@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:44308 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857Ab2HHGuB (ORCPT
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:4270 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751221Ab2H3Tkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 02:50:01 -0400
-Received: by obbuo13 with SMTP id uo13so709480obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Aug 2012 23:50:00 -0700 (PDT)
-Message-ID: <50220C0B.9080009@gmail.com> (sfid-20120808_085019_029230_4C17F776)
-Date: Wed, 08 Aug 2012 01:49:47 -0500
-From: Nathan Schulte <nmschulte@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: users@rt2x00.serialmonkey.com,
+	Thu, 30 Aug 2012 15:40:39 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
 	Gertjan van Wingerde <gwingerde@gmail.com>,
-	598144@bugs.debian.org
-Subject: Re: rt2500pci: very low transfers and link quality
-References: <20120806090054.4290.94602.reportbug@desmas-s.desmas> <20120806093051.GB28150@mannheim-rule.local> <501F96C4.1090400@gmail.com> <20120806215236.GA268@mannheim-rule.local>
-In-Reply-To: <20120806215236.GA268@mannheim-rule.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	<stable@vger.kernel.org>
+Subject: [PATCH 05/14] rt2x00: Fix rt2500pci rfkill polling prior to interface start.
+Date: Thu, 30 Aug 2012 21:34:04 +0200
+Message-Id: <1346355248-5331-6-git-send-email-gwingerde@gmail.com> (sfid-20120830_214052_328784_E36E5757)
+In-Reply-To: <1346355248-5331-5-git-send-email-gwingerde@gmail.com>
+References: <1346355248-5331-1-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-3-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-4-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-5-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks.
+We need to program the rfkill switch GPIO pin direction to input at
+device initialization time, not only when the interface is brought up.
+Doing this only when the interface is brought up could lead to rfkill
+detecting the switch is turned on erroneously and inability to create
+the interface and bringing it up.
 
-I've been requested to report a bug that I've discovered regarding 
-troubles with the rt2500pci kernel module.  As the subject suggests, 
-with my card I'm receiving very poor transfer rate and link quality. 
-The Debian bug report for this issue can be found here:
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=598144
-
-Initially, I noticed the following line repeated in the logs:
-
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 1 (-16).
-
-which led me to the (closed) Ubuntu bug report:
-
-https://bugs.launchpad.net/bugs/456977
-
-The initial error message appears to be a red herring of sorts, as it 
-can be quieted by turning off power control for the interface:
-
-# iwconfig wlan0 power off
-
-Even with the message silenced, I am still receiving poor link 
-throughput and quality.  The initial bug reporter noticed the issues 
-with kernel 2.6.32, and I've experienced it with 2.6.32 and 3.2.21 (as 
-packaged by Debian).  I tried with 3.5 from Debian experimental, but I 
-receive a kernel panic (after which the kernel becomes unresponsive) 
-whenever I bring up the interface.  This is all noted in the bug report 
-log where copies of the kernel logs can be found.
-
-The request for upstream notification can be seen below.  Please let me 
-know how I can help!
-
---
-
-Jonathan Nieder wrote:
-> Afterwards, please report this upstream (regardless of
-> the result) to linux-wireless@vger.kernel.org, cc-ing
-> users@rt2x00.serialmonkey.com, Gertjan van Wingerde
-> <gwingerde@gmail.com>, and either me or this bug log so we can track
-> it.
->
-> Then hopefully someone upstream can provide commands or a patch to try
-> to track down the cause and work toward a fix.
-
-Thanks!
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 959d565..68bca14 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1929,6 +1929,7 @@ static int rt2500pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ static int rt2500pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
++	u32 reg;
+ 
+ 	/*
+ 	 * Allocate eeprom data.
+@@ -1942,6 +1943,14 @@ static int rt2500pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	/*
++	 * Enable rfkill polling by setting GPIO direction of the
++	 * rfkill switch GPIO pin correctly.
++	 */
++	rt2x00pci_register_read(rt2x00dev, GPIOCSR, &reg);
++	rt2x00_set_field32(&reg, GPIOCSR_DIR0, 1);
++	rt2x00pci_register_write(rt2x00dev, GPIOCSR, reg);
++
++	/*
+ 	 * Initialize hw specifications.
+ 	 */
+ 	retval = rt2500pci_probe_hw_mode(rt2x00dev);
 -- 
-Nate
+1.7.11.1
+
