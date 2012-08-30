@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48566 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752042Ab2H2PAY (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:1728 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752549Ab2H3VEg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2012 11:00:24 -0400
-Message-ID: <503E2E66.8010909@candelatech.com> (sfid-20120829_170027_983876_3FDF2E73)
-Date: Wed, 29 Aug 2012 07:59:50 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Does ath9k support beam forming?
-References: <503D14FF.5000309@candelatech.com> <CAD2nsn2JFEAwB0AauFiEYxj=mC7dNjFZn12EQ0q-aOwXjfZj4A@mail.gmail.com>
-In-Reply-To: <CAD2nsn2JFEAwB0AauFiEYxj=mC7dNjFZn12EQ0q-aOwXjfZj4A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 30 Aug 2012 17:04:36 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 11/14] rt2x00: Fix rt73usb rfkill polling prior to interface start.
+Date: Thu, 30 Aug 2012 23:04:21 +0200
+Message-Id: <1346360670-6498-4-git-send-email-gwingerde@gmail.com> (sfid-20120830_230508_193609_A1B7E931)
+In-Reply-To: <1346360670-6498-3-git-send-email-gwingerde@gmail.com>
+References: <1346355248-5331-10-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-2-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-3-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/28/2012 10:05 PM, Mohammed Shafi wrote:
-> Hi Ben,
->
-> On Wed, Aug 29, 2012 at 12:29 AM, Ben Greear <greearb@candelatech.com> wrote:
->> I saw some RFC patches about beam-forming from 2010, but grepping current
->> code doesn't find anything that indicates these patches ever made it
->> upstream.
->> Of course, I could be looking for the wrong thing...
->
-> i think even though the patches are ready for submission,
-> I think the testing them proved to be very challenging, where there
-> does not seems to be consistent improvement(if not decrease)
-> in throughput.  I can be wrong.
->
->>
->> Does the current ath9k code support beam-forming?
->
-> no. hopefully we can support them(yet we need some considerable
-> amount of time to test  i suppose).
+We need to program the rfkill switch GPIO pin direction to input at
+device initialization time, not only when the interface is brought up.
+Doing this only when the interface is brought up could lead to rfkill
+detecting the switch is turned on erroneously and inability to create
+the interface and bringing it up.
 
-Can you post the latest patch series for this?
+Reported-and-tested-by: Andreas Messer <andi@bastelmap.de>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-And maybe we can make the functionality configurable by debugfs
-so that we can test it out easily?
-
-Are there any particular test cases that would help verify the
-patches?
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index d5b6fb8..cfa9f37 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2177,6 +2177,7 @@ static int rt73usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
++	u32 reg;
+ 
+ 	/*
+ 	 * Allocate eeprom data.
+@@ -2190,6 +2191,14 @@ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	/*
++	 * Enable rfkill polling by setting GPIO direction of the
++	 * rfkill switch GPIO pin correctly.
++	 */
++	rt2x00usb_register_read(rt2x00dev, MAC_CSR13, &reg);
++	rt2x00_set_field32(&reg, MAC_CSR13_DIR7, 0);
++	rt2x00usb_register_write(rt2x00dev, MAC_CSR13, reg);
++
++	/*
+ 	 * Initialize hw specifications.
+ 	 */
+ 	retval = rt73usb_probe_hw_mode(rt2x00dev);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+1.7.11.1
 
