@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:53376 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755486Ab2HWGxZ (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3418 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751194Ab2H3Tki (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 02:53:25 -0400
-MIME-Version: 1.0
-Date: Thu, 23 Aug 2012 14:53:24 +0800
-Message-ID: <CAPgLHd_zKkfbms8pMPiTKtGxWXw9=b0+AftqFxWZCPLb3EBaig@mail.gmail.com> (sfid-20120823_085331_425833_8FDDDDC8)
-Subject: [PATCH] ipw2100: use is_zero_ether_addr() and is_broadcast_ether_addr()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: stas.yakovlev@gmail.com, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 30 Aug 2012 15:40:38 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 06/14] rt2x00: Align rt2500usb MAC_CSR19 definition with datasheet.
+Date: Thu, 30 Aug 2012 21:34:05 +0200
+Message-Id: <1346355248-5331-7-git-send-email-gwingerde@gmail.com> (sfid-20120830_214100_540262_EE3D52BE)
+In-Reply-To: <1346355248-5331-6-git-send-email-gwingerde@gmail.com>
+References: <1346355248-5331-1-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-3-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-4-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-5-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-6-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Datasheet indicates additional fields to set the GPIO direction.
+At the same time rename MAC_CSR19_BIT<x> to MAC_CSR19_VAL<x> to represent
+the actual meaning better.
+Also, rt2500usb has 16-bit register values, not 32-bit register values.
 
-Using is_zero_ether_addr() and is_broadcast_ether_addr() instead of
-directly use memcmp() to determine if the ethernet address is all zeros.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-spatch with a semantic match is used to found this problem.
-(http://coccinelle.lip6.fr/)
-
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/ipw2x00/ipw2100.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 95aa8e1..c3e14b2 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -6963,13 +6963,6 @@ static int ipw2100_wx_set_wap(struct net_device *dev,
- 	struct ipw2100_priv *priv = libipw_priv(dev);
- 	int err = 0;
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 3aae36b..5742ce9 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -283,7 +283,7 @@ static int rt2500usb_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+ 	u16 reg;
  
--	static const unsigned char any[] = {
--		0xff, 0xff, 0xff, 0xff, 0xff, 0xff
--	};
--	static const unsigned char off[] = {
--		0x00, 0x00, 0x00, 0x00, 0x00, 0x00
--	};
--
- 	// sanity checks
- 	if (wrqu->ap_addr.sa_family != ARPHRD_ETHER)
- 		return -EINVAL;
-@@ -6980,8 +6973,8 @@ static int ipw2100_wx_set_wap(struct net_device *dev,
- 		goto done;
- 	}
+ 	rt2500usb_register_read(rt2x00dev, MAC_CSR19, &reg);
+-	return rt2x00_get_field32(reg, MAC_CSR19_BIT7);
++	return rt2x00_get_field16(reg, MAC_CSR19_VAL7);
+ }
  
--	if (!memcmp(any, wrqu->ap_addr.sa_data, ETH_ALEN) ||
--	    !memcmp(off, wrqu->ap_addr.sa_data, ETH_ALEN)) {
-+	if (is_broadcast_ether_addr(wrqu->ap_addr.sa_data) ||
-+	    is_zero_ether_addr(wrqu->ap_addr.sa_data)) {
- 		/* we disable mandatory BSSID association */
- 		IPW_DEBUG_WX("exit - disable mandatory BSSID\n");
- 		priv->config &= ~CFG_STATIC_BSSID;
-
+ #ifdef CONFIG_RT2X00_LIB_LEDS
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
+index b493306..ef7b420 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.h
++++ b/drivers/net/wireless/rt2x00/rt2500usb.h
+@@ -187,16 +187,26 @@
+ 
+ /*
+  * MAC_CSR19: GPIO control register.
++ *	MAC_CSR19_VALx: GPIO value
++ *	MAC_CSR19_DIRx: GPIO direction: 0 = input; 1 = output
+  */
+ #define MAC_CSR19			0x0426
+-#define MAC_CSR19_BIT0			FIELD32(0x0001)
+-#define MAC_CSR19_BIT1			FIELD32(0x0002)
+-#define MAC_CSR19_BIT2			FIELD32(0x0004)
+-#define MAC_CSR19_BIT3			FIELD32(0x0008)
+-#define MAC_CSR19_BIT4			FIELD32(0x0010)
+-#define MAC_CSR19_BIT5			FIELD32(0x0020)
+-#define MAC_CSR19_BIT6			FIELD32(0x0040)
+-#define MAC_CSR19_BIT7			FIELD32(0x0080)
++#define MAC_CSR19_VAL0			FIELD16(0x0001)
++#define MAC_CSR19_VAL1			FIELD16(0x0002)
++#define MAC_CSR19_VAL2			FIELD16(0x0004)
++#define MAC_CSR19_VAL3			FIELD16(0x0008)
++#define MAC_CSR19_VAL4			FIELD16(0x0010)
++#define MAC_CSR19_VAL5			FIELD16(0x0020)
++#define MAC_CSR19_VAL6			FIELD16(0x0040)
++#define MAC_CSR19_VAL7			FIELD16(0x0080)
++#define MAC_CSR19_DIR0			FIELD16(0x0100)
++#define MAC_CSR19_DIR1			FIELD16(0x0200)
++#define MAC_CSR19_DIR2			FIELD16(0x0400)
++#define MAC_CSR19_DIR3			FIELD16(0x0800)
++#define MAC_CSR19_DIR4			FIELD32(0x1000)
++#define MAC_CSR19_DIR5			FIELD16(0x2000)
++#define MAC_CSR19_DIR6			FIELD16(0x4000)
++#define MAC_CSR19_DIR7			FIELD16(0x8000)
+ 
+ /*
+  * MAC_CSR20: LED control register.
+-- 
+1.7.11.1
 
