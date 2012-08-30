@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:45214 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751089Ab2HLHbl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Aug 2012 03:31:41 -0400
-Received: by obbta17 with SMTP id ta17so5903573obb.8
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Aug 2012 00:31:40 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:1100 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358Ab2H3IF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2012 04:05:56 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 4/4] brcmfmac: fix get rssi by clearing getvar struct.
+Date: Thu, 30 Aug 2012 10:05:37 +0200
+Message-ID: <1346313937-3605-5-git-send-email-arend@broadcom.com> (sfid-20120830_100603_356512_7D7B0D18)
+In-Reply-To: <1346313937-3605-1-git-send-email-arend@broadcom.com>
+References: <1346313937-3605-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20120810162810.GB17559@redhat.com>
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
-	<1344426823-1795-3-git-send-email-victorg@ti.com>
-	<20120810162810.GB17559@redhat.com>
-Date: Sun, 12 Aug 2012 10:31:40 +0300
-Message-ID: <CAK80WHa1ae7jA6BxOA+1Xx0bTx2_0+0GuDa=UrJ+qsC9_sYZ7g@mail.gmail.com> (sfid-20120812_093207_617534_A24A0510)
-Subject: Re: [PATCH v3 2/7] mac80211: add radar detection command/event
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 10, 2012 at 7:28 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Wed, Aug 08, 2012 at 02:53:38PM +0300, Victor Goldenshtein wrote:
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -2262,6 +2262,10 @@ enum ieee80211_rate_control_changed {
->>   *   The callback will be called before each transmission and upon return
->>   *   mac80211 will transmit the frame right away.
->>   *   The callback is optional and can (should!) sleep.
->> + *
->> +* @start_radar_detection: Start radar detection on current operational
->> + *   channel, once started it will continuously monitor for radars as long
->> + *   as the channel active.
->>   */
->>  struct ieee80211_ops {
->>       void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
->> @@ -2404,6 +2408,10 @@ struct ieee80211_ops {
->>
->>       void    (*mgd_prepare_tx)(struct ieee80211_hw *hw,
->>                                 struct ieee80211_vif *vif);
->> +
->> +     int (*start_radar_detection)(struct ieee80211_hw *hw,
->> +                                  struct ieee80211_vif *vif,
->> +                                  struct ieee80211_channel *chan);
->
-> Why we need new callback? I.e. why this can be done by ->config ?
->
+From: Hante Meuleman <meuleman@broadcom.com>
 
-See proposed RFC and previous threads.
+The function brcmf_cfg80211_get_station requests the RSSI from
+the device. The complete structure used needs to be cleared
+before sending the request to firmware. Otherwise the request
+fails filling the logs with "Could not get rssi (-2)" messages.
 
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 28c5fbb..c36e923 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1876,16 +1876,17 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+ 	}
+ 
+ 	if (test_bit(WL_STATUS_CONNECTED, &cfg_priv->status)) {
+-		scb_val.val = cpu_to_le32(0);
++		memset(&scb_val, 0, sizeof(scb_val));
+ 		err = brcmf_exec_dcmd(ndev, BRCMF_C_GET_RSSI, &scb_val,
+ 				      sizeof(struct brcmf_scb_val_le));
+-		if (err)
++		if (err) {
+ 			WL_ERR("Could not get rssi (%d)\n", err);
+-
+-		rssi = le32_to_cpu(scb_val.val);
+-		sinfo->filled |= STATION_INFO_SIGNAL;
+-		sinfo->signal = rssi;
+-		WL_CONN("RSSI %d dBm\n", rssi);
++		} else {
++			rssi = le32_to_cpu(scb_val.val);
++			sinfo->filled |= STATION_INFO_SIGNAL;
++			sinfo->signal = rssi;
++			WL_CONN("RSSI %d dBm\n", rssi);
++		}
+ 	}
+ 
+ done:
 -- 
-Thanks,
-Victor.
+1.7.9.5
+
+
