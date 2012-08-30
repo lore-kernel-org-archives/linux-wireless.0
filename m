@@ -1,72 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:43169 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753231Ab2H1Wjn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 18:39:43 -0400
-Message-ID: <503D48AC.5040509@wwwdotorg.org> (sfid-20120829_003949_515867_E44D8770)
-Date: Tue, 28 Aug 2012 15:39:40 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:2193 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752342Ab2H3RnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2012 13:43:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/5] brcmfmac: add BCM43241 sdio interface driver
+ support
+Date: Thu, 30 Aug 2012 19:42:59 +0200
+Message-ID: <1346348582-20095-3-git-send-email-arend@broadcom.com> (sfid-20120830_194329_866227_AF8AD987)
+In-Reply-To: <1346348582-20095-1-git-send-email-arend@broadcom.com>
+References: <1346348582-20095-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Franky Lin <frankyl@broadcom.com>
-CC: Wei Ni <wni@nvidia.com>, Arend van Spriel <arend@broadcom.com>,
-	"rvossen@broadcom.com" <rvossen@broadcom.com>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR directly
- for non-OOB
-References: <1346063114-30361-1-git-send-email-wni@nvidia.com> <1346063114-30361-3-git-send-email-wni@nvidia.com> <503B9F31.5050502@broadcom.com> <503BD345.6030501@wwwdotorg.org> <1346152413.3516.211.camel@tegra-chromium-2> <503CF5B3.8040201@broadcom.com>
-In-Reply-To: <503CF5B3.8040201@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/28/2012 09:45 AM, Franky Lin wrote:
-> On 08/28/2012 04:13 AM, Wei Ni wrote:
->> On Tue, 2012-08-28 at 04:06 +0800, Stephen Warren wrote:
->>> On 08/27/2012 09:24 AM, Arend van Spriel wrote:
->>>> On 08/27/2012 12:25 PM, Wei Ni wrote:
->>>>> In case of inband interrupts, if we handle the interrupt in dpc
->>>>> thread,
->>>>> two level of thread switching takes place to process wifi interrupts.
->>>>> One in SDHCI driver and the other in Wifi driver. This may cause the
->>>>> system
->>>>> instability.
-...
->>>> Not sure if I can follow this explanation. The isr is called with host
->>>> claimed (by sdio_irq_thread) and all it does is at a linked list member
->>>> and signal the dpc thread. After doing this the host is released.
->>>
->>> Is the issue something like the ISR handler or first level of threading
->>> does:
->>>
->>> * Trigger DPC
->>> * Re-enable interrupt
->>>
->>> So that the interrupt then fires again before the triggered DPC can run
->>> to handle/clear it, thus causing an interrupt storm?
->>>
->>> Whereas handling the interrupt directly prevents this race condition?
->>
->> Above is my understanding.
-> 
-> I understand the issue here and totally agree that we should treat
-> in-band and out-band interrupts differently. But my concern is that the
-> behavior of releasing the host before calling brcmf_sdbrcm_isr and grab
-> it after is likely error prone. Also we are restructuring the dpc
-> routine internally and it's almost done. I will find a better solution
-> for in-band interrupt and get it the queue as well. So I suggest
-> dropping this patch.
+From: Franky Lin <frankyl@broadcom.com>
 
-Franky, do you know which kernel release the DPC restructuring will make
-it into? I ask because I can't apply the rest of the patches in this
-series without first resolving the stability issues with the Broadcom
-WiFi enabled, since that'd de-stabilize the Tegra platform
-significantly, and I'd like to plan when we can apply these patches to
-Tegra. Thanks!
+BCM43241 is an 11abg and 2x2 11n Wifi/BT/FM combo chip that
+supports 40MHz channel width. This patch intends to enable
+the driver support for the chip through SDIO bus interface.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 ++
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 ++
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   17 +++++++++++++++++
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
+ 4 files changed, 22 insertions(+)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 49765d3..e0b313c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -42,6 +42,7 @@
+ 
+ #define DMA_ALIGN_MASK	0x03
+ 
++#define SDIO_DEVICE_ID_BROADCOM_43241	0x4324
+ #define SDIO_DEVICE_ID_BROADCOM_4329	0x4329
+ #define SDIO_DEVICE_ID_BROADCOM_4330	0x4330
+ #define SDIO_DEVICE_ID_BROADCOM_4334	0x4334
+@@ -51,6 +52,7 @@
+ 
+ /* devices we support, null terminated */
+ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
++	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_43241)},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4329)},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4330)},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4334)},
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 472f2ef..2dd6b48 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3881,6 +3881,8 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
+ 
+ static bool brcmf_sdbrcm_chipmatch(u16 chipid)
+ {
++	if (chipid == BCM43241_CHIP_ID)
++		return true;
+ 	if (chipid == BCM4329_CHIP_ID)
+ 		return true;
+ 	if (chipid == BCM4330_CHIP_ID)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index 58155e2..9434440 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -377,6 +377,23 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	/* Address of cores for new chips should be added here */
+ 	switch (ci->chip) {
++	case BCM43241_CHIP_ID:
++		ci->c_inf[0].wrapbase = 0x18100000;
++		ci->c_inf[0].cib = 0x2a084411;
++		ci->c_inf[1].id = BCMA_CORE_SDIO_DEV;
++		ci->c_inf[1].base = 0x18002000;
++		ci->c_inf[1].wrapbase = 0x18102000;
++		ci->c_inf[1].cib = 0x0e004211;
++		ci->c_inf[2].id = BCMA_CORE_INTERNAL_MEM;
++		ci->c_inf[2].base = 0x18004000;
++		ci->c_inf[2].wrapbase = 0x18104000;
++		ci->c_inf[2].cib = 0x14080401;
++		ci->c_inf[3].id = BCMA_CORE_ARM_CM3;
++		ci->c_inf[3].base = 0x18003000;
++		ci->c_inf[3].wrapbase = 0x18103000;
++		ci->c_inf[3].cib = 0x07004211;
++		ci->ramsize = 0x90000;
++		break;
+ 	case BCM4329_CHIP_ID:
+ 		ci->c_inf[1].id = BCMA_CORE_SDIO_DEV;
+ 		ci->c_inf[1].base = BCM4329_CORE_BUS_BASE;
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index bcc79b4..e868285 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -34,6 +34,7 @@
+ #define BCM43235_CHIP_ID	43235
+ #define BCM43236_CHIP_ID	43236
+ #define BCM43238_CHIP_ID	43238
++#define BCM43241_CHIP_ID	0x4324
+ #define BCM4329_CHIP_ID		0x4329
+ #define BCM4330_CHIP_ID		0x4330
+ #define BCM4331_CHIP_ID		0x4331
+-- 
+1.7.9.5
+
+
