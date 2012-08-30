@@ -1,62 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63333 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008Ab2H1Npa (ORCPT
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:4962 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752563Ab2H3VEg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 09:45:30 -0400
-Received: by eekc1 with SMTP id c1so1396104eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2012 06:45:29 -0700 (PDT)
-Subject: Re: ath9k AR9287 freeze linux system
-From: =?ISO-8859-1?Q?Lu=EDs_D=EDaz_Gonz=E1lez?= <luis.hlodwig@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAD2nsn0uis8_GnNnR2p84TkDmphPoHe9LGTn2TNNZ18tCBxkog@mail.gmail.com>
-References: <1346146736.3087.12.camel@inferno>
-	 <CAD2nsn0uis8_GnNnR2p84TkDmphPoHe9LGTn2TNNZ18tCBxkog@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Aug 2012 15:45:26 +0200
-Message-ID: <1346161526.3808.5.camel@inferno> (sfid-20120828_154533_509768_DB0206AA)
-Mime-Version: 1.0
+	Thu, 30 Aug 2012 17:04:36 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 14/17] rt2x00: Fix rt73usb rfkill polling prior to interface start.
+Date: Thu, 30 Aug 2012 23:04:26 +0200
+Message-Id: <1346360670-6498-9-git-send-email-gwingerde@gmail.com> (sfid-20120830_230500_753057_52C19E4C)
+In-Reply-To: <1346360670-6498-8-git-send-email-gwingerde@gmail.com>
+References: <1346355248-5331-10-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-2-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-3-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-4-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-5-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-6-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-7-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-8-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El mar, 28-08-2012 a las 19:08 +0530, Mohammed Shafi escribió:
-> Hi,
-> 
-> On Tue, Aug 28, 2012 at 3:08 PM, Luís Díaz González
-> <luis.hlodwig@gmail.com> wrote:
-> > The last two releases compat-wireless (2012-08-26 and 2012-08-27) freeze
-> > my linux system.
-> 
-> thanks for reporting.
-> *Please provide some information/call trace if you can get(you can
-> attach a photograph of the trace :) )
-> *like what did you do(sending traffic, suspend resume, keep the
-> station idle?) to see the freeze.
-> *I would try to recreate in my ubuntu 2.6.32.. kernel.
-> *are you using btcoex in the driver sudo modprobe ath9k btcoex_enable=1  ?
+We need to program the rfkill switch GPIO pin direction to input at
+device initialization time, not only when the interface is brought up.
+Doing this only when the interface is brought up could lead to rfkill
+detecting the switch is turned on erroneously and inability to create
+the interface and bringing it up.
 
-Yes, I'm using btcoex, when I disabled it, all works again.
+Reported-and-tested-by: Andreas Messer <andi@bastelmap.de>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-> 
-> 
-> >
-> > I'm not a developer, I'm a simple user
-> >
-> > Debian Squeeze 2.6.32
-> > wireless card  AR9287
-> >
-> >
-> > thanks,
-> > luis
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> 
-
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index d5b6fb8..cfa9f37 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2177,6 +2177,7 @@ static int rt73usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
++	u32 reg;
+ 
+ 	/*
+ 	 * Allocate eeprom data.
+@@ -2190,6 +2191,14 @@ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	/*
++	 * Enable rfkill polling by setting GPIO direction of the
++	 * rfkill switch GPIO pin correctly.
++	 */
++	rt2x00usb_register_read(rt2x00dev, MAC_CSR13, &reg);
++	rt2x00_set_field32(&reg, MAC_CSR13_DIR7, 0);
++	rt2x00usb_register_write(rt2x00dev, MAC_CSR13, reg);
++
++	/*
+ 	 * Initialize hw specifications.
+ 	 */
+ 	retval = rt73usb_probe_hw_mode(rt2x00dev);
+-- 
+1.7.11.1
 
