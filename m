@@ -1,58 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59658 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754662Ab2HERWH (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:1728 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752628Ab2H3VEi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 13:22:07 -0400
-Message-ID: <1344187324.5765.5.camel@jlt3.sipsolutions.net> (sfid-20120805_192211_462998_8DD23CC4)
-Subject: Re: WDS vs. multi-channel operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 05 Aug 2012 19:22:04 +0200
-In-Reply-To: <1344187264.5765.4.camel@jlt3.sipsolutions.net> (sfid-20120805_192133_648139_FC40F06B)
-References: <1343655393.4452.13.camel@jlt3.sipsolutions.net>
-	 <501EA97B.3010703@openwrt.org>
-	 <1344187264.5765.4.camel@jlt3.sipsolutions.net>
-	 (sfid-20120805_192133_648139_FC40F06B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 30 Aug 2012 17:04:38 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 13/17] rt2x00: Align rt73usb MAC_CSR13 definition with datasheet.
+Date: Thu, 30 Aug 2012 23:04:24 +0200
+Message-Id: <1346360670-6498-7-git-send-email-gwingerde@gmail.com> (sfid-20120830_230456_330814_E8B1A99D)
+In-Reply-To: <1346360670-6498-6-git-send-email-gwingerde@gmail.com>
+References: <1346355248-5331-10-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-2-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-3-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-4-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-5-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-6-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-08-05 at 19:21 +0200, Johannes Berg wrote:
-> On Sun, 2012-08-05 at 19:12 +0200, Felix Fietkau wrote:
-> > On 2012-07-30 3:36 PM, Johannes Berg wrote:
-> > > Ok so I'm chipping away at multi-channel operation, but WDS is
-> > > troubling. Which channel should it use? It doesn't even have channel
-> > > configuration today, but relies on having a channel already, but that
-> > > breaks when you have multi-channel since then it either has to have its
-> > > own channel or be slaved to another channel...
-> > > 
-> > > Anyone have any ideas?
-> > Let's bind WDS interfaces to AP VIFs, then they can be slave to the AP's
-> > channel context. This is necessary for my yet-to-be-resubmitted WDS
-> > fixes anyway.
-> 
-> For now I decided that drivers supporting the channel context APIs will
-> not be allowed to support WDS interfaces :-P
-> (and the code in WDS TX will simply take the global channel as before)
-> 
-> So ... yes, I think this makes sense, but I'm not sure I care enough to
-> implement it right now, I have enough other things with multi-channel
-> still to do ... Though the question remains *how* we bind them. We could
-> try to match them by MAC address when they're brought up (and require
-> the same MAC address?), or do explicit binding, or something else
-> entirely ...
-> 
-> If you're going to require them to be bound to an AP though, where's the
-> difference to the current 4-addr AP_VLAN behaviour? It seems with that
-> you could actually implement a bound-to-AP-WDS entirely in userspace
-> since there's no requirement to actually go through the auth/assoc
-> sequence for hostapd to add the station entry?
+Rename MAC_CSR13_BIT<x> to MAC_CSR13_VAL<x> and MAC_CSR13_DIR<x> to
+represent the actual meaning better.
+Clean up list to only mention the active GPIO pins, not just all bits.
 
-Oh and if you actually do need WDS-type interfaces, maybe their role
-should change to be virtual like AP_VLAN-type interfaces?
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index ba6e434..d5b6fb8 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -189,7 +189,7 @@ static int rt73usb_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+ 	u32 reg;
+ 
+ 	rt2x00usb_register_read(rt2x00dev, MAC_CSR13, &reg);
+-	return rt2x00_get_field32(reg, MAC_CSR13_BIT7);
++	return rt2x00_get_field32(reg, MAC_CSR13_VAL7);
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_LEDS
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/rt2x00/rt73usb.h
+index 9f6b470..7577e0b 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.h
++++ b/drivers/net/wireless/rt2x00/rt73usb.h
+@@ -267,21 +267,26 @@ struct hw_pairwise_ta_entry {
+ 
+ /*
+  * MAC_CSR13: GPIO.
++ *	MAC_CSR13_VALx: GPIO value
++ *	MAC_CSR13_DIRx: GPIO direction: 0 = input; 1 = output
+  */
+ #define MAC_CSR13			0x3034
+-#define MAC_CSR13_BIT0			FIELD32(0x00000001)
+-#define MAC_CSR13_BIT1			FIELD32(0x00000002)
+-#define MAC_CSR13_BIT2			FIELD32(0x00000004)
+-#define MAC_CSR13_BIT3			FIELD32(0x00000008)
+-#define MAC_CSR13_BIT4			FIELD32(0x00000010)
+-#define MAC_CSR13_BIT5			FIELD32(0x00000020)
+-#define MAC_CSR13_BIT6			FIELD32(0x00000040)
+-#define MAC_CSR13_BIT7			FIELD32(0x00000080)
+-#define MAC_CSR13_BIT8			FIELD32(0x00000100)
+-#define MAC_CSR13_BIT9			FIELD32(0x00000200)
+-#define MAC_CSR13_BIT10			FIELD32(0x00000400)
+-#define MAC_CSR13_BIT11			FIELD32(0x00000800)
+-#define MAC_CSR13_BIT12			FIELD32(0x00001000)
++#define MAC_CSR13_VAL0			FIELD32(0x00000001)
++#define MAC_CSR13_VAL1			FIELD32(0x00000002)
++#define MAC_CSR13_VAL2			FIELD32(0x00000004)
++#define MAC_CSR13_VAL3			FIELD32(0x00000008)
++#define MAC_CSR13_VAL4			FIELD32(0x00000010)
++#define MAC_CSR13_VAL5			FIELD32(0x00000020)
++#define MAC_CSR13_VAL6			FIELD32(0x00000040)
++#define MAC_CSR13_VAL7			FIELD32(0x00000080)
++#define MAC_CSR13_DIR0			FIELD32(0x00000100)
++#define MAC_CSR13_DIR1			FIELD32(0x00000200)
++#define MAC_CSR13_DIR2			FIELD32(0x00000400)
++#define MAC_CSR13_DIR3			FIELD32(0x00000800)
++#define MAC_CSR13_DIR4			FIELD32(0x00001000)
++#define MAC_CSR13_DIR5			FIELD32(0x00002000)
++#define MAC_CSR13_DIR6			FIELD32(0x00004000)
++#define MAC_CSR13_DIR7			FIELD32(0x00008000)
+ 
+ /*
+  * MAC_CSR14: LED control register.
+-- 
+1.7.11.1
 
