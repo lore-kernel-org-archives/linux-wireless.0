@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63277 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781Ab2HJLSR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:18:17 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:5000 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752267Ab2H3IGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2012 04:06:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/4] brcmfmac: dont use ZERO flag for usb IN
+Date: Thu, 30 Aug 2012 10:05:35 +0200
+Message-ID: <1346313937-3605-3-git-send-email-arend@broadcom.com> (sfid-20120830_100614_392123_5DC175FF)
+In-Reply-To: <1346313937-3605-1-git-send-email-arend@broadcom.com>
+References: <1346313937-3605-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20516.60847.547871.63036@gargle.gargle.HOWL> (sfid-20120810_132552_245017_95F1F16E)
-Date: Fri, 10 Aug 2012 16:47:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/15] ath9k: Bail out properly before calculating rate index
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 24 +++++++++++-------------
- 1 file changed, 11 insertions(+), 13 deletions(-)
+From: Hante Meuleman <meuleman@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a94c52b..0e3d20a 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1264,23 +1264,12 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	struct ath_softc *sc = priv;
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hdr *hdr;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	int final_ts_idx = 0, tx_status = 0;
- 	int long_retry = 0;
--	__le16 fc;
-+	__le16 fc = hdr->frame_control;
- 	int i;
+URB_ZERO_PACKET should only be set or bulk OUT and this condition
+is checked with a WARN_ON in usb_submit_urb(). This patch fixes
+brcmfmac to get rid of this warning filling the logs.
+
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index f72dfb7..8ea2db7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -581,7 +581,6 @@ static void brcmf_usb_rx_refill(struct brcmf_usbdev_info *devinfo,
+ 	usb_fill_bulk_urb(req->urb, devinfo->usbdev, devinfo->rx_pipe,
+ 			  skb->data, skb_tailroom(skb), brcmf_usb_rx_complete,
+ 			  req);
+-	req->urb->transfer_flags |= URB_ZERO_PACKET;
+ 	req->devinfo = devinfo;
  
--	hdr = (struct ieee80211_hdr *)skb->data;
--	fc = hdr->frame_control;
--	for (i = 0; i < sc->hw->max_rates; i++) {
--		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
--		if (rate->idx < 0 || !rate->count)
--			break;
--
--		final_ts_idx = i;
--		long_retry = rate->count - 1;
--	}
--
- 	if (!priv_sta || !ieee80211_is_data(fc))
- 		return;
- 
-@@ -1292,6 +1281,15 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
- 		return;
- 
-+	for (i = 0; i < sc->hw->max_rates; i++) {
-+		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
-+		if (rate->idx < 0 || !rate->count)
-+			break;
-+
-+		final_ts_idx = i;
-+		long_retry = rate->count - 1;
-+	}
-+
- 	if (!(tx_info->flags & IEEE80211_TX_STAT_ACK))
- 		tx_status = 1;
- 
+ 	ret = usb_submit_urb(req->urb, GFP_ATOMIC);
 -- 
-1.7.11.4
+1.7.9.5
+
 
