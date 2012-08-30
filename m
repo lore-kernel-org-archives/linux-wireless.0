@@ -1,163 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:58651 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757997Ab2HHMCX (ORCPT
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:4270 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750875Ab2H3Tkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 08:02:23 -0400
-Received: by obqv19 with SMTP id v19so2480071obq.16
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:02:19 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <hostap@lists.shmoo.com>
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
-	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH v3 3/7] hostapd: add dfs events
-Date: Wed,  8 Aug 2012 14:55:34 +0300
-Message-Id: <1344426938-1883-4-git-send-email-victorg@ti.com> (sfid-20120808_140225_898026_93C2EA27)
-In-Reply-To: <1344426938-1883-1-git-send-email-victorg@ti.com>
-References: <1344426938-1883-1-git-send-email-victorg@ti.com>
+	Thu, 30 Aug 2012 15:40:37 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 08/14] rt2x00: Align rt61pci MAC_CSR13 definition with datasheet.
+Date: Thu, 30 Aug 2012 21:34:07 +0200
+Message-Id: <1346355248-5331-9-git-send-email-gwingerde@gmail.com> (sfid-20120830_214107_389787_52E728F9)
+In-Reply-To: <1346355248-5331-8-git-send-email-gwingerde@gmail.com>
+References: <1346355248-5331-1-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-3-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-4-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-5-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-6-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-7-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-8-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add EVENT_RADAR_DETECTED and EVENT_AP_CH_SWITCH_COMPLETE
-events.
+Rename MAC_CSR13_BIT<x> to MAC_CSR13_VAL<x> and MAC_CSR13_DIR<x> to
+represent the actual meaning better.
+Clean up list to only mention the active GPIO pins, not just all bits.
 
-EVENT_RADAR_DETECTED indicates that radar was detected on
-operational channel. EVENT_AP_CH_SWITCH_COMPLETE indicates
-that device has finished the channel switch process.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-Signed-hostap: Boris Presman <boris.presman@ti.com>
-Signed-hostap: Victor Goldenshtein <victorg@ti.com>
----
- src/ap/drv_callbacks.c      |   45 +++++++++++++++++++++++++++++++++++++++++++
- src/drivers/driver.h        |   20 ++++++++++++++++++-
- src/drivers/driver_common.c |    2 +
- 3 files changed, 66 insertions(+), 1 deletions(-)
-
-diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
-index c793c6a..d7148b0 100644
---- a/src/ap/drv_callbacks.c
-+++ b/src/ap/drv_callbacks.c
-@@ -684,6 +684,34 @@ static void hostapd_event_eapol_rx(struct hostapd_data *hapd, const u8 *src,
- 	ieee802_1x_receive(hapd, src, data, data_len);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 3f7bc5c..d84b17f 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -243,7 +243,7 @@ static int rt61pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+ 	u32 reg;
+ 
+ 	rt2x00pci_register_read(rt2x00dev, MAC_CSR13, &reg);
+-	return rt2x00_get_field32(reg, MAC_CSR13_BIT5);
++	return rt2x00_get_field32(reg, MAC_CSR13_VAL5);
  }
  
-+static void hostapd_event_radar_detected(struct hostapd_data *hapd,
-+					 struct radar_detected *radar)
-+{
-+	if (!hapd->iconf->ieee80211h)
-+		return;
-+
-+	if ((!(hapd->iface->dfs_state & DFS_INIT_PHASE_CAC)) &&
-+	    (hapd->iface->freq != radar->freq)) {
-+		wpa_printf(MSG_WARNING, "False radar detection, op_freq(%d) != "
-+			   "radar_freq(%d)", hapd->iface->freq, radar->freq);
-+		return;
-+	}
-+
-+	if (ieee802_11_radar_detected(hapd))
-+		ieee802_11_start_channel_switch(hapd, TRUE);
-+	else
-+		wpa_printf(MSG_DEBUG, "False radar detection");
-+}
-+
-+static void hostapd_event_ap_ch_switch(struct hostapd_data *hapd, int freq)
-+{
-+	if (hapd->next_channel->freq != freq)
-+		wpa_printf(MSG_WARNING, "Switched to wrong freq, next_freq(%d) "
-+			   "!= ch_switch_freq(%d)", hapd->next_channel->freq,
-+			   freq);
-+
-+	ieee802_11_complete_channel_switch(hapd);
-+}
+ #ifdef CONFIG_RT2X00_LIB_LEDS
+@@ -715,11 +715,11 @@ static void rt61pci_config_antenna_2529_rx(struct rt2x00_dev *rt2x00dev,
  
- void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 			  union wpa_event_data *data)
-@@ -707,6 +735,13 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 		event_to_string(event), event);
- #endif /* CONFIG_NO_STDOUT_DEBUG */
+ 	rt2x00pci_register_read(rt2x00dev, MAC_CSR13, &reg);
  
-+	if ((hapd->iface->dfs_state & DFS_INIT_PHASE_CAC) &&
-+	    (event != EVENT_RADAR_DETECTED)) {
-+		wpa_dbg(hapd->msg_ctx, level, "Irrelevant event "
-+			"during DFS init phase");
-+		return;
-+	}
-+
- 	switch (event) {
- 	case EVENT_MICHAEL_MIC_FAILURE:
- 		michael_mic_failure(hapd, data->michael_mic_failure.src, 1);
-@@ -816,6 +851,16 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 					data->ch_switch.ht_enabled,
- 					data->ch_switch.ch_offset);
- 		break;
-+	case EVENT_AP_CH_SWITCH_COMPLETE:
-+		if (!data)
-+			break;
-+		hostapd_event_ap_ch_switch(hapd, data->ch_switch.freq);
-+		break;
-+	case EVENT_RADAR_DETECTED:
-+		if (!data)
-+			break;
-+		hostapd_event_radar_detected(hapd, &data->radar_detected);
-+		break;
- 	default:
- 		wpa_printf(MSG_DEBUG, "Unknown event %d", event);
- 		break;
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 047a5aa..5b031a8 100644
---- a/src/drivers/driver.h
-+++ b/src/drivers/driver.h
-@@ -3111,7 +3111,17 @@ enum wpa_event_type {
- 	 *
- 	 * This event can be used to request a WNM operation to be performed.
- 	 */
--	EVENT_WNM
-+	EVENT_WNM,
-+
-+	/**
-+	 * EVENT_AP_CH_SWITCH_COMPLETE - notify of channel switch complete
-+	 */
-+	EVENT_AP_CH_SWITCH_COMPLETE,
-+
-+	/**
-+	 * EVENT_RADAR_DETECTED - notify of radar detection
-+	 */
-+	EVENT_RADAR_DETECTED
- };
+-	rt2x00_set_field32(&reg, MAC_CSR13_BIT4, p1);
+-	rt2x00_set_field32(&reg, MAC_CSR13_BIT12, 0);
++	rt2x00_set_field32(&reg, MAC_CSR13_DIR4, 0);
++	rt2x00_set_field32(&reg, MAC_CSR13_VAL4, p1);
  
+-	rt2x00_set_field32(&reg, MAC_CSR13_BIT3, !p2);
+-	rt2x00_set_field32(&reg, MAC_CSR13_BIT11, 0);
++	rt2x00_set_field32(&reg, MAC_CSR13_DIR3, 0);
++	rt2x00_set_field32(&reg, MAC_CSR13_VAL3, !p2);
  
-@@ -3736,6 +3746,14 @@ union wpa_event_data {
- 		int ht_enabled;
- 		int ch_offset;
- 	} ch_switch;
-+
-+	/**
-+	 * struct radar_detected
-+	 * @freq: Frequency of new channel in MHz
-+	 */
-+	struct radar_detected {
-+		int freq;
-+	} radar_detected;
- };
+ 	rt2x00pci_register_write(rt2x00dev, MAC_CSR13, reg);
+ }
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
+index e3cd6db..9bc6b60 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.h
++++ b/drivers/net/wireless/rt2x00/rt61pci.h
+@@ -357,21 +357,22 @@ struct hw_pairwise_ta_entry {
  
- /**
-diff --git a/src/drivers/driver_common.c b/src/drivers/driver_common.c
-index 418cf1a..2232ade 100644
---- a/src/drivers/driver_common.c
-+++ b/src/drivers/driver_common.c
-@@ -79,6 +79,8 @@ const char * event_to_string(enum wpa_event_type event)
- 	E2S(EAPOL_TX_STATUS);
- 	E2S(CH_SWITCH);
- 	E2S(WNM);
-+	E2S(AP_CH_SWITCH_COMPLETE);
-+	E2S(RADAR_DETECTED);
- 	}
+ /*
+  * MAC_CSR13: GPIO.
++ *	MAC_CSR13_VALx: GPIO value
++ *	MAC_CSR13_DIRx: GPIO direction: 0 = output; 1 = input
+  */
+ #define MAC_CSR13			0x3034
+-#define MAC_CSR13_BIT0			FIELD32(0x00000001)
+-#define MAC_CSR13_BIT1			FIELD32(0x00000002)
+-#define MAC_CSR13_BIT2			FIELD32(0x00000004)
+-#define MAC_CSR13_BIT3			FIELD32(0x00000008)
+-#define MAC_CSR13_BIT4			FIELD32(0x00000010)
+-#define MAC_CSR13_BIT5			FIELD32(0x00000020)
+-#define MAC_CSR13_BIT6			FIELD32(0x00000040)
+-#define MAC_CSR13_BIT7			FIELD32(0x00000080)
+-#define MAC_CSR13_BIT8			FIELD32(0x00000100)
+-#define MAC_CSR13_BIT9			FIELD32(0x00000200)
+-#define MAC_CSR13_BIT10			FIELD32(0x00000400)
+-#define MAC_CSR13_BIT11			FIELD32(0x00000800)
+-#define MAC_CSR13_BIT12			FIELD32(0x00001000)
++#define MAC_CSR13_VAL0			FIELD32(0x00000001)
++#define MAC_CSR13_VAL1			FIELD32(0x00000002)
++#define MAC_CSR13_VAL2			FIELD32(0x00000004)
++#define MAC_CSR13_VAL3			FIELD32(0x00000008)
++#define MAC_CSR13_VAL4			FIELD32(0x00000010)
++#define MAC_CSR13_VAL5			FIELD32(0x00000020)
++#define MAC_CSR13_DIR0			FIELD32(0x00000100)
++#define MAC_CSR13_DIR1			FIELD32(0x00000200)
++#define MAC_CSR13_DIR2			FIELD32(0x00000400)
++#define MAC_CSR13_DIR3			FIELD32(0x00000800)
++#define MAC_CSR13_DIR4			FIELD32(0x00001000)
++#define MAC_CSR13_DIR5			FIELD32(0x00002000)
  
- 	return "UNKNOWN";
+ /*
+  * MAC_CSR14: LED control register.
 -- 
-1.7.5.4
+1.7.11.1
 
