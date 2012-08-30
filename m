@@ -1,120 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:62451 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597Ab2HNL4H convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:1728 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752602Ab2H3VEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 07:56:07 -0400
-Received: by yenl14 with SMTP id l14so308666yen.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2012 04:56:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn11JdqNueAjhGxxvkAJ_BTex5Sropqo93odiOmj1bzpLQ@mail.gmail.com>
-References: <CAJwzM1nGny-JBD8hwKXsrERko0cGvuJB_nD2dbPrPmzF-T49Tg@mail.gmail.com>
-	<CAD2nsn11JdqNueAjhGxxvkAJ_BTex5Sropqo93odiOmj1bzpLQ@mail.gmail.com>
-Date: Tue, 14 Aug 2012 17:26:06 +0530
-Message-ID: <CAJwzM1=zzkoRc_oLznpFLeTgKTUaDPqSg9GUxRNHYfv8iL3+Qg@mail.gmail.com> (sfid-20120814_135612_332461_F51D1735)
-Subject: Re: [cfg80211] Issue with simultaneous AP-STA operation in mwifiex/cfg80211
-From: Avinash Patil <avinashapatil@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
+	Thu, 30 Aug 2012 17:04:40 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 15/17] rt2x00: Align rt2800 GPIO_CTRL definition with datasheet.
+Date: Thu, 30 Aug 2012 23:04:28 +0200
+Message-Id: <1346360670-6498-11-git-send-email-gwingerde@gmail.com> (sfid-20120830_230446_319839_2655FC3E)
+In-Reply-To: <1346360670-6498-10-git-send-email-gwingerde@gmail.com>
+References: <1346355248-5331-10-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-2-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-3-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-4-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-5-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-6-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-7-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-8-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-9-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-10-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+Rename GPIO_CTRL_CFG to GPIO_CTRL as that is the name according to
+the datasheet.
+Rename GPIO_CTRL_CFG_BIT<x> to GPIO_CTRL_VAL<x> and
+GPIO_CTRL_CFG_GPIOD_BIT<x> to GPIO_CTRL_DIR<x> to represent the actual
+meanings better.
+Clean up list to mention all the active GPIO pins, not just a subset.
 
-Thanks for confirming regression on your side as well.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-I suspect patch from Michal Kazior [PATCH 12/13] cfg80211: add channel
-checking for iface combinations - has introduced this regression.
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index e252e9b..e13916f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -439,26 +439,33 @@
+ #define WMM_TXOP1_CFG_AC3TXOP		FIELD32(0xffff0000)
+ 
+ /*
+- * GPIO_CTRL_CFG:
+- * GPIOD: GPIO direction, 0: Output, 1: Input
+- */
+-#define GPIO_CTRL_CFG			0x0228
+-#define GPIO_CTRL_CFG_BIT0		FIELD32(0x00000001)
+-#define GPIO_CTRL_CFG_BIT1		FIELD32(0x00000002)
+-#define GPIO_CTRL_CFG_BIT2		FIELD32(0x00000004)
+-#define GPIO_CTRL_CFG_BIT3		FIELD32(0x00000008)
+-#define GPIO_CTRL_CFG_BIT4		FIELD32(0x00000010)
+-#define GPIO_CTRL_CFG_BIT5		FIELD32(0x00000020)
+-#define GPIO_CTRL_CFG_BIT6		FIELD32(0x00000040)
+-#define GPIO_CTRL_CFG_BIT7		FIELD32(0x00000080)
+-#define GPIO_CTRL_CFG_GPIOD_BIT0	FIELD32(0x00000100)
+-#define GPIO_CTRL_CFG_GPIOD_BIT1	FIELD32(0x00000200)
+-#define GPIO_CTRL_CFG_GPIOD_BIT2	FIELD32(0x00000400)
+-#define GPIO_CTRL_CFG_GPIOD_BIT3	FIELD32(0x00000800)
+-#define GPIO_CTRL_CFG_GPIOD_BIT4	FIELD32(0x00001000)
+-#define GPIO_CTRL_CFG_GPIOD_BIT5	FIELD32(0x00002000)
+-#define GPIO_CTRL_CFG_GPIOD_BIT6	FIELD32(0x00004000)
+-#define GPIO_CTRL_CFG_GPIOD_BIT7	FIELD32(0x00008000)
++ * GPIO_CTRL:
++ *	GPIO_CTRL_VALx: GPIO value
++ *	GPIO_CTRL_DIRx: GPIO direction: 0 = output; 1 = input
++ */
++#define GPIO_CTRL			0x0228
++#define GPIO_CTRL_VAL0			FIELD32(0x00000001)
++#define GPIO_CTRL_VAL1			FIELD32(0x00000002)
++#define GPIO_CTRL_VAL2			FIELD32(0x00000004)
++#define GPIO_CTRL_VAL3			FIELD32(0x00000008)
++#define GPIO_CTRL_VAL4			FIELD32(0x00000010)
++#define GPIO_CTRL_VAL5			FIELD32(0x00000020)
++#define GPIO_CTRL_VAL6			FIELD32(0x00000040)
++#define GPIO_CTRL_VAL7			FIELD32(0x00000080)
++#define GPIO_CTRL_DIR0			FIELD32(0x00000100)
++#define GPIO_CTRL_DIR1			FIELD32(0x00000200)
++#define GPIO_CTRL_DIR2			FIELD32(0x00000400)
++#define GPIO_CTRL_DIR3			FIELD32(0x00000800)
++#define GPIO_CTRL_DIR4			FIELD32(0x00001000)
++#define GPIO_CTRL_DIR5			FIELD32(0x00002000)
++#define GPIO_CTRL_DIR6			FIELD32(0x00004000)
++#define GPIO_CTRL_DIR7			FIELD32(0x00008000)
++#define GPIO_CTRL_VAL8			FIELD32(0x00010000)
++#define GPIO_CTRL_VAL9			FIELD32(0x00020000)
++#define GPIO_CTRL_VAL10			FIELD32(0x00040000)
++#define GPIO_CTRL_DIR8			FIELD32(0x01000000)
++#define GPIO_CTRL_DIR9			FIELD32(0x02000000)
++#define GPIO_CTRL_DIR10			FIELD32(0x04000000)
+ 
+ /*
+  * MCU_CMD_CFG
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index cb8c2ac..c3cae1d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -923,8 +923,8 @@ int rt2800_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+ 		return rt2x00_get_field32(reg, WLAN_GPIO_IN_BIT0);
+ 	} else {
+-		rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
+-		return rt2x00_get_field32(reg, GPIO_CTRL_CFG_BIT2);
++		rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
++		return rt2x00_get_field32(reg, GPIO_CTRL_VAL2);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(rt2800_rfkill_poll);
+@@ -1570,10 +1570,10 @@ static void rt2800_set_ant_diversity(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_mcu_request(rt2x00dev, MCU_ANT_SELECT, 0xff,
+ 				   eesk_pin, 0);
+ 
+-	rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
+-	rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD_BIT3, 0);
+-	rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT3, gpio_bit3);
+-	rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
++	rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
++	rt2x00_set_field32(&reg, GPIO_CTRL_DIR3, 0);
++	rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, gpio_bit3);
++	rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
+ }
+ 
+ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
+@@ -1995,13 +1995,13 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_rfcsr_write(rt2x00dev, 29, 0x9f);
+ 	}
+ 
+-	rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
+-	rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD_BIT7, 0);
++	rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
++	rt2x00_set_field32(&reg, GPIO_CTRL_DIR7, 0);
+ 	if (rf->channel <= 14)
+-		rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT7, 1);
++		rt2x00_set_field32(&reg, GPIO_CTRL_VAL7, 1);
+ 	else
+-		rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT7, 0);
+-	rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
++		rt2x00_set_field32(&reg, GPIO_CTRL_VAL7, 0);
++	rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 7, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
+@@ -3587,16 +3587,16 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags)) {
+ 			u32 reg;
+ 
+-			rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
+-			rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD_BIT3, 0);
+-			rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD_BIT6, 0);
+-			rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT3, 0);
+-			rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT6, 0);
++			rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
++			rt2x00_set_field32(&reg, GPIO_CTRL_DIR3, 0);
++			rt2x00_set_field32(&reg, GPIO_CTRL_DIR6, 0);
++			rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, 0);
++			rt2x00_set_field32(&reg, GPIO_CTRL_VAL6, 0);
+ 			if (ant == 0)
+-				rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT3, 1);
++				rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, 1);
+ 			else if (ant == 1)
+-				rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT6, 1);
+-			rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
++				rt2x00_set_field32(&reg, GPIO_CTRL_VAL6, 1);
++			rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
+ 		}
+ 
+ 		/* This chip has hardware antenna diversity*/
+-- 
+1.7.11.1
 
-Michal/Johannes,
-
-Can you please help here?
-
-I tried to set software_iftypes to NL80211_IFTYPE_STATION |
-NL80211_IFTYPE_AP during wiphy_register(). It didn't work.
-One more observation- if I comment  num_different_channels++ statement
-inside first switch(chanmode) for CHAN_MODE_SHARED; AP-STA mode works
-fine.
-
-Regards,
-Avinash
-
-
-
-On Mon, Aug 13, 2012 at 11:05 AM, Mohammed Shafi
-<shafi.wireless@gmail.com> wrote:
-> Hi,
->
->
-> On Fri, Aug 10, 2012 at 11:37 AM, Avinash Patil <avinashapatil@gmail.com> wrote:
->> Hi All,
->>
->> Lately simultaneous AP-STA functionality in mwifiex driver is not
->> working. I feel this has something to do with recent changes in
->> cfg80211.
->>
->> If we associate mwifiex STA to external AP first and then try to start
->> mwifiex AP using hostapd(on different channel), we get –EBUSY error
->> from cfg80211. This happens from path
->> nl80211_start_ap->cfg80211_can_use_chan.  cfg80211_can_use_chan
->> returns EBUSY error. In our design if mwifiex STA is already
->> associated on some different channel, AP follows this channel and BSS
->> is started using STA channel settings. If we start hostapd on same
->> channel, BSS is successfully started, but association requests from
->> external station result in failure.
->
->
-> i got the same EBUSY error when i tried to start a P2P-GO in a different
-> channel when my other concurrent STA is associated to some other channel.
-> first cfg80211_can_use_chan ->  cfg80211_can_use_iftype_chan
-> when driver advertises num_different_channels as 1
-> it seems to be caught under the following logic
->
->   case CHAN_MODE_SHARED:
-> 1077                         for (i = 0; i <
-> CFG80211_MAX_NUM_DIFFERENT_CHANNELS; i++)
-> 1078                                 if (!used_channels[i] ||
-> used_channels[i] == ch)
-> 1079                                         break;
-> 1080
-> 1081                         if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS)
-> 1082                                 return -EBUSY;
-> 1083
-> 1084                         if (used_channels[i] == NULL) {
-> 1085                                 used_channels[i] = ch;
-> 1086                                 num_different_channels++;
-> 1087                         }
-> 1088                         break;
->
-> used_channels[1] is NULL
-> num_different_channels becomes '2' when STA vifs is already in some
-> other channel
->
-> the following check in interface_combination for loop seems to cause
-> the EBUSY error
->
-> 1111                 if (num_different_channels > c->num_different_channels)
-> 1112                         continue;
->
-> not sure why assoc req from external STA fails.
->
->
->>
->> Please let me know if we are missing something while registering
->> n_iface and iface combinations. num_different_channels in
->> ieee80211_iface_combination has been advertised as 1.
->>
->> Regards,
->> Avinash.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> thanks,
-> shafi
