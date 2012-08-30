@@ -1,149 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na6sys009bog013.obsmtp.com ([74.125.150.66]:48583 "EHLO
-	na6sys009bog013.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752676Ab2HDByu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 21:54:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 04/16] mwifiex: do le_to_cpu conversion for Rx packet header elements
-Date: Fri,  3 Aug 2012 18:06:02 -0700
-Message-Id: <1344042374-6892-5-git-send-email-bzhao@marvell.com> (sfid-20120804_035537_369921_EF652462)
-In-Reply-To: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
-References: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3671 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752342Ab2H3Rn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2012 13:43:29 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 3/5] brcmfmac: Add 43242 USB support.
+Date: Thu, 30 Aug 2012 19:43:00 +0200
+Message-ID: <1346348582-20095-4-git-send-email-arend@broadcom.com> (sfid-20120830_194336_880018_F98F1A77)
+In-Reply-To: <1346348582-20095-1-git-send-email-arend@broadcom.com>
+References: <1346348582-20095-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-We do similar conversion for Tx packet header but it was missing
-for Rx packet header. Without this fix, Rx packet header won't
-be correctly parsed on big endian platform.
+Added usb device id to list of supported devices. 43242 is the new
+802.11n 2x2 MIMO device.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/mwifiex/fw.h     |    8 +++---
- drivers/net/wireless/mwifiex/sta_rx.c |   38 +++++++++++++++-----------------
- 2 files changed, 22 insertions(+), 24 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |   20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index e831b44..a0222ec 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -424,10 +424,10 @@ struct txpd {
- struct rxpd {
- 	u8 bss_type;
- 	u8 bss_num;
--	u16 rx_pkt_length;
--	u16 rx_pkt_offset;
--	u16 rx_pkt_type;
--	u16 seq_num;
-+	__le16 rx_pkt_length;
-+	__le16 rx_pkt_offset;
-+	__le16 rx_pkt_type;
-+	__le16 seq_num;
- 	u8 priority;
- 	u8 rx_rate;
- 	s8 snr;
-diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
-index 02ce3b7..d91d5c0 100644
---- a/drivers/net/wireless/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/mwifiex/sta_rx.c
-@@ -54,8 +54,8 @@ int mwifiex_process_rx_packet(struct mwifiex_adapter *adapter,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index ac1ed1f..ecf3f77 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -67,6 +67,7 @@
+ #define BRCMF_USB_MAX_PKT_SIZE	1600
  
- 	local_rx_pd = (struct rxpd *) (skb->data);
+ #define BRCMF_USB_43236_FW_NAME	"brcm/brcmfmac43236b.bin"
++#define BRCMF_USB_43242_FW_NAME	"brcm/brcmfmac43242a.bin"
  
--	rx_pkt_hdr = (struct rx_packet_hdr *) ((u8 *) local_rx_pd +
--				local_rx_pd->rx_pkt_offset);
-+	rx_pkt_hdr = (void *)local_rx_pd +
-+		     le16_to_cpu(local_rx_pd->rx_pkt_offset);
- 
- 	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr,
- 		    rfc1042_eth_hdr, sizeof(rfc1042_eth_hdr))) {
-@@ -125,7 +125,7 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_adapter *adapter,
- 	struct mwifiex_rxinfo *rx_info = MWIFIEX_SKB_RXCB(skb);
- 	struct rx_packet_hdr *rx_pkt_hdr;
- 	u8 ta[ETH_ALEN];
--	u16 rx_pkt_type;
-+	u16 rx_pkt_type, rx_pkt_offset, rx_pkt_length, seq_num;
- 	struct mwifiex_private *priv =
- 			mwifiex_get_priv_by_id(adapter, rx_info->bss_num,
- 					       rx_info->bss_type);
-@@ -134,16 +134,17 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_adapter *adapter,
- 		return -1;
- 
- 	local_rx_pd = (struct rxpd *) (skb->data);
--	rx_pkt_type = local_rx_pd->rx_pkt_type;
-+	rx_pkt_type = le16_to_cpu(local_rx_pd->rx_pkt_type);
-+	rx_pkt_offset = le16_to_cpu(local_rx_pd->rx_pkt_offset);
-+	rx_pkt_length = le16_to_cpu(local_rx_pd->rx_pkt_length);
-+	seq_num = le16_to_cpu(local_rx_pd->seq_num);
- 
--	rx_pkt_hdr = (struct rx_packet_hdr *) ((u8 *) local_rx_pd +
--					local_rx_pd->rx_pkt_offset);
-+	rx_pkt_hdr = (void *)local_rx_pd + rx_pkt_offset;
- 
--	if ((local_rx_pd->rx_pkt_offset + local_rx_pd->rx_pkt_length) >
--	    (u16) skb->len) {
--		dev_err(adapter->dev, "wrong rx packet: len=%d,"
--			" rx_pkt_offset=%d, rx_pkt_length=%d\n", skb->len,
--		       local_rx_pd->rx_pkt_offset, local_rx_pd->rx_pkt_length);
-+	if ((rx_pkt_offset + rx_pkt_length) > (u16) skb->len) {
-+		dev_err(adapter->dev,
-+			"wrong rx packet: len=%d, rx_pkt_offset=%d, rx_pkt_length=%d\n",
-+			skb->len, rx_pkt_offset, rx_pkt_length);
- 		priv->stats.rx_dropped++;
- 
- 		if (adapter->if_ops.data_complete)
-@@ -154,14 +155,14 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_adapter *adapter,
- 		return ret;
+ enum usbdev_suspend_state {
+ 	USBOS_SUSPEND_STATE_DEVICE_ACTIVE = 0, /* Device is busy, won't allow
+@@ -1116,6 +1117,8 @@ static bool brcmf_usb_chip_support(int chipid, int chiprev)
+ 	case 43236:
+ 	case 43238:
+ 		return (chiprev == 3);
++	case 43242:
++		return true;
+ 	default:
+ 		break;
  	}
+@@ -1228,7 +1231,19 @@ static int brcmf_usb_get_fw(struct brcmf_usbdev_info *devinfo)
+ 	if (devinfo->image)
+ 		return 0;
  
--	if (local_rx_pd->rx_pkt_type == PKT_TYPE_AMSDU) {
-+	if (rx_pkt_type == PKT_TYPE_AMSDU) {
- 		struct sk_buff_head list;
- 		struct sk_buff *rx_skb;
+-	fwname = BRCMF_USB_43236_FW_NAME;
++	switch (devinfo->bus_pub.devid) {
++	case 43235:
++	case 43236:
++	case 43238:
++		fwname = BRCMF_USB_43236_FW_NAME;
++		break;
++	case 43242:
++		fwname = BRCMF_USB_43242_FW_NAME;
++		break;
++	default:
++		return -EINVAL;
++		break;
++	}
  
- 		__skb_queue_head_init(&list);
+ 	err = request_firmware(&fw, fwname, devinfo->dev);
+ 	if (!fw) {
+@@ -1578,16 +1593,19 @@ static int brcmf_usb_resume(struct usb_interface *intf)
  
--		skb_pull(skb, local_rx_pd->rx_pkt_offset);
--		skb_trim(skb, local_rx_pd->rx_pkt_length);
-+		skb_pull(skb, rx_pkt_offset);
-+		skb_trim(skb, rx_pkt_length);
+ #define BRCMF_USB_VENDOR_ID_BROADCOM	0x0a5c
+ #define BRCMF_USB_DEVICE_ID_43236	0xbd17
++#define BRCMF_USB_DEVICE_ID_43242	0xbd1f
+ #define BRCMF_USB_DEVICE_ID_BCMFW	0x0bdc
  
- 		ieee80211_amsdu_to_8023s(skb, &list, priv->curr_addr,
- 					 priv->wdev->iftype, 0, false);
-@@ -189,17 +190,14 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_adapter *adapter,
- 		memcpy(ta, rx_pkt_hdr->eth803_hdr.h_source, ETH_ALEN);
- 	} else {
- 		if (rx_pkt_type != PKT_TYPE_BAR)
--			priv->rx_seq[local_rx_pd->priority] =
--						local_rx_pd->seq_num;
-+			priv->rx_seq[local_rx_pd->priority] = seq_num;
- 		memcpy(ta, priv->curr_bss_params.bss_descriptor.mac_address,
- 		       ETH_ALEN);
- 	}
+ static struct usb_device_id brcmf_usb_devid_table[] = {
+ 	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_43236) },
++	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_43242) },
+ 	/* special entry for device with firmware loaded and running */
+ 	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_BCMFW) },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(usb, brcmf_usb_devid_table);
+ MODULE_FIRMWARE(BRCMF_USB_43236_FW_NAME);
++MODULE_FIRMWARE(BRCMF_USB_43242_FW_NAME);
  
- 	/* Reorder and send to OS */
--	ret = mwifiex_11n_rx_reorder_pkt(priv, local_rx_pd->seq_num,
--					     local_rx_pd->priority, ta,
--					     (u8) local_rx_pd->rx_pkt_type,
--					     skb);
-+	ret = mwifiex_11n_rx_reorder_pkt(priv, seq_num, local_rx_pd->priority,
-+					 ta, (u8) rx_pkt_type, skb);
- 
- 	if (ret || (rx_pkt_type == PKT_TYPE_BAR)) {
- 		if (adapter->if_ops.data_complete)
+ /* TODO: suspend and resume entries */
+ static struct usb_driver brcmf_usbdrvr = {
 -- 
-1.7.0.2
+1.7.9.5
+
 
