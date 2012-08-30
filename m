@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:37015 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756008Ab2HQWyM (ORCPT
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:3358 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752350Ab2H3VEf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2012 18:54:12 -0400
-Received: by ialo24 with SMTP id o24so962312ial.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Aug 2012 15:54:11 -0700 (PDT)
-Date: Fri, 17 Aug 2012 17:54:06 -0500
-From: "Saul St. John" <saul.stjohn@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Thu, 30 Aug 2012 17:04:35 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/2] bcma: expose cc sprom to sysfs
-Message-ID: <20120817225406.GA6510@eris.garyseven.net> (sfid-20120818_005438_114283_76A340FB)
-References: <20120816190616.GE6726@eris.garyseven.net>
- <502E4B70.5090900@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <502E4B70.5090900@broadcom.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 10/17] rt2x00: Fix rt2500usb rfkill polling prior to interface start.
+Date: Thu, 30 Aug 2012 23:04:19 +0200
+Message-Id: <1346360670-6498-2-git-send-email-gwingerde@gmail.com> (sfid-20120830_230504_980085_E88DFC49)
+In-Reply-To: <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
+References: <1346355248-5331-10-git-send-email-gwingerde@gmail.com>
+ <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 17, 2012 at 03:47:28PM +0200, Arend van Spriel wrote:
-[snip]
-> 
-> Hi Saul,
->
-> I was still planning to come back to your reply on August 14. Just
-> wanted to reply to this patch as I still feel it is a bad thing to
-> open up the sprom as a whole. I can see the use-cases you mentioned
-> as useful, but maybe we can get a specific solution for that.
-> 
-> Gr. AvS
->
+We need to program the rfkill switch GPIO pin direction to input at
+device initialization time, not only when the interface is brought up.
+Doing this only when the interface is brought up could lead to rfkill
+detecting the switch is turned on erroneously and inability to create
+the interface and bringing it up.
 
-Hi Arend!
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-Apologies for forking the discussion. I just wasn't sure that any more replies
-would be forthcoming.
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 5742ce9..f95b551 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1768,6 +1768,7 @@ static int rt2500usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ static int rt2500usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
++	u16 reg;
+ 
+ 	/*
+ 	 * Allocate eeprom data.
+@@ -1781,6 +1782,14 @@ static int rt2500usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	/*
++	 * Enable rfkill polling by setting GPIO direction of the
++	 * rfkill switch GPIO pin correctly.
++	 */
++	rt2500usb_register_read(rt2x00dev, MAC_CSR19, &reg);
++	rt2x00_set_field16(&reg, MAC_CSR19_DIR0, 0);
++	rt2500usb_register_write(rt2x00dev, MAC_CSR19, reg);
++
++	/*
+ 	 * Initialize hw specifications.
+ 	 */
+ 	retval = rt2500usb_probe_hw_mode(rt2x00dev);
+-- 
+1.7.11.1
 
-I'm curious why you feel it's a "bad" thing to open up the sprom as a whole. I
-see a number of distinct advantages to it; most prominently, that it allows
-for the use of existing tools and processes. I can find several examples of 
-end-users attempting to modify the sprom on bcma devices using the 
-instructions from b43-tools ([1][2][3]), and suggest that it would be 
-confusing to those users were the procedures for sprom-modification through 
-bcma substantially different than the procedures through ssb.
-
-That said, I do recognize that this functionality is potentially dangerous in
-some circumstances. I'd considered hiding it behind a non-default module 
-parameter-- would that assuage your concerns? Alternatively, if you have 
-specific solutions in mind for the use-cases previously discussed, I'm very
-interested in knowing them.
-
--saul
-
-[1] http://ubuntuforums.org/showthread.php?t=1830739
-[2] http://www.tonymacx86.com/network/25669-rebranding-bcm94322mc-based-prasys-guide-what-device-id-8.html#post291328
-[3] http://www.tonymacx86.com/network/26904-help-rebrand-broadcom-bcm94322-5.html
