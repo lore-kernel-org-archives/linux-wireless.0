@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45858 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759Ab2HYLXq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Aug 2012 07:23:46 -0400
-Received: by pbbrr13 with SMTP id rr13so4931946pbb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2012 04:23:46 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:2187 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751275Ab2H3RnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2012 13:43:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 0/5] brcmfmac: add support for new fullmac devices
+Date: Thu, 30 Aug 2012 19:42:57 +0200
+Message-ID: <1346348582-20095-1-git-send-email-arend@broadcom.com> (sfid-20120830_194329_147306_0EFED785)
 MIME-Version: 1.0
-In-Reply-To: <20120824233627.GA188@mannheim-rule.local>
-References: <BAY002-W37AC498098AD6D7EBCACA7D7BD0@phx.gbl>
-	<20120824233627.GA188@mannheim-rule.local>
-Date: Sat, 25 Aug 2012 04:23:46 -0700
-Message-ID: <CAJ-VmonjOzdwRaGx0mzzj7mNUZNiQZntc6isKH12Pmn2Hve5qw@mail.gmail.com> (sfid-20120825_132351_339760_C15FD97B)
-Subject: Re: Relatively minor Atheros AR242x wireless card light flickering
- issue with Linux kernel 2.6.32 to 3.5.2 (ath5k driver)
-From: Adrian Chadd <adrian@freebsd.org>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Deniz Akcal <denizakcal@hotmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"586383@bugs.debian.org" <586383@bugs.debian.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This patch series mainly contains support for new wireless devices. The
+fix for possible race was created during testing the driver on those
+devices. Finally, it has a patch that adds functionality to handle nl80211
+testmode command when CONFIG_NL80211_TESTMODE Kconfig item is set.
 
-So there's a hardware MAC LED blink thing that can be done. You may be
-seeing that enabled by default.
+This series applies to the wireless-next tree.
+
+Arend van Spriel (1):
+  brcmfmac: add callback for nl80211 testmode command
+
+Franky Lin (1):
+  brcmfmac: add BCM43241 sdio interface driver support
+
+Hante Meuleman (3):
+  brcmfmac: prevent possible race condition on usb rx control.
+  brcmfmac: Add 43242 USB support.
+  brcmfmac: Add 43143 USB support.
+
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 ++
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    1 +
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    8 +++++
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 ++
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   17 +++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   31 ++++++++++++++++++--
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   25 +++++++++++++++-
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
+ 8 files changed, 84 insertions(+), 3 deletions(-)
+
+-- 
+1.7.9.5
 
 
-
-Adrian
