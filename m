@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51205 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933010Ab2HWNYg (ORCPT
+Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:2474 "EHLO
+	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754114Ab2HaRWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 09:24:36 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 4/6] ath9k_htc: minor cleanup in ath9k_htc_add_station
-Date: Thu, 23 Aug 2012 18:53:56 +0530
-Message-ID: <1345728238-5313-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152439_478159_F97C4E79)
-In-Reply-To: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 31 Aug 2012 13:22:20 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	<stable@vger.kernel.org>
+Subject: [PATCH v2 1/6] rt2x00: Identify ASUS USB-N53 device.
+Date: Fri, 31 Aug 2012 19:22:09 +0200
+Message-Id: <1346433734-3337-2-git-send-email-gwingerde@gmail.com> (sfid-20120831_192225_726558_91DC56D0)
+In-Reply-To: <1346433734-3337-1-git-send-email-gwingerde@gmail.com>
+References: <1346433734-3337-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+This is an RT3572 based device.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
+Signed-off-by: Maximilian Engelhardt <maxi@daemonizer.de>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 51c69f2..73cbee5 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -489,24 +489,20 @@ static int ath9k_htc_add_station(struct ath9k_htc_priv *priv,
- 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
- 		memcpy(&tsta.macaddr, sta->addr, ETH_ALEN);
- 		memcpy(&tsta.bssid, common->curbssid, ETH_ALEN);
--		tsta.is_vif_sta = 0;
- 		ista->index = sta_idx;
-+		tsta.is_vif_sta = 0;
-+		maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-+				 sta->ht_cap.ampdu_factor);
-+		tsta.maxampdu = cpu_to_be16(maxampdu);
- 	} else {
- 		memcpy(&tsta.macaddr, vif->addr, ETH_ALEN);
- 		tsta.is_vif_sta = 1;
-+		tsta.maxampdu = cpu_to_be16(0xffff);
- 	}
- 
- 	tsta.sta_index = sta_idx;
- 	tsta.vif_index = avp->index;
- 
--	if (!sta) {
--		tsta.maxampdu = cpu_to_be16(0xffff);
--	} else {
--		maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
--				 sta->ht_cap.ampdu_factor);
--		tsta.maxampdu = cpu_to_be16(maxampdu);
--	}
--
- 	WMI_CMD_BUF(WMI_NODE_CREATE_CMDID, &tsta);
- 	if (ret) {
- 		if (sta)
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 6cf3365..6681bfc 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1157,6 +1157,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x1690, 0x0744) },
+ 	{ USB_DEVICE(0x1690, 0x0761) },
+ 	{ USB_DEVICE(0x1690, 0x0764) },
++	/* ASUS */
++	{ USB_DEVICE(0x0b05, 0x179d) },
+ 	/* Cisco */
+ 	{ USB_DEVICE(0x167b, 0x4001) },
+ 	/* EnGenius */
+@@ -1222,7 +1224,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0b05, 0x1760) },
+ 	{ USB_DEVICE(0x0b05, 0x1761) },
+ 	{ USB_DEVICE(0x0b05, 0x1790) },
+-	{ USB_DEVICE(0x0b05, 0x179d) },
+ 	/* AzureWave */
+ 	{ USB_DEVICE(0x13d3, 0x3262) },
+ 	{ USB_DEVICE(0x13d3, 0x3284) },
 -- 
-1.7.0.4
+1.7.11.1
 
