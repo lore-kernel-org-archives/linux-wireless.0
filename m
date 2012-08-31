@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:36895 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754625Ab2HXXfz (ORCPT
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:2082 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754556Ab2HaRWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 19:35:55 -0400
-Received: by dady13 with SMTP id y13so1227070dad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2012 16:35:55 -0700 (PDT)
-Date: Fri, 24 Aug 2012 16:36:27 -0700
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Deniz Akcal <denizakcal@hotmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"586383@bugs.debian.org" <586383@bugs.debian.org>
-Subject: Re: Relatively minor Atheros AR242x wireless card light flickering
- issue with Linux kernel 2.6.32 to 3.5.2 (ath5k driver)
-Message-ID: <20120824233627.GA188@mannheim-rule.local> (sfid-20120825_013637_933128_436617DB)
-References: <BAY002-W37AC498098AD6D7EBCACA7D7BD0@phx.gbl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <BAY002-W37AC498098AD6D7EBCACA7D7BD0@phx.gbl>
+	Fri, 31 Aug 2012 13:22:20 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH v2 2/6] rt2x00: Fix word size of rt2500usb MAC_CSR19 register.
+Date: Fri, 31 Aug 2012 19:22:10 +0200
+Message-Id: <1346433734-3337-3-git-send-email-gwingerde@gmail.com> (sfid-20120831_192234_847437_4F7DD95E)
+In-Reply-To: <1346433734-3337-2-git-send-email-gwingerde@gmail.com>
+References: <1346433734-3337-1-git-send-email-gwingerde@gmail.com>
+ <1346433734-3337-2-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again,
+The register is 16 bits wide, not 32.
 
-Deniz Akcal wrote:
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: <stable@vger.kernel.org>
 
->                       I think the pattern is that when the data
-> transfers through the wireless card (such as by going to the
-> internet), it activates the flicker when the colour is blue for a
-> long time and if it’s already flickering then, it increases the
-> rate of the flickering.
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 3aae36b..b3a1d73 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -283,7 +283,7 @@ static int rt2500usb_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+ 	u16 reg;
+ 
+ 	rt2500usb_register_read(rt2x00dev, MAC_CSR19, &reg);
+-	return rt2x00_get_field32(reg, MAC_CSR19_BIT7);
++	return rt2x00_get_field16(reg, MAC_CSR19_BIT7);
+ }
+ 
+ #ifdef CONFIG_RT2X00_LIB_LEDS
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
+index b493306..192531d 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.h
++++ b/drivers/net/wireless/rt2x00/rt2500usb.h
+@@ -189,14 +189,14 @@
+  * MAC_CSR19: GPIO control register.
+  */
+ #define MAC_CSR19			0x0426
+-#define MAC_CSR19_BIT0			FIELD32(0x0001)
+-#define MAC_CSR19_BIT1			FIELD32(0x0002)
+-#define MAC_CSR19_BIT2			FIELD32(0x0004)
+-#define MAC_CSR19_BIT3			FIELD32(0x0008)
+-#define MAC_CSR19_BIT4			FIELD32(0x0010)
+-#define MAC_CSR19_BIT5			FIELD32(0x0020)
+-#define MAC_CSR19_BIT6			FIELD32(0x0040)
+-#define MAC_CSR19_BIT7			FIELD32(0x0080)
++#define MAC_CSR19_BIT0			FIELD16(0x0001)
++#define MAC_CSR19_BIT1			FIELD16(0x0002)
++#define MAC_CSR19_BIT2			FIELD16(0x0004)
++#define MAC_CSR19_BIT3			FIELD16(0x0008)
++#define MAC_CSR19_BIT4			FIELD16(0x0010)
++#define MAC_CSR19_BIT5			FIELD16(0x0020)
++#define MAC_CSR19_BIT6			FIELD16(0x0040)
++#define MAC_CSR19_BIT7			FIELD16(0x0080)
+ 
+ /*
+  * MAC_CSR20: LED control register.
+-- 
+1.7.11.1
 
-Thanks.  Quick questions:
-
-Is this behavior expected or unexpected?  What led you to report it as
-a bug?  Is it desirable or undesirable?  Have you been having other
-problems with the ath5k driver?
-
-In principle an LED indicating the rx/tx rate could be a nice thing,
-but if it is distracting or counterintuitive or related to other
-problems then not so much.  Hence the question.
-
-Hope that helps,
-Jonathan
