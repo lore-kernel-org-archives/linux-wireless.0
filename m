@@ -1,108 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:49543 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753220Ab2HVOHg (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39131 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753980Ab2HaPCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 10:07:36 -0400
-Date: Wed, 22 Aug 2012 23:07:33 +0900
-From: Norbert Preining <preining@logic.at>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: rtl8192se hanging completely
-Message-ID: <20120822140733.GA1266@gamma.logic.tuwien.ac.at> (sfid-20120822_160742_154647_E722F43F)
+	Fri, 31 Aug 2012 11:02:45 -0400
+Message-ID: <5040D1F4.40709@candelatech.com> (sfid-20120831_170250_136740_811CB44A)
+Date: Fri, 31 Aug 2012 08:02:12 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Does ath9k support beam forming?
+References: <503D14FF.5000309@candelatech.com> <CAD2nsn2JFEAwB0AauFiEYxj=mC7dNjFZn12EQ0q-aOwXjfZj4A@mail.gmail.com> <503E2E66.8010909@candelatech.com> <CAD2nsn3jzWn+pW_3ZQEPtzHRwtZNy_k6=5WtB+F-J-vuMTvyKw@mail.gmail.com>
+In-Reply-To: <CAD2nsn3jzWn+pW_3ZQEPtzHRwtZNy_k6=5WtB+F-J-vuMTvyKw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+On 08/30/2012 10:28 PM, Mohammed Shafi wrote:
+> Hi Ben,
+>
+> sorry for the delayed reply was bit involved in some other tasks.
+>
+>>
+>>
+>> Can you post the latest patch series for this?
+>
+> there are some commitments which i have to finish it off and i can start
+> doing this only out of my free time.  Further it would take some good
+> amount of time for testing.
+> Unless its not pushed officially validating requires even more effort.
+> i hope we can make this work into ath9k.
+>
+>>
+>> And maybe we can make the functionality configurable by debugfs
+>> so that we can test it out easily?
+>
+> yes sure.
+>
+>>
+>> Are there any particular test cases that would help verify the
+>> patches?
+>
+> throughput test cases with variation attenuation and antenna orientation ?
+> definitely it should not cause any throughput regressions :)
 
-(please cc)
+I'll soon have the ability to script throughput tests v/s various
+attenuations (using programmable attenuator that I'm building).
 
-I am having serious troubles with my rtl8192se card:
+I can do over-the-air tests as well.  Probably 2-4 weeks until I
+get everything automated, but when it is, I'll run some baseline
+tests and then if you can post patches (RFC is fine if you are
+not sure it's ready for upstream) then I can do some tests with
+that as well and compare the results...
 
-kernel: 3.6.0-rc2+, compiled from git today, same with rc1
-rtl8192se in kernel driver, loaded with debug=3
-Debian sid
-Lenovo Thinkpad Edge
-
-When starting from cold boot, the driver associates, but no packet
-whatsoever leaves the computer it seems, pinging the gateway
-does not return anything, and ns lookups are not working.
-
-In the logs I see many instances of:
-rtlwifi:rtl_tx_agg_start():<0-0> on ra = 00:0a:79:eb:56:10 tid = 6 seq:39
-rtlwifi:rtl_action_proc():<200-1> Tx ACT_ADDBAREQ From :88:9f:fa:f9:07:28
-rtlwifi:rtl_tx_agg_stop():<0-0> on ra = 00:0a:79:eb:56:10 tid = 6
-rtlwifi:rtl_action_proc():<400-1> ACT_ADDBADEL From :88:9f:fa:f9:07:28
-rtlwifi:rtl_action_proc():<10000-1> Rx ACT_ADDBARSP From :00:0a:79:eb:56:10
-in various orders.
-
-
-trying to remove the module gave me:
-[  649.459652] wlan0: deauthenticating from 00:0a:79:eb:56:10 by local choice (reason=3)
-[  649.459701] rtlwifi:rtl_tx_agg_stop():<0-0> on ra = 00:0a:79:eb:56:10 tid = 0
-[  659.094654] rtlwifi:rtl_op_set_key():<0-0> Disabling hardware based encryption for keyidx: 0, mac: 00:0a:79:eb:56:10
-[  659.094659] rtlwifi:rtl_op_set_key():<0-0> alg:CCMP
-[  659.094663] rtlwifi:rtl_op_set_key():<0-0> set enable_hw_sec, key_type:4(OPEN:0 WEP40:1 TKIP:2 AES:4 WEP104:5)
-[  659.094667] rtlwifi:rtl_op_set_key():<0-0> disable key delete one entry
-[  659.094670] rtlwifi:rtl_cam_delete_one_entry():<0-0> key_idx:0
-[  659.094673] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A4: 0
-[  659.094676] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A0: 80010000
-[  659.094719] rtlwifi:rtl_op_sta_remove():<0-0> Remove sta addr is 00:0a:79:eb:56:10
-[  659.142712] rtlwifi:rtl_op_bss_info_changed():<0-0> BSS_CHANGED_UN_ASSOC
-[  659.142725] rtlwifi:rtl_op_bss_info_changed():<0-0> 00:00:00:00:00:00
-[  659.190740] rtlwifi:rtl_op_set_key():<0-0> Disabling hardware based encryption for keyidx: 1, mac: ff:ff:ff:ff:ff:ff
-[  659.190744] rtlwifi:rtl_op_set_key():<0-0> alg:TKIP
-[  659.190747] rtlwifi:rtl_op_set_key():<0-0> set enable_hw_sec, key_type:2(OPEN:0 WEP40:1 TKIP:2 AES:4 WEP104:5)
-[  659.190750] rtlwifi:rtl_op_set_key():<0-0> disable key delete one entry
-[  659.190753] rtlwifi:rtl_cam_delete_one_entry():<0-0> key_idx:1
-[  659.190756] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A4: 0
-[  659.190759] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A0: 80010008
+Thanks,
+Ben
 
 
-After that I reloaded the module and then it is getting worse:
-rtl8192se 0000:03:00.0: Refused to change power state, currently in D3
-rtl8192se:_rtl92se_read_adapter_info():<0-0> RTL819X Not boot from eeprom, check it !!
-tl8192se: FW Power Save off (module option)
-rtl8192se: Driver for Realtek RTL8192SE/RTL8191SE
-Loading firmware rtlwifi/rtl8192sefw.bin
-...
-rtl8192se:_rtl92se_macconfig_after_fwdownload():<0-0> OK
-rtl8192se:rtl92s_phy_bb_config():<0-0> RF_Type(0) does not match RF_Num(4)!!
-rtl8192se:rtl92s_phy_bb_config():<0-0> path1 0xf, path2 0xf, pathmap 0xf
-rtlwifi:rtl_pci_start():<0-0> OK
-rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
-rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
-rtl8192se:rtl92s_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-rtl8192se:rtl92s_phy_set_rf_power_state():<0-1> IPS Set eRf nic enable
-rtl8192se:_rtl92se_macconfig_after_fwdownload():<0-1> OK
-
-...
-rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
-rtlwifi:rtl_pci_tx():<200-1> No more TX desc@6, ring->idx = 0, idx = 0, skb_queue_len = 0x0
-
-etc etc.
-
-That is the end, no connection at all, and no way (AFAIS) to get
-it back.
-
-Are there any suggestions, patches, ideas to fix and track that down?
-
-THanks a lot
-
-Norbert
-(please cc)
-
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-MOTSPUR (n.)
-The fourth wheel of a supermarket trolley which looks identical to the
-other tree but renders the trolley completely uncontrollable.
-MO I RANA Imagine being on a vacation, and it's raining all the time,
-you are driving and the kids are making you a nervous wreck. Well you
-are definitive in Mo i Rana.
-			--- Douglas Adams, The Meaning of Liff
