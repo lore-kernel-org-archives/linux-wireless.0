@@ -1,61 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58045 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933514Ab2HQCDC (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:51427 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753666Ab2HaPYl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 22:03:02 -0400
-From: "Chen, Stephen" <scchen@qca.qualcomm.com>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Marco Fonseca <marco@tampabay.rr.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: carl9170: Unintentional transmission in monitor mode?
-Date: Fri, 17 Aug 2012 02:03:00 +0000
-Message-ID: <124AAE9739743843BE54ED9463A8330D012EFF15@NASANEXD02D.na.qualcomm.com> (sfid-20120817_040308_295270_BA486E39)
-References: <20120809165434.GA13409@192.168.1.10>
- <201208092143.28506.chunkeey@googlemail.com>
- <1345144855.4665.3.camel@jlt3.sipsolutions.net>
- <201208162134.32152.chunkeey@googlemail.com>
-In-Reply-To: <201208162134.32152.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 31 Aug 2012 11:24:41 -0400
+Received: by mail-ob0-f174.google.com with SMTP id uo13so5691518obb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2012 08:24:41 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAJ-Vmo=kzUW=PTRMDpxVf-pQVdozC5U_g-GPyFQ+vkRTFhe1dw@mail.gmail.com>
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	<CAJ-Vmo=kzUW=PTRMDpxVf-pQVdozC5U_g-GPyFQ+vkRTFhe1dw@mail.gmail.com>
+Date: Fri, 31 Aug 2012 23:24:40 +0800
+Message-ID: <CAEFj985FB5PhGRqWfzpsN46Y1YdAw42w+_u4EBzUfP1vjswCnQ@mail.gmail.com> (sfid-20120831_172454_721098_0F8714BB)
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Q2FuIHdlIHRlbGwgd2hhdCBraW5kIG9mIHVuZXhwZWN0ZWQgZnJhbWUgYXJlIGJlZW4gdHJhbnNt
-aXR0ZWQ/IChEYXRhIGZyYW1lIG9yIHdoaWNoIGtpbmQgb2YgY29udHJvbCBmcmFtZT8pDQpUaGF0
-IG1heSBnaXZlIHVzIGEgY2x1ZS4NCg0KDQpUaGFuayB5b3UuDQpTdGVwaGVuDQoNCi0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBDaHJpc3RpYW4gTGFtcGFydGVyIFttYWlsdG86Y2h1
-bmtlZXlAZ29vZ2xlbWFpbC5jb21dIA0KU2VudDogRnJpZGF5LCBBdWd1c3QgMTcsIDIwMTIgMzoz
-NSBBTQ0KVG86IEpvaGFubmVzIEJlcmcNCkNjOiBNYXJjbyBGb25zZWNhOyBsaW51eC13aXJlbGVz
-c0B2Z2VyLmtlcm5lbC5vcmc7IENoZW4sIFN0ZXBoZW4NClN1YmplY3Q6IFJlOiBjYXJsOTE3MDog
-VW5pbnRlbnRpb25hbCB0cmFuc21pc3Npb24gaW4gbW9uaXRvciBtb2RlPw0KDQpPbiBUaHVyc2Rh
-eSwgQXVndXN0IDE2LCAyMDEyIDA5OjIwOjU1IFBNIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+IE9u
-IFRodSwgMjAxMi0wOC0wOSBhdCAyMTo0MyArMDIwMCwgQ2hyaXN0aWFuIExhbXBhcnRlciB3cm90
-ZToNCj4gPiBPbiBUaHVyc2RheSwgQXVndXN0IDA5LCAyMDEyIDA2OjU0OjM0IFBNIE1hcmNvIEZv
-bnNlY2Egd3JvdGU6DQo+ID4gPiBIZWxsbyBBbGwsDQo+ID4gPiANCj4gPiA+IEkndmUgbm90aWNl
-ZCB1bmV4cGVjdGVkIHRyYW5zbWlzc2lvbnMgZnJvbSB0aGUgQVI5MTcwIHdoaWxlIGluIA0KPiA+
-ID4gbW9uaXRvciBtb2RlIGFuZCB1c2luZyB0Y3BkdW1wIChhbmQgc29tZXRpbWVzIHdpdGhvdXQg
-dGNwZHVtcCANCj4gPiA+IHJ1bm5pbmcpLiAgVGhlc2UgdHJhbnNtaXNzaW9ucyBkZWdyYWRlIChw
-cmV0dHkgc2lnbmlmaWNhbnRseSkgDQo+ID4gPiBwZXJmb3JtYW5jZSBvZiBvdGhlciBTVEEvQVAg
-b24gdGhlIGNoYW5uZWwgKGFzIHNlZW4gYnkgaXBlcmYgZ29pbmcgDQo+ID4gPiBmcm9tIDYwbWJp
-dC9zIHRvIGFsbW9zdCBuaWxsKS4gIEFzIGJlc3QgSSBjYW4gdGVsbCB0aGVzZSANCj4gPiA+IHRy
-YW5zbWlzc2lvbnMgbmV2ZXIgY29hbGVzY2VzIGludG8gYW4gYWN0dWFsIGZyYW1lIGluIHRoZSBh
-aXIgKGF0IA0KPiA+ID4gbGVhc3Qgbm90IG9uZSBJJ20gYWJsZSB0byBwaWNrIHVwIHdpdGggYSBz
-ZWNvbmQgZGlmZmVyZW50IGFkYXB0ZXIgaW4gbW9uaXRvciBtb2RlKS4NCj4gPiA+IA0KPiA+ID4g
-QXJlIHRoZXJlIGFueSBrbm93biByZWFzb25zL2J1Z3Mgb24gdGhpcz8gIElzIHRoZXJlIGFueXdh
-eSB0byANCj4gPiA+IGNvbXBsZXRlbHkgc2lsZW5jZSB0aGUgdHJhbnNtaXR0ZXIgb2YgdGhlIEFS
-OTE3MCB3aGlsZSBzdGlsbCBhbGxvd2luZyByZWNlcHRpb24/DQo+ID4gPiANCj4gPiB5ZXMuIDxo
-dHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVsZXNzL21zZzg4ODk2Lmh0bWw+
-DQo+ID4gDQo+ID4gYSBzb2x1dGlvbiBpcyBkZXNjcmliZWQgaW46DQo+ID4gPGh0dHA6Ly93d3cu
-c3Bpbmljcy5uZXQvbGlzdHMvbGludXgtd2lyZWxlc3MvbXNnODkyNzkuaHRtbD4NCj4gPiANCj4g
-PiAoaXcgZGV2IHdsYW5YIHNldCBtb25pdG9yIG5vbmUgLSBpZiBJJ20gbm90IG1pc3Rha2VuKQ0K
-PiANCj4gSSd2ZSBzZWVuIHRoaXMgYmVmb3JlIHRvbyAtLSB3aGF0IGZsYWcgY2F1c2VzIHRoZSBp
-c3N1ZSwgYW5kIHdoeT8NCldlbGwgdGhhdCB3b3VsZCBiZToNCkZJRl9PVEhFUl9CU1Mgb3IgRklG
-X1BST01JU0NfSU5fQlNTDQoNCmVpdGhlciBvbmUgb2YgdGhlc2Ugd2lsbCBzZXQgZm9sbG93aW5n
-IGZsYWdzIGZvciB0aGUgaGFyZHdhcmU6DQoNCkFSOTE3MF9NQUNfUlhfQ1RSTF9BQ0tfSU5fU05J
-RkZFUg0KQVI5MTcwX01BQ19TTklGRkVSX0VOQUJMRV9QUk9NSVNDDQoNCkFib3V0IHRoZSBpc3N1
-ZSwgSSdtIHJlYWxseSBjYW4ndCB0ZWxsIHcvbyBzY2hlbWF0aWNzIG9mIHRoZSBoYXJkd2FyZS4g
-SXQgY291bGQgYmUgdGhhdCBBQ0tfSU5fU05JRkZFUiBpcyBtb3JlIG9mIGEgZGVidWcvdGVzdCBm
-bGFnIHRoYW4gYSByZWFsIGZlYXR1cmU/DQoNCihBbnl3YXksIEkgY2MnZCBTdGVwaGVuLiBNYXli
-ZSBoZSBrbm93cyBtb3JlKQ0KDQpSZWdhcmRzLA0KCUNocg0K
+Hi, Adrian
+
+Appreciate your testing on this.
+
+---
+Chun-Yeow
+
+On Fri, Aug 31, 2012 at 2:58 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> Hiya,
+>
+> This is cool stuff - but as I don't think MFP is enabled in any
+> hardware pre-AR9280, I think it's worth doing a lot more testing
+> before flipping this on.
+>
+> But very cool indeed. I'll see what it'll take to get it enabled in
+> the FreeBSD atheros HAL for these chips.
+>
+>
+>
+> Adrian
+>
+> On 28 August 2012 02:34, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+>> This patch provides the support of hardware encyrption for
+>> management frame, including the support of AES CMAC. This
+>> patch is tested with the following chipsets:
+>> - AR5213A
+>> - AR5413
+>> - AR2413/AR2414
+>>
+>> Beside, this patch also extends the IBSS RSN to mesh.
+>>
+>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath5k/base.c         |    4 +++-
+>>  drivers/net/wireless/ath/ath5k/mac80211-ops.c |    7 +++++--
+>>  2 files changed, 8 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+>> index a0a202d..084162e 100644
+>> --- a/drivers/net/wireless/ath/ath5k/base.c
+>> +++ b/drivers/net/wireless/ath/ath5k/base.c
+>> @@ -2446,7 +2446,9 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+>>         hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+>>                         IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+>>                         IEEE80211_HW_SIGNAL_DBM |
+>> -                       IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+>> +                       IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+>> +                       IEEE80211_HW_MFP_CAPABLE |
+>> +                       IEEE80211_HW_SUPPORTS_PER_STA_GTK;
+>>
+>>         hw->wiphy->interface_modes =
+>>                 BIT(NL80211_IFTYPE_AP) |
+>> diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+>> index df61a09..7f78caa 100644
+>> --- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+>> +++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+>> @@ -489,7 +489,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+>>         if (ath5k_modparam_nohwcrypt)
+>>                 return -EOPNOTSUPP;
+>>
+>> -       if (vif->type == NL80211_IFTYPE_ADHOC &&
+>> +       if ((vif->type == NL80211_IFTYPE_ADHOC ||
+>> +            vif->type == NL80211_IFTYPE_MESH_POINT) &&
+>>             (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
+>>              key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
+>>             !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+>> @@ -502,6 +503,7 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+>>         case WLAN_CIPHER_SUITE_WEP104:
+>>         case WLAN_CIPHER_SUITE_TKIP:
+>>                 break;
+>> +       case WLAN_CIPHER_SUITE_AES_CMAC:
+>>         case WLAN_CIPHER_SUITE_CCMP:
+>>                 if (common->crypt_caps & ATH_CRYPT_CAP_CIPHER_AESCCM)
+>>                         break;
+>> @@ -522,7 +524,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+>>                         key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+>>                         if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
+>>                                 key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+>> -                       if (key->cipher == WLAN_CIPHER_SUITE_CCMP)
+>> +                       if (key->cipher == WLAN_CIPHER_SUITE_CCMP &&
+>> +                           !(common->crypt_caps & ATH_CRYPT_CAP_CIPHER_AESCCM))
+>>                                 key->flags |= IEEE80211_KEY_FLAG_SW_MGMT;
+>>                         ret = 0;
+>>                 }
+>> --
+>> 1.7.0.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
