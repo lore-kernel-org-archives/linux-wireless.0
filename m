@@ -1,208 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:58196 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737Ab2HAEB6 (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 1 Aug 2012 00:01:58 -0400
-From: "Chen, Chien-Chia" <machen@suse.com>
-To: users@rt2x00.serialmonkey.com
-Cc: kevin.chou@mediatek.com, woody.hung@mediatek.com,
-	linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [rt2x00-users] [PATCH v4] rt2x00 : fix rt3290 resuming failed.
-Date: Wed,  1 Aug 2012 12:03:14 +0800
-Message-Id: <1343793794-24176-1-git-send-email-machen@suse.com> (sfid-20120801_060201_968556_BB5E2C8D)
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:44566 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752673Ab2HaBgD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Aug 2012 21:36:03 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jeff Disher <disher@chromium.org>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: store mwifiex_ds_misc_subsc_evt in mwifiex_private
+Date: Thu, 30 Aug 2012 18:20:55 -0700
+Message-Id: <1346376056-25708-1-git-send-email-bzhao@marvell.com> (sfid-20120831_033646_673859_D450BCF9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Woody Hung <Woody.Hung@mediatek.com>
-Date: Tue, 31 Jul 2012 21:53:33 +0800
+From: Jeff Disher <disher@chromium.org>
 
-This patch is going to fix the resuming failed from S3/S4
-for rt3290 chip.
+Since mwifiex_ds_misc_subsc_evt is used in an asynchronous case,
+store the structure in the long-lived mwifiex_private instead of
+on the calling stack.
 
-Signed-off-by: Woody Hung <Woody.Hung@mediatek.com>
-CC-by: Kevin Chou <kevin.chou@mediatek.com>
-Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+This fixes a problem where the response of the asynchronous
+operation would corrupt a stack frame potentially in use by
+a different thread.
+
+Signed-off-by: Jeff Disher <disher@chromium.org>
+Reviewed-by: Sam Leffler <sleffler@chromium.org>
+Tested-by: Jeff Disher <disher@chromium.org>
+Acked-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   68 +++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800pci.c |   71 -------------------------------
- 2 files changed, 68 insertions(+), 71 deletions(-)
+ drivers/net/wireless/mwifiex/main.h        |    1 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |   24 +++++++++++++-----------
+ 2 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e76f03c..7bc4768 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -221,6 +221,67 @@ static void rt2800_rf_write(struct rt2x00_dev *rt2x00dev,
- 	mutex_unlock(&rt2x00dev->csr_mutex);
- }
- 
-+static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
-+{
-+	u32 reg;
-+	int i, count;
-+
-+	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-+	if (rt2x00_get_field32(reg, WLAN_EN))
-+		return 0;
-+
-+	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
-+	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
-+	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
-+	rt2x00_set_field32(&reg, WLAN_EN, 1);
-+	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+
-+	udelay(REGISTER_BUSY_DELAY);
-+
-+	count = 0;
-+	do {
-+		/*
-+		 * Check PLL_LD & XTAL_RDY.
-+		 */
-+		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-+			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
-+			if (rt2x00_get_field32(reg, PLL_LD) &&
-+			    rt2x00_get_field32(reg, XTAL_RDY))
-+				break;
-+			udelay(REGISTER_BUSY_DELAY);
-+		}
-+
-+		if (i >= REGISTER_BUSY_COUNT) {
-+
-+			if (count >= 10)
-+				return -EIO;
-+
-+			rt2800_register_write(rt2x00dev, 0x58, 0x018);
-+			udelay(REGISTER_BUSY_DELAY);
-+			rt2800_register_write(rt2x00dev, 0x58, 0x418);
-+			udelay(REGISTER_BUSY_DELAY);
-+			rt2800_register_write(rt2x00dev, 0x58, 0x618);
-+			udelay(REGISTER_BUSY_DELAY);
-+			count++;
-+		} else {
-+			count = 0;
-+		}
-+
-+		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-+		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
-+		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
-+		rt2x00_set_field32(&reg, WLAN_RESET, 1);
-+		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+		udelay(10);
-+		rt2x00_set_field32(&reg, WLAN_RESET, 0);
-+		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+		udelay(10);
-+		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
-+	} while (count != 0);
-+
-+	return 0;
-+}
-+
- void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
- 			const u8 command, const u8 token,
- 			const u8 arg0, const u8 arg1)
-@@ -400,6 +461,13 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index ede0c65..bb75390 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -484,6 +484,7 @@ struct mwifiex_private {
+ 	s32 cqm_rssi_thold;
+ 	u32 cqm_rssi_hyst;
+ 	u8 subsc_evt_rssi_state;
++	struct mwifiex_ds_misc_subsc_evt async_subsc_evt_storage;
+ 	struct mwifiex_ie mgmt_ie[MAX_MGMT_IE_INDEX];
+ 	u16 beacon_idx;
+ 	u16 proberesp_idx;
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 0b09004..6536356 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -123,7 +123,8 @@ static int mwifiex_ret_802_11_rssi_info(struct mwifiex_private *priv,
  {
- 	unsigned int i;
- 	u32 reg;
-+	int retval;
+ 	struct host_cmd_ds_802_11_rssi_info_rsp *rssi_info_rsp =
+ 						&resp->params.rssi_info_rsp;
+-	struct mwifiex_ds_misc_subsc_evt subsc_evt;
++	struct mwifiex_ds_misc_subsc_evt *subsc_evt =
++						&priv->async_subsc_evt_storage;
+ 
+ 	priv->data_rssi_last = le16_to_cpu(rssi_info_rsp->data_rssi_last);
+ 	priv->data_nf_last = le16_to_cpu(rssi_info_rsp->data_nf_last);
+@@ -140,26 +141,27 @@ static int mwifiex_ret_802_11_rssi_info(struct mwifiex_private *priv,
+ 	if (priv->subsc_evt_rssi_state == EVENT_HANDLED)
+ 		return 0;
+ 
++	memset(subsc_evt, 0x00, sizeof(struct mwifiex_ds_misc_subsc_evt));
 +
-+	if (rt2x00_rt(rt2x00dev, RT3290)) {
-+		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
-+		if (retval)
-+			return -EBUSY;
-+	}
+ 	/* Resubscribe low and high rssi events with new thresholds */
+-	memset(&subsc_evt, 0x00, sizeof(struct mwifiex_ds_misc_subsc_evt));
+-	subsc_evt.events = BITMASK_BCN_RSSI_LOW | BITMASK_BCN_RSSI_HIGH;
+-	subsc_evt.action = HostCmd_ACT_BITWISE_SET;
++	subsc_evt->events = BITMASK_BCN_RSSI_LOW | BITMASK_BCN_RSSI_HIGH;
++	subsc_evt->action = HostCmd_ACT_BITWISE_SET;
+ 	if (priv->subsc_evt_rssi_state == RSSI_LOW_RECVD) {
+-		subsc_evt.bcn_l_rssi_cfg.abs_value = abs(priv->bcn_rssi_avg -
++		subsc_evt->bcn_l_rssi_cfg.abs_value = abs(priv->bcn_rssi_avg -
+ 				priv->cqm_rssi_hyst);
+-		subsc_evt.bcn_h_rssi_cfg.abs_value = abs(priv->cqm_rssi_thold);
++		subsc_evt->bcn_h_rssi_cfg.abs_value = abs(priv->cqm_rssi_thold);
+ 	} else if (priv->subsc_evt_rssi_state == RSSI_HIGH_RECVD) {
+-		subsc_evt.bcn_l_rssi_cfg.abs_value = abs(priv->cqm_rssi_thold);
+-		subsc_evt.bcn_h_rssi_cfg.abs_value = abs(priv->bcn_rssi_avg +
++		subsc_evt->bcn_l_rssi_cfg.abs_value = abs(priv->cqm_rssi_thold);
++		subsc_evt->bcn_h_rssi_cfg.abs_value = abs(priv->bcn_rssi_avg +
+ 				priv->cqm_rssi_hyst);
+ 	}
+-	subsc_evt.bcn_l_rssi_cfg.evt_freq = 1;
+-	subsc_evt.bcn_h_rssi_cfg.evt_freq = 1;
++	subsc_evt->bcn_l_rssi_cfg.evt_freq = 1;
++	subsc_evt->bcn_h_rssi_cfg.evt_freq = 1;
  
- 	/*
- 	 * If driver doesn't wake up firmware here,
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 235376e..98aa426 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -980,66 +980,6 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	return rt2800_validate_eeprom(rt2x00dev);
+ 	priv->subsc_evt_rssi_state = EVENT_HANDLED;
+ 
+ 	mwifiex_send_cmd_async(priv, HostCmd_CMD_802_11_SUBSCRIBE_EVENT,
+-			       0, 0, &subsc_evt);
++			       0, 0, subsc_evt);
+ 
+ 	return 0;
  }
- 
--static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
--{
--	u32 reg;
--	int i, count;
--
--	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
--	if (rt2x00_get_field32(reg, WLAN_EN))
--		return 0;
--
--	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
--	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
--	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
--	rt2x00_set_field32(&reg, WLAN_EN, 1);
--	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--
--	udelay(REGISTER_BUSY_DELAY);
--
--	count = 0;
--	do {
--		/*
--		 * Check PLL_LD & XTAL_RDY.
--		 */
--		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
--			if (rt2x00_get_field32(reg, PLL_LD) &&
--			    rt2x00_get_field32(reg, XTAL_RDY))
--				break;
--			udelay(REGISTER_BUSY_DELAY);
--		}
--
--		if (i >= REGISTER_BUSY_COUNT) {
--
--			if (count >= 10)
--				return -EIO;
--
--			rt2800_register_write(rt2x00dev, 0x58, 0x018);
--			udelay(REGISTER_BUSY_DELAY);
--			rt2800_register_write(rt2x00dev, 0x58, 0x418);
--			udelay(REGISTER_BUSY_DELAY);
--			rt2800_register_write(rt2x00dev, 0x58, 0x618);
--			udelay(REGISTER_BUSY_DELAY);
--			count++;
--		} else {
--			count = 0;
--		}
--
--		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
--		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
--		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
--		rt2x00_set_field32(&reg, WLAN_RESET, 1);
--		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--		udelay(10);
--		rt2x00_set_field32(&reg, WLAN_RESET, 0);
--		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--		udelay(10);
--		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
--	} while (count != 0);
--
--	return 0;
--}
- static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
-@@ -1063,17 +1003,6 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		return retval;
- 
- 	/*
--	 * In probe phase call rt2800_enable_wlan_rt3290 to enable wlan
--	 * clk for rt3290. That avoid the MCU fail in start phase.
--	 */
--	if (rt2x00_rt(rt2x00dev, RT3290)) {
--		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
--
--		if (retval)
--			return retval;
--	}
--
--	/*
- 	 * This device has multiple filters for control frames
- 	 * and has a separate filter for PS Poll frames.
- 	 */
 -- 
-1.7.7
+1.7.0.2
 
