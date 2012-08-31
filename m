@@ -1,85 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26771 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750698Ab2HBMvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 08:51:42 -0400
-Date: Thu, 2 Aug 2012 08:51:03 -0400
-From: Josh Boyer <jwboyer@redhat.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 0/2] Fix lockdep warning in brcmsmac
-Message-ID: <20120802125102.GF1785@zod.bos.redhat.com> (sfid-20120802_145146_181623_367936C3)
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
- <20120802002353.GD1785@zod.bos.redhat.com>
- <20120802015320.GA25933@thinkpad-t410>
- <20120802120230.GE1785@zod.bos.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120802120230.GE1785@zod.bos.redhat.com>
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:1591 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754224Ab2HaRWU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Aug 2012 13:22:20 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 0/6] GPIO related fixes and clean ups.
+Date: Fri, 31 Aug 2012 19:22:08 +0200
+Message-Id: <1346433734-3337-1-git-send-email-gwingerde@gmail.com> (sfid-20120831_192226_441093_9F76C40C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 02, 2012 at 08:02:30AM -0400, Josh Boyer wrote:
-> On Wed, Aug 01, 2012 at 08:53:20PM -0500, Seth Forshee wrote:
-> > On Wed, Aug 01, 2012 at 08:23:54PM -0400, Josh Boyer wrote:
-> > > On Wed, Aug 01, 2012 at 03:58:41PM -0500, Seth Forshee wrote:
-> > > > As reported by Josh Boyer, brcmsmac is producing lockdep warnings by
-> > > > calling freq_reg_info() without holding cfg80211_lock. Currently
-> > > > freq_reg_info() is the only way for a wireless driver to tell whether
-> > > > OFDM is allowed on the current channel, but cfg80211_lock is outside the
-> > > > scope of the wireless drivers.
-> > > > 
-> > > > Since other regulatory restrictions are communicated in the channel
-> > > > definition, it makes sense to do the same for OFDM. These patches add a
-> > > > new flag, IEEE80211_CHAN_NO_OFDM, which is set by regulatory to
-> > > > indicated OFDM operation is prohibited. brcmsmac is modifified to use
-> > > > this flag instead of consuming the regulatory data directly.
-> > > > 
-> > > > Thanks,
-> > > > Seth
-> > > > 
-> > > > 
-> > > > Seth Forshee (2):
-> > > >   cfg80211: add channel flag to restrict OFDM
-> > > >   brcmsmac: use channel flags to restrict OFDM
-> > > 
-> > > I would love to test these, but at the moment I can't.  Oddly, the very
-> > > same machine I hit the problem with originally is no longer presenting
-> > > any devices on the bcma bus.  The driver is loaded, brcmsmac is loaded,
-> > > but neither output the devices that showed up in my original email.
-> > > This is with both the kernel I originally reported the problem with, and
-> > > other kernels.  Nothing shows up for the BCM4313 in lspci either.
-> > > 
-> > > I did power it off and then back on today after I hit the original
-> > > problem, but I'd expect the hardware in the box to still show up on a
-> > > power on...  Is there some specific module load order, or something
-> > > else I can do to try and get the device to show up?
-> > > 
-> > > I did build a kernel with your patches applied, so at least I know they
-> > > build.  If I can get this machine to probe the chip again, I'll be happy
-> > > to test.
-> > > 
-> > > At the moment, I'm just very confused and slightly afraid it's going to
-> > > just refuse to work at all.
-> > 
-> > Do you have 1f03bf06e4e3b8ed9a69e7fc4cdb1be4c6c6c819? That fixed a bug
-> > that had caused some very odd behavior, like changing PCI device ids.
-> > Recovering after booting a bad kernel required a cold boot to a kernel
-> > with the fix; a warm reboot wasn't enough.
-> 
-> The kernel I'm testing should have that commit in it.  I'll try a cold
-> boot to it to make sure.
+This patch series mostly consists of GPIO related fixes and clean ups.
+The patch series contains:
+1. Moving the ASUS USB-N53 device ID from the set of unknown devices to the
+   set of RT3572 devices.
+2. A fix for rt2500usb to match the coded register width of the GPIO register
+   with the actual register width.
+3. A fix for the all rt2x00 drivers to correctly read the value of the rfkill
+   switch at device startup. Previously we only could read that value properly
+   after interface initialization time, which was too late, as the rfkill
+   status would then prevent users to create an interface on the device.
+   Special thanks go to Andreas Messer for reporting the issue and finding the
+   root cause of the issue.
+4. A patch aligning the GPIO register definitions with the various Ralink
+   datasheets.
+5. A patch cleaning up naming of GPIO register fields.
+6. A clean-up of the rt2800 drivers, in which now more code is shared
+   between rt2800pci and rt2800usb.
 
-That didn't help.  I've tried multiple module load orderings without
-anything being shown on the bcma bus.  The modules all load, but no
-devices are created.  It's as if the hardware was removed or something.
-Puzzling.
+John, the first three patches are marked to be included in stable, so the
+logical tree for them would be wireless. The last three patches are cleanups,
+so they would be targetted at the wireless-next tree. Unfortunately, these
+latter 3 patches depend on the first 3 in the series.
+I'll leave it up to you to decide how that handle the series.
 
-josh
+---
+v1->v2:
+- Refactored the patch series to ensure only the minimal fixes are targeted
+  at the stable tree.
+- Combined patches that logically belonged together in a single patch changing
+  all rt2x00 drivers instead of having a separate patch for each rt2x00 driver.
+- As a result of the above, the patch series now only consists of 6 patches
+  instead of the previous 14.
+
+---
+Gertjan.
+
+Gertjan van Wingerde (6):
+  rt2x00: Identify ASUS USB-N53 device.
+  rt2x00: Fix word size of rt2500usb MAC_CSR19 register.
+  rt2x00: Fix rfkill polling prior to interface start.
+  rt2x00: Align GPIO register definitions with the datasheets.
+  rt2x00: Unify GPIO register field namings
+  rt2x00: rt2800 - Make probe_hw function common between PCI and USB.
+
+ drivers/net/wireless/rt2x00/rt2400pci.c |  11 ++-
+ drivers/net/wireless/rt2x00/rt2400pci.h |  26 +++++--
+ drivers/net/wireless/rt2x00/rt2500pci.c |  11 ++-
+ drivers/net/wireless/rt2x00/rt2500pci.h |  18 +++--
+ drivers/net/wireless/rt2x00/rt2500usb.c |  11 ++-
+ drivers/net/wireless/rt2x00/rt2500usb.h |  26 +++++--
+ drivers/net/wireless/rt2x00/rt2800.h    |  47 +++++++-----
+ drivers/net/wireless/rt2x00/rt2800lib.c | 125 +++++++++++++++++++++++++-------
+ drivers/net/wireless/rt2x00/rt2800lib.h |  14 +++-
+ drivers/net/wireless/rt2x00/rt2800pci.c |  74 +------------------
+ drivers/net/wireless/rt2x00/rt2800usb.c |  56 ++------------
+ drivers/net/wireless/rt2x00/rt61pci.c   |  19 +++--
+ drivers/net/wireless/rt2x00/rt61pci.h   |  27 +++----
+ drivers/net/wireless/rt2x00/rt73usb.c   |  11 ++-
+ drivers/net/wireless/rt2x00/rt73usb.h   |  31 ++++----
+ 15 files changed, 280 insertions(+), 227 deletions(-)
+
+-- 
+1.7.11.1
+
