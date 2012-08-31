@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na6sys009bog036.obsmtp.com ([74.125.150.110]:54063 "EHLO
-	na6sys009bog036.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753409Ab2HDBl4 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58142 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855Ab2HaUjh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 21:41:56 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 02/16] mwifiex: remove extra padding to AMSDU
-Date: Fri,  3 Aug 2012 18:06:00 -0700
-Message-Id: <1344042374-6892-3-git-send-email-bzhao@marvell.com> (sfid-20120804_034200_058195_9E8793C3)
-In-Reply-To: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
-References: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
+	Fri, 31 Aug 2012 16:39:37 -0400
+Received: by iahk25 with SMTP id k25so1839643iah.19
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2012 13:39:36 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 0/3 V2] Updates for rtlwifi family
+Date: Fri, 31 Aug 2012 15:38:58 -0500
+Message-Id: <1346445541-5251-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120831_223941_458749_3F8E7B8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+These patches replace an earlier version that contained 6 patches. Numbers 4-6
+have been abandoned for the moment. Other than the change in the subject,
+these 3 patches are unchanged from the previous version.
 
-Since commit: fb3c19bc9687d972b83faf366b38ac807eca8f25, adding
-extra padding to AMSDU is redundant since same is being performed at
-mwifiex_11n_aggregate_pkt after forming the AMSDU packet. Fixing it
-by removing it.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n_aggr.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index c631c7c..04222f2 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -84,7 +84,6 @@ mwifiex_11n_form_amsdu_pkt(struct sk_buff *skb_aggr,
- 
- 	*pad = (((skb_src->len + LLC_SNAP_LEN) & 3)) ? (4 - (((skb_src->len +
- 						      LLC_SNAP_LEN)) & 3)) : 0;
--	skb_put(skb_aggr, *pad);
- 
- 	return skb_aggr->len + *pad;
- }
+Larry Finger (3):
+  rtlwifi: rtl8192c: rtl8192de: Fix typo in cursta_connectctate
+  rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192se: Remove sparse
+    warnings
+  rtlwifi: Update header file
+
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |   41 ++++----
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       |   10 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |    6 +-
+ drivers/net/wireless/rtlwifi/usb.c                |    2 +-
+ drivers/net/wireless/rtlwifi/wifi.h               |  108 +++++++++++++++++++--
+ 8 files changed, 130 insertions(+), 45 deletions(-)
+
 -- 
-1.7.0.2
+1.7.10.4
 
