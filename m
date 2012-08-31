@@ -1,79 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31469 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752773Ab2HBG3D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 02:29:03 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Felix Bitterli <felixb@qca.qualcomm.com>
-Subject: [PATCH] ath9k: Add PID/VID support for AR1111
-Date: Thu, 2 Aug 2012 11:58:50 +0530
-Message-ID: <1343888930-353-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120802_082923_877790_1E194E70)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55131 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754087Ab2HaPiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Aug 2012 11:38:18 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, john@phrozen.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	florian@openwrt.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3 0/3] MIPS: BCM47xx: use gpiolib
+Date: Fri, 31 Aug 2012 17:38:02 +0200
+Message-Id: <1346427485-12801-1-git-send-email-hauke@hauke-m.de> (sfid-20120831_173840_596045_8EB7EC93)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+The original code implemented the GPIO interface itself and this caused
+some problems. With this patch gpiolib is used.
 
-AR1111 is same as AR9485. The h/w
-difference between them is quite insignificant,
-Felix suggests only very few baseband features
-may not be available in AR1111. The h/w code for
-AR9485 is already present, so AR1111 should
-work fine with the addition of its PID/VID.
+This is based on mips/master.
 
-Cc: stable@vger.kernel.org [2.6.39+]
-Cc: Felix Bitterli <felixb@qca.qualcomm.com>
-Reported-by: Tim and Alison Bentley <Home@trarbentley.net>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c  |    1 +
- drivers/net/wireless/ath/ath9k/hw.h  |    1 +
- drivers/net/wireless/ath/ath9k/pci.c |    1 +
- 3 files changed, 3 insertions(+), 0 deletions(-)
+This should go through linux-mips, John W. Linville approved that 
+for the bcma and ssb changes normally maintained in wireless-testing.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index cfa91ab..60b6a9d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -730,6 +730,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	case AR9300_DEVID_QCA955X:
- 	case AR9300_DEVID_AR9580:
- 	case AR9300_DEVID_AR9462:
-+	case AR9485_DEVID_AR1111:
- 		break;
- 	default:
- 		if (common->bus_ops->ath_bus_type == ATH_USB)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index dd0c146..ce7332c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -49,6 +49,7 @@
- #define AR9300_DEVID_AR9462	0x0034
- #define AR9300_DEVID_AR9330	0x0035
- #define AR9300_DEVID_QCA955X	0x0038
-+#define AR9485_DEVID_AR1111	0x0037
- 
- #define AR5416_AR9100_DEVID	0x000b
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 87b89d5..d455de9 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -37,6 +37,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
-+	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
- 	{ 0 }
- };
- 
+v3:
+ - add missing break after setting bcm47xx_gpio_count in bcm47xx_gpio_init()
+
+v2:
+ - use use gpio_chip.to_irq() instead of directly declare gpio_to_irq
+
+Hauke Mehrtens (3):
+  ssb: add function to return number of gpio lines
+  bcma: add GPIO driver for SoCs
+  MIPS: BCM47xx: rewrite GPIO handling and use gpiolib
+
+ arch/mips/Kconfig                            |    2 +-
+ arch/mips/bcm47xx/gpio.c                     |  208 ++++++++++++++++++++------
+ arch/mips/bcm47xx/setup.c                    |    2 +
+ arch/mips/bcm47xx/wgt634u.c                  |    7 +
+ arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    2 +
+ arch/mips/include/asm/mach-bcm47xx/gpio.h    |  148 +++---------------
+ drivers/bcma/Kconfig                         |    5 +
+ drivers/bcma/Makefile                        |    1 +
+ drivers/bcma/driver_gpio.c                   |   90 +++++++++++
+ drivers/bcma/scan.c                          |    4 +
+ drivers/ssb/embedded.c                       |   12 ++
+ include/linux/bcma/bcma.h                    |    5 +
+ include/linux/bcma/bcma_driver_gpio.h        |   21 +++
+ include/linux/ssb/ssb_embedded.h             |    4 +
+ 14 files changed, 336 insertions(+), 175 deletions(-)
+ create mode 100644 drivers/bcma/driver_gpio.c
+ create mode 100644 include/linux/bcma/bcma_driver_gpio.h
+
 -- 
-1.7.0.4
+1.7.9.5
 
