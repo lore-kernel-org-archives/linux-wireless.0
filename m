@@ -1,89 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3418 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751194Ab2H3Tki (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12433 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753664Ab2HaOgV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 15:40:38 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 06/14] rt2x00: Align rt2500usb MAC_CSR19 definition with datasheet.
-Date: Thu, 30 Aug 2012 21:34:05 +0200
-Message-Id: <1346355248-5331-7-git-send-email-gwingerde@gmail.com> (sfid-20120830_214100_540262_EE3D52BE)
-In-Reply-To: <1346355248-5331-6-git-send-email-gwingerde@gmail.com>
-References: <1346355248-5331-1-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-3-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-4-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-5-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-6-git-send-email-gwingerde@gmail.com>
+	Fri, 31 Aug 2012 10:36:21 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qca.qualcomm.com>
+Subject: [RFC] ath9k: update hw_timer_enabled to false when we stop generic timers
+Date: Fri, 31 Aug 2012 20:06:12 +0530
+Message-ID: <1346423772-9253-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120831_163625_683989_337376E9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Datasheet indicates additional fields to set the GPIO direction.
-At the same time rename MAC_CSR19_BIT<x> to MAC_CSR19_VAL<x> to represent
-the actual meaning better.
-Also, rt2500usb has 16-bit register values, not 32-bit register values.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: <stable@vger.kernel.org>
+Update the 'hw_timer_enabled' to 'false' wherever we are stopping
+hardware generic timers, excecpt the case where we start them
+again immediately. I will just test the case the generic hardware
+timer is stopped again and again even though they had been already
+stopped.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 3aae36b..5742ce9 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -283,7 +283,7 @@ static int rt2500usb_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- 	u16 reg;
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index bacdb8f..9e3471c 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -309,8 +309,10 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
+ 	ath_dbg(ath9k_hw_common(ah), BTCOEX, "Starting btcoex timers\n");
  
- 	rt2500usb_register_read(rt2x00dev, MAC_CSR19, &reg);
--	return rt2x00_get_field32(reg, MAC_CSR19_BIT7);
-+	return rt2x00_get_field16(reg, MAC_CSR19_VAL7);
+ 	/* make sure duty cycle timer is also stopped when resuming */
+-	if (btcoex->hw_timer_enabled)
++	if (btcoex->hw_timer_enabled) {
+ 		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
++		btcoex->hw_timer_enabled = false;
++	}
+ 
+ 	btcoex->bt_priority_cnt = 0;
+ 	btcoex->bt_priority_time = jiffies;
+@@ -341,7 +343,10 @@ void ath9k_btcoex_stop_gen_timer(struct ath_softc *sc)
+ {
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 
+-	ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
++	if (btcoex->hw_timer_enabled)
++		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
++
++	btcoex->hw_timer_enabled = false;
  }
  
- #ifdef CONFIG_RT2X00_LIB_LEDS
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
-index b493306..ef7b420 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.h
-@@ -187,16 +187,26 @@
- 
- /*
-  * MAC_CSR19: GPIO control register.
-+ *	MAC_CSR19_VALx: GPIO value
-+ *	MAC_CSR19_DIRx: GPIO direction: 0 = input; 1 = output
-  */
- #define MAC_CSR19			0x0426
--#define MAC_CSR19_BIT0			FIELD32(0x0001)
--#define MAC_CSR19_BIT1			FIELD32(0x0002)
--#define MAC_CSR19_BIT2			FIELD32(0x0004)
--#define MAC_CSR19_BIT3			FIELD32(0x0008)
--#define MAC_CSR19_BIT4			FIELD32(0x0010)
--#define MAC_CSR19_BIT5			FIELD32(0x0020)
--#define MAC_CSR19_BIT6			FIELD32(0x0040)
--#define MAC_CSR19_BIT7			FIELD32(0x0080)
-+#define MAC_CSR19_VAL0			FIELD16(0x0001)
-+#define MAC_CSR19_VAL1			FIELD16(0x0002)
-+#define MAC_CSR19_VAL2			FIELD16(0x0004)
-+#define MAC_CSR19_VAL3			FIELD16(0x0008)
-+#define MAC_CSR19_VAL4			FIELD16(0x0010)
-+#define MAC_CSR19_VAL5			FIELD16(0x0020)
-+#define MAC_CSR19_VAL6			FIELD16(0x0040)
-+#define MAC_CSR19_VAL7			FIELD16(0x0080)
-+#define MAC_CSR19_DIR0			FIELD16(0x0100)
-+#define MAC_CSR19_DIR1			FIELD16(0x0200)
-+#define MAC_CSR19_DIR2			FIELD16(0x0400)
-+#define MAC_CSR19_DIR3			FIELD16(0x0800)
-+#define MAC_CSR19_DIR4			FIELD32(0x1000)
-+#define MAC_CSR19_DIR5			FIELD16(0x2000)
-+#define MAC_CSR19_DIR6			FIELD16(0x4000)
-+#define MAC_CSR19_DIR7			FIELD16(0x8000)
- 
- /*
-  * MAC_CSR20: LED control register.
+ u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen)
 -- 
-1.7.11.1
+1.7.0.4
 
