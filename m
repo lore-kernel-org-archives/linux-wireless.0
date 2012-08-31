@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34764 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753818Ab2HAU6u (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:43409 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326Ab2HaU6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 16:58:50 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: [PATCH 0/2] Fix lockdep warning in brcmsmac
-Date: Wed,  1 Aug 2012 15:58:41 -0500
-Message-Id: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com> (sfid-20120801_225854_791261_4BA22052)
+	Fri, 31 Aug 2012 16:58:55 -0400
+Date: Fri, 31 Aug 2012 13:59:53 -0700
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 02/14] rt2x00: Align rt2400pci GPIOCSR definition with
+ datasheet.
+Message-ID: <20120831205953.GB164@mannheim-rule.att.net> (sfid-20120831_225901_228885_B60CD8EE)
+References: <1346355248-5331-1-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
+ <1346355248-5331-3-git-send-email-gwingerde@gmail.com>
+ <20120830210522.GA158@mannheim-rule.att.net>
+ <503FD633.8070307@gmail.com>
+ <20120831022115.GB2847@mannheim-rule.att.net>
+ <CAL1gcdP6S2PByOOEJq+AZOgUGqOVsWvcq1DXWo60ni2-iavpgA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL1gcdP6S2PByOOEJq+AZOgUGqOVsWvcq1DXWo60ni2-iavpgA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reported by Josh Boyer, brcmsmac is producing lockdep warnings by
-calling freq_reg_info() without holding cfg80211_lock. Currently
-freq_reg_info() is the only way for a wireless driver to tell whether
-OFDM is allowed on the current channel, but cfg80211_lock is outside the
-scope of the wireless drivers.
+Gertjan van Wingerde wrote:
 
-Since other regulatory restrictions are communicated in the channel
-definition, it makes sense to do the same for OFDM. These patches add a
-new flag, IEEE80211_CHAN_NO_OFDM, which is set by regulatory to
-indicated OFDM operation is prohibited. brcmsmac is modifified to use
-this flag instead of consuming the regulatory data directly.
+>            I'll refactor the series myself to reduce the number of
+> patches and to better separate the fixes from the clean-ups.
 
-Thanks,
-Seth
+The result looks good.  Thanks!
 
-
-Seth Forshee (2):
-  cfg80211: add channel flag to restrict OFDM
-  brcmsmac: use channel flags to restrict OFDM
-
- drivers/net/wireless/brcm80211/brcmsmac/channel.c  |    5 +----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    3 ++-
- include/net/cfg80211.h                             |    2 ++
- net/wireless/reg.c                                 |    2 ++
- 4 files changed, 7 insertions(+), 5 deletions(-)
-
+Jonathan
