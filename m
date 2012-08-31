@@ -1,69 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1100 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751358Ab2H3IF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 04:05:56 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 4/4] brcmfmac: fix get rssi by clearing getvar struct.
-Date: Thu, 30 Aug 2012 10:05:37 +0200
-Message-ID: <1346313937-3605-5-git-send-email-arend@broadcom.com> (sfid-20120830_100603_356512_7D7B0D18)
-In-Reply-To: <1346313937-3605-1-git-send-email-arend@broadcom.com>
-References: <1346313937-3605-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55123 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753966Ab2HaPiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Aug 2012 11:38:18 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, john@phrozen.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	florian@openwrt.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Michael Buesch <m@bues.ch>
+Subject: [PATCH v3 1/3] ssb: add function to return number of gpio lines
+Date: Fri, 31 Aug 2012 17:38:03 +0200
+Message-Id: <1346427485-12801-2-git-send-email-hauke@hauke-m.de> (sfid-20120831_173821_387190_566590E8)
+In-Reply-To: <1346427485-12801-1-git-send-email-hauke@hauke-m.de>
+References: <1346427485-12801-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
-
-The function brcmf_cfg80211_get_station requests the RSSI from
-the device. The complete structure used needs to be cleared
-before sending the request to firmware. Otherwise the request
-fails filling the logs with "Could not get rssi (-2)" messages.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+CC: Michael Buesch <m@bues.ch>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/ssb/embedded.c           |   12 ++++++++++++
+ include/linux/ssb/ssb_embedded.h |    4 ++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 28c5fbb..c36e923 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1876,16 +1876,17 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 	}
+diff --git a/drivers/ssb/embedded.c b/drivers/ssb/embedded.c
+index 9ef124f..078007c 100644
+--- a/drivers/ssb/embedded.c
++++ b/drivers/ssb/embedded.c
+@@ -136,6 +136,18 @@ u32 ssb_gpio_polarity(struct ssb_bus *bus, u32 mask, u32 value)
+ }
+ EXPORT_SYMBOL(ssb_gpio_polarity);
  
- 	if (test_bit(WL_STATUS_CONNECTED, &cfg_priv->status)) {
--		scb_val.val = cpu_to_le32(0);
-+		memset(&scb_val, 0, sizeof(scb_val));
- 		err = brcmf_exec_dcmd(ndev, BRCMF_C_GET_RSSI, &scb_val,
- 				      sizeof(struct brcmf_scb_val_le));
--		if (err)
-+		if (err) {
- 			WL_ERR("Could not get rssi (%d)\n", err);
--
--		rssi = le32_to_cpu(scb_val.val);
--		sinfo->filled |= STATION_INFO_SIGNAL;
--		sinfo->signal = rssi;
--		WL_CONN("RSSI %d dBm\n", rssi);
-+		} else {
-+			rssi = le32_to_cpu(scb_val.val);
-+			sinfo->filled |= STATION_INFO_SIGNAL;
-+			sinfo->signal = rssi;
-+			WL_CONN("RSSI %d dBm\n", rssi);
-+		}
- 	}
++int ssb_gpio_count(struct ssb_bus *bus)
++{
++	if (ssb_chipco_available(&bus->chipco))
++		return SSB_GPIO_CHIPCO_LINES;
++	else if (ssb_extif_available(&bus->extif))
++		return SSB_GPIO_EXTIF_LINES;
++	else
++		SSB_WARN_ON(1);
++	return 0;
++}
++EXPORT_SYMBOL(ssb_gpio_count);
++
+ #ifdef CONFIG_SSB_DRIVER_GIGE
+ static int gige_pci_init_callback(struct ssb_bus *bus, unsigned long data)
+ {
+diff --git a/include/linux/ssb/ssb_embedded.h b/include/linux/ssb/ssb_embedded.h
+index 8d8dedf..f1618d2 100644
+--- a/include/linux/ssb/ssb_embedded.h
++++ b/include/linux/ssb/ssb_embedded.h
+@@ -7,6 +7,9 @@
  
- done:
+ extern int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks);
+ 
++#define SSB_GPIO_EXTIF_LINES	5
++#define SSB_GPIO_CHIPCO_LINES	16
++
+ /* Generic GPIO API */
+ u32 ssb_gpio_in(struct ssb_bus *bus, u32 mask);
+ u32 ssb_gpio_out(struct ssb_bus *bus, u32 mask, u32 value);
+@@ -14,5 +17,6 @@ u32 ssb_gpio_outen(struct ssb_bus *bus, u32 mask, u32 value);
+ u32 ssb_gpio_control(struct ssb_bus *bus, u32 mask, u32 value);
+ u32 ssb_gpio_intmask(struct ssb_bus *bus, u32 mask, u32 value);
+ u32 ssb_gpio_polarity(struct ssb_bus *bus, u32 mask, u32 value);
++int ssb_gpio_count(struct ssb_bus *bus);
+ 
+ #endif /* LINUX_SSB_EMBEDDED_H_ */
 -- 
 1.7.9.5
-
 
