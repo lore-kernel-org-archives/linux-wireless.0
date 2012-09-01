@@ -1,63 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:33621 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756285Ab2IEOVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 10:21:00 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Adrian Chadd <adrian.chadd@gmail.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	openwrt-devel@lists.openwrt.org,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
-Date: Wed, 05 Sep 2012 16:20:52 +0200
-Message-ID: <168362233.PzT7LJrFi2@bentobox> (sfid-20120905_162110_507613_B2528CE1)
-In-Reply-To: <CAJ-VmonwheNtv8xfEJnWpD-XOmSEebMFJAmQmWUfe2Pd3tMnqA@mail.gmail.com>
-References: <20120813165340.GA10044@pandem0nium> <CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com> <CAJ-VmonwheNtv8xfEJnWpD-XOmSEebMFJAmQmWUfe2Pd3tMnqA@mail.gmail.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56796 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753832Ab2IAKIJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2012 06:08:09 -0400
+Received: by iahk25 with SMTP id k25so2389890iah.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2012 03:08:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2737334.eIe6BmTy2p"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+In-Reply-To: <CAK678xgwEwjoxciyNe5qv0N_+Bxi8EmUjzf9E07dLPt2nf-wHg@mail.gmail.com>
+References: <CAK678xgwEwjoxciyNe5qv0N_+Bxi8EmUjzf9E07dLPt2nf-wHg@mail.gmail.com>
+Date: Sat, 1 Sep 2012 13:08:09 +0300
+Message-ID: <CAK678xhKap=7EeChJ4TNeSMwwAecVOMvO609X=83avvK57KLbQ@mail.gmail.com> (sfid-20120901_120850_880198_46F58A29)
+Subject: Re: rtl8192cu: no beacon transmission in AP mode with Asus USB-N13
+From: coekbe <coekbe@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Aug 30, 2012 at 11:11 PM, coekbe <coekbe@gmail.com> wrote:
+> Hi All,
+>
+> I created an Access Point using hostapd and the following USB stick:
+>
+> ID 0b05:17ab ASUSTek Computer, Inc. USB-N13 802.11n Network Adapter
+> (rev. B1) [Realtek RTL8192CU]
+>
+> The problem is that I cannot see any beacon frames in data captured
+> from the air. I cannot see beacon frames in the hostapd created
+> mon.wlan0 interface on the AP either.
 
---nextPart2737334.eIe6BmTy2p
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Looks like rtlwifi, rtl8192cu driver code does not contain any calls
+to ieee80211_beacon_get() or ieee80211_beacon_get_tim() (except in
+pci.c) so I guess beacon frames are missing simply because that
+functionality was never programmed. (Realtek vendor driver does
+transmit beacon frames, though.)
 
-On Wednesday 05 September 2012 07:08:47 Adrian Chadd wrote:
-> I don't think it's a stuck beacon WAR issue here; 0xdeadbeef really
-> does read like the MAC has gone to sleep.
-> 
-> Where's the complete register dump hiding?
-
-It was not sent to the public mailing lists due to the size. You will receive 
-the dump mentioned in the first mail in some minutes.
-
-Kind regards,
-	Sven
---nextPart2737334.eIe6BmTy2p
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAABCgAGBQJQR1/EAAoJEF2HCgfBJntG9OUQAIZjy8NwITAoZzbYFX2pJHc1
-SEThuIqOYl6S3F/nNGavZp6CJMV0zvIdfNa1iJ9p5CIKDHUbgFIJr9EGvFZBGACL
-8RZOh1du3ogR+w+31ii7Bd82/1jRyi2ZEiujTEulg7otBIVbr3pIAg0i+bmu4pwU
-p5PLihKsh4Q/vitxItTRJLO2HCMOjXG9/CfoggfNt+owwZGGHrTvTPrxUK8oeopF
-Yzmh2SxGi6lIMGbDV3tjQpiPD9GA2xUQqF/0fXYasGJKUJcbbEiMahJ2CsGGmrXX
-OPRv9mAEWJA5Jc/fvIe8rX+Rfkrsxi5obTlf54HdqxyJtvEVBPIJP0KpwzJ2Zffd
-dlhyiOQi8wlQvQnCBEVTNJey83RQK8uUbpJ345FTIuzuHQzE/tm7wepAyC8NEnNb
-168KDjTFqlGLzr2ip2imdMnobO1H/AtKEcwKUFUR/MmefjzUsKXP8QnLO2ziR8GP
-625pv/aUY9KcSorrDx7h7RKs3kDAvDRPUnA42ALaDPwTmfa6FyP7BNkVUbQaHwXB
-D34BAzWmp463clWKwCFzMIqTFjDSZi0vNijL60f9BOnnuDi4KBvQncra9EoIlJIq
-EumrQRKicITBvyf8m5jAKqrCcgTt22IBuNoGWaZGlvv4+s+DznsfxU5qddqxITSH
-A7oVI21g7L0Uw/FbgjSL
-=Wgm/
------END PGP SIGNATURE-----
-
---nextPart2737334.eIe6BmTy2p--
-
+Colin
