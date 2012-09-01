@@ -1,84 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:48234 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759Ab2I1JAS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 05:00:18 -0400
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh01.mail.saunalahti.fi (Postfix) with SMTP id 3A5589002B
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2012 12:00:16 +0300 (EEST)
-Received: from [192.168.100.26] (a88-113-65-16.elisa-laajakaista.fi [88.113.65.16])
-	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id 1CB7A40A6
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2012 12:00:15 +0300 (EEST)
-Message-ID: <1348822793.15949.7.camel@cumari.coelho.fi> (sfid-20120928_110024_697534_4853CF16)
-Subject: Re: [PATCH 00/31] wlcore/wl18xx/wl12xx patches for 3.7
-From: Luciano Coelho <luca@coelho.fi>
+Received: from plane.gmane.org ([80.91.229.3]:37795 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753264Ab2IANOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Sep 2012 09:14:42 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1T7nX6-00068k-PI
+	for linux-wireless@vger.kernel.org; Sat, 01 Sep 2012 15:14:40 +0200
+Received: from 83.68.239.193 ([83.68.239.193])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2012 15:14:40 +0200
+Received: from netuse by 83.68.239.193 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2012 15:14:40 +0200
 To: linux-wireless@vger.kernel.org
-Date: Fri, 28 Sep 2012 11:59:53 +0300
-In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
-References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
+From: Marco <netuse@lavabit.com>
+Subject: Re: DHCP request timed out, iwlwifi
+Date: Sat, 1 Sep 2012 15:14:29 +0200
+Message-ID: <20120901151429.51e55525@homerow> (sfid-20120901_151519_965122_313B1529)
+References: <20120806161443.35c71558@homerow>
+	<20120806192836.369a3737@homerow>
+	<1344282454.11053.33.camel@dcbw.foobar.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-27 at 13:37 +0300, Luciano Coelho wrote:
-> Hi,
-> 
-> This is a bunch of patches that have accumulated in our internal tree
-> and are intended for 3.7.  Mostly bug-fixes and small improvements all
-> over.
-> 
-> Cheers,
-> Luca.
-> 
-> Arik Nemtsov (9):
->   wlcore: AP mode - send non-data packets with basic rates
->   wlcore: allow only the lowest OFDM rate for p2p setup frames
->   wlcore: make Tx flush timings more verbose
->   wlcore: tx_flush - optimize flow and force Tx during the flush
->   wlcore/wl18xx/wl12xx: allow up to 3 mac addresses
->   wlcore: make debug prints work without dynamic debug
->   wlcore: allow up to 3 running STA interfaces in combinations
->   wlcore: spi: use private max-buf-size limit
->   wl18xx: default to siso40 in 2.4ghz with a single antenna
-> 
-> Eliad Peller (9):
->   wlcore: consider single fw case
->   wlcore: cancel recovery_work on stop() instead of remove_interface()
->   wlcore: resume() only if sta is associated
->   wlcore: always use wlvif->role_id for scans
->   wlcore: lazy-enable device roles
->   wlcore: invalidate keep-alive template on disconnection
->   wlcore: use dynamic keep-alive template ids
->   wlcore: decrease elp timeout
->   wlcore: protect wlcore_op_set_key with mutex
-> 
-> Eyal Shapira (1):
->   wlcore: configure wowlan regardless of wakeup conditions
-> 
-> Ido Reis (2):
->   wl18xx: update default phy configuration for pg2
->   wl18xx: increase rx_ba_win_size to 32
-> 
-> Ido Yariv (6):
->   wlcore: Prevent interaction with HW after recovery is queued
->   wlcore: Don't recover during boot
->   wlcore: Fix unbalanced interrupts enablement
->   wlcore: Allow memory access when the FW crashes
->   wlcore: Refactor probe
->   wlcore: Load the NVS file asynchronously
-> 
-> Igal Chernobelsky (2):
->   wl18xx/wl12xx: defines for Tx/Rx descriptors num
->   wlcore/wl18xx/wl12xx: aggregation buffer size set
-> 
-> Yair Shapira (2):
->   wl18xx: number_of_assembled_ant5 indicates if A band is enabled
->   wlcore/wl18xx: add phy_fw_version_str to debugfs driver_state
+On 2012-08-06 Dan Williams <dcbw@redhat.com>
+wrote:
 
-Applied the series.  Thanks to all the contributers!
+Hi,
 
---
-Luca.
+I am sorry do wake up this old thread again (should I start a new
+one instead?).
+
+> Ok, that does all look fine.  At this point, either the wifi driver
+> isn't cooperating, or there isn't a DHCP server listening.
+
+I managed to find another USB network adapter with a different
+chipset which works perfectly. My guess is that the DHCP works (I
+don't have access to the DHCP server), since it works fine for all
+other hosts on the network.
+
+> I'd rule out the firewall because typically they let DHCPv4
+> through by default.  One other thing you could do is set the
+> connection to "manual" (ie, static) IPv4 addressing, enter an
+> address that you know is on the router's subnet, and try to ping
+> the default router.  If that works, then clearly something is
+> wrong with DHCP.
+
+The ping did not succeed.
+
+> If that doesn't work and you're sure the address/netmask you set
+> is correct, then there's something wrong in the driver.
+
+I am not 100% sure that the values I input were correct. I used the
+same settings that a different host used and picked a random IP
+address on the same subnet.
+
+That way I am connected to the network, but don't have internet
+access (e.g. cannot ping google by IP address).
+
+> Yet another alternative is to do the static IP thing and then
+> run a wireshark packet capture and see if the wifi card sees any traffic
+> at all.
+
+I did that and wireshark receives packages. But I don't really know
+what to look for, to be honest. I can provide a wireshark capture
+file, if necessary. But I guess it makes more sense to send it via
+email, instead of dropping a big binary blob in this list.
+
+> Anyone else have any thoughts?  If the 4-way handshake works, that
+> indicates your WPA passphrase is correct.
+
+It is definitely correct. As I said, if I use a different adapter on
+the same computer with the same settings assigned via DHCP it works.
+
+
+Marco
+
 
