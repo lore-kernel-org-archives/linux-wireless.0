@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m15-22.126.com ([220.181.15.22]:56110 "EHLO m15-22.126.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699Ab2INNAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 09:00:46 -0400
-Date: Fri, 14 Sep 2012 20:29:32 +0800 (CST)
-From: =?GBK?B?wO7J6g==?= <lishen565@126.com>
-To: devel@lists.open80211s.org
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re:[PATCH] mac80211: allow re-open the blocked peer link in mesh
-In-Reply-To: <1347603511-31165-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1347603511-31165-1-git-send-email-yeohchunyeow@gmail.com>
-Content-Type: text/plain; charset=GBK
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:42608 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598Ab2IBUoH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Sep 2012 16:44:07 -0400
+Received: by vbbff1 with SMTP id ff1so4758338vbb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Sep 2012 13:44:07 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <61696420.fc66.139c4c167b7.Coremail.lishen565@126.com> (sfid-20120914_150050_201458_497937F3)
+In-Reply-To: <1346433734-3337-7-git-send-email-gwingerde@gmail.com>
+References: <1346433734-3337-1-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-2-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-3-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-4-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-5-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-6-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-7-git-send-email-gwingerde@gmail.com>
+Date: Sun, 2 Sep 2012 22:44:07 +0200
+Message-ID: <CAOZOX0UvKHoPrcQ8C15eeogknFexBmb1qeiGb0PC52nKMri=JQ@mail.gmail.com> (sfid-20120902_224412_358877_FC173043)
+Subject: Re: [PATCH v2 6/6] rt2x00: rt2800 - Make probe_hw function common
+ between PCI and USB.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have modified the souce code as the patch shows.I'm sorry that it doesn't work and station plink state is still BLOCKED.
-At 2012-09-14 14:18:31,"Chun-Yeow Yeoh" <yeohchunyeow@gmail.com> wrote:
->Peer link which is blocked using the "iw mesh0 station
->set <MAC addr> plink_action block" is previously not able
->to re-open using "iw mesh0 station set <MAC addr>
->plink_action open". This patch is intended to solve this.
->
->If the station plink state remains at OPN_SNT once open,
->try block and open again should solve this problem.
->
->Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
->---
-> net/mac80211/mesh_plink.c |    3 ++-
-> 1 files changed, 2 insertions(+), 1 deletions(-)
->
->diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
->index 9d7ad36..3ab34d8 100644
->--- a/net/mac80211/mesh_plink.c
->+++ b/net/mac80211/mesh_plink.c
->@@ -537,7 +537,8 @@ int mesh_plink_open(struct sta_info *sta)
-> 	spin_lock_bh(&sta->lock);
-> 	get_random_bytes(&llid, 2);
-> 	sta->llid = llid;
->-	if (sta->plink_state != NL80211_PLINK_LISTEN) {
->+	if (sta->plink_state != NL80211_PLINK_LISTEN &&
->+	    sta->plink_state != NL80211_PLINK_BLOCKED) {
-> 		spin_unlock_bh(&sta->lock);
-> 		return -EBUSY;
-> 	}
->-- 
->1.7.0.4
->
->_______________________________________________
->Devel mailing list
->Devel@lists.open80211s.org
->http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
+Hi,
 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index c3cae1d..2ad3b7a 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -44,6 +44,13 @@
+>  #include "rt2800.h"
+>
+>  /*
+> + * Allow hardware encryption to be disabled.
+> + */
+> +static bool modparam_nohwcrypt = false;
+> +module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
+> +MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+
+I am not particularly fond of this change, I would like to have the
+module parameters inside the actual drivers instead of inside one of
+the
+library modules. I don't know if there is a policy for modules which
+says something about these situations, but my preference would be
+that the module parameters are inside rt2800pci and rt2800usb, and
+that the value would be passed to rt2800lib.
+
+If there is isn't a simple and clean way to do that, then we can take
+this patch though...
+
+Ivo
