@@ -1,175 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f202.google.com ([209.85.160.202]:35463 "EHLO
-	mail-gh0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757209Ab2IZQ7y (ORCPT
+Received: from ocean.emcraft.com ([213.221.7.182]:42907 "EHLO
+	ocean.emcraft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753824Ab2IBJOk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 12:59:54 -0400
-Received: by ghbz15 with SMTP id z15so90433ghb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 09:59:53 -0700 (PDT)
-From: Sam Leffler <sleffler@chromium.org>
-Date: Fri, 21 Sep 2012 10:52:57 -0700
-Subject: [PATCH 1/3] {nl,cfg}80211: add a flags word to scan requests
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20120926165952.A54C41E0040@sleffler.sfo.corp.google.com> (sfid-20120926_185959_525154_6CE87D1D)
+	Sun, 2 Sep 2012 05:14:40 -0400
+Subject: Re: [rt2x00-users] [PATCH V2]: rt2800usb: Added rx packet length
+ validity check
+From: Sergei Poselenov <sposelenov@emcraft.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Sun, 02 Sep 2012 13:14:32 +0400
+In-Reply-To: <70A1AEFB-59F7-4947-B2A0-A89C29C3108B@gmail.com>
+References: <20120820205355.7ccc0450@emcraft.com>
+	 <20120821114343.GB2380@redhat.com>
+	 <CAOZOX0V5ehfSZKQ=tPpowH35ct230nBXk6wSBiTcb10UUbieCA@mail.gmail.com>
+	 <20120821141842.GF2380@redhat.com>
+	 <A1D107E0-1E78-4123-88C1-9550064DC9AC@gmail.com>
+	 <20120822092715.GC4959@redhat.com>
+	 <70A1AEFB-59F7-4947-B2A0-A89C29C3108B@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Message-ID: <1346577272.6409.5.camel@mehome> (sfid-20120902_111538_370495_6428541E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a flags word to direct and scheduled scan requests; it will be used
-for control of optional behaviours such as flushing the bss cache prior
-to doing a scan.
+On our system (ARM Cortex-M3 SOC running linux-2.6.33)
+frequent crashes were observed in the rt2800usb module
+because of the invalid length of the received packet (3392,
+46920...). This patch adds the sanity check on the packet
+legth. Also, changed WARNING to ERROR in rt2x00lib_rxdone()
+so that the bad packet condition would be noticed.
 
-Change-Id: Ib7478fd6eea62effc21b5fb508ec51c075956de2
-Signed-off-by: Sam Leffler <sleffler@chromium.org>
+The fix was tested on the latest compat-wireless-3.5.1-1-snpc.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Sergei Poselenov <sposelenov@emcraft.com>
 ---
- include/linux/nl80211.h |   14 ++++++++++++++
- include/net/cfg80211.h  |   10 ++++++++++
- net/mac80211/scan.c     |    1 +
- net/wireless/nl80211.c  |   11 +++++++++++
- 4 files changed, 36 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |   10 +++++++++-
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 4584162..5f2d9ae 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1262,6 +1262,8 @@ enum nl80211_commands {
-  *	was used to provide the hint. For the different types of
-  *	allowed user regulatory hints see nl80211_user_reg_hint_type.
-  *
-+ * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1517,6 +1519,8 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index f8085b2..48df102 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -667,8 +667,16 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 	skb_pull(entry->skb, RXINFO_DESC_SIZE);
  
- 	NL80211_ATTR_USER_REG_HINT_TYPE,
- 
-+	NL80211_ATTR_SCAN_FLAGS,
+ 	/*
+-	 * FIXME: we need to check for rx_pkt_len validity
++	 * Check for rx_pkt_len validity. Return if invalid, leaving
++	 * rxdesc->size zeroed out by the upper level.
+ 	 */
++	if (unlikely(rx_pkt_len == 0 ||
++			rx_pkt_len > entry->queue->data_size)) {
++		ERROR(entry->queue->rt2x00dev,
++			"Bad frame size %d, forcing to 0\n", rx_pkt_len);
++		return;
++	}
 +
- 	/* add attributes here, update the policy in nl80211.c */
+ 	rxd = (__le32 *)(entry->skb->data + rx_pkt_len);
  
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3045,4 +3049,14 @@ enum nl80211_probe_resp_offload_support_attr {
- 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U =	1<<3,
- };
- 
-+/**
-+ * enum nl80211_scan_flags -  scan request control flags
-+ *
-+ * Scan request control flags are used to control the handling
-+ * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
-+ * requests.
-+ */
-+enum nl80211_scan_flags {
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 903683b1..aac20e3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -992,6 +992,12 @@ struct cfg80211_ssid {
- };
- 
- /**
-+ * enum cfg80211_scan_flags -  scan request control flags
-+ */
-+enum cfg80211_scan_flags {
-+};
-+
-+/**
-  * struct cfg80211_scan_request - scan request description
-  *
-  * @ssids: SSIDs to scan for (active scan only)
-@@ -1000,6 +1006,7 @@ struct cfg80211_ssid {
-  * @n_channels: total number of channels to scan
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @flags: bit field of flags controlling operation
-  * @rates: bitmap of rates to advertise for each band
-  * @wiphy: the wiphy this was for
-  * @wdev: the wireless device to scan for
-@@ -1012,6 +1019,7 @@ struct cfg80211_scan_request {
- 	u32 n_channels;
- 	const u8 *ie;
- 	size_t ie_len;
-+	u32 flags;
- 
- 	u32 rates[IEEE80211_NUM_BANDS];
- 
-@@ -1044,6 +1052,7 @@ struct cfg80211_match_set {
-  * @interval: interval between each scheduled scan cycle
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @flags: bit field of flags controlling operation
-  * @match_sets: sets of parameters to be matched for a scan result
-  * 	entry to be considered valid and to be passed to the host
-  * 	(others are filtered out).
-@@ -1061,6 +1070,7 @@ struct cfg80211_sched_scan_request {
- 	u32 interval;
- 	const u8 *ie;
- 	size_t ie_len;
-+	u32 flags;
- 	struct cfg80211_match_set *match_sets;
- 	int n_match_sets;
- 	s32 rssi_thold;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index c4cdbde..2535418 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -462,6 +462,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 			sizeof(*local->hw_scan_req) +
- 			req->n_channels * sizeof(req->channels[0]);
- 		local->hw_scan_req->ie = ies;
-+		local->hw_scan_req->flags = req->flags;
- 
- 		local->hw_scan_band = 0;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 222189b6..cbd2904 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -355,6 +355,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
- 	[NL80211_ATTR_WDEV] = { .type = NLA_U64 },
- 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
-+	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -4337,6 +4338,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
-+		request->flags = nla_get_u32(
-+			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
- 	request->no_cck =
- 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
-@@ -4568,6 +4573,10 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 		       request->ie_len);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
-+		request->flags = nla_get_u32(
-+			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
- 	request->dev = dev;
- 	request->wiphy = &rdev->wiphy;
- 	request->interval = interval;
-@@ -7622,6 +7631,8 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
- 	    nla_put(msg, NL80211_ATTR_IE, req->ie_len, req->ie))
- 		goto nla_put_failure;
- 
-+	nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
-+
- 	return 0;
-  nla_put_failure:
- 	return -ENOBUFS;
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index a59048f..10cf672 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -629,7 +629,7 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp)
+ 	 */
+ 	if (unlikely(rxdesc.size == 0 ||
+ 		     rxdesc.size > entry->queue->data_size)) {
+-		WARNING(rt2x00dev, "Wrong frame size %d max %d.\n",
++		ERROR(rt2x00dev, "Wrong frame size %d max %d.\n",
+ 			rxdesc.size, entry->queue->data_size);
+ 		dev_kfree_skb(entry->skb);
+ 		goto renew_skb;
 -- 
-1.7.7.3
+1.7.4.4
+
+
 
