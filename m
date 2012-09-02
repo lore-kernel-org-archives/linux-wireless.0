@@ -1,64 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:49331 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755481Ab2ITP1R (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:59818 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598Ab2IBUjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 11:27:17 -0400
-Received: by bkuw11 with SMTP id w11so297563bku.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 08:27:15 -0700 (PDT)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: artem.bityutskiy@linux.intel.com,
-	Eric Dumazet <edumazet@google.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1348154575.4161.39.camel@jlt4.sipsolutions.net>
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	 <1347631355.5263.19.camel@sauron.fi.intel.com>
-	 <1347640763.5263.24.camel@sauron.fi.intel.com>
-	 <1347892887.7112.9.camel@sauron.fi.intel.com>
-	 <1348142775.2388.10.camel@sauron.fi.intel.com>
-	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
-	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-	 <1348145936.2388.18.camel@sauron.fi.intel.com>
-	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
-	 <1348147353.2388.19.camel@sauron.fi.intel.com>
-	 <1348151149.31352.109.camel@edumazet-glaptop>
-	 <1348151876.2388.24.camel@sauron.fi.intel.com>
-	 <1348152971.31352.140.camel@edumazet-glaptop>
-	 (sfid-20120920_165616_301862_3EBAF30C)  <1348153522.4161.37.camel@jlt4.sipsolutions.net>
-	 <1348154294.31352.165.camel@edumazet-glaptop>
-	 (sfid-20120920_171820_134642_A4BA7EB1)  <1348154575.4161.39.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Sep 2012 17:27:11 +0200
-Message-ID: <1348154831.31352.177.camel@edumazet-glaptop> (sfid-20120920_172719_621319_44AE3557)
-Mime-Version: 1.0
+	Sun, 2 Sep 2012 16:39:45 -0400
+Received: by vcbfk26 with SMTP id fk26so4858837vcb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Sep 2012 13:39:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1346433734-3337-5-git-send-email-gwingerde@gmail.com>
+References: <1346433734-3337-1-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-2-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-3-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-4-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-5-git-send-email-gwingerde@gmail.com>
+Date: Sun, 2 Sep 2012 22:39:44 +0200
+Message-ID: <CAOZOX0V_Pn0t-TDz1nGJLmCg=SEKuArOoek08ywawNUUM_mcgg@mail.gmail.com> (sfid-20120902_223947_914777_DFEB1DD3)
+Subject: Re: [PATCH v2 4/6] rt2x00: Align GPIO register definitions with the datasheets.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-20 at 17:22 +0200, Johannes Berg wrote:
-> On Thu, 2012-09-20 at 17:18 +0200, Eric Dumazet wrote:
-> 
-> > > Note I think the failing packets are dhcp packets, and connman seems to
-> > > use an AF_INET, SOCK_DGRAM, IPPROTO_UDP socket for those, and binds it
-> > > to the right device. I'd be quite surprised though if UDP code had
-> > > issues with paged Rx??
-> 
-> > You told me : socket(PF_PACKET, SOCK_RAW, htons(ETH_P_EAPOL))
-> > 
-> > So I looked at raw code.
-> 
-> and even found an issue. Artem wasn't really sure, but looking at his
-> information again it seems that the EAPOL packets (those on the raw
-> sockets) do go through, and then DHCP fails. In the printk he did for
-> me, I can see that the EAPOL packets are small enough to get pulled in
-> completely in iwlwifi, and the bigger DHCP packets (~600 bytes) only go
-> through if we linearize them.
+On Fri, Aug 31, 2012 at 7:22 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> Ensure that all active GPIO pins are included in the GPIO register
+> definitions, nothing more and nothing less.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-OK, its a bug in UDP, I'll send a patch asap.
+Acked-by: Ivo van Doorn@gmail.com>
 
-
-
-
+> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
+> index 7564ae9..9d78a53 100644
+> --- a/drivers/net/wireless/rt2x00/rt2400pci.h
+> +++ b/drivers/net/wireless/rt2x00/rt2400pci.h
+> @@ -671,6 +671,13 @@
+>  #define GPIOCSR_BIT6                   FIELD32(0x00000040)
+>  #define GPIOCSR_BIT7                   FIELD32(0x00000080)
+>  #define GPIOCSR_BIT8                   FIELD32(0x00000100)
+> +#define GPIOCSR_BIT9                   FIELD32(0x00000200)
+> +#define GPIOCSR_BIT10                  FIELD32(0x00000400)
+> +#define GPIOCSR_BIT11                  FIELD32(0x00000800)
+> +#define GPIOCSR_BIT12                  FIELD32(0x00001000)
+> +#define GPIOCSR_BIT13                  FIELD32(0x00002000)
+> +#define GPIOCSR_BIT14                  FIELD32(0x00004000)
+> +#define GPIOCSR_BIT15                  FIELD32(0x00008000)
+>
+>  /*
+>   * BBPPCSR: BBP Pin control register.
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
+> index 196bd51..9652300 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.h
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.h
+> @@ -198,6 +198,13 @@
+>  #define MAC_CSR19_BIT6                 FIELD16(0x0040)
+>  #define MAC_CSR19_BIT7                 FIELD16(0x0080)
+>  #define MAC_CSR19_BIT8                 FIELD16(0x0100)
+> +#define MAC_CSR19_BIT9                 FIELD16(0x0200)
+> +#define MAC_CSR19_BIT10                        FIELD16(0x0400)
+> +#define MAC_CSR19_BIT11                        FIELD16(0x0800)
+> +#define MAC_CSR19_BIT12                        FIELD16(0x1000)
+> +#define MAC_CSR19_BIT13                        FIELD16(0x2000)
+> +#define MAC_CSR19_BIT14                        FIELD16(0x4000)
+> +#define MAC_CSR19_BIT15                        FIELD16(0x8000)
+>
+>  /*
+>   * MAC_CSR20: LED control register.
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index e252e9b..a838e17 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -459,6 +459,12 @@
+>  #define GPIO_CTRL_CFG_GPIOD_BIT5       FIELD32(0x00002000)
+>  #define GPIO_CTRL_CFG_GPIOD_BIT6       FIELD32(0x00004000)
+>  #define GPIO_CTRL_CFG_GPIOD_BIT7       FIELD32(0x00008000)
+> +#define GPIO_CTRL_CFG_BIT8             FIELD32(0x00010000)
+> +#define GPIO_CTRL_CFG_BIT9             FIELD32(0x00020000)
+> +#define GPIO_CTRL_CFG_BIT10            FIELD32(0x00040000)
+> +#define GPIO_CTRL_CFG_GPIOD_BIT8       FIELD32(0x01000000)
+> +#define GPIO_CTRL_CFG_GPIOD_BIT9       FIELD32(0x02000000)
+> +#define GPIO_CTRL_CFG_GPIOD_BIT10      FIELD32(0x04000000)
+>
+>  /*
+>   * MCU_CMD_CFG
+> diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
+> index 8f3da5a..9ee0c33 100644
+> --- a/drivers/net/wireless/rt2x00/rt61pci.h
+> +++ b/drivers/net/wireless/rt2x00/rt61pci.h
+> @@ -365,8 +365,6 @@ struct hw_pairwise_ta_entry {
+>  #define MAC_CSR13_BIT3                 FIELD32(0x00000008)
+>  #define MAC_CSR13_BIT4                 FIELD32(0x00000010)
+>  #define MAC_CSR13_BIT5                 FIELD32(0x00000020)
+> -#define MAC_CSR13_BIT6                 FIELD32(0x00000040)
+> -#define MAC_CSR13_BIT7                 FIELD32(0x00000080)
+>  #define MAC_CSR13_BIT8                 FIELD32(0x00000100)
+>  #define MAC_CSR13_BIT9                 FIELD32(0x00000200)
+>  #define MAC_CSR13_BIT10                        FIELD32(0x00000400)
+> --
+> 1.7.11.1
+>
