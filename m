@@ -1,120 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34315 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755741Ab2ITOZy (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:42252 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063Ab2IBNVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 10:25:54 -0400
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: artem.bityutskiy@linux.intel.com
-Cc: Eric Dumazet <edumazet@google.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-In-Reply-To: <1348147353.2388.19.camel@sauron.fi.intel.com>
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	 <1347631355.5263.19.camel@sauron.fi.intel.com>
-	 <1347640763.5263.24.camel@sauron.fi.intel.com>
-	 <1347892887.7112.9.camel@sauron.fi.intel.com>
-	 <1348142775.2388.10.camel@sauron.fi.intel.com>
-	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
-	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-	 <1348145936.2388.18.camel@sauron.fi.intel.com>
-	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
-	 <1348147353.2388.19.camel@sauron.fi.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Sep 2012 16:25:49 +0200
-Message-ID: <1348151149.31352.109.camel@edumazet-glaptop> (sfid-20120920_162616_839682_65056D98)
-Mime-Version: 1.0
+	Sun, 2 Sep 2012 09:21:47 -0400
+MIME-Version: 1.0
+Date: Sun, 2 Sep 2012 21:21:46 +0800
+Message-ID: <CAPgLHd_sD6NYc=Dj4yJpHY0yLBuDmQx=upQY=XQLi-9kTycK-Q@mail.gmail.com> (sfid-20120902_152243_771734_6B1873FC)
+Subject: [PATCH] NFC: fix possible memory leak
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, davem@davemloft.net
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-20 at 16:22 +0300, Artem Bityutskiy wrote:
-> On Thu, 2012-09-20 at 15:04 +0200, Eric Dumazet wrote:
-> > Try to pull 40 bytes : Thats OK for tcp performance, because 40 bytes
-> > is the minimum size of IP+TCP headers
-> > 
-> > pskb_may_pull(skb, 40);
-> 
-> OK, I've tried almost this (see below) and it solves my issue:
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 965e6ec..7f079d0 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1798,9 +1798,13 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
->  
->                 if (skb) {
->                         /* deliver to local stack */
-> -                       skb->protocol = eth_type_trans(skb, dev);
-> -                       memset(skb->cb, 0, sizeof(skb->cb));
-> -                       netif_receive_skb(skb);
-> +                       if (pskb_may_pull(skb, 40)) {
-> +                               skb->protocol = eth_type_trans(skb, dev);
-> +                               memset(skb->cb, 0, sizeof(skb->cb));
-> +                               netif_receive_skb(skb);
-> +                       } else {
-> +                               kfree_skb(skb);
-> +                       }
->                 }
->         }
-> 
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Please remove this hack and try the following bugfix in raw handler
+nfc_llcp_build_tlv() malloced the memory and should be free in
+nfc_llcp_build_gb() after used, and the same in the error handling
+case, otherwise it will cause memory leak.
 
-icmp_filter() should not modify skb, or else its caller should not
-assume ip_hdr() is unchanged.
+spatch with a semantic match is used to found this problem.
+(http://coccinelle.lip6.fr/)
 
- net/ipv4/raw.c |   29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ net/nfc/llcp/llcp.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/net/ipv4/raw.c b/net/ipv4/raw.c
-index f242578..3fa8c96 100644
---- a/net/ipv4/raw.c
-+++ b/net/ipv4/raw.c
-@@ -128,25 +128,30 @@ found:
- }
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 82f0f75..8152973 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -426,6 +426,7 @@ static int nfc_llcp_build_gb(struct nfc_llcp_local *local)
+ 	u8 *miux_tlv, miux_length;
+ 	__be16 miux;
+ 	u8 gb_len = 0;
++	int ret = 0;
  
- /*
-- *	0 - deliver
-- *	1 - block
-+ *	false - deliver
-+ *	true - block
-  */
--static __inline__ int icmp_filter(struct sock *sk, struct sk_buff *skb)
-+static bool icmp_filter(struct sock *sk, const struct sk_buff *skb)
- {
--	int type;
--
--	if (!pskb_may_pull(skb, sizeof(struct icmphdr)))
--		return 1;
--
--	type = icmp_hdr(skb)->type;
--	if (type < 32) {
-+	__u8 _type;
-+	const __u8 *type;
-+
-+	type = skb_header_pointer(skb,
-+				  skb_transport_offset(skb) +
-+				  offsetof(struct icmphdr, type),
-+				  sizeof(_type),
-+				  &_type);
-+	if (!type)
-+		return true;
-+
-+	if (*type < 32) {
- 		__u32 data = raw_sk(sk)->filter.data;
+ 	version = LLCP_VERSION_11;
+ 	version_tlv = nfc_llcp_build_tlv(LLCP_TLV_VERSION, &version,
+@@ -450,8 +451,8 @@ static int nfc_llcp_build_gb(struct nfc_llcp_local *local)
+ 	gb_len += ARRAY_SIZE(llcp_magic);
  
--		return ((1 << type) & data) != 0;
-+		return ((1U << *type) & data) != 0;
+ 	if (gb_len > NFC_MAX_GT_LEN) {
+-		kfree(version_tlv);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto out;
  	}
  
- 	/* Do not block unknown ICMP types */
+ 	gb_cur = local->gb;
+@@ -471,12 +472,15 @@ static int nfc_llcp_build_gb(struct nfc_llcp_local *local)
+ 	memcpy(gb_cur, miux_tlv, miux_length);
+ 	gb_cur += miux_length;
+ 
++	local->gb_len = gb_len;
++
++out:
+ 	kfree(version_tlv);
+ 	kfree(lto_tlv);
++	kfree(wks_tlv);
++	kfree(miux_tlv);
+ 
+-	local->gb_len = gb_len;
+-
 -	return 0;
-+	return false;
++	return ret;
  }
  
- /* IP input processing comes here for RAW socket delivery.
+ u8 *nfc_llcp_general_bytes(struct nfc_dev *dev, size_t *general_bytes_len)
 
 
