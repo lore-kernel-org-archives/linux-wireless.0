@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.u-psud.fr ([129.175.33.42]:26737 "EHLO smtp2.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760320Ab2IGKAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 06:00:03 -0400
-Message-ID: <5049C35A.1050601@lri.fr> (sfid-20120907_120008_684032_BAF46BDB)
-Date: Fri, 07 Sep 2012 11:50:18 +0200
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Antonio Quartulli <ordex@autistici.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 1/2] mac80211: export ieee80211_send_deauth_disassoc
- for usage outside of mlme.c
-References: <1346951275-32081-1-git-send-email-ordex@autistici.org>  (sfid-20120906_190828_405993_603EB9FF) <1347006332.4256.9.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1347006332.4256.9.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-we0-f174.google.com ([74.125.82.174]:37961 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755940Ab2IBN0V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Sep 2012 09:26:21 -0400
+Received: by weyx8 with SMTP id x8so2490138wey.19
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Sep 2012 06:26:20 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 2 Sep 2012 15:22:26 +0200
+Subject: [PATCH] p54: connect to 11w protected networks
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Message-Id: <E1T8ABt-0007Mx-CW@debian64.localnet> (sfid-20120902_152626_031643_E0FAEA94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/09/2012 10:25, Johannes Berg wrote:
-> On Thu, 2012-09-06 at 19:07 +0200, Antonio Quartulli wrote:
-> 
->> -		if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
->> -			IEEE80211_SKB_CB(skb)->flags |=
->> -				IEEE80211_TX_INTFL_DONT_ENCRYPT;
-> 
-> 
->> +		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
->> +		    !(sdata->u.mgd.flags & IEEE80211_STA_MFP_ENABLED))
->> +			IEEE80211_SKB_CB(skb)->flags |=
->> +				IEEE80211_TX_INTFL_DONT_ENCRYPT;
-> 
-> It would seem that this should be 
-> 
-> 	if (sdata->vif.type != NL80211_IFTYPE_STATION ||
-> 	    !(flags & MFP_ENABLED))
-> 
-> ?
+Previously, it was not possible to connect to
+networks which requires 11w to be supported by
+the stations.
 
-Or just never set TX_INTFL_DONT_ENCRYPT at all and rely on
-ieee80211_tx_h_select_key() to do the right thing ?
+This implementation relies on the mac80211
+stack to do the actual crypto operations, as
+there is no support for MFP in the firmware
+as far as I can tell.
+
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/p54/main.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+index 5e91ad0..5333201 100644
+--- a/drivers/net/wireless/p54/main.c
++++ b/drivers/net/wireless/p54/main.c
+@@ -540,7 +540,8 @@ static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
+ 				ret = -EOPNOTSUPP;
+ 				goto out_unlock;
+ 			}
+-			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV |
++				IEEE80211_KEY_FLAG_SW_MGMT;
+ 			algo = P54_CRYPTO_AESCCMP;
+ 			break;
+ 		default:
+@@ -736,6 +737,7 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
+ 	dev->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 		     IEEE80211_HW_SIGNAL_DBM |
+ 		     IEEE80211_HW_SUPPORTS_PS |
++		     IEEE80211_HW_MFP_CAPABLE |
+ 		     IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		     IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+ 
+-- 
+1.7.10.4
+
