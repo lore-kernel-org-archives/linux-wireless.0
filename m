@@ -1,65 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4926 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752627Ab2IPU35 (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:61538 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754511Ab2IBUhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2012 16:29:57 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Sun, 2 Sep 2012 16:37:53 -0400
+MIME-Version: 1.0
+In-Reply-To: <1346433734-3337-3-git-send-email-gwingerde@gmail.com>
+References: <1346433734-3337-1-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-2-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-3-git-send-email-gwingerde@gmail.com>
+Date: Sun, 2 Sep 2012 22:37:52 +0200
+Message-ID: <CAOZOX0WqWbV_UavHdamVucdPNnGnNo9PjS0QiQEe2mtbyBuDjQ@mail.gmail.com> (sfid-20120902_223801_377755_B5E1C014)
+Subject: Re: [PATCH v2 2/6] rt2x00: Fix word size of rt2500usb MAC_CSR19 register.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com,
 	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 1/5] rt2x00: Code clean up in rt2800lib.
-Date: Sun, 16 Sep 2012 22:29:49 +0200
-Message-Id: <1347827393-26948-2-git-send-email-gwingerde@gmail.com> (sfid-20120916_223059_476447_50C0A3EF)
-In-Reply-To: <1347827393-26948-1-git-send-email-gwingerde@gmail.com>
-References: <1347827393-26948-1-git-send-email-gwingerde@gmail.com>
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the code in rt2800_get_default_vgc more understandable and
-readable, especially for the 5GHz band values.
+On Fri, Aug 31, 2012 at 7:22 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> The register is 16 bits wide, not 32.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Cc: <stable@vger.kernel.org>
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn@gmail.com>
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 9e09367..cec4a99 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2896,6 +2896,8 @@ EXPORT_SYMBOL_GPL(rt2800_link_stats);
- 
- static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- {
-+	u8 vgc;
-+
- 	if (rt2x00dev->curr_band == IEEE80211_BAND_2GHZ) {
- 		if (rt2x00_rt(rt2x00dev, RT3070) ||
- 		    rt2x00_rt(rt2x00dev, RT3071) ||
-@@ -2904,15 +2906,17 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- 		    rt2x00_rt(rt2x00dev, RT3390) ||
- 		    rt2x00_rt(rt2x00dev, RT5390) ||
- 		    rt2x00_rt(rt2x00dev, RT5392))
--			return 0x1c + (2 * rt2x00dev->lna_gain);
-+			vgc = 0x1c + (2 * rt2x00dev->lna_gain);
-+		else
-+			vgc = 0x2e + rt2x00dev->lna_gain;
-+	} else { /* 5GHZ band */
-+		if (!test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
-+			vgc = 0x32 + (rt2x00dev->lna_gain * 5) / 3;
- 		else
--			return 0x2e + rt2x00dev->lna_gain;
-+			vgc = 0x3a + (rt2x00dev->lna_gain * 5) / 3;
- 	}
- 
--	if (!test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
--		return 0x32 + (rt2x00dev->lna_gain * 5) / 3;
--	else
--		return 0x3a + (rt2x00dev->lna_gain * 5) / 3;
-+	return vgc;
- }
- 
- static inline void rt2800_set_vgc(struct rt2x00_dev *rt2x00dev,
--- 
-1.7.11.1
-
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> index 3aae36b..b3a1d73 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> @@ -283,7 +283,7 @@ static int rt2500usb_rfkill_poll(struct rt2x00_dev *rt2x00dev)
+>         u16 reg;
+>
+>         rt2500usb_register_read(rt2x00dev, MAC_CSR19, &reg);
+> -       return rt2x00_get_field32(reg, MAC_CSR19_BIT7);
+> +       return rt2x00_get_field16(reg, MAC_CSR19_BIT7);
+>  }
+>
+>  #ifdef CONFIG_RT2X00_LIB_LEDS
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
+> index b493306..192531d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.h
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.h
+> @@ -189,14 +189,14 @@
+>   * MAC_CSR19: GPIO control register.
+>   */
+>  #define MAC_CSR19                      0x0426
+> -#define MAC_CSR19_BIT0                 FIELD32(0x0001)
+> -#define MAC_CSR19_BIT1                 FIELD32(0x0002)
+> -#define MAC_CSR19_BIT2                 FIELD32(0x0004)
+> -#define MAC_CSR19_BIT3                 FIELD32(0x0008)
+> -#define MAC_CSR19_BIT4                 FIELD32(0x0010)
+> -#define MAC_CSR19_BIT5                 FIELD32(0x0020)
+> -#define MAC_CSR19_BIT6                 FIELD32(0x0040)
+> -#define MAC_CSR19_BIT7                 FIELD32(0x0080)
+> +#define MAC_CSR19_BIT0                 FIELD16(0x0001)
+> +#define MAC_CSR19_BIT1                 FIELD16(0x0002)
+> +#define MAC_CSR19_BIT2                 FIELD16(0x0004)
+> +#define MAC_CSR19_BIT3                 FIELD16(0x0008)
+> +#define MAC_CSR19_BIT4                 FIELD16(0x0010)
+> +#define MAC_CSR19_BIT5                 FIELD16(0x0020)
+> +#define MAC_CSR19_BIT6                 FIELD16(0x0040)
+> +#define MAC_CSR19_BIT7                 FIELD16(0x0080)
+>
+>  /*
+>   * MAC_CSR20: LED control register.
+> --
+> 1.7.11.1
+>
