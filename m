@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48033 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932377Ab2IUJO7 (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:44994 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098Ab2IBNlF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 05:14:59 -0400
-Message-ID: <505C300F.3060407@qca.qualcomm.com> (sfid-20120921_111503_700951_A8D3A08B)
-Date: Fri, 21 Sep 2012 12:14:55 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sun, 2 Sep 2012 09:41:05 -0400
 MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 1/3] ath6kl: Avoid null ptr dereference while printing
- reg domain pair
-References: <1348122068-24648-1-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1348122068-24648-1-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Date: Sun, 2 Sep 2012 21:41:04 +0800
+Message-ID: <CAPgLHd_ykxWnV82swesivdEkyqP+a+hBgTTT8SXwn9RYWR1HFA@mail.gmail.com> (sfid-20120902_154110_872516_6EC96020)
+Subject: [PATCH] nl80211: [PATCH] nl80211: fix possible memory leak nl80211_connect()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com,
+	davem@davemloft.net
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2012 09:21 AM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
-> 
-> Return value of ath6kl_get_regpair() is stored in 'regpair' in
-> ath6kl_wmi_regdomain_event() func and it's directly accessed
-> in the debug prints without checking for NULL value. There are
-> situation to get NULL pointer as a return value from
-> ath6kl_get_regpair() func. Fix this.
-> 
-> Found this on code review.
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/wmi.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-> index 68b46bd..d5263ff 100644
-> --- a/drivers/net/wireless/ath/ath6kl/wmi.c
-> +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-> @@ -936,8 +936,9 @@ static void ath6kl_wmi_regdomain_event(struct wmi *wmi, u8 *datap, int len)
->  
->  		regpair = ath6kl_get_regpair((u16) reg_code);
->  		country = ath6kl_regd_find_country_by_rd((u16) reg_code);
-> -		ath6kl_dbg(ATH6KL_DBG_WMI, "Regpair used: 0x%0x\n",
-> -			   regpair->regDmnEnum);
-> +		if (regpair)
-> +			ath6kl_dbg(ATH6KL_DBG_WMI, "Regpair used: 0x%0x\n",
-> +				   regpair->regDmnEnum);
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-The problem with this is that the regpair debug print is not printed at
-all. Maybe something like this:
+connkeys is malloced in nl80211_parse_connkeys() and should
+be freed in the error handling case, otherwise it will cause
+memory leak.
 
-if (regpair)
-	ath6kl_dbg(ATH6KL_DBG_WMI, "Regpair used: 0x%0x\n",
-			   regpair->regDmnEnum);
-else
-	ath6kl_warn("Regpair not found reg_code 0x%0x\n",
-			reg_code);
+spatch with a semantic match is used to found this problem.
+(http://coccinelle.lip6.fr/)
 
-I used the ath6kl_warn() here as this should not happen and we can more
-easily notice the issue with ath6kl_warn(). Actually someone reported
-about this crash on IRC earlier this week.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ net/wireless/nl80211.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Kalle
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 97026f3..1e37dbf 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5633,8 +5633,10 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 		       sizeof(connect.ht_capa_mask));
+ 
+ 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
+-		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
++		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]) {
++			kfree(connkeys);
+ 			return -EINVAL;
++		}
+ 		memcpy(&connect.ht_capa,
+ 		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]),
+ 		       sizeof(connect.ht_capa));
 
