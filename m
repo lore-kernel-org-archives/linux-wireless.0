@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45125 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:34554 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686Ab2IENy5 (ORCPT
+	with ESMTP id S1755340Ab2IBVr5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 09:54:57 -0400
+	Sun, 2 Sep 2012 17:47:57 -0400
+Message-ID: <1346622503.10113.2.camel@jlt4.sipsolutions.net> (sfid-20120902_234928_831962_18D05B7A)
+Subject: Re: [PATCH] carl9170: connect to 11w protected networks
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't use kerneldoc for ieee80211_add_rx_radiotap_header
-Date: Wed,  5 Sep 2012 15:55:33 +0200
-Message-Id: <1346853333-17869-1-git-send-email-johannes@sipsolutions.net> (sfid-20120905_155500_676104_FDD24AF3)
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Sun, 02 Sep 2012 23:48:23 +0200
+In-Reply-To: <E1T89yV-0007Cn-JT@debian64.localnet> (sfid-20120902_151319_118701_3604D3F3)
+References: <E1T89yV-0007Cn-JT@debian64.localnet>
+	 (sfid-20120902_151319_118701_3604D3F3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, 2012-09-02 at 14:25 +0200, Christian Lamparter wrote:
+> Previously, it was not possible to connect to
+> networks which requires 11w to be supported by
+> the stations.
+> 
+> While the documentation hints that there's some
+> hardware support for offloading MFP "decryption",
+> this simple implementation relies on the mac80211
+> stack to do the actual crypto operations.
 
-Doing so creates warnings, but the function is internal and
-not part of the 802.11 docbooks, so it from kerneldoc.
+Maybe we need to clarify the documentation...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The problem with MFP is that now unicast management frames are encrypted
+with CCMP. If the device has HW crypto on RX or TX, it may not implement
+it correctly due to the different header munging needed for management
+frames over data frames.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b382605..61c621e 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -103,7 +103,7 @@ ieee80211_rx_radiotap_len(struct ieee80211_local *local,
- 	return len;
- }
- 
--/**
-+/*
-  * ieee80211_add_rx_radiotap_header - add radiotap header
-  *
-  * add a radiotap header containing all the fields which the hardware provided.
--- 
-1.7.10.4
+You should verify that unicast management frames are properly encrypted
+and decrypted by the hardware (or punted to software on RX like you do
+on TX). The danger is that the hardware corrupts CCMP encrypted RX mgmt
+frames and software can't recover.
+
+johannes
 
