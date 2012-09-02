@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8152 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757111Ab2IUJjb (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:42817 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109Ab2IBNMd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 05:39:31 -0400
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 1/3] ath6kl: Avoid null ptr dereference while printing reg domain pair
-Date: Fri, 21 Sep 2012 15:08:53 +0530
-Message-ID: <1348220335-29711-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120921_113934_362371_25E7712F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 2 Sep 2012 09:12:33 -0400
+Received: by wibhq12 with SMTP id hq12so2619716wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Sep 2012 06:12:32 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 2 Sep 2012 14:25:50 +0200
+Subject: [PATCH] carl9170: connect to 11w protected networks
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Message-Id: <E1T89yV-0007Cn-JT@debian64.localnet> (sfid-20120902_151319_118701_3604D3F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+Previously, it was not possible to connect to
+networks which requires 11w to be supported by
+the stations.
 
-Return value of ath6kl_get_regpair() is stored in 'regpair' in
-ath6kl_wmi_regdomain_event() func and it's directly accessed
-in the debug prints without checking for NULL value. There are
-situation to get NULL pointer as a return value from
-ath6kl_get_regpair() func. Fix this.
+While the documentation hints that there's some
+hardware support for offloading MFP "decryption",
+this simple implementation relies on the mac80211
+stack to do the actual crypto operations.
 
-Found this on code review.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/ath/ath6kl/wmi.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/carl9170/mac.c  |    3 ++-
+ drivers/net/wireless/ath/carl9170/main.c |    2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 68b46bd..64b81fd 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -936,8 +936,12 @@ static void ath6kl_wmi_regdomain_event(struct wmi *wmi, u8 *datap, int len)
+diff --git a/drivers/net/wireless/ath/carl9170/mac.c b/drivers/net/wireless/ath/carl9170/mac.c
+index f867628..e3b1b6e 100644
+--- a/drivers/net/wireless/ath/carl9170/mac.c
++++ b/drivers/net/wireless/ath/carl9170/mac.c
+@@ -304,7 +304,8 @@ int carl9170_set_operating_mode(struct ar9170 *ar)
+ 	struct ath_common *common = &ar->common;
+ 	u8 *mac_addr, *bssid;
+ 	u32 cam_mode = AR9170_MAC_CAM_DEFAULTS;
+-	u32 enc_mode = AR9170_MAC_ENCRYPTION_DEFAULTS;
++	u32 enc_mode = AR9170_MAC_ENCRYPTION_DEFAULTS |
++		AR9170_MAC_ENCRYPTION_MGMT_RX_SOFTWARE;
+ 	u32 rx_ctrl = AR9170_MAC_RX_CTRL_DEAGG |
+ 		      AR9170_MAC_RX_CTRL_SHORT_FILTER;
+ 	u32 sniffer = AR9170_MAC_SNIFFER_DEFAULTS;
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 18554ab..50c2949 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1149,6 +1149,7 @@ static int carl9170_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		ktype = AR9170_ENC_ALG_AESCCMP;
++		key->flags |= IEEE80211_KEY_FLAG_SW_MGMT;
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+@@ -1780,6 +1781,7 @@ void *carl9170_alloc(size_t priv_size)
+ 	hw->wiphy->interface_modes = 0;
  
- 		regpair = ath6kl_get_regpair((u16) reg_code);
- 		country = ath6kl_regd_find_country_by_rd((u16) reg_code);
--		ath6kl_dbg(ATH6KL_DBG_WMI, "Regpair used: 0x%0x\n",
--			   regpair->regDmnEnum);
-+		if (regpair)
-+			ath6kl_dbg(ATH6KL_DBG_WMI, "Regpair used: 0x%0x\n",
-+				   regpair->regDmnEnum);
-+		else
-+			ath6kl_warn("Regpair not found reg_code 0x%0x\n",
-+				    reg_code);
- 	}
- 
- 	if (country && wmi->parent_dev->wiphy_registered) {
+ 	hw->flags |= IEEE80211_HW_RX_INCLUDES_FCS |
++		     IEEE80211_HW_MFP_CAPABLE |
+ 		     IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+ 		     IEEE80211_HW_SUPPORTS_PS |
+ 		     IEEE80211_HW_PS_NULLFUNC_STACK |
 -- 
-1.7.1
+1.7.10.4
 
