@@ -1,113 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44514 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894Ab2IPChF (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:61538 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754511Ab2IBUha (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2012 22:37:05 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Sun, 2 Sep 2012 16:37:30 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20565.15128.420823.680669@gargle.gargle.HOWL> (sfid-20120916_043709_791596_5F435BAD)
-Date: Sun, 16 Sep 2012 08:06:08 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/8] ath9k_hw: Add antenna diversity group for AR9565
+In-Reply-To: <1346433734-3337-2-git-send-email-gwingerde@gmail.com>
+References: <1346433734-3337-1-git-send-email-gwingerde@gmail.com>
+	<1346433734-3337-2-git-send-email-gwingerde@gmail.com>
+Date: Sun, 2 Sep 2012 22:37:30 +0200
+Message-ID: <CAOZOX0X920egxb_avqNZbe=AodVTtmEN4+XEKDLe4=98UzByqQ@mail.gmail.com> (sfid-20120902_223733_947990_61C8B51A)
+Subject: Re: [PATCH v2 1/6] rt2x00: Identify ASUS USB-N53 device.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Maximilian Engelhardt <maxi@daemonizer.de>,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/antenna.c    | 62 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |  3 ++
- 2 files changed, 65 insertions(+)
+On Fri, Aug 31, 2012 at 7:22 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> This is an RT3572 based device.
+>
+> Signed-off-by: Maximilian Engelhardt <maxi@daemonizer.de>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Cc: <stable@vger.kernel.org>
 
-diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
-index eb61c6b..8eb274f 100644
---- a/drivers/net/wireless/ath/ath9k/antenna.c
-+++ b/drivers/net/wireless/ath/ath9k/antenna.c
-@@ -475,6 +475,68 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 		default:
- 			break;
- 		}
-+	} else if (ant_conf->div_group == 3) {
-+		switch ((ant_conf->main_lna_conf << 4) |
-+			ant_conf->alt_lna_conf) {
-+		case 0x01: /* A-B LNA2 */
-+			ant_conf->fast_div_bias = 0x1;
-+			break;
-+		case 0x02: /* A-B LNA1 */
-+			ant_conf->fast_div_bias = 0x39;
-+			break;
-+		case 0x03: /* A-B A+B */
-+			ant_conf->fast_div_bias = 0x1;
-+			break;
-+		case 0x10: /* LNA2 A-B */
-+			if ((antcomb->scan == 0) &&
-+			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
-+				ant_conf->fast_div_bias = 0x3f;
-+			} else {
-+				ant_conf->fast_div_bias = 0x1;
-+			}
-+			break;
-+		case 0x12: /* LNA2 LNA1 */
-+			ant_conf->fast_div_bias = 0x39;
-+			break;
-+		case 0x13: /* LNA2 A+B */
-+			if ((antcomb->scan == 0) &&
-+			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
-+				ant_conf->fast_div_bias = 0x3f;
-+			} else {
-+				ant_conf->fast_div_bias = 0x1;
-+			}
-+			break;
-+		case 0x20: /* LNA1 A-B */
-+			if ((antcomb->scan == 0) &&
-+			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
-+				ant_conf->fast_div_bias = 0x3f;
-+			} else {
-+				ant_conf->fast_div_bias = 0x4;
-+			}
-+			break;
-+		case 0x21: /* LNA1 LNA2 */
-+			ant_conf->fast_div_bias = 0x6;
-+			break;
-+		case 0x23: /* LNA1 A+B */
-+			if ((antcomb->scan == 0) &&
-+			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
-+				ant_conf->fast_div_bias = 0x3f;
-+			} else {
-+				ant_conf->fast_div_bias = 0x6;
-+			}
-+			break;
-+		case 0x30: /* A+B A-B */
-+			ant_conf->fast_div_bias = 0x1;
-+			break;
-+		case 0x31: /* A+B LNA2 */
-+			ant_conf->fast_div_bias = 0x6;
-+			break;
-+		case 0x32: /* A+B LNA1 */
-+			ant_conf->fast_div_bias = 0x1;
-+			break;
-+		default:
-+			break;
-+		}
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 0d800c6..4b503ee 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1294,6 +1294,9 @@ static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
- 	} else if (AR_SREV_9485(ah)) {
- 		antconf->lna1_lna2_delta = -9;
- 		antconf->div_group = 2;
-+	} else if (AR_SREV_9565(ah)) {
-+		antconf->lna1_lna2_delta = -3;
-+		antconf->div_group = 3;
- 	} else {
- 		antconf->lna1_lna2_delta = -3;
- 		antconf->div_group = 0;
--- 
-1.7.12
+Acked-by: Ivo van Doorn@gmail.com>
 
+
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 6cf3365..6681bfc 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -1157,6 +1157,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>         { USB_DEVICE(0x1690, 0x0744) },
+>         { USB_DEVICE(0x1690, 0x0761) },
+>         { USB_DEVICE(0x1690, 0x0764) },
+> +       /* ASUS */
+> +       { USB_DEVICE(0x0b05, 0x179d) },
+>         /* Cisco */
+>         { USB_DEVICE(0x167b, 0x4001) },
+>         /* EnGenius */
+> @@ -1222,7 +1224,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>         { USB_DEVICE(0x0b05, 0x1760) },
+>         { USB_DEVICE(0x0b05, 0x1761) },
+>         { USB_DEVICE(0x0b05, 0x1790) },
+> -       { USB_DEVICE(0x0b05, 0x179d) },
+>         /* AzureWave */
+>         { USB_DEVICE(0x13d3, 0x3262) },
+>         { USB_DEVICE(0x13d3, 0x3284) },
+> --
+> 1.7.11.1
+>
