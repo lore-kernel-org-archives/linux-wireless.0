@@ -1,54 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2926 "EHLO mms1.broadcom.com"
+Received: from narfation.org ([79.140.41.39]:33497 "EHLO v3-1039.vlinux.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032Ab2IMTMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 15:12:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/10] brcmfmac: sdio dpc restructuring and cleanup
-Date: Thu, 13 Sep 2012 21:11:56 +0200
-Message-ID: <1347563526-12513-1-git-send-email-arend@broadcom.com> (sfid-20120913_211234_632462_873919D2)
+	id S932174Ab2ICOef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Sep 2012 10:34:35 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	openwrt-devel@lists.openwrt.org,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Adrian Chadd <adrian.chadd@gmail.com>
+Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
+Date: Mon, 03 Sep 2012 16:34:30 +0200
+Message-ID: <2968585.KZWUHnqH8O@bentobox> (sfid-20120903_163439_045582_2C98D185)
+In-Reply-To: <CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
+References: <20120813165340.GA10044@pandem0nium> <20120902200102.GA28313@pandem0nium> <CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="nextPart1409415.C9LQapUH8N"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series mainly contains rework of the sdio interrupt handling
-which addresses issues with in-band sdio interrupts. These were
-raised by people working on nvidia tegra platform.
 
-This series is intended for v3.7 kernel and applies to wireless-next.
+--nextPart1409415.C9LQapUH8N
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Arend van Spriel (2):
-  brcmfmac: add parameter check in brcmf_c_mkiovar()
-  brcmfmac: simplify handling e-scan result firmware event
+On Monday 03 September 2012 19:23:26 Mohammed Shafi wrote:
+> > # dmesg
+> > [...]
+> > [900132.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
+> > [900162.160000] ath: phy0: NF calibrated [ctl] [chain 0] is -104
+> > [900162.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
+> > [900192.160000] ath: phy0: NF calibrated [ctl] [chain 0] is -104
+> > [900192.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
+> > [900197.470000] ath: phy0: missed 1 consecutive beacons
+> > [900197.560000] ath: phy0: resume beacon xmit after 1 misses
+> > [900222.160000] ath: phy0: NF calibrated [ctl] [chain 0] is -104
+> > [900222.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
+> > [900252.160000] ath: phy0: NF calibrated [ctl] [chain 0] is -104
+> > [900252.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
+> > [900275.910000] ath: phy0: missed 1 consecutive beacons
+> 
+> seems we are getting beacon stuck, though its not sufficient for triggering
+> chip reset (or) atleast start noise floor calibration. Is this is in a
+> congested environment ? we can dump cycle counters . I think we need to
+> have a WAR of chip reset if the cycle counters (busy is too high) inspite
+> the MAC hang signature . let me try too to figure out that WAR is already
+> available (or) we got to enable it.
 
-Franky Lin (7):
-  brcmfmac: absorb brcmf_sendpkt into brcmf_netdev_start_xmit
-  brcmfmac: remove obsolete sdio bus sleep mechanism
-  brcmfmac: use atomic variable for interrupt pending flag
-  brcmfmac: convert SDIO dpc implementation to workqueue
-  brcmfmac: streamline SDIO dpc
-  brcmfmac: raise SDIO host lock to higher level
-  brcmfmac: clear status for in-band interrupt in brcmf_sdbrcm_isr
+The test environment is not really "congested". It is not in a city and you 
+don't have many access points in range. Only 2/3 clients are using these two 
+test access points. I don't know whether there are other things using the 
+channel range also used by the access points.
 
-Hante Meuleman (1):
-  brcmfmac: fix bug causing errorneous free on exception.
+Kind regards,
+	Sven
+--nextPart1409415.C9LQapUH8N
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
 
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   39 +-
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   25 --
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    4 -
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    6 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   41 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  416 ++++++++------------
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    6 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   14 +-
- 9 files changed, 225 insertions(+), 328 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
--- 
-1.7.9.5
+iQIcBAABCgAGBQJQRL/2AAoJEF2HCgfBJntGXHMP/j0yoG0FhFrMBHNZDrs4q3VC
+qme7a56FSIPPtfdRxK8Z2HESl3w3g561BHcNOfBIvPTw1dASdmiKPhUJ3jsiNQB7
+JrPxxK2YR0FrcaLuJ4MLCEAI8pBN+Tpen6zcmmxqTRMoEUco48BkD9UuuRIDoQex
+uYvkFpcs5tbU2Pif4BMIZBHXfeVGxVO3O63XdsNkEbJymupajGzFc6g7sUhcwjb6
+C9rmIhpQxgQcDQ6AOmUBMq96b8Uv0WxR0kj2WWKjlBRzmqQl2TbPpMD5ragHt7UW
+yB/lDH5yur52/dvsTwOUmBu7Z9FlYOuTfanfQD0nUwKHpnA/5C6YrLic3cyb+H1X
+qNerUr42RjxrE1Pxjr1p3Rva354jZMOVXb9a6+wCTlG9XwJlNY6201hJwRhdOGfS
+J2HnMa+4b7adKoZ2j+9zvaH6vRveKi/wgvQ/4CNvsdviHsP6DCzjS8QzLggibbvN
+0pAF7f6YZePtOna2S/McFv5I31hmUpDoS6T9SbUMwkT8mIv8orjnC3/Sc+77M+ot
+UAgO2zCmaRm/IbPaTjeXnonxoQOOga7FzLbPV2wr671gKunfQzKJUfv1VsYov+bd
+/2JBPaOxsr5gnBwFaPZAxC7rqUrrVCpgDMV1sfXxNvValuurcrMz420ftDj94LBq
+fKcR5iD6EeBrokKy0Ee7
+=tlS0
+-----END PGP SIGNATURE-----
 
+--nextPart1409415.C9LQapUH8N--
 
