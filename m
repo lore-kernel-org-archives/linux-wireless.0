@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:42685 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751217Ab2IGRP4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 13:15:56 -0400
-Date: Fri, 7 Sep 2012 19:15:53 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Eric Lapuyade <eric.lapuyade@linux.intel.com>
-Cc: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>,
-	eric.lapuyade@intel.com, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org
-Subject: Re: [linux-nfc] [PATCH v2 1/2] NFC: Remove crc generation from shdlc
- layer
-Message-ID: <20120907171553.GH4128@sortiz-mobl> (sfid-20120907_191559_963970_077D0D5C)
-References: <1347008910-11472-1-git-send-email-waldemar.rymarkiewicz@tieto.com>
- <5049E874.8010306@linux.intel.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:54321 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754947Ab2ICTPq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Sep 2012 15:15:46 -0400
+Received: by wicr5 with SMTP id r5so4468646wic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2012 12:15:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5049E874.8010306@linux.intel.com>
+In-Reply-To: <1346427485-12801-3-git-send-email-hauke@hauke-m.de>
+References: <1346427485-12801-1-git-send-email-hauke@hauke-m.de>
+	<1346427485-12801-3-git-send-email-hauke@hauke-m.de>
+Date: Mon, 3 Sep 2012 21:15:44 +0200
+Message-ID: <CACna6rwb15pfbM6rM5ros0yCSW+uv1CbwWz5pUz8OgvONKKrvg@mail.gmail.com> (sfid-20120903_211548_825285_DDD8A04E)
+Subject: Re: [PATCH v3 2/3] bcma: add GPIO driver for SoCs
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: ralf@linux-mips.org, john@phrozen.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, florian@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Waldemar, Eric.
+2012/8/31 Hauke Mehrtens <hauke@hauke-m.de>:
+> +u32 bcma_gpio_in(struct bcma_bus *bus, u32 mask)
+> +{
+> +       unsigned long flags;
+> +       u32 res = 0;
+> +
+> +       spin_lock_irqsave(&bus->gpio_lock, flags);
+> +       res = bcma_chipco_gpio_in(&bus->drv_cc, mask);
+> +       spin_unlock_irqrestore(&bus->gpio_lock, flags);
+> +
+> +       return res;
+> +}
+> +EXPORT_SYMBOL(bcma_gpio_in);
 
-On Fri, Sep 07, 2012 at 02:28:36PM +0200, Eric Lapuyade wrote:
-> Hi Waldek,
-> 
-> On 09/07/2012 11:08 AM, Waldemar Rymarkiewicz wrote:
-> > Checksum is specific for a chip spcification and it varies
-> > (in size and type) between different hardware. It should be
-> > handled in the driver then.
-> > 
-> > Moreover, shdlc spec doesn't mention crc as a part of the frame.
-> > 
-> > Update pn544_hci driver as well.
-> > 
-> > Signed-off-by: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-> > ---
-> 
-> I have tested this on top of Samuel's nfc-next and it works as expected.
-> Thank you.
-> 
-> Acked-by: Eric Lapuyade <eric.lapuyade@intel.com>
-Patch applied, thanks guys.
 
-Cheers,
-Samuel.
+Could we put here direct ops on ChipCommon regs and drop GPIO
+functions from driver_chipcommon.c?
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Rafał
