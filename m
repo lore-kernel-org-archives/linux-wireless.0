@@ -1,132 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27253 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20758 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753688Ab2ILGyx (ORCPT
+	with ESMTP id S1753718Ab2ICHUc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 02:54:53 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 5/5] ath9k: fill led_pin before drv_start
-Date: Wed, 12 Sep 2012 12:23:53 +0530
-Message-ID: <1347432833-10343-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120912_085521_384373_C0D82780)
-In-Reply-To: <1347432833-10343-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1347432833-10343-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Mon, 3 Sep 2012 03:20:32 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 3/4] ath6kl: Add a bit to ath6kl_dev_state for recovery cleanup state
+Date: Mon, 3 Sep 2012 12:49:36 +0530
+Message-ID: <1346656777-15197-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120903_092035_559941_B3AEBE47)
+In-Reply-To: <1346656777-15197-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1346656777-15197-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ensure that led pin is filled and set to OFF before starting
-the driver. With recent changes, drv_start is being called even
-before led_init is being completed. This is causing led is always
-OFF on driver load when the interface is UP. This patch splits the
-led init and fills the led pin before register hw.
+Add a bit in ath6kl_dev_state to maintian the run time state
+of firmware recovery configuration. This would help to have
+user configuration in fw_recovery which will be added in
+a separate patch.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  4 ++++
- drivers/net/wireless/ath/ath9k/gpio.c  | 44 +++++++++++++++++++---------------
- drivers/net/wireless/ath/ath9k/init.c  |  1 +
- 3 files changed, 30 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
+ drivers/net/wireless/ath/ath6kl/recovery.c |   12 +++++++-----
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 96b8331..fd24535 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -537,6 +537,7 @@ struct ath9k_wow_pattern {
- #ifdef CONFIG_MAC80211_LEDS
- void ath_init_leds(struct ath_softc *sc);
- void ath_deinit_leds(struct ath_softc *sc);
-+void ath_fill_led_pin(struct ath_softc *sc);
- #else
- static inline void ath_init_leds(struct ath_softc *sc)
- {
-@@ -545,6 +546,9 @@ static inline void ath_init_leds(struct ath_softc *sc)
- static inline void ath_deinit_leds(struct ath_softc *sc)
- {
- }
-+static inline void ath_fill_led_pin(struct ath_softc *sc)
-+{
-+}
- #endif
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index ac90b31..40a7b19 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -641,6 +641,7 @@ enum ath6kl_dev_state {
+ 	SKIP_SCAN,
+ 	ROAM_TBL_PEND,
+ 	FIRST_BOOT,
++	RECOVERY_CLEANUP,
+ };
  
- /*******************************/
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 45f2422..1934cca 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -44,25 +44,6 @@ void ath_init_leds(struct ath_softc *sc)
- 	if (AR_SREV_9100(sc->sc_ah))
+ enum ath6kl_state {
+@@ -807,7 +808,6 @@ struct ath6kl {
+ 	bool wiphy_registered;
+ 
+ 	struct ath6kl_fw_recovery {
+-		bool enable;
+ 		struct work_struct recovery_work;
+ 		unsigned long err_reason;
+ 		unsigned long hb_poll;
+diff --git a/drivers/net/wireless/ath/ath6kl/recovery.c b/drivers/net/wireless/ath/ath6kl/recovery.c
+index 1a82e8b..98b6aa0 100644
+--- a/drivers/net/wireless/ath/ath6kl/recovery.c
++++ b/drivers/net/wireless/ath/ath6kl/recovery.c
+@@ -46,7 +46,8 @@ void ath6kl_recovery_err_notify(struct ath6kl *ar, enum ath6kl_fw_err reason)
+ 
+ 	set_bit(reason, &ar->fw_recovery.err_reason);
+ 
+-	if (ar->fw_recovery.enable && ar->state != ATH6KL_STATE_RECOVERY)
++	if (!test_bit(RECOVERY_CLEANUP, &ar->flag) &&
++	    ar->state != ATH6KL_STATE_RECOVERY)
+ 		queue_work(ar->ath6kl_wq, &ar->fw_recovery.recovery_work);
+ }
+ 
+@@ -61,7 +62,8 @@ static void ath6kl_recovery_hb_timer(unsigned long data)
+ 	struct ath6kl *ar = (struct ath6kl *) data;
+ 	int err;
+ 
+-	if (!ar->fw_recovery.enable || (ar->state == ATH6KL_STATE_RECOVERY))
++	if (test_bit(RECOVERY_CLEANUP, &ar->flag) ||
++	    (ar->state == ATH6KL_STATE_RECOVERY))
  		return;
  
--	if (sc->sc_ah->led_pin < 0) {
--		if (AR_SREV_9287(sc->sc_ah))
--			sc->sc_ah->led_pin = ATH_LED_PIN_9287;
--		else if (AR_SREV_9485(sc->sc_ah))
--			sc->sc_ah->led_pin = ATH_LED_PIN_9485;
--		else if (AR_SREV_9300(sc->sc_ah))
--			sc->sc_ah->led_pin = ATH_LED_PIN_9300;
--		else if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
--			sc->sc_ah->led_pin = ATH_LED_PIN_9462;
--		else
--			sc->sc_ah->led_pin = ATH_LED_PIN_DEF;
--	}
--
--	/* Configure gpio 1 for output */
--	ath9k_hw_cfg_output(sc->sc_ah, sc->sc_ah->led_pin,
--			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
--	/* LED off, active low */
--	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
--
- 	if (!led_blink)
- 		sc->led_cdev.default_trigger =
- 			ieee80211_get_radio_led_name(sc->hw);
-@@ -78,6 +59,31 @@ void ath_init_leds(struct ath_softc *sc)
+ 	if (ar->fw_recovery.hb_pending)
+@@ -94,7 +96,7 @@ void ath6kl_recovery_init(struct ath6kl *ar)
+ {
+ 	struct ath6kl_fw_recovery *recovery = &ar->fw_recovery;
  
- 	sc->led_registered = true;
- }
-+
-+void ath_fill_led_pin(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (AR_SREV_9100(ah) || (ah->led_pin >= 0))
-+		return;
-+
-+	if (AR_SREV_9287(ah))
-+		ah->led_pin = ATH_LED_PIN_9287;
-+	else if (AR_SREV_9485(sc->sc_ah))
-+		ah->led_pin = ATH_LED_PIN_9485;
-+	else if (AR_SREV_9300(sc->sc_ah))
-+		ah->led_pin = ATH_LED_PIN_9300;
-+	else if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
-+		ah->led_pin = ATH_LED_PIN_9462;
-+	else
-+		ah->led_pin = ATH_LED_PIN_DEF;
-+
-+	/* Configure gpio 1 for output */
-+	ath9k_hw_cfg_output(ah, ah->led_pin, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+
-+	/* LED off, active low */
-+	ath9k_hw_set_gpio(ah, ah->led_pin, 1);
-+}
- #endif
+-	recovery->enable = true;
++	clear_bit(RECOVERY_CLEANUP, &ar->flag);
+ 	INIT_WORK(&recovery->recovery_work, ath6kl_recovery_work);
+ 	recovery->seq_num = 0;
+ 	recovery->hb_misscnt = 0;
+@@ -110,7 +112,7 @@ void ath6kl_recovery_init(struct ath6kl *ar)
  
- /*******************/
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index f3ce5ca..7062552 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -597,6 +597,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ void ath6kl_recovery_cleanup(struct ath6kl *ar)
+ {
+-	ar->fw_recovery.enable = false;
++	set_bit(RECOVERY_CLEANUP, &ar->flag);
  
- 	ath9k_cmn_init_crypto(sc->sc_ah);
- 	ath9k_init_misc(sc);
-+	ath_fill_led_pin(sc);
+ 	del_timer_sync(&ar->fw_recovery.hb_timer);
+ 	cancel_work_sync(&ar->fw_recovery.recovery_work);
+@@ -133,7 +135,7 @@ void ath6kl_recovery_suspend(struct ath6kl *ar)
  
- 	if (common->bus_ops->aspm_init)
- 		common->bus_ops->aspm_init(common);
+ void ath6kl_recovery_resume(struct ath6kl *ar)
+ {
+-	ar->fw_recovery.enable = true;
++	clear_bit(RECOVERY_CLEANUP, &ar->flag);
+ 
+ 	if (!ar->fw_recovery.hb_poll)
+ 		return;
 -- 
-1.7.12
+1.7.0.4
 
