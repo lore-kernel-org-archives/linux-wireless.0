@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755922Ab2IJLUI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49167 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756383Ab2ICMYc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 07:20:08 -0400
-Message-ID: <1347276044.4272.14.camel@jlt4.sipsolutions.net> (sfid-20120910_132012_599584_F2B01FDF)
-Subject: Re: [PATCH v3 4/7] mac80211: add ability to enable TX on op-channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
-Date: Mon, 10 Sep 2012 13:20:44 +0200
-In-Reply-To: <1344426823-1795-5-git-send-email-victorg@ti.com>
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
-	 <1344426823-1795-5-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 3 Sep 2012 08:24:32 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [RFC 1/2] cfg80211: Move the definition of struct mac_address up
+Date: Mon, 3 Sep 2012 17:53:56 +0530
+Message-ID: <1346675037-17858-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120903_142509_777761_8B73F678)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
-> Prior starting tx on DFS channels, the DFS master
-> device shall perform a Channel Availability Check
-> to ensure that there is no radar interference on
-> those channels. Once CAC done, the tx can be
-> enabled with ieee80211_dfs_en_tx().
-> 
-> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
-> ---
->  include/net/mac80211.h    |    4 ++++
->  net/mac80211/cfg.c        |   15 +++++++++++++++
->  net/mac80211/driver-ops.h |   14 ++++++++++++++
->  net/mac80211/trace.h      |    6 ++++++
->  4 files changed, 39 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index d29c99a..ecdfb6a 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -2266,6 +2266,8 @@ enum ieee80211_rate_control_changed {
->  * @start_radar_detection: Start radar detection on current operational
->   *	channel, once started it will continuously monitor for radars as long
->   *	as the channel active.
-> + * @dfs_en_tx: Once channel pass the DFS initial channel availability check,
-> + *	initiate the tx on the channel with this command.
+struct mac_address will be used by ACL related configuration ops.
 
-Please also document (for both!) the fact that they can sleep.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ include/net/cfg80211.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-
-> +DEFINE_EVENT(local_sdata_evt, drv_dfs_en_tx,
-> +	TP_PROTO(struct ieee80211_local *local,
-> +		 struct ieee80211_sub_if_data *sdata),
-> +	TP_ARGS(local, sdata)
-> +);
-
-Again, parameters.
-
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ba2e616..fd78d38 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1415,6 +1415,10 @@ struct cfg80211_gtk_rekey_data {
+ 	u8 replay_ctr[NL80211_REPLAY_CTR_LEN];
+ };
+ 
++struct mac_address {
++	u8 addr[ETH_ALEN];
++};
++
+ /**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+@@ -2006,10 +2010,6 @@ struct ieee80211_iface_combination {
+ 	bool beacon_int_infra_match;
+ };
+ 
+-struct mac_address {
+-	u8 addr[ETH_ALEN];
+-};
+-
+ struct ieee80211_txrx_stypes {
+ 	u16 tx, rx;
+ };
+-- 
+1.7.0.4
 
