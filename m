@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45148 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505Ab2IEOEA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28992 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805Ab2ICHUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 10:04:00 -0400
-Message-ID: <1346853870.4364.20.camel@jlt4.sipsolutions.net> (sfid-20120905_160404_357525_0312A7C1)
-Subject: Re: [PATCH] mac80211: Various small fixes for cfg.c:
- mpath_set_pinfo()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: LEO Airwarosu Yoichi Shinoda <shinoda@jaist.ac.jp>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org
-Date: Wed, 05 Sep 2012 16:04:30 +0200
-In-Reply-To: <5811BCFB-A140-4A91-BF85-8074242B6000@jaist.ac.jp> (sfid-20120827_153807_127465_CC0D8428)
-References: <5811BCFB-A140-4A91-BF85-8074242B6000@jaist.ac.jp>
-	 (sfid-20120827_153807_127465_CC0D8428)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 3 Sep 2012 03:20:25 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 2/4] ath6kl: Remove unnecessary recovery state check in ath6kl_recovery_hb_timer()
+Date: Mon, 3 Sep 2012 12:49:35 +0530
+Message-ID: <1346656777-15197-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120903_092028_240425_54DE14D8)
+In-Reply-To: <1346656777-15197-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1346656777-15197-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-08-27 at 22:28 +0900, LEO Airwarosu Yoichi Shinoda wrote:
-> Various small fixes for net/mac80211/cfg.c:mpath_set_pinfo():
-> Initialize *pinfo before filling members in, handle MESH_PATH_RESOLVED
-> correctly, and remove bogus assignment; result in correct display
-> of FLAGS values and meaningful EXPTIME for expired paths in iw utility.
-> 
-> Signed-off-by: Yoichi Shinoda <shinoda@jaist.ac.jp>
+Checking for recovery state just before re-arming hb_timer is not
+necessary, this should be done at the begining of the timer instead.
 
-Applied, and I also prefer sizeof(*p)
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/recovery.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/recovery.c b/drivers/net/wireless/ath/ath6kl/recovery.c
+index c30df50..1a82e8b 100644
+--- a/drivers/net/wireless/ath/ath6kl/recovery.c
++++ b/drivers/net/wireless/ath/ath6kl/recovery.c
+@@ -61,7 +61,7 @@ static void ath6kl_recovery_hb_timer(unsigned long data)
+ 	struct ath6kl *ar = (struct ath6kl *) data;
+ 	int err;
+ 
+-	if (!ar->fw_recovery.enable)
++	if (!ar->fw_recovery.enable || (ar->state == ATH6KL_STATE_RECOVERY))
+ 		return;
+ 
+ 	if (ar->fw_recovery.hb_pending)
+@@ -86,9 +86,6 @@ static void ath6kl_recovery_hb_timer(unsigned long data)
+ 		ath6kl_warn("Failed to send hb challenge request, err:%d\n",
+ 			    err);
+ 
+-	if ((ar->state == ATH6KL_STATE_RECOVERY) || !ar->fw_recovery.enable)
+-		return;
+-
+ 	mod_timer(&ar->fw_recovery.hb_timer, jiffies +
+ 		  msecs_to_jiffies(ar->fw_recovery.hb_poll));
+ }
+-- 
+1.7.0.4
 
