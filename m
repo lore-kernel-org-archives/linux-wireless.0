@@ -1,101 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:47007 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756778Ab2IDLZj (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20048 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752208Ab2ICHUA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 07:25:39 -0400
-Received: by obbuo13 with SMTP id uo13so10691079obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2012 04:25:38 -0700 (PDT)
+	Mon, 3 Sep 2012 03:20:00 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 1/4] ath6kl: Fix bug in scheduling hb_timer
+Date: Mon, 3 Sep 2012 12:49:34 +0530
+Message-ID: <1346656777-15197-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120903_092006_834051_5314C4E5)
 MIME-Version: 1.0
-In-Reply-To: <CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
-	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
-	<20120904102204.GA2541@w1.fi>
-	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
-Date: Tue, 4 Sep 2012 19:25:38 +0800
-Message-ID: <CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com> (sfid-20120904_132542_145384_2721D8C3)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Jouni
+hb_timer should be scheduled only when hb_poll is non-zero.
+But in ath6kl_recovery_work() the timer is scheduled based
+on fw_recovery.enable instead which is wrong.
 
-I have retested with the following:
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/recovery.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-case 1 with submitted patch:
-mesh1: ath5k nohwcrypt=1
-mesh2: ath5k (no IEEE80211_KEY_FLAG_SW_MGMT)
-Result: Both of them are not able to ping each other. Also, the PREP
-action frame is not able to decrypted by another node.
+diff --git a/drivers/net/wireless/ath/ath6kl/recovery.c b/drivers/net/wireless/ath/ath6kl/recovery.c
+index 03edeb8..c30df50 100644
+--- a/drivers/net/wireless/ath/ath6kl/recovery.c
++++ b/drivers/net/wireless/ath/ath6kl/recovery.c
+@@ -34,7 +34,7 @@ static void ath6kl_recovery_work(struct work_struct *work)
+ 
+ 	ar->fw_recovery.err_reason = 0;
+ 
+-	if (ar->fw_recovery.enable)
++	if (ar->fw_recovery.hb_poll)
+ 		mod_timer(&ar->fw_recovery.hb_timer, jiffies +
+ 			  msecs_to_jiffies(ar->fw_recovery.hb_poll));
+ }
+-- 
+1.7.0.4
 
-case 2 with submitted patch:
-mesh1: ath5k nohwcrypt=1
-mesh2: ath5k nohwcrypt=1
-Result: They are able to ping each other.
-
-case 3 with submitted patch but enable IEEE80211_KEY_FLAG_SW_MGMT:
-mesh1: ath5k nohwcrypt=1
-mesh2: ath5k (with IEEE80211_KEY_FLAG_SW_MGMT)
-Result: They are able to ping each other
-
-case 4 with submitted patch but enable IEEE80211_KEY_FLAG_SW_MGMT:
-mesh1: ath5k (with IEEE80211_KEY_FLAG_SW_MGMT)
-mesh2: ath5k (with IEEE80211_KEY_FLAG_SW_MGMT)
-Result: Both of them are not able to ping each other. Also, the PREP
-action frame is not able to decrypted by another node.
-
-So can we conclude that hardware encryption is not working for both
-robust unicast management frame and also unicast
-data frame? I am confuse why on case 4, it is not working?
-
-Please advice. Thanks
-
-----
-Chun-Yeow
-
-On Tue, Sep 4, 2012 at 7:21 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> Hi, Jouni
->
->> Depends on what those nodes were.. If they were both using the same
->> ath5k implementation, then no, that would not be enough.
-> Both of nodes are using ath5k.
->
->> so working with AR2414 or even AR5213 does not necessarily mean that this would work
->> with AR5210, AR5211, or AR5212.
-> Noted.
->
->> I would also verify that unicast data frames get processed in hardware and robust
->> management frames in software.
-> I have retested with the following:
->
-> mesh1: ath5k nohwcrypt=1
-> mesh2: ath5k (no IEEE80211_KEY_FLAG_SW_MGMT)
-> Result: Both of them are not able to ping each other. Also, the PREP
-> action frame is not able to decrypted by another node.
->
-> mesh1: ath5k nohwcrypt=1
-> mesh2: ath5k nohwcrypt=1
-> Result: They are able to ping each other.
->
-> mesh1: ath5k nohwcrypt=1
-> mesh2: ath5k (with IEEE80211_KEY_FLAG_SW_MGMT)
-> Result: They are able to ping each other
->
-> mesh1:
-> mesh2I also try to enable back the IEEE80211_KEY_FLAG_SW_MGMT flags.
-> Also it does not work. So can we conclude that hardware encryption is
-> not working for both robust unicast management frame and also unicast
-> data frame?
->
-> Please advice. Thanks
->
-> ----
-> Chun-Yeow
