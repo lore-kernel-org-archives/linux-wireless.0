@@ -1,112 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42669 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757372Ab2ILGyx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40481 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756576Ab2IDJbF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 02:54:53 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 3/5] ath9k: flush bt profile whenever it is requested
-Date: Wed, 12 Sep 2012 12:23:51 +0530
-Message-ID: <1347432833-10343-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120912_085455_959582_3E8D5646)
-In-Reply-To: <1347432833-10343-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1347432833-10343-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 4 Sep 2012 05:31:05 -0400
+Message-ID: <1346751102.3737.25.camel@jlt4.sipsolutions.net> (sfid-20120904_113110_107705_CA7FEDE0)
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@lists.ath5k.org
+Date: Tue, 04 Sep 2012 11:31:42 +0200
+In-Reply-To: <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com> (sfid-20120904_112842_613203_3FC30AEF)
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	 <1346746298.3737.0.camel@jlt4.sipsolutions.net>
+	 <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+	 (sfid-20120904_112842_613203_3FC30AEF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before processing BT profiles or status messages, check whether
-it is requested to flush BT profile. Otherwise it might increase
-number of BT profiles that affects the WLAN performance. Also
-flush the profiles when MCI is recovering from broken rx. After
-flushing BT profiles, query BT topology to refetch them.
+On Tue, 2012-09-04 at 17:28 +0800, Yeoh Chun-Yeow wrote:
+> Hi, Johannes
+> 
+> > _How_ did you test this? Did you test that management frames are
+> > properly encrypted using AES CCM, and not mangled when decrypted?
+> 
+> I have setup the two mesh nodes using the secured mesh with the
+> following key installation:
+> 
+> /* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
+> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
+> 
+> I confirm that the hardware key for CCMP is set and
+> IEEE80211_KEY_FLAG_SW_MGMT is not enabled in mac80211-ops.c. Both
+> nodes are able to ping each others. Is this enough?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |  4 ++++
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |  4 +++-
- drivers/net/wireless/ath/ath9k/mci.c        | 12 +++++++++++-
- 3 files changed, 18 insertions(+), 2 deletions(-)
+I don't know? Did this encrypt any management frames with AES-CCM and
+rely on them being exchanged properly?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index f6eb43e..8d8df4b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1236,6 +1236,10 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
- 	case MCI_STATE_NEED_FTP_STOMP:
- 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
- 		break;
-+	case MCI_STATE_NEED_FLUSH_BT_INFO:
-+		value = (!mci->unhalt_bt_gpm && mci->need_flush_btinfo) ? 1 : 0;
-+		mci->need_flush_btinfo = false;
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index f3bef8d..30acf28 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -200,6 +200,7 @@ enum mci_state_type {
- 	MCI_STATE_RECOVER_RX,
- 	MCI_STATE_NEED_FTP_STOMP,
- 	MCI_STATE_DEBUG,
-+	MCI_STATE_NEED_FLUSH_BT_INFO,
- 	MCI_STATE_MAX
- };
- 
-@@ -211,7 +212,8 @@ enum mci_gpm_coex_opcode {
- 	MCI_GPM_COEX_WLAN_CHANNELS,
- 	MCI_GPM_COEX_BT_PROFILE_INFO,
- 	MCI_GPM_COEX_BT_STATUS_UPDATE,
--	MCI_GPM_COEX_BT_UPDATE_FLAGS
-+	MCI_GPM_COEX_BT_UPDATE_FLAGS,
-+	MCI_GPM_COEX_NOOP,
- };
- 
- #define MCI_GPM_NOMORE  0
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 8f0e8d9..3a400c8 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -80,6 +80,7 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci)
- 	struct ath_mci_profile_info *info, *tinfo;
- 
- 	mci->aggr_limit = 0;
-+	mci->num_mgmt = 0;
- 
- 	if (list_empty(&mci->info))
- 		return;
-@@ -328,6 +329,13 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
- 	u8 major, minor;
- 	u32 seq_num;
- 
-+	if (ar9003_mci_state(ah, MCI_STATE_NEED_FLUSH_BT_INFO) &&
-+	    ar9003_mci_state(ah, MCI_STATE_ENABLE)) {
-+		ath_dbg(common, MCI, "(MCI) Need to flush BT profiles\n");
-+		ath_mci_flush_profile(&sc->btcoex.mci);
-+		ar9003_mci_state(ah, MCI_STATE_SEND_STATUS_QUERY);
-+	}
-+
- 	switch (opcode) {
- 	case MCI_GPM_COEX_VERSION_QUERY:
- 		ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_COEX_VERSION);
-@@ -568,9 +576,11 @@ void ath_mci_intr(struct ath_softc *sc)
- 	}
- 
- 	if ((mci_int & AR_MCI_INTERRUPT_RX_INVALID_HDR) ||
--	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT))
-+	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT)) {
- 		mci_int &= ~(AR_MCI_INTERRUPT_RX_INVALID_HDR |
- 			     AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT);
-+		ath_mci_msg(sc, MCI_GPM_COEX_NOOP, NULL);
-+	}
- }
- 
- void ath_mci_enable(struct ath_softc *sc)
--- 
-1.7.12
+johannes
 
