@@ -1,51 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:44271 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756371Ab2ICUPk (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19593 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756748Ab2IDODs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2012 16:15:40 -0400
-Date: Mon, 3 Sep 2012 22:15:36 +0200
-From: Andi Kleen <andi@firstfloor.org>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] Fix uninitialized variable in ath6kl ath6kl_sdio_enable_scatter
-Message-ID: <20120903201536.GA16230@one.firstfloor.org> (sfid-20120903_221603_832201_67E97C53)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 4 Sep 2012 10:03:48 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	xijin luo <xijin@qca.qualcomm.com>
+Subject: [PATCH 1/8] ath9k_hw: Fix invalid MCI GPM index access/caching
+Date: Tue, 4 Sep 2012 19:33:32 +0530
+Message-ID: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120904_160351_590277_07DBDAE5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc 4.8 warns
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-/backup/lsrc/git/linux-lto-2.6/drivers/net/wireless/ath/ath6kl/sdio.c:
-In function 'ath6kl_sdio_enable_scatter':
-/backup/lsrc/git/linux-lto-2.6/drivers/net/wireless/ath/ath6kl/sdio.c:748:16:
-warning: 'ret' may be used uninitialized in this function
-[-Wmaybe-uninitialized]
-  if (virt_scat || ret) {
-                ^
+There is a possibility that AR_MCI_GPM_1 register can
+return 0xdeadbeef and this results in caching of invalid
+GPM index in ar9003_mci_is_gpm_valid. Ensure we
+have appropriate checks to avoid this.
 
-The variable can indeed be uninitialized when the previous if branch is
-skipped. I just set it to zero for now. I'm not fully sure the fix is
-correct, maybe the || should be an && ? 
+Cc: xijin luo <xijin@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-Signed-off-by: Andi Kleen <ak@linux.intel.com>
-
-
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 05b9540..f495899 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -709,7 +709,7 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar)
- {
- 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
- 	struct htc_target *target = ar->htc_target;
--	int ret;
-+	int ret = 0;
- 	bool virt_scat = false;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 9a34fca..995b866 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1327,6 +1327,10 @@ u32 ar9003_mci_get_next_gpm_offset(struct ath_hw *ah, bool first, u32 *more)
  
- 	if (ar_sdio->scatter_enabled)
-
-
+ 	if (first) {
+ 		gpm_ptr = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
++
++		if (gpm_ptr >= mci->gpm_len)
++			gpm_ptr = 0;
++
+ 		mci->gpm_idx = gpm_ptr;
+ 		return gpm_ptr;
+ 	}
+@@ -1371,6 +1375,10 @@ u32 ar9003_mci_get_next_gpm_offset(struct ath_hw *ah, bool first, u32 *more)
+ 			more_gpm = MCI_GPM_NOMORE;
+ 
+ 		temp_index = mci->gpm_idx;
++
++		if (temp_index >= mci->gpm_len)
++			temp_index = 0;
++
+ 		mci->gpm_idx++;
+ 
+ 		if (mci->gpm_idx >= mci->gpm_len)
 -- 
-ak@linux.intel.com -- Speaking for myself only.
+1.7.0.4
+
