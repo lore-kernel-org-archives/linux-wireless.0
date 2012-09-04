@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:35141 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758680Ab2I1RYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 13:24:22 -0400
-Message-ID: <1348853061.14262.44.camel@joe-AO722> (sfid-20120928_192427_730237_B898B010)
-Subject: Re: [PATCH] rtlwifi: use %*ph[C] to dump small buffers
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: David Laight <David.Laight@ACULAB.COM>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Fri, 28 Sep 2012 10:24:21 -0700
-In-Reply-To: <5065D32F.9090107@lwfinger.net>
-References: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1348677946.15175.8.camel@joe-AO722> <5064D318.6090705@lwfinger.net>
-	 <1348802023.3030.11.camel@joe-AO722>
-	 <AE90C24D6B3A694183C094C60CF0A2F6026B700D@saturn3.aculab.com>
-	 <5065D32F.9090107@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from kvm.w1.fi ([128.177.28.162]:56864 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756773Ab2IDLGD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2012 07:06:03 -0400
+Date: Tue, 4 Sep 2012 13:22:04 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+Message-ID: <20120904102204.GA2541@w1.fi> (sfid-20120904_130615_423185_E5733558)
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+ <1346746298.3737.0.camel@jlt4.sipsolutions.net>
+ <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-09-28 at 11:41 -0500, Larry Finger wrote:
-> On 09/28/2012 04:04 AM, David Laight wrote:
-> >>> Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-[]
-> >>> -       *(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
-> >>> -                                    (ratr_index << 28);
-> >>> +       for (i = 0; i < 3; i++)
-> >>> +               rate_mask[i] = ratr_bitmap & (0xff << (i * 4));
-[]
-> > So this either fixes, or adds, an endianness bug.
+On Tue, Sep 04, 2012 at 05:28:40PM +0800, Yeoh Chun-Yeow wrote:
+> Hi, Johannes
 > 
-> Yes, the rate_mask array is little endian after this fragment is run, but the 
-> only use of the byte array is to write it to the device, and LE is what it needs 
-> no matter the platform. This change fixes an endianness bug.
+> > _How_ did you test this? Did you test that management frames are
+> > properly encrypted using AES CCM, and not mangled when decrypted?
 > 
-> As I tend to get confused when doing these things, I wrote a small test program 
-> and ran it on x86_64 and PPC-32 to confirm the result.
+> I have setup the two mesh nodes using the secured mesh with the
+> following key installation:
 > 
-> Thanks for teaching me about a = b >>= 8. I was not aware that C could do that.
+> /* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
+> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
+> 
+> I confirm that the hardware key for CCMP is set and
+> IEEE80211_KEY_FLAG_SW_MGMT is not enabled in mac80211-ops.c. Both
+> nodes are able to ping each others. Is this enough?
 
-The other thing that could be done is to use cpu_to_le32()
-but David's method I think is superior for this use as there's
-no absolute guarantee that rate_mask is aligned on a u32.
+Depends on what those nodes were.. If they were both using the same
+ath5k implementation, then no, that would not be enough. If the CCMP
+processing is done incorrectly, they could both mangle the results in
+the same way to hide the issue. It should also be noted that there has
+been key cache changes between hardware revisions, so working with
+AR2414 or even AR5213 does not necessarily mean that this would work
+with AR5210, AR5211, or AR5212.
 
-I'd add parens to make the precedence explicit.
+You would need to test an ath5k-based device with another device that is
+known to handle unicast robust management frame protection correctly. If
+you do not have a suitable other device for this, it should be possible
+to force one of the devices to use software encryption for everything
+(i.e., make sure it does not configure any CCMP keys in the hardware key
+cache) and then run a test that exchanges robust unicast management
+frames (both TX and RX using the modified ath5k driver). I would also
+verify that unicast data frames get processed in hardware and robust
+management frames in software.
 
-	rate_mask[0] = ratr_bitmap;
-	rate_mask[1] = (ratr_bitmap >>= 8);
-	rate_mask[2] = (ratr_bitmap >>= 8);
-	rate_mask[3] = ((ratr_bitmap >> 8) & 0xf) | (ratr_index << 4);
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
