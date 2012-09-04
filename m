@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:32916 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753189Ab2IQKfq (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4611 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753953Ab2IDIqN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 06:35:46 -0400
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] wireless: remove unreachable code
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Date: Mon, 17 Sep 2012 11:54:15 +0100
-Message-ID: <20120917105354.30097.45595.stgit@localhost.localdomain> (sfid-20120917_123550_034380_87C5773D)
+	Tue, 4 Sep 2012 04:46:13 -0400
+Message-ID: <5045BFB2.6010701@qca.qualcomm.com> (sfid-20120904_104616_736054_1C0B5909)
+Date: Tue, 4 Sep 2012 14:15:38 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/2] cfg80211/nl80211: Enable drivers to implement mac address
+ based ACL
+References: <1346675037-17858-1-git-send-email-vthiagar@qca.qualcomm.com> <1346675037-17858-2-git-send-email-vthiagar@qca.qualcomm.com> <50459FD3.2010305@qca.qualcomm.com>
+In-Reply-To: <50459FD3.2010305@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alan Cox <alan@linux.intel.com>
 
-The only case where intersected_rd can become non NULL is within an if. All
-paths from that if return, so the end chunk has therefore squawked its
-last and is no more.
 
-Signed-off-by: Alan Cox <alan@linux.intel.com>
----
+On Tuesday 04 September 2012 11:59 AM, Kalle Valo wrote:
+> On 09/03/2012 03:23 PM, Vasanthakumar Thiagarajan wrote:
+>> This patch enables drivers to implement mac address based
+>> access control in AP/P2P GO mode. There is a new flag in
+>> nl80211_feature_flags (NL80211_FEATURE_MAC_ACL) for drivers
+>> to advertise this capability. There are two acl policies, white
+>> and black list, under which an acl list can be configured in the
+>> driver. Driver has to advertise the maximum number of mac address
+>> entries in acl list through max_acl_mac_addrs of wiphy.
+>>
+>> ACL is enabled/disabled based on attribute NL80211_ATTR_MAC_ACL which
+>> is passed in start_ap. A list of stations' mac addresses is set
+>> using NL80211_CMD_SET_MAC_ACL.
+>
+> I would prefer a bit more documentation how this works from user space
+> or driver's point of view. I think I can guess how it's supposed to
+> work, but it would be good to document it explicitly. For example, it
+> wasn't clear how he driver must function when NL80211_ACL_POLICY_ACCEPT
+> or DENY is used.
 
- net/wireless/reg.c |   19 +------------------
- 1 file changed, 1 insertion(+), 18 deletions(-)
+Sure, I'll add more documentation.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ad04e5..4a405c2 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2305,24 +2305,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		return 0;
- 	}
- 
--	if (!intersected_rd)
--		return -EINVAL;
--
--	rdev = wiphy_to_dev(request_wiphy);
--
--	rdev->country_ie_alpha2[0] = rd->alpha2[0];
--	rdev->country_ie_alpha2[1] = rd->alpha2[1];
--	rdev->env = last_request->country_ie_env;
--
--	BUG_ON(intersected_rd == rd);
--
--	kfree(rd);
--	rd = NULL;
--
--	reset_regdomains(false);
--	cfg80211_regdomain = intersected_rd;
--
--	return 0;
-+	return -EINVAL;
- }
- 
- 
+>
+>> Driver may have to make sure to clear it's acl list when doing start/stop ap.
+>
+> s/may/must/?
 
+Right, it is must. Thanks!
+
+Vasanth
