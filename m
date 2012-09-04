@@ -1,53 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:47621 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562Ab2ITUMk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 16:12:40 -0400
-Received: by lbbgj3 with SMTP id gj3so2934170lbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 13:12:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <505B77F9.1010000@broadcom.com>
-References: <1348039339-22246-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1348039339-22246-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <20120920183740.GY3354@lenteja.do-not-panic.com> <505B77F9.1010000@broadcom.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 20 Sep 2012 13:12:18 -0700
-Message-ID: <CAB=NE6XzFa5sGJKGwSxoNOwq3N3ROoSc7_bmd_-btH2A=k4jNQ@mail.gmail.com> (sfid-20120920_221243_322827_9A18C1F2)
-Subject: Re: [PATCH v2] cfg80211: Fix regulatory check for 60GHz band frequencies
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:5580 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757065Ab2IDOMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2012 10:12:53 -0400
+Message-ID: <1346768117.26638.3.camel@dcbw.foobar.com> (sfid-20120904_161256_883815_9C6B47AE)
+Subject: Re: [PATCH] libertas: set mac control synchronously
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Date: Tue, 04 Sep 2012 09:15:17 -0500
+In-Reply-To: <20120903194934.04E06FAA0A@dev.laptop.org>
+References: <20120903194934.04E06FAA0A@dev.laptop.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 20, 2012 at 1:09 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 09/20/2012 08:37 PM, Luis R. Rodriguez wrote:
->>
->> On Wed, Sep 19, 2012 at 10:22:19AM +0300, Vladimir Kondratiev wrote:
->>>
->>> @@ -520,9 +522,12 @@ static bool freq_in_rule_band(const struct
->>> ieee80211_freq_range *freq_range,
->>>         u32 freq_khz)
->>>   {
->>>   #define ONE_GHZ_IN_KHZ        1000000
->>> -       if (abs(freq_khz - freq_range->start_freq_khz) <= (2 *
->>> ONE_GHZ_IN_KHZ))
->>> +       /* DMG frequencies starts from 45 GHz, see 802.11ad */
->>
->>
->> What's this DMG thing?
->>
->
-> From 11ad:
->
-> directional multi-gigabit (DMG): Pertaining to operation in a frequency band
-> containing a channel with the Channel starting frequency above 45 GHz.
+On Mon, 2012-09-03 at 15:49 -0400, Daniel Drake wrote:
+> CMD_MAC_CONTROL is currently sent async to the firmware, and is sent
+> from the lbs_setup_firmware() path during device init.
+> 
+> This means that device init can complete with commands pending, and
+> the if_sdio driver will sometimes power down the device (after init)
+> with this command still pending.
+> 
+> This was causing an occasional spurious command timeout after init,
+> leading to a device reset.
+> 
+> Fix this by making CMD_MAC_CONTROL synchronous - there is currently
+> no reason for it to be async (although there may have been in 2008
+> when commit c97329e2 was made).
 
-Adding something like that then may help explain to those who have no
-clue what DMG is :D
+Hmm, any chance we could just have another function
+(lbs_cmd_mac_control_sync?) that does it sync?  That's called from a
+bunch of places and we were trying to make most of the commands done
+from major flows async to reduce driver blocking and bad stalls when the
+firmware times out commands.  It shouldn't be too hard to have both
+sync/async calls for it.
 
-  Luis
+Dan
+
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
+> ---
+>  drivers/net/wireless/libertas/cmd.c  | 6 ++++--
+>  drivers/net/wireless/libertas/cmd.h  | 2 +-
+>  drivers/net/wireless/libertas/main.c | 4 +++-
+>  3 files changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index 26e6832..df0e4af5 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -1144,9 +1144,10 @@ out:
+>  	return ret;
+>  }
+>  
+> -void lbs_set_mac_control(struct lbs_private *priv)
+> +int lbs_set_mac_control(struct lbs_private *priv)
+>  {
+>  	struct cmd_ds_mac_control cmd;
+> +	int ret;
+>  
+>  	lbs_deb_enter(LBS_DEB_CMD);
+>  
+> @@ -1154,9 +1155,10 @@ void lbs_set_mac_control(struct lbs_private *priv)
+>  	cmd.action = cpu_to_le16(priv->mac_control);
+>  	cmd.reserved = 0;
+>  
+> -	lbs_cmd_async(priv, CMD_MAC_CONTROL, &cmd.hdr, sizeof(cmd));
+> +	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
+>  
+>  	lbs_deb_leave(LBS_DEB_CMD);
+> +	return ret;
+>  }
+>  
+>  /**
+> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+> index ab07608..43df4c4 100644
+> --- a/drivers/net/wireless/libertas/cmd.h
+> +++ b/drivers/net/wireless/libertas/cmd.h
+> @@ -95,7 +95,7 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv);
+>  
+>  int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
+>  
+> -void lbs_set_mac_control(struct lbs_private *priv);
+> +int lbs_set_mac_control(struct lbs_private *priv);
+>  
+>  int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
+>  		     s16 *maxlevel);
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index fe1ea43..b878b45 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -682,8 +682,10 @@ static int lbs_setup_firmware(struct lbs_private *priv)
+>  
+>  	/* Send cmd to FW to enable 11D function */
+>  	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
+> +	if (ret)
+> +		goto done;
+>  
+> -	lbs_set_mac_control(priv);
+> +	ret = lbs_set_mac_control(priv);
+>  done:
+>  	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
+>  	return ret;
+
+
