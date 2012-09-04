@@ -1,104 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:59857 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754658Ab2ITMpC (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:44284 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512Ab2IDRVN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 08:45:02 -0400
-Received: by pbbrr4 with SMTP id rr4so129304pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 05:45:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	<1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	<1347631355.5263.19.camel@sauron.fi.intel.com>
-	<1347640763.5263.24.camel@sauron.fi.intel.com>
-	<1347892887.7112.9.camel@sauron.fi.intel.com>
-	<1348142775.2388.10.camel@sauron.fi.intel.com>
-	<1348144524.4161.26.camel@jlt4.sipsolutions.net>
-	<CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-Date: Thu, 20 Sep 2012 14:45:01 +0200
-Message-ID: <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com> (sfid-20120920_144510_962319_056B6D29)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Eric Dumazet <edumazet@google.com>
+	Tue, 4 Sep 2012 13:21:13 -0400
+Date: Tue, 4 Sep 2012 10:20:57 -0700
+From: Dan Carpenter <dan.carpenter@oracle.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211: support P2P Device abstraction
+Message-ID: <20120904172057.GB19410@mwanda> (sfid-20120904_192116_370111_5CCA1636)
+References: <20120904161319.GA11494@elgon.mountain>
+ <1346775525.3737.36.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1346775525.3737.36.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I guess you only need to make sure 14 bytes of ethernet header are
-available before eth_type_trans(skb, dev);
+On Tue, Sep 04, 2012 at 06:18:45PM +0200, Johannes Berg wrote:
+> Hi Dan,
+> 
+> > The patch f142c6b906da: "mac80211: support P2P Device abstraction" 
+> > from Jun 18, 2012, leads to the following Smatch complaint:
+> > 
+> > net/mac80211/iface.c:1168 ieee80211_setup_sdata()
+> > 	 error: we previously assumed 'sdata->dev' could be null (see line 1134)
+> > 
+> > net/mac80211/iface.c
+> >   1133		/* only monitor/p2p-device differ */
+> >   1134		if (sdata->dev) {
+> >                     ^^^^^^^^^^
+> > New test.
+> > 
+> >   1135			sdata->dev->netdev_ops = &ieee80211_dataif_ops;
+> >   1136			sdata->dev->type = ARPHRD_ETHER;
+> >   1137		}
+> > 
+> > [snip]
+> > 
+> >   1167		case NL80211_IFTYPE_MONITOR:
+> >   1168			sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
+> >                         ^^^^^^^^^^^^
+> > Old dereference.
+> 
+> Thanks. I'm aware of the warning (I run smatch), but sdata->dev can only
+> be NULL in "case NL80211_IFTYPE_P2P_DEVICE", so adding an extra check in
+> the monitor case didn't seem worthwhile.
+> 
+> It might have been better to use sdata->vif.type != P2P_DEVICE in the
+> new test I guess, but then it wouldn't be extensible to new interface
+> types like Bluetooth AMP.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 61c621e..ffe5f84 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1795,9 +1795,13 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+Gar.  This was my bad.  I didn't realize the warning was so old.  I
+try to only send the automatic emails for new warnings.  I have been
+meaning to fix the bug in my script for a while now but this time
+I will really do that.
 
-                if (skb) {
-                        /* deliver to local stack */
--                       skb->protocol = eth_type_trans(skb, dev);
--                       memset(skb->cb, 0, sizeof(skb->cb));
--                       netif_receive_skb(skb);
-+                       if (pskb_may_pull(skb, sizeof(struct ethhdr))) {
-+                               skb->protocol = eth_type_trans(skb, dev);
-+                               memset(skb->cb, 0, sizeof(skb->cb));
-+                               netif_receive_skb(skb);
-+                       } else {
-+                               kfree_skb(skb);
-+                       }
-                }
-        }
+regards,
+dan carpenter
 
-
-On Thu, Sep 20, 2012 at 2:40 PM, Eric Dumazet <edumazet@google.com> wrote:
-> OK, but which netif_receive_skb(), as I count 5 occurrences in
-> net/mac80211/rx.c ?
->
-> Instead of skb_linearize() calls
->
-> you could try several values of XXX in
->
-> pskb_may_pull(skb, XXX)
->
-> So that you make sure XXX bytes are available in skb->head, and not
-> the whole frame.
->
-> One you know the limit for XXX, it might give a clue where a
-> pskb_may_pull(skb, XXX) is missing.
->
-> On Thu, Sep 20, 2012 at 2:35 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> Hi,
->>
->>> >             56138f5 iwlwifi: dont pull too much payload in skb head
->>> >             3edaf3e mac80211: manage AP netdev carrier state
->>>
->>> The second patch (AP carrier state) actually exposed a connman issue
->>> which I fixed and submitted a connman patch:
->>> http://lists.connman.net/pipermail/connman/2012-September/011232.html
->>>
->>> However, Eric's patch still causes tethering problems to me.
->>
->>
->> Let me recap a bit. Artem is using connman, which sets up the wifi
->> interface as part of a bridge. It runs wpa_supplicant to create an AP
->> (only AP and mesh mode interfaces can be bridged anyway).
->>
->>
->> Eric, you said:
->>
->>> I would say some part of the stack assumes a header (I dont know wich
->>> one ?) is pulled in skb->head/data, and thats a bug.
->>>
->>> Always use pskb_may_pull(skb, XXX) to make sure you can access XXX
->>> bytes in skb->data
->>
->> I thought we'd figure out which part of the stack assumes a header, so I
->> asked Artem to test a one-line patch which adds "skb_linearize()" before
->> "netif_receive_skb()" in mac80211. This makes it work, but I'm not sure
->> where after that the bad assumption might be.
->>
->> johannes
->>
