@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4838 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757583Ab2IJM03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 08:26:29 -0400
-Message-ID: <504DDD28.6020804@broadcom.com> (sfid-20120910_142632_830714_E355274B)
-Date: Mon, 10 Sep 2012 14:29:28 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:64179 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932204Ab2IDQlS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2012 12:41:18 -0400
+Received: by iahk25 with SMTP id k25so5684065iah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2012 09:41:17 -0700 (PDT)
 MIME-Version: 1.0
-To: "Colin King" <colin.king@canonical.com>
-cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] brcm80211: fix missing allocation failure check
-References: <1347267926-7118-1-git-send-email-colin.king@canonical.com>
-In-Reply-To: <1347267926-7118-1-git-send-email-colin.king@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <1346758521.3737.28.camel@jlt4.sipsolutions.net>
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
+	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+	<20120904102204.GA2541@w1.fi>
+	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
+	<CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
+	<1346758521.3737.28.camel@jlt4.sipsolutions.net>
+Date: Wed, 5 Sep 2012 00:41:16 +0800
+Message-ID: <CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com> (sfid-20120904_184124_349619_A80CF711)
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2012 11:05 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->
-> Check for oobirq_entry allocation failure to avoid
-> NULL pointer dereferencing.
+Hi, Johannes
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 ++
->   1 file changed, 2 insertions(+)
+> I would guess that hardware *decryption* is faulty, maybe only one
+> action frame needs to be correct and so if one of them is nohwcrypt=1 it
+> still works?
+Yes, you are correct. Case 3 is working only accidentally not always
+if the mesh node loaded with nohwcrypt=1 is reboot. So, with following
+case is also not working.
 
-Thanks.
+mesh1: ath5k loaded without nohwcrypt=1 (with
+IEEE80211_KEY_FLAG_SW_MGMT enabled)
+mesh2: ath5k loaded without nohwcrypt=1 (with
+IEEE80211_KEY_FLAG_SW_MGMT enabled)
 
-Gr. AvS
+Can we conclude that unicast data frames get processed in hardware and
+robust unicast management frames get processed in software for CCMP
+are not working.
 
+By the way, current secured mesh requires the AES CMAC to be enabled.
+But without enabling IEEE80211_HW_MFP_CAPABLE, the key cannot be added
+since this cipher suite is considered not supported. But actually AES
+CMAC can be done in software. Any work around on this?
 
+---
+Chun-Yeow
