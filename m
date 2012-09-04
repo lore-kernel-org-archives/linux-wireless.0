@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:62854 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752717Ab2ILIPR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 04:15:17 -0400
-Message-ID: <50504493.1060706@tieto.com> (sfid-20120912_101524_652355_97F754DF)
-Date: Wed, 12 Sep 2012 10:15:15 +0200
-From: Rymarkiewicz Waldemar <waldemar.rymarkiewicz@tieto.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55673 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932110Ab2IDOFC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2012 10:05:02 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 8/8] ath9k_htc: Cancel BTCOEX related work before disabling BTCOEX
+Date: Tue, 4 Sep 2012 19:33:39 +0530
+Message-ID: <1346767419-12359-8-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120904_160507_398725_5ACA40BF)
+In-Reply-To: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Rymarkiewicz Waldemar <Waldemar.Rymarkiewicz@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
-	"sameo@linux.intel.com" <sameo@linux.intel.com>,
-	"eric.lapuyade@linux.intel.com" <eric.lapuyade@linux.intel.com>
-Subject: Re: [PATCH 1/3] NFC: Handle RSET in SHDLC_CONNECTING state
-References: <1347437589-14450-1-git-send-email-waldemar.rymarkiewicz@tieto.com>
-In-Reply-To: <1347437589-14450-1-git-send-email-waldemar.rymarkiewicz@tieto.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-On 09/12/2012 10:13 AM, Rymarkiewicz Waldemar wrote:
-> As queue_work() does not guarantee ordered execution of sm_work it
-> can happen in crossover RSET usecase that connect timer will constantly
-> change the shdlc state from NEGOTIATING to CONNECTING before shdlc have
-> chance to handle incoming frame.
+Before disabling BTCOEX in the h/w cancel all BTCOEX related
+works. This is similar to the commit in ath9k(c32cdbd8)
+ath9k: Stop the BTCOEX timers before disabling BTCOEX
 
-Skip that one I will resend whole series.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks,
-/Waldek
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index fe4836b..8fd64a6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -173,9 +173,9 @@ void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv)
+ 
+ 	if (ah->btcoex_hw.enabled &&
+ 	    ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) {
+-		ath9k_hw_btcoex_disable(ah);
+ 		if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
+ 			ath_htc_cancel_btcoex_work(priv);
++		ath9k_hw_btcoex_disable(ah);
+ 	}
+ }
+ 
+-- 
+1.7.0.4
 
