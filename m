@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49188 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:41890 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756784Ab2IFPJU (ORCPT
+	with ESMTP id S1753512Ab2IDR1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 11:09:20 -0400
+	Tue, 4 Sep 2012 13:27:03 -0400
+Message-ID: <1346779659.3737.41.camel@jlt4.sipsolutions.net> (sfid-20120904_192708_124986_E5542492)
+Subject: Re: mac80211: support P2P Device abstraction
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: move module_init/exit
-Date: Thu,  6 Sep 2012 17:09:57 +0200
-Message-Id: <1346944197-13140-1-git-send-email-johannes@sipsolutions.net> (sfid-20120906_170924_292556_5DAAC6EF)
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 04 Sep 2012 19:27:39 +0200
+In-Reply-To: <20120904172057.GB19410@mwanda>
+References: <20120904161319.GA11494@elgon.mountain>
+	 <1346775525.3737.36.camel@jlt4.sipsolutions.net>
+	 <20120904172057.GB19410@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Dan,
 
-These should be with the functions so move
-the module_init/exit statements.
+> > > The patch f142c6b906da: "mac80211: support P2P Device abstraction" 
+> > > from Jun 18, 2012, leads to the following Smatch complaint:
+> > > 
+> > > net/mac80211/iface.c:1168 ieee80211_setup_sdata()
+> > > 	 error: we previously assumed 'sdata->dev' could be null (see line 1134)
+> > > 
+> > > net/mac80211/iface.c
+> > >   1133		/* only monitor/p2p-device differ */
+> > >   1134		if (sdata->dev) {
+> > >                     ^^^^^^^^^^
+> > > New test.
+> > > 
+> > >   1135			sdata->dev->netdev_ops = &ieee80211_dataif_ops;
+> > >   1136			sdata->dev->type = ARPHRD_ETHER;
+> > >   1137		}
+> > > 
+> > > [snip]
+> > > 
+> > >   1167		case NL80211_IFTYPE_MONITOR:
+> > >   1168			sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
+> > >                         ^^^^^^^^^^^^
+> > > Old dereference.
+> > 
+> > Thanks. I'm aware of the warning (I run smatch), but sdata->dev can only
+> > be NULL in "case NL80211_IFTYPE_P2P_DEVICE", so adding an extra check in
+> > the monitor case didn't seem worthwhile.
+> > 
+> > It might have been better to use sdata->vif.type != P2P_DEVICE in the
+> > new test I guess, but then it wouldn't be extensible to new interface
+> > types like Bluetooth AMP.
+> 
+> Gar.  This was my bad.  I didn't realize the warning was so old.  I
+> try to only send the automatic emails for new warnings.  I have been
+> meaning to fix the bug in my script for a while now but this time
+> I will really do that.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+No no, the warning was introduced in that patch on June 18th, so in that
+sense the email was correct. Before that patch, the test didn't exist,
+so the warning didn't show up, because the function *always* assumed
+sdata->dev was set. Now there's one case where this isn't the case any
+more, for vif.type == NL80211_IFTYPE_P2P_DEVICE, but the monitor case
+can still assume sdata->dev is set...
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 72b0456..e603adb 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2056,7 +2056,7 @@ failed:
- 	mac80211_hwsim_free();
- 	return err;
- }
--
-+module_init(init_mac80211_hwsim);
- 
- static void __exit exit_mac80211_hwsim(void)
- {
-@@ -2067,7 +2067,4 @@ static void __exit exit_mac80211_hwsim(void)
- 	mac80211_hwsim_free();
- 	unregister_netdev(hwsim_mon);
- }
--
--
--module_init(init_mac80211_hwsim);
- module_exit(exit_mac80211_hwsim);
--- 
-1.7.10.4
+It's really just a false positive since sdata->dev and sdata->vif.type
+are correlated, but smatch can't know that.
+
+johannes
 
