@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:54764 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757260Ab2IKBcZ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19885 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932181Ab2IDOEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 21:32:25 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 09/10] mwifiex: disable WOW by default
-Date: Mon, 10 Sep 2012 18:30:48 -0700
-Message-Id: <1347327049-13665-10-git-send-email-bzhao@marvell.com> (sfid-20120911_033231_816411_0DED11F3)
-In-Reply-To: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
-References: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
+	Tue, 4 Sep 2012 10:04:40 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 6/8] ath9k_htc: minor cleanup in ath9k_htc_add_station
+Date: Tue, 4 Sep 2012 19:33:37 +0530
+Message-ID: <1346767419-12359-6-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120904_160444_128312_0BD4954A)
+In-Reply-To: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some platforms do not support WOW. Let's change the default wakeup
-criteria to 0.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/fw.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   14 +++++---------
+ 1 files changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 1a4a694..b8ce78e 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -310,7 +310,7 @@ enum ENH_PS_MODES {
- #define HostCmd_SCAN_RADIO_TYPE_A           1
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index c32f6e3..61d096e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -489,24 +489,20 @@ static int ath9k_htc_add_station(struct ath9k_htc_priv *priv,
+ 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
+ 		memcpy(&tsta.macaddr, sta->addr, ETH_ALEN);
+ 		memcpy(&tsta.bssid, common->curbssid, ETH_ALEN);
+-		tsta.is_vif_sta = 0;
+ 		ista->index = sta_idx;
++		tsta.is_vif_sta = 0;
++		maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
++				 sta->ht_cap.ampdu_factor);
++		tsta.maxampdu = cpu_to_be16(maxampdu);
+ 	} else {
+ 		memcpy(&tsta.macaddr, vif->addr, ETH_ALEN);
+ 		tsta.is_vif_sta = 1;
++		tsta.maxampdu = cpu_to_be16(0xffff);
+ 	}
  
- #define HOST_SLEEP_CFG_CANCEL		0xffffffff
--#define HOST_SLEEP_CFG_COND_DEF		0x0000000f
-+#define HOST_SLEEP_CFG_COND_DEF		0x00000000
- #define HOST_SLEEP_CFG_GPIO_DEF		0xff
- #define HOST_SLEEP_CFG_GAP_DEF		0
+ 	tsta.sta_index = sta_idx;
+ 	tsta.vif_index = avp->index;
  
+-	if (!sta) {
+-		tsta.maxampdu = cpu_to_be16(0xffff);
+-	} else {
+-		maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
+-				 sta->ht_cap.ampdu_factor);
+-		tsta.maxampdu = cpu_to_be16(maxampdu);
+-	}
+-
+ 	WMI_CMD_BUF(WMI_NODE_CREATE_CMDID, &tsta);
+ 	if (ret) {
+ 		if (sta)
 -- 
-1.7.0.2
+1.7.0.4
 
