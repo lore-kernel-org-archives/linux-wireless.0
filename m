@@ -1,49 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:51229 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754867Ab2IEUTG convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48041 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932110Ab2IDOEw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 16:19:06 -0400
-Received: by eekc1 with SMTP id c1so400879eek.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 13:19:05 -0700 (PDT)
-References: <1346019997-14487-1-git-send-email-mkl@blackshift.org> <CAOZOX0VBUZzGYnAM1O4Do7VyskpjXUE5ewW=qtW7JsbKJtLAMQ@mail.gmail.com> <50470E54.6030801@blackshift.org>
-In-Reply-To: <50470E54.6030801@blackshift.org>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <CF352CE5-5239-4417-B664-D4F6DE398A22@gmail.com> (sfid-20120905_221911_356879_B69D0CC3)
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: fix votage setting for RT3572/RT3592
-Date: Wed, 5 Sep 2012 22:19:02 +0200
-To: Marc Kleine-Budde <mkl@blackshift.org>
+	Tue, 4 Sep 2012 10:04:52 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 7/8] ath9k_htc: Add a modparam to enable BTCOEX rather than default
+Date: Tue, 4 Sep 2012 19:33:38 +0530
+Message-ID: <1346767419-12359-7-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120904_160455_475020_4F9F0E17)
+In-Reply-To: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marc,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Sent from my iPad
+Enable BTCOEX for WB193(which seems to be the only supported
+ath9k_htc BTCOEX chipset)only when it is enabled via modparam,
+rather than enabling it by default.
 
-On 5 sep. 2012, at 10:33, Marc Kleine-Budde <mkl@blackshift.org> wrote:
-
-> On 08/27/2012 10:19 AM, Ivo Van Doorn wrote:
->> On Mon, Aug 27, 2012 at 12:26 AM, Marc Kleine-Budde <mkl@blackshift.org> wrote:
->>> According to the vendor driver v2.6.0.1, during the rf register init the SRAM
->>> voltage should be increased to 1.35V and after 1ms decreased back to 1.2V. This
->>> patch adds the field setting of LDO_CFG0_LDO_CORE_VLEVEL accordingly.
->>> 
->>> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
->>> Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
->> 
->> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-> 
-> Ping. Is someone taking care of this patch?
-> 
-
-Normally, John takes these patches after Ivo, Helmut or I have acked them.
-However, I believe he was travelling last week, so it takes a bit longer to be applied.
-
+Cc: Vivek Natarajan <nataraja@qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-Gertjan
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |    9 +++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    5 +++++
+ 2 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 07df279..fe4836b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -182,8 +182,17 @@ void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv)
+ void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product)
+ {
+ 	struct ath_hw *ah = priv->ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	int qnum;
+ 
++	/*
++	 * Check if BTCOEX is globally disabled.
++	 */
++	if (!common->btcoex_enabled) {
++		ah->btcoex_hw.scheme = ATH_BTCOEX_CFG_NONE;
++		return;
++	}
++
+ 	if (product && strncmp(product, ATH_HTC_BTCOEX_PRODUCT_ID, 5) == 0) {
+ 		ah->btcoex_hw.scheme = ATH_BTCOEX_CFG_3WIRE;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a035a38..d98255e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -30,6 +30,10 @@ int htc_modparam_nohwcrypt;
+ module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, 0444);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
+ 
++static int ath9k_htc_btcoex_enable;
++module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
++MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
++
+ #define CHAN2G(_freq, _idx)  { \
+ 	.center_freq = (_freq), \
+ 	.hw_value = (_idx), \
+@@ -635,6 +639,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	common->hw = priv->hw;
+ 	common->priv = priv;
+ 	common->debug_mask = ath9k_debug;
++	common->btcoex_enabled = ath9k_htc_btcoex_enable == 1;
+ 
+ 	spin_lock_init(&priv->beacon_lock);
+ 	spin_lock_init(&priv->tx.tx_lock);
+-- 
+1.7.0.4
+
