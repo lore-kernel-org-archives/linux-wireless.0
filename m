@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59087 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757545Ab2I2Sg1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 14:36:27 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] ssb: add attribute to indicate a parallel flash is available
-Date: Sat, 29 Sep 2012 20:36:18 +0200
-Message-Id: <1348943778-23079-3-git-send-email-hauke@hauke-m.de> (sfid-20120929_203631_767526_062E726B)
-In-Reply-To: <1348943778-23079-1-git-send-email-hauke@hauke-m.de>
-References: <1348943778-23079-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:1931 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757201Ab2IDOa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2012 10:30:58 -0400
+Message-ID: <1346769184.26638.7.camel@dcbw.foobar.com> (sfid-20120904_163102_572229_54D7C91D)
+Subject: Re: [PATCH v2] p54: connect to 11w protected networks
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Tue, 04 Sep 2012 09:33:04 -0500
+In-Reply-To: <1346768149.3737.29.camel@jlt4.sipsolutions.net>
+References: <1346622538.10113.3.camel@jlt4.sipsolutions.net>
+	 <E1T8tYj-00051o-3z@debian64.localnet>
+	 (sfid-20120904_155321_955424_2D6B3F4B) <1346768149.3737.29.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2012-09-04 at 16:15 +0200, Johannes Berg wrote:
+> On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
+> 
+> > As you feared: the firmware is corrupting incoming management
+> > frames. However, it does so only when a rxkey was configured.
+> > So as a possible trade-off, MFP will only be supported by p54,
+> > when the firmware crypto offloading is relieved of his duties
+> > (disabled). 
+> > 
+> > Note: Strictly speaking, it would be enough to no longer upload
+> > any rx key which could affect management frames, as the firmware
+> > does not decrypt any frames unless there is a fitting key candidate.
+> 
+> Right, however, that would kinda defeat the point. Unless ... maybe we
+> can tell the driver if 11w is going to be used at all? If we did that,
+> we could make it work in the set_key callback.
+> 
+> For now your patch looks good though.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/driver_mipscore.c       |    2 ++
- include/linux/ssb/ssb_driver_mips.h |    1 +
- 2 files changed, 3 insertions(+)
+We can't get this to happen without a module option?  Is there a way to
+turn the crypto offloading off when we know we're connecting to a W
+protected AP?
 
-diff --git a/drivers/ssb/driver_mipscore.c b/drivers/ssb/driver_mipscore.c
-index dcad2c4..b918ba9 100644
---- a/drivers/ssb/driver_mipscore.c
-+++ b/drivers/ssb/driver_mipscore.c
-@@ -192,6 +192,7 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
- 
- 	/* When there is no chipcommon on the bus there is 4MB flash */
- 	if (!bus->chipco.dev) {
-+		mcore->pflash.present = true;
- 		mcore->pflash.buswidth = 2;
- 		mcore->pflash.window = SSB_FLASH1;
- 		mcore->pflash.window_size = SSB_FLASH1_SZ;
-@@ -206,6 +207,7 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
- 		break;
- 	case SSB_CHIPCO_FLASHT_PARA:
- 		pr_debug("Found parallel flash\n");
-+		mcore->pflash.present = true;
- 		mcore->pflash.window = SSB_FLASH2;
- 		mcore->pflash.window_size = SSB_FLASH2_SZ;
- 		if ((ssb_read32(bus->chipco.dev, SSB_CHIPCO_FLASH_CFG)
-diff --git a/include/linux/ssb/ssb_driver_mips.h b/include/linux/ssb/ssb_driver_mips.h
-index 5d057db..07a9c7a 100644
---- a/include/linux/ssb/ssb_driver_mips.h
-+++ b/include/linux/ssb/ssb_driver_mips.h
-@@ -14,6 +14,7 @@ struct ssb_serial_port {
- };
- 
- struct ssb_pflash {
-+	bool present;
- 	u8 buswidth;
- 	u32 window;
- 	u32 window_size;
--- 
-1.7.9.5
+Dan
 
