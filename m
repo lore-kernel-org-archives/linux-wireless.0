@@ -1,42 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:42673 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757566Ab2IJM2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 08:28:05 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH v3] p54: connect to 11w protected networks
-References: <E1TA0re-00059m-CD@debian64.localnet>
-	<1347036664.8913.1.camel@dcbw.foobar.com>
-Date: Mon, 10 Sep 2012 15:28:00 +0300
-In-Reply-To: <1347036664.8913.1.camel@dcbw.foobar.com> (Dan Williams's message
-	of "Fri, 07 Sep 2012 11:51:04 -0500")
-Message-ID: <87ehma5agf.fsf@purkki.adurom.net> (sfid-20120910_142809_016918_3C13F892)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:42101 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757506Ab2IDSmU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2012 14:42:20 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: don't hang on to sched_scan_ies
+Date: Tue,  4 Sep 2012 20:42:49 +0200
+Message-Id: <1346784169-2929-1-git-send-email-johannes@sipsolutions.net> (sfid-20120904_204223_738128_C3F5DE70)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@redhat.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
->> Previously, it was not possible to connect
->> to networks which requires 11w to be supported
->> by the stations.
->
-> If at all possible if we can do this without module parameters, that
-> would be great.  Otherwise how is userspace supposed to connect to a
-> W-capable network without twiddling driver-specific module options,
-> something we've tried really hard to not do?  Module options really
-> aren't any different than private ioctls or IWPRIV commands...
+There's no need to keep a copy of the scheduled
+scan IEs after the driver has been told, if it
+requires a copy it must make one. Therefore, we
+can move sched_scan_ies into the function.
 
-Sure, and that's how it works with properly supported hardware. But p54
-is so old that the user will need to buy newer hardware if he really
-needs 11w support out-of-box. IMHO there's no point of making a huge
-effort to add 11w support to older hardware, there are more important
-things to fix in Linux wireless stack than that.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/scan.c        |   39 ++++++++++++++-------------------------
+ 2 files changed, 14 insertions(+), 26 deletions(-)
 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b58c8fb..9d5d26e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1012,7 +1012,6 @@ struct ieee80211_local {
+ 	int scan_channel_idx;
+ 	int scan_ies_len;
+ 
+-	struct ieee80211_sched_scan_ies sched_scan_ies;
+ 	struct work_struct sched_scan_stopped_work;
+ 	struct ieee80211_sub_if_data __rcu *sched_scan_sdata;
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index de09d1f..ccfa35e 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -921,6 +921,7 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
+ 				       struct cfg80211_sched_scan_request *req)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_sched_scan_ies sched_scan_ies;
+ 	int ret, i;
+ 
+ 	mutex_lock(&local->mtx);
+@@ -939,33 +940,28 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
+ 		if (!local->hw.wiphy->bands[i])
+ 			continue;
+ 
+-		local->sched_scan_ies.ie[i] = kzalloc(2 +
+-						      IEEE80211_MAX_SSID_LEN +
+-						      local->scan_ies_len +
+-						      req->ie_len,
+-						      GFP_KERNEL);
+-		if (!local->sched_scan_ies.ie[i]) {
++		sched_scan_ies.ie[i] = kzalloc(2 + IEEE80211_MAX_SSID_LEN +
++					       local->scan_ies_len +
++					       req->ie_len,
++					       GFP_KERNEL);
++		if (!sched_scan_ies.ie[i]) {
+ 			ret = -ENOMEM;
+ 			goto out_free;
+ 		}
+ 
+-		local->sched_scan_ies.len[i] =
+-			ieee80211_build_preq_ies(local,
+-						 local->sched_scan_ies.ie[i],
++		sched_scan_ies.len[i] =
++			ieee80211_build_preq_ies(local, sched_scan_ies.ie[i],
+ 						 req->ie, req->ie_len, i,
+ 						 (u32) -1, 0);
+ 	}
+ 
+-	ret = drv_sched_scan_start(local, sdata, req,
+-				   &local->sched_scan_ies);
+-	if (ret == 0) {
++	ret = drv_sched_scan_start(local, sdata, req, &sched_scan_ies);
++	if (ret == 0)
+ 		rcu_assign_pointer(local->sched_scan_sdata, sdata);
+-		goto out;
+-	}
+ 
+ out_free:
+ 	while (i > 0)
+-		kfree(local->sched_scan_ies.ie[--i]);
++		kfree(sched_scan_ies.ie[--i]);
+ out:
+ 	mutex_unlock(&local->mtx);
+ 	return ret;
+@@ -974,7 +970,7 @@ out:
+ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	int ret = 0, i;
++	int ret = 0;
+ 
+ 	mutex_lock(&local->mtx);
+ 
+@@ -983,12 +979,9 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
+ 		goto out;
+ 	}
+ 
+-	if (rcu_access_pointer(local->sched_scan_sdata)) {
+-		for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+-			kfree(local->sched_scan_ies.ie[i]);
+-
++	if (rcu_access_pointer(local->sched_scan_sdata))
+ 		drv_sched_scan_stop(local, sdata);
+-	}
++
+ out:
+ 	mutex_unlock(&local->mtx);
+ 
+@@ -1010,7 +1003,6 @@ void ieee80211_sched_scan_stopped_work(struct work_struct *work)
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local,
+ 			     sched_scan_stopped_work);
+-	int i;
+ 
+ 	mutex_lock(&local->mtx);
+ 
+@@ -1019,9 +1011,6 @@ void ieee80211_sched_scan_stopped_work(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+-		kfree(local->sched_scan_ies.ie[i]);
+-
+ 	rcu_assign_pointer(local->sched_scan_sdata, NULL);
+ 
+ 	mutex_unlock(&local->mtx);
 -- 
-Kalle Valo
+1.7.10.4
+
