@@ -1,109 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5580 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757065Ab2IDOMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 10:12:53 -0400
-Message-ID: <1346768117.26638.3.camel@dcbw.foobar.com> (sfid-20120904_161256_883815_9C6B47AE)
-Subject: Re: [PATCH] libertas: set mac control synchronously
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Date: Tue, 04 Sep 2012 09:15:17 -0500
-In-Reply-To: <20120903194934.04E06FAA0A@dev.laptop.org>
-References: <20120903194934.04E06FAA0A@dev.laptop.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:42258 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751967Ab2IDTiO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2012 15:38:14 -0400
+Message-ID: <1346787524.3737.43.camel@jlt4.sipsolutions.net> (sfid-20120904_213817_611719_D52E79AD)
+Subject: Re: [RFC] cfg/nl/mac80211: use per-band basic rates bitmap in IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 04 Sep 2012 21:38:44 +0200
+In-Reply-To: <1346784741-7003-1-git-send-email-ordex@autistici.org>
+References: <1346784741-7003-1-git-send-email-ordex@autistici.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-09-03 at 15:49 -0400, Daniel Drake wrote:
-> CMD_MAC_CONTROL is currently sent async to the firmware, and is sent
-> from the lbs_setup_firmware() path during device init.
+On Tue, 2012-09-04 at 20:52 +0200, Antonio Quartulli wrote:
+> Each band maps the bitmap of rates to different real bitrates, therefore using
+> the same bitmask for every band (as it is now) is not correct.
+> Each band must have its own bitmask where the bits of the rates specified by the
+> user on IBSS join have to be set
 > 
-> This means that device init can complete with commands pending, and
-> the if_sdio driver will sometimes power down the device (after init)
-> with this command still pending.
-> 
-> This was causing an occasional spurious command timeout after init,
-> leading to a device reset.
-> 
-> Fix this by making CMD_MAC_CONTROL synchronous - there is currently
-> no reason for it to be async (although there may have been in 2008
-> when commit c97329e2 was made).
-
-Hmm, any chance we could just have another function
-(lbs_cmd_mac_control_sync?) that does it sync?  That's called from a
-bunch of places and we were trying to make most of the commands done
-from major flows async to reduce driver blocking and bad stalls when the
-firmware times out commands.  It shouldn't be too hard to have both
-sync/async calls for it.
-
-Dan
-
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
+> Signed-off-by: Antonio Quartulli <ordex@autistici.org>
 > ---
->  drivers/net/wireless/libertas/cmd.c  | 6 ++++--
->  drivers/net/wireless/libertas/cmd.h  | 2 +-
->  drivers/net/wireless/libertas/main.c | 4 +++-
->  3 files changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index 26e6832..df0e4af5 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -1144,9 +1144,10 @@ out:
->  	return ret;
->  }
->  
-> -void lbs_set_mac_control(struct lbs_private *priv)
-> +int lbs_set_mac_control(struct lbs_private *priv)
->  {
->  	struct cmd_ds_mac_control cmd;
-> +	int ret;
->  
->  	lbs_deb_enter(LBS_DEB_CMD);
->  
-> @@ -1154,9 +1155,10 @@ void lbs_set_mac_control(struct lbs_private *priv)
->  	cmd.action = cpu_to_le16(priv->mac_control);
->  	cmd.reserved = 0;
->  
-> -	lbs_cmd_async(priv, CMD_MAC_CONTROL, &cmd.hdr, sizeof(cmd));
-> +	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
->  
->  	lbs_deb_leave(LBS_DEB_CMD);
-> +	return ret;
->  }
->  
->  /**
-> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-> index ab07608..43df4c4 100644
-> --- a/drivers/net/wireless/libertas/cmd.h
-> +++ b/drivers/net/wireless/libertas/cmd.h
-> @@ -95,7 +95,7 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv);
->  
->  int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
->  
-> -void lbs_set_mac_control(struct lbs_private *priv);
-> +int lbs_set_mac_control(struct lbs_private *priv);
->  
->  int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
->  		     s16 *maxlevel);
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index fe1ea43..b878b45 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -682,8 +682,10 @@ static int lbs_setup_firmware(struct lbs_private *priv)
->  
->  	/* Send cmd to FW to enable 11D function */
->  	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
-> +	if (ret)
-> +		goto done;
->  
-> -	lbs_set_mac_control(priv);
-> +	ret = lbs_set_mac_control(priv);
->  done:
->  	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
->  	return ret;
+>  include/net/cfg80211.h     |  4 ++--
+>  net/mac80211/ibss.c        |  6 ++++--
+>  net/mac80211/ieee80211_i.h |  2 +-
+>  net/wireless/nl80211.c     | 12 +++++++-----
 
+I'm not sure I see the need to change nl80211, and the change seems
+wrong anyway.
+
+As far as I understand it, the basic rates that are passed into the
+kernel are intended to be used when the kernel creates a new IBSS. This
+always happens on the channel that is also passed in, so it's always
+bound to a given channel (band).
+
+Now mac80211 internally seems to mess this up a bit, but that doesn't
+affect nl80211/cfg80211?
+
+johannes
 
