@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37850 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752914Ab2IGP1n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 11:27:43 -0400
-Message-ID: <504A1269.1050002@openwrt.org> (sfid-20120907_172756_848140_57E5E691)
-Date: Fri, 07 Sep 2012 17:27:37 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: validate skb->dev in the tx status path
-References: <1347029656-41430-1-git-send-email-nbd@openwrt.org> <1347030695.4256.25.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1347030695.4256.25.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:40195 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544Ab2IDILG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Sep 2012 04:11:06 -0400
+Message-ID: <1346746298.3737.0.camel@jlt4.sipsolutions.net> (sfid-20120904_101112_137395_C537083F)
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@lists.ath5k.org
+Date: Tue, 04 Sep 2012 10:11:38 +0200
+In-Reply-To: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120828_113608_728319_48791C3E)
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20120828_113608_728319_48791C3E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-09-07 5:11 PM, Johannes Berg wrote:
-> On Fri, 2012-09-07 at 16:54 +0200, Felix Fietkau wrote:
-> 
->> +		if (!skb->dev) {
->>  			p2p_sdata = rcu_dereference(local->p2p_sdata);
->>  			if (p2p_sdata) {
->> -				cfg80211_mgmt_tx_status(
->> -					&p2p_sdata->wdev, cookie, skb->data,
->> -					skb->len, acked, GFP_ATOMIC);
->> +				skb->dev = p2p_sdata->dev;
->> +				found = true;
-> 
-> What's the point of this? p2p_sdata->dev will be NULL, just like
-> skb->dev already is?
-Oh, missed that. I'll send a v2.
+On Tue, 2012-08-28 at 17:34 +0800, Chun-Yeow Yeoh wrote:
+> This patch provides the support of hardware encyrption for
+> management frame, including the support of AES CMAC. This
+> patch is tested with the following chipsets:
+> - AR5213A
+> - AR5413
+> - AR2413/AR2414
 
-- Felix
+_How_ did you test this? Did you test that management frames are
+properly encrypted using AES CCM, and not mangled when decrypted? That's
+the concern, see my other mail to Christian on his carl9170 patch.
+
+johannes
+
