@@ -1,55 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59441 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071Ab2IHIVn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 04:21:43 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:3021 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759201Ab2IETsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 15:48:33 -0400
+Message-ID: <5047AC85.6090704@broadcom.com> (sfid-20120905_214837_888534_6884B9E7)
+Date: Wed, 5 Sep 2012 21:48:21 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20554.65332.70163.2580@gargle.gargle.HOWL> (sfid-20120908_102149_768955_C032CEBF)
-Date: Sat, 8 Sep 2012 13:47:56 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Sujith Manoharan <c_manoha@qualcomm.com>, <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 6/7] ath9k_hw: Program correct PLL value for AR9565
-In-Reply-To: <504AFCE8.5010306@openwrt.org>
-References: <20554.62374.945320.866841@gargle.gargle.HOWL>
-	<504AFCE8.5010306@openwrt.org>
+To: "Brad Figg" <brad.figg@canonical.com>
+cc: "Seth Forshee" <seth.forshee@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>,
+	"Jonathan Nieder" <jrnieder@gmail.com>,
+	"Stanislaw Gruszka" <sgruszka@redhat.com>,
+	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	"Milan Bouchet-Valat" <nalimilan@club-internet.fr>
+Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback
+ operation
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+ <1346838562-4818-3-git-send-email-arend@broadcom.com>
+ <20120905165735.GD302@thinkpad-t410> <50478CE9.6040103@canonical.com>
+ <5047A624.7090105@broadcom.com> <5047AC15.8060207@canonical.com>
+In-Reply-To: <5047AC15.8060207@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> That looks messed up, how about just:
-> 
-> 	pll = ath9k_hw_compute_pll_control(ah, chan);
-> 	if (AR_SREV_9565(ah))
-> 		pll |= 0x40000;
-> 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
-> 
-> Or alternatively move that OR mask into ath9k_hw_compute_pll_control
+On 09/05/2012 09:46 PM, Brad Figg wrote:
+> On 09/05/2012 12:21 PM, Arend van Spriel wrote:
+>> On 09/05/2012 07:33 PM, Brad Figg wrote:
+>>> On 09/05/2012 09:57 AM, Seth Forshee wrote:
+>>>> On Wed, Sep 05, 2012 at 11:49:22AM +0200, Arend van Spriel wrote:
+>>>>> This patch addresses a long standing issue of the driver with the
+>>>>> mac80211 .flush() callback. Since implementing the .flush() callback
+>>>>> a number of issues have been fixed, but a WARN_ON_ONCE() was still
+>>>>> triggered because the flush takes too much time. The flush now
+>>>>> makes use of a waitqueue and still has a timeout on which a warning
+>>>>> is given.
+>>>>
+>>>> Brad Figg and I have been testing this patch with a 3.5 kernel. With the
+>>>> patch we're both still seeing the warning from brcms_ops_flush(), and
+>>>> Brad has also seen the "No where to go" message in
+>>>> brcms_c_prec_enq_head(). But the connection continues to work when this
+>>>> happens, whereas previously we had to reconnect, so this is definitely
+>>>> an improvement.
+>>>>
+>>>> Seth
+>>>>
+>>>
+>>> Arend,
+>>>
+>>> Though the driver is definitely better, it is still struggling quite a
+>>> bit as can be seen in the iperf output found at:
+>>>       http://pastebin.ubuntu.com/1187578/
+>>>
+>>
+>> Thanks, Brad
+>>
+>> I was focusing on the warning in the flush callback. I actually could not reproduce the "nowhere to go" message under my ubuntu test laptop.
+>>
+>> The root cause of your problem seems the "nowhere to go". Basically, all packet queues in the driver have reached their limit. In that case packets are simply dropped.
+>>
+>> Could you provide following info:
+>> * cpu info
+>> * wireless device id
+>> * scan data of your AP
+>> * kernel configuration
+>>
+>> If I can download the kernel debian package of your 3.5 kernel from somewhere that would be great.
+>>
+>> Gr. AvS
+>>
+>
+> Arend,
+>
+> I just filed https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1046507
+> which should contain all this information.
+>
+> If there is _anything_ more I can provide to you or test for you do not
+> hesitate to ask.
 
-[RFC v2] ath9k_hw: Program correct PLL value for AR9565
+I will not (hesitate, that is).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 063d724..47de1a9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -918,7 +918,8 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 	}
- 
- 	pll = ath9k_hw_compute_pll_control(ah, chan);
--
-+	if (AR_SREV_9565(ah))
-+		pll |= 0x40000;
- 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
- 
- 	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
--- 
-1.7.12
+Gr. AvS
 
