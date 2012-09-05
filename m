@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33168 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751098Ab2I3PPk (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:43977 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752001Ab2IERXv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2012 11:15:40 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: use __printf attribute in debugfs
-Date: Sun, 30 Sep 2012 17:16:14 +0200
-Message-Id: <1349018174-22867-1-git-send-email-johannes@sipsolutions.net> (sfid-20120930_171543_198899_696E1E06)
+	Wed, 5 Sep 2012 13:23:51 -0400
+Received: by wicr5 with SMTP id r5so5700208wic.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 10:23:50 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/2] make roaming a bit faster 
+Date: Wed,  5 Sep 2012 20:23:55 +0300
+Message-Id: <1346865837-32265-1-git-send-email-eliad@wizery.com> (sfid-20120905_192355_427159_296B8511)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The use of synchronize_rcu during roaming adds
+a significant delay. try minimizing it by replacing
+these calls with other alternatives.
 
-The internal function mac80211_format_buffer() has a
-printf-style argument list, so add the attribute to
-have gcc verify that list.
+Eliad Peller (2):
+  mac80211: use synchronize_net() on key destroying
+  mac80211: use call_rcu() on sta deletion
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/debugfs.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/iface.c    |    5 ++
+ net/mac80211/key.c      |    2 +-
+ net/mac80211/sta_info.c |  117 ++++++++++++++++++++++++++---------------------
+ net/mac80211/sta_info.h |    2 +
+ 4 files changed, 73 insertions(+), 53 deletions(-)
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 466f4b4..b189ae2 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -17,8 +17,8 @@
- 
- #define DEBUGFS_FORMAT_BUFFER_SIZE 100
- 
--int mac80211_format_buffer(char __user *userbuf, size_t count,
--				  loff_t *ppos, char *fmt, ...)
-+int __printf(4, 5) mac80211_format_buffer(char __user *userbuf, size_t count,
-+					  loff_t *ppos, char *fmt, ...)
- {
- 	va_list args;
- 	char buf[DEBUGFS_FORMAT_BUFFER_SIZE];
 -- 
-1.7.10.4
+1.7.6.401.g6a319
 
