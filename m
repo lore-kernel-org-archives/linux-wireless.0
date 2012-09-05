@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:41477 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753287Ab2IEHH3 (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:51229 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754867Ab2IEUTG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 03:07:29 -0400
-MIME-Version: 1.0
-Date: Wed, 5 Sep 2012 15:07:29 +0800
-Message-ID: <CAPgLHd-6RmrLpi9FPTFhXiA+BHywGknmvNAd-KCdHaM+tn0qgQ@mail.gmail.com> (sfid-20120905_090738_155485_FF29528D)
-Subject: [PATCH] ath6kl: use list_move_tail instead of list_del/list_add_tail
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: kvalo@qca.qualcomm.com, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 Sep 2012 16:19:06 -0400
+Received: by eekc1 with SMTP id c1so400879eek.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 13:19:05 -0700 (PDT)
+References: <1346019997-14487-1-git-send-email-mkl@blackshift.org> <CAOZOX0VBUZzGYnAM1O4Do7VyskpjXUE5ewW=qtW7JsbKJtLAMQ@mail.gmail.com> <50470E54.6030801@blackshift.org>
+In-Reply-To: <50470E54.6030801@blackshift.org>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <CF352CE5-5239-4417-B664-D4F6DE398A22@gmail.com> (sfid-20120905_221911_356879_B69D0CC3)
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: fix votage setting for RT3572/RT3592
+Date: Wed, 5 Sep 2012 22:19:02 +0200
+To: Marc Kleine-Budde <mkl@blackshift.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Marc,
 
-Using list_move_tail() instead of list_del() + list_add_tail().
+Sent from my iPad
 
-spatch with a semantic match is used to found this problem.
-(http://coccinelle.lip6.fr/)
+On 5 sep. 2012, at 10:33, Marc Kleine-Budde <mkl@blackshift.org> wrote:
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> On 08/27/2012 10:19 AM, Ivo Van Doorn wrote:
+>> On Mon, Aug 27, 2012 at 12:26 AM, Marc Kleine-Budde <mkl@blackshift.org> wrote:
+>>> According to the vendor driver v2.6.0.1, during the rf register init the SRAM
+>>> voltage should be increased to 1.35V and after 1ms decreased back to 1.2V. This
+>>> patch adds the field setting of LDO_CFG0_LDO_CORE_VLEVEL accordingly.
+>>> 
+>>> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+>>> Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
+>> 
+>> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> Ping. Is someone taking care of this patch?
+> 
+
+Normally, John takes these patches after Ivo, Helmut or I have acked them.
+However, I believe he was travelling last week, so it takes a bit longer to be applied.
+
 ---
- drivers/net/wireless/ath/ath6kl/htc_pipe.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-index f9626c7..ba6bd49 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-@@ -374,9 +374,8 @@ static enum htc_send_queue_result htc_try_send(struct htc_target *target,
- 				packet = list_first_entry(txq,
- 							  struct htc_packet,
- 							  list);
--				list_del(&packet->list);
--				/* insert into local queue */
--				list_add_tail(&packet->list, &send_queue);
-+				/* move to local queue */
-+				list_move_tail(&packet->list, &send_queue);
- 			}
- 
- 			/*
-@@ -399,11 +398,10 @@ static enum htc_send_queue_result htc_try_send(struct htc_target *target,
- 					 * for cleanup */
- 				} else {
- 					/* callback wants to keep this packet,
--					 * remove from caller's queue */
--					list_del(&packet->list);
--					/* put it in the send queue */
--					list_add_tail(&packet->list,
--						      &send_queue);
-+					 * move from caller's queue to the send
-+					 * queue */
-+					list_move_tail(&packet->list,
-+						       &send_queue);
- 				}
- 
- 			}
-
-
+Gertjan
