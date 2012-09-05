@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13794 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757111Ab2IUJgn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 05:36:43 -0400
-From: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <kvalo@qca.qualcomm.com>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Max clients reached notification
-Date: Fri, 21 Sep 2012 15:06:14 +0530
-Message-ID: <1348220174-5324-1-git-send-email-c_ppitch@qca.qualcomm.com> (sfid-20120921_113647_471996_9298D1B8)
+Received: from narfation.org ([79.140.41.39]:33621 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756285Ab2IEOVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 10:21:00 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Adrian Chadd <adrian.chadd@gmail.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	openwrt-devel@lists.openwrt.org,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
+Date: Wed, 05 Sep 2012 16:20:52 +0200
+Message-ID: <168362233.PzT7LJrFi2@bentobox> (sfid-20120905_162110_507613_B2528CE1)
+In-Reply-To: <CAJ-VmonwheNtv8xfEJnWpD-XOmSEebMFJAmQmWUfe2Pd3tMnqA@mail.gmail.com>
+References: <20120813165340.GA10044@pandem0nium> <CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com> <CAJ-VmonwheNtv8xfEJnWpD-XOmSEebMFJAmQmWUfe2Pd3tMnqA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="nextPart2737334.eIe6BmTy2p"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a station requests connection to an AP, that has already been
-connected to the maximum number of stations it can support, an event
-is sent to user space via NL80211_CMD_CONN_FAILED command and reason
-attribute NL80211_ATTR_CONN_FAILED_REASON with
-NL80211_CONN_FAIL_MAX_CLIENTS as reason.
 
-Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/main.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+--nextPart2737334.eIe6BmTy2p
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 9533558..cc2749a 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1004,6 +1004,13 @@ void ath6kl_disconnect_event(struct ath6kl_vif *vif, u8 reason, u8 *bssid,
- 			ar->last_ch = le16_to_cpu(vif->profile.ch);
- 		}
- 
-+		if (prot_reason_status == WMI_AP_REASON_MAX_STA) {
-+			/* send max client reached notification to user space */
-+			cfg80211_conn_failed(vif->ndev, bssid,
-+					     NL80211_CONN_FAIL_MAX_CLIENTS,
-+					     GFP_KERNEL);
-+		}
-+
- 		if (!ath6kl_remove_sta(ar, bssid, prot_reason_status))
- 			return;
- 
--- 
-1.7.9.5
+On Wednesday 05 September 2012 07:08:47 Adrian Chadd wrote:
+> I don't think it's a stuck beacon WAR issue here; 0xdeadbeef really
+> does read like the MAC has gone to sleep.
+> 
+> Where's the complete register dump hiding?
+
+It was not sent to the public mailing lists due to the size. You will receive 
+the dump mentioned in the first mail in some minutes.
+
+Kind regards,
+	Sven
+--nextPart2737334.eIe6BmTy2p
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABCgAGBQJQR1/EAAoJEF2HCgfBJntG9OUQAIZjy8NwITAoZzbYFX2pJHc1
+SEThuIqOYl6S3F/nNGavZp6CJMV0zvIdfNa1iJ9p5CIKDHUbgFIJr9EGvFZBGACL
+8RZOh1du3ogR+w+31ii7Bd82/1jRyi2ZEiujTEulg7otBIVbr3pIAg0i+bmu4pwU
+p5PLihKsh4Q/vitxItTRJLO2HCMOjXG9/CfoggfNt+owwZGGHrTvTPrxUK8oeopF
+Yzmh2SxGi6lIMGbDV3tjQpiPD9GA2xUQqF/0fXYasGJKUJcbbEiMahJ2CsGGmrXX
+OPRv9mAEWJA5Jc/fvIe8rX+Rfkrsxi5obTlf54HdqxyJtvEVBPIJP0KpwzJ2Zffd
+dlhyiOQi8wlQvQnCBEVTNJey83RQK8uUbpJ345FTIuzuHQzE/tm7wepAyC8NEnNb
+168KDjTFqlGLzr2ip2imdMnobO1H/AtKEcwKUFUR/MmefjzUsKXP8QnLO2ziR8GP
+625pv/aUY9KcSorrDx7h7RKs3kDAvDRPUnA42ALaDPwTmfa6FyP7BNkVUbQaHwXB
+D34BAzWmp463clWKwCFzMIqTFjDSZi0vNijL60f9BOnnuDi4KBvQncra9EoIlJIq
+EumrQRKicITBvyf8m5jAKqrCcgTt22IBuNoGWaZGlvv4+s+DznsfxU5qddqxITSH
+A7oVI21g7L0Uw/FbgjSL
+=Wgm/
+-----END PGP SIGNATURE-----
+
+--nextPart2737334.eIe6BmTy2p--
 
