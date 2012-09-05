@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52077 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455Ab2IHHbz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45069 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab2IENm1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 03:31:55 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20554.62320.883202.31640@gargle.gargle.HOWL> (sfid-20120908_093158_179618_53EB9BD3)
-Date: Sat, 8 Sep 2012 12:57:44 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [RFC 0/7] ath9k patches
+	Wed, 5 Sep 2012 09:42:27 -0400
+Message-ID: <1346852578.4364.13.camel@jlt4.sipsolutions.net> (sfid-20120905_154231_147031_DC12DE6D)
+Subject: Re: [RFC V2 2/2] cfg80211/nl80211: Enable drivers to implement mac
+ address based ACL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Wed, 05 Sep 2012 15:42:58 +0200
+In-Reply-To: <1346824110-26382-2-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1346824110-26382-1-git-send-email-vthiagar@qca.qualcomm.com>
+	 <1346824110-26382-2-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds support for AR9565, which is a 1x1, 2G-only
-chip with BT coexistence.
+On Wed, 2012-09-05 at 11:18 +0530, Vasanthakumar Thiagarajan wrote:
 
-Sujith
+> + * @NL80211_ATTR_MAC_ACL_MAX: u16 attribute to advertise the maximum
+> + *	number of mac addresses that a device can support for MAC
+> + *	access control.
 
-Sujith Manoharan (7):
-  ath9k_hw: Add version/revision macros for AR9565
-  ath9k_hw: Add AR9565 initvals
-  ath9k_hw: Add AR9565 HW support
-  ath9k: Set correct max streams for AR9565
-  ath9k_hw: Fix spur mitigation for AR9565
-  ath9k_hw: Program correct PLL value for AR9565
-  ath9k: Add PCI ID for AR9565
+Why not use u32? I know we won't use more than u16 most likely, but u32
+takes just as much space in netlink messages ...
 
- drivers/net/wireless/ath/ath9k/ani.c               |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |   10 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |   57 +-
- drivers/net/wireless/ath/ath9k/ar9003_mac.c        |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   86 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h        |   29 +-
- .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   | 1233 ++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/eeprom.h            |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c                |   42 +-
- drivers/net/wireless/ath/ath9k/hw.h                |    1 +
- drivers/net/wireless/ath/ath9k/init.c              |    2 +-
- drivers/net/wireless/ath/ath9k/pci.c               |    1 +
- drivers/net/wireless/ath/ath9k/reg.h               |    9 +
- 13 files changed, 1422 insertions(+), 54 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
 
--- 
-1.7.12
+> Drivers
+> + *	which advertise the support for mac address based access control have to
+> + *	implement this callback.
+
+You might consider checking this in register_wiphy?
+
+
+So about the race condition ... shouldn't the initial MAC list be given
+in the start_ap() call, so that the AP can start up with a proper ACL
+already in place, rather than starting up & then modifying later?
+
+johannes
 
