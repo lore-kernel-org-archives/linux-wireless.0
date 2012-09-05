@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:48715 "EHLO ebb06.tieto.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2259 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754193Ab2ILIP4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 04:15:56 -0400
-From: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-To: <linux-wireless@vger.kernel.org>, <linux-nfc@lists.01.org>
-CC: <sameo@linux.intel.com>, <eric.lapuyade@linux.intel.com>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: [PATCH 3/3] NFC: Clean rcv_q to avoid handling of remaing RSET
-Date: Wed, 12 Sep 2012 10:15:35 +0200
-Message-ID: <1347437735-15041-3-git-send-email-waldemar.rymarkiewicz@tieto.com> (sfid-20120912_101608_067946_373D5DA8)
-In-Reply-To: <1347437735-15041-1-git-send-email-waldemar.rymarkiewicz@tieto.com>
-References: <1347437735-15041-1-git-send-email-waldemar.rymarkiewicz@tieto.com>
+	id S1752100Ab2IEJtl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 05:49:41 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Seth Forshee" <seth.forshee@canonical.com>
+Subject: [PATCH 0/2] brcmsmac: fix for regulatory rules and flush
+ callback
+Date: Wed, 5 Sep 2012 11:49:20 +0200
+Message-ID: <1346838562-4818-1-git-send-email-arend@broadcom.com> (sfid-20120905_114946_214327_B368BC00)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During processing incoming RSET frame chip, possibly due to its internal
-timout, could retrnasmit an another RSET which is next queued for processing
-in shdlc layer.
+Two fixes intended for the wireless tree. The issue with the .flush() has
+been giving me a lot of email from RedHat's bugzilla server. Hope this
+patch will silence that ;-)
 
-To avoid processing of those remaining in rcv_q purge the queue. Otherwise it
-will be handled in CONNECTED state which will result in disconnection.
+The other issue was introduced with regulatory changes made by Seth Forshee
+as he remove rule for channel 14 upon my review comment, but n_rules field
+was not decreased so we got a random rule with bad side-effects.
 
-Signed-off-by: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
----
- net/nfc/hci/shdlc.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+Cc: Seth Forshee <seth.forshee@canonical.com>
 
-diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
-index 12feb58..6ede86c 100644
---- a/net/nfc/hci/shdlc.c
-+++ b/net/nfc/hci/shdlc.c
-@@ -381,6 +381,12 @@ static void nfc_shdlc_rcv_u_frame(struct nfc_shdlc *shdlc,
- 				shdlc->srej_support = srej_support;
- 				r = nfc_shdlc_connect_send_ua(shdlc);
- 				nfc_shdlc_connect_complete(shdlc, r);
-+
-+				if (shdlc->rcv_q.qlen)
-+					/* Handling incoming RSET the chip could issue an another one,
-+					 * possibly due to its internal timeout, so we have to make
-+					 * sure we won't handle these remaining on the rcv_q */
-+					skb_queue_purge(&shdlc->rcv_q);
- 			}
- 		} else if (shdlc->state == SHDLC_CONNECTED) {
- 			/*
+Arend van Spriel (2):
+  brcmsmac: fix mismatch in number of custom regulatory rules
+  brcmsmac: rework of mac80211 .flush() callback operation
+
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c  |    2 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   41 +++++++++++++-------
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    3 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   21 +++-------
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    4 +-
+ 5 files changed, 38 insertions(+), 33 deletions(-)
+
 -- 
-1.7.10
+1.7.9.5
+
 
