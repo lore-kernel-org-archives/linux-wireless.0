@@ -1,95 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.laptop.org ([18.85.2.166]:51128 "EHLO swan.laptop.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756327Ab2ICT5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2012 15:57:44 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com, dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: set mac control synchronously
-Message-Id: <20120903194934.04E06FAA0A@dev.laptop.org> (sfid-20120903_215749_241785_5E968E95)
-Date: Mon,  3 Sep 2012 15:49:33 -0400 (EDT)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60321 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077Ab2IEGwJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 02:52:09 -0400
+Received: by iahk25 with SMTP id k25so305537iah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2012 23:52:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1346777666.3737.38.camel@jlt4.sipsolutions.net>
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
+	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+	<20120904102204.GA2541@w1.fi>
+	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
+	<CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
+	<1346758521.3737.28.camel@jlt4.sipsolutions.net>
+	<CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
+	<1346777666.3737.38.camel@jlt4.sipsolutions.net>
+Date: Wed, 5 Sep 2012 14:52:08 +0800
+Message-ID: <CAEFj9866ZAaZ1T-RSVj7Rp8-7giBF9xgtsvnwa_+Wi+ShTfVeA@mail.gmail.com> (sfid-20120905_085215_043128_2134E4E6)
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CMD_MAC_CONTROL is currently sent async to the firmware, and is sent
-from the lbs_setup_firmware() path during device init.
+Hi, Johannes
 
-This means that device init can complete with commands pending, and
-the if_sdio driver will sometimes power down the device (after init)
-with this command still pending.
+> Well, that's a separate question. Of course we could enable it, but what
+> would the point be? You don't have CCM for management frames right now,
+> so CMAC is pretty useless? And if you had CCM for management frames, say
+> with the things discussed in the p54 thread, then you could just enable
+> both, right?
 
-This was causing an occasional spurious command timeout after init,
-leading to a device reset.
+We will load the ath5k with nohwcrypt=, so no hardware encryption at
+all. But to proceed with key installation using AES CMAC to be
+processed in software, we need somethings related to:
+http://www.spinics.net/lists/linux-wireless/msg96187.html
 
-Fix this by making CMD_MAC_CONTROL synchronous - there is currently
-no reason for it to be async (although there may have been in 2008
-when commit c97329e2 was made).
+Otherwise, we may need to bypass the cfg80211_supported_cipher_suite checking:
+http://www.spinics.net/lists/linux-wireless/msg95951.html
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
+Is this relevant?
+
 ---
- drivers/net/wireless/libertas/cmd.c  | 6 ++++--
- drivers/net/wireless/libertas/cmd.h  | 2 +-
- drivers/net/wireless/libertas/main.c | 4 +++-
- 3 files changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 26e6832..df0e4af5 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1144,9 +1144,10 @@ out:
- 	return ret;
- }
- 
--void lbs_set_mac_control(struct lbs_private *priv)
-+int lbs_set_mac_control(struct lbs_private *priv)
- {
- 	struct cmd_ds_mac_control cmd;
-+	int ret;
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
-@@ -1154,9 +1155,10 @@ void lbs_set_mac_control(struct lbs_private *priv)
- 	cmd.action = cpu_to_le16(priv->mac_control);
- 	cmd.reserved = 0;
- 
--	lbs_cmd_async(priv, CMD_MAC_CONTROL, &cmd.hdr, sizeof(cmd));
-+	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
- 
- 	lbs_deb_leave(LBS_DEB_CMD);
-+	return ret;
- }
- 
- /**
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index ab07608..43df4c4 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -95,7 +95,7 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv);
- 
- int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
- 
--void lbs_set_mac_control(struct lbs_private *priv);
-+int lbs_set_mac_control(struct lbs_private *priv);
- 
- int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
- 		     s16 *maxlevel);
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index fe1ea43..b878b45 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -682,8 +682,10 @@ static int lbs_setup_firmware(struct lbs_private *priv)
- 
- 	/* Send cmd to FW to enable 11D function */
- 	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
-+	if (ret)
-+		goto done;
- 
--	lbs_set_mac_control(priv);
-+	ret = lbs_set_mac_control(priv);
- done:
- 	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
- 	return ret;
--- 
-1.7.11.4
-
+Chun-Yeow
