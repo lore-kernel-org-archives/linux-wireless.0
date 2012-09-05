@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:34616 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756964Ab2IJRzY (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39548 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759283Ab2IEUE0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 13:55:24 -0400
-Subject: [PATCH] staging: r8712u: fix bug in r8712_recv_indicatepkt()
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <1347289446.1234.1717.camel@edumazet-glaptop>
-References: <50369925.3050705@lwfinger.net>
-	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
-	 <20120824.111948.680531915905273128.davem@davemloft.net>
-	 <5037A4B0.3080208@lwfinger.net>
-	 <1345825095.19483.19.camel@edumazet-glaptop>
-	 <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>
-	 <1345830424.19483.69.camel@edumazet-glaptop>
-	 <503BB49C.5010402@lwfinger.net>
-	 <1347266366.1234.1267.camel@edumazet-glaptop>
-	 <504DFEFF.6060004@lwfinger.net>
-	 <1347289446.1234.1717.camel@edumazet-glaptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Sep 2012 19:55:15 +0200
-Message-ID: <1347299715.1234.1902.camel@edumazet-glaptop> (sfid-20120910_195534_066022_870D40AA)
-Mime-Version: 1.0
+	Wed, 5 Sep 2012 16:04:26 -0400
+Date: Wed, 5 Sep 2012 15:54:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com
+Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
+ 2012 (Barcelona!)
+Message-ID: <20120905195402.GF12843@tuxdriver.com> (sfid-20120905_220442_720157_D0CAB32E)
+References: <20120822201930.GC14913@tuxdriver.com>
+ <1346874819.21200.109.camel@aeonflux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1346874819.21200.109.camel@aeonflux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <edumazet@google.com>
+On Wed, Sep 05, 2012 at 12:53:39PM -0700, Marcel Holtmann wrote:
+> Hi John,
+> 
+> > The time for our meeting in Barcelona is drawing near.  I think it
+> > is time that we start nailing-down the agenda.
+> > 
+> > We have one room on the first day, and three rooms on the second day.
+> > I figure that the Bluetooth and 802.11 groups should each get a
+> > break-out room for their own in-depth discussons on the second day and
+> > the third room can be used for more general topics and presentations.
+> > 
+> > With that said, there are still a number of slots available for
+> > presentations or discussion topics.  This is especially true for the
+> > 802.11 group...  Please step-up with some suggested topics!
+> > 
+> > Below is my strawman agenda proposal.  Please make suggestions for
+> > improvements!
+> > 
+> > Day 1
+> > -----
+> > 
+> > Everyone together in a single room...
+> > 
+> > Time	Topic						Speaker
+> > ----	-----						-------
+> > 0930	Welcome/Intro/Agenda				John Linville
+> > 
+> > 1000	802.15.4 stack, 6lowpan				Alexander Smirnov
+> > 
+> > 1100	Break
+> > 
+> > 1130	Virtual Bluetooth AMP Controller for mac80211	Andrei Emeltchenko
+> 
+> can we swap this talk with my Bluetooth overview talk. So that we get
+> all the overview talks on the first day. And keep the breakout talks on
+> the next day.
 
-64bit arches have a buggy r8712u driver, let's fix it.
+Sure, no problem.
 
-Signed-off-by: Eric Dumazet <edumazet@google.com>
----
- drivers/staging/rtl8712/recv_linux.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+Now, if we only had a few 802.11-related topics...
 
-diff --git a/drivers/staging/rtl8712/recv_linux.c b/drivers/staging/rtl8712/recv_linux.c
-index 0e26d5f..495ee12 100644
---- a/drivers/staging/rtl8712/recv_linux.c
-+++ b/drivers/staging/rtl8712/recv_linux.c
-@@ -117,13 +117,8 @@ void r8712_recv_indicatepkt(struct _adapter *padapter,
- 	if (skb == NULL)
- 		goto _recv_indicatepkt_drop;
- 	skb->data = precv_frame->u.hdr.rx_data;
--#ifdef NET_SKBUFF_DATA_USES_OFFSET
--	skb->tail = (sk_buff_data_t)(precv_frame->u.hdr.rx_tail -
--		     precv_frame->u.hdr.rx_head);
--#else
--	skb->tail = (sk_buff_data_t)precv_frame->u.hdr.rx_tail;
--#endif
- 	skb->len = precv_frame->u.hdr.len;
-+	skb_set_tail_pointer(skb, skb->len);
- 	if ((pattrib->tcpchk_valid == 1) && (pattrib->tcp_chkrpt == 1))
- 		skb->ip_summed = CHECKSUM_UNNECESSARY;
- 	else
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
