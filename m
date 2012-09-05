@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20797 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753643Ab2IUDXw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 23:23:52 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:64245 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751318Ab2IELta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 07:49:30 -0400
+Date: Wed, 5 Sep 2012 13:49:11 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	=?iso-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	Milan Bouchet-Valat <nalimilan@club-internet.fr>
+Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback
+ operation
+Message-ID: <20120905114910.GA2466@redhat.com> (sfid-20120905_134934_538034_5B64E2CB)
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+ <1346838562-4818-3-git-send-email-arend@broadcom.com>
+ <20120905102046.GC2311@redhat.com>
+ <50472B74.5060104@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20571.56697.194850.514451@gargle.gargle.HOWL> (sfid-20120921_052356_807930_5D688D72)
-Date: Fri, 21 Sep 2012 08:52:33 +0530
-To: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
-CC: Sujith Manoharan <c_manoha@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: Atheros AR9485 receiving error -5 in init
-In-Reply-To: <1348195935.21813.140661130714053.0302A2E4@webmail.messagingengine.com>
-References: <1348073684.14711.140661130028433.035E90DC@webmail.messagingengine.com>
-	<207925.414c4261696d4941414f4f6255467379697735635131766f663355@popretr.messagingengine.com>
-	<20571.12875.594812.396218@gargle.gargle.HOWL>
-	<1348195935.21813.140661130714053.0302A2E4@webmail.messagingengine.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50472B74.5060104@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luiz Carlos Ramos wrote:
-> OK, here it goes!
+On Wed, Sep 05, 2012 at 12:37:40PM +0200, Arend van Spriel wrote:
+> On 09/05/2012 12:20 PM, Stanislaw Gruszka wrote:
+> >On Wed, Sep 05, 2012 at 11:49:22AM +0200, Arend van Spriel wrote:
+> >>+	ret = wait_event_timeout(wl->tx_flush_wq,
+> >>+				 brcms_tx_flush_completed(wl),
+> >>+				 msecs_to_jiffies(BRCMS_FLUSH_TIMEOUT));
+> >>+
+> >>+	ieee80211_wake_queues(hw);
+> >>+	WARN_ON(!ret);
+> >Any particular reason why this WARN_ON is after ieee80211_wake_queues() ?
+> >
 > 
-> I opted to attach only the part which refers to the AR9485. If you'd
-> need the rest, feel free to ask me.
-> 
-> As the adapter seems to be a PCI (or PCI-e) device, I omitted the lsusb
-> -v output.
+> The wait has a timeout so the warning indicates flush did not
+> complete as in the old implementation. Maybe a WARN_ON_ONCE() would
+> be better, but I have not observed the warning yet.
 
-Well, I wanted to see if the chip you have is a WLAN+BT combo, so
-lsusb output would be useful. :)
+Yeah, but I rather asked why it is _after_ ieee80211_wake_queues(),
+not before, just after wait_event_timeout().
 
-Sujith
+Not big deal thought, just if something wrong will happen in
+ieee80211_wake_queues() order of error prints will be confusing.
+
+Stanislaw
