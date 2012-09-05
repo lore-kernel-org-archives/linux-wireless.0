@@ -1,92 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swan.laptop.org ([18.85.2.166]:59524 "EHLO swan.laptop.org"
+Received: from mms2.broadcom.com ([216.31.210.18]:1278 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757408Ab2IKPiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 11:38:12 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: dcbw@redhat.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: set mac control synchronously during init
-Message-Id: <20120911153812.08740FAA7C@dev.laptop.org> (sfid-20120911_173818_290555_F5FF33C0)
-Date: Tue, 11 Sep 2012 11:38:11 -0400 (EDT)
+	id S1751265Ab2IEQWI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 12:22:08 -0400
+Message-ID: <50477C1C.6020209@broadcom.com> (sfid-20120905_182212_827776_2139C3A1)
+Date: Wed, 5 Sep 2012 18:21:48 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wext: include wireless event id when it has a size
+ problem
+References: <1345812212-18778-1-git-send-email-arend@broadcom.com> (
+ sfid-20120824_144347_019489_948E84F3)
+ <1346854421.4364.21.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1346854421.4364.21.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CMD_MAC_CONTROL is currently sent async to the firmware, and is sent
-from the lbs_setup_firmware() path during device init.
+On 09/05/2012 04:13 PM, Johannes Berg wrote:
+> On Fri, 2012-08-24 at 14:43 +0200, Arend van Spriel wrote:
+>> The wext code checks is the event data is within size limits.
+>> When this check fails a message is logged with violating size.
+>> This patch adds the event id to put us on the right track for
+>> resolving that violation.
+>>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> ---
+>> Maybe wext is not popular, but I found the change helpful debugging
+>> so others may benefit from it. Still some wireless apps default to
+>> it, eg. wpa_supplicant.
+>
+> I don't even want to know what you're debugging, but I applied it
+> anyway.
+>
+> FWIW, wext isn't just "not popular", it's "pretty much dead" :-)
+>
+> johannes
+>
+>
 
-This means that device init can complete with commands pending, and
-the if_sdio driver will sometimes power down the device (after init)
-with this command still pending.
+We got the "Wireless Event too big" message and were wondering what 
+event from our driver was causing it. I agree wext is pretty much dead 
+although wpa_supplicant still defaults to that driver. At least in most 
+distro's it seems to be so.
 
-This was causing an occasional spurious command timeout after init,
-leading to a device reset.
-
-Fix this by making CMD_MAC_CONTROL synchronous when called from the
-lbs_setup_firmware() path.
-
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/libertas/cmd.c  | 16 ++++++++++++++++
- drivers/net/wireless/libertas/cmd.h  |  1 +
- drivers/net/wireless/libertas/main.c |  4 +++-
- 3 files changed, 20 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 26e6832..aaa2973 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1159,6 +1159,22 @@ void lbs_set_mac_control(struct lbs_private *priv)
- 	lbs_deb_leave(LBS_DEB_CMD);
- }
- 
-+int lbs_set_mac_control_sync(struct lbs_private *priv)
-+{
-+	struct cmd_ds_mac_control cmd;
-+	int ret = 0;
-+
-+	lbs_deb_enter(LBS_DEB_CMD);
-+
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(priv->mac_control);
-+	cmd.reserved = 0;
-+	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
-+
-+	lbs_deb_leave(LBS_DEB_CMD);
-+	return ret;
-+}
-+
- /**
-  *  lbs_allocate_cmd_buffer - allocates the command buffer and links
-  *  it to command free queue
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index ab07608..4279e8a 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -96,6 +96,7 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv);
- int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
- 
- void lbs_set_mac_control(struct lbs_private *priv);
-+int lbs_set_mac_control_sync(struct lbs_private *priv);
- 
- int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
- 		     s16 *maxlevel);
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index fe1ea43..0c02f04 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -682,8 +682,10 @@ static int lbs_setup_firmware(struct lbs_private *priv)
- 
- 	/* Send cmd to FW to enable 11D function */
- 	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
-+	if (ret)
-+		goto done;
- 
--	lbs_set_mac_control(priv);
-+	ret = lbs_set_mac_control_sync(priv);
- done:
- 	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
- 	return ret;
--- 
-1.7.11.4
+Gr. AvS
 
