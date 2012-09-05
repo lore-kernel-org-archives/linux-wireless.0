@@ -1,297 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:55585 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220Ab2IJDu6 (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:46479 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697Ab2IERi2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Sep 2012 23:50:58 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Wed, 5 Sep 2012 13:38:28 -0400
+Received: by ieje11 with SMTP id e11so1509829iej.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 10:38:27 -0700 (PDT)
+Message-ID: <50478E10.6030808@lwfinger.net> (sfid-20120905_193833_351879_2790384D)
+Date: Wed, 05 Sep 2012 12:38:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20557.25451.661979.447365@gargle.gargle.HOWL> (sfid-20120910_055145_856556_A87BC890)
-Date: Mon, 10 Sep 2012 09:20:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/7] ath9k_hw: Add AR9565 HW support
+To: Anisse Astier <anisse@astier.eu>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ce: activation problem with rtl8188ce pci card
+References: <20120905185510.2ab501cd@destiny.ordissimo>
+In-Reply-To: <20120905185510.2ab501cd@destiny.ordissimo>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Various parts of the code require AR9565 checks,
-this patch adds them.
+On 09/05/2012 11:55 AM, Anisse Astier wrote:
+> Hi,
+>
+> On a toshiba laptop (see dmesg attached), with a wireless-next kernel,
+> this card doesn't seem to turn on:
+> 01:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8101E/RTL8102E PCI Express Fast Ethernet controller [10ec:8136] (rev 02)
+>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ani.c           |  2 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c    |  2 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 10 +++++-----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 14 +++++++-------
- drivers/net/wireless/ath/ath9k/eeprom.h        |  2 +-
- drivers/net/wireless/ath/ath9k/hw.c            | 20 +++++++++++---------
- 7 files changed, 31 insertions(+), 29 deletions(-)
+Unfortunately, the above is not a wireless device. It is your wired device.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index ff007f5..e09ec40 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -237,7 +237,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
- 				     entry_cck->fir_step_level);
- 
- 	/* Skip MRC CCK for pre AR9003 families */
--	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah))
-+	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
- 		return;
- 
- 	if (aniState->mrcCCK != entry_cck->mrc_cck_on)
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index c37fe96..ec140c5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3520,7 +3520,7 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- 
- 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
--	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah))
-+	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah) || AR_SREV_9565(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
- 	else {
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
-@@ -3568,7 +3568,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 
- 	u32 value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
- 
--	if (AR_SREV_9462(ah)) {
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
- 				AR_SWITCH_TABLE_COM_AR9462_ALL, value);
- 	} else if (AR_SREV_9550(ah)) {
-@@ -3612,7 +3612,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 		}
- 	}
- 
--	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
-+	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
- 		value = ath9k_hw_ar9300_get_eeprom(ah, EEP_ANT_DIV_CTL1);
- 		/*
- 		 * main_lnaconf, alt_lnaconf, main_tb, alt_tb
-@@ -3843,7 +3843,7 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- 			REG_WRITE(ah, AR_PHY_PMU2, reg_pmu_set);
- 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
- 				return;
--		} else if (AR_SREV_9462(ah)) {
-+		} else if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 			reg_val = le32_to_cpu(pBase->swreg);
- 			REG_WRITE(ah, AR_PHY_PMU1, reg_val);
- 		} else {
-@@ -3874,7 +3874,7 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- 			while (!REG_READ_FIELD(ah, AR_PHY_PMU2,
- 						AR_PHY_PMU2_PGM))
- 				udelay(10);
--		} else if (AR_SREV_9462(ah))
-+		} else if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
- 			REG_RMW_FIELD(ah, AR_PHY_PMU1, AR_PHY_PMU1_PWD, 0x1);
- 		else {
- 			reg_val = REG_READ(ah, AR_RTC_SLEEP_CLK) |
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 78816b8..8e358c7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -31,7 +31,7 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 	u32 val, ctl12, ctl17;
- 	u8 desc_len;
- 
--	desc_len = (AR_SREV_9462(ah) ? 0x18 : 0x17);
-+	desc_len = ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x18 : 0x17);
- 
- 	val = (ATHEROS_VENDOR_ID << AR_DescId_S) |
- 	      (1 << AR_TxRxDesc_S) |
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index c3ebf87..78665b2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -88,7 +88,7 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 			channelSel = (freq * 4) / div;
- 			chan_frac = (((freq * 4) % div) * 0x20000) / div;
- 			channelSel = (channelSel << 17) | chan_frac;
--		} else if (AR_SREV_9485(ah)) {
-+		} else if (AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
- 			u32 chan_frac;
- 
- 			/*
-@@ -736,7 +736,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	if (chan->channel == 2484)
- 		ar9003_hw_prog_ini(ah, &ah->ini_japan2484, 1);
- 
--	if (AR_SREV_9462(ah))
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
- 		REG_WRITE(ah, AR_GLB_SWREG_DISCONT_MODE,
- 			  AR_GLB_SWREG_DISCONT_EN_BT_WLAN);
- 
-@@ -746,9 +746,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
- 	ath9k_hw_apply_txpower(ah, chan, false);
- 
--	if (AR_SREV_9462(ah)) {
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		if (REG_READ_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_0,
--				AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL))
-+				   AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL))
- 			ah->enabled_cals |= TX_IQ_CAL;
- 		else
- 			ah->enabled_cals &= ~TX_IQ_CAL;
-@@ -1111,7 +1111,7 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
- 	if (AR_SREV_9330(ah))
- 		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
- 
--	if (AR_SREV_9462(ah)) {
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ;
- 		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9462_2GHZ;
- 		ah->nf_5g.min = AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 84d3d49..20bf3ae 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -630,8 +630,8 @@
- #define AR_PHY_65NM_CH0_TXRF3_CAPDIV2G_S	1
- 
- #define AR_PHY_65NM_CH0_SYNTH4      0x1608c
--#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   (AR_SREV_9462(ah) ? 0x00000001 : 0x00000002)
--#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S (AR_SREV_9462(ah) ? 0 : 1)
-+#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x00000001 : 0x00000002)
-+#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0 : 1)
- #define AR_PHY_65NM_CH0_SYNTH7      0x16098
- #define AR_PHY_65NM_CH0_BIAS1       0x160c0
- #define AR_PHY_65NM_CH0_BIAS2       0x160c4
-@@ -641,7 +641,7 @@
- #define AR_PHY_65NM_CH2_RXTX4       0x1690c
- 
- #define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
--				((AR_SREV_9462(ah) ? 0x1628c : 0x16280)))
-+			 (((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x1628c : 0x16280)))
- #define AR_CH0_TOP_XPABIASLVL (AR_SREV_9550(ah) ? 0x3c0 : 0x300)
- #define AR_CH0_TOP_XPABIASLVL_S (AR_SREV_9550(ah) ? 6 : 8)
- 
-@@ -669,7 +669,7 @@
- #define AR_SWITCH_TABLE_ALL_S (0)
- 
- #define AR_PHY_65NM_CH0_THERM       (AR_SREV_9300(ah) ? 0x16290 :\
--					(AR_SREV_9462(ah) ? 0x16294 : 0x1628c))
-+				     ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16294 : 0x1628c))
- 
- #define AR_PHY_65NM_CH0_THERM_LOCAL   0x80000000
- #define AR_PHY_65NM_CH0_THERM_LOCAL_S 31
-@@ -691,17 +691,17 @@
- #define AR_CH0_TOP2_XPABIASLVL_S	12
- 
- #define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : \
--					(AR_SREV_9462(ah) ? 0x16298 : 0x16290))
-+				 ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16298 : 0x16290))
- #define AR_CH0_XTAL_CAPINDAC	0x7f000000
- #define AR_CH0_XTAL_CAPINDAC_S	24
- #define AR_CH0_XTAL_CAPOUTDAC	0x00fe0000
- #define AR_CH0_XTAL_CAPOUTDAC_S	17
- 
--#define AR_PHY_PMU1		(AR_SREV_9462(ah) ? 0x16340 : 0x16c40)
-+#define AR_PHY_PMU1		((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16340 : 0x16c40)
- #define AR_PHY_PMU1_PWD		0x1
- #define AR_PHY_PMU1_PWD_S	0
- 
--#define AR_PHY_PMU2		(AR_SREV_9462(ah) ? 0x16344 : 0x16c44)
-+#define AR_PHY_PMU2		((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16344 : 0x16c44)
- #define AR_PHY_PMU2_PGM		0x00200000
- #define AR_PHY_PMU2_PGM_S	21
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 484b313..7e1da18 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -108,7 +108,7 @@
- #define EEP_RFSILENT_ENABLED_S      0
- #define EEP_RFSILENT_POLARITY       0x0002
- #define EEP_RFSILENT_POLARITY_S     1
--#define EEP_RFSILENT_GPIO_SEL       (AR_SREV_9462(ah) ? 0x00fc : 0x001c)
-+#define EEP_RFSILENT_GPIO_SEL       ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x00fc : 0x001c)
- #define EEP_RFSILENT_GPIO_SEL_S     2
- 
- #define AR5416_OPFLAGS_11A           0x01
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3638626..6539d2a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -602,6 +602,11 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	if (AR_SREV_9462(ah))
- 		ah->WARegVal &= ~AR_WA_D3_L1_DISABLE;
- 
-+	if (AR_SREV_9565(ah)) {
-+		ah->WARegVal |= AR_WA_BIT22;
-+		REG_WRITE(ah, AR_WA, ah->WARegVal);
-+	}
-+
- 	ath9k_hw_init_defaults(ah);
- 	ath9k_hw_init_config(ah);
- 
-@@ -802,8 +807,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- {
- 	u32 pll;
- 
--	if (AR_SREV_9485(ah)) {
--
-+	if (AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
- 		/* program BB PLL ki and kd value, ki=0x4, kd=0x40 */
- 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
- 			      AR_CH0_BB_DPLL2_PLL_PWD, 0x1);
-@@ -2036,7 +2040,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- {
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
- 
--	if (AR_SREV_9462(ah)) {
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		REG_CLR_BIT(ah, AR_TIMER_MODE, 0xff);
- 		REG_CLR_BIT(ah, AR_NDP2_TIMER_MODE, 0xff);
- 		REG_CLR_BIT(ah, AR_SLP32_INC, 0xfffff);
-@@ -2491,7 +2495,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
--		if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah))
-+		if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah) && !AR_SREV_9565(ah))
- 			pCap->hw_caps |= ATH9K_HW_CAP_LDPC;
- 
- 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
-@@ -2574,14 +2578,12 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
- 	}
- 
--	if (AR_SREV_9462(ah)) {
--
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		if (!(ah->ent_mode & AR_ENT_OTP_49GHZ_DISABLE))
- 			pCap->hw_caps |= ATH9K_HW_CAP_MCI;
- 
- 		if (AR_SREV_9462_20(ah))
- 			pCap->hw_caps |= ATH9K_HW_CAP_RTT;
--
- 	}
- 
- 
-@@ -2747,7 +2749,7 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
--	if (AR_SREV_9462(ah))
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
- 		bits |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
- 
- 	REG_WRITE(ah, AR_RX_FILTER, bits);
-@@ -3044,7 +3046,7 @@ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
- 	REG_SET_BIT(ah, gen_tmr_configuration[timer->index].mode_addr,
- 		    gen_tmr_configuration[timer->index].mode_mask);
- 
--	if (AR_SREV_9462(ah)) {
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		/*
- 		 * Starting from AR9462, each generic timer can select which tsf
- 		 * to use. But we still follow the old rule, 0 - 7 use tsf and
--- 
-1.7.12
+> # modprobe rtl8192ce debug=4
+> [ 6184.995319] cfg80211: Calling CRDA to update world regulatory domain
+> [ 6185.103824] rtl8192ce: rtl8192ce: FW Power Save off (module option)
+
+The above line is unexpected. Do you have a module option set in /etc/module.d/?
+
+> [ 6185.103881] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
+> [ 6185.150488] rtlwifi:rtl_fw_cb():<0-0> Firmware callback routine entered!
+> [ 6185.216834] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+> [ 6185.224729] rtlwifi: wireless switch is on
+> [ 6185.289544] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:18051d59:11
+> [ 6185.289649] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:18051d59:11
+> [ 6185.289797] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:18051d59:11
+> [ 6185.289944] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:18051d59:11
+> [ 6185.290092] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:18051d59:11
+> [ 6185.290250] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:18051d59:11
+> [ 6185.290398] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:18051d59:11
+> [ 6185.290545] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:18051d59:11
+> [ 6185.290693] rtl8192ce:_rtl92ce_init_mac():<0-0> reg0xec:98053f15:10
+> [ 6185.291829] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(49), Signature(0x88c1),Size(32)
+
+That is the firmware that I use.
+
+> [ 6185.513223] rtl8192ce:rtl92ce_enable_hw_security_config():<0-0> PairwiseEncAlgorithm = 0 GroupEncAlgorithm = 0
+> [ 6185.513237] rtl8192ce:rtl92ce_enable_hw_security_config():<0-0> The SECR-value cc
+> [ 6185.622274] rtl8192c_common:rtl92c_dm_initialize_txpower_tracking_thermalmeter():<0-0> pMgntInfo->txpower_tracking = 1
+> [ 6185.623129] rtlwifi:rtl_pci_start():<0-0> enable_interrupt OK
+> [ 6185.623140] rtlwifi:rtl_pci_start():<0-0> OK
+> [ 6185.624061] rtl8192c_common:rtl92c_dm_dynamic_bb_powersaving():<0-0> Not connected to any
+> [ 6185.624073] rtl8192c_common:rtl92c_dm_dynamic_bb_powersaving():<0-0> AP Ext Port PWDB = 0x0
+> [ 6185.624123] rtl8192c_common:rtl92c_dm_check_txpower_tracking_thermal_meter():<0-0> Trigger 92S Thermal Meter!!
+> [ 6185.632970] rtl8192ce:rtl92ce_led_control():<0-0> ledaction 2
+> [ 6185.632987] rtl8192ce:rtl92ce_sw_led_on():<0-0> LedAddr:4E ledpin=1
+> [ 6185.633028] rtlwifi:rtl_op_bss_info_changed():<0-0> BSS_CHANGED_ERP_PREAMBLE use short preamble:0
+> [ 6185.633040] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
+> [ 6185.633989] rtlwifi:rtl_op_config():<0-0> IEEE80211_CONF_CHANGE_LISTEN_INTERVAL
+> [ 6185.634281] rtlwifi:rtl_op_config():<0-0> IEEE80211_CONF_CHANGE_RETRY_LIMITS 4
+> [ 6185.644434] rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schdule workitem
+> [ 6185.644445] rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
+> [ 6185.655245] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [ 6185.734598] rtl8192ce:_rtl92ce_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+> [ 6185.735117] rtl8192ce:rtl92ce_led_control():<0-0> ledaction 2
+> [ 6185.735129] rtl8192ce:rtl92ce_sw_led_on():<0-0> LedAddr:4E ledpin=1
+> [ 6185.852489] rtlwifi:_rtl_pci_interrupt():<10000-1> rx descriptor unavailable!
+> [ 6185.852504] rtlwifi:_rtl_pci_interrupt():<10000-1> rx overflow !
+> [ 6185.853211] rtlwifi:_rtl_pci_interrupt():<10000-1> rx descriptor unavailable!
+> [ 6185.853221] rtlwifi:_rtl_pci_interrupt():<10000-1> rx overflow !
+> [ 6185.853823] rtlwifi:_rtl_pci_interrupt():<10000-1> rx descriptor unavailable!
+> [ 6185.853833] rtlwifi:_rtl_pci_interrupt():<10000-1> rx overflow !
+> [...] this is repeated
+>
+> After a modprobe -r:
+> [ 6187.127706] rtl8192ce:rtl92ce_led_control():<0-0> ledaction 2
+> [ 6187.127724] rtl8192ce:rtl92ce_sw_led_on():<0-0> LedAddr:4E ledpin=1
+> [ 6187.130614] rtl8192ce:rtl92ce_led_control():<0-0> ledaction 2
+> [ 6187.130626] rtl8192ce:rtl92ce_sw_led_on():<0-0> LedAddr:4E ledpin=1
+> [ 6187.130638] rtl8192ce:rtl92ce_led_control():<0-0> ledaction 7
+> [ 6187.130646] rtl8192ce:rtl92ce_sw_led_off():<0-0> LedAddr:4E ledpin=1
+> [ 6187.139353] rtl8192c_common:rtl92c_firmware_selfreset(): 8051 reset fail
+> [ 6187.139373] rtl8192ce:rtl92ce_led_control():<0-0> ledaction 7
+> [ 6187.139382] rtl8192ce:rtl92ce_sw_led_off():<0-0> LedAddr:4E ledpin=1
+>
+>
+> After inserting the module, the PCI information is scrambled:
+> 06:00.0 Network controller: Realtek Semiconductor Co., Ltd. Device 8176 (rev ff) (prog-if ff)
+>          !!! Unknown header type 7f
+
+This listing is likely for your wireless card.
+
+> After a few seconds, the computer will freeze if the module isn't removed.
+> The card works on Windows.
+>
+> This looks like a hidden rfkill, or maybe it is a different revision of
+> the card. What do you think ?
+
+Without a full 'sudo lspci -nnv' listing for the wireless, it is hard to tell if 
+it is a different revision. The rx descriptor unavailable message is a new one 
+for me.
+
+I have two different revisions of the RTL8188CE card. The newer one, marked 
+RTL8188CE-VL, gives the following lspci output:
+
+06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 
+802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+         Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi 
+Adapter [10ec:8176]
+         Flags: bus master, fast devsel, latency 0, IRQ 20
+         I/O ports at 4000 [size=256]
+         Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
+         Capabilities: [40] Power Management version 3
+         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+         Capabilities: [70] Express Endpoint, MSI 00
+         Capabilities: [100] Advanced Error Reporting
+         Capabilities: [140] Virtual Channel
+         Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+         Kernel driver in use: rtl8192ce
+
+It certainly does not yield the rx descriptor problem. Please send the lspci 
+output when the driver has not been loaded.
+
+Larry
+
+
 
