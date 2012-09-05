@@ -1,240 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47533 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011Ab2IPChd (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.171]:56853 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765Ab2IEIde (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2012 22:37:33 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Wed, 5 Sep 2012 04:33:34 -0400
+Message-ID: <50470E54.6030801@blackshift.org> (sfid-20120905_103340_418505_C798D94F)
+Date: Wed, 05 Sep 2012 10:33:24 +0200
+From: Marc Kleine-Budde <mkl@blackshift.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20565.15156.919463.834590@gargle.gargle.HOWL> (sfid-20120916_043737_068931_33196602)
-Date: Sun, 16 Sep 2012 08:06:36 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/8] ath9k_hw: Add a HW callback to set diversity
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: fix votage setting for RT3572/RT3592
+References: <1346019997-14487-1-git-send-email-mkl@blackshift.org> <CAOZOX0VBUZzGYnAM1O4Do7VyskpjXUE5ewW=qtW7JsbKJtLAMQ@mail.gmail.com>
+In-Reply-To: <CAOZOX0VBUZzGYnAM1O4Do7VyskpjXUE5ewW=qtW7JsbKJtLAMQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new callback to handle WLAN RX diversity for
-AR9565.
+On 08/27/2012 10:19 AM, Ivo Van Doorn wrote:
+> On Mon, Aug 27, 2012 at 12:26 AM, Marc Kleine-Budde <mkl@blackshift.org> wrote:
+>> According to the vendor driver v2.6.0.1, during the rf register init the SRAM
+>> voltage should be increased to 1.35V and after 1ms decreased back to 1.2V. This
+>> patch adds the field setting of LDO_CFG0_LDO_CORE_VLEVEL accordingly.
+>>
+>> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+>> Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
+> 
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 60 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 24 +++++++++++
- drivers/net/wireless/ath/ath9k/hw-ops.h        |  7 +++
- drivers/net/wireless/ath/ath9k/hw.c            |  4 ++
- drivers/net/wireless/ath/ath9k/hw.h            |  3 +-
- 6 files changed, 107 insertions(+), 1 deletion(-)
+Ping. Is someone taking care of this patch?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index bfd2055..5bbe505 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3633,6 +3633,16 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 		/* enable_lnadiv */
- 		regval &= (~AR_PHY_ANT_DIV_LNADIV);
- 		regval |= ((value >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
-+
-+		if (AR_SREV_9565(ah)) {
-+			if (ah->shared_chain_lnadiv) {
-+				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
-+			} else {
-+				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
-+				regval &= ~(1 << AR_PHY_ANT_SW_RX_PROT_S);
-+			}
-+		}
-+
- 		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
- 
- 		/*enable fast_div */
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 4b503ee..1c6aadb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1328,6 +1328,65 @@ static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
- }
- 
-+static void ar9003_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
-+						  bool enable)
-+{
-+	u8 ant_div_ctl1;
-+	u32 regval;
-+
-+	if (!AR_SREV_9565(ah))
-+		return;
-+
-+	ah->shared_chain_lnadiv = enable;
-+	ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
-+
-+	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
-+	regval &= (~AR_ANT_DIV_CTRL_ALL);
-+	regval |= (ant_div_ctl1 & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
-+	regval &= ~AR_PHY_ANT_DIV_LNADIV;
-+	regval |= ((ant_div_ctl1 >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
-+
-+	if (enable)
-+		regval |= AR_ANT_DIV_ENABLE;
-+
-+	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
-+
-+	regval = REG_READ(ah, AR_PHY_CCK_DETECT);
-+	regval &= ~AR_FAST_DIV_ENABLE;
-+	regval |= ((ant_div_ctl1 >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
-+
-+	if (enable)
-+		regval |= AR_FAST_DIV_ENABLE;
-+
-+	REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
-+
-+	if (enable) {
-+		REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-+			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
-+		if (IS_CHAN_2GHZ(ah->curchan))
-+			REG_SET_BIT(ah, AR_PHY_RESTART,
-+				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
-+		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
-+			    AR_BTCOEX_WL_LNADIV_FORCE_ON);
-+	} else {
-+		REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE);
-+		REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-+			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
-+		REG_CLR_BIT(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE);
-+		REG_CLR_BIT(ah, AR_BTCOEX_WL_LNADIV,
-+			    AR_BTCOEX_WL_LNADIV_FORCE_ON);
-+
-+		regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
-+		regval &= ~(AR_PHY_ANT_DIV_MAIN_LNACONF |
-+			AR_PHY_ANT_DIV_ALT_LNACONF |
-+			AR_PHY_ANT_DIV_MAIN_GAINTB |
-+			AR_PHY_ANT_DIV_ALT_GAINTB);
-+		regval |= (AR_PHY_ANT_DIV_LNA1 << AR_PHY_ANT_DIV_MAIN_LNACONF_S);
-+		regval |= (AR_PHY_ANT_DIV_LNA2 << AR_PHY_ANT_DIV_ALT_LNACONF_S);
-+		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
-+	}
-+}
-+
- static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
- 				      struct ath9k_channel *chan,
- 				      u8 *ini_reloaded)
-@@ -1426,6 +1485,7 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- 
- 	ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
- 	ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
-+	ops->antctrl_shared_chain_lnadiv = ar9003_hw_antctrl_shared_chain_lnadiv;
- 
- 	ar9003_hw_set_nf_limits(ah);
- 	ar9003_hw_set_radar_conf(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index fdabc9a..9a48e3d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -282,6 +282,8 @@
- 
- #define AR_PHY_ANT_FAST_DIV_BIAS                0x00007e00
- #define AR_PHY_ANT_FAST_DIV_BIAS_S              9
-+#define AR_PHY_ANT_SW_RX_PROT                   0x00800000
-+#define AR_PHY_ANT_SW_RX_PROT_S                 23
- #define AR_PHY_ANT_DIV_LNADIV                   0x01000000
- #define AR_PHY_ANT_DIV_LNADIV_S                 24
- #define AR_PHY_ANT_DIV_ALT_LNACONF              0x06000000
-@@ -422,6 +424,8 @@
- #define AR_PHY_FIND_SIG_RELSTEP        0x1f
- #define AR_PHY_FIND_SIG_RELSTEP_S         0
- #define AR_PHY_FIND_SIG_RELSTEP_SIGN_BIT  5
-+#define AR_PHY_RESTART_ENABLE_DIV_M2FLAG 0x00200000
-+#define AR_PHY_RESTART_ENABLE_DIV_M2FLAG_S 21
- #define AR_PHY_RESTART_DIV_GC   0x001C0000
- #define AR_PHY_RESTART_DIV_GC_S 18
- #define AR_PHY_RESTART_ENA      0x01
-@@ -1261,4 +1265,24 @@
- #define AR_PHY_CL_TAB_CL_GAIN_MOD		0x1f
- #define AR_PHY_CL_TAB_CL_GAIN_MOD_S		0
- 
-+#define AR_BTCOEX_WL_LNADIV                                0x1a64
-+#define AR_BTCOEX_WL_LNADIV_PREDICTED_PERIOD               0x00003FFF
-+#define AR_BTCOEX_WL_LNADIV_PREDICTED_PERIOD_S             0
-+#define AR_BTCOEX_WL_LNADIV_DPDT_IGNORE_PRIORITY           0x00004000
-+#define AR_BTCOEX_WL_LNADIV_DPDT_IGNORE_PRIORITY_S         14
-+#define AR_BTCOEX_WL_LNADIV_FORCE_ON                       0x00008000
-+#define AR_BTCOEX_WL_LNADIV_FORCE_ON_S                     15
-+#define AR_BTCOEX_WL_LNADIV_MODE_OPTION                    0x00030000
-+#define AR_BTCOEX_WL_LNADIV_MODE_OPTION_S                  16
-+#define AR_BTCOEX_WL_LNADIV_MODE                           0x007c0000
-+#define AR_BTCOEX_WL_LNADIV_MODE_S                         18
-+#define AR_BTCOEX_WL_LNADIV_ALLOWED_TX_ANTDIV_WL_TX_REQ    0x00800000
-+#define AR_BTCOEX_WL_LNADIV_ALLOWED_TX_ANTDIV_WL_TX_REQ_S  23
-+#define AR_BTCOEX_WL_LNADIV_DISABLE_TX_ANTDIV_ENABLE       0x01000000
-+#define AR_BTCOEX_WL_LNADIV_DISABLE_TX_ANTDIV_ENABLE_S     24
-+#define AR_BTCOEX_WL_LNADIV_CONTINUOUS_BT_ACTIVE_PROTECT   0x02000000
-+#define AR_BTCOEX_WL_LNADIV_CONTINUOUS_BT_ACTIVE_PROTECT_S 25
-+#define AR_BTCOEX_WL_LNADIV_BT_INACTIVE_THRESHOLD          0xFC000000
-+#define AR_BTCOEX_WL_LNADIV_BT_INACTIVE_THRESHOLD_S        26
-+
- #endif  /* AR9003_PHY_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 265bf77..0f2b97f 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -78,6 +78,13 @@ static inline void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
- 	ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
- }
- 
-+static inline void ath9k_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
-+							bool enable)
-+{
-+	if (ath9k_hw_ops(ah)->antctrl_shared_chain_lnadiv)
-+		ath9k_hw_ops(ah)->antctrl_shared_chain_lnadiv(ah, enable);
-+}
-+
- /* Private hardware call ops */
- 
- /* PHY ops */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 40f57aa..c562f13 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -24,6 +24,7 @@
- #include "rc.h"
- #include "ar9003_mac.h"
- #include "ar9003_mci.h"
-+#include "ar9003_phy.h"
- #include "debug.h"
- #include "ath9k.h"
- 
-@@ -2025,6 +2026,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	ath9k_hw_apply_gpio_override(ah);
- 
-+	if (AR_SREV_9565(ah) && ah->shared_chain_lnadiv)
-+		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV, AR_BTCOEX_WL_LNADIV_FORCE_ON);
-+
- 	return 0;
- }
- EXPORT_SYMBOL(ath9k_hw_reset);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index f0798cc..566a4ce 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -686,7 +686,7 @@ struct ath_hw_ops {
- 			struct ath_hw_antcomb_conf *antconf);
- 	void (*antdiv_comb_conf_set)(struct ath_hw *ah,
- 			struct ath_hw_antcomb_conf *antconf);
--
-+	void (*antctrl_shared_chain_lnadiv)(struct ath_hw *hw, bool enable);
- };
- 
- struct ath_nf_limits {
-@@ -730,6 +730,7 @@ struct ath_hw {
- 	bool aspm_enabled;
- 	bool is_monitoring;
- 	bool need_an_top2_fixup;
-+	bool shared_chain_lnadiv;
- 	u16 tx_trig_level;
- 
- 	u32 nf_regs[6];
--- 
-1.7.12
+Marc
+
+> 
+>> ---
+>> Hello,
+>>
+>> I don't have the hardware to test, just stumbled over this while hacking on the
+>> rt3593.
+>>
+>> regards,  Marc
+>>
+>>  drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index cb8c2ac..b93516d 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -4089,6 +4089,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>>                 rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+>>                 msleep(1);
+>>                 rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
+>> +               rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
+>>                 rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+>>                 rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+>>         }
+>> --
+>> 1.7.10
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
