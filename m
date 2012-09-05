@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43778 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45556 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835Ab2IZHNy (ORCPT
+	with ESMTP id S1758827Ab2IEQdg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 03:13:54 -0400
-Message-ID: <1348643666.10548.2.camel@jlt4.sipsolutions.net> (sfid-20120926_091357_528263_D482A8F3)
-Subject: Re: [RFC] mac80211: Notify new IBSS network creation
+	Wed, 5 Sep 2012 12:33:36 -0400
+Message-ID: <1346862851.4364.33.camel@jlt4.sipsolutions.net> (sfid-20120905_183341_124053_682C0E17)
+Subject: Re: mac80211 flush callback
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 26 Sep 2012 09:14:26 +0200
-In-Reply-To: <20578.31128.207010.660580@gargle.gargle.HOWL> (sfid-20120926_054322_128189_D4D138FB)
-References: <20578.31128.207010.660580@gargle.gargle.HOWL>
-	 (sfid-20120926_054322_128189_D4D138FB)
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 05 Sep 2012 18:34:11 +0200
+In-Reply-To: <50477D5E.2040003@broadcom.com>
+References: <503DFDE4.5030102@broadcom.com>
+	 <1346853217.4364.15.camel@jlt4.sipsolutions.net>
+	 <50477D5E.2040003@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-09-26 at 09:12 +0530, Sujith Manoharan wrote:
-> Initialization of beacon transmission in IBSS mode depends
-> on whether a new BSS is being created or joined. When joining
-> an existing IBSS network, beaconing has to start only after
-> a TSF-sync has happened - this is explained in 11.1.4.
+On Wed, 2012-09-05 at 18:27 +0200, Arend van Spriel wrote:
+> On 09/05/2012 03:53 PM, Johannes Berg wrote:
+> > Hi Arend,
+> >
+> >> I ma currently looking into a long standing issue with flush callback in
+> >> brcmsmac. After some debugging I found out that mac80211 keeps pushing
+> >> packets to brcmsmac during the flush. Is that correct? Should brcmsmac
+> >> (or any other driver) stop the mac80211 queues during the flush? My
+> >> assumption was that mac80211 would not do transmits during the flush,
+> >> but it probably comes from another worker thread.
+> >
+> > Hmm, good question, this area isn't quite fully worked out yet I
+> > think ... probably better to stop queues yourself for now, although I
+> > guess mac80211 should really take care to do it ...
+> >
 > 
-> Introduce a new parameter in the BSS information structure to
-> indicate creator/joiner mode.
+> Thanks, Johannes
+> 
+> I did look at some other driver and it seems they grab a mutex in the 
+> flush that is (probably?) also grabbed in the tx path thus blocking it. 
+> For brcmsmac I submitted a patch to explicitly stop the queues in the flush.
 
-Interesting, I guess this makes sense. Never seemed to come up, maybe it
-doesn't matter all that much since we sync once we receive some other
-beacon, so worst case we just transmit a few spuriously?
+I don't think any driver could possibly grab a mutex in the TX path
+since it needs to be atomic? :)
 
 johannes
 
