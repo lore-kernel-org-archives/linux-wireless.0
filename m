@@ -1,45 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34404 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753346Ab2IUSQ0 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51388 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759278Ab2IEUYt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 14:16:26 -0400
-Message-ID: <505CAEE4.7000906@candelatech.com> (sfid-20120921_201630_066463_12CEB71B)
-Date: Fri, 21 Sep 2012 11:16:04 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 5 Sep 2012 16:24:49 -0400
+Received: by iahk25 with SMTP id k25so1242216iah.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 13:24:48 -0700 (PDT)
+Message-ID: <5047B508.5030606@lwfinger.net> (sfid-20120905_222452_960791_29BFBFE6)
+Date: Wed, 05 Sep 2012 15:24:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath9k: Add a debugfs file to adjust antenna diversity
-References: <20572.4308.801973.961874@gargle.gargle.HOWL> <505C7984.1090600@candelatech.com> <20572.39015.872732.569065@gargle.gargle.HOWL>
-In-Reply-To: <20572.39015.872732.569065@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Anisse Astier <anisse@astier.eu>
+CC: linux-wireless@vger.kernel.org,
+	=?UTF-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
+Subject: Re: rtl8192ce: activation problem with rtl8188ce pci card
+References: <20120905185510.2ab501cd@destiny.ordissimo> <50478E10.6030808@lwfinger.net> <20120905201437.70c008ca@destiny.ordissimo>
+In-Reply-To: <20120905201437.70c008ca@destiny.ordissimo>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2012 09:40 AM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->> Can you document what the various settings mean?
+On 09/05/2012 01:14 PM, Anisse Astier wrote:
+> On Wed, 05 Sep 2012 12:38:24 -0500, Larry Finger <Larry.Finger@lwfinger.net> wrote :
 >
-> 1 = Enable, 0 = Disable. :)
+>> I have two different revisions of the RTL8188CE card. The newer one, marked
+>> RTL8188CE-VL, gives the following lspci output:
+>>
+>> 06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE
+>> 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+>>           Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
+>> Adapter [10ec:8176]
+>>           Flags: bus master, fast devsel, latency 0, IRQ 20
+>>           I/O ports at 4000 [size=256]
+>>           Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
+>>           Capabilities: [40] Power Management version 3
+>>           Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+>>           Capabilities: [70] Express Endpoint, MSI 00
+>>           Capabilities: [100] Advanced Error Reporting
+>>           Capabilities: [140] Virtual Channel
+>>           Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+>>           Kernel driver in use: rtl8192ce
+>>
+>> It certainly does not yield the rx descriptor problem. Please send the lspci
+>> output when the driver has not been loaded.
 >
->> Also, what is the difference between antenna diversity
->> and selecting the tx/rx chainmask?
+> The subsystem ID is different on my wireless card (8212):
 >
-> Diversity is used to select which antenna to receive on based on RSSI.
-> (See antenna.c)
+> 06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+>          Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8212]
+>          Flags: bus master, fast devsel, latency 0, IRQ 3
+>          I/O ports at 3000 [size=256]
+>          Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
+>          Capabilities: [40] Power Management version 3
+>          Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+>          Capabilities: [70] Express Endpoint, MSI 00
+>          Capabilities: [100] Advanced Error Reporting
+>          Capabilities: [140] Virtual Channel
+>          Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+>
+> This id is nowhere to be found in the rtlwifi driver. The only matches in
+> Google are my previous problem report (FWLPS freeze) and windows driver
+> listings.
 
-Ok, that sounds interesting.
+The ID that counts is the first one. I think the second is some kind of vendor code.
 
-With the chainmask stuff, it turns out it was bad to set it through
-debugfs...  Can diversity be enabled/disabled through debugfs
-without worry?
+My other RTL8188CE gives the following output:
 
-Thanks,
-Ben
+0e:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 
+802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+         Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi 
+Adapter [10ec:8176]
+         Flags: bus master, fast devsel, latency 0, IRQ 20
+         I/O ports at 4000 [size=256]
+         Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
+         Capabilities: [40] Power Management version 3
+         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+         Capabilities: [70] Express Endpoint, MSI 00
+         Capabilities: [100] Advanced Error Reporting
+         Capabilities: [140] Virtual Channel
+         Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+         Kernel driver in use: rtl8192ce
 
+Other than the MAC address, and the bus number, they have the same output.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Note, the RTL8188CE-VL does not work with wireless-next, but does with 
+wireless-testing with some patches applied. I will contact the Realtek software 
+team to ask questions about your card. I added my contact as a Cc here. In the 
+meantime, could you try the wireless-testing tree? If your card still does not 
+work, I will send you some patches to see what it takes.
+
+Larry
+
 
