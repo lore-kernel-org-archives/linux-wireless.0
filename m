@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40862 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803Ab2IYOIh (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:39991 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753566Ab2IEUHY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 10:08:37 -0400
-Message-ID: <1348582152.10041.36.camel@jlt4.sipsolutions.net> (sfid-20120925_160841_662058_C8D1B121)
-Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Tue, 25 Sep 2012 16:09:12 +0200
-In-Reply-To: <50617E2C.6050000@posedge.com>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>
-	  <1348477154.10257.2.camel@jlt4.sipsolutions.net>
-	  <50614089.6020105@posedge.com>
-	 <1348557902.10041.17.camel@jlt4.sipsolutions.net>
-	 <50617E2C.6050000@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Sep 2012 16:07:24 -0400
+Date: Wed, 5 Sep 2012 15:07:16 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Brad Figg <brad.figg@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	Milan Bouchet-Valat <nalimilan@club-internet.fr>
+Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback
+ operation
+Message-ID: <20120905200716.GF302@thinkpad-t410> (sfid-20120905_220727_887432_BA20DD59)
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+ <1346838562-4818-3-git-send-email-arend@broadcom.com>
+ <20120905165735.GD302@thinkpad-t410>
+ <50478CE9.6040103@canonical.com>
+ <5047A624.7090105@broadcom.com>
+ <20120905193330.GE302@thinkpad-t410>
+ <5047AF77.3060903@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5047AF77.3060903@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-25 at 15:19 +0530, Mahesh Palivela wrote:
-
-> > OTOH, this would only matter to drivers that actually support all these
-> > features, and those drivers could take care of not enabling the features
-> > if their hardware doesn't support them. However, think of a driver that
-> > is for different hardware, some that supports beamforming and some that
-> > doesn't. Then if we mask out the beamforming capability of a station if
-> > it's not locally supported, that driver could be simpler? Then again, if
-> > we don't the driver just has to check if the hardware supports it, which
-> > seems reasonable as well.
+On Wed, Sep 05, 2012 at 10:00:55PM +0200, Arend van Spriel wrote:
+> On 09/05/2012 09:33 PM, Seth Forshee wrote:
+> >On Wed, Sep 05, 2012 at 09:21:08PM +0200, Arend van Spriel wrote:
+> >>If I can download the kernel debian package of your 3.5 kernel from
+> >>somewhere that would be great.
 > >
-> > Do you understand the issue?
+> >You can get the debs for the kernel from
+> >http://people.canonical.com/~sforshee/linux-3.5.0-13.14~lp000000v201209051242/.
+> >
+> >Seth
+> >
 > >
 > 
-> why should we mask out remote STA caps bits. Our local hw caps are in 
-> sband->sta.vht_caps. remote caps sta_info->sta.vht_caps. In what way 
-> drivers are connected with remote STA vht caps bits.
+> I see the two brcmsmac patches there. Are those applied to this kernel?
 
-Well imagine you have a driver for some hardware that can do
-beamforming, and the same driver can also work with hardware that
-doesn't. If we restrict remote caps, like we do for HT, the driver
-doesn't have to worry about this but can just do whatever the remote
-caps say is possible. If we don't restrict it, the driver has to also
-check its own caps.
-
-We can do this, and I suspect it will be simpler, but it needs to be
-*very clearly* documented since VHT will then be different from HT.
-
-johannes
+Yes, they are applied to that build. Otherwise it is our stock kernel
+for Ubuntu 12.10.
 
