@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:58315 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071Ab2IAQFZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45125 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752686Ab2IENy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2012 12:05:25 -0400
-Received: by vbbff1 with SMTP id ff1so4176392vbb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2012 09:05:24 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sat, 1 Sep 2012 12:05:23 -0400
-Message-ID: <CA+7oygfSuwomt5GxWKNvcjqTjSeW_gS9zvcFVqJN75EZp03zxw@mail.gmail.com> (sfid-20120901_180542_242821_369500D1)
-Subject: want to use mac80211/cfg80211 from kernel tree...
-From: George Nychis <gnychis@gmail.com>
+	Wed, 5 Sep 2012 09:54:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: don't use kerneldoc for ieee80211_add_rx_radiotap_header
+Date: Wed,  5 Sep 2012 15:55:33 +0200
+Message-Id: <1346853333-17869-1-git-send-email-johannes@sipsolutions.net> (sfid-20120905_155500_676104_FDD24AF3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a long story cut very short, but I have an Android kernel tree
-which has mac80211 and cfg80211 built as modules and support for a
-Broadcom chipset.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I want to add support for rt2x00 from compat-wireless, cross-compiling
-it.  I am able to successfully cross-compile it, however the build in
-compat-wireless creates its own set of mac80211 and cfg80211 modules.
-So now I end up with:
+Doing so creates warnings, but the function is internal and
+not part of the 802.11 docbooks, so it from kerneldoc.
 
-*  In kernel tree:  cfg80211.ko, mac80211.ko, and dhd.ko which are
-compatible with each other.
-*  In compat-wireless: cfg80211.ko, mac80211.ko, and rt*.ko which are compatible
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-So, I can't insert all of these modules because dhd.ko is only
-compatible (due to versions) with cfg80211.ko and mac80211.ko that
-were built with the kernel, and the Ralink modules are only compatible
-with cfg80211.ko and mac80211.ko that were built with compat-wireless.
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b382605..61c621e 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -103,7 +103,7 @@ ieee80211_rx_radiotap_len(struct ieee80211_local *local,
+ 	return len;
+ }
+ 
+-/**
++/*
+  * ieee80211_add_rx_radiotap_header - add radiotap header
+  *
+  * add a radiotap header containing all the fields which the hardware provided.
+-- 
+1.7.10.4
 
-Is there any way for me to get compat-wireless to not build its own
-versions of cfg80211.ko and mac80211.ko, and use those in the
-KERNEL_DIR?  That way I don't have two sets of cfg80211/mac80211 and I
-can insert all modules?
-
-Thanks!
-George
