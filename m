@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40195 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544Ab2IDILG (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:39397 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777Ab2IERd3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 04:11:06 -0400
-Message-ID: <1346746298.3737.0.camel@jlt4.sipsolutions.net> (sfid-20120904_101112_137395_C537083F)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@lists.ath5k.org
-Date: Tue, 04 Sep 2012 10:11:38 +0200
-In-Reply-To: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120828_113608_728319_48791C3E)
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20120828_113608_728319_48791C3E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Sep 2012 13:33:29 -0400
+Message-ID: <50478CE9.6040103@canonical.com> (sfid-20120905_193333_767238_C36A8F6B)
+Date: Wed, 05 Sep 2012 10:33:29 -0700
+From: Brad Figg <brad.figg@canonical.com>
+MIME-Version: 1.0
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	Milan Bouchet-Valat <nalimilan@club-internet.fr>
+Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback operation
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com> <1346838562-4818-3-git-send-email-arend@broadcom.com> <20120905165735.GD302@thinkpad-t410>
+In-Reply-To: <20120905165735.GD302@thinkpad-t410>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-08-28 at 17:34 +0800, Chun-Yeow Yeoh wrote:
-> This patch provides the support of hardware encyrption for
-> management frame, including the support of AES CMAC. This
-> patch is tested with the following chipsets:
-> - AR5213A
-> - AR5413
-> - AR2413/AR2414
+On 09/05/2012 09:57 AM, Seth Forshee wrote:
+> On Wed, Sep 05, 2012 at 11:49:22AM +0200, Arend van Spriel wrote:
+>> This patch addresses a long standing issue of the driver with the
+>> mac80211 .flush() callback. Since implementing the .flush() callback
+>> a number of issues have been fixed, but a WARN_ON_ONCE() was still
+>> triggered because the flush takes too much time. The flush now
+>> makes use of a waitqueue and still has a timeout on which a warning
+>> is given.
+> 
+> Brad Figg and I have been testing this patch with a 3.5 kernel. With the
+> patch we're both still seeing the warning from brcms_ops_flush(), and
+> Brad has also seen the "No where to go" message in
+> brcms_c_prec_enq_head(). But the connection continues to work when this
+> happens, whereas previously we had to reconnect, so this is definitely
+> an improvement.
+> 
+> Seth
+> 
 
-_How_ did you test this? Did you test that management frames are
-properly encrypted using AES CCM, and not mangled when decrypted? That's
-the concern, see my other mail to Christian on his carl9170 patch.
+Arend,
 
-johannes
+Though the driver is definitely better, it is still struggling quite a
+bit as can be seen in the iperf output found at:
+    http://pastebin.ubuntu.com/1187578/
 
+-- 
+Brad Figg brad.figg@canonical.com http://www.canonical.com
