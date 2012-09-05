@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44733 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755230Ab2I0Var (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 17:30:47 -0400
-Date: Thu, 27 Sep 2012 17:24:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [PATCH -next] wireless: ath9k-htc: fix possible use after free
-Message-ID: <20120927212435.GA1892@tuxdriver.com> (sfid-20120927_233051_484395_1DBB3CF8)
-References: <1347503608-3521-1-git-send-email-ming.lei@canonical.com>
- <CACVXFVOkTNOtk6_nxG4CgcgZX5iLCiuSusxvbBpn43F1=L=X2g@mail.gmail.com>
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:41095 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751004Ab2IFFKI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2012 01:10:08 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1T9ULr-0001Je-PR
+	for linux-wireless@vger.kernel.org; Thu, 06 Sep 2012 07:10:04 +0200
+Received: from dsl-KK-static-010.61.101.203.airtelbroadband.in ([dsl-KK-static-010.61.101.203.airtelbroadband.in])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 07:10:03 +0200
+Received: from chitrar.ti by dsl-KK-static-010.61.101.203.airtelbroadband.in with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 07:10:03 +0200
+To: linux-wireless@vger.kernel.org
+From: CHITRA <chitrar.ti@gmail.com>
+Subject: Re: compat-wireless can't compile under kernel 3.2.0 both 3.3-rc1-2 and 2012-01-26 - error: missing binary operator before token 
+Date: Wed, 5 Sep 2012 10:58:10 +0000 (UTC)
+Message-ID: <loom.20120905T125528-352@post.gmane.org> (sfid-20120906_071012_566896_E74951B4)
+References: <CAO=xpBGCABtjPstHcxcPHL7MGXSa7nQw4ZtwJkfZiTq=DPAE1w@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACVXFVOkTNOtk6_nxG4CgcgZX5iLCiuSusxvbBpn43F1=L=X2g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 27, 2012 at 12:06:17PM +0800, Ming Lei wrote:
-> On Thu, Sep 13, 2012 at 10:33 AM, Ming Lei <ming.lei@canonical.com> wrote:
-> > Inside ath9k_hif_usb_firmware_fail(), the instance of
-> > 'struct struct hif_device_usb' may be freed by
-> > ath9k_hif_usb_disconnect() after
-> >
-> >         complete(&hif_dev->fw_done);
-> >
-> > But 'hif_dev' is still accessed after the line code
-> > above is executed.
-> >
-> > This patch fixes the issue by not accessing 'hif_dev'
-> > after 'complete(&hif_dev->fw_done)' inside
-> > ath9k_hif_usb_firmware_fail().
-> >
-> > Cc: ath9k-devel@lists.ath9k.org
-> > Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-> > Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-> > Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> > Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-> > Cc: "John W. Linville" <linville@tuxdriver.com>
-> 
-> Gentle ping, :-)
 
-This is commit e962610f8100e1b52973f5a9c855cbc3d1ba04ec in wireless-next?
+Hi Alfonso,
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Even I m facing the same problem.
+Please let me know how did you resolve this issue.
+
+Thanks,
+chitra
+
+
+
