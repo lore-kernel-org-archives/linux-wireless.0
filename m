@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:20102 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342Ab2IGRBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 13:01:25 -0400
-Date: Fri, 7 Sep 2012 19:01:21 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	davem@davemloft.net, yongjun_wei@trendmicro.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] NFC: fix possible memory leak
-Message-ID: <20120907170121.GF3647@sortiz-mobl> (sfid-20120907_190130_432351_E24BA2FB)
-References: <CAPgLHd_sD6NYc=Dj4yJpHY0yLBuDmQx=upQY=XQLi-9kTycK-Q@mail.gmail.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:62768 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751336Ab2IEOIr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 10:08:47 -0400
+Received: by pbbrr13 with SMTP id rr13so986449pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 07:08:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPgLHd_sD6NYc=Dj4yJpHY0yLBuDmQx=upQY=XQLi-9kTycK-Q@mail.gmail.com>
+In-Reply-To: <CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com>
+References: <20120813165340.GA10044@pandem0nium>
+	<20120819220436.GA9899@pandem0nium>
+	<CAD2nsn0O+dfJLnKroRUJF6TEVWUmgwvriF7M+Oy4YL2ug0gSNA@mail.gmail.com>
+	<CAD2nsn2_V-p+8u0VSnkJnjtFF-+nkT=vOLCBqmK9+H=Sj=uhCA@mail.gmail.com>
+	<20120902200102.GA28313@pandem0nium>
+	<CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
+	<20120904171215.GA5953@pandem0nium>
+	<CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com>
+Date: Wed, 5 Sep 2012 07:08:47 -0700
+Message-ID: <CAJ-VmonwheNtv8xfEJnWpD-XOmSEebMFJAmQmWUfe2Pd3tMnqA@mail.gmail.com> (sfid-20120905_160851_856088_A56914F8)
+Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
+From: Adrian Chadd <adrian.chadd@gmail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	openwrt-devel@lists.openwrt.org,
+	Marek Lindner <lindner_marek@yahoo.de>, sven@narfation.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wei,
+I don't think it's a stuck beacon WAR issue here; 0xdeadbeef really
+does read like the MAC has gone to sleep.
 
-On Sun, Sep 02, 2012 at 09:21:46PM +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> nfc_llcp_build_tlv() malloced the memory and should be free in
-> nfc_llcp_build_gb() after used, and the same in the error handling
-> case, otherwise it will cause memory leak.
-> 
-> spatch with a semantic match is used to found this problem.
-> (http://coccinelle.lip6.fr/)
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  net/nfc/llcp/llcp.c | 14 +++++++++-----
->  1 file changed, 9 insertions(+), 5 deletions(-)
-Patch applied, thanks.
+Where's the complete register dump hiding?
 
-Cheers,
-Samuel.
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+
+Adrian
+
+
+On 4 September 2012 22:12, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+> Hi Simon/Sven,
+>
+>>
+>> I'm living at a small village, and one or two neighbors may have access points too,
+>> but that's it - this should be far from beeing busy. We mostly use these APs for
+>> surfing with smart phones, this is also far from congesting them. ;)
+>>
+>> TBH I don't really understand what you are talking about regarding WAR, etc, can
+>> you please explain? What can we do to analyse the problem better?
+>
+>
+> work arounds(WAR) for beacon stuck in congested environment,
+> there may be quite a few that may not be not yet ported for ath9k,
+> but as your environment is not a congested, then the issue can be
+> something different. Have not got much information/change list
+> from the query posted internally.
+>
+>>
+>> Thanks,
+>>         Simon
+>>
+>> -----BEGIN PGP SIGNATURE-----
+>> Version: GnuPG v1.4.10 (GNU/Linux)
+>>
+>> iEYEARECAAYFAlBGNm8ACgkQrzg/fFk7axbuNwCg626AvtDTWoeaSrVGjB92XN+7
+>> 5tEAnAjEXI04gSS102VwlSKQqBHEPFyG
+>> =9pIv
+>> -----END PGP SIGNATURE-----
+>>
+>
+>
+>
+> --
+> thanks,
+> shafi
