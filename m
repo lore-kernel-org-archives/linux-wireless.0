@@ -1,97 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:57148 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136Ab2IGGvs (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43920 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841Ab2IEEuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 02:51:48 -0400
-Received: by mail-qa0-f53.google.com with SMTP id s11so1913741qaa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 23:51:47 -0700 (PDT)
+	Wed, 5 Sep 2012 00:50:04 -0400
+Received: by eaac11 with SMTP id c11so21137eaa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2012 21:50:03 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 7 Sep 2012 14:51:47 +0800
-Message-ID: <CAPgLHd8yH37C=mRWinWM4FGQaWTvH0r69PFEgJCNZL2DdZAS1A@mail.gmail.com> (sfid-20120907_085155_207855_1E33D689)
-Subject: [PATCH] NFC: move the dereference below the NULL test
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+In-Reply-To: <5046D8E9.3050505@posedge.com>
+References: <50457491.9020604@posedge.com> <1346747134.3737.10.camel@jlt4.sipsolutions.net>
+ <5046D8E9.3050505@posedge.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 5 Sep 2012 14:49:42 +1000
+Message-ID: <CAGRGNgXkjKKoykWYAev=JpS+owTopCj0j9tLbvwDC+NDM0vzVw@mail.gmail.com> (sfid-20120905_065008_895494_9E17AEFC)
+Subject: Re: [RFC] cfg80211: VHT regulatory
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Hi Mahesh,
 
-The dereference should be moved below the NULL test.
+On Wed, Sep 5, 2012 at 2:45 PM, Mahesh Palivela <maheshp@posedge.com> wrote:
+> On 09/04/2012 01:55 PM, Johannes Berg wrote:
+>>
+>> On Tue, 2012-09-04 at 08:55 +0530, Mahesh Palivela wrote:
+>>> +       left_end_freq -= MHZ_TO_KHZ(10);
+>>> +       right_end_freq -= MHZ_TO_KHZ(10);
+>>
+>>
+>> Hmm? Shouldn't you add 10 MHz to the lower end, if anything?
+>>
+>
+> Nope. For example 80 MHz BW, take channel 36, 40, 44 and 48. Center freq
+> value is chan 42. so left end will be chan 34 and right end will be chan 50.
+> so I am subtracting 10MHz on both ends to get chan 36 and 48
 
-spatch with a semantic match is used to found this.
-(http://coccinelle.lip6.fr/)
+Surely if you subtract 10MHz from chan 34, you'd end up with chan 32, right?
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/nfc/nfcwilink.c | 4 ++--
- drivers/nfc/pn544_hci.c | 3 ++-
- drivers/nfc/pn544.c     | 3 ++-
- 3 files changed, 6 insertions(+), 4 deletions(-)
+Thanks,
 
-diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
-index e7fd493..1a47190 100644
---- a/drivers/nfc/nfcwilink.c
-+++ b/drivers/nfc/nfcwilink.c
-@@ -352,8 +352,6 @@ static long nfcwilink_receive(void *priv_data, struct sk_buff *skb)
- 	struct nfcwilink *drv = priv_data;
- 	int rc;
- 
--	nfc_dev_dbg(&drv->pdev->dev, "receive entry, len %d", skb->len);
--
- 	if (!skb)
- 		return -EFAULT;
- 
-@@ -362,6 +360,8 @@ static long nfcwilink_receive(void *priv_data, struct sk_buff *skb)
- 		return -EFAULT;
- 	}
- 
-+	nfc_dev_dbg(&drv->pdev->dev, "receive entry, len %d", skb->len);
-+
- 	/* strip the ST header
- 	(apart for the chnl byte, which is not received in the hdr) */
- 	skb_pull(skb, (NFCWILINK_HDR_LEN-1));
+-- 
+Julian Calaby
 
-diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
-index aa71807..7b20f2d 100644
---- a/drivers/nfc/pn544_hci.c
-+++ b/drivers/nfc/pn544_hci.c
-@@ -341,13 +341,14 @@ flush:
- static irqreturn_t pn544_hci_irq_thread_fn(int irq, void *dev_id)
- {
- 	struct pn544_hci_info *info = dev_id;
--	struct i2c_client *client = info->i2c_dev;
-+	struct i2c_client *client;
- 	struct sk_buff *skb = NULL;
- 	int r;
- 
- 	BUG_ON(!info);
- 	BUG_ON(irq != info->i2c_dev->irq);
- 
-+	client = info->i2c_dev;
- 	dev_dbg(&client->dev, "IRQ\n");
- 
- 	if (info->hard_fault != 0)
-
-diff --git a/drivers/nfc/pn544.c b/drivers/nfc/pn544.c
-index 724f65d..33696d6 100644
---- a/drivers/nfc/pn544.c
-+++ b/drivers/nfc/pn544.c
-@@ -288,11 +288,12 @@ static int pn544_fw_read(struct i2c_client *client, u8 *buf, int buflen)
- static irqreturn_t pn544_irq_thread_fn(int irq, void *dev_id)
- {
- 	struct pn544_info *info = dev_id;
--	struct i2c_client *client = info->i2c_dev;
-+	struct i2c_client *client;
- 
- 	BUG_ON(!info);
- 	BUG_ON(irq != info->i2c_dev->irq);
- 
-+	client = info->i2c_dev;
- 	dev_dbg(&client->dev, "IRQ\n");
- 
- 	mutex_lock(&info->read_mutex);
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
