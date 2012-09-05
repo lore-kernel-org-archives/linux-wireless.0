@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44575 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755646Ab2IZLxH (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:45118 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753869Ab2IESOs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 07:53:07 -0400
-Message-ID: <1348660422.10548.10.camel@jlt4.sipsolutions.net> (sfid-20120926_135311_685606_7DBB71B1)
-Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 26 Sep 2012 13:53:42 +0200
-In-Reply-To: <5062736B.9060008@posedge.com>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>
-	   <1348477154.10257.2.camel@jlt4.sipsolutions.net>
-	   <50614089.6020105@posedge.com>
-	  <1348557902.10041.17.camel@jlt4.sipsolutions.net>
-	  <50617E2C.6050000@posedge.com>
-	 <1348582152.10041.36.camel@jlt4.sipsolutions.net>
-	 <5062736B.9060008@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 5 Sep 2012 14:14:48 -0400
+Received: by eekc1 with SMTP id c1so356925eek.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 11:14:47 -0700 (PDT)
+Date: Wed, 5 Sep 2012 20:14:37 +0200
+From: Anisse Astier <anisse@astier.eu>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ce: activation problem with rtl8188ce pci card
+Message-ID: <20120905201437.70c008ca@destiny.ordissimo> (sfid-20120905_201537_078255_8441662C)
+In-Reply-To: <50478E10.6030808@lwfinger.net>
+References: <20120905185510.2ab501cd@destiny.ordissimo>
+	<50478E10.6030808@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-09-26 at 08:45 +0530, Mahesh Palivela wrote:
-> On 09/25/2012 07:39 PM, Johannes Berg wrote:
-> >
-> > Well imagine you have a driver for some hardware that can do
-> > beamforming, and the same driver can also work with hardware that
-> > doesn't. If we restrict remote caps, like we do for HT, the driver
-> > doesn't have to worry about this but can just do whatever the remote
-> > caps say is possible. If we don't restrict it, the driver has to also
-> > check its own caps.
+On Wed, 05 Sep 2012 12:38:24 -0500, Larry Finger <Larry.Finger@lwfinger.net> wrote :
+
+> I have two different revisions of the RTL8188CE card. The newer one, marked 
+> RTL8188CE-VL, gives the following lspci output:
 > 
-> you mean to say some drivers which dont provide its own VHT caps, will 
-> use remote STA VHT caps as its own?
-> If so I feel not correct posing remote STA caps as local caps.
+> 06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 
+> 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+>          Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi 
+> Adapter [10ec:8176]
+>          Flags: bus master, fast devsel, latency 0, IRQ 20
+>          I/O ports at 4000 [size=256]
+>          Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
+>          Capabilities: [40] Power Management version 3
+>          Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+>          Capabilities: [70] Express Endpoint, MSI 00
+>          Capabilities: [100] Advanced Error Reporting
+>          Capabilities: [140] Virtual Channel
+>          Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+>          Kernel driver in use: rtl8192ce
+> 
+> It certainly does not yield the rx descriptor problem. Please send the lspci 
+> output when the driver has not been loaded.
 
-No, no. If you look at HT, then you'll see that if the driver has HT but
-isn't capable of doing everything the peer STA can do, then mac80211
-restricts tells the driver only about the peer capabilities that the
-device can do as well.
+The subsystem ID is different on my wireless card (8212):
 
-I agree that this isn't really necessary and can be rather complex in
-VHT, but I think you need to document the difference very clearly in the
-documentation for the ieee80211_sta VHT caps.
+06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+        Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8212]
+        Flags: bus master, fast devsel, latency 0, IRQ 3
+        I/O ports at 3000 [size=256]
+        Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: [40] Power Management version 3
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [70] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Virtual Channel
+        Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
 
-johannes
+This id is nowhere to be found in the rtlwifi driver. The only matches in
+Google are my previous problem report (FWLPS freeze) and windows driver
+listings.
 
+Anisse
