@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43324 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45053 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753790Ab2ILGxs (ORCPT
+	with ESMTP id S1757073Ab2IENil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 02:53:48 -0400
-Message-ID: <1347432846.4293.0.camel@jlt4.sipsolutions.net> (sfid-20120912_085436_745520_8B40FF88)
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
+	Wed, 5 Sep 2012 09:38:41 -0400
+Message-ID: <1346852356.4364.9.camel@jlt4.sipsolutions.net> (sfid-20120905_153848_977032_0D92C1BE)
+Subject: Re: [RFC v2] cfg80211: VHT regulatory
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marc MERLIN <marc@merlins.org>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	David Rientjes <rientjes@google.com>, sgruszka@redhat.com,
-	linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, Andrew Morton <akpm@osdl.org>,
-	Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org
-Date: Wed, 12 Sep 2012 08:54:06 +0200
-In-Reply-To: <20120912055712.GE11613@merlins.org> (sfid-20120912_075811_640589_74AB6505)
-References: <20120909213228.GA5538@elf.ucw.cz>
-	 <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
-	 <20120910111113.GA25159@elf.ucw.cz>
-	 <20120911162536.bd5171a1.akpm@linux-foundation.org>
-	 <1347426988.13103.684.camel@edumazet-glaptop>
-	 <20120912055712.GE11613@merlins.org> (sfid-20120912_075811_640589_74AB6505)
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Wed, 05 Sep 2012 15:39:16 +0200
+In-Reply-To: <5046FB3D.6090803@posedge.com>
+References: <5046FB3D.6090803@posedge.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-11 at 22:57 -0700, Marc MERLIN wrote:
-> On Wed, Sep 12, 2012 at 07:16:28AM +0200, Eric Dumazet wrote:
-> > On Tue, 2012-09-11 at 16:25 -0700, Andrew Morton wrote:
-> > 
-> > > Asking for a 256k allocation is pretty crazy - this is an operating
-> > > system kernel, not a userspace application.
-> > > 
-> > > I'm wondering if this is due to a recent change, but I'm having trouble
-> > > working out where the allocation call site is.
-> > > --
-> > 
-> > (Adding Marc Merlin to CC, since he reported same problem)
-> > 
-> > Thats the firmware loading in iwlwifi driver. Not sure if it can use SG.
-> > 
-> > drivers/net/wireless/iwlwifi/iwl-drv.c
-> > 
-> > iwl_alloc_ucode() -> iwl_alloc_fw_desc() -> dma_alloc_coherent()
-> > 
-> > It seems some sections of /lib/firmware/iwlwifi*.ucode files are above
-> > 128 Kbytes, so dma_alloc_coherent() try order-5 allocations
-> 
-> Thanks for looping me in, yes, this looks very familiar to me :)
-> 
-> In the other thread, Johannes Berg gave me this patch which is supposed to
-> help: http://p.sipsolutions.net/11ea33b376a5bac5.txt
+On Wed, 2012-09-05 at 12:41 +0530, Mahesh Palivela wrote:
 
-Yes, but that patch won't apply to iwlegacy as is. However, I'm pretty
-sure that it should be possible to solve the issue in the same way in
-iwlegacy.
+>   /**
+> + * struct ieee80211_channel_config - channel config definition
+> + *
+> + * This structure describes channel configuration
+> + *
+> + * @chan_width1: channel bandwidth
+> + * @center_freq1: center frequency of 1 st frequency segment
+> + * @center_freq2: center frequency of 2 nd frequency segment
+> + * 	Used only for 80+80 MHz combination
+> + * @prim_chan_freq: primary channel frequency
+
+I still don't like this as a frequency, I think it makes a lot more
+sense to stick to how the standard does it.
+
+> +static bool reg_sec_chans_permitted(struct wiphy *wiphy,
+> +				    u32 center_freq,
+> +				    u32 bw_khz)
+> +{
+> +	struct ieee80211_channel *chan;
+> +	u32 left_end_freq, right_end_freq;
+> +
+> +	if (center_freq == 0 || bw_khz == 0)
+> +		return false;
+
+Can that actually happen?
+
+> +	// get chan BW from config
+
+Please don't use C99-style comments.
+
+> +	r = freq_reg_info_regd(wiphy,
+> +			       chan_config->prim_chan_freq,
+> +			       desired_bw_khz,
+
+This is wrong, I think? We won't use 40/80/160 MHz around the primary
+channel frequency, we use it around the center_freq1/2.
+
+> +	ret = reg_sec_chans_permitted(wiphy,
+> +				      chan_config->center_freq1,
+> +				      desired_bw_khz);
+
+This seems better, but is missing the bandwidth check?
 
 johannes
 
