@@ -1,92 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34124 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753131Ab2IHJ6i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 05:58:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2] mac80211: validate skb->dev in the tx status path
-Date: Sat,  8 Sep 2012 11:58:30 +0200
-Message-Id: <1347098310-95159-1-git-send-email-nbd@openwrt.org> (sfid-20120908_115903_481744_1E594528)
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:45215 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758116Ab2IEFMS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 01:12:18 -0400
+Received: by ieje11 with SMTP id e11so283544iej.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2012 22:12:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120904171215.GA5953@pandem0nium>
+References: <20120813165340.GA10044@pandem0nium>
+	<20120819220436.GA9899@pandem0nium>
+	<CAD2nsn0O+dfJLnKroRUJF6TEVWUmgwvriF7M+Oy4YL2ug0gSNA@mail.gmail.com>
+	<CAD2nsn2_V-p+8u0VSnkJnjtFF-+nkT=vOLCBqmK9+H=Sj=uhCA@mail.gmail.com>
+	<20120902200102.GA28313@pandem0nium>
+	<CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
+	<20120904171215.GA5953@pandem0nium>
+Date: Wed, 5 Sep 2012 10:42:17 +0530
+Message-ID: <CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com> (sfid-20120905_071230_628700_224E859A)
+Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	openwrt-devel@lists.openwrt.org,
+	Marek Lindner <lindner_marek@yahoo.de>, sven@narfation.org,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Adrian Chadd <adrian.chadd@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-skb->dev might contain a stale reference to a device that was already
-deleted, and using it unchecked can lead to invalid pointer accesses.
-Since this is only used for nl80211 tx, iterate over active interfaces
-to find a match for skb->dev, and discard the tx status if the device
-is gone.
+Hi Simon/Sven,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/status.c |   48 ++++++++++++++++++++++++++++++------------------
- 1 file changed, 30 insertions(+), 18 deletions(-)
+>
+> I'm living at a small village, and one or two neighbors may have access points too,
+> but that's it - this should be far from beeing busy. We mostly use these APs for
+> surfing with smart phones, this is also far from congesting them. ;)
+>
+> TBH I don't really understand what you are talking about regarding WAR, etc, can
+> you please explain? What can we do to analyse the problem better?
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index b0801b7..2ce8973 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -517,29 +517,41 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
- 		u64 cookie = (unsigned long)skb;
-+		bool found = false;
-+
- 		acked = info->flags & IEEE80211_TX_STAT_ACK;
- 
--		if (ieee80211_is_nullfunc(hdr->frame_control) ||
--		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
--			cfg80211_probe_status(skb->dev, hdr->addr1,
--					      cookie, acked, GFP_ATOMIC);
--		} else if (skb->dev) {
--			cfg80211_mgmt_tx_status(
--				skb->dev->ieee80211_ptr, cookie, skb->data,
--				skb->len, acked, GFP_ATOMIC);
--		} else {
--			struct ieee80211_sub_if_data *p2p_sdata;
-+		rcu_read_lock();
-+
-+		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+			if (!sdata->dev)
-+				continue;
- 
--			rcu_read_lock();
-+			if (skb->dev != sdata->dev)
-+				continue;
- 
--			p2p_sdata = rcu_dereference(local->p2p_sdata);
--			if (p2p_sdata) {
--				cfg80211_mgmt_tx_status(
--					&p2p_sdata->wdev, cookie, skb->data,
--					skb->len, acked, GFP_ATOMIC);
--			}
--			rcu_read_unlock();
-+			found = true;
-+			break;
-+		}
-+
-+		if (!skb->dev) {
-+			sdata = rcu_dereference(local->p2p_sdata);
-+			if (sdata)
-+				found = true;
-+		}
-+
-+		if (!found)
-+			skb->dev = NULL;
-+		else if (ieee80211_is_nullfunc(hdr->frame_control) ||
-+			 ieee80211_is_qos_nullfunc(hdr->frame_control)) {
-+			cfg80211_probe_status(sdata->dev, hdr->addr1,
-+					      cookie, acked, GFP_ATOMIC);
-+		} else {
-+			cfg80211_mgmt_tx_status(&sdata->wdev, cookie, skb->data,
-+						skb->len, acked, GFP_ATOMIC);
- 		}
-+
-+		rcu_read_unlock();
- 	}
- 
- 	if (unlikely(info->ack_frame_id)) {
+
+work arounds(WAR) for beacon stuck in congested environment,
+there may be quite a few that may not be not yet ported for ath9k,
+but as your environment is not a congested, then the issue can be
+something different. Have not got much information/change list
+from the query posted internally.
+
+>
+> Thanks,
+>         Simon
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.10 (GNU/Linux)
+>
+> iEYEARECAAYFAlBGNm8ACgkQrzg/fFk7axbuNwCg626AvtDTWoeaSrVGjB92XN+7
+> 5tEAnAjEXI04gSS102VwlSKQqBHEPFyG
+> =9pIv
+> -----END PGP SIGNATURE-----
+>
+
+
+
 -- 
-1.7.9.6 (Apple Git-31.1)
-
+thanks,
+shafi
