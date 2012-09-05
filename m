@@ -1,35 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45118 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373Ab2IENxA (ORCPT
+Received: from investici.nine.ch ([217.150.252.179]:31244 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469Ab2IEOhR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 09:53:00 -0400
-Message-ID: <1346853217.4364.15.camel@jlt4.sipsolutions.net> (sfid-20120905_155305_326185_71449EDF)
-Subject: Re: mac80211 flush callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 05 Sep 2012 15:53:37 +0200
-In-Reply-To: <503DFDE4.5030102@broadcom.com>
-References: <503DFDE4.5030102@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Sep 2012 10:37:17 -0400
+Date: Wed, 5 Sep 2012 16:37:00 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: reply to AUTH frame with a DEAUTH if sta
+ allocation fails
+Message-ID: <20120905143659.GA4788@ritirata.org> (sfid-20120905_163723_547861_974D26E6)
+References: <1345995273-27358-1-git-send-email-ordex@autistici.org>
+ <1345995273-27358-2-git-send-email-ordex@autistici.org>
+ <1346853503.4364.16.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="6TrnltStXW4iwmi0"
+In-Reply-To: <1346853503.4364.16.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
 
-> I ma currently looking into a long standing issue with flush callback in 
-> brcmsmac. After some debugging I found out that mac80211 keeps pushing 
-> packets to brcmsmac during the flush. Is that correct? Should brcmsmac 
-> (or any other driver) stop the mac80211 queues during the flush? My 
-> assumption was that mac80211 would not do transmits during the flush, 
-> but it probably comes from another worker thread.
+--6TrnltStXW4iwmi0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hmm, good question, this area isn't quite fully worked out yet I
-think ... probably better to stop queues yourself for now, although I
-guess mac80211 should really take care to do it ...
+On Wed, Sep 05, 2012 at 03:58:23 +0200, Johannes Berg wrote:
+> On Sun, 2012-08-26 at 17:34 +0200, Antonio Quartulli wrote:
+> > Whenever a host gets an AUTH frame it first allocates a new station and=
+ then
+> > replies with another AUTH frame. However, if sta allocations fails the =
+host
+> > should send a DEAUTH frame instead to tell the other end that something=
+ went
+> > wrong
+>=20
+> Well, ok, but...
+>=20
+> >  	/*
+> > +	 * if we have any problem in allocating the new station, we reply wit=
+h a
+> > +	 * DEAUTH frame to tell the other end that we had a problem
+> > +	 */
+> > +	if (!sta) {
+> > +		ieee80211_send_deauth_disassoc(sdata, sdata->u.ibss.bssid,
+> > +					       IEEE80211_STYPE_DEAUTH,
+> > +					       WLAN_REASON_UNSPECIFIED, true,
+> > +					       deauth_frame_buf);
+>=20
+> You can't call the function in IBSS mode, it accesses sdata->u.mgd. You
+> should probably fix that in the first patch and make it conditional on
+> the sdata->vif.type actually being station mode.
 
-johannes
+argh ok. I see the problem. Will fix and send v2.
 
+Thank you
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--6TrnltStXW4iwmi0
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlBHY4sACgkQpGgxIkP9cwcdNQCeNFsFD32oWvFXGhuEm0nbM51n
+BwAAn18vkqadckrHjZ1wmpdqzOPzXEK0
+=ZK9o
+-----END PGP SIGNATURE-----
+
+--6TrnltStXW4iwmi0--
