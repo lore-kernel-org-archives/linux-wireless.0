@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:40687 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756778Ab2IDLVY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 07:21:24 -0400
-Received: by obbuo13 with SMTP id uo13so10685809obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2012 04:21:24 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:4926 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758292Ab2IEKVQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 06:21:16 -0400
+Date: Wed, 5 Sep 2012 12:20:47 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	=?iso-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	Milan Bouchet-Valat <nalimilan@club-internet.fr>
+Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback
+ operation
+Message-ID: <20120905102046.GC2311@redhat.com> (sfid-20120905_122133_436457_2EEFAF3D)
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+ <1346838562-4818-3-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20120904102204.GA2541@w1.fi>
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
-	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
-	<20120904102204.GA2541@w1.fi>
-Date: Tue, 4 Sep 2012 19:21:23 +0800
-Message-ID: <CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com> (sfid-20120904_132128_447075_8D88D8F5)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1346838562-4818-3-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Jouni
+On Wed, Sep 05, 2012 at 11:49:22AM +0200, Arend van Spriel wrote:
+> +	ret = wait_event_timeout(wl->tx_flush_wq,
+> +				 brcms_tx_flush_completed(wl),
+> +				 msecs_to_jiffies(BRCMS_FLUSH_TIMEOUT));
+> +
+> +	ieee80211_wake_queues(hw);
+> +	WARN_ON(!ret);
+Any particular reason why this WARN_ON is after ieee80211_wake_queues() ?
 
-> Depends on what those nodes were.. If they were both using the same
-> ath5k implementation, then no, that would not be enough.
-Both of nodes are using ath5k.
+Stanislaw
 
-> so working with AR2414 or even AR5213 does not necessarily mean that this would work
-> with AR5210, AR5211, or AR5212.
-Noted.
-
-> I would also verify that unicast data frames get processed in hardware and robust
-> management frames in software.
-I have retested with the following:
-
-mesh1: ath5k nohwcrypt=1
-mesh2: ath5k (no IEEE80211_KEY_FLAG_SW_MGMT)
-Result: Both of them are not able to ping each other. Also, the PREP
-action frame is not able to decrypted by another node.
-
-mesh1: ath5k nohwcrypt=1
-mesh2: ath5k nohwcrypt=1
-Result: They are able to ping each other.
-
-mesh1: ath5k nohwcrypt=1
-mesh2: ath5k (with IEEE80211_KEY_FLAG_SW_MGMT)
-Result: They are able to ping each other
-
-mesh1:
-mesh2I also try to enable back the IEEE80211_KEY_FLAG_SW_MGMT flags.
-Also it does not work. So can we conclude that hardware encryption is
-not working for both robust unicast management frame and also unicast
-data frame?
-
-Please advice. Thanks
-
-----
-Chun-Yeow
