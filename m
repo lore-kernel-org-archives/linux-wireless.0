@@ -1,39 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36751 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757527Ab2IJPnm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 11:43:42 -0400
-Message-ID: <1347291849.4272.27.camel@jlt4.sipsolutions.net> (sfid-20120910_174345_914865_EF49CCC8)
-Subject: Re: kernel 3.5.2/amd64: iwlwifi 0000:03:00.0: failed to allocate
- pci memory
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Marc MERLIN <marc@merlins.org>, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Date: Mon, 10 Sep 2012 17:44:09 +0200
-In-Reply-To: <504E037B.9030801@lwfinger.net> (sfid-20120910_171305_381831_E8B3328A)
-References: <20120908161038.GF3347@merlins.org>
-	  <1347122927.1234.849.camel@edumazet-glaptop>
-	  <20120904003014.GB6287@merlins.org> <20120908170128.GK3347@merlins.org>
-	  (sfid-20120908_190214_109241_625AC686) <1347130641.11167.0.camel@jlt4.sipsolutions.net>
-	  (sfid-20120908_205654_374994_2998A2BE) <1347272641.4272.1.camel@jlt4.sipsolutions.net>
-	 <504E037B.9030801@lwfinger.net> (sfid-20120910_171305_381831_E8B3328A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:1564 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753449Ab2IETVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 15:21:47 -0400
+Message-ID: <5047A624.7090105@broadcom.com> (sfid-20120905_212151_395510_98D2E686)
+Date: Wed, 5 Sep 2012 21:21:08 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Brad Figg" <brad.figg@canonical.com>
+cc: "Seth Forshee" <seth.forshee@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>,
+	"Jonathan Nieder" <jrnieder@gmail.com>,
+	"Stanislaw Gruszka" <sgruszka@redhat.com>,
+	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	"Milan Bouchet-Valat" <nalimilan@club-internet.fr>
+Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback
+ operation
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+ <1346838562-4818-3-git-send-email-arend@broadcom.com>
+ <20120905165735.GD302@thinkpad-t410> <50478CE9.6040103@canonical.com>
+In-Reply-To: <50478CE9.6040103@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-09-10 at 10:12 -0500, Larry Finger wrote:
+On 09/05/2012 07:33 PM, Brad Figg wrote:
+> On 09/05/2012 09:57 AM, Seth Forshee wrote:
+>> On Wed, Sep 05, 2012 at 11:49:22AM +0200, Arend van Spriel wrote:
+>>> This patch addresses a long standing issue of the driver with the
+>>> mac80211 .flush() callback. Since implementing the .flush() callback
+>>> a number of issues have been fixed, but a WARN_ON_ONCE() was still
+>>> triggered because the flush takes too much time. The flush now
+>>> makes use of a waitqueue and still has a timeout on which a warning
+>>> is given.
+>>
+>> Brad Figg and I have been testing this patch with a 3.5 kernel. With the
+>> patch we're both still seeing the warning from brcms_ops_flush(), and
+>> Brad has also seen the "No where to go" message in
+>> brcms_c_prec_enq_head(). But the connection continues to work when this
+>> happens, whereas previously we had to reconnect, so this is definitely
+>> an improvement.
+>>
+>> Seth
+>>
+>
+> Arend,
+>
+> Though the driver is definitely better, it is still struggling quite a
+> bit as can be seen in the iperf output found at:
+>      http://pastebin.ubuntu.com/1187578/
+>
 
-> > http://p.sipsolutions.net/11ea33b376a5bac5.txt
-> 
-> That patch looks like a good way to solve the problem; however, some 
-> architectures need an explicit "#include <linux/vmalloc.h>" somewhere in the 
-> headers, even though x86 does not, and I did not see it in the patch. I didn't 
-> do a lot of checking, but grep did not find one in the existing code.
+Thanks, Brad
 
-Thanks for that, I added the include.
+I was focusing on the warning in the flush callback. I actually could 
+not reproduce the "nowhere to go" message under my ubuntu test laptop.
 
-johannes
+The root cause of your problem seems the "nowhere to go". Basically, all 
+packet queues in the driver have reached their limit. In that case 
+packets are simply dropped.
+
+Could you provide following info:
+* cpu info
+* wireless device id
+* scan data of your AP
+* kernel configuration
+
+If I can download the kernel debian package of your 3.5 kernel from 
+somewhere that would be great.
+
+Gr. AvS
 
