@@ -1,73 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:58852 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752088Ab2IGINb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 04:13:31 -0400
-Message-ID: <5049AC3F.2000704@tieto.com> (sfid-20120907_101337_129556_321F625D)
-Date: Fri, 7 Sep 2012 10:11:43 +0200
-From: Rymarkiewicz Waldemar <waldemar.rymarkiewicz@tieto.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15422 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984Ab2IEFa7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 01:30:59 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/3] ath9k_hw: use peak detection for 5GHz
+Date: Wed, 5 Sep 2012 11:02:14 +0530
+Message-ID: <1346823135-2992-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120905_073103_012510_E2007D26)
+In-Reply-To: <1346823135-2992-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1346823135-2992-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Eric Lapuyade <eric.lapuyade@linux.intel.com>
-CC: "eric.lapuyade@intel.com" <eric.lapuyade@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>
-Subject: Re: [linux-nfc] [PATCH 1/2] NFC: Remove crc generation from shdlc
- layer
-References: <1346926937-4968-1-git-send-email-waldemar.rymarkiewicz@tieto.com> <5048C901.5010704@linux.intel.com> <5049AB7C.1020103@linux.intel.com>
-In-Reply-To: <5049AB7C.1020103@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eric,
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> As a side effect of my comment on the second patch, this should be
-> defined like this:
->
->   #define PN544_CMDS_HEADROOM	2
-> +#define PN544_FRAME_HEADROOM	1
-> +#define PN544_FRAME_TAILROOM	2
->
->>>   static int pn544_hci_xmit(struct nfc_shdlc *shdlc, struct sk_buff *skb)
->>>   {
->>>   	struct pn544_hci_info *info = nfc_shdlc_get_clientdata(shdlc);
->>> @@ -584,6 +599,8 @@ static int pn544_hci_xmit(struct nfc_shdlc
-> *shdlc, struct sk_buff *skb)
->>>   	if (info->hard_fault != 0)
->>>   		return info->hard_fault;
->>>
->>> +	pn544_hci_add_len_crc(skb);
->>> +
->>>   	return pn544_hci_i2c_write(client, skb->data, skb->len);
->
-> Here, we would have:
->
-> 	r = pn544_hci_i2c_write(client, skb->data, skb->len);
-> 	pn544_hci_remove_len_crc(skb);
-> 	return r;
->
->>>   	info->shdlc = nfc_shdlc_allocate(&pn544_shdlc_ops,
->>>   					 &init_data, protocols,
->>> -					 PN544_CMDS_HEADROOM, 0,
->>> +					 PN544_CMDS_HEADROOM, PN544_CMDS_TAILROOM,
->>>   					 PN544_HCI_LLC_MAX_PAYLOAD,
->>>   					 dev_name(&client->dev));
->
-> And this should be:
->
->    	info->shdlc = nfc_shdlc_allocate(&pn544_shdlc_ops,
->    					 &init_data, protocols,
->   					 PN544_CMDS_HEADROOM +
-> 					 PN544_FRAME_HEADROOM,
-> 					 PN544_FRAME_TAILROOM,
->    					 PN544_HCI_LLC_MAX_PAYLOAD,
->    					 dev_name(&client->dev));
->
-> note that PN544_CMDS_HEADROOM is really only for skb allocated by HCI
-> (or NFC Core), not by those allocated by shdlc, but we aggregate it all
-> in a single parameter for simplicity.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+index 4ef7dcc..58f30f6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+@@ -58,7 +58,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+ 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
+-	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcfd5c782, 0xcfd5c282},
++	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcfd5c782, 0xcfd5c282},
+ 	{0x00009e44, 0x62321e27, 0x62321e27, 0xfe291e27, 0xfe291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+-- 
+1.7.12
 
-Now, I see the point. Will update the patch.
-
-Thanks,
-/Waldek
