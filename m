@@ -1,83 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:49839 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751719Ab2IZD2y (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:57461 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750826Ab2IEHRI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 23:28:54 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 03/15] mwifiex: advertise mgmt_stype to cfg80211
-Date: Tue, 25 Sep 2012 20:23:33 -0700
-Message-Id: <1348629825-12001-4-git-send-email-bzhao@marvell.com> (sfid-20120926_052856_900317_33E3CFE5)
-In-Reply-To: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
-References: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
+	Wed, 5 Sep 2012 03:17:08 -0400
+Date: Wed, 5 Sep 2012 10:16:53 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+Message-ID: <20120905071653.GB3629@w1.fi> (sfid-20120905_091713_465453_6FCF6F28)
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+ <1346746298.3737.0.camel@jlt4.sipsolutions.net>
+ <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+ <20120904102204.GA2541@w1.fi>
+ <CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
+ <CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
+ <1346758521.3737.28.camel@jlt4.sipsolutions.net>
+ <CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+On Wed, Sep 05, 2012 at 12:41:16AM +0800, Yeoh Chun-Yeow wrote:
+> By the way, current secured mesh requires the AES CMAC to be enabled.
+> But without enabling IEEE80211_HW_MFP_CAPABLE, the key cannot be added
+> since this cipher suite is considered not supported. But actually AES
+> CMAC can be done in software. Any work around on this?
 
-Advertise supported management frame types to cfg80211.
+Could you please describe what exactly you mean with "current secured
+mesh requires the AES CMAC to be enabled" and what is that claim based
+on? Any pointers to the specific standard clause(s) that say that?
 
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |   30 ++++++++++++++++++++++++++++++
- 1 files changed, 30 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 11942e5..2befac5 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -867,6 +867,35 @@ static const u32 mwifiex_cipher_suites[] = {
- 	WLAN_CIPHER_SUITE_AES_CMAC,
- };
- 
-+/* Supported mgmt frame types to be advertised to cfg80211 */
-+static const struct ieee80211_txrx_stypes
-+mwifiex_mgmt_stypes[NUM_NL80211_IFTYPES] = {
-+	[NL80211_IFTYPE_STATION] = {
-+		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
-+	},
-+	[NL80211_IFTYPE_AP] = {
-+		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
-+	},
-+	[NL80211_IFTYPE_P2P_CLIENT] = {
-+		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
-+	},
-+	[NL80211_IFTYPE_P2P_GO] = {
-+		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
-+	},
-+};
-+
- /*
-  * CFG802.11 operation handler for setting bit rates.
-  *
-@@ -1935,6 +1964,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	}
- 	wiphy->max_scan_ssids = MWIFIEX_MAX_SSID_LIST_LENGTH;
- 	wiphy->max_scan_ie_len = MWIFIEX_MAX_VSIE_LEN;
-+	wiphy->mgmt_stypes = mwifiex_mgmt_stypes;
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				 BIT(NL80211_IFTYPE_ADHOC) |
- 				 BIT(NL80211_IFTYPE_AP);
 -- 
-1.7.0.2
-
+Jouni Malinen                                            PGP id EFC895FA
