@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:37139 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176Ab2IJPdn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 11:33:43 -0400
-Message-ID: <20120910183339.19525dpw8ii5bk9c@www.81.fi> (sfid-20120910_173354_468580_0A1773EB)
-Date: Mon, 10 Sep 2012 18:33:39 +0300
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2] rndis_wlan: remove pointless check from
- rndis_scan()
-References: <CAPgLHd8FG3pEz3FZ=1ux=h5sKGXwykXc=qafb=OzEQKXWU9uuw@mail.gmail.com>
-In-Reply-To: <CAPgLHd8FG3pEz3FZ=1ux=h5sKGXwykXc=qafb=OzEQKXWU9uuw@mail.gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2200 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758589Ab2IEKhr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 06:37:47 -0400
+Message-ID: <50472B74.5060104@broadcom.com> (sfid-20120905_123755_909148_560DA8DF)
+Date: Wed, 5 Sep 2012 12:37:40 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Stanislaw Gruszka" <sgruszka@redhat.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>,
+	"Jonathan Nieder" <jrnieder@gmail.com>,
+	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	"Milan Bouchet-Valat" <nalimilan@club-internet.fr>
+Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback
+ operation
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+ <1346838562-4818-3-git-send-email-arend@broadcom.com>
+ <20120905102046.GC2311@redhat.com>
+In-Reply-To: <20120905102046.GC2311@redhat.com>
 Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Wei Yongjun <weiyj.lk@gmail.com>:
-
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
-> In rndis_scan(), 'request' is actually always valid pointer and
-> the !request check is unneeded, so remove it.
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-
-> ---
->  drivers/net/wireless/rndis_wlan.c | 3 ---
->  1 file changed, 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> b/drivers/net/wireless/rndis_wlan.c
-> index 7a4ae9e..bd1f0cb 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -1959,9 +1959,6 @@ static int rndis_scan(struct wiphy *wiphy,
->  	 */
->  	rndis_check_bssid_list(usbdev, NULL, NULL);
->
-> -	if (!request)
-> -		return -EINVAL;
-> -
->  	if (priv->scan_request && priv->scan_request != request)
->  		return -EBUSY;
->
->
->
->
+On 09/05/2012 12:20 PM, Stanislaw Gruszka wrote:
+> On Wed, Sep 05, 2012 at 11:49:22AM +0200, Arend van Spriel wrote:
+>> +	ret = wait_event_timeout(wl->tx_flush_wq,
+>> +				 brcms_tx_flush_completed(wl),
+>> +				 msecs_to_jiffies(BRCMS_FLUSH_TIMEOUT));
+>> +
+>> +	ieee80211_wake_queues(hw);
+>> +	WARN_ON(!ret);
+> Any particular reason why this WARN_ON is after ieee80211_wake_queues() ?
 >
 
+The wait has a timeout so the warning indicates flush did not complete 
+as in the old implementation. Maybe a WARN_ON_ONCE() would be better, 
+but I have not observed the warning yet.
+
+Gr. AvS
 
 
