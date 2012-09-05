@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40239 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab2IDIPD (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:39214 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753298Ab2IEQ5o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 04:15:03 -0400
-Message-ID: <1346746540.3737.3.camel@jlt4.sipsolutions.net> (sfid-20120904_101519_839432_6A03EECB)
-Subject: Re: [RFC][PATCH] rtl8192cu: completing beaconing support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: coekbe <coekbe@gmail.com>, linux-wireless@vger.kernel.org
-Date: Tue, 04 Sep 2012 10:15:40 +0200
-In-Reply-To: <50440156.5020300@lwfinger.net> (sfid-20120903_030117_121240_2694CB76)
-References: <CAK678xg-uD6rKdcZVksAdAwMtsvmcn6GmYsSa1gWS=CNTLpenw@mail.gmail.com>
-	  <5043E582.6070205@lwfinger.net>
-	 (sfid-20120903_010233_586023_7DF08501) <1346628057.10113.13.camel@jlt4.sipsolutions.net>
-	 <50440156.5020300@lwfinger.net> (sfid-20120903_030117_121240_2694CB76)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Sep 2012 12:57:44 -0400
+Date: Wed, 5 Sep 2012 11:57:35 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	stable <stable@vger.kernel.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	Milan Bouchet-Valat <nalimilan@club-internet.fr>,
+	Brad Figg <brad.figg@canonical.com>
+Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback
+ operation
+Message-ID: <20120905165735.GD302@thinkpad-t410> (sfid-20120905_185748_277627_DEEF409D)
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+ <1346838562-4818-3-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1346838562-4818-3-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-09-02 at 20:01 -0500, Larry Finger wrote:
-> On 09/02/2012 06:20 PM, Johannes Berg wrote:
-> >
-> > Just FYI -- that's not guaranteed if "iw scan" returns results, you'd
-> > have to run "iw scan passive" to make sure you pick up beacons rather
-> > than just probe responses.
-> 
-> That is good to know. Unfortunately, 'iw wlan0 scan passive' run as an 
-> unprivileged user results in "command failed: Operation not permitted (-1)". 
-> When I run it as root, then I get "command failed: Operation not supported 
-> (-95)". I am assuming that my version of iw (0.9.22) is not new enough.
+On Wed, Sep 05, 2012 at 11:49:22AM +0200, Arend van Spriel wrote:
+> This patch addresses a long standing issue of the driver with the
+> mac80211 .flush() callback. Since implementing the .flush() callback
+> a number of issues have been fixed, but a WARN_ON_ONCE() was still
+> triggered because the flush takes too much time. The flush now
+> makes use of a waitqueue and still has a timeout on which a warning
+> is given.
 
-Seems like, though it's a bit strange that'd you'd get operation not
-supported. Not sure why that is.
+Brad Figg and I have been testing this patch with a 3.5 kernel. With the
+patch we're both still seeing the warning from brcms_ops_flush(), and
+Brad has also seen the "No where to go" message in
+brcms_c_prec_enq_head(). But the connection continues to work when this
+happens, whereas previously we had to reconnect, so this is definitely
+an improvement.
 
-> When I run 'iwlist scan' in unprivileged mode, I did see the beacon, thus I got 
-> the right answer.
-
-You can't run "iwlist scan" in unprivileged mode either, in this mode
-it'll just return the existing results list that is still there due to
-wpa_supplicant (or some other process) triggering a scan.
-
-If you want to check if you saw a beacon, you can run
-
-iw wlan0 scan dump -b
-
-and check if it prints
-"Information elements from Beacon frame:"
-
-for that AP.
-
-johannes
+Seth
 
