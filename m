@@ -1,34 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60639 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753279Ab2I1Itu (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:41477 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753287Ab2IEHH3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 04:49:50 -0400
-Message-ID: <1348822162.15949.4.camel@cumari.coelho.fi> (sfid-20120928_104954_641300_A439E268)
-Subject: Re: [PATCH] wl18xx: use module_platform_driver
-From: Luciano Coelho <luca@coelho.fi>
-To: Devendra Naga <devendra.aaru@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>, Ido Reis <idor@ti.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 28 Sep 2012 11:49:22 +0300
-In-Reply-To: <1346261581-21613-1-git-send-email-devendra.aaru@gmail.com>
-References: <1346261581-21613-1-git-send-email-devendra.aaru@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Sep 2012 03:07:29 -0400
+MIME-Version: 1.0
+Date: Wed, 5 Sep 2012 15:07:29 +0800
+Message-ID: <CAPgLHd-6RmrLpi9FPTFhXiA+BHywGknmvNAd-KCdHaM+tn0qgQ@mail.gmail.com> (sfid-20120905_090738_155485_FF29528D)
+Subject: [PATCH] ath6kl: use list_move_tail instead of list_del/list_add_tail
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: kvalo@qca.qualcomm.com, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-29 at 23:03 +0530, Devendra Naga wrote:
-> the driver's init and exit routines can be implemented with the
-> module_platform_driver, as the init and exit code is same as
-> that of the module_platform_driver
-> 
-> Signed-off-by: Devendra Naga <devendra.aaru@gmail.com>
-> ---
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Applied, thanks!
+Using list_move_tail() instead of list_del() + list_add_tail().
 
---
-Luca.
+spatch with a semantic match is used to found this problem.
+(http://coccinelle.lip6.fr/)
+
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index f9626c7..ba6bd49 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -374,9 +374,8 @@ static enum htc_send_queue_result htc_try_send(struct htc_target *target,
+ 				packet = list_first_entry(txq,
+ 							  struct htc_packet,
+ 							  list);
+-				list_del(&packet->list);
+-				/* insert into local queue */
+-				list_add_tail(&packet->list, &send_queue);
++				/* move to local queue */
++				list_move_tail(&packet->list, &send_queue);
+ 			}
+ 
+ 			/*
+@@ -399,11 +398,10 @@ static enum htc_send_queue_result htc_try_send(struct htc_target *target,
+ 					 * for cleanup */
+ 				} else {
+ 					/* callback wants to keep this packet,
+-					 * remove from caller's queue */
+-					list_del(&packet->list);
+-					/* put it in the send queue */
+-					list_add_tail(&packet->list,
+-						      &send_queue);
++					 * move from caller's queue to the send
++					 * queue */
++					list_move_tail(&packet->list,
++						       &send_queue);
+ 				}
+ 
+ 			}
+
 
