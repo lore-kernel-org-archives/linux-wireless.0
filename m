@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:51298 "EHLO ebb05.tieto.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1559 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750900Ab2IJH7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 03:59:55 -0400
-From: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-To: <linux-wireless@vger.kernel.org>, <linux-nfc@lists.01.org>
-CC: <sameo@linux.intel.com>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: [PATCH] NFC: Unify kfree_skb call for received u frame
-Date: Mon, 10 Sep 2012 09:59:46 +0200
-Message-ID: <1347263986-4327-1-git-send-email-waldemar.rymarkiewicz@tieto.com> (sfid-20120910_095959_099575_AAF5C8BB)
+	id S1751999Ab2IEQ1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 12:27:18 -0400
+Message-ID: <50477D5E.2040003@broadcom.com> (sfid-20120905_182721_970474_08F68239)
+Date: Wed, 5 Sep 2012 18:27:10 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: mac80211 flush callback
+References: <503DFDE4.5030102@broadcom.com>
+ <1346853217.4364.15.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1346853217.4364.15.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
----
- net/nfc/hci/shdlc.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On 09/05/2012 03:53 PM, Johannes Berg wrote:
+> Hi Arend,
+>
+>> I ma currently looking into a long standing issue with flush callback in
+>> brcmsmac. After some debugging I found out that mac80211 keeps pushing
+>> packets to brcmsmac during the flush. Is that correct? Should brcmsmac
+>> (or any other driver) stop the mac80211 queues during the flush? My
+>> assumption was that mac80211 would not do transmits during the flush,
+>> but it probably comes from another worker thread.
+>
+> Hmm, good question, this area isn't quite fully worked out yet I
+> think ... probably better to stop queues yourself for now, although I
+> guess mac80211 should really take care to do it ...
+>
 
-diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
-index dc8443a..fd75cec 100644
---- a/net/nfc/hci/shdlc.c
-+++ b/net/nfc/hci/shdlc.c
-@@ -398,8 +398,6 @@ static void nfc_shdlc_rcv_u_frame(struct nfc_shdlc *shdlc,
- 	default:
- 		break;
- 	}
--
--	kfree_skb(skb);
- }
- 
- static void nfc_shdlc_handle_rcv_queue(struct nfc_shdlc *shdlc)
-@@ -433,6 +431,7 @@ static void nfc_shdlc_handle_rcv_queue(struct nfc_shdlc *shdlc)
- 		case SHDLC_CONTROL_HEAD_U:
- 			u_frame_modifier = control & SHDLC_CONTROL_M_MASK;
- 			nfc_shdlc_rcv_u_frame(shdlc, skb, u_frame_modifier);
-+			kfree_skb(skb);
- 			break;
- 		default:
- 			pr_err("UNKNOWN Control=%d\n", control);
--- 
-1.7.10
+Thanks, Johannes
+
+I did look at some other driver and it seems they grab a mutex in the 
+flush that is (probably?) also grabbed in the tx path thus blocking it. 
+For brcmsmac I submitted a patch to explicitly stop the queues in the flush.
+
+Gr. AvS
 
