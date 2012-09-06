@@ -1,93 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49192 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756813Ab2IFPKn (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:23202 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932323Ab2IFRIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 11:10:43 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: check power constraint IE size when parsing
-Date: Thu,  6 Sep 2012 17:11:19 +0200
-Message-Id: <1346944279-18196-1-git-send-email-johannes@sipsolutions.net> (sfid-20120906_171048_580446_BF2F27EF)
+	Thu, 6 Sep 2012 13:08:19 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv2 1/2] mac80211: export ieee80211_send_deauth_disassoc for usage outside of mlme.c
+Date: Thu,  6 Sep 2012 19:07:54 +0200
+Message-Id: <1346951275-32081-1-git-send-email-ordex@autistici.org> (sfid-20120906_190828_405993_603EB9FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ieee80211_send_deauth_disassoc() is now defined in util.c and it is available
+for usage in the rest of the mac80211 code.
 
-The power constraint IE is always a single byte
-so check the size when parsing instead of later.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
 ---
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |   10 ++--------
- net/mac80211/util.c        |    5 ++++-
- 3 files changed, 6 insertions(+), 10 deletions(-)
+
+v2:
+- in ieee80211_send_deauth_disassoc(), limit check for IEEE80211_STA_MFP_ENABLED
+  to the case of vif.type equal to STA
+
+
+ net/mac80211/ieee80211_i.h |  5 ++++
+ net/mac80211/mlme.c        | 60 ++++++++--------------------------------------
+ net/mac80211/util.c        | 40 +++++++++++++++++++++++++++++++
+ 3 files changed, 55 insertions(+), 50 deletions(-)
 
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e2ab03c..b95fa25 100644
+index b95fa25..8874523 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -1165,7 +1165,6 @@ struct ieee802_11_elems {
- 	u8 prep_len;
- 	u8 perr_len;
- 	u8 country_elem_len;
--	u8 pwr_constr_elem_len;
- 	u8 quiet_elem_len;
- 	u8 num_of_quiet_elem;	/* can be more the one */
- 	u8 timeout_int_len;
+@@ -68,6 +68,8 @@ struct ieee80211_local;
+ #define IEEE80211_DEFAULT_MAX_SP_LEN		\
+ 	IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL
+ 
++#define IEEE80211_DEAUTH_FRAME_LEN	(24 /* hdr */ + 2 /* reason */)
++
+ struct ieee80211_fragment_entry {
+ 	unsigned long first_frag_time;
+ 	unsigned int seq;
+@@ -1458,6 +1460,9 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg,
+ 			 u8 *extra, size_t extra_len, const u8 *bssid,
+ 			 const u8 *da, const u8 *key, u8 key_len, u8 key_idx);
++void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
++				    const u8 *bssid, u16 stype, u16 reason,
++				    bool send_frame, u8 *frame_buf);
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+ 			     enum ieee80211_band band, u32 rate_mask,
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6e374cb..8746694 100644
+index 8746694..0ca3413 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -821,18 +821,13 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+@@ -88,8 +88,6 @@ MODULE_PARM_DESC(probe_wait_ms,
+ #define TMR_RUNNING_TIMER	0
+ #define TMR_RUNNING_CHANSW	1
+ 
+-#define DEAUTH_DISASSOC_LEN	(24 /* hdr */ + 2 /* reason */)
+-
+ /*
+  * All cfg80211 functions have to be called outside a locked
+  * section so that they can acquire a lock themselves... This
+@@ -574,46 +572,6 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_tx_skb(sdata, skb);
  }
  
- static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
--					u16 capab_info, u8 *pwr_constr_elem,
--					u8 pwr_constr_elem_len)
-+					u16 capab_info, u8 *pwr_constr_elem)
- {
- 	struct ieee80211_conf *conf = &sdata->local->hw.conf;
- 
- 	if (!(capab_info & WLAN_CAPABILITY_SPECTRUM_MGMT))
- 		return;
- 
--	/* Power constraint IE length should be 1 octet */
--	if (pwr_constr_elem_len != 1)
--		return;
+-static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+-					   const u8 *bssid, u16 stype,
+-					   u16 reason, bool send_frame,
+-					   u8 *frame_buf)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	struct sk_buff *skb;
+-	struct ieee80211_mgmt *mgmt = (void *)frame_buf;
 -
- 	if ((*pwr_constr_elem <= conf->channel->max_reg_power) &&
- 	    (*pwr_constr_elem != sdata->local->power_constr_level)) {
- 		sdata->local->power_constr_level = *pwr_constr_elem;
-@@ -2552,8 +2547,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		if (elems.pwr_constr_elem)
- 			ieee80211_handle_pwr_constr(sdata,
- 				le16_to_cpu(mgmt->u.probe_resp.capab_info),
--				elems.pwr_constr_elem,
--				elems.pwr_constr_elem_len);
-+				elems.pwr_constr_elem);
- 	}
+-	/* build frame */
+-	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT | stype);
+-	mgmt->duration = 0; /* initialize only */
+-	mgmt->seq_ctrl = 0; /* initialize only */
+-	memcpy(mgmt->da, bssid, ETH_ALEN);
+-	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+-	memcpy(mgmt->bssid, bssid, ETH_ALEN);
+-	/* u.deauth.reason_code == u.disassoc.reason_code */
+-	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
+-
+-	if (send_frame) {
+-		skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+-				    DEAUTH_DISASSOC_LEN);
+-		if (!skb)
+-			return;
+-
+-		skb_reserve(skb, local->hw.extra_tx_headroom);
+-
+-		/* copy in frame */
+-		memcpy(skb_put(skb, DEAUTH_DISASSOC_LEN),
+-		       mgmt, DEAUTH_DISASSOC_LEN);
+-
+-		if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
+-			IEEE80211_SKB_CB(skb)->flags |=
+-				IEEE80211_TX_INTFL_DONT_ENCRYPT;
+-
+-		ieee80211_tx_skb(sdata, skb);
+-	}
+-}
+-
+ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ 			   struct ieee80211_sub_if_data *sdata)
+ {
+@@ -1695,7 +1653,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_local *local = sdata->local;
+-	u8 frame_buf[DEAUTH_DISASSOC_LEN];
++	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
  
- 	ieee80211_bss_info_change_notify(sdata, changed);
+ 	mutex_lock(&ifmgd->mtx);
+ 	if (!ifmgd->associated) {
+@@ -1713,7 +1671,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata,
+ 	 * must be outside lock due to cfg80211,
+ 	 * but that's not a problem.
+ 	 */
+-	cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
++	cfg80211_send_deauth(sdata->dev, frame_buf, IEEE80211_DEAUTH_FRAME_LEN);
+ 
+ 	mutex_lock(&local->mtx);
+ 	ieee80211_recalc_idle(local);
+@@ -2645,7 +2603,7 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	u8 frame_buf[DEAUTH_DISASSOC_LEN];
++	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
+ 			       false, frame_buf);
+@@ -2655,7 +2613,7 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ 	 * must be outside lock due to cfg80211,
+ 	 * but that's not a problem.
+ 	 */
+-	cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
++	cfg80211_send_deauth(sdata->dev, frame_buf, IEEE80211_DEAUTH_FRAME_LEN);
+ 
+ 	mutex_lock(&local->mtx);
+ 	ieee80211_recalc_idle(local);
+@@ -3538,7 +3496,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 			 struct cfg80211_deauth_request *req)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	u8 frame_buf[DEAUTH_DISASSOC_LEN];
++	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+@@ -3566,7 +3524,8 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+-	__cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
++	__cfg80211_send_deauth(sdata->dev, frame_buf,
++			       IEEE80211_DEAUTH_FRAME_LEN);
+ 
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+@@ -3580,7 +3539,7 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 bssid[ETH_ALEN];
+-	u8 frame_buf[DEAUTH_DISASSOC_LEN];
++	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+@@ -3605,7 +3564,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 			       frame_buf);
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+-	__cfg80211_send_disassoc(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
++	__cfg80211_send_disassoc(sdata->dev, frame_buf,
++				 IEEE80211_DEAUTH_FRAME_LEN);
+ 
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 471fb05..ed75439 100644
+index ed75439..2d74fad 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
-@@ -792,8 +792,11 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			elems->country_elem_len = elen;
- 			break;
- 		case WLAN_EID_PWR_CONSTRAINT:
-+			if (elen != 1) {
-+				elem_parse_failed = true;
-+				break;
-+			}
- 			elems->pwr_constr_elem = pos;
--			elems->pwr_constr_elem_len = elen;
- 			break;
- 		case WLAN_EID_TIMEOUT_INTERVAL:
- 			elems->timeout_int = pos;
+@@ -1007,6 +1007,46 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
++void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
++				    const u8 *bssid, u16 stype, u16 reason,
++				    bool send_frame, u8 *frame_buf)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *mgmt = (void *)frame_buf;
++
++	/* build frame */
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT | stype);
++	mgmt->duration = 0; /* initialize only */
++	mgmt->seq_ctrl = 0; /* initialize only */
++	memcpy(mgmt->da, bssid, ETH_ALEN);
++	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
++	memcpy(mgmt->bssid, bssid, ETH_ALEN);
++	/* u.deauth.reason_code == u.disassoc.reason_code */
++	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
++
++	if (send_frame) {
++		skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++				    IEEE80211_DEAUTH_FRAME_LEN);
++		if (!skb)
++			return;
++
++		skb_reserve(skb, local->hw.extra_tx_headroom);
++
++		/* copy in frame */
++		memcpy(skb_put(skb, IEEE80211_DEAUTH_FRAME_LEN),
++		       mgmt, IEEE80211_DEAUTH_FRAME_LEN);
++
++		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++		    !(sdata->u.mgd.flags & IEEE80211_STA_MFP_ENABLED))
++			IEEE80211_SKB_CB(skb)->flags |=
++				IEEE80211_TX_INTFL_DONT_ENCRYPT;
++
++		ieee80211_tx_skb(sdata, skb);
++	}
++}
++
++
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+ 			     enum ieee80211_band band, u32 rate_mask,
 -- 
-1.7.10.4
+1.7.12
 
