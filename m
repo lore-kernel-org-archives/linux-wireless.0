@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:63449 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751191Ab2ILIPo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 04:15:44 -0400
-From: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-To: <linux-wireless@vger.kernel.org>, <linux-nfc@lists.01.org>
-CC: <sameo@linux.intel.com>, <eric.lapuyade@linux.intel.com>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: [PATCH 1/3] NFC: Handle RSET in SHDLC_CONNECTING state
-Date: Wed, 12 Sep 2012 10:15:33 +0200
-Message-ID: <1347437735-15041-1-git-send-email-waldemar.rymarkiewicz@tieto.com> (sfid-20120912_101549_138713_03DF2381)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:49175 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756550Ab2IFPCd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2012 11:02:33 -0400
+Message-ID: <1346943788.5469.12.camel@jlt4.sipsolutions.net> (sfid-20120906_170237_197472_7971BC8C)
+Subject: Re: [PATCH/RFC] rfkill: prevent unnecessary event generation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vitaly Wool <vitaly.wool@sonymobile.com>
+Cc: linux-wireless@vger.kernel.org, vitalywool@gmail.com
+Date: Thu, 06 Sep 2012 17:03:08 +0200
+In-Reply-To: <5048ADFC.1010708@sonymobile.com> (sfid-20120906_161659_043721_12893A62)
+References: <5048ADFC.1010708@sonymobile.com>
+	 (sfid-20120906_161659_043721_12893A62)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As queue_work() does not guarantee ordered execution of sm_work it
-can happen in crossover RSET usecase that connect timer will constantly
-change the shdlc state from NEGOTIATING to CONNECTING before shdlc have
-chance to handle incoming frame.
+On Thu, 2012-09-06 at 16:06 +0200, Vitaly Wool wrote:
+> Prevent unnecessary rfkill event generation when the state has
+> not actually changed. These events have to be delivered to
+> relevant userspace processes, causing these processes to wake
+> up and do something while they could as well have slept. This
+> obviously results in more CPU usage, longer time-to-sleep-again
+> and therefore higher power consumption.
+> 
+> Signed-off-by: Vitaly Wool <vitalywool@gmail.com>
+> Signed-off-by: Mykyta Iziumtsev <nikita.izyumtsev@gmail.com>
 
-As a result the incoming RSET frame will remain not handled before putting
-shdlc into DISCONNECTED state which is too late.
+Looks fine to me, should I just pick it up?
 
-Signed-off-by: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
----
- net/nfc/hci/shdlc.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+johannes
 
-diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
-index fd75cec..fe66cbc 100644
---- a/net/nfc/hci/shdlc.c
-+++ b/net/nfc/hci/shdlc.c
-@@ -365,7 +365,8 @@ static void nfc_shdlc_rcv_u_frame(struct nfc_shdlc *shdlc,
- 
- 	switch (u_frame_modifier) {
- 	case U_FRAME_RSET:
--		if (shdlc->state == SHDLC_NEGOCIATING) {
-+		if ( (shdlc->state == SHDLC_NEGOCIATING) ||
-+					(shdlc->state == SHDLC_CONNECTING) ) {
- 			/* we sent RSET, but chip wants to negociate */
- 			if (skb->len > 0)
- 				w = skb->data[0];
--- 
-1.7.10
+
+> ---
+>   net/rfkill/core.c |    8 +++++++-
+>   1 files changed, 7 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> index 752b723..520617c 100644
+> --- a/net/rfkill/core.c
+> +++ b/net/rfkill/core.c
+> @@ -256,6 +256,7 @@ static bool __rfkill_set_hw_state(struct rfkill *rfkill,
+>   static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+>   {
+>   	unsigned long flags;
+> +	bool prev, curr;
+>   	int err;
+>   
+>   	if (unlikely(rfkill->dev.power.power_state.event & PM_EVENT_SLEEP))
+> @@ -270,6 +271,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+>   		rfkill->ops->query(rfkill, rfkill->data);
+>   
+>   	spin_lock_irqsave(&rfkill->lock, flags);
+> +	prev = rfkill->state & RFKILL_BLOCK_SW;
+> +
+>   	if (rfkill->state & RFKILL_BLOCK_SW)
+>   		rfkill->state |= RFKILL_BLOCK_SW_PREV;
+>   	else
+> @@ -299,10 +302,13 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+>   	}
+>   	rfkill->state &= ~RFKILL_BLOCK_SW_SETCALL;
+>   	rfkill->state &= ~RFKILL_BLOCK_SW_PREV;
+> +	curr = rfkill->state & RFKILL_BLOCK_SW;
+>   	spin_unlock_irqrestore(&rfkill->lock, flags);
+>   
+>   	rfkill_led_trigger_event(rfkill);
+> -	rfkill_event(rfkill);
+> +
+> +	if (prev != curr)
+> +		rfkill_event(rfkill);
+>   }
+>   
+>   #ifdef CONFIG_RFKILL_INPUT
+
 
