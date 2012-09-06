@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4902 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753278Ab2I0MSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 08:18:18 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/11] brcmfmac: notify common driver about usb tx
- completion.
-Date: Thu, 27 Sep 2012 14:17:50 +0200
-Message-ID: <1348748277-21460-5-git-send-email-arend@broadcom.com> (sfid-20120927_141839_572389_326DBBA1)
-In-Reply-To: <1348748277-21460-1-git-send-email-arend@broadcom.com>
-References: <1348748277-21460-1-git-send-email-arend@broadcom.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:33499 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752742Ab2IFN5y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2012 09:57:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 6 Sep 2012 21:57:53 +0800
+Message-ID: <CAPgLHd_Vwr2oGWEGi_Ey5WcVz+XKT8yh76CYDNiy1d73rk2cbQ@mail.gmail.com> (sfid-20120906_155759_071867_633DD48C)
+Subject: Re: [PATCH] mac80211: use list_move instead of list_del/list_add
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On 09/06/2012 05:56 PM, Johannes Berg wrote:
 
-brcmf_usb_tx_complete now calls brcmf_txcomplete to correct
-eapol counter.
+Hi Johannes,
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |    2 ++
- 1 file changed, 2 insertions(+)
+> On Thu, 2012-09-06 at 13:20 +0800, Wei Yongjun wrote:
+>> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>>
+>> Using list_move() instead of list_del() + list_add().
+>>
+>> spatch with a semantic match is used to found this problem.
+>> (http://coccinelle.lip6.fr/)
+>>
+>> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> Applied. FWIW, I don't think it's really a "problem" rather than a
+> simplification or something like that, but anyway.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 555ccdd..a2b4b1e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -465,6 +465,8 @@ static void brcmf_usb_tx_complete(struct urb *urb)
- 	else
- 		devinfo->bus_pub.bus->dstats.tx_errors++;
- 
-+	brcmf_txcomplete(devinfo->dev, req->skb, urb->status == 0);
-+
- 	brcmu_pkt_buf_free_skb(req->skb);
- 	req->skb = NULL;
- 	brcmf_usb_enq(devinfo, &devinfo->tx_freeq, req, &devinfo->tx_freecount);
--- 
-1.7.9.5
+That is right, I will change the patch description if I send some other
+patchs like this cleanup.
+
+Thanks,
+Yongjun Wei
+
+>
+> johannes
+>
+>
+>
 
 
