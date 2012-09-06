@@ -1,58 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:35239 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233Ab2IJFMr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48292 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050Ab2IFJyY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 01:12:47 -0400
-Received: by pbbrr13 with SMTP id rr13so1909340pbb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Sep 2012 22:12:47 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@lists.ath5k.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] ath5k: disable HW crypto in management frame
-Date: Mon, 10 Sep 2012 13:09:10 +0800
-Message-Id: <1347253750-30417-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120910_071251_309119_1A0F7C7D)
+	Thu, 6 Sep 2012 05:54:24 -0400
+Message-ID: <1346925298.5469.4.camel@jlt4.sipsolutions.net> (sfid-20120906_115455_113907_B20D2DE5)
+Subject: Re: [RFC v2] cfg80211: VHT regulatory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Thu, 06 Sep 2012 11:54:58 +0200
+In-Reply-To: <50481C2E.5040303@posedge.com>
+References: <5046FB3D.6090803@posedge.com>
+	 <1346852356.4364.9.camel@jlt4.sipsolutions.net>
+	 <50481C2E.5040303@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware support for MFP is not available in ath5k. Thus,
-this implementation allows the mac80211 stack to do the
-actuall crypto operation.
+On Thu, 2012-09-06 at 09:14 +0530, Mahesh Palivela wrote:
+> On 09/05/2012 07:09 PM, Johannes Berg wrote:
+> > On Wed, 2012-09-05 at 12:41 +0530, Mahesh Palivela wrote:
+> >
+> >> + * @prim_chan_freq: primary channel frequency
+> >
+> > I still don't like this as a frequency, I think it makes a lot more
+> > sense to stick to how the standard does it.
+> >
+> 
+>  From spec:
+> 
+> Channel center frequency [MHz]
+> = Channel starting frequency + 5 * dot11CurrentChannelCenterFrequencyIndex
+> 
+> Primary 20 MHz channel center frequency [MHz]
+> = Channel starting frequency + 5 * dot11CurrentPrimaryChannel
+> 
+> The channel starting frequency is defined as dot11ChannelStartingFactor 
+> × 500 kHz. If a channel center frequency is 5.000 GHz, it shall be 
+> indicated by dot11ChannelStartingFactor = 8000 and
+> dot11CurrentPrimaryChannel = 200
+> 
+> end spec:
+> 
+> So spec defined center freq index and prim channel numbers. 
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- drivers/net/wireless/ath/ath5k/base.c         |    1 +
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    3 +++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+No, it doesn't. It *derives* these. Check "Table 22-22—Fields to specify
+VHT channels" for how it actually *specifies* them.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a0a202d..9fd6d9a 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2446,6 +2446,7 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 			IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 			IEEE80211_HW_SIGNAL_DBM |
-+			IEEE80211_HW_MFP_CAPABLE |
- 			IEEE80211_HW_REPORTS_TX_ACK_STATUS;
- 
- 	hw->wiphy->interface_modes =
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index df61a09..0f34086 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -489,6 +489,9 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if (ath5k_modparam_nohwcrypt)
- 		return -EOPNOTSUPP;
- 
-+	if (key->flags & IEEE80211_KEY_FLAG_RX_MGMT)
-+		return -EOPNOTSUPP;
-+
- 	if (vif->type == NL80211_IFTYPE_ADHOC &&
- 	    (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
- 	     key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
--- 
-1.7.0.4
+> >> +	if (center_freq == 0 || bw_khz == 0)
+> >> +		return false;
+> >
+> > Can that actually happen?
+> >
+> 
+> just a defensive check. I can remove it, if redundant
+
+I was thinking then it should have a WARN_ON_ONCE() maybe.
+
+
+> >> +	r = freq_reg_info_regd(wiphy,
+> >> +			       chan_config->prim_chan_freq,
+> >> +			       desired_bw_khz,
+> >
+> > This is wrong, I think? We won't use 40/80/160 MHz around the primary
+> > channel frequency, we use it around the center_freq1/2.
+> >
+> 
+> This is to find the regulatory rule only. Not checking desired BW around 
+> prim channel. center freq chan 42 of 36, 40, 44 and 48 for 80 MHz BW may 
+> not be in list of freq values in reg rule.
+
+Hmm? Don't think I understand this. Why do you pass in the right
+bandwidth if it's not used?
+
+> >> +	ret = reg_sec_chans_permitted(wiphy,
+> >> +				      chan_config->center_freq1,
+> >> +				      desired_bw_khz);
+> >
+> > This seems better, but is missing the bandwidth check?
+> 
+> bandwidths are checked in reg_chan_use_permitted. reg rule decides it right?
+
+I guess I don't really understand this.
+
+johannes
 
