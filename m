@@ -1,127 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:34952 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440Ab2IUGRg (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:41631 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932212Ab2IFQJr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 02:17:36 -0400
-Received: by weyx8 with SMTP id x8so1751606wey.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 23:17:34 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC][PATCH V2] bcma: change delays to follow timers-howto guide
-Date: Fri, 21 Sep 2012 08:17:42 +0200
-Message-Id: <1348208262-28230-1-git-send-email-zajec5@gmail.com> (sfid-20120921_081741_185784_4ED1E054)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 6 Sep 2012 12:09:47 -0400
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kernel-janitors@vger.kernel.org,
+	Peter Senna Tschudin <peter.senna@gmail.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 9/10] drivers/net/wireless/rtlwifi/rtl8192de/phy.c: removes unnecessary semicolon
+Date: Thu,  6 Sep 2012 18:09:17 +0200
+Message-Id: <1346947757-10481-10-git-send-email-peter.senna@gmail.com> (sfid-20120906_181018_657492_0F4DB0E1)
+In-Reply-To: <1346947757-10481-1-git-send-email-peter.senna@gmail.com>
+References: <1346947757-10481-1-git-send-email-peter.senna@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Peter Senna Tschudin <peter.senna@gmail.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
+removes unnecessary semicolon
+
+Found by Coccinelle: http://coccinelle.lip6.fr/
+
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+
 ---
- drivers/bcma/core.c                  |    2 +-
- drivers/bcma/driver_chipcommon_pmu.c |    5 ++++-
- drivers/bcma/driver_pci.c            |    6 +++---
- drivers/bcma/driver_pci_host.c       |    8 ++++----
- 4 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 63c8b47..03bbe10 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -65,7 +65,7 @@ void bcma_core_set_clockmode(struct bcma_device *core,
- 	switch (clkmode) {
- 	case BCMA_CLKMODE_FAST:
- 		bcma_set32(core, BCMA_CLKCTLST, BCMA_CLKCTLST_FORCEHT);
--		udelay(64);
-+		usleep_range(64, 300);
- 		for (i = 0; i < 1500; i++) {
- 			if (bcma_read32(core, BCMA_CLKCTLST) &
- 			    BCMA_CLKCTLST_HAVEHT) {
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 8b8f2f3..201faf1 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -76,7 +76,10 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
- 	if (max_msk)
- 		bcma_cc_write32(cc, BCMA_CC_PMU_MAXRES_MSK, max_msk);
+diff -u -p a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+@@ -1314,7 +1314,7 @@ static void _rtl92d_phy_restore_rf_env(s
+ 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
  
--	/* Add some delay; allow resources to come up and settle. */
-+	/*
-+	 * Add some delay; allow resources to come up and settle.
-+	 * Delay is required for SoC (early init).
-+	 */
- 	mdelay(2);
- }
- 
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index c32ebd5..c39ee6d 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -51,7 +51,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u8 phy)
- 		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
- 		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
- 			break;
--		msleep(1);
-+		usleep_range(1000, 2000);
- 	}
- }
- 
-@@ -92,7 +92,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
- 			ret = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_DATA);
- 			break;
- 		}
--		msleep(1);
-+		usleep_range(1000, 2000);
- 	}
- 	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
- 	return ret;
-@@ -132,7 +132,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u8 device,
- 		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
- 		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
- 			break;
--		msleep(1);
-+		usleep_range(1000, 2000);
- 	}
- 	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
- }
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index cbae2c2..9baf886 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -425,9 +425,9 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
- 	pc_host->io_resource.flags = IORESOURCE_IO | IORESOURCE_PCI_FIXED;
- 
- 	/* Reset RC */
--	udelay(3000);
-+	usleep_range(3000, 5000);
- 	pcicore_write32(pc, BCMA_CORE_PCI_CTL, BCMA_CORE_PCI_CTL_RST_OE);
--	udelay(1000);
-+	usleep_range(1000, 2000);
- 	pcicore_write32(pc, BCMA_CORE_PCI_CTL, BCMA_CORE_PCI_CTL_RST |
- 			BCMA_CORE_PCI_CTL_RST_OE);
- 
-@@ -481,7 +481,7 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
- 	 * before issuing configuration requests to PCI Express
- 	 * devices.
- 	 */
--	udelay(100000);
-+	msleep(100);
- 
- 	bcma_core_pci_enable_crs(pc);
- 
-@@ -501,7 +501,7 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
- 	set_io_port_base(pc_host->pci_controller.io_map_base);
- 	/* Give some time to the PCI controller to configure itself with the new
- 	 * values. Not waiting at this point causes crashes of the machine. */
--	mdelay(10);
-+	usleep_range(10000, 15000);
- 	register_pci_controller(&pc_host->pci_controller);
- 	return;
- }
--- 
-1.7.7
+ 	RT_TRACE(rtlpriv, COMP_RF, DBG_LOUD, "=====>\n");
+-	/*----Restore RFENV control type----*/ ;
++	/*----Restore RFENV control type----*/
+ 	switch (rfpath) {
+ 	case RF90_PATH_A:
+ 	case RF90_PATH_C:
 
