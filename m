@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1168 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755451Ab2IKTTC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 15:19:02 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 0/7] brcmfmac: transmit flow control and e-scan
- support
-Date: Tue, 11 Sep 2012 21:18:45 +0200
-Message-ID: <1347391132-10953-1-git-send-email-arend@broadcom.com> (sfid-20120911_211907_299379_6FF25897)
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:29763
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751020Ab2IFMFA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2012 08:05:00 -0400
+Message-ID: <50489165.1080902@posedge.com> (sfid-20120906_140506_310171_502216BD)
+Date: Thu, 6 Sep 2012 17:34:53 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [RFC v2] cfg80211: VHT regulatory
+References: <5046FB3D.6090803@posedge.com>  <1346852356.4364.9.camel@jlt4.sipsolutions.net>  <50481C2E.5040303@posedge.com> <1346925298.5469.4.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1346925298.5469.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains transmit flow control handling when the brcmfmac driver
-has no resources to transfer packets over the host interface. This improves
-throughput number for TCP. The other feature in this series is event based
-scanning in which firmware sends an event per BSS.
+On 09/06/2012 03:24 PM, Johannes Berg wrote:
+> On Thu, 2012-09-06 at 09:14 +0530, Mahesh Palivela wrote:
+>> On 09/05/2012 07:09 PM, Johannes Berg wrote:
+>
+> No, it doesn't. It *derives* these. Check "Table 22-22—Fields to specify
+> VHT channels" for how it actually *specifies* them.
+>
 
-The other changes in this series are small fixes.
+hostapd.conf specifies using numbers only. hostapd converts to freq 
+values, puts into NL attribs and cfg80211 directly gets freq values 
+rather than channel numbers.
+we have to do these calculations either in app or cfg80211. user space 
+vs krnl space. I am ok either way.
 
-This series is for the v3.7 kernel and applies to the wireless-next tree.
+>>
+>> just a defensive check. I can remove it, if redundant
+>
+> I was thinking then it should have a WARN_ON_ONCE() maybe.
+>
+>
 
-Hante Meuleman (7):
-  brcmfmac: Stop all net if queues on tx flow halt.
-  brcmfmac: Add extra data support to firmware event queueing.
-  brcmfmac: Add tx flow control on net if queue for USB.
-  brcmfmac: Clean up scan related code.
-  brcmfmac: refill buffers on rx protocol error.
-  brcmfmac: avoid using local usb data.
-  brcmfmac: add e-scan support.
+ok. will put WARN_ON_ONCE()
 
- drivers/net/wireless/brcm80211/Kconfig             |    8 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   24 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    8 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   16 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |  184 +++----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  558 +++++++++++++++++++-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   25 +
- 9 files changed, 697 insertions(+), 136 deletions(-)
+>>
+>> This is to find the regulatory rule only. Not checking desired BW around
+>> prim channel. center freq chan 42 of 36, 40, 44 and 48 for 80 MHz BW may
+>> not be in list of freq values in reg rule.
+>
+> Hmm? Don't think I understand this. Why do you pass in the right
+> bandwidth if it's not used?
+>
 
--- 
-1.7.9.5
+ok. I will define new freq_reg_info_regd() to take center freq and 
+desired BW and return reg_rule. I think current freq_reg_info_regd() may 
+fail if we give chan 42.
 
+>>> This seems better, but is missing the bandwidth check?
+>>
+>> bandwidths are checked in reg_chan_use_permitted. reg rule decides it right?
+>
+> I guess I don't really understand this.
+>
 
+what should I do for bandwidth check in reg_sec_chans_permitted() ?
+
+> johannes
+>
