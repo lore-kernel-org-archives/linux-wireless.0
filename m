@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:56853 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765Ab2IEIde (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:54862 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759230Ab2IFQte (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 04:33:34 -0400
-Message-ID: <50470E54.6030801@blackshift.org> (sfid-20120905_103340_418505_C798D94F)
-Date: Wed, 05 Sep 2012 10:33:24 +0200
-From: Marc Kleine-Budde <mkl@blackshift.org>
+	Thu, 6 Sep 2012 12:49:34 -0400
+Message-ID: <5048D41A.5060906@lwfinger.net> (sfid-20120906_184945_176346_04166BC2)
+Date: Thu, 06 Sep 2012 11:49:30 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-CC: linux-wireless@vger.kernel.org,
+To: Peter Senna Tschudin <peter.senna@gmail.com>
+CC: kernel-janitors@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: fix votage setting for RT3572/RT3592
-References: <1346019997-14487-1-git-send-email-mkl@blackshift.org> <CAOZOX0VBUZzGYnAM1O4Do7VyskpjXUE5ewW=qtW7JsbKJtLAMQ@mail.gmail.com>
-In-Reply-To: <CAOZOX0VBUZzGYnAM1O4Do7VyskpjXUE5ewW=qtW7JsbKJtLAMQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 9/10] drivers/net/wireless/rtlwifi/rtl8192de/phy.c: removes
+ unnecessary semicolon
+References: <1346947757-10481-1-git-send-email-peter.senna@gmail.com> <1346947757-10481-10-git-send-email-peter.senna@gmail.com>
+In-Reply-To: <1346947757-10481-10-git-send-email-peter.senna@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/27/2012 10:19 AM, Ivo Van Doorn wrote:
-> On Mon, Aug 27, 2012 at 12:26 AM, Marc Kleine-Budde <mkl@blackshift.org> wrote:
->> According to the vendor driver v2.6.0.1, during the rf register init the SRAM
->> voltage should be increased to 1.35V and after 1ms decreased back to 1.2V. This
->> patch adds the field setting of LDO_CFG0_LDO_CORE_VLEVEL accordingly.
->>
->> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
->> Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
-> 
-> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+On 09/06/2012 11:09 AM, Peter Senna Tschudin wrote:
+> From: Peter Senna Tschudin <peter.senna@gmail.com>
+>
+> removes unnecessary semicolon
+>
+> Found by Coccinelle: http://coccinelle.lip6.fr/
+>
+> Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff -u -p a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> @@ -1314,7 +1314,7 @@ static void _rtl92d_phy_restore_rf_env(s
+>   	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
+>
+>   	RT_TRACE(rtlpriv, COMP_RF, DBG_LOUD, "=====>\n");
+> -	/*----Restore RFENV control type----*/ ;
+> +	/*----Restore RFENV control type----*/
+>   	switch (rfpath) {
+>   	case RF90_PATH_A:
+>   	case RF90_PATH_C:
+>
+>
 
-Ping. Is someone taking care of this patch?
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Marc
+Thanks,
 
-> 
->> ---
->> Hello,
->>
->> I don't have the hardware to test, just stumbled over this while hacking on the
->> rt3593.
->>
->> regards,  Marc
->>
->>  drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index cb8c2ac..b93516d 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -4089,6 +4089,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->>                 rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
->>                 msleep(1);
->>                 rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
->> +               rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
->>                 rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
->>                 rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
->>         }
->> --
->> 1.7.10
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Larry
 
