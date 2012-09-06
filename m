@@ -1,118 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-3.exch022.serverdata.net ([206.225.164.186]:59122
-	"EHLO HUB022-nj-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750803Ab2IEEpg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 00:45:36 -0400
-Message-ID: <5046D8E9.3050505@posedge.com> (sfid-20120905_064604_260904_43D995BE)
-Date: Wed, 5 Sep 2012 10:15:29 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+Received: from mga02.intel.com ([134.134.136.20]:24706 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758537Ab2IFQRl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Sep 2012 12:17:41 -0400
+Message-ID: <5048CCA7.4010604@linux.intel.com> (sfid-20120906_181744_613116_38F932C5)
+Date: Thu, 06 Sep 2012 18:17:43 +0200
+From: Eric Lapuyade <eric.lapuyade@linux.intel.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [RFC] cfg80211: VHT regulatory
-References: <50457491.9020604@posedge.com> <1346747134.3737.10.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1346747134.3737.10.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
+CC: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	sameo@linux.intel.com, eric.lapuyade@intel.com
+Subject: Re: [linux-nfc] [PATCH 2/2] NFC: Correct outgoing frame before requeueing
+References: <1346926937-4968-1-git-send-email-waldemar.rymarkiewicz@tieto.com> <1346926937-4968-2-git-send-email-waldemar.rymarkiewicz@tieto.com>
+In-Reply-To: <1346926937-4968-2-git-send-email-waldemar.rymarkiewicz@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/04/2012 01:55 PM, Johannes Berg wrote:
-> On Tue, 2012-09-04 at 08:55 +0530, Mahesh Palivela wrote:
->>    net/wireless/reg.c     |  104
->> ++++++++++++++++++++++++++++++++++++++++++++++++
->
-> Even for an RFC patch it'd be nice to not mangle it :)
->
+On 09/06/2012 12:22 PM, Waldemar Rymarkiewicz wrote:
+> Purge data added by lower layers (len and crc) in the head and tail of the frame
+> during initial send. Now, the frame is correct to be resent.
+> 
+> Signed-off-by: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
+> ---
+>  net/nfc/hci/shdlc.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
+> index 8a5f034..30e353e 100644
+> --- a/net/nfc/hci/shdlc.c
+> +++ b/net/nfc/hci/shdlc.c
+> @@ -241,8 +241,9 @@ static void nfc_shdlc_requeue_ack_pending(struct nfc_shdlc *shdlc)
+>  	pr_debug("ns reset to %d\n", shdlc->dnr);
+>  
+>  	while ((skb = skb_dequeue_tail(&shdlc->ack_pending_q))) {
+> -		skb_pull(skb, 2);	/* remove len+control */
+> -		skb_trim(skb, skb->len - 2);	/* remove crc */
+> +		/* remove client head + shdlc control field */
+> +		skb_pull(skb, shdlc->client_headroom + 1);
+> +		skb_trim(skb, skb->len - shdlc->client_tailroom);
+>  		skb_queue_head(&shdlc->send_q, skb);
+>  	}
+>  	shdlc->ns = shdlc->dnr;
+> 
 
-My email text editor issue. wrapping more than 80 char.
+Hi Waldemar,
 
->> + * @center_freq2: center frequency of 2 nd frequency segment
->
-> I'd add a note here that the 2nd is only used for 80+80
->
+This patch would work for PN544, but it makes the assumption that the
+driver will always insert/append exactly client_headroom/client_tailroom
+bytes when xmit is called. This is not specified nor enforced so it may
+be a little dangerous.
 
-Sure
+To correct that, we can :
+- either specify that the driver xmit MUST NOT modify skb. We then let
+it remove those len and crc before returning from xmit. This is the most
+logical since only the driver really knows what it's doing.
+- or specify that the driver head/tailroom request MUST BE the exact
+number of bytes added to the skb by xmit.
 
->> + * @prim_chan_freq: primary channel frequency
->
-> You said you wanted to change it to be like the standard, that's not how
-> it works though, the standard says (copying from your email)
->
-> dot11CurrentPrimaryChannel
->         Denotes the location of the primary 20 MHz channel.
->         Valid range is 1 to 200.
->
+Samuel, what do you think?
 
- From that number we derive freq in kHZ. Even center freq also mentioned 
-as number only. we need to use formula to derive freq in kHZ. Thought 
-better hostapd convert numbers to freq value.
+Eric
 
->> +	left_end_freq -= MHZ_TO_KHZ(10);
->> +	right_end_freq -= MHZ_TO_KHZ(10);
->
-> Hmm? Shouldn't you add 10 MHz to the lower end, if anything?
->
 
-Nope. For example 80 MHz BW, take channel 36, 40, 44 and 48. Center freq 
-value is chan 42. so left end will be chan 34 and right end will be chan 
-50. so I am subtracting 10MHz on both ends to get chan 36 and 48
-Hope I made it clear.
-
->> +	/* find out all possible secondary channels */
->> +	while (left_end_freq < right_end_freq) {
->> +		chan = ieee80211_get_channel(wiphy, left_end_freq);
->
-> Overall I'm not sure I'd go to the channel structs for this function at
-> all though, I'd rather go to the regulatory definition, I think that
-> would make more sense.
->
-> OTOH, this may be needed to keep the ability for the driver to disable
-> certain channels etc.
->
->> +	const struct ieee80211_reg_rule *reg_rule = NULL;
->> +	const struct ieee80211_freq_range *freq_range = NULL;
->
-> Don't initialize to values you don't need.
->
-
-Sure, will remove inits.
-
->> +	case IEEE80211_CHAN_WIDTH_80P80MHZ:
->> +		desired_bw_khz = MHZ_TO_KHZ(160);
->
-> This is not true at all.
->
-
-ok, will change to 80 MHz
-
->> +		break;
->> +	}
->
-> Missing a default case with a warning/error return?
->
-
-ok, will add default.
-
->> +	r = freq_reg_info_regd(wiphy,
->> +			       chan_config->prim_chan_freq,
->> +			       desired_bw_khz,
->> +			       &reg_rule,
->> +			       regd);
->> +
->> +	if (r) {
->> +		REG_DBG_PRINT("Disabling freq %d MHz as custom "
->> +			      "regd has no rule that fits a %d MHz "
->> +			      "wide channel\n",
->> +			      chan_config->prim_chan_freq,
->> +			      KHZ_TO_MHZ(desired_bw_khz));
->
-> That's not a good message in this context now. Clearly it came from the
-> channel flag settings, but now we don't do that so ...
-
-OK. I will modify REG_DBG_PRINT()
-
->
-> johannes
->
