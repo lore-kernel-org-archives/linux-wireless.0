@@ -1,73 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19496 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751645Ab2I0Jyz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 05:54:55 -0400
-Date: Thu, 27 Sep 2012 11:54:51 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@lists.01.org>
-Subject: [GIT] [3.7] 2nd NFC pull request
-Message-ID: <20120927095451.GA21047@sortiz-mobl> (sfid-20120927_115458_722097_02902BE1)
+Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:60897
+	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751858Ab2IFDox (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Sep 2012 23:44:53 -0400
+Message-ID: <50481C2E.5040303@posedge.com> (sfid-20120906_054456_909883_E24AA4D8)
+Date: Thu, 6 Sep 2012 09:14:46 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [RFC v2] cfg80211: VHT regulatory
+References: <5046FB3D.6090803@posedge.com> <1346852356.4364.9.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1346852356.4364.9.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On 09/05/2012 07:09 PM, Johannes Berg wrote:
+> On Wed, 2012-09-05 at 12:41 +0530, Mahesh Palivela wrote:
+>
+>> + * @prim_chan_freq: primary channel frequency
+>
+> I still don't like this as a frequency, I think it makes a lot more
+> sense to stick to how the standard does it.
+>
 
-This is my 2nd pull NFC pull request for 3.7. It includes your build fix and
-also a couple of 3.6 potential material. I just assumed it would be too late
-for them to make it to 3.6 so I queued them here.
-Please let me know if there is still time for 3.6 fixes.
+ From spec:
 
-With this pull request we have:
+Channel center frequency [MHz]
+= Channel starting frequency + 5 * dot11CurrentChannelCenterFrequencyIndex
 
-- A couple of wrong context sleep fixes.
-- An LLCP rwlock intizialisation fix.
-- A missing mutex unlocking for pn533.
-- LLCP raw sockets support. This is going to be used for NFC sniffing.
-- A build fix for llc_shdlc. It fixes a build error triggered by code that's
-  living in wireless-next.
+Primary 20 MHz channel center frequency [MHz]
+= Channel starting frequency + 5 * dot11CurrentPrimaryChannel
 
-Thanks in advance for pulling them in.
+The channel starting frequency is defined as dot11ChannelStartingFactor 
+× 500 kHz. If a channel center frequency is 5.000 GHz, it shall be 
+indicated by dot11ChannelStartingFactor = 8000 and
+dot11CurrentPrimaryChannel = 200
 
-The following changes since commit 944f8a1a6f5ff8b503f3544811d0aa4ac27dd2aa:
+end spec:
 
-  ath5k: add missing breaks in ath5k_hw_set_spur_mitigation_filter (2012-09-25 15:57:44 -0400)
+So spec defined center freq index and prim channel numbers. From those 
+we compute actual freq value. I though push arithmetic part to apps.
+If we move to represent as numbers then will change types from u16 to 
+u8. Let me know.
 
-are available in the git repository at:
+>> +	if (center_freq == 0 || bw_khz == 0)
+>> +		return false;
+>
+> Can that actually happen?
+>
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git tags/nfc-next-3.7-2
+just a defensive check. I can remove it, if redundant
 
-for you to fetch changes up to 50b78b2a6500d0e97c204c1b6c51df8c17358bbe:
+>> +	// get chan BW from config
+>
+> Please don't use C99-style comments.
+>
 
-  NFC: Fix sleeping in atomic when releasing socket (2012-09-27 10:52:22 +0200)
+Sure. will change it.
 
-John W. Linville (1):
-      NFC: Add dummy nfc_llc_shdlc_register definition
+>> +	r = freq_reg_info_regd(wiphy,
+>> +			       chan_config->prim_chan_freq,
+>> +			       desired_bw_khz,
+>
+> This is wrong, I think? We won't use 40/80/160 MHz around the primary
+> channel frequency, we use it around the center_freq1/2.
+>
 
-Szymon Janc (4):
-      NFC: Use dynamic initialization for rwlocks
-      NFC: Fix missing mutex unlock in pn533_send_cmd_frame_async
-      NFC: Fix sleeping in invalid context when netlink socket is closed
-      NFC: Fix sleeping in atomic when releasing socket
+This is to find the regulatory rule only. Not checking desired BW around 
+prim channel. center freq chan 42 of 36, 40, 44 and 48 for 80 MHz BW may 
+not be in list of freq values in reg rule.
 
-Thierry Escande (1):
-      NFC: LLCP raw socket support
+>> +	ret = reg_sec_chans_permitted(wiphy,
+>> +				      chan_config->center_freq1,
+>> +				      desired_bw_khz);
+>
+> This seems better, but is missing the bandwidth check?
 
- drivers/nfc/pn533.c     |   15 ++++----
- include/linux/nfc.h     |   11 ++++++
- net/nfc/hci/llc.h       |    8 +++++
- net/nfc/llcp/commands.c |    2 ++
- net/nfc/llcp/llcp.c     |   60 +++++++++++++++++++++++++++----
- net/nfc/llcp/llcp.h     |    3 ++
- net/nfc/llcp/sock.c     |   90 ++++++++++++++++++++++++++++++++++++++++++++---
- net/nfc/netlink.c       |   46 ++++++++++++++++++++----
- 8 files changed, 210 insertions(+), 25 deletions(-)
+bandwidths are checked in reg_chan_use_permitted. reg rule decides it right?
 
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+>
+> johannes
+>
