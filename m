@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:37571 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757953Ab2IYSAz (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:54760 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab2IFVRC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 14:00:55 -0400
-Received: by weyt9 with SMTP id t9so1068313wey.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2012 11:00:53 -0700 (PDT)
+	Thu, 6 Sep 2012 17:17:02 -0400
+Received: by obbuo13 with SMTP id uo13so3468562obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 14:17:01 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: kerolasa@gmail.com
-In-Reply-To: <5061B0B5.3040103@lwfinger.net>
-References: <CAG27Bk3tuw+P34btGic9pKwof3xsDw=dBpm-VEgv-RxN-BgVaQ@mail.gmail.com>
-	<5061B0B5.3040103@lwfinger.net>
-Date: Tue, 25 Sep 2012 19:00:53 +0100
-Message-ID: <CAG27Bk21XrQ_E=VFmDZUPYFkg7o5TN=B8B5W3==s4=mGguFxYg@mail.gmail.com> (sfid-20120925_200059_120912_EA853A83)
-Subject: Re: rtl8192ce, system freeze and bios reset
-From: Sami Kerola <kerolasa@iki.fi>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <1346946070.5469.23.camel@jlt4.sipsolutions.net>
+References: <1346865837-32265-1-git-send-email-eliad@wizery.com>
+	<1346865837-32265-3-git-send-email-eliad@wizery.com>
+	<1346946070.5469.23.camel@jlt4.sipsolutions.net>
+Date: Fri, 7 Sep 2012 00:17:01 +0300
+Message-ID: <CAB3XZEcMkz4Fu-JDmCaS5y6Zy-E6ZP0V9KhSu_Hphp1fSNbfjQ@mail.gmail.com> (sfid-20120906_231707_411510_DF42699F)
+Subject: Re: [PATCH 2/2] mac80211: use call_rcu() on sta deletion
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 25, 2012 at 2:25 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-Hi Larry et.al.,
-
-> As I do not have a Toshiba laptop, I have no idea what the
-> change in BIOS setting might have done.
-
-All I know it happen every time, so if someone has any idea how
-to debug what is going on proposals are welcome.
-
-> I doubt that adding the rtl8192cfwU_B.bin firmware to your
-> system made any difference.  The device that needs that
-> firmware is a B-cut RTL8188CE, and the code to drive it has
-> been submitted to wireless-testing, but not yet merged.  I
-> expect that it will be in kernel 3.7.  Kernel 3.6-rc7 from
-> mainline contains code that detects the B-cut device and logs a
-> warning, but there are no other changes.
+On Thu, Sep 6, 2012 at 6:41 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2012-09-05 at 20:23 +0300, Eliad Peller wrote:
 >
-> The output of the dmesg command will say what firmware has been
-> loaded.
+>> +++ b/net/mac80211/iface.c
+>> @@ -774,6 +774,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+>>                * frames at this very time on another CPU.
+>>                */
+>>               synchronize_rcu();
+>> +
+>> +             /* flush any remaining cleanup work */
+>> +             flush_workqueue(local->workqueue);
+>
+> I have a feeling we need rcu_barrier() here instead of synchronize_rcu()
+> now to guarantee that all the potentially pending call_rcu() functions
+> from the sta_info_flush() above have actually completed and queued the
+> work items that we want to flush here. Right? That's a bit unfortunate,
+> but I guess the best way of handling it and ifdown should be rare anyway
+> compared to everything else.
+>
+i wrongly assumed synchronize_rcu() takes care of call_rcu() callbacks
+as well. thanks for clarifying this.
 
-Well, I had no idea about any firmware update before I compiled
-Linus git
+> I think it'd also be good to make the comment more verbose and explain
+> which cleanup work.
+>
+sure.
 
-commit e5e77cf9f9a275083f9a365a20d956fa8a67803e
+>> +static void free_sta_work(struct work_struct *wk)
+>> +{
+>> +     struct sta_info *sta = container_of(wk, struct sta_info, free_sta_wk);
+>> +     int ac, i;
+>> +     struct tid_ampdu_tx *tid_tx;
+>> +     struct ieee80211_sub_if_data *sdata = sta->sdata;
+>> +     struct ieee80211_local *local = sdata->local;
+>> +
+>> +     /*
+>> +      * At this point, after we wait for an RCU grace period,
+>> +      * neither mac80211 nor the driver can reference this
+>> +      * sta struct any more except by still existing timers
+>> +      * associated with this station that we clean up below.
+>> +      */
+>
+> Should probably rewrite the comment a bit to indicate that we have in
+> fact waited since we get called via call_rcu().
+>
+sure.
 
-and after boot the driver was more broken.  With rmmod & modprobe
-I realized rtl8192cfwU_B.bin was expected, so I added it to
-/usr/lib/firmware/ manually from
+>> +     cancel_work_sync(&sta->drv_unblock_wk);
+>
+> This will deadlock now, but cancel_work() will be safe without the sync
+> since the workqueue is single-threaded.
+>
+i guess that because we run on an ordered workqueue we can't really
+deadlock, but sure, i'll change it.
 
-http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob_plain;f=rtlwifi/rtl8192cfwU_B.bin;hb=HEAD
-
-That made dmesg telling insmod is happy...
-
-kerolasa@kerolasa-home ~ dmesg | grep rtl
-[    7.901371] rtl8192ce: ****** This B_CUT device may not work with
-kernels 3.6 and earlier
-[    7.901383] rtl8192ce: Using firmware rtlwifi/rtl8192cfwU_B.bin
-[    8.104591] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-[    8.105394] rtlwifi: wireless switch is on
-
-...and quite frankly so am I, even tough this is strange way to
-fix peculiar problem.
-
--- 
-   Sami Kerola
-   http://www.iki.fi/kerolasa/
+thanks for the review.
+Eliad.
