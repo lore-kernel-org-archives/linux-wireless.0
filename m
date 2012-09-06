@@ -1,34 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:43977 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752001Ab2IERXv (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:23203 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932329Ab2IFRIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 13:23:51 -0400
-Received: by wicr5 with SMTP id r5so5700208wic.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 10:23:50 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/2] make roaming a bit faster 
-Date: Wed,  5 Sep 2012 20:23:55 +0300
-Message-Id: <1346865837-32265-1-git-send-email-eliad@wizery.com> (sfid-20120905_192355_427159_296B8511)
+	Thu, 6 Sep 2012 13:08:19 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv2 2/2] mac80211: reply to AUTH frame with a DEAUTH if sta allocation fails
+Date: Thu,  6 Sep 2012 19:07:55 +0200
+Message-Id: <1346951275-32081-2-git-send-email-ordex@autistici.org> (sfid-20120906_190825_608451_5B528E08)
+In-Reply-To: <1346951275-32081-1-git-send-email-ordex@autistici.org>
+References: <1346951275-32081-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The use of synchronize_rcu during roaming adds
-a significant delay. try minimizing it by replacing
-these calls with other alternatives.
+Whenever a host gets an AUTH frame it first allocates a new station and then
+replies with another AUTH frame. However, if sta allocations fails the host
+should send a DEAUTH frame instead to tell the other end that something went
+wrong
 
-Eliad Peller (2):
-  mac80211: use synchronize_net() on key destroying
-  mac80211: use call_rcu() on sta deletion
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
 
- net/mac80211/iface.c    |    5 ++
- net/mac80211/key.c      |    2 +-
- net/mac80211/sta_info.c |  117 ++++++++++++++++++++++++++---------------------
- net/mac80211/sta_info.h |    2 +
- 4 files changed, 73 insertions(+), 53 deletions(-)
+v2:
+- noop
 
+ net/mac80211/ibss.c | 33 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index a9d9328..7c08251 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -332,11 +332,27 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	return ieee80211_ibss_finish_sta(sta, auth);
+ }
+ 
++static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
++					  struct ieee80211_mgmt *mgmt,
++					  size_t len)
++{
++	u16 reason = le16_to_cpu(mgmt->u.deauth.reason_code);
++
++	if (len < IEEE80211_DEAUTH_FRAME_LEN)
++		return;
++
++	ibss_dbg(sdata, "RX DeAuth SA=%pM DA=%pM BSSID=%pM (reason: %d)\n",
++		 mgmt->sa, mgmt->da, mgmt->bssid, reason);
++	sta_info_destroy_addr(sdata, mgmt->sa);
++}
++
+ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+ 					struct ieee80211_mgmt *mgmt,
+ 					size_t len)
+ {
+ 	u16 auth_alg, auth_transaction;
++	struct sta_info *sta;
++	u8 deauth_frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 
+ 	lockdep_assert_held(&sdata->u.ibss.mtx);
+ 
+@@ -352,10 +368,22 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+ 		 "RX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=%d)\n",
+ 		 mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
+ 	sta_info_destroy_addr(sdata, mgmt->sa);
+-	ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
++	sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
+ 	rcu_read_unlock();
+ 
+ 	/*
++	 * if we have any problem in allocating the new station, we reply with a
++	 * DEAUTH frame to tell the other end that we had a problem
++	 */
++	if (!sta) {
++		ieee80211_send_deauth_disassoc(sdata, sdata->u.ibss.bssid,
++					       IEEE80211_STYPE_DEAUTH,
++					       WLAN_REASON_UNSPECIFIED, true,
++					       deauth_frame_buf);
++		return;
++	}
++
++	/*
+ 	 * IEEE 802.11 standard does not require authentication in IBSS
+ 	 * networks and most implementations do not seem to use it.
+ 	 * However, try to reply to authentication attempts if someone
+@@ -902,6 +930,9 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	case IEEE80211_STYPE_AUTH:
+ 		ieee80211_rx_mgmt_auth_ibss(sdata, mgmt, skb->len);
+ 		break;
++	case IEEE80211_STYPE_DEAUTH:
++		ieee80211_rx_mgmt_deauth_ibss(sdata, mgmt, skb->len);
++		break;
+ 	}
+ 
+  mgmt_out:
 -- 
-1.7.6.401.g6a319
+1.7.12
 
