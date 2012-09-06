@@ -1,136 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:52138 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754836Ab2I0W2o (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:46539 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645Ab2IFOZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 18:28:44 -0400
-Message-ID: <5064D318.6090705@lwfinger.net> (sfid-20120928_002855_186928_4F93DA05)
-Date: Thu, 27 Sep 2012 17:28:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 6 Sep 2012 10:25:36 -0400
+Received: by wibhi8 with SMTP id hi8so487909wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 07:25:35 -0700 (PDT)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: use %*ph[C] to dump small buffers
-References: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com> <1348677946.15175.8.camel@joe-AO722>
-In-Reply-To: <1348677946.15175.8.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20120822201930.GC14913@tuxdriver.com>
+References: <20120822201930.GC14913@tuxdriver.com>
+Date: Thu, 6 Sep 2012 10:25:33 -0400
+Message-ID: <CAJdJm_Px_see=f1W09BeV+F7qP-=U6CPkk_NUU5KCtjvxLuYqQ@mail.gmail.com> (sfid-20120906_162541_560011_9791EDE0)
+Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012 (Barcelona!)
+From: Anderson Lizardo <anderson.lizardo@openbossa.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/26/2012 11:45 AM, Joe Perches wrote:
-> On Wed, 2012-09-26 at 16:57 +0300, Andy Shevchenko wrote:
->> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->
-> Hi Andy.
->
-> (adding Larry and Chaoming to cc's)
->
-> Please use scripts/get_maintainer.pl on your patches to
-> see who maintains these files so you can cc them.
->
-> One comment below, it looks like a possible endian bug.
-> (not in your patch)
->
->> ---
->>   drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
->>   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
->>   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
->>   3 files changed, 6 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
->> index 5b4b4d4..6ba9f80 100644
->> --- a/drivers/net/wireless/rtlwifi/cam.c
->> +++ b/drivers/net/wireless/rtlwifi/cam.c
->> @@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
->>   	u32 target_content = 0;
->>   	u8 entry_i;
->>
->> -	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
->> -		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
->> -		 key_cont_128[0], key_cont_128[1],
->> -		 key_cont_128[2], key_cont_128[3],
->> -		 key_cont_128[4], key_cont_128[5]);
->> +	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
->> +			6, key_cont_128);
->>
->>   	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
->>   		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
->> index 86d73b3..932780d 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
->> @@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
->>   				     (ratr_index << 28);
->>   	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
->>   	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
->> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
->> -		 ratr_index, ratr_bitmap,
->> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
->> -		 rate_mask[4]);
->> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
->> +		 ratr_index, ratr_bitmap, 5, rate_mask);
->>   	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
->>
->>   	if (macid != 0)
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
->> index 4bbb711..7554501 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
->> @@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
->>   				      ratr_index << 28);
->>   	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
->>   	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
->> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
->> -		 ratr_index, ratr_bitmap,
->> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
->> -		 rate_mask[4]);
->> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
->> +		 ratr_index, ratr_bitmap, 5, rate_mask);
->>   	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
->>   }
->>
->
-> rate_mask uses:
->
-> 	u32 ratr_bitmap = (u32) mac->basic_rates;
-> ...
-> 	u8 rate_mask[5];
-> ...
-> 	[sets ratr_bitmap as u32]
-> ...
-> 	*(u32 *)&rate_mask = ((ratr_bitmap & 0x0fffffff) |
-> 				      ratr_index << 28);
-> ...
-> 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
->
-> Looks like a possible endian misuse to me.
+Hi John,
 
-After a second look at the code, I don't think this is an endian issue; however, 
-I am proposing the following changes to remove any doubt:
+On Wed, Aug 22, 2012 at 4:19 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> All,
+>
+> The time for our meeting in Barcelona is drawing near.  I think it
+> is time that we start nailing-down the agenda.
+>
+> We have one room on the first day, and three rooms on the second day.
+> I figure that the Bluetooth and 802.11 groups should each get a
+> break-out room for their own in-depth discussons on the second day and
+> the third room can be used for more general topics and presentations.
+>
+> With that said, there are still a number of slots available for
+> presentations or discussion topics.  This is especially true for the
+> 802.11 group...  Please step-up with some suggested topics!
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1964,8 +1965,9 @@ static void rtl92ce_update_hal_rate_mask
+If there are still available slots, we would like to present and
+discuss our current proposal for a Bluetooth Broadcaster/Observer API.
+These are new GAP Operational Modes for connectionless communication
+available since Core spec 4.0 (it is specified for LE channel, but the
+plan is to reuse the same API for broadcasting and observing data over
+EIR on BR/EDR channel as well).
 
-         RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
-                  "ratr_bitmap :%x\n", ratr_bitmap);
--       *(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
--                                    (ratr_index << 28);
-+       for (i = 0; i < 3; i++)
-+               rate_mask[i] = ratr_bitmap & (0xff << (i * 4));
-+       rate_mask[3] = (ratr_bitmap & 0x0f000000) | (ratr_index << 28);
-         rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
-         RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
-                  "Rate_index:%x, ratr_val:%x, %*phC\n",
+Title: Bluetooth Broadcaster/Observer API
+Speakers: Anderson Lizardo, Jefferson Delfes
 
-The downstream routine uses this info as an array of u8, thus it is OK. A proper 
-patch will be sent later. At least we avoid that ugly cast.
+The relevant patch series:
 
-Larry
+http://thread.gmane.org/gmane.linux.bluez.kernel/28228 (kernel space
+management API)
+http://thread.gmane.org/gmane.linux.bluez.kernel/28798 (userspace API in BlueZ)
 
-
+Best Regards,
+-- 
+Anderson Lizardo
+Instituto Nokia de Tecnologia - INdT
+Manaus - Brazil
