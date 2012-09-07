@@ -1,108 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:46613 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756345Ab2IXSq3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 14:46:29 -0400
-Date: Mon, 24 Sep 2012 15:46:22 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2012-09-18
-Message-ID: <20120924184622.GA7922@joana> (sfid-20120924_204651_035437_5989722D)
-References: <20120919013113.GG24689@joana>
- <CAB=NE6XKNSMeS3_uzcGsGBhcm6ZKtJwJ=DdAq_DoWmKTXQvV=Q@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:19602 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752954Ab2IGNBX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 09:01:23 -0400
+Date: Fri, 7 Sep 2012 08:59:58 -0400
+From: Andy Gospodarek <gospo@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	backports@vger.kernel.org
+Subject: Re: [PATCH] compat: drop const to fix compiler warnings
+Message-ID: <20120907125958.GD3638@quad.redhat.com> (sfid-20120907_150137_725659_9F998445)
+References: <1347004574-80506-1-git-send-email-nbd@openwrt.org>
+ <CAB=NE6V6vAdsVQyjKyaMYnPRQdJLc+Gt=nqiS5cN9mWU3vz7aQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAB=NE6XKNSMeS3_uzcGsGBhcm6ZKtJwJ=DdAq_DoWmKTXQvV=Q@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6V6vAdsVQyjKyaMYnPRQdJLc+Gt=nqiS5cN9mWU3vz7aQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Luis R. Rodriguez <mcgrof@do-not-panic.com> [2012-09-21 18:06:42 -0700]:
+On Fri, Sep 07, 2012 at 02:04:37AM -0700, Luis R. Rodriguez wrote:
+> On Fri, Sep 7, 2012 at 12:56 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> > When calling pci_find_capability and pci_read_config_word, struct pci_dev
+> > needs to be passed without const.
+> 
+> Thanks! I guess because at certain kernel version pci_dev was const ?
+> 
 
-> On Tue, Sep 18, 2012 at 6:31 PM, Gustavo Padovan <gustavo@padovan.org> wrote:
-> 
-> > Johan Hedberg (2):
-> >       Bluetooth: mgmt: Implement support for passkey notification
-> 
-> Too late now... but why did we allow this a stable fix? I get its a
-> feature that is important and likely overlooked / someone had a brain
-> fart, but from what I gather this is not on v3.5.4 and yet may make it
-> to v3.5.5. At least for backporting this was a bitch:
-> 
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3290:52:
-> error: dereferencing pointer to incomplete type
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3294:6:
-> error: ‘struct hci_conn’ has no member named ‘passkey_notify’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3294:25:
-> error: dereferencing pointer to incomplete type
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3295:6:
-> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3298:3:
-> error: implicit declaration of function ‘mgmt_user_passkey_notify’
-> [-Werror=implicit-function-declaration]
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3299:27:
-> error: ‘struct hci_conn’ has no member named ‘passkey_notify’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3300:11:
-> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:
-> In function ‘hci_keypress_notify_evt’:
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3310:52:
-> error: dereferencing pointer to incomplete type
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3314:12:
-> error: dereferencing pointer to incomplete type
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3315:7:
-> error: ‘HCI_KEYPRESS_STARTED’ undeclared (first use in this function)
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3315:7:
-> note: each undeclared identifier is reported only once for each
-> function it appears in
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3316:7:
-> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3319:7:
-> error: ‘HCI_KEYPRESS_ENTERED’ undeclared (first use in this function)
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3320:7:
-> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3323:7:
-> error: ‘HCI_KEYPRESS_ERASED’ undeclared (first use in this function)
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3324:7:
-> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3327:7:
-> error: ‘HCI_KEYPRESS_CLEARED’ undeclared (first use in this function)
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3328:7:
-> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3331:7:
-> error: ‘HCI_KEYPRESS_COMPLETED’ undeclared (first use in this
-> function)
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3337:27:
-> error: ‘struct hci_conn’ has no member named ‘passkey_notify’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3338:11:
-> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:
-> In function ‘hci_event_packet’:
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3701:7:
-> error: ‘HCI_EV_USER_PASSKEY_NOTIFY’ undeclared (first use in this
-> function)
-> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3705:7:
-> error: ‘HCI_EV_KEYPRESS_NOTIFY’ undeclared (first use in this
-> function)
-> 
-> I'd much prefer to see things like these identified as 'important' but
-> not 'fuck, this fixes that crash'. The fact that kernel maintainers
-> may be anal about these sorts of patches is *good* for many reasons
-> and figuring out a way to categorize, identify and allow users to reap
-> benefits of backporting suck fixes / cherry picking a full solution is
-> what something that should not interfere and hopefully be transparent
-> to Linux upstream development.
-> 
-> Here's one way I dealt with these type of patches:
-> 
-> https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/additional-patches
-> 
-> If you look at the patch 'Bluetooth: mgmt: Implement support for
-> passkey' its  a clear "feature" implementation, not a fucking fix.
-
-Yes, this patch is wrongly marked as stable, it is not even going to 3.5. I'm
-just removing the tag from it and resending the pull request to John.
-
-	Gustavo
+Similar issues exist with ethtool_ops, but it's not a huge deal, imo.
