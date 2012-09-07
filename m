@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:43309 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754480Ab2I0PKM (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:35794 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136Ab2IGGyD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 11:10:12 -0400
-Message-ID: <50646C50.70703@lwfinger.net> (sfid-20120927_171026_043628_7DA9FBD7)
-Date: Thu, 27 Sep 2012 10:10:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 7 Sep 2012 02:54:03 -0400
+Received: by vbbff1 with SMTP id ff1so2681482vbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 23:54:02 -0700 (PDT)
 MIME-Version: 1.0
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-CC: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: use %*ph[C] to dump small buffers
-References: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20120906224448.GA16676@khazad-dum.debian.net>
+References: <5048ADFC.1010708@sonymobile.com>
+	<20120906224448.GA16676@khazad-dum.debian.net>
+Date: Fri, 7 Sep 2012 08:54:02 +0200
+Message-ID: <CAMJBoFMd2sLEScY3j2-wsWQh3Mv_nArPC904dzJ+j-16+pdkgQ@mail.gmail.com> (sfid-20120907_085419_412505_9AEB3D7E)
+Subject: Re: [PATCH/RFC] rfkill: prevent unnecessary event generation
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Vitaly Wool <vitaly.wool@sonymobile.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/26/2012 08:57 AM, Andy Shevchenko wrote:
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->   drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
->   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
->   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
->   3 files changed, 6 insertions(+), 13 deletions(-)
+Hi Henrique,
 
-Andy,
+On Fri, Sep 7, 2012 at 12:44 AM, Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
+>
+> On Thu, 06 Sep 2012, Vitaly Wool wrote:
+> > Prevent unnecessary rfkill event generation when the state has
+> > not actually changed. These events have to be delivered to
+> > relevant userspace processes, causing these processes to wake
+> > up and do something while they could as well have slept. This
+> > obviously results in more CPU usage, longer time-to-sleep-again
+> > and therefore higher power consumption.
+>
+> Could this supress the first event when a switch is registered? Would that
+> be a concern?
 
-Thanks for this. I have only one suggestion. I try to include all the drivers 
-affected in the subject line. As this one changes rtl8192ce, and rtl8192cu, I 
-would like to see "rtlwifi: rtl8192ce: rtl8192cu: use ..." as the subject. Other 
-than that, ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+I'm not sure I got your question, but just in case, rfkill is
+initialized to all zeroes so rfkill->state is 0 and on each consequent
+_real_ change there (prev != curr) == true and the event will be
+generated.
 
-Larry
-
->
-> diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-> index 5b4b4d4..6ba9f80 100644
-> --- a/drivers/net/wireless/rtlwifi/cam.c
-> +++ b/drivers/net/wireless/rtlwifi/cam.c
-> @@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
->   	u32 target_content = 0;
->   	u8 entry_i;
->
-> -	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
-> -		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
-> -		 key_cont_128[0], key_cont_128[1],
-> -		 key_cont_128[2], key_cont_128[3],
-> -		 key_cont_128[4], key_cont_128[5]);
-> +	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
-> +			6, key_cont_128);
->
->   	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
->   		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> index 86d73b3..932780d 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> @@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
->   				     (ratr_index << 28);
->   	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
->   	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
-> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
-> -		 ratr_index, ratr_bitmap,
-> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
-> -		 rate_mask[4]);
-> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
-> +		 ratr_index, ratr_bitmap, 5, rate_mask);
->   	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
->
->   	if (macid != 0)
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> index 4bbb711..7554501 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> @@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
->   				      ratr_index << 28);
->   	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
->   	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
-> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
-> -		 ratr_index, ratr_bitmap,
-> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
-> -		 rate_mask[4]);
-> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
-> +		 ratr_index, ratr_bitmap, 5, rate_mask);
->   	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
->   }
->
->
-
+~Vitaly
