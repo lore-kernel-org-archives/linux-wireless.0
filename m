@@ -1,202 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35521 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756997Ab2IJKyZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 06:54:25 -0400
-From: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [RFC] cfg80211/nl80211: Notify connection request failure in AP mode
-Date: Mon, 10 Sep 2012 16:23:28 +0530
-Message-ID: <1347274408-11949-1-git-send-email-c_ppitch@qca.qualcomm.com> (sfid-20120910_125428_185383_C0E0BF88)
+Received: from ebb05.tieto.com ([131.207.168.36]:60290 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753066Ab2IGJIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 05:08:38 -0400
+From: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
+To: <linux-wireless@vger.kernel.org>, <linux-nfc@lists.01.org>,
+	<eric.lapuyade@intel.com>
+CC: <sameo@linux.intel.com>,
+	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
+Subject: [PATCH v2 1/2] NFC: Remove crc generation from shdlc layer
+Date: Fri, 7 Sep 2012 11:08:29 +0200
+Message-ID: <1347008910-11472-1-git-send-email-waldemar.rymarkiewicz@tieto.com> (sfid-20120907_110841_882179_C98F5F4A)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In AP mode, when a station requests connection to an AP and if the
-request is failed for particular reason, userspace is notified about the
-failure through NL80211_CMD_CONN_FAILED command. Reason for the failure
-is sent through the attribute NL80211_ATTR_CONN_FAILED_REASON.
+Checksum is specific for a chip spcification and it varies
+(in size and type) between different hardware. It should be
+handled in the driver then.
 
-Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+Moreover, shdlc spec doesn't mention crc as a part of the frame.
+
+Update pn544_hci driver as well.
+
+Signed-off-by: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
 ---
- include/linux/nl80211.h |   19 +++++++++++++++++++
- include/net/cfg80211.h  |   18 ++++++++++++++++++
- net/wireless/mlme.c     |   11 +++++++++++
- net/wireless/nl80211.c  |   34 ++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    5 +++++
- 5 files changed, 87 insertions(+)
+ drivers/nfc/pn544_hci.c |   32 ++++++++++++++++++++++++++++++--
+ net/nfc/hci/shdlc.c     |   27 ++-------------------------
+ 2 files changed, 32 insertions(+), 27 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 2f38788..e5bf1ae 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -565,6 +565,11 @@
-  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
-  *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
-  *
-+ * @NL80211_CMD_CONN_FAILED: connection request to an AP failed; used to
-+ *	notify userspace that AP has rejected the connection request from a
-+ *	station, due to particular reason. %NL80211_ATTR_CONN_FAILED_REASON
-+ *	is used for this.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -708,6 +713,8 @@ enum nl80211_commands {
+diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
+index 9458d53..d90aecf 100644
+--- a/drivers/nfc/pn544_hci.c
++++ b/drivers/nfc/pn544_hci.c
+@@ -128,6 +128,8 @@ static struct nfc_hci_gate pn544_gates[] = {
  
- 	NL80211_CMD_CH_SWITCH_NOTIFY,
+ /* Largest headroom needed for outgoing custom commands */
+ #define PN544_CMDS_HEADROOM	2
++#define PN544_FRAME_HEADROOM 1
++#define PN544_FRAME_TAILROOM 2
  
-+	NL80211_CMD_CONN_FAILED,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1251,6 +1258,10 @@ enum nl80211_commands {
-  *	was used to provide the hint. For the different types of
-  *	allowed user regulatory hints see nl80211_user_reg_hint_type.
-  *
-+ * @NL80211_ATTR_CONN_FAILED_REASON: The reason for which AP has rejected
-+ *	the connection request from a station. nl80211_connect_failed_reason
-+ *	enum has different reasons of connection failure.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1506,6 +1517,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_USER_REG_HINT_TYPE,
- 
-+	NL80211_ATTR_CONN_FAILED_REASON,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3023,4 +3036,10 @@ enum nl80211_probe_resp_offload_support_attr {
- 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U =	1<<3,
- };
- 
-+/* AP mode - sta's connection request failed reasons */
-+enum nl80211_connect_failed_reason {
-+	NL80211_CONN_FAIL_MAX_CLIENTS		= 1,
-+	NL80211_CONN_FAIL_BLOCKED_CLIENT	= 2,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3d254e1..94a5bde 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3342,6 +3342,24 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
- void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
- 
- /**
-+ * cfg80211_conn_failed - connection request failed notification
-+ *
-+ * @dev: the netdev
-+ * @mac_addr: the station's address
-+ * @reason: the reason for connection failure
-+ * @gfp: allocation flags
-+ *
-+ * Whenever a station tries to connect to an AP and if the station
-+ * could not connect to the AP for some reason, this function is called.
-+ *
-+ * The reason for connection failure can be any of the value from
-+ * nl80211_connect_failed_reason enum
-+ */
-+void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-+			  enum nl80211_connect_failed_reason reason,
-+			  gfp_t gfp);
-+
-+/**
-  * cfg80211_rx_mgmt - notification of received, unprocessed management frame
-  * @wdev: wireless device receiving the frame
-  * @freq: Frequency on which the frame was received in MHz
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 1cdb1d5..7e3eca5 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -612,6 +612,17 @@ void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
- }
- EXPORT_SYMBOL(cfg80211_del_sta);
- 
-+void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
-+			  enum nl80211_connect_failed_reason reason,
-+			  gfp_t gfp)
-+{
-+	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_conn_failed_event(rdev, dev, mac_addr, reason, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_conn_failed);
-+
- struct cfg80211_mgmt_registration {
- 	struct list_head list;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 97026f3..db06929 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8252,6 +8252,40 @@ void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
- 	nlmsg_free(msg);
+ struct pn544_hci_info {
+ 	struct i2c_client *i2c_dev;
+@@ -576,15 +578,40 @@ static int pn544_hci_ready(struct nfc_shdlc *shdlc)
+ 	return 0;
  }
  
-+void nl80211_send_conn_failed_event(struct cfg80211_registered_device *rdev,
-+				    struct net_device *dev, const u8 *mac_addr,
-+				    enum nl80211_connect_failed_reason reason,
-+				    gfp_t gfp)
++static void pn544_hci_add_len_crc(struct sk_buff *skb)
 +{
-+	struct sk_buff *msg;
-+	void *hdr;
++	u16 crc;
++	int len;
 +
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
++	len = skb->len + 2;
++	*skb_push(skb, 1) = len;
 +
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CONN_FAILED);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr) ||
-+	    nla_put_u32(msg, NL80211_ATTR_CONN_FAILED_REASON, reason))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
++	crc = crc_ccitt(0xffff, skb->data, skb->len);
++	crc = ~crc;
++	*skb_put(skb, 1) = crc & 0xff;
++	*skb_put(skb, 1) = crc >> 8;
 +}
 +
- static bool __nl80211_unexpected_frame(struct net_device *dev, u8 cmd,
- 				       const u8 *addr, gfp_t gfp)
++static void pn544_hci_remove_len_crc(struct sk_buff *skb)
++{
++	skb_pull(skb, PN544_FRAME_HEADROOM);
++	skb_trim(skb, PN544_FRAME_TAILROOM);
++}
++
+ static int pn544_hci_xmit(struct nfc_shdlc *shdlc, struct sk_buff *skb)
  {
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 9f2616f..f615351 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -91,6 +91,11 @@ void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
- 				struct net_device *dev, const u8 *mac_addr,
- 				gfp_t gfp);
+ 	struct pn544_hci_info *info = nfc_shdlc_get_clientdata(shdlc);
+ 	struct i2c_client *client = info->i2c_dev;
++	int r;
  
-+void nl80211_send_conn_failed_event(struct cfg80211_registered_device *rdev,
-+				    struct net_device *dev, const u8 *mac_addr,
-+				    enum nl80211_connect_failed_reason reason,
-+				    gfp_t gfp);
+ 	if (info->hard_fault != 0)
+ 		return info->hard_fault;
+ 
+-	return pn544_hci_i2c_write(client, skb->data, skb->len);
++	pn544_hci_add_len_crc(skb);
++	r = pn544_hci_i2c_write(client, skb->data, skb->len);
++	pn544_hci_remove_len_crc(skb);
 +
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, u32 nlpid,
- 		      int freq, int sig_dbm,
++	return r;
+ }
+ 
+ static int pn544_hci_start_poll(struct nfc_shdlc *shdlc,
+@@ -874,7 +901,8 @@ static int __devinit pn544_hci_probe(struct i2c_client *client,
+ 
+ 	info->shdlc = nfc_shdlc_allocate(&pn544_shdlc_ops,
+ 					 &init_data, protocols,
+-					 PN544_CMDS_HEADROOM, 0,
++					 PN544_FRAME_HEADROOM + PN544_CMDS_HEADROOM,
++					 PN544_FRAME_TAILROOM,
+ 					 PN544_HCI_LLC_MAX_PAYLOAD,
+ 					 dev_name(&client->dev));
+ 	if (!info->shdlc) {
+diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
+index d4fe5e9..8a5f034 100644
+--- a/net/nfc/hci/shdlc.c
++++ b/net/nfc/hci/shdlc.c
+@@ -22,7 +22,6 @@
+ #include <linux/sched.h>
+ #include <linux/export.h>
+ #include <linux/wait.h>
+-#include <linux/crc-ccitt.h>
+ #include <linux/slab.h>
+ #include <linux/skbuff.h>
+ 
+@@ -30,7 +29,6 @@
+ #include <net/nfc/shdlc.h>
+ 
+ #define SHDLC_LLC_HEAD_ROOM	2
+-#define SHDLC_LLC_TAIL_ROOM	2
+ 
+ #define SHDLC_MAX_WINDOW	4
+ #define SHDLC_SREJ_SUPPORT	false
+@@ -94,28 +92,13 @@ static struct sk_buff *nfc_shdlc_alloc_skb(struct nfc_shdlc *shdlc,
+ 	struct sk_buff *skb;
+ 
+ 	skb = alloc_skb(shdlc->client_headroom + SHDLC_LLC_HEAD_ROOM +
+-			shdlc->client_tailroom + SHDLC_LLC_TAIL_ROOM +
+-			payload_len, GFP_KERNEL);
++			shdlc->client_tailroom + payload_len, GFP_KERNEL);
+ 	if (skb)
+ 		skb_reserve(skb, shdlc->client_headroom + SHDLC_LLC_HEAD_ROOM);
+ 
+ 	return skb;
+ }
+ 
+-static void nfc_shdlc_add_len_crc(struct sk_buff *skb)
+-{
+-	u16 crc;
+-	int len;
+-
+-	len = skb->len + 2;
+-	*skb_push(skb, 1) = len;
+-
+-	crc = crc_ccitt(0xffff, skb->data, skb->len);
+-	crc = ~crc;
+-	*skb_put(skb, 1) = crc & 0xff;
+-	*skb_put(skb, 1) = crc >> 8;
+-}
+-
+ /* immediately sends an S frame. */
+ static int nfc_shdlc_send_s_frame(struct nfc_shdlc *shdlc,
+ 				  enum sframe_type sframe_type, int nr)
+@@ -131,8 +114,6 @@ static int nfc_shdlc_send_s_frame(struct nfc_shdlc *shdlc,
+ 
+ 	*skb_push(skb, 1) = SHDLC_CONTROL_HEAD_S | (sframe_type << 3) | nr;
+ 
+-	nfc_shdlc_add_len_crc(skb);
+-
+ 	r = shdlc->ops->xmit(shdlc, skb);
+ 
+ 	kfree_skb(skb);
+@@ -151,8 +132,6 @@ static int nfc_shdlc_send_u_frame(struct nfc_shdlc *shdlc,
+ 
+ 	*skb_push(skb, 1) = SHDLC_CONTROL_HEAD_U | uframe_modifier;
+ 
+-	nfc_shdlc_add_len_crc(skb);
+-
+ 	r = shdlc->ops->xmit(shdlc, skb);
+ 
+ 	kfree_skb(skb);
+@@ -510,8 +489,6 @@ static void nfc_shdlc_handle_send_queue(struct nfc_shdlc *shdlc)
+ 			 shdlc->nr);
+ 	/*	SHDLC_DUMP_SKB("shdlc frame written", skb); */
+ 
+-		nfc_shdlc_add_len_crc(skb);
+-
+ 		r = shdlc->ops->xmit(shdlc, skb);
+ 		if (r < 0) {
+ 			shdlc->hard_fault = r;
+@@ -881,7 +858,7 @@ struct nfc_shdlc *nfc_shdlc_allocate(struct nfc_shdlc_ops *ops,
+ 
+ 	shdlc->hdev = nfc_hci_allocate_device(&shdlc_ops, init_data, protocols,
+ 					      tx_headroom + SHDLC_LLC_HEAD_ROOM,
+-					      tx_tailroom + SHDLC_LLC_TAIL_ROOM,
++					      tx_tailroom,
+ 					      max_link_payload);
+ 	if (shdlc->hdev == NULL)
+ 		goto err_allocdev;
 -- 
-1.7.9.5
+1.7.10
 
