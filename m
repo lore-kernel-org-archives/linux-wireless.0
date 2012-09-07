@@ -1,202 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10479 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250Ab2INHo7 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:42056 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017Ab2IGRFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 03:44:59 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Fri, 7 Sep 2012 13:05:24 -0400
+Received: by eaac11 with SMTP id c11so1002587eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 10:05:23 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH v3] p54: connect to 11w protected networks
+Date: Fri, 7 Sep 2012 19:05:16 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>
+References: <E1TA0re-00059m-CD@debian64.localnet> <1347036664.8913.1.camel@dcbw.foobar.com>
+In-Reply-To: <1347036664.8913.1.camel@dcbw.foobar.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20562.57412.759802.884551@gargle.gargle.HOWL> (sfid-20120914_094504_715840_AB15FC51)
-Date: Fri, 14 Sep 2012 13:14:04 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [RFC 2/8] ath9k: Remove redundant variable assignment
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201209071905.16432.chunkeey@googlemail.com> (sfid-20120907_190528_558094_8570F378)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set main_gaintb and alt_gaintb once instead of zero'ing them
-in every case.
+On Friday 07 September 2012 18:51:04 Dan Williams wrote:
+> On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
+> > Previously, it was not possible to connect
+> > to networks which requires 11w to be supported
+> > by the stations.
+> 
+> If at all possible if we can do this without module parameters, that
+> would be great.
+Hm, just a odd question. How does 11w work with
+TDLS and networks with mandatory 11w. So what
+happens if a station with 11w wants to connect
+to a station without over TDLS? So, do we need
+to have a MFP flag at a per-station level, or
+is it enough if we have it per-vif?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/antenna.c | 51 ++------------------------------
- 1 file changed, 3 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
-index bbcfeb3..eb61c6b 100644
---- a/drivers/net/wireless/ath/ath9k/antenna.c
-+++ b/drivers/net/wireless/ath/ath9k/antenna.c
-@@ -311,6 +311,9 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 					  struct ath_ant_comb *antcomb,
- 					  int alt_ratio)
- {
-+	ant_conf->main_gaintb = 0;
-+	ant_conf->alt_gaintb = 0;
-+
- 	if (ant_conf->div_group == 0) {
- 		/* Adjust the fast_div_bias based on main and alt lna conf */
- 		switch ((ant_conf->main_lna_conf << 4) |
-@@ -360,18 +363,12 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 			ant_conf->alt_lna_conf) {
- 		case 0x01: /* A-B LNA2 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x02: /* A-B LNA1 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x03: /* A-B A+B */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x10: /* LNA2 A-B */
- 			if (!(antcomb->scan) &&
-@@ -379,13 +376,9 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->fast_div_bias = 0x3f;
- 			else
- 				ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x12: /* LNA2 LNA1 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x13: /* LNA2 A+B */
- 			if (!(antcomb->scan) &&
-@@ -393,8 +386,6 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->fast_div_bias = 0x3f;
- 			else
- 				ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x20: /* LNA1 A-B */
- 			if (!(antcomb->scan) &&
-@@ -402,13 +393,9 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->fast_div_bias = 0x3f;
- 			else
- 				ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x21: /* LNA1 LNA2 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x23: /* LNA1 A+B */
- 			if (!(antcomb->scan) &&
-@@ -416,23 +403,15 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->fast_div_bias = 0x3f;
- 			else
- 				ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x30: /* A+B A-B */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x31: /* A+B LNA2 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x32: /* A+B LNA1 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		default:
- 			break;
-@@ -443,18 +422,12 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->alt_lna_conf) {
- 		case 0x01: /* A-B LNA2 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x02: /* A-B LNA1 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x03: /* A-B A+B */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x10: /* LNA2 A-B */
- 			if (!(antcomb->scan) &&
-@@ -462,13 +435,9 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->fast_div_bias = 0x1;
- 			else
- 				ant_conf->fast_div_bias = 0x2;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x12: /* LNA2 LNA1 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x13: /* LNA2 A+B */
- 			if (!(antcomb->scan) &&
-@@ -476,8 +445,6 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->fast_div_bias = 0x1;
- 			else
- 				ant_conf->fast_div_bias = 0x2;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x20: /* LNA1 A-B */
- 			if (!(antcomb->scan) &&
-@@ -485,13 +452,9 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->fast_div_bias = 0x1;
- 			else
- 				ant_conf->fast_div_bias = 0x2;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x21: /* LNA1 LNA2 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x23: /* LNA1 A+B */
- 			if (!(antcomb->scan) &&
-@@ -499,23 +462,15 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
- 				ant_conf->fast_div_bias = 0x1;
- 			else
- 				ant_conf->fast_div_bias = 0x2;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x30: /* A+B A-B */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x31: /* A+B LNA2 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		case 0x32: /* A+B LNA1 */
- 			ant_conf->fast_div_bias = 0x1;
--			ant_conf->main_gaintb = 0;
--			ant_conf->alt_gaintb = 0;
- 			break;
- 		default:
- 			break;
--- 
-1.7.12
-
+Regards,
+	Chr
