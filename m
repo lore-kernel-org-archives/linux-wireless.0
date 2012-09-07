@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:48016 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753131Ab2IHNTp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52074 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756319Ab2IGIUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 09:19:45 -0400
-Received: by qcro28 with SMTP id o28so272921qcr.19
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2012 06:19:44 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sat, 8 Sep 2012 21:19:44 +0800
-Message-ID: <CAPgLHd97e_ZyJFwSbCyCYMy4jwVVib5x4=A9UbTXuw+AiyJ3jA@mail.gmail.com> (sfid-20120908_152020_961970_FEE863CA)
-Subject: [PATCH v3] NFC: pn544_hci: move the dereference below the NULL test
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 7 Sep 2012 04:20:45 -0400
+Message-ID: <1347006078.4256.6.camel@jlt4.sipsolutions.net> (sfid-20120907_102050_673811_2C99503D)
+Subject: Re: [PATCH/RFC] rfkill: prevent unnecessary event generation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vitaly Wool <vitalywool@gmail.com>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Vitaly Wool <vitaly.wool@sonymobile.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 07 Sep 2012 10:21:18 +0200
+In-Reply-To: <CAMJBoFMd2sLEScY3j2-wsWQh3Mv_nArPC904dzJ+j-16+pdkgQ@mail.gmail.com> (sfid-20120907_085419_412505_9AEB3D7E)
+References: <5048ADFC.1010708@sonymobile.com>
+	 <20120906224448.GA16676@khazad-dum.debian.net>
+	 <CAMJBoFMd2sLEScY3j2-wsWQh3Mv_nArPC904dzJ+j-16+pdkgQ@mail.gmail.com>
+	 (sfid-20120907_085419_412505_9AEB3D7E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Fri, 2012-09-07 at 08:54 +0200, Vitaly Wool wrote:
+> Hi Henrique,
+> 
+> On Fri, Sep 7, 2012 at 12:44 AM, Henrique de Moraes Holschuh
+> <hmh@hmh.eng.br> wrote:
+> >
+> > On Thu, 06 Sep 2012, Vitaly Wool wrote:
+> > > Prevent unnecessary rfkill event generation when the state has
+> > > not actually changed. These events have to be delivered to
+> > > relevant userspace processes, causing these processes to wake
+> > > up and do something while they could as well have slept. This
+> > > obviously results in more CPU usage, longer time-to-sleep-again
+> > > and therefore higher power consumption.
+> >
+> > Could this supress the first event when a switch is registered? Would that
+> > be a concern?
+> 
+> I'm not sure I got your question, but just in case, rfkill is
+> initialized to all zeroes so rfkill->state is 0 and on each consequent
+> _real_ change there (prev != curr) == true and the event will be
+> generated.
 
-The dereference should be moved below the NULL test.
+But maybe applications were expecting an event for registration? Or do
+we get that anyway maybe?
 
-spatch with a semantic match is used to found this.
-(http://coccinelle.lip6.fr/)
-
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/nfc/pn544_hci.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
-index aa71807..e42b100 100644
---- a/drivers/nfc/pn544_hci.c
-+++ b/drivers/nfc/pn544_hci.c
-@@ -341,13 +341,16 @@ flush:
- static irqreturn_t pn544_hci_irq_thread_fn(int irq, void *dev_id)
- {
- 	struct pn544_hci_info *info = dev_id;
--	struct i2c_client *client = info->i2c_dev;
-+	struct i2c_client *client;
- 	struct sk_buff *skb = NULL;
- 	int r;
- 
--	BUG_ON(!info);
--	BUG_ON(irq != info->i2c_dev->irq);
-+	if (!info || irq != info->i2c_dev->irq) {
-+		WARN_ON_ONCE(1);
-+		return IRQ_NONE;
-+	}
- 
-+	client = info->i2c_dev;
- 	dev_dbg(&client->dev, "IRQ\n");
- 
- 	if (info->hard_fault != 0)
-
+johannes
 
