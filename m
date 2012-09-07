@@ -1,53 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53050 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753011Ab2I1LDb (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21836 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753138Ab2IGGpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 07:03:31 -0400
-Message-ID: <1348830246.13298.24.camel@jlt4.sipsolutions.net> (sfid-20120928_130338_315494_DD0C0C65)
-Subject: Re: [PATCH v2 3/5] cfg80211: add support for flushing old scan
- results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Fri, 28 Sep 2012 13:04:06 +0200
-In-Reply-To: <1348772354-15936-4-git-send-email-bzhao@marvell.com>
-References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
-	 <1348772354-15936-4-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 7 Sep 2012 02:45:16 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath9k_hw: Read and configure thermocal for AR9462
+Date: Fri, 7 Sep 2012 12:15:16 +0530
+Message-ID: <1347000316-4466-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120907_084525_578930_AE834F60)
+In-Reply-To: <1347000316-4466-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1347000316-4466-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-27 at 11:59 -0700, Bing Zhao wrote:
+Read and configure thermometer calibration results read from
+OTP card.
 
-> +static void __cfg80211_bss_expire(struct cfg80211_registered_device *dev,
-> +				  int maxage, unsigned long expire_time);
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 19 +++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    |  6 ++++++
+ 2 files changed, 25 insertions(+)
 
-Please no static forward declarations, unless you really can't move the
-code (say because it's recursive). You can move the code up instead.
-
->  /* must hold dev->bss_lock! */
-> -void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
-> +static void __cfg80211_bss_expire(struct cfg80211_registered_device *dev,
-> +				  int maxage, unsigned long expire_time)
-
-I don't really see why you need maxage and expire_time?
-
-> +void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
-> +{
-> +	__cfg80211_bss_expire(dev, IEEE80211_SCAN_RESULT_EXPIRE, 0);
-
-Here, you could just pass "jiffies - SCAN_RESULT_EXPIRE" as the maxage
-and get pretty much the same behaviour as before without a second
-parameter.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 0e46330..d44ed24 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4020,6 +4020,24 @@ static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
+ 	}
+ }
+ 
++static void ar9003_hw_thermo_cal_apply(struct ath_hw *ah)
++{
++	u32 data, ko, kg;
++
++	if (!AR_SREV_9462_20(ah))
++		return;
++	ar9300_otp_read_word(ah, 1, &data);
++	ko = data & 0xff;
++	kg = (data >> 8) & 0xff;
++	if (ko || kg) {
++		REG_RMW_FIELD(ah, AR_PHY_BB_THERM_ADC_3,
++			      AR_PHY_BB_THERM_ADC_3_THERM_ADC_OFFSET, ko);
++		REG_RMW_FIELD(ah, AR_PHY_BB_THERM_ADC_3,
++			      AR_PHY_BB_THERM_ADC_3_THERM_ADC_SCALE_GAIN,
++			      kg + 256);
++	}
++}
++
+ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 					     struct ath9k_channel *chan)
+ {
+@@ -4036,6 +4054,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_apply_tuning_caps(ah);
+ 	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
+ 	ar9003_hw_thermometer_apply(ah);
++	ar9003_hw_thermo_cal_apply(ah);
+ }
+ 
+ static void ath9k_hw_ar9300_set_addac(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 25d8181..e8bfb41 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -609,6 +609,12 @@
+ #define AR_PHY_BB_THERM_ADC_1_INIT_THERM		0x000000ff
+ #define AR_PHY_BB_THERM_ADC_1_INIT_THERM_S		0
+ 
++#define AR_PHY_BB_THERM_ADC_3				(AR_SM_BASE + 0x250)
++#define AR_PHY_BB_THERM_ADC_3_THERM_ADC_SCALE_GAIN	0x0001ff00
++#define AR_PHY_BB_THERM_ADC_3_THERM_ADC_SCALE_GAIN_S	8
++#define AR_PHY_BB_THERM_ADC_3_THERM_ADC_OFFSET		0x000000ff
++#define AR_PHY_BB_THERM_ADC_3_THERM_ADC_OFFSET_S	0
++
+ #define AR_PHY_BB_THERM_ADC_4				(AR_SM_BASE + 0x254)
+ #define AR_PHY_BB_THERM_ADC_4_LATEST_THERM_VALUE	0x000000ff
+ #define AR_PHY_BB_THERM_ADC_4_LATEST_THERM_VALUE_S	0
+-- 
+1.7.12
 
