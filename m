@@ -1,93 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:58041 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758337Ab2IMQvP (ORCPT
+Received: from mailrelayi.jaist.ac.jp ([150.65.19.7]:39603 "EHLO
+	mailrelayi.jaist.ac.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755413Ab2IGAWH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 12:51:15 -0400
-Date: Thu, 13 Sep 2012 18:51:24 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Sven Eckelmann <sven@narfation.org>
-Cc: Adrian Chadd <adrian.chadd@gmail.com>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	openwrt-devel@lists.openwrt.org,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: AR9330 hornet board stops beaconing after a few days
- (0xdeadbeef)
-Message-ID: <20120913165124.GA13877@pandem0nium> (sfid-20120913_185119_861644_1A3D8E8C)
-References: <20120813165340.GA10044@pandem0nium>
- <CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com>
- <CAJ-VmonwheNtv8xfEJnWpD-XOmSEebMFJAmQmWUfe2Pd3tMnqA@mail.gmail.com>
- <168362233.PzT7LJrFi2@bentobox>
+	Thu, 6 Sep 2012 20:22:07 -0400
+Date: Fri, 7 Sep 2012 09:11:39 +0900
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Borislav Petkov <bp@alien8.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: rtl8192se hanging completely
+Message-ID: <20120907001138.GB9279@gandalf.dynalias.org> (sfid-20120907_022231_481184_3B098EDD)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="r5Pyd7+fXNt84Ff3"
-In-Reply-To: <168362233.PzT7LJrFi2@bentobox>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120822144027.GA6981@x1.osrc.amd.com>
+ <20120822140733.GA1266@gamma.logic.tuwien.ac.at>
+From: Norbert Preining <preining@logic.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all,
 
---r5Pyd7+fXNt84Ff3
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+(please cc)
 
-ath9k fellows,
+I have now changed my home router and with the new one it
+is working without problems at home, and with a few
+hickups at work, too.
 
-as it seems no one could find the cause for this problem so far. I'd theref=
-ore
-like to create a workaround by checking one/some registers for 0xdeadbeef a=
-nd
-reset the chip if this is found.
+But still, at work after some time the connection breaks.
+I found the following interesting messages in the log:
+   dmar: DRHD: handling fault status reg 3
+   dmar: DMAR:[DMA Read] Request device [03:00.0] fault addr fff73000 
+   DMAR:[fault reason 06] PTE Read access is not set
+around the time the connection hangs and never comes back.
 
-Can anyone recommend a register which should never go 0xdeadbeef in a norma=
-l case?
+The mentioned device 03:00.0 is the wlan adapter:
+$ lspci -v -s 03:00.0
+03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller (rev 10)
+	Subsystem: Realtek Semiconductor Co., Ltd. Device e020
+	Flags: bus master, fast devsel, latency 0, IRQ 17
+	I/O ports at 2000 [size=256]
+	Memory at f0500000 (32-bit, non-prefetchable) [size=16K]
+	Capabilities: [40] Power Management version 3
+	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+	Capabilities: [70] Express Legacy Endpoint, MSI 00
+	Capabilities: [100] Advanced Error Reporting
+	Capabilities: [140] Virtual Channel
+	Capabilities: [160] Device Serial Number 88-55-22-fe-ff-4c-e0-00
+	Kernel driver in use: rtl8192se
+$
 
-=46rom what i've seen, AR_CFG (0x0014) might be a good choice. My regdumps =
-say:
+That is with latest git kernel from yesterday.
 
-bad regdump:  0x000014 0xdeadbeef   =20
-good regdump: 0x000014 0x0008010a
+Any suggestions would be appreciated.
 
-Unfortunately I don't have documentation to find out if this register can e=
-ver
-go deadbeef in a normal case. :)
+On Wed, 22 Aug 2012, Norbert Preining wrote:
+> Dear all,
+> 
+> (please cc)
+> 
+> I am having serious troubles with my rtl8192se card:
+> 
+> kernel: 3.6.0-rc2+, compiled from git today, same with rc1
+> rtl8192se in kernel driver, loaded with debug=3
+> Debian sid
+> Lenovo Thinkpad Edge
+> 
+> When starting from cold boot, the driver associates, but no packet
+> whatsoever leaves the computer it seems, pinging the gateway
+> does not return anything, and ns lookups are not working.
+> 
+> In the logs I see many instances of:
+> rtlwifi:rtl_tx_agg_start():<0-0> on ra = 00:0a:79:eb:56:10 tid = 6 seq:39
+> rtlwifi:rtl_action_proc():<200-1> Tx ACT_ADDBAREQ From :88:9f:fa:f9:07:28
+> rtlwifi:rtl_tx_agg_stop():<0-0> on ra = 00:0a:79:eb:56:10 tid = 6
+> rtlwifi:rtl_action_proc():<400-1> ACT_ADDBADEL From :88:9f:fa:f9:07:28
+> rtlwifi:rtl_action_proc():<10000-1> Rx ACT_ADDBARSP From :00:0a:79:eb:56:10
+> in various orders.
+> 
+> 
+> trying to remove the module gave me:
+> [  649.459652] wlan0: deauthenticating from 00:0a:79:eb:56:10 by local choice (reason=3)
+> [  649.459701] rtlwifi:rtl_tx_agg_stop():<0-0> on ra = 00:0a:79:eb:56:10 tid = 0
+> [  659.094654] rtlwifi:rtl_op_set_key():<0-0> Disabling hardware based encryption for keyidx: 0, mac: 00:0a:79:eb:56:10
+> [  659.094659] rtlwifi:rtl_op_set_key():<0-0> alg:CCMP
+> [  659.094663] rtlwifi:rtl_op_set_key():<0-0> set enable_hw_sec, key_type:4(OPEN:0 WEP40:1 TKIP:2 AES:4 WEP104:5)
+> [  659.094667] rtlwifi:rtl_op_set_key():<0-0> disable key delete one entry
+> [  659.094670] rtlwifi:rtl_cam_delete_one_entry():<0-0> key_idx:0
+> [  659.094673] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A4: 0
+> [  659.094676] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A0: 80010000
+> [  659.094719] rtlwifi:rtl_op_sta_remove():<0-0> Remove sta addr is 00:0a:79:eb:56:10
+> [  659.142712] rtlwifi:rtl_op_bss_info_changed():<0-0> BSS_CHANGED_UN_ASSOC
+> [  659.142725] rtlwifi:rtl_op_bss_info_changed():<0-0> 00:00:00:00:00:00
+> [  659.190740] rtlwifi:rtl_op_set_key():<0-0> Disabling hardware based encryption for keyidx: 1, mac: ff:ff:ff:ff:ff:ff
+> [  659.190744] rtlwifi:rtl_op_set_key():<0-0> alg:TKIP
+> [  659.190747] rtlwifi:rtl_op_set_key():<0-0> set enable_hw_sec, key_type:2(OPEN:0 WEP40:1 TKIP:2 AES:4 WEP104:5)
+> [  659.190750] rtlwifi:rtl_op_set_key():<0-0> disable key delete one entry
+> [  659.190753] rtlwifi:rtl_cam_delete_one_entry():<0-0> key_idx:1
+> [  659.190756] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A4: 0
+> [  659.190759] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A0: 80010008
+> 
+> 
+> After that I reloaded the module and then it is getting worse:
+> rtl8192se 0000:03:00.0: Refused to change power state, currently in D3
+> rtl8192se:_rtl92se_read_adapter_info():<0-0> RTL819X Not boot from eeprom, check it !!
+> tl8192se: FW Power Save off (module option)
+> rtl8192se: Driver for Realtek RTL8192SE/RTL8191SE
+> Loading firmware rtlwifi/rtl8192sefw.bin
+> ...
+> rtl8192se:_rtl92se_macconfig_after_fwdownload():<0-0> OK
+> rtl8192se:rtl92s_phy_bb_config():<0-0> RF_Type(0) does not match RF_Num(4)!!
+> rtl8192se:rtl92s_phy_bb_config():<0-0> path1 0xf, path2 0xf, pathmap 0xf
+> rtlwifi:rtl_pci_start():<0-0> OK
+> rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
+> rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
+> rtl8192se:rtl92s_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+> 
+> rtl8192se:rtl92s_phy_set_rf_power_state():<0-1> IPS Set eRf nic enable
+> rtl8192se:_rtl92se_macconfig_after_fwdownload():<0-1> OK
+> 
+> ...
+> rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
+> rtlwifi:rtl_pci_tx():<200-1> No more TX desc@6, ring->idx = 0, idx = 0, skb_queue_len = 0x0
+> 
+> etc etc.
+> 
+> That is the end, no connection at all, and no way (AFAIS) to get
+> it back.
+> 
+> Are there any suggestions, patches, ideas to fix and track that down?
 
-What do you think? (of course, a proper solution is still appreciated ...)
 
-Cheers,
-	Simon
+Best wishes
 
+Norbert
 
-On Wed, Sep 05, 2012 at 04:20:52PM +0200, Sven Eckelmann wrote:
-> On Wednesday 05 September 2012 07:08:47 Adrian Chadd wrote:
-> > I don't think it's a stuck beacon WAR issue here; 0xdeadbeef really
-> > does read like the MAC has gone to sleep.
-> >=20
-> > Where's the complete register dump hiding?
->=20
-> It was not sent to the public mailing lists due to the size. You will rec=
-eive=20
-> the dump mentioned in the first mail in some minutes.
->=20
-> Kind regards,
-> 	Sven
-
-
-
---r5Pyd7+fXNt84Ff3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlBSDwwACgkQrzg/fFk7axaCLQCg27g4pk6seTqcix0RFoeoglZm
-+fkAoJnqhGv77388XjzRPdhSM/V3yNYl
-=BYI7
------END PGP SIGNATURE-----
-
---r5Pyd7+fXNt84Ff3--
+----------------------------------------------------------------------------
+Norbert Preining                preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                   TeX Live and Debian Developer
+gpg DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+----------------------------------------------------------------------------
+FULKING (participial vb.)
+Pretending not to be in when the carol-singers come round.
+			--- Douglas Adams, The Meaning of Liff
