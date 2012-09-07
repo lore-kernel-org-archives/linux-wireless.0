@@ -1,71 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49325 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754173Ab2IIS7G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Sep 2012 14:59:06 -0400
-Message-ID: <1347217142.7709.61.camel@deadeye.wl.decadent.org.uk> (sfid-20120909_205935_672465_3468884D)
-Subject: Re: [PATCH] rtlwifi/rtl8723e: Add firmware for new driver
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dwmw2@infradead.org
-Date: Sun, 09 Sep 2012 19:59:02 +0100
-In-Reply-To: <1345480950-11107-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1345480950-11107-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-fBBq5iH7FF3tWfuMFrm4"
+Received: from mx1.redhat.com ([209.132.183.28]:52461 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751222Ab2IGQsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 12:48:20 -0400
+Message-ID: <1347036664.8913.1.camel@dcbw.foobar.com> (sfid-20120907_184823_427738_A02AA7C6)
+Subject: Re: [PATCH v3] p54: connect to 11w protected networks
+From: Dan Williams <dcbw@redhat.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Fri, 07 Sep 2012 11:51:04 -0500
+In-Reply-To: <E1TA0re-00059m-CD@debian64.localnet>
+References: <E1TA0re-00059m-CD@debian64.localnet>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
+> Previously, it was not possible to connect
+> to networks which requires 11w to be supported
+> by the stations.
 
---=-fBBq5iH7FF3tWfuMFrm4
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+If at all possible if we can do this without module parameters, that
+would be great.  Otherwise how is userspace supposed to connect to a
+W-capable network without twiddling driver-specific module options,
+something we've tried really hard to not do?  Module options really
+aren't any different than private ioctls or IWPRIV commands...
 
-On Mon, 2012-08-20 at 11:42 -0500, Larry Finger wrote:
-> The driver and firmware are new additions to the rtlwifi family of driver=
-s.
->=20
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Dan
+
+> Note:
+> 
+> As all current (and old) firmwares corrupt
+> incoming, protected management frames, the
+> decryption offloading needs to be disabled.
+> 
+> This can be done by loading the p54common
+> module with the nohwcrypt=1 parameter.
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 > ---
->  WHENCE                  |   10 ++++++++++
->  rtlwifi/rtl8723fw.bin   |  Bin 0 -> 11662 bytes
->  rtlwifi/rtl8723fw_B.bin |  Bin 0 -> 22996 bytes
->  3 files changed, 10 insertions(+)
->  create mode 100755 rtlwifi/rtl8723fw.bin
->  create mode 100755 rtlwifi/rtl8723fw_B.bin
-[...]
+> v2->v3:
+> 	- fixed modparam_nohwcrypt typo
+> 	(Yes, v2 never compiled :( )
+> 
+> Regards,
+> 	Christian
+> ---
+>  drivers/net/wireless/p54/main.c |   11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+> index 5e91ad0..8ab5aef 100644
+> --- a/drivers/net/wireless/p54/main.c
+> +++ b/drivers/net/wireless/p54/main.c
+> @@ -739,6 +739,17 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
+>  		     IEEE80211_HW_PS_NULLFUNC_STACK |
+>  		     IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+>  
+> +	if (modparam_nohwcrypt) {
+> +		/*
+> +		 * Only support MFP, if the hardware crypto engine
+> +		 * is disabled, as the firmware's rx-path corrupts
+> +		 * incoming CCMP encrypted RX mgmt frames.
+> +		 * However, if no rx key is uploaded, the firmware
+> +		 * passes the unencrypted frame to the driver. 
+> +		 */
+> +		dev->flags |= IEEE80211_HW_MFP_CAPABLE;
+> +	}
+> +
+>  	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+>  				      BIT(NL80211_IFTYPE_ADHOC) |
+>  				      BIT(NL80211_IFTYPE_AP) |
 
-Applied, thanks.
 
-Ben.
-
---=20
-Ben Hutchings
-Time is nature's way of making sure that everything doesn't happen at once.
-
---=-fBBq5iH7FF3tWfuMFrm4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUEzm9ue/yOyVhhEJAQrz2w/9HDHlr9CXy8+I7zzcbJbKaECoiyNGDeRy
-7do8kMscG6jGUsCeB2xZ7NwY4O1dei2ufY2/XCm+FYCUoCDTbvdJ0eB9SNf03xr5
-VLqKcdrZlN3g8zNz+djsZPlUCw6ylN2erVeNaVpojXuH+81QmtwnQz2+O1mF2H1J
-+YToTdMJ2CAbmG0yN2gNdSs229I8YYgGMp332idyG2gvPMVK7b8+ZKlZF7MgUR4V
-YCulywIgKuiqugOzYo7ThPEyxPzfkxda0B3yI9KTIW+IzkNXDQ5QJsmZwoBzWter
-YaQW8KxcEgOCl7ZrVWq+YecA4J7+hMTjvZb1HLZ6vG3XDAic6b2fcUg7xD5QjRxQ
-Jl2NedWsj49xvmJnlpRSgq6YLDXOmgaL53Pxs+nahbuRKSm6vRvkllaFgNRJI6RI
-Qyhk4S050NGH0PZmWrgr93UUjQIIzkMsGUn70kN2lm+NPOQ7HxFfp0vK2MwV3Tlt
-63ADVuEkmlFHBhMCViH8JF7g7BXWsE4x6PlHa/bxHcLj4z5M45EoNeYC+VTnOmkK
-kPvLogzaEK5+S4MfHf55VGWWE3tEIGaTxTl8Q35zfXaYW8r8ErrDiTHNYpef6AIs
-+O5JS7EKbsjtuC/IsJwV4Q5MZa/Ak32fqJDHuvO6BqFtXBgrAYebUAhmQmsEVBSz
-ycAfCG2mqf4=
-=n2LY
------END PGP SIGNATURE-----
-
---=-fBBq5iH7FF3tWfuMFrm4--
