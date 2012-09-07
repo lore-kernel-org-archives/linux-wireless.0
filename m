@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f51.google.com ([209.85.213.51]:50838 "EHLO
-	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755561Ab2IKVFE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 17:05:04 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH] rtlwifi: Remove EXPERIMENTAL as pre-requisite for the drivers
-Date: Tue, 11 Sep 2012 16:04:36 -0500
-Message-Id: <1347397476-13282-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120911_230514_595302_1B467BE4)
+Received: from vserver9.axc.nl ([159.253.0.33]:43433 "EHLO vserver9.axc.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753186Ab2IGRZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 13:25:15 -0400
+Received: from 84-245-10-224.dsl.cambrium.nl ([84.245.10.224] helo=[192.168.178.20])
+	by vserver9.axc.nl with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.76)
+	(envelope-from <koos2012@pohw.nl>)
+	id 1TA1qT-0000i1-Cc
+	for linux-wireless@vger.kernel.org; Fri, 07 Sep 2012 18:55:53 +0200
+Message-ID: <504A2718.10805@pohw.nl> (sfid-20120907_192542_327478_7D5EB140)
+Date: Fri, 07 Sep 2012 18:55:52 +0200
+From: Koos Pol <koos2012@pohw.nl>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Problems with Atheros AR54B22 (AR9462)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All of the rtlwifi-family of drivers have been in the kernel since 3.1
-or earlier. The dependence on EXPERIMENTAL can be removed.
+Hi,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+After receiving great help on irc #linux-wireless, I'd figure to post the
+results here in case someone wants to track this down.
 
-John,
+I've installed openSUSE 12.2 on a brand new Acer V3-771 with the Atheros
+AR54B22 chipset. The ath9 driver works right out of the box. But.... My wlan
+router (Fritzbox 7170) doesn't seem to handle it very well, as it will
+drop/reset the wlan connection after a few seconds. Notably other wlan laptops
+are disconnected too. The whole wlan network seems to go astray.
+So it seems to be strongly related to the Fritzbox. I did manage to connect
+successfully to someone else's pub wifi.
+Is this something worth debugging (for the greater public as well)?
 
-There is no rush on this patch. Inclusion in 3.7 will be fine.
+The response I got from irc (sacamano_m82) was to use the compat-wireless
+package as ath9k is still under development.
 
-Larry
----
+I did and I have perfect wlan connectivity now. Wlan is stable since. So that
+did the trick.
 
- drivers/net/wireless/rtlwifi/Kconfig |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+If anyone is interested in debugging this, I'm happy to help you in any way I
+can. Just tell me what to do. FYI, I'm not subscribed to this list.
 
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-index cefac6a..6b28e92 100644
---- a/drivers/net/wireless/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -1,6 +1,6 @@
- config RTL8192CE
- 	tristate "Realtek RTL8192CE/RTL8188CE Wireless Network Adapter"
--	depends on MAC80211 && PCI && EXPERIMENTAL
-+	depends on MAC80211 && PCI
- 	select FW_LOADER
- 	select RTLWIFI
- 	select RTL8192C_COMMON
-@@ -12,7 +12,7 @@ config RTL8192CE
- 
- config RTL8192SE
- 	tristate "Realtek RTL8192SE/RTL8191SE PCIe Wireless Network Adapter"
--	depends on MAC80211 && EXPERIMENTAL && PCI
-+	depends on MAC80211 && PCI
- 	select FW_LOADER
- 	select RTLWIFI
- 	---help---
-@@ -23,7 +23,7 @@ config RTL8192SE
- 
- config RTL8192DE
- 	tristate "Realtek RTL8192DE/RTL8188DE PCIe Wireless Network Adapter"
--	depends on MAC80211 && EXPERIMENTAL && PCI
-+	depends on MAC80211 && PCI
- 	select FW_LOADER
- 	select RTLWIFI
- 	---help---
-@@ -34,7 +34,7 @@ config RTL8192DE
- 
- config RTL8192CU
- 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
--	depends on MAC80211 && USB && EXPERIMENTAL
-+	depends on MAC80211 && USB
- 	select FW_LOADER
- 	select RTLWIFI
- 	select RTL8192C_COMMON
+Cheers,
+Koos
+
 -- 
-1.7.10.4
-
+http://www.malarianomore.org
+For $10 a mosquito net + distribution + education + monitoring + evaluation.
