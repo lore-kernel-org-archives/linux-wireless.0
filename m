@@ -1,58 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56953 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881Ab2IKXZj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52059 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011Ab2IGISk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 19:25:39 -0400
-Date: Tue, 11 Sep 2012 16:25:36 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: David Rientjes <rientjes@google.com>, sgruszka@redhat.com,
-	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	Andrew Morton <akpm@osdl.org>, Mel Gorman <mgorman@suse.de>,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-Message-Id: <20120911162536.bd5171a1.akpm@linux-foundation.org> (sfid-20120912_012610_624444_F84CAC1A)
-In-Reply-To: <20120910111113.GA25159@elf.ucw.cz>
-References: <20120909213228.GA5538@elf.ucw.cz>
-	<alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
-	<20120910111113.GA25159@elf.ucw.cz>
+	Fri, 7 Sep 2012 04:18:40 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1T9tlv-0004wC-L9
+	for linux-wireless@vger.kernel.org; Fri, 07 Sep 2012 10:18:39 +0200
+Message-ID: <1347005958.4256.3.camel@jlt4.sipsolutions.net> (sfid-20120907_101843_780581_E1DB2F2B)
+Subject: Re: [PATCH] mac80211_hwsim: move module_init/exit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 07 Sep 2012 10:19:18 +0200
+In-Reply-To: <1346944197-13140-1-git-send-email-johannes@sipsolutions.net> (sfid-20120906_170924_292556_5DAAC6EF)
+References: <1346944197-13140-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120906_170924_292556_5DAAC6EF)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 10 Sep 2012 13:11:13 +0200
-Pavel Machek <pavel@ucw.cz> wrote:
-
-> On Sun 2012-09-09 15:40:55, David Rientjes wrote:
-> > On Sun, 9 Sep 2012, Pavel Machek wrote:
-> > 
-> > > On 3.6.0-rc2+, I tried to turn on the wireless, but got
-> > > 
-> > > root@amd:~# ifconfig wlan0 10.0.0.6 up
-> > > SIOCSIFFLAGS: Cannot allocate memory
-> > > SIOCSIFFLAGS: Cannot allocate memory
-> > > root@amd:~# 
-> > > 
-> > > It looks like it uses "a bit too big" allocations to allocate
-> > > firmware...? Order five allocation....
-> > > 
-> > > Hmm... then I did "echo 3  > /proc/sys/vm/drop_caches" and now the
-> > > network works. Is it VM problem that it failed to allocate memory when
-> > > it was freeable?
-> > > 
-> > 
-> > Do you have CONFIG_COMPACTION enabled?
+On Thu, 2012-09-06 at 17:09 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Yes:
-> 
-> pavel@amd:/data/l/linux-good$ zgrep CONFIG_COMPACTION /proc/config.gz 
-> CONFIG_COMPACTION=y
+> These should be with the functions so move
+> the module_init/exit statements.
 
-Asking for a 256k allocation is pretty crazy - this is an operating
-system kernel, not a userspace application.
+Applied.
 
-I'm wondering if this is due to a recent change, but I'm having trouble
-working out where the allocation call site is.
+
