@@ -1,47 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48421 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53585 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754060Ab2I0JPX (ORCPT
+	with ESMTP id S1751332Ab2IGRIg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 05:15:23 -0400
-Message-ID: <1348737359.10353.8.camel@jlt4.sipsolutions.net> (sfid-20120927_111526_802295_C19C5226)
-Subject: Re: [PATCH 3/3] cfg80211: add support for flushing old scan results
+	Fri, 7 Sep 2012 13:08:36 -0400
+Message-ID: <1347037745.4256.37.camel@jlt4.sipsolutions.net> (sfid-20120907_190840_355951_AEB493EB)
+Subject: Re: [PATCH v2] p54: connect to 11w protected networks
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Sam Leffler <sleffler@chromium.org>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 27 Sep 2012 11:15:59 +0200
-In-Reply-To: <20120926165952.BC0E71E051D@sleffler.sfo.corp.google.com> (sfid-20120926_185956_248675_62A4C8CC)
-References: <20120926165952.BC0E71E051D@sleffler.sfo.corp.google.com>
-	 (sfid-20120926_185956_248675_62A4C8CC)
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Date: Fri, 07 Sep 2012 19:09:05 +0200
+In-Reply-To: <201209071901.59705.chunkeey@googlemail.com> (sfid-20120907_190207_971998_7DE5E0BF)
+References: <1346622538.10113.3.camel@jlt4.sipsolutions.net>
+	 <201209071825.13588.chunkeey@googlemail.com>
+	 <1347035277.4256.33.camel@jlt4.sipsolutions.net>
+	 <201209071901.59705.chunkeey@googlemail.com>
+	 (sfid-20120907_190207_971998_7DE5E0BF)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-09-21 at 11:08 -0700, Sam Leffler wrote:
+On Fri, 2012-09-07 at 19:01 +0200, Christian Lamparter wrote:
 
->  void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
->  {
->  	struct cfg80211_scan_request *request;
-> @@ -47,8 +50,16 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
->  
->  	if (request->aborted)
->  		nl80211_send_scan_aborted(rdev, wdev);
-> -	else
-> +	else {
-> +		if (request->flags & CFG80211_SCAN_FLAG_FLUSH) {
-> +			/* flush entries from previous scans */
-> +			spin_lock_bh(&rdev->bss_lock);
-> +			__cfg80211_bss_expire(rdev,
-> +				jiffies - request->scan_start);
+> > > Oh no, I mean dynamic reconfiguration of the firmware's
+> > > keycache during runtime. 
+> > 
+> > Right right, but for MFP that doesn't help since in AP mode
+> > we don't know whether to expect encrypted management frames
+> > or not.
+> 
+> Hmpf, don't we set the CMAC key in this case? 
 
-I wonder if we should pass an absolute time instead? jiffies will
-continue to advance while we iterate the list etc., if we pass the
-absolute time in both cases we can avoid this small race condition.
+Hmm, I guess we would have that, and actually ... we know MFP will be
+used for the *station* so we should in fact know this already. I'll need
+to revise my patch. D'oh.
 
-The race really isn't important, but it still seems a bit cleaner to me
-overall.
+> (Note: I haven't
+> seen much/any of the 11w spec, as 802.11-2012 is AFAICT still not
+> available for _free_). 
+
+Hm. Well it was published March 29th, so it should be available in 3
+weeks if they hold their promise ...
+
+> However, my thinking is/was that when
+> mac80211 tries to upload the CMAC key, return -EOPNOTSUPP and 
+> we kick the ccm per-station key, so the firmware won't try to
+> decrypt incoming (mgmt and data) frames with this combination
+> anymore.
+
+CMAC keys aren't per-station, so we'd have to remove them all or
+something? But I think we already know about MFP for the station when we
+set the key, I'll check this.
+ 
+> > > But for this, we would need
+> > > a way to tell mac80211 when driver wants to delete a key
+> > > from the hw/fw cache and when there is room for another
+> > > one (Didn't you had a patch for the "we have a empty slot
+> > > in the rxkey cache we are not using" case some time ago?
+> > > However in this case, we want to tell mac80211 what "exact"
+> > > key (by MAC of the peer and key index) we want.)
+> > 
+> > I had a patch for the opposite: please remove this key, I can't
+> > handle it any more. Adding a new one in that case couldn't be
+> > done.
+> Ah well, that's too bad. Altough, I thought you removed
+> it because its prone to cause rx/tx races?!
+
+No, just because it was unused. Adding a new key could also be
+implemented, or you could iterate the keys in some way maybe.
+
+> > > Of course, I'm well aware of the "amount of work" and the
+> > > problems associated with removing and readding keys during
+> > > runtime without causing races (or just minor races).
+> > 
+> > Actually that's not too difficult, the bigger difficulty is
+> > actually knowing which key to re-upload I think.
+> Well, the firmware reports a "CACHE MISS" status in every
+> encrypted rx frame if no key was found in the rxkey cache.
+> 
+> Of course, being a cache, we can make some sort of LRU 
+> (not sure about the size, but rxkey cache * 2 would be
+> a start) and keep track of the rx key usage. This way
+> when a "rxkey" becomes more popular it will be detected
+> and "replace" a rxkey that is no longer active... and
+> so on.
+
+Right. Seems pretty simple really, but I guess the devil is in the
+details :-)
+
+Anyway I'll revise that patch (after dinner) and see if MFP flag is set
+correctly, if so then we can just use that.
 
 johannes
 
