@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:34863 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329Ab2IVTvm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756957Ab2IGHdq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Sep 2012 15:51:42 -0400
-Date: Sat, 22 Sep 2012 15:51:33 -0400 (EDT)
-Message-Id: <20120922.155133.484429173339077143.davem@davemloft.net> (sfid-20120922_215145_872287_A1CCEDFD)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-09-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120922171341.GB2101@tuxdriver.com>
-References: <20120922171341.GB2101@tuxdriver.com>
+	Fri, 7 Sep 2012 03:33:46 -0400
+Message-ID: <1347003263.4256.0.camel@jlt4.sipsolutions.net> (sfid-20120907_093350_254820_CD6FA7B4)
+Subject: Re: [PATCH 2/2] mac80211: use call_rcu() on sta deletion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Sep 2012 09:34:23 +0200
+In-Reply-To: <CAB3XZEcMkz4Fu-JDmCaS5y6Zy-E6ZP0V9KhSu_Hphp1fSNbfjQ@mail.gmail.com> (sfid-20120906_231704_627607_3615E67B)
+References: <1346865837-32265-1-git-send-email-eliad@wizery.com>
+	 <1346865837-32265-3-git-send-email-eliad@wizery.com>
+	 <1346946070.5469.23.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEcMkz4Fu-JDmCaS5y6Zy-E6ZP0V9KhSu_Hphp1fSNbfjQ@mail.gmail.com>
+	 (sfid-20120906_231704_627607_3615E67B)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Sat, 22 Sep 2012 13:13:42 -0400
+On Fri, 2012-09-07 at 00:17 +0300, Eliad Peller wrote:
 
-> Please pull this last(?) batch of fixes intended for 3.6...
-> 
-> For the Bluetooth bits, Gustavo says this:
-> 
-> "Here goes probably my last update to 3.6. It includes the two patches
-> you were ok last week(from Andrzej Kaczmarek), those are critical
-> ones, and two other fixes one for a system crash and the other for
-> a missing lockdep annotation."
-> 
-> The referenced fixes from Andrzej prevent attempts to configure devices
-> that are powered-off.
-> 
-> Along with the Bluetooth fixes, there are a couple of 802.11 fixes.
-> Emmanuel Grumbach gives us an iwlwifi fix to prevent releasing an
-> interrupt twice.  Luis R. Rodriguez provides a fix for a possible
-> circular lock dependency in the cfg80211 regulatory enforcement code.
-> 
-> All of these have been in linux-next for a few days.  I hope they are
-> not too late to make the 3.6 release!
+> >> +     cancel_work_sync(&sta->drv_unblock_wk);
+> >
+> > This will deadlock now, but cancel_work() will be safe without the sync
+> > since the workqueue is single-threaded.
 
-Pulled, thanks John.
+Good point, I confused it with flush_work().
+
+johannes
+
