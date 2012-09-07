@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50984 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754684Ab2IOB0h (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088Ab2IGR1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 21:26:37 -0400
-MIME-Version: 1.0
-In-Reply-To: <20563.54449.930282.825384@gargle.gargle.HOWL>
-References: <1347637262-27782-1-git-send-email-bkamatch@qca.qualcomm.com>
- <CAB=NE6WBLusFkQP-a9mCxM2Hu-NyWvUiF8iALY6YvvbV81eKNg@mail.gmail.com>
- <CAB=NE6XYjYrRSA8Xupu21GWoCd-jv63ic32Q3rP7YiVHajTWTg@mail.gmail.com>
- <CAB=NE6UG647WMS7kW=xEFgU=PGMq7fdt7G0k_8sMqkkS9sZkcw@mail.gmail.com> <20563.54449.930282.825384@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 14 Sep 2012 18:26:15 -0700
-Message-ID: <CAB=NE6XXN5ZqZ3_ho8MermvXMSU67MWv5j26B7_1j+BEySMnSA@mail.gmail.com> (sfid-20120915_032711_402036_393FBE4E)
-Subject: Re: [PATCH 1/4] compat-drivers: update pending-stable patches.
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-Cc: Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless@vger.kernel.org, backports@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 7 Sep 2012 13:27:48 -0400
+Message-ID: <1347038903.4256.38.camel@jlt4.sipsolutions.net> (sfid-20120907_192751_495173_1AB6ECFA)
+Subject: Re: [PATCH v2] p54: connect to 11w protected networks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Date: Fri, 07 Sep 2012 19:28:23 +0200
+In-Reply-To: <1347037745.4256.37.camel@jlt4.sipsolutions.net> (sfid-20120907_190840_355951_AEB493EB)
+References: <1346622538.10113.3.camel@jlt4.sipsolutions.net>
+	 <201209071825.13588.chunkeey@googlemail.com>
+	 <1347035277.4256.33.camel@jlt4.sipsolutions.net>
+	 <201209071901.59705.chunkeey@googlemail.com>
+	 (sfid-20120907_190207_971998_7DE5E0BF) <1347037745.4256.37.camel@jlt4.sipsolutions.net>
+	 (sfid-20120907_190840_355951_AEB493EB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 14, 2012 at 6:06 PM, Sujith Manoharan <c_manoha@qualcomm.com> wrote:
-> Luis R. Rodriguez wrote:
->> So based on what I think you described you only want these two hunks
->> from that patch... to avoid regressions possibly caused by Felix'
->> other changes.
->
-> This will not cause any regression for AR9462 because the patch does this:
->
->        if (!AR_SREV_9300(ah))
->                return;
->
-> I think all this confusion would have been avoided if the 3.5.y patches had
-> just backported Felix's patch. :)
+On Fri, 2012-09-07 at 19:09 +0200, Johannes Berg wrote:
+> On Fri, 2012-09-07 at 19:01 +0200, Christian Lamparter wrote:
+> 
+> > > > Oh no, I mean dynamic reconfiguration of the firmware's
+> > > > keycache during runtime. 
+> > > 
+> > > Right right, but for MFP that doesn't help since in AP mode
+> > > we don't know whether to expect encrypted management frames
+> > > or not.
+> > 
+> > Hmpf, don't we set the CMAC key in this case? 
+> 
+> Hmm, I guess we would have that, and actually ... we know MFP will be
+> used for the *station* so we should in fact know this already. I'll need
+> to revise my patch. D'oh.
 
-Oh well, I just relabeled the patch / description, put into
-linux-next-pending for now and kicked out a new set of releases that
-includes your other patch as well.
+I just posted a new patch. I haven't really tested it though, but I'm
+pretty sure it'll work.
 
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5.3-1-snpc.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5.3-2-sn.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5.3-2-snpc.tar.bz2
+johannes
 
-ckmake tests will follow up.
-
-  Luis
