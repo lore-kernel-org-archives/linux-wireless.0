@@ -1,85 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:56758 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816Ab2IKVSl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 17:18:41 -0400
-Received: by wibhi8 with SMTP id hi8so4366513wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 14:18:40 -0700 (PDT)
-Subject: [PATCH] carl9170: fix spurious transmissions in sniffer mode
+Received: from nbd.name ([46.4.11.11]:43544 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933244Ab2IGOyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 10:54:24 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: scchen@qca.qualcomm.com, linville@tuxdriver.com,
-	johannes@sipsolutions.net, marco@tampabay.rr.com,
-	janusz.dziedzic@gmail.com
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Tue, 11 Sep 2012 23:18:34 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201209112318.35334.chunkeey@googlemail.com> (sfid-20120911_231846_198454_A38F100C)
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 1/2] mac80211: validate skb->dev in the tx status path
+Date: Fri,  7 Sep 2012 16:54:15 +0200
+Message-Id: <1347029656-41430-1-git-send-email-nbd@openwrt.org> (sfid-20120907_165428_164546_AA0B2B21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several people have complained about an unusual
-and undocumented feature of the AR9170 hardware:
+skb->dev might contain a stale reference to a device that was already
+deleted, and using it unchecked can lead to invalid pointer accesses.
+Since this is only used for nl80211 tx, iterate over active interfaces
+to find a match for skb->dev, and discard the tx status if the device
+is gone.
 
-In siffer mode, the hardware generates spurious
-ACK frames for every received frame... even
-broadcasts.
-
-The reason for this malfunction is unknown:
-<http://marc.info/?l=linux-wireless&m=134517238506033>
-But there's a workaround: Instead of the special
-sniffer mode, the hardware will be put into
-station mode and all rx filters are disabled.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reported-by: Marco Fonseca <marco@tampabay.rr.com>
-Reported-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/carl9170/mac.c |   21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+ net/mac80211/status.c |   46 +++++++++++++++++++++++++++++++---------------
+ 1 file changed, 31 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/mac.c b/drivers/net/wireless/ath/carl9170/mac.c
-index e3b1b6e..24d75ab 100644
---- a/drivers/net/wireless/ath/carl9170/mac.c
-+++ b/drivers/net/wireless/ath/carl9170/mac.c
-@@ -343,7 +343,24 @@ int carl9170_set_operating_mode(struct ar9170 *ar)
- 			break;
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index b0801b7..6a21562 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -516,30 +516,46 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	}
+ 
+ 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
++		struct ieee80211_sub_if_data *p2p_sdata;
+ 		u64 cookie = (unsigned long)skb;
++		bool found = false;
++
+ 		acked = info->flags & IEEE80211_TX_STAT_ACK;
+ 
+-		if (ieee80211_is_nullfunc(hdr->frame_control) ||
+-		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+-			cfg80211_probe_status(skb->dev, hdr->addr1,
+-					      cookie, acked, GFP_ATOMIC);
+-		} else if (skb->dev) {
+-			cfg80211_mgmt_tx_status(
+-				skb->dev->ieee80211_ptr, cookie, skb->data,
+-				skb->len, acked, GFP_ATOMIC);
+-		} else {
+-			struct ieee80211_sub_if_data *p2p_sdata;
++		rcu_read_lock();
++
++		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++			if (!sdata->dev)
++				continue;
+ 
+-			rcu_read_lock();
++			if (skb->dev != sdata->dev)
++				continue;
+ 
++			found = true;
++			break;
++		}
++
++		if (!skb->dev) {
+ 			p2p_sdata = rcu_dereference(local->p2p_sdata);
+ 			if (p2p_sdata) {
+-				cfg80211_mgmt_tx_status(
+-					&p2p_sdata->wdev, cookie, skb->data,
+-					skb->len, acked, GFP_ATOMIC);
++				skb->dev = p2p_sdata->dev;
++				found = true;
+ 			}
+-			rcu_read_unlock();
  		}
- 	} else {
--		mac_addr = NULL;
-+		/*
-+		 * Enable monitor mode
-+		 *
-+		 * rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
-+		 * sniffer |= AR9170_MAC_SNIFFER_ENABLE_PROMISC;
-+		 *
-+		 * When the hardware is in SNIFFER_PROMISC mode,
-+		 * it generates spurious ACKs for every incoming
-+		 * frame. This confuses every peer in the
-+		 * vicinity and the network throughput will suffer
-+		 * badly.
-+		 *
-+		 * Hence, the hardware will be put into station
-+		 * mode and just the rx filters are disabled.
-+		 */
-+		cam_mode |= AR9170_MAC_CAM_STA;
-+		rx_ctrl |= AR9170_MAC_RX_CTRL_PASS_TO_HOST;
-+		mac_addr = common->macaddr;
- 		bssid = NULL;
- 	}
- 	rcu_read_unlock();
-@@ -355,8 +372,6 @@ int carl9170_set_operating_mode(struct ar9170 *ar)
- 		enc_mode |= AR9170_MAC_ENCRYPTION_RX_SOFTWARE;
- 
- 	if (ar->sniffer_enabled) {
--		rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
--		sniffer |= AR9170_MAC_SNIFFER_ENABLE_PROMISC;
- 		enc_mode |= AR9170_MAC_ENCRYPTION_RX_SOFTWARE;
++
++		if (!found)
++			skb->dev = NULL;
++		else if (ieee80211_is_nullfunc(hdr->frame_control) ||
++			 ieee80211_is_qos_nullfunc(hdr->frame_control)) {
++			cfg80211_probe_status(skb->dev, hdr->addr1,
++					      cookie, acked, GFP_ATOMIC);
++		} else {
++			cfg80211_mgmt_tx_status(
++				skb->dev->ieee80211_ptr, cookie, skb->data,
++				skb->len, acked, GFP_ATOMIC);
++		}
++
++		rcu_read_unlock();
  	}
  
+ 	if (unlikely(info->ack_frame_id)) {
 -- 
-1.7.10.4
+1.7.9.6 (Apple Git-31.1)
 
