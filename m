@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53058 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52543 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294Ab2I1LGG (ORCPT
+	with ESMTP id S1760436Ab2IGLRk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 07:06:06 -0400
-Message-ID: <1348830401.13298.27.camel@jlt4.sipsolutions.net> (sfid-20120928_130611_722461_A847C769)
-Subject: Re: [PATCH v2 4/5] mac80211: add support for tx to abort low
- priority scan requests
+	Fri, 7 Sep 2012 07:17:40 -0400
+Message-ID: <1347016689.4256.10.camel@jlt4.sipsolutions.net> (sfid-20120907_131745_368283_412605DB)
+Subject: Re: [PATCHv2 1/2] mac80211: export ieee80211_send_deauth_disassoc
+ for usage outside of mlme.c
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: Antonio Quartulli <ordex@autistici.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Fri, 28 Sep 2012 13:06:41 +0200
-In-Reply-To: <1348772354-15936-5-git-send-email-bzhao@marvell.com>
-References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
-	 <1348772354-15936-5-git-send-email-bzhao@marvell.com>
+	linux-wireless@vger.kernel.org
+Date: Fri, 07 Sep 2012 13:18:09 +0200
+In-Reply-To: <5049C35A.1050601@lri.fr>
+References: <1346951275-32081-1-git-send-email-ordex@autistici.org>
+	  (sfid-20120906_190828_405993_603EB9FF) <1347006332.4256.9.camel@jlt4.sipsolutions.net>
+	 <5049C35A.1050601@lri.fr>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-27 at 11:59 -0700, Bing Zhao wrote:
+On Fri, 2012-09-07 at 11:50 +0200, Nicolas Cavallari wrote:
+> On 07/09/2012 10:25, Johannes Berg wrote:
+> > On Thu, 2012-09-06 at 19:07 +0200, Antonio Quartulli wrote:
+> > 
+> >> -		if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
+> >> -			IEEE80211_SKB_CB(skb)->flags |=
+> >> -				IEEE80211_TX_INTFL_DONT_ENCRYPT;
+> > 
+> > 
+> >> +		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+> >> +		    !(sdata->u.mgd.flags & IEEE80211_STA_MFP_ENABLED))
+> >> +			IEEE80211_SKB_CB(skb)->flags |=
+> >> +				IEEE80211_TX_INTFL_DONT_ENCRYPT;
+> > 
+> > It would seem that this should be 
+> > 
+> > 	if (sdata->vif.type != NL80211_IFTYPE_STATION ||
+> > 	    !(flags & MFP_ENABLED))
+> > 
+> > ?
+> 
+> Or just never set TX_INTFL_DONT_ENCRYPT at all and rely on
+> ieee80211_tx_h_select_key() to do the right thing ?
 
-> +	if (associated && !tx_empty) {
-> +		if (unlikely(local->scan_req->flags &
-> +			     CFG80211_SCAN_FLAG_LOW_PRIORITY))
-
-I don't really see value in the "unlikely()" here, that just clutters
-the code and probably has very little effect on the runtime behaviour,
-this is very infrequently executed.
-
-
-> +		case SCAN_ABORT:
-> +			aborted = true;
-> +			goto out_complete;
-
-Maybe we should have different flags though ... I mean, this is the
-first implementation that I hear of that interprets a background scan as
-"ok to abort at any time"? It seems very unlikely that other
-implementations would do that. I *think* (like I said before, I don't
-really know) that ours (Intel's) will just shorten the dwell time, or
-similar instead.
+I don't think it can do the right thing, it doesn't check whether MFP is
+enabled or not... unless you want to test all those cases I'd rather not
+change it :)
 
 johannes
 
