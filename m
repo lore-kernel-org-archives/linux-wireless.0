@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19885 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932181Ab2IDOEk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 10:04:40 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 6/8] ath9k_htc: minor cleanup in ath9k_htc_add_station
-Date: Tue, 4 Sep 2012 19:33:37 +0530
-Message-ID: <1346767419-12359-6-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120904_160444_128312_0BD4954A)
-In-Reply-To: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
+Received: from smtp2.u-psud.fr ([129.175.33.42]:26737 "EHLO smtp2.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760320Ab2IGKAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 06:00:03 -0400
+Message-ID: <5049C35A.1050601@lri.fr> (sfid-20120907_120008_684032_BAF46BDB)
+Date: Fri, 07 Sep 2012 11:50:18 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Antonio Quartulli <ordex@autistici.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 1/2] mac80211: export ieee80211_send_deauth_disassoc
+ for usage outside of mlme.c
+References: <1346951275-32081-1-git-send-email-ordex@autistici.org>  (sfid-20120906_190828_405993_603EB9FF) <1347006332.4256.9.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1347006332.4256.9.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 07/09/2012 10:25, Johannes Berg wrote:
+> On Thu, 2012-09-06 at 19:07 +0200, Antonio Quartulli wrote:
+> 
+>> -		if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
+>> -			IEEE80211_SKB_CB(skb)->flags |=
+>> -				IEEE80211_TX_INTFL_DONT_ENCRYPT;
+> 
+> 
+>> +		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+>> +		    !(sdata->u.mgd.flags & IEEE80211_STA_MFP_ENABLED))
+>> +			IEEE80211_SKB_CB(skb)->flags |=
+>> +				IEEE80211_TX_INTFL_DONT_ENCRYPT;
+> 
+> It would seem that this should be 
+> 
+> 	if (sdata->vif.type != NL80211_IFTYPE_STATION ||
+> 	    !(flags & MFP_ENABLED))
+> 
+> ?
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index c32f6e3..61d096e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -489,24 +489,20 @@ static int ath9k_htc_add_station(struct ath9k_htc_priv *priv,
- 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
- 		memcpy(&tsta.macaddr, sta->addr, ETH_ALEN);
- 		memcpy(&tsta.bssid, common->curbssid, ETH_ALEN);
--		tsta.is_vif_sta = 0;
- 		ista->index = sta_idx;
-+		tsta.is_vif_sta = 0;
-+		maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-+				 sta->ht_cap.ampdu_factor);
-+		tsta.maxampdu = cpu_to_be16(maxampdu);
- 	} else {
- 		memcpy(&tsta.macaddr, vif->addr, ETH_ALEN);
- 		tsta.is_vif_sta = 1;
-+		tsta.maxampdu = cpu_to_be16(0xffff);
- 	}
- 
- 	tsta.sta_index = sta_idx;
- 	tsta.vif_index = avp->index;
- 
--	if (!sta) {
--		tsta.maxampdu = cpu_to_be16(0xffff);
--	} else {
--		maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
--				 sta->ht_cap.ampdu_factor);
--		tsta.maxampdu = cpu_to_be16(maxampdu);
--	}
--
- 	WMI_CMD_BUF(WMI_NODE_CREATE_CMDID, &tsta);
- 	if (ret) {
- 		if (sta)
--- 
-1.7.0.4
-
+Or just never set TX_INTFL_DONT_ENCRYPT at all and rely on
+ieee80211_tx_h_select_key() to do the right thing ?
