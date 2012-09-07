@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17408 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24319 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277Ab2I1J11 (ORCPT
+	with ESMTP id S932968Ab2IGKYh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 05:27:27 -0400
-Message-ID: <50656D77.4040101@qca.qualcomm.com> (sfid-20120928_112731_050236_B04695F7)
-Date: Fri, 28 Sep 2012 14:57:19 +0530
+	Fri, 7 Sep 2012 06:24:37 -0400
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Add Generic hardware timer interrupt in debugfs
+Date: Fri, 7 Sep 2012 15:54:13 +0530
+Message-ID: <1347013453-15255-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120907_122455_063840_8807AA13)
 MIME-Version: 1.0
-To: Holger Schurig <holgerschurig@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<Mohammed@venema.h4ckr.net>, <ath9k-devel@lists.ath9k.org>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>
-Subject: Re: [ath9k-devel] [PATCH] ath9k: Ensure we set FTP_STOMP_LOW weight
- when WLAN is idle
-References: <1348758768-5228-1-git-send-email-mohammed@qca.qualcomm.com> <CAOpc7mF8XTnW5gh7hnN=7e_M7f=wRVuPqT_7S9k2YN7tq4YXBw@mail.gmail.com>
-In-Reply-To: <CAOpc7mF8XTnW5gh7hnN=7e_M7f=wRVuPqT_7S9k2YN7tq4YXBw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Holger,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
+Having generic hardware timer interrupt in debugfs
+would come handy when we are debugging 3 WIRE
+BTCOEX issues.
 
-On Friday 28 September 2012 02:30 PM, Holger Schurig wrote:
->> We WLAN is idle we can some better bandwidth to FTP by
->> setting STOMP_LOW_FTP where stomping the FTP BT is pretty
->> much reduced when compared to setting STOMP_LOW weight.
->
-> I understand that english isn't your first language (and neither is it
-> mine). But this is quite unintelligible.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |    3 +++
+ drivers/net/wireless/ath/ath9k/debug.h |    3 +++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-:) :)
-apologies, I simply missed the commit log line, Its been sent as an RFC 
-sometime and yesterday I sent the patch, apparently not much looking 
-into the commit log :). Definitely its not correct and thanks for 
-pointing this out.  Will send a v2!
-
->
-> Beside wrong words (We/When) it doesn't also really say what is going
-> on. What, for example, is FTP ?  How can you assume that this is
-> generally known?  For sure it's not the file transfer protocol. Same
-> with "FTP BT".
-
-sure I would make it clear in the v2.
-
->
-> Also, "we can some better bandwidth" misses a verb. "take into account
-> of data packets" is weird, too.
-
-sure, I will change in v2.
-
->
-> Confused.
->
-
-thanks a lot for your review and comments!
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 68b643c..ab3bc85 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -373,6 +373,8 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
+ 		sc->debug.stats.istats.tsfoor++;
+ 	if (status & ATH9K_INT_MCI)
+ 		sc->debug.stats.istats.mci++;
++	if (status & ATH9K_INT_GENTIMER)
++		sc->debug.stats.istats.gen_timer++;
+ }
+ 
+ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+@@ -418,6 +420,7 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+ 	PR_IS("DTIM", dtim);
+ 	PR_IS("TSFOOR", tsfoor);
+ 	PR_IS("MCI", mci);
++	PR_IS("GENTIMER", gen_timer);
+ 	PR_IS("TOTAL", total);
+ 
+ 	len += snprintf(buf + len, mxlen - len,
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 8b9d080..61341cd 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -74,6 +74,8 @@ enum ath_reset_type {
+  * from a beacon differs from the PCU's internal TSF by more than a
+  * (programmable) threshold
+  * @local_timeout: Internal bus timeout.
++ * @mci: MCI interrupt, specific to MCI based BTCOEX chipsets
++ * @gen_timer: Generic hardware timer interrupt
+  */
+ struct ath_interrupt_stats {
+ 	u32 total;
+@@ -100,6 +102,7 @@ struct ath_interrupt_stats {
+ 	u32 bb_watchdog;
+ 	u32 tsfoor;
+ 	u32 mci;
++	u32 gen_timer;
+ 
+ 	/* Sync-cause stats */
+ 	u32 sync_cause_all;
 -- 
-thanks,
-shafi
-
+1.7.0.4
 
