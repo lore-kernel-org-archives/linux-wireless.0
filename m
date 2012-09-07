@@ -1,122 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:63094 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753186Ab2ILUzT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 16:55:19 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, <chaoming_li@realsil.com.cn>
-Subject: [RFC/RFT 00/15] Add new driver RTL8723AE
-Date: Wed, 12 Sep 2012 15:54:39 -0500
-Message-Id: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120912_225530_516112_B9BF2588)
+Received: from mga11.intel.com ([192.55.52.93]:48559 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759245Ab2IGHnE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 03:43:04 -0400
+Message-ID: <5049A58F.2060905@linux.intel.com> (sfid-20120907_094321_617872_7125FB09)
+Date: Fri, 07 Sep 2012 09:43:11 +0200
+From: Eric Lapuyade <eric.lapuyade@linux.intel.com>
+MIME-Version: 1.0
+To: Rymarkiewicz Waldemar <waldemar.rymarkiewicz@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
+	"sameo@linux.intel.com" <sameo@linux.intel.com>,
+	"eric.lapuyade@intel.com" <eric.lapuyade@intel.com>
+Subject: Re: [linux-nfc] [PATCH 2/2] NFC: Correct outgoing frame before requeueing
+References: <1346926937-4968-1-git-send-email-waldemar.rymarkiewicz@tieto.com> <1346926937-4968-2-git-send-email-waldemar.rymarkiewicz@tieto.com> <5048CCA7.4010604@linux.intel.com> <5049964A.6020808@tieto.com>
+In-Reply-To: <5049964A.6020808@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches add the new driver rtl8723ae to the rtlwifi family
-of drivers. It handles the RTL8723AE, which is now being included in
-some Toshiba laptops. This driver is derived from version 0007.0809.2012
-of the vendor driver.
+Hi Waldek,
 
-Depending on how long the review process takes, I am hoping to include
-this driver in kernel 3.7.
+On 09/07/2012 08:38 AM, Rymarkiewicz Waldemar wrote:
+> Hi Eric,
+> 
+>> This patch would work for PN544, but it makes the assumption that the
+>> driver will always insert/append exactly client_headroom/client_tailroom
+>> bytes when xmit is called. This is not specified nor enforced so it may
+>> be a little dangerous.
+> 
+> Do you mean that the driver can request client_head/tailroom which is a
+> maximum it can use, but it does not mean that all space will be used in
+> in each frame e.g. due to optional fields?  That's the only situation I
+> can imagine now.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Yes, this is exactly what I mean.
 
-Larry Finger (15):
-  rtlwifi: rtl8723ae: Add new driver - Part 1
-  rtlwifi: rtl8723ae: Add new driver - Part 2
-  rtlwifi: rtl8723ae: Add new driver - Part 3
-  rtlwifi: rtl8723ae: Add new driver - Part 4
-  rtlwifi: rtl8723ae: Add new driver - Part 5
-  rtlwifi: rtl8723ae: Add new driver - Part 6
-  rtlwifi: rtl8723ae: Add new driver - Part 7
-  rtlwifi: rtl8723ae: Add new driver - Part 8
-  rtlwifi: rtl8723ae: Add new driver - Part 9
-  rtlwifi: rtl8723ae: Add new driver - Part 10
-  rtlwifi: rtl8723ae: Add new driver - Part 11
-  rtlwifi: rtl8723ae: Add new driver - Part 12
-  rtlwifi: rtl8723ae: Add new driver - Part 13
-  rtlwifi: Modify files for addition of rtl8723ae
-  rtlwifi: rtl8192ce: rtl8192cu: rtl8192se: rtl81723ae: Turn on
-    building of the new driver
+> BTW I see the headroom for pn544 is 2 but it make use of 1 byte (len).
+> Is that correct?
 
- drivers/net/wireless/rtlwifi/Kconfig               |   19 +-
- drivers/net/wireless/rtlwifi/Makefile              |    4 +-
- drivers/net/wireless/rtlwifi/debug.h               |    2 +
- drivers/net/wireless/rtlwifi/pci.h                 |    1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   83 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   10 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |    6 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/Makefile    |   23 +
- drivers/net/wireless/rtlwifi/rtl8723ae/btc.h       |   41 +
- drivers/net/wireless/rtlwifi/rtl8723ae/def.h       |  291 +++
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |  952 ++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |  174 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |  758 ++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |   99 +
- .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c    |  554 +++++
- .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h    |  161 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   | 1807 ++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |  161 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        | 2559 ++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.h        |   70 +
- drivers/net/wireless/rtlwifi/rtl8723ae/led.c       |  158 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/led.h       |   40 +
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       | 2160 +++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |  228 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c    |  113 +
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h    |  313 +++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c |  145 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h |  101 +
- drivers/net/wireless/rtlwifi/rtl8723ae/reg.h       | 2129 ++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.c        |  518 ++++
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.h        |   45 +
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |  405 ++++
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.h        |   38 +
- drivers/net/wireless/rtlwifi/rtl8723ae/table.c     |  744 ++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/table.h     |   51 +
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |  830 +++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |  725 ++++++
- drivers/net/wireless/rtlwifi/stats.c               |  274 +++
- drivers/net/wireless/rtlwifi/stats.h               |   47 +
- drivers/net/wireless/rtlwifi/wifi.h                |  112 +-
- 40 files changed, 16919 insertions(+), 32 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/Makefile
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/btc.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/def.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/reg.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.h
- create mode 100644 drivers/net/wireless/rtlwifi/stats.c
- create mode 100644 drivers/net/wireless/rtlwifi/stats.h
+That question made me go back to have a closer look. With shdlc
+currently adding the len and crc, there would be no reason for the
+driver to request any headroom. If you look at the comment above
+PN544_CMDS_HEADROOM, it says "Largest headroom needed for outgoing
+custom commands". The headroom it requests it not for len, it is used by
+the driver to insert special bytes when handling a
+pn544_hci_data_exchange for a reader F gate, which is a special case.
 
--- 
-1.7.10.4
+I didn't remember that when I wrote the previous answer, and this
+defeats my second suggestion. I suggest we go with my first suggestion:
 
+- Specify that the driver xmit MUST NOT modify skb. It shall remove
+anything it inserts or appends before returning from xmit.
+
+Eric
