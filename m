@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:53719 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756697Ab2I0Kim (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:38674 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205Ab2IGNCL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 06:38:42 -0400
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 15/31] wlcore: make debug prints work without dynamic debug
-Date: Thu, 27 Sep 2012 13:37:53 +0300
-Message-Id: <1348742289-6587-16-git-send-email-luca@coelho.fi> (sfid-20120927_123937_557609_712B1B28)
-In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
-References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+	Fri, 7 Sep 2012 09:02:11 -0400
+Received: by ghrr11 with SMTP id r11so515028ghr.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 06:02:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1347006078.4256.6.camel@jlt4.sipsolutions.net>
+References: <5048ADFC.1010708@sonymobile.com>
+	<20120906224448.GA16676@khazad-dum.debian.net>
+	<CAMJBoFMd2sLEScY3j2-wsWQh3Mv_nArPC904dzJ+j-16+pdkgQ@mail.gmail.com>
+	<1347006078.4256.6.camel@jlt4.sipsolutions.net>
+Date: Fri, 7 Sep 2012 15:02:10 +0200
+Message-ID: <CAMJBoFNQFpM_do9EVBAQu8vtbsAiZJDJkoL9pcXwVP-Cf1=ZZg@mail.gmail.com> (sfid-20120907_150214_758190_0AD7C001)
+Subject: Re: [PATCH/RFC] rfkill: prevent unnecessary event generation
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Vitaly Wool <vitaly.wool@sonymobile.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Fri, Sep 7, 2012 at 10:21 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2012-09-07 at 08:54 +0200, Vitaly Wool wrote:
+>> Hi Henrique,
+>>
+>> On Fri, Sep 7, 2012 at 12:44 AM, Henrique de Moraes Holschuh
+>> <hmh@hmh.eng.br> wrote:
+>> >
+>> > On Thu, 06 Sep 2012, Vitaly Wool wrote:
+>> > > Prevent unnecessary rfkill event generation when the state has
+>> > > not actually changed. These events have to be delivered to
+>> > > relevant userspace processes, causing these processes to wake
+>> > > up and do something while they could as well have slept. This
+>> > > obviously results in more CPU usage, longer time-to-sleep-again
+>> > > and therefore higher power consumption.
+>> >
+>> > Could this supress the first event when a switch is registered? Would that
+>> > be a concern?
+>>
+>> I'm not sure I got your question, but just in case, rfkill is
+>> initialized to all zeroes so rfkill->state is 0 and on each consequent
+>> _real_ change there (prev != curr) == true and the event will be
+>> generated.
+>
+> But maybe applications were expecting an event for registration? Or do
+> we get that anyway maybe?
 
-Make debug prints operational when dynamic debug is not defined.
-This allows better debugging in production environments.
+We should get them anyway. rfkill_fop_open() basically just pushes all
+the startup events into the list so the application will see all the
+_changes_ on registration. And at least wpa_supplicant reads out all
+these events on rfkill registration. If an application does something
+else, then I think it's buggy.
 
-Change the driver prefix to "wlcore" while were at it.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <luca@coelho.fi>
----
- drivers/net/wireless/ti/wlcore/debug.h |   16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/debug.h b/drivers/net/wireless/ti/wlcore/debug.h
-index 6b800b3..db4bf5a 100644
---- a/drivers/net/wireless/ti/wlcore/debug.h
-+++ b/drivers/net/wireless/ti/wlcore/debug.h
-@@ -28,7 +28,7 @@
- #include <linux/bitops.h>
- #include <linux/printk.h>
- 
--#define DRIVER_NAME "wl12xx"
-+#define DRIVER_NAME "wlcore"
- #define DRIVER_PREFIX DRIVER_NAME ": "
- 
- enum {
-@@ -73,11 +73,21 @@ extern u32 wl12xx_debug_level;
- #define wl1271_info(fmt, arg...) \
- 	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
- 
-+/* define the debug macro differently if dynamic debug is supported */
-+#if defined(CONFIG_DYNAMIC_DEBUG)
- #define wl1271_debug(level, fmt, arg...) \
- 	do { \
--		if (level & wl12xx_debug_level) \
--			pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
-+		if (unlikely(level & wl12xx_debug_level)) \
-+			dynamic_pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
-+	} while (0)
-+#else
-+#define wl1271_debug(level, fmt, arg...) \
-+	do { \
-+		if (unlikely(level & wl12xx_debug_level)) \
-+			printk(KERN_DEBUG pr_fmt(DRIVER_PREFIX fmt "\n"), \
-+			       ##arg); \
- 	} while (0)
-+#endif
- 
- /* TODO: use pr_debug_hex_dump when it becomes available */
- #define wl1271_dump(level, prefix, buf, len)	\
--- 
-1.7.10.4
-
+~Vitaly
