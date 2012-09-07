@@ -1,42 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41318 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757065Ab2IDOPN (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:44474 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342Ab2IGRhR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 10:15:13 -0400
-Message-ID: <1346768149.3737.29.camel@jlt4.sipsolutions.net> (sfid-20120904_161517_030820_FAA4EA37)
-Subject: Re: [PATCH v2] p54: connect to 11w protected networks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Tue, 04 Sep 2012 16:15:49 +0200
-In-Reply-To: <E1T8tYj-00051o-3z@debian64.localnet> (sfid-20120904_155321_955424_2D6B3F4B)
-References: <1346622538.10113.3.camel@jlt4.sipsolutions.net>
-	 <E1T8tYj-00051o-3z@debian64.localnet>
-	 (sfid-20120904_155321_955424_2D6B3F4B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 7 Sep 2012 13:37:17 -0400
+Received: by eaac11 with SMTP id c11so1016592eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 10:37:15 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: add key flag for management keys
+Date: Fri, 7 Sep 2012 19:37:09 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+References: <1347038794-29039-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1347038794-29039-1-git-send-email-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201209071937.09316.chunkeey@googlemail.com> (sfid-20120907_193721_475342_ACAF666E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
+On Friday 07 September 2012 19:26:34 Johannes Berg wrote:
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 03fe6d1..b45f410 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -170,6 +170,38 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+>  		}
+>  	}
+>  
+> +	switch (sdata->vif.type) {
+> +	case NL80211_IFTYPE_STATION:
+> +		if (sdata->u.mgd.mfp != IEEE80211_MFP_DISABLED)
+> +			key->conf.flags |= IEEE80211_KEY_FLAG_RX_MGMT;
+> +		break;
+> +	case NL80211_IFTYPE_AP:
+> +	case NL80211_IFTYPE_AP_VLAN:
+> +		/* Keys without a station are used for TX only */
+> +		if (key->sta && test_sta_flag(key->sta, WLAN_STA_MFP))
+> +			key->conf.flags |= IEEE80211_KEY_FLAG_RX_MGMT;
+> +		break;
+> +	case NL80211_IFTYPE_ADHOC:
+> +		/* no MFP (yet) */
+> +		break;
+> +	case NL80211_IFTYPE_MESH_POINT:
+> +#ifdef CONFIG_MAC80211_MESH
+> +		if (sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE)
+> +			key->conf.flags |= IEEE80211_KEY_FLAG_RX_MGMT;
+> +		break;
+> +#endif
+> +	case NL80211_IFTYPE_WDS:
+> +	case NL80211_IFTYPE_MONITOR:
+> +	case NL80211_IFTYPE_P2P_DEVICE:
+> +	case NL80211_IFTYPE_UNSPECIFIED:
+> +	case NUM_NL80211_IFTYPES:
+> +	case NL80211_IFTYPE_P2P_CLIENT:
+> +	case NL80211_IFTYPE_P2P_GO:
+> +		/* shouldn't happen */
+> +		WARN_ON(1);
+> +		break;
+> +	}
+> +
+Is there a reason not to use default: ? 
 
-> As you feared: the firmware is corrupting incoming management
-> frames. However, it does so only when a rxkey was configured.
-> So as a possible trade-off, MFP will only be supported by p54,
-> when the firmware crypto offloading is relieved of his duties
-> (disabled). 
-> 
-> Note: Strictly speaking, it would be enough to no longer upload
-> any rx key which could affect management frames, as the firmware
-> does not decrypt any frames unless there is a fitting key candidate.
+	...
+#ifdef CONFIG_MAC80211_MESH
+	case NL80211_IFTYPE_MESH_POINT:
+		if (sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE)
+			key->conf.flags |= IEEE80211_KEY_FLAG_RX_MGMT;
+	break;
+#endif
+	default:
+		/* shouldn't happen */
+		WARN_ON(1);
+		break;
+}
 
-Right, however, that would kinda defeat the point. Unless ... maybe we
-can tell the driver if 11w is going to be used at all? If we did that,
-we could make it work in the set_key callback.
-
-For now your patch looks good though.
-
-johannes
-
-
+Regards,
+	Chr
