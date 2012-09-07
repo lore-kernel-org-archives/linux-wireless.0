@@ -1,61 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:61378 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752410Ab2IXOc0 (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:58313 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758104Ab2IGJE7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 10:32:26 -0400
-Received: by ieak13 with SMTP id k13so10976988iea.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2012 07:32:26 -0700 (PDT)
+	Fri, 7 Sep 2012 05:04:59 -0400
 MIME-Version: 1.0
-In-Reply-To: <20572.46476.617076.695309@gargle.gargle.HOWL>
-References: <20572.46476.617076.695309@gargle.gargle.HOWL>
-Date: Mon, 24 Sep 2012 07:32:25 -0700
-Message-ID: <CAMcMvsizdUL-SvArOiVZCPcZyea45FVxynTfWHzgf0zQDE17iQ@mail.gmail.com> (sfid-20120924_163230_610502_0F0F1A8F)
-Subject: Re: [PATCH] ath9k: Disable ASPM only for AR9285
-From: Paul Stewart <pstew@chromium.org>
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Luis Rodriguez <rodrigue@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1347004574-80506-1-git-send-email-nbd@openwrt.org>
+References: <1347004574-80506-1-git-send-email-nbd@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Fri, 7 Sep 2012 02:04:37 -0700
+Message-ID: <CAB=NE6V6vAdsVQyjKyaMYnPRQdJLc+Gt=nqiS5cN9mWU3vz7aQ@mail.gmail.com> (sfid-20120907_110519_009116_E8AE40D7)
+Subject: Re: [PATCH] compat: drop const to fix compiler warnings
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 21, 2012 at 11:44 AM, Sujith Manoharan
-<c_manoha@qualcomm.com> wrote:
-> Currently, ASPM is disabled for all WLAN+BT combo chipsets
-> when BTCOEX is enabled. This is incorrect since the workaround
-> is required only for WB195, which is a AR9285+AR3011 combo
-> solution. Fix this by checking for the HW version when enabling
-> the workaround.
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Tested-by: Paul Stewart <pstew@chromium.org>
-> ---
->  drivers/net/wireless/ath/ath9k/pci.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-> index a8f6126..c0c5996 100644
-> --- a/drivers/net/wireless/ath/ath9k/pci.c
-> +++ b/drivers/net/wireless/ath/ath9k/pci.c
-> @@ -128,8 +128,9 @@ static void ath_pci_aspm_init(struct ath_common *common)
->         if (!parent)
->                 return;
->
-> -       if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) {
-> -               /* Bluetooth coexistance requires disabling ASPM. */
-> +       if ((ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) &&
-> +           (AR_SREV_9285(ah))) {
-> +               /* Bluetooth coexistance requires disabling ASPM for AR9285. */
->                 pci_read_config_byte(pdev, pos + PCI_EXP_LNKCTL, &aspm);
->                 aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
->                 pci_write_config_byte(pdev, pos + PCI_EXP_LNKCTL, aspm);
-> --
-> 1.7.12
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, Sep 7, 2012 at 12:56 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> When calling pci_find_capability and pci_read_config_word, struct pci_dev
+> needs to be passed without const.
+
+Thanks! I guess because at certain kernel version pci_dev was const ?
+
+  Luis
