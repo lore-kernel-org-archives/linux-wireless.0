@@ -1,135 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:34660 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759278Ab2IETx6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43317 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024Ab2IGTAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 15:53:58 -0400
-Message-ID: <1346874819.21200.109.camel@aeonflux> (sfid-20120905_215403_252014_844DC045)
-Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona!)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com
-Date: Wed, 05 Sep 2012 12:53:39 -0700
-In-Reply-To: <20120822201930.GC14913@tuxdriver.com>
-References: <20120822201930.GC14913@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 7 Sep 2012 15:00:17 -0400
+Date: Fri, 7 Sep 2012 14:54:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Golle <dgolle@allnet.de>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"gwingerde@gmail.com" <gwingerde@gmail.com>,
+	"heinold@inf.fu-berlin.de" <heinold@inf.fu-berlin.de>
+Subject: Re: [PATCH v2] rt2x00: add MediaTek/RaLink Rt3352 WiSoC
+Message-ID: <20120907185407.GB1854@tuxdriver.com> (sfid-20120907_210023_029955_30C82A9E)
+References: <20120821235349.GA14648@earthship.home>
+ <20120822105110.GC6082@redhat.com>
+ <20120824152542.GA32145@earthship.home>
+ <20120828124214.GA8426@redhat.com>
+ <503CBEF8.7010505@allnet.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <503CBEF8.7010505@allnet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, Aug 28, 2012 at 03:52:08PM +0300, Daniel Golle wrote:
+> Hi Stanislaw,
+> 
+> On 28/08/12 15:42, Stanislaw Gruszka wrote:
+> > Thanks. Could you also provide information what was the source
+> > (registers programming) you based when writing this patch?
+> The vendor-driver Allnet got for that board (which is not publicly available and
+> we can't release its source)
+> 
+> >> +	if (rt2x00_rt(rt2x00dev, RT3352)) {
+> >> +		rt2800_bbp_write(rt2x00dev, 27, 0x0);
+> >> +		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
+> >> +		rt2800_bbp_write(rt2x00dev, 27, 0x20);
+> >> +		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
+> > 
+> > Writes two times to the same registers are intended?
+> Yes, as this is how it is done in the vendor driver, to me it looks like
+> register 27 acts as a switch selecting the destination for the value written to
+> register 62 or something like that.
 
-> The time for our meeting in Barcelona is drawing near.  I think it
-> is time that we start nailing-down the agenda.
-> 
-> We have one room on the first day, and three rooms on the second day.
-> I figure that the Bluetooth and 802.11 groups should each get a
-> break-out room for their own in-depth discussons on the second day and
-> the third room can be used for more general topics and presentations.
-> 
-> With that said, there are still a number of slots available for
-> presentations or discussion topics.  This is especially true for the
-> 802.11 group...  Please step-up with some suggested topics!
-> 
-> Below is my strawman agenda proposal.  Please make suggestions for
-> improvements!
-> 
-> Day 1
-> -----
-> 
-> Everyone together in a single room...
-> 
-> Time	Topic						Speaker
-> ----	-----						-------
-> 0930	Welcome/Intro/Agenda				John Linville
-> 
-> 1000	802.15.4 stack, 6lowpan				Alexander Smirnov
-> 
-> 1100	Break
-> 
-> 1130	Virtual Bluetooth AMP Controller for mac80211	Andrei Emeltchenko
+Daniel,
 
-can we swap this talk with my Bluetooth overview talk. So that we get
-all the overview talks on the first day. And keep the breakout talks on
-the next day.
+Could you perhaps repost a new patch with a "finalized" commit message
+that covers the original patch and addresses Stanislaw's concerns
+in a single, neat message?
 
-> 1230	Lunch
-> 
-> 1400	NFC "state of the union", etc.			Ortiz / Elias / Chlad
-> 
-> 1500	Break
-> 
-> ...
-> 
-> 1800	Adjourn
-> 
-> 
-> Day 2
-> -----
-> 
-> 802.11 break-out room...
-> 
-> Time	Topic						Speaker
-> ----	-----						-------
-> 1000	Regulatory updates				Luis Rodriguez
-> 
-> 1100	Break
-> 
-> ...
-> 
-> 1800	Adjourn
+Thanks!
 
-We could move the mac80211 AMP controller here.
-
-> Bluetooth break-out room...
-> 
-> Time	Topic						Speaker
-> ----	-----						-------
-> 1000	Bluetooth: state of the union			Marcel Holtmann
-> 
-> 1100	Break
-> 
-> 1130	status and roadmap of Bluetooth LE		Joao Paulo Rechi Vita
-
-And then just continue with the LE topic. Then we only have two parallel
-tracks on Friday.
-
-> 
-> 1230	Lunch
-> 
-> ...
-> 
-> 1800	Adjourn
-> 
-> 
-> Presentation room...
-> 
-> Time	Topic						Speaker
-> ----	-----						-------
-> 1000	wireless community networks			Nick Kossifidis
-> 
-> 1100	Break
-> 
-> 1130	"a short overview what we do in ConnMan"	Wagner / Flykt
-> 
-> 1230	Lunch
-> 
-> 1400	oFono / mobile wireless				Denis Kenzior
-> 
-> 1500	Break
-> 
-> ...
-> 
-> 1800	Adjourn
-> 
-> 
-> So...suggestions??
-> 
-
-Regards
-
-Marcel
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
