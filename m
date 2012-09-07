@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:1032 "EHLO
-	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755467Ab2ICBXv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2012 21:23:51 -0400
-Message-ID: <504406A2.7000303@gmail.com> (sfid-20120903_032417_129467_74B68891)
-Date: Mon, 03 Sep 2012 03:23:46 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from smtp2.u-psud.fr ([129.175.33.42]:51805 "EHLO smtp2.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753293Ab2IGMSs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 08:18:48 -0400
+Message-ID: <5049E62B.3050305@lri.fr> (sfid-20120907_141851_587147_11A58E59)
+Date: Fri, 07 Sep 2012 14:18:51 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 MIME-Version: 1.0
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-CC: linux-wireless@vger.kernel.org,
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Antonio Quartulli <ordex@autistici.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH v2 6/6] rt2x00: rt2800 - Make probe_hw function common
- between PCI and USB.
-References: <1346433734-3337-1-git-send-email-gwingerde@gmail.com> <1346433734-3337-2-git-send-email-gwingerde@gmail.com> <1346433734-3337-3-git-send-email-gwingerde@gmail.com> <1346433734-3337-4-git-send-email-gwingerde@gmail.com> <1346433734-3337-5-git-send-email-gwingerde@gmail.com> <1346433734-3337-6-git-send-email-gwingerde@gmail.com> <1346433734-3337-7-git-send-email-gwingerde@gmail.com> <CAOZOX0UvKHoPrcQ8C15eeogknFexBmb1qeiGb0PC52nKMri=JQ@mail.gmail.com>
-In-Reply-To: <CAOZOX0UvKHoPrcQ8C15eeogknFexBmb1qeiGb0PC52nKMri=JQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 1/2] mac80211: export ieee80211_send_deauth_disassoc
+ for usage outside of mlme.c
+References: <1346951275-32081-1-git-send-email-ordex@autistici.org>    (sfid-20120906_190828_405993_603EB9FF) <1347006332.4256.9.camel@jlt4.sipsolutions.net>   <5049C35A.1050601@lri.fr> <1347016689.4256.10.camel@jlt4.sipsolutions.net>  <5049E236.2020502@lri.fr> <1347019529.4256.20.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1347019529.4256.20.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/02/12 22:44, Ivo Van Doorn wrote:
-> Hi,
+On 07/09/2012 14:05, Johannes Berg wrote:
+> On Fri, 2012-09-07 at 14:01 +0200, Nicolas Cavallari wrote:
 > 
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index c3cae1d..2ad3b7a 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -44,6 +44,13 @@
->>  #include "rt2800.h"
+>>>> Or just never set TX_INTFL_DONT_ENCRYPT at all and rely on
+>>>> ieee80211_tx_h_select_key() to do the right thing ?
+>>>
+>>> I don't think it can do the right thing, it doesn't check whether MFP is
+>>> enabled or not...
 >>
->>  /*
->> + * Allow hardware encryption to be disabled.
->> + */
->> +static bool modparam_nohwcrypt = false;
->> +module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
->> +MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+>> It does; The first part try to encrypt everything, the second part
+>> disable encryption if ccmp is selected and !ieee80211_is_data_present &&
+>> !ieee80211_use_mfp,
+>> which test, among other things, for the sta's WLAN_STA_MFP flag if sta
+>> != null.
 > 
-> I am not particularly fond of this change, I would like to have the
-> module parameters inside the actual drivers instead of inside one of
-> the
-> library modules. I don't know if there is a policy for modules which
-> says something about these situations, but my preference would be
-> that the module parameters are inside rt2800pci and rt2800usb, and
-> that the value would be passed to rt2800lib.
+> Good point.
 > 
-> If there is isn't a simple and clean way to do that, then we can take
-> this patch though...
+>> If tx_h_select_key does not select the right key in this case, i think
+>> we have bigger problems.
 > 
+> Maybe, maybe not. But it looks like it would be safe.
+> 
+>>> unless you want to test all those cases I'd rather not
+>>> change it :)
+>>
+>> Not worth the trouble in this case, but i think there is too much code
+>> that sets TX_INTFL_DONT_ENCRYPT when it shouldn't.
+> 
+> I already applied the v3 patchset, but even if I hadn't I'd say it
+> should be a separate patch(set), want to send some patches to remove
+> them? :)
 
-Yeah, I wasn't a big fan of that part as well, but at the time couldn't
-find a better solution. I do have a better solution now, though.
-v3 of this patch will be posted soon.
-
----
-Gertjan
+I'll do that later, along with some other 802.11 2012 crypto work.
