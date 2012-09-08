@@ -1,49 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51288 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751097Ab2IXWna (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 18:43:30 -0400
-Received: by pbbrr4 with SMTP id rr4so7951900pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2012 15:43:29 -0700 (PDT)
-Date: Mon, 24 Sep 2012 15:43:27 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: Nico Schottelius <nico-kernel20120920@schottelius.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dave Kleikamp <shaggy@kernel.org>,
-	jfs-discussion@lists.sourceforge.net
-Subject: Re: Out of memory on 3.5 kernels
-In-Reply-To: <20120921194931.GA732@schottelius.org>
-Message-ID: <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com> (sfid-20120925_004334_215965_FC819CA2)
-References: <505B1FA0.6030100@broadcom.com> <20120921194931.GA732@schottelius.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from nbd.name ([46.4.11.11]:34124 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753131Ab2IHJ6i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Sep 2012 05:58:38 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2] mac80211: validate skb->dev in the tx status path
+Date: Sat,  8 Sep 2012 11:58:30 +0200
+Message-Id: <1347098310-95159-1-git-send-email-nbd@openwrt.org> (sfid-20120908_115903_481744_1E594528)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 21 Sep 2012, Nico Schottelius wrote:
+skb->dev might contain a stale reference to a device that was already
+deleted, and using it unchecked can lead to invalid pointer accesses.
+Since this is only used for nl80211 tx, iterate over active interfaces
+to find a match for skb->dev, and discard the tx status if the device
+is gone.
 
->  Active / Total Objects (% used)    : 1165130 / 1198087 (97.2%)
->  Active / Total Slabs (% used)      : 81027 / 81027 (100.0%)
->  Active / Total Caches (% used)     : 69 / 101 (68.3%)
->  Active / Total Size (% used)       : 1237249.81K / 1246521.94K (99.3%)
->  Minimum / Average / Maximum Object : 0.01K / 1.04K / 15.23K
-> 
->   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
-> 993607 993607 100%    1.21K  75358       26   2411456K jfs_ip
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/status.c |   48 ++++++++++++++++++++++++++++++------------------
+ 1 file changed, 30 insertions(+), 18 deletions(-)
 
-Well that doesn't look good.  100% of the inode cache for jfs are being 
-used which either means
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index b0801b7..2ce8973 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -517,29 +517,41 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
+ 		u64 cookie = (unsigned long)skb;
++		bool found = false;
++
+ 		acked = info->flags & IEEE80211_TX_STAT_ACK;
+ 
+-		if (ieee80211_is_nullfunc(hdr->frame_control) ||
+-		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+-			cfg80211_probe_status(skb->dev, hdr->addr1,
+-					      cookie, acked, GFP_ATOMIC);
+-		} else if (skb->dev) {
+-			cfg80211_mgmt_tx_status(
+-				skb->dev->ieee80211_ptr, cookie, skb->data,
+-				skb->len, acked, GFP_ATOMIC);
+-		} else {
+-			struct ieee80211_sub_if_data *p2p_sdata;
++		rcu_read_lock();
++
++		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++			if (!sdata->dev)
++				continue;
+ 
+-			rcu_read_lock();
++			if (skb->dev != sdata->dev)
++				continue;
+ 
+-			p2p_sdata = rcu_dereference(local->p2p_sdata);
+-			if (p2p_sdata) {
+-				cfg80211_mgmt_tx_status(
+-					&p2p_sdata->wdev, cookie, skb->data,
+-					skb->len, acked, GFP_ATOMIC);
+-			}
+-			rcu_read_unlock();
++			found = true;
++			break;
++		}
++
++		if (!skb->dev) {
++			sdata = rcu_dereference(local->p2p_sdata);
++			if (sdata)
++				found = true;
++		}
++
++		if (!found)
++			skb->dev = NULL;
++		else if (ieee80211_is_nullfunc(hdr->frame_control) ||
++			 ieee80211_is_qos_nullfunc(hdr->frame_control)) {
++			cfg80211_probe_status(sdata->dev, hdr->addr1,
++					      cookie, acked, GFP_ATOMIC);
++		} else {
++			cfg80211_mgmt_tx_status(&sdata->wdev, cookie, skb->data,
++						skb->len, acked, GFP_ATOMIC);
+ 		}
++
++		rcu_read_unlock();
+ 	}
+ 
+ 	if (unlikely(info->ack_frame_id)) {
+-- 
+1.7.9.6 (Apple Git-31.1)
 
- - there's a memory leak, or
-
- - there's some sort of throttling issue in jfs.
-
-And those objects are consuming ~2.3GB of slab on your 4GB machine and 
-seems to only have occurred between v3.4.2 to v3.5.3.
-
-It would be interesting to see what kmemleak would tell us.
-
-Adding Dave Kleikamp to the cc.
