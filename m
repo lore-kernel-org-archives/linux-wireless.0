@@ -1,128 +1,297 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59471 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548Ab2IYIIH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53986 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455Ab2IHHcE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 04:08:07 -0400
-Received: by bkcjk13 with SMTP id jk13so1369228bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2012 01:08:06 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH V2] bcma: change delays to follow timers-howto guide
-Date: Tue, 25 Sep 2012 10:17:22 +0200
-Message-Id: <1348561042-13637-1-git-send-email-zajec5@gmail.com> (sfid-20120925_100814_723809_69453166)
+	Sat, 8 Sep 2012 03:32:04 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20554.62352.279832.766140@gargle.gargle.HOWL> (sfid-20120908_093209_771848_0F931CA6)
+Date: Sat, 8 Sep 2012 12:58:16 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [RFC 3/7] ath9k_hw: Add AR9565 HW support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Various parts of the code require AR9565 checks,
+this patch adds them.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/bcma/core.c                  |    2 +-
- drivers/bcma/driver_chipcommon_pmu.c |    5 ++++-
- drivers/bcma/driver_pci.c            |    6 +++---
- drivers/bcma/driver_pci_host.c       |    8 ++++----
- 4 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c           |  2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c    |  2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 14 +++++++-------
+ drivers/net/wireless/ath/ath9k/eeprom.h        |  2 +-
+ drivers/net/wireless/ath/ath9k/hw.c            | 20 +++++++++++---------
+ 7 files changed, 31 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 63c8b47..03bbe10 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -65,7 +65,7 @@ void bcma_core_set_clockmode(struct bcma_device *core,
- 	switch (clkmode) {
- 	case BCMA_CLKMODE_FAST:
- 		bcma_set32(core, BCMA_CLKCTLST, BCMA_CLKCTLST_FORCEHT);
--		udelay(64);
-+		usleep_range(64, 300);
- 		for (i = 0; i < 1500; i++) {
- 			if (bcma_read32(core, BCMA_CLKCTLST) &
- 			    BCMA_CLKCTLST_HAVEHT) {
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 8b8f2f3..201faf1 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -76,7 +76,10 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
- 	if (max_msk)
- 		bcma_cc_write32(cc, BCMA_CC_PMU_MAXRES_MSK, max_msk);
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index ff007f5..e09ec40 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -237,7 +237,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
+ 				     entry_cck->fir_step_level);
  
--	/* Add some delay; allow resources to come up and settle. */
-+	/*
-+	 * Add some delay; allow resources to come up and settle.
-+	 * Delay is required for SoC (early init).
-+	 */
- 	mdelay(2);
- }
+ 	/* Skip MRC CCK for pre AR9003 families */
+-	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah))
++	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
+ 		return;
  
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index c32ebd5..c39ee6d 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -51,7 +51,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u8 phy)
- 		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
- 		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
- 			break;
--		msleep(1);
-+		usleep_range(1000, 2000);
- 	}
- }
+ 	if (aniState->mrcCCK != entry_cck->mrc_cck_on)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index c37fe96..ec140c5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3520,7 +3520,7 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
  
-@@ -92,7 +92,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
- 			ret = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_DATA);
- 			break;
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
+-	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah))
++	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah) || AR_SREV_9565(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
+ 	else {
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
+@@ -3568,7 +3568,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 
+ 	u32 value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
+ 				AR_SWITCH_TABLE_COM_AR9462_ALL, value);
+ 	} else if (AR_SREV_9550(ah)) {
+@@ -3612,7 +3612,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
  		}
--		msleep(1);
-+		usleep_range(1000, 2000);
  	}
- 	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
- 	return ret;
-@@ -132,7 +132,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u8 device,
- 		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
- 		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
- 			break;
--		msleep(1);
-+		usleep_range(1000, 2000);
+ 
+-	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
++	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
+ 		value = ath9k_hw_ar9300_get_eeprom(ah, EEP_ANT_DIV_CTL1);
+ 		/*
+ 		 * main_lnaconf, alt_lnaconf, main_tb, alt_tb
+@@ -3843,7 +3843,7 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 			REG_WRITE(ah, AR_PHY_PMU2, reg_pmu_set);
+ 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
+ 				return;
+-		} else if (AR_SREV_9462(ah)) {
++		} else if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 			reg_val = le32_to_cpu(pBase->swreg);
+ 			REG_WRITE(ah, AR_PHY_PMU1, reg_val);
+ 		} else {
+@@ -3874,7 +3874,7 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 			while (!REG_READ_FIELD(ah, AR_PHY_PMU2,
+ 						AR_PHY_PMU2_PGM))
+ 				udelay(10);
+-		} else if (AR_SREV_9462(ah))
++		} else if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 			REG_RMW_FIELD(ah, AR_PHY_PMU1, AR_PHY_PMU1_PWD, 0x1);
+ 		else {
+ 			reg_val = REG_READ(ah, AR_RTC_SLEEP_CLK) |
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 78816b8..8e358c7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -31,7 +31,7 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 	u32 val, ctl12, ctl17;
+ 	u8 desc_len;
+ 
+-	desc_len = (AR_SREV_9462(ah) ? 0x18 : 0x17);
++	desc_len = ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x18 : 0x17);
+ 
+ 	val = (ATHEROS_VENDOR_ID << AR_DescId_S) |
+ 	      (1 << AR_TxRxDesc_S) |
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index c3ebf87..78665b2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -88,7 +88,7 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 			channelSel = (freq * 4) / div;
+ 			chan_frac = (((freq * 4) % div) * 0x20000) / div;
+ 			channelSel = (channelSel << 17) | chan_frac;
+-		} else if (AR_SREV_9485(ah)) {
++		} else if (AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
+ 			u32 chan_frac;
+ 
+ 			/*
+@@ -736,7 +736,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 	if (chan->channel == 2484)
+ 		ar9003_hw_prog_ini(ah, &ah->ini_japan2484, 1);
+ 
+-	if (AR_SREV_9462(ah))
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 		REG_WRITE(ah, AR_GLB_SWREG_DISCONT_MODE,
+ 			  AR_GLB_SWREG_DISCONT_EN_BT_WLAN);
+ 
+@@ -746,9 +746,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+ 	ath9k_hw_apply_txpower(ah, chan, false);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		if (REG_READ_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_0,
+-				AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL))
++				   AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL))
+ 			ah->enabled_cals |= TX_IQ_CAL;
+ 		else
+ 			ah->enabled_cals &= ~TX_IQ_CAL;
+@@ -1111,7 +1111,7 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
+ 	if (AR_SREV_9330(ah))
+ 		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ;
+ 		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9462_2GHZ;
+ 		ah->nf_5g.min = AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 84d3d49..20bf3ae 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -630,8 +630,8 @@
+ #define AR_PHY_65NM_CH0_TXRF3_CAPDIV2G_S	1
+ 
+ #define AR_PHY_65NM_CH0_SYNTH4      0x1608c
+-#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   (AR_SREV_9462(ah) ? 0x00000001 : 0x00000002)
+-#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S (AR_SREV_9462(ah) ? 0 : 1)
++#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x00000001 : 0x00000002)
++#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0 : 1)
+ #define AR_PHY_65NM_CH0_SYNTH7      0x16098
+ #define AR_PHY_65NM_CH0_BIAS1       0x160c0
+ #define AR_PHY_65NM_CH0_BIAS2       0x160c4
+@@ -641,7 +641,7 @@
+ #define AR_PHY_65NM_CH2_RXTX4       0x1690c
+ 
+ #define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
+-				((AR_SREV_9462(ah) ? 0x1628c : 0x16280)))
++			 (((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x1628c : 0x16280)))
+ #define AR_CH0_TOP_XPABIASLVL (AR_SREV_9550(ah) ? 0x3c0 : 0x300)
+ #define AR_CH0_TOP_XPABIASLVL_S (AR_SREV_9550(ah) ? 6 : 8)
+ 
+@@ -669,7 +669,7 @@
+ #define AR_SWITCH_TABLE_ALL_S (0)
+ 
+ #define AR_PHY_65NM_CH0_THERM       (AR_SREV_9300(ah) ? 0x16290 :\
+-					(AR_SREV_9462(ah) ? 0x16294 : 0x1628c))
++				     ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16294 : 0x1628c))
+ 
+ #define AR_PHY_65NM_CH0_THERM_LOCAL   0x80000000
+ #define AR_PHY_65NM_CH0_THERM_LOCAL_S 31
+@@ -691,17 +691,17 @@
+ #define AR_CH0_TOP2_XPABIASLVL_S	12
+ 
+ #define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : \
+-					(AR_SREV_9462(ah) ? 0x16298 : 0x16290))
++				 ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16298 : 0x16290))
+ #define AR_CH0_XTAL_CAPINDAC	0x7f000000
+ #define AR_CH0_XTAL_CAPINDAC_S	24
+ #define AR_CH0_XTAL_CAPOUTDAC	0x00fe0000
+ #define AR_CH0_XTAL_CAPOUTDAC_S	17
+ 
+-#define AR_PHY_PMU1		(AR_SREV_9462(ah) ? 0x16340 : 0x16c40)
++#define AR_PHY_PMU1		((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16340 : 0x16c40)
+ #define AR_PHY_PMU1_PWD		0x1
+ #define AR_PHY_PMU1_PWD_S	0
+ 
+-#define AR_PHY_PMU2		(AR_SREV_9462(ah) ? 0x16344 : 0x16c44)
++#define AR_PHY_PMU2		((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16344 : 0x16c44)
+ #define AR_PHY_PMU2_PGM		0x00200000
+ #define AR_PHY_PMU2_PGM_S	21
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 484b313..7e1da18 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -108,7 +108,7 @@
+ #define EEP_RFSILENT_ENABLED_S      0
+ #define EEP_RFSILENT_POLARITY       0x0002
+ #define EEP_RFSILENT_POLARITY_S     1
+-#define EEP_RFSILENT_GPIO_SEL       (AR_SREV_9462(ah) ? 0x00fc : 0x001c)
++#define EEP_RFSILENT_GPIO_SEL       ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x00fc : 0x001c)
+ #define EEP_RFSILENT_GPIO_SEL_S     2
+ 
+ #define AR5416_OPFLAGS_11A           0x01
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 3638626..6539d2a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -602,6 +602,11 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (AR_SREV_9462(ah))
+ 		ah->WARegVal &= ~AR_WA_D3_L1_DISABLE;
+ 
++	if (AR_SREV_9565(ah)) {
++		ah->WARegVal |= AR_WA_BIT22;
++		REG_WRITE(ah, AR_WA, ah->WARegVal);
++	}
++
+ 	ath9k_hw_init_defaults(ah);
+ 	ath9k_hw_init_config(ah);
+ 
+@@ -802,8 +807,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ {
+ 	u32 pll;
+ 
+-	if (AR_SREV_9485(ah)) {
+-
++	if (AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
+ 		/* program BB PLL ki and kd value, ki=0x4, kd=0x40 */
+ 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
+ 			      AR_CH0_BB_DPLL2_PLL_PWD, 0x1);
+@@ -2036,7 +2040,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
+ {
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		REG_CLR_BIT(ah, AR_TIMER_MODE, 0xff);
+ 		REG_CLR_BIT(ah, AR_NDP2_TIMER_MODE, 0xff);
+ 		REG_CLR_BIT(ah, AR_SLP32_INC, 0xfffff);
+@@ -2491,7 +2495,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
+-		if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah))
++		if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah) && !AR_SREV_9565(ah))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_LDPC;
+ 
+ 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
+@@ -2574,14 +2578,12 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
  	}
- 	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
- }
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index cbae2c2..9baf886 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -425,9 +425,9 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
- 	pc_host->io_resource.flags = IORESOURCE_IO | IORESOURCE_PCI_FIXED;
  
- 	/* Reset RC */
--	udelay(3000);
-+	usleep_range(3000, 5000);
- 	pcicore_write32(pc, BCMA_CORE_PCI_CTL, BCMA_CORE_PCI_CTL_RST_OE);
--	udelay(1000);
-+	usleep_range(1000, 2000);
- 	pcicore_write32(pc, BCMA_CORE_PCI_CTL, BCMA_CORE_PCI_CTL_RST |
- 			BCMA_CORE_PCI_CTL_RST_OE);
+-	if (AR_SREV_9462(ah)) {
+-
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		if (!(ah->ent_mode & AR_ENT_OTP_49GHZ_DISABLE))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_MCI;
  
-@@ -481,7 +481,7 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
- 	 * before issuing configuration requests to PCI Express
- 	 * devices.
- 	 */
--	udelay(100000);
-+	msleep(100);
+ 		if (AR_SREV_9462_20(ah))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_RTT;
+-
+ 	}
  
- 	bcma_core_pci_enable_crs(pc);
  
-@@ -501,7 +501,7 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
- 	set_io_port_base(pc_host->pci_controller.io_map_base);
- 	/* Give some time to the PCI controller to configure itself with the new
- 	 * values. Not waiting at this point causes crashes of the machine. */
--	mdelay(10);
-+	usleep_range(10000, 15000);
- 	register_pci_controller(&pc_host->pci_controller);
- 	return;
- }
+@@ -2747,7 +2749,7 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+-	if (AR_SREV_9462(ah))
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 		bits |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
+ 
+ 	REG_WRITE(ah, AR_RX_FILTER, bits);
+@@ -3044,7 +3046,7 @@ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
+ 	REG_SET_BIT(ah, gen_tmr_configuration[timer->index].mode_addr,
+ 		    gen_tmr_configuration[timer->index].mode_mask);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		/*
+ 		 * Starting from AR9462, each generic timer can select which tsf
+ 		 * to use. But we still follow the old rule, 0 - 7 use tsf and
 -- 
-1.7.7
+1.7.12
 
