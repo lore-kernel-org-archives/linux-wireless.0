@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:33926 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751523Ab2ITMvL (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:47934 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754544Ab2IHCDr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 08:51:11 -0400
-Received: by pbbrr4 with SMTP id rr4so140588pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 05:51:11 -0700 (PDT)
+	Fri, 7 Sep 2012 22:03:47 -0400
+Received: by ieje11 with SMTP id e11so210449iej.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 19:03:47 -0700 (PDT)
+Message-ID: <504AA77F.2010906@lwfinger.net> (sfid-20120908_040352_235354_7DA6B6CD)
+Date: Fri, 07 Sep 2012 21:03:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1348145450.4161.31.camel@jlt4.sipsolutions.net>
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	<1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	<1347631355.5263.19.camel@sauron.fi.intel.com>
-	<1347640763.5263.24.camel@sauron.fi.intel.com>
-	<1347892887.7112.9.camel@sauron.fi.intel.com>
-	<1348142775.2388.10.camel@sauron.fi.intel.com>
-	<1348144524.4161.26.camel@jlt4.sipsolutions.net>
-	<CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-	<CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-	<1348145269.4161.28.camel@jlt4.sipsolutions.net>
-	<CANn89iLksBMJ=Ep+VcPSAOPzqst70hk8hR5=mGte2vSx=49zUA@mail.gmail.com>
-	<1348145450.4161.31.camel@jlt4.sipsolutions.net>
-Date: Thu, 20 Sep 2012 14:51:10 +0200
-Message-ID: <CANn89iLudX29yU8ziNyN+8gN3b2L55L9m5p6ob_wnfZ3fp_TDg@mail.gmail.com> (sfid-20120920_145119_521746_E8E29FA1)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Eric Dumazet <edumazet@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Wei Yongjun <weiyj.lk@gmail.com>
+CC: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] NFC: pn544_hci: move the dereference below the NULL
+ test
+References: <CAPgLHd_gF6X91JPGZK0f7vhSAK+d74YfbcvPn+givzMr=44+Sw@mail.gmail.com>
+In-Reply-To: <CAPgLHd_gF6X91JPGZK0f7vhSAK+d74YfbcvPn+givzMr=44+Sw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So its using a RAW socket ?
+On 09/07/2012 08:53 PM, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> The dereference should be moved below the NULL test.
+>
+> spatch with a semantic match is used to found this.
+> (http://coccinelle.lip6.fr/)
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>   drivers/nfc/pn544_hci.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
+> index aa71807..7b20f2d 100644
+> --- a/drivers/nfc/pn544_hci.c
+> +++ b/drivers/nfc/pn544_hci.c
+> @@ -341,13 +341,14 @@ flush:
+>   static irqreturn_t pn544_hci_irq_thread_fn(int irq, void *dev_id)
+>   {
+>   	struct pn544_hci_info *info = dev_id;
+> -	struct i2c_client *client = info->i2c_dev;
+> +	struct i2c_client *client;
+>   	struct sk_buff *skb = NULL;
+>   	int r;
+>
+>   	BUG_ON(!info);
+>   	BUG_ON(irq != info->i2c_dev->irq);
+>
+> +	client = info->i2c_dev;
 
-On Thu, Sep 20, 2012 at 2:50 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-09-20 at 14:48 +0200, Eric Dumazet wrote:
->> Or its a buggy protocol ?
->>
->> IP/UDP/TCP definitely works, but maybe another protocol assumes its
->> header is in skb->head
+As long as you are reworking this section, doesn't BUG_ON seem a little harsh? I 
+do not think the kernel should ever be crashed because a non-essential driver is 
+messed up. As the patch would be a totally different change, it should be a new 
+submission, but I think each of these conditions should trigger a WARN_ON_ONCE, 
+and return IRQ_NONE when they occur.
+
+Larry
+
+>   	dev_dbg(&client->dev, "IRQ\n");
 >
-> It could be, I think it failed either on EAPOL (which is just userspace
-> registering a protocol socket) or DHCP (same?)
+>   	if (info->hard_fault != 0)
 >
-> johannes
 >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
