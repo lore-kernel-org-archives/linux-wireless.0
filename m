@@ -1,173 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:50775 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753369Ab2IFKWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 06:22:30 -0400
-From: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-To: <linux-wireless@vger.kernel.org>, <linux-nfc@lists.01.org>,
-	<sameo@linux.intel.com>
-CC: <lauro.venancio@openbossa.org>, <aloisio.almeida@openbossa.org>,
-	<eric.lapuyade@intel.com>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: [PATCH 1/2] NFC: Remove crc generation from shdlc layer
-Date: Thu, 6 Sep 2012 12:22:16 +0200
-Message-ID: <1346926937-4968-1-git-send-email-waldemar.rymarkiewicz@tieto.com> (sfid-20120906_122234_744013_5E707345)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:35184 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197Ab2IHANU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 20:13:20 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20554.36022.695344.376020@gargle.gargle.HOWL> (sfid-20120908_021335_734962_1A14E9C1)
+Date: Sat, 8 Sep 2012 05:39:26 +0530
+To: Koos Pol <koos2012@pohw.nl>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Problems with Atheros AR54B22 (AR9462)
+In-Reply-To: <504A2718.10805@pohw.nl>
+References: <504A2718.10805@pohw.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Checksum is specific for a chip spcification and it varies
-(in size and type) between different hardware. It should be
-handled in the driver then.
+Koos Pol wrote:
+> Hi,
+> 
+> After receiving great help on irc #linux-wireless, I'd figure to post the
+> results here in case someone wants to track this down.
+> 
+> I've installed openSUSE 12.2 on a brand new Acer V3-771 with the Atheros
+> AR54B22 chipset. The ath9 driver works right out of the box. But.... My wlan
+> router (Fritzbox 7170) doesn't seem to handle it very well, as it will
+> drop/reset the wlan connection after a few seconds. Notably other wlan laptops
+> are disconnected too. The whole wlan network seems to go astray.
+> So it seems to be strongly related to the Fritzbox. I did manage to connect
+> successfully to someone else's pub wifi.
+> Is this something worth debugging (for the greater public as well)?
+> 
+> The response I got from irc (sacamano_m82) was to use the compat-wireless
+> package as ath9k is still under development.
+> 
+> I did and I have perfect wlan connectivity now. Wlan is stable since. So that
+> did the trick.
 
-Moreover, shdlc spec doesn't mention crc as a part of the frame.
+Nice.
 
-Update pn544_hci driver as well.
+> If anyone is interested in debugging this, I'm happy to help you in any way I
+> can. Just tell me what to do. FYI, I'm not subscribed to this list.
 
-Signed-off-by: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
----
- drivers/nfc/pn544_hci.c |   19 ++++++++++++++++++-
- net/nfc/hci/shdlc.c     |   27 ++-------------------------
- 2 files changed, 20 insertions(+), 26 deletions(-)
+Well, the kernel in openSUSE 12.2 probably doesn't have full support for AR9462 yet..
 
-diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
-index 9458d53..4e0716c 100644
---- a/drivers/nfc/pn544_hci.c
-+++ b/drivers/nfc/pn544_hci.c
-@@ -128,6 +128,7 @@ static struct nfc_hci_gate pn544_gates[] = {
- 
- /* Largest headroom needed for outgoing custom commands */
- #define PN544_CMDS_HEADROOM	2
-+#define PN544_CMDS_TAILROOM	2
- 
- struct pn544_hci_info {
- 	struct i2c_client *i2c_dev;
-@@ -576,6 +577,20 @@ static int pn544_hci_ready(struct nfc_shdlc *shdlc)
- 	return 0;
- }
- 
-+static void pn544_hci_add_len_crc(struct sk_buff *skb)
-+{
-+	u16 crc;
-+	int len;
-+
-+	len = skb->len + 2;
-+	*skb_push(skb, 1) = len;
-+
-+	crc = crc_ccitt(0xffff, skb->data, skb->len);
-+	crc = ~crc;
-+	*skb_put(skb, 1) = crc & 0xff;
-+	*skb_put(skb, 1) = crc >> 8;
-+}
-+
- static int pn544_hci_xmit(struct nfc_shdlc *shdlc, struct sk_buff *skb)
- {
- 	struct pn544_hci_info *info = nfc_shdlc_get_clientdata(shdlc);
-@@ -584,6 +599,8 @@ static int pn544_hci_xmit(struct nfc_shdlc *shdlc, struct sk_buff *skb)
- 	if (info->hard_fault != 0)
- 		return info->hard_fault;
- 
-+	pn544_hci_add_len_crc(skb);
-+
- 	return pn544_hci_i2c_write(client, skb->data, skb->len);
- }
- 
-@@ -874,7 +891,7 @@ static int __devinit pn544_hci_probe(struct i2c_client *client,
- 
- 	info->shdlc = nfc_shdlc_allocate(&pn544_shdlc_ops,
- 					 &init_data, protocols,
--					 PN544_CMDS_HEADROOM, 0,
-+					 PN544_CMDS_HEADROOM, PN544_CMDS_TAILROOM,
- 					 PN544_HCI_LLC_MAX_PAYLOAD,
- 					 dev_name(&client->dev));
- 	if (!info->shdlc) {
-diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
-index d4fe5e9..8a5f034 100644
---- a/net/nfc/hci/shdlc.c
-+++ b/net/nfc/hci/shdlc.c
-@@ -22,7 +22,6 @@
- #include <linux/sched.h>
- #include <linux/export.h>
- #include <linux/wait.h>
--#include <linux/crc-ccitt.h>
- #include <linux/slab.h>
- #include <linux/skbuff.h>
- 
-@@ -30,7 +29,6 @@
- #include <net/nfc/shdlc.h>
- 
- #define SHDLC_LLC_HEAD_ROOM	2
--#define SHDLC_LLC_TAIL_ROOM	2
- 
- #define SHDLC_MAX_WINDOW	4
- #define SHDLC_SREJ_SUPPORT	false
-@@ -94,28 +92,13 @@ static struct sk_buff *nfc_shdlc_alloc_skb(struct nfc_shdlc *shdlc,
- 	struct sk_buff *skb;
- 
- 	skb = alloc_skb(shdlc->client_headroom + SHDLC_LLC_HEAD_ROOM +
--			shdlc->client_tailroom + SHDLC_LLC_TAIL_ROOM +
--			payload_len, GFP_KERNEL);
-+			shdlc->client_tailroom + payload_len, GFP_KERNEL);
- 	if (skb)
- 		skb_reserve(skb, shdlc->client_headroom + SHDLC_LLC_HEAD_ROOM);
- 
- 	return skb;
- }
- 
--static void nfc_shdlc_add_len_crc(struct sk_buff *skb)
--{
--	u16 crc;
--	int len;
--
--	len = skb->len + 2;
--	*skb_push(skb, 1) = len;
--
--	crc = crc_ccitt(0xffff, skb->data, skb->len);
--	crc = ~crc;
--	*skb_put(skb, 1) = crc & 0xff;
--	*skb_put(skb, 1) = crc >> 8;
--}
--
- /* immediately sends an S frame. */
- static int nfc_shdlc_send_s_frame(struct nfc_shdlc *shdlc,
- 				  enum sframe_type sframe_type, int nr)
-@@ -131,8 +114,6 @@ static int nfc_shdlc_send_s_frame(struct nfc_shdlc *shdlc,
- 
- 	*skb_push(skb, 1) = SHDLC_CONTROL_HEAD_S | (sframe_type << 3) | nr;
- 
--	nfc_shdlc_add_len_crc(skb);
--
- 	r = shdlc->ops->xmit(shdlc, skb);
- 
- 	kfree_skb(skb);
-@@ -151,8 +132,6 @@ static int nfc_shdlc_send_u_frame(struct nfc_shdlc *shdlc,
- 
- 	*skb_push(skb, 1) = SHDLC_CONTROL_HEAD_U | uframe_modifier;
- 
--	nfc_shdlc_add_len_crc(skb);
--
- 	r = shdlc->ops->xmit(shdlc, skb);
- 
- 	kfree_skb(skb);
-@@ -510,8 +489,6 @@ static void nfc_shdlc_handle_send_queue(struct nfc_shdlc *shdlc)
- 			 shdlc->nr);
- 	/*	SHDLC_DUMP_SKB("shdlc frame written", skb); */
- 
--		nfc_shdlc_add_len_crc(skb);
--
- 		r = shdlc->ops->xmit(shdlc, skb);
- 		if (r < 0) {
- 			shdlc->hard_fault = r;
-@@ -881,7 +858,7 @@ struct nfc_shdlc *nfc_shdlc_allocate(struct nfc_shdlc_ops *ops,
- 
- 	shdlc->hdev = nfc_hci_allocate_device(&shdlc_ops, init_data, protocols,
- 					      tx_headroom + SHDLC_LLC_HEAD_ROOM,
--					      tx_tailroom + SHDLC_LLC_TAIL_ROOM,
-+					      tx_tailroom,
- 					      max_link_payload);
- 	if (shdlc->hdev == NULL)
- 		goto err_allocdev;
--- 
-1.7.10
-
+Sujith
