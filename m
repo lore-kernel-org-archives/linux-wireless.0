@@ -1,45 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:51668 "EHLO
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:47883 "EHLO
 	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398Ab2IEJjX convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1752174Ab2IHMht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 05:39:23 -0400
-Received: by ieje11 with SMTP id e11so690355iej.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 02:39:23 -0700 (PDT)
+	Sat, 8 Sep 2012 08:37:49 -0400
+Received: by ieje11 with SMTP id e11so560373iej.19
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2012 05:37:49 -0700 (PDT)
+Message-ID: <504B3C19.5040405@lwfinger.net> (sfid-20120908_143753_708949_60128D64)
+Date: Sat, 08 Sep 2012 07:37:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <45566970CF58C74CB52107862E0541CD1D1B0BFB@POCITMSEXMB03.LntUniverse.com>
-References: <45566970CF58C74CB52107862E0541CD1D1B0BFB@POCITMSEXMB03.LntUniverse.com>
-Date: Wed, 5 Sep 2012 12:39:23 +0300
-Message-ID: <CAB3XZEd9mJMW-BeR3DhMg4ocCkLBDn41poAzGCpU7A2Apy1GJg@mail.gmail.com> (sfid-20120905_113927_960262_0FD25325)
-Subject: Re: Crash with Wl12xx driver while Concurrent operation(P2P and Wi-Fi legacy)
-From: Eliad Peller <eliad@wizery.com>
-To: Girish Bn <Girish.BN@lnties.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=US-ASCII
+To: Wei Yongjun <weiyj.lk@gmail.com>
+CC: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] NFC: pn544_hci: move the dereference below the NULL
+ test
+References: <CAPgLHd-DabDrNN9KpQjG+XiXJDA38_VA2jeiF+O-7QBqNhEogA@mail.gmail.com>
+In-Reply-To: <CAPgLHd-DabDrNN9KpQjG+XiXJDA38_VA2jeiF+O-7QBqNhEogA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 5, 2012 at 7:48 AM, Girish Bn <Girish.BN@lnties.com> wrote:
-> Hi TI developers,
+On 09/07/2012 10:34 PM, Wei Yongjun wrote:
+> On 09/08/2012 10:03 AM, Larry Finger wrote:
+>> On 09/07/2012 08:53 PM, Wei Yongjun wrote:
+>>> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>>>
+>>> The dereference should be moved below the NULL test.
+>>>
+>>> spatch with a semantic match is used to found this.
+>>> (http://coccinelle.lip6.fr/)
+>>>
+>>> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>>> ---
+>>>
+>>
+>> As long as you are reworking this section, doesn't BUG_ON seem a little harsh? I do not think the kernel should ever be crashed because a non-essential driver is messed up. As the patch would be a totally different change, it should be a new submission, but I think each of these conditions should trigger a WARN_ON_ONCE, and return IRQ_NONE when they occur.
+>>
+> You means the should be like this?
 >
-> Can anybody answer this? I am waiting for the reply
+> diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
+> index aa71807..e42b100 100644
+> --- a/drivers/nfc/pn544_hci.c
+> +++ b/drivers/nfc/pn544_hci.c
+> @@ -341,13 +341,16 @@ flush:
+>   static irqreturn_t pn544_hci_irq_thread_fn(int irq, void *dev_id)
+>   {
+>   	struct pn544_hci_info *info = dev_id;
+> -	struct i2c_client *client = info->i2c_dev;
+> +	struct i2c_client *client;
+>   	struct sk_buff *skb = NULL;
+>   	int r;
 >
-> Thanks
-> Girish
+> -	BUG_ON(!info);
+> -	BUG_ON(irq != info->i2c_dev->irq);
+> +	if (!info || irq != info->i2c_dev->irq) {
+> +		WARN_ON_ONCE(1);
+> +		return IRQ_NONE;
+> +	}
 >
-> -----Original Message-----
-> From: Girish Bn
-> Sent: Tuesday, August 28, 2012 8:17 PM
-> To: 'linux-wireless@vger.kernel.org'
-> Subject: Crash with Wl12xx driver while Concurrent operation(P2P and Wi-Fi legacy)
+> +	client = info->i2c_dev;
+>   	dev_dbg(&client->dev, "IRQ\n");
 >
+>   	if (info->hard_fault != 0)
 
-> /wlan # dmesg
-> Powering on wl12xx<6>Powering up MMC Slot<6>wl12xx: firmware booted (Rev 6.3.10.2.115) [  724.990000] wl12xx: down [  724.990000] Powering off wl12xx<6>Powering down MMC Slot<6>ieee80211 phy0: Hardware restart was requested [  725.030000] Powering on wl12xx<6>Powering up MMC Slot<6>wl12xx: firmware booted (Rev 6.5.7.0.27) [  725.900000] ------------[ cut here ]------------ [  725.900000] WARNING: at /home/bps/compat-wireless-2012-08-26/drivers/net/wireless/ti/wlcore/tx.c:1114 wl1271_tx_min_rate_get+0x28/0x54 [wlcore]() [  725.900000] Modules linked in: wlcore_sdio wl12xx wlcore compat_firmware_class mac80211 cfg80211 rfkill_backport compat lpc313x_mmc g_serial nxp_usb2_udc [  725.900000] [<c0205590>] (dump_stack+0x0/0x1c) from [<c0037b80>] (warn_on_slowpath+0x54/0x70) [  725.900000] [<c0037b2c>] (warn_on_slowpath+0x0/0x70) from [<bf0c0e98>] (wl1271_tx_min_rate_get+0x28/0x54 [wlcore]) [  725.900000]  r6:c161a890 r5:c159d780 r4:00000000 [  725.900000] [<bf0c0e70>] (wl1271_tx_min_rate_get+0x0/0x54 [wlcore]) from [<bf0b8d00>] (wl1271_op_bss_info_changed+0xdc/0xc24 [wlcore]) [  725.900000]  r5:c159d780 r4:c161a928 [  725.900000] [<bf0b8c24>] (wl1271_op_bss_info_changed+0x0/0xc24 [wlcore]) from [<bf06a56c>] (ieee80211_bss_info_change_notify+0x1dc/0x200 [mac80211]) [  725.900000] [<bf06a390>] (ieee80211_bss_info_change_notify+0x0/0x200 [mac80211]) from [<bf089b98>] (ieee80211_reconfig+0x584/0x9a0 [mac80211]) [  725.900000]  r7:c161a888 r6:c15f07d0 r5:c161a3a0 r4:c159cb00 [  725.900000] [<bf089614>] (ieee80211_reconfig+0x0/0x9a0 [mac80211]) from [<bf06b460>] (ieee80211_restart_work+0x7c/0x94 [mac80211]) [  725.910000] [<bf06b3e4>] (ieee80211_restart_work+0x0/0x94 [mac80211]) from [<c00487a4>] (run_workqueue+0xc4/0x14c) [  725.910000]  r7:00000000 r6:bf06b3e4 r5:c14d2000 r4:c1fef280 [  725.910000] [<c00486e0>] (run_workqueue+0x0/0x14c) from [<c0048f18>] (worker_thread+0x10c/0x120) [  725.910000]  r7:c1fef288 r6:c14d3fa4 r5:c14d2000 r4:c1fef280 [  725.910000] [<c0048e0c>] (worker_thread+0x0/0x120) from [<c004c888>] (kthread+0x60/0x9c) [  725.910000]  r7:00000000 r6:c1fef280 r5:c0048e0c r4:c14d2000 [  725.910000] [<c004c828>] (kthread+0x0/0x9c) from [<c003ab6c>] (do_exit+0x0/0x734) [  725.910000]  r7:00000000 r6:00000000 r5:00000000 r4:00000000 [  725.910000] ---[ end trace 1cd0b968bc5f5a81 ]--- [  725.910000] wl12xx: ERROR AP rate policy change failed -22 Can you please let me know the reason behind crash? Also confirm the driver and firmware version being used is right or not?
->
+Yes, that looks better to me.
 
-this doesn't look like a crash, but only a warning.
-please try applying the following supplicant patch:
-https://github.com/TI-OpenLink/hostap/commit/6ef9363d1bd503e622106a5250bb58619a709b13
+Larry
 
-Eliad.
+
