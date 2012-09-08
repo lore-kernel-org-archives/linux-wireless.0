@@ -1,113 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:50853 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757718Ab2IXTeZ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:59441 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071Ab2IHIVn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 15:34:25 -0400
-Date: Mon, 24 Sep 2012 20:34:21 +0100
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dwmw2@infradead.org, Eric Dumazet <eric.dumazet@gmail.com>,
-	Jan Terstegge <jan@terstegge.net>
-Message-ID: <20120924193421.GH29217@decadent.org.uk> (sfid-20120924_213441_628666_0B3EF027)
-References: <1347294365-6509-1-git-send-email-Larry.Finger@lwfinger.net>
- <1348180259.4801.9.camel@deadeye.wl.decadent.org.uk>
- <505C9254.5090101@lwfinger.net>
+	Sat, 8 Sep 2012 04:21:43 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="SkvwRMAIpAhPCcCJ"
-In-Reply-To: <505C9254.5090101@lwfinger.net>
-Subject: Re: [PATCH] rtlwifi/rtl8712u Revert firmware
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20554.65332.70163.2580@gargle.gargle.HOWL> (sfid-20120908_102149_768955_C032CEBF)
+Date: Sat, 8 Sep 2012 13:47:56 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Sujith Manoharan <c_manoha@qualcomm.com>, <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 6/7] ath9k_hw: Program correct PLL value for AR9565
+In-Reply-To: <504AFCE8.5010306@openwrt.org>
+References: <20554.62374.945320.866841@gargle.gargle.HOWL>
+	<504AFCE8.5010306@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Felix Fietkau wrote:
+> That looks messed up, how about just:
+> 
+> 	pll = ath9k_hw_compute_pll_control(ah, chan);
+> 	if (AR_SREV_9565(ah))
+> 		pll |= 0x40000;
+> 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+> 
+> Or alternatively move that OR mask into ath9k_hw_compute_pll_control
 
---SkvwRMAIpAhPCcCJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+[RFC v2] ath9k_hw: Program correct PLL value for AR9565
 
-On Fri, Sep 21, 2012 at 11:14:12AM -0500, Larry Finger wrote:
-> On 09/20/2012 05:31 PM, Ben Hutchings wrote:
-> >On Mon, 2012-09-10 at 11:26 -0500, Larry Finger wrote:
-> >>Although the newest firmware for the RTL8192SU, which is found in vendor
-> >>driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404, works with =
-most
-> >>devices, it causes drops of the wireless connection for the ASUS WL-167=
-G V3
-> >>(USB ID 0b05:1791), the D-Link DWA131 (07d1:3303), and probably others.
-> >>Tests show that the firmware from vendor driver
-> >>rtl8712_8188_8191_8192SU_usb_linux_v7_0.20100831 works better.
-> >>
-> >>This commerts reverts to that older firmware.
-> >>
-> >>Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> >[...]
-> >
-> >This is the original blob added by:
-> >
-> >commit 8f919160792e4702c6b7a67a243cea4f757407e4
-> >Author: Larry Finger <Larry.Finger@lwfinger.net>
-> >Date:   Mon Nov 1 23:56:52 2010 -0500
-> >
-> >     linux-firmware: Add firmware files for Realtek RTL8712U and RTL8192=
-CE
-> >
-> >There have been two updates since then:
-> >
-> >commit f8ddc05e13c4c6dd9d725bc376b287f307eb223a
-> >Author: Larry Finger <Larry.Finger@lwfinger.net>
-> >Date:   Tue Aug 16 11:12:14 2011 -0500
-> >
-> >     rtlwifi: rtl8712u: Upgrade to firmware found in vendor's V2.6.6
-> >
-> >commit d8f60751d3f09545f51aac5d8e451f7668063ebf
-> >Author: Larry Finger <Larry.Finger@lwfinger.net>
-> >Date:   Wed Jul 11 13:18:30 2012 -0500
-> >
-> >     r8712u: Update to latest firmware
-> >
-> >     A new firmware file is used in the vendor driver with name/version
-> >     rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404.
-> >
-> >Sure you want to revert both of these, not just the latest?
->=20
-> Yes. Both of the updates work on my hardware (D-Link and Rosewill),
-> but both fail on an ASUS WL-167g v3 as reported privately to me. I
-> will work with Realtek and the OP to resolve the problem, and then
-> update the fw once again.
-=20
-OK, I've reverted as requested.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Ben.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 063d724..47de1a9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -918,7 +918,8 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 	}
+ 
+ 	pll = ath9k_hw_compute_pll_control(ah, chan);
+-
++	if (AR_SREV_9565(ah))
++		pll |= 0x40000;
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+ 
+ 	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
+-- 
+1.7.12
 
---=20
-Ben Hutchings
-We get into the habit of living before acquiring the habit of thinking.
-                                                              - Albert Camus
-
---SkvwRMAIpAhPCcCJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUBUGC1vOe/yOyVhhEJAQpvPg/6A3igrukIgZbJQsv857F3im1I4CYKg0cP
-Q8n+h8Z/Z/ruOvgisGFMCBIi0+2MAf6vURqvFWwR5NESsQ1FGKvW8ODgbnqdRXUE
-6iM+51ovtMEgxpx6bOx9LWh4qGqWRTlHqlk/Fq2z9jtlDDiAVVcuNaT+cGdJtZpF
-BcRip5s0aFANGl+QmqQGT6r+U2fXDyQnhLWVTisxSNYPgvbpydrirR3Fbfon9V5k
-NZjnwTg8eCwQ6GrtruAoJrIh2v+Ts5SumTTzBqjBXBQ9MGHg8kYBZNUeDMeyTIzn
-oTreB8yhBGHg7OretKoiaJihPM+jfgjumtNt3+m0B27WqUVaaXgdVofca8AAw+3s
-NRMmZ9KCNvO64wOhzcBEiejudriMr7KPCpM6az3D+X98gVBUDI1U+ROicaKbOeVj
-kcMo5dvqEdh9MzTP0wMr0Iaewrc+WqBHai1tiRLLD2NFk6i+5P/uYfRvp2KlRcPn
-Mk49Nlhv9UmYvfpzy0w8fkxbYbZi0w0eFIXy7j8t95cd0fZbFYP3IBL4awTp4ZkG
-iu4ekADeVVveWaiOCu9aVbPL/AE62N07P8Ioldnu3VB0gp/zt/wjCDZW24mCfHPu
-CQTSjN4ZGr25FsPmeO97Hii1soFf6/1T6AMqUQVQwL0oSCxqBWmzfQFnFwtzaxYB
-mBit5O/HDDw=
-=RYQO
------END PGP SIGNATURE-----
-
---SkvwRMAIpAhPCcCJ--
