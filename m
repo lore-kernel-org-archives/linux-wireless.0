@@ -1,87 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:43022 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863Ab2IYNZN (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48558 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455Ab2IHHbs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 09:25:13 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so13805250iea.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2012 06:25:13 -0700 (PDT)
-Message-ID: <5061B0B5.3040103@lwfinger.net> (sfid-20120925_152518_032258_2F8A93E9)
-Date: Tue, 25 Sep 2012 08:25:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 8 Sep 2012 03:31:48 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-To: kerolasa@gmail.com
-CC: Sami Kerola <kerolasa@iki.fi>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce, system freeze and bios reset
-References: <CAG27Bk3tuw+P34btGic9pKwof3xsDw=dBpm-VEgv-RxN-BgVaQ@mail.gmail.com>
-In-Reply-To: <CAG27Bk3tuw+P34btGic9pKwof3xsDw=dBpm-VEgv-RxN-BgVaQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20554.62336.614799.170591@gargle.gargle.HOWL> (sfid-20120908_093153_672375_7550F4CA)
+Date: Sat, 8 Sep 2012 12:58:00 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [RFC 1/7] ath9k_hw: Add version/revision macros for AR9565
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2012 02:49 PM, Sami Kerola wrote:
-> FYI rtl8192ce maintainers (and maillist archive readers),
->
-> I recently bought Toshiba Satellite C850D-107 version PSC9SE-00T00DEN
-> which comes with Realtek hardware[1].
->
-> Initially I had a bit of problems with Arch Linux kernel 3.5.4-1-ARCH
-> which froze after running wpa_supplicant.  Once the command had been
-> entered it took about 5 to 10 seconds before real trouble, by which I
-> mean terminal did not echo keystrokes nor feel any way responsive.  I did
-> not try Magic SysRq's.
->
-> Strange enough that problem persisted over boot, and went away only if I
-> went to BIOS and set factory defaults.  Once factory defaults where set I
-> could use console again, as long I did not try to do anything with
-> wpa_supplicant command.  After wondering for while I found
-> instructions[2] how to go around; disable power saving, e.g., the set the
-> lines below.
->
-> $ cat /etc/modprobe.d/rtl8192ce.conf
-> options rtl8192ce ips=0 fwlps=0
->
-> That worked I became curious if the latest kernel would have the same
-> issue.  Now I am running 3.6.0-rc6-ARCH-00193-ge5e77cf from Linus's git
-> with new firmware[3], and power save enabled.  At least after an hour all
-> seems to work fine.
->
-> Did you anticipate firmware change to fix this these sort of problem?
->
->
-> [1] The hardware:
-> 06:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
-> 802.11b/g/n WiFi Adapter (rev 01)
-> 	Subsystem: Realtek Semiconductor Co., Ltd. Device 8212
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-> Stepping- SERR- FastB2B- DisINTx-
-> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0, Cache Line Size: 64 bytes
-> 	Interrupt: pin A routed to IRQ 17
-> 	Region 0: I/O ports at 3000 [size=256]
-> 	Region 2: Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
-> 	Capabilities: <access denied>
-> 	Kernel driver in use: rtl8192ce
->
-> [2] https://bbs.archlinux.org/viewtopic.php?id=132931
->
-> [3] md5sum /usr/lib/firmware/rtlwifi/rtl8192cfwU_B.bin
-> dd371739aa401ea1d615436b24598bc4 /usr/lib/firmware/rtlwifi/rtl8192cfwU_B.bin
+And recognize the device in the init path.
 
-As I do not have a Toshiba laptop, I have no idea what the change in BIOS 
-setting might have done.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  | 7 +++++--
+ drivers/net/wireless/ath/ath9k/hw.h  | 1 +
+ drivers/net/wireless/ath/ath9k/reg.h | 9 +++++++++
+ 3 files changed, 15 insertions(+), 2 deletions(-)
 
-I doubt that adding the rtl8192cfwU_B.bin firmware to your system made any 
-difference. The device that needs that firmware is a B-cut RTL8188CE, and the 
-code to drive it has been submitted to wireless-testing, but not yet merged. I 
-expect that it will be in kernel 3.7. Kernel 3.6-rc7 from mainline contains code 
-that detects the B-cut device and logs a warning, but there are no other changes.
-
-The output of the dmesg command will say what firmware has been loaded.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 48af401..3638626 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -355,7 +355,7 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+ 			(val & AR_SREV_VERSION2) >> AR_SREV_TYPE2_S;
+ 		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
+ 
+-		if (AR_SREV_9462(ah))
++		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 			ah->is_pciexpress = true;
+ 		else
+ 			ah->is_pciexpress = (val &
+@@ -647,6 +647,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	case AR_SREV_VERSION_9340:
+ 	case AR_SREV_VERSION_9462:
+ 	case AR_SREV_VERSION_9550:
++	case AR_SREV_VERSION_9565:
+ 		break;
+ 	default:
+ 		ath_err(common,
+@@ -708,7 +709,7 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	int ret;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	/* These are all the AR5008/AR9001/AR9002 hardware family of chipsets */
++	/* These are all the AR5008/AR9001/AR9002/AR9003 hardware family of chipsets */
+ 	switch (ah->hw_version.devid) {
+ 	case AR5416_DEVID_PCI:
+ 	case AR5416_DEVID_PCIE:
+@@ -728,6 +729,7 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	case AR9300_DEVID_AR9580:
+ 	case AR9300_DEVID_AR9462:
+ 	case AR9485_DEVID_AR1111:
++	case AR9300_DEVID_AR9565:
+ 		break;
+ 	default:
+ 		if (common->bus_ops->ath_bus_type == ATH_USB)
+@@ -3157,6 +3159,7 @@ static struct {
+ 	{ AR_SREV_VERSION_9485,         "9485" },
+ 	{ AR_SREV_VERSION_9462,         "9462" },
+ 	{ AR_SREV_VERSION_9550,         "9550" },
++	{ AR_SREV_VERSION_9565,         "9565" },
+ };
+ 
+ /* For devices with external radios */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6599a75..0d17ce0 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -50,6 +50,7 @@
+ #define AR9300_DEVID_AR9330	0x0035
+ #define AR9300_DEVID_QCA955X	0x0038
+ #define AR9485_DEVID_AR1111	0x0037
++#define AR9300_DEVID_AR9565     0x0036
+ 
+ #define AR5416_AR9100_DEVID	0x000b
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 87cac8e..6ca34a4 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -801,6 +801,8 @@
+ #define AR_SREV_REVISION_9580_10	4 /* AR9580 1.0 */
+ #define AR_SREV_VERSION_9462		0x280
+ #define AR_SREV_REVISION_9462_20	2
++#define AR_SREV_VERSION_9565            0x2C0
++#define AR_SREV_REVISION_9565_10        0
+ #define AR_SREV_VERSION_9550		0x400
+ 
+ #define AR_SREV_5416(_ah) \
+@@ -909,6 +911,13 @@
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
+ 	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
+ 
++#define AR_SREV_9565(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
++
++#define AR_SREV_9565_10(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10)))
++
+ #define AR_SREV_9550(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9550))
+ 
+-- 
+1.7.12
 
