@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3867 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751687Ab2ISUVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 16:21:44 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/13] brcmfmac: remove unused function.
-Date: Wed, 19 Sep 2012 22:21:12 +0200
-Message-ID: <1348086078-19183-8-git-send-email-arend@broadcom.com> (sfid-20120919_222156_123107_427BA33D)
-In-Reply-To: <1348086078-19183-1-git-send-email-arend@broadcom.com>
-References: <1348086078-19183-1-git-send-email-arend@broadcom.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:33327 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487Ab2IHBxp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Sep 2012 21:53:45 -0400
+Received: by mail-qc0-f174.google.com with SMTP id o28so128834qcr.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 18:53:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Sat, 8 Sep 2012 09:53:45 +0800
+Message-ID: <CAPgLHd_gF6X91JPGZK0f7vhSAK+d74YfbcvPn+givzMr=44+Sw@mail.gmail.com> (sfid-20120908_035349_259647_2748BF1B)
+Subject: [PATCH v2] NFC: pn544_hci: move the dereference below the NULL test
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-clean up code.
+The dereference should be moved below the NULL test.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+spatch with a semantic match is used to found this.
+(http://coccinelle.lip6.fr/)
+
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   17 -----------------
- 1 file changed, 17 deletions(-)
+ drivers/nfc/pn544_hci.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 2f0a103..d434934 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4708,20 +4708,3 @@ s32 brcmf_cfg80211_down(struct brcmf_cfg80211_dev *cfg_dev)
- 	return err;
- }
+diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
+index aa71807..7b20f2d 100644
+--- a/drivers/nfc/pn544_hci.c
++++ b/drivers/nfc/pn544_hci.c
+@@ -341,13 +341,14 @@ flush:
+ static irqreturn_t pn544_hci_irq_thread_fn(int irq, void *dev_id)
+ {
+ 	struct pn544_hci_info *info = dev_id;
+-	struct i2c_client *client = info->i2c_dev;
++	struct i2c_client *client;
+ 	struct sk_buff *skb = NULL;
+ 	int r;
  
--static __used s32 brcmf_add_ie(struct brcmf_cfg80211_priv *cfg_priv,
--			       u8 t, u8 l, u8 *v)
--{
--	struct brcmf_cfg80211_ie *ie = &cfg_priv->ie;
--	s32 err = 0;
--
--	if (ie->offset + l + 2 > WL_TLV_INFO_MAX) {
--		WL_ERR("ei crosses buffer boundary\n");
--		return -ENOSPC;
--	}
--	ie->buf[ie->offset] = t;
--	ie->buf[ie->offset + 1] = l;
--	memcpy(&ie->buf[ie->offset + 2], v, l);
--	ie->offset += l + 2;
--
--	return err;
--}
--- 
-1.7.9.5
+ 	BUG_ON(!info);
+ 	BUG_ON(irq != info->i2c_dev->irq);
+ 
++	client = info->i2c_dev;
+ 	dev_dbg(&client->dev, "IRQ\n");
+ 
+ 	if (info->hard_fault != 0)
 
 
