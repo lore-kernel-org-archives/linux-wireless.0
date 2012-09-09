@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:47741 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756466Ab2I0Kin (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49322 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754173Ab2IIS6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 06:38:43 -0400
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Yair Shapira <yair.shapira@ti.com>,
-	Igal Chernobelsky <igalc@ti.com>
-Subject: [PATCH 19/31] wl18xx: number_of_assembled_ant5 indicates if A band is enabled
-Date: Thu, 27 Sep 2012 13:37:57 +0300
-Message-Id: <1348742289-6587-20-git-send-email-luca@coelho.fi> (sfid-20120927_123944_351339_AB0EC748)
-In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
-References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+	Sun, 9 Sep 2012 14:58:50 -0400
+Message-ID: <1347217118.7709.60.camel@deadeye.wl.decadent.org.uk> (sfid-20120909_205854_010892_61D3493B)
+Subject: Re: [PATCH] linux-firmware: ath6k: add firmware for AR6004 hw1.3
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org,
+	ath6kl-devel@qualcomm.com, Ray Chen <raychen@qca.qualcomm.com>
+Date: Sun, 09 Sep 2012 19:58:38 +0100
+In-Reply-To: <1345450009-4395-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1345450009-4395-1-git-send-email-kvalo@qca.qualcomm.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-oQzBe4Fdh/dU48BMZvjt"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yair Shapira <yair.shapira@ti.com>
 
-Use number_of_assembled_ant5 phy param to indicate if A band is enabled:
-if number_of_assembled_ant5 != 0 then it is enabled otherwise it is
-disabled.
+--=-oQzBe4Fdh/dU48BMZvjt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This aligns with phy implementation that uses this param both to indicate
-if band is active and the number of antennas.
+On Mon, 2012-08-20 at 11:06 +0300, Kalle Valo wrote:
+> From: Ray Chen <raychen@qca.qualcomm.com>
+>=20
+> Signed-off-by: Ray Chen <raychen@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+>  WHENCE                       |    2 ++
+>  ath6k/AR6004/hw1.3/bdata.bin |  Bin 0 -> 6144 bytes
+>  ath6k/AR6004/hw1.3/fw-3.bin  |  Bin 0 -> 50662 bytes
+>  3 files changed, 2 insertions(+), 0 deletions(-)
+>  create mode 100644 ath6k/AR6004/hw1.3/bdata.bin
+>  create mode 100644 ath6k/AR6004/hw1.3/fw-3.bin
+[...]
 
-This parameter replaces enable_11a module param that was removed.
+Applied, thanks.
 
-User-Space applications can use wlconf and/or INI files to disable A band
-using this parameter.
+Ben.
 
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-Signed-off-by: Luciano Coelho <luca@coelho.fi>
----
- drivers/net/wireless/ti/wl18xx/main.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+--=20
+Ben Hutchings
+Time is nature's way of making sure that everything doesn't happen at once.
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 93b148f..ae6920b 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -45,7 +45,6 @@
- static char *ht_mode_param = NULL;
- static char *board_type_param = NULL;
- static bool checksum_param = false;
--static bool enable_11a_param = true;
- static int num_rx_desc_param = -1;
- 
- /* phy paramters */
-@@ -1502,7 +1501,8 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
- 		wl18xx_ops.init_vif = NULL;
- 	}
- 
--	wl->enable_11a = enable_11a_param;
-+	/* Enable 11a Band only if we have 5G antennas */
-+	wl->enable_11a = (priv->conf.phy.number_of_assembled_ant5 != 0);
- 
- 	return wlcore_probe(wl, pdev);
- 
-@@ -1539,9 +1539,6 @@ MODULE_PARM_DESC(board_type, "Board type: fpga, hdk (default), evb, com8 or "
- module_param_named(checksum, checksum_param, bool, S_IRUSR);
- MODULE_PARM_DESC(checksum, "Enable TCP checksum: boolean (defaults to false)");
- 
--module_param_named(enable_11a, enable_11a_param, bool, S_IRUSR);
--MODULE_PARM_DESC(enable_11a, "Enable 11a (5GHz): boolean (defaults to true)");
--
- module_param_named(dc2dc, dc2dc_param, int, S_IRUSR);
- MODULE_PARM_DESC(dc2dc, "External DC2DC: u8 (defaults to 0)");
- 
--- 
-1.7.10.4
+--=-oQzBe4Fdh/dU48BMZvjt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUEzm3ue/yOyVhhEJAQo8CBAAny9AV98ppC8P6i2jIYw6pq5Hg4Jrekmd
+C5reClHOC8eP+DCFq9rCnDizYi7s6wWzFc3C6mptwqMSol5EdsipWRvGCERipHWs
+tTr96woSDe2l0bDeDpq8Zg1SQjwAFHGv/SIpCv0ukoRdkn7lPPJF9obOXpI/zGl8
+V7pTsIkAn21qfc0ZeLFS/+7FBYzlZ9NSp1jHoD0CKKJui6CmVTjv/qahPatRc5MV
+6E5HKZO49PhNr8BE3Gd7i+4FBdBY5myceSHXrdYJRDJ54P8lKmexSExhO0INBrmq
+S5asAU/A97kZVHa01t1OsR8zyjpytIenr2kDwc0Sn/Aiq2dul4wxHBB4ckC51GID
+h8mrvX2BnX9QNutAy/PmUm5WrCtcpDJMRRyyHCtn6hrGjrJNQiEQ8AzxwptG5vdT
+3jUyZ36tsQ2e+HZNI39fEVibNMz4hicCpltocdjEVHxRe5F1MsGbBlZCnqbsn7Cg
+wed0w/UI0vyx0dfxjq5r+25ucnySEOYrs4boNfB1m5BEUCeEQJjY7cZ1XkeoH7LV
+Mb5h1i2mcQbg0NmwcCHU/T0WVnW+oHUE2QQQoTMdkx4YtNHBlLHhb9WBHZEGCOxc
+rPwEgc2FOtyGW8aHA+uGf3YGgoyOj1n2RG7eLTDpIFEZ7D9y3lhCKEth+TY6VaF5
+OWa2qJeflho=
+=hOln
+-----END PGP SIGNATURE-----
+
+--=-oQzBe4Fdh/dU48BMZvjt--
