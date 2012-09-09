@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:4017 "EHLO
-	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752631Ab2IPU35 (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49325 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754173Ab2IIS7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2012 16:29:57 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 3/5] rt2x00: rt2800lib - code cleanup.
-Date: Sun, 16 Sep 2012 22:29:51 +0200
-Message-Id: <1347827393-26948-4-git-send-email-gwingerde@gmail.com> (sfid-20120916_223058_063997_1C3DEA86)
-In-Reply-To: <1347827393-26948-3-git-send-email-gwingerde@gmail.com>
-References: <1347827393-26948-1-git-send-email-gwingerde@gmail.com>
- <1347827393-26948-2-git-send-email-gwingerde@gmail.com>
- <1347827393-26948-3-git-send-email-gwingerde@gmail.com>
+	Sun, 9 Sep 2012 14:59:06 -0400
+Message-ID: <1347217142.7709.61.camel@deadeye.wl.decadent.org.uk> (sfid-20120909_205935_672465_3468884D)
+Subject: Re: [PATCH] rtlwifi/rtl8723e: Add firmware for new driver
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dwmw2@infradead.org
+Date: Sun, 09 Sep 2012 19:59:02 +0100
+In-Reply-To: <1345480950-11107-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1345480950-11107-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-fBBq5iH7FF3tWfuMFrm4"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move RT3290 BBP initialization sequence (part) to the right place in the code.
 
-This is just a code style change, no functional changes.
+--=-fBBq5iH7FF3tWfuMFrm4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Mon, 2012-08-20 at 11:42 -0500, Larry Finger wrote:
+> The driver and firmware are new additions to the rtlwifi family of driver=
+s.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  WHENCE                  |   10 ++++++++++
+>  rtlwifi/rtl8723fw.bin   |  Bin 0 -> 11662 bytes
+>  rtlwifi/rtl8723fw_B.bin |  Bin 0 -> 22996 bytes
+>  3 files changed, 10 insertions(+)
+>  create mode 100755 rtlwifi/rtl8723fw.bin
+>  create mode 100755 rtlwifi/rtl8723fw_B.bin
+[...]
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 17b8a28..37f64ba 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3535,6 +3535,11 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	} else if (rt2800_is_305x_soc(rt2x00dev)) {
- 		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
- 		rt2800_bbp_write(rt2x00dev, 80, 0x08);
-+	} else if (rt2x00_rt(rt2x00dev, RT3290)) {
-+		rt2800_bbp_write(rt2x00dev, 74, 0x0b);
-+		rt2800_bbp_write(rt2x00dev, 79, 0x18);
-+		rt2800_bbp_write(rt2x00dev, 80, 0x09);
-+		rt2800_bbp_write(rt2x00dev, 81, 0x33);
- 	} else if (rt2x00_rt(rt2x00dev, RT3352)) {
- 		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
- 		rt2800_bbp_write(rt2x00dev, 80, 0x08);
-@@ -3543,13 +3548,6 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		rt2800_bbp_write(rt2x00dev, 81, 0x37);
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT3290)) {
--		rt2800_bbp_write(rt2x00dev, 74, 0x0b);
--		rt2800_bbp_write(rt2x00dev, 79, 0x18);
--		rt2800_bbp_write(rt2x00dev, 80, 0x09);
--		rt2800_bbp_write(rt2x00dev, 81, 0x33);
--	}
--
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
- 	if (rt2x00_rt(rt2x00dev, RT3290) ||
- 	    rt2x00_rt(rt2x00dev, RT5390) ||
--- 
-1.7.11.1
+Applied, thanks.
 
+Ben.
+
+--=20
+Ben Hutchings
+Time is nature's way of making sure that everything doesn't happen at once.
+
+--=-fBBq5iH7FF3tWfuMFrm4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUEzm9ue/yOyVhhEJAQrz2w/9HDHlr9CXy8+I7zzcbJbKaECoiyNGDeRy
+7do8kMscG6jGUsCeB2xZ7NwY4O1dei2ufY2/XCm+FYCUoCDTbvdJ0eB9SNf03xr5
+VLqKcdrZlN3g8zNz+djsZPlUCw6ylN2erVeNaVpojXuH+81QmtwnQz2+O1mF2H1J
++YToTdMJ2CAbmG0yN2gNdSs229I8YYgGMp332idyG2gvPMVK7b8+ZKlZF7MgUR4V
+YCulywIgKuiqugOzYo7ThPEyxPzfkxda0B3yI9KTIW+IzkNXDQ5QJsmZwoBzWter
+YaQW8KxcEgOCl7ZrVWq+YecA4J7+hMTjvZb1HLZ6vG3XDAic6b2fcUg7xD5QjRxQ
+Jl2NedWsj49xvmJnlpRSgq6YLDXOmgaL53Pxs+nahbuRKSm6vRvkllaFgNRJI6RI
+Qyhk4S050NGH0PZmWrgr93UUjQIIzkMsGUn70kN2lm+NPOQ7HxFfp0vK2MwV3Tlt
+63ADVuEkmlFHBhMCViH8JF7g7BXWsE4x6PlHa/bxHcLj4z5M45EoNeYC+VTnOmkK
+kPvLogzaEK5+S4MfHf55VGWWE3tEIGaTxTl8Q35zfXaYW8r8ErrDiTHNYpef6AIs
++O5JS7EKbsjtuC/IsJwV4Q5MZa/Ak32fqJDHuvO6BqFtXBgrAYebUAhmQmsEVBSz
+ycAfCG2mqf4=
+=n2LY
+-----END PGP SIGNATURE-----
+
+--=-fBBq5iH7FF3tWfuMFrm4--
