@@ -1,111 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:49840 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753837Ab2INJOC (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:39481 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065Ab2IIL7j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 05:14:02 -0400
-Received: by obbuo13 with SMTP id uo13so5932576obb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2012 02:14:01 -0700 (PDT)
+	Sun, 9 Sep 2012 07:59:39 -0400
+Received: by iahk25 with SMTP id k25so967926iah.19
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Sep 2012 04:59:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20562.57519.298444.874991@gargle.gargle.HOWL>
-References: <20562.57519.298444.874991@gargle.gargle.HOWL>
-Date: Fri, 14 Sep 2012 14:44:00 +0530
-Message-ID: <CAD2nsn0paBt4YyyCp0-iuJ9xxQctRhdL+TtVh1bovM2WMt4MzQ@mail.gmail.com> (sfid-20120914_111407_505823_D1E6791D)
-Subject: Re: [RFC 7/8] ath9k: Add a module parameter to enable diversity for
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <CA+XVXffd4DcP+8PQa=meV0AADS-WY0um=xOQmwZnqaR=DPjGkg@mail.gmail.com>
+References: <1347029656-41430-1-git-send-email-nbd@openwrt.org>
+ <1347029656-41430-2-git-send-email-nbd@openwrt.org> <CA+XVXffd4DcP+8PQa=meV0AADS-WY0um=xOQmwZnqaR=DPjGkg@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 9 Sep 2012 14:59:24 +0300
+Message-ID: <CA+XVXffRW-r6xqsh8GhfvMxxEiCfk-5QJO+CEQcapSXY8SBsYg@mail.gmail.com> (sfid-20120909_135943_251911_AF37F4B4)
+Subject: Re: [PATCH 2/2] mac80211: prevent work queueing while quiescing on suspend
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Sujith,
+On Sun, Sep 9, 2012 at 12:15 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> On Fri, Sep 7, 2012 at 5:54 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Do not emit a warning in that case, since there is nothing else in mac80211
+>> that would effectively prevent more work from being queued.
+>>
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>
+> This is a bit problematic. You see we rely on this always working
+> (prior to the suspend handler) to handle the case of HW reconfig
+> before suspend.
+>
+> The better option for wlcore would be to flush the workqueue again
+> after setting suspended = true, but i'm not sure if it's possible.
+>
+> At the very least we'll have to know the work was not queued (via a ret val?).
 
-On Fri, Sep 14, 2012 at 1:15 PM, Sujith Manoharan <c_manoha@qualcomm.com> wrote:
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath.h           |  1 +
->  drivers/net/wireless/ath/ath9k/antenna.c |  4 ++++
->  drivers/net/wireless/ath/ath9k/init.c    | 12 ++++++++++++
->  3 files changed, 17 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-> index 6169fbd..4521342 100644
-> --- a/drivers/net/wireless/ath/ath.h
-> +++ b/drivers/net/wireless/ath/ath.h
-> @@ -159,6 +159,7 @@ struct ath_common {
->
->         bool btcoex_enabled;
->         bool disable_ani;
-> +       bool antenna_diversity;
->  };
->
->  struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
-> diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
-> index 8eb274f..664844c 100644
-> --- a/drivers/net/wireless/ath/ath9k/antenna.c
-> +++ b/drivers/net/wireless/ath/ath9k/antenna.c
-> @@ -776,6 +776,7 @@ div_comb_done:
->  void ath_ant_comb_update(struct ath_softc *sc)
->  {
->         struct ath_hw *ah = sc->sc_ah;
-> +       struct ath_common *common = ath9k_hw_common(ah);
->         struct ath_hw_antcomb_conf div_ant_conf;
->         u8 lna_conf;
->
-> @@ -790,4 +791,7 @@ void ath_ant_comb_update(struct ath_softc *sc)
->         div_ant_conf.alt_lna_conf = lna_conf;
->
->         ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
-> +
-> +       if (common->antenna_diversity)
-> +               ath9k_hw_antctrl_shared_chain_lnadiv(ah, true);
->  }
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index f3ce5ca..ce20831 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -46,6 +46,10 @@ static int ath9k_btcoex_enable;
->  module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
->  MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
->
-> +static int ath9k_enable_diversity;
-> +module_param_named(enable_diversity, ath9k_enable_diversity, int, 0444);
-> +MODULE_PARM_DESC(enable_diversity, "Enable Antenna diversity for AR9565");
+Actually this is problematic in general, as lower level driver use
+ieee80211_queue_work for day to day stuff, and are not aware of
+mac80211 state (was pointed out by Eliad).
 
-is it specific for AR9565 alone, we have AR9285, AR9485 .
+While it makes sense to expect a driver to not queue work after its
+suspend handler is called, you're doing something quite different
+here.
+So adding a retval is not good enough, as it's a big API change for
+the drivers, that suddenly have to check every queue_work call.
 
-
-> +
->  bool is_ath9k_unloaded;
->  /* We use the hw_value as an index into our private channel structure */
->
-> @@ -546,6 +550,14 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
->         common->debug_mask = ath9k_debug;
->         common->btcoex_enabled = ath9k_btcoex_enable == 1;
->         common->disable_ani = false;
-> +
-> +       /*
-> +        * Enable Antenna diversity only when BTCOEX is disabled
-> +        * and the user manually requests the feature.
-> +        */
-> +       if (!common->btcoex_enabled && ath9k_enable_diversity)
-> +               common->antenna_diversity = 1;
-> +
->         spin_lock_init(&common->cc_lock);
->
->         spin_lock_init(&sc->sc_serial_rw);
-> --
-> 1.7.12
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-thanks,
-shafi
+Maybe turning this into a freezable wq is a good idea? Maybe just fail
+works queued from within mac80211? (but that can be done from inside
+by just checking the quiescing flag inside the work)
