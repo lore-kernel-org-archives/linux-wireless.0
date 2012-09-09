@@ -1,32 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52635 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760360Ab2IGLvf (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:38495 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750966Ab2IIJQA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 07:51:35 -0400
-Message-ID: <1347018732.4256.13.camel@jlt4.sipsolutions.net> (sfid-20120907_135206_134007_E7ECEBB0)
-Subject: Re: [PATCH 2/2] mac80211: reply to AUTH frame with a DEAUTH if sta
- allocation fails
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Sep 2012 13:52:12 +0200
-In-Reply-To: <1347017333-13497-2-git-send-email-ordex@autistici.org>
-References: <1347017333-13497-1-git-send-email-ordex@autistici.org>
-	 <1347017333-13497-2-git-send-email-ordex@autistici.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 9 Sep 2012 05:16:00 -0400
+Received: by ieje11 with SMTP id e11so1416345iej.19
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Sep 2012 02:16:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1347029656-41430-2-git-send-email-nbd@openwrt.org>
+References: <1347029656-41430-1-git-send-email-nbd@openwrt.org> <1347029656-41430-2-git-send-email-nbd@openwrt.org>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 9 Sep 2012 12:15:44 +0300
+Message-ID: <CA+XVXffd4DcP+8PQa=meV0AADS-WY0um=xOQmwZnqaR=DPjGkg@mail.gmail.com> (sfid-20120909_111605_061716_0E692CAD)
+Subject: Re: [PATCH 2/2] mac80211: prevent work queueing while quiescing on suspend
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-09-07 at 13:28 +0200, Antonio Quartulli wrote:
-> Whenever a host gets an AUTH frame it first allocates a new station and then
-> replies with another AUTH frame. However, if sta allocations fails the host
-> should send a DEAUTH frame instead to tell the other end that something went
-> wrong
+On Fri, Sep 7, 2012 at 5:54 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Do not emit a warning in that case, since there is nothing else in mac80211
+> that would effectively prevent more work from being queued.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-Applied both, but I reworded the commit messages a bit and broke lines
-to less than 72 chars as recommended.
+This is a bit problematic. You see we rely on this always working
+(prior to the suspend handler) to handle the case of HW reconfig
+before suspend.
 
-johannes
+The better option for wlcore would be to flush the workqueue again
+after setting suspended = true, but i'm not sure if it's possible.
 
+At the very least we'll have to know the work was not queued (via a ret val?).
