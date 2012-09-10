@@ -1,100 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:46781 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754215Ab2ISAVY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35955 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757032Ab2IJLZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2012 20:21:24 -0400
-Date: Tue, 18 Sep 2012 21:21:15 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2012-09-18
-Message-ID: <20120919002115.GE24689@joana> (sfid-20120919_022154_627301_2733DBEF)
-References: <20120919001143.GD24689@joana>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
-In-Reply-To: <20120919001143.GD24689@joana>
+	Mon, 10 Sep 2012 07:25:00 -0400
+Message-ID: <1347276337.4272.19.camel@jlt4.sipsolutions.net> (sfid-20120910_132505_386731_AD2F4B54)
+Subject: Re: [PATCH v3 6/7] mac80211: add ap channel switch command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Date: Mon, 10 Sep 2012 13:25:37 +0200
+In-Reply-To: <1344426823-1795-7-git-send-email-victorg@ti.com>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	 <1344426823-1795-7-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---W/nzBZO5zC0uMSeA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> +static int
+> +ieee80211_ap_process_chanswitch(struct wiphy *wiphy,
+> +				struct net_device *dev,
+> +				struct ieee80211_ap_ch_switch *ap_ch_switch)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	struct ieee80211_local *local = sdata->local;
+> +
+> +	if (!local->ops->channel_switch)
+> +		return -EOPNOTSUPP;
+> +
+> +	if (!ap_ch_switch || !ap_ch_switch->channel)
+> +		return -EINVAL;
+> +
+> +	drv_ap_channel_switch(local, ap_ch_switch);
+> +	return 0;
 
-Forgot to sign this..
+errors are not possible?
 
-* Gustavo Padovan <gustavo@padovan.org> [2012-09-18 21:11:43 -0300]:
+> +void ieee80211_ap_ch_switch_done(struct ieee80211_vif *vif,
+> +				 struct ieee80211_channel *new_channel,
+> +				 enum nl80211_channel_type type)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> +	struct ieee80211_local *local = sdata->local;
+> +
+> +	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP))
+> +		return;
+> +
+> +	/* update the device channel directly */
+> +	mutex_lock(&local->mtx);
+> +	local->oper_channel = local->hw.conf.channel = new_channel;
+> +	local->_oper_channel_type = type;
+> +	mutex_unlock(&local->mtx);
+> +
+> +	cfg80211_ch_switch_notify(sdata->dev, new_channel->center_freq, type);
+> +	trace_api_ap_ch_switch_done(sdata, new_channel->center_freq);
 
-> Hi John,
->=20
-> Here goes probably my last update to 3.6. It includes the two patches you
-> were ok last week(from Andrzej Kaczmarek), those are critical ones, and t=
-wo
-> other fixes one for a system crash and the other for a missing lockdep
-> annotation.
->=20
-> Please pull or let me know of any problems!
->=20
-> 	Gustavo
->=20
-> ---
-> The following changes since commit e020a83d0942a5aceac35986500c9834efc870=
-7d:
->=20
->   brcmfmac: Fix big endian host configuration data. (2012-09-12 14:15:31 =
--0400)
->=20
-> are available in the git repository at:
->=20
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
->=20
-> for you to fetch changes up to 78c04c0bf52360dc2f7185e99c8e9aa05d73ae5a:
->=20
->   Bluetooth: Fix not removing power_off delayed work (2012-09-18 20:13:02=
- -0300)
->=20
-> ----------------------------------------------------------------
-> Andrei Emeltchenko (1):
->       Bluetooth: Fix freeing uninitialized delayed works
->=20
-> Andrzej Kaczmarek (2):
->       Bluetooth: mgmt: Fix enabling SSP while powered off
->       Bluetooth: mgmt: Fix enabling LE while powered off
->=20
-> Vinicius Costa Gomes (1):
->       Bluetooth: Fix not removing power_off delayed work
->=20
->  net/bluetooth/hci_core.c   |  2 ++
->  net/bluetooth/l2cap_core.c |  2 +-
->  net/bluetooth/mgmt.c       | 16 ++++++++++++++++
->  3 files changed, 19 insertions(+), 1 deletion(-)
->=20
+tracing last seems very strange
 
-	Gustavo
+johannes
 
---W/nzBZO5zC0uMSeA
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQWQ/7AAoJEPs3PUX4s20oqtMP/AqoZSXYo3bXB1NOH63yMd4E
-Uh0a/MaDQQgXU+eDP5ngswVPiohO8VXiII5nEozj5mZdcG9z3sW1C5yQjoqtH4Mz
-44AcjYl7JAU9kg71dbxoSb2+6LK5dJljJZwAn+G/UStG7ORaya3LLnj0+nUVUwCu
-/5oC4qRYuDNcf7vi/e/l4qFFGC2Ml9u4fWOS4O9M2dgk+X89QNWPGBrolbcyuVXS
-A/VpYJIGJr8FAY69PVgJ/9ws4Owbi+EkmG0mqC1T7mQohgOR8vOcoiP8v+oWhnt+
-JRvNmty8XiA7f+4crxFe94xrYpIwnqwMo776b/Z4kMTdf6c0qd9DUFNBzYNFZDiP
-jNDMOgDAkuTMPem+jdITr8NHhCAdBIhBhUn1fQGhrFSSrE4BgfjJscmUNodjhIuh
-8XN4urKA4E/wlL4LVw/U6HoKCbvPHcF1BevfNUkfdFAxuvS71PxGc6fcQ4TD0vzC
-kPSb9j6YwrGhCKfUaFjcX72jy0QKYVqCgoZYhkul1DBJ9V+2puSi3vJZ51vjbxXE
-d792NMtKfEEIYYGQvOqFoHVFPvPITKq185hfdbh5lh0OoZBUF2QVT/GBWhuHMmmY
-J9yDVXolsPKg4twdRtsEtsQJ30pV5SUfeGKfZh5sXCtOlEtaEKCgNUnm9Jqx5EPB
-ZD47mZm/E4c0XzAjj2QX
-=oRie
------END PGP SIGNATURE-----
-
---W/nzBZO5zC0uMSeA--
