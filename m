@@ -1,713 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:50901 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755528Ab2IQVTi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37087 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753425Ab2IJROz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 17:19:38 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, <chaoming_li@realsil.com.cn>
-Subject: [PATCH 08/15] rtlwifi: rtl8723ae: Add new driver - Part 8
-Date: Mon, 17 Sep 2012 16:18:47 -0500
-Message-Id: <1347916754-9219-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120917_232006_509603_7649A733)
-In-Reply-To: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 10 Sep 2012 13:14:55 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 4/6] iwlwifi: some clean up in transport layer
+Date: Mon, 10 Sep 2012 19:15:28 +0200
+Message-Id: <1347297330-23338-5-git-send-email-johannes@sipsolutions.net> (sfid-20120910_191501_052973_9784430A)
+In-Reply-To: <1347297330-23338-1-git-send-email-johannes@sipsolutions.net>
+References: <1347297330-23338-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is part 8 of the addition of files for a new driver to handle
-the Realtek RTL8723AE wireless device.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: <chaoming_li@realsil.com.cn>
+Remove outdated iwlagn prefix to a few functions and fix comments
+that were not accurate.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c    |  113 +++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h    |  313 ++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c |  145 +++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h |  101 +++++++
- 4 files changed, 672 insertions(+)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    2 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |   54 +++++++++++++++-----------
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |    2 +-
+ 3 files changed, 33 insertions(+), 25 deletions(-)
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c
-===================================================================
---- /dev/null
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c
-@@ -0,0 +1,111 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "pwrseqcmd.h"
-+#include "pwrseq.h"
-+
-+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 3ef8d5a..fa102b8 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -311,7 +311,7 @@ void iwl_trans_pcie_free(struct iwl_trans *trans);
+ ******************************************************/
+ void iwl_bg_rx_replenish(struct work_struct *data);
+ void iwl_irq_tasklet(struct iwl_trans *trans);
+-void iwlagn_rx_replenish(struct iwl_trans *trans);
++void iwl_rx_replenish(struct iwl_trans *trans);
+ void iwl_rx_queue_update_write_ptr(struct iwl_trans *trans,
+ 				   struct iwl_rx_queue *q);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 7b2ac67..7fc3821 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -177,15 +177,15 @@ void iwl_rx_queue_update_write_ptr(struct iwl_trans *trans,
+ }
+ 
+ /**
+- * iwlagn_dma_addr2rbd_ptr - convert a DMA address to a uCode read buffer ptr
++ * iwl_dma_addr2rbd_ptr - convert a DMA address to a uCode read buffer ptr
+  */
+-static inline __le32 iwlagn_dma_addr2rbd_ptr(dma_addr_t dma_addr)
++static inline __le32 iwl_dma_addr2rbd_ptr(dma_addr_t dma_addr)
+ {
+ 	return cpu_to_le32((u32)(dma_addr >> 8));
+ }
+ 
+ /**
+- * iwlagn_rx_queue_restock - refill RX queue from pre-allocated pool
++ * iwl_rx_queue_restock - refill RX queue from pre-allocated pool
+  *
+  * If there are slots in the RX queue that need to be restocked,
+  * and we have free pre-allocated buffers, fill the ranks as much
+@@ -195,7 +195,7 @@ static inline __le32 iwlagn_dma_addr2rbd_ptr(dma_addr_t dma_addr)
+  * also updates the memory address in the firmware to reference the new
+  * target buffer.
+  */
+-static void iwlagn_rx_queue_restock(struct iwl_trans *trans)
++static void iwl_rx_queue_restock(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rx_queue *rxq = &trans_pcie->rxq;
+@@ -215,7 +215,7 @@ static void iwlagn_rx_queue_restock(struct iwl_trans *trans)
+ 		list_del(element);
+ 
+ 		/* Point to Rx buffer via next RBD in circular buffer */
+-		rxq->bd[rxq->write] = iwlagn_dma_addr2rbd_ptr(rxb->page_dma);
++		rxq->bd[rxq->write] = iwl_dma_addr2rbd_ptr(rxb->page_dma);
+ 		rxq->queue[rxq->write] = rxb;
+ 		rxq->write = (rxq->write + 1) & RX_QUEUE_MASK;
+ 		rxq->free_count--;
+@@ -226,7 +226,6 @@ static void iwlagn_rx_queue_restock(struct iwl_trans *trans)
+ 	if (rxq->free_count <= RX_LOW_WATERMARK)
+ 		schedule_work(&trans_pcie->rx_replenish);
+ 
+-
+ 	/* If we've added more space for the firmware to place data, tell it.
+ 	 * Increment device's write pointer in multiples of 8. */
+ 	if (rxq->write_actual != (rxq->write & ~0x7)) {
+@@ -237,15 +236,16 @@ static void iwlagn_rx_queue_restock(struct iwl_trans *trans)
+ 	}
+ }
+ 
+-/**
+- * iwlagn_rx_replenish - Move all used packet from rx_used to rx_free
+- *
+- * When moving to rx_free an SKB is allocated for the slot.
 +/*
-+    drivers should parse below arrays and do the corresponding actions
-+*/
-+/*3 Power on  Array*/
-+struct wlan_pwr_cfg rtl8723A_power_on_flow[RTL8723A_TRANS_CARDEMU_TO_ACT_STPS
-+					+ RTL8723A_TRANS_END_STPS] = {
-+	RTL8723A_TRANS_CARDEMU_TO_ACT
-+	RTL8723A_TRANS_END
-+};
-+
-+/*3Radio off GPIO Array */
-+struct wlan_pwr_cfg rtl8723A_radio_off_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+					+ RTL8723A_TRANS_END_STPS] = {
-+	RTL8723A_TRANS_ACT_TO_CARDEMU
-+	RTL8723A_TRANS_END
-+};
-+
-+/*3Card Disable Array*/
-+struct wlan_pwr_cfg
-+rtl8723A_card_disable_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+			  + RTL8723A_TRANS_CARDEMU_TO_PDN_STPS
-+			  + RTL8723A_TRANS_END_STPS] = {
-+	RTL8723A_TRANS_ACT_TO_CARDEMU
-+	RTL8723A_TRANS_CARDEMU_TO_CARDDIS
-+	RTL8723A_TRANS_END
-+};
-+
-+/*3 Card Enable Array*/
-+struct wlan_pwr_cfg rtl8723A_card_enable_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+					+ RTL8723A_TRANS_CARDEMU_TO_PDN_STPS
-+					+ RTL8723A_TRANS_END_STPS] = {
-+	RTL8723A_TRANS_CARDDIS_TO_CARDEMU
-+	RTL8723A_TRANS_CARDEMU_TO_ACT
-+	RTL8723A_TRANS_END
-+};
-+
-+/*3Suspend Array*/
-+struct wlan_pwr_cfg rtl8723A_suspend_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+					+ RTL8723A_TRANS_CARDEMU_TO_SUS_STPS
-+					+ RTL8723A_TRANS_END_STPS] = {
-+	RTL8723A_TRANS_ACT_TO_CARDEMU
-+	RTL8723A_TRANS_CARDEMU_TO_SUS
-+	RTL8723A_TRANS_END
-+};
-+
-+/*3 Resume Array*/
-+struct wlan_pwr_cfg rtl8723A_resume_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+					+ RTL8723A_TRANS_CARDEMU_TO_SUS_STPS
-+					+ RTL8723A_TRANS_END_STPS] = {
-+	RTL8723A_TRANS_SUS_TO_CARDEMU
-+	RTL8723A_TRANS_CARDEMU_TO_ACT
-+	RTL8723A_TRANS_END
-+};
-+
-+/*3HWPDN Array*/
-+struct wlan_pwr_cfg rtl8723A_hwpdn_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+				+ RTL8723A_TRANS_CARDEMU_TO_PDN_STPS
-+				+ RTL8723A_TRANS_END_STPS] = {
-+	RTL8723A_TRANS_ACT_TO_CARDEMU
-+	RTL8723A_TRANS_CARDEMU_TO_PDN
-+	RTL8723A_TRANS_END
-+};
-+
-+/*3 Enter LPS */
-+struct wlan_pwr_cfg rtl8723A_enter_lps_flow[RTL8723A_TRANS_ACT_TO_LPS_STPS
-+					+ RTL8723A_TRANS_END_STPS] = {
-+	/*FW behavior*/
-+	RTL8723A_TRANS_ACT_TO_LPS
-+	RTL8723A_TRANS_END
-+};
-+
-+/*3 Leave LPS */
-+struct wlan_pwr_cfg rtl8723A_leave_lps_flow[RTL8723A_TRANS_LPS_TO_ACT_STPS
-+					+ RTL8723A_TRANS_END_STPS] = {
-+	/*FW behavior*/
-+	RTL8723A_TRANS_LPS_TO_ACT
-+	RTL8723A_TRANS_END
-+};
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h
-===================================================================
---- /dev/null
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h
-@@ -0,0 +1,311 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL8723E_PWRSEQ_H__
-+#define __RTL8723E_PWRSEQ_H__
-+
-+#include "pwrseqcmd.h"
++ * iwl_rx_allocate - allocate a page for each used RBD
+  *
+- * Also restock the Rx queue via iwl_rx_queue_restock.
+- * This is called as a scheduled work item (except for during initialization)
++ * A used RBD is an Rx buffer that has been given to the stack. To use it again
++ * a page must be allocated and the RBD must point to the page. This function
++ * doesn't change the HW pointer but handles the list of pages that is used by
++ * iwl_rx_queue_restock. The latter function will update the HW to use the newly
++ * allocated buffers.
+  */
+-static void iwlagn_rx_allocate(struct iwl_trans *trans, gfp_t priority)
++static void iwl_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rx_queue *rxq = &trans_pcie->rxq;
+@@ -324,23 +324,31 @@ static void iwlagn_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+ 	}
+ }
+ 
+-void iwlagn_rx_replenish(struct iwl_trans *trans)
 +/*
-+	Check document WM-20110607-Paul-RTL8723A_Power_Architecture-R02.vsd
-+	There are 6 HW Power States:
-+	0: POFF--Power Off
-+	1: PDN--Power Down
-+	2: CARDEMU--Card Emulation
-+	3: ACT--Active Mode
-+	4: LPS--Low Power State
-+	5: SUS--Suspend
-+
-+	The transision from different states are defined below
-+	TRANS_CARDEMU_TO_ACT
-+	TRANS_ACT_TO_CARDEMU
-+	TRANS_CARDEMU_TO_SUS
-+	TRANS_SUS_TO_CARDEMU
-+	TRANS_CARDEMU_TO_PDN
-+	TRANS_ACT_TO_LPS
-+	TRANS_LPS_TO_ACT
-+
-+	TRANS_END
-+*/
-+
-+#define	RTL8723A_TRANS_CARDEMU_TO_ACT_STPS	10
-+#define	RTL8723A_TRANS_ACT_TO_CARDEMU_STPS	10
-+#define	RTL8723A_TRANS_CARDEMU_TO_SUS_STPS	10
-+#define	RTL8723A_TRANS_SUS_TO_CARDEMU_STPS	10
-+#define	RTL8723A_TRANS_CARDEMU_TO_PDN_STPS	10
-+#define	RTL8723A_TRANS_PDN_TO_CARDEMU_STPS	10
-+#define	RTL8723A_TRANS_ACT_TO_LPS_STPS		15
-+#define	RTL8723A_TRANS_LPS_TO_ACT_STPS		15
-+#define	RTL8723A_TRANS_END_STPS		1
-+
-+
-+#define RTL8723A_TRANS_CARDEMU_TO_ACT					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, \
-+	 *  comments here*/						\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(2), 0},		\
-+		/* disable SW LPS 0x04[10]=0*/				\
-+	{0x0006, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_POLLING, BIT(1), BIT(1)},	\
-+		/* wait till 0x04[17] = 1    power ready*/		\
-+	{0x0006, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(0), BIT(0)},	\
-+		/* release WLON reset  0x04[16]=1*/			\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), 0},		\
-+		/* disable HWPDN 0x04[15]=0*/				\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, (BIT(4)|BIT(3)), 0},	\
-+	/* disable WL suspend*/						\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(0), BIT(0)},	\
-+		/* polling until return 0*/				\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_POLLING, BIT(0), 0},
-+
-+#define RTL8723A_TRANS_ACT_TO_CARDEMU					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, \
-+	 *  comments here*/						\
-+	{0x001F, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0},		\
-+		/*0x1F[7:0] = 0 turn off RF*/				\
-+	{0x004E, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), 0},		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1), BIT(1)},	\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_POLLING, BIT(1), 0},
-+
-+#define RTL8723A_TRANS_CARDEMU_TO_SUS					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, \
-+	 *  comments here*/						\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_PCI_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4)|BIT(3),		\
-+		(BIT(4)|BIT(3))},					\
-+		/*0x04[12:11] = 2b'11 enable WL suspend for PCIe*/	\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_USB_MSK |	\
-+		PWR_INTF_SDIO_MSK,					\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(3)|BIT(4), BIT(3)},\
-+		 /*0x04[12:11] = 2b'01 enable WL suspend*/		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_PCI_MSK,	\
-+		PWR_BASEADDR_MAC,					\
-+		PWR_CMD_WRITE, BIT(3)|BIT(4), BIT(3)|BIT(4)},		\
-+		 /*0x04[12:11] = 2b'11 enable WL suspend for PCIe*/	\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		PWR_BASEADDR_SDIO,					\
-+		PWR_CMD_WRITE, BIT(0), BIT(0)},				\
-+		/*Set SDIO suspend local register*/			\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		PWR_BASEADDR_SDIO,					\
-+		PWR_CMD_POLLING, BIT(1), 0},				\
-+		/*wait power state to suspend*/
-+
-+#define RTL8723A_TRANS_SUS_TO_CARDEMU					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		PWR_BASEADDR_SDIO, PWR_CMD_WRITE, BIT(0), 0},		\
-+		/*Set SDIO suspend local register*/			\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		PWR_BASEADDR_SDIO, PWR_CMD_POLLING, BIT(1), BIT(1)},	\
-+		/*wait power state to suspend*/				\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(3)|BIT(4), 0},	\
-+		/*0x04[12:11] = 2b'01enable WL suspend*/
-+
-+#define RTL8723A_TRANS_CARDEMU_TO_CARDDIS				\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK,			\
-+	PWR_INTF_USB_MSK|PWR_INTF_SDIO_MSK,				\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(3)|BIT(4), BIT(3)},\
-+		/*0x04[12:11] = 2b'01 enable WL suspend*/		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_PCI_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(2), BIT(2)},	\
-+		/*0x04[10] = 1, enable SW LPS*/				\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		PWR_BASEADDR_SDIO, PWR_CMD_WRITE, BIT(0), BIT(0)},	\
-+		/*Set SDIO suspend local register*/			\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		PWR_BASEADDR_SDIO, PWR_CMD_POLLING, BIT(1), 0},		\
-+		/*wait power state to suspend*/
-+
-+#define RTL8723A_TRANS_CARDDIS_TO_CARDEMU				\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		PWR_BASEADDR_SDIO, PWR_CMD_WRITE, BIT(0), 0},		\
-+		/*Set SDIO suspend local register*/			\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		PWR_BASEADDR_SDIO, PWR_CMD_POLLING, BIT(1), BIT(1)},	\
-+		/*wait power state to suspend*/				\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(3)|BIT(4), 0},	\
-+		/*0x04[12:11] = 2b'00enable WL suspend*/		\
-+	{0x0301, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0},/*PCIe DMA start*/
-+
-+#define RTL8723A_TRANS_CARDEMU_TO_PDN					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0006, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(0), 0},/* 0x04[16] = 0*/\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), BIT(7)},	\
-+		/* 0x04[15] = 1*/
-+
-+#define RTL8723A_TRANS_PDN_TO_CARDEMU					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), 0},/* 0x04[15] = 0*/
-+
-+#define RTL8723A_TRANS_ACT_TO_LPS					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0301, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0xFF},/*PCIe DMA stop*/\
-+	{0x0522, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0x7F},/*Tx Pause*/\
-+	{0x05F8, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_POLLING, 0xFF, 0},		\
-+		/*Should be zero if no packet is transmitting*/		\
-+	{0x05F9, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_POLLING, 0xFF, 0},		\
-+		/*Should be zero if no packet is transmitting*/		\
-+	{0x05FA, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_POLLING, 0xFF, 0},		\
-+		/*Should be zero if no packet is transmitting*/		\
-+	{0x05FB, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_POLLING, 0xFF, 0},		\
-+		/*Should be zero if no packet is transmitting*/		\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(0), 0},		\
-+		/*CCK and OFDM are disabled,and clock are gated*/	\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_DELAY, 0, PWRSEQ_DELAY_US},	\
-+		/*Delay 1us*/						\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1), 0},		\
-+		/*Whole BB is reset*/					\
-+	{0x0100, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0x3F},/*Reset MAC TRX*/\
-+	{0x0101, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1), 0},		\
-+		/*check if removed later*/				\
-+	{0x0553, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(5), BIT(5)},	\
-+		/*Respond TxOK to scheduler*/
-+
-+#define RTL8723A_TRANS_LPS_TO_ACT					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0080, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+		 PWR_BASEADDR_SDIO, PWR_CMD_WRITE, 0xFF, 0x84}, /*SDIO RPWM*/\
-+	{0xFE58, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_USB_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0x84}, /*USB RPWM*/\
-+	{0x0361, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_PCI_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0x84}, /*PCIe RPWM*/\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		 PWR_BASEADDR_MAC, PWR_CMD_DELAY, 0, PWRSEQ_DELAY_MS},	\
-+		/*Delay*/						\
-+	{0x0008, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), 0},		\
-+		/* 0x08[4] = 0 switch TSF to 40M*/			\
-+	{0x0109, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_POLLING, BIT(7), 0},		\
-+		/*Polling 0x109[7]=0  TSF in 40M*/			\
-+	{0x0029, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(6)|BIT(7), 0},	\
-+		/*.	0x29[7:6] = 2b'00	 enable BB clock*/	\
-+	{0x0101, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1), BIT(1)},	\
-+		/*.	0x101[1] = 1*/					\
-+	{0x0100, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0xFF},		\
-+		/* 0x100[7:0] = 0xFF enable WMAC TRX*/			\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1)|BIT(0),		\
-+		BIT(1)|BIT(0)}, /* 0x02[1:0] = 2b'11  enable BB macro*/	\
-+	{0x0522, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+		PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0}, /*.	0x522 = 0*/
-+
-+#define RTL8723A_TRANS_END						\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0xFFFF, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	0, PWR_CMD_END, 0, 0}
-+
-+extern struct
-+wlan_pwr_cfg rtl8723A_power_on_flow[RTL8723A_TRANS_CARDEMU_TO_ACT_STPS
-+				    + RTL8723A_TRANS_END_STPS];
-+extern struct
-+wlan_pwr_cfg rtl8723A_radio_off_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+				     + RTL8723A_TRANS_END_STPS];
-+extern struct
-+wlan_pwr_cfg rtl8723A_card_disable_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+					+ RTL8723A_TRANS_CARDEMU_TO_PDN_STPS
-+					+ RTL8723A_TRANS_END_STPS];
-+extern struct
-+wlan_pwr_cfg rtl8723A_card_enable_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+				       + RTL8723A_TRANS_CARDEMU_TO_PDN_STPS
-+				       + RTL8723A_TRANS_END_STPS];
-+extern struct
-+wlan_pwr_cfg rtl8723A_suspend_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+				   + RTL8723A_TRANS_CARDEMU_TO_SUS_STPS
-+				   + RTL8723A_TRANS_END_STPS];
-+extern struct
-+wlan_pwr_cfg rtl8723A_resume_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+				  + RTL8723A_TRANS_CARDEMU_TO_SUS_STPS
-+				  + RTL8723A_TRANS_END_STPS];
-+extern struct
-+wlan_pwr_cfg rtl8723A_hwpdn_flow[RTL8723A_TRANS_ACT_TO_CARDEMU_STPS
-+				 + RTL8723A_TRANS_CARDEMU_TO_PDN_STPS
-+				 + RTL8723A_TRANS_END_STPS];
-+extern struct
-+wlan_pwr_cfg rtl8723A_enter_lps_flow[RTL8723A_TRANS_ACT_TO_LPS_STPS
-+				     + RTL8723A_TRANS_END_STPS];
-+extern struct
-+wlan_pwr_cfg rtl8723A_leave_lps_flow[RTL8723A_TRANS_LPS_TO_ACT_STPS
-+				     + RTL8723A_TRANS_END_STPS];
-+
-+/* RTL8723 Power Configuration CMDs for PCIe interface */
-+#define Rtl8723_NIC_PWR_ON_FLOW		rtl8723A_power_on_flow
-+#define Rtl8723_NIC_RF_OFF_FLOW		rtl8723A_radio_off_flow
-+#define Rtl8723_NIC_DISABLE_FLOW	rtl8723A_card_disable_flow
-+#define Rtl8723_NIC_ENABLE_FLOW		rtl8723A_card_enable_flow
-+#define Rtl8723_NIC_SUSPEND_FLOW	rtl8723A_suspend_flow
-+#define Rtl8723_NIC_RESUME_FLOW		rtl8723A_resume_flow
-+#define Rtl8723_NIC_PDN_FLOW		rtl8723A_hwpdn_flow
-+#define Rtl8723_NIC_LPS_ENTER_FLOW	rtl8723A_enter_lps_flow
-+#define Rtl8723_NIC_LPS_LEAVE_FLOW	rtl8723A_leave_lps_flow
-+
-+#endif
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c
-===================================================================
---- /dev/null
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c
-@@ -0,0 +1,137 @@
-+/******************************************************************************
++ * iwl_rx_replenish - Move all used buffers from rx_used to rx_free
 + *
-+ * Copyright(c) 2009-2012  Realtek Corporation.
++ * When moving to rx_free an page is allocated for the slot.
 + *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "pwrseq.h"
-+
-+
-+/*
-+*	Description:
-+*		This routine deal with the Power Configuration CMDs
-+*		 parsing for RTL8723/RTL8188E Series IC.
-+*	Assumption:
-+*		We should follow specific format which was released from HW SD.
-+*
-+*	2011.07.07, added by Roger.
-+*/
-+bool rtl_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
-+			      u8 faversion, u8 interface_type,
-+			      struct wlan_pwr_cfg pwrcfgcmd[])
-+
-+{
-+	struct wlan_pwr_cfg cfg_cmd = {0};
-+	bool polling_bit = false;
-+	u32 ary_idx = 0;
-+	u8 value = 0;
-+	u32 offset = 0;
-+	u32 polling_count = 0;
-+	u32 max_polling_cnt = 5000;
-+
-+	do {
-+		cfg_cmd = pwrcfgcmd[ary_idx];
-+		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+			"rtl_hal_pwrseqcmdparsing(): offset(%#x),cut_msk(%#x), famsk(%#x),"
-+			"interface_msk(%#x), base(%#x), cmd(%#x), msk(%#x), value(%#x)\n",
-+			GET_PWR_CFG_OFFSET(cfg_cmd),
-+					   GET_PWR_CFG_CUT_MASK(cfg_cmd),
-+			GET_PWR_CFG_FAB_MASK(cfg_cmd),
-+					     GET_PWR_CFG_INTF_MASK(cfg_cmd),
-+			GET_PWR_CFG_BASE(cfg_cmd), GET_PWR_CFG_CMD(cfg_cmd),
-+			GET_PWR_CFG_MASK(cfg_cmd), GET_PWR_CFG_VALUE(cfg_cmd));
-+
-+		if ((GET_PWR_CFG_FAB_MASK(cfg_cmd)&faversion) &&
-+		    (GET_PWR_CFG_CUT_MASK(cfg_cmd)&cut_version) &&
-+		    (GET_PWR_CFG_INTF_MASK(cfg_cmd)&interface_type)) {
-+			switch (GET_PWR_CFG_CMD(cfg_cmd)) {
-+			case PWR_CMD_READ:
-+				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+					"rtl_hal_pwrseqcmdparsing(): PWR_CMD_READ\n");
-+				break;
-+			case PWR_CMD_WRITE: {
-+				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+					"rtl_hal_pwrseqcmdparsing(): PWR_CMD_WRITE\n");
-+				offset = GET_PWR_CFG_OFFSET(cfg_cmd);
-+
-+					/*Read the value from system register*/
-+					value = rtl_read_byte(rtlpriv, offset);
-+					value &= (~(GET_PWR_CFG_MASK(cfg_cmd)));
-+					value |= (GET_PWR_CFG_VALUE(cfg_cmd) &
-+						  GET_PWR_CFG_MASK(cfg_cmd));
-+
-+					/*Write the value back to sytem
-+					 * register*/
-+					rtl_write_byte(rtlpriv, offset, value);
-+				}
-+				break;
-+			case PWR_CMD_POLLING:
-+				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+					"rtl_hal_pwrseqcmdparsing(): PWR_CMD_POLLING\n");
-+				polling_bit = false;
-+				offset = GET_PWR_CFG_OFFSET(cfg_cmd);
-+
-+				do {
-+					value = rtl_read_byte(rtlpriv, offset);
-+
-+					value &= GET_PWR_CFG_MASK(cfg_cmd);
-+					if (value ==
-+					    (GET_PWR_CFG_VALUE(cfg_cmd)
-+					    & GET_PWR_CFG_MASK(cfg_cmd)))
-+						polling_bit = true;
-+					else
-+						udelay(10);
-+
-+					if (polling_count++ > max_polling_cnt)
-+						return false;
-+				} while (!polling_bit);
-+				break;
-+			case PWR_CMD_DELAY:
-+				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+					"rtl_hal_pwrseqcmdparsing(): PWR_CMD_DELAY\n");
-+				if (GET_PWR_CFG_VALUE(cfg_cmd) ==
-+				    PWRSEQ_DELAY_US)
-+					udelay(GET_PWR_CFG_OFFSET(cfg_cmd));
-+				else
-+					mdelay(GET_PWR_CFG_OFFSET(cfg_cmd));
-+				break;
-+			case PWR_CMD_END:
-+				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+					 "rtl_hal_pwrseqcmdparsing(): PWR_CMD_END\n");
-+				return true;
-+			default:
-+				RT_ASSERT(false,
-+					 "rtl_hal_pwrseqcmdparsing(): Unknown CMD!!\n");
-+				break;
-+			}
-+
-+		}
-+
-+		ary_idx++;
-+	} while (1);
-+
-+	return true;
-+}
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h
-===================================================================
---- /dev/null
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h
-@@ -0,0 +1,99 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL8723E_PWRSEQCMD_H__
-+#define __RTL8723E_PWRSEQCMD_H__
-+
-+#include "../wifi.h"
-+/*---------------------------------------------
-+ * 3 The value of cmd: 4 bits
-+ *---------------------------------------------*/
-+#define  PWR_CMD_READ		0x00
-+#define    PWR_CMD_WRITE	0x01
-+#define    PWR_CMD_POLLING	0x02
-+#define    PWR_CMD_DELAY	0x03
-+#define    PWR_CMD_END		0x04
-+
-+/* define the base address of each block */
-+#define   PWR_BASEADDR_MAC	0x00
-+#define   PWR_BASEADDR_USB	0x01
-+#define   PWR_BASEADDR_PCIE	0x02
-+#define   PWR_BASEADDR_SDIO	0x03
-+
-+#define	PWR_INTF_SDIO_MSK	BIT(0)
-+#define	PWR_INTF_USB_MSK	BIT(1)
-+#define	PWR_INTF_PCI_MSK	BIT(2)
-+#define	PWR_INTF_ALL_MSK	(BIT(0)|BIT(1)|BIT(2)|BIT(3))
-+
-+#define	PWR_FAB_TSMC_MSK	BIT(0)
-+#define	PWR_FAB_UMC_MSK		BIT(1)
-+#define	PWR_FAB_ALL_MSK		(BIT(0)|BIT(1)|BIT(2)|BIT(3))
-+
-+#define	PWR_CUT_TESTCHIP_MSK	BIT(0)
-+#define	PWR_CUT_A_MSK		BIT(1)
-+#define	PWR_CUT_B_MSK		BIT(2)
-+#define	PWR_CUT_C_MSK		BIT(3)
-+#define	PWR_CUT_D_MSK		BIT(4)
-+#define	PWR_CUT_E_MSK		BIT(5)
-+#define	PWR_CUT_F_MSK		BIT(6)
-+#define	PWR_CUT_G_MSK		BIT(7)
-+#define	PWR_CUT_ALL_MSK		0xFF
-+
-+
-+enum pwrseq_delay_unit {
-+	PWRSEQ_DELAY_US,
-+	PWRSEQ_DELAY_MS,
-+};
-+
-+struct wlan_pwr_cfg {
-+	u16 offset;
-+	u8 cut_msk;
-+	u8 fab_msk:4;
-+	u8 interface_msk:4;
-+	u8 base:4;
-+	u8 cmd:4;
-+	u8 msk;
-+	u8 value;
-+
-+};
-+
-+#define	GET_PWR_CFG_OFFSET(__PWR_CMD)	(__PWR_CMD.offset)
-+#define	GET_PWR_CFG_CUT_MASK(__PWR_CMD)	(__PWR_CMD.cut_msk)
-+#define	GET_PWR_CFG_FAB_MASK(__PWR_CMD)	(__PWR_CMD.fab_msk)
-+#define	GET_PWR_CFG_INTF_MASK(__PWR_CMD)	(__PWR_CMD.interface_msk)
-+#define	GET_PWR_CFG_BASE(__PWR_CMD)	(__PWR_CMD.base)
-+#define	GET_PWR_CFG_CMD(__PWR_CMD)	(__PWR_CMD.cmd)
-+#define	GET_PWR_CFG_MASK(__PWR_CMD)	(__PWR_CMD.msk)
-+#define	GET_PWR_CFG_VALUE(__PWR_CMD)	(__PWR_CMD.value)
-+
-+bool rtl_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
-+			      u8 fab_version, u8 interface_type,
-+			      struct wlan_pwr_cfg pwrcfgcmd[]);
-+
-+#endif
++ * Also restock the Rx queue via iwl_rx_queue_restock.
++ * This is called as a scheduled work item (except for during initialization)
++ */
++void iwl_rx_replenish(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	unsigned long flags;
+ 
+-	iwlagn_rx_allocate(trans, GFP_KERNEL);
++	iwl_rx_allocate(trans, GFP_KERNEL);
+ 
+ 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
+-	iwlagn_rx_queue_restock(trans);
++	iwl_rx_queue_restock(trans);
+ 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ }
+ 
+-static void iwlagn_rx_replenish_now(struct iwl_trans *trans)
++static void iwl_rx_replenish_now(struct iwl_trans *trans)
+ {
+-	iwlagn_rx_allocate(trans, GFP_ATOMIC);
++	iwl_rx_allocate(trans, GFP_ATOMIC);
+ 
+-	iwlagn_rx_queue_restock(trans);
++	iwl_rx_queue_restock(trans);
+ }
+ 
+ void iwl_bg_rx_replenish(struct work_struct *data)
+@@ -348,7 +356,7 @@ void iwl_bg_rx_replenish(struct work_struct *data)
+ 	struct iwl_trans_pcie *trans_pcie =
+ 	    container_of(data, struct iwl_trans_pcie, rx_replenish);
+ 
+-	iwlagn_rx_replenish(trans_pcie->trans);
++	iwl_rx_replenish(trans_pcie->trans);
+ }
+ 
+ static void iwl_rx_handle_rxbuf(struct iwl_trans *trans,
+@@ -526,7 +534,7 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 			count++;
+ 			if (count >= 8) {
+ 				rxq->read = i;
+-				iwlagn_rx_replenish_now(trans);
++				iwl_rx_replenish_now(trans);
+ 				count = 0;
+ 			}
+ 		}
+@@ -535,9 +543,9 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 	/* Backtrack one entry */
+ 	rxq->read = i;
+ 	if (fill_rx)
+-		iwlagn_rx_replenish_now(trans);
++		iwl_rx_replenish_now(trans);
+ 	else
+-		iwlagn_rx_queue_restock(trans);
++		iwl_rx_queue_restock(trans);
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 3f11b17..d44fa2a 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -216,7 +216,7 @@ static int iwl_rx_init(struct iwl_trans *trans)
+ 	rxq->free_count = 0;
+ 	spin_unlock_irqrestore(&rxq->lock, flags);
+ 
+-	iwlagn_rx_replenish(trans);
++	iwl_rx_replenish(trans);
+ 
+ 	iwl_trans_rx_hw_init(trans, rxq);
+ 
+-- 
+1.7.10.4
+
