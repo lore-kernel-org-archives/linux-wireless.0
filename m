@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:45076 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756896Ab2IZQoG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 12:44:06 -0400
-Received: from localhost.localdomain (earthlight.etchedpixels.co.uk [81.2.110.250])
-	by lxorguk.ukuu.org.uk (8.14.5/8.14.1) with ESMTP id q8QHGT3f006006
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 18:16:34 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] RFC ath5k: missing break
-To: linux-wireless@vger.kernel.org
-Date: Wed, 26 Sep 2012 18:02:58 +0100
-Message-ID: <20120926170242.8585.7010.stgit@localhost.localdomain> (sfid-20120926_184410_524232_CB79D99F)
+Received: from mms2.broadcom.com ([216.31.210.18]:2622 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752416Ab2IJQRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 12:17:44 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 08/10] brcmfmac: refill buffers on rx protocol error.
+Date: Mon, 10 Sep 2012 15:16:56 +0200
+Message-ID: <1347283018-24223-9-git-send-email-arend@broadcom.com> (sfid-20120910_181754_434191_B528F985)
+In-Reply-To: <1347283018-24223-1-git-send-email-arend@broadcom.com>
+References: <1347283018-24223-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alan Cox <alan@linux.intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-This code seems to make no sense otherwise for 5MHz mode as it always
-recomputes the values in the fall through.
+This patch fixes a bug where rx buffer does not get refilled if the
+packet received has an rx protocol error.
 
-[ath5k_hw_set_opmode looks suspicious too btw]
-
-Signed-off-by: Alan Cox <alan@linux.intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
- drivers/net/wireless/ath/ath5k/phy.c |    2 ++
- 1 file changed, 2 insertions(+)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 8aab2a2..6e3ff6f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -552,12 +552,10 @@ static void brcmf_usb_rx_complete(struct urb *urb)
+ 		if (brcmf_proto_hdrpull(devinfo->dev, &ifidx, skb) != 0) {
+ 			brcmf_dbg(ERROR, "rx protocol error\n");
+ 			brcmu_pkt_buf_free_skb(skb);
+-			brcmf_usb_enq(devinfo, &devinfo->rx_freeq, req, NULL);
+ 			devinfo->bus_pub.bus->dstats.rx_errors++;
+-		} else {
++		} else
+ 			brcmf_rx_packet(devinfo->dev, ifidx, skb);
+-			brcmf_usb_rx_refill(devinfo, req);
+-		}
++		brcmf_usb_rx_refill(devinfo, req);
+ 	} else {
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		brcmf_usb_enq(devinfo, &devinfo->rx_freeq, req, NULL);
+-- 
+1.7.9.5
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 01c90ed..ab363f3 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1975,11 +1975,13 @@ ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
- 			spur_delta_phase = (spur_offset << 18) / 25;
- 			spur_freq_sigma_delta = (spur_delta_phase >> 10);
- 			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 2;
-+			break;
- 		case AR5K_BWMODE_5MHZ:
- 			/* Both sample_freq and chip_freq are 10MHz (?) */
- 			spur_delta_phase = (spur_offset << 19) / 25;
- 			spur_freq_sigma_delta = (spur_delta_phase >> 10);
- 			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 4;
-+			break;
- 		default:
- 			if (channel->band == IEEE80211_BAND_5GHZ) {
- 				/* Both sample_freq and chip_freq are 40MHz */
 
