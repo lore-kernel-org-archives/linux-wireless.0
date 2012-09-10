@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40714 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753100Ab2IJOxz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35928 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755922Ab2IJLUI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 10:53:55 -0400
-Message-ID: <504DFEFF.6060004@lwfinger.net> (sfid-20120910_165404_625748_CEB65896)
-Date: Mon, 10 Sep 2012 09:53:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-References: <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <20120824.111948.680531915905273128.davem@davemloft.net>  <5037A4B0.3080208@lwfinger.net>  <1345825095.19483.19.camel@edumazet-glaptop>  <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>  <1345830424.19483.69.camel@edumazet-glaptop>  <503BB49C.5010402@lwfinger.net> <1347266366.1234.1267.camel@edumazet-glaptop>
-In-Reply-To: <1347266366.1234.1267.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 10 Sep 2012 07:20:08 -0400
+Message-ID: <1347276044.4272.14.camel@jlt4.sipsolutions.net> (sfid-20120910_132012_599584_F2B01FDF)
+Subject: Re: [PATCH v3 4/7] mac80211: add ability to enable TX on op-channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Date: Mon, 10 Sep 2012 13:20:44 +0200
+In-Reply-To: <1344426823-1795-5-git-send-email-victorg@ti.com>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	 <1344426823-1795-5-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2012 03:39 AM, Eric Dumazet wrote:
-> On Mon, 2012-08-27 at 12:55 -0500, Larry Finger wrote:
->
->> I have prepared a patch to fix all the unchecked allocations.
->>
->> Over the weekend I made some progress. To test the latest vendor driver, I
->> installed a 32-bit system. Their driver is not compatible with a 64-bit system.
->> I found that not only did the vendor driver work with secure sites, but so did
->> the in-kernel version. I now have tcpdump output for the 32-bit case that works,
->> and the 64-bit case that fails. It seems likely that I missed some 32/64 bit
->> incompatibility when I did the conversion.
->>
->> Thanks for all your help in trying to resolve this issue.
->>
->> Larry
->>
->>
->
-> Hi Larry
->
-> It appears I have a D-Link N300 (DWA-131) nano USB adapter, using
-> staging/rtl8712 driver.
->
-> I tried many kernel versions (including 3.3) and none seems to work
-> reliably.
->
-> Sometime, I have some traffic but only for about 50 frames...
-> It might be because my access point is a netgear wndr3800, because I
-> have following warning a bit before the freezes :
->
-> r8712u: [r8712_got_addbareq_event_callback] mac = 20:4e:7f:5a:cd:30, sea = 80, tid = 0
+On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
+> Prior starting tx on DFS channels, the DFS master
+> device shall perform a Channel Availability Check
+> to ensure that there is no radar interference on
+> those channels. Once CAC done, the tx can be
+> enabled with ieee80211_dfs_en_tx().
+> 
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> ---
+>  include/net/mac80211.h    |    4 ++++
+>  net/mac80211/cfg.c        |   15 +++++++++++++++
+>  net/mac80211/driver-ops.h |   14 ++++++++++++++
+>  net/mac80211/trace.h      |    6 ++++++
+>  4 files changed, 39 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index d29c99a..ecdfb6a 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -2266,6 +2266,8 @@ enum ieee80211_rate_control_changed {
+>  * @start_radar_detection: Start radar detection on current operational
+>   *	channel, once started it will continuously monitor for radars as long
+>   *	as the channel active.
+> + * @dfs_en_tx: Once channel pass the DFS initial channel availability check,
+> + *	initiate the tx on the channel with this command.
 
-Eric,
+Please also document (for both!) the fact that they can sleep.
 
-What is the md5sum for the firmware file /lib/firmware/rtlwifi/rtl8712u.bin? 
-Over the weekend, there was a report of another device that had problems with 
-firmware that was added to the linux-firmware repo in July with md5sum of 
-c6f3b7b880aefb7b3f249428d659bdbb. An older version with md5sum of 
-200fd952db3cc9259b1fd05e3e51966f works in that case. I'll send you this one 
-privately.
 
-I have a Netgear WNDR3300 and also get the addbareq events, but I do not get 
-freezes. I'm not sure the message is correlated.
+> +DEFINE_EVENT(local_sdata_evt, drv_dfs_en_tx,
+> +	TP_PROTO(struct ieee80211_local *local,
+> +		 struct ieee80211_sub_if_data *sdata),
+> +	TP_ARGS(local, sdata)
+> +);
 
-Larry
+Again, parameters.
 
+johannes
 
