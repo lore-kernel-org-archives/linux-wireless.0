@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:57247 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932191Ab2IFQJr (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:54269 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077Ab2IJPEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 12:09:47 -0400
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Peter Senna Tschudin <peter.senna@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 8/10] net/mac80211/scan.c: removes unnecessary semicolon
-Date: Thu,  6 Sep 2012 18:09:16 +0200
-Message-Id: <1346947757-10481-9-git-send-email-peter.senna@gmail.com> (sfid-20120906_181141_727521_59BA9FFD)
-In-Reply-To: <1346947757-10481-1-git-send-email-peter.senna@gmail.com>
-References: <1346947757-10481-1-git-send-email-peter.senna@gmail.com>
+	Mon, 10 Sep 2012 11:04:12 -0400
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <504DFEFF.6060004@lwfinger.net>
+References: <50369925.3050705@lwfinger.net>
+	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
+	 <20120824.111948.680531915905273128.davem@davemloft.net>
+	 <5037A4B0.3080208@lwfinger.net>
+	 <1345825095.19483.19.camel@edumazet-glaptop>
+	 <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>
+	 <1345830424.19483.69.camel@edumazet-glaptop>
+	 <503BB49C.5010402@lwfinger.net>
+	 <1347266366.1234.1267.camel@edumazet-glaptop>
+	 <504DFEFF.6060004@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Sep 2012 17:04:06 +0200
+Message-ID: <1347289446.1234.1717.camel@edumazet-glaptop> (sfid-20120910_170421_599720_8C9292BA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Peter Senna Tschudin <peter.senna@gmail.com>
+On Mon, 2012-09-10 at 09:53 -0500, Larry Finger wrote:
 
-removes unnecessary semicolon
+> Eric,
+> 
+> What is the md5sum for the firmware file /lib/firmware/rtlwifi/rtl8712u.bin? 
+> Over the weekend, there was a report of another device that had problems with 
+> firmware that was added to the linux-firmware repo in July with md5sum of 
+> c6f3b7b880aefb7b3f249428d659bdbb. An older version with md5sum of 
+> 200fd952db3cc9259b1fd05e3e51966f works in that case. I'll send you this one 
+> privately.
+> 
+> I have a Netgear WNDR3300 and also get the addbareq events, but I do not get 
+> freezes. I'm not sure the message is correlated.
+> 
 
-Found by Coccinelle: http://coccinelle.lip6.fr/
+It seems I have the c6f3b7b880aefb7b3f249428d659bdbb one
+# md5sum /data/src/linux-firmware/rtlwifi/rtl8712u.bin /lib/firmware/rtlwifi/rtl8712u.bin
+c6f3b7b880aefb7b3f249428d659bdbb  /data/src/linux-firmware/rtlwifi/rtl8712u.bin
+c6f3b7b880aefb7b3f249428d659bdbb  /lib/firmware/rtlwifi/rtl8712u.bin
 
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+Since I have linux-firmware tree, should I go back to initial commit 
+commit 8f919160792e4702c6b7a67a243cea4f757407e4
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Mon Nov 1 23:56:52 2010 -0500
 
----
- net/mac80211/scan.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+    linux-firmware: Add firmware files for Realtek RTL8712U and
+RTL8192CE
 
-diff -u -p a/net/mac80211/scan.c b/net/mac80211/scan.c
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -407,7 +407,7 @@ static void ieee80211_scan_state_send_pr
- 	enum ieee80211_band band = local->hw.conf.channel->band;
- 
- 	sdata = rcu_dereference_protected(local->scan_sdata,
--					  lockdep_is_held(&local->mtx));;
-+					  lockdep_is_held(&local->mtx));
- 
- 	for (i = 0; i < local->scan_req->n_ssids; i++)
- 		ieee80211_send_probe_req(
+Thanks !
+
+
 
