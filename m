@@ -1,31 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44355 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751586Ab2INNfV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 09:35:21 -0400
-Message-ID: <50533297.2030103@openwrt.org> (sfid-20120914_153525_859044_ECBD6ECB)
-Date: Fri, 14 Sep 2012 15:35:19 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFT v2] cfg80211: fix possible circular lock on reg_regdb_search()
-References: <1347569712-24886-1-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1347569712-24886-1-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:35968 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752072Ab2IJLZZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 07:25:25 -0400
+Message-ID: <1347276361.4272.20.camel@jlt4.sipsolutions.net> (sfid-20120910_132528_107037_9DE75773)
+Subject: Re: [PATCH v3 7/7] mac80211: add DFS support to monitor interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Date: Mon, 10 Sep 2012 13:26:01 +0200
+In-Reply-To: <1344426823-1795-8-git-send-email-victorg@ti.com>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	 <1344426823-1795-8-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-09-13 10:55 PM, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
+> AP mode uses monitor interfaces to transmit
+> management frames which were blocked for "radar
+> channels" until now.
 > 
-> When call_crda() is called we kick off a witch hunt search
-> for the same regulatory domain on our internal regulatory
-> database and that work gets kicked off on a workqueue, this
-> is done while the cfg80211_mutex is held. If that workqueue
-> kicks off it will first lock reg_regdb_search_mutex and
-> later cfg80211_mutex but to ensure two CPUs will not contend
-> against cfg80211_mutex the right thing to do is to have the
-> reg_regdb_search() wait until the cfg80211_mutex is let go.
-Tested-by: Felix Fietkau <nbd@openwrt.org>
+> Stop dropping packets if we are on 'radar channel'
+> and the DFS is enabled.
+
+Umm, no? Check for dfs_en_tx().
+
+johannes
 
