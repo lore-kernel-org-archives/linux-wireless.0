@@ -1,108 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2254 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751816Ab2IKTTG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 15:19:06 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 4/7] brcmfmac: Clean up scan related code.
-Date: Tue, 11 Sep 2012 21:18:49 +0200
-Message-ID: <1347391132-10953-5-git-send-email-arend@broadcom.com> (sfid-20120911_211912_562073_F4A7350E)
-In-Reply-To: <1347391132-10953-1-git-send-email-arend@broadcom.com>
-References: <1347391132-10953-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10227 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753520Ab2IJPMh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 11:12:37 -0400
+Message-ID: <504E035B.7050106@qca.qualcomm.com> (sfid-20120910_171240_802190_DAC02532)
+Date: Mon, 10 Sep 2012 20:42:27 +0530
+From: Pandiyarajan <c_ppitch@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] cfg80211/nl80211: Notify connection request failure in
+ AP mode
+References: <1347274408-11949-1-git-send-email-c_ppitch@qca.qualcomm.com> <1347276502.4272.22.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1347276502.4272.22.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Hi Johannes,
 
-Clean up scan related code in preparation of a new scan mechanism (e-scan)
-which will follow in a separate patch.
+On Monday 10 September 2012 04:58 PM, Johannes Berg wrote:
+> On Mon, 2012-09-10 at 16:23 +0530, Pandiyarajan Pitchaimuthu wrote:
+>> In AP mode, when a station requests connection to an AP and if the
+>> request is failed for particular reason, userspace is notified about the
+>> failure through NL80211_CMD_CONN_FAILED command. Reason for the failure
+>> is sent through the attribute NL80211_ATTR_CONN_FAILED_REASON.
+> Why would userspace care?
+It would be useful to inform the userspace that the driver/firmware's
+limitation of maintaining the maximum number of connected clients is 
+reached.
+Without this the user may not be clear about why another client cannot 
+be added.
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   22 ++++++++------------
- 1 file changed, 9 insertions(+), 13 deletions(-)
+Also, further enhancements/decisions can be made based on this event.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 4553fa0..4a27ca0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -490,8 +490,8 @@ static void brcmf_set_mpc(struct net_device *ndev, int mpc)
- 	}
- }
- 
--static void wl_iscan_prep(struct brcmf_scan_params_le *params_le,
--			  struct brcmf_ssid *ssid)
-+static void brcmf_iscan_prep(struct brcmf_scan_params_le *params_le,
-+			     struct brcmf_ssid *ssid)
- {
- 	memcpy(params_le->bssid, ether_bcast, ETH_ALEN);
- 	params_le->bss_type = DOT11_BSSTYPE_ANY;
-@@ -545,7 +545,7 @@ brcmf_run_iscan(struct brcmf_cfg80211_iscan_ctrl *iscan,
- 		return -ENOMEM;
- 	BUG_ON(params_size >= BRCMF_DCMD_SMLEN);
- 
--	wl_iscan_prep(&params->params_le, ssid);
-+	brcmf_iscan_prep(&params->params_le, ssid);
- 
- 	params->version = cpu_to_le32(BRCMF_ISCAN_REQ_VERSION);
- 	params->action = cpu_to_le16(action);
-@@ -598,9 +598,9 @@ static s32 brcmf_do_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- }
- 
- static s32
--__brcmf_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
--		   struct cfg80211_scan_request *request,
--		   struct cfg80211_ssid *this_ssid)
-+brcmf_cfg80211_iscan(struct wiphy *wiphy, struct net_device *ndev,
-+		     struct cfg80211_scan_request *request,
-+		     struct cfg80211_ssid *this_ssid)
- {
- 	struct brcmf_cfg80211_priv *cfg_priv = ndev_to_cfg(ndev);
- 	struct cfg80211_ssid *ssids;
-@@ -703,7 +703,7 @@ brcmf_cfg80211_scan(struct wiphy *wiphy,
- 	if (!check_sys_up(wiphy))
- 		return -EIO;
- 
--	err = __brcmf_cfg80211_scan(wiphy, ndev, request, NULL);
-+	err = brcmf_cfg80211_iscan(wiphy, ndev, request, NULL);
- 	if (err)
- 		WL_ERR("scan error (%d)\n", err);
- 
-@@ -2547,10 +2547,8 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
- 	clear_bit(WL_STATUS_SCAN_ABORTING, &cfg_priv->status);
- 
- 	/* Turn off watchdog timer */
--	if (test_bit(WL_STATUS_READY, &cfg_priv->status)) {
--		WL_INFO("Enable MPC\n");
-+	if (test_bit(WL_STATUS_READY, &cfg_priv->status))
- 		brcmf_set_mpc(ndev, 1);
--	}
- 
- 	WL_TRACE("Exit\n");
- 
-@@ -3194,10 +3192,8 @@ brcmf_notify_scan_status(struct brcmf_cfg80211_priv *cfg_priv,
- 	cfg_priv->scan_results->count = le32_to_cpu(bss_list_le->count);
- 
- 	err = brcmf_inform_bss(cfg_priv);
--	if (err) {
-+	if (err)
- 		scan_abort = true;
--		goto scan_done_out;
--	}
- 
- scan_done_out:
- 	if (cfg_priv->scan_request) {
--- 
-1.7.9.5
+>> +/* AP mode - sta's connection request failed reasons */
+>> +enum nl80211_connect_failed_reason {
+>> +	NL80211_CONN_FAIL_MAX_CLIENTS		= 1,
+>> +	NL80211_CONN_FAIL_BLOCKED_CLIENT	= 2,
+>> +};
+> Why number explicitly?
+Thanks. Will change it to have the default value.
+>> + * Whenever a station tries to connect to an AP and if the station
+>> + * could not connect to the AP for some reason, this function is called.
+> It's not really "for some reason", it's "because the AP rejected it for
+> some reason"... You're not handling other cases anyway.
+>
+> johannes
+>
+Sure. Will change the comment.
 
-
+Pandiyarajan.P
