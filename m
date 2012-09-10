@@ -1,51 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40614 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753Ab2IGPh2 (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:38057 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757366Ab2IJLtn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 11:37:28 -0400
-Message-ID: <504A14B0.4020104@candelatech.com> (sfid-20120907_173732_290358_F7A71BBF)
-Date: Fri, 07 Sep 2012 08:37:20 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 10 Sep 2012 07:49:43 -0400
+Received: by ieje11 with SMTP id e11so2867279iej.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 04:49:42 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: validate skb->dev in the tx status path
-References: <1347029656-41430-1-git-send-email-nbd@openwrt.org>  <504A11C0.5030602@candelatech.com> <1347031704.4256.26.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1347031704.4256.26.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Mon, 10 Sep 2012 12:49:42 +0100
+Message-ID: <CAN6WCkZBmR7b8fWubjgHgkHnrr9Kn_qEO7Y56ySPdWEebjpFzQ@mail.gmail.com> (sfid-20120910_134947_027385_9F81D0DF)
+Subject: linuxwireless.org documentation outdated
+From: =?ISO-8859-1?Q?Crist=F3v=E3o_Cruz?= <cristovao.a.cruz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/07/2012 08:28 AM, Johannes Berg wrote:
-> On Fri, 2012-09-07 at 08:24 -0700, Ben Greear wrote:
->> On 09/07/2012 07:54 AM, Felix Fietkau wrote:
->>> skb->dev might contain a stale reference to a device that was already
->>> deleted, and using it unchecked can lead to invalid pointer accesses.
->>> Since this is only used for nl80211 tx, iterate over active interfaces
->>> to find a match for skb->dev, and discard the tx status if the device
->>> is gone.
->>
->> Nasty performance hit if we have lots of virtual
->> interfaces, eh?  Maybe some sort of ref-counting
->> would be better?  Or a hashed lookup on the netdev
->> pointer/token?
->
-> As Felix also pointed out to me, no. Frames that need to go to nl80211
-> should be rare, this isn't the common case.
+Hello.
 
-Ahh, ok.  I was thinking each transmitted pkt would cause this code
-to run.
+I am reading documentation about the 80211 kernel subsystem and
+noticed that the website kerneldocs are outdated
+(http://linuxwireless.org/en/developers/Documentation/kerneldoc/include/net/mac80211.h).
+>From what I could understand they should be automatically updated to
+be in sync with kernel tree.
+Is there any reason for the docs to be outdated?
+I would be glad to help if help is needed.
 
-Thanks,
-Ben
-
->
-> johannes
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Cristóvão Cruz.
