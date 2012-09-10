@@ -1,37 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:53230 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755887Ab2IFOPk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 10:15:40 -0400
-Received: by eaac11 with SMTP id c11so559859eaa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 07:15:39 -0700 (PDT)
-Date: Thu, 6 Sep 2012 16:15:29 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
-Subject: Re: rtl8192ce: activation problem with rtl8188ce pci card
-Message-ID: <20120906161529.016b2202@destiny.ordissimo> (sfid-20120906_161545_245605_96551537)
-In-Reply-To: <5047B508.5030606@lwfinger.net>
-References: <20120905185510.2ab501cd@destiny.ordissimo>
-	<50478E10.6030808@lwfinger.net>
-	<20120905201437.70c008ca@destiny.ordissimo>
-	<5047B508.5030606@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mms1.broadcom.com ([216.31.210.17]:2012 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751879Ab2IJNRT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 09:17:19 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/10] brcmfmac: Stop all net if queues on tx flow halt.
+Date: Mon, 10 Sep 2012 15:16:49 +0200
+Message-ID: <1347283018-24223-2-git-send-email-arend@broadcom.com> (sfid-20120910_151723_725818_FEFAEB22)
+In-Reply-To: <1347283018-24223-1-git-send-email-arend@broadcom.com>
+References: <1347283018-24223-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 05 Sep 2012 15:24:40 -0500, Larry Finger <Larry.Finger@lwfinger.net> wrote :
+From: Hante Meuleman <meuleman@broadcom.com>
 
-> Note, the RTL8188CE-VL does not work with wireless-next, but does with 
-> wireless-testing with some patches applied. I will contact the Realtek software 
-> team to ask questions about your card. I added my contact as a Cc here. In the 
-> meantime, could you try the wireless-testing tree? If your card still does not 
-> work, I will send you some patches to see what it takes.
+When tx flow is to be blocked due to host interface throttle then
+all net if queues should be stopped.
 
-What patch does wireless-testing have that aren't in wireless-next ? I
-failed to find them.
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   16 ++++++++++------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 ++++----
+ 3 files changed, 15 insertions(+), 11 deletions(-)
 
-Anisse
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index 537f499..9b8ee19 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -103,7 +103,7 @@ extern int brcmf_attach(uint bus_hdrlen, struct device *dev);
+ extern void brcmf_detach(struct device *dev);
+ 
+ /* Indication from bus module to change flow-control state */
+-extern void brcmf_txflowcontrol(struct device *dev, int ifidx, bool on);
++extern void brcmf_txflowblock(struct device *dev, bool state);
+ 
+ /* Notify tx completion */
+ extern void brcmf_txcomplete(struct device *dev, struct sk_buff *txp,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 7f9ba82..b08f347 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -350,19 +350,23 @@ done:
+ 	return 0;
+ }
+ 
+-void brcmf_txflowcontrol(struct device *dev, int ifidx, bool state)
++void brcmf_txflowblock(struct device *dev, bool state)
+ {
+ 	struct net_device *ndev;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_pub *drvr = bus_if->drvr;
++	int i;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	ndev = drvr->iflist[ifidx]->ndev;
+-	if (state == ON)
+-		netif_stop_queue(ndev);
+-	else
+-		netif_wake_queue(ndev);
++	for (i = 0; i < BRCMF_MAX_IFS; i++)
++		if (drvr->iflist[i]) {
++			ndev = drvr->iflist[i]->ndev;
++			if (state)
++				netif_stop_queue(ndev);
++			else
++				netif_wake_queue(ndev);
++		}
+ }
+ 
+ static int brcmf_host_event(struct brcmf_pub *drvr, int *ifidx,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 2dd6b48..4580ff3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2235,8 +2235,8 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 	if (bus->sdiodev->bus_if->drvr_up &&
+ 	    (bus->sdiodev->bus_if->state == BRCMF_BUS_DATA) &&
+ 	    bus->txoff && (pktq_len(&bus->txq) < TXLOW)) {
+-		bus->txoff = OFF;
+-		brcmf_txflowcontrol(bus->sdiodev->dev, 0, OFF);
++		bus->txoff = false;
++		brcmf_txflowblock(bus->sdiodev->dev, false);
+ 	}
+ 
+ 	return cnt;
+@@ -2672,8 +2672,8 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 	spin_unlock_bh(&bus->txqlock);
+ 
+ 	if (pktq_len(&bus->txq) >= TXHI) {
+-		bus->txoff = ON;
+-		brcmf_txflowcontrol(bus->sdiodev->dev, 0, ON);
++		bus->txoff = true;
++		brcmf_txflowblock(bus->sdiodev->dev, true);
+ 	}
+ 
+ #ifdef DEBUG
+-- 
+1.7.9.5
+
+
