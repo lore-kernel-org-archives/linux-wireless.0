@@ -1,45 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44240 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755968Ab2ISKH5 (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:53299 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886Ab2IJSe7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 06:07:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] mac80211: don't send delBA when removing stations
-Date: Wed, 19 Sep 2012 12:08:32 +0200
-Message-Id: <1348049313-7650-3-git-send-email-johannes@sipsolutions.net> (sfid-20120919_120805_148102_024AB7FD)
-In-Reply-To: <1348049313-7650-1-git-send-email-johannes@sipsolutions.net>
-References: <1348049313-7650-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 10 Sep 2012 14:34:59 -0400
+Message-ID: <504E32CE.10108@lwfinger.net> (sfid-20120910_203510_294097_93BFCD59)
+Date: Mon, 10 Sep 2012 13:34:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] staging: r8712u: fix bug in r8712_recv_indicatepkt()
+References: <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <20120824.111948.680531915905273128.davem@davemloft.net>  <5037A4B0.3080208@lwfinger.net>  <1345825095.19483.19.camel@edumazet-glaptop>  <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>  <1345830424.19483.69.camel@edumazet-glaptop>  <503BB49C.5010402@lwfinger.net>  <1347266366.1234.1267.camel@edumazet-glaptop>  <504DFEFF.6060004@lwfinger.net>  <1347289446.1234.1717.camel@edumazet-glaptop> <1347299715.1234.1902.camel@edumazet-glaptop>
+In-Reply-To: <1347299715.1234.1902.camel@edumazet-glaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 09/10/2012 12:55 PM, Eric Dumazet wrote:
+> From: Eric Dumazet <edumazet@google.com>
+>
+> 64bit arches have a buggy r8712u driver, let's fix it.
+>
+> Signed-off-by: Eric Dumazet <edumazet@google.com>
+> ---
+>   drivers/staging/rtl8712/recv_linux.c |    7 +------
+>   1 file changed, 1 insertion(+), 6 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8712/recv_linux.c b/drivers/staging/rtl8712/recv_linux.c
+> index 0e26d5f..495ee12 100644
+> --- a/drivers/staging/rtl8712/recv_linux.c
+> +++ b/drivers/staging/rtl8712/recv_linux.c
+> @@ -117,13 +117,8 @@ void r8712_recv_indicatepkt(struct _adapter *padapter,
+>   	if (skb == NULL)
+>   		goto _recv_indicatepkt_drop;
+>   	skb->data = precv_frame->u.hdr.rx_data;
+> -#ifdef NET_SKBUFF_DATA_USES_OFFSET
+> -	skb->tail = (sk_buff_data_t)(precv_frame->u.hdr.rx_tail -
+> -		     precv_frame->u.hdr.rx_head);
+> -#else
+> -	skb->tail = (sk_buff_data_t)precv_frame->u.hdr.rx_tail;
+> -#endif
+>   	skb->len = precv_frame->u.hdr.len;
+> +	skb_set_tail_pointer(skb, skb->len);
+>   	if ((pattrib->tcpchk_valid == 1) && (pattrib->tcp_chkrpt == 1))
+>   		skb->ip_summed = CHECKSUM_UNNECESSARY;
+>   	else
 
-When a station is removed and we stop the aggregation
-sessions, it's not useful to send delBA since this is
-due to us or the station disassociating or dropping
-the connection in some other way, so change that.
+Eric,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks for this. It works for me. I had looked at this code a number of times, 
+but for some reason, I thought that the u.hdr.rx_yyyy parameters were like 
+32-bit systems and that all 4 values were pointers, and not like 64-bit systems, 
+thus the funny conversion. Strange that the bug was never triggered until commit 
+c8628155ece3 - this code has not changed since the driver was accepted into 2.6.37.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 9c8cd8b..797dd36 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -738,7 +738,7 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	 * will be sufficient.
- 	 */
- 	set_sta_flag(sta, WLAN_STA_BLOCK_BA);
--	ieee80211_sta_tear_down_BA_sessions(sta, true);
-+	ieee80211_sta_tear_down_BA_sessions(sta, false);
- 
- 	ret = sta_info_hash_del(local, sta);
- 	if (ret)
--- 
-1.7.10.4
+A few points on the patch. As the driver is in staging, the patch needs to go to 
+Greg Kroah-Hartman. In addition, please add the "Cc: Stable 
+<stable@vger.kernel.org>" line. You may also give an a s-o-b for me. Finally, 
+this patch should fix https://bugzilla.redhat.com/show_bug.cgi?id=847525, and 
+https://bugzilla.kernel.org/show_bug.cgi?id=45071.
+
+Larry
 
