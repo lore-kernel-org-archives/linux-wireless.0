@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47781 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224Ab2ILIKZ (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:63539 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757539Ab2IJP7Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 04:10:25 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v1] Fix for regulatory in 60g
-Date: Wed, 12 Sep 2012 11:10:20 +0300
-Message-ID: <14825905.k5l7QPk6IR@lx-vladimir> (sfid-20120912_101035_341437_1AE5DDEC)
-In-Reply-To: <1347384193.4683.2.camel@jlt4.sipsolutions.net>
-References: <1347364329-19443-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1347384193.4683.2.camel@jlt4.sipsolutions.net>
+	Mon, 10 Sep 2012 11:59:24 -0400
+Received: by eekc1 with SMTP id c1so1282683eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 08:59:23 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Subject: Re: [PATCH v3] p54: connect to 11w protected networks
+Date: Mon, 10 Sep 2012 17:59:17 +0200
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+References: <E1TA0re-00059m-CD@debian64.localnet> <1347036664.8913.1.camel@dcbw.foobar.com> <87ehma5agf.fsf@purkki.adurom.net>
+In-Reply-To: <87ehma5agf.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201209101759.17751.chunkeey@googlemail.com> (sfid-20120910_175928_286926_CB0DC75F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, September 11, 2012 07:23:13 PM Johannes Berg wrote:
-> On Tue, 2012-09-11 at 14:52 +0300, Vladimir Kondratiev wrote:
-> > Another bit in 60g band support.
-> > 
-> > If possible, this is bug fix intended for 3.6
+On Monday 10 September 2012 14:28:00 Kalle Valo wrote:
+> Dan Williams <dcbw@redhat.com> writes:
 > 
-> I don't really see a reason for that given that we don't have a driver
-> that uses 60g support anyway. Why should I pick it up anyway this late
-> in the cycle?
+> > On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
+> >> Previously, it was not possible to connect
+> >> to networks which requires 11w to be supported
+> >> by the stations.
+> >
+> > If at all possible if we can do this without module parameters, that
+> > would be great.  Otherwise how is userspace supposed to connect to a
+> > W-capable network without twiddling driver-specific module options,
+> > something we've tried really hard to not do?  Module options really
+> > aren't any different than private ioctls or IWPRIV commands...
 > 
-> johannes
+> Sure, and that's how it works with properly supported hardware. But p54
+> is so old that the user will need to buy newer hardware if he really
+> needs 11w support out-of-box. IMHO there's no point of making a huge
+> effort to add 11w support to older hardware, there are more important
+> things to fix in Linux wireless stack than that.
 
-Well, it is bug fix for 60g band that was merged. Also, I am readying
-driver for 60g card and will submit it shortly. Having this bug fixed
-will help to 3-rd parties that want to experiment with 60g,
-and for 60g-related work in tools like wpa_supplicant and iw.
+Dan's concern has been addressed by v4 of this patch
+(which depends on johannes' "add mgmt key flags" patch).
+p54 should now provide basic support for 11w protected
+networks w/o messing with any module parameters.
 
-If it is not looks reasonable, sure it can wait.
-
-Thanks, Vladimir.
+Regards,
+	Chr 
