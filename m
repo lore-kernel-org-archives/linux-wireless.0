@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53667 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088Ab2IGR1s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 13:27:48 -0400
-Message-ID: <1347038903.4256.38.camel@jlt4.sipsolutions.net> (sfid-20120907_192751_495173_1AB6ECFA)
-Subject: Re: [PATCH v2] p54: connect to 11w protected networks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Date: Fri, 07 Sep 2012 19:28:23 +0200
-In-Reply-To: <1347037745.4256.37.camel@jlt4.sipsolutions.net> (sfid-20120907_190840_355951_AEB493EB)
-References: <1346622538.10113.3.camel@jlt4.sipsolutions.net>
-	 <201209071825.13588.chunkeey@googlemail.com>
-	 <1347035277.4256.33.camel@jlt4.sipsolutions.net>
-	 <201209071901.59705.chunkeey@googlemail.com>
-	 (sfid-20120907_190207_971998_7DE5E0BF) <1347037745.4256.37.camel@jlt4.sipsolutions.net>
-	 (sfid-20120907_190840_355951_AEB493EB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3374 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755984Ab2IJNbW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 09:31:22 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/10] brcmfmac: transmit flow control and e-scan
+ support
+Date: Mon, 10 Sep 2012 15:16:48 +0200
+Message-ID: <1347283018-24223-1-git-send-email-arend@broadcom.com> (sfid-20120910_153132_305356_394601F9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-09-07 at 19:09 +0200, Johannes Berg wrote:
-> On Fri, 2012-09-07 at 19:01 +0200, Christian Lamparter wrote:
-> 
-> > > > Oh no, I mean dynamic reconfiguration of the firmware's
-> > > > keycache during runtime. 
-> > > 
-> > > Right right, but for MFP that doesn't help since in AP mode
-> > > we don't know whether to expect encrypted management frames
-> > > or not.
-> > 
-> > Hmpf, don't we set the CMAC key in this case? 
-> 
-> Hmm, I guess we would have that, and actually ... we know MFP will be
-> used for the *station* so we should in fact know this already. I'll need
-> to revise my patch. D'oh.
+This series contains transmit flow control handling when the brcmfmac driver
+has no resources to transfer packets over the host interface. This improves
+throughput number for TCP. The other feature in this series is event based
+scanning in which firmware sends an event per BSS.
 
-I just posted a new patch. I haven't really tested it though, but I'm
-pretty sure it'll work.
+The other changes in this series are small fixes.
 
-johannes
+This series is for the v3.7 kernel and applies to the wireless-next tree.
+
+Hante Meuleman (10):
+  brcmfmac: Stop all net if queues on tx flow halt.
+  brcmfmac: Add extra data support to firmware event queueing.
+  brcmfmac: Fix extra data support handling.
+  brcmfmac: Add tx flow control on net if queue for USB.
+  brcmfmac: Clean up scan related code.
+  brcmfmac: fix big endian bug in i-scan.
+  brcmfmac: Fix big endian host configuration data.
+  brcmfmac: refill buffers on rx protocol error.
+  brcmfmac: avoid using local usb data.
+  brcmfmac: add e-scan support.
+
+ drivers/net/wireless/brcm80211/Kconfig             |    8 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   24 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   34 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   16 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +-
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |  184 +++----
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  564 +++++++++++++++++++-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   25 +
+ 9 files changed, 717 insertions(+), 148 deletions(-)
+
+-- 
+1.7.9.5
+
 
