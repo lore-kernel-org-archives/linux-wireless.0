@@ -1,82 +1,297 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:33497 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932174Ab2ICOef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2012 10:34:35 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	openwrt-devel@lists.openwrt.org,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Adrian Chadd <adrian.chadd@gmail.com>
-Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
-Date: Mon, 03 Sep 2012 16:34:30 +0200
-Message-ID: <2968585.KZWUHnqH8O@bentobox> (sfid-20120903_163439_045582_2C98D185)
-In-Reply-To: <CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
-References: <20120813165340.GA10044@pandem0nium> <20120902200102.GA28313@pandem0nium> <CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55585 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754220Ab2IJDu6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Sep 2012 23:50:58 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1409415.C9LQapUH8N"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20557.25451.661979.447365@gargle.gargle.HOWL> (sfid-20120910_055145_856556_A87BC890)
+Date: Mon, 10 Sep 2012 09:20:03 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/7] ath9k_hw: Add AR9565 HW support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Various parts of the code require AR9565 checks,
+this patch adds them.
 
---nextPart1409415.C9LQapUH8N
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c           |  2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c    |  2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 14 +++++++-------
+ drivers/net/wireless/ath/ath9k/eeprom.h        |  2 +-
+ drivers/net/wireless/ath/ath9k/hw.c            | 20 +++++++++++---------
+ 7 files changed, 31 insertions(+), 29 deletions(-)
 
-On Monday 03 September 2012 19:23:26 Mohammed Shafi wrote:
-> > # dmesg
-> > [...]
-> > [900132.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
-> > [900162.160000] ath: phy0: NF calibrated [ctl] [chain 0] is -104
-> > [900162.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
-> > [900192.160000] ath: phy0: NF calibrated [ctl] [chain 0] is -104
-> > [900192.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
-> > [900197.470000] ath: phy0: missed 1 consecutive beacons
-> > [900197.560000] ath: phy0: resume beacon xmit after 1 misses
-> > [900222.160000] ath: phy0: NF calibrated [ctl] [chain 0] is -104
-> > [900222.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
-> > [900252.160000] ath: phy0: NF calibrated [ctl] [chain 0] is -104
-> > [900252.160000] ath: phy0: NF calibrated [ext] [chain 0] is -104
-> > [900275.910000] ath: phy0: missed 1 consecutive beacons
-> 
-> seems we are getting beacon stuck, though its not sufficient for triggering
-> chip reset (or) atleast start noise floor calibration. Is this is in a
-> congested environment ? we can dump cycle counters . I think we need to
-> have a WAR of chip reset if the cycle counters (busy is too high) inspite
-> the MAC hang signature . let me try too to figure out that WAR is already
-> available (or) we got to enable it.
-
-The test environment is not really "congested". It is not in a city and you 
-don't have many access points in range. Only 2/3 clients are using these two 
-test access points. I don't know whether there are other things using the 
-channel range also used by the access points.
-
-Kind regards,
-	Sven
---nextPart1409415.C9LQapUH8N
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAABCgAGBQJQRL/2AAoJEF2HCgfBJntGXHMP/j0yoG0FhFrMBHNZDrs4q3VC
-qme7a56FSIPPtfdRxK8Z2HESl3w3g561BHcNOfBIvPTw1dASdmiKPhUJ3jsiNQB7
-JrPxxK2YR0FrcaLuJ4MLCEAI8pBN+Tpen6zcmmxqTRMoEUco48BkD9UuuRIDoQex
-uYvkFpcs5tbU2Pif4BMIZBHXfeVGxVO3O63XdsNkEbJymupajGzFc6g7sUhcwjb6
-C9rmIhpQxgQcDQ6AOmUBMq96b8Uv0WxR0kj2WWKjlBRzmqQl2TbPpMD5ragHt7UW
-yB/lDH5yur52/dvsTwOUmBu7Z9FlYOuTfanfQD0nUwKHpnA/5C6YrLic3cyb+H1X
-qNerUr42RjxrE1Pxjr1p3Rva354jZMOVXb9a6+wCTlG9XwJlNY6201hJwRhdOGfS
-J2HnMa+4b7adKoZ2j+9zvaH6vRveKi/wgvQ/4CNvsdviHsP6DCzjS8QzLggibbvN
-0pAF7f6YZePtOna2S/McFv5I31hmUpDoS6T9SbUMwkT8mIv8orjnC3/Sc+77M+ot
-UAgO2zCmaRm/IbPaTjeXnonxoQOOga7FzLbPV2wr671gKunfQzKJUfv1VsYov+bd
-/2JBPaOxsr5gnBwFaPZAxC7rqUrrVCpgDMV1sfXxNvValuurcrMz420ftDj94LBq
-fKcR5iD6EeBrokKy0Ee7
-=tlS0
------END PGP SIGNATURE-----
-
---nextPart1409415.C9LQapUH8N--
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index ff007f5..e09ec40 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -237,7 +237,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
+ 				     entry_cck->fir_step_level);
+ 
+ 	/* Skip MRC CCK for pre AR9003 families */
+-	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah))
++	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah))
+ 		return;
+ 
+ 	if (aniState->mrcCCK != entry_cck->mrc_cck_on)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index c37fe96..ec140c5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3520,7 +3520,7 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ 
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
+-	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah))
++	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah) || AR_SREV_9565(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
+ 	else {
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
+@@ -3568,7 +3568,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 
+ 	u32 value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
+ 				AR_SWITCH_TABLE_COM_AR9462_ALL, value);
+ 	} else if (AR_SREV_9550(ah)) {
+@@ -3612,7 +3612,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		}
+ 	}
+ 
+-	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
++	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
+ 		value = ath9k_hw_ar9300_get_eeprom(ah, EEP_ANT_DIV_CTL1);
+ 		/*
+ 		 * main_lnaconf, alt_lnaconf, main_tb, alt_tb
+@@ -3843,7 +3843,7 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 			REG_WRITE(ah, AR_PHY_PMU2, reg_pmu_set);
+ 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
+ 				return;
+-		} else if (AR_SREV_9462(ah)) {
++		} else if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 			reg_val = le32_to_cpu(pBase->swreg);
+ 			REG_WRITE(ah, AR_PHY_PMU1, reg_val);
+ 		} else {
+@@ -3874,7 +3874,7 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 			while (!REG_READ_FIELD(ah, AR_PHY_PMU2,
+ 						AR_PHY_PMU2_PGM))
+ 				udelay(10);
+-		} else if (AR_SREV_9462(ah))
++		} else if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 			REG_RMW_FIELD(ah, AR_PHY_PMU1, AR_PHY_PMU1_PWD, 0x1);
+ 		else {
+ 			reg_val = REG_READ(ah, AR_RTC_SLEEP_CLK) |
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 78816b8..8e358c7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -31,7 +31,7 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 	u32 val, ctl12, ctl17;
+ 	u8 desc_len;
+ 
+-	desc_len = (AR_SREV_9462(ah) ? 0x18 : 0x17);
++	desc_len = ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x18 : 0x17);
+ 
+ 	val = (ATHEROS_VENDOR_ID << AR_DescId_S) |
+ 	      (1 << AR_TxRxDesc_S) |
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index c3ebf87..78665b2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -88,7 +88,7 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 			channelSel = (freq * 4) / div;
+ 			chan_frac = (((freq * 4) % div) * 0x20000) / div;
+ 			channelSel = (channelSel << 17) | chan_frac;
+-		} else if (AR_SREV_9485(ah)) {
++		} else if (AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
+ 			u32 chan_frac;
+ 
+ 			/*
+@@ -736,7 +736,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 	if (chan->channel == 2484)
+ 		ar9003_hw_prog_ini(ah, &ah->ini_japan2484, 1);
+ 
+-	if (AR_SREV_9462(ah))
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 		REG_WRITE(ah, AR_GLB_SWREG_DISCONT_MODE,
+ 			  AR_GLB_SWREG_DISCONT_EN_BT_WLAN);
+ 
+@@ -746,9 +746,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+ 	ath9k_hw_apply_txpower(ah, chan, false);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		if (REG_READ_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_0,
+-				AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL))
++				   AR_PHY_TX_IQCAL_CONTROL_0_ENABLE_TXIQ_CAL))
+ 			ah->enabled_cals |= TX_IQ_CAL;
+ 		else
+ 			ah->enabled_cals &= ~TX_IQ_CAL;
+@@ -1111,7 +1111,7 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
+ 	if (AR_SREV_9330(ah))
+ 		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ;
+ 		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9462_2GHZ;
+ 		ah->nf_5g.min = AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 84d3d49..20bf3ae 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -630,8 +630,8 @@
+ #define AR_PHY_65NM_CH0_TXRF3_CAPDIV2G_S	1
+ 
+ #define AR_PHY_65NM_CH0_SYNTH4      0x1608c
+-#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   (AR_SREV_9462(ah) ? 0x00000001 : 0x00000002)
+-#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S (AR_SREV_9462(ah) ? 0 : 1)
++#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x00000001 : 0x00000002)
++#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0 : 1)
+ #define AR_PHY_65NM_CH0_SYNTH7      0x16098
+ #define AR_PHY_65NM_CH0_BIAS1       0x160c0
+ #define AR_PHY_65NM_CH0_BIAS2       0x160c4
+@@ -641,7 +641,7 @@
+ #define AR_PHY_65NM_CH2_RXTX4       0x1690c
+ 
+ #define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
+-				((AR_SREV_9462(ah) ? 0x1628c : 0x16280)))
++			 (((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x1628c : 0x16280)))
+ #define AR_CH0_TOP_XPABIASLVL (AR_SREV_9550(ah) ? 0x3c0 : 0x300)
+ #define AR_CH0_TOP_XPABIASLVL_S (AR_SREV_9550(ah) ? 6 : 8)
+ 
+@@ -669,7 +669,7 @@
+ #define AR_SWITCH_TABLE_ALL_S (0)
+ 
+ #define AR_PHY_65NM_CH0_THERM       (AR_SREV_9300(ah) ? 0x16290 :\
+-					(AR_SREV_9462(ah) ? 0x16294 : 0x1628c))
++				     ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16294 : 0x1628c))
+ 
+ #define AR_PHY_65NM_CH0_THERM_LOCAL   0x80000000
+ #define AR_PHY_65NM_CH0_THERM_LOCAL_S 31
+@@ -691,17 +691,17 @@
+ #define AR_CH0_TOP2_XPABIASLVL_S	12
+ 
+ #define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : \
+-					(AR_SREV_9462(ah) ? 0x16298 : 0x16290))
++				 ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16298 : 0x16290))
+ #define AR_CH0_XTAL_CAPINDAC	0x7f000000
+ #define AR_CH0_XTAL_CAPINDAC_S	24
+ #define AR_CH0_XTAL_CAPOUTDAC	0x00fe0000
+ #define AR_CH0_XTAL_CAPOUTDAC_S	17
+ 
+-#define AR_PHY_PMU1		(AR_SREV_9462(ah) ? 0x16340 : 0x16c40)
++#define AR_PHY_PMU1		((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16340 : 0x16c40)
+ #define AR_PHY_PMU1_PWD		0x1
+ #define AR_PHY_PMU1_PWD_S	0
+ 
+-#define AR_PHY_PMU2		(AR_SREV_9462(ah) ? 0x16344 : 0x16c44)
++#define AR_PHY_PMU2		((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16344 : 0x16c44)
+ #define AR_PHY_PMU2_PGM		0x00200000
+ #define AR_PHY_PMU2_PGM_S	21
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 484b313..7e1da18 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -108,7 +108,7 @@
+ #define EEP_RFSILENT_ENABLED_S      0
+ #define EEP_RFSILENT_POLARITY       0x0002
+ #define EEP_RFSILENT_POLARITY_S     1
+-#define EEP_RFSILENT_GPIO_SEL       (AR_SREV_9462(ah) ? 0x00fc : 0x001c)
++#define EEP_RFSILENT_GPIO_SEL       ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x00fc : 0x001c)
+ #define EEP_RFSILENT_GPIO_SEL_S     2
+ 
+ #define AR5416_OPFLAGS_11A           0x01
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 3638626..6539d2a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -602,6 +602,11 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (AR_SREV_9462(ah))
+ 		ah->WARegVal &= ~AR_WA_D3_L1_DISABLE;
+ 
++	if (AR_SREV_9565(ah)) {
++		ah->WARegVal |= AR_WA_BIT22;
++		REG_WRITE(ah, AR_WA, ah->WARegVal);
++	}
++
+ 	ath9k_hw_init_defaults(ah);
+ 	ath9k_hw_init_config(ah);
+ 
+@@ -802,8 +807,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ {
+ 	u32 pll;
+ 
+-	if (AR_SREV_9485(ah)) {
+-
++	if (AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
+ 		/* program BB PLL ki and kd value, ki=0x4, kd=0x40 */
+ 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
+ 			      AR_CH0_BB_DPLL2_PLL_PWD, 0x1);
+@@ -2036,7 +2040,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
+ {
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		REG_CLR_BIT(ah, AR_TIMER_MODE, 0xff);
+ 		REG_CLR_BIT(ah, AR_NDP2_TIMER_MODE, 0xff);
+ 		REG_CLR_BIT(ah, AR_SLP32_INC, 0xfffff);
+@@ -2491,7 +2495,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
+-		if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah))
++		if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah) && !AR_SREV_9565(ah))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_LDPC;
+ 
+ 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
+@@ -2574,14 +2578,12 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
+ 	}
+ 
+-	if (AR_SREV_9462(ah)) {
+-
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		if (!(ah->ent_mode & AR_ENT_OTP_49GHZ_DISABLE))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_MCI;
+ 
+ 		if (AR_SREV_9462_20(ah))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_RTT;
+-
+ 	}
+ 
+ 
+@@ -2747,7 +2749,7 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+-	if (AR_SREV_9462(ah))
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 		bits |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
+ 
+ 	REG_WRITE(ah, AR_RX_FILTER, bits);
+@@ -3044,7 +3046,7 @@ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
+ 	REG_SET_BIT(ah, gen_tmr_configuration[timer->index].mode_addr,
+ 		    gen_tmr_configuration[timer->index].mode_mask);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		/*
+ 		 * Starting from AR9462, each generic timer can select which tsf
+ 		 * to use. But we still follow the old rule, 0 - 7 use tsf and
+-- 
+1.7.12
 
