@@ -1,149 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:60981 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750765Ab2IEIwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 04:52:08 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, proski@gnu.org,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [resend][PATCH] wireless: at76c50x: eliminate hex2str()
-Date: Wed,  5 Sep 2012 11:52:32 +0300
-Message-Id: <1346835153-5321-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120905_105213_723806_2E207F27)
-In-Reply-To: <1341391552-4842-3-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1341391552-4842-3-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8648 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480Ab2IJGE0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 02:04:26 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 1/3] ath9k_hw: Wait BT calibration to complete
+Date: Mon, 10 Sep 2012 17:05:09 +0530
+Message-ID: <1347276911-1993-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120910_080430_045158_1ED25EE8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hex2str() is substituted by '%*phD' specificator.
+Whenever BT calibration requested, WLAN has to wait for the
+calibration to be completed. But right now we defer the waiting
+which might cause BT calibration to fail. Fix that.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/at76c50x-usb.c |   54 ++++++++---------------------------
- 1 file changed, 12 insertions(+), 42 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  1 +
+ drivers/net/wireless/ath/ath9k/debug.h      |  1 -
+ drivers/net/wireless/ath/ath9k/mci.c        | 19 ++++++++++++++++++-
+ 3 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index e361afe..99b9ddf 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -498,36 +498,6 @@ exit:
- 	return ret;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index ff53091..fbc96d0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -714,6 +714,7 @@ bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan)
+ 
+ 	return true;
+ }
++EXPORT_SYMBOL(ar9003_mci_start_reset);
+ 
+ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			 struct ath9k_hw_cal_data *caldata)
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 8b9d080..f80c466 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -41,7 +41,6 @@ enum ath_reset_type {
+ 	RESET_TYPE_PLL_HANG,
+ 	RESET_TYPE_MAC_HANG,
+ 	RESET_TYPE_BEACON_STUCK,
+-	RESET_TYPE_MCI,
+ 	__RESET_TYPE_MAX
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 9ee1f89..8f0e8d9 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -191,6 +191,23 @@ skip_tuning:
+ 	ath9k_btcoex_timer_resume(sc);
  }
  
--#define HEX2STR_BUFFERS 4
--#define HEX2STR_MAX_LEN 64
--
--/* Convert binary data into hex string */
--static char *hex2str(void *buf, size_t len)
--{
--	static atomic_t a = ATOMIC_INIT(0);
--	static char bufs[HEX2STR_BUFFERS][3 * HEX2STR_MAX_LEN + 1];
--	char *ret = bufs[atomic_inc_return(&a) & (HEX2STR_BUFFERS - 1)];
--	char *obuf = ret;
--	u8 *ibuf = buf;
--
--	if (len > HEX2STR_MAX_LEN)
--		len = HEX2STR_MAX_LEN;
--
--	if (len == 0)
--		goto exit;
--
--	while (len--) {
--		obuf = hex_byte_pack(obuf, *ibuf++);
--		*obuf++ = '-';
--	}
--	obuf--;
--
--exit:
--	*obuf = '\0';
--
--	return ret;
--}
--
- /* LED trigger */
- static int tx_activity;
- static void at76_ledtrig_tx_timerfunc(unsigned long data);
-@@ -1004,9 +974,9 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
- 	    WEP_SMALL_KEY_LEN : WEP_LARGE_KEY_LEN;
- 
- 	for (i = 0; i < WEP_KEYS; i++)
--		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %s",
-+		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %*phD",
- 			 wiphy_name(priv->hw->wiphy), i,
--			 hex2str(m->wep_default_keyvalue[i], key_len));
-+			 key_len, m->wep_default_keyvalue[i]);
- exit:
- 	kfree(m);
- }
-@@ -1031,7 +1001,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- 	at76_dbg(DBG_MIB, "%s: MIB MAC_MGMT: beacon_period %d CFP_max_duration "
- 		 "%d medium_occupancy_limit %d station_id 0x%x ATIM_window %d "
- 		 "CFP_mode %d privacy_opt_impl %d DTIM_period %d CFP_period %d "
--		 "current_bssid %pM current_essid %s current_bss_type %d "
-+		 "current_bssid %pM current_essid %*phD current_bss_type %d "
- 		 "pm_mode %d ibss_change %d res %d "
- 		 "multi_domain_capability_implemented %d "
- 		 "international_roaming %d country_string %.3s",
-@@ -1041,7 +1011,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- 		 le16_to_cpu(m->station_id), le16_to_cpu(m->ATIM_window),
- 		 m->CFP_mode, m->privacy_option_implemented, m->DTIM_period,
- 		 m->CFP_period, m->current_bssid,
--		 hex2str(m->current_essid, IW_ESSID_MAX_SIZE),
-+		 IW_ESSID_MAX_SIZE, m->current_essid,
- 		 m->current_bss_type, m->power_mgmt_mode, m->ibss_change,
- 		 m->res, m->multi_domain_capability_implemented,
- 		 m->multi_domain_capability_enabled, m->country_string);
-@@ -1069,7 +1039,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
- 		 "cwmin %d cwmax %d short_retry_time %d long_retry_time %d "
- 		 "scan_type %d scan_channel %d probe_delay %u "
- 		 "min_channel_time %d max_channel_time %d listen_int %d "
--		 "desired_ssid %s desired_bssid %pM desired_bsstype %d",
-+		 "desired_ssid %*phD desired_bssid %pM desired_bsstype %d",
- 		 wiphy_name(priv->hw->wiphy),
- 		 le32_to_cpu(m->max_tx_msdu_lifetime),
- 		 le32_to_cpu(m->max_rx_lifetime),
-@@ -1080,7 +1050,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
- 		 le16_to_cpu(m->min_channel_time),
- 		 le16_to_cpu(m->max_channel_time),
- 		 le16_to_cpu(m->listen_interval),
--		 hex2str(m->desired_ssid, IW_ESSID_MAX_SIZE),
-+		 IW_ESSID_MAX_SIZE, m->desired_ssid,
- 		 m->desired_bssid, m->desired_bsstype);
- exit:
- 	kfree(m);
-@@ -1160,13 +1130,13 @@ static void at76_dump_mib_mdomain(struct at76_priv *priv)
- 		goto exit;
- 	}
- 
--	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %s",
-+	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %*phD",
- 		 wiphy_name(priv->hw->wiphy),
--		 hex2str(m->channel_list, sizeof(m->channel_list)));
-+		 (int)sizeof(m->channel_list), m->channel_list);
- 
--	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %s",
-+	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %*phD",
- 		 wiphy_name(priv->hw->wiphy),
--		 hex2str(m->tx_powerlevel, sizeof(m->tx_powerlevel)));
-+		 (int)sizeof(m->tx_powerlevel), m->tx_powerlevel);
- exit:
- 	kfree(m);
- }
-@@ -1369,9 +1339,9 @@ static int at76_startup_device(struct at76_priv *priv)
- 	int ret;
- 
- 	at76_dbg(DBG_PARAMS,
--		 "%s param: ssid %.*s (%s) mode %s ch %d wep %s key %d "
-+		 "%s param: ssid %.*s (%*phD) mode %s ch %d wep %s key %d "
- 		 "keylen %d", wiphy_name(priv->hw->wiphy), priv->essid_size,
--		 priv->essid, hex2str(priv->essid, IW_ESSID_MAX_SIZE),
-+		 priv->essid, IW_ESSID_MAX_SIZE, priv->essid,
- 		 priv->iw_mode == IW_MODE_ADHOC ? "adhoc" : "infra",
- 		 priv->channel, priv->wep_enabled ? "enabled" : "disabled",
- 		 priv->wep_key_id, priv->wep_keys_len[priv->wep_key_id]);
++static void ath_mci_wait_btcal_done(struct ath_softc *sc)
++{
++	struct ath_hw *ah = sc->sc_ah;
++
++	/* Stop tx & rx */
++	ieee80211_stop_queues(sc->hw);
++	ath_stoprecv(sc);
++	ath_drain_all_txq(sc, false);
++
++	/* Wait for cal done */
++	ar9003_mci_start_reset(ah, ah->curchan);
++
++	/* Resume tx & rx */
++	ath_startrecv(sc);
++	ieee80211_wake_queues(sc->hw);
++}
++
+ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -202,7 +219,7 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 	case MCI_GPM_BT_CAL_REQ:
+ 		if (mci_hw->bt_state == MCI_BT_AWAKE) {
+ 			mci_hw->bt_state = MCI_BT_CAL_START;
+-			ath9k_queue_reset(sc, RESET_TYPE_MCI);
++			ath_mci_wait_btcal_done(sc);
+ 		}
+ 		ath_dbg(common, MCI, "MCI State : %d\n", mci_hw->bt_state);
+ 		break;
 -- 
-1.7.10.4
+1.7.12
 
