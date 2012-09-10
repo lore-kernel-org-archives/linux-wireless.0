@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42310 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757689Ab2IDTq7 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15672 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754837Ab2IJDvY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 15:46:59 -0400
-Message-ID: <1346788056.3737.44.camel@jlt4.sipsolutions.net> (sfid-20120904_214702_220903_DE083ADC)
-Subject: Re: [RFC] cfg/nl/mac80211: use per-band basic rates bitmap in IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 04 Sep 2012 21:47:36 +0200
-In-Reply-To: <20120904194532.GJ22841@ritirata.org>
-References: <1346784741-7003-1-git-send-email-ordex@autistici.org>
-	 <1346787524.3737.43.camel@jlt4.sipsolutions.net>
-	 <20120904194532.GJ22841@ritirata.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 9 Sep 2012 23:51:24 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20557.25477.258444.823053@gargle.gargle.HOWL> (sfid-20120910_055150_809270_0E9861B2)
+Date: Mon, 10 Sep 2012 09:20:29 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/7] ath9k_hw: Program correct PLL value for AR9565
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-04 at 21:45 +0200, Antonio Quartulli wrote:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> > As far as I understand it, the basic rates that are passed into the
-> > kernel are intended to be used when the kernel creates a new IBSS. This
-> > always happens on the channel that is also passed in, so it's always
-> > bound to a given channel (band).
-> 
-> I think basic rates are also used in case of merging, right? In this case we
-> could switch to another channel (and band).
-
-No, as I understand it we should in that case use the IBSS's existing
-basic rates, not our own.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 063d724..47de1a9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -918,7 +918,8 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 	}
+ 
+ 	pll = ath9k_hw_compute_pll_control(ah, chan);
+-
++	if (AR_SREV_9565(ah))
++		pll |= 0x40000;
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+ 
+ 	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
+-- 
+1.7.12
 
