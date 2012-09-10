@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18932 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148Ab2IYQzX (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40714 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100Ab2IJOxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 12:55:23 -0400
-Date: Tue, 25 Sep 2012 09:56:30 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] cfg80211: Fix regulatory check for 60GHz band
- frequencies
-Message-ID: <20120925165630.GG3354@lenteja.do-not-panic.com> (sfid-20120925_185604_701460_7B194E91)
-References: <1348386594-6067-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1348386594-6067-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1348558107.10041.19.camel@jlt4.sipsolutions.net>
+	Mon, 10 Sep 2012 10:53:55 -0400
+Message-ID: <504DFEFF.6060004@lwfinger.net> (sfid-20120910_165404_625748_CEB65896)
+Date: Mon, 10 Sep 2012 09:53:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1348558107.10041.19.camel@jlt4.sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+References: <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <20120824.111948.680531915905273128.davem@davemloft.net>  <5037A4B0.3080208@lwfinger.net>  <1345825095.19483.19.camel@edumazet-glaptop>  <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>  <1345830424.19483.69.camel@edumazet-glaptop>  <503BB49C.5010402@lwfinger.net> <1347266366.1234.1267.camel@edumazet-glaptop>
+In-Reply-To: <1347266366.1234.1267.camel@edumazet-glaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 25, 2012 at 09:28:27AM +0200, Johannes Berg wrote:
-> On Sun, 2012-09-23 at 09:49 +0200, Vladimir Kondratiev wrote:
-> > Without a fix for this even though channels 1-3 are allowed world
-> > wide on the rule (57240 - 63720 @ 2160), channel 2 at 60480 MHz
-> > will end up getting disabled given that it is 3240 MHz from
-> > both the frequency rule start and end frequency. Fix this by
-> > using 2 GHz separation assumption for the 2.4 and 5 GHz bands
-> > but for 60 GHz use a 10 GHz separation before assuming a rule
-> > is not part of the band.
-> 
-> Luis, given that you think the regulatory code in the kernel is 802.11
-> specific, why are we inferring these rules from the frequencies rather
-> than using the 802.11 specific information about the band that it
-> represents? :-D
+On 09/10/2012 03:39 AM, Eric Dumazet wrote:
+> On Mon, 2012-08-27 at 12:55 -0500, Larry Finger wrote:
+>
+>> I have prepared a patch to fix all the unchecked allocations.
+>>
+>> Over the weekend I made some progress. To test the latest vendor driver, I
+>> installed a 32-bit system. Their driver is not compatible with a 64-bit system.
+>> I found that not only did the vendor driver work with secure sites, but so did
+>> the in-kernel version. I now have tcpdump output for the 32-bit case that works,
+>> and the 64-bit case that fails. It seems likely that I missed some 32/64 bit
+>> incompatibility when I did the conversion.
+>>
+>> Thanks for all your help in trying to resolve this issue.
+>>
+>> Larry
+>>
+>>
+>
+> Hi Larry
+>
+> It appears I have a D-Link N300 (DWA-131) nano USB adapter, using
+> staging/rtl8712 driver.
+>
+> I tried many kernel versions (including 3.3) and none seems to work
+> reliably.
+>
+> Sometime, I have some traffic but only for about 50 frames...
+> It might be because my access point is a netgear wndr3800, because I
+> have following warning a bit before the freezes :
+>
+> r8712u: [r8712_got_addbareq_event_callback] mac = 20:4e:7f:5a:cd:30, sea = 80, tid = 0
 
-Its a good point freq_reg_info() is at the crux of where we do are still
-agnostic to 802.11. To make this 802.11 specific and easier to read I
-suspect we can require passing the chan struct and then we'd use a switch
-statement for the band.
+Eric,
 
-  Luis
+What is the md5sum for the firmware file /lib/firmware/rtlwifi/rtl8712u.bin? 
+Over the weekend, there was a report of another device that had problems with 
+firmware that was added to the linux-firmware repo in July with md5sum of 
+c6f3b7b880aefb7b3f249428d659bdbb. An older version with md5sum of 
+200fd952db3cc9259b1fd05e3e51966f works in that case. I'll send you this one 
+privately.
+
+I have a Netgear WNDR3300 and also get the addbareq events, but I do not get 
+freezes. I'm not sure the message is correlated.
+
+Larry
+
+
