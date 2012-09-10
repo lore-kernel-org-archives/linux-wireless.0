@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:54760 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957Ab2IFVRC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 17:17:02 -0400
-Received: by obbuo13 with SMTP id uo13so3468562obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 14:17:01 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:34852 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751046Ab2IJNKU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 09:10:20 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Larry.Finger@lwfinger.net, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] NFC: pn544_hci: move the dereference below the NULL test
+References: <CAPgLHd-DabDrNN9KpQjG+XiXJDA38_VA2jeiF+O-7QBqNhEogA@mail.gmail.com>
+Date: Mon, 10 Sep 2012 16:10:16 +0300
+In-Reply-To: <CAPgLHd-DabDrNN9KpQjG+XiXJDA38_VA2jeiF+O-7QBqNhEogA@mail.gmail.com>
+	(Wei Yongjun's message of "Sat, 8 Sep 2012 11:34:33 +0800")
+Message-ID: <874nn658hz.fsf@purkki.adurom.net> (sfid-20120910_151027_796302_9D45B10F)
 MIME-Version: 1.0
-In-Reply-To: <1346946070.5469.23.camel@jlt4.sipsolutions.net>
-References: <1346865837-32265-1-git-send-email-eliad@wizery.com>
-	<1346865837-32265-3-git-send-email-eliad@wizery.com>
-	<1346946070.5469.23.camel@jlt4.sipsolutions.net>
-Date: Fri, 7 Sep 2012 00:17:01 +0300
-Message-ID: <CAB3XZEcMkz4Fu-JDmCaS5y6Zy-E6ZP0V9KhSu_Hphp1fSNbfjQ@mail.gmail.com> (sfid-20120906_231707_411510_DF42699F)
-Subject: Re: [PATCH 2/2] mac80211: use call_rcu() on sta deletion
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 6, 2012 at 6:41 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2012-09-05 at 20:23 +0300, Eliad Peller wrote:
->
->> +++ b/net/mac80211/iface.c
->> @@ -774,6 +774,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
->>                * frames at this very time on another CPU.
->>                */
->>               synchronize_rcu();
->> +
->> +             /* flush any remaining cleanup work */
->> +             flush_workqueue(local->workqueue);
->
-> I have a feeling we need rcu_barrier() here instead of synchronize_rcu()
-> now to guarantee that all the potentially pending call_rcu() functions
-> from the sta_info_flush() above have actually completed and queued the
-> work items that we want to flush here. Right? That's a bit unfortunate,
-> but I guess the best way of handling it and ifdown should be rare anyway
-> compared to everything else.
->
-i wrongly assumed synchronize_rcu() takes care of call_rcu() callbacks
-as well. thanks for clarifying this.
+Wei Yongjun <weiyj.lk@gmail.com> writes:
 
-> I think it'd also be good to make the comment more verbose and explain
-> which cleanup work.
->
-sure.
+> -	BUG_ON(!info);
+> -	BUG_ON(irq != info->i2c_dev->irq);
+> +	if (!info || irq != info->i2c_dev->irq) {
+> +		WARN_ON_ONCE(1);
+> +		return IRQ_NONE;
+> +	}
 
->> +static void free_sta_work(struct work_struct *wk)
->> +{
->> +     struct sta_info *sta = container_of(wk, struct sta_info, free_sta_wk);
->> +     int ac, i;
->> +     struct tid_ampdu_tx *tid_tx;
->> +     struct ieee80211_sub_if_data *sdata = sta->sdata;
->> +     struct ieee80211_local *local = sdata->local;
->> +
->> +     /*
->> +      * At this point, after we wait for an RCU grace period,
->> +      * neither mac80211 nor the driver can reference this
->> +      * sta struct any more except by still existing timers
->> +      * associated with this station that we clean up below.
->> +      */
->
-> Should probably rewrite the comment a bit to indicate that we have in
-> fact waited since we get called via call_rcu().
->
-sure.
+You can even simplify it to this:
 
->> +     cancel_work_sync(&sta->drv_unblock_wk);
->
-> This will deadlock now, but cancel_work() will be safe without the sync
-> since the workqueue is single-threaded.
->
-i guess that because we run on an ordered workqueue we can't really
-deadlock, but sure, i'll change it.
+if (WARN_ON_ONCE(!info || irq != info->i2c_dev->irq))
+	return IRQ_NONE;
 
-thanks for the review.
-Eliad.
+I don't know if it matters here but if it's important to know which test
+is failing having two different tests makes that easier, as the line
+number will be different:
+
+if (WARN_ON_ONCE(!info))
+	return IRQ_NONE;
+
+if (WARN_ON_ONCE(irq != info->i2c_dev->irq))
+	return IRQ_NONE;
+
+-- 
+Kalle Valo
