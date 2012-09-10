@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51489 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755239Ab2IUOlz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 10:41:55 -0400
-From: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <kvalo@qca.qualcomm.com>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2] ath6kl: Array index out of bounds check
-Date: Fri, 21 Sep 2012 20:11:46 +0530
-Message-ID: <1348238506-9691-1-git-send-email-c_ppitch@qca.qualcomm.com> (sfid-20120921_164159_644635_B4709F52)
+Received: from purkki.adurom.net ([80.68.90.206]:48244 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752010Ab2IJNNI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 09:13:08 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>, Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
+	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+	<20120904102204.GA2541@w1.fi>
+	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
+	<CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
+	<1346758521.3737.28.camel@jlt4.sipsolutions.net>
+	<CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
+	<20120905071653.GB3629@w1.fi>
+	<CAEFj985iHQJTAqXBkz56BDPodHb9q0Z=x3S5Q43UwA5vU-mfMw@mail.gmail.com>
+	<20120905080336.GA4747@w1.fi>
+	<CAEFj986i9XUcEN0i2y5=YLh2RX8MZOf+60i8XL4jMiq5-JcJ6Q@mail.gmail.com>
+	<CAJ-Vmonesc=VPMUJgS1GHTUS-Xj_BTohv0rQ9ZS+rW-761g_8w@mail.gmail.com>
+Date: Mon, 10 Sep 2012 16:13:00 +0300
+In-Reply-To: <CAJ-Vmonesc=VPMUJgS1GHTUS-Xj_BTohv0rQ9ZS+rW-761g_8w@mail.gmail.com>
+	(Adrian Chadd's message of "Sat, 8 Sep 2012 18:47:39 -0700")
+Message-ID: <87zk4y3tsz.fsf@purkki.adurom.net> (sfid-20120910_151312_870352_EF7B6AA7)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variable assigned_ep can be assigned value of -1 and is never
-checked if it equals -1. So the endpoint array can have -1  as the index
-value and can be out of bounds.
+Adrian Chadd <adrian@freebsd.org> writes:
 
-The value of assigned_ep is checked for -1 and is ensured that the
-endpoint array doesn't go out of bounds.
+> Yeoh - can you please email me privately with a summary of what you
+> implemented, what you've tested and what worked / what didn't work?
 
-Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc_mbox.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Why privately? Better to have all the information public, you never know
+if someone finds the info from the web and picks up the work.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-index cd0e1ba..ceaf921 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-@@ -2492,7 +2492,8 @@ static int ath6kl_htc_mbox_conn_service(struct htc_target *target,
- 		max_msg_sz = le16_to_cpu(resp_msg->max_msg_sz);
- 	}
- 
--	if (assigned_ep >= ENDPOINT_MAX || !max_msg_sz) {
-+	if (WARN_ON_ONCE(assigned_ep == ENDPOINT_UNUSED ||
-+			 assigned_ep >= ENDPOINT_MAX || !max_msg_sz)) {
- 		status = -ENOMEM;
- 		goto fail_tx;
- 	}
 -- 
-1.7.9.5
-
+Kalle Valo
