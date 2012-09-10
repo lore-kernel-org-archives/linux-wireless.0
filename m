@@ -1,84 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48007 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:4778 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751897Ab2INLdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 07:33:36 -0400
-Message-ID: <5053160B.8060908@openwrt.org> (sfid-20120914_133339_975682_8F9A8600)
-Date: Fri, 14 Sep 2012 13:33:31 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1751878Ab2IJNRS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 09:17:18 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 07/10] brcmfmac: Fix big endian host configuration data.
+Date: Mon, 10 Sep 2012 15:16:55 +0200
+Message-ID: <1347283018-24223-8-git-send-email-arend@broadcom.com> (sfid-20120910_151723_033401_AD9CF588)
+In-Reply-To: <1347283018-24223-1-git-send-email-arend@broadcom.com>
+References: <1347283018-24223-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Sven Eckelmann <sven@narfation.org>
-CC: ath9k-devel@lists.ath9k.org, adrian.chadd@gmail.com,
-	linux-wireless@vger.kernel.org, shafi.wireless@gmail.com,
-	lindner_marek@yahoo.de, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [RFC] ath9k: Work around complete stuck of hw
-References: <50521E02.4030809@openwrt.org> <1347616045-29336-1-git-send-email-sven@narfation.org>
-In-Reply-To: <1347616045-29336-1-git-send-email-sven@narfation.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-09-14 11:47 AM, Sven Eckelmann wrote:
-> AR9330 and most likely other chips like AR9285 seem to get stuck completely
-> after they worked a long period of time in special environments. It is
-> currently unknown which parameters causes this problem.
-> 
-> Symptom of these stuck is the exposure of 0xdeadbeef through different hardware
-> registers. An interface down/up change seems to help the hardware to recover
-> from the problem.
-> 
-> A workaround is to periodically test register AR_CFG for 0xdeadbeef and force
-> an reset when 0xdeadbeef would be unexpected.
-> 
-> Signed-off-by: Sven Eckelmann <sven@narfation.org>
-> Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-> ---
-> This check is currently tested. This takes quite a long time and maybe someone
-> with more knowledge of atheros devices can check whether this one is completely
-> and utterly wrong.
-> 
-> The type RESET_TYPE_FATAL_INT was chosen in this test to allow us to see
-> whether this condition was already true by reading from
-> /sys/kernel/debug/ieee80211/phy0/ath9k/reset
-Your debug patch should not be silent when it resets the hw. We need 
-to make sure that this bug gets fixed properly. If my patch below does
-not fix it, then at least add a WARN_ON to ensure that we don't just
-hide the bug and move on.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Somebody on the openwrt-devel list pointed out that there is some code 
-missing in the ar933x wmac reset function. Please try this patch (apply 
-it to your kernel tree):
+Fixes big endian host configuration parameters.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
---- a/arch/mips/ath79/dev-wmac.c
-+++ b/arch/mips/ath79/dev-wmac.c
-@@ -67,10 +67,27 @@ static void __init ar913x_wmac_setup(voi
- 
- static int ar933x_wmac_reset(void)
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   26 ++++++++++++--------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 2621dd3..6f70953 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -764,8 +764,11 @@ static void brcmf_c_arp_offload_set(struct brcmf_pub *drvr, int arp_mode)
  {
-+	int retries = 20;
-+
- 	ath79_device_reset_set(AR933X_RESET_WMAC);
- 	ath79_device_reset_clear(AR933X_RESET_WMAC);
+ 	char iovbuf[32];
+ 	int retcode;
++	__le32 arp_mode_le;
  
--	return 0;
-+	while (1) {
-+		u32 bootstrap;
-+
-+		bootstrap = ath79_reset_rr(AR933X_RESET_REG_BOOTSTRAP);
-+		if ((bootstrap & AR933X_BOOTSTRAP_EEPBUSY) == 0)
-+			return 0;
-+
-+		if (retries-- == 0)
-+			break;
-+
-+		udelay(10000);
-+		retries++;
-+	}
-+
-+	pr_err("ar93xx: WMAC reset timed out");
-+	return -ETIMEDOUT;
- }
+-	brcmf_c_mkiovar("arp_ol", (char *)&arp_mode, 4, iovbuf, sizeof(iovbuf));
++	arp_mode_le = cpu_to_le32(arp_mode);
++	brcmf_c_mkiovar("arp_ol", (char *)&arp_mode_le, 4, iovbuf,
++			sizeof(iovbuf));
+ 	retcode = brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR,
+ 				   iovbuf, sizeof(iovbuf));
+ 	retcode = retcode >= 0 ? 0 : retcode;
+@@ -781,8 +784,11 @@ static void brcmf_c_arp_offload_enable(struct brcmf_pub *drvr, int arp_enable)
+ {
+ 	char iovbuf[32];
+ 	int retcode;
++	__le32 arp_enable_le;
  
- static int ar933x_r1_get_wmac_revision(void)
+-	brcmf_c_mkiovar("arpoe", (char *)&arp_enable, 4,
++	arp_enable_le = cpu_to_le32(arp_enable);
++
++	brcmf_c_mkiovar("arpoe", (char *)&arp_enable_le, 4,
+ 			iovbuf, sizeof(iovbuf));
+ 	retcode = brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR,
+ 				   iovbuf, sizeof(iovbuf));
+@@ -800,10 +806,10 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 	char iovbuf[BRCMF_EVENTING_MASK_LEN + 12];	/*  Room for
+ 				 "event_msgs" + '\0' + bitvec  */
+ 	char buf[128], *ptr;
+-	u32 roaming = 1;
+-	uint bcn_timeout = 3;
+-	int scan_assoc_time = 40;
+-	int scan_unassoc_time = 40;
++	__le32 roaming_le = cpu_to_le32(1);
++	__le32 bcn_timeout_le = cpu_to_le32(3);
++	__le32 scan_assoc_time_le = cpu_to_le32(40);
++	__le32 scan_unassoc_time_le = cpu_to_le32(40);
+ 	int i;
+ 	struct brcmf_bus_dcmd *cmdlst;
+ 	struct list_head *cur, *q;
+@@ -829,14 +835,14 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 
+ 	/* Setup timeout if Beacons are lost and roam is off to report
+ 		 link down */
+-	brcmf_c_mkiovar("bcn_timeout", (char *)&bcn_timeout, 4, iovbuf,
++	brcmf_c_mkiovar("bcn_timeout", (char *)&bcn_timeout_le, 4, iovbuf,
+ 		    sizeof(iovbuf));
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
+ 				  sizeof(iovbuf));
+ 
+ 	/* Enable/Disable build-in roaming to allowed ext supplicant to take
+ 		 of romaing */
+-	brcmf_c_mkiovar("roam_off", (char *)&roaming, 4,
++	brcmf_c_mkiovar("roam_off", (char *)&roaming_le, 4,
+ 		      iovbuf, sizeof(iovbuf));
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
+ 				  sizeof(iovbuf));
+@@ -848,9 +854,9 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 				  sizeof(iovbuf));
+ 
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_SCAN_CHANNEL_TIME,
+-			 (char *)&scan_assoc_time, sizeof(scan_assoc_time));
++		 (char *)&scan_assoc_time_le, sizeof(scan_assoc_time_le));
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_SCAN_UNASSOC_TIME,
+-			 (char *)&scan_unassoc_time, sizeof(scan_unassoc_time));
++		 (char *)&scan_unassoc_time_le, sizeof(scan_unassoc_time_le));
+ 
+ 	/* Set and enable ARP offload feature */
+ 	brcmf_c_arp_offload_set(drvr, BRCMF_ARPOL_MODE);
+-- 
+1.7.9.5
 
 
