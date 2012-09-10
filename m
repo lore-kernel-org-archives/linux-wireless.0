@@ -1,72 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50775 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932250Ab2IKPPZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 11:15:25 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, john@phrozen.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>, Michael Buesch <m@bues.ch>
-Subject: [PATCH v4 1/3] ssb: add function to return number of gpio lines
-Date: Tue, 11 Sep 2012 17:15:08 +0200
-Message-Id: <1347376511-20953-2-git-send-email-hauke@hauke-m.de> (sfid-20120911_171536_395279_859F0E30)
-In-Reply-To: <1347376511-20953-1-git-send-email-hauke@hauke-m.de>
-References: <1347376511-20953-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:37079 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753425Ab2IJROx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 13:14:53 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TB7ZU-0000AH-6d
+	for linux-wireless@vger.kernel.org; Mon, 10 Sep 2012 19:14:52 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/6] iwlwifi: some more changes
+Date: Mon, 10 Sep 2012 19:15:24 +0200
+Message-Id: <1347297330-23338-1-git-send-email-johannes@sipsolutions.net> (sfid-20120910_191457_746915_8CEA1502)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CC: Michael Buesch <m@bues.ch>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/embedded.c           |   12 ++++++++++++
- include/linux/ssb/ssb_embedded.h |    4 ++++
- 2 files changed, 16 insertions(+)
+A few changes I've put into my tree and will push unless
+somebody complains :-)
 
-diff --git a/drivers/ssb/embedded.c b/drivers/ssb/embedded.c
-index 9ef124f..078007c 100644
---- a/drivers/ssb/embedded.c
-+++ b/drivers/ssb/embedded.c
-@@ -136,6 +136,18 @@ u32 ssb_gpio_polarity(struct ssb_bus *bus, u32 mask, u32 value)
- }
- EXPORT_SYMBOL(ssb_gpio_polarity);
- 
-+int ssb_gpio_count(struct ssb_bus *bus)
-+{
-+	if (ssb_chipco_available(&bus->chipco))
-+		return SSB_GPIO_CHIPCO_LINES;
-+	else if (ssb_extif_available(&bus->extif))
-+		return SSB_GPIO_EXTIF_LINES;
-+	else
-+		SSB_WARN_ON(1);
-+	return 0;
-+}
-+EXPORT_SYMBOL(ssb_gpio_count);
-+
- #ifdef CONFIG_SSB_DRIVER_GIGE
- static int gige_pci_init_callback(struct ssb_bus *bus, unsigned long data)
- {
-diff --git a/include/linux/ssb/ssb_embedded.h b/include/linux/ssb/ssb_embedded.h
-index 8d8dedf..f1618d2 100644
---- a/include/linux/ssb/ssb_embedded.h
-+++ b/include/linux/ssb/ssb_embedded.h
-@@ -7,6 +7,9 @@
- 
- extern int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks);
- 
-+#define SSB_GPIO_EXTIF_LINES	5
-+#define SSB_GPIO_CHIPCO_LINES	16
-+
- /* Generic GPIO API */
- u32 ssb_gpio_in(struct ssb_bus *bus, u32 mask);
- u32 ssb_gpio_out(struct ssb_bus *bus, u32 mask, u32 value);
-@@ -14,5 +17,6 @@ u32 ssb_gpio_outen(struct ssb_bus *bus, u32 mask, u32 value);
- u32 ssb_gpio_control(struct ssb_bus *bus, u32 mask, u32 value);
- u32 ssb_gpio_intmask(struct ssb_bus *bus, u32 mask, u32 value);
- u32 ssb_gpio_polarity(struct ssb_bus *bus, u32 mask, u32 value);
-+int ssb_gpio_count(struct ssb_bus *bus);
- 
- #endif /* LINUX_SSB_EMBEDDED_H_ */
--- 
-1.7.9.5
+johannes
 
