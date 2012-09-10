@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:61538 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754511Ab2IBUhx (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34091 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757076Ab2IJLLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2012 16:37:53 -0400
+	Mon, 10 Sep 2012 07:11:17 -0400
+Date: Mon, 10 Sep 2012 13:11:13 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: David Rientjes <rientjes@google.com>
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+	johannes.berg@intel.com, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, Andrew Morton <akpm@osdl.org>,
+	Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
+Message-ID: <20120910111113.GA25159@elf.ucw.cz> (sfid-20120910_131138_529665_58436E42)
+References: <20120909213228.GA5538@elf.ucw.cz>
+ <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1346433734-3337-3-git-send-email-gwingerde@gmail.com>
-References: <1346433734-3337-1-git-send-email-gwingerde@gmail.com>
-	<1346433734-3337-2-git-send-email-gwingerde@gmail.com>
-	<1346433734-3337-3-git-send-email-gwingerde@gmail.com>
-Date: Sun, 2 Sep 2012 22:37:52 +0200
-Message-ID: <CAOZOX0WqWbV_UavHdamVucdPNnGnNo9PjS0QiQEe2mtbyBuDjQ@mail.gmail.com> (sfid-20120902_223801_377755_B5E1C014)
-Subject: Re: [PATCH v2 2/6] rt2x00: Fix word size of rt2500usb MAC_CSR19 register.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 31, 2012 at 7:22 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> The register is 16 bits wide, not 32.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Cc: <stable@vger.kernel.org>
+On Sun 2012-09-09 15:40:55, David Rientjes wrote:
+> On Sun, 9 Sep 2012, Pavel Machek wrote:
+> 
+> > On 3.6.0-rc2+, I tried to turn on the wireless, but got
+> > 
+> > root@amd:~# ifconfig wlan0 10.0.0.6 up
+> > SIOCSIFFLAGS: Cannot allocate memory
+> > SIOCSIFFLAGS: Cannot allocate memory
+> > root@amd:~# 
+> > 
+> > It looks like it uses "a bit too big" allocations to allocate
+> > firmware...? Order five allocation....
+> > 
+> > Hmm... then I did "echo 3  > /proc/sys/vm/drop_caches" and now the
+> > network works. Is it VM problem that it failed to allocate memory when
+> > it was freeable?
+> > 
+> 
+> Do you have CONFIG_COMPACTION enabled?
 
-Acked-by: Ivo van Doorn@gmail.com>
+Yes:
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index 3aae36b..b3a1d73 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -283,7 +283,7 @@ static int rt2500usb_rfkill_poll(struct rt2x00_dev *rt2x00dev)
->         u16 reg;
->
->         rt2500usb_register_read(rt2x00dev, MAC_CSR19, &reg);
-> -       return rt2x00_get_field32(reg, MAC_CSR19_BIT7);
-> +       return rt2x00_get_field16(reg, MAC_CSR19_BIT7);
->  }
->
->  #ifdef CONFIG_RT2X00_LIB_LEDS
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
-> index b493306..192531d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.h
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.h
-> @@ -189,14 +189,14 @@
->   * MAC_CSR19: GPIO control register.
->   */
->  #define MAC_CSR19                      0x0426
-> -#define MAC_CSR19_BIT0                 FIELD32(0x0001)
-> -#define MAC_CSR19_BIT1                 FIELD32(0x0002)
-> -#define MAC_CSR19_BIT2                 FIELD32(0x0004)
-> -#define MAC_CSR19_BIT3                 FIELD32(0x0008)
-> -#define MAC_CSR19_BIT4                 FIELD32(0x0010)
-> -#define MAC_CSR19_BIT5                 FIELD32(0x0020)
-> -#define MAC_CSR19_BIT6                 FIELD32(0x0040)
-> -#define MAC_CSR19_BIT7                 FIELD32(0x0080)
-> +#define MAC_CSR19_BIT0                 FIELD16(0x0001)
-> +#define MAC_CSR19_BIT1                 FIELD16(0x0002)
-> +#define MAC_CSR19_BIT2                 FIELD16(0x0004)
-> +#define MAC_CSR19_BIT3                 FIELD16(0x0008)
-> +#define MAC_CSR19_BIT4                 FIELD16(0x0010)
-> +#define MAC_CSR19_BIT5                 FIELD16(0x0020)
-> +#define MAC_CSR19_BIT6                 FIELD16(0x0040)
-> +#define MAC_CSR19_BIT7                 FIELD16(0x0080)
->
->  /*
->   * MAC_CSR20: LED control register.
-> --
-> 1.7.11.1
->
+pavel@amd:/data/l/linux-good$ zgrep CONFIG_COMPACTION /proc/config.gz 
+CONFIG_COMPACTION=y
+								Pavel
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
