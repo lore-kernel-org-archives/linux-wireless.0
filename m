@@ -1,183 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16442 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737Ab2IHHcT (ORCPT
+Received: from magic.merlins.org ([209.81.13.136]:53615 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754176Ab2IJPeh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 03:32:19 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Mon, 10 Sep 2012 11:34:37 -0400
+Date: Mon, 10 Sep 2012 08:34:31 -0700
+From: Marc MERLIN <marc@merlins.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org, netdev@ger.kernel.org
+Subject: Re: kernel 3.5.2/amd64: iwlwifi 0000:03:00.0: failed to allocate pci memory
+Message-ID: <20120910153431.GD5053@merlins.org> (sfid-20120910_173450_291878_EB5FA821)
+References: <20120908161038.GF3347@merlins.org> <1347122927.1234.849.camel@edumazet-glaptop> <20120904003014.GB6287@merlins.org> <20120908170128.GK3347@merlins.org> <1347130641.11167.0.camel@jlt4.sipsolutions.net> <1347272641.4272.1.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20554.62367.411605.885449@gargle.gargle.HOWL> (sfid-20120908_093221_987605_60A63207)
-Date: Sat, 8 Sep 2012 12:58:31 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [RFC 5/7] ath9k_hw: Fix spur mitigation for AR9565
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1347272641.4272.1.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Exclude CCK spur mitigation, freq 2437 for OFDM and
-add AR9565-specific logic.
+On Mon, Sep 10, 2012 at 12:24:01PM +0200, Johannes Berg wrote:
+> On Sat, 2012-09-08 at 20:57 +0200, Johannes Berg wrote:
+> 
+> > > [856806.497959]  [<ffffffff810cf54c>] warn_alloc_failed+0x117/0x12c
+> > > [856806.497963]  [<ffffffff810d23af>] __alloc_pages_nodemask+0x6e3/0x792
+> > > [856806.497969]  [<ffffffff812b7f41>] ? pfn_to_dma_pte+0x116/0x15e
+> > > [856806.497976]  [<ffffffff810ff58b>] alloc_pages_current+0xcd/0xee
+> > > [856806.497979]  [<ffffffff810cecca>] __get_free_pages+0x9/0x45
+> > > [856806.497982]  [<ffffffff812ba67d>] intel_alloc_coherent+0x84/0xe7
+> > > [856806.497986]  [<ffffffff81085cf8>] ? arch_local_irq_save+0x15/0x1b
+> > > [856806.497999]  [<ffffffffa0b84afc>] iwl_ucode_callback+0xa49/0xc0d [iwlwifi]
+> > 
+> > Yes, unfortunately we need a whole bunch of contiguous memory to load
+> > the firmware.
+> > 
+> > > Any ideas?
+> > 
+> > Nothing we can do from the driver side, I'm afraid.
+> 
+> Turns out I was wrong. Here's a patch you can test. Note that we still
+> need a lot of DMA-coherent memory for other things, but at least for the
+> firmware image we don't.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 67 ++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath9k/ar9003_phy.h | 15 +++++--
- 2 files changed, 72 insertions(+), 10 deletions(-)
+Thanks for that, I'll try it out and report back if I have other problems
+(it's hard to prove that it worked since I don't have the fragmented memory
+right away).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 78665b2..05d0ac0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -206,6 +206,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
- 	for (i = 0; i < max_spur_cnts; i++) {
- 		if (AR_SREV_9462(ah) && (i == 0 || i == 3))
- 			continue;
-+
- 		negative = 0;
- 		if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
- 		    AR_SREV_9550(ah))
-@@ -301,7 +302,9 @@ static void ar9003_hw_spur_ofdm(struct ath_hw *ah,
- 				int freq_offset,
- 				int spur_freq_sd,
- 				int spur_delta_phase,
--				int spur_subchannel_sd)
-+				int spur_subchannel_sd,
-+				int range,
-+				int synth_freq)
- {
- 	int mask_index = 0;
- 
-@@ -316,8 +319,11 @@ static void ar9003_hw_spur_ofdm(struct ath_hw *ah,
- 		      AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD, spur_subchannel_sd);
- 	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
- 		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC, 0x1);
--	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
--		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR, 0x1);
-+
-+	if (!(AR_SREV_9565(ah) && range == 10 && synth_freq == 2437))
-+		REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+			      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR, 0x1);
-+
- 	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
- 		      AR_PHY_TIMING4_ENABLE_SPUR_RSSI, 0x1);
- 	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-@@ -358,9 +364,44 @@ static void ar9003_hw_spur_ofdm(struct ath_hw *ah,
- 		      AR_PHY_SPUR_REG_MASK_RATE_CNTL, 0xff);
- }
- 
-+static void ar9003_hw_spur_ofdm_9565(struct ath_hw *ah,
-+				     int freq_offset)
-+{
-+	int mask_index = 0;
-+
-+	mask_index = (freq_offset << 4) / 5;
-+	if (mask_index < 0)
-+		mask_index = mask_index - 1;
-+
-+	mask_index = mask_index & 0x7f;
-+
-+	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
-+		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_B,
-+		      mask_index);
-+
-+	/* A == B */
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_B,
-+		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A,
-+		      mask_index);
-+
-+	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
-+		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_B,
-+		      mask_index);
-+	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
-+		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_B, 0xe);
-+	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
-+		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_B, 0xe);
-+
-+	/* A == B */
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_B,
-+		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A, 0xa0);
-+}
-+
- static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
- 				     struct ath9k_channel *chan,
--				     int freq_offset)
-+				     int freq_offset,
-+				     int range,
-+				     int synth_freq)
- {
- 	int spur_freq_sd = 0;
- 	int spur_subchannel_sd = 0;
-@@ -402,7 +443,8 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
- 			    freq_offset,
- 			    spur_freq_sd,
- 			    spur_delta_phase,
--			    spur_subchannel_sd);
-+			    spur_subchannel_sd,
-+			    range, synth_freq);
- }
- 
- /* Spur mitigation for OFDM */
-@@ -447,7 +489,17 @@ static void ar9003_hw_spur_mitigate_ofdm(struct ath_hw *ah,
- 		freq_offset = ath9k_hw_fbin2freq(spurChansPtr[i], mode);
- 		freq_offset -= synth_freq;
- 		if (abs(freq_offset) < range) {
--			ar9003_hw_spur_ofdm_work(ah, chan, freq_offset);
-+			ar9003_hw_spur_ofdm_work(ah, chan, freq_offset,
-+						 range, synth_freq);
-+
-+			if (AR_SREV_9565(ah) && (i < 4)) {
-+				freq_offset = ath9k_hw_fbin2freq(spurChansPtr[i + 1],
-+								 mode);
-+				freq_offset -= synth_freq;
-+				if (abs(freq_offset) < range)
-+					ar9003_hw_spur_ofdm_9565(ah, freq_offset);
-+			}
-+
- 			break;
- 		}
- 	}
-@@ -456,7 +508,8 @@ static void ar9003_hw_spur_mitigate_ofdm(struct ath_hw *ah,
- static void ar9003_hw_spur_mitigate(struct ath_hw *ah,
- 				    struct ath9k_channel *chan)
- {
--	ar9003_hw_spur_mitigate_mrc_cck(ah, chan);
-+	if (!AR_SREV_9565(ah))
-+		ar9003_hw_spur_mitigate_mrc_cck(ah, chan);
- 	ar9003_hw_spur_mitigate_ofdm(ah, chan);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 20bf3ae..ff5899e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -223,15 +223,24 @@
- #define AR_PHY_ML_CNTL_2       (AR_MRC_BASE + 0x1c)
- #define AR_PHY_TST_ADC         (AR_MRC_BASE + 0x20)
- 
--#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A              0x00000FE0
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A      0x00000FE0
- #define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A_S    5
--#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A                  0x1F
--#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A_S                0
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A          0x1F
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A_S        0
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_B      0x00FE0000
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_B_S    17
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_B          0x0001F000
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_B_S        12
- 
- #define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A        0x00000FE0
- #define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A_S      5
- #define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A            0x1F
- #define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A_S		0
-+#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_B	0x00FE0000
-+#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_B_S	17
-+#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_B		0x0001F000
-+#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_B_S		12
-+
- 
- /*
-  * MRC Feild Definitions
+Marc
 -- 
-1.7.12
-
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
