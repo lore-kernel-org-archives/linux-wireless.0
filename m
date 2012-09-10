@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:46847 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071Ab2IAQHw (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50902 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753Ab2IJFZv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2012 12:07:52 -0400
-Received: by vcbfk26 with SMTP id fk26so4282211vcb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Sep 2012 09:07:51 -0700 (PDT)
+	Mon, 10 Sep 2012 01:25:51 -0400
+Date: Mon, 10 Sep 2012 10:56:33 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath9k_hw: Wait BT calibration to complete
+Message-ID: <20120910052632.GA20286@vmraj-lnx.qca.qualcomm.com> (sfid-20120910_072558_103150_E11FF99F)
+References: <1346823135-2992-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+7oygfSuwomt5GxWKNvcjqTjSeW_gS9zvcFVqJN75EZp03zxw@mail.gmail.com>
-References: <CA+7oygfSuwomt5GxWKNvcjqTjSeW_gS9zvcFVqJN75EZp03zxw@mail.gmail.com>
-Date: Sat, 1 Sep 2012 12:07:51 -0400
-Message-ID: <CA+7oygc1P6jXK3N1ejM6vHLMhisELt+OcqBy7XKPNzUxC+n3HQ@mail.gmail.com> (sfid-20120901_180755_560549_3C000F27)
-Subject: Re: want to use mac80211/cfg80211 from kernel tree...
-From: George Nychis <gnychis@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1346823135-2992-1-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BTW- the reason I'm not using rt2x00 from the kernel tree is that for
-some reason scanning is broken.  The reason I'm not using brcm from
-compat-wireless is that cross-compiling it is broken and segfaults my
-cross-compiler.  So, I want to build these two in two different trees.
+On Wed, Sep 05, 2012 at 11:02:13AM +0530, Rajkumar Manoharan wrote:
+> Whenever BT calibration requested, WLAN has to wait for the
+> calibration to be completed. But right now we defer the waiting
+> which might cause BT calibration to fail. Fix that.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_mci.c |  1 +
+>  drivers/net/wireless/ath/ath9k/debug.h      |  1 -
+>  drivers/net/wireless/ath/ath9k/mci.c        | 19 ++++++++++++++++++-
+>  3 files changed, 19 insertions(+), 2 deletions(-)
+John,
 
-On Sat, Sep 1, 2012 at 12:05 PM, George Nychis <gnychis@gmail.com> wrote:
-> This is a long story cut very short, but I have an Android kernel tree
-> which has mac80211 and cfg80211 built as modules and support for a
-> Broadcom chipset.
->
-> I want to add support for rt2x00 from compat-wireless, cross-compiling
-> it.  I am able to successfully cross-compile it, however the build in
-> compat-wireless creates its own set of mac80211 and cfg80211 modules.
-> So now I end up with:
->
-> *  In kernel tree:  cfg80211.ko, mac80211.ko, and dhd.ko which are
-> compatible with each other.
-> *  In compat-wireless: cfg80211.ko, mac80211.ko, and rt*.ko which are compatible
->
-> So, I can't insert all of these modules because dhd.ko is only
-> compatible (due to versions) with cfg80211.ko and mac80211.ko that
-> were built with the kernel, and the Ralink modules are only compatible
-> with cfg80211.ko and mac80211.ko that were built with compat-wireless.
->
-> Is there any way for me to get compat-wireless to not build its own
-> versions of cfg80211.ko and mac80211.ko, and use those in the
-> KERNEL_DIR?  That way I don't have two sets of cfg80211/mac80211 and I
-> can insert all modules?
->
-> Thanks!
-> George
+This patch conflicts with -rc5. I'll will resend v2 patchset.
+
+-Rajkumar
