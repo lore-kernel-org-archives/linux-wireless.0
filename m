@@ -1,72 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34607 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752316Ab2ILKSc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 06:18:32 -0400
-Date: Wed, 12 Sep 2012 11:18:26 +0100
-From: Mel Gorman <mgorman@suse.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Pavel Machek <pavel@ucw.cz>, David Rientjes <rientjes@google.com>,
-	sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-	johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-Message-ID: <20120912101826.GL11266@suse.de> (sfid-20120912_121848_551373_BCFAED97)
-References: <20120909213228.GA5538@elf.ucw.cz>
- <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
- <20120910111113.GA25159@elf.ucw.cz>
- <20120911162536.bd5171a1.akpm@linux-foundation.org>
+Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:37139 "EHLO
+	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754176Ab2IJPdn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 11:33:43 -0400
+Message-ID: <20120910183339.19525dpw8ii5bk9c@www.81.fi> (sfid-20120910_173354_468580_0A1773EB)
+Date: Mon, 10 Sep 2012 18:33:39 +0300
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2] rndis_wlan: remove pointless check from
+ rndis_scan()
+References: <CAPgLHd8FG3pEz3FZ=1ux=h5sKGXwykXc=qafb=OzEQKXWU9uuw@mail.gmail.com>
+In-Reply-To: <CAPgLHd8FG3pEz3FZ=1ux=h5sKGXwykXc=qafb=OzEQKXWU9uuw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <20120911162536.bd5171a1.akpm@linux-foundation.org>
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 11, 2012 at 04:25:36PM -0700, Andrew Morton wrote:
-> On Mon, 10 Sep 2012 13:11:13 +0200
-> Pavel Machek <pavel@ucw.cz> wrote:
-> 
-> > On Sun 2012-09-09 15:40:55, David Rientjes wrote:
-> > > On Sun, 9 Sep 2012, Pavel Machek wrote:
-> > > 
-> > > > On 3.6.0-rc2+, I tried to turn on the wireless, but got
-> > > > 
-> > > > root@amd:~# ifconfig wlan0 10.0.0.6 up
-> > > > SIOCSIFFLAGS: Cannot allocate memory
-> > > > SIOCSIFFLAGS: Cannot allocate memory
-> > > > root@amd:~# 
-> > > > 
-> > > > It looks like it uses "a bit too big" allocations to allocate
-> > > > firmware...? Order five allocation....
-> > > > 
-> > > > Hmm... then I did "echo 3  > /proc/sys/vm/drop_caches" and now the
-> > > > network works. Is it VM problem that it failed to allocate memory when
-> > > > it was freeable?
-> > > > 
-> > > 
-> > > Do you have CONFIG_COMPACTION enabled?
-> > 
-> > Yes:
-> > 
-> > pavel@amd:/data/l/linux-good$ zgrep CONFIG_COMPACTION /proc/config.gz 
-> > CONFIG_COMPACTION=y
-> 
-> Asking for a 256k allocation is pretty crazy - this is an operating
-> system kernel, not a userspace application.
-> 
-> I'm wondering if this is due to a recent change, but I'm having trouble
-> working out where the allocation call site is.
+Quoting Wei Yongjun <weiyj.lk@gmail.com>:
 
-It may be indirectly due to a recent change and this was somewhat
-deliberate. Order-5 is larger than PAGE_ALLOC_COSTLY_ORDER and I doubt
-__GFP_REPEAT was set so it is treated as something that can fail in
-preference to aggressively reclaiming pages to satisfy the allocation. In
-older kernels with lumpy reclaim and an aggressive kswapd it would have
-probably succeeded but now it errs on the side of failing early instead
-assuming that the caller can recover. Drivers that depend on order-5
-allocations to succeed for correct operation are somewhat frowned upon.
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> In rndis_scan(), 'request' is actually always valid pointer and
+> the !request check is unneeded, so remove it.
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
--- 
-Mel Gorman
-SUSE Labs
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+
+> ---
+>  drivers/net/wireless/rndis_wlan.c | 3 ---
+>  1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rndis_wlan.c  
+> b/drivers/net/wireless/rndis_wlan.c
+> index 7a4ae9e..bd1f0cb 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -1959,9 +1959,6 @@ static int rndis_scan(struct wiphy *wiphy,
+>  	 */
+>  	rndis_check_bssid_list(usbdev, NULL, NULL);
+>
+> -	if (!request)
+> -		return -EINVAL;
+> -
+>  	if (priv->scan_request && priv->scan_request != request)
+>  		return -EBUSY;
+>
+>
+>
+>
+>
+
+
+
