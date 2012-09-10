@@ -1,63 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:56731 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752490Ab2IOAvg convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8685 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093Ab2IJGEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 20:51:36 -0400
+	Mon, 10 Sep 2012 02:04:49 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 3/3] ath9k_hw: add 8 points for 5G temp slop
+Date: Mon, 10 Sep 2012 17:05:11 +0530
+Message-ID: <1347276911-1993-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120910_080452_514742_476648EB)
+In-Reply-To: <1347276911-1993-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1347276911-1993-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WBLusFkQP-a9mCxM2Hu-NyWvUiF8iALY6YvvbV81eKNg@mail.gmail.com>
-References: <1347637262-27782-1-git-send-email-bkamatch@qca.qualcomm.com> <CAB=NE6WBLusFkQP-a9mCxM2Hu-NyWvUiF8iALY6YvvbV81eKNg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 14 Sep 2012 17:51:13 -0700
-Message-ID: <CAB=NE6XYjYrRSA8Xupu21GWoCd-jv63ic32Q3rP7YiVHajTWTg@mail.gmail.com> (sfid-20120915_025141_021688_0FAF6D87)
-Subject: Re: [PATCH 1/4] compat-drivers: update pending-stable patches.
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 14, 2012 at 3:28 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Fri, Sep 14, 2012 at 8:40 AM, Bala Shanmugam
-> <bkamatch@qca.qualcomm.com> wrote:
->> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
->> ---
->
-> Thanks but these patches do not apply on to the branch
-> origin/origin/linux-3.6.y. They do however apply on top of the branch
-> origin/linux-3.5.y... did you intend for these patches to be applied
-> on top of that branch?
->
-> Please be sure to do to be on top of commit
-> 4f298ae180e84c6857af803177f82724ba6cf97c from the origin/linux-3.6.y
-> branch if you want to send patches for that branch.
->
-> Also, we now have a new mailing list, backports@vger.kernel.org,
-> please subscribe and send future patches there.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 26 +++++++++++++++++++-------
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |  3 ++-
+ drivers/net/wireless/ath/ath9k/eeprom.h        |  1 +
+ 3 files changed, 22 insertions(+), 8 deletions(-)
 
-After reviewing company e-mails I see you sent me there a note about
-these being applicable to the linux-3.5.y branch. I applied them and
-test compiled against ckmake. Compilation was OK except for the -sn
-release and it fails at:
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index c37fe96..a03e905 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -138,7 +138,8 @@ static const struct ar9300_eeprom ar9300_default = {
+ 	 },
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0},
++		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -713,7 +714,8 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 	 },
+ 	 .base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0},
++		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	 },
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -1289,7 +1291,8 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 	},
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0},
++		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -1865,7 +1868,8 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 	},
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0},
++		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -2440,7 +2444,8 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 	 },
+ 	 .base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
++		.future = {0, 0, 0},
++		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	 },
+ 	.calFreqPier2G = {
+ 		FREQ2FBIN(2412, 1),
+@@ -4528,7 +4533,7 @@ static int ar9003_hw_power_control_override(struct ath_hw *ah,
+ {
+ 	int tempSlope = 0;
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	int f[3], t[3];
++	int f[8], t[8], i;
+ 
+ 	REG_RMW(ah, AR_PHY_TPC_11_B0,
+ 		(correction[0] << AR_PHY_TPC_OLPC_GAIN_DELTA_S),
+@@ -4561,7 +4566,14 @@ static int ar9003_hw_power_control_override(struct ath_hw *ah,
+ 	 */
+ 	if (frequency < 4000)
+ 		tempSlope = eep->modalHeader2G.tempSlope;
+-	else if (eep->base_ext2.tempSlopeLow != 0) {
++	else if ((eep->baseEepHeader.miscConfiguration & 0x20) != 0) {
++		for (i = 0; i < 8; i++) {
++			t[i] = eep->base_ext1.tempslopextension[i];
++			f[i] = FBIN2FREQ(eep->calFreqPier5G[i], 0);
++		}
++		tempSlope = ar9003_hw_power_interpolate((s32) frequency,
++							f, t, 8);
++	} else if (eep->base_ext2.tempSlopeLow != 0) {
+ 		t[0] = eep->base_ext2.tempSlopeLow;
+ 		f[0] = 5180;
+ 		t[1] = eep->modalHeader5G.tempSlope;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 3a1ff55..41b1a75 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -267,7 +267,8 @@ struct cal_ctl_data_5g {
+ 
+ struct ar9300_BaseExtension_1 {
+ 	u8 ant_div_control;
+-	u8 future[11];
++	u8 future[3];
++	u8 tempslopextension[8];
+ 	int8_t quick_drop_low;
+ 	int8_t quick_drop_high;
+ } __packed;
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 484b313..4249096 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -96,6 +96,7 @@
+ 
+ #define ATH9K_POW_SM(_r, _s)	(((_r) & 0x3f) << (_s))
+ #define FREQ2FBIN(x, y)		((y) ? ((x) - 2300) : (((x) - 4800) / 5))
++#define FBIN2FREQ(x, y)		((y) ? (2300 + x) : (4800 + 5 * x))
+ #define ath9k_hw_use_flash(_ah)	(!(_ah->ah_flags & AH_USE_EEPROM))
+ 
+ #define AR5416_VER_MASK (eep->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK)
+-- 
+1.7.12
 
-/home/mcgrof/staging/v3.5.3/compat-wireless-3.5.3-1-sn/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3974:3:
-error: ‘AR_PHY_65NM_CH1_RXTX4’ undeclared (first use in this function)
-/home/mcgrof/staging/v3.5.3/compat-wireless-3.5.3-1-sn/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3974:3:
-note: each undeclared identifier is reported only once for each
-function it appears in
-/home/mcgrof/staging/v3.5.3/compat-wireless-3.5.3-1-sn/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3977:3:
-error: ‘AR_PHY_65NM_CH2_RXTX4’ undeclared (first use in this function)
-make[5]: *** [/home/mcgrof/staging/v3.5.3/compat-wireless-3.5.3-1-sn/drivers/net/wireless/ath/ath9k/ar9003_eeprom.o]
-Error 1
-make[5]: *** Waiting for unfinished jobs....
-
-Now these guys are added through your crap/ patch.. but if you think
-about this.. this means that you had AR_PHY_65NM_CH1_RXTX4 and the
-other define used in code not yet upstream... I'm going to post that
-patch to uncrap it and to fix these releases. I will also throw in
-this patch into pending:
-
-https://patchwork.kernel.org/patch/1441611/
-
-  Luis
