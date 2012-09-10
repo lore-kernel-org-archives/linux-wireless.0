@@ -1,46 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1931 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757201Ab2IDOa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 10:30:58 -0400
-Message-ID: <1346769184.26638.7.camel@dcbw.foobar.com> (sfid-20120904_163102_572229_54D7C91D)
-Subject: Re: [PATCH v2] p54: connect to 11w protected networks
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Tue, 04 Sep 2012 09:33:04 -0500
-In-Reply-To: <1346768149.3737.29.camel@jlt4.sipsolutions.net>
-References: <1346622538.10113.3.camel@jlt4.sipsolutions.net>
-	 <E1T8tYj-00051o-3z@debian64.localnet>
-	 (sfid-20120904_155321_955424_2D6B3F4B) <1346768149.3737.29.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:41709 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935Ab2IJQiN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 12:38:13 -0400
+Received: by eekc1 with SMTP id c1so1316649eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 09:38:11 -0700 (PDT)
+From: Florian Fainelli <florian@openwrt.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 06/10] brcmfmac: fix big endian bug in i-scan.
+Date: Mon, 10 Sep 2012 18:37:32 +0200
+Message-ID: <3265895.MSDQPtTcs3@flexo> (sfid-20120910_183816_284163_5FCE82C4)
+In-Reply-To: <1347283018-24223-7-git-send-email-arend@broadcom.com>
+References: <1347283018-24223-1-git-send-email-arend@broadcom.com> <1347283018-24223-7-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-04 at 16:15 +0200, Johannes Berg wrote:
-> On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
-> 
-> > As you feared: the firmware is corrupting incoming management
-> > frames. However, it does so only when a rxkey was configured.
-> > So as a possible trade-off, MFP will only be supported by p54,
-> > when the firmware crypto offloading is relieved of his duties
-> > (disabled). 
-> > 
-> > Note: Strictly speaking, it would be enough to no longer upload
-> > any rx key which could affect management frames, as the firmware
-> > does not decrypt any frames unless there is a fitting key candidate.
-> 
-> Right, however, that would kinda defeat the point. Unless ... maybe we
-> can tell the driver if 11w is going to be used at all? If we did that,
-> we could make it work in the set_key callback.
-> 
-> For now your patch looks good though.
+Hello,
 
-We can't get this to happen without a module option?  Is there a way to
-turn the crypto offloading off when we know we're connecting to a W
-protected AP?
+On Monday 10 September 2012 15:16:54 Arend van Spriel wrote:
+> From: Hante Meuleman <meuleman@broadcom.com>
+> 
+> ssid len is 32 bit and needs endian conversion for big endian systems.
+> 
+> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-Dan
+This looks like a candidate for stable.
 
+> ---
+>  .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c 
+b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> index 4a27ca0..6623f48 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> @@ -501,8 +501,10 @@ static void brcmf_iscan_prep(struct 
+brcmf_scan_params_le *params_le,
+>  	params_le->active_time = cpu_to_le32(-1);
+>  	params_le->passive_time = cpu_to_le32(-1);
+>  	params_le->home_time = cpu_to_le32(-1);
+> -	if (ssid && ssid->SSID_len)
+> -		memcpy(&params_le->ssid_le, ssid, sizeof(struct brcmf_ssid));
+> +	if (ssid && ssid->SSID_len) {
+> +		params_le->ssid_le.SSID_len = cpu_to_le32(ssid->SSID_len);
+> +		memcpy(&params_le->ssid_le.SSID, ssid->SSID, ssid->SSID_len);
+> +	}
+>  }
+>  
+>  static s32
+> -- 
+> 1.7.9.5
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
