@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:42252 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063Ab2IBNVr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Sep 2012 09:21:47 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:3205 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758356Ab2IJUYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 16:24:07 -0400
+Message-ID: <504DE996.4020709@broadcom.com> (sfid-20120910_222411_760064_03A12293)
+Date: Mon, 10 Sep 2012 15:22:30 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Date: Sun, 2 Sep 2012 21:21:46 +0800
-Message-ID: <CAPgLHd_sD6NYc=Dj4yJpHY0yLBuDmQx=upQY=XQLi-9kTycK-Q@mail.gmail.com> (sfid-20120902_152243_771734_6B1873FC)
-Subject: [PATCH] NFC: fix possible memory leak
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, davem@davemloft.net
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Arend van Spriel" <arend@broadcom.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Seth Forshee" <seth.forshee@canonical.com>
+Subject: Re: [PATCH 0/2] brcmsmac: fix for regulatory rules and flush
+ callback
+References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1346838562-4818-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 09/05/2012 11:49 AM, Arend van Spriel wrote:
+> Two fixes intended for the wireless tree. The issue with the .flush() has
+> been giving me a lot of email from RedHat's bugzilla server. Hope this
+> patch will silence that ;-)
 
-nfc_llcp_build_tlv() malloced the memory and should be free in
-nfc_llcp_build_gb() after used, and the same in the error handling
-case, otherwise it will cause memory leak.
+Hi John,
 
-spatch with a semantic match is used to found this problem.
-(http://coccinelle.lip6.fr/)
+I should remove that smile above, but are you planning to take these for 
+v3.6. At least the first patch is a clear bug fix that I would like
+to have applied.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- net/nfc/llcp/llcp.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+Gr. AvS
 
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index 82f0f75..8152973 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -426,6 +426,7 @@ static int nfc_llcp_build_gb(struct nfc_llcp_local *local)
- 	u8 *miux_tlv, miux_length;
- 	__be16 miux;
- 	u8 gb_len = 0;
-+	int ret = 0;
- 
- 	version = LLCP_VERSION_11;
- 	version_tlv = nfc_llcp_build_tlv(LLCP_TLV_VERSION, &version,
-@@ -450,8 +451,8 @@ static int nfc_llcp_build_gb(struct nfc_llcp_local *local)
- 	gb_len += ARRAY_SIZE(llcp_magic);
- 
- 	if (gb_len > NFC_MAX_GT_LEN) {
--		kfree(version_tlv);
--		return -EINVAL;
-+		ret = -EINVAL;
-+		goto out;
- 	}
- 
- 	gb_cur = local->gb;
-@@ -471,12 +472,15 @@ static int nfc_llcp_build_gb(struct nfc_llcp_local *local)
- 	memcpy(gb_cur, miux_tlv, miux_length);
- 	gb_cur += miux_length;
- 
-+	local->gb_len = gb_len;
-+
-+out:
- 	kfree(version_tlv);
- 	kfree(lto_tlv);
-+	kfree(wks_tlv);
-+	kfree(miux_tlv);
- 
--	local->gb_len = gb_len;
--
--	return 0;
-+	return ret;
- }
- 
- u8 *nfc_llcp_general_bytes(struct nfc_dev *dev, size_t *general_bytes_len)
+>
+> Arend van Spriel (2):
+>    brcmsmac: fix mismatch in number of custom regulatory rules
+>    brcmsmac: rework of mac80211 .flush() callback operation
+>
+>   drivers/net/wireless/brcm80211/brcmsmac/channel.c  |    2 +-
+>   .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   41 +++++++++++++-------
+>   .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    3 +-
+>   drivers/net/wireless/brcm80211/brcmsmac/main.c     |   21 +++-------
+>   drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    4 +-
+>   5 files changed, 38 insertions(+), 33 deletions(-)
+>
 
 
