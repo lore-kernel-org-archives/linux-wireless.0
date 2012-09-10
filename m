@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:37892 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756958Ab2IKBcC (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:56833 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801Ab2IJIjd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 21:32:02 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 07/10] mwifiex: do not hint regulatory domain with f/w country code
-Date: Mon, 10 Sep 2012 18:30:46 -0700
-Message-Id: <1347327049-13665-8-git-send-email-bzhao@marvell.com> (sfid-20120911_033206_827433_72AC11C7)
-In-Reply-To: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
-References: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
+	Mon, 10 Sep 2012 04:39:33 -0400
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <503BB49C.5010402@lwfinger.net>
+References: <50369925.3050705@lwfinger.net>
+	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
+	 <20120824.111948.680531915905273128.davem@davemloft.net>
+	 <5037A4B0.3080208@lwfinger.net>
+	 <1345825095.19483.19.camel@edumazet-glaptop>
+	 <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>
+	 <1345830424.19483.69.camel@edumazet-glaptop>
+	 <503BB49C.5010402@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Sep 2012 10:39:26 +0200
+Message-ID: <1347266366.1234.1267.camel@edumazet-glaptop> (sfid-20120910_103941_802786_94BC7EB8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We will use world regulatory domain (country 00) as default
-when driver is loaded. Later after a successful association
-cfg80211 will change the regulatory domain to a specific country
-if the AP has advertised country IE.
+On Mon, 2012-08-27 at 12:55 -0500, Larry Finger wrote:
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+> I have prepared a patch to fix all the unchecked allocations.
+> 
+> Over the weekend I made some progress. To test the latest vendor driver, I 
+> installed a 32-bit system. Their driver is not compatible with a 64-bit system. 
+> I found that not only did the vendor driver work with secure sites, but so did 
+> the in-kernel version. I now have tcpdump output for the 32-bit case that works, 
+> and the 64-bit case that fails. It seems likely that I missed some 32/64 bit 
+> incompatibility when I did the conversion.
+> 
+> Thanks for all your help in trying to resolve this issue.
+> 
+> Larry
+> 
+> 
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 3a27554..797f978 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1862,8 +1862,9 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 		return ret;
- 	}
- 	country_code = mwifiex_11d_code_2_region(priv->adapter->region_code);
--	if (country_code && regulatory_hint(wiphy, country_code))
--		dev_err(adapter->dev, "regulatory_hint() failed\n");
-+	if (country_code)
-+		dev_info(adapter->dev,
-+			 "ignoring F/W country code %2.2s\n", country_code);
- 
- 	adapter->wiphy = wiphy;
- 	return ret;
--- 
-1.7.0.2
+Hi Larry
+
+It appears I have a D-Link N300 (DWA-131) nano USB adapter, using
+staging/rtl8712 driver.
+
+I tried many kernel versions (including 3.3) and none seems to work
+reliably.
+
+Sometime, I have some traffic but only for about 50 frames...
+It might be because my access point is a netgear wndr3800, because I
+have following warning a bit before the freezes :
+
+r8712u: [r8712_got_addbareq_event_callback] mac = 20:4e:7f:5a:cd:30, sea = 80, tid = 0
+
+Thanks
+
 
