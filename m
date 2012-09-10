@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:51798 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561Ab2I0JbG (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:34616 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756964Ab2IJRzY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 05:31:06 -0400
-Received: by oagh16 with SMTP id h16so1553220oag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2012 02:31:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1348737219.10353.6.camel@jlt4.sipsolutions.net>
-References: <20120926165952.766801E10D3@sleffler.sfo.corp.google.com>
-	<1348737219.10353.6.camel@jlt4.sipsolutions.net>
-Date: Thu, 27 Sep 2012 11:31:04 +0200
-Message-ID: <CAB3XZEfFy58mDxSWjO3whptsGhHjBMLJDWkkh6K6CQtW-KnMBg@mail.gmail.com> (sfid-20120927_113110_008290_26906082)
-Subject: Re: [PATCH 0/3] add scan flags support
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sam Leffler <sleffler@chromium.org>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 10 Sep 2012 13:55:24 -0400
+Subject: [PATCH] staging: r8712u: fix bug in r8712_recv_indicatepkt()
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <1347289446.1234.1717.camel@edumazet-glaptop>
+References: <50369925.3050705@lwfinger.net>
+	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
+	 <20120824.111948.680531915905273128.davem@davemloft.net>
+	 <5037A4B0.3080208@lwfinger.net>
+	 <1345825095.19483.19.camel@edumazet-glaptop>
+	 <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>
+	 <1345830424.19483.69.camel@edumazet-glaptop>
+	 <503BB49C.5010402@lwfinger.net>
+	 <1347266366.1234.1267.camel@edumazet-glaptop>
+	 <504DFEFF.6060004@lwfinger.net>
+	 <1347289446.1234.1717.camel@edumazet-glaptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Sep 2012 19:55:15 +0200
+Message-ID: <1347299715.1234.1902.camel@edumazet-glaptop> (sfid-20120910_195534_066022_870D40AA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 27, 2012 at 11:13 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2012-09-25 at 15:49 -0700, Sam Leffler wrote:
->> These add per-scan request controls for optional behaviours we've found
->> useful (they've been in Chrome OS for a long time).  A patch for iw will
->> follow separately and the mods for wpa_supplicant are in our repo and
->> I'll push them to Jouni if these are accepted.
->>
->> Sam Leffler (3):
->>   {nl,cfg}80211: add a flags word to scan requests
->>   mac80211: add support for tx to abort scan requests
->>   cfg80211: add support for flushing old scan results
->
-> I like the flushing one, but I'm not so sure about the TX abort thing.
-> How do you suggest to handle that when scanning is offloaded to the
-> driver and/or firmware? Especially given that multi-channel is going to
-> require a firmware implementation, I'm not sure how to achieve good
-> behaviour across the different implementations.
->
-> Maybe it'd be worthwhile to go for a more generic approach, marking
-> scans as "low priority" or "high priority" or similar, and then
-> implementing such behaviour based on such settings? Our device for
-> example has a notion of "background scan" vs. "forced scan", which
-> behave differently in the firmware, and it would be useful to be able to
-> use these different behaviours. However, I can't say that "TX abort"
-> would be a guaranteed scan behaviour for a "background scan".
->
-we also have some "urgency" option in our hw scan, but we currently
-never use it (not really sure when it should be used... maybe for
-roaming on beacon loss?)
+From: Eric Dumazet <edumazet@google.com>
 
-the TX abort is relevant mainly for sw scan.
-i'm not sure we really want to couple it with scan priority, though.
-otoh, userspace doesn't really care (or know) if we use sw or hw scan,
-so configuring it all with a single "scan priority" option does make
-sense.
+64bit arches have a buggy r8712u driver, let's fix it.
 
-Eliad.
+Signed-off-by: Eric Dumazet <edumazet@google.com>
+---
+ drivers/staging/rtl8712/recv_linux.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/drivers/staging/rtl8712/recv_linux.c b/drivers/staging/rtl8712/recv_linux.c
+index 0e26d5f..495ee12 100644
+--- a/drivers/staging/rtl8712/recv_linux.c
++++ b/drivers/staging/rtl8712/recv_linux.c
+@@ -117,13 +117,8 @@ void r8712_recv_indicatepkt(struct _adapter *padapter,
+ 	if (skb == NULL)
+ 		goto _recv_indicatepkt_drop;
+ 	skb->data = precv_frame->u.hdr.rx_data;
+-#ifdef NET_SKBUFF_DATA_USES_OFFSET
+-	skb->tail = (sk_buff_data_t)(precv_frame->u.hdr.rx_tail -
+-		     precv_frame->u.hdr.rx_head);
+-#else
+-	skb->tail = (sk_buff_data_t)precv_frame->u.hdr.rx_tail;
+-#endif
+ 	skb->len = precv_frame->u.hdr.len;
++	skb_set_tail_pointer(skb, skb->len);
+ 	if ((pattrib->tcpchk_valid == 1) && (pattrib->tcp_chkrpt == 1))
+ 		skb->ip_summed = CHECKSUM_UNNECESSARY;
+ 	else
+
+
