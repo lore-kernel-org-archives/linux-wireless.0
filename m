@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40084 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619Ab2IRKiw (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:57398 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756926Ab2IJJFc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2012 06:38:52 -0400
-Message-ID: <1347964771.4283.2.camel@jlt4.sipsolutions.net> (sfid-20120918_123854_993457_6B17AF19)
-Subject: Re: [PATCH] cfg80211/nl80211: Notify connection request failure in
- AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 18 Sep 2012 12:39:31 +0200
-In-Reply-To: <1347964742.4283.1.camel@jlt4.sipsolutions.net> (sfid-20120918_123827_298949_81136031)
-References: <1347964001-9491-1-git-send-email-c_ppitch@qca.qualcomm.com>
-	 <1347964742.4283.1.camel@jlt4.sipsolutions.net>
-	 (sfid-20120918_123827_298949_81136031)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 10 Sep 2012 05:05:32 -0400
+From: Colin King <colin.king@canonical.com>
+To: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] brcm80211: fix missing allocation failure check
+Date: Mon, 10 Sep 2012 10:05:26 +0100
+Message-Id: <1347267926-7118-1-git-send-email-colin.king@canonical.com> (sfid-20120910_110619_787790_2FAB5ACD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-18 at 12:39 +0200, Johannes Berg wrote:
-> On Tue, 2012-09-18 at 15:56 +0530, Pandiyarajan Pitchaimuthu wrote:
-> 
-> > +/**
-> > + * enum nl80211_connect_failed_reason - The reasons for which an AP could
-> > + *	have rejected the station's connection request. Any of the mentioned
-> > + *	reasons are used with the attribute %NL80211_ATTR_CONN_FAILED_REASON
-> > + *	while sending the event %NL80211_CMD_CONN_FAILED.
-> 
-> Unfortunately, this isn't valid kernel-doc. You should have
-> 
->  /**
->   * name - short description
+From: Colin Ian King <colin.king@canonical.com>
 
-And I should say: this must fit on a single line.
+Check for oobirq_entry allocation failure to avoid
+NULL pointer dereferencing.
 
-johannes
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 49765d3..7c4ee72 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -638,6 +638,8 @@ static int brcmf_sdio_pd_probe(struct platform_device *pdev)
+ 
+ 		oobirq_entry = kzalloc(sizeof(struct brcmf_sdio_oobirq),
+ 				       GFP_KERNEL);
++		if (!oobirq_entry)
++			return -ENOMEM;
+ 		oobirq_entry->irq = res->start;
+ 		oobirq_entry->flags = res->flags & IRQF_TRIGGER_MASK;
+ 		list_add_tail(&oobirq_entry->list, &oobirq_lh);
+-- 
+1.7.10.4
 
