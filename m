@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37978 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932609Ab2IUJf0 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:61880 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935Ab2IJQhy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 05:35:26 -0400
-Message-ID: <505C34C7.50202@qca.qualcomm.com> (sfid-20120921_113542_902530_F307ADDF)
-Date: Fri, 21 Sep 2012 15:05:03 +0530
-From: Raja Mani <rmani@qca.qualcomm.com>
+	Mon, 10 Sep 2012 12:37:54 -0400
+Received: by eaac11 with SMTP id c11so1007453eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 09:37:53 -0700 (PDT)
+From: Florian Fainelli <florian@openwrt.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 03/10] brcmfmac: Fix extra data support handling.
+Date: Mon, 10 Sep 2012 18:37:09 +0200
+Message-ID: <5221312.fK3dkv1oOA@flexo> (sfid-20120910_183758_342737_6B8471C0)
+In-Reply-To: <1347283018-24223-4-git-send-email-arend@broadcom.com>
+References: <1347283018-24223-1-git-send-email-arend@broadcom.com> <1347283018-24223-4-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 3/3] ath6kl: Check for valid endpoint ID values in ath6kl_control_tx()
-References: <1348122068-24648-1-git-send-email-rmani@qca.qualcomm.com> <1348122068-24648-3-git-send-email-rmani@qca.qualcomm.com> <505C30E5.6080208@qca.qualcomm.com>
-In-Reply-To: <505C30E5.6080208@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 21 September 2012 02:48 PM, Kalle Valo wrote:
-> On 09/20/2012 09:21 AM, rmani@qca.qualcomm.com wrote:
->> From: Raja Mani<rmani@qca.qualcomm.com>
->>
->> It's safe to check endpoint id values before it get
->> really used. Found this on code review.
->>
->> Signed-off-by: Raja Mani<rmani@qca.qualcomm.com>
->> ---
->>   drivers/net/wireless/ath/ath6kl/txrx.c |    6 ++++++
->>   1 files changed, 6 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
->> index e867193..4ea6559 100644
->> --- a/drivers/net/wireless/ath/ath6kl/txrx.c
->> +++ b/drivers/net/wireless/ath/ath6kl/txrx.c
->> @@ -294,6 +294,12 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
->>   		return -EACCES;
->>   	}
->>
->> +	if (WARN_ON_ONCE(eid == ENDPOINT_UNUSED ||
->> +	    eid>= ENDPOINT_MAX)) {
->> +		status = -EINVAL;
->> +		goto fail_ctrl_tx;
->> +	}
->
-> Indentation for the line starting with eid doesn't look right (or my
-> thunderbird is corrupting it again). But I can fix it up when I commit
-> the patch. (I assume you will send v2 of this patchset.)
+Hello,
 
-Thanks for the review. I'll submit v2 with your review comments 
-addressed in this patch series.
+On Monday 10 September 2012 15:16:51 Arend van Spriel wrote:
+> From: Hante Meuleman <meuleman@broadcom.com>
+> 
+> This patch fixes bug in length calculation.
+> 
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c 
+b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> index 6383052..4553fa0 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> @@ -3331,7 +3331,7 @@ brcmf_enq_event(struct brcmf_cfg80211_priv *cfg_priv, 
+u32 event,
+>  
+>  	total_len = sizeof(struct brcmf_cfg80211_event_q);
+>  	if (data)
+> -		data_len += be32_to_cpu(msg->datalen);
+> +		data_len = be32_to_cpu(msg->datalen);
 
->
-> Kalle
+This should be folded in patch 2/10 since this is where the bug gets 
+introduced.
+--
+Florian
