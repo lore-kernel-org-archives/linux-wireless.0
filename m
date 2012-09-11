@@ -1,90 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24963 "EHLO mga01.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4090 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756257Ab2IQOgO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 10:36:14 -0400
-Message-ID: <1347892887.7112.9.camel@sauron.fi.intel.com> (sfid-20120917_163617_677167_0B529F43)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
-Reply-To: artem.bityutskiy@linux.intel.com
-To: "Berg, Johannes" <johannes.berg@intel.com>,
-	Eric Dumazet <edumazet@google.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 17 Sep 2012 17:41:27 +0300
-In-Reply-To: <1347640763.5263.24.camel@sauron.fi.intel.com>
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	 <1347631355.5263.19.camel@sauron.fi.intel.com>
-	 <1347640763.5263.24.camel@sauron.fi.intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-Umswc144aMln99m44br1"
-Mime-Version: 1.0
+	id S1751824Ab2IKTRC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 15:17:02 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	stable <stable@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/2] brcmfmac: Fix big endian host configuration data.
+Date: Tue, 11 Sep 2012 21:16:48 +0200
+Message-ID: <1347391008-10583-3-git-send-email-arend@broadcom.com> (sfid-20120911_211707_485545_2395DCBD)
+In-Reply-To: <1347391008-10583-1-git-send-email-arend@broadcom.com>
+References: <1347391008-10583-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Hante Meuleman <meuleman@broadcom.com>
 
---=-Umswc144aMln99m44br1
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Fixes big endian host configuration parameters.
 
-On Fri, 2012-09-14 at 19:39 +0300, Artem Bityutskiy wrote:
-> On Fri, 2012-09-14 at 17:02 +0300, Artem Bityutskiy wrote:
-> > Hi Johannes,
-> >=20
-> > We are using iwlwifi driver in Tizen IVI. We were using kernel v3.4 and
-> > wifi tethering worked fine. But after upgrading to v3.5 it stopped
-> > working.
-> >=20
-> > I am trying to bisect this already many hours - very difficult, because
-> > tethering did not work in kernels around v3.4-rcX for some different
-> > reasons, so just 'git bisect' does not work.
->=20
-> OK, my latest finding is:
->        =20
->         bad:               3edaf3e Johannes Berg  mac80211: manage AP net=
-dev carrier state
->         good:              fe40cb6 Ashok Nagarajan  mac80211: Check basic=
- rates when peering
->        =20
-> However, just reverting in 3.5 does not solve the issue. I am out of
-> ideas how to proceed.
+Cc: stable <stable@vger.kernel.org>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   26 ++++++++++++--------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
-OK, finally I got it. After 3 days of hardcore intelligent bisecting
-        I've found out that tethering in 3.5 works for me if I revert
-these 2
-        patches:
-       =20
-            56138f5 iwlwifi: dont pull too much payload in skb head
-            3edaf3e mac80211: manage AP netdev carrier state
-       =20
-        Johannes, Eric?
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 2621dd3..6f70953 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -764,8 +764,11 @@ static void brcmf_c_arp_offload_set(struct brcmf_pub *drvr, int arp_mode)
+ {
+ 	char iovbuf[32];
+ 	int retcode;
++	__le32 arp_mode_le;
+ 
+-	brcmf_c_mkiovar("arp_ol", (char *)&arp_mode, 4, iovbuf, sizeof(iovbuf));
++	arp_mode_le = cpu_to_le32(arp_mode);
++	brcmf_c_mkiovar("arp_ol", (char *)&arp_mode_le, 4, iovbuf,
++			sizeof(iovbuf));
+ 	retcode = brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR,
+ 				   iovbuf, sizeof(iovbuf));
+ 	retcode = retcode >= 0 ? 0 : retcode;
+@@ -781,8 +784,11 @@ static void brcmf_c_arp_offload_enable(struct brcmf_pub *drvr, int arp_enable)
+ {
+ 	char iovbuf[32];
+ 	int retcode;
++	__le32 arp_enable_le;
+ 
+-	brcmf_c_mkiovar("arpoe", (char *)&arp_enable, 4,
++	arp_enable_le = cpu_to_le32(arp_enable);
++
++	brcmf_c_mkiovar("arpoe", (char *)&arp_enable_le, 4,
+ 			iovbuf, sizeof(iovbuf));
+ 	retcode = brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR,
+ 				   iovbuf, sizeof(iovbuf));
+@@ -800,10 +806,10 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 	char iovbuf[BRCMF_EVENTING_MASK_LEN + 12];	/*  Room for
+ 				 "event_msgs" + '\0' + bitvec  */
+ 	char buf[128], *ptr;
+-	u32 roaming = 1;
+-	uint bcn_timeout = 3;
+-	int scan_assoc_time = 40;
+-	int scan_unassoc_time = 40;
++	__le32 roaming_le = cpu_to_le32(1);
++	__le32 bcn_timeout_le = cpu_to_le32(3);
++	__le32 scan_assoc_time_le = cpu_to_le32(40);
++	__le32 scan_unassoc_time_le = cpu_to_le32(40);
+ 	int i;
+ 	struct brcmf_bus_dcmd *cmdlst;
+ 	struct list_head *cur, *q;
+@@ -829,14 +835,14 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 
+ 	/* Setup timeout if Beacons are lost and roam is off to report
+ 		 link down */
+-	brcmf_c_mkiovar("bcn_timeout", (char *)&bcn_timeout, 4, iovbuf,
++	brcmf_c_mkiovar("bcn_timeout", (char *)&bcn_timeout_le, 4, iovbuf,
+ 		    sizeof(iovbuf));
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
+ 				  sizeof(iovbuf));
+ 
+ 	/* Enable/Disable build-in roaming to allowed ext supplicant to take
+ 		 of romaing */
+-	brcmf_c_mkiovar("roam_off", (char *)&roaming, 4,
++	brcmf_c_mkiovar("roam_off", (char *)&roaming_le, 4,
+ 		      iovbuf, sizeof(iovbuf));
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
+ 				  sizeof(iovbuf));
+@@ -848,9 +854,9 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 				  sizeof(iovbuf));
+ 
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_SCAN_CHANNEL_TIME,
+-			 (char *)&scan_assoc_time, sizeof(scan_assoc_time));
++		 (char *)&scan_assoc_time_le, sizeof(scan_assoc_time_le));
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_SCAN_UNASSOC_TIME,
+-			 (char *)&scan_unassoc_time, sizeof(scan_unassoc_time));
++		 (char *)&scan_unassoc_time_le, sizeof(scan_unassoc_time_le));
+ 
+ 	/* Set and enable ARP offload feature */
+ 	brcmf_c_arp_offload_set(drvr, BRCMF_ARPOL_MODE);
+-- 
+1.7.9.5
 
---=20
-Best Regards,
-Artem Bityutskiy
-
---=-Umswc144aMln99m44br1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAABAgAGBQJQVzaXAAoJECmIfjd9wqK0s5wQAIU89tsWzzhoHiUjXzjtleTO
-0WeMeJjJFL1OaTvzRo2sVrq5PsJ/59jGSGYzuxLmqC9LPvfTQG6kad9KVtspLNGf
-5rrZip7C4fH+QBtQf0uKNoXLRmT2NnhNIRmVdmcqeZ0BW55Mo+E2jRmFMRh50Otf
-0qGiCQ8yaaUMT8FjMGzxEqraD4n7Y50x1xPKWKew/pj5ajJ6AoeIxS2M7ermhhHh
-lTH15Dja4x9vEvJZgK2Jc7bgtvSfEqYhC7m1AapmeqChuIvKyYHQq9CB0M2UAX8g
-hZaT3mUK7rcxv+UEWTAvT9iBU6Ot0hoAm3n5sUwtyHEzRaavNRKcOW8Pr8ggGfwb
-FUby7d188VYWdxF3KaGT9LhXzGp5mp5s7SmbCO4IHLxicGbJIKe7NheRplEgYUNx
-ya1HrPwrHWz7OOAR+InZ10+rjwTPRCcTQZ8BoefsRU6iI6WDWscKn4jdG/PhGPHW
-f8OEdvezy88SmCm1z66b8dQ1pFB6s0kkuPSsIs8qynEoXfOyXv4wLt6X9as9jwYH
-xr0rRVwcCRK91pzf4/qo5i2aRo+ys655L0VQ9PU++iG856aPbYEyTvr0mb7awAgV
-p5NVyoFbEn27TErri7uV01PRyn4UWoo+Gtcaq2C2Uv0rOXP2wXatJNwjJdxIOhdI
-VWx3wuxGOy4gAc1VGQdZ
-=DxKt
------END PGP SIGNATURE-----
-
---=-Umswc144aMln99m44br1--
 
