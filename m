@@ -1,230 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58941 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757370Ab2I2SaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 14:30:00 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-yw0-f51.google.com ([209.85.213.51]:50838 "EHLO
+	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755561Ab2IKVFE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 17:05:04 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] bcma: just do the necessary things in early register on SoCs
-Date: Sat, 29 Sep 2012 20:29:49 +0200
-Message-Id: <1348943390-22411-2-git-send-email-hauke@hauke-m.de> (sfid-20120929_203053_956690_BC45DF6A)
-In-Reply-To: <1348943390-22411-1-git-send-email-hauke@hauke-m.de>
-References: <1348943390-22411-1-git-send-email-hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH] rtlwifi: Remove EXPERIMENTAL as pre-requisite for the drivers
+Date: Tue, 11 Sep 2012 16:04:36 -0500
+Message-Id: <1347397476-13282-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120911_230514_595302_1B467BE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some parts of the initialization for chip common and the pcie core are
-accessing the sprom struct, but it is not initialized at that stage.
-Just do the necessary thing in the early register on SoCs and not the
-complete initialization to read out the nvram from the flash chip.
-After it is possible to read out the nvram, the sprom should be parsed
-from it and the full initialization of the cores should be run.
+All of the rtlwifi-family of drivers have been in the kernel since 3.1
+or earlier. The dependence on EXPERIMENTAL can be removed.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/bcma/driver_chipcommon.c            |   23 ++++++++++++++++++-----
- drivers/bcma/driver_chipcommon_pmu.c        |    5 ++++-
- drivers/bcma/driver_mips.c                  |   26 +++++++++++++++++++-------
- drivers/bcma/main.c                         |    8 ++++----
- include/linux/bcma/bcma_driver_chipcommon.h |    3 +++
- include/linux/bcma/bcma_driver_mips.h       |    3 +++
- 6 files changed, 51 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index a4c3ebc..ffd74e5 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -22,12 +22,9 @@ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
- 	return value;
- }
+John,
+
+There is no rush on this patch. Inclusion in 3.7 will be fine.
+
+Larry
+---
+
+ drivers/net/wireless/rtlwifi/Kconfig |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
+index cefac6a..6b28e92 100644
+--- a/drivers/net/wireless/rtlwifi/Kconfig
++++ b/drivers/net/wireless/rtlwifi/Kconfig
+@@ -1,6 +1,6 @@
+ config RTL8192CE
+ 	tristate "Realtek RTL8192CE/RTL8188CE Wireless Network Adapter"
+-	depends on MAC80211 && PCI && EXPERIMENTAL
++	depends on MAC80211 && PCI
+ 	select FW_LOADER
+ 	select RTLWIFI
+ 	select RTL8192C_COMMON
+@@ -12,7 +12,7 @@ config RTL8192CE
  
--void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
-+void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
- {
--	u32 leddc_on = 10;
--	u32 leddc_off = 90;
--
--	if (cc->setup_done)
-+	if (cc->early_setup_done)
- 		return;
+ config RTL8192SE
+ 	tristate "Realtek RTL8192SE/RTL8191SE PCIe Wireless Network Adapter"
+-	depends on MAC80211 && EXPERIMENTAL && PCI
++	depends on MAC80211 && PCI
+ 	select FW_LOADER
+ 	select RTLWIFI
+ 	---help---
+@@ -23,7 +23,7 @@ config RTL8192SE
  
- 	if (cc->core->id.rev >= 11)
-@@ -36,6 +33,22 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
- 	if (cc->core->id.rev >= 35)
- 		cc->capabilities_ext = bcma_cc_read32(cc, BCMA_CC_CAP_EXT);
+ config RTL8192DE
+ 	tristate "Realtek RTL8192DE/RTL8188DE PCIe Wireless Network Adapter"
+-	depends on MAC80211 && EXPERIMENTAL && PCI
++	depends on MAC80211 && PCI
+ 	select FW_LOADER
+ 	select RTLWIFI
+ 	---help---
+@@ -34,7 +34,7 @@ config RTL8192DE
  
-+	if (cc->capabilities & BCMA_CC_CAP_PMU)
-+		bcma_pmu_early_init(cc);
-+
-+	cc->early_setup_done = true;
-+}
-+
-+void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
-+{
-+	u32 leddc_on = 10;
-+	u32 leddc_off = 90;
-+
-+	if (cc->setup_done)
-+		return;
-+
-+	bcma_core_chipcommon_early_init(cc);
-+
- 	if (cc->core->id.rev >= 20) {
- 		bcma_cc_write32(cc, BCMA_CC_GPIOPULLUP, 0);
- 		bcma_cc_write32(cc, BCMA_CC_GPIOPULLDOWN, 0);
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 201faf1..a63ddd9 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -144,7 +144,7 @@ static void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- 	}
- }
- 
--void bcma_pmu_init(struct bcma_drv_cc *cc)
-+void bcma_pmu_early_init(struct bcma_drv_cc *cc)
- {
- 	u32 pmucap;
- 
-@@ -153,7 +153,10 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
- 
- 	bcma_debug(cc->core->bus, "Found rev %u PMU (capabilities 0x%08X)\n",
- 		   cc->pmu.rev, pmucap);
-+}
- 
-+void bcma_pmu_init(struct bcma_drv_cc *cc)
-+{
- 	if (cc->pmu.rev == 1)
- 		bcma_cc_mask32(cc, BCMA_CC_PMU_CTL,
- 			      ~BCMA_CC_PMU_CTL_NOILPONW);
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index cc65b45..f44f1fb 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -212,16 +212,33 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- 	}
- }
- 
-+void bcma_core_mips_early_init(struct bcma_drv_mips *mcore)
-+{
-+	struct bcma_bus *bus = mcore->core->bus;
-+
-+	if (mcore->early_setup_done)
-+		return;
-+
-+	bcma_chipco_serial_init(&bus->drv_cc);
-+	bcma_core_mips_flash_detect(mcore);
-+
-+	mcore->early_setup_done = true;
-+}
-+
- void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- {
- 	struct bcma_bus *bus;
- 	struct bcma_device *core;
- 	bus = mcore->core->bus;
- 
-+	if (mcore->setup_done)
-+		return;
-+
- 	bcma_info(bus, "Initializing MIPS core...\n");
- 
--	if (!mcore->setup_done)
--		mcore->assigned_irqs = 1;
-+	bcma_core_mips_early_init(mcore);
-+
-+	mcore->assigned_irqs = 1;
- 
- 	/* Assign IRQs to all cores on the bus */
- 	list_for_each_entry(core, &bus->cores, list) {
-@@ -256,10 +273,5 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- 	bcma_info(bus, "IRQ reconfiguration done\n");
- 	bcma_core_mips_dump_irq(bus);
- 
--	if (mcore->setup_done)
--		return;
--
--	bcma_chipco_serial_init(&bus->drv_cc);
--	bcma_core_mips_flash_detect(mcore);
- 	mcore->setup_done = true;
- }
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 432aeee..bea2d7c 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -274,18 +274,18 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
- 		return -1;
- 	}
- 
--	/* Init CC core */
-+	/* Early init CC core */
- 	core = bcma_find_core(bus, bcma_cc_core_id(bus));
- 	if (core) {
- 		bus->drv_cc.core = core;
--		bcma_core_chipcommon_init(&bus->drv_cc);
-+		bcma_core_chipcommon_early_init(&bus->drv_cc);
- 	}
- 
--	/* Init MIPS core */
-+	/* Early init MIPS core */
- 	core = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
- 	if (core) {
- 		bus->drv_mips.core = core;
--		bcma_core_mips_init(&bus->drv_mips);
-+		bcma_core_mips_early_init(&bus->drv_mips);
- 	}
- 
- 	bcma_info(bus, "Early bus registered\n");
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 6ba45d2..91c2aad 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -550,6 +550,7 @@ struct bcma_drv_cc {
- 	u32 capabilities;
- 	u32 capabilities_ext;
- 	u8 setup_done:1;
-+	u8 early_setup_done:1;
- 	/* Fast Powerup Delay constant */
- 	u16 fast_pwrup_delay;
- 	struct bcma_chipcommon_pmu pmu;
-@@ -581,6 +582,7 @@ struct bcma_drv_cc {
- 	bcma_cc_write32(cc, offset, (bcma_cc_read32(cc, offset) & (mask)) | (set))
- 
- extern void bcma_core_chipcommon_init(struct bcma_drv_cc *cc);
-+extern void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc);
- 
- extern void bcma_chipco_suspend(struct bcma_drv_cc *cc);
- extern void bcma_chipco_resume(struct bcma_drv_cc *cc);
-@@ -604,6 +606,7 @@ u32 bcma_chipco_gpio_polarity(struct bcma_drv_cc *cc, u32 mask, u32 value);
- 
- /* PMU support */
- extern void bcma_pmu_init(struct bcma_drv_cc *cc);
-+extern void bcma_pmu_early_init(struct bcma_drv_cc *cc);
- 
- extern void bcma_chipco_pll_write(struct bcma_drv_cc *cc, u32 offset,
- 				  u32 value);
-diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
-index c004364..0baf8a5 100644
---- a/include/linux/bcma/bcma_driver_mips.h
-+++ b/include/linux/bcma/bcma_driver_mips.h
-@@ -35,13 +35,16 @@ struct bcma_device;
- struct bcma_drv_mips {
- 	struct bcma_device *core;
- 	u8 setup_done:1;
-+	u8 early_setup_done:1;
- 	unsigned int assigned_irqs;
- };
- 
- #ifdef CONFIG_BCMA_DRIVER_MIPS
- extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
-+extern void bcma_core_mips_early_init(struct bcma_drv_mips *mcore);
- #else
- static inline void bcma_core_mips_init(struct bcma_drv_mips *mcore) { }
-+static inline void bcma_core_mips_early_init(struct bcma_drv_mips *mcore) { }
- #endif
- 
- extern u32 bcma_cpu_clock(struct bcma_drv_mips *mcore);
+ config RTL8192CU
+ 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
+-	depends on MAC80211 && USB && EXPERIMENTAL
++	depends on MAC80211 && USB
+ 	select FW_LOADER
+ 	select RTLWIFI
+ 	select RTL8192C_COMMON
 -- 
-1.7.9.5
+1.7.10.4
 
