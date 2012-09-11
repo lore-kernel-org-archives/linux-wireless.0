@@ -1,50 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28188 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928Ab2ITGWH (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7042 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759108Ab2IKLwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 02:22:07 -0400
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH 3/3] ath6kl: Check for valid endpoint ID values in ath6kl_control_tx()
-Date: Thu, 20 Sep 2012 11:51:08 +0530
-Message-ID: <1348122068-24648-3-git-send-email-rmani@qca.qualcomm.com> (sfid-20120920_082210_622195_76066238)
-In-Reply-To: <1348122068-24648-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1348122068-24648-1-git-send-email-rmani@qca.qualcomm.com>
+	Tue, 11 Sep 2012 07:52:35 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v1] cfg80211: Fix regulatory check for 60GHz band frequencies
+Date: Tue, 11 Sep 2012 14:52:09 +0300
+Message-ID: <1347364329-19443-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120911_135238_462538_5A410BD0)
+In-Reply-To: <1347364329-19443-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1347364329-19443-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+Remove freq_in_rule_band, that was used to optimize regulatory rules check.
+Approach used in the freq_in_rule_band is incorrect for 60GHz band,
+where channel spacing is 2.160GHz.
+Also, it does not really add any optimization, since real check for frequency fit is
+always performed.
 
-It's safe to check endpoint id values before it get
-really used. Found this on code review.
+Issue exposed in the following way: 60g band defines 3 channels supported wold-wide:
+channels 1..3 or 58320, 60480, 62640 MHz, and channel 4, or 64800 MHz,
+in the most of the world, with 2160 MHz spacing.
+Corresponded regulatory rule for channels 1..3 would be
+(57240 - 63720 @ 2160)
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+And, when regulatory applies to the channel 2 (60480), it get disabled since it is
+more then 2GHz from either frequency boundary and freq_in_rule_band fails
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/txrx.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ net/wireless/reg.c |   54 ++++++----------------------------------------------
+ 1 file changed, 6 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index e867193..4ea6559 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -294,6 +294,12 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
- 		return -EACCES;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1ad04e5..5b0dc05 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -497,31 +497,6 @@ static bool reg_does_bw_fit(const struct ieee80211_freq_range *freq_range,
+ 	return false;
+ }
+ 
+-/**
+- * freq_in_rule_band - tells us if a frequency is in a frequency band
+- * @freq_range: frequency rule we want to query
+- * @freq_khz: frequency we are inquiring about
+- *
+- * This lets us know if a specific frequency rule is or is not relevant to
+- * a specific frequency's band. Bands are device specific and artificial
+- * definitions (the "2.4 GHz band" and the "5 GHz band"), however it is
+- * safe for now to assume that a frequency rule should not be part of a
+- * frequency's band if the start freq or end freq are off by more than 2 GHz.
+- * This resolution can be lowered and should be considered as we add
+- * regulatory rule support for other "bands".
+- **/
+-static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
+-	u32 freq_khz)
+-{
+-#define ONE_GHZ_IN_KHZ	1000000
+-	if (abs(freq_khz - freq_range->start_freq_khz) <= (2 * ONE_GHZ_IN_KHZ))
+-		return true;
+-	if (abs(freq_khz - freq_range->end_freq_khz) <= (2 * ONE_GHZ_IN_KHZ))
+-		return true;
+-	return false;
+-#undef ONE_GHZ_IN_KHZ
+-}
+-
+ /*
+  * Helper for regdom_intersect(), this does the real
+  * mathematical intersection fun
+@@ -692,9 +667,7 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
+ 			      const struct ieee80211_regdomain *custom_regd)
+ {
+ 	int i;
+-	bool band_rule_found = false;
+ 	const struct ieee80211_regdomain *regd;
+-	bool bw_fits = false;
+ 
+ 	if (!desired_bw_khz)
+ 		desired_bw_khz = MHZ_TO_KHZ(20);
+@@ -715,33 +688,18 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 
+ 	for (i = 0; i < regd->n_reg_rules; i++) {
+-		const struct ieee80211_reg_rule *rr;
+-		const struct ieee80211_freq_range *fr = NULL;
++		const struct ieee80211_reg_rule *rr = &regd->reg_rules[i];
++		const struct ieee80211_freq_range *fr = &rr->freq_range;
++		bool bw_fits = reg_does_bw_fit(fr,
++					       center_freq,
++					       desired_bw_khz);
+ 
+-		rr = &regd->reg_rules[i];
+-		fr = &rr->freq_range;
+-
+-		/*
+-		 * We only need to know if one frequency rule was
+-		 * was in center_freq's band, that's enough, so lets
+-		 * not overwrite it once found
+-		 */
+-		if (!band_rule_found)
+-			band_rule_found = freq_in_rule_band(fr, center_freq);
+-
+-		bw_fits = reg_does_bw_fit(fr,
+-					  center_freq,
+-					  desired_bw_khz);
+-
+-		if (band_rule_found && bw_fits) {
++		if (bw_fits) {
+ 			*reg_rule = rr;
+ 			return 0;
+ 		}
  	}
  
-+	if (WARN_ON_ONCE(eid == ENDPOINT_UNUSED ||
-+	    eid >= ENDPOINT_MAX)) {
-+		status = -EINVAL;
-+		goto fail_ctrl_tx;
-+	}
-+
- 	spin_lock_bh(&ar->lock);
+-	if (!band_rule_found)
+-		return -ERANGE;
+-
+ 	return -EINVAL;
+ }
  
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
 -- 
-1.7.1
+1.7.9.5
 
