@@ -1,41 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:56939 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753887Ab2IZLCi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 07:02:38 -0400
-Received: by wgbdr13 with SMTP id dr13so410733wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 04:02:37 -0700 (PDT)
-Message-ID: <5062E0CB.6040308@gmail.com> (sfid-20120926_130241_840733_025514D8)
-Date: Wed, 26 Sep 2012 12:02:35 +0100
-From: Ben Gray <ben.r.gray@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: ath6kl-devel@qualcomm.com
-Subject: ath6kl ar6004/ar9374 (hw 1.3) WPA/WPA2 supported ?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:52234 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750726Ab2IKQBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 12:01:39 -0400
+Message-ID: <1347379457.20066.16.camel@dcbw.foobar.com> (sfid-20120911_180148_268203_F22B8CAD)
+Subject: Re: [PATCH] libertas: set mac control synchronously during init
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Date: Tue, 11 Sep 2012 11:04:17 -0500
+In-Reply-To: <20120911153812.08740FAA7C@dev.laptop.org>
+References: <20120911153812.08740FAA7C@dev.laptop.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, 2012-09-11 at 11:38 -0400, Daniel Drake wrote:
+> CMD_MAC_CONTROL is currently sent async to the firmware, and is sent
+> from the lbs_setup_firmware() path during device init.
+> 
+> This means that device init can complete with commands pending, and
+> the if_sdio driver will sometimes power down the device (after init)
+> with this command still pending.
+> 
+> This was causing an occasional spurious command timeout after init,
+> leading to a device reset.
+> 
+> Fix this by making CMD_MAC_CONTROL synchronous when called from the
+> lbs_setup_firmware() path.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-     I have a bunch of UB134 USB dongles which have a ath6kl chip with 
-H/W version 0x31c8088a, I'm trying to get them to work with the ath6kl 
-driver from the compat-wireless-3.6-rc5-1 package. I've applied this 
-(https://patchwork.kernel.org/patch/1203191/) patch to the source and 
-pulled the hw1.3 firmware from the linux-firmware git.
+Thanks!
 
-     The driver works as far as it can scan AP's and connect to 
-unencrypted networks, however WPA/WPA2 doesn't work when I run 
-wpa_supplicant. I realise "WPA doesn't work" is a bit vague, and I can 
-post the wpa_supplicant and driver logs if that helps, but I've seen 
-another post which says they couldn't get WPA to work either, so I'd 
-like to know if this is a known issue with the driver and/or firmware? 
-Has anyone had any luck getting WPA/WPA2 working with ath6kl hw1.3 ?
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-     If this is a known issue does anyone know when it might be fixed ?
+>  drivers/net/wireless/libertas/cmd.c  | 16 ++++++++++++++++
+>  drivers/net/wireless/libertas/cmd.h  |  1 +
+>  drivers/net/wireless/libertas/main.c |  4 +++-
+>  3 files changed, 20 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index 26e6832..aaa2973 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -1159,6 +1159,22 @@ void lbs_set_mac_control(struct lbs_private *priv)
+>  	lbs_deb_leave(LBS_DEB_CMD);
+>  }
+>  
+> +int lbs_set_mac_control_sync(struct lbs_private *priv)
+> +{
+> +	struct cmd_ds_mac_control cmd;
+> +	int ret = 0;
+> +
+> +	lbs_deb_enter(LBS_DEB_CMD);
+> +
+> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+> +	cmd.action = cpu_to_le16(priv->mac_control);
+> +	cmd.reserved = 0;
+> +	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
+> +
+> +	lbs_deb_leave(LBS_DEB_CMD);
+> +	return ret;
+> +}
+> +
+>  /**
+>   *  lbs_allocate_cmd_buffer - allocates the command buffer and links
+>   *  it to command free queue
+> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+> index ab07608..4279e8a 100644
+> --- a/drivers/net/wireless/libertas/cmd.h
+> +++ b/drivers/net/wireless/libertas/cmd.h
+> @@ -96,6 +96,7 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv);
+>  int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
+>  
+>  void lbs_set_mac_control(struct lbs_private *priv);
+> +int lbs_set_mac_control_sync(struct lbs_private *priv);
+>  
+>  int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
+>  		     s16 *maxlevel);
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index fe1ea43..0c02f04 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -682,8 +682,10 @@ static int lbs_setup_firmware(struct lbs_private *priv)
+>  
+>  	/* Send cmd to FW to enable 11D function */
+>  	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
+> +	if (ret)
+> +		goto done;
+>  
+> -	lbs_set_mac_control(priv);
+> +	ret = lbs_set_mac_control_sync(priv);
+>  done:
+>  	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
+>  	return ret;
 
-
-Thanks in advance,
-Ben.
 
