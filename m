@@ -1,137 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278Ab2IKNZs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 09:25:48 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v2 04/12] mac80211: reuse channels for channel contexts
-Date: Tue, 11 Sep 2012 15:26:15 +0200
-Message-Id: <1347369983-12459-5-git-send-email-johannes@sipsolutions.net> (sfid-20120911_152557_553019_53FE2DDD)
-In-Reply-To: <1347369983-12459-1-git-send-email-johannes@sipsolutions.net>
-References: <1347369983-12459-1-git-send-email-johannes@sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:1948 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759519Ab2IKTTG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 15:19:06 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 5/7] brcmfmac: refill buffers on rx protocol error.
+Date: Tue, 11 Sep 2012 21:18:50 +0200
+Message-ID: <1347391132-10953-6-git-send-email-arend@broadcom.com> (sfid-20120911_211915_311383_73468303)
+In-Reply-To: <1347391132-10953-1-git-send-email-arend@broadcom.com>
+References: <1347391132-10953-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Reuse channels with compatible channel types. Some
-channel types are compatible and can be used
-concurrently.
+This patch fixes a bug where rx buffer does not get refilled if the
+packet received has an rx protocol error.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/chan.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 58 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index d8580ec..e77da88 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -167,7 +167,17 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 		sdata->vif.bss_conf.channel_type = chantype;
- 
- 	return true;
-+}
-+
-+static void ieee80211_change_chantype(struct ieee80211_local *local,
-+				      struct ieee80211_chanctx *ctx,
-+				      enum nl80211_channel_type chantype)
-+{
-+	if (chantype == ctx->conf.channel_type)
-+		return;
- 
-+	ctx->conf.channel_type = chantype;
-+	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_CHANNEL_TYPE);
- }
- 
- static struct ieee80211_chanctx *
-@@ -177,6 +187,7 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 		       enum ieee80211_chanctx_mode mode)
- {
- 	struct ieee80211_chanctx *ctx;
-+	enum nl80211_channel_type compat_type;
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
-@@ -186,13 +197,19 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 		return NULL;
- 
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
-+		compat_type = ctx->conf.channel_type;
-+
- 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
- 			continue;
- 		if (ctx->conf.channel != channel)
- 			continue;
--		if (ctx->conf.channel_type != channel_type)
-+		if (!ieee80211_channel_types_are_compatible(ctx->conf.channel_type,
-+							    channel_type,
-+							    &compat_type))
- 			continue;
- 
-+		ieee80211_change_chantype(local, ctx, compat_type);
-+
- 		return ctx;
- 	}
- 
-@@ -250,6 +267,43 @@ static void ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 	ctx->refcount++;
- }
- 
-+static enum nl80211_channel_type
-+ieee80211_calc_chantype(struct ieee80211_local *local,
-+			struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_chanctx_conf *conf = &ctx->conf;
-+	struct ieee80211_sub_if_data *sdata;
-+	enum nl80211_channel_type result = NL80211_CHAN_NO_HT;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+		if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf)
-+			continue;
-+
-+		WARN_ON_ONCE(!ieee80211_channel_types_are_compatible(
-+					sdata->vif.bss_conf.channel_type,
-+					result, &result));
-+	}
-+	rcu_read_unlock();
-+
-+	return result;
-+}
-+
-+static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
-+					      struct ieee80211_chanctx *ctx)
-+{
-+	enum nl80211_channel_type chantype;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	chantype = ieee80211_calc_chantype(local, ctx);
-+	ieee80211_change_chantype(local, ctx, chantype);
-+}
-+
- static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 					   struct ieee80211_chanctx *ctx)
- {
-@@ -261,6 +315,9 @@ static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 	rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
- 
- 	drv_unassign_vif_chanctx(local, sdata, ctx);
-+
-+	if (ctx->refcount > 0)
-+		ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
- }
- 
- static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 8aab2a2..6e3ff6f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -552,12 +552,10 @@ static void brcmf_usb_rx_complete(struct urb *urb)
+ 		if (brcmf_proto_hdrpull(devinfo->dev, &ifidx, skb) != 0) {
+ 			brcmf_dbg(ERROR, "rx protocol error\n");
+ 			brcmu_pkt_buf_free_skb(skb);
+-			brcmf_usb_enq(devinfo, &devinfo->rx_freeq, req, NULL);
+ 			devinfo->bus_pub.bus->dstats.rx_errors++;
+-		} else {
++		} else
+ 			brcmf_rx_packet(devinfo->dev, ifidx, skb);
+-			brcmf_usb_rx_refill(devinfo, req);
+-		}
++		brcmf_usb_rx_refill(devinfo, req);
+ 	} else {
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		brcmf_usb_enq(devinfo, &devinfo->rx_freeq, req, NULL);
 -- 
-1.7.10.4
+1.7.9.5
+
 
