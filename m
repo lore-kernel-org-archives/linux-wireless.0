@@ -1,31 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:50184 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834Ab2ISTcX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60266 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978Ab2IKFRW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 15:32:23 -0400
-Received: by weyx8 with SMTP id x8so790291wey.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2012 12:32:21 -0700 (PDT)
+	Tue, 11 Sep 2012 01:17:22 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1348049313-7650-1-git-send-email-johannes@sipsolutions.net>
-References: <1348049313-7650-1-git-send-email-johannes@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 19 Sep 2012 22:32:06 +0300
-Message-ID: <CA+XVXfcxHENu1HzY+-WkyMr6g+3P2wSyj7BhDsfKgZoB7fZHRg@mail.gmail.com> (sfid-20120919_213226_679561_746087FF)
-Subject: Re: [PATCH 0/3] mac80211: avoid useless delBA frames
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20558.51496.575142.581841@gargle.gargle.HOWL> (sfid-20120911_071726_916440_28E81247)
+Date: Tue, 11 Sep 2012 10:46:24 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath9k_hw: Handle gentimer termination properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2012 at 1:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> There are a few situations where it's completely pointless
-> to send delBA action frames, so let's remove them.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Maybe it's a good opportunity to also fix ieee80211_reconfig? I
-remember you mentioned some FW/HW issue there, perhaps this was solved
-in the meantime. Otherwise we can add a HW flag for that I guess.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index cb90321..40f57aa 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3080,6 +3080,16 @@ void ath9k_hw_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
+ 	REG_CLR_BIT(ah, gen_tmr_configuration[timer->index].mode_addr,
+ 			gen_tmr_configuration[timer->index].mode_mask);
+ 
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
++		/*
++		 * Need to switch back to TSF if it was using TSF2.
++		 */
++		if ((timer->index >= AR_GEN_TIMER_BANK_1_LEN)) {
++			REG_CLR_BIT(ah, AR_MAC_PCU_GEN_TIMER_TSF_SEL,
++				    (1 << timer->index));
++		}
++	}
++
+ 	/* Disable both trigger and thresh interrupt masks */
+ 	REG_CLR_BIT(ah, AR_IMR_S5,
+ 		(SM(AR_GENTMR_BIT(timer->index), AR_IMR_S5_GENTIMER_THRESH) |
+-- 
+1.7.12
 
-Arik
