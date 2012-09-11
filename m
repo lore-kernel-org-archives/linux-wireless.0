@@ -1,111 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56840 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754666Ab2ITMqx (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:52692 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757960Ab2IKJmx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 08:46:53 -0400
-Received: by pbbrr4 with SMTP id rr4so132615pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 05:46:52 -0700 (PDT)
+	Tue, 11 Sep 2012 05:42:53 -0400
+Received: by obbuo13 with SMTP id uo13so421626obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 02:42:53 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	<1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	<1347631355.5263.19.camel@sauron.fi.intel.com>
-	<1347640763.5263.24.camel@sauron.fi.intel.com>
-	<1347892887.7112.9.camel@sauron.fi.intel.com>
-	<1348142775.2388.10.camel@sauron.fi.intel.com>
-	<1348144524.4161.26.camel@jlt4.sipsolutions.net>
-	<CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-	<CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-Date: Thu, 20 Sep 2012 14:46:52 +0200
-Message-ID: <CANn89iLnv2kWLd_hTpMXjMJ=r+hOvb2q2Oy6L-s5+6SzqxYvjA@mail.gmail.com> (sfid-20120920_144701_552250_F7103BC5)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Eric Dumazet <edumazet@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
+In-Reply-To: <CAFtRNNzdXFbcxNw0M7oYsvidiLnckycy4V73Y+pG4oUNqeCJvQ@mail.gmail.com>
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
+	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+	<20120904102204.GA2541@w1.fi>
+	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
+	<CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
+	<1346758521.3737.28.camel@jlt4.sipsolutions.net>
+	<CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
+	<20120905071653.GB3629@w1.fi>
+	<CAEFj985iHQJTAqXBkz56BDPodHb9q0Z=x3S5Q43UwA5vU-mfMw@mail.gmail.com>
+	<20120905080336.GA4747@w1.fi>
+	<CAEFj986i9XUcEN0i2y5=YLh2RX8MZOf+60i8XL4jMiq5-JcJ6Q@mail.gmail.com>
+	<CAJ-Vmonesc=VPMUJgS1GHTUS-Xj_BTohv0rQ9ZS+rW-761g_8w@mail.gmail.com>
+	<87zk4y3tsz.fsf@purkki.adurom.net>
+	<CAEFj9845-oLbFK7_i5hL6bWMF4=oTJ4avDkEv3kpJGXCpaiSiQ@mail.gmail.com>
+	<CAFtRNNzdXFbcxNw0M7oYsvidiLnckycy4V73Y+pG4oUNqeCJvQ@mail.gmail.com>
+Date: Tue, 11 Sep 2012 17:42:52 +0800
+Message-ID: <CAEFj984je_UEriLbTmJ0KC9+M-FKOpiithuapMRUHRG3WCZ4hA@mail.gmail.com> (sfid-20120911_114258_200222_8EE1CC41)
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Kalle Valo <kvalo@adurom.com>, Adrian Chadd <adrian@freebsd.org>,
+	Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mcgrof@qca.qualcomm.com, ath5k-devel@venema.h4ckr.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Or its the lines with CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS ?
+Hi, Nick
 
-What arch is it ?
+> Have you tried disabing RX or TX only encryption/decryption on hw
+> trough PCU DIAG register ?
 
+Nope. Is that same with loading the ath5k with nohwcrypt=1 to do
+purely SW encryption/decryption?
 
-On Thu, Sep 20, 2012 at 2:45 PM, Eric Dumazet <edumazet@google.com> wrote:
-> I guess you only need to make sure 14 bytes of ethernet header are
-> available before eth_type_trans(skb, dev);
->
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 61c621e..ffe5f84 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1795,9 +1795,13 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
->
->                 if (skb) {
->                         /* deliver to local stack */
-> -                       skb->protocol = eth_type_trans(skb, dev);
-> -                       memset(skb->cb, 0, sizeof(skb->cb));
-> -                       netif_receive_skb(skb);
-> +                       if (pskb_may_pull(skb, sizeof(struct ethhdr))) {
-> +                               skb->protocol = eth_type_trans(skb, dev);
-> +                               memset(skb->cb, 0, sizeof(skb->cb));
-> +                               netif_receive_skb(skb);
-> +                       } else {
-> +                               kfree_skb(skb);
-> +                       }
->                 }
->         }
->
->
-> On Thu, Sep 20, 2012 at 2:40 PM, Eric Dumazet <edumazet@google.com> wrote:
->> OK, but which netif_receive_skb(), as I count 5 occurrences in
->> net/mac80211/rx.c ?
->>
->> Instead of skb_linearize() calls
->>
->> you could try several values of XXX in
->>
->> pskb_may_pull(skb, XXX)
->>
->> So that you make sure XXX bytes are available in skb->head, and not
->> the whole frame.
->>
->> One you know the limit for XXX, it might give a clue where a
->> pskb_may_pull(skb, XXX) is missing.
->>
->> On Thu, Sep 20, 2012 at 2:35 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> Hi,
->>>
->>>> >             56138f5 iwlwifi: dont pull too much payload in skb head
->>>> >             3edaf3e mac80211: manage AP netdev carrier state
->>>>
->>>> The second patch (AP carrier state) actually exposed a connman issue
->>>> which I fixed and submitted a connman patch:
->>>> http://lists.connman.net/pipermail/connman/2012-September/011232.html
->>>>
->>>> However, Eric's patch still causes tethering problems to me.
->>>
->>>
->>> Let me recap a bit. Artem is using connman, which sets up the wifi
->>> interface as part of a bridge. It runs wpa_supplicant to create an AP
->>> (only AP and mesh mode interfaces can be bridged anyway).
->>>
->>>
->>> Eric, you said:
->>>
->>>> I would say some part of the stack assumes a header (I dont know wich
->>>> one ?) is pulled in skb->head/data, and thats a bug.
->>>>
->>>> Always use pskb_may_pull(skb, XXX) to make sure you can access XXX
->>>> bytes in skb->data
->>>
->>> I thought we'd figure out which part of the stack assumes a header, so I
->>> asked Artem to test a one-line patch which adds "skb_linearize()" before
->>> "netif_receive_skb()" in mac80211. This makes it work, but I'm not sure
->>> where after that the bad assumption might be.
->>>
->>> johannes
->>>
+----
+Chun-Yeow
