@@ -1,106 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28533 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147Ab2I3Dd1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 23:33:27 -0400
-From: Sujith Manoharan <c_manoha@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20583.48529.795930.408227@gargle.gargle.HOWL> (sfid-20120930_053353_283111_F2447429)
-Date: Sun, 30 Sep 2012 09:03:37 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] ath9k: Fix BT_OP_SCAN usage
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50775 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932250Ab2IKPPZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 11:15:25 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, john@phrozen.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	florian@openwrt.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>, Michael Buesch <m@bues.ch>
+Subject: [PATCH v4 1/3] ssb: add function to return number of gpio lines
+Date: Tue, 11 Sep 2012 17:15:08 +0200
+Message-Id: <1347376511-20953-2-git-send-email-hauke@hauke-m.de> (sfid-20120911_171536_395279_859F0E30)
+In-Reply-To: <1347376511-20953-1-git-send-email-hauke@hauke-m.de>
+References: <1347376511-20953-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BT_OP_SCAN is applicable only for pre-MCI WLAN/BT combo chips
-and using it for MCI-based cards is incorrect. Fix this by
-cleaning up its usage.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: Michael Buesch <m@bues.ch>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/gpio.c | 27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+ drivers/ssb/embedded.c           |   12 ++++++++++++
+ include/linux/ssb/ssb_embedded.h |    4 ++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 334c98d..bf4fb7d 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -216,8 +216,8 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	struct ath_softc *sc = (struct ath_softc *) data;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_btcoex *btcoex = &sc->btcoex;
-+	enum ath_stomp_type stomp_type;
- 	u32 timer_period;
--	bool is_btscan;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-@@ -228,19 +228,28 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
- 	ath9k_ps_wakeup(sc);
-+
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
- 		ath_detect_bt_priority(sc);
--	is_btscan = test_bit(BT_OP_SCAN, &btcoex->op_flags);
- 
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
- 		ath_mci_ftp_adjust(sc);
- 
- 	spin_lock_bh(&btcoex->btcoex_lock);
- 
--	ath9k_hw_btcoex_bt_stomp(ah, is_btscan ? ATH_BTCOEX_STOMP_ALL :
--			      btcoex->bt_stomp_type);
-+	stomp_type = btcoex->bt_stomp_type;
-+	timer_period = btcoex->btcoex_no_stomp;
-+
-+	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI)) {
-+		if (test_bit(BT_OP_SCAN, &btcoex->op_flags)) {
-+			stomp_type = ATH_BTCOEX_STOMP_ALL;
-+			timer_period = btcoex->btscan_no_stomp;
-+		}
-+	}
- 
-+	ath9k_hw_btcoex_bt_stomp(ah, stomp_type);
- 	ath9k_hw_btcoex_enable(ah);
-+
- 	spin_unlock_bh(&btcoex->btcoex_lock);
- 
- 	/*
-@@ -252,17 +261,16 @@ static void ath_btcoex_period_timer(unsigned long data)
- 		if (btcoex->hw_timer_enabled)
- 			ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
- 
--		timer_period = is_btscan ? btcoex->btscan_no_stomp :
--					   btcoex->btcoex_no_stomp;
- 		ath9k_gen_timer_start(ah, btcoex->no_stomp_timer, timer_period,
- 				      timer_period * 10);
- 		btcoex->hw_timer_enabled = true;
- 	}
- 
- 	ath9k_ps_restore(sc);
-+
- skip_hw_wakeup:
--	timer_period = btcoex->btcoex_period;
--	mod_timer(&btcoex->period_timer, jiffies + msecs_to_jiffies(timer_period));
-+	mod_timer(&btcoex->period_timer,
-+		  jiffies + msecs_to_jiffies(btcoex->btcoex_period));
+diff --git a/drivers/ssb/embedded.c b/drivers/ssb/embedded.c
+index 9ef124f..078007c 100644
+--- a/drivers/ssb/embedded.c
++++ b/drivers/ssb/embedded.c
+@@ -136,6 +136,18 @@ u32 ssb_gpio_polarity(struct ssb_bus *bus, u32 mask, u32 value)
  }
+ EXPORT_SYMBOL(ssb_gpio_polarity);
  
- /*
-@@ -282,7 +290,8 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 	spin_lock_bh(&btcoex->btcoex_lock);
++int ssb_gpio_count(struct ssb_bus *bus)
++{
++	if (ssb_chipco_available(&bus->chipco))
++		return SSB_GPIO_CHIPCO_LINES;
++	else if (ssb_extif_available(&bus->extif))
++		return SSB_GPIO_EXTIF_LINES;
++	else
++		SSB_WARN_ON(1);
++	return 0;
++}
++EXPORT_SYMBOL(ssb_gpio_count);
++
+ #ifdef CONFIG_SSB_DRIVER_GIGE
+ static int gige_pci_init_callback(struct ssb_bus *bus, unsigned long data)
+ {
+diff --git a/include/linux/ssb/ssb_embedded.h b/include/linux/ssb/ssb_embedded.h
+index 8d8dedf..f1618d2 100644
+--- a/include/linux/ssb/ssb_embedded.h
++++ b/include/linux/ssb/ssb_embedded.h
+@@ -7,6 +7,9 @@
  
- 	if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_LOW ||
--	    test_bit(BT_OP_SCAN, &btcoex->op_flags))
-+	    (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI) &&
-+	     test_bit(BT_OP_SCAN, &btcoex->op_flags)))
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
- 	 else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_LOW);
+ extern int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks);
+ 
++#define SSB_GPIO_EXTIF_LINES	5
++#define SSB_GPIO_CHIPCO_LINES	16
++
+ /* Generic GPIO API */
+ u32 ssb_gpio_in(struct ssb_bus *bus, u32 mask);
+ u32 ssb_gpio_out(struct ssb_bus *bus, u32 mask, u32 value);
+@@ -14,5 +17,6 @@ u32 ssb_gpio_outen(struct ssb_bus *bus, u32 mask, u32 value);
+ u32 ssb_gpio_control(struct ssb_bus *bus, u32 mask, u32 value);
+ u32 ssb_gpio_intmask(struct ssb_bus *bus, u32 mask, u32 value);
+ u32 ssb_gpio_polarity(struct ssb_bus *bus, u32 mask, u32 value);
++int ssb_gpio_count(struct ssb_bus *bus);
+ 
+ #endif /* LINUX_SSB_EMBEDDED_H_ */
 -- 
-1.7.12.1
+1.7.9.5
 
