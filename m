@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47058 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408Ab2IJSpP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 14:45:15 -0400
-Date: Mon, 10 Sep 2012 14:33:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH 0/2] brcmsmac: fix for regulatory rules and flush callback
-Message-ID: <20120910183335.GA2137@tuxdriver.com> (sfid-20120910_204548_440095_A4BD960E)
-References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
- <504DE996.4020709@broadcom.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3941 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751895Ab2IKStO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 14:49:14 -0400
+Message-ID: <504F87A2.6050905@broadcom.com> (sfid-20120911_204918_434175_BEB91C59)
+Date: Tue, 11 Sep 2012 20:49:06 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <504DE996.4020709@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Florian Fainelli" <florian@openwrt.org>
+Subject: Re: [PATCH 00/10] brcmfmac: transmit flow control and e-scan
+ support
+References: <1347283018-24223-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1347283018-24223-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 10, 2012 at 03:22:30PM +0200, Arend van Spriel wrote:
-> On 09/05/2012 11:49 AM, Arend van Spriel wrote:
-> >Two fixes intended for the wireless tree. The issue with the .flush() has
-> >been giving me a lot of email from RedHat's bugzilla server. Hope this
-> >patch will silence that ;-)
-> 
-> Hi John,
-> 
-> I should remove that smile above, but are you planning to take these
-> for v3.6. At least the first patch is a clear bug fix that I would
-> like
-> to have applied.
-> 
-> Gr. AvS
+On 09/10/2012 03:16 PM, Arend van Spriel wrote:
+> This series contains transmit flow control handling when the brcmfmac driver
+> has no resources to transfer packets over the host interface. This improves
+> throughput number for TCP. The other feature in this series is event based
+> scanning in which firmware sends an event per BSS.
+>
+> The other changes in this series are small fixes.
+>
+> This series is for the v3.7 kernel and applies to the wireless-next tree.
 
-Arend,
+Hi John,
 
-I held-off on these because of the continuing discussion...
+Please drop this series. I will resent it to address the comments made 
+by Florian.
 
-I definitely 'feel your pain' re: Red Hat bugzilla and the second
-patch.  But I'm not sure it meets either the 'small' or 'obvious'
-tests, so I would prefer to leave it out for now.  I'll take the
-first one now.
+Gr. AvS
 
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
