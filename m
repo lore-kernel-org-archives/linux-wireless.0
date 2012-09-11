@@ -1,66 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:50376
-	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751315Ab2IJJ7q (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38041 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754149Ab2IKOkY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 05:59:46 -0400
-Message-ID: <504DBA13.3060505@posedge.com> (sfid-20120910_115949_748764_FEBA03D1)
-Date: Mon, 10 Sep 2012 15:29:47 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+	Tue, 11 Sep 2012 10:40:24 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [RFC v2] cfg80211: VHT regulatory
-References: <5046FB3D.6090803@posedge.com>   <1346852356.4364.9.camel@jlt4.sipsolutions.net>   <50481C2E.5040303@posedge.com>  <1346925298.5469.4.camel@jlt4.sipsolutions.net>  <50489165.1080902@posedge.com> <1347019809.4256.21.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1347019809.4256.21.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20559.19734.219610.370383@gargle.gargle.HOWL> (sfid-20120911_164029_334159_546EB458)
+Date: Tue, 11 Sep 2012 20:09:18 +0530
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+CC: Sujith Manoharan <c_manoha@qualcomm.com>, <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/7] ath9k_hw: Add version/revision macros for AR9565
+In-Reply-To: <504F31C5.4020901@qca.qualcomm.com>
+References: <20557.25427.250740.150293@gargle.gargle.HOWL>
+	<504F31C5.4020901@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/7/2012 5:40 PM, Johannes Berg wrote:
-> We don't have to do any calculation in kernel though as far as I can
-> tell? Maybe we do need the channel, but I think in terms of
-> *specifying*, in particular in the nl80211 and cfg80211 APIs, we should
-> stick to the standard if we're going to change it now.
->
+Bala Shanmugam wrote:
+> > +#define AR_SREV_9565_10(_ah) \
+> > +	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565)&&  \
+> > +	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10)))
+> > +
+> There is an extra braces. Please check.
 
-If we don't have to do any calculation, what for the formulas in spec? 
-converting chan number to frequency value. Just with channel number 
-entire cfg,mac and drivers are fine?
+Good catch.
 
->
-> I have no idea. I don't know the regulatory code very well, sorry.
->
+An updated patch below.
 
-Sorry I take it back. we can pass center freq to get reg rule. RFC v3 is 
-on way ...
+John, I have also updated the patch-set at:
+http://sujith.github.com/patches/wl/wl-ath9k-Sep-11-2012.patch
 
->
-> It seems to me that if we're going to specify things as an overall
-> center frequency + bandwidth then we don't really care about
-> primary/secondary channels? We'd rather just get the reg rule(s) from
-> the center freq(s)/bandwidth, and then check all channels that happen to
-> fall into this space, or something like that?
->
-> Even if we do that, there's still another issue though. Some drivers,
-> like ours, don't support HT40 everywhere. Right now I believe we pretty
-> much support HT40 everywhere that is allowed, but that might not be the
-> case for all drivers.
->
-> So previously, the driver was able to set the IEEE80211_CHAN_NO_HT40PLUS
-> etc. flags on a channel before registering. If we remove these flags
-> we'll have to find a way to allow the driver to influence the decision
-> about what is allowed in some way, I guess? Or maybe the driver would
-> have to register a regulatory rule that encapsulates everything in the
-> device's EEPROM?
+[PATCH v2] ath9k_hw: Add version/revision macros for AR9565
 
-Let me know if my RFC v3 is ok for this.
->
-> johannes
->
+And recognize the device in the init path.
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  | 7 +++++--
+ drivers/net/wireless/ath/ath9k/hw.h  | 1 +
+ drivers/net/wireless/ath/ath9k/reg.h | 9 +++++++++
+ 3 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4faf0a3..b9fcb12 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -355,7 +355,7 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+ 			(val & AR_SREV_VERSION2) >> AR_SREV_TYPE2_S;
+ 		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
+ 
+-		if (AR_SREV_9462(ah))
++		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 			ah->is_pciexpress = true;
+ 		else
+ 			ah->is_pciexpress = (val &
+@@ -647,6 +647,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	case AR_SREV_VERSION_9340:
+ 	case AR_SREV_VERSION_9462:
+ 	case AR_SREV_VERSION_9550:
++	case AR_SREV_VERSION_9565:
+ 		break;
+ 	default:
+ 		ath_err(common,
+@@ -708,7 +709,7 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	int ret;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	/* These are all the AR5008/AR9001/AR9002 hardware family of chipsets */
++	/* These are all the AR5008/AR9001/AR9002/AR9003 hardware family of chipsets */
+ 	switch (ah->hw_version.devid) {
+ 	case AR5416_DEVID_PCI:
+ 	case AR5416_DEVID_PCIE:
+@@ -728,6 +729,7 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	case AR9300_DEVID_AR9580:
+ 	case AR9300_DEVID_AR9462:
+ 	case AR9485_DEVID_AR1111:
++	case AR9300_DEVID_AR9565:
+ 		break;
+ 	default:
+ 		if (common->bus_ops->ath_bus_type == ATH_USB)
+@@ -3153,6 +3155,7 @@ static struct {
+ 	{ AR_SREV_VERSION_9485,         "9485" },
+ 	{ AR_SREV_VERSION_9462,         "9462" },
+ 	{ AR_SREV_VERSION_9550,         "9550" },
++	{ AR_SREV_VERSION_9565,         "9565" },
+ };
+ 
+ /* For devices with external radios */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index de6968f..f0798cc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -50,6 +50,7 @@
+ #define AR9300_DEVID_AR9330	0x0035
+ #define AR9300_DEVID_QCA955X	0x0038
+ #define AR9485_DEVID_AR1111	0x0037
++#define AR9300_DEVID_AR9565     0x0036
+ 
+ #define AR5416_AR9100_DEVID	0x000b
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 87cac8e..4e6760f 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -801,6 +801,8 @@
+ #define AR_SREV_REVISION_9580_10	4 /* AR9580 1.0 */
+ #define AR_SREV_VERSION_9462		0x280
+ #define AR_SREV_REVISION_9462_20	2
++#define AR_SREV_VERSION_9565            0x2C0
++#define AR_SREV_REVISION_9565_10        0
+ #define AR_SREV_VERSION_9550		0x400
+ 
+ #define AR_SREV_5416(_ah) \
+@@ -909,6 +911,13 @@
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
+ 	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
+ 
++#define AR_SREV_9565(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
++
++#define AR_SREV_9565_10(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10))
++
+ #define AR_SREV_9550(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9550))
+ 
 -- 
-Thanks,
-Mahesh
+1.7.12
+
