@@ -1,78 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59020 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757358Ab2I2SeG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 14:34:06 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/5] bcma: extract drv_cc in bcma_core_mips_flash_detect()
-Date: Sat, 29 Sep 2012 20:33:52 +0200
-Message-Id: <1348943633-22800-5-git-send-email-hauke@hauke-m.de> (sfid-20120929_203412_182976_8DF04967)
-In-Reply-To: <1348943633-22800-1-git-send-email-hauke@hauke-m.de>
-References: <1348943633-22800-1-git-send-email-hauke@hauke-m.de>
+Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:57444 "EHLO
+	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756649Ab2IKBbj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 21:31:39 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 02/10] mwifiex: remove 11N_CFG command response handler
+Date: Mon, 10 Sep 2012 18:30:41 -0700
+Message-Id: <1347327049-13665-3-git-send-email-bzhao@marvell.com> (sfid-20120911_033142_663603_75A16608)
+In-Reply-To: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
+References: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the code more readable
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+HostCmd_CMD_11N_CFG is never called with GET action. So the code in
+mwifiex_ret_11n_cfg() becomes redundant.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/bcma/driver_mips.c |   23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+ drivers/net/wireless/mwifiex/11n.c         |   17 -----------------
+ drivers/net/wireless/mwifiex/11n.h         |    2 --
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |    1 -
+ 3 files changed, 0 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 8470192..584a506 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -181,34 +181,35 @@ EXPORT_SYMBOL(bcma_cpu_clock);
- static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- {
- 	struct bcma_bus *bus = mcore->core->bus;
-+	struct bcma_drv_cc *cc = &bus->drv_cc;
- 
--	switch (bus->drv_cc.capabilities & BCMA_CC_CAP_FLASHT) {
-+	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
- 	case BCMA_CC_FLASHT_STSER:
- 	case BCMA_CC_FLASHT_ATSER:
- 		bcma_debug(bus, "Found serial flash\n");
--		bcma_sflash_init(&bus->drv_cc);
-+		bcma_sflash_init(cc);
- 		break;
- 	case BCMA_CC_FLASHT_PARA:
- 		bcma_debug(bus, "Found parallel flash\n");
--		bus->drv_cc.pflash.present = true;
--		bus->drv_cc.pflash.window = BCMA_SOC_FLASH2;
--		bus->drv_cc.pflash.window_size = BCMA_SOC_FLASH2_SZ;
-+		cc->pflash.present = true;
-+		cc->pflash.window = BCMA_SOC_FLASH2;
-+		cc->pflash.window_size = BCMA_SOC_FLASH2_SZ;
- 
--		if ((bcma_read32(bus->drv_cc.core, BCMA_CC_FLASH_CFG) &
-+		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
- 		     BCMA_CC_FLASH_CFG_DS) == 0)
--			bus->drv_cc.pflash.buswidth = 1;
-+			cc->pflash.buswidth = 1;
- 		else
--			bus->drv_cc.pflash.buswidth = 2;
-+			cc->pflash.buswidth = 2;
- 		break;
- 	default:
- 		bcma_err(bus, "Flash type not supported\n");
- 	}
- 
--	if (bus->drv_cc.core->id.rev == 38 ||
-+	if (cc->core->id.rev == 38 ||
- 	    bus->chipinfo.id == BCMA_CHIP_ID_BCM4706) {
--		if (bus->drv_cc.capabilities & BCMA_CC_CAP_NFLASH) {
-+		if (cc->capabilities & BCMA_CC_CAP_NFLASH) {
- 			bcma_debug(bus, "Found NAND flash\n");
--			bcma_nflash_init(&bus->drv_cc);
-+			bcma_nflash_init(cc);
- 		}
- 	}
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index d273273..754b554 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -176,23 +176,6 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
  }
+ 
+ /*
+- * This function handles the command response of 11n configuration request.
+- *
+- * Handling includes changing the header fields into CPU format.
+- */
+-int mwifiex_ret_11n_cfg(struct host_cmd_ds_command *resp,
+-			struct mwifiex_ds_11n_tx_cfg *tx_cfg)
+-{
+-	struct host_cmd_ds_11n_cfg *htcfg = &resp->params.htcfg;
+-
+-	if (tx_cfg) {
+-		tx_cfg->tx_htcap = le16_to_cpu(htcfg->ht_tx_cap);
+-		tx_cfg->tx_htinfo = le16_to_cpu(htcfg->ht_tx_info);
+-	}
+-	return 0;
+-}
+-
+-/*
+  * This function prepares command of reconfigure Tx buffer.
+  *
+  * Preparation includes -
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index 67c087c..dbcf384 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -28,8 +28,6 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
+ 			  struct host_cmd_ds_command *resp);
+ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 			      struct host_cmd_ds_command *resp);
+-int mwifiex_ret_11n_cfg(struct host_cmd_ds_command *resp,
+-			struct mwifiex_ds_11n_tx_cfg *tx_cfg);
+ int mwifiex_cmd_11n_cfg(struct host_cmd_ds_command *cmd, u16 cmd_action,
+ 			struct mwifiex_ds_11n_tx_cfg *txcfg);
+ 
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 364b608..3addf76 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -928,7 +928,6 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 	case HostCmd_CMD_SET_BSS_MODE:
+ 		break;
+ 	case HostCmd_CMD_11N_CFG:
+-		ret = mwifiex_ret_11n_cfg(resp, data_buf);
+ 		break;
+ 	case HostCmd_CMD_PCIE_DESC_DETAILS:
+ 		break;
 -- 
-1.7.9.5
+1.7.0.2
 
