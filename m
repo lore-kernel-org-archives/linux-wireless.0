@@ -1,67 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17600 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865Ab2IPCgW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2012 22:36:22 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20565.15083.665319.997662@gargle.gargle.HOWL> (sfid-20120916_043627_266685_3AF0A5F9)
-Date: Sun, 16 Sep 2012 08:05:23 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/8] ath9k_hw: Use HW cap ATH9K_HW_CAP_ANT_DIV_COMB
+Received: from plane.gmane.org ([80.91.229.3]:43645 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759157Ab2IKPRl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 11:17:41 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TBSDb-0003jB-ND
+	for linux-wireless@vger.kernel.org; Tue, 11 Sep 2012 17:17:39 +0200
+Received: from 141.215.239.84 ([141.215.239.84])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 17:17:39 +0200
+Received: from ilhebe999 by 141.215.239.84 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 17:17:39 +0200
+To: linux-wireless@vger.kernel.org
+From: Ouyang <ilhebe999@gmail.com>
+Subject: =?utf-8?b?aWxfaGNtZF91dGlsc19vcHM=?=
+Date: Tue, 11 Sep 2012 15:17:25 +0000 (UTC)
+Message-ID: <loom.20120911T171150-407@post.gmane.org> (sfid-20120911_171745_493266_E400222F)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of trying to determine whether antenna diversity is
-enabled by parsing eeprom data, use ATH9K_HW_CAP_ANT_DIV_COMB
-which is already filled at init time.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 884f9f0..bfd2055 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3566,9 +3566,9 @@ static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah, int chain,
- 
- static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- {
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	int chain;
- 	u32 regval;
--	u32 ant_div_ctl1;
- 	static const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
- 			AR_PHY_SWITCH_CHAIN_0,
- 			AR_PHY_SWITCH_CHAIN_1,
-@@ -3640,9 +3640,8 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 		regval &= (~AR_FAST_DIV_ENABLE);
- 		regval |= ((value >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
- 		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
--		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
--		/* check whether antenna diversity is enabled */
--		if ((ant_div_ctl1 >> 0x6) == 0x3) {
-+
-+		if (pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
- 			regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
- 			/*
- 			 * clear bits 25-30 main_lnaconf, alt_lnaconf,
-@@ -3659,10 +3658,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 				   AR_PHY_ANT_DIV_ALT_LNACONF_S);
- 			REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
- 		}
--
--
- 	}
--
- }
- 
- static void ar9003_hw_drive_strength_apply(struct ath_hw *ah)
--- 
-1.7.12
+It is said "drivers/net/wireless/iwlegacy/common.h: * il_hcmd_utils_ops etc. we 
+accommodate different command structures", what new structure can I use instead 
+of il_hcmd_utils_ops???
 
