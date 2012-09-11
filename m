@@ -1,38 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:41095 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751004Ab2IFFKI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 01:10:08 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1T9ULr-0001Je-PR
-	for linux-wireless@vger.kernel.org; Thu, 06 Sep 2012 07:10:04 +0200
-Received: from dsl-KK-static-010.61.101.203.airtelbroadband.in ([dsl-KK-static-010.61.101.203.airtelbroadband.in])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 07:10:03 +0200
-Received: from chitrar.ti by dsl-KK-static-010.61.101.203.airtelbroadband.in with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2012 07:10:03 +0200
+Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:52412 "EHLO
+	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756918Ab2IKBbs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 21:31:48 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-From: CHITRA <chitrar.ti@gmail.com>
-Subject: Re: compat-wireless can't compile under kernel 3.2.0 both 3.3-rc1-2 and 2012-01-26 - error: missing binary operator before token 
-Date: Wed, 5 Sep 2012 10:58:10 +0000 (UTC)
-Message-ID: <loom.20120905T125528-352@post.gmane.org> (sfid-20120906_071012_566896_E74951B4)
-References: <CAO=xpBGCABtjPstHcxcPHL7MGXSa7nQw4ZtwJkfZiTq=DPAE1w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 04/10] mwifiex: have same priority for AP and station traffic
+Date: Mon, 10 Sep 2012 18:30:43 -0700
+Message-Id: <1347327049-13665-5-git-send-email-bzhao@marvell.com> (sfid-20120911_033151_304823_2A39531F)
+In-Reply-To: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
+References: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Hi Alfonso,
+Currently AP interface has higher priority over station. Hence
+separate entries are created in "adapter->bss_prio_tbl" for these
+interfaces and station packet is dequeued only if there is not
+packet in queue for AP. It is observed that ping for station
+interface doesn't work if heavy traffic is running on AP.
 
-Even I m facing the same problem.
-Please let me know how did you resolve this issue.
+The problem is fixed by having same priority for both the
+interfaces. This patch also removes an extra initialisation
+for "priv->bss_priority".
 
-Thanks,
-chitra
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    4 ++--
+ drivers/net/wireless/mwifiex/main.c     |    1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index f7a06d2..7113086 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1641,7 +1641,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 
+ 		priv->bss_type = MWIFIEX_BSS_TYPE_STA;
+ 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
+-		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
++		priv->bss_priority = 0;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
+ 		priv->bss_num = 0;
+ 
+@@ -1664,7 +1664,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 
+ 		priv->bss_type = MWIFIEX_BSS_TYPE_UAP;
+ 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
+-		priv->bss_priority = MWIFIEX_BSS_ROLE_UAP;
++		priv->bss_priority = 0;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
+ 		priv->bss_started = 0;
+ 		priv->bss_num = 0;
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index cb11552..bfd6667 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -72,7 +72,6 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
+ 			goto error;
+ 
+ 		adapter->priv[i]->adapter = adapter;
+-		adapter->priv[i]->bss_priority = i;
+ 		adapter->priv_num++;
+ 	}
+ 	mwifiex_init_lock_list(adapter);
+-- 
+1.7.0.2
 
