@@ -1,240 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49562 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245Ab2INHq1 (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:42576 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751483Ab2IKHEB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 03:46:27 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20562.57501.348786.120200@gargle.gargle.HOWL> (sfid-20120914_094630_593160_33DE7A76)
-Date: Fri, 14 Sep 2012 13:15:33 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [RFC 6/8] ath9k_hw: Add a HW callback to set diversity
+	Tue, 11 Sep 2012 03:04:01 -0400
+Message-ID: <1347347067.17626.2.camel@smile> (sfid-20120911_090406_787415_4AD5AD48)
+Subject: Re: [resend][PATCH] wireless: at76c50x: eliminate hex2str()
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>, proski@gnu.org
+Date: Tue, 11 Sep 2012 10:04:27 +0300
+In-Reply-To: <20120910183458.GB2137@tuxdriver.com>
+References: <1341391552-4842-3-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1346835153-5321-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <20120910183458.GB2137@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new callback to handle WLAN RX diversity for
-AR9565.
+On Mon, 2012-09-10 at 14:34 -0400, John W. Linville wrote: 
+> Could you point me at the commit that adds the 'phD' specification?
+There it is:
+http://www.spinics.net/lists/linux-wireless/msg93694.html
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 60 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 24 +++++++++++
- drivers/net/wireless/ath/ath9k/hw-ops.h        |  7 +++
- drivers/net/wireless/ath/ath9k/hw.c            |  4 ++
- drivers/net/wireless/ath/ath9k/hw.h            |  3 +-
- 6 files changed, 107 insertions(+), 1 deletion(-)
+commit 31550a16a5d2af859e8a11839e8c6c6c9c92dfa7
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index bfd2055..5bbe505 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3633,6 +3633,16 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 		/* enable_lnadiv */
- 		regval &= (~AR_PHY_ANT_DIV_LNADIV);
- 		regval |= ((value >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
-+
-+		if (AR_SREV_9565(ah)) {
-+			if (ah->shared_chain_lnadiv) {
-+				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
-+			} else {
-+				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
-+				regval &= ~(1 << AR_PHY_ANT_SW_RX_PROT_S);
-+			}
-+		}
-+
- 		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
- 
- 		/*enable fast_div */
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 4b503ee..1c6aadb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1328,6 +1328,65 @@ static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
- }
- 
-+static void ar9003_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
-+						  bool enable)
-+{
-+	u8 ant_div_ctl1;
-+	u32 regval;
-+
-+	if (!AR_SREV_9565(ah))
-+		return;
-+
-+	ah->shared_chain_lnadiv = enable;
-+	ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
-+
-+	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
-+	regval &= (~AR_ANT_DIV_CTRL_ALL);
-+	regval |= (ant_div_ctl1 & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
-+	regval &= ~AR_PHY_ANT_DIV_LNADIV;
-+	regval |= ((ant_div_ctl1 >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
-+
-+	if (enable)
-+		regval |= AR_ANT_DIV_ENABLE;
-+
-+	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
-+
-+	regval = REG_READ(ah, AR_PHY_CCK_DETECT);
-+	regval &= ~AR_FAST_DIV_ENABLE;
-+	regval |= ((ant_div_ctl1 >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
-+
-+	if (enable)
-+		regval |= AR_FAST_DIV_ENABLE;
-+
-+	REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
-+
-+	if (enable) {
-+		REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-+			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
-+		if (IS_CHAN_2GHZ(ah->curchan))
-+			REG_SET_BIT(ah, AR_PHY_RESTART,
-+				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
-+		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
-+			    AR_BTCOEX_WL_LNADIV_FORCE_ON);
-+	} else {
-+		REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE);
-+		REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-+			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
-+		REG_CLR_BIT(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE);
-+		REG_CLR_BIT(ah, AR_BTCOEX_WL_LNADIV,
-+			    AR_BTCOEX_WL_LNADIV_FORCE_ON);
-+
-+		regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
-+		regval &= ~(AR_PHY_ANT_DIV_MAIN_LNACONF |
-+			AR_PHY_ANT_DIV_ALT_LNACONF |
-+			AR_PHY_ANT_DIV_MAIN_GAINTB |
-+			AR_PHY_ANT_DIV_ALT_GAINTB);
-+		regval |= (AR_PHY_ANT_DIV_LNA1 << AR_PHY_ANT_DIV_MAIN_LNACONF_S);
-+		regval |= (AR_PHY_ANT_DIV_LNA2 << AR_PHY_ANT_DIV_ALT_LNACONF_S);
-+		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
-+	}
-+}
-+
- static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
- 				      struct ath9k_channel *chan,
- 				      u8 *ini_reloaded)
-@@ -1426,6 +1485,7 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- 
- 	ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
- 	ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
-+	ops->antctrl_shared_chain_lnadiv = ar9003_hw_antctrl_shared_chain_lnadiv;
- 
- 	ar9003_hw_set_nf_limits(ah);
- 	ar9003_hw_set_radar_conf(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index fdabc9a..9a48e3d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -282,6 +282,8 @@
- 
- #define AR_PHY_ANT_FAST_DIV_BIAS                0x00007e00
- #define AR_PHY_ANT_FAST_DIV_BIAS_S              9
-+#define AR_PHY_ANT_SW_RX_PROT                   0x00800000
-+#define AR_PHY_ANT_SW_RX_PROT_S                 23
- #define AR_PHY_ANT_DIV_LNADIV                   0x01000000
- #define AR_PHY_ANT_DIV_LNADIV_S                 24
- #define AR_PHY_ANT_DIV_ALT_LNACONF              0x06000000
-@@ -422,6 +424,8 @@
- #define AR_PHY_FIND_SIG_RELSTEP        0x1f
- #define AR_PHY_FIND_SIG_RELSTEP_S         0
- #define AR_PHY_FIND_SIG_RELSTEP_SIGN_BIT  5
-+#define AR_PHY_RESTART_ENABLE_DIV_M2FLAG 0x00200000
-+#define AR_PHY_RESTART_ENABLE_DIV_M2FLAG_S 21
- #define AR_PHY_RESTART_DIV_GC   0x001C0000
- #define AR_PHY_RESTART_DIV_GC_S 18
- #define AR_PHY_RESTART_ENA      0x01
-@@ -1261,4 +1265,24 @@
- #define AR_PHY_CL_TAB_CL_GAIN_MOD		0x1f
- #define AR_PHY_CL_TAB_CL_GAIN_MOD_S		0
- 
-+#define AR_BTCOEX_WL_LNADIV                                0x1a64
-+#define AR_BTCOEX_WL_LNADIV_PREDICTED_PERIOD               0x00003FFF
-+#define AR_BTCOEX_WL_LNADIV_PREDICTED_PERIOD_S             0
-+#define AR_BTCOEX_WL_LNADIV_DPDT_IGNORE_PRIORITY           0x00004000
-+#define AR_BTCOEX_WL_LNADIV_DPDT_IGNORE_PRIORITY_S         14
-+#define AR_BTCOEX_WL_LNADIV_FORCE_ON                       0x00008000
-+#define AR_BTCOEX_WL_LNADIV_FORCE_ON_S                     15
-+#define AR_BTCOEX_WL_LNADIV_MODE_OPTION                    0x00030000
-+#define AR_BTCOEX_WL_LNADIV_MODE_OPTION_S                  16
-+#define AR_BTCOEX_WL_LNADIV_MODE                           0x007c0000
-+#define AR_BTCOEX_WL_LNADIV_MODE_S                         18
-+#define AR_BTCOEX_WL_LNADIV_ALLOWED_TX_ANTDIV_WL_TX_REQ    0x00800000
-+#define AR_BTCOEX_WL_LNADIV_ALLOWED_TX_ANTDIV_WL_TX_REQ_S  23
-+#define AR_BTCOEX_WL_LNADIV_DISABLE_TX_ANTDIV_ENABLE       0x01000000
-+#define AR_BTCOEX_WL_LNADIV_DISABLE_TX_ANTDIV_ENABLE_S     24
-+#define AR_BTCOEX_WL_LNADIV_CONTINUOUS_BT_ACTIVE_PROTECT   0x02000000
-+#define AR_BTCOEX_WL_LNADIV_CONTINUOUS_BT_ACTIVE_PROTECT_S 25
-+#define AR_BTCOEX_WL_LNADIV_BT_INACTIVE_THRESHOLD          0xFC000000
-+#define AR_BTCOEX_WL_LNADIV_BT_INACTIVE_THRESHOLD_S        26
-+
- #endif  /* AR9003_PHY_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 265bf77..0f2b97f 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -78,6 +78,13 @@ static inline void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
- 	ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
- }
- 
-+static inline void ath9k_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
-+							bool enable)
-+{
-+	if (ath9k_hw_ops(ah)->antctrl_shared_chain_lnadiv)
-+		ath9k_hw_ops(ah)->antctrl_shared_chain_lnadiv(ah, enable);
-+}
-+
- /* Private hardware call ops */
- 
- /* PHY ops */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 40f57aa..c562f13 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -24,6 +24,7 @@
- #include "rc.h"
- #include "ar9003_mac.h"
- #include "ar9003_mci.h"
-+#include "ar9003_phy.h"
- #include "debug.h"
- #include "ath9k.h"
- 
-@@ -2025,6 +2026,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	ath9k_hw_apply_gpio_override(ah);
- 
-+	if (AR_SREV_9565(ah) && ah->shared_chain_lnadiv)
-+		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV, AR_BTCOEX_WL_LNADIV_FORCE_ON);
-+
- 	return 0;
- }
- EXPORT_SYMBOL(ath9k_hw_reset);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index f0798cc..566a4ce 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -686,7 +686,7 @@ struct ath_hw_ops {
- 			struct ath_hw_antcomb_conf *antconf);
- 	void (*antdiv_comb_conf_set)(struct ath_hw *ah,
- 			struct ath_hw_antcomb_conf *antconf);
--
-+	void (*antctrl_shared_chain_lnadiv)(struct ath_hw *hw, bool enable);
- };
- 
- struct ath_nf_limits {
-@@ -730,6 +730,7 @@ struct ath_hw {
- 	bool aspm_enabled;
- 	bool is_monitoring;
- 	bool need_an_top2_fixup;
-+	bool shared_chain_lnadiv;
- 	u16 tx_trig_level;
- 
- 	u32 nf_regs[6];
+> On Wed, Sep 05, 2012 at 11:52:32AM +0300, Andy Shevchenko wrote:
+> > The hex2str() is substituted by '%*phD' specificator.
+> > 
+> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > 
+> > ---
+> >  drivers/net/wireless/at76c50x-usb.c |   54 ++++++++---------------------------
+> >  1 file changed, 12 insertions(+), 42 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+> > index e361afe..99b9ddf 100644
+> > --- a/drivers/net/wireless/at76c50x-usb.c
+> > +++ b/drivers/net/wireless/at76c50x-usb.c
+> > @@ -498,36 +498,6 @@ exit:
+> >  	return ret;
+> >  }
+> >  
+> > -#define HEX2STR_BUFFERS 4
+> > -#define HEX2STR_MAX_LEN 64
+> > -
+> > -/* Convert binary data into hex string */
+> > -static char *hex2str(void *buf, size_t len)
+> > -{
+> > -	static atomic_t a = ATOMIC_INIT(0);
+> > -	static char bufs[HEX2STR_BUFFERS][3 * HEX2STR_MAX_LEN + 1];
+> > -	char *ret = bufs[atomic_inc_return(&a) & (HEX2STR_BUFFERS - 1)];
+> > -	char *obuf = ret;
+> > -	u8 *ibuf = buf;
+> > -
+> > -	if (len > HEX2STR_MAX_LEN)
+> > -		len = HEX2STR_MAX_LEN;
+> > -
+> > -	if (len == 0)
+> > -		goto exit;
+> > -
+> > -	while (len--) {
+> > -		obuf = hex_byte_pack(obuf, *ibuf++);
+> > -		*obuf++ = '-';
+> > -	}
+> > -	obuf--;
+> > -
+> > -exit:
+> > -	*obuf = '\0';
+> > -
+> > -	return ret;
+> > -}
+> > -
+> >  /* LED trigger */
+> >  static int tx_activity;
+> >  static void at76_ledtrig_tx_timerfunc(unsigned long data);
+> > @@ -1004,9 +974,9 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
+> >  	    WEP_SMALL_KEY_LEN : WEP_LARGE_KEY_LEN;
+> >  
+> >  	for (i = 0; i < WEP_KEYS; i++)
+> > -		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %s",
+> > +		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %*phD",
+> >  			 wiphy_name(priv->hw->wiphy), i,
+> > -			 hex2str(m->wep_default_keyvalue[i], key_len));
+> > +			 key_len, m->wep_default_keyvalue[i]);
+> >  exit:
+> >  	kfree(m);
+> >  }
+> > @@ -1031,7 +1001,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+> >  	at76_dbg(DBG_MIB, "%s: MIB MAC_MGMT: beacon_period %d CFP_max_duration "
+> >  		 "%d medium_occupancy_limit %d station_id 0x%x ATIM_window %d "
+> >  		 "CFP_mode %d privacy_opt_impl %d DTIM_period %d CFP_period %d "
+> > -		 "current_bssid %pM current_essid %s current_bss_type %d "
+> > +		 "current_bssid %pM current_essid %*phD current_bss_type %d "
+> >  		 "pm_mode %d ibss_change %d res %d "
+> >  		 "multi_domain_capability_implemented %d "
+> >  		 "international_roaming %d country_string %.3s",
+> > @@ -1041,7 +1011,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+> >  		 le16_to_cpu(m->station_id), le16_to_cpu(m->ATIM_window),
+> >  		 m->CFP_mode, m->privacy_option_implemented, m->DTIM_period,
+> >  		 m->CFP_period, m->current_bssid,
+> > -		 hex2str(m->current_essid, IW_ESSID_MAX_SIZE),
+> > +		 IW_ESSID_MAX_SIZE, m->current_essid,
+> >  		 m->current_bss_type, m->power_mgmt_mode, m->ibss_change,
+> >  		 m->res, m->multi_domain_capability_implemented,
+> >  		 m->multi_domain_capability_enabled, m->country_string);
+> > @@ -1069,7 +1039,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+> >  		 "cwmin %d cwmax %d short_retry_time %d long_retry_time %d "
+> >  		 "scan_type %d scan_channel %d probe_delay %u "
+> >  		 "min_channel_time %d max_channel_time %d listen_int %d "
+> > -		 "desired_ssid %s desired_bssid %pM desired_bsstype %d",
+> > +		 "desired_ssid %*phD desired_bssid %pM desired_bsstype %d",
+> >  		 wiphy_name(priv->hw->wiphy),
+> >  		 le32_to_cpu(m->max_tx_msdu_lifetime),
+> >  		 le32_to_cpu(m->max_rx_lifetime),
+> > @@ -1080,7 +1050,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+> >  		 le16_to_cpu(m->min_channel_time),
+> >  		 le16_to_cpu(m->max_channel_time),
+> >  		 le16_to_cpu(m->listen_interval),
+> > -		 hex2str(m->desired_ssid, IW_ESSID_MAX_SIZE),
+> > +		 IW_ESSID_MAX_SIZE, m->desired_ssid,
+> >  		 m->desired_bssid, m->desired_bsstype);
+> >  exit:
+> >  	kfree(m);
+> > @@ -1160,13 +1130,13 @@ static void at76_dump_mib_mdomain(struct at76_priv *priv)
+> >  		goto exit;
+> >  	}
+> >  
+> > -	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %s",
+> > +	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %*phD",
+> >  		 wiphy_name(priv->hw->wiphy),
+> > -		 hex2str(m->channel_list, sizeof(m->channel_list)));
+> > +		 (int)sizeof(m->channel_list), m->channel_list);
+> >  
+> > -	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %s",
+> > +	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %*phD",
+> >  		 wiphy_name(priv->hw->wiphy),
+> > -		 hex2str(m->tx_powerlevel, sizeof(m->tx_powerlevel)));
+> > +		 (int)sizeof(m->tx_powerlevel), m->tx_powerlevel);
+> >  exit:
+> >  	kfree(m);
+> >  }
+> > @@ -1369,9 +1339,9 @@ static int at76_startup_device(struct at76_priv *priv)
+> >  	int ret;
+> >  
+> >  	at76_dbg(DBG_PARAMS,
+> > -		 "%s param: ssid %.*s (%s) mode %s ch %d wep %s key %d "
+> > +		 "%s param: ssid %.*s (%*phD) mode %s ch %d wep %s key %d "
+> >  		 "keylen %d", wiphy_name(priv->hw->wiphy), priv->essid_size,
+> > -		 priv->essid, hex2str(priv->essid, IW_ESSID_MAX_SIZE),
+> > +		 priv->essid, IW_ESSID_MAX_SIZE, priv->essid,
+> >  		 priv->iw_mode == IW_MODE_ADHOC ? "adhoc" : "infra",
+> >  		 priv->channel, priv->wep_enabled ? "enabled" : "disabled",
+> >  		 priv->wep_key_id, priv->wep_keys_len[priv->wep_key_id]);
+> > -- 
+> > 1.7.10.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+
 -- 
-1.7.12
-
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
