@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50765 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932246Ab2IKPPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 11:15:24 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, john@phrozen.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v4 0/3] MIPS: BCM47xx: use gpiolib
-Date: Tue, 11 Sep 2012 17:15:07 +0200
-Message-Id: <1347376511-20953-1-git-send-email-hauke@hauke-m.de> (sfid-20120911_171535_574109_4B3E531F)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:46122 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895Ab2IKRss (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 13:48:48 -0400
+Received: by obbuo13 with SMTP id uo13so1192039obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 10:48:47 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <201209111931.24258.chunkeey@googlemail.com>
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	<CAEFj986+K6TGpR2MXteAY86vAX8D=xVrFWMAVdc9zSuiix+Ogw@mail.gmail.com>
+	<CAFtRNNwXgr=oN8y9u9MnEt75dAL0R-tJ6yf6vTOMcnCuCb7S-A@mail.gmail.com>
+	<201209111931.24258.chunkeey@googlemail.com>
+Date: Tue, 11 Sep 2012 20:48:47 +0300
+Message-ID: <CAFtRNNybLaHK3OWE3qbexCK18-Uc6XZ=H3Q9XqfyZzRwknetbA@mail.gmail.com> (sfid-20120911_194853_061682_A57FD2F0)
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Adrian Chadd <adrian@freebsd.org>, Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mcgrof@qca.qualcomm.com, ath5k-devel@venema.h4ckr.net
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original code implemented the GPIO interface itself and this caused
-some problems. With this patch gpiolib is used.
+2012/9/11 Christian Lamparter <chunkeey@googlemail.com>:
+> On Tuesday 11 September 2012 18:36:27 Nick Kossifidis wrote:
+>> 2012/9/11 Yeoh Chun-Yeow <yeohchunyeow@gmail.com>:
+>> >> To be more clear: you can tell the hw to *only* disable decryption and
+>> >> keep doing encryption.
+>> >
+>> > But the question here is that during Rx, need to do SW decryption for
+>> > management frame and then HW decryption for unicast data frame for all
+>> > the frame coming from the same STA. I still not so sure how to do
+>> > that.
+>> >
+>> > Jouni said that the workaround is to re-encrypt(incorrectly) received
+>> > robust unicast management frames if hwaccel for CCMP was configured
+>> > for the transmitting STA (this is to undo the incorrect decryption
+>> > done by the hardware) and then pass the encrypted frame to mac80211
+>> > for software decryption.
+>> >
+>>
+>> How about disabling acks on hw completely and handle them on sw ?
+>> This might keep the engine running ok for unicast frames.
+>>
+>> #define AR5K_DIAG_SW_DIS_ACK          0x00000002      /* Disable ACKs */
+>> #define AR5K_DIAG_SW_DIS_CTS          0x00000004      /* Disable CTSs */
+>
+> No, CTS and ACKs are control frames and not management frames.
 
-This is based on mips/master.
+ACK :-)
 
-This should go through linux-mips, John W. Linville approved that 
-for the bcma and ssb changes normally maintained in wireless-testing.
 
-v4:
- - remove extra BCMA_DRIVER_GPIO option and inline the spinlocks in
-   bcma/driver_chipcommon.c.
 
-v3:
- - add missing break after setting bcm47xx_gpio_count in bcm47xx_gpio_init()
-
-v2:
- - use use gpio_chip.to_irq() instead of directly declare gpio_to_irq
-
-Hauke Mehrtens (3):
-  ssb: add function to return number of gpio lines
-  bcma: add GPIO driver for SoCs
-  MIPS: BCM47xx: rewrite GPIO handling and use gpiolib
-
- arch/mips/Kconfig                            |    2 +-
- arch/mips/bcm47xx/gpio.c                     |  212 ++++++++++++++++++++------
- arch/mips/bcm47xx/setup.c                    |    2 +
- arch/mips/bcm47xx/wgt634u.c                  |    7 +
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    2 +
- arch/mips/include/asm/mach-bcm47xx/gpio.h    |  148 +++---------------
- drivers/bcma/driver_chipcommon.c             |   61 +++++++-
- drivers/ssb/embedded.c                       |   12 ++
- include/linux/bcma/bcma_driver_chipcommon.h  |   24 ++-
- include/linux/ssb/ssb_embedded.h             |    4 +
- 10 files changed, 287 insertions(+), 187 deletions(-)
 
 -- 
-1.7.9.5
-
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
