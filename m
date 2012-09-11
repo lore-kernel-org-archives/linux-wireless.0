@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10227 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753520Ab2IJPMh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 11:12:37 -0400
-Message-ID: <504E035B.7050106@qca.qualcomm.com> (sfid-20120910_171240_802190_DAC02532)
-Date: Mon, 10 Sep 2012 20:42:27 +0530
-From: Pandiyarajan <c_ppitch@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4090 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751895Ab2IKTRQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 15:17:16 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	stable <stable@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 1/2] brcmfmac: fix big endian bug in i-scan.
+Date: Tue, 11 Sep 2012 21:16:47 +0200
+Message-ID: <1347391008-10583-2-git-send-email-arend@broadcom.com> (sfid-20120911_211719_307194_233692AF)
+In-Reply-To: <1347391008-10583-1-git-send-email-arend@broadcom.com>
+References: <1347391008-10583-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] cfg80211/nl80211: Notify connection request failure in
- AP mode
-References: <1347274408-11949-1-git-send-email-c_ppitch@qca.qualcomm.com> <1347276502.4272.22.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1347276502.4272.22.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Hante Meuleman <meuleman@broadcom.com>
 
-On Monday 10 September 2012 04:58 PM, Johannes Berg wrote:
-> On Mon, 2012-09-10 at 16:23 +0530, Pandiyarajan Pitchaimuthu wrote:
->> In AP mode, when a station requests connection to an AP and if the
->> request is failed for particular reason, userspace is notified about the
->> failure through NL80211_CMD_CONN_FAILED command. Reason for the failure
->> is sent through the attribute NL80211_ATTR_CONN_FAILED_REASON.
-> Why would userspace care?
-It would be useful to inform the userspace that the driver/firmware's
-limitation of maintaining the maximum number of connected clients is 
-reached.
-Without this the user may not be clear about why another client cannot 
-be added.
+ssid len is 32 bit and needs endian conversion for big endian systems.
 
-Also, further enhancements/decisions can be made based on this event.
+Cc: stable <stable@vger.kernel.org>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
->> +/* AP mode - sta's connection request failed reasons */
->> +enum nl80211_connect_failed_reason {
->> +	NL80211_CONN_FAIL_MAX_CLIENTS		= 1,
->> +	NL80211_CONN_FAIL_BLOCKED_CLIENT	= 2,
->> +};
-> Why number explicitly?
-Thanks. Will change it to have the default value.
->> + * Whenever a station tries to connect to an AP and if the station
->> + * could not connect to the AP for some reason, this function is called.
-> It's not really "for some reason", it's "because the AP rejected it for
-> some reason"... You're not handling other cases anyway.
->
-> johannes
->
-Sure. Will change the comment.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index c36e923..50b5553 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -500,8 +500,10 @@ static void wl_iscan_prep(struct brcmf_scan_params_le *params_le,
+ 	params_le->active_time = cpu_to_le32(-1);
+ 	params_le->passive_time = cpu_to_le32(-1);
+ 	params_le->home_time = cpu_to_le32(-1);
+-	if (ssid && ssid->SSID_len)
+-		memcpy(&params_le->ssid_le, ssid, sizeof(struct brcmf_ssid));
++	if (ssid && ssid->SSID_len) {
++		params_le->ssid_le.SSID_len = cpu_to_le32(ssid->SSID_len);
++		memcpy(&params_le->ssid_le.SSID, ssid->SSID, ssid->SSID_len);
++	}
+ }
+ 
+ static s32
+-- 
+1.7.9.5
 
-Pandiyarajan.P
+
