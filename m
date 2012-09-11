@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tee.schottelius.org ([77.109.138.222]:41443 "EHLO
-	mx3.schottelius.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752778Ab2IZHmM (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56953 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753881Ab2IKXZj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 03:42:12 -0400
-Date: Wed, 26 Sep 2012 08:03:12 +0200
-From: Nico Schottelius <nico-kernel20120920@schottelius.org>
-To: Dave Kleikamp <dave.kleikamp@oracle.com>
-Cc: David Rientjes <rientjes@google.com>,
-	Nico Schottelius <nico-kernel20120920@schottelius.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dave Kleikamp <shaggy@kernel.org>,
-	jfs-discussion@lists.sourceforge.net
-Subject: Re: Out of memory on 3.5 kernels
-Message-ID: <20120926060312.GC16575@schottelius.org> (sfid-20120926_094218_133187_37F941CA)
-References: <505B1FA0.6030100@broadcom.com>
- <20120921194931.GA732@schottelius.org>
- <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com>
- <5061C8A2.1020605@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5061C8A2.1020605@oracle.com>
+	Tue, 11 Sep 2012 19:25:39 -0400
+Date: Tue, 11 Sep 2012 16:25:36 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: David Rientjes <rientjes@google.com>, sgruszka@redhat.com,
+	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	Andrew Morton <akpm@osdl.org>, Mel Gorman <mgorman@suse.de>,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
+Message-Id: <20120911162536.bd5171a1.akpm@linux-foundation.org> (sfid-20120912_012610_624444_F84CAC1A)
+In-Reply-To: <20120910111113.GA25159@elf.ucw.cz>
+References: <20120909213228.GA5538@elf.ucw.cz>
+	<alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
+	<20120910111113.GA25159@elf.ucw.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good morning,
+On Mon, 10 Sep 2012 13:11:13 +0200
+Pavel Machek <pavel@ucw.cz> wrote:
 
-Dave Kleikamp [Tue, Sep 25, 2012 at 10:07:14AM -0500]:
-> >>  Active / Total Objects (% used)    : 1165130 / 1198087 (97.2%)
-> >>  Active / Total Slabs (% used)      : 81027 / 81027 (100.0%)
-> >>  Active / Total Caches (% used)     : 69 / 101 (68.3%)
-> >>  Active / Total Size (% used)       : 1237249.81K / 1246521.94K (99.3%)
-> >>  Minimum / Average / Maximum Object : 0.01K / 1.04K / 15.23K
-> >>
-> >>   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
-> >> 993607 993607 100%    1.21K  75358       26   2411456K jfs_ip
+> On Sun 2012-09-09 15:40:55, David Rientjes wrote:
+> > On Sun, 9 Sep 2012, Pavel Machek wrote:
 > > 
-> > Well that doesn't look good.  100% of the inode cache for jfs are being 
-> > used which either means
+> > > On 3.6.0-rc2+, I tried to turn on the wireless, but got
+> > > 
+> > > root@amd:~# ifconfig wlan0 10.0.0.6 up
+> > > SIOCSIFFLAGS: Cannot allocate memory
+> > > SIOCSIFFLAGS: Cannot allocate memory
+> > > root@amd:~# 
+> > > 
+> > > It looks like it uses "a bit too big" allocations to allocate
+> > > firmware...? Order five allocation....
+> > > 
+> > > Hmm... then I did "echo 3  > /proc/sys/vm/drop_caches" and now the
+> > > network works. Is it VM problem that it failed to allocate memory when
+> > > it was freeable?
+> > > 
 > > 
-> >  - there's a memory leak, or
+> > Do you have CONFIG_COMPACTION enabled?
 > 
-> maybe a missing iput() somewhere?
+> Yes:
 > 
-> Nico, does unmounting the usb drive after killing the backup clean up
-> the jfs inode cache?
+> pavel@amd:/data/l/linux-good$ zgrep CONFIG_COMPACTION /proc/config.gz 
+> CONFIG_COMPACTION=y
 
-Iirc, it does not. I'll check this evening, because doing the backup
-currently forces me to reboot my productive system.
+Asking for a 256k allocation is pretty crazy - this is an operating
+system kernel, not a userspace application.
 
-> >  - there's some sort of throttling issue in jfs.
-> > 
-> > And those objects are consuming ~2.3GB of slab on your 4GB machine and 
-> > seems to only have occurred between v3.4.2 to v3.5.3.
-> 
-> Almost nothing in jfs has changed between these releases. Only this:
-> 
-> vfs: Rename end_writeback() to clear_inode()
-
-The other obscurity is that the root filesystem is also jfs - it's not
-only the usb disk.
-
-Cheers,
-
-Nico
-
--- 
-PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
+I'm wondering if this is due to a recent change, but I'm having trouble
+working out where the allocation call site is.
