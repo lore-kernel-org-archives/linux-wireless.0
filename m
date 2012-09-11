@@ -1,44 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:54202 "EHLO purkki.adurom.net"
+Received: from swan.laptop.org ([18.85.2.166]:59524 "EHLO swan.laptop.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752182Ab2INGLD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 02:11:03 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	chaoming_li@realsil.com.cn
-Subject: Re: [RFC/RFT 14/15] rtlwifi: Modify files for addition of rtl8723ae
-References: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1347483294-6943-15-git-send-email-Larry.Finger@lwfinger.net>
-	<CAGRGNgWezEzXV0-k6DA7TckNpa=zgN6LNv898N-PRU6P1LYgOw@mail.gmail.com>
-	<505170C6.8090003@lwfinger.net>
-Date: Fri, 14 Sep 2012 09:10:56 +0300
-In-Reply-To: <505170C6.8090003@lwfinger.net> (Larry Finger's message of "Thu,
-	13 Sep 2012 00:36:06 -0500")
-Message-ID: <87mx0t3zin.fsf@purkki.adurom.net> (sfid-20120914_081109_373157_FB26680E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1757408Ab2IKPiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Sep 2012 11:38:12 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: dcbw@redhat.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: [PATCH] libertas: set mac control synchronously during init
+Message-Id: <20120911153812.08740FAA7C@dev.laptop.org> (sfid-20120911_173818_290555_F5FF33C0)
+Date: Tue, 11 Sep 2012 11:38:11 -0400 (EDT)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+CMD_MAC_CONTROL is currently sent async to the firmware, and is sent
+from the lbs_setup_firmware() path during device init.
 
->> Is this supposed to be bit #29 - I notice that COMP_USB is also bit 29.
->
-> Yes, that is OK. One will only be used for PCI-based drivers, and the
-> other is obviously for USB. As nearly all the bits of a 32-bit
-> quantity are used, I wanted to save one if possible.
->
-> In the final version, I'll code this as
->
-> #define COMP_USB                       BIT(29)
-> #define COMP_EASY_CONCURRENT           COMP_USB
->
-> That way will be more obvious.
+This means that device init can complete with commands pending, and
+the if_sdio driver will sometimes power down the device (after init)
+with this command still pending.
 
-You could also add a comment explaining it, just to make sure that
-everyone understands it.
+This was causing an occasional spurious command timeout after init,
+leading to a device reset.
 
+Fix this by making CMD_MAC_CONTROL synchronous when called from the
+lbs_setup_firmware() path.
+
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+---
+ drivers/net/wireless/libertas/cmd.c  | 16 ++++++++++++++++
+ drivers/net/wireless/libertas/cmd.h  |  1 +
+ drivers/net/wireless/libertas/main.c |  4 +++-
+ 3 files changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 26e6832..aaa2973 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1159,6 +1159,22 @@ void lbs_set_mac_control(struct lbs_private *priv)
+ 	lbs_deb_leave(LBS_DEB_CMD);
+ }
+ 
++int lbs_set_mac_control_sync(struct lbs_private *priv)
++{
++	struct cmd_ds_mac_control cmd;
++	int ret = 0;
++
++	lbs_deb_enter(LBS_DEB_CMD);
++
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++	cmd.action = cpu_to_le16(priv->mac_control);
++	cmd.reserved = 0;
++	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
++
++	lbs_deb_leave(LBS_DEB_CMD);
++	return ret;
++}
++
+ /**
+  *  lbs_allocate_cmd_buffer - allocates the command buffer and links
+  *  it to command free queue
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index ab07608..4279e8a 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -96,6 +96,7 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv);
+ int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
+ 
+ void lbs_set_mac_control(struct lbs_private *priv);
++int lbs_set_mac_control_sync(struct lbs_private *priv);
+ 
+ int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
+ 		     s16 *maxlevel);
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index fe1ea43..0c02f04 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -682,8 +682,10 @@ static int lbs_setup_firmware(struct lbs_private *priv)
+ 
+ 	/* Send cmd to FW to enable 11D function */
+ 	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
++	if (ret)
++		goto done;
+ 
+-	lbs_set_mac_control(priv);
++	ret = lbs_set_mac_control_sync(priv);
+ done:
+ 	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
+ 	return ret;
 -- 
-Kalle Valo
+1.7.11.4
+
