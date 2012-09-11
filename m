@@ -1,66 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:56616 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753643Ab2IUDY2 (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:44076 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752626Ab2IKQLd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 23:24:28 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: disconnect the device before entering suspend state
-Date: Thu, 20 Sep 2012 20:23:17 -0700
-Message-Id: <1348197798-977-1-git-send-email-bzhao@marvell.com> (sfid-20120921_052430_841318_E37BE59D)
+	Tue, 11 Sep 2012 12:11:33 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	Anisse Astier <anisse@astier.eu>,
+	Li Chaoming <chaoming_li@realsil.com.cn>
+Subject: [PATCH] rtlwifi: rtl8192ce: Log message that B_CUT device may not work
+Date: Tue, 11 Sep 2012 11:11:13 -0500
+Message-Id: <1347379873-9390-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120911_181249_465390_2782DDDF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+There are a number of problems that occur for the latest version
+of the Realtek RTL8188CE device with the in-kernel driver. These
+include selection of the wrong firmware, and system lockup. A full
+fix is known, but is too invasive for inclusion in stable. This patch
+fixes the problem with loading the wrong firmware, and logs a message
+that the device may not work for kernels 3.6 and older.
 
-By default, device is disconnected before entering suspend state.
-User can keep the connection alive by using module parameter
-"disconect_on_suspend=0".
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+Cc: Anisse Astier <anisse@astier.eu>
+Cc: Li Chaoming <chaoming_li@realsil.com.cn>
 ---
- drivers/net/wireless/mwifiex/sta_ioctl.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c  |   12 ++++++++++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |    6 ++++--
+ 3 files changed, 15 insertions(+), 4 deletions(-)
+---
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index d7ad2d4..731562f 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -26,6 +26,9 @@
- #include "11n.h"
- #include "cfg80211.h"
+John,
+
+Although this patch does not fix a regression, it should prevent the
+system freezes that are associated with selecting the wrong firmware
+for the new devices. I hope it can be included in 3.6.
+
+A full patch to fix the problems is nearly ready, and will be submitted
+for -next later today.
+
+Thanks,
+
+Larry
+---
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+index 04c3aef..2925094 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+@@ -117,6 +117,7 @@
  
-+static int disconnect_on_suspend = 1;
-+module_param(disconnect_on_suspend, int, 0644);
-+
- /*
-  * Copies the multicast address list from device to driver.
-  *
-@@ -448,6 +451,16 @@ EXPORT_SYMBOL_GPL(mwifiex_cancel_hs);
- int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
- {
- 	struct mwifiex_ds_hs_cfg hscfg;
-+	struct mwifiex_private *priv;
-+	int i;
-+
-+	if (disconnect_on_suspend) {
-+		for (i = 0; i < adapter->priv_num; i++) {
-+			priv = adapter->priv[i];
-+			if (priv)
-+				mwifiex_deauthenticate(priv, NULL);
+ #define CHIP_VER_B			BIT(4)
+ #define CHIP_92C_BITMASK		BIT(0)
++#define CHIP_UNKNOWN			BIT(7)
+ #define CHIP_92C_1T2R			0x03
+ #define CHIP_92C			0x01
+ #define CHIP_88C			0x00
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index cc89582..86d73b3 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -994,8 +994,16 @@ static enum version_8192c _rtl92ce_read_chip_version(struct ieee80211_hw *hw)
+ 		version = (value32 & TYPE_ID) ? VERSION_A_CHIP_92C :
+ 			   VERSION_A_CHIP_88C;
+ 	} else {
+-		version = (value32 & TYPE_ID) ? VERSION_B_CHIP_92C :
+-			   VERSION_B_CHIP_88C;
++		version = (enum version_8192c) (CHIP_VER_B |
++				((value32 & TYPE_ID) ? CHIP_92C_BITMASK : 0) |
++				((value32 & VENDOR_ID) ? CHIP_VENDOR_UMC : 0));
++		if ((!IS_CHIP_VENDOR_UMC(version)) && (value32 &
++		     CHIP_VER_RTL_MASK)) {
++			version = (enum version_8192c)(version |
++				   ((((value32 & CHIP_VER_RTL_MASK) == BIT(12))
++				   ? CHIP_VENDOR_UMC_B_CUT : CHIP_UNKNOWN) |
++				   CHIP_VENDOR_UMC));
 +		}
+ 	}
+ 
+ 	switch (version) {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+index 60451ee..ea2e1bd 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -162,10 +162,12 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
+ 
+ 	/* request fw */
+ 	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
+-	    !IS_92C_SERIAL(rtlhal->version))
++	    !IS_92C_SERIAL(rtlhal->version)) {
+ 		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU.bin";
+-	else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
++	} else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
+ 		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU_B.bin";
++		pr_info("****** This B_CUT device may not work with kernels 3.6 and earlier\n");
 +	}
  
- 	if (adapter->hs_activated) {
- 		dev_dbg(adapter->dev, "cmd: HS Already actived\n");
+ 	rtlpriv->max_fw_size = 0x4000;
+ 	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
 -- 
-1.7.0.2
+1.7.10.4
 
