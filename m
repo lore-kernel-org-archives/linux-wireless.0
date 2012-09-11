@@ -1,66 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39548 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759283Ab2IEUE0 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:46889 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751388Ab2IKGrA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 16:04:26 -0400
-Date: Wed, 5 Sep 2012 15:54:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com
-Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona!)
-Message-ID: <20120905195402.GF12843@tuxdriver.com> (sfid-20120905_220442_720157_D0CAB32E)
-References: <20120822201930.GC14913@tuxdriver.com>
- <1346874819.21200.109.camel@aeonflux>
+	Tue, 11 Sep 2012 02:47:00 -0400
+Received: by obbuo13 with SMTP id uo13so240417obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 23:47:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1346874819.21200.109.camel@aeonflux>
+In-Reply-To: <CAEFj9845-oLbFK7_i5hL6bWMF4=oTJ4avDkEv3kpJGXCpaiSiQ@mail.gmail.com>
+References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
+	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
+	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+	<20120904102204.GA2541@w1.fi>
+	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
+	<CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
+	<1346758521.3737.28.camel@jlt4.sipsolutions.net>
+	<CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
+	<20120905071653.GB3629@w1.fi>
+	<CAEFj985iHQJTAqXBkz56BDPodHb9q0Z=x3S5Q43UwA5vU-mfMw@mail.gmail.com>
+	<20120905080336.GA4747@w1.fi>
+	<CAEFj986i9XUcEN0i2y5=YLh2RX8MZOf+60i8XL4jMiq5-JcJ6Q@mail.gmail.com>
+	<CAJ-Vmonesc=VPMUJgS1GHTUS-Xj_BTohv0rQ9ZS+rW-761g_8w@mail.gmail.com>
+	<87zk4y3tsz.fsf@purkki.adurom.net>
+	<CAEFj9845-oLbFK7_i5hL6bWMF4=oTJ4avDkEv3kpJGXCpaiSiQ@mail.gmail.com>
+Date: Tue, 11 Sep 2012 09:46:59 +0300
+Message-ID: <CAFtRNNzdXFbcxNw0M7oYsvidiLnckycy4V73Y+pG4oUNqeCJvQ@mail.gmail.com> (sfid-20120911_084705_665704_89F6403B)
+Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: Kalle Valo <kvalo@adurom.com>, Adrian Chadd <adrian@freebsd.org>,
+	Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mcgrof@qca.qualcomm.com, ath5k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 05, 2012 at 12:53:39PM -0700, Marcel Holtmann wrote:
-> Hi John,
-> 
-> > The time for our meeting in Barcelona is drawing near.  I think it
-> > is time that we start nailing-down the agenda.
-> > 
-> > We have one room on the first day, and three rooms on the second day.
-> > I figure that the Bluetooth and 802.11 groups should each get a
-> > break-out room for their own in-depth discussons on the second day and
-> > the third room can be used for more general topics and presentations.
-> > 
-> > With that said, there are still a number of slots available for
-> > presentations or discussion topics.  This is especially true for the
-> > 802.11 group...  Please step-up with some suggested topics!
-> > 
-> > Below is my strawman agenda proposal.  Please make suggestions for
-> > improvements!
-> > 
-> > Day 1
-> > -----
-> > 
-> > Everyone together in a single room...
-> > 
-> > Time	Topic						Speaker
-> > ----	-----						-------
-> > 0930	Welcome/Intro/Agenda				John Linville
-> > 
-> > 1000	802.15.4 stack, 6lowpan				Alexander Smirnov
-> > 
-> > 1100	Break
-> > 
-> > 1130	Virtual Bluetooth AMP Controller for mac80211	Andrei Emeltchenko
-> 
-> can we swap this talk with my Bluetooth overview talk. So that we get
-> all the overview talks on the first day. And keep the breakout talks on
-> the next day.
+2012/9/10 Yeoh Chun-Yeow <yeohchunyeow@gmail.com>:
+> Hi, all
+>
+> For your information, my submitted patch has allowed me to do the
+> following and mainly to setup the secured mesh 802.11s using authsae:
+>
+> 1. Key installations for the following:
+> /* key to protect integrity of multicast mgmt frames tx*/
+> install_key(nlcfg, NULL, CIPHER_AES_CMAC, NL80211_KEYTYPE_GROUP, 4, mgtk_tx);
+> /* key to encrypt multicast data traffic */
+> install_key(nlcfg, NULL, CIPHER_CCMP, NL80211_KEYTYPE_GROUP, 0, mgtk_tx);
+> /* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
+> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
+> /* key to decrypt multicast data traffic from this peer */
+> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_GROUP, 0, peer_mgtk);
+> /* to check integrity of multicast mgmt frames from this peer */
+> install_key(&nlcfg, peer, CIPHER_AES_CMAC, NL80211_KEYTYPE_GROUP, 4, peer_mgtk);
+>
+> 2. By using the submitted patch, how ever as Jouni has pointed out
+> that testing with ath5k implementation alone may not be correct, due
+> to the following statement:
+> If the CCMP processing is done incorrectly, they could both mangle the
+> results in the same way to hide the issue.
+>
+> thus I revert back by not disabling the IEEE80211_KEY_FLAG_SW_MGMT.
+> However, with this, it has showed that robust unicast management frame
+> is encrypted in SW but is decrypted wrongly in SW (perhaps HW decrypt
+> it due to the HW accl enabling for unicast data frame).
+>
+> Hope this help.
+>
+> Thanks.
+>
+> Regards,
+> Chun-Yeow
+>
+> On Mon, Sep 10, 2012 at 9:13 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>> Adrian Chadd <adrian@freebsd.org> writes:
+>>
+>>> Yeoh - can you please email me privately with a summary of what you
+>>> implemented, what you've tested and what worked / what didn't work?
+>>
+>> Why privately? Better to have all the information public, you never know
+>> if someone finds the info from the web and picks up the work.
+>>
+>> --
+>> Kalle Valo
 
-Sure, no problem.
-
-Now, if we only had a few 802.11-related topics...
+Have you tried disabing RX or TX only encryption/decryption on hw
+trough PCU DIAG register ?
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
