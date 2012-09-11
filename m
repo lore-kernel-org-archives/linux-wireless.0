@@ -1,114 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40300 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:40179 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754343Ab2IKNZu (ORCPT
+	with ESMTP id S1750898Ab2IKMp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 09:25:50 -0400
+	Tue, 11 Sep 2012 08:45:29 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 08/12] mac80211: return error code from ieee80211_vif_use_channel
-Date: Tue, 11 Sep 2012 15:26:19 +0200
-Message-Id: <1347369983-12459-9-git-send-email-johannes@sipsolutions.net> (sfid-20120911_152607_132529_8BB0FFAA)
-In-Reply-To: <1347369983-12459-1-git-send-email-johannes@sipsolutions.net>
-References: <1347369983-12459-1-git-send-email-johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: change locking around ieee80211_recalc_smps
+Date: Tue, 11 Sep 2012 14:46:06 +0200
+Message-Id: <1347367566-30660-1-git-send-email-johannes@sipsolutions.net> (sfid-20120911_144531_648560_39799CAE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Instead of returning a bool successful value, return a
-regular error code that could come from the driver.
+Make the function acquire the necessary mutex itself
+to simplify the callers.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/chan.c        |   22 ++++++++++++----------
- net/mac80211/ieee80211_i.h |    9 +++++----
- 2 files changed, 17 insertions(+), 14 deletions(-)
+ net/mac80211/cfg.c  |    2 --
+ net/mac80211/main.c |    2 --
+ net/mac80211/mlme.c |    2 +-
+ net/mac80211/util.c |    7 ++++---
+ 4 files changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 95c4a5f..94ed9e7 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -223,20 +223,22 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 		      enum ieee80211_chanctx_mode mode)
- {
- 	struct ieee80211_chanctx *ctx;
-+	int err;
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
- 	ctx = kzalloc(sizeof(*ctx) + local->hw.chanctx_data_size, GFP_KERNEL);
- 	if (!ctx)
--		return NULL;
-+		return ERR_PTR(-ENOMEM);
- 
- 	ctx->conf.channel = channel;
- 	ctx->conf.channel_type = channel_type;
- 	ctx->mode = mode;
- 
--	if (drv_add_chanctx(local, ctx)) {
-+	err = drv_add_chanctx(local, ctx);
-+	if (err) {
- 		kfree(ctx);
--		return NULL;
-+		return ERR_PTR(err);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 00e31b4..9bd56a7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2070,9 +2070,7 @@ int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
+ 	 */
+ 	if (!sdata->u.mgd.associated ||
+ 	    sdata->vif.bss_conf.channel_type == NL80211_CHAN_NO_HT) {
+-		mutex_lock(&sdata->local->iflist_mtx);
+ 		ieee80211_recalc_smps(sdata->local);
+-		mutex_unlock(&sdata->local->iflist_mtx);
+ 		return 0;
  	}
  
- 	list_add(&ctx->list, &local->chanctx_list);
-@@ -343,10 +345,10 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_free_chanctx(local, ctx);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 416e85e..c80c449 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -364,9 +364,7 @@ static void ieee80211_recalc_smps_work(struct work_struct *work)
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local, recalc_smps);
+ 
+-	mutex_lock(&local->iflist_mtx);
+ 	ieee80211_recalc_smps(local);
+-	mutex_unlock(&local->iflist_mtx);
  }
  
--bool ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
--			       struct ieee80211_channel *channel,
--			       enum nl80211_channel_type channel_type,
--			       enum ieee80211_chanctx_mode mode)
-+int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
-+			      struct ieee80211_channel *channel,
-+			      enum nl80211_channel_type channel_type,
-+			      enum ieee80211_chanctx_mode mode)
+ #ifdef CONFIG_INET
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 45a9fa6..2dbd9e1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1348,9 +1348,9 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	ieee80211_recalc_ps(local, -1);
+-	ieee80211_recalc_smps(local);
+ 	mutex_unlock(&local->iflist_mtx);
+ 
++	ieee80211_recalc_smps(local);
+ 	ieee80211_recalc_ps_vif(sdata);
+ 
+ 	netif_tx_start_all_queues(sdata->dev);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 2017904..22ca350 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1606,14 +1606,13 @@ static int check_mgd_smps(struct ieee80211_if_managed *ifmgd,
+ 	return 0;
+ }
+ 
+-/* must hold iflist_mtx */
+ void ieee80211_recalc_smps(struct ieee80211_local *local)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_chanctx *ctx;
-@@ -357,14 +359,14 @@ bool ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	ctx = ieee80211_find_chanctx(local, channel, channel_type, mode);
- 	if (!ctx)
- 		ctx = ieee80211_new_chanctx(local, channel, channel_type, mode);
--	if (!ctx) {
-+	if (IS_ERR(ctx)) {
- 		mutex_unlock(&local->chanctx_mtx);
--		return false;
-+		return PTR_ERR(ctx);
+ 	struct ieee80211_sub_if_data *sdata;
+ 	enum ieee80211_smps_mode smps_mode = IEEE80211_SMPS_OFF;
+ 	int count = 0;
+ 
+-	lockdep_assert_held(&local->iflist_mtx);
++	mutex_lock(&local->iflist_mtx);
+ 
+ 	/*
+ 	 * This function could be improved to handle multiple
+@@ -1642,12 +1641,14 @@ void ieee80211_recalc_smps(struct ieee80211_local *local)
  	}
  
- 	ieee80211_assign_vif_chanctx(sdata, ctx);
- 	mutex_unlock(&local->chanctx_mtx);
--	return true;
-+	return 0;
+ 	if (smps_mode == local->smps_mode)
+-		return;
++		goto unlock;
+ 
+  set:
+ 	local->smps_mode = smps_mode;
+ 	/* changed flag is auto-detected for this */
+ 	ieee80211_hw_config(local, 0);
++ unlock:
++	mutex_unlock(&local->iflist_mtx);
  }
  
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e0315d4..8fa00ad 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1540,10 +1540,11 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- enum nl80211_channel_type
- ieee80211_ht_oper_to_channel_type(struct ieee80211_ht_operation *ht_oper);
- 
--bool ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
--			       struct ieee80211_channel *channel,
--			       enum nl80211_channel_type channel_type,
--			       enum ieee80211_chanctx_mode mode);
-+int __must_check
-+ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
-+			  struct ieee80211_channel *channel,
-+			  enum nl80211_channel_type channel_type,
-+			  enum ieee80211_chanctx_mode mode);
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
+ static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
 -- 
 1.7.10.4
 
