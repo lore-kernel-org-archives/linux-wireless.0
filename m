@@ -1,54 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3374 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752410Ab2IMTMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 15:12:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/10] brcmfmac: fix bug causing errorneous free on
- exception.
-Date: Thu, 13 Sep 2012 21:12:04 +0200
-Message-ID: <1347563526-12513-9-git-send-email-arend@broadcom.com> (sfid-20120913_211243_561610_CD100800)
-In-Reply-To: <1347563526-12513-1-git-send-email-arend@broadcom.com>
-References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:55989 "EHLO
+	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757260Ab2IKBcV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Sep 2012 21:32:21 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 08/10] mwifiex: support custom world regulatory domain
+Date: Mon, 10 Sep 2012 18:30:47 -0700
+Message-Id: <1347327049-13665-9-git-send-email-bzhao@marvell.com> (sfid-20120911_033231_090321_CD5E0299)
+In-Reply-To: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
+References: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-This patch fixes bug where driver frees resources twice when
-an exception occurs.
+country 00 (world regulatory domain) doesn't define channels
+52 - 64 and 100 - 140. Add these channels to our custom world
+regulatory domain.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |   35 ++++++++++++++++++++++++++++++-
+ 1 files changed, 34 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index c6d5aeb..03f59cd 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1340,10 +1340,8 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo,
- 	struct device *dev = devinfo->dev;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 797f978..b9f7b3e 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -37,6 +37,36 @@ static const struct ieee80211_iface_combination mwifiex_iface_comb_ap_sta = {
+ 	.beacon_int_infra_match = true,
+ };
  
- 	bus_pub = brcmf_usb_attach(devinfo, BRCMF_USB_NRXQ, BRCMF_USB_NTXQ);
--	if (!bus_pub) {
--		ret = -ENODEV;
--		goto fail;
--	}
-+	if (!bus_pub)
-+		return -ENODEV;
++static const struct ieee80211_regdomain mwifiex_world_regdom_custom = {
++	.n_reg_rules = 7,
++	.alpha2 =  "99",
++	.reg_rules = {
++		/* Channel 1 - 11 */
++		REG_RULE(2412-10, 2462+10, 40, 3, 20, 0),
++		/* Channel 12 - 13 */
++		REG_RULE(2467-10, 2472+10, 20, 3, 20,
++			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS),
++		/* Channel 14 */
++		REG_RULE(2484-10, 2484+10, 20, 3, 20,
++			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS |
++			 NL80211_RRF_NO_OFDM),
++		/* Channel 36 - 48 */
++		REG_RULE(5180-10, 5240+10, 40, 3, 20,
++			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS),
++		/* Channel 149 - 165 */
++		REG_RULE(5745-10, 5825+10, 40, 3, 20,
++			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS),
++		/* Channel 52 - 64 */
++		REG_RULE(5260-10, 5320+10, 40, 3, 30,
++			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS |
++			 NL80211_RRF_DFS),
++		/* Channel 100 - 140 */
++		REG_RULE(5500-10, 5700+10, 40, 3, 30,
++			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS |
++			 NL80211_RRF_DFS),
++	}
++};
++
+ /*
+  * This function maps the nl802.11 channel type into driver channel type.
+  *
+@@ -1833,7 +1863,10 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	memcpy(wiphy->perm_addr, priv->curr_addr, ETH_ALEN);
+ 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ 	wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME |
+-			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
++			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
++			WIPHY_FLAG_CUSTOM_REGULATORY;
++
++	wiphy_apply_custom_regulatory(wiphy, &mwifiex_world_regdom_custom);
  
- 	bus = kzalloc(sizeof(struct brcmf_bus), GFP_ATOMIC);
- 	if (!bus) {
+ 	wiphy->probe_resp_offload = NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
+ 				    NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2;
 -- 
-1.7.9.5
-
+1.7.0.2
 
