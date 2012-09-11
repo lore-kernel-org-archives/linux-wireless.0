@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:58836 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750854Ab2IGQKX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40141 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898Ab2IKMm6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 12:10:23 -0400
-Received: by eaac11 with SMTP id c11so976784eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 09:10:22 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] p54: connect to 11w protected networks
-Date: Fri, 7 Sep 2012 18:10:18 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-References: <1346622538.10113.3.camel@jlt4.sipsolutions.net> <201209071747.09666.chunkeey@googlemail.com> <1347033342.4256.28.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1347033342.4256.28.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209071810.18821.chunkeey@googlemail.com> (sfid-20120907_181028_313230_413ABEE2)
+	Tue, 11 Sep 2012 08:42:58 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TBPnt-0006lG-K0
+	for linux-wireless@vger.kernel.org; Tue, 11 Sep 2012 14:42:57 +0200
+Message-ID: <1347367415.4683.0.camel@jlt4.sipsolutions.net> (sfid-20120911_144301_252033_82F46D22)
+Subject: Re: [PATCH] mac80211: remove unneeded CONFIG_PM ifdef
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 11 Sep 2012 14:43:35 +0200
+In-Reply-To: <1347350383-23349-1-git-send-email-johannes@sipsolutions.net> (sfid-20120911_095912_518897_A3019C15)
+References: <1347350383-23349-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120911_095912_518897_A3019C15)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 September 2012 17:55:42 Johannes Berg wrote:
-> On Fri, 2012-09-07 at 17:47 +0200, Christian Lamparter wrote:
-> > On Friday 07 September 2012 14:17:14 Johannes Berg wrote:
-> > > On Tue, 2012-09-04 at 16:54 +0200, Johannes Berg wrote:
-> > >
-> > > If you want this for your driver, I'll commit this:
-> > > 
-> > > http://p.sipsolutions.net/ea2e3dbe980f5db8.txt
-> > 
-> > Won't this totally disable the crypto offload
-> > capabilities in AP mode?
+On Tue, 2012-09-11 at 09:59 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Yes, though we could add an nl80211 attribute that
-> allows hostapd to tell us, and then if it did tell
-> us we could know and do the right thing here.
+> The functions are only called if CONFIG_PM is set
+> as the callers are under an ifdef, so there's no
+> need to also define no-op functions.
 
-Well, if we want to do the right thing here, then I
-guess we should go for another alternative: a rxkey
-manager of some sorts. So, we delete keys from the
-firmware context once MFP comes into the game.
+Applied.
 
-This method also has another advantage that with
-a proper manager we can use the key usage statistics
-and upload only the most-used keys into the firmware
-context (most/all? p54 firmwares have usually 4-8 key
-slots in total, which is not always enough).
- 
-> > I sort of prefer the nohwcrypt switch as it won't
-> > interfere with running user setups as much (so we
-> > don't burden systems like that weird telekom
-> > streamin-box (Vision S100 - it's name I think)
-> > that came with a p54pci minipci card and are
-> > now used for different purposes by some.
-> 
-> I guess it would make sense then to give hostapd the ability to tell us?
-> 
-> It's up to you. I don't need 11w, nor do I have p54 hardware, nor does
-> it matter much to me ... :)
-Let's save that task for a rainy day :-D.
+johannes
 
-Regards,
-	Chr
