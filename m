@@ -1,50 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:49271 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755305Ab2ISMkS (ORCPT
+Received: from magic.merlins.org ([209.81.13.136]:42871 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115Ab2ILF51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 08:40:18 -0400
+	Wed, 12 Sep 2012 01:57:27 -0400
+Date: Tue, 11 Sep 2012 22:57:12 -0700
+From: Marc MERLIN <marc@merlins.org>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	David Rientjes <rientjes@google.com>, sgruszka@redhat.com,
+	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	Andrew Morton <akpm@osdl.org>, Mel Gorman <mgorman@suse.de>,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
+Message-ID: <20120912055712.GE11613@merlins.org> (sfid-20120912_075811_640589_74AB6505)
+References: <20120909213228.GA5538@elf.ucw.cz> <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com> <20120910111113.GA25159@elf.ucw.cz> <20120911162536.bd5171a1.akpm@linux-foundation.org> <1347426988.13103.684.camel@edumazet-glaptop>
 MIME-Version: 1.0
-In-Reply-To: <1348053493-22955-1-git-send-email-jarl@softace.dk>
-References: <1348053493-22955-1-git-send-email-jarl@softace.dk>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 19 Sep 2012 22:39:56 +1000
-Message-ID: <CAGRGNgUGOPt2iRaL+HGxsK-uFjSfmQVW6S0TzWhSgdZv7AJqTw@mail.gmail.com> (sfid-20120919_144036_996565_A53349B7)
-Subject: Re: [PATCH 1/2] Added information about which firmware file is being requested.
-To: Jarl Friis <jarl@softace.dk>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, "John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1347426988.13103.684.camel@edumazet-glaptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jarl,
+On Wed, Sep 12, 2012 at 07:16:28AM +0200, Eric Dumazet wrote:
+> On Tue, 2012-09-11 at 16:25 -0700, Andrew Morton wrote:
+> 
+> > Asking for a 256k allocation is pretty crazy - this is an operating
+> > system kernel, not a userspace application.
+> > 
+> > I'm wondering if this is due to a recent change, but I'm having trouble
+> > working out where the allocation call site is.
+> > --
+> 
+> (Adding Marc Merlin to CC, since he reported same problem)
+> 
+> Thats the firmware loading in iwlwifi driver. Not sure if it can use SG.
+> 
+> drivers/net/wireless/iwlwifi/iwl-drv.c
+> 
+> iwl_alloc_ucode() -> iwl_alloc_fw_desc() -> dma_alloc_coherent()
+> 
+> It seems some sections of /lib/firmware/iwlwifi*.ucode files are above
+> 128 Kbytes, so dma_alloc_coherent() try order-5 allocations
 
-You should really mention which driver these are for in the subject line, say:
+Thanks for looping me in, yes, this looks very familiar to me :)
 
-[PATCH] b43: Added information about which firmware file is being requested
+In the other thread, Johannes Berg gave me this patch which is supposed to
+help: http://p.sipsolutions.net/11ea33b376a5bac5.txt
 
-On Wed, Sep 19, 2012 at 9:18 PM, Jarl Friis <jarl@softace.dk> wrote:
-> This is informative information to provide about which actual firmware
-> file is being used.
+Unfortunately due to very long work days, I haven't had the time to try it
+out yet, but I will soon.
 
-Also, this patch is so small and obvious that you could arguably get
-away with something like:
+Would that help in this case too?
 
-Subject: [PATCH] b43: Log firmware filename
+And to answer David Rientjes, I also have compaction on:
+gandalfthegreat:~# zgrep CONFIG_COMPACTION /proc/config.gz 
+CONFIG_COMPACTION=y
 
-Log the name of the firmware file requested.
+Full config:
+http://marc.merlins.org/tmp/config-3.5.2-amd64-preempt-noide-20120731
 
-
-Or something along those lines.
+If that helps for comparison, my thread is here:
+http://www.spinics.net/lists/linux-wireless/msg96438.html
 
 Thanks,
-
+Marc
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
