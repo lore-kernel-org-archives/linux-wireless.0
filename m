@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36754 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754816Ab2IQPRI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42636 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757185Ab2ILGyK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 11:17:08 -0400
-Message-ID: <1347895064.4975.7.camel@jlt4.sipsolutions.net> (sfid-20120917_171713_380441_698CBF65)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <edumazet@google.com>
-Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org
-Date: Mon, 17 Sep 2012 17:17:44 +0200
-In-Reply-To: <CANn89iJymkq8LKcNCFCbQakfEZ+zV4Nbg33wATBD7oc0QCnj6Q@mail.gmail.com> (sfid-20120917_171545_758986_2167CDC2)
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	 <1347631355.5263.19.camel@sauron.fi.intel.com>
-	 <1347640763.5263.24.camel@sauron.fi.intel.com>
-	 <1347892887.7112.9.camel@sauron.fi.intel.com>
-	 <CANn89iJymkq8LKcNCFCbQakfEZ+zV4Nbg33wATBD7oc0QCnj6Q@mail.gmail.com>
-	 (sfid-20120917_171545_758986_2167CDC2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 12 Sep 2012 02:54:10 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/5] ath9k_hw: fix ar9462 selfgen chainmask
+Date: Wed, 12 Sep 2012 12:23:50 +0530
+Message-ID: <1347432833-10343-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120912_085438_326865_C356B1B3)
+In-Reply-To: <1347432833-10343-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1347432833-10343-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-09-17 at 17:15 +0200, Eric Dumazet wrote:
-> Hi
-> 
-> I would say some part of the stack assumes a header (I dont know wich
-> one ?) is pulled in skb->head/data, and thats a bug.
-> 
-> Always use pskb_may_pull(skb, XXX) to make sure you can access XXX
-> bytes in skb->data
-> 
-> It would help if you describe the problem, because I have no history (
-> I am not linux-wireless subscriber).
+When the 9462 is operating in 2G mode and MCI is enabled then
+reduce the selfgen chain mask to chain 1. Otherwise poor performance
+was reported at short range at Rx side when COEX is enabled.
 
-No worries, I'll take care of it, I've just not gotten to it yet and for
-that I apologize. I'll either look at it later today or tomorrow.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 1 +
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 3 ---
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index b2e39e8..f6eb43e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1027,6 +1027,7 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ 
+ 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
+ 			ar9003_mci_osla_setup(ah, true);
++		REG_WRITE(ah, AR_SELFGEN_MASK, 0x02);
+ 	} else {
+ 		ar9003_mci_send_lna_take(ah, true);
+ 		udelay(5);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 0d800c6..158b50d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -605,9 +605,6 @@ static void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
+ 
+ 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_APM) && (tx == 0x7))
+ 		REG_WRITE(ah, AR_SELFGEN_MASK, 0x3);
+-	else if (AR_SREV_9462(ah))
+-		/* xxx only when MCI support is enabled */
+-		REG_WRITE(ah, AR_SELFGEN_MASK, 0x3);
+ 	else
+ 		REG_WRITE(ah, AR_SELFGEN_MASK, tx);
+ 
+-- 
+1.7.12
 
