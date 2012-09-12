@@ -1,50 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63539 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757539Ab2IJP7Y (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10865 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752847Ab2ILN3t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 11:59:24 -0400
-Received: by eekc1 with SMTP id c1so1282683eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 08:59:23 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Subject: Re: [PATCH v3] p54: connect to 11w protected networks
-Date: Mon, 10 Sep 2012 17:59:17 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-References: <E1TA0re-00059m-CD@debian64.localnet> <1347036664.8913.1.camel@dcbw.foobar.com> <87ehma5agf.fsf@purkki.adurom.net>
-In-Reply-To: <87ehma5agf.fsf@purkki.adurom.net>
+	Wed, 12 Sep 2012 09:29:49 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 3/6] ath9k: flush bt profile whenever it is requested
+Date: Wed, 12 Sep 2012 18:59:21 +0530
+Message-ID: <1347456564-8222-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120912_152953_591815_49F1EA32)
+In-Reply-To: <1347456564-8222-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1347456564-8222-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201209101759.17751.chunkeey@googlemail.com> (sfid-20120910_175928_286926_CB0DC75F)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 September 2012 14:28:00 Kalle Valo wrote:
-> Dan Williams <dcbw@redhat.com> writes:
-> 
-> > On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
-> >> Previously, it was not possible to connect
-> >> to networks which requires 11w to be supported
-> >> by the stations.
-> >
-> > If at all possible if we can do this without module parameters, that
-> > would be great.  Otherwise how is userspace supposed to connect to a
-> > W-capable network without twiddling driver-specific module options,
-> > something we've tried really hard to not do?  Module options really
-> > aren't any different than private ioctls or IWPRIV commands...
-> 
-> Sure, and that's how it works with properly supported hardware. But p54
-> is so old that the user will need to buy newer hardware if he really
-> needs 11w support out-of-box. IMHO there's no point of making a huge
-> effort to add 11w support to older hardware, there are more important
-> things to fix in Linux wireless stack than that.
+Before processing BT profiles or status messages, check whether
+it is requested to flush BT profile. Otherwise it might increase
+number of BT profiles that affects the WLAN performance. Also
+flush the profiles when MCI is recovering from broken rx. After
+flushing BT profiles, query BT topology to refetch them.
 
-Dan's concern has been addressed by v4 of this patch
-(which depends on johannes' "add mgmt key flags" patch).
-p54 should now provide basic support for 11w protected
-networks w/o messing with any module parameters.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  4 ++++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |  4 +++-
+ drivers/net/wireless/ath/ath9k/mci.c        | 12 +++++++++++-
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-Regards,
-	Chr 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index f6eb43e..8d8df4b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1236,6 +1236,10 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 	case MCI_STATE_NEED_FTP_STOMP:
+ 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
+ 		break;
++	case MCI_STATE_NEED_FLUSH_BT_INFO:
++		value = (!mci->unhalt_bt_gpm && mci->need_flush_btinfo) ? 1 : 0;
++		mci->need_flush_btinfo = false;
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index f3bef8d..30acf28 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -200,6 +200,7 @@ enum mci_state_type {
+ 	MCI_STATE_RECOVER_RX,
+ 	MCI_STATE_NEED_FTP_STOMP,
+ 	MCI_STATE_DEBUG,
++	MCI_STATE_NEED_FLUSH_BT_INFO,
+ 	MCI_STATE_MAX
+ };
+ 
+@@ -211,7 +212,8 @@ enum mci_gpm_coex_opcode {
+ 	MCI_GPM_COEX_WLAN_CHANNELS,
+ 	MCI_GPM_COEX_BT_PROFILE_INFO,
+ 	MCI_GPM_COEX_BT_STATUS_UPDATE,
+-	MCI_GPM_COEX_BT_UPDATE_FLAGS
++	MCI_GPM_COEX_BT_UPDATE_FLAGS,
++	MCI_GPM_COEX_NOOP,
+ };
+ 
+ #define MCI_GPM_NOMORE  0
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 8f0e8d9..3a400c8 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -80,6 +80,7 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci)
+ 	struct ath_mci_profile_info *info, *tinfo;
+ 
+ 	mci->aggr_limit = 0;
++	mci->num_mgmt = 0;
+ 
+ 	if (list_empty(&mci->info))
+ 		return;
+@@ -328,6 +329,13 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 	u8 major, minor;
+ 	u32 seq_num;
+ 
++	if (ar9003_mci_state(ah, MCI_STATE_NEED_FLUSH_BT_INFO) &&
++	    ar9003_mci_state(ah, MCI_STATE_ENABLE)) {
++		ath_dbg(common, MCI, "(MCI) Need to flush BT profiles\n");
++		ath_mci_flush_profile(&sc->btcoex.mci);
++		ar9003_mci_state(ah, MCI_STATE_SEND_STATUS_QUERY);
++	}
++
+ 	switch (opcode) {
+ 	case MCI_GPM_COEX_VERSION_QUERY:
+ 		ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_COEX_VERSION);
+@@ -568,9 +576,11 @@ void ath_mci_intr(struct ath_softc *sc)
+ 	}
+ 
+ 	if ((mci_int & AR_MCI_INTERRUPT_RX_INVALID_HDR) ||
+-	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT))
++	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT)) {
+ 		mci_int &= ~(AR_MCI_INTERRUPT_RX_INVALID_HDR |
+ 			     AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT);
++		ath_mci_msg(sc, MCI_GPM_COEX_NOOP, NULL);
++	}
+ }
+ 
+ void ath_mci_enable(struct ath_softc *sc)
+-- 
+1.7.12
+
