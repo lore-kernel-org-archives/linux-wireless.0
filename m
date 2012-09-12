@@ -1,51 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:48453 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756499Ab2IKRbe (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50121 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761060Ab2ILSPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 13:31:34 -0400
-Received: by eekc1 with SMTP id c1so632561eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 10:31:33 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-Date: Tue, 11 Sep 2012 19:31:23 +0200
-Cc: "Yeoh Chun-Yeow" <yeohchunyeow@gmail.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Adrian Chadd <adrian@freebsd.org>, Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mcgrof@qca.qualcomm.com, ath5k-devel@venema.h4ckr.net
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com> <CAEFj986+K6TGpR2MXteAY86vAX8D=xVrFWMAVdc9zSuiix+Ogw@mail.gmail.com> <CAFtRNNwXgr=oN8y9u9MnEt75dAL0R-tJ6yf6vTOMcnCuCb7S-A@mail.gmail.com>
-In-Reply-To: <CAFtRNNwXgr=oN8y9u9MnEt75dAL0R-tJ6yf6vTOMcnCuCb7S-A@mail.gmail.com>
+	Wed, 12 Sep 2012 14:15:21 -0400
+Date: Wed, 12 Sep 2012 14:13:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2012-09-08
+Message-ID: <20120912181309.GB28823@tuxdriver.com> (sfid-20120912_201603_275133_CF552428)
+References: <20120908215956.GP5788@joana>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209111931.24258.chunkeey@googlemail.com> (sfid-20120911_193138_391351_650D97C7)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120908215956.GP5788@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 11 September 2012 18:36:27 Nick Kossifidis wrote:
-> 2012/9/11 Yeoh Chun-Yeow <yeohchunyeow@gmail.com>:
-> >> To be more clear: you can tell the hw to *only* disable decryption and
-> >> keep doing encryption.
-> >
-> > But the question here is that during Rx, need to do SW decryption for
-> > management frame and then HW decryption for unicast data frame for all
-> > the frame coming from the same STA. I still not so sure how to do
-> > that.
-> >
-> > Jouni said that the workaround is to re-encrypt(incorrectly) received
-> > robust unicast management frames if hwaccel for CCMP was configured
-> > for the transmitting STA (this is to undo the incorrect decryption
-> > done by the hardware) and then pass the encrypted frame to mac80211
-> > for software decryption.
-> >
+On Sat, Sep 08, 2012 at 06:59:56PM -0300, Gustavo Padovan wrote:
+> Hi John,
 > 
-> How about disabling acks on hw completely and handle them on sw ?
-> This might keep the engine running ok for unicast frames.
-> 
-> #define AR5K_DIAG_SW_DIS_ACK		0x00000002	/* Disable ACKs */
-> #define AR5K_DIAG_SW_DIS_CTS		0x00000004	/* Disable CTSs */
+> A few more fixes to 3.6, here we have four important fix to the MGMT interface,
+> two from Johan Hedberg and Andrzej Kaczmarek. Andrei fixed a free on
+> uninitialized memory and I added support for Broadcom/Foxconn devices.
 
-No, CTS and ACKs are control frames and not management frames.
+"Bluetooth: mgmt: Implement support for passkey notification" doesn't
+look like a fix at all.
+
+"Bluetooth: Update management interface revision" is suspect.  It kinda
+makes sense, but if it is so important than it should have been merged
+much earlier, no?
+
+"Bluetooth: Add USB_VENDOR_AND_INTERFACE_INFO() for Broadcom/Foxconn"
+might normally be OK, but it is getting late enough in the cycle
+that I would prefer to delay any device ID patches until the next
+merge window.
+
+The others look fine.  Do you want me to merge them directly?
+Or would you rather respin your pull request?
+
+John
+
+> Please pull, or let me know of any problems. Thanks.
+> 
+> 	Gustavo
+> 
+> The following changes since commit f10723841e624c0726c70356b31d91befed01dd6:
+> 
+>   libertas sdio: fix suspend when interface is down (2012-09-05 14:53:36 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+> 
+> for you to fetch changes up to b6f04c364ef853d8baa8949be20ef708000bcb97:
+> 
+>   Bluetooth: Fix freeing uninitialized delayed works (2012-09-08 17:27:52 -0300)
+> 
+> ----------------------------------------------------------------
+> Andrei Emeltchenko (1):
+>       Bluetooth: Fix freeing uninitialized delayed works
+> 
+> Andrzej Kaczmarek (2):
+>       Bluetooth: mgmt: Fix enabling SSP while powered off
+>       Bluetooth: mgmt: Fix enabling LE while powered off
+> 
+> Gustavo Padovan (1):
+>       Bluetooth: Add USB_VENDOR_AND_INTERFACE_INFO() for Broadcom/Foxconn
+> 
+> Johan Hedberg (2):
+>       Bluetooth: mgmt: Implement support for passkey notification
+>       Bluetooth: Update management interface revision
+> 
+>  drivers/bluetooth/btusb.c        |  2 +-
+>  include/net/bluetooth/hci.h      | 18 ++++++++++++
+>  include/net/bluetooth/hci_core.h |  5 ++++
+>  include/net/bluetooth/mgmt.h     |  7 +++++
+>  net/bluetooth/hci_event.c        | 67 ++++++++++++++++++++++++++++++++++++++++++
+>  net/bluetooth/l2cap_core.c       |  2 +-
+>  net/bluetooth/mgmt.c             | 35 +++++++++++++++++++++-
+>  7 files changed, 133 insertions(+), 3 deletions(-)
+> 
+
+
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
