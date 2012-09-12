@@ -1,66 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1948 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751674Ab2IJU7U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 16:59:20 -0400
-Message-ID: <504E549E.5080309@broadcom.com> (sfid-20120910_225923_940673_DC4DF8C3)
-Date: Mon, 10 Sep 2012 22:59:10 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44119 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758910Ab2ILRyD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Sep 2012 13:54:03 -0400
+Received: by lagy9 with SMTP id y9so1311483lag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2012 10:54:00 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Florian Fainelli" <florian@openwrt.org>
-Subject: Re: [PATCH 00/10] brcmfmac: transmit flow control and e-scan
- support
-References: <1347283018-24223-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1347283018-24223-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <20560.11160.528440.961924@gargle.gargle.HOWL>
+References: <20560.11160.528440.961924@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Wed, 12 Sep 2012 10:53:40 -0700
+Message-ID: <CAB=NE6X+eyvPy+-TpU7+53u8o+B9LMLKwb1K-AWTOG79zGoMGg@mail.gmail.com> (sfid-20120912_195407_563344_0C78605D)
+Subject: Re: [PATCH] qca-swiss-army-knife: Update AR9565 initvals
+To: Sujith Manoharan <c_manoha@qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2012 03:16 PM, Arend van Spriel wrote:
-> This series contains transmit flow control handling when the brcmfmac driver
-> has no resources to transfer packets over the host interface. This improves
-> throughput number for TCP. The other feature in this series is event based
-> scanning in which firmware sends an event per BSS.
+On Tue, Sep 11, 2012 at 11:28 PM, Sujith Manoharan
+<c_manoha@qualcomm.com> wrote:
+> * Set BB_tpc_1.enable_pd_calibrate to 0
 >
-> The other changes in this series are small fixes.
+> * Set BB_cl_cal_ctrl.enable_parallel_cal to 1
 >
-> This series is for the v3.7 kernel and applies to the wireless-next tree.
+> * Enable "enable_dac_async_fifo" and "enable_adc_async_fifo"
+>   to fix some dac/adc timing issue,
+>   e.g. EVM won't degrade when setting core voltage to 1.15V.
 >
-> Hante Meuleman (10):
->    brcmfmac: Stop all net if queues on tx flow halt.
->    brcmfmac: Add extra data support to firmware event queueing.
->    brcmfmac: Fix extra data support handling.
->    brcmfmac: Add tx flow control on net if queue for USB.
->    brcmfmac: Clean up scan related code.
-
->    brcmfmac: fix big endian bug in i-scan.
->    brcmfmac: Fix big endian host configuration data.
-
-Hi John,
-
-Florian indicated that these are stable candidates. Do you agree? If so,
-I will take them out of this series and resend the patches.
-
-Gr. AvS
-
->    brcmfmac: refill buffers on rx protocol error.
->    brcmfmac: avoid using local usb data.
->    brcmfmac: add e-scan support.
+>   Set BB_gen_controls.enable_dac_async_fifo=1
+>   Set BB_gen_controls.enable_adc_async_fifo=1
 >
->   drivers/net/wireless/brcm80211/Kconfig             |    8 +
->   drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   24 +
->   drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
->   .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   34 +-
->   .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   16 +-
->   drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +-
->   drivers/net/wireless/brcm80211/brcmfmac/usb.c      |  184 +++----
->   .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  564 +++++++++++++++++++-
->   .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   25 +
->   9 files changed, 717 insertions(+), 148 deletions(-)
+> * Improve LNA2 Sensitivity ~1dB
+>   Set ch0_PLLCLKMODA2WLAN.inv_clk320_adc_ch0 = 1
 >
+> * Correct alternate chain RSSI when doing diversity
+>   Set BB_bbb_sig_detect.ant_switch_time to 63
+>
+> * Refer to RACK RX gain report and modify RF gain table for LNA2
+>
+> * Invert the phase of the root of both clocks
+>   (setting flip_pllclk320 = 1) and set inv_clk320_adc back = 0.
+>
+>   Set ch0_PLLCLKMODA2WLAN.flip_pllclk320 to 1
+>   Set ch0_PLLCLKMODA2WLAN.inv_clk320_adc_ch0 to 0
+>
+> * Remove MAC PCU registers MAC_PCU_TSF_L32/MAC_PCU_TSF_U32.
+>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
+thanks, applied and pushed both patches, sorry for the delay in
+applying the other patch.
 
+  Luis
