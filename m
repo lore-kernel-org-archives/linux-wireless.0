@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:53333 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756229Ab2ICUDv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43750 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755013Ab2ILJi3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2012 16:03:51 -0400
-Message-ID: <50450D23.3010904@lwfinger.net> (sfid-20120903_220409_160285_85727E81)
-Date: Mon, 03 Sep 2012 15:03:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Andi Kleen <andi@firstfloor.org>
-CC: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Remove bogus memcpy in brcm80211 ai_detach
-References: <20120903191335.GW16230@one.firstfloor.org> <50450388.6040506@lwfinger.net> <20120903195700.GZ16230@one.firstfloor.org>
-In-Reply-To: <20120903195700.GZ16230@one.firstfloor.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 12 Sep 2012 05:38:29 -0400
+Message-ID: <1347442742.4293.4.camel@jlt4.sipsolutions.net> (sfid-20120912_113832_889285_F63190B7)
+Subject: Re: [PATCH v1] Fix for regulatory in 60g
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Wed, 12 Sep 2012 11:39:02 +0200
+In-Reply-To: <14825905.k5l7QPk6IR@lx-vladimir>
+References: <1347364329-19443-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1347384193.4683.2.camel@jlt4.sipsolutions.net>
+	 <14825905.k5l7QPk6IR@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/03/2012 02:57 PM, Andi Kleen wrote:
-> On Mon, Sep 03, 2012 at 02:22:48PM -0500, Larry Finger wrote:
+On Wed, 2012-09-12 at 11:10 +0300, Vladimir Kondratiev wrote:
 
->> Have you compiled all of wireless with gcc 4.8? If so, can I assume that
->> you will report warnings for other drivers?
->
-> I did 64bit allyesconfig with LTO yes.  wireless has very few warnings overall,
-> compared to many other subsystems.
->
-> I found one other issue in it for which I'm sending a patch.
+> > I don't really see a reason for that given that we don't have a driver
+> > that uses 60g support anyway. Why should I pick it up anyway this late
+> > in the cycle?
 
-Thanks for responding, and for doing the cleanup.
+> Well, it is bug fix for 60g band that was merged. 
 
-Larry
+It was, but it never gets used.
 
+> Also, I am readying
+> driver for 60g card and will submit it shortly.
 
+That won't be making it into 3.6 either though.
+
+>  Having this bug fixed
+> will help to 3-rd parties that want to experiment with 60g,
+> and for 60g-related work in tools like wpa_supplicant and iw.
+
+So I don't think this makes much sense? They'll probably use compat
+anyway ;-)
+
+I'll apply the patch to my -next branch after Luis reviews it.
+
+johannes
 
