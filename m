@@ -1,138 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33165 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751098Ab2I3PPc (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32259 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755561Ab2ILG3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2012 11:15:32 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: remove some unused code
-Date: Sun, 30 Sep 2012 17:16:05 +0200
-Message-Id: <1349018165-22826-1-git-send-email-johannes@sipsolutions.net> (sfid-20120930_171534_971256_CC4F28E8)
+	Wed, 12 Sep 2012 02:29:34 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20560.11160.528440.961924@gargle.gargle.HOWL> (sfid-20120912_082939_135666_411DDD88)
+Date: Wed, 12 Sep 2012 11:58:40 +0530
+To: Luis Rodriguez <rodrigue@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] qca-swiss-army-knife: Update AR9565 initvals
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+* Set BB_tpc_1.enable_pd_calibrate to 0
 
-There are a number of unused variables that gcc
-pointed out (when building with W=1) as well as
-some conditions that can never be true due to
-the datatypes used: unsigned values can't be
-less than zero. Remove this code.
+* Set BB_cl_cal_ctrl.enable_parallel_cal to 1
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+* Enable "enable_dac_async_fifo" and "enable_adc_async_fifo"
+  to fix some dac/adc timing issue,
+  e.g. EVM won't degrade when setting core voltage to 1.15V.
+
+  Set BB_gen_controls.enable_dac_async_fifo=1
+  Set BB_gen_controls.enable_adc_async_fifo=1
+
+* Improve LNA2 Sensitivity ~1dB
+  Set ch0_PLLCLKMODA2WLAN.inv_clk320_adc_ch0 = 1
+
+* Correct alternate chain RSSI when doing diversity
+  Set BB_bbb_sig_detect.ant_switch_time to 63
+
+* Refer to RACK RX gain report and modify RF gain table for LNA2
+
+* Invert the phase of the root of both clocks
+  (setting flip_pllclk320 = 1) and set inv_clk320_adc back = 0.
+
+  Set ch0_PLLCLKMODA2WLAN.flip_pllclk320 to 1
+  Set ch0_PLLCLKMODA2WLAN.inv_clk320_adc_ch0 to 0
+
+* Remove MAC PCU registers MAC_PCU_TSF_L32/MAC_PCU_TSF_U32.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/mac80211/cfg.c  |    2 --
- net/mac80211/mlme.c |    7 +------
- net/mac80211/rx.c   |   11 +++--------
- net/mac80211/tx.c   |    2 --
- 4 files changed, 4 insertions(+), 18 deletions(-)
+ tools/initvals/ar9565_1p0_initvals.h | 100 +++++++++++++++++------------------
+ 1 file changed, 49 insertions(+), 51 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 05f3a31..0181e0d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2819,7 +2819,6 @@ static int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb = NULL;
- 	bool send_direct;
- 	int ret;
-@@ -2845,7 +2844,6 @@ static int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 	if (!skb)
- 		return -ENOMEM;
- 
--	info = IEEE80211_SKB_CB(skb);
- 	skb_reserve(skb, local->hw.extra_tx_headroom);
- 
- 	switch (action_code) {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e714ed8..8fed60b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2543,14 +2543,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 
- 	if (elems.ht_cap_elem && elems.ht_operation && elems.wmm_param &&
--	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N)) {
--		struct ieee80211_supported_band *sband;
--
--		sband = local->hw.wiphy->bands[local->oper_channel->band];
--
-+	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
- 		changed |= ieee80211_config_ht_tx(sdata, elems.ht_operation,
- 						  bssid, true);
--	}
- 
- 	if (elems.country_elem && elems.pwr_constr_elem &&
- 	    mgmt->u.probe_resp.capab_info &
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 61c621e..9f64fc4 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1384,9 +1384,7 @@ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
- 			 struct sk_buff **skb)
- {
- 	struct ieee80211_fragment_entry *entry;
--	int idx;
- 
--	idx = sdata->fragment_next;
- 	entry = &sdata->fragments[sdata->fragment_next++];
- 	if (sdata->fragment_next >= IEEE80211_FRAGMENT_MAX)
- 		sdata->fragment_next = 0;
-@@ -3010,8 +3008,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	WARN_ON_ONCE(softirq_count() == 0);
- 
--	if (WARN_ON(status->band < 0 ||
--		    status->band >= IEEE80211_NUM_BANDS))
-+	if (WARN_ON(status->band >= IEEE80211_NUM_BANDS))
- 		goto drop;
- 
- 	sband = local->hw.wiphy->bands[status->band];
-@@ -3056,8 +3053,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			 * hardware error. The driver should catch hardware
- 			 * errors.
- 			 */
--			if (WARN((status->rate_idx < 0 ||
--				 status->rate_idx > 76),
-+			if (WARN(status->rate_idx > 76,
- 				 "Rate marked as an HT rate but passed "
- 				 "status->rate_idx is not "
- 				 "an MCS index [0-76]: %d (0x%02x)\n",
-@@ -3065,8 +3061,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				 status->rate_idx))
- 				goto drop;
- 		} else {
--			if (WARN_ON(status->rate_idx < 0 ||
--				    status->rate_idx >= sband->n_bitrates))
-+			if (WARN_ON(status->rate_idx >= sband->n_bitrates))
- 				goto drop;
- 			rate = &sband->bitrates[status->rate_idx];
- 		}
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e0e0d1d..baa88fc 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -951,7 +951,6 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
- 	fragnum = 0;
- 
- 	skb_queue_walk(&tx->skbs, skb) {
--		int next_len;
- 		const __le16 morefrags = cpu_to_le16(IEEE80211_FCTL_MOREFRAGS);
- 
- 		hdr = (void *)skb->data;
-@@ -970,7 +969,6 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
- 			info->flags &= ~IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 		} else {
- 			hdr->frame_control &= ~morefrags;
--			next_len = 0;
- 		}
- 		hdr->seq_ctrl |= cpu_to_le16(fragnum & IEEE80211_SCTL_FRAG);
- 		fragnum++;
+diff --git a/tools/initvals/ar9565_1p0_initvals.h b/tools/initvals/ar9565_1p0_initvals.h
+index fa9e093..843e79f 100644
+--- a/tools/initvals/ar9565_1p0_initvals.h
++++ b/tools/initvals/ar9565_1p0_initvals.h
+@@ -58,8 +58,6 @@ static const u32 ar9565_1p0_mac_core[][2] = {
+ 	{0x00008040, 0x00000000},
+ 	{0x00008044, 0x00000000},
+ 	{0x00008048, 0x00000000},
+-	{0x0000804c, 0xffffffff},
+-	{0x00008050, 0xffffffff},
+ 	{0x00008054, 0x00000000},
+ 	{0x00008058, 0x00000000},
+ 	{0x0000805c, 0x000fc78f},
+@@ -246,7 +244,7 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	{0x00009e50, 0x00ff03f1},
+ 	{0x00009e54, 0xe4c355c7},
+ 	{0x00009e5c, 0xe9198724},
+-	{0x00009fc0, 0x823e4788},
++	{0x00009fc0, 0x823e4fc8},
+ 	{0x00009fc4, 0x0001efb5},
+ 	{0x00009fcc, 0x40000014},
+ 	{0x0000a20c, 0x00000000},
+@@ -291,7 +289,7 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	{0x0000a3ec, 0x20202020},
+ 	{0x0000a3f0, 0x00000000},
+ 	{0x0000a3f4, 0x00000006},
+-	{0x0000a3f8, 0x0cdbd380},
++	{0x0000a3f8, 0x0c9bd380},
+ 	{0x0000a3fc, 0x000f0f01},
+ 	{0x0000a400, 0x8fa91f01},
+ 	{0x0000a404, 0x00000000},
+@@ -355,11 +353,11 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+ 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
+-	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946222, 0xcf946222},
++	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946222, 0xcf946222},
+ 	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+-	{0x0000a204, 0x033187c0, 0x033187c4, 0x033187c4, 0x033187c0},
++	{0x0000a204, 0x07318fc0, 0x07318fc4, 0x07318fc4, 0x07318fc0},
+ 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
+ 	{0x0000a22c, 0x01026a2f, 0x01026a27, 0x01026a2f, 0x01026a2f},
+ 	{0x0000a230, 0x0000400a, 0x00004014, 0x00004016, 0x0000400b},
+@@ -375,9 +373,9 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
+ 	{0x0000a288, 0x00100510, 0x00100510, 0x00100510, 0x00100510},
+ 	{0x0000a28c, 0x00021551, 0x00021551, 0x00021551, 0x00021551},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2d0, 0x00071982, 0x00071982, 0x00071982, 0x00071982},
+-	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
++	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000ae04, 0x00800000, 0x00800000, 0x00800000, 0x00800000},
+ 	{0x0000ae18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+@@ -417,7 +415,7 @@ static const u32 ar9565_1p0_radio_core[][2] = {
+ 	{0x00016144, 0x02084080},
+ 	{0x00016148, 0x000080c0},
+ 	{0x00016280, 0x050a0001},
+-	{0x00016284, 0x3d841400},
++	{0x00016284, 0x3d841440},
+ 	{0x00016288, 0x00000000},
+ 	{0x0001628c, 0xe3000000},
+ 	{0x00016290, 0xa1004080},
+@@ -840,27 +838,27 @@ static const u32 ar9565_1p0_common_wo_xlna_rx_gain_table[][2] = {
+ 	{0x0000a0b4, 0x00000000},
+ 	{0x0000a0b8, 0x00000000},
+ 	{0x0000a0bc, 0x00000000},
+-	{0x0000a0c0, 0x301f3000},
+-	{0x0000a0c4, 0x41004101},
+-	{0x0000a0c8, 0x411e411f},
+-	{0x0000a0cc, 0x411c411d},
+-	{0x0000a0d0, 0x42434244},
+-	{0x0000a0d4, 0x42414242},
+-	{0x0000a0d8, 0x425f4240},
+-	{0x0000a0dc, 0x5342425e},
+-	{0x0000a0e0, 0x53405341},
+-	{0x0000a0e4, 0x535e535f},
+-	{0x0000a0e8, 0x7402535d},
+-	{0x0000a0ec, 0x74007401},
+-	{0x0000a0f0, 0x741e741f},
+-	{0x0000a0f4, 0x7522741d},
+-	{0x0000a0f8, 0x75207521},
+-	{0x0000a0fc, 0x753e753f},
+-	{0x0000a100, 0x76617662},
+-	{0x0000a104, 0x767f7660},
+-	{0x0000a108, 0x767d767e},
+-	{0x0000a10c, 0x77e277e3},
+-	{0x0000a110, 0x77e077e1},
++	{0x0000a0c0, 0x00bf00a0},
++	{0x0000a0c4, 0x11a011a1},
++	{0x0000a0c8, 0x11be11bf},
++	{0x0000a0cc, 0x11bc11bd},
++	{0x0000a0d0, 0x22632264},
++	{0x0000a0d4, 0x22612262},
++	{0x0000a0d8, 0x227f2260},
++	{0x0000a0dc, 0x4322227e},
++	{0x0000a0e0, 0x43204321},
++	{0x0000a0e4, 0x433e433f},
++	{0x0000a0e8, 0x4462433d},
++	{0x0000a0ec, 0x44604461},
++	{0x0000a0f0, 0x447e447f},
++	{0x0000a0f4, 0x5582447d},
++	{0x0000a0f8, 0x55805581},
++	{0x0000a0fc, 0x559e559f},
++	{0x0000a100, 0x66816682},
++	{0x0000a104, 0x669f6680},
++	{0x0000a108, 0x669d669e},
++	{0x0000a10c, 0x77627763},
++	{0x0000a110, 0x77607761},
+ 	{0x0000a114, 0x00000000},
+ 	{0x0000a118, 0x00000000},
+ 	{0x0000a11c, 0x00000000},
+@@ -872,27 +870,27 @@ static const u32 ar9565_1p0_common_wo_xlna_rx_gain_table[][2] = {
+ 	{0x0000a134, 0x00000000},
+ 	{0x0000a138, 0x00000000},
+ 	{0x0000a13c, 0x00000000},
+-	{0x0000a140, 0x301f3000},
+-	{0x0000a144, 0x41004101},
+-	{0x0000a148, 0x411e411f},
+-	{0x0000a14c, 0x411c411d},
+-	{0x0000a150, 0x42434244},
+-	{0x0000a154, 0x42414242},
+-	{0x0000a158, 0x425f4240},
+-	{0x0000a15c, 0x5342425e},
+-	{0x0000a160, 0x53405341},
+-	{0x0000a164, 0x535e535f},
+-	{0x0000a168, 0x7402535d},
+-	{0x0000a16c, 0x74007401},
+-	{0x0000a170, 0x741e741f},
+-	{0x0000a174, 0x7522741d},
+-	{0x0000a178, 0x75207521},
+-	{0x0000a17c, 0x753e753f},
+-	{0x0000a180, 0x76617662},
+-	{0x0000a184, 0x767f7660},
+-	{0x0000a188, 0x767d767e},
+-	{0x0000a18c, 0x77e277e3},
+-	{0x0000a190, 0x77e077e1},
++	{0x0000a140, 0x00bf00a0},
++	{0x0000a144, 0x11a011a1},
++	{0x0000a148, 0x11be11bf},
++	{0x0000a14c, 0x11bc11bd},
++	{0x0000a150, 0x22632264},
++	{0x0000a154, 0x22612262},
++	{0x0000a158, 0x227f2260},
++	{0x0000a15c, 0x4322227e},
++	{0x0000a160, 0x43204321},
++	{0x0000a164, 0x433e433f},
++	{0x0000a168, 0x4462433d},
++	{0x0000a16c, 0x44604461},
++	{0x0000a170, 0x447e447f},
++	{0x0000a174, 0x5582447d},
++	{0x0000a178, 0x55805581},
++	{0x0000a17c, 0x559e559f},
++	{0x0000a180, 0x66816682},
++	{0x0000a184, 0x669f6680},
++	{0x0000a188, 0x669d669e},
++	{0x0000a18c, 0x77627763},
++	{0x0000a190, 0x77607761},
+ 	{0x0000a194, 0x00000000},
+ 	{0x0000a198, 0x00000000},
+ 	{0x0000a19c, 0x00000000},
 -- 
-1.7.10.4
+1.7.12
 
