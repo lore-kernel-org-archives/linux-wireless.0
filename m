@@ -1,64 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40828 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752375Ab2IDLeq (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25005 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755061Ab2ILN35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 07:34:46 -0400
-Message-ID: <1346758521.3737.28.camel@jlt4.sipsolutions.net> (sfid-20120904_133450_761914_FDFA6D52)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@venema.h4ckr.net
-Date: Tue, 04 Sep 2012 13:35:21 +0200
-In-Reply-To: <CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com> (sfid-20120904_132540_615042_3B7789FB)
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-	 <1346746298.3737.0.camel@jlt4.sipsolutions.net>
-	 <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
-	 <20120904102204.GA2541@w1.fi>
-	 <CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
-	 <CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
-	 (sfid-20120904_132540_615042_3B7789FB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 12 Sep 2012 09:29:57 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 4/6] ath9k: move coex param updation within mci work
+Date: Wed, 12 Sep 2012 18:59:22 +0530
+Message-ID: <1347456564-8222-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120912_153001_292367_E6DA1506)
+In-Reply-To: <1347456564-8222-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1347456564-8222-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-04 at 19:25 +0800, Yeoh Chun-Yeow wrote:
-> Hi, Jouni
-> 
-> I have retested with the following:
-> 
-> case 1 with submitted patch:
-> mesh1: ath5k nohwcrypt=1
-> mesh2: ath5k (no IEEE80211_KEY_FLAG_SW_MGMT)
-> Result: Both of them are not able to ping each other. Also, the PREP
-> action frame is not able to decrypted by another node.
-> 
-> case 2 with submitted patch:
-> mesh1: ath5k nohwcrypt=1
-> mesh2: ath5k nohwcrypt=1
-> Result: They are able to ping each other.
-> 
-> case 3 with submitted patch but enable IEEE80211_KEY_FLAG_SW_MGMT:
-> mesh1: ath5k nohwcrypt=1
-> mesh2: ath5k (with IEEE80211_KEY_FLAG_SW_MGMT)
-> Result: They are able to ping each other
-> 
-> case 4 with submitted patch but enable IEEE80211_KEY_FLAG_SW_MGMT:
-> mesh1: ath5k (with IEEE80211_KEY_FLAG_SW_MGMT)
-> mesh2: ath5k (with IEEE80211_KEY_FLAG_SW_MGMT)
-> Result: Both of them are not able to ping each other. Also, the PREP
-> action frame is not able to decrypted by another node.
-> 
-> So can we conclude that hardware encryption is not working for both
-> robust unicast management frame and also unicast
-> data frame? I am confuse why on case 4, it is not working?
+Update all coex parameters in sigle place. So that we can avoid
+redoing the same operation in mutiple places and it eases debugging.
 
-I would guess that hardware *decryption* is faulty, maybe only one
-action frame needs to be correct and so if one of them is nohwcrypt=1 it
-still works?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mci.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 3a400c8..fa859e3 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -121,7 +121,14 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
+ 		goto skip_tuning;
+ 
++	mci->aggr_limit = 0;
+ 	btcoex->duty_cycle = ath_mci_duty_cycle[num_profile];
++	btcoex->btcoex_period = ATH_MCI_DEF_BT_PERIOD;
++	if (NUM_PROF(mci))
++		btcoex->bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
++	else
++		btcoex->bt_stomp_type = mci->num_mgmt ? ATH_BTCOEX_STOMP_ALL :
++							ATH_BTCOEX_STOMP_LOW;
+ 
+ 	if (num_profile == 1) {
+ 		info = list_first_entry(&mci->info,
+@@ -133,7 +140,8 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 			else if (info->T == 6) {
+ 				mci->aggr_limit = 6;
+ 				btcoex->duty_cycle = 30;
+-			}
++			} else
++				mci->aggr_limit = 6;
+ 			ath_dbg(common, MCI,
+ 				"Single SCO, aggregation limit %d 1/4 ms\n",
+ 				mci->aggr_limit);
+@@ -273,16 +281,6 @@ static void ath_mci_process_profile(struct ath_softc *sc,
+ 	} else
+ 		ath_mci_del_profile(common, mci, entry);
+ 
+-	btcoex->btcoex_period = ATH_MCI_DEF_BT_PERIOD;
+-	mci->aggr_limit = mci->num_sco ? 6 : 0;
+-
+-	btcoex->duty_cycle = ath_mci_duty_cycle[NUM_PROF(mci)];
+-	if (NUM_PROF(mci))
+-		btcoex->bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+-	else
+-		btcoex->bt_stomp_type = mci->num_mgmt ? ATH_BTCOEX_STOMP_ALL :
+-							ATH_BTCOEX_STOMP_LOW;
+-
+ 	ieee80211_queue_work(sc->hw, &sc->mci_work);
+ }
+ 
+-- 
+1.7.12
 
