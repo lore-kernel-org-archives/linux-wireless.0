@@ -1,80 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43563 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752781Ab2IGH4W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 03:56:22 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@qca.qualcomm.com
-Subject: [PATCH] compat: drop const to fix compiler warnings
-Date: Fri,  7 Sep 2012 09:56:14 +0200
-Message-Id: <1347004574-80506-1-git-send-email-nbd@openwrt.org> (sfid-20120907_095626_255733_9E08C68F)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42669 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757372Ab2ILGyx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Sep 2012 02:54:53 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 3/5] ath9k: flush bt profile whenever it is requested
+Date: Wed, 12 Sep 2012 12:23:51 +0530
+Message-ID: <1347432833-10343-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120912_085455_959582_3E8D5646)
+In-Reply-To: <1347432833-10343-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1347432833-10343-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When calling pci_find_capability and pci_read_config_word, struct pci_dev
-needs to be passed without const.
+Before processing BT profiles or status messages, check whether
+it is requested to flush BT profile. Otherwise it might increase
+number of BT profiles that affects the WLAN performance. Also
+flush the profiles when MCI is recovering from broken rx. After
+flushing BT profiles, query BT topology to refetch them.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- compat/compat-3.7.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  4 ++++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |  4 +++-
+ drivers/net/wireless/ath/ath9k/mci.c        | 12 +++++++++++-
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/compat/compat-3.7.c b/compat/compat-3.7.c
-index b37b73a..f591f16 100644
---- a/compat/compat-3.7.c
-+++ b/compat/compat-3.7.c
-@@ -29,7 +29,7 @@ EXPORT_SYMBOL_GPL(mod_delayed_work);
-  * pci_dev but if we found it we likely would remove it from
-  * the kernel anyway right? Bite me.
-  */
--static inline u16 pcie_flags_reg(const struct pci_dev *dev)
-+static inline u16 pcie_flags_reg(struct pci_dev *dev)
- {
- 	int pos;
- 	u16 reg16;
-@@ -43,12 +43,12 @@ static inline u16 pcie_flags_reg(const struct pci_dev *dev)
- 	return reg16;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index f6eb43e..8d8df4b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1236,6 +1236,10 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 	case MCI_STATE_NEED_FTP_STOMP:
+ 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
+ 		break;
++	case MCI_STATE_NEED_FLUSH_BT_INFO:
++		value = (!mci->unhalt_bt_gpm && mci->need_flush_btinfo) ? 1 : 0;
++		mci->need_flush_btinfo = false;
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index f3bef8d..30acf28 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -200,6 +200,7 @@ enum mci_state_type {
+ 	MCI_STATE_RECOVER_RX,
+ 	MCI_STATE_NEED_FTP_STOMP,
+ 	MCI_STATE_DEBUG,
++	MCI_STATE_NEED_FLUSH_BT_INFO,
+ 	MCI_STATE_MAX
+ };
+ 
+@@ -211,7 +212,8 @@ enum mci_gpm_coex_opcode {
+ 	MCI_GPM_COEX_WLAN_CHANNELS,
+ 	MCI_GPM_COEX_BT_PROFILE_INFO,
+ 	MCI_GPM_COEX_BT_STATUS_UPDATE,
+-	MCI_GPM_COEX_BT_UPDATE_FLAGS
++	MCI_GPM_COEX_BT_UPDATE_FLAGS,
++	MCI_GPM_COEX_NOOP,
+ };
+ 
+ #define MCI_GPM_NOMORE  0
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 8f0e8d9..3a400c8 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -80,6 +80,7 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci)
+ 	struct ath_mci_profile_info *info, *tinfo;
+ 
+ 	mci->aggr_limit = 0;
++	mci->num_mgmt = 0;
+ 
+ 	if (list_empty(&mci->info))
+ 		return;
+@@ -328,6 +329,13 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 	u8 major, minor;
+ 	u32 seq_num;
+ 
++	if (ar9003_mci_state(ah, MCI_STATE_NEED_FLUSH_BT_INFO) &&
++	    ar9003_mci_state(ah, MCI_STATE_ENABLE)) {
++		ath_dbg(common, MCI, "(MCI) Need to flush BT profiles\n");
++		ath_mci_flush_profile(&sc->btcoex.mci);
++		ar9003_mci_state(ah, MCI_STATE_SEND_STATUS_QUERY);
++	}
++
+ 	switch (opcode) {
+ 	case MCI_GPM_COEX_VERSION_QUERY:
+ 		ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_COEX_VERSION);
+@@ -568,9 +576,11 @@ void ath_mci_intr(struct ath_softc *sc)
+ 	}
+ 
+ 	if ((mci_int & AR_MCI_INTERRUPT_RX_INVALID_HDR) ||
+-	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT))
++	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT)) {
+ 		mci_int &= ~(AR_MCI_INTERRUPT_RX_INVALID_HDR |
+ 			     AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT);
++		ath_mci_msg(sc, MCI_GPM_COEX_NOOP, NULL);
++	}
  }
  
--static inline int pci_pcie_type(const struct pci_dev *dev)
-+static inline int pci_pcie_type(struct pci_dev *dev)
- {
- 	return (pcie_flags_reg(dev) & PCI_EXP_FLAGS_TYPE) >> 4;
- }
- 
--static inline int pcie_cap_version(const struct pci_dev *dev)
-+static inline int pcie_cap_version(struct pci_dev *dev)
- {
- 	return pcie_flags_reg(dev) & PCI_EXP_FLAGS_VERS;
- }
-@@ -58,7 +58,7 @@ static inline bool pcie_cap_has_devctl(const struct pci_dev *dev)
- 	return true;
- }
- 
--static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
-+static inline bool pcie_cap_has_lnkctl(struct pci_dev *dev)
- {
- 	int type = pci_pcie_type(dev);
- 
-@@ -68,7 +68,7 @@ static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
- 	       type == PCI_EXP_TYPE_LEG_END;
- }
- 
--static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
-+static inline bool pcie_cap_has_sltctl(struct pci_dev *dev)
- {
- 	int type = pci_pcie_type(dev);
- 
-@@ -78,7 +78,7 @@ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
- 		pcie_flags_reg(dev) & PCI_EXP_FLAGS_SLOT);
- }
- 
--static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
-+static inline bool pcie_cap_has_rtctl(struct pci_dev *dev)
- {
- 	int type = pci_pcie_type(dev);
- 
+ void ath_mci_enable(struct ath_softc *sc)
 -- 
-1.7.9.6 (Apple Git-31.1)
+1.7.12
 
