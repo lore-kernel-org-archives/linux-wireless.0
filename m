@@ -1,114 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f202.google.com ([209.85.161.202]:52965 "EHLO
-	mail-gg0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756955Ab2IZS1v (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43324 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753790Ab2ILGxs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 14:27:51 -0400
-Received: by ggnq2 with SMTP id q2so104346ggn.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 11:27:51 -0700 (PDT)
-From: Sam Leffler <sleffler@chromium.org>
-Date: Wed, 26 Sep 2012 11:24:49 -0700
-Subject: [PATCH] iw: add txabort and flush scan operands
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20120926182750.46A011E055E@sleffler.sfo.corp.google.com> (sfid-20120926_202755_524251_C74E69E8)
+	Wed, 12 Sep 2012 02:53:48 -0400
+Message-ID: <1347432846.4293.0.camel@jlt4.sipsolutions.net> (sfid-20120912_085436_745520_8B40FF88)
+Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marc MERLIN <marc@merlins.org>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	David Rientjes <rientjes@google.com>, sgruszka@redhat.com,
+	linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, Andrew Morton <akpm@osdl.org>,
+	Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org
+Date: Wed, 12 Sep 2012 08:54:06 +0200
+In-Reply-To: <20120912055712.GE11613@merlins.org> (sfid-20120912_075811_640589_74AB6505)
+References: <20120909213228.GA5538@elf.ucw.cz>
+	 <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
+	 <20120910111113.GA25159@elf.ucw.cz>
+	 <20120911162536.bd5171a1.akpm@linux-foundation.org>
+	 <1347426988.13103.684.camel@edumazet-glaptop>
+	 <20120912055712.GE11613@merlins.org> (sfid-20120912_075811_640589_74AB6505)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add txabort and flush operands to the scan cmd to request the equivalent
-flags be set in the scan request.
----
- nl80211.h |   16 ++++++++++++++++
- scan.c    |   16 ++++++++++++++--
- 2 files changed, 30 insertions(+), 2 deletions(-)
+On Tue, 2012-09-11 at 22:57 -0700, Marc MERLIN wrote:
+> On Wed, Sep 12, 2012 at 07:16:28AM +0200, Eric Dumazet wrote:
+> > On Tue, 2012-09-11 at 16:25 -0700, Andrew Morton wrote:
+> > 
+> > > Asking for a 256k allocation is pretty crazy - this is an operating
+> > > system kernel, not a userspace application.
+> > > 
+> > > I'm wondering if this is due to a recent change, but I'm having trouble
+> > > working out where the allocation call site is.
+> > > --
+> > 
+> > (Adding Marc Merlin to CC, since he reported same problem)
+> > 
+> > Thats the firmware loading in iwlwifi driver. Not sure if it can use SG.
+> > 
+> > drivers/net/wireless/iwlwifi/iwl-drv.c
+> > 
+> > iwl_alloc_ucode() -> iwl_alloc_fw_desc() -> dma_alloc_coherent()
+> > 
+> > It seems some sections of /lib/firmware/iwlwifi*.ucode files are above
+> > 128 Kbytes, so dma_alloc_coherent() try order-5 allocations
+> 
+> Thanks for looping me in, yes, this looks very familiar to me :)
+> 
+> In the other thread, Johannes Berg gave me this patch which is supposed to
+> help: http://p.sipsolutions.net/11ea33b376a5bac5.txt
 
-diff --git a/nl80211.h b/nl80211.h
-index 2f38788..b9d3afd 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -1506,6 +1506,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_USER_REG_HINT_TYPE,
- 
-+	NL80211_ATTR_SCAN_FLAGS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3023,4 +3025,18 @@ enum nl80211_probe_resp_offload_support_attr {
- 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U =	1<<3,
- };
- 
-+/**
-+ * enum nl80211_scan_flags -  scan request control flags
-+ *
-+ * Scan request control flags are used to control the handling
-+ * of NL80211_CMD_TRIGGER_SCAN, requests.
-+ *
-+ * @NL80211_SCAN_FLAG_TX_ABORT: abort scan if tx collides
-+ * @NL80211_SCAN_FLAG_FLUSH: flush bss cache before scan
-+ */
-+enum nl80211_scan_flags {
-+	NL80211_SCAN_FLAG_TX_ABORT	= 1<<0,
-+	NL80211_SCAN_FLAG_FLUSH		= 1<<1,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/scan.c b/scan.c
-index bb84a67..44ffaf8 100644
---- a/scan.c
-+++ b/scan.c
-@@ -73,6 +73,7 @@ static int handle_scan(struct nl80211_state *state,
- 	bool passive = false, have_ssids = false, have_freqs = false;
- 	size_t tmp;
- 	unsigned char *ies;
-+	int flags = 0;
- 
- 	ssids = nlmsg_alloc();
- 	if (!ssids)
-@@ -102,6 +103,14 @@ static int handle_scan(struct nl80211_state *state,
- 				parse = DONE;
- 				passive = true;
- 				break;
-+			} else if (strcmp(argv[i], "txabort") == 0) {
-+				parse = DONE;
-+				flags |= NL80211_SCAN_FLAG_TX_ABORT;
-+				break;
-+			} else if (strcmp(argv[i], "flush") == 0) {
-+				parse = DONE;
-+				flags |= NL80211_SCAN_FLAG_FLUSH;
-+				break;
- 			}
- 		case DONE:
- 			return 1;
-@@ -136,6 +145,8 @@ static int handle_scan(struct nl80211_state *state,
- 
- 	if (have_freqs)
- 		nla_put_nested(msg, NL80211_ATTR_SCAN_FREQUENCIES, freqs);
-+	if (flags)
-+		NLA_PUT_U32(msg, NL80211_ATTR_SCAN_FLAGS, flags);
- 
- 	err = 0;
-  nla_put_failure:
-@@ -1344,7 +1355,7 @@ static int handle_scan_combined(struct nl80211_state *state,
- 	dump_argv[0] = argv[0];
- 	return handle_cmd(state, id, dump_argc, dump_argv);
- }
--TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [ssid <ssid>*|passive]", 0, 0,
-+TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [ssid <ssid>*|passive|txabort|flush]", 0, 0,
- 	 CIB_NETDEV, handle_scan_combined,
- 	 "Scan on the given frequencies and probe for the given SSIDs\n"
- 	 "(or wildcard if not given) unless passive scanning is requested.\n"
-@@ -1354,7 +1365,8 @@ COMMAND(scan, dump, "[-u]",
- 	NL80211_CMD_GET_SCAN, NLM_F_DUMP, CIB_NETDEV, handle_scan_dump,
- 	"Dump the current scan results. If -u is specified, print unknown\n"
- 	"data in scan results.");
--COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [ssid <ssid>*|passive]",
-+COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [ssid <ssid>*|passive|txabort|flush]",
- 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
- 	 "Trigger a scan on the given frequencies with probing for the given\n"
-+
- 	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
--- 
-1.7.7.3
+Yes, but that patch won't apply to iwlegacy as is. However, I'm pretty
+sure that it should be possible to solve the issue in the same way in
+iwlegacy.
+
+johannes
 
