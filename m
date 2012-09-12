@@ -1,61 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:46693 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756138Ab2I0Kii (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10956 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755758Ab2ILNaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 06:38:38 -0400
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH 02/31] wlcore: consider single fw case
-Date: Thu, 27 Sep 2012 13:37:40 +0300
-Message-Id: <1348742289-6587-3-git-send-email-luca@coelho.fi> (sfid-20120927_124033_565126_6E5A9E98)
-In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
-References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+	Wed, 12 Sep 2012 09:30:17 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 6/6] ath9k: fix queuing MCI work twice
+Date: Wed, 12 Sep 2012 18:59:24 +0530
+Message-ID: <1347456564-8222-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120912_153020_783740_325EC45B)
+In-Reply-To: <1347456564-8222-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1347456564-8222-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Right now MCI work is being queued twice by profile and status
+updation. Queue MCI work once when it is needed.
 
-When a single fw is being used for both single-role
-and multi-role cases (e.g. 18xx), wl->mr_fw_name is
-NULL, which results in NULL dereference while trying
-to load the multi-role fw.
-
-In this case, always use the single-role fw, and avoid
-redundant fw switch by checking for this case in
-wl12xx_need_fw_change() as well.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Luciano Coelho <luca@coelho.fi>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/mci.c | 30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 600af8e..f421c42 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -696,7 +696,7 @@ static int wl12xx_fetch_firmware(struct wl1271 *wl, bool plt)
- 		 * we can't call wl12xx_get_vif_count() here because
- 		 * wl->mutex is taken, so use the cached last_vif_count value
- 		 */
--		if (wl->last_vif_count > 1) {
-+		if (wl->last_vif_count > 1 && wl->mr_fw_name) {
- 			fw_type = WL12XX_FW_TYPE_MULTI;
- 			fw_name = wl->mr_fw_name;
- 		} else {
-@@ -2170,6 +2170,10 @@ static bool wl12xx_need_fw_change(struct wl1271 *wl,
- 	if (wl->state == WL1271_STATE_OFF)
- 		return false;
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index fa859e3..8f51e9e 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -250,8 +250,8 @@ static void ath9k_mci_work(struct work_struct *work)
+ 	ath_mci_update_scheme(sc);
+ }
  
-+	/* no need for fw change if a single fw is used */
-+	if (!wl->mr_fw_name)
-+		return false;
+-static void ath_mci_process_profile(struct ath_softc *sc,
+-				    struct ath_mci_profile_info *info)
++static u8 ath_mci_process_profile(struct ath_softc *sc,
++				  struct ath_mci_profile_info *info)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+@@ -277,15 +277,15 @@ static void ath_mci_process_profile(struct ath_softc *sc,
+ 
+ 	if (info->start) {
+ 		if (!entry && !ath_mci_add_profile(common, mci, info))
+-			return;
++			return 0;
+ 	} else
+ 		ath_mci_del_profile(common, mci, entry);
+ 
+-	ieee80211_queue_work(sc->hw, &sc->mci_work);
++	return 1;
+ }
+ 
+-static void ath_mci_process_status(struct ath_softc *sc,
+-				   struct ath_mci_profile_status *status)
++static u8 ath_mci_process_status(struct ath_softc *sc,
++				 struct ath_mci_profile_status *status)
+ {
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 	struct ath_mci_profile *mci = &btcoex->mci;
+@@ -294,14 +294,14 @@ static void ath_mci_process_status(struct ath_softc *sc,
+ 
+ 	/* Link status type are not handled */
+ 	if (status->is_link)
+-		return;
++		return 0;
+ 
+ 	info.conn_handle = status->conn_handle;
+ 	if (ath_mci_find_profile(mci, &info))
+-		return;
++		return 0;
+ 
+ 	if (status->conn_handle >= ATH_MCI_MAX_PROFILE)
+-		return;
++		return 0;
+ 
+ 	if (status->is_critical)
+ 		__set_bit(status->conn_handle, mci->status);
+@@ -315,7 +315,9 @@ static void ath_mci_process_status(struct ath_softc *sc,
+ 	} while (++i < ATH_MCI_MAX_PROFILE);
+ 
+ 	if (old_num_mgmt != mci->num_mgmt)
+-		ieee80211_queue_work(sc->hw, &sc->mci_work);
++		return 1;
 +
- 	if (vif_count > 1 && current_fw == WL12XX_FW_TYPE_NORMAL)
- 		return true;
- 	if (vif_count <= 1 && current_fw == WL12XX_FW_TYPE_MULTI)
++	return 0;
+ }
+ 
+ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+@@ -324,7 +326,7 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 	struct ath_mci_profile_info profile_info;
+ 	struct ath_mci_profile_status profile_status;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	u8 major, minor;
++	u8 major, minor, update_scheme = 0;
+ 	u32 seq_num;
+ 
+ 	if (ar9003_mci_state(ah, MCI_STATE_NEED_FLUSH_BT_INFO) &&
+@@ -359,7 +361,7 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 			break;
+ 		}
+ 
+-		ath_mci_process_profile(sc, &profile_info);
++		update_scheme += ath_mci_process_profile(sc, &profile_info);
+ 		break;
+ 	case MCI_GPM_COEX_BT_STATUS_UPDATE:
+ 		profile_status.is_link = *(rx_payload +
+@@ -375,12 +377,14 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 			profile_status.is_link, profile_status.conn_handle,
+ 			profile_status.is_critical, seq_num);
+ 
+-		ath_mci_process_status(sc, &profile_status);
++		update_scheme += ath_mci_process_status(sc, &profile_status);
+ 		break;
+ 	default:
+ 		ath_dbg(common, MCI, "Unknown GPM COEX message = 0x%02x\n", opcode);
+ 		break;
+ 	}
++	if (update_scheme)
++		ieee80211_queue_work(sc->hw, &sc->mci_work);
+ }
+ 
+ int ath_mci_setup(struct ath_softc *sc)
 -- 
-1.7.10.4
+1.7.12
 
