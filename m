@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:44912 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752419Ab2IMUzT (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:41661 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752568Ab2ILAMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 16:55:19 -0400
-Received: by dady13 with SMTP id y13so1949517dad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2012 13:55:19 -0700 (PDT)
+	Tue, 11 Sep 2012 20:12:21 -0400
+Received: by pbbrr13 with SMTP id rr13so1494035pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 17:12:21 -0700 (PDT)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: nbd@openwrt.org
 Cc: linux-wireless@vger.kernel.org,
 	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFT v2] cfg80211: fix possible circular lock on reg_regdb_search()
-Date: Thu, 13 Sep 2012 13:55:12 -0700
-Message-Id: <1347569712-24886-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20120913_225524_000018_A613C50D)
+Subject: [RFT] cfg80211: fix possible circular lock on reg_regdb_search()
+Date: Tue, 11 Sep 2012 17:12:15 -0700
+Message-Id: <1347408735-25745-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20120912_021226_104887_50A8CDBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -20,7 +20,7 @@ From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
 When call_crda() is called we kick off a witch hunt search
 for the same regulatory domain on our internal regulatory
-database and that work gets kicked off on a workqueue, this
+database and that work gets scheuled on a workqueue, this
 is done while the cfg80211_mutex is held. If that workqueue
 kicks off it will first lock reg_regdb_search_mutex and
 later cfg80211_mutex but to ensure two CPUs will not contend
@@ -94,45 +94,36 @@ Call Trace:
 Reported-by: Felix Fietkau <nbd@openwrt.org>
 Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
-
-This v2 remoes the search lock from the context of calling
-set_regdom().
-
- net/wireless/reg.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ net/wireless/reg.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ad04e5..4de18ae 100644
+index 5efd6f6..a04d90c 100644
 --- a/net/wireless/reg.c
 +++ b/net/wireless/reg.c
-@@ -350,6 +350,9 @@ static void reg_regdb_search(struct work_struct *work)
- 	struct reg_regdb_search_request *request;
+@@ -351,6 +351,8 @@ static void reg_regdb_search(struct work_struct *work)
  	const struct ieee80211_regdomain *curdom, *regdom;
  	int i, r;
-+	bool set_reg = false;
-+
-+	mutex_lock(&cfg80211_mutex);
  
++	mutex_lock(&cfg80211_mutex);
++
  	mutex_lock(&reg_regdb_search_mutex);
  	while (!list_empty(&reg_regdb_search_list)) {
-@@ -365,9 +368,7 @@ static void reg_regdb_search(struct work_struct *work)
+ 		request = list_first_entry(&reg_regdb_search_list,
+@@ -365,9 +367,7 @@ static void reg_regdb_search(struct work_struct *work)
  				r = reg_copy_regd(&regdom, curdom);
  				if (r)
  					break;
 -				mutex_lock(&cfg80211_mutex);
--				set_regdom(regdom);
+ 				set_regdom(regdom);
 -				mutex_unlock(&cfg80211_mutex);
-+				set_reg = true;
  				break;
  			}
  		}
-@@ -375,6 +376,11 @@ static void reg_regdb_search(struct work_struct *work)
+@@ -375,6 +375,8 @@ static void reg_regdb_search(struct work_struct *work)
  		kfree(request);
  	}
  	mutex_unlock(&reg_regdb_search_mutex);
-+
-+	if (set_reg)
-+		set_regdom(regdom);
 +
 +	mutex_unlock(&cfg80211_mutex);
  }
