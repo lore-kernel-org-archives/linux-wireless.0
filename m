@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:43216 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752550Ab2IZORq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43350 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756756Ab2ILHJW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 10:17:46 -0400
-Message-ID: <1348669043.13371.12.camel@aeonflux> (sfid-20120926_161750_583170_12B39BD2)
-Subject: Re: [PATCH] ath3k: Added VID/PID for the Gigabyte GC-WB300D
- Wifi/Bluetooth card
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Wouter Thielen <wouter@morannon.org>
-Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 26 Sep 2012 16:17:23 +0200
-In-Reply-To: <CACySJQUFfxKNAK7J0Qu7QoQhSjdUk+SJ8eZoE+9RQFMKspewLQ@mail.gmail.com>
-References: <CACySJQUFfxKNAK7J0Qu7QoQhSjdUk+SJ8eZoE+9RQFMKspewLQ@mail.gmail.com>
+	Wed, 12 Sep 2012 03:09:22 -0400
+Message-ID: <1347433797.4293.2.camel@jlt4.sipsolutions.net> (sfid-20120912_090926_123126_36422384)
+Subject: Re: [PATCH] carl9170: fix spurious transmissions in sniffer mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Richard Farina <sidhayn@gmail.com>, linux-wireless@vger.kernel.org,
+	scchen@qca.qualcomm.com, linville@tuxdriver.com,
+	marco@tampabay.rr.com, janusz.dziedzic@gmail.com
+Date: Wed, 12 Sep 2012 09:09:57 +0200
+In-Reply-To: <201209120308.30985.chunkeey@googlemail.com> (sfid-20120912_030846_969448_7F6F8B63)
+References: <201209112318.35334.chunkeey@googlemail.com>
+	 <201209120126.31312.chunkeey@googlemail.com> <504FCD39.80705@gmail.com>
+	 <201209120308.30985.chunkeey@googlemail.com>
+	 (sfid-20120912_030846_969448_7F6F8B63)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wouter,
+On Wed, 2012-09-12 at 03:08 +0200, Christian Lamparter wrote:
 
-> This card is supplied with the Gigabyte Sniper 3 motherboard (and some
-> others). I followed the information on
-> http://wireless.kernel.org/en/users/Drivers/ath3k and confirmed with
-> lsusb -v that it is using the AR3012 chipset.
+> Anyway, now the hardware will only react to frames that
+> are "directed" (DA matches either the main, or one of
+> the 8 vif mac addresses) to it (is this now sane or
+> not?).
 
-send this to linux-bluetooth@vger.kernel.org since otherwise it will get
-lost. And we require inclusion of /sys/kernel/debug/usb/devices for this
-one.
+That's reasonable. A lot of hardware behaves that way, and for many
+injection use cases it is actually desired while normal monitoring use
+cases aren't really affected. If you'd want to not have this you could
+inject with a different MAC address, so it's still fine.
 
-Regards
+> (BTW: wasn't there once some sort of a "tx ack" control
+> interface in mac80211 debugfs path? Does anybody know
+> what happend to it?)
 
-Marcel
+It moved into cfg80211/nl80211, but it's only applicable for properly
+transmitted QoS frames anyway.
 
-
+johannes
 
