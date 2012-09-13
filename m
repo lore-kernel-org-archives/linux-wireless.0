@@ -1,75 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:33823 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754850Ab2I1DNo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 23:13:44 -0400
-Message-ID: <1348802023.3030.11.camel@joe-AO722> (sfid-20120928_051353_290924_40169297)
-Subject: Re: [PATCH] rtlwifi: use %*ph[C] to dump small buffers
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 27 Sep 2012 20:13:43 -0700
-In-Reply-To: <5064D318.6090705@lwfinger.net>
-References: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1348677946.15175.8.camel@joe-AO722> <5064D318.6090705@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2926 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752032Ab2IMTMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2012 15:12:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/10] brcmfmac: sdio dpc restructuring and cleanup
+Date: Thu, 13 Sep 2012 21:11:56 +0200
+Message-ID: <1347563526-12513-1-git-send-email-arend@broadcom.com> (sfid-20120913_211234_632462_873919D2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-27 at 17:28 -0500, Larry Finger wrote:
-> On 09/26/2012 11:45 AM, Joe Perches wrote:
-> > rate_mask uses:
-> >
-> > 	u32 ratr_bitmap = (u32) mac->basic_rates;
-> > ...
-> > 	u8 rate_mask[5];
-> > ...
-> > 	[sets ratr_bitmap as u32]
-> > ...
-> > 	*(u32 *)&rate_mask = ((ratr_bitmap & 0x0fffffff) |
-> > 				      ratr_index << 28);
-> > ...
-> > 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
-> >
-> > Looks like a possible endian misuse to me.
-> 
-> After a second look at the code, I don't think this is an endian issue; however, 
-> I am proposing the following changes to remove any doubt:
+This series mainly contains rework of the sdio interrupt handling
+which addresses issues with in-band sdio interrupts. These were
+raised by people working on nvidia tegra platform.
 
-I believe if it wasn't an endian problem, then the new
-code makes it one.
+This series is intended for v3.7 kernel and applies to wireless-next.
 
-> Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> ===================================================================
-> --- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> +++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> @@ -1964,8 +1965,9 @@ static void rtl92ce_update_hal_rate_mask
-> 
->          RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
->                   "ratr_bitmap :%x\n", ratr_bitmap);
-> -       *(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
-> -                                    (ratr_index << 28);
-> +       for (i = 0; i < 3; i++)
-> +               rate_mask[i] = ratr_bitmap & (0xff << (i * 4));
+Arend van Spriel (2):
+  brcmfmac: add parameter check in brcmf_c_mkiovar()
+  brcmfmac: simplify handling e-scan result firmware event
 
-rate_mask is u8, doesn't this needs (calc) >> (i * 8)
+Franky Lin (7):
+  brcmfmac: absorb brcmf_sendpkt into brcmf_netdev_start_xmit
+  brcmfmac: remove obsolete sdio bus sleep mechanism
+  brcmfmac: use atomic variable for interrupt pending flag
+  brcmfmac: convert SDIO dpc implementation to workqueue
+  brcmfmac: streamline SDIO dpc
+  brcmfmac: raise SDIO host lock to higher level
+  brcmfmac: clear status for in-band interrupt in brcmf_sdbrcm_isr
 
-> +       rate_mask[3] = (ratr_bitmap & 0x0f000000) | (ratr_index << 28);
+Hante Meuleman (1):
+  brcmfmac: fix bug causing errorneous free on exception.
 
-Perhaps you meant:
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   39 +-
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   25 --
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    4 -
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    6 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   41 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  416 ++++++++------------
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    6 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   14 +-
+ 9 files changed, 225 insertions(+), 328 deletions(-)
 
-		((ratr_bitmap & 0x0f000000) >> 24) | (ratr_index << 4)
-
->          rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
->          RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
->                   "Rate_index:%x, ratr_val:%x, %*phC\n",
-> 
-> The downstream routine uses this info as an array of u8, thus it is OK. A proper 
-> patch will be sent later. At least we avoid that ugly cast.
-
+-- 
+1.7.9.5
 
 
