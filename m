@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:49447 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932093Ab2IQP1l (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:40503 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754541Ab2IMDMU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 11:27:41 -0400
-Received: by dady13 with SMTP id y13so959484dad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2012 08:27:41 -0700 (PDT)
+	Wed, 12 Sep 2012 23:12:20 -0400
 MIME-Version: 1.0
-In-Reply-To: <1347827393-26948-3-git-send-email-gwingerde@gmail.com>
-References: <1347827393-26948-1-git-send-email-gwingerde@gmail.com>
-	<1347827393-26948-2-git-send-email-gwingerde@gmail.com>
-	<1347827393-26948-3-git-send-email-gwingerde@gmail.com>
-Date: Mon, 17 Sep 2012 17:27:41 +0200
-Message-ID: <CAOZOX0WovkjPgnoKccN4UEpJAuDdmDjpkOsrEwquKAwA+mGHTg@mail.gmail.com> (sfid-20120917_172751_288076_B48796DF)
-Subject: Re: [PATCH 2/5] rt2x00: rt2800 - Fix default vgc values for RT3572
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
+In-Reply-To: <1347483294-6943-15-git-send-email-Larry.Finger@lwfinger.net>
+References: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net> <1347483294-6943-15-git-send-email-Larry.Finger@lwfinger.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 13 Sep 2012 13:11:58 +1000
+Message-ID: <CAGRGNgWezEzXV0-k6DA7TckNpa=zgN6LNv898N-PRU6P1LYgOw@mail.gmail.com> (sfid-20120913_051238_429329_99C1DA99)
+Subject: Re: [RFC/RFT 14/15] rtlwifi: Modify files for addition of rtl8723ae
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, chaoming_li@realsil.com.cn
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 16, 2012 at 10:29 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Align with the values used by the RT3572 Ralink vendor driver v2.5.0.0.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Hi Larry,
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+On Thu, Sep 13, 2012 at 6:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> This patch modifies the files of rtlwifi for the addition of a new driver
+> to handle the Realtek RTL8723AE wireless device, and introduces a new
+> routine to maintaim statistics that will be used later for roaming.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: <chaoming_li@realsil.com.cn>
+> ---
+>  drivers/net/wireless/rtlwifi/debug.h |    2 +
+>  drivers/net/wireless/rtlwifi/pci.h   |    1 +
+>  drivers/net/wireless/rtlwifi/stats.c |  274 ++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/rtlwifi/stats.h |   47 ++++++
+>  4 files changed, 324 insertions(+)
+>  create mode 100644 drivers/net/wireless/rtlwifi/stats.c
+>  create mode 100644 drivers/net/wireless/rtlwifi/stats.h
+>
+> diff --git a/drivers/net/wireless/rtlwifi/debug.h b/drivers/net/wireless/rtlwifi/debug.h
+> index 07493d2..b81e299 100644
+> --- a/drivers/net/wireless/rtlwifi/debug.h
+> +++ b/drivers/net/wireless/rtlwifi/debug.h
+> @@ -106,6 +106,8 @@
+>  #define COMP_REGD                      BIT(27)
+>  #define COMP_CHAN                      BIT(28)
+>  #define COMP_USB                       BIT(29)
+> +#define COMP_EASY_CONCURRENT           BIT(29)
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index cec4a99..17b8a28 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2904,16 +2904,21 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
->                     rt2x00_rt(rt2x00dev, RT3090) ||
->                     rt2x00_rt(rt2x00dev, RT3290) ||
->                     rt2x00_rt(rt2x00dev, RT3390) ||
-> +                   rt2x00_rt(rt2x00dev, RT3572) ||
->                     rt2x00_rt(rt2x00dev, RT5390) ||
->                     rt2x00_rt(rt2x00dev, RT5392))
->                         vgc = 0x1c + (2 * rt2x00dev->lna_gain);
->                 else
->                         vgc = 0x2e + rt2x00dev->lna_gain;
->         } else { /* 5GHZ band */
-> -               if (!test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
-> -                       vgc = 0x32 + (rt2x00dev->lna_gain * 5) / 3;
-> -               else
-> -                       vgc = 0x3a + (rt2x00dev->lna_gain * 5) / 3;
-> +               if (rt2x00_rt(rt2x00dev, RT3572))
-> +                       vgc = 0x22 + (rt2x00dev->lna_gain * 5) / 3;
-> +               else {
-> +                       if (!test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
-> +                               vgc = 0x32 + (rt2x00dev->lna_gain * 5) / 3;
-> +                       else
-> +                               vgc = 0x3a + (rt2x00dev->lna_gain * 5) / 3;
-> +               }
->         }
->
->         return vgc;
-> --
-> 1.7.11.1
->
+Is this supposed to be bit #29 - I notice that COMP_USB is also bit 29.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
