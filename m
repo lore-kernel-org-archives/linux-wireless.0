@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy11-pub.bluehost.com ([173.254.64.10]:41419 "HELO
-	oproxy11-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753684Ab2IUPbY (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44332 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752749Ab2IMTJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 11:31:24 -0400
-Message-ID: <505C8822.6080605@xenotime.net> (sfid-20120921_173128_793446_D24D8BA2)
-Date: Fri, 21 Sep 2012 08:30:42 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
+	Thu, 13 Sep 2012 15:09:49 -0400
 MIME-Version: 1.0
-To: Ouyang <ilhebe999@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: could anyone please help me with make modules error
-References: <loom.20120921T071134-64@post.gmane.org>
-In-Reply-To: <loom.20120921T071134-64@post.gmane.org>
+In-Reply-To: <1347344964-4120-1-git-send-email-bkamatch@qca.qualcomm.com>
+References: <1347344964-4120-1-git-send-email-bkamatch@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 13 Sep 2012 12:09:27 -0700
+Message-ID: <CAB=NE6UJOgP03t+eN_EDM+92JejAFfsqDdhF+2DD_FpD7M5JZg@mail.gmail.com> (sfid-20120913_210953_868226_11C1EF68)
+Subject: Re: [PATCH] compat-drivers: Use GIT_TREE variable.
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2012 10:19 PM, Ouyang wrote:
+On Mon, Sep 10, 2012 at 11:29 PM, Bala Shanmugam
+<bkamatch@qca.qualcomm.com> wrote:
+> In gen-stable-release.sh stable git tree path is hardcoded.
+> Use GIT_TREE environment variable if specified.
+>
+> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 
->> drivers/net/igbvf/igbvf.h: At top level:
->> drivers/net/igbvf/igbvf.h:128:15: error: duplicate member ‘page’
->> make[3]: *** [drivers/net/igbvf/ethtool.o] Error 1
->> make[2]: *** [drivers/net/igbvf] Error 2
->> make[1]: *** [drivers/net] Error 2
->> make: *** [drivers] Error 2
-> I just google it and one had met the same problem. Is it possible 
-> just because of 
-> the version of gcc?
+Thanks, applied and pushed! In the future please subscribe and use the
+new dedicated mailing list for the project: backports@vger.kernel.org.
+For more details:
 
+https://backports.wiki.kernel.org/
 
-1.  Not a question for linux-wireless mailing list.
-That driver is not a wireless driver.
-Please try the netdev mailing list.
-
-2.  Also specify what kernel version this is, what gcc version
-you are using, and if any kernel patches have been applied
-locally to the kernel.
-
-
--- 
-~Randy
+  Luis
