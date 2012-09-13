@@ -1,55 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48736 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741Ab2ITMvJ (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:44912 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419Ab2IMUzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 08:51:09 -0400
-Message-ID: <1348145505.4161.32.camel@jlt4.sipsolutions.net> (sfid-20120920_145122_836883_65F5FB8F)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <edumazet@google.com>
-Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Date: Thu, 20 Sep 2012 14:51:45 +0200
-In-Reply-To: <1348145269.4161.28.camel@jlt4.sipsolutions.net> (sfid-20120920_144723_081920_00B84F43)
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	 <1347631355.5263.19.camel@sauron.fi.intel.com>
-	 <1347640763.5263.24.camel@sauron.fi.intel.com>
-	 <1347892887.7112.9.camel@sauron.fi.intel.com>
-	 <1348142775.2388.10.camel@sauron.fi.intel.com>
-	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
-	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-	 (sfid-20120920_144505_999408_BB063E95) <1348145269.4161.28.camel@jlt4.sipsolutions.net>
-	 (sfid-20120920_144723_081920_00B84F43)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Sep 2012 16:55:19 -0400
+Received: by dady13 with SMTP id y13so1949517dad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2012 13:55:19 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: nbd@openwrt.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFT v2] cfg80211: fix possible circular lock on reg_regdb_search()
+Date: Thu, 13 Sep 2012 13:55:12 -0700
+Message-Id: <1347569712-24886-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20120913_225524_000018_A613C50D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-20 at 14:47 +0200, Johannes Berg wrote:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> >                 if (skb) {
-> >                         /* deliver to local stack */
-> > -                       skb->protocol = eth_type_trans(skb, dev);
-> > -                       memset(skb->cb, 0, sizeof(skb->cb));
-> > -                       netif_receive_skb(skb);
-> > +                       if (pskb_may_pull(skb, sizeof(struct ethhdr))) {
-> > +                               skb->protocol = eth_type_trans(skb, dev);
-> > +                               memset(skb->cb, 0, sizeof(skb->cb));
-> > +                               netif_receive_skb(skb);
-> > +                       } else {
-> > +                               kfree_skb(skb);
-> > +                       }
-> >                 }
-> >         }
-> 
-> Yeah I was looking at the same code just now. However, we had actually
-> inserted the skb_linearize() *after* eth_type_trans(), so I'm confused.
+When call_crda() is called we kick off a witch hunt search
+for the same regulatory domain on our internal regulatory
+database and that work gets kicked off on a workqueue, this
+is done while the cfg80211_mutex is held. If that workqueue
+kicks off it will first lock reg_regdb_search_mutex and
+later cfg80211_mutex but to ensure two CPUs will not contend
+against cfg80211_mutex the right thing to do is to have the
+reg_regdb_search() wait until the cfg80211_mutex is let go.
 
-Ok actually, by the time we get here the ethernet header must be in the
-skb head because we construct it from the 802.11 and llc/snap header.
+The lockdep report is pasted below.
 
-johannes
+cfg80211: Calling CRDA to update world regulatory domain
+
+======================================================
+[ INFO: possible circular locking dependency detected ]
+3.3.8 #3 Tainted: G           O
+-------------------------------------------------------
+kworker/0:1/235 is trying to acquire lock:
+ (cfg80211_mutex){+.+...}, at: [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+
+but task is already holding lock:
+ (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
+
+which lock already depends on the new lock.
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (reg_regdb_search_mutex){+.+...}:
+       [<800a8384>] lock_acquire+0x60/0x88
+       [<802950a8>] mutex_lock_nested+0x54/0x31c
+       [<81645778>] is_world_regdom+0x9f8/0xc74 [cfg80211]
+
+-> #1 (reg_mutex#2){+.+...}:
+       [<800a8384>] lock_acquire+0x60/0x88
+       [<802950a8>] mutex_lock_nested+0x54/0x31c
+       [<8164539c>] is_world_regdom+0x61c/0xc74 [cfg80211]
+
+-> #0 (cfg80211_mutex){+.+...}:
+       [<800a77b8>] __lock_acquire+0x10d4/0x17bc
+       [<800a8384>] lock_acquire+0x60/0x88
+       [<802950a8>] mutex_lock_nested+0x54/0x31c
+       [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+
+other info that might help us debug this:
+
+Chain exists of:
+  cfg80211_mutex --> reg_mutex#2 --> reg_regdb_search_mutex
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(reg_regdb_search_mutex);
+                               lock(reg_mutex#2);
+                               lock(reg_regdb_search_mutex);
+  lock(cfg80211_mutex);
+
+ *** DEADLOCK ***
+
+3 locks held by kworker/0:1/235:
+ #0:  (events){.+.+..}, at: [<80089a00>] process_one_work+0x230/0x460
+ #1:  (reg_regdb_work){+.+...}, at: [<80089a00>] process_one_work+0x230/0x460
+ #2:  (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
+
+stack backtrace:
+Call Trace:
+[<80290fd4>] dump_stack+0x8/0x34
+[<80291bc4>] print_circular_bug+0x2ac/0x2d8
+[<800a77b8>] __lock_acquire+0x10d4/0x17bc
+[<800a8384>] lock_acquire+0x60/0x88
+[<802950a8>] mutex_lock_nested+0x54/0x31c
+[<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+
+Reported-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+
+This v2 remoes the search lock from the context of calling
+set_regdom().
+
+ net/wireless/reg.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1ad04e5..4de18ae 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -350,6 +350,9 @@ static void reg_regdb_search(struct work_struct *work)
+ 	struct reg_regdb_search_request *request;
+ 	const struct ieee80211_regdomain *curdom, *regdom;
+ 	int i, r;
++	bool set_reg = false;
++
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	mutex_lock(&reg_regdb_search_mutex);
+ 	while (!list_empty(&reg_regdb_search_list)) {
+@@ -365,9 +368,7 @@ static void reg_regdb_search(struct work_struct *work)
+ 				r = reg_copy_regd(&regdom, curdom);
+ 				if (r)
+ 					break;
+-				mutex_lock(&cfg80211_mutex);
+-				set_regdom(regdom);
+-				mutex_unlock(&cfg80211_mutex);
++				set_reg = true;
+ 				break;
+ 			}
+ 		}
+@@ -375,6 +376,11 @@ static void reg_regdb_search(struct work_struct *work)
+ 		kfree(request);
+ 	}
+ 	mutex_unlock(&reg_regdb_search_mutex);
++
++	if (set_reg)
++		set_regdom(regdom);
++
++	mutex_unlock(&cfg80211_mutex);
+ }
+ 
+ static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
+-- 
+1.7.10.4
 
