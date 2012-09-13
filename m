@@ -1,59 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:55689 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758927Ab2I1UiK (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:59486 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752671Ab2IMVhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 16:38:10 -0400
-Received: by ieak13 with SMTP id k13so8347182iea.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2012 13:38:10 -0700 (PDT)
+	Thu, 13 Sep 2012 17:37:05 -0400
+Message-ID: <505251FD.2090901@lwfinger.net> (sfid-20120913_233729_185351_C38BA86D)
+Date: Thu, 13 Sep 2012 16:37:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1348830401.13298.27.camel@jlt4.sipsolutions.net>
-References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
-	<1348772354-15936-5-git-send-email-bzhao@marvell.com>
-	<1348830401.13298.27.camel@jlt4.sipsolutions.net>
-Date: Fri, 28 Sep 2012 13:38:09 -0700
-Message-ID: <CA+yqC4aGJ4wpBNvyZRuPvSMdmQf8o2CHW=S=Uxry3CCT_RxwFw@mail.gmail.com> (sfid-20120928_223819_162349_D32BE2BE)
-Subject: Re: [PATCH v2 4/5] mac80211: add support for tx to abort low priority
- scan requests
-From: Sam Leffler <sleffler@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Norbert Preining <preining@logic.at>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Borislav Petkov <bp@alien8.de>
+Subject: Re: rtl8192se: ping router gives mdev of 25387.102???
+References: <20120913101828.GA3309@gandalf.dynalias.org>
+In-Reply-To: <20120913101828.GA3309@gandalf.dynalias.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 28, 2012 at 4:06 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-09-27 at 11:59 -0700, Bing Zhao wrote:
+On 09/13/2012 05:18 AM, Norbert Preining wrote:
+> Hi everyone,
 >
->> +     if (associated && !tx_empty) {
->> +             if (unlikely(local->scan_req->flags &
->> +                          CFG80211_SCAN_FLAG_LOW_PRIORITY))
+> (please cc)
 >
-> I don't really see value in the "unlikely()" here, that just clutters
-> the code and probably has very little effect on the runtime behaviour,
-> this is very infrequently executed.
+> see $subject ...
+>
+> No warning, nothing in the logs, but pinging my router I get
+> things like:
+> --- 192.168.0.1 ping statistics ---
+> 376 packets transmitted, 315 received, +33 errors, 16% packet loss, time 405164ms
+> rtt min/avg/max/mdev = 0.873/10077.793/95935.698/25387.102 ms, pipe 68
+>
+> or
+> --- 192.168.0.1 ping statistics ---
+> 1252 packets transmitted, 1225 received, 2% packet loss, time 1252976ms
+> rtt min/avg/max/mdev = 0.941/764.171/19929.265/2758.225 ms, pipe 20
 >
 >
->> +             case SCAN_ABORT:
->> +                     aborted = true;
->> +                     goto out_complete;
->
-> Maybe we should have different flags though ... I mean, this is the
-> first implementation that I hear of that interprets a background scan as
-> "ok to abort at any time"? It seems very unlikely that other
-> implementations would do that. I *think* (like I said before, I don't
-> really know) that ours (Intel's) will just shorten the dwell time, or
-> similar instead.
+> Has anyone *ever* seen a mdev of 25387.102 ms ???
 
-Well previous implementations I've done have used this technique for
-many years and you can find them in various products (assuming they
-haven't been totally rewritten) :-)
+No, but packets that are not returned for 19+ or 95+ seconds are usually counted 
+as lost.
 
--Sam
+I have 4 different cards that use rtl8192se. With the current wireless-testing 
+git, I get the following:
+
+Card 1: Antenna config not known
+--------------------------------
+Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless 
+LAN Controller [10ec:8172] (rev 10)
+
+100 packets transmitted, 100 received, 0% packet loss, time 99138ms
+rtt min/avg/max/mdev = 1.106/2.824/107.634/10.684 ms
+
+Card 2: Labeled 1x1
+-------------------
+Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvA Wireless 
+LAN Controller [10ec:8171] (rev 10)
+
+100 packets transmitted, 100 received, 0% packet loss, time 99139ms
+rtt min/avg/max/mdev = 0.986/1.954/26.982/3.005 ms
+
+Card 3: Labeled 1x2
+-------------------
+Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless 
+LAN Controller [10ec:8172] (rev 10)
+
+100 packets transmitted, 100 received, 0% packet loss, time 99141ms
+rtt min/avg/max/mdev = 0.996/2.507/50.636/5.989 ms
+
+Card 4: Labeled 2x2
+-------------------
+Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8192SE Wireless 
+LAN Controller [10ec:8174] (rev 10)
+
+100 packets transmitted, 99 received, 1% packet loss, time 99146ms
+rtt min/avg/max/mdev = 0.974/1.768/31.183/3.016 ms
+
+My AP is a Netgear WNDR3300 with a max rate of 270 Mbps in the 2.4 GHz band. The 
+distance between my laptop and the AP is about 2m. The card is on an Express 
+Card PCIe extender, and I have 2 7 dBi antennas connected. They likely boost the 
+signal more than the ordinary laptop antennas would. The iwconfig output for 
+card 4 is
+
+wlan26    IEEE 802.11bgn  ESSID:"lwfdjf-n"
+           Mode:Managed  Frequency:2.422 GHz  Access Point: C0:3F:0E:BE:2B:44
+           Bit Rate=270 Mb/s   Tx-Power=20 dBm
+           Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
+           Power Management:off
+           Link Quality=70/70  Signal level=-35 dBm
+           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+ From what you posted earlier, I think your card is like my Cards 1 & 3, but the 
+PCI ID will tell for sure. These tests were run with commit 0a92aec2f22d of 
+wireless-testing. There are some test patches installed, but non of them affect 
+rtl8192se.
+
+Larry
+
+
