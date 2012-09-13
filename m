@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49175 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756550Ab2IFPCd (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53175 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750734Ab2IMTDW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 11:02:33 -0400
-Message-ID: <1346943788.5469.12.camel@jlt4.sipsolutions.net> (sfid-20120906_170237_197472_7971BC8C)
-Subject: Re: [PATCH/RFC] rfkill: prevent unnecessary event generation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vitaly Wool <vitaly.wool@sonymobile.com>
-Cc: linux-wireless@vger.kernel.org, vitalywool@gmail.com
-Date: Thu, 06 Sep 2012 17:03:08 +0200
-In-Reply-To: <5048ADFC.1010708@sonymobile.com> (sfid-20120906_161659_043721_12893A62)
-References: <5048ADFC.1010708@sonymobile.com>
-	 (sfid-20120906_161659_043721_12893A62)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Sep 2012 15:03:22 -0400
+Received: by lagy9 with SMTP id y9so2179925lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2012 12:03:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1347364329-19443-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1347364329-19443-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1347364329-19443-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 13 Sep 2012 12:03:00 -0700
+Message-ID: <CAB=NE6X78e=b6e1PQn2rPcLY+3C--qO5+WkcbaM3F7FF83YWig@mail.gmail.com> (sfid-20120913_210326_722580_446D31CA)
+Subject: Re: [PATCH v1] cfg80211: Fix regulatory check for 60GHz band frequencies
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-06 at 16:06 +0200, Vitaly Wool wrote:
-> Prevent unnecessary rfkill event generation when the state has
-> not actually changed. These events have to be delivered to
-> relevant userspace processes, causing these processes to wake
-> up and do something while they could as well have slept. This
-> obviously results in more CPU usage, longer time-to-sleep-again
-> and therefore higher power consumption.
-> 
-> Signed-off-by: Vitaly Wool <vitalywool@gmail.com>
-> Signed-off-by: Mykyta Iziumtsev <nikita.izyumtsev@gmail.com>
+On Tue, Sep 11, 2012 at 4:52 AM, Vladimir Kondratiev
+<qca_vkondrat@qca.qualcomm.com> wrote:
+> Remove freq_in_rule_band, that was used to optimize regulatory rules check.
+> Approach used in the freq_in_rule_band is incorrect for 60GHz band,
+> where channel spacing is 2.160GHz.
+> Also, it does not really add any optimization, since real check for frequency fit is
+> always performed.
+>
+> Issue exposed in the following way: 60g band defines 3 channels supported wold-wide:
+> channels 1..3 or 58320, 60480, 62640 MHz, and channel 4, or 64800 MHz,
+> in the most of the world, with 2160 MHz spacing.
+> Corresponded regulatory rule for channels 1..3 would be
+> (57240 - 63720 @ 2160)
+>
+> And, when regulatory applies to the channel 2 (60480), it get disabled since it is
+> more then 2GHz from either frequency boundary and freq_in_rule_band fails
+>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Looks fine to me, should I just pick it up?
+NACK - please check the usage of -ERANGE returned here for its users.
+It turns out that Country IEs are allowed to be sent by APs whereby
+specific bands are not specified even though those bands are allowed
+in that country, and although the device supports them. In such cases
+without a band check like this if a country IE is issued with say only
+2.4 GHz rules we'd end up disabling all 5 GHz and 60 GHz rules. What
+the check does then is if we get an country IE we ensure that before
+we disable channels on a band we ensure that the country IE has at
+least one channel on the band. Otherwise we leave that band alone.
 
-johannes
+With your patch we'd break previous behavior where an AP may send a
+country IE only for 2.4 GHz and force us to disable all of our 5 GHz
+channels. We don't want that.
 
-
-> ---
->   net/rfkill/core.c |    8 +++++++-
->   1 files changed, 7 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index 752b723..520617c 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -256,6 +256,7 @@ static bool __rfkill_set_hw_state(struct rfkill *rfkill,
->   static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
->   {
->   	unsigned long flags;
-> +	bool prev, curr;
->   	int err;
->   
->   	if (unlikely(rfkill->dev.power.power_state.event & PM_EVENT_SLEEP))
-> @@ -270,6 +271,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
->   		rfkill->ops->query(rfkill, rfkill->data);
->   
->   	spin_lock_irqsave(&rfkill->lock, flags);
-> +	prev = rfkill->state & RFKILL_BLOCK_SW;
-> +
->   	if (rfkill->state & RFKILL_BLOCK_SW)
->   		rfkill->state |= RFKILL_BLOCK_SW_PREV;
->   	else
-> @@ -299,10 +302,13 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
->   	}
->   	rfkill->state &= ~RFKILL_BLOCK_SW_SETCALL;
->   	rfkill->state &= ~RFKILL_BLOCK_SW_PREV;
-> +	curr = rfkill->state & RFKILL_BLOCK_SW;
->   	spin_unlock_irqrestore(&rfkill->lock, flags);
->   
->   	rfkill_led_trigger_event(rfkill);
-> -	rfkill_event(rfkill);
-> +
-> +	if (prev != curr)
-> +		rfkill_event(rfkill);
->   }
->   
->   #ifdef CONFIG_RFKILL_INPUT
-
-
+  Luis
