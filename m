@@ -1,53 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22934 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712Ab2IHHc0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 03:32:26 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3441 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752257Ab2IMTMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2012 15:12:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 03/10] brcmfmac: use atomic variable for interrupt
+ pending flag
+Date: Thu, 13 Sep 2012 21:11:59 +0200
+Message-ID: <1347563526-12513-4-git-send-email-arend@broadcom.com> (sfid-20120913_211231_108309_FE32A2BA)
+In-Reply-To: <1347563526-12513-1-git-send-email-arend@broadcom.com>
+References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20554.62374.945320.866841@gargle.gargle.HOWL> (sfid-20120908_093228_928739_FBD1AF67)
-Date: Sat, 8 Sep 2012 12:58:38 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [RFC 6/7] ath9k_hw: Program correct PLL value for AR9565
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+From: Franky Lin <frankyl@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 063d724..07dd330 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -837,6 +837,9 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
- 			      AR_CH0_BB_DPLL2_PLL_PWD, 0x0);
- 		udelay(1000);
-+
-+		if (AR_SREV_9565(ah))
-+			REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x4142c);
- 	} else if (AR_SREV_9330(ah)) {
- 		u32 ddr_dpll2, pll_control2, kd;
+Interrupt pending flag used in SDIO bus layer could be used in
+multiple processes in different context. Use atomic_t make sure
+every interrupt is handled.
+
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 2ca9e8c..b0794e8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -531,7 +531,7 @@ struct brcmf_sdio {
  
-@@ -917,9 +920,10 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 		udelay(1000);
+ 	bool intr;		/* Use interrupts */
+ 	bool poll;		/* Use polling */
+-	bool ipend;		/* Device interrupt is pending */
++	atomic_t ipend;		/* Device interrupt is pending */
+ 	uint spurious;		/* Count of spurious interrupts */
+ 	uint pollrate;		/* Ticks between device polls */
+ 	uint polltick;		/* Tick counter */
+@@ -2151,7 +2151,7 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 			if (ret != 0)
+ 				break;
+ 			if (intstatus & bus->hostintmask)
+-				bus->ipend = true;
++				atomic_set(&bus->ipend, 1);
+ 		}
  	}
  
--	pll = ath9k_hw_compute_pll_control(ah, chan);
--
--	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
-+	if (!AR_SREV_9565(ah)) {
-+		pll = ath9k_hw_compute_pll_control(ah, chan);
-+		REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
-+	}
+@@ -2249,7 +2249,7 @@ static inline void brcmf_sdbrcm_clrintr(struct brcmf_sdio *bus)
+ 	unsigned long flags;
  
- 	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
- 	    AR_SREV_9550(ah))
+ 	spin_lock_irqsave(&bus->sdiodev->irq_en_lock, flags);
+-	if (!bus->sdiodev->irq_en && !bus->ipend) {
++	if (!bus->sdiodev->irq_en && !atomic_read(&bus->ipend)) {
+ 		enable_irq(bus->sdiodev->irq);
+ 		bus->sdiodev->irq_en = true;
+ 	}
+@@ -2332,8 +2332,8 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
+ 		goto clkwait;
+ 
+ 	/* Pending interrupt indicates new device status */
+-	if (bus->ipend) {
+-		bus->ipend = false;
++	if (atomic_read(&bus->ipend) > 0) {
++		atomic_set(&bus->ipend, 0);
+ 		err = r_sdreg32(bus, &newstatus,
+ 				offsetof(struct sdpcmd_regs, intstatus));
+ 		bus->sdcnt.f1regdata++;
+@@ -2478,7 +2478,7 @@ clkwait:
+ 	} else if (bus->clkstate == CLK_PENDING) {
+ 		brcmf_dbg(INFO, "rescheduled due to CLK_PENDING awaiting I_CHIPACTIVE interrupt\n");
+ 		resched = true;
+-	} else if (bus->intstatus || bus->ipend ||
++	} else if (bus->intstatus || atomic_read(&bus->ipend) > 0 ||
+ 		(!bus->fcstate && brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol)
+ 		 && data_ok(bus)) || PKT_AVAILABLE()) {
+ 		resched = true;
+@@ -3692,7 +3692,7 @@ void brcmf_sdbrcm_isr(void *arg)
+ 	}
+ 	/* Count the interrupt call */
+ 	bus->sdcnt.intrcount++;
+-	bus->ipend = true;
++	atomic_set(&bus->ipend, 1);
+ 
+ 	/* Disable additional interrupts (is this needed now)? */
+ 	if (!bus->intr)
+@@ -3740,7 +3740,7 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
+ 				 schedule the DPC */
+ 			if (intstatus) {
+ 				bus->sdcnt.pollcnt++;
+-				bus->ipend = true;
++				atomic_set(&bus->ipend, 1);
+ 
+ 				bus->dpc_sched = true;
+ 				if (bus->dpc_tsk) {
+@@ -3784,7 +3784,7 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
+ 
+ 	up(&bus->sdsem);
+ 
+-	return bus->ipend;
++	return (atomic_read(&bus->ipend) > 0);
+ }
+ 
+ static bool brcmf_sdbrcm_chipmatch(u16 chipid)
 -- 
-1.7.12
+1.7.9.5
+
 
