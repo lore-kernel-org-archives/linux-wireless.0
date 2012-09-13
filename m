@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:45118 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753869Ab2IESOs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 14:14:48 -0400
-Received: by eekc1 with SMTP id c1so356925eek.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 11:14:47 -0700 (PDT)
-Date: Wed, 5 Sep 2012 20:14:37 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce: activation problem with rtl8188ce pci card
-Message-ID: <20120905201437.70c008ca@destiny.ordissimo> (sfid-20120905_201537_078255_8441662C)
-In-Reply-To: <50478E10.6030808@lwfinger.net>
-References: <20120905185510.2ab501cd@destiny.ordissimo>
-	<50478E10.6030808@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mms3.broadcom.com ([216.31.210.19]:1915 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752517Ab2IMTM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2012 15:12:26 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/10] brcmfmac: add parameter check in
+ brcmf_c_mkiovar()
+Date: Thu, 13 Sep 2012 21:12:05 +0200
+Message-ID: <1347563526-12513-10-git-send-email-arend@broadcom.com> (sfid-20120913_211241_183536_BF594CC2)
+In-Reply-To: <1347563526-12513-1-git-send-email-arend@broadcom.com>
+References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 05 Sep 2012 12:38:24 -0500, Larry Finger <Larry.Finger@lwfinger.net> wrote :
+This patch assures data is only appended in output buffer when
+data is not NULL and datalen is not zero.
 
-> I have two different revisions of the RTL8188CE card. The newer one, marked 
-> RTL8188CE-VL, gives the following lspci output:
-> 
-> 06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 
-> 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
->          Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi 
-> Adapter [10ec:8176]
->          Flags: bus master, fast devsel, latency 0, IRQ 20
->          I/O ports at 4000 [size=256]
->          Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
->          Capabilities: [40] Power Management version 3
->          Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
->          Capabilities: [70] Express Endpoint, MSI 00
->          Capabilities: [100] Advanced Error Reporting
->          Capabilities: [140] Virtual Channel
->          Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
->          Kernel driver in use: rtl8192ce
-> 
-> It certainly does not yield the rx descriptor problem. Please send the lspci 
-> output when the driver has not been loaded.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-The subsystem ID is different on my wireless card (8212):
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 8121dba..6afb26c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -80,8 +80,10 @@ brcmf_c_mkiovar(char *name, char *data, uint datalen, char *buf, uint buflen)
+ 	strncpy(buf, name, buflen);
+ 
+ 	/* append data onto the end of the name string */
+-	memcpy(&buf[len], data, datalen);
+-	len += datalen;
++	if (data && datalen) {
++		memcpy(&buf[len], data, datalen);
++		len += datalen;
++	}
+ 
+ 	return len;
+ }
+-- 
+1.7.9.5
 
-06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-        Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8212]
-        Flags: bus master, fast devsel, latency 0, IRQ 3
-        I/O ports at 3000 [size=256]
-        Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
-        Capabilities: [40] Power Management version 3
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-        Capabilities: [70] Express Endpoint, MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [140] Virtual Channel
-        Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
 
-This id is nowhere to be found in the rtlwifi driver. The only matches in
-Google are my previous problem report (FWLPS freeze) and windows driver
-listings.
-
-Anisse
