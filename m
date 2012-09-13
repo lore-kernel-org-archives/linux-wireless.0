@@ -1,52 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160Ab2IZISe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 04:18:34 -0400
-Message-ID: <1348647549.10548.8.camel@jlt4.sipsolutions.net> (sfid-20120926_101840_368819_D5DE1ECC)
-Subject: Re: [RFC] mac80211: Notify new IBSS network creation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 26 Sep 2012 10:19:09 +0200
-In-Reply-To: <20578.47013.636428.710724@gargle.gargle.HOWL>
-References: <20578.31128.207010.660580@gargle.gargle.HOWL>
-	 <1348643666.10548.2.camel@jlt4.sipsolutions.net>
-	 <20578.44784.141822.850065@gargle.gargle.HOWL>
-	 <1348645070.10548.5.camel@jlt4.sipsolutions.net>
-	 <20578.47013.636428.710724@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:3323 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752142Ab2IMTMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2012 15:12:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/10] brcmfmac: absorb brcmf_sendpkt into
+ brcmf_netdev_start_xmit
+Date: Thu, 13 Sep 2012 21:11:57 +0200
+Message-ID: <1347563526-12513-2-git-send-email-arend@broadcom.com> (sfid-20120913_211233_208968_246D09FB)
+In-Reply-To: <1347563526-12513-1-git-send-email-arend@broadcom.com>
+References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-09-26 at 13:37 +0530, Sujith Manoharan wrote:
-> Johannes Berg wrote:
-> > That looks a bit different from what I thought though? Not really sure I
-> > understand that though :-)
-> 
-> The basic issue was that we were not initializing the timers based on
-> the sync'd TSF.
-> 
-> > What I'm thinking is that if you always just start beaconing, wouldn't
-> > you just reset the beacon whenever you notice a higher TSF show up in
-> > the network?
-> > 
-> > Actually I think we call reset_tsf() or something like that? But all of
-> > that has always seemed very quirky to me.
-> 
-> Currently, I don't think we reset the beacon/timers for IBSS mode.
-> 
-> For station mode, all of this is handled in ath9k using the 
-> PS_WAIT_FOR_BEACON/PS_BEACON_SYNC flags. For IBSS creator mode, there is
-> no problem because mac80211 calls reset_tsf() in __ieee80211_sta_join_ibss().
-> For joiner mode, drivers like ath9k need to do a beacon-sync (like station),
-> before starting to pollute the environment with beacons, but there is no way to know
-> if an existing IBSS network is being joined.
+From: Franky Lin <frankyl@broadcom.com>
 
-Right, makes sense. I have no objections to this patch, just wanted to
-understand the issue better.
+brcmf_sendpkt only called by brcmf_netdev_start_xmit now. Absorb it
+to increase readability.
 
-johannes
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    4 --
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   41 ++++++++------------
+ 2 files changed, 16 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 4766d9f..55e489d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -682,10 +682,6 @@ extern int brcmf_c_host_event(struct brcmf_pub *drvr, int *idx,
+ 
+ extern void brcmf_del_if(struct brcmf_pub *drvr, int ifidx);
+ 
+-/* Send packet to dongle via data channel */
+-extern int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx,\
+-			 struct sk_buff *pkt);
+-
+ extern void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg);
+ extern void brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg,
+ 					     int enable, int master_mode);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index b08f347..d7c76ce 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -272,30 +272,6 @@ static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
+ 	schedule_work(&drvr->multicast_work);
+ }
+ 
+-int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx, struct sk_buff *pktbuf)
+-{
+-	/* Reject if down */
+-	if (!drvr->bus_if->drvr_up || (drvr->bus_if->state == BRCMF_BUS_DOWN))
+-		return -ENODEV;
+-
+-	/* Update multicast statistic */
+-	if (pktbuf->len >= ETH_ALEN) {
+-		u8 *pktdata = (u8 *) (pktbuf->data);
+-		struct ethhdr *eh = (struct ethhdr *)pktdata;
+-
+-		if (is_multicast_ether_addr(eh->h_dest))
+-			drvr->tx_multicast++;
+-		if (ntohs(eh->h_proto) == ETH_P_PAE)
+-			atomic_inc(&drvr->pend_8021x_cnt);
+-	}
+-
+-	/* If the protocol uses a data header, apply it */
+-	brcmf_proto_hdrpush(drvr, ifidx, pktbuf);
+-
+-	/* Use bus module to send data frame */
+-	return drvr->bus_if->brcmf_bus_txdata(drvr->dev, pktbuf);
+-}
+-
+ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ {
+ 	int ret;
+@@ -338,7 +314,22 @@ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 		}
+ 	}
+ 
+-	ret = brcmf_sendpkt(drvr, ifp->idx, skb);
++	/* Update multicast statistic */
++	if (skb->len >= ETH_ALEN) {
++		u8 *pktdata = (u8 *)(skb->data);
++		struct ethhdr *eh = (struct ethhdr *)pktdata;
++
++		if (is_multicast_ether_addr(eh->h_dest))
++			drvr->tx_multicast++;
++		if (ntohs(eh->h_proto) == ETH_P_PAE)
++			atomic_inc(&drvr->pend_8021x_cnt);
++	}
++
++	/* If the protocol uses a data header, apply it */
++	brcmf_proto_hdrpush(drvr, ifp->idx, skb);
++
++	/* Use bus module to send data frame */
++	ret =  drvr->bus_if->brcmf_bus_txdata(drvr->dev, skb);
+ 
+ done:
+ 	if (ret)
+-- 
+1.7.9.5
+
 
