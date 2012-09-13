@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:39346 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521Ab2IYS3Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 14:29:24 -0400
-Received: by pbbrr4 with SMTP id rr4so540368pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2012 11:29:24 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:3374 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752410Ab2IMTMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2012 15:12:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 08/10] brcmfmac: fix bug causing errorneous free on
+ exception.
+Date: Thu, 13 Sep 2012 21:12:04 +0200
+Message-ID: <1347563526-12513-9-git-send-email-arend@broadcom.com> (sfid-20120913_211243_561610_CD100800)
+In-Reply-To: <1347563526-12513-1-git-send-email-arend@broadcom.com>
+References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A3190138FB68@sbs2003.acksys.local>
-References: <773DB8A82AB6A046AE0195C68612A3190138FB68@sbs2003.acksys.local>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Tue, 25 Sep 2012 11:29:04 -0700
-Message-ID: <CAG6hwVOXXBTyrixToYaFnpiq_WUhSt7uLyHRL=WqQHUdpg4G_g@mail.gmail.com> (sfid-20120925_202928_405780_DFE277D0)
-Subject: Re: Unexpected periodical Wi-Fi speed drop
-To: Cedric Debarge <cedric.debarge@acksys.fr>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cedric,
+From: Hante Meuleman <meuleman@broadcom.com>
 
-On Mon, Sep 24, 2012 at 5:57 AM, Cedric Debarge
-<cedric.debarge@acksys.fr> wrote:
->>I am encountering a periodic (each 1 second) Wi-Fi transmission speed drop (from 54Mbps to 6Mbps) during an iperf between two mesh portals.
->>The speed stays stuck to 6Mbps during about 300ms and then recovers its 54Mbps rate. About 1 second later this happen again.
+This patch fixes bug where driver frees resources twice when
+an exception occurs.
 
-This looks like a regression we had where peer rates were
-re-initialized on each beacon and was fixed in
-bae35d92b6a1b6fd8c699415ab90aeeea2a56bc3 "mac80211: don't re-init rate
-control when receiving mesh beacon". You should be able to find this
-fix in compat-wireless since 8/23.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Thomas
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index c6d5aeb..03f59cd 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -1340,10 +1340,8 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo,
+ 	struct device *dev = devinfo->dev;
+ 
+ 	bus_pub = brcmf_usb_attach(devinfo, BRCMF_USB_NRXQ, BRCMF_USB_NTXQ);
+-	if (!bus_pub) {
+-		ret = -ENODEV;
+-		goto fail;
+-	}
++	if (!bus_pub)
++		return -ENODEV;
+ 
+ 	bus = kzalloc(sizeof(struct brcmf_bus), GFP_ATOMIC);
+ 	if (!bus) {
+-- 
+1.7.9.5
+
+
