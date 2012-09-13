@@ -1,39 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:38764 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750878Ab2I3Pw1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2012 11:52:27 -0400
-Message-ID: <1349020345.1958.1.camel@joe-AO722> (sfid-20120930_175231_013199_1AC37AED)
-Subject: Re: [PATCH] mac80211: use __printf attribute in debugfs
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Sun, 30 Sep 2012 08:52:25 -0700
-In-Reply-To: <1349018174-22867-1-git-send-email-johannes@sipsolutions.net>
-References: <1349018174-22867-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mailrelayi.jaist.ac.jp ([150.65.19.7]:18874 "EHLO
+	mailrelayi.jaist.ac.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759018Ab2IMW2z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2012 18:28:55 -0400
+Date: Fri, 14 Sep 2012 07:28:51 +0900
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Borislav Petkov <bp@alien8.de>
+Subject: Re: rtl8192se: ping router gives mdev of 25387.102???
+Message-ID: <20120913222850.GA438@gandalf.dynalias.org> (sfid-20120914_002905_267750_1C1094AA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <505251FD.2090901@lwfinger.net>
+ <5051EF3C.3020401@lwfinger.net>
+From: Norbert Preining <preining@logic.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-09-30 at 17:16 +0200, Johannes Berg wrote:
-> The internal function mac80211_format_buffer() has a
-> printf-style argument list, so add the attribute to
-> have gcc verify that list.
-[]
-> diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-[]
-> @@ -17,8 +17,8 @@
-[]
-> -int mac80211_format_buffer(char __user *userbuf, size_t count,
-> -				  loff_t *ppos, char *fmt, ...)
-> +int __printf(4, 5) mac80211_format_buffer(char __user *userbuf, size_t count,
-> +					  loff_t *ppos, char *fmt, ...)
->  {
->  	va_list args;
->  	char buf[DEBUGFS_FORMAT_BUFFER_SIZE];
+Hi Larry,
 
-Good idea, but this needs to be added to the prototype
-in debugfs.h not on the function itself.
+thanks for the answer, here some more information as requested
 
+AP infos:distance: 3m
+NEC Aterm WR8600N ATERM-B45459
+firmware 1.0.11
+
+Network card is built in into a Lenovo Thinkpad Edge
+# lspci -nnv -s  03:00.0
+03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller [10ec:8172] (rev 10)
+	Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:e020]
+	Flags: bus master, fast devsel, latency 0, IRQ 17
+	I/O ports at 2000 [size=256]
+	Memory at f0500000 (32-bit, non-prefetchable) [size=16K]
+	Capabilities: [40] Power Management version 3
+	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+	Capabilities: [70] Express Legacy Endpoint, MSI 00
+	Capabilities: [100] Advanced Error Reporting
+	Capabilities: [140] Virtual Channel
+	Capabilities: [160] Device Serial Number 88-55-22-fe-ff-4c-e0-00
+	Kernel driver in use: rtl8192se
+
+# iwconfig wlan0
+wlan0     IEEE 802.11bgn  ESSID:"norbujp"  
+          Mode:Managed  Frequency:2.442 GHz  Access Point: 00:3A:9D:B4:54:5A   
+          Bit Rate=150 Mb/s   Tx-Power=20 dBm   
+          Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=70/70  Signal level=-35 dBm  
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:9   Missed beacon:0
+
+at this point there is according to ifconfig/iwconfig a connection 
+up and running, but ping tells me:
+# ping 192.168.0.1
+...
+>From 192.168.0.2 icmp_seq=77 Destination Host Unreachable
+..
+
+I tried with network-manager as well as without and wpa_supplicant
+directly, no change.
+
+Also removing the module and reloading it did not help.
+
+
+On Thu, 13 Sep 2012, Larry Finger wrote:
+> the details of your AP - STA configuration. What is the distance? Is
+
+I think it is pretty standard WPA-PSK, is there anything more I can
+tell you, please let me know.
+
+> it 802.11n or 802.11g? What is the signal strength as indicated by
+> iwconfig or a scan?
+
+See above.
+
+> From what you posted earlier, I think your card is like my Cards 1 &
+> 3, but the PCI ID will tell for sure. These tests were run with
+> commit 0a92aec2f22d of wireless-testing. There are some test patches
+> installed, but non of them affect rtl8192se.
+
+I am running on top of default kernel git, will try wireless-testing, too.
+
+Thanks a lot and all the best, and let me know what I can provide more!
+
+Norbert
+
+----------------------------------------------------------------------------
+Norbert Preining                preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                   TeX Live and Debian Developer
+gpg DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+----------------------------------------------------------------------------
+IPING (participial vb.)
+The increasingly anxious shifting from leg to leg you go through when
+you are desperate to go to the lavatory and the person you are talking
+to keeps on remembering a few final things he want to mention.
+			--- Douglas Adams, The Meaning of Liff
