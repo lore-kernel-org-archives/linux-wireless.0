@@ -1,267 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40288 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529Ab2IKNZr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 09:25:47 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v2 02/12] mac80211: introduce new ieee80211_ops
-Date: Tue, 11 Sep 2012 15:26:13 +0200
-Message-Id: <1347369983-12459-3-git-send-email-johannes@sipsolutions.net> (sfid-20120911_152604_265478_E6F20D03)
-In-Reply-To: <1347369983-12459-1-git-send-email-johannes@sipsolutions.net>
-References: <1347369983-12459-1-git-send-email-johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:46476 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757843Ab2IMMRQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2012 08:17:16 -0400
+Message-ID: <5051CEC3.8090806@openwrt.org> (sfid-20120913_141720_111146_D65FD9A9)
+Date: Thu, 13 Sep 2012 14:17:07 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFT] cfg80211: fix possible circular lock on reg_regdb_search()
+References: <1347408735-25745-1-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1347408735-25745-1-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+On 2012-09-12 2:12 AM, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> 
+> When call_crda() is called we kick off a witch hunt search
+> for the same regulatory domain on our internal regulatory
+> database and that work gets scheuled on a workqueue, this
+> is done while the cfg80211_mutex is held. If that workqueue
+> kicks off it will first lock reg_regdb_search_mutex and
+> later cfg80211_mutex but to ensure two CPUs will not contend
+> against cfg80211_mutex the right thing to do is to have the
+> reg_regdb_search() wait until the cfg80211_mutex is let go.
+> 
+> The lockdep report is pasted below.
+> 
+> cfg80211: Calling CRDA to update world regulatory domain
+> 
+> ======================================================
+> [ INFO: possible circular locking dependency detected ]
+> 3.3.8 #3 Tainted: G           O
+> -------------------------------------------------------
+> kworker/0:1/235 is trying to acquire lock:
+>  (cfg80211_mutex){+.+...}, at: [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+> 
+> but task is already holding lock:
+>  (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
+> 
+> which lock already depends on the new lock.
+> 
+> the existing dependency chain (in reverse order) is:
+> 
+> -> #2 (reg_regdb_search_mutex){+.+...}:
+>        [<800a8384>] lock_acquire+0x60/0x88
+>        [<802950a8>] mutex_lock_nested+0x54/0x31c
+>        [<81645778>] is_world_regdom+0x9f8/0xc74 [cfg80211]
+> 
+> -> #1 (reg_mutex#2){+.+...}:
+>        [<800a8384>] lock_acquire+0x60/0x88
+>        [<802950a8>] mutex_lock_nested+0x54/0x31c
+>        [<8164539c>] is_world_regdom+0x61c/0xc74 [cfg80211]
+> 
+> -> #0 (cfg80211_mutex){+.+...}:
+>        [<800a77b8>] __lock_acquire+0x10d4/0x17bc
+>        [<800a8384>] lock_acquire+0x60/0x88
+>        [<802950a8>] mutex_lock_nested+0x54/0x31c
+>        [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+> 
+> other info that might help us debug this:
+> 
+> Chain exists of:
+>   cfg80211_mutex --> reg_mutex#2 --> reg_regdb_search_mutex
+> 
+>  Possible unsafe locking scenario:
+> 
+>        CPU0                    CPU1
+>        ----                    ----
+>   lock(reg_regdb_search_mutex);
+>                                lock(reg_mutex#2);
+>                                lock(reg_regdb_search_mutex);
+>   lock(cfg80211_mutex);
+> 
+>  *** DEADLOCK ***
+> 
+> 3 locks held by kworker/0:1/235:
+>  #0:  (events){.+.+..}, at: [<80089a00>] process_one_work+0x230/0x460
+>  #1:  (reg_regdb_work){+.+...}, at: [<80089a00>] process_one_work+0x230/0x460
+>  #2:  (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
+> 
+> stack backtrace:
+> Call Trace:
+> [<80290fd4>] dump_stack+0x8/0x34
+> [<80291bc4>] print_circular_bug+0x2ac/0x2d8
+> [<800a77b8>] __lock_acquire+0x10d4/0x17bc
+> [<800a8384>] lock_acquire+0x60/0x88
+> [<802950a8>] mutex_lock_nested+0x54/0x31c
+> [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+> 
+> Reported-by: Felix Fietkau <nbd@openwrt.org>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+With this patch I get a slightly different report:
 
-Introduce channel context driver methods. The channel
-on a context channel is immutable, but the channel type
-and other properties can change.
+[    9.480000] cfg80211: Calling CRDA to update world regulatory domain
+[    9.490000] 
+[    9.490000] ======================================================
+[    9.490000] [ INFO: possible circular locking dependency detected ]
+[    9.490000] 3.3.8 #4 Tainted: G           O
+[    9.490000] -------------------------------------------------------
+[    9.490000] kworker/0:1/235 is trying to acquire lock:
+[    9.490000]  (reg_mutex#2){+.+...}, at: [<8164617c>] set_regdom+0x64/0x80c [cfg80211]
+[    9.490000] 
+[    9.490000] but task is already holding lock:
+[    9.490000]  (reg_regdb_search_mutex){+.+...}, at: [<81646830>] set_regdom+0x718/0x80c [cfg80211]
+[    9.490000] 
+[    9.490000] which lock already depends on the new lock.
+[    9.490000] 
+[    9.490000] 
+[    9.490000] the existing dependency chain (in reverse order) is:
+[    9.490000] 
+[    9.490000] -> #1 (reg_regdb_search_mutex){+.+...}:
+[    9.490000]        [<800a8384>] lock_acquire+0x60/0x88
+[    9.490000]        [<802950a8>] mutex_lock_nested+0x54/0x31c
+[    9.490000]        [<81645778>] is_world_regdom+0x9f8/0xc74 [cfg80211]
+[    9.490000] 
+[    9.490000] -> #0 (reg_mutex#2){+.+...}:
+[    9.490000]        [<800a77b8>] __lock_acquire+0x10d4/0x17bc
+[    9.490000]        [<800a8384>] lock_acquire+0x60/0x88
+[    9.490000]        [<802950a8>] mutex_lock_nested+0x54/0x31c
+[    9.490000]        [<8164617c>] set_regdom+0x64/0x80c [cfg80211]
+[    9.490000]        [<816468ac>] set_regdom+0x794/0x80c [cfg80211]
+[    9.490000] 
+[    9.490000] other info that might help us debug this:
+[    9.490000] 
+[    9.490000]  Possible unsafe locking scenario:
+[    9.490000] 
+[    9.490000]        CPU0                    CPU1
+[    9.490000]        ----                    ----
+[    9.490000]   lock(reg_regdb_search_mutex);
+[    9.490000]                                lock(reg_mutex#2);
+[    9.490000]                                lock(reg_regdb_search_mutex);
+[    9.490000]   lock(reg_mutex#2);
+[    9.490000] 
+[    9.490000]  *** DEADLOCK ***
+[    9.490000] 
+[    9.490000] 4 locks held by kworker/0:1/235:
+[    9.490000]  #0:  (events){.+.+..}, at: [<80089a00>] process_one_work+0x230/0x460
+[    9.490000]  #1:  (reg_regdb_work){+.+...}, at: [<80089a00>] process_one_work+0x230/0x460
+[    9.490000]  #2:  (cfg80211_mutex){+.+...}, at: [<81646824>] set_regdom+0x70c/0x80c [cfg80211]
+[    9.490000]  #3:  (reg_regdb_search_mutex){+.+...}, at: [<81646830>] set_regdom+0x718/0x80c [cfg80211]
+[    9.490000] 
+[    9.490000] stack backtrace:
+[    9.490000] Call Trace:
+[    9.490000] [<80290fd4>] dump_stack+0x8/0x34
+[    9.490000] [<80291bc4>] print_circular_bug+0x2ac/0x2d8
+[    9.490000] [<800a77b8>] __lock_acquire+0x10d4/0x17bc
+[    9.490000] [<800a8384>] lock_acquire+0x60/0x88
+[    9.490000] [<802950a8>] mutex_lock_nested+0x54/0x31c
+[    9.490000] [<8164617c>] set_regdom+0x64/0x80c [cfg80211]
+[    9.490000] [<816468ac>] set_regdom+0x794/0x80c [cfg80211]
+[    9.490000] 
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h    |   24 ++++++++++
- net/mac80211/driver-ops.h |   57 ++++++++++++++++++++++++
- net/mac80211/trace.h      |  107 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 188 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ab1b5ba..4d955c1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2353,6 +2353,16 @@ enum ieee80211_rate_control_changed {
-  *	The callback will be called before each transmission and upon return
-  *	mac80211 will transmit the frame right away.
-  *	The callback is optional and can (should!) sleep.
-+ *
-+ * @add_chanctx: Notifies device driver about new channel context creation.
-+ * @remove_chanctx: Notifies device driver about channel context destruction.
-+ * @change_chanctx: Notifies device driver about channel context changes that
-+ *	may happen when combining different virtual interfaces on the same
-+ *	channel context with different settings
-+ * @assign_vif_chanctx: Notifies device driver about channel context being bound
-+ *	to vif. Possible use is for hw queue remapping.
-+ * @unassign_vif_chanctx: Notifies device driver about channel context being
-+ *	unbound from vif.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -2497,6 +2507,20 @@ struct ieee80211_ops {
- 
- 	void	(*mgd_prepare_tx)(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif);
-+
-+	void (*add_chanctx)(struct ieee80211_hw *hw,
-+			    struct ieee80211_chanctx_conf *ctx);
-+	void (*remove_chanctx)(struct ieee80211_hw *hw,
-+			       struct ieee80211_chanctx_conf *ctx);
-+	void (*change_chanctx)(struct ieee80211_hw *hw,
-+			       struct ieee80211_chanctx_conf *ctx,
-+			       u32 changed);
-+	void (*assign_vif_chanctx)(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_chanctx_conf *ctx);
-+	void (*unassign_vif_chanctx)(struct ieee80211_hw *hw,
-+				     struct ieee80211_vif *vif,
-+				     struct ieee80211_chanctx_conf *ctx);
- };
- 
- /**
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index da9003b..aa34cb5 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -871,4 +871,61 @@ static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
- 		local->ops->mgd_prepare_tx(&local->hw, &sdata->vif);
- 	trace_drv_return_void(local);
- }
-+
-+static inline void drv_add_chanctx(struct ieee80211_local *local,
-+				   struct ieee80211_chanctx *ctx)
-+{
-+	trace_drv_add_chanctx(local, ctx);
-+	if (local->ops->add_chanctx)
-+		local->ops->add_chanctx(&local->hw, &ctx->conf);
-+	trace_drv_return_void(local);
-+}
-+
-+static inline void drv_remove_chanctx(struct ieee80211_local *local,
-+				      struct ieee80211_chanctx *ctx)
-+{
-+	trace_drv_remove_chanctx(local, ctx);
-+	if (local->ops->remove_chanctx)
-+		local->ops->remove_chanctx(&local->hw, &ctx->conf);
-+	trace_drv_return_void(local);
-+}
-+
-+static inline void drv_change_chanctx(struct ieee80211_local *local,
-+				      struct ieee80211_chanctx *ctx,
-+				      u32 changed)
-+{
-+	trace_drv_change_chanctx(local, ctx, changed);
-+	if (local->ops->change_chanctx)
-+		local->ops->change_chanctx(&local->hw, &ctx->conf, changed);
-+	trace_drv_return_void(local);
-+}
-+
-+static inline void drv_assign_vif_chanctx(struct ieee80211_local *local,
-+					  struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_chanctx *ctx)
-+{
-+	check_sdata_in_driver(sdata);
-+
-+	trace_drv_assign_vif_chanctx(local, sdata, ctx);
-+	if (local->ops->assign_vif_chanctx)
-+		local->ops->assign_vif_chanctx(&local->hw,
-+					       &sdata->vif,
-+					       &ctx->conf);
-+	trace_drv_return_void(local);
-+}
-+
-+static inline void drv_unassign_vif_chanctx(struct ieee80211_local *local,
-+					    struct ieee80211_sub_if_data *sdata,
-+					    struct ieee80211_chanctx *ctx)
-+{
-+	check_sdata_in_driver(sdata);
-+
-+	trace_drv_unassign_vif_chanctx(local, sdata, ctx);
-+	if (local->ops->unassign_vif_chanctx)
-+		local->ops->unassign_vif_chanctx(&local->hw,
-+						 &sdata->vif,
-+						 &ctx->conf);
-+	trace_drv_return_void(local);
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 18d9c8a..d214f91 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -28,6 +28,15 @@
- #define VIF_PR_FMT	" vif:%s(%d%s)"
- #define VIF_PR_ARG	__get_str(vif_name), __entry->vif_type, __entry->p2p ? "/p2p" : ""
- 
-+#define CHANCTX_ENTRY	__field(int, freq)						\
-+			__field(int, chantype)
-+#define CHANCTX_ASSIGN	__entry->freq = ctx->conf.channel->center_freq;			\
-+			__entry->chantype = ctx->conf.channel_type
-+#define CHANCTX_PR_FMT	" freq:%d MHz chantype:%d"
-+#define CHANCTX_PR_ARG	__entry->freq, __entry->chantype
-+
-+
-+
- /*
-  * Tracing for driver callbacks.
-  */
-@@ -1256,6 +1265,104 @@ DEFINE_EVENT(local_sdata_evt, drv_mgd_prepare_tx,
- 	TP_ARGS(local, sdata)
- );
- 
-+DECLARE_EVENT_CLASS(local_chanctx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_chanctx *ctx),
-+
-+	TP_ARGS(local, ctx),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		CHANCTX_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		CHANCTX_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT CHANCTX_PR_FMT,
-+		LOCAL_PR_ARG, CHANCTX_PR_ARG
-+	)
-+);
-+
-+DEFINE_EVENT(local_chanctx, drv_add_chanctx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_chanctx *ctx),
-+	TP_ARGS(local, ctx)
-+);
-+
-+DEFINE_EVENT(local_chanctx, drv_remove_chanctx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_chanctx *ctx),
-+	TP_ARGS(local, ctx)
-+);
-+
-+TRACE_EVENT(drv_change_chanctx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_chanctx *ctx,
-+		 u32 changed),
-+
-+	TP_ARGS(local, ctx, changed),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		CHANCTX_ENTRY
-+		__field(u32, changed)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		CHANCTX_ASSIGN;
-+		__entry->changed = changed;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT CHANCTX_PR_FMT " changed:%#x",
-+		LOCAL_PR_ARG, CHANCTX_PR_ARG, __entry->changed
-+	)
-+);
-+
-+DECLARE_EVENT_CLASS(local_sdata_chanctx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_chanctx *ctx),
-+
-+	TP_ARGS(local, sdata, ctx),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		CHANCTX_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		CHANCTX_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT VIF_PR_FMT CHANCTX_PR_FMT,
-+		LOCAL_PR_ARG, VIF_PR_ARG, CHANCTX_PR_ARG
-+	)
-+);
-+
-+DEFINE_EVENT(local_sdata_chanctx, drv_assign_vif_chanctx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_chanctx *ctx),
-+	TP_ARGS(local, sdata, ctx)
-+);
-+
-+DEFINE_EVENT(local_sdata_chanctx, drv_unassign_vif_chanctx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_chanctx *ctx),
-+	TP_ARGS(local, sdata, ctx)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
--- 
-1.7.10.4
 
