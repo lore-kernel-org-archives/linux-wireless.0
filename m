@@ -1,69 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4109 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752861Ab2I0MSQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 08:18:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/11] brcmfmac: use define instead of hardcoded values.
-Date: Thu, 27 Sep 2012 14:17:49 +0200
-Message-ID: <1348748277-21460-4-git-send-email-arend@broadcom.com> (sfid-20120927_141823_170220_A139CE76)
-In-Reply-To: <1348748277-21460-1-git-send-email-arend@broadcom.com>
-References: <1348748277-21460-1-git-send-email-arend@broadcom.com>
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:58041 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758337Ab2IMQvP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Sep 2012 12:51:15 -0400
+Date: Thu, 13 Sep 2012 18:51:24 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Sven Eckelmann <sven@narfation.org>
+Cc: Adrian Chadd <adrian.chadd@gmail.com>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	openwrt-devel@lists.openwrt.org,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: AR9330 hornet board stops beaconing after a few days
+ (0xdeadbeef)
+Message-ID: <20120913165124.GA13877@pandem0nium> (sfid-20120913_185119_861644_1A3D8E8C)
+References: <20120813165340.GA10044@pandem0nium>
+ <CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com>
+ <CAJ-VmonwheNtv8xfEJnWpD-XOmSEebMFJAmQmWUfe2Pd3tMnqA@mail.gmail.com>
+ <168362233.PzT7LJrFi2@bentobox>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="r5Pyd7+fXNt84Ff3"
+In-Reply-To: <168362233.PzT7LJrFi2@bentobox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
 
-brcmf_parse_tlvs was using hardcoded values.
+--r5Pyd7+fXNt84Ff3
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ath9k fellows,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index fad6d05..63dbb2a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -48,6 +48,8 @@
- #define BRCMF_PNO_SCAN_COMPLETE		1
- #define BRCMF_PNO_SCAN_INCOMPLETE	0
- 
-+#define TLV_HDR_LEN			2	/* header length */
-+
- #define BRCMF_ASSOC_PARAMS_FIXED_SIZE \
- 	(sizeof(struct brcmf_assoc_params_le) - sizeof(u16))
- 
-@@ -2610,15 +2612,15 @@ static struct brcmf_tlv *brcmf_parse_tlvs(void *buf, int buflen, uint key)
- 	totlen = buflen;
- 
- 	/* find tagged parameter */
--	while (totlen >= 2) {
-+	while (totlen >= TLV_HDR_LEN) {
- 		int len = elt->len;
- 
- 		/* validate remaining totlen */
--		if ((elt->id == key) && (totlen >= (len + 2)))
-+		if ((elt->id == key) && (totlen >= (len + TLV_HDR_LEN)))
- 			return elt;
- 
--		elt = (struct brcmf_tlv *) ((u8 *) elt + (len + 2));
--		totlen -= (len + 2);
-+		elt = (struct brcmf_tlv *) ((u8 *) elt + (len + TLV_HDR_LEN));
-+		totlen -= (len + TLV_HDR_LEN);
- 	}
- 
- 	return NULL;
--- 
-1.7.9.5
+as it seems no one could find the cause for this problem so far. I'd theref=
+ore
+like to create a workaround by checking one/some registers for 0xdeadbeef a=
+nd
+reset the chip if this is found.
+
+Can anyone recommend a register which should never go 0xdeadbeef in a norma=
+l case?
+
+=46rom what i've seen, AR_CFG (0x0014) might be a good choice. My regdumps =
+say:
+
+bad regdump:  0x000014 0xdeadbeef   =20
+good regdump: 0x000014 0x0008010a
+
+Unfortunately I don't have documentation to find out if this register can e=
+ver
+go deadbeef in a normal case. :)
+
+What do you think? (of course, a proper solution is still appreciated ...)
+
+Cheers,
+	Simon
 
 
+On Wed, Sep 05, 2012 at 04:20:52PM +0200, Sven Eckelmann wrote:
+> On Wednesday 05 September 2012 07:08:47 Adrian Chadd wrote:
+> > I don't think it's a stuck beacon WAR issue here; 0xdeadbeef really
+> > does read like the MAC has gone to sleep.
+> >=20
+> > Where's the complete register dump hiding?
+>=20
+> It was not sent to the public mailing lists due to the size. You will rec=
+eive=20
+> the dump mentioned in the first mail in some minutes.
+>=20
+> Kind regards,
+> 	Sven
+
+
+
+--r5Pyd7+fXNt84Ff3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlBSDwwACgkQrzg/fFk7axaCLQCg27g4pk6seTqcix0RFoeoglZm
++fkAoJnqhGv77388XjzRPdhSM/V3yNYl
+=BYI7
+-----END PGP SIGNATURE-----
+
+--r5Pyd7+fXNt84Ff3--
