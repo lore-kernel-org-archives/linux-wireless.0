@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:58275 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900Ab2IEGeN (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:58528 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822Ab2IMFgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 02:34:13 -0400
+	Thu, 13 Sep 2012 01:36:10 -0400
+Message-ID: <505170C6.8090003@lwfinger.net> (sfid-20120913_073619_885697_B506F120)
+Date: Thu, 13 Sep 2012 00:36:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Wed, 5 Sep 2012 14:34:12 +0800
-Message-ID: <CAPgLHd-7DpM_OQ7RTVip6d-zb8DZS9SiscrMugm2-D992ajjsg@mail.gmail.com> (sfid-20120905_083416_637090_5EB51AF1)
-Subject: [PATCH] cfg80211: use list_move_tail instead of list_del/list_add_tail
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com,
-	davem@davemloft.net
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, chaoming_li@realsil.com.cn
+Subject: Re: [RFC/RFT 14/15] rtlwifi: Modify files for addition of rtl8723ae
+References: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net> <1347483294-6943-15-git-send-email-Larry.Finger@lwfinger.net> <CAGRGNgWezEzXV0-k6DA7TckNpa=zgN6LNv898N-PRU6P1LYgOw@mail.gmail.com>
+In-Reply-To: <CAGRGNgWezEzXV0-k6DA7TckNpa=zgN6LNv898N-PRU6P1LYgOw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 09/12/2012 10:11 PM, Julian Calaby wrote:
+> Hi Larry,
+>
+> On Thu, Sep 13, 2012 at 6:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> This patch modifies the files of rtlwifi for the addition of a new driver
+>> to handle the Realtek RTL8723AE wireless device, and introduces a new
+>> routine to maintaim statistics that will be used later for roaming.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: <chaoming_li@realsil.com.cn>
+>> ---
+>>   drivers/net/wireless/rtlwifi/debug.h |    2 +
+>>   drivers/net/wireless/rtlwifi/pci.h   |    1 +
+>>   drivers/net/wireless/rtlwifi/stats.c |  274 ++++++++++++++++++++++++++++++++++
+>>   drivers/net/wireless/rtlwifi/stats.h |   47 ++++++
+>>   4 files changed, 324 insertions(+)
+>>   create mode 100644 drivers/net/wireless/rtlwifi/stats.c
+>>   create mode 100644 drivers/net/wireless/rtlwifi/stats.h
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/debug.h b/drivers/net/wireless/rtlwifi/debug.h
+>> index 07493d2..b81e299 100644
+>> --- a/drivers/net/wireless/rtlwifi/debug.h
+>> +++ b/drivers/net/wireless/rtlwifi/debug.h
+>> @@ -106,6 +106,8 @@
+>>   #define COMP_REGD                      BIT(27)
+>>   #define COMP_CHAN                      BIT(28)
+>>   #define COMP_USB                       BIT(29)
+>> +#define COMP_EASY_CONCURRENT           BIT(29)
+>
+> Is this supposed to be bit #29 - I notice that COMP_USB is also bit 29.
 
-Using list_move_tail() instead of list_del() + list_add_tail().
+Yes, that is OK. One will only be used for PCI-based drivers, and the other is 
+obviously for USB. As nearly all the bits of a 32-bit quantity are used, I 
+wanted to save one if possible.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- net/wireless/reg.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+In the final version, I'll code this as
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2ded3c7..1ad04e5 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1949,8 +1949,7 @@ static void restore_regulatory_settings(bool reset_user)
- 			if (reg_request->initiator !=
- 			    NL80211_REGDOM_SET_BY_USER)
- 				continue;
--			list_del(&reg_request->list);
--			list_add_tail(&reg_request->list, &tmp_reg_req_list);
-+			list_move_tail(&reg_request->list, &tmp_reg_req_list);
- 		}
- 	}
- 	spin_unlock(&reg_requests_lock);
-@@ -2009,8 +2008,7 @@ static void restore_regulatory_settings(bool reset_user)
- 			      "into the queue\n",
- 			      reg_request->alpha2[0],
- 			      reg_request->alpha2[1]);
--		list_del(&reg_request->list);
--		list_add_tail(&reg_request->list, &reg_requests_list);
-+		list_move_tail(&reg_request->list, &reg_requests_list);
- 	}
- 	spin_unlock(&reg_requests_lock);
- 
+#define COMP_USB                       BIT(29)
+#define COMP_EASY_CONCURRENT           COMP_USB
+
+That way will be more obvious.
+
+Larry
+
+
 
