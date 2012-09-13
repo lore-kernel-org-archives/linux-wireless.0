@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:39857 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753955Ab2IETdj (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58062 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764Ab2IMCdp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 15:33:39 -0400
-Date: Wed, 5 Sep 2012 14:33:30 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brad Figg <brad.figg@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	stable <stable@vger.kernel.org>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
-	Milan Bouchet-Valat <nalimilan@club-internet.fr>
-Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback
- operation
-Message-ID: <20120905193330.GE302@thinkpad-t410> (sfid-20120905_213343_571031_2873F5FE)
-References: <1346838562-4818-1-git-send-email-arend@broadcom.com>
- <1346838562-4818-3-git-send-email-arend@broadcom.com>
- <20120905165735.GD302@thinkpad-t410>
- <50478CE9.6040103@canonical.com>
- <5047A624.7090105@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5047A624.7090105@broadcom.com>
+	Wed, 12 Sep 2012 22:33:45 -0400
+Received: by pbbrr13 with SMTP id rr13so3234905pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2012 19:33:45 -0700 (PDT)
+From: Ming Lei <ming.lei@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ming Lei <ming.lei@canonical.com>, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH -next] wireless: ath9k-htc: fix possible use after free
+Date: Thu, 13 Sep 2012 10:33:28 +0800
+Message-Id: <1347503608-3521-1-git-send-email-ming.lei@canonical.com> (sfid-20120913_043349_565821_B4CC953F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 05, 2012 at 09:21:08PM +0200, Arend van Spriel wrote:
-> If I can download the kernel debian package of your 3.5 kernel from
-> somewhere that would be great.
+Inside ath9k_hif_usb_firmware_fail(), the instance of
+'struct struct hif_device_usb' may be freed by
+ath9k_hif_usb_disconnect() after
 
-You can get the debs for the kernel from
-http://people.canonical.com/~sforshee/linux-3.5.0-13.14~lp000000v201209051242/.
+	complete(&hif_dev->fw_done);
 
-Seth
+But 'hif_dev' is still accessed after the line code
+above is executed.
+
+This patch fixes the issue by not accessing 'hif_dev'
+after 'complete(&hif_dev->fw_done)' inside
+ath9k_hif_usb_firmware_fail().
+
+Cc: ath9k-devel@lists.ath9k.org
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index ee6e50a..924c461 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -1072,14 +1072,15 @@ static void ath9k_hif_usb_dev_deinit(struct hif_device_usb *hif_dev)
+  */
+ static void ath9k_hif_usb_firmware_fail(struct hif_device_usb *hif_dev)
+ {
+-	struct device *parent = hif_dev->udev->dev.parent;
++	struct device *dev = &hif_dev->udev->dev;
++	struct device *parent = dev->parent;
+ 
+ 	complete(&hif_dev->fw_done);
+ 
+ 	if (parent)
+ 		device_lock(parent);
+ 
+-	device_release_driver(&hif_dev->udev->dev);
++	device_release_driver(dev);
+ 
+ 	if (parent)
+ 		device_unlock(parent);
+-- 
+1.7.9.5
 
