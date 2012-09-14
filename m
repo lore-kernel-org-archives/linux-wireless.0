@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:63222 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898Ab2IYWCA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52525 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759359Ab2INMIc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 18:02:00 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UgCJKrWvfPbn5f1od5tJ5DU9qYEigRZMHXtsVXy5fukA@mail.gmail.com>
-References: <20572.46476.617076.695309@gargle.gargle.HOWL> <CAB=NE6UgCJKrWvfPbn5f1od5tJ5DU9qYEigRZMHXtsVXy5fukA@mail.gmail.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Tue, 25 Sep 2012 15:01:38 -0700
-Message-ID: <CAB=NE6VPKnNm0X-Uh0O+675AM=GmbBuT9u6sNAORJw_kf+YbVw@mail.gmail.com> (sfid-20120926_000206_040056_B8BD8A76)
-Subject: Re: [PATCH] ath9k: Disable ASPM only for AR9285
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	backports@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 14 Sep 2012 08:08:32 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TCUhD-0006FV-2E
+	for linux-wireless@vger.kernel.org; Fri, 14 Sep 2012 14:08:31 +0200
+Message-ID: <1347624549.4060.1.camel@jlt4.sipsolutions.net> (sfid-20120914_140837_534817_4890883F)
+Subject: Re: [PATCH] mac80211: change locking around ieee80211_recalc_smps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 14 Sep 2012 14:09:09 +0200
+In-Reply-To: <1347367566-30660-1-git-send-email-johannes@sipsolutions.net> (sfid-20120911_144531_648560_39799CAE)
+References: <1347367566-30660-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120911_144531_648560_39799CAE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 21, 2012 at 8:30 PM, Luis R. Rodriguez
-<rodrigue@qca.qualcomm.com> wrote:
-> On Fri, Sep 21, 2012 at 11:44 AM, Sujith Manoharan
-> <c_manoha@qualcomm.com> wrote:
->> Currently, ASPM is disabled for all WLAN+BT combo chipsets
->> when BTCOEX is enabled. This is incorrect since the workaround
->> is required only for WB195, which is a AR9285+AR3011 combo
->> solution. Fix this by checking for the HW version when enabling
->> the workaround.
->>
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> I've sucked this into the origin/linux-3.5.y branch, and am working on
-> ckmake test compiling a new stable release that brings up on to
-> v3.5.4. All changes have been pushed. The new Bluetooth stable patches
-> from linux-next were plain stupid but I've tried backporting them.
->
-> waiting on ckmake result.
+On Tue, 2012-09-11 at 14:46 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Make the function acquire the necessary mutex itself
+> to simplify the callers.
 
-All ckmake tests passed, uploaded all new releases based on new v3.5.4
-and with this patch applied.
+Applied.
 
-http://wireless.kernel.org/en/users/Download/stable#compat-wireless_3.5_stable_releases
+johannes
 
-  Luis
