@@ -1,126 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59077 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757545Ab2I2Sg0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 14:36:26 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] ssb: move parallel flash config into an own struct
-Date: Sat, 29 Sep 2012 20:36:17 +0200
-Message-Id: <1348943778-23079-2-git-send-email-hauke@hauke-m.de> (sfid-20120929_203629_866755_D71204F9)
-In-Reply-To: <1348943778-23079-1-git-send-email-hauke@hauke-m.de>
-References: <1348943778-23079-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:52689 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753034Ab2INMxT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Sep 2012 08:53:19 -0400
+Message-ID: <1347627232.4060.10.camel@jlt4.sipsolutions.net> (sfid-20120914_145345_569013_89C9F12A)
+Subject: pull-request: iwlwifi-next 2012-09-14
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 14 Sep 2012 14:53:52 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-6hU2h41ISb3k8nXnZmA9"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a preparing step for adding serial flash support.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- arch/mips/bcm47xx/nvram.c           |    4 ++--
- arch/mips/bcm47xx/wgt634u.c         |    8 ++++----
- drivers/ssb/driver_mipscore.c       |   14 +++++++-------
- include/linux/ssb/ssb_driver_mips.h |    9 ++++++---
- 4 files changed, 19 insertions(+), 16 deletions(-)
+--=-6hU2h41ISb3k8nXnZmA9
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/arch/mips/bcm47xx/nvram.c b/arch/mips/bcm47xx/nvram.c
-index d43ceff..48a4c70 100644
---- a/arch/mips/bcm47xx/nvram.c
-+++ b/arch/mips/bcm47xx/nvram.c
-@@ -43,8 +43,8 @@ static void early_nvram_init(void)
- #ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		mcore_ssb = &bcm47xx_bus.ssb.mipscore;
--		base = mcore_ssb->flash_window;
--		lim = mcore_ssb->flash_window_size;
-+		base = mcore_ssb->pflash.window;
-+		lim = mcore_ssb->pflash.window_size;
- 		break;
- #endif
- #ifdef CONFIG_BCM47XX_BCMA
-diff --git a/arch/mips/bcm47xx/wgt634u.c b/arch/mips/bcm47xx/wgt634u.c
-index e9f9ec8..e80d585 100644
---- a/arch/mips/bcm47xx/wgt634u.c
-+++ b/arch/mips/bcm47xx/wgt634u.c
-@@ -156,10 +156,10 @@ static int __init wgt634u_init(void)
- 					    SSB_CHIPCO_IRQ_GPIO);
- 		}
- 
--		wgt634u_flash_data.width = mcore->flash_buswidth;
--		wgt634u_flash_resource.start = mcore->flash_window;
--		wgt634u_flash_resource.end = mcore->flash_window
--					   + mcore->flash_window_size
-+		wgt634u_flash_data.width = mcore->pflash.buswidth;
-+		wgt634u_flash_resource.start = mcore->pflash.window;
-+		wgt634u_flash_resource.end = mcore->pflash.window
-+					   + mcore->pflash.window_size
- 					   - 1;
- 		return platform_add_devices(wgt634u_devices,
- 					    ARRAY_SIZE(wgt634u_devices));
-diff --git a/drivers/ssb/driver_mipscore.c b/drivers/ssb/driver_mipscore.c
-index c625086..dcad2c4 100644
---- a/drivers/ssb/driver_mipscore.c
-+++ b/drivers/ssb/driver_mipscore.c
-@@ -192,9 +192,9 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
- 
- 	/* When there is no chipcommon on the bus there is 4MB flash */
- 	if (!bus->chipco.dev) {
--		mcore->flash_buswidth = 2;
--		mcore->flash_window = SSB_FLASH1;
--		mcore->flash_window_size = SSB_FLASH1_SZ;
-+		mcore->pflash.buswidth = 2;
-+		mcore->pflash.window = SSB_FLASH1;
-+		mcore->pflash.window_size = SSB_FLASH1_SZ;
- 		return;
- 	}
- 
-@@ -206,13 +206,13 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
- 		break;
- 	case SSB_CHIPCO_FLASHT_PARA:
- 		pr_debug("Found parallel flash\n");
--		mcore->flash_window = SSB_FLASH2;
--		mcore->flash_window_size = SSB_FLASH2_SZ;
-+		mcore->pflash.window = SSB_FLASH2;
-+		mcore->pflash.window_size = SSB_FLASH2_SZ;
- 		if ((ssb_read32(bus->chipco.dev, SSB_CHIPCO_FLASH_CFG)
- 		               & SSB_CHIPCO_CFG_DS16) == 0)
--			mcore->flash_buswidth = 1;
-+			mcore->pflash.buswidth = 1;
- 		else
--			mcore->flash_buswidth = 2;
-+			mcore->pflash.buswidth = 2;
- 		break;
- 	}
- }
-diff --git a/include/linux/ssb/ssb_driver_mips.h b/include/linux/ssb/ssb_driver_mips.h
-index 5f44e97..5d057db 100644
---- a/include/linux/ssb/ssb_driver_mips.h
-+++ b/include/linux/ssb/ssb_driver_mips.h
-@@ -13,6 +13,11 @@ struct ssb_serial_port {
- 	unsigned int reg_shift;
- };
- 
-+struct ssb_pflash {
-+	u8 buswidth;
-+	u32 window;
-+	u32 window_size;
-+};
- 
- struct ssb_mipscore {
- 	struct ssb_device *dev;
-@@ -20,9 +25,7 @@ struct ssb_mipscore {
- 	int nr_serial_ports;
- 	struct ssb_serial_port serial_ports[4];
- 
--	u8 flash_buswidth;
--	u32 flash_window;
--	u32 flash_window_size;
-+	struct ssb_pflash pflash;
- };
- 
- extern void ssb_mipscore_init(struct ssb_mipscore *mcore);
--- 
-1.7.9.5
+Hi John,
+
+Another pull request, this one for iwlwifi, but it has fewer changes
+than mac80211 :-)
+
+This is mostly random fixes/cleanups all over, including the firmware
+allocation change. I've not tagged that for stable (yet) since we didn't
+really cause the regression, I have a feeling that it might be better to
+just set __GFP_REPEAT in stable kernels as Mel Gorman had pointed out
+that this was previously implicitly included and now gone due to
+allocator changes.
+
+johannes
+
+----
+
+The following changes since commit c5d472212024543e32cf3eea4381ab91b9f6b812=
+:
+
+  iwlwifi: remove radio_config from eeprom_data (2012-09-05 16:18:01 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to 83f84d7bd49f9e4deea0a77a76c9882673ee1f3c:
+
+  iwlwifi: load firmware in chunks (2012-09-10 19:14:30 +0200)
+
+----------------------------------------------------------------
+David Spinadel (2):
+      iwlwifi: don't reset interupts after disabling
+      iwlwifi: stop interrupts before stopping device
+
+Emmanuel Grumbach (2):
+      iwlwifi: some clean up in transport layer
+      iwlwifi: don't access the HW when it is not available
+
+Johannes Berg (3):
+      iwlwifi: remove unused IDI code stubs
+      iwlwifi: fix indentation in iwl_load_given_ucode
+      iwlwifi: load firmware in chunks
+
+ drivers/net/wireless/iwlwifi/dvm/ucode.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-drv.c       |   26 ++++----
+ drivers/net/wireless/iwlwifi/iwl-fw.h        |    3 +-
+ drivers/net/wireless/iwlwifi/pcie/drv.c      |   13 ----
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    2 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |   75 +++++++++++++---------=
+-
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |   84 +++++++++++++++++-----=
+----
+ 7 files changed, 117 insertions(+), 90 deletions(-)
+
+
+--=-6hU2h41ISb3k8nXnZmA9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQUyjgAAoJEDBSmw7B7bqr4kUP/Aj7KsTCM3MkhL+v25v6BMRI
+6bRtoWDrSsCbp5ZjwOVv/xSHO7raPZyej6PFFETbE3hC7Pvj9d6WaU+167mrLR8Y
+71i3dYWxM9pwTG6yJoej9rpp8ShrEBfHWoDCGqQ2H7Ja61uWtxW77meNbjaw9xRx
+Mb2N23KQyTzp8dWBFrt3KAm1sNzc4tbtku9cbr288R0DO2OqbkKliaskkIMedLZn
+P6lAI3nud0z+pTd3QVTiycXIQzx6nh1MgQD7yo18aTtx1X2ICcY2JPZRt+f1ZZ/G
+HO1e4hrItPmMVBYV4TchZ7Fjeuef7q/7NEdVx1GxmlIQoYLM8j+2ayGvOrFxLf3K
+ru25PrERh7nAaFoG349M+OqJd0FDtRwrASGPhCBfEq1q9DI8ZcdaI4jtS33HpA9C
+qS6wjCI2zz9e9OlFetxzSmY+9fN/WiNZ6PaW8cNHW1K+zGNvb1g3qogmgWPn4zdv
+qS/aWo8k9hleqVkIl1MKbECCaJqowPo/Bu26XallSRRWi6pM7pldodsi/nOpXZdy
+ZNZPbWBvwlmQ3lJT6A525md4ULFANN/g3K85tQAkBRbtFMw7QqGwJyW4n1im/zGr
+QwS3tCn52GYNsA2kdSFEYDw5coYUvDx3gg9sjO4WyOxNAfP1f9LUk3Vnj7hkAi/j
+tyqCzUllJcNjwxheUBtg
+=YJvD
+-----END PGP SIGNATURE-----
+
+--=-6hU2h41ISb3k8nXnZmA9--
 
