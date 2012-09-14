@@ -1,86 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41920 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52619 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112Ab2IDRlZ (ORCPT
+	with ESMTP id S1751231Ab2INMgl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 13:41:25 -0400
+	Fri, 14 Sep 2012 08:36:41 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] iwlwifi: report A-MPDU status
-Date: Tue,  4 Sep 2012 19:41:59 +0200
-Message-Id: <1346780519-2311-1-git-send-email-johannes@sipsolutions.net> (sfid-20120904_194129_765053_304EC221)
+Subject: [PATCH 06/10] mac80211: track whether to use channel contexts
+Date: Fri, 14 Sep 2012 14:37:09 +0200
+Message-Id: <1347626233-21916-7-git-send-email-johannes@sipsolutions.net> (sfid-20120914_143657_327410_3D036D7C)
+In-Reply-To: <1347626233-21916-1-git-send-email-johannes@sipsolutions.net>
+References: <1347626233-21916-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Since the firmware will give us an A-MPDU bit and
-only a single PHY information packet for all the
-subframes in an A-MPDU, we can easily report the
-minimal A-MPDU information for radiotap.
+Depending on the driver, channel contexts may be used or
+not. If they are used, the driver must have support for
+hardware scan and remain-on-channel; otherwise the driver
+must not advertise support for multiple channels.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Also prohibit WDS type interfaces when channel contexts
+are to be used as there's no clear definition of which
+channel they use.
+
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/commands.h |    1 +
- drivers/net/wireless/iwlwifi/dvm/dev.h      |    1 +
- drivers/net/wireless/iwlwifi/dvm/rx.c       |   11 +++++++++++
- 3 files changed, 13 insertions(+)
+ net/mac80211/cfg.c         |    3 +++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/main.c        |   22 ++++++++++++++++++++++
+ net/mac80211/offchannel.c  |    6 ++++++
+ net/mac80211/scan.c        |    4 ++++
+ 5 files changed, 37 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/commands.h b/drivers/net/wireless/iwlwifi/dvm/commands.h
-index cee8a05..01128c9 100644
---- a/drivers/net/wireless/iwlwifi/dvm/commands.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/commands.h
-@@ -1057,6 +1057,7 @@ struct iwl_wep_cmd {
- #define RX_RES_PHY_FLAGS_NARROW_BAND_MSK	cpu_to_le16(1 << 3)
- #define RX_RES_PHY_FLAGS_ANTENNA_MSK		0x70
- #define RX_RES_PHY_FLAGS_ANTENNA_POS		4
-+#define RX_RES_PHY_FLAGS_AGG_MSK		cpu_to_le16(1 << 7)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9bd56a7..7e9b5d4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2188,6 +2188,9 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
  
- #define RX_RES_STATUS_SEC_TYPE_MSK	(0x7 << 8)
- #define RX_RES_STATUS_SEC_TYPE_NONE	(0x0 << 8)
-diff --git a/drivers/net/wireless/iwlwifi/dvm/dev.h b/drivers/net/wireless/iwlwifi/dvm/dev.h
-index 054f728..8141f91 100644
---- a/drivers/net/wireless/iwlwifi/dvm/dev.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/dev.h
-@@ -771,6 +771,7 @@ struct iwl_priv {
- 	u8 agg_tids_count;
+ 	lockdep_assert_held(&local->mtx);
  
- 	struct iwl_rx_phy_res last_phy_res;
-+	u32 ampdu_ref;
- 	bool last_phy_res_valid;
++	if (local->use_chanctx && !local->ops->remain_on_channel)
++		return -EOPNOTSUPP;
++
+ 	roc = kzalloc(sizeof(*roc), GFP_KERNEL);
+ 	if (!roc)
+ 		return -ENOMEM;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9a058e5..8fa00ad 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -882,6 +882,8 @@ struct ieee80211_local {
  
- 	/*
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
-index fee5cff..5a9c325 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
-@@ -667,6 +667,7 @@ static int iwlagn_rx_reply_rx_phy(struct iwl_priv *priv,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	bool wiphy_ciphers_allocated;
  
- 	priv->last_phy_res_valid = true;
-+	priv->ampdu_ref++;
- 	memcpy(&priv->last_phy_res, pkt->data,
- 	       sizeof(struct iwl_rx_phy_res));
- 	return 0;
-@@ -981,6 +982,16 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
- 	if (phy_res->phy_flags & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
- 		rx_status.flag |= RX_FLAG_SHORTPRE;
++	bool use_chanctx;
++
+ 	/* protects the aggregated multicast list and filter calls */
+ 	spinlock_t filter_lock;
  
-+	if (phy_res->phy_flags & RX_RES_PHY_FLAGS_AGG_MSK) {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d709a5d..0dd1ea2 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -540,6 +540,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	struct ieee80211_local *local;
+ 	int priv_size, i;
+ 	struct wiphy *wiphy;
++	bool use_chanctx;
+ 
+ 	if (WARN_ON(!ops->tx || !ops->start || !ops->stop || !ops->config ||
+ 		    !ops->add_interface || !ops->remove_interface ||
+@@ -555,6 +556,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	    !!ops->unassign_vif_chanctx;
+ 	if (WARN_ON(i != 0 && i != 5))
+ 		return NULL;
++	use_chanctx = i == 5;
+ 
+ 	/* Ensure 32-byte alignment of our private data and hw private data.
+ 	 * We use the wiphy priv data for both our ieee80211_local and for
+@@ -606,6 +608,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	local->hw.priv = (char *)local + ALIGN(sizeof(*local), NETDEV_ALIGN);
+ 
+ 	local->ops = ops;
++	local->use_chanctx = use_chanctx;
+ 
+ 	/* set up some defaults */
+ 	local->hw.queues = 1;
+@@ -729,6 +732,25 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if ((hw->flags & IEEE80211_HW_SCAN_WHILE_IDLE) && !local->ops->hw_scan)
+ 		return -EINVAL;
+ 
++	if (!local->use_chanctx) {
++		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
++			const struct ieee80211_iface_combination *comb;
++
++			comb = &local->hw.wiphy->iface_combinations[i];
++
++			if (comb->num_different_channels > 1)
++				return -EINVAL;
++		}
++
 +		/*
-+		 * We know which subframes of an A-MPDU belong
-+		 * together since we get a single PHY response
-+		 * from the firmware for all of them
++		 * WDS is currently prohibited when channel contexts are used
++		 * because there's no clear definition of which channel WDS
++		 * type interfaces use
 +		 */
-+		rx_status.flag |= RX_FLAG_AMPDU_DETAILS;
-+		rx_status.ampdu_reference = priv->ampdu_ref;
++		if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_WDS))
++			return -EINVAL;
 +	}
 +
- 	/* Set up the HT phy flags */
- 	if (rate_n_flags & RATE_MCS_HT_MSK)
- 		rx_status.flag |= RX_FLAG_HT;
+ 	/* Only HW csum features are currently compatible with mac80211 */
+ 	feature_whitelist = NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM |
+ 			    NETIF_F_HW_CSUM;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 83608ac..9c52fc4 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -107,6 +107,9 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
++	if (WARN_ON(local->use_chanctx))
++		return;
++
+ 	/*
+ 	 * notify the AP about us leaving the channel and stop all
+ 	 * STA interfaces.
+@@ -145,6 +148,9 @@ void ieee80211_offchannel_return(struct ieee80211_local *local,
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
++	if (WARN_ON(local->use_chanctx))
++		return;
++
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE)
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index c4cdbde..fdaa505 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -336,6 +336,10 @@ EXPORT_SYMBOL(ieee80211_scan_completed);
+ 
+ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ {
++	/* Software scan is not supported in multi-channel cases */
++	if (local->use_chanctx)
++		return -EOPNOTSUPP;
++
+ 	/*
+ 	 * Hardware/driver doesn't support hw_scan, so use software
+ 	 * scanning instead. First send a nullfunc frame with power save
 -- 
 1.7.10.4
 
