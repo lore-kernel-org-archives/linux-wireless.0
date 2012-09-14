@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12566 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017Ab2IGRFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 13:05:25 -0400
-Date: Fri, 7 Sep 2012 19:05:22 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] NFC: move the dereference below the NULL test
-Message-ID: <20120907170522.GG3647@sortiz-mobl> (sfid-20120907_190528_918516_99144349)
-References: <CAPgLHd8yH37C=mRWinWM4FGQaWTvH0r69PFEgJCNZL2DdZAS1A@mail.gmail.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62514 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758732Ab2INPpK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Sep 2012 11:45:10 -0400
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <mcgrof@do-not-panic.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/4] compat-driver: Add crap patch to avoid regression
+Date: Fri, 14 Sep 2012 21:11:02 +0530
+Message-ID: <1347637262-27782-4-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120914_174514_773338_91D92308)
+In-Reply-To: <1347637262-27782-1-git-send-email-bkamatch@qca.qualcomm.com>
+References: <1347637262-27782-1-git-send-email-bkamatch@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPgLHd8yH37C=mRWinWM4FGQaWTvH0r69PFEgJCNZL2DdZAS1A@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wei,
+Felix patch ath9k_hw: apply XLNA bias settings from EEPROM
+is not cherry picked to avoid regression issues.
+This patch adds few macros defined in above patch to avoid
+compilation issues.
 
-On Fri, Sep 07, 2012 at 02:51:47PM +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> The dereference should be moved below the NULL test.
-> 
-> spatch with a semantic match is used to found this.
-> (http://coccinelle.lip6.fr/)
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  drivers/nfc/nfcwilink.c | 4 ++--
->  drivers/nfc/pn544_hci.c | 3 ++-
->  drivers/nfc/pn544.c     | 3 ++-
->  3 files changed, 6 insertions(+), 4 deletions(-)
-Those are correct fixes but could you please split the nfcwilink and pn544_hci
-fixes into 2 patches. Also, the pn544 driver is going to be removed so no need
-to fix it.
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+ ..._hw-add-macros-to-avoid-compilation-error.patch |   26 ++++++++++++++++++++
+ 1 files changed, 26 insertions(+), 0 deletions(-)
+ create mode 100644 crap/0004-ath9k_hw-add-macros-to-avoid-compilation-error.patch
 
-Cheers,
-Samuel.
-
+diff --git a/crap/0004-ath9k_hw-add-macros-to-avoid-compilation-error.patch b/crap/0004-ath9k_hw-add-macros-to-avoid-compilation-error.patch
+new file mode 100644
+index 0000000..09bcb17
+--- /dev/null
++++ b/crap/0004-ath9k_hw-add-macros-to-avoid-compilation-error.patch
+@@ -0,0 +1,26 @@
++From 4a74a46a0628d8187dc310f0f90aea950ea84a7b Mon Sep 17 00:00:00 2001
++From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
++Date: Fri, 14 Sep 2012 20:10:36 +0530
++Subject: [PATCH] ath9k_hw: add macros for CH1 & CH2
++
++Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
++---
++ drivers/net/wireless/ath/ath9k/ar9003_phy.h | 2 ++
++ 1 file changed, 2 insertions(+)
++
++diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++index 7268a48..547e785 100644
++--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++@@ -633,6 +633,8 @@
++ #define AR_PHY_65NM_CH0_BIAS2       0x160c4
++ #define AR_PHY_65NM_CH0_BIAS4       0x160cc
++ #define AR_PHY_65NM_CH0_RXTX4       0x1610c
+++#define AR_PHY_65NM_CH1_RXTX4       0x1650c
+++#define AR_PHY_65NM_CH2_RXTX4       0x1690c
++ 
++ #define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
++ 				((AR_SREV_9462(ah) ? 0x1628c : 0x16280)))
++-- 
++1.7.11.4
++
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.4.1
+
