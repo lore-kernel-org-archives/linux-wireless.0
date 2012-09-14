@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44455 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751646Ab2ILJWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 05:22:13 -0400
-Date: Wed, 12 Sep 2012 11:22:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Pavel Machek <pavel@ucw.cz>, David Rientjes <rientjes@google.com>,
-	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	Andrew Morton <akpm@osdl.org>, Mel Gorman <mgorman@suse.de>,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-Message-ID: <20120912092211.GA3146@redhat.com> (sfid-20120912_112231_078462_AF846F98)
-References: <20120909213228.GA5538@elf.ucw.cz>
- <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
- <20120910111113.GA25159@elf.ucw.cz>
- <20120911162536.bd5171a1.akpm@linux-foundation.org>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:45970 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597Ab2INPKt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Sep 2012 11:10:49 -0400
+Received: by oago6 with SMTP id o6so2930354oag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2012 08:10:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120911162536.bd5171a1.akpm@linux-foundation.org>
+In-Reply-To: <25df68a.fd56.139c4d65f66.Coremail.lishen565@126.com>
+References: <1347603511-31165-1-git-send-email-yeohchunyeow@gmail.com>
+	<61696420.fc66.139c4c167b7.Coremail.lishen565@126.com>
+	<25df68a.fd56.139c4d65f66.Coremail.lishen565@126.com>
+Date: Fri, 14 Sep 2012 23:10:49 +0800
+Message-ID: <CAEFj985N-3EhL0Y71_28w42ZNWkuZBZ-r1uX0EZ2++jkU-aiqA@mail.gmail.com> (sfid-20120914_171053_558249_9F41C4AD)
+Subject: Re: Re:[PATCH] mac80211: allow re-open the blocked peer link in mesh
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: devel@lists.open80211s.org
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 11, 2012 at 04:25:36PM -0700, Andrew Morton wrote:
-> On Mon, 10 Sep 2012 13:11:13 +0200
-> Pavel Machek <pavel@ucw.cz> wrote:
-> 
-> > On Sun 2012-09-09 15:40:55, David Rientjes wrote:
-> > > On Sun, 9 Sep 2012, Pavel Machek wrote:
-> > > 
-> > > > On 3.6.0-rc2+, I tried to turn on the wireless, but got
-> > > > 
-> > > > root@amd:~# ifconfig wlan0 10.0.0.6 up
-> > > > SIOCSIFFLAGS: Cannot allocate memory
-> > > > SIOCSIFFLAGS: Cannot allocate memory
-> > > > root@amd:~# 
-> > > > 
-> > > > It looks like it uses "a bit too big" allocations to allocate
-> > > > firmware...? Order five allocation....
-> > > > 
-> > > > Hmm... then I did "echo 3  > /proc/sys/vm/drop_caches" and now the
-> > > > network works. Is it VM problem that it failed to allocate memory when
-> > > > it was freeable?
-> > > > 
-> > > 
-> > > Do you have CONFIG_COMPACTION enabled?
-> > 
-> > Yes:
-> > 
-> > pavel@amd:/data/l/linux-good$ zgrep CONFIG_COMPACTION /proc/config.gz 
-> > CONFIG_COMPACTION=y
-> 
-> Asking for a 256k allocation is pretty crazy - this is an operating
-> system kernel, not a userspace application.
-> 
-> I'm wondering if this is due to a recent change, but I'm having trouble
-> working out where the allocation call site is.
+Great to hear that it works.
 
-iwlwifi/iwlegacy do such kind of allocation for ages, since iwlwifi driver
-inclusion in 2.6.24 (however firmware was smaller then).
+---
+Chun-Yeow
 
-I can fix that in iwlegacy similar as Johannes did it in iwlwifi, but this
-actually seems to be allocator regression. We use GFP_KERNEL allocation,
-kernel can wait for free memory and/or swap out pages, I do not understand
-why this fail.
-
-Stanislaw
+On Fri, Sep 14, 2012 at 8:52 PM, 李申 <lishen565@126.com> wrote:
+> I'm sorry that I made a mistake in the process of modifying the source code.Now it works well.Thank you for your help!
+> At 2012-09-14 20:29:32,"李申" <lishen565@126.com> wrote:
+>>I have modified the souce code as the patch shows.I'm sorry that it doesn't work and station plink state is still BLOCKED.
+>>At 2012-09-14 14:18:31,"Chun-Yeow Yeoh" <yeohchunyeow@gmail.com> wrote:
+>>>Peer link which is blocked using the "iw mesh0 station
+>>>set <MAC addr> plink_action block" is previously not able
+>>>to re-open using "iw mesh0 station set <MAC addr>
+>>>plink_action open". This patch is intended to solve this.
+>>>
+>>>If the station plink state remains at OPN_SNT once open,
+>>>try block and open again should solve this problem.
+>>>
+>>>Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>>>---
+>>> net/mac80211/mesh_plink.c |    3 ++-
+>>> 1 files changed, 2 insertions(+), 1 deletions(-)
+>>>
+>>>diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+>>>index 9d7ad36..3ab34d8 100644
+>>>--- a/net/mac80211/mesh_plink.c
+>>>+++ b/net/mac80211/mesh_plink.c
+>>>@@ -537,7 +537,8 @@ int mesh_plink_open(struct sta_info *sta)
+>>>      spin_lock_bh(&sta->lock);
+>>>      get_random_bytes(&llid, 2);
+>>>      sta->llid = llid;
+>>>-     if (sta->plink_state != NL80211_PLINK_LISTEN) {
+>>>+     if (sta->plink_state != NL80211_PLINK_LISTEN &&
+>>>+         sta->plink_state != NL80211_PLINK_BLOCKED) {
+>>>              spin_unlock_bh(&sta->lock);
+>>>              return -EBUSY;
+>>>      }
+>>>--
+>>>1.7.0.4
+>>>
+>>>_______________________________________________
+>>>Devel mailing list
+>>>Devel@lists.open80211s.org
+>>>http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
+>>
+>>_______________________________________________
+>>Devel mailing list
+>>Devel@lists.open80211s.org
+>>http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
+>
+> _______________________________________________
+> Devel mailing list
+> Devel@lists.open80211s.org
+> http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
