@@ -1,84 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f51.google.com ([209.85.213.51]:39142 "EHLO
-	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516Ab2IKXni (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 19:43:38 -0400
-Received: by yhnn12 with SMTP id n12so278941yhn.10
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 16:43:38 -0700 (PDT)
-Message-ID: <504FCD39.80705@gmail.com> (sfid-20120912_014342_174587_A6EC6576)
-Date: Tue, 11 Sep 2012 19:46:01 -0400
-From: Richard Farina <sidhayn@gmail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:54202 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752182Ab2INGLD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Sep 2012 02:11:03 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	chaoming_li@realsil.com.cn
+Subject: Re: [RFC/RFT 14/15] rtlwifi: Modify files for addition of rtl8723ae
+References: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net>
+	<1347483294-6943-15-git-send-email-Larry.Finger@lwfinger.net>
+	<CAGRGNgWezEzXV0-k6DA7TckNpa=zgN6LNv898N-PRU6P1LYgOw@mail.gmail.com>
+	<505170C6.8090003@lwfinger.net>
+Date: Fri, 14 Sep 2012 09:10:56 +0300
+In-Reply-To: <505170C6.8090003@lwfinger.net> (Larry Finger's message of "Thu,
+	13 Sep 2012 00:36:06 -0500")
+Message-ID: <87mx0t3zin.fsf@purkki.adurom.net> (sfid-20120914_081109_373157_FB26680E)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org, scchen@qca.qualcomm.com,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	marco@tampabay.rr.com, janusz.dziedzic@gmail.com
-Subject: Re: [PATCH] carl9170: fix spurious transmissions in sniffer mode
-References: <201209112318.35334.chunkeey@googlemail.com> <504FB53C.6050106@gmail.com> <201209120126.31312.chunkeey@googlemail.com>
-In-Reply-To: <201209120126.31312.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/11/2012 07:26 PM, Christian Lamparter wrote:
-> On Wednesday 12 September 2012 00:03:40 Richard Farina wrote:
->> On 09/11/2012 05:18 PM, Christian Lamparter wrote:
->>> Several people have complained about an unusual
->>> and undocumented feature of the AR9170 hardware:
->>>
->>> In siffer mode, the hardware generates spurious
->>> ACK frames for every received frame... even
->>> broadcasts.
->>>
->>> The reason for this malfunction is unknown:
->>> <http://marc.info/?l=linux-wireless&m=134517238506033>
->>> But there's a workaround: Instead of the special
->>> sniffer mode, the hardware will be put into
->>> station mode and all rx filters are disabled.
->> I am by no means an expert here but wouldn't it be better to disable
->> ACK? Or is this not really an option?
-> Oh AFAIK there's some nifty software which emulates
-> some sort of accesspoint by (ab-)using monitor mode
-> and injection. And in this case having a device which
-> ACKs any frame destined for the semi-fake ap might be
-> a "good thing".
-Are you referencing airbase-ng here?  Airbase-ng assumes the hardware
-does not ack in monitor mode and therefore does it itself.  Mind you,
-I'm not saying it wouldn't be nice to have the hardware ack (VASTLY
-improved response time for one) but a monitor mode vif is assumed to not
-transmit anything at all, unless we specifically inject it.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-An ack on/off (default off) would be awesome, but baring that the only
-sane choice is off.
+>> Is this supposed to be bit #29 - I notice that COMP_USB is also bit 29.
+>
+> Yes, that is OK. One will only be used for PCI-based drivers, and the
+> other is obviously for USB. As nearly all the bits of a 32-bit
+> quantity are used, I wanted to save one if possible.
+>
+> In the final version, I'll code this as
+>
+> #define COMP_USB                       BIT(29)
+> #define COMP_EASY_CONCURRENT           COMP_USB
+>
+> That way will be more obvious.
 
-Thanks,
-Zero
-> 
->> Did you test to see if this actually does receive the same number of
->> packets as "special sniffer mode"? If so, that really should be in the
->> commit message imho.
-> One problem is that you can't really take two devices,
-> attach them to separate machines (one machine is patched,
-> the other isn't) and do a "head-to-head" comparison.
-> The device on the machine without the "fix" will happily
-> generate spurious messages which will be picked up by
-> everyone else (including the other machine). However,
-> the device on the patched machine does not generate
-> bogus ACKs, so the device without the patch does not
-> notice anything unusual... (Yep, this is very confusing.)
-> 
-> Note: The AR9170 MAC hardware does not feed generated
-> control frames like ACK,RTS/CTS,BACKs, etc... back to
-> the driver. Only those from other peers are picked up!
-> 
->> (I know you tested it, but since you didn't say it
->> the commit message reads like you didn't).
-> You are right, but what I need are "Tested-by" tags.
-> It's sort of pointless if I just add a "works-for-me",
-> as I do very little with monitor mode.
-> 
-> Regards,
-> 	Chr
-> 
+You could also add a comment explaining it, just to make sure that
+everyone understands it.
 
+-- 
+Kalle Valo
