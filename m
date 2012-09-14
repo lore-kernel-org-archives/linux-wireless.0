@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36661 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756410Ab2IQOxx (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39393 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751078Ab2INNOJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 10:53:53 -0400
-Message-ID: <1347893667.4975.1.camel@jlt4.sipsolutions.net> (sfid-20120917_165357_323971_2A50A1B9)
-Subject: Re: [PATCH 01/10] mac80211: introduce channel context skeleton code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Arend van Spriel <arend@broadcom.com>
-Date: Mon, 17 Sep 2012 16:54:27 +0200
-In-Reply-To: <CAB3XZEdAX8=BU5QQaQpS=OF-5XXDH=k3rO7C2z2F+sZpaCNK1Q@mail.gmail.com> (sfid-20120915_234241_109266_3C0AE5C7)
-References: <1347626233-21916-1-git-send-email-johannes@sipsolutions.net>
-	 <1347626233-21916-2-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEdAX8=BU5QQaQpS=OF-5XXDH=k3rO7C2z2F+sZpaCNK1Q@mail.gmail.com>
-	 (sfid-20120915_234241_109266_3C0AE5C7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 14 Sep 2012 09:14:09 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k: update hw_timer_enabled to false when we stop generic timers
+Date: Fri, 14 Sep 2012 18:43:58 +0530
+Message-ID: <1347628438-17220-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120914_151415_901200_C47D05AD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-09-16 at 00:42 +0300, Eliad Peller wrote:
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> > +       ctx = ieee80211_find_chanctx(local, channel, channel_type, mode);
-> since you might use an existing ctx here...
-> 
-> > +       if (!ctx)
-> > +               ctx = ieee80211_new_chanctx(local, channel, channel_type, mode);
-> > +       if (IS_ERR(ctx)) {
-> > +               ret = PTR_ERR(ctx);
-> > +               goto out;
-> > +       }
-> > +
-> > +       ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-> > +       if (ret) {
-> > +               ieee80211_free_chanctx(local, ctx);
-> i think you should check ctx->refcount before freeing it.
+Update the 'hw_timer_enabled' to 'false' wherever we are stopping
+hardware generic timers, excecpt the case where we start them
+again immediately.
 
-Oops, good catch! I think I'll just add a test here rather than Arend's
-suggestion because nothing it's called _free_chanctx(), and it's already
-very indirectly used via the vif. Not that it's a bad suggestion, it
-just doesn't seem to fit with the code as it is now.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
-Thanks guys!
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 45f2422..8aeb4a2 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -314,8 +314,10 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
+ 	ath_dbg(ath9k_hw_common(ah), BTCOEX, "Starting btcoex timers\n");
+ 
+ 	/* make sure duty cycle timer is also stopped when resuming */
+-	if (btcoex->hw_timer_enabled)
++	if (btcoex->hw_timer_enabled) {
+ 		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
++		btcoex->hw_timer_enabled = false;
++	}
+ 
+ 	btcoex->bt_priority_cnt = 0;
+ 	btcoex->bt_priority_time = jiffies;
+@@ -336,18 +338,20 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc)
+ 
+ 	del_timer_sync(&btcoex->period_timer);
+ 
+-	if (btcoex->hw_timer_enabled)
++	if (btcoex->hw_timer_enabled) {
+ 		ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
+-
+-	btcoex->hw_timer_enabled = false;
++		btcoex->hw_timer_enabled = false;
++	}
+ }
+ 
+ void ath9k_btcoex_stop_gen_timer(struct ath_softc *sc)
+ {
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 
+-	if (btcoex->hw_timer_enabled)
++	if (btcoex->hw_timer_enabled) {
+ 		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
++		btcoex->hw_timer_enabled = false;
++	}
+ }
+ 
+ u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen)
+-- 
+1.7.0.4
 
