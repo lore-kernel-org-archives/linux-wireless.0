@@ -1,34 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13216 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756407Ab2IUQmv (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47066 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760146Ab2INWhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 12:42:51 -0400
-Message-ID: <505C9905.2000003@qca.qualcomm.com> (sfid-20120921_184259_581212_B0DE7BB1)
-Date: Fri, 21 Sep 2012 19:42:45 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Wei Yongjun <weiyj.lk@gmail.com>
-CC: <linville@tuxdriver.com>, <yongjun_wei@trendmicro.com.cn>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: use list_move_tail instead of list_del/list_add_tail
-References: <CAPgLHd-6RmrLpi9FPTFhXiA+BHywGknmvNAd-KCdHaM+tn0qgQ@mail.gmail.com>
-In-Reply-To: <CAPgLHd-6RmrLpi9FPTFhXiA+BHywGknmvNAd-KCdHaM+tn0qgQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 14 Sep 2012 18:37:05 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] cfg80211: fix possible circular lock on reg_regdb_search()
+Date: Fri, 14 Sep 2012 15:36:57 -0700
+Message-Id: <1347662217-4292-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20120915_003711_261355_FFFFCF99)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/05/2012 10:07 AM, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> Using list_move_tail() instead of list_del() + list_add_tail().
-> 
-> spatch with a semantic match is used to found this problem.
-> (http://coccinelle.lip6.fr/)
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Thanks, applied to ath6kl.git.
+When call_crda() is called we kick off a witch hunt search
+for the same regulatory domain on our internal regulatory
+database and that work gets kicked off on a workqueue, this
+is done while the cfg80211_mutex is held. If that workqueue
+kicks off it will first lock reg_regdb_search_mutex and
+later cfg80211_mutex but to ensure two CPUs will not contend
+against cfg80211_mutex the right thing to do is to have the
+reg_regdb_search() wait until the cfg80211_mutex is let go.
 
-Kalle
+The lockdep report is pasted below.
+
+cfg80211: Calling CRDA to update world regulatory domain
+
+======================================================
+[ INFO: possible circular locking dependency detected ]
+3.3.8 #3 Tainted: G           O
+-------------------------------------------------------
+kworker/0:1/235 is trying to acquire lock:
+ (cfg80211_mutex){+.+...}, at: [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+
+but task is already holding lock:
+ (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
+
+which lock already depends on the new lock.
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (reg_regdb_search_mutex){+.+...}:
+       [<800a8384>] lock_acquire+0x60/0x88
+       [<802950a8>] mutex_lock_nested+0x54/0x31c
+       [<81645778>] is_world_regdom+0x9f8/0xc74 [cfg80211]
+
+-> #1 (reg_mutex#2){+.+...}:
+       [<800a8384>] lock_acquire+0x60/0x88
+       [<802950a8>] mutex_lock_nested+0x54/0x31c
+       [<8164539c>] is_world_regdom+0x61c/0xc74 [cfg80211]
+
+-> #0 (cfg80211_mutex){+.+...}:
+       [<800a77b8>] __lock_acquire+0x10d4/0x17bc
+       [<800a8384>] lock_acquire+0x60/0x88
+       [<802950a8>] mutex_lock_nested+0x54/0x31c
+       [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+
+other info that might help us debug this:
+
+Chain exists of:
+  cfg80211_mutex --> reg_mutex#2 --> reg_regdb_search_mutex
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(reg_regdb_search_mutex);
+                               lock(reg_mutex#2);
+                               lock(reg_regdb_search_mutex);
+  lock(cfg80211_mutex);
+
+ *** DEADLOCK ***
+
+3 locks held by kworker/0:1/235:
+ #0:  (events){.+.+..}, at: [<80089a00>] process_one_work+0x230/0x460
+ #1:  (reg_regdb_work){+.+...}, at: [<80089a00>] process_one_work+0x230/0x460
+ #2:  (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
+
+stack backtrace:
+Call Trace:
+[<80290fd4>] dump_stack+0x8/0x34
+[<80291bc4>] print_circular_bug+0x2ac/0x2d8
+[<800a77b8>] __lock_acquire+0x10d4/0x17bc
+[<800a8384>] lock_acquire+0x60/0x88
+[<802950a8>] mutex_lock_nested+0x54/0x31c
+[<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+
+Reported-by: Felix Fietkau <nbd@openwrt.org>
+Tested-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+
+This v2 remoes the search lock from the context of calling
+set_regdom().
+
+ net/wireless/reg.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1ad04e5..4de18ae 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -350,6 +350,9 @@ static void reg_regdb_search(struct work_struct *work)
+ 	struct reg_regdb_search_request *request;
+ 	const struct ieee80211_regdomain *curdom, *regdom;
+ 	int i, r;
++	bool set_reg = false;
++
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	mutex_lock(&reg_regdb_search_mutex);
+ 	while (!list_empty(&reg_regdb_search_list)) {
+@@ -365,9 +368,7 @@ static void reg_regdb_search(struct work_struct *work)
+ 				r = reg_copy_regd(&regdom, curdom);
+ 				if (r)
+ 					break;
+-				mutex_lock(&cfg80211_mutex);
+-				set_regdom(regdom);
+-				mutex_unlock(&cfg80211_mutex);
++				set_reg = true;
+ 				break;
+ 			}
+ 		}
+@@ -375,6 +376,11 @@ static void reg_regdb_search(struct work_struct *work)
+ 		kfree(request);
+ 	}
+ 	mutex_unlock(&reg_regdb_search_mutex);
++
++	if (set_reg)
++		set_regdom(regdom);
++
++	mutex_unlock(&cfg80211_mutex);
+ }
+ 
+ static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
+-- 
+1.7.10.4
+
