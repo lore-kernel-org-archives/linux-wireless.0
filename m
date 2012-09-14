@@ -1,112 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:61786 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039Ab2IZMrj (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14503 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245Ab2INHp5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 08:47:39 -0400
-Received: by qadc26 with SMTP id c26so2762695qad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 05:47:38 -0700 (PDT)
+	Fri, 14 Sep 2012 03:45:57 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
+Message-ID: <20562.57471.123670.448475@gargle.gargle.HOWL> (sfid-20120914_094602_275867_166F0645)
+Date: Fri, 14 Sep 2012 13:15:03 +0530
 MIME-Version: 1.0
-In-Reply-To: <CAJZjf_xVOKjVYYXxsWf6Z+KaTDi_3ZDqvBMyzMETfbkpWUgWFQ@mail.gmail.com>
-References: <CAJZjf_wv=+HKLwnH-=rvx9h=0jEGzoCrd-a8GOW-QnXfOVgc_g@mail.gmail.com>
- <20120807102208.GA12589@redhat.com> <CAJZjf_xVOKjVYYXxsWf6Z+KaTDi_3ZDqvBMyzMETfbkpWUgWFQ@mail.gmail.com>
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-Date: Wed, 26 Sep 2012 13:47:18 +0100
-Message-ID: <CAJZjf_xVzQmpLHd=KQ0qc77QxdpE0a7xjGTNo2Sw6BM8miwe7A@mail.gmail.com> (sfid-20120926_144744_080342_D107F710)
-Subject: Re: unloading WiFi modules is usually triggering kernel crash
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: ML linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [RFC 5/8] ath9k_hw: Update AR9565 initvals
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 30, 2012 at 4:58 PM, Pedro Francisco
-<pedrogfrancisco@gmail.com> wrote:
-> On Tue, Aug 7, 2012 at 11:22 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Tue, Jul 31, 2012 at 01:54:52PM +0100, Pedro Francisco wrote:
->>> I've noticed in the past few days a pattern: sometimes nm-applet
->>> starts showing empty bars for the signal strength.
->>
->> RSSI reporting problem or maybe NM issue. When you change kernel to
->> older or newer does this problem go away ?
->>
->>> Running the script:
->>> sudo ifconfig wlan0 down; sleep 1
->>> sudo rmmod hp_wmi; sudo rmmod iwl3945; sudo rmmod iwlegacy; sudo rmmod
->>> mac80211; sudo rmmod cfg80211
->>> sleep 2; sudo rmmod rfkill; sync
->>> sudo modprobe rfkill; sudo modprobe cfg80211; sudo modprobe mac80211;
->>> sudo modprobe iwlegacy
->>> sudo modprobe iwl3945; sudo modprobe hp_wmi; sleep 1; sudo ifconfig wlan0 up
->>
->> I run a bit modified script (I do not have hp_wmi.ko and rfkill.ko) for few
->> hours, and did not get any WARNING/crash. I used 3.5, can you check if that
->> problem is also fixed on your system on 3.5 or newer.
->
-> On 3.5.2-3.fc17.i686.PAE everything seems stable. The problem I had
-> described hasn't happened recently.
-> I guess it got fixed in the meantime.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   | 100 ++++++++++-----------
+ 1 file changed, 49 insertions(+), 51 deletions(-)
 
-I was wrong, got it again.
-
-So, to recap: once the network applet shows no signal, but only then,
-removing the wireless modules triggers an unrecoverable kernel panic.
-I still haven't compiled a relocatable x86 kernel to get a proper
-backtrace using kexec/kdump, sorry.
-
-I found something else as well. Notice this output of "iwconfig" when
-everything is _normal_:
-$ iwconfig wlan0
-wlan0     IEEE 802.11abg  ESSID:"eduroam"
-          Mode:Managed  Frequency:2.437 GHz  Access Point: B8:62:1F:XX:XX:XX
-          Bit Rate=54 Mb/s   Tx-Power=15 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Power Management:off
-          Link Quality=58/70  Signal level=-52 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-When I have the "empty signal bars" issue:
-$ iwconfig wlan0
-wlan0     IEEE 802.11abg  ESSID:off/any
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=15 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Power Management:off
-
-In case you're wondering, it is connected and streaming stuff :)
-
-I can sometimes trigger it on purpose: I just have to roam to a 5GHz
-AP of the same ESS, cycle around 2GHz and back to 5GHz (using wpa_cli
-roam XX:XX:XX:XX:XX ). If I get "SME: Authentication request to the
-driver failed", then disabling NetworkManager (not wireless) and
-reenabling will _probably_ get the "empty signal bars" (I was just
-able to trigger the "empty signal bars" now after a clean boot).
-So I'm guessing something gets corrupted, which is why reloading the
-modules will crash.
-
-I'm aware due to a patch to _iwlwifi_ (not iwl3945/iwlegacy) [1] that
-2->5GHz roaming is not working very well on newer Intel wireless cards
-so it is worth considering it is happening here as well.
-
-Also, note some info, collected two days ago, relative to "Invalid
-misc:" is getting 10 "invalid misc" packets in 10 seconds normal?
-Several 'VAL=`date`; VAL="$VAL $(iwconfig wlan0 |grep "Invalid
-misc")"; echo $VAL' follow:
-Seg Set 24 15:06:36 WEST 2012 Tx excessive retries:5 Invalid misc:133
-Missed beacon:0
-Seg Set 24 15:06:46 WEST 2012 Tx excessive retries:5 Invalid misc:143
-Missed beacon:0
-Seg Set 24 15:07:00 WEST 2012 Tx excessive retries:5 Invalid misc:148
-Missed beacon:0
-Seg Set 24 15:21:46 WEST 2012 Tx excessive retries:22 Invalid misc:495
-Missed beacon:0
-Seg Set 24 15:24:41 WEST 2012 Tx excessive retries:24 Invalid misc:593
-Missed beacon:0
-
-
-So, something is getting corrupted here. Do you want the full logs?
-
-[1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/89361/focus=89445
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+index fa9e093..843e79f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+@@ -58,8 +58,6 @@ static const u32 ar9565_1p0_mac_core[][2] = {
+ 	{0x00008040, 0x00000000},
+ 	{0x00008044, 0x00000000},
+ 	{0x00008048, 0x00000000},
+-	{0x0000804c, 0xffffffff},
+-	{0x00008050, 0xffffffff},
+ 	{0x00008054, 0x00000000},
+ 	{0x00008058, 0x00000000},
+ 	{0x0000805c, 0x000fc78f},
+@@ -246,7 +244,7 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	{0x00009e50, 0x00ff03f1},
+ 	{0x00009e54, 0xe4c355c7},
+ 	{0x00009e5c, 0xe9198724},
+-	{0x00009fc0, 0x823e4788},
++	{0x00009fc0, 0x823e4fc8},
+ 	{0x00009fc4, 0x0001efb5},
+ 	{0x00009fcc, 0x40000014},
+ 	{0x0000a20c, 0x00000000},
+@@ -291,7 +289,7 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	{0x0000a3ec, 0x20202020},
+ 	{0x0000a3f0, 0x00000000},
+ 	{0x0000a3f4, 0x00000006},
+-	{0x0000a3f8, 0x0cdbd380},
++	{0x0000a3f8, 0x0c9bd380},
+ 	{0x0000a3fc, 0x000f0f01},
+ 	{0x0000a400, 0x8fa91f01},
+ 	{0x0000a404, 0x00000000},
+@@ -355,11 +353,11 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+ 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
+-	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946222, 0xcf946222},
++	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946222, 0xcf946222},
+ 	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+-	{0x0000a204, 0x033187c0, 0x033187c4, 0x033187c4, 0x033187c0},
++	{0x0000a204, 0x07318fc0, 0x07318fc4, 0x07318fc4, 0x07318fc0},
+ 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
+ 	{0x0000a22c, 0x01026a2f, 0x01026a27, 0x01026a2f, 0x01026a2f},
+ 	{0x0000a230, 0x0000400a, 0x00004014, 0x00004016, 0x0000400b},
+@@ -375,9 +373,9 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
+ 	{0x0000a288, 0x00100510, 0x00100510, 0x00100510, 0x00100510},
+ 	{0x0000a28c, 0x00021551, 0x00021551, 0x00021551, 0x00021551},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2d0, 0x00071982, 0x00071982, 0x00071982, 0x00071982},
+-	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
++	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000ae04, 0x00800000, 0x00800000, 0x00800000, 0x00800000},
+ 	{0x0000ae18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+@@ -417,7 +415,7 @@ static const u32 ar9565_1p0_radio_core[][2] = {
+ 	{0x00016144, 0x02084080},
+ 	{0x00016148, 0x000080c0},
+ 	{0x00016280, 0x050a0001},
+-	{0x00016284, 0x3d841400},
++	{0x00016284, 0x3d841440},
+ 	{0x00016288, 0x00000000},
+ 	{0x0001628c, 0xe3000000},
+ 	{0x00016290, 0xa1004080},
+@@ -840,27 +838,27 @@ static const u32 ar9565_1p0_common_wo_xlna_rx_gain_table[][2] = {
+ 	{0x0000a0b4, 0x00000000},
+ 	{0x0000a0b8, 0x00000000},
+ 	{0x0000a0bc, 0x00000000},
+-	{0x0000a0c0, 0x301f3000},
+-	{0x0000a0c4, 0x41004101},
+-	{0x0000a0c8, 0x411e411f},
+-	{0x0000a0cc, 0x411c411d},
+-	{0x0000a0d0, 0x42434244},
+-	{0x0000a0d4, 0x42414242},
+-	{0x0000a0d8, 0x425f4240},
+-	{0x0000a0dc, 0x5342425e},
+-	{0x0000a0e0, 0x53405341},
+-	{0x0000a0e4, 0x535e535f},
+-	{0x0000a0e8, 0x7402535d},
+-	{0x0000a0ec, 0x74007401},
+-	{0x0000a0f0, 0x741e741f},
+-	{0x0000a0f4, 0x7522741d},
+-	{0x0000a0f8, 0x75207521},
+-	{0x0000a0fc, 0x753e753f},
+-	{0x0000a100, 0x76617662},
+-	{0x0000a104, 0x767f7660},
+-	{0x0000a108, 0x767d767e},
+-	{0x0000a10c, 0x77e277e3},
+-	{0x0000a110, 0x77e077e1},
++	{0x0000a0c0, 0x00bf00a0},
++	{0x0000a0c4, 0x11a011a1},
++	{0x0000a0c8, 0x11be11bf},
++	{0x0000a0cc, 0x11bc11bd},
++	{0x0000a0d0, 0x22632264},
++	{0x0000a0d4, 0x22612262},
++	{0x0000a0d8, 0x227f2260},
++	{0x0000a0dc, 0x4322227e},
++	{0x0000a0e0, 0x43204321},
++	{0x0000a0e4, 0x433e433f},
++	{0x0000a0e8, 0x4462433d},
++	{0x0000a0ec, 0x44604461},
++	{0x0000a0f0, 0x447e447f},
++	{0x0000a0f4, 0x5582447d},
++	{0x0000a0f8, 0x55805581},
++	{0x0000a0fc, 0x559e559f},
++	{0x0000a100, 0x66816682},
++	{0x0000a104, 0x669f6680},
++	{0x0000a108, 0x669d669e},
++	{0x0000a10c, 0x77627763},
++	{0x0000a110, 0x77607761},
+ 	{0x0000a114, 0x00000000},
+ 	{0x0000a118, 0x00000000},
+ 	{0x0000a11c, 0x00000000},
+@@ -872,27 +870,27 @@ static const u32 ar9565_1p0_common_wo_xlna_rx_gain_table[][2] = {
+ 	{0x0000a134, 0x00000000},
+ 	{0x0000a138, 0x00000000},
+ 	{0x0000a13c, 0x00000000},
+-	{0x0000a140, 0x301f3000},
+-	{0x0000a144, 0x41004101},
+-	{0x0000a148, 0x411e411f},
+-	{0x0000a14c, 0x411c411d},
+-	{0x0000a150, 0x42434244},
+-	{0x0000a154, 0x42414242},
+-	{0x0000a158, 0x425f4240},
+-	{0x0000a15c, 0x5342425e},
+-	{0x0000a160, 0x53405341},
+-	{0x0000a164, 0x535e535f},
+-	{0x0000a168, 0x7402535d},
+-	{0x0000a16c, 0x74007401},
+-	{0x0000a170, 0x741e741f},
+-	{0x0000a174, 0x7522741d},
+-	{0x0000a178, 0x75207521},
+-	{0x0000a17c, 0x753e753f},
+-	{0x0000a180, 0x76617662},
+-	{0x0000a184, 0x767f7660},
+-	{0x0000a188, 0x767d767e},
+-	{0x0000a18c, 0x77e277e3},
+-	{0x0000a190, 0x77e077e1},
++	{0x0000a140, 0x00bf00a0},
++	{0x0000a144, 0x11a011a1},
++	{0x0000a148, 0x11be11bf},
++	{0x0000a14c, 0x11bc11bd},
++	{0x0000a150, 0x22632264},
++	{0x0000a154, 0x22612262},
++	{0x0000a158, 0x227f2260},
++	{0x0000a15c, 0x4322227e},
++	{0x0000a160, 0x43204321},
++	{0x0000a164, 0x433e433f},
++	{0x0000a168, 0x4462433d},
++	{0x0000a16c, 0x44604461},
++	{0x0000a170, 0x447e447f},
++	{0x0000a174, 0x5582447d},
++	{0x0000a178, 0x55805581},
++	{0x0000a17c, 0x559e559f},
++	{0x0000a180, 0x66816682},
++	{0x0000a184, 0x669f6680},
++	{0x0000a188, 0x669d669e},
++	{0x0000a18c, 0x77627763},
++	{0x0000a190, 0x77607761},
+ 	{0x0000a194, 0x00000000},
+ 	{0x0000a198, 0x00000000},
+ 	{0x0000a19c, 0x00000000},
 -- 
-Pedro
+1.7.12
+
