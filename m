@@ -1,83 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:54880 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760315Ab2IGLWB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52621 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752811Ab2INMgl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 07:22:01 -0400
-Date: Fri, 7 Sep 2012 13:21:41 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 1/2] mac80211: export ieee80211_send_deauth_disassoc
- for usage outside of mlme.c
-Message-ID: <20120907112141.GB14616@ritirata.org> (sfid-20120907_132207_916748_F110B429)
-References: <1346951275-32081-1-git-send-email-ordex@autistici.org>
- <1347006332.4256.9.camel@jlt4.sipsolutions.net>
- <5049C35A.1050601@lri.fr>
- <1347016689.4256.10.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NMuMz9nt05w80d4+"
-In-Reply-To: <1347016689.4256.10.camel@jlt4.sipsolutions.net>
+	Fri, 14 Sep 2012 08:36:41 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 05/10] mac80211: check channel context methods
+Date: Fri, 14 Sep 2012 14:37:08 +0200
+Message-Id: <1347626233-21916-6-git-send-email-johannes@sipsolutions.net> (sfid-20120914_143650_014295_49988182)
+In-Reply-To: <1347626233-21916-1-git-send-email-johannes@sipsolutions.net>
+References: <1347626233-21916-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---NMuMz9nt05w80d4+
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Verify that the channel context methods are
+all assigned by the driver or not used.
 
-On Fri, Sep 07, 2012 at 01:18:09 +0200, Johannes Berg wrote:
-> On Fri, 2012-09-07 at 11:50 +0200, Nicolas Cavallari wrote:
-> > On 07/09/2012 10:25, Johannes Berg wrote:
-> > > On Thu, 2012-09-06 at 19:07 +0200, Antonio Quartulli wrote:
-> > >=20
-> > >> -		if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
-> > >> -			IEEE80211_SKB_CB(skb)->flags |=3D
-> > >> -				IEEE80211_TX_INTFL_DONT_ENCRYPT;
-> > >=20
-> > >=20
-> > >> +		if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION &&
-> > >> +		    !(sdata->u.mgd.flags & IEEE80211_STA_MFP_ENABLED))
-> > >> +			IEEE80211_SKB_CB(skb)->flags |=3D
-> > >> +				IEEE80211_TX_INTFL_DONT_ENCRYPT;
-> > >=20
-> > > It would seem that this should be=20
-> > >=20
-> > > 	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION ||
-> > > 	    !(flags & MFP_ENABLED))
-> > >=20
-> > > ?
-> >=20
-> > Or just never set TX_INTFL_DONT_ENCRYPT at all and rely on
-> > ieee80211_tx_h_select_key() to do the right thing ?
->=20
-> I don't think it can do the right thing, it doesn't check whether MFP is
-> enabled or not... unless you want to test all those cases I'd rather not
-> change it :)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/main.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Ok, then I will send v3 with the modified if-condition.
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 9be3ef1..d709a5d 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -549,6 +549,13 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	if (WARN_ON(ops->sta_state && (ops->sta_add || ops->sta_remove)))
+ 		return NULL;
+ 
++	/* check all or no channel context operations exist */
++	i = !!ops->add_chanctx + !!ops->remove_chanctx +
++	    !!ops->change_chanctx + !!ops->assign_vif_chanctx +
++	    !!ops->unassign_vif_chanctx;
++	if (WARN_ON(i != 0 && i != 5))
++		return NULL;
++
+ 	/* Ensure 32-byte alignment of our private data and hw private data.
+ 	 * We use the wiphy priv data for both our ieee80211_local and for
+ 	 * the driver's private data
+-- 
+1.7.10.4
 
-Thank you all,
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---NMuMz9nt05w80d4+
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlBJ2MUACgkQpGgxIkP9cwc71ACfUA2tbPSJ5qKHQQlhcnW45gfS
-4D8An2IqgjyY0p6vsR7Uo+W6oDSo+S3M
-=IPDs
------END PGP SIGNATURE-----
-
---NMuMz9nt05w80d4+--
