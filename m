@@ -1,606 +1,434 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:51477 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752882Ab2ISBsJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56921 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752642Ab2INSaU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2012 21:48:09 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so798834iea.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2012 18:48:09 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, <chaoming_li@realsil.com.cn>
-Subject: [PATCH NEXT V2 10/15] rtlwifi: rtl8723ae: Add new driver - Part 10
-Date: Tue, 18 Sep 2012 20:47:18 -0500
-Message-Id: <1348019243-18016-11-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120919_034822_120328_2082017A)
-In-Reply-To: <1348019243-18016-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1348019243-18016-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 14 Sep 2012 14:30:20 -0400
+Date: Fri, 14 Sep 2012 14:22:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next 2012-09-14
+Message-ID: <20120914182200.GA7190@tuxdriver.com> (sfid-20120914_203032_987624_1878CEEA)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is part 10 of the addition of files for a new driver to handle
-the Realtek RTL8723AE wireless device.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: <chaoming_li@realsil.com.cn>
+--nFreZHaLTZJo0R7j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+commit 9316f0e3c6ba524d8fa14bfded048b252891931a
+
+Dave,
+
+This is another batch of updates intended for the 3.7 stream.
+
+There are not a lot of large items, but iwlwifi, mwifiex, rt2x00,
+ath9k, and brcmfmac all get some attention.  Wei Yongjun also provides
+a series of small maintenance fixes.
+
+This also includes a pull of the wireless tree in order to satisfy
+some prerequisites for later patches.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.c |  515 +++++++++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.h |   44 +++
- 2 files changed, 559 insertions(+)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.c b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.c
-new file mode 100644
-index 0000000..ec346bf
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.c
-@@ -0,0 +1,515 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "../wifi.h"
-+#include "reg.h"
-+#include "def.h"
-+#include "phy.h"
-+#include "rf.h"
-+#include "dm.h"
-+
-+void rtl8723ae_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+
-+	switch (bandwidth) {
-+	case HT_CHANNEL_WIDTH_20:
-+		rtlphy->rfreg_chnlval[0] = ((rtlphy->rfreg_chnlval[0] &
-+					     0xfffff3ff) | 0x0400);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_CHNLBW, RFREG_OFFSET_MASK,
-+			      rtlphy->rfreg_chnlval[0]);
-+		break;
-+	case HT_CHANNEL_WIDTH_20_40:
-+		rtlphy->rfreg_chnlval[0] = ((rtlphy->rfreg_chnlval[0] &
-+					     0xfffff3ff));
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_CHNLBW, RFREG_OFFSET_MASK,
-+			      rtlphy->rfreg_chnlval[0]);
-+		break;
-+	default:
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 "unknown bandwidth: %#X\n", bandwidth);
-+		break;
-+	}
-+}
-+
-+void rtl8723ae_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
-+					  u8 *ppowerlevel)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
-+	u32 tx_agc[2] = {0, 0}, tmpval;
-+	bool turbo_scanoff = false;
-+	u8 idx1, idx2;
-+	u8 *ptr;
-+
-+	if (rtlefuse->eeprom_regulatory != 0)
-+		turbo_scanoff = true;
-+
-+	if (mac->act_scanning == true) {
-+		tx_agc[RF90_PATH_A] = 0x3f3f3f3f;
-+		tx_agc[RF90_PATH_B] = 0x3f3f3f3f;
-+
-+		if (turbo_scanoff) {
-+			for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
-+				tx_agc[idx1] = ppowerlevel[idx1] |
-+				    (ppowerlevel[idx1] << 8) |
-+				    (ppowerlevel[idx1] << 16) |
-+				    (ppowerlevel[idx1] << 24);
-+			}
-+		}
-+	} else {
-+		for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
-+			tx_agc[idx1] = ppowerlevel[idx1] |
-+			    (ppowerlevel[idx1] << 8) |
-+			    (ppowerlevel[idx1] << 16) |
-+			    (ppowerlevel[idx1] << 24);
-+		}
-+
-+		if (rtlefuse->eeprom_regulatory == 0) {
-+			tmpval =
-+			    (rtlphy->mcs_txpwrlevel_origoffset[0][6]) +
-+			    (rtlphy->mcs_txpwrlevel_origoffset[0][7] <<
-+			     8);
-+			tx_agc[RF90_PATH_A] += tmpval;
-+
-+			tmpval = (rtlphy->mcs_txpwrlevel_origoffset[0][14]) +
-+			    (rtlphy->mcs_txpwrlevel_origoffset[0][15] <<
-+			     24);
-+			tx_agc[RF90_PATH_B] += tmpval;
-+		}
-+	}
-+
-+	for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
-+		ptr = (u8 *) (&(tx_agc[idx1]));
-+		for (idx2 = 0; idx2 < 4; idx2++) {
-+			if (*ptr > RF6052_MAX_TX_PWR)
-+				*ptr = RF6052_MAX_TX_PWR;
-+			ptr++;
-+		}
-+	}
-+
-+	tmpval = tx_agc[RF90_PATH_A] & 0xff;
-+	rtl_set_bbreg(hw, RTXAGC_A_CCK1_MCS32, MASKBYTE1, tmpval);
-+
-+	RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+		"CCK PWR 1M (rf-A) = 0x%x (reg 0x%x)\n", tmpval,
-+		RTXAGC_A_CCK1_MCS32);
-+
-+	tmpval = tx_agc[RF90_PATH_A] >> 8;
-+
-+	tmpval = tmpval & 0xff00ffff;
-+
-+	rtl_set_bbreg(hw, RTXAGC_B_CCK11_A_CCK2_11, 0xffffff00, tmpval);
-+
-+	RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+		"CCK PWR 2~11M (rf-A) = 0x%x (reg 0x%x)\n", tmpval,
-+		RTXAGC_B_CCK11_A_CCK2_11);
-+
-+	tmpval = tx_agc[RF90_PATH_B] >> 24;
-+	rtl_set_bbreg(hw, RTXAGC_B_CCK11_A_CCK2_11, MASKBYTE0, tmpval);
-+
-+	RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+		"CCK PWR 11M (rf-B) = 0x%x (reg 0x%x)\n", tmpval,
-+		RTXAGC_B_CCK11_A_CCK2_11);
-+
-+	tmpval = tx_agc[RF90_PATH_B] & 0x00ffffff;
-+	rtl_set_bbreg(hw, RTXAGC_B_CCK1_55_MCS32, 0xffffff00, tmpval);
-+
-+	RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+		"CCK PWR 1~5.5M (rf-B) = 0x%x (reg 0x%x)\n", tmpval,
-+		RTXAGC_B_CCK1_55_MCS32);
-+}
-+
-+static void rtl8723ae_phy_get_power_base(struct ieee80211_hw *hw,
-+					 u8 *ppowerlevel, u8 channel,
-+					 u32 *ofdmbase, u32 *mcsbase)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
-+	u32 powerBase0, powerBase1;
-+	u8 legacy_pwrdiff, ht20_pwrdiff;
-+	u8 i, powerlevel[2];
-+
-+	for (i = 0; i < 2; i++) {
-+		powerlevel[i] = ppowerlevel[i];
-+		legacy_pwrdiff = rtlefuse->txpwr_legacyhtdiff[i][channel - 1];
-+		powerBase0 = powerlevel[i] + legacy_pwrdiff;
-+
-+		powerBase0 = (powerBase0 << 24) | (powerBase0 << 16) |
-+		    (powerBase0 << 8) | powerBase0;
-+		*(ofdmbase + i) = powerBase0;
-+		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+			" [OFDM power base index rf(%c) = 0x%x]\n",
-+			((i == 0) ? 'A' : 'B'), *(ofdmbase + i));
-+	}
-+
-+	for (i = 0; i < 2; i++) {
-+		if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20) {
-+			ht20_pwrdiff = rtlefuse->txpwr_ht20diff[i][channel - 1];
-+			powerlevel[i] += ht20_pwrdiff;
-+		}
-+		powerBase1 = powerlevel[i];
-+		powerBase1 = (powerBase1 << 24) |
-+		    (powerBase1 << 16) | (powerBase1 << 8) | powerBase1;
-+
-+		*(mcsbase + i) = powerBase1;
-+
-+		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+			" [MCS power base index rf(%c) = 0x%x]\n",
-+			((i == 0) ? 'A' : 'B'), *(mcsbase + i));
-+	}
-+}
-+
-+static void rtl8723ae_get_txpwr_val_by_reg(struct ieee80211_hw *hw,
-+					   u8 channel, u8 index,
-+					   u32 *powerBase0,
-+					   u32 *powerBase1,
-+					   u32 *p_outwriteval)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
-+	u8 i, chnlgroup = 0, pwr_diff_limit[4];
-+	u32 writeVal, customer_limit, rf;
-+
-+	for (rf = 0; rf < 2; rf++) {
-+		switch (rtlefuse->eeprom_regulatory) {
-+		case 0:
-+			chnlgroup = 0;
-+
-+			writeVal = rtlphy->mcs_txpwrlevel_origoffset[chnlgroup]
-+				   [index + (rf ? 8 : 0)] +
-+				   ((index < 2) ? powerBase0[rf] :
-+				   powerBase1[rf]);
-+
-+			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+				"RTK better performance, "
-+				"writeVal(%c) = 0x%x\n",
-+				((rf == 0) ? 'A' : 'B'), writeVal);
-+			break;
-+		case 1:
-+			if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40) {
-+				writeVal = ((index < 2) ? powerBase0[rf] :
-+					    powerBase1[rf]);
-+
-+				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+					"Realtek regulatory, 40MHz, "
-+					"writeVal(%c) = 0x%x\n",
-+					((rf == 0) ? 'A' : 'B'), writeVal);
-+			} else {
-+				if (rtlphy->pwrgroup_cnt == 1)
-+					chnlgroup = 0;
-+				if (rtlphy->pwrgroup_cnt >= 3) {
-+					if (channel <= 3)
-+						chnlgroup = 0;
-+					else if (channel >= 4 && channel <= 9)
-+						chnlgroup = 1;
-+					else if (channel > 9)
-+						chnlgroup = 2;
-+					if (rtlphy->current_chan_bw ==
-+					    HT_CHANNEL_WIDTH_20)
-+						chnlgroup++;
-+					else
-+						chnlgroup += 4;
-+				}
-+
-+				writeVal =
-+				    rtlphy->mcs_txpwrlevel_origoffset[chnlgroup]
-+				    [index + (rf ? 8 : 0)] + ((index < 2) ?
-+							      powerBase0[rf] :
-+							      powerBase1[rf]);
-+
-+				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+					"Realtek regulatory, 20MHz, writeVal(%c) = 0x%x\n",
-+					((rf == 0) ? 'A' : 'B'), writeVal);
-+			}
-+			break;
-+		case 2:
-+			writeVal =
-+			    ((index < 2) ? powerBase0[rf] : powerBase1[rf]);
-+
-+			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+				"Better regulatory, writeVal(%c) = 0x%x\n",
-+				((rf == 0) ? 'A' : 'B'), writeVal);
-+			break;
-+		case 3:
-+			chnlgroup = 0;
-+
-+			if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40) {
-+				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+					"customer's limit, 40MHz rf(%c) = 0x%x\n",
-+					((rf == 0) ? 'A' : 'B'),
-+					rtlefuse->pwrgroup_ht40[rf][channel-1]);
-+			} else {
-+				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+					"customer's limit, 20MHz rf(%c) = 0x%x\n",
-+					((rf == 0) ? 'A' : 'B'),
-+					rtlefuse->pwrgroup_ht20[rf][channel-1]);
-+			}
-+			for (i = 0; i < 4; i++) {
-+				pwr_diff_limit[i] =
-+					(u8) ((rtlphy->mcs_txpwrlevel_origoffset
-+					[chnlgroup][index + (rf ? 8 : 0)] &
-+					(0x7f << (i * 8))) >> (i * 8));
-+
-+				if (rtlphy->current_chan_bw ==
-+				    HT_CHANNEL_WIDTH_20_40) {
-+					if (pwr_diff_limit[i] >
-+					    rtlefuse->
-+					    pwrgroup_ht40[rf][channel - 1])
-+						pwr_diff_limit[i] =
-+						    rtlefuse->pwrgroup_ht40[rf]
-+						    [channel - 1];
-+				} else {
-+					if (pwr_diff_limit[i] >
-+					    rtlefuse->
-+					    pwrgroup_ht20[rf][channel - 1])
-+						pwr_diff_limit[i] =
-+						    rtlefuse->pwrgroup_ht20[rf]
-+						    [channel - 1];
-+				}
-+			}
-+
-+			customer_limit = (pwr_diff_limit[3] << 24) |
-+			    (pwr_diff_limit[2] << 16) |
-+			    (pwr_diff_limit[1] << 8) | (pwr_diff_limit[0]);
-+
-+			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+				"Customer's limit rf(%c) = 0x%x\n",
-+				((rf == 0) ? 'A' : 'B'), customer_limit);
-+
-+			writeVal = customer_limit +
-+			    ((index < 2) ? powerBase0[rf] : powerBase1[rf]);
-+
-+			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+				"Customer, writeVal rf(%c)= 0x%x\n",
-+				((rf == 0) ? 'A' : 'B'), writeVal);
-+			break;
-+		default:
-+			chnlgroup = 0;
-+			writeVal =
-+			    rtlphy->mcs_txpwrlevel_origoffset[chnlgroup]
-+			    [index + (rf ? 8 : 0)]
-+			    + ((index < 2) ? powerBase0[rf] : powerBase1[rf]);
-+
-+			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+				"RTK better performance, writeVal rf(%c) = 0x%x\n",
-+				((rf == 0) ? 'A' : 'B'), writeVal);
-+			break;
-+		}
-+
-+		if (rtlpriv->dm.dynamic_txhighpower_lvl == TXHIGHPWRLEVEL_BT1)
-+			writeVal = writeVal - 0x06060606;
-+		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
-+			 TXHIGHPWRLEVEL_BT2)
-+			writeVal = writeVal - 0x0c0c0c0c;
-+		*(p_outwriteval + rf) = writeVal;
-+	}
-+}
-+
-+static void _rtl8723ae_write_ofdm_power_reg(struct ieee80211_hw *hw,
-+					    u8 index, u32 *pValue)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+
-+	u16 regoffset_a[6] = {
-+		RTXAGC_A_RATE18_06, RTXAGC_A_RATE54_24,
-+		RTXAGC_A_MCS03_MCS00, RTXAGC_A_MCS07_MCS04,
-+		RTXAGC_A_MCS11_MCS08, RTXAGC_A_MCS15_MCS12
-+	};
-+	u16 regoffset_b[6] = {
-+		RTXAGC_B_RATE18_06, RTXAGC_B_RATE54_24,
-+		RTXAGC_B_MCS03_MCS00, RTXAGC_B_MCS07_MCS04,
-+		RTXAGC_B_MCS11_MCS08, RTXAGC_B_MCS15_MCS12
-+	};
-+	u8 i, rf, pwr_val[4];
-+	u32 writeVal;
-+	u16 regoffset;
-+
-+	for (rf = 0; rf < 2; rf++) {
-+		writeVal = pValue[rf];
-+		for (i = 0; i < 4; i++) {
-+			pwr_val[i] = (u8) ((writeVal & (0x7f <<
-+							(i * 8))) >> (i * 8));
-+
-+			if (pwr_val[i] > RF6052_MAX_TX_PWR)
-+				pwr_val[i] = RF6052_MAX_TX_PWR;
-+		}
-+		writeVal = (pwr_val[3] << 24) | (pwr_val[2] << 16) |
-+		    (pwr_val[1] << 8) | pwr_val[0];
-+
-+		if (rf == 0)
-+			regoffset = regoffset_a[index];
-+		else
-+			regoffset = regoffset_b[index];
-+		rtl_set_bbreg(hw, regoffset, MASKDWORD, writeVal);
-+
-+		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
-+			"Set 0x%x = %08x\n", regoffset, writeVal);
-+
-+		if (((get_rf_type(rtlphy) == RF_2T2R) &&
-+		     (regoffset == RTXAGC_A_MCS15_MCS12 ||
-+		      regoffset == RTXAGC_B_MCS15_MCS12)) ||
-+		    ((get_rf_type(rtlphy) != RF_2T2R) &&
-+		     (regoffset == RTXAGC_A_MCS07_MCS04 ||
-+		      regoffset == RTXAGC_B_MCS07_MCS04))) {
-+
-+			writeVal = pwr_val[3];
-+			if (regoffset == RTXAGC_A_MCS15_MCS12 ||
-+			    regoffset == RTXAGC_A_MCS07_MCS04)
-+				regoffset = 0xc90;
-+			if (regoffset == RTXAGC_B_MCS15_MCS12 ||
-+			    regoffset == RTXAGC_B_MCS07_MCS04)
-+				regoffset = 0xc98;
-+
-+			for (i = 0; i < 3; i++) {
-+				writeVal = (writeVal > 6) ? (writeVal - 6) : 0;
-+				rtl_write_byte(rtlpriv, (u32) (regoffset + i),
-+					       (u8) writeVal);
-+			}
-+		}
-+	}
-+}
-+
-+void rtl8723ae_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
-+					   u8 *ppowerlevel, u8 channel)
-+{
-+	u32 writeVal[2], powerBase0[2], powerBase1[2];
-+	u8 index;
-+
-+	rtl8723ae_phy_get_power_base(hw, ppowerlevel,
-+				  channel, &powerBase0[0], &powerBase1[0]);
-+
-+	for (index = 0; index < 6; index++) {
-+		rtl8723ae_get_txpwr_val_by_reg(hw, channel, index,
-+					      &powerBase0[0],
-+					      &powerBase1[0],
-+					      &writeVal[0]);
-+
-+		_rtl8723ae_write_ofdm_power_reg(hw, index, &writeVal[0]);
-+	}
-+}
-+
-+static bool _rtl8723ae_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	u32 u4_regvalue = 0;
-+	u8 rfpath;
-+	bool rtstatus = true;
-+	struct bb_reg_def *pphyreg;
-+
-+	for (rfpath = 0; rfpath < rtlphy->num_total_rfpath; rfpath++) {
-+
-+		pphyreg = &rtlphy->phyreg_def[rfpath];
-+
-+		switch (rfpath) {
-+		case RF90_PATH_A:
-+		case RF90_PATH_C:
-+			u4_regvalue = rtl_get_bbreg(hw, pphyreg->rfintfs,
-+						    BRFSI_RFENV);
-+			break;
-+		case RF90_PATH_B:
-+		case RF90_PATH_D:
-+			u4_regvalue = rtl_get_bbreg(hw, pphyreg->rfintfs,
-+						    BRFSI_RFENV << 16);
-+			break;
-+		}
-+
-+		rtl_set_bbreg(hw, pphyreg->rfintfe, BRFSI_RFENV << 16, 0x1);
-+		udelay(1);
-+
-+		rtl_set_bbreg(hw, pphyreg->rfintfo, BRFSI_RFENV, 0x1);
-+		udelay(1);
-+
-+		rtl_set_bbreg(hw, pphyreg->rfhssi_para2,
-+			      B3WIREADDREAALENGTH, 0x0);
-+		udelay(1);
-+
-+		rtl_set_bbreg(hw, pphyreg->rfhssi_para2, B3WIREDATALENGTH, 0x0);
-+		udelay(1);
-+
-+		switch (rfpath) {
-+		case RF90_PATH_A:
-+			rtstatus = rtl8723ae_phy_config_rf_with_headerfile(hw,
-+						(enum radio_path)rfpath);
-+			break;
-+		case RF90_PATH_B:
-+			rtstatus = rtl8723ae_phy_config_rf_with_headerfile(hw,
-+						(enum radio_path)rfpath);
-+			break;
-+		case RF90_PATH_C:
-+			break;
-+		case RF90_PATH_D:
-+			break;
-+		}
-+
-+		switch (rfpath) {
-+		case RF90_PATH_A:
-+		case RF90_PATH_C:
-+			rtl_set_bbreg(hw, pphyreg->rfintfs,
-+				      BRFSI_RFENV, u4_regvalue);
-+			break;
-+		case RF90_PATH_B:
-+		case RF90_PATH_D:
-+			rtl_set_bbreg(hw, pphyreg->rfintfs,
-+				      BRFSI_RFENV << 16, u4_regvalue);
-+			break;
-+		}
-+
-+		if (rtstatus != true) {
-+			RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+				 "Radio[%d] Fail!!", rfpath);
-+			return false;
-+		}
-+
-+	}
-+
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "<---\n");
-+	return rtstatus;
-+}
-+
-+bool rtl8723ae_phy_rf6052_config(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+
-+	if (rtlphy->rf_type == RF_1T1R)
-+		rtlphy->num_total_rfpath = 1;
-+	else
-+		rtlphy->num_total_rfpath = 2;
-+
-+	return _rtl8723ae_phy_rf6052_config_parafile(hw);
-+
-+}
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
-new file mode 100644
-index 0000000..caeb92f
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
-@@ -0,0 +1,44 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL8723E_RF_H__
-+#define __RTL8723E_RF_H__
-+
-+#define RF6052_MAX_TX_PWR		0x3F
-+#define RF6052_MAX_REG			0x3F
-+
-+extern void rtl8723ae_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
-+					    u8 bandwidth);
-+extern void rtl8723ae_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
-+					      u8 *ppowerlevel);
-+extern void rtl8723ae_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
-+					       u8 *ppowerlevel, u8 channel);
-+extern bool rtl8723ae_phy_rf6052_config(struct ieee80211_hw *hw);
-+
-+#endif
--- 
-1.7.10.4
+The following changes since commit 7f2e6a5d8608d0353b017a0fe15502307593734e:
 
+  drivers/isdn/gigaset/common.c: Remove useless kfree (2012-09-13 17:05:17 =
+-0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
+for-davem
+
+for you to fetch changes up to 9316f0e3c6ba524d8fa14bfded048b252891931a:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless-next into for-davem (2012-09-14 13:53:49 -0400)
+
+----------------------------------------------------------------
+
+Amitkumar Karwar (9):
+      mwifiex: release semaphore acquired for internal scan operation
+      mwifiex: don't disable wait_q_enabled flag
+      mwifiex: remove get operation code for SUBSCRIBE EVENT command
+      mwifiex: remove 11N_CFG command response handler
+      mwifiex: remove AMSDU_AGGR_CTRL command response handler
+      mwifiex: have same priority for AP and station traffic
+      mwifiex: update adapter->bss_prio_tbl[j].bss_prio_cur correctly
+      mwifiex: use country ie of requested AP while associating
+      mwifiex: support custom world regulatory domain
+
+Andi Kleen (1):
+      brcm80211: Remove bogus memcpy in ai_detach
+
+Andre Guedes (1):
+      Bluetooth: Fix use-after-free bug in SMP
+
+Andy Shevchenko (1):
+      wireless: at76c50x: eliminate hex2str()
+
+Arend van Spriel (3):
+      wext: include wireless event id when it has a size problem
+      brcmfmac: fix use of dev_kfree_skb() in irq context
+      brcmfmac: add callback for nl80211 testmode command
+
+Avinash Patil (2):
+      mwifiex: parse rate info for AP
+      mwifiex: separate TxPD processing routine for AP
+
+Bing Zhao (3):
+      mwifiex: make use of is_zero_ether_addr()
+      mwifiex: do not hint regulatory domain with f/w country code
+      mwifiex: disable WOW by default
+
+Christian Lamparter (1):
+      p54: fix off-by-one null pointer bug in p54_tx_80211
+
+Daniel Drake (2):
+      libertas sdio: fix suspend when interface is down
+      libertas: set mac control synchronously during init
+
+Daniel Golle (1):
+      rt2x00: add MediaTek/RaLink Rt3352 WiSoC
+
+David Spinadel (1):
+      iwlwifi: remove radio_config from eeprom_data
+
+Eliad Peller (1):
+      mac80211: clear bssid on auth/assoc failure
+
+Felix Fietkau (6):
+      ath9k_hw: do not enable the MIB interrupt in the interrupt mask regis=
+ter
+      ath9k_hw: clear the AM2PM predistortion mask on AR933x
+      ath9k_hw: calibrate PA input for PA predistortion
+      ath9k_hw: disable PA linearization for AR9462
+      ath9k: fix PA linearization calibration related crash
+      ath9k_hw: enable PA linearization
+
+Franky Lin (1):
+      brcmfmac: add BCM43241 sdio interface driver support
+
+Gertjan van Wingerde (6):
+      rt2x00: Identify ASUS USB-N53 device.
+      rt2x00: Fix word size of rt2500usb MAC_CSR19 register.
+      rt2x00: Fix rfkill polling prior to interface start.
+      rt2x00: Align GPIO register definitions with the datasheets.
+      rt2x00: Unify GPIO register field namings
+      rt2x00: rt2800 - Make probe_hw function common between PCI and USB.
+
+Gustavo Padovan (1):
+      Bluetooth: Use USB_VENDOR_AND_INTERFACE() for Broadcom devices
+
+Hante Meuleman (13):
+      brcmfmac: dont use ZERO flag for usb IN
+      brcmfmac: fix race condition for rx and tx data.
+      brcmfmac: fix get rssi by clearing getvar struct.
+      brcmfmac: prevent possible race condition on usb rx control.
+      brcmfmac: Add 43242 USB support.
+      brcmfmac: Add 43143 USB support.
+      brcmfmac: Stop all net if queues on tx flow halt.
+      brcmfmac: Add extra data support to firmware event queueing.
+      brcmfmac: Add tx flow control on net if queue for USB.
+      brcmfmac: Clean up scan related code.
+      brcmfmac: refill buffers on rx protocol error.
+      brcmfmac: avoid using local usb data.
+      brcmfmac: add e-scan support.
+
+Henrik Rydberg (1):
+      Bluetooth: Add support for Apple vendor-specific devices
+
+Hila Gonen (1):
+      cfg80211: fix indentation
+
+Ilan Peer (1):
+      mac80211: Do not check for valid hw_queues for P2P_DEVICE
+
+Jeff Disher (1):
+      mwifiex: store mwifiex_ds_misc_subsc_evt in mwifiex_private
+
+Johannes Berg (5):
+      iwlwifi: fix antenna bitmask
+      mac80211: don't use kerneldoc for ieee80211_add_rx_radiotap_header
+      Merge remote-tracking branch 'wireless-next/master' into iwlwifi-next
+      iwlwifi: report A-MPDU status
+      iwlwifi: reduce overhead if tracing disabled
+
+John W. Linville (6):
+      Merge branch 'master' of git://git.kernel.org/.../bluetooth/bluetooth
+      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
+      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211-ne=
+xt
+      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-n=
+ext
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
+ext into for-davem
+
+Jussi Kivilinna (1):
+      zd1211rw: enable support for MFP
+
+LEO Airwarosu Yoichi Shinoda (1):
+      mac80211: Various small fixes for cfg.c: mpath_set_pinfo()
+
+Larry Finger (4):
+      rtlwifi: rtl8192c: rtl8192de: Fix typo in cursta_connectctate
+      rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192se: Remove sparse war=
+nings
+      rtlwifi: Update header file
+      rtlwifi: Remove EXPERIMENTAL as pre-requisite for the drivers
+
+Marc Kleine-Budde (1):
+      rt2x00: fix voltage setting for RT3572/RT3592
+
+Ming Lei (1):
+      wireless: ath9k-htc: only load firmware in need
+
+Mohammed Shafi Shajakhan (11):
+      ath9k: Fix a crash in 2 WIRE btcoex chipsets
+      ath9k_hw: small optimization
+      ath9k_hw: Fix invalid MCI GPM index access/caching
+      ath9k: Fix BTCOEX timer triggering comparision
+      ath9k: Make use of ath_stop_ani wrapper
+      ath9k: Remove an obselete function declaration
+      ath9k: Cleanup add/change_interface callbacks
+      ath9k_htc: minor cleanup in ath9k_htc_add_station
+      ath9k_htc: Add a modparam to enable BTCOEX rather than default
+      ath9k_htc: Cancel BTCOEX related work before disabling BTCOEX
+      ath9k: Add Generic hardware timer interrupt in debugfs
+
+Peter Senna Tschudin (2):
+      drivers/net/wireless/rtlwifi/rtl8192de/phy.c: removes unnecessary sem=
+icolon
+      drivers/net/wireless/ath/ath9k/ar9003_mac.c: removes unnecessary semi=
+colon
+
+Rajkumar Manoharan (5):
+      ath9k_hw: Read and apply thermometer settings from EEPROM
+      ath9k_hw: Read and configure thermocal for AR9462
+      ath9k_hw: Wait BT calibration to complete
+      ath9k_hw: use peak detection for 5GHz
+      ath9k_hw: add 8 points for 5G temp slop
+
+Robert P. J. Day (1):
+      cfg80211: add kerneldoc entry for "vht_cap"
+
+Saul St. John (1):
+      bcma: don't leak memory for PCIE, MIPS, GBIT cores
+
+Sergei Poselenov (1):
+      rt2800usb: Added rx packet length validity check
+
+Stone Piao (1):
+      mwifiex: fix skb length issue when send a command to firmware
+
+Sujith Manoharan (11):
+      ath9k: Fix TX filter usage
+      ath9k_hw: Add version/revision macros for AR9565
+      ath9k_hw: Add AR9565 initvals
+      ath9k_hw: Add AR9565 HW support
+      ath9k: Set correct max streams for AR9565
+      ath9k_hw: Fix spur mitigation for AR9565
+      ath9k_hw: Program correct PLL value for AR9565
+      ath9k: Add PCI ID for AR9565
+      ath9k_hw: Handle gentimer termination properly
+      ath9k_hw: Rename antenna diversity macros
+      ath9k: Choose correct LED pin for AR9565
+
+Vinicius Costa Gomes (2):
+      Bluetooth: Change signature of smp_conn_security()
+      Bluetooth: Fix sending a HCI Authorization Request over LE links
+
+Wei Yongjun (16):
+      nl80211: fix possible memory leak nl80211_connect()
+      cfg80211: use list_move_tail instead of list_del/list_add_tail
+      ipw2100: use is_zero_ether_addr() and is_broadcast_ether_addr()
+      ipw2200: use is_zero_ether_addr() and is_broadcast_ether_addr()
+      orinoco: use is_zero_ether_addr() instead of memcmp()
+      drivers/net: use is_zero_ether_addr() instead of memcmp()
+      airo: use is_zero_ether_addr() and is_broadcast_ether_addr()
+      mwifiex: use is_broadcast_ether_addr() instead of memcmp()
+      mwifiex: use is_zero_ether_addr() instead of memcmp()
+      wireless: use is_broadcast_ether_addr() instead of memcmp()
+      wl3501_cs: use is_broadcast_ether_addr() instead of memcmp()
+      wl18xx: remove duplicated include from main.c
+      airo: remove duplicated include from airo.c
+      rtlwifi: rtl8192de: remove pointless conditional before kfree_skb()
+      rtlwifi: rtl8192c: remove pointless conditional before kfree_skb()
+      rndis_wlan: remove pointless check from rndis_scan()
+
+Yevgeniy Melnichuk (1):
+      Bluetooth: Add support for Sony Vaio T-Series
+
+ drivers/bcma/main.c                                |   10 +
+ drivers/bluetooth/ath3k.c                          |    2 +
+ drivers/bluetooth/btusb.c                          |   12 +-
+ drivers/net/wireless/airo.c                        |    7 +-
+ drivers/net/wireless/at76c50x-usb.c                |   54 +-
+ drivers/net/wireless/ath/ath9k/ani.c               |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |  121 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h     |    3 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |   57 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c        |    4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c        |   15 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h        |    2 -
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c      |  105 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |  131 ++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h        |   75 +-
+ .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |    2 +-
+ .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   | 1233 ++++++++++++++++=
+++++
+ drivers/net/wireless/ath/ath9k/ath9k.h             |    3 +-
+ drivers/net/wireless/ath/ath9k/debug.c             |    3 +
+ drivers/net/wireless/ath/ath9k/debug.h             |    4 +-
+ drivers/net/wireless/ath/ath9k/eeprom.h            |    3 +-
+ drivers/net/wireless/ath/ath9k/gpio.c              |   12 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.c           |   33 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.h           |    4 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c      |   11 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c      |    5 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   14 +-
+ drivers/net/wireless/ath/ath9k/hw.c                |   56 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |    2 +
+ drivers/net/wireless/ath/ath9k/init.c              |    2 +-
+ drivers/net/wireless/ath/ath9k/link.c              |   18 +-
+ drivers/net/wireless/ath/ath9k/main.c              |   59 +-
+ drivers/net/wireless/ath/ath9k/mci.c               |   21 +-
+ drivers/net/wireless/ath/ath9k/pci.c               |    1 +
+ drivers/net/wireless/ath/ath9k/reg.h               |    9 +
+ drivers/net/wireless/ath/ath9k/xmit.c              |    5 +-
+ drivers/net/wireless/brcm80211/Kconfig             |    8 +
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   25 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    8 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   24 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   10 +-
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   17 +
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |  237 ++--
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  598 +++++++++-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   25 +
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c  |    3 -
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
+ drivers/net/wireless/hostap/hostap_info.c          |    4 +-
+ drivers/net/wireless/hostap/hostap_ioctl.c         |   15 +-
+ drivers/net/wireless/hostap/hostap_main.c          |    2 +-
+ drivers/net/wireless/ipw2x00/ipw2100.c             |   11 +-
+ drivers/net/wireless/ipw2x00/ipw2200.c             |   11 +-
+ drivers/net/wireless/iwlwifi/dvm/commands.h        |    3 +-
+ drivers/net/wireless/iwlwifi/dvm/dev.h             |    1 +
+ drivers/net/wireless/iwlwifi/dvm/rx.c              |   11 +
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h        |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h    |    2 -
+ drivers/net/wireless/iwlwifi/pcie/tx.c             |   25 +-
+ drivers/net/wireless/libertas/cmd.c                |   16 +
+ drivers/net/wireless/libertas/cmd.h                |    1 +
+ drivers/net/wireless/libertas/if_sdio.c            |    5 +
+ drivers/net/wireless/libertas/main.c               |    4 +-
+ drivers/net/wireless/mwifiex/11n.c                 |   38 -
+ drivers/net/wireless/mwifiex/11n.h                 |    5 -
+ drivers/net/wireless/mwifiex/cfg80211.c            |   51 +-
+ drivers/net/wireless/mwifiex/cmdevt.c              |   15 +-
+ drivers/net/wireless/mwifiex/fw.h                  |    8 +-
+ drivers/net/wireless/mwifiex/init.c                |    6 +-
+ drivers/net/wireless/mwifiex/ioctl.h               |    7 +-
+ drivers/net/wireless/mwifiex/main.c                |    1 -
+ drivers/net/wireless/mwifiex/main.h                |    9 +-
+ drivers/net/wireless/mwifiex/scan.c                |    4 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c             |    3 +-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c         |   38 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c           |   40 +
+ drivers/net/wireless/mwifiex/txrx.c                |    6 +-
+ drivers/net/wireless/mwifiex/uap_cmd.c             |   39 +-
+ drivers/net/wireless/mwifiex/uap_txrx.c            |   70 ++
+ drivers/net/wireless/mwifiex/wmm.c                 |    9 +-
+ drivers/net/wireless/orinoco/wext.c                |    7 +-
+ drivers/net/wireless/p54/main.c                    |    3 +-
+ drivers/net/wireless/rndis_wlan.c                  |    3 -
+ drivers/net/wireless/rt2x00/rt2400pci.c            |   11 +-
+ drivers/net/wireless/rt2x00/rt2400pci.h            |   26 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c            |   11 +-
+ drivers/net/wireless/rt2x00/rt2500pci.h            |   18 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c            |   11 +-
+ drivers/net/wireless/rt2x00/rt2500usb.h            |   26 +-
+ drivers/net/wireless/rt2x00/rt2800.h               |   52 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |  330 +++++-
+ drivers/net/wireless/rt2x00/rt2800lib.h            |   22 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c            |   73 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c            |   65 +-
+ drivers/net/wireless/rt2x00/rt2x00.h               |    1 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c            |    2 +-
+ drivers/net/wireless/rt2x00/rt61pci.c              |   19 +-
+ drivers/net/wireless/rt2x00/rt61pci.h              |   27 +-
+ drivers/net/wireless/rt2x00/rt73usb.c              |   11 +-
+ drivers/net/wireless/rt2x00/rt73usb.h              |   31 +-
+ drivers/net/wireless/rtlwifi/Kconfig               |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |   41 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  |    3 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   10 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.c        |    3 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |    6 +-
+ drivers/net/wireless/rtlwifi/usb.c                 |    2 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |  108 +-
+ drivers/net/wireless/ti/wl18xx/main.c              |    1 -
+ drivers/net/wireless/wl3501_cs.c                   |    3 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c             |    3 +-
+ include/net/bluetooth/smp.h                        |    2 +-
+ include/net/cfg80211.h                             |    1 +
+ net/bluetooth/hci_conn.c                           |    4 +
+ net/bluetooth/l2cap_core.c                         |   11 +-
+ net/bluetooth/l2cap_sock.c                         |    2 +-
+ net/bluetooth/smp.c                                |   10 +-
+ net/mac80211/cfg.c                                 |    9 +-
+ net/mac80211/iface.c                               |   16 +-
+ net/mac80211/mlme.c                                |    4 +
+ net/mac80211/rx.c                                  |    2 +-
+ net/wireless/nl80211.c                             |    4 +-
+ net/wireless/reg.c                                 |    6 +-
+ net/wireless/scan.c                                |    2 +-
+ net/wireless/wext-core.c                           |    8 +-
+ 130 files changed, 3664 insertions(+), 918 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--nFreZHaLTZJo0R7j
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQU3XIAAoJEJctW/TcYTgGGwYP/jMHSTcQmC0PWcId2bCK5S7q
+/wJK1Zu+L35RUBacguYdxDnl4WOKnRLTC8tn+08QX3OcuvbAzUXLcJ2IjJPt7ffU
+URwBjaM3yvSu1u2D/q/Fews0TJVMMdXs46L57X+9qn8cim2ONtez8YqBPZrdVdLg
+b0NotwEbr2Qlqe8V83/MFywmPg8QPtYsslC7QSU+P+HT8i8N6nN+uCv+e/fRahwY
+cNw4a16ftOzkjAxkQWKXCEyj59nPoUSE9kDVyBijrp/kAFWzhQQmEw62qimQBYNG
+3aquF84Npu9l/DjWaukoeI0cQcv+3Y/Aw36uOzcUMFbb0asCIwgXpHVQNqQrHAzh
+3z2imePMTSXp+eG7VMzNYtZFjGryjndHX9Fj3HSpBu3MuxMDUZyplu+zz77eS60v
+mwJyjZU/nLz3SG1DHFTtzMk04zRTdvXVPI9lsU/3i6lanX4c7JrGRxN4rJY6QL85
+FvWqgRVssgUoUdfNy7h0OTGFt2o5qeNDAfMz8qPW5uO1gpufkhKPJ3yg226CRmRg
+PiraP3CDaJNmiymH7uN+7LqV9d8xC5o7lmQCW2WZgu2RJnU+lxY3D1UtQ+Q0R5ia
++BI5o1fuprXyKPvPIaNoP0c9KN2VbChfHn8NpWZY1U7xEgI07Q/fQ8PicWe4cpGT
+v5ENc5uRUD/RnivWiW6t
+=PhqG
+-----END PGP SIGNATURE-----
+
+--nFreZHaLTZJo0R7j--
