@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:59212 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751006Ab2IXWb5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48892 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034Ab2INHop (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 18:31:57 -0400
-Date: Mon, 24 Sep 2012 19:31:49 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2012-09-18
-Message-ID: <20120924223149.GB7922@joana> (sfid-20120925_003216_680138_5405F292)
-References: <20120919013113.GG24689@joana>
- <CAB=NE6XKNSMeS3_uzcGsGBhcm6ZKtJwJ=DdAq_DoWmKTXQvV=Q@mail.gmail.com>
- <20120924184622.GA7922@joana>
- <20120924195422.GF32351@tuxdriver.com>
+	Fri, 14 Sep 2012 03:44:45 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120924195422.GF32351@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20562.57398.203651.913249@gargle.gargle.HOWL> (sfid-20120914_094449_592199_1B134BBF)
+Date: Fri, 14 Sep 2012 13:13:50 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [RFC 0/8] AR9565 antenna diversity
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* John W. Linville <linville@tuxdriver.com> [2012-09-24 15:54:22 -0400]:
+Hi,
 
-> On Mon, Sep 24, 2012 at 03:46:22PM -0300, Gustavo Padovan wrote:
-> > * Luis R. Rodriguez <mcgrof@do-not-panic.com> [2012-09-21 18:06:42 -0700]:
-> > 
-> > > On Tue, Sep 18, 2012 at 6:31 PM, Gustavo Padovan <gustavo@padovan.org> wrote:
-> > > 
-> > > > Johan Hedberg (2):
-> > > >       Bluetooth: mgmt: Implement support for passkey notification
-> > > 
-> > > Too late now... but why did we allow this a stable fix? I get its a
-> > > feature that is important and likely overlooked / someone had a brain
-> > > fart, but from what I gather this is not on v3.5.4 and yet may make it
-> > > to v3.5.5. At least for backporting this was a bitch:
-> 
-> <snip>
-> 
-> > Yes, this patch is wrongly marked as stable, it is not even going to 3.5. I'm
-> > just removing the tag from it and resending the pull request to John.
-> 
-> Hmmm...well, I already pulled it, and I just pushed it out.  Can we live with it?
+This is a work in progress to enable WLAN Antenna diversity for AR9565.
+Please review !
 
-Yes, that would be ok for me.
+Sujith
 
-	Gustavo
+Sujith Manoharan (8):
+  ath9k_hw: Use HW cap ATH9K_HW_CAP_ANT_DIV_COMB
+  ath9k: Remove redundant variable assignment
+  ath9k: Remove a couple of unused variables
+  ath9k_hw: Add antenna diversity group for AR9565
+  ath9k_hw: Update AR9565 initvals
+  ath9k_hw: Add a HW callback to set diversity
+  ath9k: Add a module parameter to enable diversity for AR9565
+  ath9k_hw: Enable WLAN RX diversity for AR9565
+
+ drivers/net/wireless/ath/ath.h                     |   1 +
+ drivers/net/wireless/ath/ath9k/antenna.c           | 117 ++++++++++++---------
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |  20 ++--
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |  63 +++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h        |  24 +++++
+ .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   | 100 +++++++++---------
+ drivers/net/wireless/ath/ath9k/ath9k.h             |   2 -
+ drivers/net/wireless/ath/ath9k/hw-ops.h            |   7 ++
+ drivers/net/wireless/ath/ath9k/hw.c                |   6 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |   3 +-
+ drivers/net/wireless/ath/ath9k/init.c              |  12 +++
+ 11 files changed, 245 insertions(+), 110 deletions(-)
+
+-- 
+1.7.12
+
