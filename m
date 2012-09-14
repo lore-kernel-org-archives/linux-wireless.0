@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4989 "EHLO mms3.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3734 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751275Ab2ITNwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 09:52:45 -0400
-Message-ID: <505B1FA0.6030100@broadcom.com> (sfid-20120920_155302_137295_FDFBFB49)
-Date: Thu, 20 Sep 2012 15:52:32 +0200
+	id S1752941Ab2INQAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Sep 2012 12:00:49 -0400
+Message-ID: <505354AC.7040108@broadcom.com> (sfid-20120914_180100_301211_116BEB47)
+Date: Fri, 14 Sep 2012 18:00:44 +0200
 From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: "Nico Schottelius" <nico-kernel20120920@schottelius.org>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Out of memory on 3.5 kernels
+To: "Fengguang Wu" <fengguang.wu@intel.com>
+cc: "Hante Meuleman" <meuleman@broadcom.com>,
+	kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [iwlwifi:master 67/70]
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:732:42: sparse:
+ invalid assignment: |=
+References: <20120914144351.GA23614@localhost>
+In-Reply-To: <20120914144351.GA23614@localhost>
 Content-Type: text/plain;
  charset=iso-8859-1;
  format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, Nico
+On 09/14/2012 04:43 PM, Fengguang Wu wrote:
+> Hi Hante,
+>
+> FYI, there are new sparse warnings show up in
+>
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git master
+> head:   99f314c04ff5f4cfd969f5fbe82d6d0c0a7d8336
+> commit: e756af5b30b008f6ffcfebf8ad0b477f6f225b62 [67/70] brcmfmac: add e-scan support.
+>
+> All sparse warnings:
 
- > just while running, I got the following brcmsmac related error:
- >
- > [17336.572558] WARNING: at 
-drivers/net/wireless/brcm80211/brcmsmac/main.c:7968 
-brcms_c_wait_for_tx_completion+0x99/0xb0 [brcmsmac]()
- > [17336.572562] Hardware name: MacBookAir4,2
- > [17336.572565] Modules linked in: sha256_generic snd_hda_codec_hdmi 
-snd_hda_codec_cirrus ext4 jbd2 mbcache arc4 uvcvideo brcmsmac 
-videobuf2_vmalloc videobuf2_memops cordic brcmutil btusb bluetooth i915 
-videobuf2_core mac80211 videodev crc16 acpi_cpufreq snd_hda_intel media 
-i2c_algo_bit cfg80211 mperf drm_kms_helper snd_hda_codec rfkill joydev 
-bcm5974 iTCO_wdt iTCO_vendor_support i2c_i801 intel_agp lpc_ich applesmc 
-evdev microcode drm coretemp input_polldev pcspkr intel_gtt mfd_core 
-i2c_core processor bcma snd_hwdep video button battery apple_bl mei ac 
-snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc snd_timer snd soundcore 
-kvm_intel kvm nfs nfs_acl lockd auth_rpcgss sunrpc fscache autofs4 jfs 
-xts gf128mul dm_crypt dm_mod sd_mod pata_acpi ata_generic hid_generic 
-usb_storage hid_apple usbhid hid uhci_hcd aesni_intel aes_x86_64 
-aes_generic ghash_clmulni_intel cryptd crc32c_intel ata_piix libata 
-scsi_mod ehci_hcd usbcore usb_common
- > [17336.572716] Pid: 27714, comm: kworker/u:1 Not tainted 3.5.4-1-ARCH #1
- > [17336.572719] Call Trace:
- > [17336.572734]  [<ffffffff81051a3f>] warn_slowpath_common+0x7f/0xc0
- > [17336.572743]  [<ffffffff81051a9a>] warn_slowpath_null+0x1a/0x20
- > [17336.572759]  [<ffffffffa063bd29>] 
-brcms_c_wait_for_tx_completion+0x99/0xb0 [brcmsmac]
- > [17336.572769]  [<ffffffffa062e1bb>] brcms_ops_flush+0x3b/0x60 [brcmsmac]
+Thanks, Fengguang
 
-This issue is bugging me for quite a while and some patch do patch up 
-the issue, but it is still bleeding. Nasty one to get to the root cause 
-of it, but I am testing my pitbull mentality on it ;-)
+I was doing 'make C=2' today and noticed these warnings as well. Already 
+patching it.
 
-Gr. AvS
+Regards,
+Arend
 
