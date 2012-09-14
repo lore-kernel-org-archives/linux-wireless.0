@@ -1,141 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:47213 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751811Ab2IZDbh (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14345 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753250Ab2INHpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 23:31:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 10/15] mwifiex: add P2P interface
-Date: Tue, 25 Sep 2012 20:23:40 -0700
-Message-Id: <1348629825-12001-11-git-send-email-bzhao@marvell.com> (sfid-20120926_053140_511354_233282F1)
-In-Reply-To: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
-References: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
+	Fri, 14 Sep 2012 03:45:13 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20562.57426.927069.184092@gargle.gargle.HOWL> (sfid-20120914_094517_786691_AAD5C144)
+Date: Fri, 14 Sep 2012 13:14:18 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [RFC 4/8] ath9k_hw: Add antenna diversity group for AR9565
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
-
-Due to firmware design, driver needs to add a default P2P interface
-to implement find phase and action frame handshake.
-
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |   39 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/mwifiex/decl.h     |    3 +-
- drivers/net/wireless/mwifiex/main.c     |    7 +++++
- 3 files changed, 47 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/antenna.c    | 62 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |  3 ++
+ 2 files changed, 65 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 1f4bd67..ece267a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -22,7 +22,7 @@
- 
- static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
- 	{
--		.max = 1, .types = BIT(NL80211_IFTYPE_STATION),
-+		.max = 2, .types = BIT(NL80211_IFTYPE_STATION),
- 	},
- 	{
- 		.max = 1, .types = BIT(NL80211_IFTYPE_AP),
-@@ -1918,6 +1918,41 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_mode = type;
- 
- 		break;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		priv = adapter->priv[MWIFIEX_BSS_TYPE_P2P];
-+
-+		if (priv->bss_mode) {
-+			wiphy_err(wiphy, "Can't create multiple P2P ifaces");
-+			return ERR_PTR(-EINVAL);
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index eb61c6b..8eb274f 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -475,6 +475,68 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 		default:
+ 			break;
+ 		}
++	} else if (ant_conf->div_group == 3) {
++		switch ((ant_conf->main_lna_conf << 4) |
++			ant_conf->alt_lna_conf) {
++		case 0x01: /* A-B LNA2 */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		case 0x02: /* A-B LNA1 */
++			ant_conf->fast_div_bias = 0x39;
++			break;
++		case 0x03: /* A-B A+B */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		case 0x10: /* LNA2 A-B */
++			if ((antcomb->scan == 0) &&
++			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
++				ant_conf->fast_div_bias = 0x3f;
++			} else {
++				ant_conf->fast_div_bias = 0x1;
++			}
++			break;
++		case 0x12: /* LNA2 LNA1 */
++			ant_conf->fast_div_bias = 0x39;
++			break;
++		case 0x13: /* LNA2 A+B */
++			if ((antcomb->scan == 0) &&
++			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
++				ant_conf->fast_div_bias = 0x3f;
++			} else {
++				ant_conf->fast_div_bias = 0x1;
++			}
++			break;
++		case 0x20: /* LNA1 A-B */
++			if ((antcomb->scan == 0) &&
++			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
++				ant_conf->fast_div_bias = 0x3f;
++			} else {
++				ant_conf->fast_div_bias = 0x4;
++			}
++			break;
++		case 0x21: /* LNA1 LNA2 */
++			ant_conf->fast_div_bias = 0x6;
++			break;
++		case 0x23: /* LNA1 A+B */
++			if ((antcomb->scan == 0) &&
++			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
++				ant_conf->fast_div_bias = 0x3f;
++			} else {
++				ant_conf->fast_div_bias = 0x6;
++			}
++			break;
++		case 0x30: /* A+B A-B */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		case 0x31: /* A+B LNA2 */
++			ant_conf->fast_div_bias = 0x6;
++			break;
++		case 0x32: /* A+B LNA1 */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		default:
++			break;
 +		}
-+
-+		wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
-+		if (!wdev)
-+			return ERR_PTR(-ENOMEM);
-+
-+		priv->wdev = wdev;
-+		wdev->wiphy = wiphy;
-+
-+		/* At start-up, wpa_supplicant tries to change the interface
-+		 * to NL80211_IFTYPE_STATION if it is not managed mode.
-+		 * So, we initialize it to STA mode.
-+		 */
-+		wdev->iftype = NL80211_IFTYPE_STATION;
-+		priv->bss_mode = NL80211_IFTYPE_STATION;
-+
-+		/* Setting bss_type to P2P tells firmware that this interface
-+		 * is receiving P2P peers found during find phase and doing
-+		 * action frame handshake.
-+		 */
-+		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
-+
-+		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
-+		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
-+		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
-+		priv->bss_started = 0;
-+		priv->bss_num = 0;
-+
-+		break;
- 	default:
- 		wiphy_err(wiphy, "type not supported\n");
- 		return ERR_PTR(-EINVAL);
-@@ -2069,6 +2104,8 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->max_remain_on_channel_duration = 5000;
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				 BIT(NL80211_IFTYPE_ADHOC) |
-+				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				 BIT(NL80211_IFTYPE_P2P_GO) |
- 				 BIT(NL80211_IFTYPE_AP);
- 
- 	wiphy->bands[IEEE80211_BAND_2GHZ] = &mwifiex_band_2ghz;
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index d21bcc1..e9357d8 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -28,7 +28,7 @@
- #include <linux/ieee80211.h>
- 
- 
--#define MWIFIEX_MAX_BSS_NUM         (2)
-+#define MWIFIEX_MAX_BSS_NUM         (3)
- 
- #define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
- 					 *   + 4 byte alignment
-@@ -70,6 +70,7 @@
- enum mwifiex_bss_type {
- 	MWIFIEX_BSS_TYPE_STA = 0,
- 	MWIFIEX_BSS_TYPE_UAP = 1,
-+	MWIFIEX_BSS_TYPE_P2P = 2,
- 	MWIFIEX_BSS_TYPE_ANY = 0xff,
- };
- 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 3bb3417..eb22dd2 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -369,6 +369,13 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 		dev_err(adapter->dev, "cannot create default AP interface\n");
- 		goto err_add_intf;
  	}
-+
-+	/* Create P2P interface by default */
-+	if (!mwifiex_add_virtual_intf(adapter->wiphy, "p2p%d",
-+				      NL80211_IFTYPE_P2P_CLIENT, NULL, NULL)) {
-+		dev_err(adapter->dev, "cannot create default P2P interface\n");
-+		goto err_add_intf;
-+	}
- 	rtnl_unlock();
+ }
  
- 	mwifiex_drv_get_driver_version(adapter, fmt, sizeof(fmt) - 1);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 0d800c6..4b503ee 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1294,6 +1294,9 @@ static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
+ 	} else if (AR_SREV_9485(ah)) {
+ 		antconf->lna1_lna2_delta = -9;
+ 		antconf->div_group = 2;
++	} else if (AR_SREV_9565(ah)) {
++		antconf->lna1_lna2_delta = -3;
++		antconf->div_group = 3;
+ 	} else {
+ 		antconf->lna1_lna2_delta = -3;
+ 		antconf->div_group = 0;
 -- 
-1.7.0.2
+1.7.12
 
