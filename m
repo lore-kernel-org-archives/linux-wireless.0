@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:35202 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753Ab2IKQHV (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:45603 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511Ab2INKaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 12:07:21 -0400
-Received: by oago6 with SMTP id o6so345411oag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 09:07:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAFtRNNzbizOVOr+J=Z0=JmRCunMwo4Ys_AYaFY7z-xnUE2Tp6w@mail.gmail.com>
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
-	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
-	<20120904102204.GA2541@w1.fi>
-	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
-	<CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
-	<1346758521.3737.28.camel@jlt4.sipsolutions.net>
-	<CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
-	<20120905071653.GB3629@w1.fi>
-	<CAEFj985iHQJTAqXBkz56BDPodHb9q0Z=x3S5Q43UwA5vU-mfMw@mail.gmail.com>
-	<20120905080336.GA4747@w1.fi>
-	<CAEFj986i9XUcEN0i2y5=YLh2RX8MZOf+60i8XL4jMiq5-JcJ6Q@mail.gmail.com>
-	<CAJ-Vmonesc=VPMUJgS1GHTUS-Xj_BTohv0rQ9ZS+rW-761g_8w@mail.gmail.com>
-	<87zk4y3tsz.fsf@purkki.adurom.net>
-	<CAEFj9845-oLbFK7_i5hL6bWMF4=oTJ4avDkEv3kpJGXCpaiSiQ@mail.gmail.com>
-	<CAFtRNNzdXFbcxNw0M7oYsvidiLnckycy4V73Y+pG4oUNqeCJvQ@mail.gmail.com>
-	<CAEFj984je_UEriLbTmJ0KC9+M-FKOpiithuapMRUHRG3WCZ4hA@mail.gmail.com>
-	<CAFtRNNyNVnkfyjDGvuUJfYq3pKfiwG+YOpxo0DX_uw6CKiErTA@mail.gmail.com>
-	<CAEFj987sqS7ZONEJ0xbsmWjkMijNAr8PnmVpw0ok60rdgS6FpA@mail.gmail.com>
-	<CAFtRNNzbizOVOr+J=Z0=JmRCunMwo4Ys_AYaFY7z-xnUE2Tp6w@mail.gmail.com>
-Date: Tue, 11 Sep 2012 19:07:20 +0300
-Message-ID: <CAFtRNNy4UWzz7tdnWGSQ++qqx-LGVGZQ=Vae2SO59CB5K2b2+Q@mail.gmail.com> (sfid-20120911_180735_195690_10ADA477)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Kalle Valo <kvalo@adurom.com>, Adrian Chadd <adrian@freebsd.org>,
-	Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mcgrof@qca.qualcomm.com, ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=UTF-8
+	Fri, 14 Sep 2012 06:30:03 -0400
+Received: by pbbrr13 with SMTP id rr13so5422790pbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2012 03:30:03 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath5k: disable HW crypto in management frame
+Date: Fri, 14 Sep 2012 18:26:11 +0800
+Message-Id: <1347618371-31546-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120914_123010_026072_C1F0A5F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/9/11 Nick Kossifidis <mickflemm@gmail.com>:
-> 2012/9/11 Yeoh Chun-Yeow <yeohchunyeow@gmail.com>:
->> Hi, Nick
->>
->>> Nope, with nohwcrypt we don't initialize the hw engine at all, we just
->>> tell hw that data is not encrypted and that nothing should be done
->>> about it. With these hw options from what I understand from docs we
->>> can initialize the engine but use only part of it, eg. use only hw
->>> encryption or only hw decryption. It might be useful in your case.
->>
->> The problem of ath5k right seems to be that: '
->> If CCMP HW encryption is enabled, HW encryption for unicast data frame
->> and SW encryption for unicast management frame are possible for TX.
->> But for RX, both the unicast data frame and unicast management frame
->> are decrypted by the HW instead of doing only SW decryption for
->> unicast management frame.
->>
->> With the help of PCU DIAG register, possible to separate this?
->>
->
-> Its possible to tell hw to disable decryption so that you can handle
-> that only on sw, I haven't tested it but that's what docs say.
->
+Hardware support for MFP is not available in ath5k. Thus,
+this implementation allows the mac80211 stack to do the
+actuall crypto operation.
 
-To be more clear: you can tell the hw to *only* disable decryption and
-keep doing encryption.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c         |    1 +
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index a0a202d..9fd6d9a 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2446,6 +2446,7 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 			IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 			IEEE80211_HW_SIGNAL_DBM |
++			IEEE80211_HW_MFP_CAPABLE |
+ 			IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+ 
+ 	hw->wiphy->interface_modes =
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index df61a09..0f34086 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -489,6 +489,9 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	if (ath5k_modparam_nohwcrypt)
+ 		return -EOPNOTSUPP;
+ 
++	if (key->flags & IEEE80211_KEY_FLAG_RX_MGMT)
++		return -EOPNOTSUPP;
++
+ 	if (vif->type == NL80211_IFTYPE_ADHOC &&
+ 	    (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
+ 	     key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
 -- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.0.4
+
