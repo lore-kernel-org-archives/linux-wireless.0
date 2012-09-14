@@ -1,69 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelayi.jaist.ac.jp ([150.65.19.7]:6528 "EHLO
-	mailrelayi.jaist.ac.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754849Ab2IMKTD (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49562 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245Ab2INHq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 06:19:03 -0400
-Date: Thu, 13 Sep 2012 19:18:42 +0900
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Borislav Petkov <bp@alien8.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: rtl8192se: ping router gives mdev of 25387.102???
-Message-ID: <20120913101828.GA3309@gandalf.dynalias.org> (sfid-20120913_121925_567051_651EB5C6)
+	Fri, 14 Sep 2012 03:46:27 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-From: Norbert Preining <preining@logic.at>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20562.57501.348786.120200@gargle.gargle.HOWL> (sfid-20120914_094630_593160_33DE7A76)
+Date: Fri, 14 Sep 2012 13:15:33 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [RFC 6/8] ath9k_hw: Add a HW callback to set diversity
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+This patch adds a new callback to handle WLAN RX diversity for
+AR9565.
 
-(please cc)
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 60 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 24 +++++++++++
+ drivers/net/wireless/ath/ath9k/hw-ops.h        |  7 +++
+ drivers/net/wireless/ath/ath9k/hw.c            |  4 ++
+ drivers/net/wireless/ath/ath9k/hw.h            |  3 +-
+ 6 files changed, 107 insertions(+), 1 deletion(-)
 
-see $subject ...
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index bfd2055..5bbe505 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3633,6 +3633,16 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		/* enable_lnadiv */
+ 		regval &= (~AR_PHY_ANT_DIV_LNADIV);
+ 		regval |= ((value >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
++
++		if (AR_SREV_9565(ah)) {
++			if (ah->shared_chain_lnadiv) {
++				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
++			} else {
++				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
++				regval &= ~(1 << AR_PHY_ANT_SW_RX_PROT_S);
++			}
++		}
++
+ 		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
+ 
+ 		/*enable fast_div */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 4b503ee..1c6aadb 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1328,6 +1328,65 @@ static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
+ }
+ 
++static void ar9003_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
++						  bool enable)
++{
++	u8 ant_div_ctl1;
++	u32 regval;
++
++	if (!AR_SREV_9565(ah))
++		return;
++
++	ah->shared_chain_lnadiv = enable;
++	ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
++
++	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
++	regval &= (~AR_ANT_DIV_CTRL_ALL);
++	regval |= (ant_div_ctl1 & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
++	regval &= ~AR_PHY_ANT_DIV_LNADIV;
++	regval |= ((ant_div_ctl1 >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
++
++	if (enable)
++		regval |= AR_ANT_DIV_ENABLE;
++
++	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
++
++	regval = REG_READ(ah, AR_PHY_CCK_DETECT);
++	regval &= ~AR_FAST_DIV_ENABLE;
++	regval |= ((ant_div_ctl1 >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
++
++	if (enable)
++		regval |= AR_FAST_DIV_ENABLE;
++
++	REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
++
++	if (enable) {
++		REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
++			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
++		if (IS_CHAN_2GHZ(ah->curchan))
++			REG_SET_BIT(ah, AR_PHY_RESTART,
++				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
++		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
++			    AR_BTCOEX_WL_LNADIV_FORCE_ON);
++	} else {
++		REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE);
++		REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
++			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
++		REG_CLR_BIT(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE);
++		REG_CLR_BIT(ah, AR_BTCOEX_WL_LNADIV,
++			    AR_BTCOEX_WL_LNADIV_FORCE_ON);
++
++		regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
++		regval &= ~(AR_PHY_ANT_DIV_MAIN_LNACONF |
++			AR_PHY_ANT_DIV_ALT_LNACONF |
++			AR_PHY_ANT_DIV_MAIN_GAINTB |
++			AR_PHY_ANT_DIV_ALT_GAINTB);
++		regval |= (AR_PHY_ANT_DIV_LNA1 << AR_PHY_ANT_DIV_MAIN_LNACONF_S);
++		regval |= (AR_PHY_ANT_DIV_LNA2 << AR_PHY_ANT_DIV_ALT_LNACONF_S);
++		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
++	}
++}
++
+ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
+ 				      struct ath9k_channel *chan,
+ 				      u8 *ini_reloaded)
+@@ -1426,6 +1485,7 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ 
+ 	ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
+ 	ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
++	ops->antctrl_shared_chain_lnadiv = ar9003_hw_antctrl_shared_chain_lnadiv;
+ 
+ 	ar9003_hw_set_nf_limits(ah);
+ 	ar9003_hw_set_radar_conf(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index fdabc9a..9a48e3d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -282,6 +282,8 @@
+ 
+ #define AR_PHY_ANT_FAST_DIV_BIAS                0x00007e00
+ #define AR_PHY_ANT_FAST_DIV_BIAS_S              9
++#define AR_PHY_ANT_SW_RX_PROT                   0x00800000
++#define AR_PHY_ANT_SW_RX_PROT_S                 23
+ #define AR_PHY_ANT_DIV_LNADIV                   0x01000000
+ #define AR_PHY_ANT_DIV_LNADIV_S                 24
+ #define AR_PHY_ANT_DIV_ALT_LNACONF              0x06000000
+@@ -422,6 +424,8 @@
+ #define AR_PHY_FIND_SIG_RELSTEP        0x1f
+ #define AR_PHY_FIND_SIG_RELSTEP_S         0
+ #define AR_PHY_FIND_SIG_RELSTEP_SIGN_BIT  5
++#define AR_PHY_RESTART_ENABLE_DIV_M2FLAG 0x00200000
++#define AR_PHY_RESTART_ENABLE_DIV_M2FLAG_S 21
+ #define AR_PHY_RESTART_DIV_GC   0x001C0000
+ #define AR_PHY_RESTART_DIV_GC_S 18
+ #define AR_PHY_RESTART_ENA      0x01
+@@ -1261,4 +1265,24 @@
+ #define AR_PHY_CL_TAB_CL_GAIN_MOD		0x1f
+ #define AR_PHY_CL_TAB_CL_GAIN_MOD_S		0
+ 
++#define AR_BTCOEX_WL_LNADIV                                0x1a64
++#define AR_BTCOEX_WL_LNADIV_PREDICTED_PERIOD               0x00003FFF
++#define AR_BTCOEX_WL_LNADIV_PREDICTED_PERIOD_S             0
++#define AR_BTCOEX_WL_LNADIV_DPDT_IGNORE_PRIORITY           0x00004000
++#define AR_BTCOEX_WL_LNADIV_DPDT_IGNORE_PRIORITY_S         14
++#define AR_BTCOEX_WL_LNADIV_FORCE_ON                       0x00008000
++#define AR_BTCOEX_WL_LNADIV_FORCE_ON_S                     15
++#define AR_BTCOEX_WL_LNADIV_MODE_OPTION                    0x00030000
++#define AR_BTCOEX_WL_LNADIV_MODE_OPTION_S                  16
++#define AR_BTCOEX_WL_LNADIV_MODE                           0x007c0000
++#define AR_BTCOEX_WL_LNADIV_MODE_S                         18
++#define AR_BTCOEX_WL_LNADIV_ALLOWED_TX_ANTDIV_WL_TX_REQ    0x00800000
++#define AR_BTCOEX_WL_LNADIV_ALLOWED_TX_ANTDIV_WL_TX_REQ_S  23
++#define AR_BTCOEX_WL_LNADIV_DISABLE_TX_ANTDIV_ENABLE       0x01000000
++#define AR_BTCOEX_WL_LNADIV_DISABLE_TX_ANTDIV_ENABLE_S     24
++#define AR_BTCOEX_WL_LNADIV_CONTINUOUS_BT_ACTIVE_PROTECT   0x02000000
++#define AR_BTCOEX_WL_LNADIV_CONTINUOUS_BT_ACTIVE_PROTECT_S 25
++#define AR_BTCOEX_WL_LNADIV_BT_INACTIVE_THRESHOLD          0xFC000000
++#define AR_BTCOEX_WL_LNADIV_BT_INACTIVE_THRESHOLD_S        26
++
+ #endif  /* AR9003_PHY_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 265bf77..0f2b97f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -78,6 +78,13 @@ static inline void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
+ 	ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
+ }
+ 
++static inline void ath9k_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
++							bool enable)
++{
++	if (ath9k_hw_ops(ah)->antctrl_shared_chain_lnadiv)
++		ath9k_hw_ops(ah)->antctrl_shared_chain_lnadiv(ah, enable);
++}
++
+ /* Private hardware call ops */
+ 
+ /* PHY ops */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 40f57aa..c562f13 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -24,6 +24,7 @@
+ #include "rc.h"
+ #include "ar9003_mac.h"
+ #include "ar9003_mci.h"
++#include "ar9003_phy.h"
+ #include "debug.h"
+ #include "ath9k.h"
+ 
+@@ -2025,6 +2026,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	ath9k_hw_apply_gpio_override(ah);
+ 
++	if (AR_SREV_9565(ah) && ah->shared_chain_lnadiv)
++		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV, AR_BTCOEX_WL_LNADIV_FORCE_ON);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(ath9k_hw_reset);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f0798cc..566a4ce 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -686,7 +686,7 @@ struct ath_hw_ops {
+ 			struct ath_hw_antcomb_conf *antconf);
+ 	void (*antdiv_comb_conf_set)(struct ath_hw *ah,
+ 			struct ath_hw_antcomb_conf *antconf);
+-
++	void (*antctrl_shared_chain_lnadiv)(struct ath_hw *hw, bool enable);
+ };
+ 
+ struct ath_nf_limits {
+@@ -730,6 +730,7 @@ struct ath_hw {
+ 	bool aspm_enabled;
+ 	bool is_monitoring;
+ 	bool need_an_top2_fixup;
++	bool shared_chain_lnadiv;
+ 	u16 tx_trig_level;
+ 
+ 	u32 nf_regs[6];
+-- 
+1.7.12
 
-No warning, nothing in the logs, but pinging my router I get
-things like:
---- 192.168.0.1 ping statistics ---
-376 packets transmitted, 315 received, +33 errors, 16% packet loss, time 405164ms
-rtt min/avg/max/mdev = 0.873/10077.793/95935.698/25387.102 ms, pipe 68
-
-or
---- 192.168.0.1 ping statistics ---
-1252 packets transmitted, 1225 received, 2% packet loss, time 1252976ms
-rtt min/avg/max/mdev = 0.941/764.171/19929.265/2758.225 ms, pipe 20
-
-
-Has anyone *ever* seen a mdev of 25387.102 ms ???
-
-At the same time I am pinging the same router from an iphone with a 
-steady stream of 40ms or so, no problem whatsoever ...
-
-$ lspci -v -s 03:00.0
-03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller (rev 10)
-	Subsystem: Realtek Semiconductor Co., Ltd. Device e020
-	Flags: bus master, fast devsel, latency 0, IRQ 17
- 	I/O ports at 2000 [size=256]
- 	Memory at f0500000 (32-bit, non-prefetchable) [size=16K]
- 	Capabilities: [40] Power Management version 3
- 	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
- 	Capabilities: [70] Express Legacy Endpoint, MSI 00
- 	Capabilities: [100] Advanced Error Reporting
- 	Capabilities: [140] Virtual Channel
- 	Capabilities: [160] Device Serial Number 88-55-22-fe-ff-4c-e0-00
- 	Kernel driver in use: rtl8192se
-
-That is with git from yesterday or so.
-
-Best wishes
-
-Norbert
-
-----------------------------------------------------------------------------
-Norbert Preining                preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                   TeX Live and Debian Developer
-gpg DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-----------------------------------------------------------------------------
-`Ford, you're turning into a penguin. Stop it.'
-                 --- Arthur experiences the improbability drive at work.
-                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
