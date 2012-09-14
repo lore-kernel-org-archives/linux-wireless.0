@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48047 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24488 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754969Ab2IJDve (ORCPT
+	with ESMTP id S1758675Ab2INJ0j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Sep 2012 23:51:34 -0400
+	Fri, 14 Sep 2012 05:26:39 -0400
 From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20557.25487.319650.209875@gargle.gargle.HOWL> (sfid-20120910_055151_924007_C497C2E9)
-Date: Mon, 10 Sep 2012 09:20:39 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 7/7] ath9k: Add PCI ID for AR9565
+Message-ID: <20562.63507.607989.546536@gargle.gargle.HOWL> (sfid-20120914_112643_729886_75D4F6C0)
+Date: Fri, 14 Sep 2012 14:55:39 +0530
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Sujith Manoharan <c_manoha@qualcomm.com>, <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 7/8] ath9k: Add a module parameter to enable diversity for
+In-Reply-To: <CAD2nsn0paBt4YyyCp0-iuJ9xxQctRhdL+TtVh1bovM2WMt4MzQ@mail.gmail.com>
+References: <20562.57519.298444.874991@gargle.gargle.HOWL>
+	<CAD2nsn0paBt4YyyCp0-iuJ9xxQctRhdL+TtVh1bovM2WMt4MzQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable AR9565.
+Mohammed Shafi wrote:
+> > +static int ath9k_enable_diversity;
+> > +module_param_named(enable_diversity, ath9k_enable_diversity, int, 0444);
+> > +MODULE_PARM_DESC(enable_diversity, "Enable Antenna diversity for AR9565");
+> 
+> is it specific for AR9565 alone, we have AR9285, AR9485 .
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/pci.c | 1 +
- 1 file changed, 1 insertion(+)
+For AR9565 only, this is needed because we are sharing the BT antenna.
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index a978984..a8f6126 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -38,6 +38,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
-+	{ PCI_VDEVICE(ATHEROS, 0x0036) }, /* PCI-E  AR9565 */
- 	{ 0 }
- };
- 
--- 
-1.7.12
-
+Sujith
