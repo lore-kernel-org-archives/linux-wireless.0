@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:44284 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512Ab2IDRVN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 13:21:13 -0400
-Date: Tue, 4 Sep 2012 10:20:57 -0700
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: mac80211: support P2P Device abstraction
-Message-ID: <20120904172057.GB19410@mwanda> (sfid-20120904_192116_370111_5CCA1636)
-References: <20120904161319.GA11494@elgon.mountain>
- <1346775525.3737.36.camel@jlt4.sipsolutions.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:4209 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752203Ab2IOJUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Sep 2012 05:20:06 -0400
+Message-ID: <50544830.4020804@broadcom.com> (sfid-20120915_112101_610212_BC0E5EA3)
+Date: Sat, 15 Sep 2012 11:19:44 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1346775525.3737.36.camel@jlt4.sipsolutions.net>
+To: "Stephen Warren" <swarren@wwwdotorg.org>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>, "Wei Ni" <wni@nvidia.com>
+Subject: Re: [PATCH 07/10] brcmfmac: clear status for in-band interrupt
+ in brcmf_sdbrcm_isr
+References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
+ <1347563526-12513-8-git-send-email-arend@broadcom.com>
+ <5053A74D.6080200@wwwdotorg.org>
+In-Reply-To: <5053A74D.6080200@wwwdotorg.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 04, 2012 at 06:18:45PM +0200, Johannes Berg wrote:
-> Hi Dan,
-> 
-> > The patch f142c6b906da: "mac80211: support P2P Device abstraction" 
-> > from Jun 18, 2012, leads to the following Smatch complaint:
-> > 
-> > net/mac80211/iface.c:1168 ieee80211_setup_sdata()
-> > 	 error: we previously assumed 'sdata->dev' could be null (see line 1134)
-> > 
-> > net/mac80211/iface.c
-> >   1133		/* only monitor/p2p-device differ */
-> >   1134		if (sdata->dev) {
-> >                     ^^^^^^^^^^
-> > New test.
-> > 
-> >   1135			sdata->dev->netdev_ops = &ieee80211_dataif_ops;
-> >   1136			sdata->dev->type = ARPHRD_ETHER;
-> >   1137		}
-> > 
-> > [snip]
-> > 
-> >   1167		case NL80211_IFTYPE_MONITOR:
-> >   1168			sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
-> >                         ^^^^^^^^^^^^
-> > Old dereference.
-> 
-> Thanks. I'm aware of the warning (I run smatch), but sdata->dev can only
-> be NULL in "case NL80211_IFTYPE_P2P_DEVICE", so adding an extra check in
-> the monitor case didn't seem worthwhile.
-> 
-> It might have been better to use sdata->vif.type != P2P_DEVICE in the
-> new test I guess, but then it wouldn't be extensible to new interface
-> types like Bluetooth AMP.
+On 09/14/2012 11:53 PM, Stephen Warren wrote:
+> On 09/13/2012 01:12 PM, Arend van Spriel wrote:
+>> From: Franky Lin <frankyl@broadcom.com>
+>>
+>> SDIO in-band interrupt is level sensitive according to SDIO standard.
+>> When the register interrupt handler gets called by SDIO stack it is
+>> running in non interrupt context and expected to clear the interrupt
+>> from the dongle. Therefore in-band and out-of-band interrupt need to
+>> be handled differently.
+>
+> Tested-by: Stephen Warren <swarren@wwwdotorg.org>
+>
+> For reference, I took next-20120914, applied this patch series, applied
+> a few patches from Wei Ni to set up the SDIO HW on Tegra correctly, and
+> tested. The last time I tried this without any patches to the brcmfmac,
+> this test caused some system instability issues. This time around, I
+> observed no instability. I tested WPA PSK, ping (or flood ping) plus
+> playing audio through ALSA.
+>
+> Is this series likely to make 3.7?
+>
 
-Gar.  This was my bad.  I didn't realize the warning was so old.  I
-try to only send the automatic emails for new warnings.  I have been
-meaning to fix the bug in my script for a while now but this time
-I will really do that.
+Thanks, Stephen
 
-regards,
-dan carpenter
+Good to hear. I suspect we are close to the 3.7 merge window, but we do 
+hope this will make it mainly for the tegra sdio issue that Wei Ni 
+raised. In general the series should resolve issues when used on 
+sdhci/mmc framework with in-band interrupt.
+
+Do you still need the patches from Wei Ni and are they SDIO or brcmfmac 
+related?
+
+Gr. AvS
 
