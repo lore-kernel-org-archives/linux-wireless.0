@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:52946 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752628Ab2ISALw (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47005 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859Ab2IOBHw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2012 20:11:52 -0400
-Date: Tue, 18 Sep 2012 21:11:43 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2012-09-18
-Message-ID: <20120919001143.GD24689@joana> (sfid-20120919_021211_027566_26C70F07)
+	Fri, 14 Sep 2012 21:07:52 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20563.54449.930282.825384@gargle.gargle.HOWL> (sfid-20120915_030802_936658_184EC9FA)
+Date: Sat, 15 Sep 2012 06:36:57 +0530
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	<linux-wireless@vger.kernel.org>, <backports@vger.kernel.org>
+Subject: Re: [PATCH 1/4] compat-drivers: update pending-stable patches.
+In-Reply-To: <CAB=NE6UG647WMS7kW=xEFgU=PGMq7fdt7G0k_8sMqkkS9sZkcw@mail.gmail.com>
+References: <1347637262-27782-1-git-send-email-bkamatch@qca.qualcomm.com>
+	<CAB=NE6WBLusFkQP-a9mCxM2Hu-NyWvUiF8iALY6YvvbV81eKNg@mail.gmail.com>
+	<CAB=NE6XYjYrRSA8Xupu21GWoCd-jv63ic32Q3rP7YiVHajTWTg@mail.gmail.com>
+	<CAB=NE6UG647WMS7kW=xEFgU=PGMq7fdt7G0k_8sMqkkS9sZkcw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Luis R. Rodriguez wrote:
+> So based on what I think you described you only want these two hunks
+> from that patch... to avoid regressions possibly caused by Felix'
+> other changes.
 
-Here goes probably my last update to 3.6. It includes the two patches you
-were ok last week(from Andrzej Kaczmarek), those are critical ones, and two
-other fixes one for a system crash and the other for a missing lockdep
-annotation.
+This will not cause any regression for AR9462 because the patch does this:
 
-Please pull or let me know of any problems!
+       if (!AR_SREV_9300(ah))
+               return;
 
-	Gustavo
+I think all this confusion would have been avoided if the 3.5.y patches had
+just backported Felix's patch. :)
 
----
-The following changes since commit e020a83d0942a5aceac35986500c9834efc8707d:
-
-  brcmfmac: Fix big endian host configuration data. (2012-09-12 14:15:31 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-
-for you to fetch changes up to 78c04c0bf52360dc2f7185e99c8e9aa05d73ae5a:
-
-  Bluetooth: Fix not removing power_off delayed work (2012-09-18 20:13:02 -0300)
-
-----------------------------------------------------------------
-Andrei Emeltchenko (1):
-      Bluetooth: Fix freeing uninitialized delayed works
-
-Andrzej Kaczmarek (2):
-      Bluetooth: mgmt: Fix enabling SSP while powered off
-      Bluetooth: mgmt: Fix enabling LE while powered off
-
-Vinicius Costa Gomes (1):
-      Bluetooth: Fix not removing power_off delayed work
-
- net/bluetooth/hci_core.c   |  2 ++
- net/bluetooth/l2cap_core.c |  2 +-
- net/bluetooth/mgmt.c       | 16 ++++++++++++++++
- 3 files changed, 19 insertions(+), 1 deletion(-)
-
+Sujith
