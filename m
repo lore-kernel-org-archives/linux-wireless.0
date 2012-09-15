@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33479 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754729Ab2I0PTX (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:54148 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650Ab2IORMN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 11:19:23 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC/RFT] ath9k: Advertize beacon_int_infra_match
-Date: Thu, 27 Sep 2012 20:48:51 +0530
-Message-ID: <1348759131-6998-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120927_171926_598073_37A93267)
+	Sat, 15 Sep 2012 13:12:13 -0400
+Message-ID: <5054B6EB.3010608@wwwdotorg.org> (sfid-20120915_191217_580774_C49EBA0E)
+Date: Sat, 15 Sep 2012 11:12:11 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>, Wei Ni <wni@nvidia.com>
+Subject: Re: [PATCH 07/10] brcmfmac: clear status for in-band interrupt in
+ brcmf_sdbrcm_isr
+References: <1347563526-12513-1-git-send-email-arend@broadcom.com> <1347563526-12513-8-git-send-email-arend@broadcom.com> <5053A74D.6080200@wwwdotorg.org> <50544830.4020804@broadcom.com>
+In-Reply-To: <50544830.4020804@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 09/15/2012 03:19 AM, Arend van Spriel wrote:
+> On 09/14/2012 11:53 PM, Stephen Warren wrote:
+>> On 09/13/2012 01:12 PM, Arend van Spriel wrote:
+>>> From: Franky Lin <frankyl@broadcom.com>
+>>>
+>>> SDIO in-band interrupt is level sensitive according to SDIO standard.
+>>> When the register interrupt handler gets called by SDIO stack it is
+>>> running in non interrupt context and expected to clear the interrupt
+>>> from the dongle. Therefore in-band and out-of-band interrupt need to
+>>> be handled differently.
+>>
+>> Tested-by: Stephen Warren <swarren@wwwdotorg.org>
+>>
+>> For reference, I took next-20120914, applied this patch series, applied
+>> a few patches from Wei Ni to set up the SDIO HW on Tegra correctly, and
+>> tested. The last time I tried this without any patches to the brcmfmac,
+>> this test caused some system instability issues. This time around, I
+>> observed no instability. I tested WPA PSK, ping (or flood ping) plus
+>> playing audio through ALSA.
+>>
+>> Is this series likely to make 3.7?
+>>
+> 
+> Thanks, Stephen
+> 
+> Good to hear. I suspect we are close to the 3.7 merge window, but we do
+> hope this will make it mainly for the tegra sdio issue that Wei Ni
+> raised. In general the series should resolve issues when used on
+> sdhci/mmc framework with in-band interrupt.
+> 
+> Do you still need the patches from Wei Ni and are they SDIO or brcmfmac
+> related?
 
-Currently ath9k need to have beacon interval matched
-between STA mode and beaconing mode. Advertize this
-through interface combinations. Need to test this
-properly.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index fad3ccd..546bae9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -687,6 +687,7 @@ static const struct ieee80211_iface_combination if_comb = {
- 	.n_limits = ARRAY_SIZE(if_limits),
- 	.max_interfaces = 2048,
- 	.num_different_channels = 1,
-+	.beacon_int_infra_match = true,
- };
- 
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
--- 
-1.7.0.4
+Some patches are needed, but they're all for Tegra-specific code to
+configure the pinmux, GPIO, etc. on the Tegra SoC in order to correctly
+communicate with the SDIO port, and to enable the controller. No patches
+are required to the brcmfmac driver.
 
