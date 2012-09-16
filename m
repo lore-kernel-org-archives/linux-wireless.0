@@ -1,83 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49391 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752216Ab2IITIe (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47533 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011Ab2IPChd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Sep 2012 15:08:34 -0400
-Message-ID: <1347217703.7709.64.camel@deadeye.wl.decadent.org.uk> (sfid-20120909_210838_584317_C54D4825)
-Subject: Re: linux-firmware updates for Marvell wifi
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Daniel Drake <dsd@laptop.org>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	libertas-dev@lists.infradead.org
-Date: Sun, 09 Sep 2012 20:08:23 +0100
-In-Reply-To: <CAMLZHHTtJZZ4a0MJAUTPdwgdEX4zcSmR8ZU57bjwAF1ksre+5A@mail.gmail.com>
-References: <CAMLZHHTtJZZ4a0MJAUTPdwgdEX4zcSmR8ZU57bjwAF1ksre+5A@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-K6wxoI5dVEMZQIIF+fZZ"
-Mime-Version: 1.0
+	Sat, 15 Sep 2012 22:37:33 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20565.15156.919463.834590@gargle.gargle.HOWL> (sfid-20120916_043737_068931_33196602)
+Date: Sun, 16 Sep 2012 08:06:36 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/8] ath9k_hw: Add a HW callback to set diversity
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds a new callback to handle WLAN RX diversity for
+AR9565.
 
---=-K6wxoI5dVEMZQIIF+fZZ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 60 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 24 +++++++++++
+ drivers/net/wireless/ath/ath9k/hw-ops.h        |  7 +++
+ drivers/net/wireless/ath/ath9k/hw.c            |  4 ++
+ drivers/net/wireless/ath/ath9k/hw.h            |  3 +-
+ 6 files changed, 107 insertions(+), 1 deletion(-)
 
-On Thu, 2012-08-30 at 19:02 -0600, Daniel Drake wrote:
-> Hi,
->=20
-> Please pull from git://dev.laptop.org/users/dsd/linux-firmware (master
-> branch) to receive 2 firmware updates for Marvell wifi hardware
-> shipped in OLPC laptops:
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index bfd2055..5bbe505 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3633,6 +3633,16 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		/* enable_lnadiv */
+ 		regval &= (~AR_PHY_ANT_DIV_LNADIV);
+ 		regval |= ((value >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
++
++		if (AR_SREV_9565(ah)) {
++			if (ah->shared_chain_lnadiv) {
++				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
++			} else {
++				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
++				regval &= ~(1 << AR_PHY_ANT_SW_RX_PROT_S);
++			}
++		}
++
+ 		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
+ 
+ 		/*enable fast_div */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 4b503ee..1c6aadb 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1328,6 +1328,65 @@ static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
+ }
+ 
++static void ar9003_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
++						  bool enable)
++{
++	u8 ant_div_ctl1;
++	u32 regval;
++
++	if (!AR_SREV_9565(ah))
++		return;
++
++	ah->shared_chain_lnadiv = enable;
++	ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
++
++	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
++	regval &= (~AR_ANT_DIV_CTRL_ALL);
++	regval |= (ant_div_ctl1 & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
++	regval &= ~AR_PHY_ANT_DIV_LNADIV;
++	regval |= ((ant_div_ctl1 >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
++
++	if (enable)
++		regval |= AR_ANT_DIV_ENABLE;
++
++	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
++
++	regval = REG_READ(ah, AR_PHY_CCK_DETECT);
++	regval &= ~AR_FAST_DIV_ENABLE;
++	regval |= ((ant_div_ctl1 >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
++
++	if (enable)
++		regval |= AR_FAST_DIV_ENABLE;
++
++	REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
++
++	if (enable) {
++		REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
++			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
++		if (IS_CHAN_2GHZ(ah->curchan))
++			REG_SET_BIT(ah, AR_PHY_RESTART,
++				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
++		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
++			    AR_BTCOEX_WL_LNADIV_FORCE_ON);
++	} else {
++		REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE);
++		REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
++			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
++		REG_CLR_BIT(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE);
++		REG_CLR_BIT(ah, AR_BTCOEX_WL_LNADIV,
++			    AR_BTCOEX_WL_LNADIV_FORCE_ON);
++
++		regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
++		regval &= ~(AR_PHY_ANT_DIV_MAIN_LNACONF |
++			AR_PHY_ANT_DIV_ALT_LNACONF |
++			AR_PHY_ANT_DIV_MAIN_GAINTB |
++			AR_PHY_ANT_DIV_ALT_GAINTB);
++		regval |= (AR_PHY_ANT_DIV_LNA1 << AR_PHY_ANT_DIV_MAIN_LNACONF_S);
++		regval |= (AR_PHY_ANT_DIV_LNA2 << AR_PHY_ANT_DIV_ALT_LNACONF_S);
++		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
++	}
++}
++
+ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
+ 				      struct ath9k_channel *chan,
+ 				      u8 *ini_reloaded)
+@@ -1426,6 +1485,7 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ 
+ 	ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
+ 	ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
++	ops->antctrl_shared_chain_lnadiv = ar9003_hw_antctrl_shared_chain_lnadiv;
+ 
+ 	ar9003_hw_set_nf_limits(ah);
+ 	ar9003_hw_set_radar_conf(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index fdabc9a..9a48e3d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -282,6 +282,8 @@
+ 
+ #define AR_PHY_ANT_FAST_DIV_BIAS                0x00007e00
+ #define AR_PHY_ANT_FAST_DIV_BIAS_S              9
++#define AR_PHY_ANT_SW_RX_PROT                   0x00800000
++#define AR_PHY_ANT_SW_RX_PROT_S                 23
+ #define AR_PHY_ANT_DIV_LNADIV                   0x01000000
+ #define AR_PHY_ANT_DIV_LNADIV_S                 24
+ #define AR_PHY_ANT_DIV_ALT_LNACONF              0x06000000
+@@ -422,6 +424,8 @@
+ #define AR_PHY_FIND_SIG_RELSTEP        0x1f
+ #define AR_PHY_FIND_SIG_RELSTEP_S         0
+ #define AR_PHY_FIND_SIG_RELSTEP_SIGN_BIT  5
++#define AR_PHY_RESTART_ENABLE_DIV_M2FLAG 0x00200000
++#define AR_PHY_RESTART_ENABLE_DIV_M2FLAG_S 21
+ #define AR_PHY_RESTART_DIV_GC   0x001C0000
+ #define AR_PHY_RESTART_DIV_GC_S 18
+ #define AR_PHY_RESTART_ENA      0x01
+@@ -1261,4 +1265,24 @@
+ #define AR_PHY_CL_TAB_CL_GAIN_MOD		0x1f
+ #define AR_PHY_CL_TAB_CL_GAIN_MOD_S		0
+ 
++#define AR_BTCOEX_WL_LNADIV                                0x1a64
++#define AR_BTCOEX_WL_LNADIV_PREDICTED_PERIOD               0x00003FFF
++#define AR_BTCOEX_WL_LNADIV_PREDICTED_PERIOD_S             0
++#define AR_BTCOEX_WL_LNADIV_DPDT_IGNORE_PRIORITY           0x00004000
++#define AR_BTCOEX_WL_LNADIV_DPDT_IGNORE_PRIORITY_S         14
++#define AR_BTCOEX_WL_LNADIV_FORCE_ON                       0x00008000
++#define AR_BTCOEX_WL_LNADIV_FORCE_ON_S                     15
++#define AR_BTCOEX_WL_LNADIV_MODE_OPTION                    0x00030000
++#define AR_BTCOEX_WL_LNADIV_MODE_OPTION_S                  16
++#define AR_BTCOEX_WL_LNADIV_MODE                           0x007c0000
++#define AR_BTCOEX_WL_LNADIV_MODE_S                         18
++#define AR_BTCOEX_WL_LNADIV_ALLOWED_TX_ANTDIV_WL_TX_REQ    0x00800000
++#define AR_BTCOEX_WL_LNADIV_ALLOWED_TX_ANTDIV_WL_TX_REQ_S  23
++#define AR_BTCOEX_WL_LNADIV_DISABLE_TX_ANTDIV_ENABLE       0x01000000
++#define AR_BTCOEX_WL_LNADIV_DISABLE_TX_ANTDIV_ENABLE_S     24
++#define AR_BTCOEX_WL_LNADIV_CONTINUOUS_BT_ACTIVE_PROTECT   0x02000000
++#define AR_BTCOEX_WL_LNADIV_CONTINUOUS_BT_ACTIVE_PROTECT_S 25
++#define AR_BTCOEX_WL_LNADIV_BT_INACTIVE_THRESHOLD          0xFC000000
++#define AR_BTCOEX_WL_LNADIV_BT_INACTIVE_THRESHOLD_S        26
++
+ #endif  /* AR9003_PHY_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 265bf77..0f2b97f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -78,6 +78,13 @@ static inline void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
+ 	ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
+ }
+ 
++static inline void ath9k_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
++							bool enable)
++{
++	if (ath9k_hw_ops(ah)->antctrl_shared_chain_lnadiv)
++		ath9k_hw_ops(ah)->antctrl_shared_chain_lnadiv(ah, enable);
++}
++
+ /* Private hardware call ops */
+ 
+ /* PHY ops */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 40f57aa..c562f13 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -24,6 +24,7 @@
+ #include "rc.h"
+ #include "ar9003_mac.h"
+ #include "ar9003_mci.h"
++#include "ar9003_phy.h"
+ #include "debug.h"
+ #include "ath9k.h"
+ 
+@@ -2025,6 +2026,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	ath9k_hw_apply_gpio_override(ah);
+ 
++	if (AR_SREV_9565(ah) && ah->shared_chain_lnadiv)
++		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV, AR_BTCOEX_WL_LNADIV_FORCE_ON);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(ath9k_hw_reset);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f0798cc..566a4ce 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -686,7 +686,7 @@ struct ath_hw_ops {
+ 			struct ath_hw_antcomb_conf *antconf);
+ 	void (*antdiv_comb_conf_set)(struct ath_hw *ah,
+ 			struct ath_hw_antcomb_conf *antconf);
+-
++	void (*antctrl_shared_chain_lnadiv)(struct ath_hw *hw, bool enable);
+ };
+ 
+ struct ath_nf_limits {
+@@ -730,6 +730,7 @@ struct ath_hw {
+ 	bool aspm_enabled;
+ 	bool is_monitoring;
+ 	bool need_an_top2_fixup;
++	bool shared_chain_lnadiv;
+ 	u16 tx_trig_level;
+ 
+ 	u32 nf_regs[6];
+-- 
+1.7.12
 
-Pulled, thanks.
-
-Ben.
-
-> commit bac3567cdb38d5cfcf3045718618026d60478d05
-> Author: Daniel Drake <dsd@laptop.org>
-> Date:   Thu Aug 30 18:19:45 2012 -0600
->=20
->     Marvell SD8787: update to v14.66.9.p96
->=20
-> commit 6a08d149c162cbca574f9e586b2c2f46beb866ac
-> Author: Daniel Drake <dsd@laptop.org>
-> Date:   Thu Aug 30 11:31:06 2012 -0600
->=20
->     Marvell SD8686: update to v9.70.20.p0
->=20
-> Thanks
-> Daniel
->=20
-
---=20
-Ben Hutchings
-Time is nature's way of making sure that everything doesn't happen at once.
-
---=-K6wxoI5dVEMZQIIF+fZZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUEzpJ+e/yOyVhhEJAQrvwQ/8DrMJCtrBUSwnbuUiBCa5Zh0ijRylvCbp
-4v231q1vk1Cznz6P2FCp0/I1ESt5YaVM/3JCUvCh3IVNSkMU2ryxXKE9ZJP+1J21
-EUM7mMfSrt0mkARZFM5mufGdPTy+MnCRglUHOllosDzTicZraetSvVaRAe7lajTz
-41nBoT6qtNxyH+ngpW31nnF96vT8q4hlz7b/ckn0FEdi/jWU+iSZGfwZ7mDYFI5X
-e2iIhQlOvp8f7hfWi3tfzXfXGVPnzMr9cdAt2FUToTlKiiMgPAMQ/t1TTtC3YWVj
-UeRYWdhv3akNdYGv5purY8Q3+cyo68xqGo2txBi3tlxTUAgqpnRgEaFEyv7D/G7N
-3FRiJssBrcDf+lgVFsllVKOHc/uh1N+1DlLX5KrNBBJfUM7RwDspN8EsgBg51D8z
-SSRSVJ2ZCPYWyMYR5aFZPfLh72QXhmheYlMw48YchvJ2pkF/aE34HKvWqSsF8AFi
-4LC/Cp0J+M98VCkjHxns30QaaCOvuGNiiNiPpI/Sg/7mqdJovc8KIIH9enuw4+Cq
-qhx/CC9sOj6lP8tdBNWN5b5n62f8RWayhX2d1nnfSsUSxDjZmOeyLl62tn9c+UPH
-8y0S+wBnAuzVwuzPY16z3cabMJUBZB17Yp3kb6QMvxYjF63t7e/uuXg7g5KlGjZW
-ve6jiOHASM8=
-=Yvra
------END PGP SIGNATURE-----
-
---=-K6wxoI5dVEMZQIIF+fZZ--
