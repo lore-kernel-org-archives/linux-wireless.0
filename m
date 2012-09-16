@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5448 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756123Ab2ISAZg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2012 20:25:36 -0400
-Date: Wed, 19 Sep 2012 02:25:20 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Cong Wang <amwang@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Cong Wang <xiyou.wangcong@gmail.com>
-Subject: Re: [Patch] nfc: remove the pn544 raw driver
-Message-ID: <20120919002520.GE3647@sortiz-mobl> (sfid-20120919_022542_128322_B4C68B10)
-References: <1345911978-24321-1-git-send-email-amwang@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1345911978-24321-1-git-send-email-amwang@redhat.com>
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:2043 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752608Ab2IPU35 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Sep 2012 16:29:57 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 4/5] rt2x00: Code style cleanup in rt2800lib.c
+Date: Sun, 16 Sep 2012 22:29:52 +0200
+Message-Id: <1347827393-26948-5-git-send-email-gwingerde@gmail.com> (sfid-20120916_223055_515658_FC78F0F0)
+In-Reply-To: <1347827393-26948-4-git-send-email-gwingerde@gmail.com>
+References: <1347827393-26948-1-git-send-email-gwingerde@gmail.com>
+ <1347827393-26948-2-git-send-email-gwingerde@gmail.com>
+ <1347827393-26948-3-git-send-email-gwingerde@gmail.com>
+ <1347827393-26948-4-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cong,
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-On Sun, Aug 26, 2012 at 12:26:18AM +0800, Cong Wang wrote:
-> From: Cong Wang <xiyou.wangcong@gmail.com>
-> 
-> It is scheduled to be removed in 3.6.
-We're late :)
-Thanks, patch applied.
-
-Cheers,
-Samuel.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 37f64ba..d745c32 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3090,7 +3090,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+ 	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
+-			   rt2x00_rt(rt2x00dev, RT5392)) {
++		   rt2x00_rt(rt2x00dev, RT5392)) {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.11.1
+
