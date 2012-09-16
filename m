@@ -1,34 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37085 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17600 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752157Ab2IZHa4 (ORCPT
+	with ESMTP id S1750865Ab2IPCgW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 03:30:56 -0400
+	Sat, 15 Sep 2012 22:36:22 -0400
 From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20578.44784.141822.850065@gargle.gargle.HOWL> (sfid-20120926_093100_556510_54660B65)
-Date: Wed, 26 Sep 2012 12:59:52 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Sujith Manoharan <c_manoha@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: Notify new IBSS network creation
-In-Reply-To: <1348643666.10548.2.camel@jlt4.sipsolutions.net>
-References: <20578.31128.207010.660580@gargle.gargle.HOWL>
-	<1348643666.10548.2.camel@jlt4.sipsolutions.net>
+Message-ID: <20565.15083.665319.997662@gargle.gargle.HOWL> (sfid-20120916_043627_266685_3AF0A5F9)
+Date: Sun, 16 Sep 2012 08:05:23 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/8] ath9k_hw: Use HW cap ATH9K_HW_CAP_ANT_DIV_COMB
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Interesting, I guess this makes sense. Never seemed to come up, maybe it
-> doesn't matter all that much since we sync once we receive some other
-> beacon, so worst case we just transmit a few spuriously?
+Instead of trying to determine whether antenna diversity is
+enabled by parsing eeprom data, use ATH9K_HW_CAP_ANT_DIV_COMB
+which is already filled at init time.
 
-Yes, that was the reported problem:
-http://www.spinics.net/lists/linux-wireless/msg96846.html
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-ath9k programs the TBTT timers etc. based on the HW TSF, but this needs to
-be done after a sync has been done (in joiner mode, that is). We do it for
-station mode, but IBSS needs to fixed.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 884f9f0..bfd2055 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3566,9 +3566,9 @@ static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah, int chain,
+ 
+ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ {
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	int chain;
+ 	u32 regval;
+-	u32 ant_div_ctl1;
+ 	static const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
+ 			AR_PHY_SWITCH_CHAIN_0,
+ 			AR_PHY_SWITCH_CHAIN_1,
+@@ -3640,9 +3640,8 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		regval &= (~AR_FAST_DIV_ENABLE);
+ 		regval |= ((value >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
+ 		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
+-		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
+-		/* check whether antenna diversity is enabled */
+-		if ((ant_div_ctl1 >> 0x6) == 0x3) {
++
++		if (pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
+ 			regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
+ 			/*
+ 			 * clear bits 25-30 main_lnaconf, alt_lnaconf,
+@@ -3659,10 +3658,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 				   AR_PHY_ANT_DIV_ALT_LNACONF_S);
+ 			REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
+ 		}
+-
+-
+ 	}
+-
+ }
+ 
+ static void ar9003_hw_drive_strength_apply(struct ath_hw *ah)
+-- 
+1.7.12
 
-Sujith
