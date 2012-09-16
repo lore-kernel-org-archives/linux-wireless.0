@@ -1,45 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:50195 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202Ab2ITGdD convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13847 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841Ab2IPChS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 02:33:03 -0400
-Received: by qcro28 with SMTP id o28so1467746qcr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2012 23:33:02 -0700 (PDT)
+	Sat, 15 Sep 2012 22:37:18 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6ryRXB6GjymaP-RM8HTEeWRHnE8B=5tdH3J4JGyeHBEE6Q@mail.gmail.com>
-References: <1348053493-22955-1-git-send-email-jarl@softace.dk>
- <1348053493-22955-2-git-send-email-jarl@softace.dk> <CAOjsGA2uvCxnX1PH85w2vO894kZT+af-Tgj7bV-3kw3ScxN10g@mail.gmail.com>
- <CACna6ryRXB6GjymaP-RM8HTEeWRHnE8B=5tdH3J4JGyeHBEE6Q@mail.gmail.com>
-From: Jarl Friis <jarl@softace.dk>
-Date: Thu, 20 Sep 2012 08:32:42 +0200
-Message-ID: <CAOjsGA3cmuGHY1WAJ92RwbUf1iNpFHaSvePxvzSYxkY1FJzjkw@mail.gmail.com> (sfid-20120920_083309_017338_235BA308)
-Subject: Re: [PATCH 2/2] Using LP firmware for taking advantage of the
- low-power capabilities.
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, "John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20565.15142.408729.722753@gargle.gargle.HOWL> (sfid-20120916_043723_376036_62B3AA34)
+Date: Sun, 16 Sep 2012 08:06:22 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/8] ath9k_hw: Update AR9565 initvals
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/9/20 Rafał Miłecki <zajec5@gmail.com>:
-> Well, your BCM4322 is not LP-PHY card... does it really work better
-> after that change, and wakes up faster? ;)
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   | 100 ++++++++++-----------
+ 1 file changed, 49 insertions(+), 51 deletions(-)
 
-That was my un-scientific impression, yes (probably biased by
-expectations, right? :-) ). But it could also be that I was using a
-more upstream kernel than the stock ubuntu kernel. I don't know :-)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+index fa9e093..843e79f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+@@ -58,8 +58,6 @@ static const u32 ar9565_1p0_mac_core[][2] = {
+ 	{0x00008040, 0x00000000},
+ 	{0x00008044, 0x00000000},
+ 	{0x00008048, 0x00000000},
+-	{0x0000804c, 0xffffffff},
+-	{0x00008050, 0xffffffff},
+ 	{0x00008054, 0x00000000},
+ 	{0x00008058, 0x00000000},
+ 	{0x0000805c, 0x000fc78f},
+@@ -246,7 +244,7 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	{0x00009e50, 0x00ff03f1},
+ 	{0x00009e54, 0xe4c355c7},
+ 	{0x00009e5c, 0xe9198724},
+-	{0x00009fc0, 0x823e4788},
++	{0x00009fc0, 0x823e4fc8},
+ 	{0x00009fc4, 0x0001efb5},
+ 	{0x00009fcc, 0x40000014},
+ 	{0x0000a20c, 0x00000000},
+@@ -291,7 +289,7 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	{0x0000a3ec, 0x20202020},
+ 	{0x0000a3f0, 0x00000000},
+ 	{0x0000a3f4, 0x00000006},
+-	{0x0000a3f8, 0x0cdbd380},
++	{0x0000a3f8, 0x0c9bd380},
+ 	{0x0000a3fc, 0x000f0f01},
+ 	{0x0000a400, 0x8fa91f01},
+ 	{0x0000a404, 0x00000000},
+@@ -355,11 +353,11 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+ 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
+-	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946222, 0xcf946222},
++	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946222, 0xcf946222},
+ 	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+-	{0x0000a204, 0x033187c0, 0x033187c4, 0x033187c4, 0x033187c0},
++	{0x0000a204, 0x07318fc0, 0x07318fc4, 0x07318fc4, 0x07318fc0},
+ 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
+ 	{0x0000a22c, 0x01026a2f, 0x01026a27, 0x01026a2f, 0x01026a2f},
+ 	{0x0000a230, 0x0000400a, 0x00004014, 0x00004016, 0x0000400b},
+@@ -375,9 +373,9 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
+ 	{0x0000a288, 0x00100510, 0x00100510, 0x00100510, 0x00100510},
+ 	{0x0000a28c, 0x00021551, 0x00021551, 0x00021551, 0x00021551},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2d0, 0x00071982, 0x00071982, 0x00071982, 0x00071982},
+-	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
++	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000ae04, 0x00800000, 0x00800000, 0x00800000, 0x00800000},
+ 	{0x0000ae18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+@@ -417,7 +415,7 @@ static const u32 ar9565_1p0_radio_core[][2] = {
+ 	{0x00016144, 0x02084080},
+ 	{0x00016148, 0x000080c0},
+ 	{0x00016280, 0x050a0001},
+-	{0x00016284, 0x3d841400},
++	{0x00016284, 0x3d841440},
+ 	{0x00016288, 0x00000000},
+ 	{0x0001628c, 0xe3000000},
+ 	{0x00016290, 0xa1004080},
+@@ -840,27 +838,27 @@ static const u32 ar9565_1p0_common_wo_xlna_rx_gain_table[][2] = {
+ 	{0x0000a0b4, 0x00000000},
+ 	{0x0000a0b8, 0x00000000},
+ 	{0x0000a0bc, 0x00000000},
+-	{0x0000a0c0, 0x301f3000},
+-	{0x0000a0c4, 0x41004101},
+-	{0x0000a0c8, 0x411e411f},
+-	{0x0000a0cc, 0x411c411d},
+-	{0x0000a0d0, 0x42434244},
+-	{0x0000a0d4, 0x42414242},
+-	{0x0000a0d8, 0x425f4240},
+-	{0x0000a0dc, 0x5342425e},
+-	{0x0000a0e0, 0x53405341},
+-	{0x0000a0e4, 0x535e535f},
+-	{0x0000a0e8, 0x7402535d},
+-	{0x0000a0ec, 0x74007401},
+-	{0x0000a0f0, 0x741e741f},
+-	{0x0000a0f4, 0x7522741d},
+-	{0x0000a0f8, 0x75207521},
+-	{0x0000a0fc, 0x753e753f},
+-	{0x0000a100, 0x76617662},
+-	{0x0000a104, 0x767f7660},
+-	{0x0000a108, 0x767d767e},
+-	{0x0000a10c, 0x77e277e3},
+-	{0x0000a110, 0x77e077e1},
++	{0x0000a0c0, 0x00bf00a0},
++	{0x0000a0c4, 0x11a011a1},
++	{0x0000a0c8, 0x11be11bf},
++	{0x0000a0cc, 0x11bc11bd},
++	{0x0000a0d0, 0x22632264},
++	{0x0000a0d4, 0x22612262},
++	{0x0000a0d8, 0x227f2260},
++	{0x0000a0dc, 0x4322227e},
++	{0x0000a0e0, 0x43204321},
++	{0x0000a0e4, 0x433e433f},
++	{0x0000a0e8, 0x4462433d},
++	{0x0000a0ec, 0x44604461},
++	{0x0000a0f0, 0x447e447f},
++	{0x0000a0f4, 0x5582447d},
++	{0x0000a0f8, 0x55805581},
++	{0x0000a0fc, 0x559e559f},
++	{0x0000a100, 0x66816682},
++	{0x0000a104, 0x669f6680},
++	{0x0000a108, 0x669d669e},
++	{0x0000a10c, 0x77627763},
++	{0x0000a110, 0x77607761},
+ 	{0x0000a114, 0x00000000},
+ 	{0x0000a118, 0x00000000},
+ 	{0x0000a11c, 0x00000000},
+@@ -872,27 +870,27 @@ static const u32 ar9565_1p0_common_wo_xlna_rx_gain_table[][2] = {
+ 	{0x0000a134, 0x00000000},
+ 	{0x0000a138, 0x00000000},
+ 	{0x0000a13c, 0x00000000},
+-	{0x0000a140, 0x301f3000},
+-	{0x0000a144, 0x41004101},
+-	{0x0000a148, 0x411e411f},
+-	{0x0000a14c, 0x411c411d},
+-	{0x0000a150, 0x42434244},
+-	{0x0000a154, 0x42414242},
+-	{0x0000a158, 0x425f4240},
+-	{0x0000a15c, 0x5342425e},
+-	{0x0000a160, 0x53405341},
+-	{0x0000a164, 0x535e535f},
+-	{0x0000a168, 0x7402535d},
+-	{0x0000a16c, 0x74007401},
+-	{0x0000a170, 0x741e741f},
+-	{0x0000a174, 0x7522741d},
+-	{0x0000a178, 0x75207521},
+-	{0x0000a17c, 0x753e753f},
+-	{0x0000a180, 0x76617662},
+-	{0x0000a184, 0x767f7660},
+-	{0x0000a188, 0x767d767e},
+-	{0x0000a18c, 0x77e277e3},
+-	{0x0000a190, 0x77e077e1},
++	{0x0000a140, 0x00bf00a0},
++	{0x0000a144, 0x11a011a1},
++	{0x0000a148, 0x11be11bf},
++	{0x0000a14c, 0x11bc11bd},
++	{0x0000a150, 0x22632264},
++	{0x0000a154, 0x22612262},
++	{0x0000a158, 0x227f2260},
++	{0x0000a15c, 0x4322227e},
++	{0x0000a160, 0x43204321},
++	{0x0000a164, 0x433e433f},
++	{0x0000a168, 0x4462433d},
++	{0x0000a16c, 0x44604461},
++	{0x0000a170, 0x447e447f},
++	{0x0000a174, 0x5582447d},
++	{0x0000a178, 0x55805581},
++	{0x0000a17c, 0x559e559f},
++	{0x0000a180, 0x66816682},
++	{0x0000a184, 0x669f6680},
++	{0x0000a188, 0x669d669e},
++	{0x0000a18c, 0x77627763},
++	{0x0000a190, 0x77607761},
+ 	{0x0000a194, 0x00000000},
+ 	{0x0000a198, 0x00000000},
+ 	{0x0000a19c, 0x00000000},
+-- 
+1.7.12
 
-> BCM4313 is LCN-PHY, so your change won't affect it, not to mention it
-> is not supported by b43.
->
-> 14e4:4315 is really BCM4312 (LP-PHY) and maybe could be affected by
-> this patch... but just in case of core 16. AFAIK our 14e4:4315 are
-> usually devices with core rev 15.
-
-Thanks for clearing that out...
-
-Jarl
