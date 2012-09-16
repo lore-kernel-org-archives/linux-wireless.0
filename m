@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:41709 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750935Ab2IJQiN (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8062 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750934Ab2IPCgu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 12:38:13 -0400
-Received: by eekc1 with SMTP id c1so1316649eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 09:38:11 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH 06/10] brcmfmac: fix big endian bug in i-scan.
-Date: Mon, 10 Sep 2012 18:37:32 +0200
-Message-ID: <3265895.MSDQPtTcs3@flexo> (sfid-20120910_183816_284163_5FCE82C4)
-In-Reply-To: <1347283018-24223-7-git-send-email-arend@broadcom.com>
-References: <1347283018-24223-1-git-send-email-arend@broadcom.com> <1347283018-24223-7-git-send-email-arend@broadcom.com>
+	Sat, 15 Sep 2012 22:36:50 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20565.15114.899770.736332@gargle.gargle.HOWL> (sfid-20120916_043653_039373_7A81D11C)
+Date: Sun, 16 Sep 2012 08:05:54 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/8] ath9k: Remove a couple of unused variables
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-On Monday 10 September 2012 15:16:54 Arend van Spriel wrote:
-> From: Hante Meuleman <meuleman@broadcom.com>
-> 
-> ssid len is 32 bit and needs endian conversion for big endian systems.
-> 
-> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 96b8331..df0a594 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -596,8 +596,6 @@ struct ath_ant_comb {
+ 	int main_conf;
+ 	enum ath9k_ant_div_comb_lna_conf first_quick_scan_conf;
+ 	enum ath9k_ant_div_comb_lna_conf second_quick_scan_conf;
+-	int first_bias;
+-	int second_bias;
+ 	bool first_ratio;
+ 	bool second_ratio;
+ 	unsigned long scan_start_time;
+-- 
+1.7.12
 
-This looks like a candidate for stable.
-
-> ---
->  .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c 
-b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> index 4a27ca0..6623f48 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> @@ -501,8 +501,10 @@ static void brcmf_iscan_prep(struct 
-brcmf_scan_params_le *params_le,
->  	params_le->active_time = cpu_to_le32(-1);
->  	params_le->passive_time = cpu_to_le32(-1);
->  	params_le->home_time = cpu_to_le32(-1);
-> -	if (ssid && ssid->SSID_len)
-> -		memcpy(&params_le->ssid_le, ssid, sizeof(struct brcmf_ssid));
-> +	if (ssid && ssid->SSID_len) {
-> +		params_le->ssid_le.SSID_len = cpu_to_le32(ssid->SSID_len);
-> +		memcpy(&params_le->ssid_le.SSID, ssid->SSID, ssid->SSID_len);
-> +	}
->  }
->  
->  static s32
-> -- 
-> 1.7.9.5
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
