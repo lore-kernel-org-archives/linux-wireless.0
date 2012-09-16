@@ -1,44 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35985 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774Ab2IJL1t (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44514 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894Ab2IPChF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 07:27:49 -0400
-Message-ID: <1347276502.4272.22.camel@jlt4.sipsolutions.net> (sfid-20120910_132752_605482_A5A8F3AB)
-Subject: Re: [RFC] cfg80211/nl80211: Notify connection request failure in AP
- mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Mon, 10 Sep 2012 13:28:22 +0200
-In-Reply-To: <1347274408-11949-1-git-send-email-c_ppitch@qca.qualcomm.com>
-References: <1347274408-11949-1-git-send-email-c_ppitch@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 15 Sep 2012 22:37:05 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20565.15128.420823.680669@gargle.gargle.HOWL> (sfid-20120916_043709_791596_5F435BAD)
+Date: Sun, 16 Sep 2012 08:06:08 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/8] ath9k_hw: Add antenna diversity group for AR9565
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-09-10 at 16:23 +0530, Pandiyarajan Pitchaimuthu wrote:
-> In AP mode, when a station requests connection to an AP and if the
-> request is failed for particular reason, userspace is notified about the
-> failure through NL80211_CMD_CONN_FAILED command. Reason for the failure
-> is sent through the attribute NL80211_ATTR_CONN_FAILED_REASON.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/antenna.c    | 62 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |  3 ++
+ 2 files changed, 65 insertions(+)
 
-Why would userspace care?
-
-> +/* AP mode - sta's connection request failed reasons */
-> +enum nl80211_connect_failed_reason {
-> +	NL80211_CONN_FAIL_MAX_CLIENTS		= 1,
-> +	NL80211_CONN_FAIL_BLOCKED_CLIENT	= 2,
-> +};
-
-Why number explicitly?
-
-> + * Whenever a station tries to connect to an AP and if the station
-> + * could not connect to the AP for some reason, this function is called.
-
-It's not really "for some reason", it's "because the AP rejected it for
-some reason"... You're not handling other cases anyway.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index eb61c6b..8eb274f 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -475,6 +475,68 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 		default:
+ 			break;
+ 		}
++	} else if (ant_conf->div_group == 3) {
++		switch ((ant_conf->main_lna_conf << 4) |
++			ant_conf->alt_lna_conf) {
++		case 0x01: /* A-B LNA2 */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		case 0x02: /* A-B LNA1 */
++			ant_conf->fast_div_bias = 0x39;
++			break;
++		case 0x03: /* A-B A+B */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		case 0x10: /* LNA2 A-B */
++			if ((antcomb->scan == 0) &&
++			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
++				ant_conf->fast_div_bias = 0x3f;
++			} else {
++				ant_conf->fast_div_bias = 0x1;
++			}
++			break;
++		case 0x12: /* LNA2 LNA1 */
++			ant_conf->fast_div_bias = 0x39;
++			break;
++		case 0x13: /* LNA2 A+B */
++			if ((antcomb->scan == 0) &&
++			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
++				ant_conf->fast_div_bias = 0x3f;
++			} else {
++				ant_conf->fast_div_bias = 0x1;
++			}
++			break;
++		case 0x20: /* LNA1 A-B */
++			if ((antcomb->scan == 0) &&
++			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
++				ant_conf->fast_div_bias = 0x3f;
++			} else {
++				ant_conf->fast_div_bias = 0x4;
++			}
++			break;
++		case 0x21: /* LNA1 LNA2 */
++			ant_conf->fast_div_bias = 0x6;
++			break;
++		case 0x23: /* LNA1 A+B */
++			if ((antcomb->scan == 0) &&
++			    (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)) {
++				ant_conf->fast_div_bias = 0x3f;
++			} else {
++				ant_conf->fast_div_bias = 0x6;
++			}
++			break;
++		case 0x30: /* A+B A-B */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		case 0x31: /* A+B LNA2 */
++			ant_conf->fast_div_bias = 0x6;
++			break;
++		case 0x32: /* A+B LNA1 */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		default:
++			break;
++		}
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 0d800c6..4b503ee 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1294,6 +1294,9 @@ static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
+ 	} else if (AR_SREV_9485(ah)) {
+ 		antconf->lna1_lna2_delta = -9;
+ 		antconf->div_group = 2;
++	} else if (AR_SREV_9565(ah)) {
++		antconf->lna1_lna2_delta = -3;
++		antconf->div_group = 3;
+ 	} else {
+ 		antconf->lna1_lna2_delta = -3;
+ 		antconf->div_group = 0;
+-- 
+1.7.12
 
