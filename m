@@ -1,78 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:62768 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336Ab2IEOIr (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32070 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894Ab2IPCiH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 10:08:47 -0400
-Received: by pbbrr13 with SMTP id rr13so986449pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2012 07:08:47 -0700 (PDT)
+	Sat, 15 Sep 2012 22:38:07 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com>
-References: <20120813165340.GA10044@pandem0nium>
-	<20120819220436.GA9899@pandem0nium>
-	<CAD2nsn0O+dfJLnKroRUJF6TEVWUmgwvriF7M+Oy4YL2ug0gSNA@mail.gmail.com>
-	<CAD2nsn2_V-p+8u0VSnkJnjtFF-+nkT=vOLCBqmK9+H=Sj=uhCA@mail.gmail.com>
-	<20120902200102.GA28313@pandem0nium>
-	<CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
-	<20120904171215.GA5953@pandem0nium>
-	<CAD2nsn1=q_YCXjQOLyc+KeG6Bji=7b_VHN4PDA7poXk5Kkdi6Q@mail.gmail.com>
-Date: Wed, 5 Sep 2012 07:08:47 -0700
-Message-ID: <CAJ-VmonwheNtv8xfEJnWpD-XOmSEebMFJAmQmWUfe2Pd3tMnqA@mail.gmail.com> (sfid-20120905_160851_856088_A56914F8)
-Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
-From: Adrian Chadd <adrian.chadd@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	openwrt-devel@lists.openwrt.org,
-	Marek Lindner <lindner_marek@yahoo.de>, sven@narfation.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20565.15192.132342.355053@gargle.gargle.HOWL> (sfid-20120916_043811_413252_798C51D6)
+Date: Sun, 16 Sep 2012 08:07:12 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 8/8] ath9k_hw: Enable WLAN RX diversity for AR9565
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't think it's a stuck beacon WAR issue here; 0xdeadbeef really
-does read like the MAC has gone to sleep.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Where's the complete register dump hiding?
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c562f13..8afd044 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2539,7 +2539,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
+ 
+ 
+-	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
++	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
+ 		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
+ 		/*
+ 		 * enable the diversity-combining algorithm only when
+-- 
+1.7.12
 
-
-
-Adrian
-
-
-On 4 September 2012 22:12, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
-> Hi Simon/Sven,
->
->>
->> I'm living at a small village, and one or two neighbors may have access points too,
->> but that's it - this should be far from beeing busy. We mostly use these APs for
->> surfing with smart phones, this is also far from congesting them. ;)
->>
->> TBH I don't really understand what you are talking about regarding WAR, etc, can
->> you please explain? What can we do to analyse the problem better?
->
->
-> work arounds(WAR) for beacon stuck in congested environment,
-> there may be quite a few that may not be not yet ported for ath9k,
-> but as your environment is not a congested, then the issue can be
-> something different. Have not got much information/change list
-> from the query posted internally.
->
->>
->> Thanks,
->>         Simon
->>
->> -----BEGIN PGP SIGNATURE-----
->> Version: GnuPG v1.4.10 (GNU/Linux)
->>
->> iEYEARECAAYFAlBGNm8ACgkQrzg/fFk7axbuNwCg626AvtDTWoeaSrVGjB92XN+7
->> 5tEAnAjEXI04gSS102VwlSKQqBHEPFyG
->> =9pIv
->> -----END PGP SIGNATURE-----
->>
->
->
->
-> --
-> thanks,
-> shafi
