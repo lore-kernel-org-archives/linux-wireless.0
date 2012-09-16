@@ -1,56 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45603 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511Ab2INKaD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30365 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894Ab2IPChx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 06:30:03 -0400
-Received: by pbbrr13 with SMTP id rr13so5422790pbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2012 03:30:03 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] ath5k: disable HW crypto in management frame
-Date: Fri, 14 Sep 2012 18:26:11 +0800
-Message-Id: <1347618371-31546-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120914_123010_026072_C1F0A5F2)
+	Sat, 15 Sep 2012 22:37:53 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20565.15176.803271.736039@gargle.gargle.HOWL> (sfid-20120916_043756_305079_E24891F1)
+Date: Sun, 16 Sep 2012 08:06:56 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 7/8] ath9k: Add a module parameter to enable diversity
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware support for MFP is not available in ath5k. Thus,
-this implementation allows the mac80211 stack to do the
-actuall crypto operation.
-
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c         |    1 +
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    3 +++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath.h           |  1 +
+ drivers/net/wireless/ath/ath9k/antenna.c |  4 ++++
+ drivers/net/wireless/ath/ath9k/init.c    | 12 ++++++++++++
+ 3 files changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a0a202d..9fd6d9a 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2446,6 +2446,7 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 			IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 			IEEE80211_HW_SIGNAL_DBM |
-+			IEEE80211_HW_MFP_CAPABLE |
- 			IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 6169fbd..4521342 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -159,6 +159,7 @@ struct ath_common {
  
- 	hw->wiphy->interface_modes =
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index df61a09..0f34086 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -489,6 +489,9 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if (ath5k_modparam_nohwcrypt)
- 		return -EOPNOTSUPP;
+ 	bool btcoex_enabled;
+ 	bool disable_ani;
++	bool antenna_diversity;
+ };
  
-+	if (key->flags & IEEE80211_KEY_FLAG_RX_MGMT)
-+		return -EOPNOTSUPP;
+ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
+diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
+index 8eb274f..664844c 100644
+--- a/drivers/net/wireless/ath/ath9k/antenna.c
++++ b/drivers/net/wireless/ath/ath9k/antenna.c
+@@ -776,6 +776,7 @@ div_comb_done:
+ void ath_ant_comb_update(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath_hw_antcomb_conf div_ant_conf;
+ 	u8 lna_conf;
+ 
+@@ -790,4 +791,7 @@ void ath_ant_comb_update(struct ath_softc *sc)
+ 	div_ant_conf.alt_lna_conf = lna_conf;
+ 
+ 	ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
 +
- 	if (vif->type == NL80211_IFTYPE_ADHOC &&
- 	    (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
- 	     key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
++	if (common->antenna_diversity)
++		ath9k_hw_antctrl_shared_chain_lnadiv(ah, true);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index f3ce5ca..ce20831 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -46,6 +46,10 @@ static int ath9k_btcoex_enable;
+ module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
+ MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+ 
++static int ath9k_enable_diversity;
++module_param_named(enable_diversity, ath9k_enable_diversity, int, 0444);
++MODULE_PARM_DESC(enable_diversity, "Enable Antenna diversity for AR9565");
++
+ bool is_ath9k_unloaded;
+ /* We use the hw_value as an index into our private channel structure */
+ 
+@@ -546,6 +550,14 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	common->debug_mask = ath9k_debug;
+ 	common->btcoex_enabled = ath9k_btcoex_enable == 1;
+ 	common->disable_ani = false;
++
++	/*
++	 * Enable Antenna diversity only when BTCOEX is disabled
++	 * and the user manually requests the feature.
++	 */
++	if (!common->btcoex_enabled && ath9k_enable_diversity)
++		common->antenna_diversity = 1;
++
+ 	spin_lock_init(&common->cc_lock);
+ 
+ 	spin_lock_init(&sc->sc_serial_rw);
 -- 
-1.7.0.4
+1.7.12
 
