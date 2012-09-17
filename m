@@ -1,59 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52731 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751712Ab2IHIIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 04:08:34 -0400
-Message-ID: <504AFCE8.5010306@openwrt.org> (sfid-20120908_100840_491189_B3B96CAE)
-Date: Sat, 08 Sep 2012 10:08:08 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 6/7] ath9k_hw: Program correct PLL value for AR9565
-References: <20554.62374.945320.866841@gargle.gargle.HOWL>
-In-Reply-To: <20554.62374.945320.866841@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:36774 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756824Ab2IQPY3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Sep 2012 11:24:29 -0400
+Message-ID: <1347895505.4975.10.camel@jlt4.sipsolutions.net> (sfid-20120917_172436_068812_67BAA885)
+Subject: Re: [RFC V2] cfg80211/nl80211: Notify connection request failure in
+ AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 17 Sep 2012 17:25:05 +0200
+In-Reply-To: <1347881834-31615-1-git-send-email-c_ppitch@qca.qualcomm.com>
+References: <1347881834-31615-1-git-send-email-c_ppitch@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-09-08 9:28 AM, Sujith Manoharan wrote:
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hw.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
+On Mon, 2012-09-17 at 17:07 +0530, Pandiyarajan Pitchaimuthu wrote:
+> In AP mode, when a station requests connection to an AP and if the
+> request is failed for particular reason, userspace is notified about the
+> failure through NL80211_CMD_CONN_FAILED command. Reason for the failure
+> is sent through the attribute NL80211_ATTR_CONN_FAILED_REASON.
 > 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 063d724..07dd330 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -837,6 +837,9 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
->  		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
->  			      AR_CH0_BB_DPLL2_PLL_PWD, 0x0);
->  		udelay(1000);
+> Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+> ---
+>  include/linux/nl80211.h |   19 +++++++++++++++++++
+>  include/net/cfg80211.h  |   19 +++++++++++++++++++
+>  net/wireless/mlme.c     |   11 +++++++++++
+>  net/wireless/nl80211.c  |   34 ++++++++++++++++++++++++++++++++++
+>  net/wireless/nl80211.h  |    5 +++++
+>  5 files changed, 88 insertions(+)
+> 
+> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> index 2f38788..55c01d0 100644
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -565,6 +565,11 @@
+>   *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
+>   *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
+>   *
+> + * @NL80211_CMD_CONN_FAILED: connection request to an AP failed; used to
+> + *	notify userspace that AP has rejected the connection request from a
+> + *	station, due to particular reason. %NL80211_ATTR_CONN_FAILED_REASON
+> + *	is used for this.
+> + *
+>   * @NL80211_CMD_MAX: highest used command number
+>   * @__NL80211_CMD_AFTER_LAST: internal use
+>   */
+> @@ -708,6 +713,8 @@ enum nl80211_commands {
+>  
+>  	NL80211_CMD_CH_SWITCH_NOTIFY,
+>  
+> +	NL80211_CMD_CONN_FAILED,
 > +
-> +		if (AR_SREV_9565(ah))
-> +			REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x4142c);
->  	} else if (AR_SREV_9330(ah)) {
->  		u32 ddr_dpll2, pll_control2, kd;
+>  	/* add new commands above here */
 >  
-> @@ -917,9 +920,10 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
->  		udelay(1000);
->  	}
+>  	/* used to define NL80211_CMD_MAX below */
+> @@ -1251,6 +1258,10 @@ enum nl80211_commands {
+>   *	was used to provide the hint. For the different types of
+>   *	allowed user regulatory hints see nl80211_user_reg_hint_type.
+>   *
+> + * @NL80211_ATTR_CONN_FAILED_REASON: The reason for which AP has rejected
+> + *	the connection request from a station. nl80211_connect_failed_reason
+> + *	enum has different reasons of connection failure.
+> + *
+>   * @NL80211_ATTR_MAX: highest attribute number currently defined
+>   * @__NL80211_ATTR_AFTER_LAST: internal use
+>   */
+> @@ -1506,6 +1517,8 @@ enum nl80211_attrs {
 >  
-> -	pll = ath9k_hw_compute_pll_control(ah, chan);
-> -
-> -	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
-> +	if (!AR_SREV_9565(ah)) {
-> +		pll = ath9k_hw_compute_pll_control(ah, chan);
-> +		REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
-> +	}
-That looks messed up, how about just:
+>  	NL80211_ATTR_USER_REG_HINT_TYPE,
+>  
+> +	NL80211_ATTR_CONN_FAILED_REASON,
+> +
+>  	/* add attributes here, update the policy in nl80211.c */
+>  
+>  	__NL80211_ATTR_AFTER_LAST,
+> @@ -3023,4 +3036,10 @@ enum nl80211_probe_resp_offload_support_attr {
+>  	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U =	1<<3,
+>  };
+>  
+> +/* AP mode - sta's connection request failed reasons */
+> +enum nl80211_connect_failed_reason {
 
-	pll = ath9k_hw_compute_pll_control(ah, chan);
-	if (AR_SREV_9565(ah))
-		pll |= 0x40000;
-	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+Kernel-doc descriptions here would be nice.
 
-Or alternatively move that OR mask into ath9k_hw_compute_pll_control
+Otherwise looks fine, thanks.
 
-- Felix
+johannes
+
