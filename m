@@ -1,70 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:55614 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995Ab2ILFQf (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:57066 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752532Ab2IQVTP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 01:16:35 -0400
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>,
-	Marc MERLIN <marc@merlins.org>
-Cc: Pavel Machek <pavel@ucw.cz>, David Rientjes <rientjes@google.com>,
-	sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-	johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, Andrew Morton <akpm@osdl.org>,
-	Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org
-In-Reply-To: <20120911162536.bd5171a1.akpm@linux-foundation.org>
-References: <20120909213228.GA5538@elf.ucw.cz>
-	 <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
-	 <20120910111113.GA25159@elf.ucw.cz>
-	 <20120911162536.bd5171a1.akpm@linux-foundation.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Sep 2012 07:16:28 +0200
-Message-ID: <1347426988.13103.684.camel@edumazet-glaptop> (sfid-20120912_071652_806064_4DEF5443)
-Mime-Version: 1.0
+	Mon, 17 Sep 2012 17:19:15 -0400
+Message-ID: <505793d0.e8a1320a.44f7.fffff8d0@mx.google.com> (sfid-20120917_231925_418963_FD02BD5C)
+Date: Mon, 17 Sep 2012 14:19:12 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-11 at 16:25 -0700, Andrew Morton wrote:
+,
+	netdev@vger.kernel.org,
+	<chaoming_li@realsil.com.cn>
+Subject: [PATCH 00/15] Add new driver RTL8723AE
+Date: Mon, 17 Sep 2012 16:18:39 -0500
+Message-Id: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net>
+X-Mailer: git-send-email 1.7.10.4
+X-Account-Key: account11
+X-UIDL: GmailId139bc43b51cd682c
+X-Mozilla-Status: 0001
+Return-Path: <larry.finger@gmail.com>
+Received: from localhost.localdomain (CPE-75-81-36-228.kc.res.rr.com. [75.81.36.228])
+ by mx.google.com with ESMTPS id ng5sm5862034igc.0.2012.09.12.13.55.15
+ (version=TLSv1/SSLv3 cipher=OTHER);
+ Wed, 12 Sep 2012 13:55:16 -0700 (PDT)
+Sender: Larry Finger <larry.finger@gmail.com>
+X-Mailer: git-send-email 1.7.10.4
 
-> Asking for a 256k allocation is pretty crazy - this is an operating
-> system kernel, not a userspace application.
-> 
-> I'm wondering if this is due to a recent change, but I'm having trouble
-> working out where the allocation call site is.
-> --
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
-(Adding Marc Merlin to CC, since he reported same problem)
+This set of patches add the new driver rtl8723ae to the rtlwifi family
+of drivers. It handles the RTL8723AE, which is now being included in
+some Toshiba laptops. This driver is derived from version 0007.0809.2012
+of the vendor driver.
 
-Thats the firmware loading in iwlwifi driver. Not sure if it can use SG.
+Depending on how long the review process takes, I am hoping to include
+this driver in kernel 3.7.
 
-drivers/net/wireless/iwlwifi/iwl-drv.c
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-iwl_alloc_ucode() -> iwl_alloc_fw_desc() -> dma_alloc_coherent()
+Larry Finger (15):
+  rtlwifi: rtl8723ae: Add new driver - Part 1
+  rtlwifi: rtl8723ae: Add new driver - Part 2
+  rtlwifi: rtl8723ae: Add new driver - Part 3
+  rtlwifi: rtl8723ae: Add new driver - Part 4
+  rtlwifi: rtl8723ae: Add new driver - Part 5
+  rtlwifi: rtl8723ae: Add new driver - Part 6
+  rtlwifi: rtl8723ae: Add new driver - Part 7
+  rtlwifi: rtl8723ae: Add new driver - Part 8
+  rtlwifi: rtl8723ae: Add new driver - Part 9
+  rtlwifi: rtl8723ae: Add new driver - Part 10
+  rtlwifi: rtl8723ae: Add new driver - Part 11
+  rtlwifi: rtl8723ae: Add new driver - Part 12
+  rtlwifi: rtl8723ae: Add new driver - Part 13
+  rtlwifi: Modify files for addition of rtl8723ae
+  rtlwifi: rtl8192ce: rtl8192cu: rtl8192se: rtl81723ae: Turn on
+    building of the new driver
 
-It seems some sections of /lib/firmware/iwlwifi*.ucode files are above
-128 Kbytes, so dma_alloc_coherent() try order-5 allocations
+ drivers/net/wireless/rtlwifi/Kconfig               |   19 +-
+ drivers/net/wireless/rtlwifi/Makefile              |    4 +-
+ drivers/net/wireless/rtlwifi/debug.h               |    2 +
+ drivers/net/wireless/rtlwifi/pci.h                 |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   83 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   10 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/Makefile    |   23 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/btc.h       |   41 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/def.h       |  291 +++
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |  952 ++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |  174 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |  758 ++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |   99 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c    |  554 +++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h    |  161 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   | 1807 ++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |  161 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        | 2559 ++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.h        |   70 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.c       |  158 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.h       |   40 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       | 2160 +++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |  228 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c    |  113 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h    |  313 +++
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c |  145 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h |  101 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/reg.h       | 2129 ++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.c        |  518 ++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.h        |   45 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |  405 ++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.h        |   38 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/table.c     |  744 ++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/table.h     |   51 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |  830 +++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |  725 ++++++
+ drivers/net/wireless/rtlwifi/stats.c               |  274 +++
+ drivers/net/wireless/rtlwifi/stats.h               |   47 +
+ drivers/net/wireless/rtlwifi/wifi.h                |  112 +-
+ 40 files changed, 16919 insertions(+), 32 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/btc.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/def.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/reg.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.h
+ create mode 100644 drivers/net/wireless/rtlwifi/stats.c
+ create mode 100644 drivers/net/wireless/rtlwifi/stats.h
 
-
-# ls -l /lib/firmware/iwlwifi*.ucode
--rw-r--r-- 1 root root 335056 2012-01-23 18:20 /lib/firmware/iwlwifi-1000-3.ucode
--rw-r--r-- 1 root root 337520 2012-01-23 18:20 /lib/firmware/iwlwifi-1000-5.ucode
--rw-r--r-- 1 root root 689680 2012-01-24 19:18 /lib/firmware/iwlwifi-105-6.ucode
--rw-r--r-- 1 root root 701228 2012-01-24 19:18 /lib/firmware/iwlwifi-135-6.ucode
--rw-r--r-- 1 root root 695876 2012-01-24 19:19 /lib/firmware/iwlwifi-2000-6.ucode
--rw-r--r-- 1 root root 707392 2012-01-24 19:19 /lib/firmware/iwlwifi-2030-6.ucode
--rw-r--r-- 1 root root 150100 2012-01-23 18:20 /lib/firmware/iwlwifi-3945-2.ucode
--rw-r--r-- 1 root root 187972 2012-01-23 18:20 /lib/firmware/iwlwifi-4965-2.ucode
--rw-r--r-- 1 root root 345008 2012-01-23 18:20 /lib/firmware/iwlwifi-5000-1.ucode
--rw-r--r-- 1 root root 353240 2012-01-23 18:20 /lib/firmware/iwlwifi-5000-2.ucode
--rw-r--r-- 1 root root 340696 2012-01-23 18:21 /lib/firmware/iwlwifi-5000-5.ucode
--rw-r--r-- 1 root root 337400 2012-01-23 18:20 /lib/firmware/iwlwifi-5150-2.ucode
--rw-r--r-- 1 root root 462280 2012-01-24 19:20 /lib/firmware/iwlwifi-6000-4.ucode
--rw-r--r-- 1 root root 444128 2012-01-24 19:20 /lib/firmware/iwlwifi-6000g2a-5.ucode
--rw-r--r-- 1 root root 460912 2012-01-24 19:20 /lib/firmware/iwlwifi-6000g2b-5.ucode
--rw-r--r-- 1 root root 679436 2012-01-24 19:19 /lib/firmware/iwlwifi-6000g2b-6.ucode
--rw-r--r-- 1 root root 463692 2012-01-23 18:20 /lib/firmware/iwlwifi-6050-4.ucode
--rw-r--r-- 1 root root 469780 2012-01-23 18:20 /lib/firmware/iwlwifi-6050-5.ucode
+-- 
+1.7.10.4
 
 
