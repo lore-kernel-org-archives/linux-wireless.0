@@ -1,64 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46122 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895Ab2IKRss (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:57448 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756383Ab2IQRh4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 13:48:48 -0400
-Received: by obbuo13 with SMTP id uo13so1192039obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2012 10:48:47 -0700 (PDT)
+	Mon, 17 Sep 2012 13:37:56 -0400
+Message-ID: <50575FF1.7070602@wwwdotorg.org> (sfid-20120917_193803_938126_846A89A4)
+Date: Mon, 17 Sep 2012 11:37:53 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <201209111931.24258.chunkeey@googlemail.com>
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-	<CAEFj986+K6TGpR2MXteAY86vAX8D=xVrFWMAVdc9zSuiix+Ogw@mail.gmail.com>
-	<CAFtRNNwXgr=oN8y9u9MnEt75dAL0R-tJ6yf6vTOMcnCuCb7S-A@mail.gmail.com>
-	<201209111931.24258.chunkeey@googlemail.com>
-Date: Tue, 11 Sep 2012 20:48:47 +0300
-Message-ID: <CAFtRNNybLaHK3OWE3qbexCK18-Uc6XZ=H3Q9XqfyZzRwknetbA@mail.gmail.com> (sfid-20120911_194853_061682_A57FD2F0)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Adrian Chadd <adrian@freebsd.org>, Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mcgrof@qca.qualcomm.com, ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>, Wei Ni <wni@nvidia.com>
+Subject: Re: [PATCH 07/10] brcmfmac: clear status for in-band interrupt in
+ brcmf_sdbrcm_isr
+References: <1347563526-12513-1-git-send-email-arend@broadcom.com> <1347563526-12513-8-git-send-email-arend@broadcom.com> <5053A74D.6080200@wwwdotorg.org> <50544830.4020804@broadcom.com> <5054B6EB.3010608@wwwdotorg.org>
+In-Reply-To: <5054B6EB.3010608@wwwdotorg.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/9/11 Christian Lamparter <chunkeey@googlemail.com>:
-> On Tuesday 11 September 2012 18:36:27 Nick Kossifidis wrote:
->> 2012/9/11 Yeoh Chun-Yeow <yeohchunyeow@gmail.com>:
->> >> To be more clear: you can tell the hw to *only* disable decryption and
->> >> keep doing encryption.
->> >
->> > But the question here is that during Rx, need to do SW decryption for
->> > management frame and then HW decryption for unicast data frame for all
->> > the frame coming from the same STA. I still not so sure how to do
->> > that.
->> >
->> > Jouni said that the workaround is to re-encrypt(incorrectly) received
->> > robust unicast management frames if hwaccel for CCMP was configured
->> > for the transmitting STA (this is to undo the incorrect decryption
->> > done by the hardware) and then pass the encrypted frame to mac80211
->> > for software decryption.
->> >
+On 09/15/2012 11:12 AM, Stephen Warren wrote:
+> On 09/15/2012 03:19 AM, Arend van Spriel wrote:
+>> On 09/14/2012 11:53 PM, Stephen Warren wrote:
+>>> On 09/13/2012 01:12 PM, Arend van Spriel wrote:
+>>>> From: Franky Lin <frankyl@broadcom.com>
+>>>>
+>>>> SDIO in-band interrupt is level sensitive according to SDIO standard.
+>>>> When the register interrupt handler gets called by SDIO stack it is
+>>>> running in non interrupt context and expected to clear the interrupt
+>>>> from the dongle. Therefore in-band and out-of-band interrupt need to
+>>>> be handled differently.
+>>>
+>>> Tested-by: Stephen Warren <swarren@wwwdotorg.org>
+>>>
+>>> For reference, I took next-20120914, applied this patch series, applied
+>>> a few patches from Wei Ni to set up the SDIO HW on Tegra correctly, and
+>>> tested. The last time I tried this without any patches to the brcmfmac,
+>>> this test caused some system instability issues. This time around, I
+>>> observed no instability. I tested WPA PSK, ping (or flood ping) plus
+>>> playing audio through ALSA.
+>>>
+>>> Is this series likely to make 3.7?
+>>>
 >>
->> How about disabling acks on hw completely and handle them on sw ?
->> This might keep the engine running ok for unicast frames.
+>> Thanks, Stephen
 >>
->> #define AR5K_DIAG_SW_DIS_ACK          0x00000002      /* Disable ACKs */
->> #define AR5K_DIAG_SW_DIS_CTS          0x00000004      /* Disable CTSs */
->
-> No, CTS and ACKs are control frames and not management frames.
+>> Good to hear. I suspect we are close to the 3.7 merge window, but we do
+>> hope this will make it mainly for the tegra sdio issue that Wei Ni
+>> raised. In general the series should resolve issues when used on
+>> sdhci/mmc framework with in-band interrupt.
+>>
+>> Do you still need the patches from Wei Ni and are they SDIO or brcmfmac
+>> related?
+> 
+> Some patches are needed, but they're all for Tegra-specific code to
+> configure the pinmux, GPIO, etc. on the Tegra SoC in order to correctly
+> communicate with the SDIO port, and to enable the controller. No patches
+> are required to the brcmfmac driver.
 
-ACK :-)
+Just to be explicit here:
 
+If this patch series (the one at the start of this email thread) makes
+it into 3.7, I'll apply the Tegra patches to enable brcmfmac on Tegra
+for 3.8, and everything will work out nicely.
 
+If this patch series doesn't make it into 3.7, but gets into 3.8
+instead, I'd still like to apply the Tegra patches for 3.8 as well.
+However, I can't apply the Tegra patches to any branch that doesn't
+include this patch series, or it'll cause system instability on Tegra.
+To that end, if this patch series doesn't make 3.7, I'd like to request
+that it be applied to a separate topic branch in the wireless tree, so
+that it can be both merged into the wireless tree for any required
+future work there, /and/ merged into the Tegra tree so that I can use it
+as a baseline to enable wireless on Tegra.
 
-
--- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Thanks!
