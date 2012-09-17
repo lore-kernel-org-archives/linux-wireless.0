@@ -1,110 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:52609 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757041Ab2IZQpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 12:45:47 -0400
-Message-ID: <1348677946.15175.8.camel@joe-AO722> (sfid-20120926_184552_372990_6913937F)
-Subject: Re: [PATCH] rtlwifi: use %*ph[C] to dump small buffers
-From: Joe Perches <joe@perches.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 26 Sep 2012 09:45:46 -0700
-In-Reply-To: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:41459 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757140Ab2IQS4r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Sep 2012 14:56:47 -0400
+Received: by lbbgj3 with SMTP id gj3so4432732lbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2012 11:56:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1347896071.4975.14.camel@jlt4.sipsolutions.net>
+References: <504DBBAC.7040300@posedge.com> <CAB=NE6UfQdM6HrVGw3Dn-NBxQupwA3kJD27kv3c9DjLY8DVm1Q@mail.gmail.com>
+ <5052E852.8030804@posedge.com> <1347896071.4975.14.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 17 Sep 2012 11:56:25 -0700
+Message-ID: <CAB=NE6VMOvftuxi1zu3=4q-BJgM9rJHY86W-6+MAHmtY=V=6xA@mail.gmail.com> (sfid-20120917_205652_845691_339E315A)
+Subject: Re: [RFC v3] cfg80211: VHT regulatory
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mahesh Palivela <maheshp@posedge.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-09-26 at 16:57 +0300, Andy Shevchenko wrote:
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+On Mon, Sep 17, 2012 at 8:34 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2012-09-14 at 13:48 +0530, Mahesh Palivela wrote:
+>
+>> > Although VHT complicates the regulatory checks, to the extent you
+>> > check for valid 20 MHz IEEE channels in between a VHT wide channel,
+>> > the IEEE spec actually only allows in practice certain VHT
+>> > arrangements. I've asked for shiny diagrams that have this laid out
+>> > clearly and simple but unfortunately we do not have one, but such
+>> > simple static arrangements are apparently specified on the spec, its
+>> > not clear to me where exactly though... Technically then if we wanted
+>> > to keep a static cached early check of allowed channels maps for VHT
+>> > we should be able to have a bitmap representation of the allowed IEEE
+>> > VHT channel configurations and upon initialization / regulatory change
+>> > update this bitmap to determine if we're allowed to use the new
+>> > arrangement. The approach you use is also fine and while it does allow
+>> > for flexibility to do add more technologies one should consider the
+>> > penalty incurred at doing these computations at run time. The run time
+>> > impact is no issue if its done just once but consider changing
+>> > channels and how often we can do this. Consider a device now with one
+>> > radio but two virtual devices and each one doing their own set of
+>> > scans and two different types of HT / VHT configurations. This means
+>> > the code you just wrote will become a real hot path -- used for
+>> > anything  that has to do with any channel change. The purpose of the
+>> > flags are to remove that run time penalty, so if we can take into
+>> > consideration more the nature of how we VHT channels are allowed and
+>> > how IEEE decided to simplify the arrangements for VHT then likely
+>> > keeping flags may make sense then. That is, not all VHT arrangements
+>> > are possible, only a subset, and it seems fairly trivial and
+>> > reasonable to me to do this upon regulatory change only once rather
+>> > than at every channel change.
+>> >
+>> > And as for the question: "What about the future? Will we see 320 MHz
+>> > wide channels in 2020? :)"
+>> >
+>> > I'm told through a shiny crystal ball: let's not expect 320 MHz channels.
+>> >
+>> > So I'd rather keep this simple and also due to the fact that VHT
+>> > channels are static just try to use a bitmap for them and check for it
+>> > at regulatory change.
+>> >
+>>
+>> I agree Luis. Limiting the flags to a subset is fine with me. Hope no
+>> more disagreements.
+>
+> I'm not convinced :-)
+>
+> Today, we have people who want to use wifi on other parts of the
+> spectrum, like somewhere in the 800 MHz range for example. If that gets
+> properly integrated into drivers (rather than pretending it's actually
+> 2.4 GHz) then you may want to do something different here, and those
+> channels would never actually have IEEE defined 80 MHz rules.
 
-Hi Andy.
+So we'd have HT20 and HT40 only for 800 MHz?
 
-(adding Larry and Chaoming to cc's)
+> Also, those definitions are arbitrary for interoperability and don't
+> reflect regulatory rules.
 
-Please use scripts/get_maintainer.pl on your patches to
-see who maintains these files so you can cc them.
+It seems easier to implement supporting checking for a static set of
+VHT arrangements rather than figuring out all theoretically possible
+arrangements given that most other arrangements would be unused /
+unimplemented / not-supported.
 
-One comment below, it looks like a possible endian bug.
-(not in your patch)
+> Yes, it may be easier today to just pretend
+> that regulatory rules only matter for IEEE defined operation, but I'm
+> not convinced that we really should have definitions here in the
+> regulatory database that really only cover specific IEEE 802.11
+> channels.
 
-> ---
->  drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
->  drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
->  drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
->  3 files changed, 6 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-> index 5b4b4d4..6ba9f80 100644
-> --- a/drivers/net/wireless/rtlwifi/cam.c
-> +++ b/drivers/net/wireless/rtlwifi/cam.c
-> @@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
->  	u32 target_content = 0;
->  	u8 entry_i;
->  
-> -	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
-> -		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
-> -		 key_cont_128[0], key_cont_128[1],
-> -		 key_cont_128[2], key_cont_128[3],
-> -		 key_cont_128[4], key_cont_128[5]);
-> +	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
-> +			6, key_cont_128);
->  
->  	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
->  		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> index 86d73b3..932780d 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> @@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
->  				     (ratr_index << 28);
->  	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
->  	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
-> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
-> -		 ratr_index, ratr_bitmap,
-> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
-> -		 rate_mask[4]);
-> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
-> +		 ratr_index, ratr_bitmap, 5, rate_mask);
->  	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
->  
->  	if (macid != 0)
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> index 4bbb711..7554501 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> @@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
->  				      ratr_index << 28);
->  	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
->  	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
-> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
-> -		 ratr_index, ratr_bitmap,
-> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
-> -		 rate_mask[4]);
-> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
-> +		 ratr_index, ratr_bitmap, 5, rate_mask);
->  	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
->  }
->  
+Agreed, but what I am proposing doesn't necessarily push us to push
+anything IEEE specific into the wireless regulatory database, but it
+does however push us to implement IEEE specific use cases on cfg80211.
 
-rate_mask uses:
+> The regulatory database was designed to be at least a bit more
+> generic and in fact we always treated it as max bandwidth etc.
 
-	u32 ratr_bitmap = (u32) mac->basic_rates;
-...
-	u8 rate_mask[5];
-...
-	[sets ratr_bitmap as u32]
-...
-	*(u32 *)&rate_mask = ((ratr_bitmap & 0x0fffffff) |
-				      ratr_index << 28);
-...
-	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
+I don't think this would deviate us away from it though. Where would
+that happen?
 
-Looks like a possible endian misuse to me.
+> I think just using the 802.11 rules here would be artificially limiting
+> the expressiveness of the regulatory database.
 
+Agreed, but in so far as cfg80211 is concerned, as a consumer it can
+surely use IEEE definitions in its own domain, no?
 
-
+  Luis
