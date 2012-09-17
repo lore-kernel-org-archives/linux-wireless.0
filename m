@@ -1,94 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46889 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388Ab2IKGrA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 02:47:00 -0400
-Received: by obbuo13 with SMTP id uo13so240417obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 23:47:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAEFj9845-oLbFK7_i5hL6bWMF4=oTJ4avDkEv3kpJGXCpaiSiQ@mail.gmail.com>
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
-	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
-	<20120904102204.GA2541@w1.fi>
-	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
-	<CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
-	<1346758521.3737.28.camel@jlt4.sipsolutions.net>
-	<CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
-	<20120905071653.GB3629@w1.fi>
-	<CAEFj985iHQJTAqXBkz56BDPodHb9q0Z=x3S5Q43UwA5vU-mfMw@mail.gmail.com>
-	<20120905080336.GA4747@w1.fi>
-	<CAEFj986i9XUcEN0i2y5=YLh2RX8MZOf+60i8XL4jMiq5-JcJ6Q@mail.gmail.com>
-	<CAJ-Vmonesc=VPMUJgS1GHTUS-Xj_BTohv0rQ9ZS+rW-761g_8w@mail.gmail.com>
-	<87zk4y3tsz.fsf@purkki.adurom.net>
-	<CAEFj9845-oLbFK7_i5hL6bWMF4=oTJ4avDkEv3kpJGXCpaiSiQ@mail.gmail.com>
-Date: Tue, 11 Sep 2012 09:46:59 +0300
-Message-ID: <CAFtRNNzdXFbcxNw0M7oYsvidiLnckycy4V73Y+pG4oUNqeCJvQ@mail.gmail.com> (sfid-20120911_084705_665704_89F6403B)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Kalle Valo <kvalo@adurom.com>, Adrian Chadd <adrian@freebsd.org>,
-	Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mcgrof@qca.qualcomm.com, ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:24963 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756257Ab2IQOgO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Sep 2012 10:36:14 -0400
+Message-ID: <1347892887.7112.9.camel@sauron.fi.intel.com> (sfid-20120917_163617_677167_0B529F43)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
+Reply-To: artem.bityutskiy@linux.intel.com
+To: "Berg, Johannes" <johannes.berg@intel.com>,
+	Eric Dumazet <edumazet@google.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 17 Sep 2012 17:41:27 +0300
+In-Reply-To: <1347640763.5263.24.camel@sauron.fi.intel.com>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-Umswc144aMln99m44br1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/9/10 Yeoh Chun-Yeow <yeohchunyeow@gmail.com>:
-> Hi, all
->
-> For your information, my submitted patch has allowed me to do the
-> following and mainly to setup the secured mesh 802.11s using authsae:
->
-> 1. Key installations for the following:
-> /* key to protect integrity of multicast mgmt frames tx*/
-> install_key(nlcfg, NULL, CIPHER_AES_CMAC, NL80211_KEYTYPE_GROUP, 4, mgtk_tx);
-> /* key to encrypt multicast data traffic */
-> install_key(nlcfg, NULL, CIPHER_CCMP, NL80211_KEYTYPE_GROUP, 0, mgtk_tx);
-> /* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
-> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
-> /* key to decrypt multicast data traffic from this peer */
-> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_GROUP, 0, peer_mgtk);
-> /* to check integrity of multicast mgmt frames from this peer */
-> install_key(&nlcfg, peer, CIPHER_AES_CMAC, NL80211_KEYTYPE_GROUP, 4, peer_mgtk);
->
-> 2. By using the submitted patch, how ever as Jouni has pointed out
-> that testing with ath5k implementation alone may not be correct, due
-> to the following statement:
-> If the CCMP processing is done incorrectly, they could both mangle the
-> results in the same way to hide the issue.
->
-> thus I revert back by not disabling the IEEE80211_KEY_FLAG_SW_MGMT.
-> However, with this, it has showed that robust unicast management frame
-> is encrypted in SW but is decrypted wrongly in SW (perhaps HW decrypt
-> it due to the HW accl enabling for unicast data frame).
->
-> Hope this help.
->
-> Thanks.
->
-> Regards,
-> Chun-Yeow
->
-> On Mon, Sep 10, 2012 at 9:13 PM, Kalle Valo <kvalo@adurom.com> wrote:
->> Adrian Chadd <adrian@freebsd.org> writes:
->>
->>> Yeoh - can you please email me privately with a summary of what you
->>> implemented, what you've tested and what worked / what didn't work?
->>
->> Why privately? Better to have all the information public, you never know
->> if someone finds the info from the web and picks up the work.
->>
->> --
->> Kalle Valo
 
-Have you tried disabing RX or TX only encryption/decryption on hw
-trough PCU DIAG register ?
+--=-Umswc144aMln99m44br1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+On Fri, 2012-09-14 at 19:39 +0300, Artem Bityutskiy wrote:
+> On Fri, 2012-09-14 at 17:02 +0300, Artem Bityutskiy wrote:
+> > Hi Johannes,
+> >=20
+> > We are using iwlwifi driver in Tizen IVI. We were using kernel v3.4 and
+> > wifi tethering worked fine. But after upgrading to v3.5 it stopped
+> > working.
+> >=20
+> > I am trying to bisect this already many hours - very difficult, because
+> > tethering did not work in kernels around v3.4-rcX for some different
+> > reasons, so just 'git bisect' does not work.
+>=20
+> OK, my latest finding is:
+>        =20
+>         bad:               3edaf3e Johannes Berg  mac80211: manage AP net=
+dev carrier state
+>         good:              fe40cb6 Ashok Nagarajan  mac80211: Check basic=
+ rates when peering
+>        =20
+> However, just reverting in 3.5 does not solve the issue. I am out of
+> ideas how to proceed.
+
+OK, finally I got it. After 3 days of hardcore intelligent bisecting
+        I've found out that tethering in 3.5 works for me if I revert
+these 2
+        patches:
+       =20
+            56138f5 iwlwifi: dont pull too much payload in skb head
+            3edaf3e mac80211: manage AP netdev carrier state
+       =20
+        Johannes, Eric?
+
+--=20
+Best Regards,
+Artem Bityutskiy
+
+--=-Umswc144aMln99m44br1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABAgAGBQJQVzaXAAoJECmIfjd9wqK0s5wQAIU89tsWzzhoHiUjXzjtleTO
+0WeMeJjJFL1OaTvzRo2sVrq5PsJ/59jGSGYzuxLmqC9LPvfTQG6kad9KVtspLNGf
+5rrZip7C4fH+QBtQf0uKNoXLRmT2NnhNIRmVdmcqeZ0BW55Mo+E2jRmFMRh50Otf
+0qGiCQ8yaaUMT8FjMGzxEqraD4n7Y50x1xPKWKew/pj5ajJ6AoeIxS2M7ermhhHh
+lTH15Dja4x9vEvJZgK2Jc7bgtvSfEqYhC7m1AapmeqChuIvKyYHQq9CB0M2UAX8g
+hZaT3mUK7rcxv+UEWTAvT9iBU6Ot0hoAm3n5sUwtyHEzRaavNRKcOW8Pr8ggGfwb
+FUby7d188VYWdxF3KaGT9LhXzGp5mp5s7SmbCO4IHLxicGbJIKe7NheRplEgYUNx
+ya1HrPwrHWz7OOAR+InZ10+rjwTPRCcTQZ8BoefsRU6iI6WDWscKn4jdG/PhGPHW
+f8OEdvezy88SmCm1z66b8dQ1pFB6s0kkuPSsIs8qynEoXfOyXv4wLt6X9as9jwYH
+xr0rRVwcCRK91pzf4/qo5i2aRo+ys655L0VQ9PU++iG856aPbYEyTvr0mb7awAgV
+p5NVyoFbEn27TErri7uV01PRyn4UWoo+Gtcaq2C2Uv0rOXP2wXatJNwjJdxIOhdI
+VWx3wuxGOy4gAc1VGQdZ
+=DxKt
+-----END PGP SIGNATURE-----
+
+--=-Umswc144aMln99m44br1--
+
