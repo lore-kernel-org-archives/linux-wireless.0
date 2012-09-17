@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-6.exch022.serverdata.net ([206.225.164.189]:51389
-	"EHLO HUB022-nj-6.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750984Ab2IEEyP (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:32916 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189Ab2IQKfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 00:54:15 -0400
-Message-ID: <5046DAF1.103@posedge.com> (sfid-20120905_065419_865641_557DBB36)
-Date: Wed, 5 Sep 2012 10:24:09 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+	Mon, 17 Sep 2012 06:35:46 -0400
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] wireless: remove unreachable code
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Date: Mon, 17 Sep 2012 11:54:15 +0100
+Message-ID: <20120917105354.30097.45595.stgit@localhost.localdomain> (sfid-20120917_123550_034380_87C5773D)
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [RFC] cfg80211: VHT regulatory
-References: <50457491.9020604@posedge.com> <1346747134.3737.10.camel@jlt4.sipsolutions.net> <5046D8E9.3050505@posedge.com> <CAGRGNgXkjKKoykWYAev=JpS+owTopCj0j9tLbvwDC+NDM0vzVw@mail.gmail.com>
-In-Reply-To: <CAGRGNgXkjKKoykWYAev=JpS+owTopCj0j9tLbvwDC+NDM0vzVw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/05/2012 10:19 AM, Julian Calaby wrote:
-> Hi Mahesh,
->
->>>
->>>
->>> Hmm? Shouldn't you add 10 MHz to the lower end, if anything?
->>>
->>
->> Nope. For example 80 MHz BW, take channel 36, 40, 44 and 48. Center freq
->> value is chan 42. so left end will be chan 34 and right end will be chan 50.
->> so I am subtracting 10MHz on both ends to get chan 36 and 48
->
-> Surely if you subtract 10MHz from chan 34, you'd end up with chan 32, right?
+From: Alan Cox <alan@linux.intel.com>
 
-Very bad. I am wrong. It should be + 10 MHz. Thanks for quick response 
-Julian.
+The only case where intersected_rd can become non NULL is within an if. All
+paths from that if return, so the end chunk has therefore squawked its
+last and is no more.
 
->
-> Thanks,
->
+Signed-off-by: Alan Cox <alan@linux.intel.com>
+---
+
+ net/wireless/reg.c |   19 +------------------
+ 1 file changed, 1 insertion(+), 18 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1ad04e5..4a405c2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2305,24 +2305,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		return 0;
+ 	}
+ 
+-	if (!intersected_rd)
+-		return -EINVAL;
+-
+-	rdev = wiphy_to_dev(request_wiphy);
+-
+-	rdev->country_ie_alpha2[0] = rd->alpha2[0];
+-	rdev->country_ie_alpha2[1] = rd->alpha2[1];
+-	rdev->env = last_request->country_ie_env;
+-
+-	BUG_ON(intersected_rd == rd);
+-
+-	kfree(rd);
+-	rd = NULL;
+-
+-	reset_regdomains(false);
+-	cfg80211_regdomain = intersected_rd;
+-
+-	return 0;
++	return -EINVAL;
+ }
+ 
+ 
+
