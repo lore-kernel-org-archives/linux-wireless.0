@@ -1,107 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32823 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6361 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753679Ab2IYIWW (ORCPT
+	with ESMTP id S1751837Ab2IQPNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 04:22:22 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Enable MCI for Aphrodite
-Date: Tue, 25 Sep 2012 13:48:40 +0530
-Message-ID: <1348561120-3276-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120925_102231_722342_DF88ACC5)
+	Mon, 17 Sep 2012 11:13:08 -0400
+Message-ID: <50573DDE.2060502@qca.qualcomm.com> (sfid-20120917_171313_526953_21DB337C)
+Date: Mon, 17 Sep 2012 20:42:30 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Thomas Wagner <thomas.wagner@hs-rm.de>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<ath9k-devel@venema.h4ckr.net>,
+	Javier Cardona <javier@cozybit.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath9k: Fix mesh related rx filtering issue for older
+ chips
+References: <1347634168-20706-1-git-send-email-mohammed@qca.qualcomm.com> <50534AE3.3060107@openwrt.org> <1518263.XlGm7EvTdD@buri> <5056B274.5050901@qca.qualcomm.com>
+In-Reply-To: <5056B274.5050901@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |   19 +++++++++++++++----
- drivers/net/wireless/ath/ath9k/gpio.c   |    2 +-
- drivers/net/wireless/ath/ath9k/wow.c    |    2 +-
- 3 files changed, 17 insertions(+), 6 deletions(-)
+Hi Tom,
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index acd4373..88c4927 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -51,6 +51,14 @@ static const u32 ar9462_wlan_weights[ATH_BTCOEX_STOMP_MAX]
- 	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
- };
- 
-+static const u32 ar9565_wlan_weights[ATH_BTCOEX_STOMP_MAX]
-+				    [AR9300_NUM_WLAN_WEIGHTS] = {
-+	{ 0x01017d01, 0x7d7d7d01, 0x7d7d7d01, 0x7d7d7d7d }, /* STOMP_ALL */
-+	{ 0x01017d01, 0x3b3b3b01, 0x3b3b3b01, 0x3b3b3b3b }, /* STOMP_LOW */
-+	{ 0x01017d01, 0x01010101, 0x01010101, 0x01010101 }, /* STOMP_NONE */
-+	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
-+};
-+
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-@@ -282,7 +290,7 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- 		ath9k_hw_btcoex_enable_2wire(ah);
- 		break;
- 	case ATH_BTCOEX_CFG_3WIRE:
--		if (AR_SREV_9462(ah)) {
-+		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 			ath9k_hw_btcoex_enable_mci(ah);
- 			return;
- 		}
-@@ -304,7 +312,7 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
- 	int i;
- 
- 	btcoex_hw->enabled = false;
--	if (AR_SREV_9462(ah)) {
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
- 		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
- 			REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
-@@ -339,11 +347,14 @@ static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
- 	const u32 *weight = ar9003_wlan_weights[stomp_type];
- 	int i;
- 
--	if (AR_SREV_9462(ah)) {
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
- 		    btcoex->mci.stomp_ftp)
- 			stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
--		weight = ar9462_wlan_weights[stomp_type];
-+		if (AR_SREV_9565(ah))
-+			weight = ar9565_wlan_weights[stomp_type];
-+		else
-+			weight = ar9462_wlan_weights[stomp_type];
- 	}
- 
- 	for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 45f2422..83a204d 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -402,7 +402,7 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
- 		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
- 			ath9k_btcoex_timer_pause(sc);
- 		ath9k_hw_btcoex_disable(ah);
--		if (AR_SREV_9462(ah))
-+		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
- 			ath_mci_flush_profile(&sc->btcoex.mci);
- 	}
- }
-diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
-index 44a08eb..a483d51 100644
---- a/drivers/net/wireless/ath/ath9k/wow.c
-+++ b/drivers/net/wireless/ath/ath9k/wow.c
-@@ -497,7 +497,7 @@ void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
- 
- 	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
- 
--	if (AR_SREV_9462(ah)) {
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
- 		/*
- 		 * this is needed to prevent the chip waking up
- 		 * the host within 3-4 seconds with certain
+
+On Monday 17 September 2012 10:47 AM, Mohammed Shafi Shajakhan wrote:
+> Hi Tom,
+>
+> + linux-wireless
+>
+> On Saturday 15 September 2012 12:24 AM, Thomas Wagner wrote:
+>> Hi,
+>>
+>>> I'm really not sure about this being tied to sc->nvifs.
+>>> If it's mesh related, how about just adding a check for the number of
+>>> mesh interfaces [...]
+>> No, it is not mesh related!
+>> Several frames where filtered out.
+>> I discovered this on trying to set up a mesh.
+>> But the where filtered frames beyond  the mesh: e.g. a beacon of
+>> 802.11b Sitecom Router
+>>
+>> @Felix: Pleas forward this mail to:
+>> linux-wireless@vger.kernel.org
+>> ath9k-devel@venema.h4ckr.net
+>>
+>>
+>
+> thanks for the clarification.
+>
+>
+
+will send a v3 soon changing the subject and commit log mentioning 
+generically that the  older hardware chipsets seem to filter some 
+necessary wifi frames ?. thanks!
+
+
 -- 
-1.7.4.1
+thanks,
+shafi
+
 
