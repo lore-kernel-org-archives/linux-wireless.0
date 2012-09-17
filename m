@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:53830 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754566Ab2ITMPX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36689 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756127Ab2IQPCr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 08:15:23 -0400
-Received: by bkuw11 with SMTP id w11so171886bku.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 05:15:21 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Sabrina Schulte <sabrina.schulte@rwth-aachen.de>
-Subject: Re: decision for an access point
-Date: Thu, 20 Sep 2012 14:15:16 +0200
+	Mon, 17 Sep 2012 11:02:47 -0400
+Message-ID: <1347894205.4975.5.camel@jlt4.sipsolutions.net> (sfid-20120917_170250_555799_88C60C4A)
+Subject: Re: [PATCH] wireless: remove unreachable code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-wireless@vger.kernel.org
-References: <505B03D7.2050300@rwth-aachen.de>
-In-Reply-To: <505B03D7.2050300@rwth-aachen.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201209201415.17078.chunkeey@googlemail.com> (sfid-20120920_141531_526653_09DE92F0)
+Date: Mon, 17 Sep 2012 17:03:25 +0200
+In-Reply-To: <20120917105354.30097.45595.stgit@localhost.localdomain>
+References: <20120917105354.30097.45595.stgit@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 September 2012 13:53:59 Sabrina Schulte wrote:
-> I do not know if this is the right mailing list to ask. I am tying to 
-> modify the association process in a carl9170 driver. I am looking for 
-> the place, where the decision for a certain access point is done. Does 
-> anyone know, where this decision or the sorting of a list of access 
-> points is done?
-The decision is made by userspace (the driver is not involved).
-In almost all cases this will be done by some sort of 
-"wpa_supplicant" (either directly, or through networkmanager, wicd, ...).
+On Mon, 2012-09-17 at 11:54 +0100, Alan Cox wrote:
+> From: Alan Cox <alan@linux.intel.com>
+> 
+> The only case where intersected_rd can become non NULL is within an if. All
+> paths from that if return, so the end chunk has therefore squawked its
+> last and is no more.
 
-In wpa_supplicant itself, the network is usually picked from a 
-priority list (see function "wpa_supplicant_pick_network" in
-wpa_supplicant/events.c)
+Ohh, a BUG_ON() gone, that makes me happy :-)
 
-Regards,
-	Chr
+Applied, thanks.
+
+johannes
+
