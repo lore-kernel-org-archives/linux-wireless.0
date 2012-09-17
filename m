@@ -1,502 +1,334 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3073 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751708Ab2ISUVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 16:21:42 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/13] brcmfmac: introduce scheduled scan support
-Date: Wed, 19 Sep 2012 22:21:08 +0200
-Message-ID: <1348086078-19183-4-git-send-email-arend@broadcom.com> (sfid-20120919_222553_057621_E2BCB834)
-In-Reply-To: <1348086078-19183-1-git-send-email-arend@broadcom.com>
-References: <1348086078-19183-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52784 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751970Ab2IQUf5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Sep 2012 16:35:57 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Anisse Astier <anisse@astier.eu>,
+	Li Chaoming <chaoming_li@realsil.com.cn>
+Subject: [PATCH NEXT V2] rtlwifi: rtl8192c: rtl8192ce: Add support for B-CUT version of RTL8188CE
+Date: Mon, 17 Sep 2012 15:35:43 -0500
+Message-Id: <1347914143-27698-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120917_223610_443901_4DFEE612)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This change add support for NL80211 scheduled scan. This may be used to
-offload scanning to the device, which may give the host opportunity to
-sleep. The newer versions of wpa_supplicant have support for this
-functionality.
+Realtek devices with designation RTL8188CE-VL have the so-called B-cut
+of the wireless chip. This patch adds the special programming needed by
+these devices.
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Anisse Astier <anisse@astier.eu>
+Cc: Li Chaoming <chaoming_li@realsil.com.cn>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  306 +++++++++++++++++++-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   82 ++++++
- 2 files changed, 387 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   21 +++++++
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |    3 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   61 ++++++++++++++++++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |    4 +-
+ 6 files changed, 87 insertions(+), 12 deletions(-)
+---
+V1 => V2	Remove extraneous white space.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 6536656..2f0a103 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -36,6 +36,18 @@
- #include "dhd.h"
- #include "wl_cfg80211.h"
+
+John,
+
+This patch is too invasive to backport to the stable kernels, thus it should
+be applied to 3.7.
+
+Thanks,
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+@@ -724,6 +724,26 @@ u8 rtl92c_phy_sw_chnl(struct ieee80211_h
+ }
+ EXPORT_SYMBOL(rtl92c_phy_sw_chnl);
  
-+#define BRCMF_SCAN_IE_LEN_MAX		2048
-+#define BRCMF_PNO_VERSION		2
-+#define BRCMF_PNO_TIME			30
-+#define BRCMF_PNO_REPEAT		4
-+#define BRCMF_PNO_FREQ_EXPO_MAX		3
-+#define BRCMF_PNO_MAX_PFN_COUNT		16
-+#define BRCMF_PNO_ENABLE_ADAPTSCAN_BIT	6
-+#define BRCMF_PNO_HIDDEN_BIT		2
-+#define BRCMF_PNO_WPA_AUTH_ANY		0xFFFFFFFF
-+#define BRCMF_PNO_SCAN_COMPLETE		1
-+#define BRCMF_PNO_SCAN_INCOMPLETE	0
++static void _rtl92c_phy_sw_rf_setting(struct ieee80211_hw *hw, u8 channel)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
 +
- #define BRCMF_ASSOC_PARAMS_FIXED_SIZE \
- 	(sizeof(struct brcmf_assoc_params_le) - sizeof(u16))
++	if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
++		if (channel == 6 && rtlphy->current_chan_bw ==
++		    HT_CHANNEL_WIDTH_20)
++			rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD,
++				      0x00255);
++		else{
++			u32 backupRF0x1A = (u32)rtl_get_rfreg(hw, RF90_PATH_A,
++					    RF_RX_G1, RFREG_OFFSET_MASK);
++			rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD,
++				      backupRF0x1A);
++		}
++	}
++}
++
+ static bool _rtl92c_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+ 					     u32 cmdtableidx, u32 cmdtablesz,
+ 					     enum swchnlcmd_id cmdid,
+@@ -837,6 +857,7 @@ bool _rtl92c_phy_sw_chnl_step_by_step(st
+ 					      currentcmd->para1,
+ 					      RFREG_OFFSET_MASK,
+ 					      rtlphy->rfreg_chnlval[rfpath]);
++			_rtl92c_phy_sw_rf_setting(hw, channel);
+ 			}
+ 			break;
+ 		default:
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+@@ -116,6 +116,9 @@
+ 	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 20, 12)
  
-@@ -832,7 +844,17 @@ brcmf_notify_escan_complete(struct brcmf_cfg80211_priv *cfg_priv,
- 		if (err)
- 			WL_ERR("Scan abort  failed\n");
+ #define CHIP_VER_B			BIT(4)
++#define CHIP_BONDING_IDENTIFIER(_value) (((_value) >> 22) & 0x3)
++#define CHIP_BONDING_92C_1T2R		0x1
++#define RF_TYPE_1T2R			BIT(1)
+ #define CHIP_92C_BITMASK		BIT(0)
+ #define CHIP_UNKNOWN			BIT(7)
+ #define CHIP_92C_1T2R			0x03
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -896,7 +896,6 @@ int rtl92ce_hw_init(struct ieee80211_hw
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	static bool iqk_initialized; /* initialized to false */
+ 	bool rtstatus = true;
+ 	bool is92c;
+ 	int err;
+@@ -921,9 +920,28 @@ int rtl92ce_hw_init(struct ieee80211_hw
+ 
+ 	rtlhal->last_hmeboxnum = 0;
+ 	rtl92c_phy_mac_config(hw);
++	/* because last function modify RCR, so we update
++	 * rcr var here, or TP will unstable for receive_config
++	 * is wrong, RX RCR_ACRC32 will cause TP unstabel & Rx
++	 * RCR_APP_ICV will cause mac80211 unassoc for cisco 1252*/
++	rtlpci->receive_config = rtl_read_dword(rtlpriv, REG_RCR);
++	rtlpci->receive_config &= ~(RCR_ACRC32 | RCR_AICV);
++	rtl_write_dword(rtlpriv, REG_RCR, rtlpci->receive_config);
+ 	rtl92c_phy_bb_config(hw);
+ 	rtlphy->rf_mode = RF_OP_BY_SW_3WIRE;
+ 	rtl92c_phy_rf_config(hw);
++	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
++	    !IS_92C_SERIAL(rtlhal->version)) {
++		rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD, 0x30255);
++		rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G2, MASKDWORD, 0x50a00);
++	} else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
++		rtl_set_rfreg(hw, RF90_PATH_A, 0x0C, MASKDWORD, 0x894AE);
++		rtl_set_rfreg(hw, RF90_PATH_A, 0x0A, MASKDWORD, 0x1AF31);
++		rtl_set_rfreg(hw, RF90_PATH_A, RF_IPA, MASKDWORD, 0x8F425);
++		rtl_set_rfreg(hw, RF90_PATH_A, RF_SYN_G2, MASKDWORD, 0x4F200);
++		rtl_set_rfreg(hw, RF90_PATH_A, RF_RCK1, MASKDWORD, 0x44053);
++		rtl_set_rfreg(hw, RF90_PATH_A, RF_RCK2, MASKDWORD, 0x80201);
++	}
+ 	rtlphy->rfreg_chnlval[0] = rtl_get_rfreg(hw, (enum radio_path)0,
+ 						 RF_CHNLBW, RFREG_OFFSET_MASK);
+ 	rtlphy->rfreg_chnlval[1] = rtl_get_rfreg(hw, (enum radio_path)1,
+@@ -945,11 +963,11 @@ int rtl92ce_hw_init(struct ieee80211_hw
+ 
+ 	if (ppsc->rfpwr_state == ERFON) {
+ 		rtl92c_phy_set_rfpath_switch(hw, 1);
+-		if (iqk_initialized) {
++		if (rtlphy->iqk_initialized) {
+ 			rtl92c_phy_iq_calibrate(hw, true);
+ 		} else {
+ 			rtl92c_phy_iq_calibrate(hw, false);
+-			iqk_initialized = true;
++			rtlphy->iqk_initialized = true;
+ 		}
+ 
+ 		rtl92c_dm_check_txpower_tracking(hw);
+@@ -1004,6 +1022,13 @@ static enum version_8192c _rtl92ce_read_
+ 				   ? CHIP_VENDOR_UMC_B_CUT : CHIP_UNKNOWN) |
+ 				   CHIP_VENDOR_UMC));
+ 		}
++		if (IS_92C_SERIAL(version)) {
++			value32 = rtl_read_dword(rtlpriv, REG_HPON_FSM);
++			version = (enum version_8192c)(version |
++				   ((CHIP_BONDING_IDENTIFIER(value32)
++				   == CHIP_BONDING_92C_1T2R) ?
++				   RF_TYPE_1T2R : 0));
++		}
  	}
--	if (scan_request) {
-+	/*
-+	 * e-scan can be initiated by scheduled scan
-+	 * which takes precedence.
-+	 */
-+	if (cfg_priv->sched_escan) {
-+		WL_SCAN("scheduled scan completed\n");
-+		cfg_priv->sched_escan = false;
-+		if (!aborted)
-+			cfg80211_sched_scan_results(cfg_to_wiphy(cfg_priv));
-+		brcmf_set_mpc(ndev, 1);
-+	} else if (scan_request) {
- 		WL_SCAN("ESCAN Completed scan: %s\n",
- 				aborted ? "Aborted" : "Done");
- 		cfg80211_scan_done(scan_request, aborted);
-@@ -3231,6 +3253,269 @@ brcmf_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *ndev)
  
- }
+ 	switch (version) {
+@@ -1019,12 +1044,30 @@ static enum version_8192c _rtl92ce_read_
+ 	case VERSION_A_CHIP_88C:
+ 		versionid = "A_CHIP_88C";
+ 		break;
++	case VERSION_NORMAL_UMC_CHIP_92C_1T2R_A_CUT:
++		versionid = "A_CUT_92C_1T2R";
++		break;
++	case VERSION_NORMAL_UMC_CHIP_92C_A_CUT:
++		versionid = "A_CUT_92C";
++		break;
++	case VERSION_NORMAL_UMC_CHIP_88C_A_CUT:
++		versionid = "A_CUT_88C";
++		break;
++	case VERSION_NORMAL_UMC_CHIP_92C_1T2R_B_CUT:
++		versionid = "B_CUT_92C_1T2R";
++		break;
++	case VERSION_NORMAL_UMC_CHIP_92C_B_CUT:
++		versionid = "B_CUT_92C";
++		break;
++	case VERSION_NORMAL_UMC_CHIP_88C_B_CUT:
++		versionid = "B_CUT_88C";
++		break;
+ 	default:
+ 		versionid = "Unknown. Bug?";
+ 		break;
+ 	}
  
-+/*
-+ * PFN result doesn't have all the info which are
-+ * required by the supplicant
-+ * (For e.g IEs) Do a target Escan so that sched scan results are reported
-+ * via wl_inform_single_bss in the required format. Escan does require the
-+ * scan request in the form of cfg80211_scan_request. For timebeing, create
-+ * cfg80211_scan_request one out of the received PNO event.
-+ */
-+static s32
-+brcmf_notify_sched_scan_results(struct brcmf_cfg80211_priv *cfg_priv,
-+				struct net_device *ndev,
-+				const struct brcmf_event_msg *e, void *data)
-+{
-+	struct brcmf_pno_net_info_le *netinfo, *netinfo_start;
-+	struct cfg80211_scan_request *request = NULL;
-+	struct cfg80211_ssid *ssid = NULL;
-+	struct ieee80211_channel *channel = NULL;
-+	struct wiphy *wiphy = cfg_to_wiphy(cfg_priv);
-+	int err = 0;
-+	int channel_req = 0;
-+	int band = 0;
-+	struct brcmf_pno_scanresults_le *pfn_result;
-+	u32 result_count;
-+	u32 status;
-+
-+	WL_SCAN("Enter\n");
-+
-+	if (e->event_type == cpu_to_be32(BRCMF_E_PFN_NET_LOST)) {
-+		WL_SCAN("PFN NET LOST event. Do Nothing\n");
-+		return 0;
-+	}
-+
-+	pfn_result = (struct brcmf_pno_scanresults_le *)data;
-+	result_count = le32_to_cpu(pfn_result->count);
-+	status = le32_to_cpu(pfn_result->status);
-+
-+	/*
-+	 * PFN event is limited to fit 512 bytes so we may get
-+	 * multiple NET_FOUND events. For now place a warning here.
-+	 */
-+	WARN_ON(status != BRCMF_PNO_SCAN_COMPLETE);
-+	WL_SCAN("PFN NET FOUND event. count: %d\n", result_count);
-+	if (result_count > 0) {
-+		int i;
-+
-+		request = kzalloc(sizeof(*request), GFP_KERNEL);
-+		ssid = kzalloc(sizeof(*ssid) * result_count, GFP_KERNEL);
-+		channel = kzalloc(sizeof(*channel) * result_count, GFP_KERNEL);
-+		if (!request || !ssid || !channel) {
-+			err = -ENOMEM;
-+			goto out_err;
-+		}
-+
-+		request->wiphy = wiphy;
-+		data += sizeof(struct brcmf_pno_scanresults_le);
-+		netinfo_start = (struct brcmf_pno_net_info_le *)data;
-+
-+		for (i = 0; i < result_count; i++) {
-+			netinfo = &netinfo_start[i];
-+			if (!netinfo) {
-+				WL_ERR("Invalid netinfo ptr. index: %d\n", i);
-+				err = -EINVAL;
-+				goto out_err;
-+			}
-+
-+			WL_SCAN("SSID:%s Channel:%d\n",
-+			netinfo->SSID, netinfo->channel);
-+			memcpy(ssid[i].ssid, netinfo->SSID, netinfo->SSID_len);
-+			ssid[i].ssid_len = netinfo->SSID_len;
-+			request->n_ssids++;
-+
-+			channel_req = netinfo->channel;
-+			if (channel_req <= CH_MAX_2G_CHANNEL)
-+				band = NL80211_BAND_2GHZ;
-+			else
-+				band = NL80211_BAND_5GHZ;
-+			channel[i].center_freq =
-+				ieee80211_channel_to_frequency(channel_req,
-+							       band);
-+			channel[i].band = band;
-+			channel[i].flags |= IEEE80211_CHAN_NO_HT40;
-+			request->channels[i] = &channel[i];
-+			request->n_channels++;
-+		}
-+
-+		/* assign parsed ssid array */
-+		if (request->n_ssids)
-+			request->ssids = &ssid[0];
-+
-+		if (test_bit(WL_STATUS_SCANNING, &cfg_priv->status)) {
-+			/* Abort any on-going scan */
-+			brcmf_abort_scanning(cfg_priv);
-+		}
-+
-+		set_bit(WL_STATUS_SCANNING, &cfg_priv->status);
-+		err = brcmf_do_escan(cfg_priv, wiphy, ndev, request);
-+		if (err) {
-+			clear_bit(WL_STATUS_SCANNING, &cfg_priv->status);
-+			goto out_err;
-+		}
-+		cfg_priv->sched_escan = true;
-+		cfg_priv->scan_request = request;
-+	} else {
-+		WL_ERR("FALSE PNO Event. (pfn_count == 0)\n");
-+		goto out_err;
-+	}
-+
-+	kfree(ssid);
-+	kfree(channel);
-+	kfree(request);
-+	return 0;
-+
-+out_err:
-+	kfree(ssid);
-+	kfree(channel);
-+	kfree(request);
-+	cfg80211_sched_scan_stopped(wiphy);
-+	return err;
-+}
-+
-+#ifndef CONFIG_BRCMISCAN
-+static int brcmf_dev_pno_clean(struct net_device *ndev)
-+{
-+	char iovbuf[128];
-+	int ret;
-+
-+	/* Disable pfn */
-+	ret = brcmf_dev_intvar_set(ndev, "pfn", 0);
-+	if (ret == 0) {
-+		/* clear pfn */
-+		ret = brcmf_dev_iovar_setbuf(ndev, "pfnclear", NULL, 0,
-+					     iovbuf, sizeof(iovbuf));
-+	}
-+	if (ret < 0)
-+		WL_ERR("failed code %d\n", ret);
-+
-+	return ret;
-+}
-+
-+static int brcmf_dev_pno_config(struct net_device *ndev)
-+{
-+	struct brcmf_pno_param_le pfn_param;
-+	char iovbuf[128];
-+
-+	memset(&pfn_param, 0, sizeof(pfn_param));
-+	pfn_param.version = cpu_to_le32(BRCMF_PNO_VERSION);
-+
-+	/* set extra pno params */
-+	pfn_param.flags = cpu_to_le16(1 << BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
-+	pfn_param.repeat = BRCMF_PNO_REPEAT;
-+	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
-+
-+	/* set up pno scan fr */
-+	pfn_param.scan_freq = cpu_to_le32(BRCMF_PNO_TIME);
-+
-+	return brcmf_dev_iovar_setbuf(ndev, "pfn_set",
-+				      &pfn_param, sizeof(pfn_param),
-+				      iovbuf, sizeof(iovbuf));
-+}
-+
-+static int
-+brcmf_cfg80211_sched_scan_start(struct wiphy *wiphy,
-+				struct net_device *ndev,
-+				struct cfg80211_sched_scan_request *request)
-+{
-+	char iovbuf[128];
-+	struct brcmf_cfg80211_priv *cfg_priv = wiphy_priv(wiphy);
-+	struct brcmf_pno_net_param_le pfn;
-+	int i;
-+	int ret = 0;
-+
-+	WL_SCAN("Enter n_match_sets:%d   n_ssids:%d\n",
-+		request->n_match_sets, request->n_ssids);
-+	if (test_bit(WL_STATUS_SCANNING, &cfg_priv->status)) {
-+		WL_ERR("Scanning already : status (%lu)\n", cfg_priv->status);
-+		return -EAGAIN;
-+	}
-+
-+	if (!request || !request->n_ssids || !request->n_match_sets) {
-+		WL_ERR("Invalid sched scan req!! n_ssids:%d\n",
-+		       request->n_ssids);
-+		return -EINVAL;
-+	}
-+
-+	if (request->n_ssids > 0) {
-+		for (i = 0; i < request->n_ssids; i++) {
-+			/* Active scan req for ssids */
-+			WL_SCAN(">>> Active scan req for ssid (%s)\n",
-+				request->ssids[i].ssid);
-+
-+			/*
-+			 * match_set ssids is a supert set of n_ssid list,
-+			 * so we need not add these set seperately.
-+			 */
-+		}
-+	}
-+
-+	if (request->n_match_sets > 0) {
-+		/* clean up everything */
-+		ret = brcmf_dev_pno_clean(ndev);
-+		if  (ret < 0) {
-+			WL_ERR("failed error=%d\n", ret);
-+			return ret;
-+		}
-+
-+		/* configure pno */
-+		ret = brcmf_dev_pno_config(ndev);
-+		if (ret < 0) {
-+			WL_ERR("PNO setup failed!! ret=%d\n", ret);
-+			return -EINVAL;
-+		}
-+
-+		/* configure each match set */
-+		for (i = 0; i < request->n_match_sets; i++) {
-+			struct cfg80211_ssid *ssid;
-+			u32 ssid_len;
-+
-+			ssid = &request->match_sets[i].ssid;
-+			ssid_len = ssid->ssid_len;
-+
-+			if (!ssid_len) {
-+				WL_ERR("skip broadcast ssid\n");
-+				continue;
-+			}
-+			pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
-+			pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
-+			pfn.wsec = cpu_to_le32(0);
-+			pfn.infra = cpu_to_le32(1);
-+			pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
-+			pfn.ssid.SSID_len = cpu_to_le32(ssid_len);
-+			memcpy(pfn.ssid.SSID, ssid->ssid, ssid_len);
-+			ret = brcmf_dev_iovar_setbuf(ndev, "pfn_add",
-+						     &pfn, sizeof(pfn),
-+						     iovbuf, sizeof(iovbuf));
-+			WL_SCAN(">>> PNO filter %s for ssid (%s)\n",
-+				ret == 0 ? "set" : "failed",
-+				ssid->ssid);
-+		}
-+		/* Enable the PNO */
-+		if (brcmf_dev_intvar_set(ndev, "pfn", 1) < 0) {
-+			WL_ERR("PNO enable failed!! ret=%d\n", ret);
-+			return -EINVAL;
-+		}
-+	} else {
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
-+					  struct net_device *ndev)
-+{
-+	struct brcmf_cfg80211_priv *cfg_priv = wiphy_to_cfg(wiphy);
-+
-+	WL_SCAN("enter\n");
-+	brcmf_dev_pno_clean(ndev);
-+	if (cfg_priv->sched_escan)
-+		brcmf_notify_escan_complete(cfg_priv, ndev, true, true);
-+	return 0;
-+}
-+#endif /* CONFIG_BRCMISCAN */
-+
- #ifdef CONFIG_NL80211_TESTMODE
- static int brcmf_cfg80211_testmode(struct wiphy *wiphy, void *data, int len)
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
++	RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+ 		 "Chip Version ID: %s\n", versionid);
+ 
+ 	switch (version & 0x3) {
+@@ -1197,6 +1240,7 @@ static void _rtl92ce_poweroff_adapter(st
  {
-@@ -3273,6 +3558,11 @@ static struct cfg80211_ops wl_cfg80211_ops = {
- 	.set_pmksa = brcmf_cfg80211_set_pmksa,
- 	.del_pmksa = brcmf_cfg80211_del_pmksa,
- 	.flush_pmksa = brcmf_cfg80211_flush_pmksa,
-+#ifndef CONFIG_BRCMISCAN
-+	/* scheduled scan need e-scan, which is mutual exclusive with i-scan */
-+	.sched_scan_start = brcmf_cfg80211_sched_scan_start,
-+	.sched_scan_stop = brcmf_cfg80211_sched_scan_stop,
-+#endif
- #ifdef CONFIG_NL80211_TESTMODE
- 	.testmode_cmd = brcmf_cfg80211_testmode
- #endif
-@@ -3294,6 +3584,17 @@ static s32 brcmf_mode_to_nl80211_iftype(s32 mode)
- 	return err;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci_priv *rtlpcipriv = rtl_pcipriv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 	u8 u1b_tmp;
+ 	u32 u4b_tmp;
+ 
+@@ -1225,7 +1269,8 @@ static void _rtl92ce_poweroff_adapter(st
+ 	rtl_write_word(rtlpriv, REG_GPIO_IO_SEL, 0x0790);
+ 	rtl_write_word(rtlpriv, REG_LEDCFG0, 0x8080);
+ 	rtl_write_byte(rtlpriv, REG_AFE_PLL_CTRL, 0x80);
+-	rtl_write_byte(rtlpriv, REG_SPS0_CTRL, 0x23);
++	if (!IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
++		rtl_write_byte(rtlpriv, REG_SPS0_CTRL, 0x23);
+ 	if (rtlpcipriv->bt_coexist.bt_coexistence) {
+ 		u4b_tmp = rtl_read_dword(rtlpriv, REG_AFE_XTAL_CTRL);
+ 		u4b_tmp |= 0x03824800;
+@@ -1254,6 +1299,9 @@ void rtl92ce_card_disable(struct ieee802
+ 		rtlpriv->cfg->ops->led_control(hw, LED_CTL_POWER_OFF);
+ 	RT_SET_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+ 	_rtl92ce_poweroff_adapter(hw);
++
++	/* after power off we should do iqk again */
++	rtlpriv->phy.iqk_initialized = false;
  }
  
-+static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
-+{
-+#ifndef CONFIG_BRCMFISCAN
-+	/* scheduled scan settings */
-+	wiphy->max_sched_scan_ssids = BRCMF_PNO_MAX_PFN_COUNT;
-+	wiphy->max_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
-+	wiphy->max_sched_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
-+	wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
-+#endif
-+}
+ void rtl92ce_interrupt_recognized(struct ieee80211_hw *hw,
+@@ -1355,9 +1403,9 @@ static void _rtl92ce_read_txpower_info_f
+ 			tempval = hwinfo[EEPROM_TXPOWERHT40_2SDIFF + i];
+ 		else
+ 			tempval = EEPROM_DEFAULT_HT40_2SDIFF;
+-		rtlefuse->eeprom_chnlarea_txpwr_ht40_2sdiif[RF90_PATH_A][i] =
++		rtlefuse->eprom_chnl_txpwr_ht40_2sdf[RF90_PATH_A][i] =
+ 		    (tempval & 0xf);
+-		rtlefuse->eeprom_chnlarea_txpwr_ht40_2sdiif[RF90_PATH_B][i] =
++		rtlefuse->eprom_chnl_txpwr_ht40_2sdf[RF90_PATH_B][i] =
+ 		    ((tempval & 0xf0) >> 4);
+ 	}
+ 
+@@ -1381,7 +1429,7 @@ static void _rtl92ce_read_txpower_info_f
+ 				"RF(%d) EEPROM HT40 2S Diff Area(%d) = 0x%x\n",
+ 				rf_path, i,
+ 				rtlefuse->
+-				eeprom_chnlarea_txpwr_ht40_2sdiif[rf_path][i]);
++				eprom_chnl_txpwr_ht40_2sdf[rf_path][i]);
+ 
+ 	for (rf_path = 0; rf_path < 2; rf_path++) {
+ 		for (i = 0; i < 14; i++) {
+@@ -1396,14 +1444,14 @@ static void _rtl92ce_read_txpower_info_f
+ 			if ((rtlefuse->
+ 			     eeprom_chnlarea_txpwr_ht40_1s[rf_path][index] -
+ 			     rtlefuse->
+-			     eeprom_chnlarea_txpwr_ht40_2sdiif[rf_path][index])
++			     eprom_chnl_txpwr_ht40_2sdf[rf_path][index])
+ 			    > 0) {
+ 				rtlefuse->txpwrlevel_ht40_2s[rf_path][i] =
+ 				    rtlefuse->
+ 				    eeprom_chnlarea_txpwr_ht40_1s[rf_path]
+ 				    [index] -
+ 				    rtlefuse->
+-				    eeprom_chnlarea_txpwr_ht40_2sdiif[rf_path]
++				    eprom_chnl_txpwr_ht40_2sdf[rf_path]
+ 				    [index];
+ 			} else {
+ 				rtlefuse->txpwrlevel_ht40_2s[rf_path][i] = 0;
+@@ -1912,6 +1960,8 @@ static void rtl92ce_update_hal_rate_mask
+ 			ratr_bitmap &= 0x0f0ff0ff;
+ 		break;
+ 	}
++	sta_entry->ratr_index = ratr_index;
 +
- static struct wireless_dev *brcmf_alloc_wdev(s32 sizeof_iface,
- 					  struct device *ndev)
+ 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+ 		 "ratr_bitmap :%x\n", ratr_bitmap);
+ 	*(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+@@ -82,6 +82,8 @@ bool rtl92c_phy_mac_config(struct ieee80
+ 
+ 	if (is92c)
+ 		rtl_write_byte(rtlpriv, 0x14, 0x71);
++	else
++		rtl_write_byte(rtlpriv, 0x04CA, 0x0A);
+ 	return rtstatus;
+ }
+ 
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -162,12 +162,10 @@ int rtl92c_init_sw_vars(struct ieee80211
+ 
+ 	/* request fw */
+ 	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
+-	    !IS_92C_SERIAL(rtlhal->version)) {
++	    !IS_92C_SERIAL(rtlhal->version))
+ 		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU.bin";
+-	} else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
++	else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
+ 		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU_B.bin";
+-		pr_info("****** This B_CUT device may not work with kernels 3.6 and earlier\n");
+-	}
+ 
+ 	rtlpriv->max_fw_size = 0x4000;
+ 	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -127,11 +127,11 @@ static void _rtl92ce_query_rxphystatus(s
  {
-@@ -3332,6 +3633,7 @@ static struct wireless_dev *brcmf_alloc_wdev(s32 sizeof_iface,
- 								 * save mode
- 								 * by default
- 								 */
-+	brcmf_wiphy_pno_params(wdev->wiphy);
- 	err = wiphy_register(wdev->wiphy);
- 	if (err < 0) {
- 		WL_ERR("Could not register wiphy device (%d)\n", err);
-@@ -3734,6 +4036,7 @@ static void brcmf_init_eloop_handler(struct brcmf_cfg80211_event_loop *el)
- 	el->handler[BRCMF_E_ROAM] = brcmf_notify_roaming_status;
- 	el->handler[BRCMF_E_MIC_ERROR] = brcmf_notify_mic_status;
- 	el->handler[BRCMF_E_SET_SSID] = brcmf_notify_connect_status;
-+	el->handler[BRCMF_E_PFN_NET_FOUND] = brcmf_notify_sched_scan_results;
- }
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct phy_sts_cck_8192s_t *cck_buf;
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
+ 	s8 rx_pwr_all = 0, rx_pwr[4];
+ 	u8 evm, pwdb_all, rf_rx_num = 0;
+ 	u8 i, max_spatial_stream;
+ 	u32 rssi, total_rssi = 0;
+-	bool in_powersavemode = false;
+ 	bool is_cck_rate;
  
- static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_priv *cfg_priv)
-@@ -4105,6 +4408,7 @@ static s32 brcmf_dongle_eventmsg(struct net_device *ndev)
- 	setbit(eventmask, BRCMF_E_JOIN_START);
- 	setbit(eventmask, BRCMF_E_SCAN_COMPLETE);
- 	setbit(eventmask, BRCMF_E_ESCAN_RESULT);
-+	setbit(eventmask, BRCMF_E_PFN_NET_FOUND);
+ 	is_cck_rate = RX_HAL_IS_CCK_RATE(pdesc);
+@@ -147,7 +147,7 @@ static void _rtl92ce_query_rxphystatus(s
+ 		u8 report, cck_highpwr;
+ 		cck_buf = (struct phy_sts_cck_8192s_t *)p_drvinfo;
  
- 	brcmf_c_mkiovar("event_msgs", eventmask, BRCMF_EVENTING_MASK_LEN,
- 			iovbuf, sizeof(iovbuf));
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index 3b21297..b5c3fd9 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -295,6 +295,87 @@ struct escan_info {
- 	struct net_device *ndev;
- };
- 
-+/**
-+ * struct brcmf_pno_param_le - PNO scan configuration parameters
-+ *
-+ * @version: PNO parameters version.
-+ * @scan_freq: scan frequency.
-+ * @lost_network_timeout: #sec. to declare discovered network as lost.
-+ * @flags: Bit field to control features of PFN such as sort criteria auto
-+ *	enable switch and background scan.
-+ * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
-+ *	criteria.
-+ * @bestn: number of best networks in each scan.
-+ * @mscan: number of scans recorded.
-+ * @repeat: minimum number of scan intervals before scan frequency changes
-+ *	in adaptive scan.
-+ * @exp: exponent of 2 for maximum scan interval.
-+ * @slow_freq: slow scan period.
-+ */
-+struct brcmf_pno_param_le {
-+	__le32 version;
-+	__le32 scan_freq;
-+	__le32 lost_network_timeout;
-+	__le16 flags;
-+	__le16 rssi_margin;
-+	u8 bestn;
-+	u8 mscan;
-+	u8 repeat;
-+	u8 exp;
-+	__le32 slow_freq;
-+};
-+
-+/**
-+ * struct brcmf_pno_net_param_le - scan parameters per preferred network.
-+ *
-+ * @ssid: ssid name and its length.
-+ * @flags: bit2: hidden.
-+ * @infra: BSS vs IBSS.
-+ * @auth: Open vs Closed.
-+ * @wpa_auth: WPA type.
-+ * @wsec: wsec value.
-+ */
-+struct brcmf_pno_net_param_le {
-+	struct brcmf_ssid_le ssid;
-+	__le32 flags;
-+	__le32 infra;
-+	__le32 auth;
-+	__le32 wpa_auth;
-+	__le32 wsec;
-+};
-+
-+/**
-+ * struct brcmf_pno_net_info_le - information per found network.
-+ *
-+ * @bssid: BSS network identifier.
-+ * @channel: channel number only.
-+ * @SSID_len: length of ssid.
-+ * @SSID: ssid characters.
-+ * @RSSI: receive signal strength (in dBm).
-+ * @timestamp: age in seconds.
-+ */
-+struct brcmf_pno_net_info_le {
-+	u8 bssid[ETH_ALEN];
-+	u8 channel;
-+	u8 SSID_len;
-+	u8 SSID[32];
-+	__le16	RSSI;
-+	__le16	timestamp;
-+};
-+
-+/**
-+ * struct brcmf_pno_scanresults_le - result returned in PNO NET FOUND event.
-+ *
-+ * @version: PNO version identifier.
-+ * @status: indicates completion status of PNO scan.
-+ * @count: amount of brcmf_pno_net_info_le entries appended.
-+ */
-+struct brcmf_pno_scanresults_le {
-+	__le32 version;
-+	__le32 status;
-+	__le32 count;
-+};
-+
- /* dongle private data of cfg80211 interface */
- struct brcmf_cfg80211_priv {
- 	struct wireless_dev *wdev;	/* representing wl cfg80211 device */
-@@ -325,6 +406,7 @@ struct brcmf_cfg80211_priv {
- 	bool iscan_on;		/* iscan on/off switch */
- 	bool iscan_kickstart;	/* indicate iscan already started */
- 	bool active_scan;	/* current scan mode */
-+	bool sched_escan;	/* e-scan for scheduled scan support running */
- 	bool ibss_starter;	/* indicates this sta is ibss starter */
- 	bool link_up;		/* link/connection up flag */
- 	bool pwr_save;		/* indicate whether dongle to support
--- 
-1.7.9.5
-
-
+-		if (!in_powersavemode)
++		if (ppsc->rfpwr_state == ERFON)
+ 			cck_highpwr = (u8) rtl_get_bbreg(hw,
+ 						 RFPGA0_XA_HSSIPARAMETER2,
+ 						 BIT(9));
