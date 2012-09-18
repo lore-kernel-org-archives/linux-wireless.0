@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:39397 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752777Ab2IERd3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 13:33:29 -0400
-Message-ID: <50478CE9.6040103@canonical.com> (sfid-20120905_193333_767238_C36A8F6B)
-Date: Wed, 05 Sep 2012 10:33:29 -0700
-From: Brad Figg <brad.figg@canonical.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4815 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751243Ab2IRQUb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2012 12:20:31 -0400
+Message-ID: <50589F42.9060608@broadcom.com> (sfid-20120918_182035_996595_AE1F37BE)
+Date: Tue, 18 Sep 2012 18:20:18 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	stable <stable@vger.kernel.org>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
-	Milan Bouchet-Valat <nalimilan@club-internet.fr>
-Subject: Re: [PATCH 2/2] brcmsmac: rework of mac80211 .flush() callback operation
-References: <1346838562-4818-1-git-send-email-arend@broadcom.com> <1346838562-4818-3-git-send-email-arend@broadcom.com> <20120905165735.GD302@thinkpad-t410>
-In-Reply-To: <20120905165735.GD302@thinkpad-t410>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: remove obselete comment for
+ .sched_scan_stop() callback
+References: <1347958799-4060-1-git-send-email-arend@broadcom.com>
+ <1347964664.4283.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1347964664.4283.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/05/2012 09:57 AM, Seth Forshee wrote:
-> On Wed, Sep 05, 2012 at 11:49:22AM +0200, Arend van Spriel wrote:
->> This patch addresses a long standing issue of the driver with the
->> mac80211 .flush() callback. Since implementing the .flush() callback
->> a number of issues have been fixed, but a WARN_ON_ONCE() was still
->> triggered because the flush takes too much time. The flush now
->> makes use of a waitqueue and still has a timeout on which a warning
->> is given.
-> 
-> Brad Figg and I have been testing this patch with a 3.5 kernel. With the
-> patch we're both still seeing the warning from brcms_ops_flush(), and
-> Brad has also seen the "No where to go" message in
-> brcms_c_prec_enq_head(). But the connection continues to work when this
-> happens, whereas previously we had to reconnect, so this is definitely
-> an improvement.
-> 
-> Seth
-> 
+On 09/18/2012 12:37 PM, Johannes Berg wrote:
+> On Tue, 2012-09-18 at 10:59 +0200, Arend van Spriel wrote:
+>> The kerneldoc comment for .sched_scan_stop() callback describes a
+>> driver_initiated flag, but the interface does not hold such a flag.
+>>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> ---
+>> Hi Johannes,
+>>
+>> Was working on scheduled scan support for brcmfmac and got a little
+>> confused about .sched_scan_stop() documentation. Not sure if this
+>> was stale documentation.
+>
+> Yes I believe this was some sort of circular call that we removed
+> (driver calls stop, cfg80211 tells driver it itself stopped??)
 
-Arend,
+I can come up with a scenario, where scheduled scan related cleanup is 
+done in sched_scan_stop and needs different behaviour when initiated by 
+driver as opposed to user-space initiated. However, it feels awkward so 
+good riddance.
 
-Though the driver is definitely better, it is still struggling quite a
-bit as can be seen in the iperf output found at:
-    http://pastebin.ubuntu.com/1187578/
+> I'll apply this (and fix the typo ("obsolete") in the subject)
+>
+> johannes
 
--- 
-Brad Figg brad.figg@canonical.com http://www.canonical.com
+Thanks (and thanks for fixing the subject ;-) ).
+
+Gr. AvS
+
+
