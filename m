@@ -1,68 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:58336
-	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758331Ab2I1Rej (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33557 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754710Ab2IRBN0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 13:34:39 -0400
-Message-ID: <5065DFAD.2070305@posedge.com> (sfid-20120928_193445_117823_9F759FCD)
-Date: Fri, 28 Sep 2012 23:04:37 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+	Mon, 17 Sep 2012 21:13:26 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [RFC v2] cfg80211: VHT regulatory
-References: <5046FB3D.6090803@posedge.com>  <1346852356.4364.9.camel@jlt4.sipsolutions.net>  <50481C2E.5040303@posedge.com>  <1346925298.5469.4.camel@jlt4.sipsolutions.net>  <50489165.1080902@posedge.com>  <1347019809.4256.21.camel@jlt4.sipsolutions.net>  <50655B36.5060500@posedge.com>  <1348828789.13298.5.camel@jlt4.sipsolutions.net>  (sfid-20120928_123917_337659_1AA6C9C6) <1348828963.13298.8.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1348828963.13298.8.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <CAB=NE6W9O-XvQUJgyfVgNtrNH6P-U57oMD+ptNGFid4bqZqv-Q@mail.gmail.com>
+References: <20566.39957.867109.459668@gargle.gargle.HOWL> <CAB=NE6W9O-XvQUJgyfVgNtrNH6P-U57oMD+ptNGFid4bqZqv-Q@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 17 Sep 2012 18:13:04 -0700
+Message-ID: <CAB=NE6VBk6_Fq7NTXXDUK1AVMBXfLRY52n4iLp+njX0e_ms7hA@mail.gmail.com> (sfid-20120918_031333_692352_2361DBA5)
+Subject: Re: [PATCH 0/3] Patches for compat 3.6.y
+To: Sujith Manoharan <c_manoha@qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org,
+	Konstantin Ryabitsev <mricon@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/28/2012 4:12 PM, Johannes Berg wrote:
-> On Fri, 2012-09-28 at 12:39 +0200, Johannes Berg wrote:
->> On Fri, 2012-09-28 at 13:39 +0530, Mahesh Palivela wrote:
->>> On 09/07/2012 05:40 PM, Johannes Berg wrote:
->>>>
->>>> We don't have to do any calculation in kernel though as far as I can
->>>> tell? Maybe we do need the channel, but I think in terms of
->>>> *specifying*, in particular in the nl80211 and cfg80211 APIs, we should
->>>> stick to the standard if we're going to change it now.
->>>>
->>>
->>> struct ieee80211_channel_config {
->>>           enum ieee80211_chan_width chan_width;
->>>           u16 center_freq1;
->>>           u16 center_freq2;
->>>           u16 prim_chan_freq;
->>> };
->>>
->>> If we stick to standard, all u16 become u8, as their values range is
->>> from 1-200. But these numbers have to be converted to freqKHz in
->>> reg_chan_use_permitted() to find fits in reg rule or not?
->>> Is that ok?
+On Mon, Sep 17, 2012 at 3:21 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> On Sun, Sep 16, 2012 at 8:42 PM, Sujith Manoharan <c_manoha@qualcomm.com> wrote:
+>> Hi,
 >>
->> I prefer MHz for center freqs, but offset for the primary channel, and
->> this is exactly like table 22-22 in the 802.11ac draft, so only the "u16
->> primary_channel_freq" becomes "u8 primary_channel_offset", not all of
->> them change, no?
+>> These patches are for the 3.6.y branch in compat-drivers.
+>>
+>> Sujith
+>>
+>> Sujith Manoharan (3):
+>>   compat-drivers: Add pending stable patches
+>>   compat-drivers: Add new cherry picked patches
+>>   compat-drivers: Add linux-next pending patches
 >
-> Ohh, wait, it's called frequency in table 22-22 but actually says the
-> valid range is 1-200 ... wtf? Ok you're right, then it uses the equation
-> 22-99, but ... hmm that's a bit stupid since it needs the (non-constant)
-> "Channel starting frequency".
+> Great thanks, applied and pushed!
 >
-> Ok so maybe that wasn't such a good idea. How about we just change
-> prim_chan_freq to prim_chan_offset and leave the other two unchanged?
-
-we need "channel starting frequency" anyways for calculating center 
-freq. so we can use same constant for computing primary chan freq as 
-well. why switch to prim_chan_offset?
-
+> v3.6-rc6 was pushed out recently as well, and I updated the trees to
+> reflect that. Based on that and your patches I've kicked out a new set
+> of first tarballs based on v3.6-rc1. These releases did not have any
+> pending-stable/ patches as in between v3.6-rc6..next-20120917 and as
+> such there are no "-s" releases.
 >
-> Sorry.
+> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6-rc6-1.tar.bz2
+> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6-rc6-1-n.tar.bz2
+> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6-rc6-1-np.tar.bz2
+> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6-rc6-1-npc.tar.bz2
+>
+> Legend
+>
+> Extra flag meanings:
+>
+> -s - get and apply pending-stable/ from linux-next.git
+> -n - apply the patches linux-next-cherry-picks/ directory
+> -p - apply the patches on the linux-next-pending/ directory
+> -c - apply the patches on the crap/ directory
+>
+> When no flags are used it means a vanilla release with 0 delta.
+>
+> The respective ckmake logs for all releases will be uploaded in about
+> 2-3 hours, but before tagging a release I did run ckmake test against
+> the -snpc release and everything went fine so I don't suspect issues
+> with the rest of the releases.
 
--- 
-Thanks,
-Mahesh
+Respective ckmake logs:
+
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/ckmake-3.6-rc6-1.log.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/ckmake-3.6-rc6-1-n.log.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/ckmake-3.6-rc6-1-np.log.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/ckmake-3.6-rc6-1-npc.log.bz2
+
+The results are all OK for all 21 kernels. The compressed logs have
+all the details though, a summary for all kernels below.
+
+Trying kernel 3.5.0-030500-generic [OK]
+Trying kernel 3.4.4-030404-generic [OK]
+Trying kernel 3.3.7-030307-generic [OK]
+Trying kernel 3.2.2-030202-generic [OK]
+Trying kernel 3.1.10-030110-generic [OK]
+Trying kernel 3.0.18-030018-generic [OK]
+Trying kernel 2.6.39-02063904-generic [OK]
+Trying kernel 2.6.38-02063808-generic [OK]
+Trying kernel 2.6.37-02063706-generic [OK]
+Trying kernel 2.6.36-02063604-generic [OK]
+Trying kernel 2.6.35-02063512-generic [OK]
+Trying kernel 2.6.34-02063410-generic [OK]
+Trying kernel 2.6.33-02063305-generic [OK]
+Trying kernel 2.6.32-02063255-generic [OK]
+Trying kernel 2.6.31-02063113-generic [OK]
+Trying kernel 2.6.30-02063010-generic [OK]
+Trying kernel 2.6.29-02062906-generic [OK]
+Trying kernel 2.6.28-02062810-generic [OK]
+Trying kernel 2.6.27-020627-generic [OK]
+Trying kernel 2.6.26-020626-generic [OK]
+Trying kernel 2.6.25-020625-generic [OK]
+Trying kernel 2.6.24-020624-generic [OK]
+
+real    26m59.600s
+user    141m37.487s
+sys     13m34.835s
+
+  Luis
