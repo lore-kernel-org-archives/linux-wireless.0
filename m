@@ -1,149 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53891 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104Ab2IZC0F (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39492 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756166Ab2IRHJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 22:26:05 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20578.26475.892960.621162@gargle.gargle.HOWL> (sfid-20120926_042609_697002_E0723377)
-Date: Wed, 26 Sep 2012 07:54:43 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/2] ath9k: Handle errors properly in MCI initialization
+	Tue, 18 Sep 2012 03:09:23 -0400
+Message-ID: <1347952199.6503.3.camel@jlt4.sipsolutions.net> (sfid-20120918_090927_009018_DC8FE745)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: artem.bityutskiy@linux.intel.com
+Cc: Eric Dumazet <edumazet@google.com>, linux-wireless@vger.kernel.org
+Date: Tue, 18 Sep 2012 09:09:59 +0200
+In-Reply-To: <1347892887.7112.9.camel@sauron.fi.intel.com> (sfid-20120917_163617_677167_0B529F43)
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 (sfid-20120917_163617_677167_0B529F43)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The MCI initialization path has various points of failures,
-handle these to ensure that we bail out correctly in such
-cases.
+On Mon, 2012-09-17 at 17:41 +0300, Artem Bityutskiy wrote:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 21 +++++++++++----------
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |  8 ++++----
- drivers/net/wireless/ath/ath9k/mci.c        | 11 ++++++++---
- 3 files changed, 23 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 8dbb60b..44c202c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -813,8 +813,8 @@ static void ar9003_mci_osla_setup(struct ath_hw *ah, bool enable)
- 		      AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN, 1);
- }
- 
--void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
--		      bool is_full_sleep)
-+int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
-+		     bool is_full_sleep)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-@@ -824,14 +824,13 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 		is_full_sleep, is_2g);
- 
- 	if (!mci->gpm_addr && !mci->sched_addr) {
--		ath_dbg(common, MCI,
--			"MCI GPM and schedule buffers are not allocated\n");
--		return;
-+		ath_err(common, "MCI GPM and schedule buffers are not allocated\n");
-+		return -ENOMEM;
- 	}
- 
- 	if (REG_READ(ah, AR_BTCOEX_CTRL) == 0xdeadbeef) {
--		ath_dbg(common, MCI, "BTCOEX control register is dead\n");
--		return;
-+		ath_err(common, "BTCOEX control register is dead\n");
-+		return -EINVAL;
- 	}
- 
- 	/* Program MCI DMA related registers */
-@@ -913,6 +912,8 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 
- 	if (en_int)
- 		ar9003_mci_enable_interrupt(ah);
-+
-+	return 0;
- }
- 
- void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
-@@ -1144,8 +1145,8 @@ void ar9003_mci_init_cal_done(struct ath_hw *ah)
- 	ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
- }
- 
--void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
--		      u16 len, u32 sched_addr)
-+int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
-+		     u16 len, u32 sched_addr)
- {
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
- 
-@@ -1154,7 +1155,7 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
- 	mci->gpm_len = len;
- 	mci->sched_addr = sched_addr;
- 
--	ar9003_mci_reset(ah, true, true, true);
-+	return ar9003_mci_reset(ah, true, true, true);
- }
- EXPORT_SYMBOL(ar9003_mci_setup);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 30acf28..2a2d018 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -249,8 +249,8 @@ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
- 			     u32 *payload, u8 len, bool wait_done,
- 			     bool check_bt);
- u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type);
--void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
--		      u16 len, u32 sched_addr);
-+int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
-+		     u16 len, u32 sched_addr);
- void ar9003_mci_cleanup(struct ath_hw *ah);
- void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- 			      u32 *rx_msg_intr);
-@@ -272,8 +272,8 @@ void ar9003_mci_check_bt(struct ath_hw *ah);
- bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
- int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 			 struct ath9k_hw_cal_data *caldata);
--void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
--		      bool is_full_sleep);
-+int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
-+		     bool is_full_sleep);
- void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
- void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
- void ar9003_mci_set_power_awake(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 8f51e9e..ec2d7c8 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -392,6 +392,7 @@ int ath_mci_setup(struct ath_softc *sc)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_mci_coex *mci = &sc->mci_coex;
- 	struct ath_mci_buf *buf = &mci->sched_buf;
-+	int ret;
- 
- 	buf->bf_addr = dma_alloc_coherent(sc->dev,
- 				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
-@@ -411,9 +412,13 @@ int ath_mci_setup(struct ath_softc *sc)
- 	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr + mci->sched_buf.bf_len;
- 	mci->gpm_buf.bf_paddr = mci->sched_buf.bf_paddr + mci->sched_buf.bf_len;
- 
--	ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
--			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
--			 mci->sched_buf.bf_paddr);
-+	ret = ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
-+			       mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
-+			       mci->sched_buf.bf_paddr);
-+	if (ret) {
-+		ath_err(common, "Failed to initialize MCI\n");
-+		return ret;
-+	}
- 
- 	INIT_WORK(&sc->mci_work, ath9k_mci_work);
- 	ath_dbg(common, MCI, "MCI Initialized\n");
--- 
-1.7.12
+> OK, finally I got it. After 3 days of hardcore intelligent bisecting
+>         I've found out that tethering in 3.5 works for me if I revert
+> these 2
+>         patches:
+>         
+>             56138f5 iwlwifi: dont pull too much payload in skb head
+>             3edaf3e mac80211: manage AP netdev carrier state
+
+Hm. This is curious. *How* does AP mode fail? You said earlier stations
+failed to connect, but can they actually get associated? I'm curious
+because while I could see the carrier state thing causing issues (on old
+hostapd versions that we didn't test), I'm not sure I see how the skb
+payload makes a difference since mac80211 will linearize management
+frames (so association should work) and data frames don't matter (so
+authorization should work) ... unless there's a bug somewhere in
+mac80211 where it forgets to pskb_may_pull(), but I don't see any such
+place right now.
+
+johannes
 
