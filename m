@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48381 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250Ab2I0JNH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 05:13:07 -0400
-Message-ID: <1348737219.10353.6.camel@jlt4.sipsolutions.net> (sfid-20120927_111311_807200_8F5233B3)
-Subject: Re: [PATCH 0/3] add scan flags support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sam Leffler <sleffler@chromium.org>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, eliad <eliad@wizery.com>,
-	coelho <coelho@ti.com>
-Date: Thu, 27 Sep 2012 11:13:39 +0200
-In-Reply-To: <20120926165952.766801E10D3@sleffler.sfo.corp.google.com> (sfid-20120926_185956_215056_52A41944)
-References: <20120926165952.766801E10D3@sleffler.sfo.corp.google.com>
-	 (sfid-20120926_185956_215056_52A41944)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3071 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751687Ab2ISUVi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2012 16:21:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/13] brcmfmac: remove unused usb bmac model code.
+Date: Wed, 19 Sep 2012 22:21:14 +0200
+Message-ID: <1348086078-19183-10-git-send-email-arend@broadcom.com> (sfid-20120919_222151_586545_8650F367)
+In-Reply-To: <1348086078-19183-1-git-send-email-arend@broadcom.com>
+References: <1348086078-19183-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-25 at 15:49 -0700, Sam Leffler wrote:
-> These add per-scan request controls for optional behaviours we've found
-> useful (they've been in Chrome OS for a long time).  A patch for iw will
-> follow separately and the mods for wpa_supplicant are in our repo and
-> I'll push them to Jouni if these are accepted.
-> 
-> Sam Leffler (3):
->   {nl,cfg}80211: add a flags word to scan requests
->   mac80211: add support for tx to abort scan requests
->   cfg80211: add support for flushing old scan results
+From: Hante Meuleman <meuleman@broadcom.com>
 
-I like the flushing one, but I'm not so sure about the TX abort thing.
-How do you suggest to handle that when scanning is offloaded to the
-driver and/or firmware? Especially given that multi-channel is going to
-require a firmware implementation, I'm not sure how to achieve good
-behaviour across the different implementations.
+clean up code.
 
-Maybe it'd be worthwhile to go for a more generic approach, marking
-scans as "low priority" or "high priority" or similar, and then
-implementing such behaviour based on such settings? Our device for
-example has a notion of "background scan" vs. "forced scan", which
-behave differently in the firmware, and it would be useful to be able to
-use these different behaviours. However, I can't say that "TX abort"
-would be a guaranteed scan behaviour for a "background scan".
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |   18 +++---------------
+ 1 file changed, 3 insertions(+), 15 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index edb4311..246d06b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -134,8 +134,6 @@ struct brcmf_usbdev_info {
+ 	wait_queue_head_t ctrl_wait;
+ 	ulong ctl_op;
+ 
+-	bool rxctl_deferrespok;
+-
+ 	struct urb *bulk_urb; /* used for FW download */
+ 	struct urb *intr_urb; /* URB for interrupt endpoint */
+ 	int intr_size;          /* Size of interrupt message */
+@@ -301,17 +299,9 @@ brcmf_usb_recv_ctl(struct brcmf_usbdev_info *devinfo, u8 *buf, int len)
+ 	devinfo->ctl_read.wLength = cpu_to_le16p(&size);
+ 	devinfo->ctl_urb->transfer_buffer_length = size;
+ 
+-	if (devinfo->rxctl_deferrespok) {
+-		/* BMAC model */
+-		devinfo->ctl_read.bRequestType = USB_DIR_IN
+-			| USB_TYPE_VENDOR | USB_RECIP_INTERFACE;
+-		devinfo->ctl_read.bRequest = DL_DEFER_RESP_OK;
+-	} else {
+-		/* full dongle model */
+-		devinfo->ctl_read.bRequestType = USB_DIR_IN
+-			| USB_TYPE_CLASS | USB_RECIP_INTERFACE;
+-		devinfo->ctl_read.bRequest = 1;
+-	}
++	devinfo->ctl_read.bRequestType = USB_DIR_IN
++		| USB_TYPE_CLASS | USB_RECIP_INTERFACE;
++	devinfo->ctl_read.bRequest = 1;
+ 
+ 	usb_fill_control_urb(devinfo->ctl_urb,
+ 		devinfo->usbdev,
+@@ -1312,8 +1302,6 @@ struct brcmf_usbdev *brcmf_usb_attach(struct brcmf_usbdev_info *devinfo,
+ 		brcmf_dbg(ERROR, "usb_alloc_urb (ctl) failed\n");
+ 		goto error;
+ 	}
+-	devinfo->rxctl_deferrespok = 0;
+-
+ 	devinfo->bulk_urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!devinfo->bulk_urb) {
+ 		brcmf_dbg(ERROR, "usb_alloc_urb (bulk) failed\n");
+-- 
+1.7.9.5
+
 
