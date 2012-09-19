@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:45071 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751627Ab2IZD2h (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:51328 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752140Ab2ISLSu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 23:28:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 01/15] mwifiex: fix coding style issue
-Date: Tue, 25 Sep 2012 20:23:31 -0700
-Message-Id: <1348629825-12001-2-git-send-email-bzhao@marvell.com> (sfid-20120926_052840_201571_4AD0E72C)
-In-Reply-To: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
-References: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
+	Wed, 19 Sep 2012 07:18:50 -0400
+Received: by lbbgj3 with SMTP id gj3so717247lbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2012 04:18:49 -0700 (PDT)
+From: Jarl Friis <jarl@softace.dk>
+To: Stefano Brivio <stefano.brivio@polimi.it>,
+	=?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jarl Friis <jarl@softace.dk>
+Subject: [PATCH 1/2] Added information about which firmware file is being requested.
+Date: Wed, 19 Sep 2012 13:18:12 +0200
+Message-Id: <1348053493-22955-1-git-send-email-jarl@softace.dk> (sfid-20120919_131854_834887_7AFA3789)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+This is informative information to provide about which actual firmware
+file is being used.
 
-Remove unnecessary blank lines and extra tab.
-
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Jarl Friis <jarl@softace.dk>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |    3 ---
- drivers/net/wireless/mwifiex/wmm.c      |    2 +-
- 2 files changed, 1 insertions(+), 4 deletions(-)
+ drivers/net/wireless/b43/main.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index c24824f..6fd4fa6 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -688,7 +688,6 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- }
- 
- /* Supported rates to be advertised to the cfg80211 */
--
- static struct ieee80211_rate mwifiex_rates[] = {
- 	{.bitrate = 10, .hw_value = 2, },
- 	{.bitrate = 20, .hw_value = 4, },
-@@ -705,7 +704,6 @@ static struct ieee80211_rate mwifiex_rates[] = {
- };
- 
- /* Channel definitions to be advertised to cfg80211 */
--
- static struct ieee80211_channel mwifiex_channels_2ghz[] = {
- 	{.center_freq = 2412, .hw_value = 1, },
- 	{.center_freq = 2417, .hw_value = 2, },
-@@ -773,7 +771,6 @@ static struct ieee80211_supported_band mwifiex_band_5ghz = {
- 
- 
- /* Supported crypto cipher suits to be advertised to cfg80211 */
--
- static const u32 mwifiex_cipher_suites[] = {
- 	WLAN_CIPHER_SUITE_WEP40,
- 	WLAN_CIPHER_SUITE_WEP104,
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 766d452..07a4540 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -462,7 +462,7 @@ mwifiex_wmm_lists_empty(struct mwifiex_adapter *adapter)
- 	for (i = 0; i < adapter->priv_num; ++i) {
- 		priv = adapter->priv[i];
- 		if (priv && atomic_read(&priv->wmm.tx_pkts_queued))
--				return false;
-+			return false;
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index a140165..202a0eb 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2131,6 +2131,7 @@ int b43_do_request_fw(struct b43_request_fw_context *ctx,
+ 		B43_WARN_ON(1);
+ 		return -ENOSYS;
  	}
- 
- 	return true;
++	b43info(ctx->dev->wl, "Requesting firmware file '%s'\n", ctx->fwname);
+ 	err = request_firmware(&blob, ctx->fwname, ctx->dev->dev->dev);
+ 	if (err == -ENOENT) {
+ 		snprintf(ctx->errors[ctx->req_type],
 -- 
-1.7.0.2
+1.7.9.5
 
