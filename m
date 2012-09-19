@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:41995 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932066Ab2IQP2N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 11:28:13 -0400
-Received: by dady13 with SMTP id y13so959801dad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2012 08:28:13 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:16340 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752667Ab2ISHjU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Sep 2012 03:39:20 -0400
+Date: Wed, 19 Sep 2012 09:38:55 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rmmod bcma trigger a crash
+Message-ID: <20120919073855.GA2378@redhat.com> (sfid-20120919_093923_866607_FD4D2C3A)
+References: <20120918114830.GA3704@redhat.com>
+ <5058A315.6060401@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1347827393-26948-5-git-send-email-gwingerde@gmail.com>
-References: <1347827393-26948-1-git-send-email-gwingerde@gmail.com>
-	<1347827393-26948-2-git-send-email-gwingerde@gmail.com>
-	<1347827393-26948-3-git-send-email-gwingerde@gmail.com>
-	<1347827393-26948-4-git-send-email-gwingerde@gmail.com>
-	<1347827393-26948-5-git-send-email-gwingerde@gmail.com>
-Date: Mon, 17 Sep 2012 17:28:13 +0200
-Message-ID: <CAOZOX0XWrUiUNp1Ry62ptiVOWrJ-+O7o_VjiPHX0ep8zTdH6wQ@mail.gmail.com> (sfid-20120917_172821_546518_A1CACA62)
-Subject: Re: [PATCH 4/5] rt2x00: Code style cleanup in rt2800lib.c
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5058A315.6060401@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 16, 2012 at 10:29 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Tue, Sep 18, 2012 at 06:36:37PM +0200, Arend van Spriel wrote:
+> On 09/18/2012 01:48 PM, Stanislaw Gruszka wrote:
+> >modprobe -r brcmsmac). It happen on 3.5 and latest
+> >wireless-testing tree.
+> >
+> ><4>Pid: 28372, comm: modprobe Not tainted 2.6.32.sgruszka_03 #7 Hewlett-Packard HP xw8600 Workstation/0A98h
+> 
+> I am doing rmmod of bcma nightly on multiple system. What does
+> '2.6.32.sgruszka_03' mean here. Using compat-wireless?
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+It's RHEL6 kernel with brcmsmac backported from 3.5, but as I wrote
+before the same crash happen on vanilla 3.5 and latest wireless-testing.
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 37f64ba..d745c32 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -3090,7 +3090,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->                 rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
->                 rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
->         } else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> -                          rt2x00_rt(rt2x00dev, RT5392)) {
-> +                  rt2x00_rt(rt2x00dev, RT5392)) {
->                 rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
->                 rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
->                 rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-> --
-> 1.7.11.1
->
+On RHEL memory dump works so I could grab dmesg after a crash. I put
+photo from vanilla 3.5 here:
+http://people.redhat.com/sgruszka/DSC_0075.JPG
+
+> The gdb list seems to suggest there is NULL pointer in the list of
+> cores, but need disassembly to be sure.
+
+It's not NULL, RAX and RBX are 6b6b6b6b6b6b6b6b, so this is memory
+usage after free kind of issue.
+
+BTW: Arend, I'm testing brcmsmac currently and I hit various other
+problems, in what form You (i.e. brcsmac developers) prefer to get
+bug reports, mailing list, kernel bugzilla, something else ?
+
+Stanislaw
