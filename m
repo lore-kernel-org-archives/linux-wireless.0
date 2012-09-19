@@ -1,73 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:50236 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753782Ab2ITKz6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43783 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754824Ab2ISHco (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 06:55:58 -0400
-Received: by wibhi8 with SMTP id hi8so507141wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 03:55:57 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 20 Sep 2012 12:55:57 +0200
-Message-ID: <CANq1E4QzhnVwk1Tt3JAK7Qgp=LbMuS58xd6i147Nvjts0MkmwQ@mail.gmail.com> (sfid-20120920_125602_260229_D214E2A0)
-Subject: rt73usb: WARN(x) in check_sdata_in_driver() again
-From: David Herrmann <dh.herrmann@googlemail.com>
+	Wed, 19 Sep 2012 03:32:44 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: constify name parameter to add_virtual_intf
+Date: Wed, 19 Sep 2012 09:33:18 +0200
+Message-Id: <1348039998-7739-1-git-send-email-johannes@sipsolutions.net> (sfid-20120919_093247_434548_B47DB518)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Johannes Berg <johannes.berg@intel.com>
 
-I reported this earlier this year:
-http://www.spinics.net/lists/linux-wireless/msg94318.html
-I now run kernel 3.5.3 and still get the warnings. dmesg is attached.
-Device is an:
-  ASUSTek Computer, Inc. WL-167G v2 802.11g Adapter [Ralink RT2571W]
-With USB ID: 0b05:1723. The device is quite old and works only on
-short ranges but it does work reliably now. I get the warnings but I
-no longer have to reboot, the device simply continues working.
-The device looks like this one (if someone is interested):
-http://i.discuss.com.hk/d/attachments/day_110626/20110626_036ae8435bb3894c6548lo8K2yBToJq4.jpg
+The name can't be modified by the driver,
+make it const.
 
-wpa_supplicant was started with:
-  wpa_supplicant -B -P /run/wpa_supplicant_wlan0.pid -i wlan0 -D
-nl80211,wext -c/run/network/wpa.wlan0/wpa.conf
-The /run/..../wpa.conf file looks like this:
-  ctrl_interface=/run/wpa_supplicant
-  ctrl_interface_group=wheel
-  network = {
-    ssid="...my ssid..."
-    proto=RSN WPA
-    psk="...my password..."
-  }
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++--
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c    |    2 +-
+ drivers/net/wireless/mwifiex/main.h        |    2 +-
+ include/net/cfg80211.h                     |    2 +-
+ net/mac80211/cfg.c                         |    3 ++-
+ 6 files changed, 8 insertions(+), 7 deletions(-)
 
-dmesg output: https://gist.github.com/3755159
-Sorry, its quite long but I think it contains all required information.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 86aeef4..7089f81 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1488,7 +1488,7 @@ static int ath6kl_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ }
+ 
+ static struct wireless_dev *ath6kl_cfg80211_add_iface(struct wiphy *wiphy,
+-						      char *name,
++						      const char *name,
+ 						      enum nl80211_iftype type,
+ 						      u32 *flags,
+ 						      struct vif_params *params)
+@@ -3477,7 +3477,7 @@ void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif)
+ 	ar->num_vif--;
+ }
+ 
+-struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, char *name,
++struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
+ 					  enum nl80211_iftype type,
+ 					  u8 fw_vif_idx, u8 nw_type)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index 56b1ebe..780f777 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -25,7 +25,7 @@ enum ath6kl_cfg_suspend_mode {
+ 	ATH6KL_CFG_SUSPEND_SCHED_SCAN,
+ };
+ 
+-struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, char *name,
++struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
+ 					  enum nl80211_iftype type,
+ 					  u8 fw_vif_idx, u8 nw_type);
+ void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index e57f543..49e2066 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1597,7 +1597,7 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
+  *  create a new virtual interface with the given name
+  */
+ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+-					      char *name,
++					      const char *name,
+ 					      enum nl80211_iftype type,
+ 					      u32 *flags,
+ 					      struct vif_params *params)
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 994bc4f..d2fb3c3e 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1030,7 +1030,7 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
+ 					struct mwifiex_bssdescriptor *bss_desc);
+ 
+ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+-					      char *name,
++					      const char *name,
+ 					      enum nl80211_iftype type,
+ 					      u32 *flags,
+ 					      struct vif_params *params);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 80051ff..ab78b53 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1628,7 +1628,7 @@ struct cfg80211_ops {
+ 	void	(*set_wakeup)(struct wiphy *wiphy, bool enabled);
+ 
+ 	struct wireless_dev * (*add_virtual_intf)(struct wiphy *wiphy,
+-						  char *name,
++						  const char *name,
+ 						  enum nl80211_iftype type,
+ 						  u32 *flags,
+ 						  struct vif_params *params);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9bd56a7..05f3a31 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -20,7 +20,8 @@
+ #include "rate.h"
+ #include "mesh.h"
+ 
+-static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy, char *name,
++static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
++						const char *name,
+ 						enum nl80211_iftype type,
+ 						u32 *flags,
+ 						struct vif_params *params)
+-- 
+1.7.10.4
 
-I don't know how to reproduce this reliably, but suspending/resuming a
-few times does almost always generate these warnings. Also note the
-easily overlooked warning before suspending the first time:
-[267106.009044] phy0 -> rt73usb_set_device_state: Error - Device
-failed to enter state 1 (-16).
-
-The first warning that occurs then goes like this:
-[267107.447852] ------------[ cut here ]------------
-[267107.447869] WARNING: at net/mac80211/util.c:574
-ieee80211_can_queue_work.isra.29+0x2d/0x40()
-[267107.447872] Hardware name: N150P/N210P/N220P
-[267107.447874] queueing ieee80211 work while going to suspend
-
-So I really think the problem is that the device is not correctly put
-to sleep during suspend and then continues sending data. The other
-warnings probably are caused by this, too. As I said, the device still
-works after resume, and if not, then I simply replug it, as I am not
-sure whether it doesn't work because of this error or because of being
-out-of-range.
-
-It really doesn't bother me much as it works reliably. But maybe
-you're interested in these warnings and Stanislaw asked me to report
-whether these warnings still occur with 3.5.1. And yes, they do.
-
-Regards
-David
