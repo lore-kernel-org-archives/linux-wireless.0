@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:53299 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750886Ab2IJSe7 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:52946 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628Ab2ISALw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 14:34:59 -0400
-Message-ID: <504E32CE.10108@lwfinger.net> (sfid-20120910_203510_294097_93BFCD59)
-Date: Mon, 10 Sep 2012 13:34:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 18 Sep 2012 20:11:52 -0400
+Date: Tue, 18 Sep 2012 21:11:43 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2012-09-18
+Message-ID: <20120919001143.GD24689@joana> (sfid-20120919_021211_027566_26C70F07)
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] staging: r8712u: fix bug in r8712_recv_indicatepkt()
-References: <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <20120824.111948.680531915905273128.davem@davemloft.net>  <5037A4B0.3080208@lwfinger.net>  <1345825095.19483.19.camel@edumazet-glaptop>  <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>  <1345830424.19483.69.camel@edumazet-glaptop>  <503BB49C.5010402@lwfinger.net>  <1347266366.1234.1267.camel@edumazet-glaptop>  <504DFEFF.6060004@lwfinger.net>  <1347289446.1234.1717.camel@edumazet-glaptop> <1347299715.1234.1902.camel@edumazet-glaptop>
-In-Reply-To: <1347299715.1234.1902.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2012 12:55 PM, Eric Dumazet wrote:
-> From: Eric Dumazet <edumazet@google.com>
->
-> 64bit arches have a buggy r8712u driver, let's fix it.
->
-> Signed-off-by: Eric Dumazet <edumazet@google.com>
-> ---
->   drivers/staging/rtl8712/recv_linux.c |    7 +------
->   1 file changed, 1 insertion(+), 6 deletions(-)
->
-> diff --git a/drivers/staging/rtl8712/recv_linux.c b/drivers/staging/rtl8712/recv_linux.c
-> index 0e26d5f..495ee12 100644
-> --- a/drivers/staging/rtl8712/recv_linux.c
-> +++ b/drivers/staging/rtl8712/recv_linux.c
-> @@ -117,13 +117,8 @@ void r8712_recv_indicatepkt(struct _adapter *padapter,
->   	if (skb == NULL)
->   		goto _recv_indicatepkt_drop;
->   	skb->data = precv_frame->u.hdr.rx_data;
-> -#ifdef NET_SKBUFF_DATA_USES_OFFSET
-> -	skb->tail = (sk_buff_data_t)(precv_frame->u.hdr.rx_tail -
-> -		     precv_frame->u.hdr.rx_head);
-> -#else
-> -	skb->tail = (sk_buff_data_t)precv_frame->u.hdr.rx_tail;
-> -#endif
->   	skb->len = precv_frame->u.hdr.len;
-> +	skb_set_tail_pointer(skb, skb->len);
->   	if ((pattrib->tcpchk_valid == 1) && (pattrib->tcp_chkrpt == 1))
->   		skb->ip_summed = CHECKSUM_UNNECESSARY;
->   	else
+Hi John,
 
-Eric,
+Here goes probably my last update to 3.6. It includes the two patches you
+were ok last week(from Andrzej Kaczmarek), those are critical ones, and two
+other fixes one for a system crash and the other for a missing lockdep
+annotation.
 
-Thanks for this. It works for me. I had looked at this code a number of times, 
-but for some reason, I thought that the u.hdr.rx_yyyy parameters were like 
-32-bit systems and that all 4 values were pointers, and not like 64-bit systems, 
-thus the funny conversion. Strange that the bug was never triggered until commit 
-c8628155ece3 - this code has not changed since the driver was accepted into 2.6.37.
+Please pull or let me know of any problems!
 
-A few points on the patch. As the driver is in staging, the patch needs to go to 
-Greg Kroah-Hartman. In addition, please add the "Cc: Stable 
-<stable@vger.kernel.org>" line. You may also give an a s-o-b for me. Finally, 
-this patch should fix https://bugzilla.redhat.com/show_bug.cgi?id=847525, and 
-https://bugzilla.kernel.org/show_bug.cgi?id=45071.
+	Gustavo
 
-Larry
+---
+The following changes since commit e020a83d0942a5aceac35986500c9834efc8707d:
+
+  brcmfmac: Fix big endian host configuration data. (2012-09-12 14:15:31 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+
+for you to fetch changes up to 78c04c0bf52360dc2f7185e99c8e9aa05d73ae5a:
+
+  Bluetooth: Fix not removing power_off delayed work (2012-09-18 20:13:02 -0300)
+
+----------------------------------------------------------------
+Andrei Emeltchenko (1):
+      Bluetooth: Fix freeing uninitialized delayed works
+
+Andrzej Kaczmarek (2):
+      Bluetooth: mgmt: Fix enabling SSP while powered off
+      Bluetooth: mgmt: Fix enabling LE while powered off
+
+Vinicius Costa Gomes (1):
+      Bluetooth: Fix not removing power_off delayed work
+
+ net/bluetooth/hci_core.c   |  2 ++
+ net/bluetooth/l2cap_core.c |  2 +-
+ net/bluetooth/mgmt.c       | 16 ++++++++++++++++
+ 3 files changed, 19 insertions(+), 1 deletion(-)
 
