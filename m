@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017Ab2INMgi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 08:36:38 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TCV8O-0006ke-Hd
-	for linux-wireless@vger.kernel.org; Fri, 14 Sep 2012 14:36:36 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/10] mac80211 multi-channel work (final?)
-Date: Fri, 14 Sep 2012 14:37:03 +0200
-Message-Id: <1347626233-21916-1-git-send-email-johannes@sipsolutions.net> (sfid-20120914_143641_493953_B2559877)
+Received: from mga11.intel.com ([192.55.52.93]:5448 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756123Ab2ISAZg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Sep 2012 20:25:36 -0400
+Date: Wed, 19 Sep 2012 02:25:20 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Cong Wang <amwang@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Cong Wang <xiyou.wangcong@gmail.com>
+Subject: Re: [Patch] nfc: remove the pn544 raw driver
+Message-ID: <20120919002520.GE3647@sortiz-mobl> (sfid-20120919_022542_128322_B4C68B10)
+References: <1345911978-24321-1-git-send-email-amwang@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1345911978-24321-1-git-send-email-amwang@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Hi Cong,
 
-I'm happy with this now. It works for me, I've tested actual
-multi-channel work with hwsim and converted a hardware driver
-to the API as well for testing.
+On Sun, Aug 26, 2012 at 12:26:18AM +0800, Cong Wang wrote:
+> From: Cong Wang <xiyou.wangcong@gmail.com>
+> 
+> It is scheduled to be removed in 3.6.
+We're late :)
+Thanks, patch applied.
 
-I know I still need to sort out TX power that gets broken in
-this patchset for *new* drivers (still works for drivers not
-using channel contexts), but I think I can do that later. I
-hope you're not afraid I'll abandon the task :-)
+Cheers,
+Samuel.
 
-The other thing that I might want to sort out is the RCU use
-in this patchset, but that's an internal thing in mac80211
-and is therefore also not needed to work on drivers.
-
-I've included the hwsim patch, but don't intend to merge it
-as is since it has issues with wmediumd. I need to work with
-the developers there to figure out what should be done.
-
-I also don't intend to merge this for 3.7, it's late in the
-cycle now and the merge window will open soon, I'd rather
-have a little more time to let this be sorted out, and also
-for the TX power issue. I'll put it into mac80211-next as
-soon as the merge window opens, until then you can find it
-in the 'wip' branch of my mac80211-next tree.
-
-Please review and see what it does to your drivers :-)
-
-johannes
-
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
