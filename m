@@ -1,144 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47066 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760146Ab2INWhF (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49385 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753113Ab2IUOKZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 18:37:05 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] cfg80211: fix possible circular lock on reg_regdb_search()
-Date: Fri, 14 Sep 2012 15:36:57 -0700
-Message-Id: <1347662217-4292-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20120915_003711_261355_FFFFCF99)
+	Fri, 21 Sep 2012 10:10:25 -0400
+Message-ID: <1348180259.4801.9.camel@deadeye.wl.decadent.org.uk> (sfid-20120921_161051_431179_97DE7EC7)
+Subject: Re: [PATCH] rtlwifi/rtl8712u Revert firmware
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dwmw2@infradead.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	Jan Terstegge <jan@terstegge.net>
+In-Reply-To: <1347294365-6509-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1347294365-6509-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-iojFm8NyISB3K0CowScz"
+Date: Thu, 20 Sep 2012 23:31:00 +0100
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-When call_crda() is called we kick off a witch hunt search
-for the same regulatory domain on our internal regulatory
-database and that work gets kicked off on a workqueue, this
-is done while the cfg80211_mutex is held. If that workqueue
-kicks off it will first lock reg_regdb_search_mutex and
-later cfg80211_mutex but to ensure two CPUs will not contend
-against cfg80211_mutex the right thing to do is to have the
-reg_regdb_search() wait until the cfg80211_mutex is let go.
+--=-iojFm8NyISB3K0CowScz
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The lockdep report is pasted below.
+On Mon, 2012-09-10 at 11:26 -0500, Larry Finger wrote:
+> Although the newest firmware for the RTL8192SU, which is found in vendor
+> driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404, works with mo=
+st
+> devices, it causes drops of the wireless connection for the ASUS WL-167G =
+V3
+> (USB ID 0b05:1791), the D-Link DWA131 (07d1:3303), and probably others.
+> Tests show that the firmware from vendor driver
+> rtl8712_8188_8191_8192SU_usb_linux_v7_0.20100831 works better.
+>=20
+> This commerts reverts to that older firmware.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+[...]
 
-cfg80211: Calling CRDA to update world regulatory domain
+This is the original blob added by:
 
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.3.8 #3 Tainted: G           O
--------------------------------------------------------
-kworker/0:1/235 is trying to acquire lock:
- (cfg80211_mutex){+.+...}, at: [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+commit 8f919160792e4702c6b7a67a243cea4f757407e4
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Mon Nov 1 23:56:52 2010 -0500
 
-but task is already holding lock:
- (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
+    linux-firmware: Add firmware files for Realtek RTL8712U and RTL8192CE
 
-which lock already depends on the new lock.
+There have been two updates since then:
 
-the existing dependency chain (in reverse order) is:
+commit f8ddc05e13c4c6dd9d725bc376b287f307eb223a
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Tue Aug 16 11:12:14 2011 -0500
 
--> #2 (reg_regdb_search_mutex){+.+...}:
-       [<800a8384>] lock_acquire+0x60/0x88
-       [<802950a8>] mutex_lock_nested+0x54/0x31c
-       [<81645778>] is_world_regdom+0x9f8/0xc74 [cfg80211]
+    rtlwifi: rtl8712u: Upgrade to firmware found in vendor's V2.6.6
 
--> #1 (reg_mutex#2){+.+...}:
-       [<800a8384>] lock_acquire+0x60/0x88
-       [<802950a8>] mutex_lock_nested+0x54/0x31c
-       [<8164539c>] is_world_regdom+0x61c/0xc74 [cfg80211]
+commit d8f60751d3f09545f51aac5d8e451f7668063ebf
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Wed Jul 11 13:18:30 2012 -0500
 
--> #0 (cfg80211_mutex){+.+...}:
-       [<800a77b8>] __lock_acquire+0x10d4/0x17bc
-       [<800a8384>] lock_acquire+0x60/0x88
-       [<802950a8>] mutex_lock_nested+0x54/0x31c
-       [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
+    r8712u: Update to latest firmware
+   =20
+    A new firmware file is used in the vendor driver with name/version
+    rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404.
 
-other info that might help us debug this:
+Sure you want to revert both of these, not just the latest?
 
-Chain exists of:
-  cfg80211_mutex --> reg_mutex#2 --> reg_regdb_search_mutex
+Ben.
 
- Possible unsafe locking scenario:
+--=20
+Ben Hutchings
+The world is coming to an end.	Please log off.
 
-       CPU0                    CPU1
-       ----                    ----
-  lock(reg_regdb_search_mutex);
-                               lock(reg_mutex#2);
-                               lock(reg_regdb_search_mutex);
-  lock(cfg80211_mutex);
+--=-iojFm8NyISB3K0CowScz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
- *** DEADLOCK ***
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-3 locks held by kworker/0:1/235:
- #0:  (events){.+.+..}, at: [<80089a00>] process_one_work+0x230/0x460
- #1:  (reg_regdb_work){+.+...}, at: [<80089a00>] process_one_work+0x230/0x460
- #2:  (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
+iQIVAwUAUFuZI+e/yOyVhhEJAQozihAAsKx1mpxbBV5mVysiB4qn2JzvKImJcyav
+ahLjTwTkmN91L83SacV1O+fh7H7B4aWYpvyPsnjabnrMqrGD06RlB7HkeweJHjIg
+p3fnRRghK52p43wW+2x7BYawiyxd0K/nke68OypBdQRtOdjCj16vrmS1ja1GYH8M
+JgAKLQ+rUr1aksT/fNHoadq5rm40pWNplmUKOw1PFgT7lSWUZH+i3BtGG8tjP5JE
+mv20rk40+b5xFMmSs//famBLvSsOYk1uTvAOZ8yjr13K5UKo0ng08tCHDvI36TDP
++8T2lhI7F8RbYhe9VAU6xODyTlLVYxsE6Lhe3dvyglO23H1DgctFIxC4BOwfcllr
++Ddbr6BF1foUCUVHQ4+NU+dl22UCefMtgO2imwJ1sSBmjdqa6TDPLQD3Ft80AR/X
+xfLiucKIbE56zf+OhUKEUwHbzyQZR4KvgfhYQjSrjc2FESDR634SVA41zrzxeUgH
+BSRBVHB3wtXVF+NN96gcFvGOMB7At3jFriZcSfZpRuICvn3WmFDcXmCkrKTIQpz/
+c4IqBK5z5xbbovmaLc4Nuj7Ixa9aFM7Ybt/VAaTAyNMygtmorxQYqGfYCQ/TbDzm
+r17XG1BjmTTAV03J9zSnVKoaUQMinWg+maQCQ/nfJgXd1Ez0QBLFgsp1MCeSxFkS
+NDgrQngtYKw=
+=26Aw
+-----END PGP SIGNATURE-----
 
-stack backtrace:
-Call Trace:
-[<80290fd4>] dump_stack+0x8/0x34
-[<80291bc4>] print_circular_bug+0x2ac/0x2d8
-[<800a77b8>] __lock_acquire+0x10d4/0x17bc
-[<800a8384>] lock_acquire+0x60/0x88
-[<802950a8>] mutex_lock_nested+0x54/0x31c
-[<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
-
-Reported-by: Felix Fietkau <nbd@openwrt.org>
-Tested-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
-
-This v2 remoes the search lock from the context of calling
-set_regdom().
-
- net/wireless/reg.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ad04e5..4de18ae 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -350,6 +350,9 @@ static void reg_regdb_search(struct work_struct *work)
- 	struct reg_regdb_search_request *request;
- 	const struct ieee80211_regdomain *curdom, *regdom;
- 	int i, r;
-+	bool set_reg = false;
-+
-+	mutex_lock(&cfg80211_mutex);
- 
- 	mutex_lock(&reg_regdb_search_mutex);
- 	while (!list_empty(&reg_regdb_search_list)) {
-@@ -365,9 +368,7 @@ static void reg_regdb_search(struct work_struct *work)
- 				r = reg_copy_regd(&regdom, curdom);
- 				if (r)
- 					break;
--				mutex_lock(&cfg80211_mutex);
--				set_regdom(regdom);
--				mutex_unlock(&cfg80211_mutex);
-+				set_reg = true;
- 				break;
- 			}
- 		}
-@@ -375,6 +376,11 @@ static void reg_regdb_search(struct work_struct *work)
- 		kfree(request);
- 	}
- 	mutex_unlock(&reg_regdb_search_mutex);
-+
-+	if (set_reg)
-+		set_regdom(regdom);
-+
-+	mutex_unlock(&cfg80211_mutex);
- }
- 
- static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
--- 
-1.7.10.4
-
+--=-iojFm8NyISB3K0CowScz--
