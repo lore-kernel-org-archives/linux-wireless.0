@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48731 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741Ab2ITMuO (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:58469 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755764Ab2ITPZ7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 08:50:14 -0400
-Message-ID: <1348145450.4161.31.camel@jlt4.sipsolutions.net> (sfid-20120920_145024_721097_33894A57)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <edumazet@google.com>
-Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Date: Thu, 20 Sep 2012 14:50:50 +0200
-In-Reply-To: <CANn89iLksBMJ=Ep+VcPSAOPzqst70hk8hR5=mGte2vSx=49zUA@mail.gmail.com> (sfid-20120920_144819_303341_E8D2666B)
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	 <1347631355.5263.19.camel@sauron.fi.intel.com>
-	 <1347640763.5263.24.camel@sauron.fi.intel.com>
-	 <1347892887.7112.9.camel@sauron.fi.intel.com>
-	 <1348142775.2388.10.camel@sauron.fi.intel.com>
-	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
-	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-	 <1348145269.4161.28.camel@jlt4.sipsolutions.net>
-	 <CANn89iLksBMJ=Ep+VcPSAOPzqst70hk8hR5=mGte2vSx=49zUA@mail.gmail.com>
-	 (sfid-20120920_144819_303341_E8D2666B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 20 Sep 2012 11:25:59 -0400
+Received: by wibhi8 with SMTP id hi8so875320wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 08:25:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <505B2F3A.9070504@hauke-m.de>
+References: <1348123339-15210-1-git-send-email-zajec5@gmail.com>
+	<505B11A7.4040001@hauke-m.de>
+	<505B2F3A.9070504@hauke-m.de>
+Date: Thu, 20 Sep 2012 17:25:57 +0200
+Message-ID: <CACna6rwyVkj6GCWOLZDK3Hsh1bA6zfxf1WaHxyizGrvy+Oz2iA@mail.gmail.com> (sfid-20120920_172602_271345_9A616E9A)
+Subject: Re: [PATCH] bcma: use udelay for short waits
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-20 at 14:48 +0200, Eric Dumazet wrote:
-> Or its a buggy protocol ?
-> 
-> IP/UDP/TCP definitely works, but maybe another protocol assumes its
-> header is in skb->head
+2012/9/20 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 09/20/2012 02:52 PM, Hauke Mehrtens wrote:
+>> On 09/20/2012 08:42 AM, Rafał Miłecki wrote:
+>>> msleep shouldn't be used for less than 20ms
+>>>
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>> ---
+>>>  drivers/bcma/driver_pci.c |    6 +++---
+>>>  1 files changed, 3 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+>>> index c32ebd5..e78e6a8 100644
+>>> --- a/drivers/bcma/driver_pci.c
+>>> +++ b/drivers/bcma/driver_pci.c
+>>> @@ -51,7 +51,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u8 phy)
+>>>              v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
+>>>              if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
+>>>                      break;
+>>> -            msleep(1);
+>>> +            udelay(1000);
+>>>      }
+>>>  }
+>>>
+>>> @@ -92,7 +92,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
+>>>                      ret = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_DATA);
+>>>                      break;
+>>>              }
+>>> -            msleep(1);
+>>> +            udelay(1000);
+>>>      }
+>>>      pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
+>>>      return ret;
+>>> @@ -132,7 +132,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u8 device,
+>>>              v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
+>>>              if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
+>>>                      break;
+>>> -            msleep(1);
+>>> +            udelay(1000);
+>>>      }
+>>>      pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
+>>>  }
+>>>
+>>
+>> Using msleep(1) here is not correct, but I do not know if udelay(1000)
+>> is better. The BCM4706 SoC or more the kernel code you are using seams
+>> to have problems with sleeping, at least that is my current assumption.
+>> when I add an msleep(1) somewhere into the code the exception stops
+>> there without an exception from the CPU.
+>>
+>> According to Documentation/timers/timers-howto.txt we should use
+>> usleep_range for values from 10us to 20ms, but that also causes the same
+>> problem as msleep() on this SoC.
+>>
+>> Hauke
+>
+> The BCM4706 SoC has problems with the Mips wait instruction and that is
+> not activated in the Broadcom SDK, but in the OpenWrt kernel. I
+> deactivated it [0] in my kernel and now the device boots without this
+> patch for bcma. The patch to deactivate the mips wait instruction can
+> not be mainlined, like it is now.
+>
+> Please drop this patch and use usleep_range(), that should work now.
 
-It could be, I think it failed either on EAPOL (which is just userspace
-registering a protocol socket) or DHCP (same?)
+Any suggestion about values? 900, 1100? 1000, 1200? 1000, 1500?
 
-johannes
-
+-- 
+Rafał
