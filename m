@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44119 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758910Ab2ILRyD (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:50195 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202Ab2ITGdD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 13:54:03 -0400
-Received: by lagy9 with SMTP id y9so1311483lag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2012 10:54:00 -0700 (PDT)
+	Thu, 20 Sep 2012 02:33:03 -0400
+Received: by qcro28 with SMTP id o28so1467746qcr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2012 23:33:02 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20560.11160.528440.961924@gargle.gargle.HOWL>
-References: <20560.11160.528440.961924@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Wed, 12 Sep 2012 10:53:40 -0700
-Message-ID: <CAB=NE6X+eyvPy+-TpU7+53u8o+B9LMLKwb1K-AWTOG79zGoMGg@mail.gmail.com> (sfid-20120912_195407_563344_0C78605D)
-Subject: Re: [PATCH] qca-swiss-army-knife: Update AR9565 initvals
-To: Sujith Manoharan <c_manoha@qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CACna6ryRXB6GjymaP-RM8HTEeWRHnE8B=5tdH3J4JGyeHBEE6Q@mail.gmail.com>
+References: <1348053493-22955-1-git-send-email-jarl@softace.dk>
+ <1348053493-22955-2-git-send-email-jarl@softace.dk> <CAOjsGA2uvCxnX1PH85w2vO894kZT+af-Tgj7bV-3kw3ScxN10g@mail.gmail.com>
+ <CACna6ryRXB6GjymaP-RM8HTEeWRHnE8B=5tdH3J4JGyeHBEE6Q@mail.gmail.com>
+From: Jarl Friis <jarl@softace.dk>
+Date: Thu, 20 Sep 2012 08:32:42 +0200
+Message-ID: <CAOjsGA3cmuGHY1WAJ92RwbUf1iNpFHaSvePxvzSYxkY1FJzjkw@mail.gmail.com> (sfid-20120920_083309_017338_235BA308)
+Subject: Re: [PATCH 2/2] Using LP firmware for taking advantage of the
+ low-power capabilities.
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, "John W. Linville" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 11, 2012 at 11:28 PM, Sujith Manoharan
-<c_manoha@qualcomm.com> wrote:
-> * Set BB_tpc_1.enable_pd_calibrate to 0
->
-> * Set BB_cl_cal_ctrl.enable_parallel_cal to 1
->
-> * Enable "enable_dac_async_fifo" and "enable_adc_async_fifo"
->   to fix some dac/adc timing issue,
->   e.g. EVM won't degrade when setting core voltage to 1.15V.
->
->   Set BB_gen_controls.enable_dac_async_fifo=1
->   Set BB_gen_controls.enable_adc_async_fifo=1
->
-> * Improve LNA2 Sensitivity ~1dB
->   Set ch0_PLLCLKMODA2WLAN.inv_clk320_adc_ch0 = 1
->
-> * Correct alternate chain RSSI when doing diversity
->   Set BB_bbb_sig_detect.ant_switch_time to 63
->
-> * Refer to RACK RX gain report and modify RF gain table for LNA2
->
-> * Invert the phase of the root of both clocks
->   (setting flip_pllclk320 = 1) and set inv_clk320_adc back = 0.
->
->   Set ch0_PLLCLKMODA2WLAN.flip_pllclk320 to 1
->   Set ch0_PLLCLKMODA2WLAN.inv_clk320_adc_ch0 to 0
->
-> * Remove MAC PCU registers MAC_PCU_TSF_L32/MAC_PCU_TSF_U32.
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+2012/9/20 Rafał Miłecki <zajec5@gmail.com>:
+> Well, your BCM4322 is not LP-PHY card... does it really work better
+> after that change, and wakes up faster? ;)
 
-thanks, applied and pushed both patches, sorry for the delay in
-applying the other patch.
+That was my un-scientific impression, yes (probably biased by
+expectations, right? :-) ). But it could also be that I was using a
+more upstream kernel than the stock ubuntu kernel. I don't know :-)
 
-  Luis
+> BCM4313 is LCN-PHY, so your change won't affect it, not to mention it
+> is not supported by b43.
+>
+> 14e4:4315 is really BCM4312 (LP-PHY) and maybe could be affected by
+> this patch... but just in case of core 16. AFAIK our 14e4:4315 are
+> usually devices with core rev 15.
+
+Thanks for clearing that out...
+
+Jarl
