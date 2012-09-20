@@ -1,101 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52234 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750726Ab2IKQBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 12:01:39 -0400
-Message-ID: <1347379457.20066.16.camel@dcbw.foobar.com> (sfid-20120911_180148_268203_F22B8CAD)
-Subject: Re: [PATCH] libertas: set mac control synchronously during init
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Date: Tue, 11 Sep 2012 11:04:17 -0500
-In-Reply-To: <20120911153812.08740FAA7C@dev.laptop.org>
-References: <20120911153812.08740FAA7C@dev.laptop.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39063 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752146Ab2ITMxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2012 08:53:07 -0400
+Message-ID: <505B11A7.4040001@hauke-m.de> (sfid-20120920_145321_930189_9035BD61)
+Date: Thu, 20 Sep 2012 14:52:55 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] bcma: use udelay for short waits
+References: <1348123339-15210-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1348123339-15210-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-11 at 11:38 -0400, Daniel Drake wrote:
-> CMD_MAC_CONTROL is currently sent async to the firmware, and is sent
-> from the lbs_setup_firmware() path during device init.
+On 09/20/2012 08:42 AM, Rafał Miłecki wrote:
+> msleep shouldn't be used for less than 20ms
 > 
-> This means that device init can complete with commands pending, and
-> the if_sdio driver will sometimes power down the device (after init)
-> with this command still pending.
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/bcma/driver_pci.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> This was causing an occasional spurious command timeout after init,
-> leading to a device reset.
-> 
-> Fix this by making CMD_MAC_CONTROL synchronous when called from the
-> lbs_setup_firmware() path.
-> 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
-
-Thanks!
-
-Signed-off-by: Dan Williams <dcbw@redhat.com>
-
->  drivers/net/wireless/libertas/cmd.c  | 16 ++++++++++++++++
->  drivers/net/wireless/libertas/cmd.h  |  1 +
->  drivers/net/wireless/libertas/main.c |  4 +++-
->  3 files changed, 20 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index 26e6832..aaa2973 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -1159,6 +1159,22 @@ void lbs_set_mac_control(struct lbs_private *priv)
->  	lbs_deb_leave(LBS_DEB_CMD);
+> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+> index c32ebd5..e78e6a8 100644
+> --- a/drivers/bcma/driver_pci.c
+> +++ b/drivers/bcma/driver_pci.c
+> @@ -51,7 +51,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u8 phy)
+>  		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
+>  		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
+>  			break;
+> -		msleep(1);
+> +		udelay(1000);
+>  	}
 >  }
 >  
-> +int lbs_set_mac_control_sync(struct lbs_private *priv)
-> +{
-> +	struct cmd_ds_mac_control cmd;
-> +	int ret = 0;
-> +
-> +	lbs_deb_enter(LBS_DEB_CMD);
-> +
-> +	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> +	cmd.action = cpu_to_le16(priv->mac_control);
-> +	cmd.reserved = 0;
-> +	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
-> +
-> +	lbs_deb_leave(LBS_DEB_CMD);
-> +	return ret;
-> +}
-> +
->  /**
->   *  lbs_allocate_cmd_buffer - allocates the command buffer and links
->   *  it to command free queue
-> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-> index ab07608..4279e8a 100644
-> --- a/drivers/net/wireless/libertas/cmd.h
-> +++ b/drivers/net/wireless/libertas/cmd.h
-> @@ -96,6 +96,7 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv);
->  int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
->  
->  void lbs_set_mac_control(struct lbs_private *priv);
-> +int lbs_set_mac_control_sync(struct lbs_private *priv);
->  
->  int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
->  		     s16 *maxlevel);
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index fe1ea43..0c02f04 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -682,8 +682,10 @@ static int lbs_setup_firmware(struct lbs_private *priv)
->  
->  	/* Send cmd to FW to enable 11D function */
->  	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
-> +	if (ret)
-> +		goto done;
->  
-> -	lbs_set_mac_control(priv);
-> +	ret = lbs_set_mac_control_sync(priv);
->  done:
->  	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
+> @@ -92,7 +92,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
+>  			ret = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_DATA);
+>  			break;
+>  		}
+> -		msleep(1);
+> +		udelay(1000);
+>  	}
+>  	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
 >  	return ret;
+> @@ -132,7 +132,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u8 device,
+>  		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
+>  		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
+>  			break;
+> -		msleep(1);
+> +		udelay(1000);
+>  	}
+>  	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
+>  }
+> 
 
+Using msleep(1) here is not correct, but I do not know if udelay(1000)
+is better. The BCM4706 SoC or more the kernel code you are using seams
+to have problems with sleeping, at least that is my current assumption.
+when I add an msleep(1) somewhere into the code the exception stops
+there without an exception from the CPU.
 
+According to Documentation/timers/timers-howto.txt we should use
+usleep_range for values from 10us to 20ms, but that also causes the same
+problem as msleep() on this SoC.
+
+Hauke
