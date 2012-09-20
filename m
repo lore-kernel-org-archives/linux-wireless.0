@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39063 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752146Ab2ITMxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 08:53:07 -0400
-Message-ID: <505B11A7.4040001@hauke-m.de> (sfid-20120920_145321_930189_9035BD61)
-Date: Thu, 20 Sep 2012 14:52:55 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcma: use udelay for short waits
-References: <1348123339-15210-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1348123339-15210-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:49331 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755481Ab2ITP1R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2012 11:27:17 -0400
+Received: by bkuw11 with SMTP id w11so297563bku.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 08:27:15 -0700 (PDT)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com,
+	Eric Dumazet <edumazet@google.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1348154575.4161.39.camel@jlt4.sipsolutions.net>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348151149.31352.109.camel@edumazet-glaptop>
+	 <1348151876.2388.24.camel@sauron.fi.intel.com>
+	 <1348152971.31352.140.camel@edumazet-glaptop>
+	 (sfid-20120920_165616_301862_3EBAF30C)  <1348153522.4161.37.camel@jlt4.sipsolutions.net>
+	 <1348154294.31352.165.camel@edumazet-glaptop>
+	 (sfid-20120920_171820_134642_A4BA7EB1)  <1348154575.4161.39.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Sep 2012 17:27:11 +0200
+Message-ID: <1348154831.31352.177.camel@edumazet-glaptop> (sfid-20120920_172719_621319_44AE3557)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2012 08:42 AM, Rafał Miłecki wrote:
-> msleep shouldn't be used for less than 20ms
+On Thu, 2012-09-20 at 17:22 +0200, Johannes Berg wrote:
+> On Thu, 2012-09-20 at 17:18 +0200, Eric Dumazet wrote:
 > 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->  drivers/bcma/driver_pci.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
+> > > Note I think the failing packets are dhcp packets, and connman seems to
+> > > use an AF_INET, SOCK_DGRAM, IPPROTO_UDP socket for those, and binds it
+> > > to the right device. I'd be quite surprised though if UDP code had
+> > > issues with paged Rx??
 > 
-> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-> index c32ebd5..e78e6a8 100644
-> --- a/drivers/bcma/driver_pci.c
-> +++ b/drivers/bcma/driver_pci.c
-> @@ -51,7 +51,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u8 phy)
->  		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
->  		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
->  			break;
-> -		msleep(1);
-> +		udelay(1000);
->  	}
->  }
->  
-> @@ -92,7 +92,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
->  			ret = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_DATA);
->  			break;
->  		}
-> -		msleep(1);
-> +		udelay(1000);
->  	}
->  	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
->  	return ret;
-> @@ -132,7 +132,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u8 device,
->  		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
->  		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
->  			break;
-> -		msleep(1);
-> +		udelay(1000);
->  	}
->  	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
->  }
+> > You told me : socket(PF_PACKET, SOCK_RAW, htons(ETH_P_EAPOL))
+> > 
+> > So I looked at raw code.
 > 
+> and even found an issue. Artem wasn't really sure, but looking at his
+> information again it seems that the EAPOL packets (those on the raw
+> sockets) do go through, and then DHCP fails. In the printk he did for
+> me, I can see that the EAPOL packets are small enough to get pulled in
+> completely in iwlwifi, and the bigger DHCP packets (~600 bytes) only go
+> through if we linearize them.
 
-Using msleep(1) here is not correct, but I do not know if udelay(1000)
-is better. The BCM4706 SoC or more the kernel code you are using seams
-to have problems with sleeping, at least that is my current assumption.
-when I add an msleep(1) somewhere into the code the exception stops
-there without an exception from the CPU.
+OK, its a bug in UDP, I'll send a patch asap.
 
-According to Documentation/timers/timers-howto.txt we should use
-usleep_range for values from 10us to 20ms, but that also causes the same
-problem as msleep() on this SoC.
 
-Hauke
+
+
