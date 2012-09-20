@@ -1,114 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48558 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455Ab2IHHbs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49130 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755754Ab2ITPEr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 03:31:48 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20554.62336.614799.170591@gargle.gargle.HOWL> (sfid-20120908_093153_672375_7550F4CA)
-Date: Sat, 8 Sep 2012 12:58:00 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [RFC 1/7] ath9k_hw: Add version/revision macros for AR9565
+	Thu, 20 Sep 2012 11:04:47 -0400
+Message-ID: <1348153522.4161.37.camel@jlt4.sipsolutions.net> (sfid-20120920_170456_258449_3D51D76F)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: artem.bityutskiy@linux.intel.com,
+	Eric Dumazet <edumazet@google.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 20 Sep 2012 17:05:22 +0200
+In-Reply-To: <1348152971.31352.140.camel@edumazet-glaptop> (sfid-20120920_165616_301862_3EBAF30C)
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348151149.31352.109.camel@edumazet-glaptop>
+	 <1348151876.2388.24.camel@sauron.fi.intel.com>
+	 <1348152971.31352.140.camel@edumazet-glaptop>
+	 (sfid-20120920_165616_301862_3EBAF30C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And recognize the device in the init path.
+On Thu, 2012-09-20 at 16:56 +0200, Eric Dumazet wrote:
+> On Thu, 2012-09-20 at 17:37 +0300, Artem Bityutskiy wrote:
+> > On Thu, 2012-09-20 at 16:25 +0200, Eric Dumazet wrote:
+> > > Please remove this hack and try the following bugfix in raw handler
+> > > 
+> > > icmp_filter() should not modify skb, or else its caller should not
+> > > assume ip_hdr() is unchanged.
+> > 
+> > Did not help :(
+> > 
+> 
+> What gives (after some failures)
+> 
+> cat /proc/net/raw
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c  | 7 +++++--
- drivers/net/wireless/ath/ath9k/hw.h  | 1 +
- drivers/net/wireless/ath/ath9k/reg.h | 9 +++++++++
- 3 files changed, 15 insertions(+), 2 deletions(-)
+Note I think the failing packets are dhcp packets, and connman seems to
+use an AF_INET, SOCK_DGRAM, IPPROTO_UDP socket for those, and binds it
+to the right device. I'd be quite surprised though if UDP code had
+issues with paged Rx??
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 48af401..3638626 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -355,7 +355,7 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 			(val & AR_SREV_VERSION2) >> AR_SREV_TYPE2_S;
- 		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
- 
--		if (AR_SREV_9462(ah))
-+		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
- 			ah->is_pciexpress = true;
- 		else
- 			ah->is_pciexpress = (val &
-@@ -647,6 +647,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	case AR_SREV_VERSION_9340:
- 	case AR_SREV_VERSION_9462:
- 	case AR_SREV_VERSION_9550:
-+	case AR_SREV_VERSION_9565:
- 		break;
- 	default:
- 		ath_err(common,
-@@ -708,7 +709,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	int ret;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
--	/* These are all the AR5008/AR9001/AR9002 hardware family of chipsets */
-+	/* These are all the AR5008/AR9001/AR9002/AR9003 hardware family of chipsets */
- 	switch (ah->hw_version.devid) {
- 	case AR5416_DEVID_PCI:
- 	case AR5416_DEVID_PCIE:
-@@ -728,6 +729,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	case AR9300_DEVID_AR9580:
- 	case AR9300_DEVID_AR9462:
- 	case AR9485_DEVID_AR1111:
-+	case AR9300_DEVID_AR9565:
- 		break;
- 	default:
- 		if (common->bus_ops->ath_bus_type == ATH_USB)
-@@ -3157,6 +3159,7 @@ static struct {
- 	{ AR_SREV_VERSION_9485,         "9485" },
- 	{ AR_SREV_VERSION_9462,         "9462" },
- 	{ AR_SREV_VERSION_9550,         "9550" },
-+	{ AR_SREV_VERSION_9565,         "9565" },
- };
- 
- /* For devices with external radios */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 6599a75..0d17ce0 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -50,6 +50,7 @@
- #define AR9300_DEVID_AR9330	0x0035
- #define AR9300_DEVID_QCA955X	0x0038
- #define AR9485_DEVID_AR1111	0x0037
-+#define AR9300_DEVID_AR9565     0x0036
- 
- #define AR5416_AR9100_DEVID	0x000b
- 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 87cac8e..6ca34a4 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -801,6 +801,8 @@
- #define AR_SREV_REVISION_9580_10	4 /* AR9580 1.0 */
- #define AR_SREV_VERSION_9462		0x280
- #define AR_SREV_REVISION_9462_20	2
-+#define AR_SREV_VERSION_9565            0x2C0
-+#define AR_SREV_REVISION_9565_10        0
- #define AR_SREV_VERSION_9550		0x400
- 
- #define AR_SREV_5416(_ah) \
-@@ -909,6 +911,13 @@
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
- 	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
- 
-+#define AR_SREV_9565(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
-+
-+#define AR_SREV_9565_10(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10)))
-+
- #define AR_SREV_9550(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9550))
- 
--- 
-1.7.12
+johannes
 
