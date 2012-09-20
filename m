@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7042 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758851Ab2IKLwd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 07:52:33 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v1] Fix for regulatory in 60g
-Date: Tue, 11 Sep 2012 14:52:08 +0300
-Message-ID: <1347364329-19443-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120911_135236_654164_D63C5379)
+Received: from mms1.broadcom.com ([216.31.210.17]:4933 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755164Ab2ITUJi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2012 16:09:38 -0400
+Message-ID: <505B77F9.1010000@broadcom.com> (sfid-20120920_220942_560223_516CE47B)
+Date: Thu, 20 Sep 2012 22:09:29 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+cc: "Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] cfg80211: Fix regulatory check for 60GHz band
+ frequencies
+References: <1348039339-22246-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1348039339-22246-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <20120920183740.GY3354@lenteja.do-not-panic.com>
+In-Reply-To: <20120920183740.GY3354@lenteja.do-not-panic.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Another bit in 60g band support.
+On 09/20/2012 08:37 PM, Luis R. Rodriguez wrote:
+> On Wed, Sep 19, 2012 at 10:22:19AM +0300, Vladimir Kondratiev wrote:
+>> @@ -520,9 +522,12 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
+>>   	u32 freq_khz)
+>>   {
+>>   #define ONE_GHZ_IN_KHZ	1000000
+>> -	if (abs(freq_khz - freq_range->start_freq_khz) <= (2 * ONE_GHZ_IN_KHZ))
+>> +	/* DMG frequencies starts from 45 GHz, see 802.11ad */
+>
+> What's this DMG thing?
+>
 
-If possible, this is bug fix intended for 3.6
+ From 11ad:
 
-Vladimir Kondratiev (1):
-  cfg80211: Fix regulatory check for 60GHz band frequencies
+directional multi-gigabit (DMG): Pertaining to operation in a frequency 
+band containing a channel with the Channel starting frequency above 45 GHz.
 
- net/wireless/reg.c |   54 ++++++----------------------------------------------
- 1 file changed, 6 insertions(+), 48 deletions(-)
-
--- 
-1.7.9.5
+Gr. AvS
 
