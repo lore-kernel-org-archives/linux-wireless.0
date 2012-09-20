@@ -1,119 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58526 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754055Ab2IYNlc (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:59080 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755554Ab2ITPbM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 09:41:32 -0400
-Date: Tue, 25 Sep 2012 19:10:57 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath9k: Enable MCI for AR9565
-Message-ID: <20120925134055.GA3981@vmraj-lnx.qca.qualcomm.com> (sfid-20120925_154136_751844_125456F7)
-References: <1348573983-5710-1-git-send-email-bkamatch@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1348573983-5710-1-git-send-email-bkamatch@qca.qualcomm.com>
+	Thu, 20 Sep 2012 11:31:12 -0400
+Received: by bkuw11 with SMTP id w11so300211bku.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 08:31:11 -0700 (PDT)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com,
+	Eric Dumazet <edumazet@google.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1348154831.31352.177.camel@edumazet-glaptop>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348151149.31352.109.camel@edumazet-glaptop>
+	 <1348151876.2388.24.camel@sauron.fi.intel.com>
+	 <1348152971.31352.140.camel@edumazet-glaptop>
+	 (sfid-20120920_165616_301862_3EBAF30C)  <1348153522.4161.37.camel@jlt4.sipsolutions.net>
+	 <1348154294.31352.165.camel@edumazet-glaptop>
+	 (sfid-20120920_171820_134642_A4BA7EB1)  <1348154575.4161.39.camel@jlt4.sipsolutions.net>
+	 <1348154831.31352.177.camel@edumazet-glaptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Sep 2012 17:31:07 +0200
+Message-ID: <1348155067.31352.183.camel@edumazet-glaptop> (sfid-20120920_173117_218865_1ABCC5A7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 25, 2012 at 05:23:03PM +0530, Bala Shanmugam wrote:
-> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/btcoex.c |   19 +++++++++++++++----
->  drivers/net/wireless/ath/ath9k/gpio.c   |    2 +-
->  drivers/net/wireless/ath/ath9k/wow.c    |    2 +-
->  3 files changed, 17 insertions(+), 6 deletions(-)
+On Thu, 2012-09-20 at 17:27 +0200, Eric Dumazet wrote:
+> On Thu, 2012-09-20 at 17:22 +0200, Johannes Berg wrote:
+> > On Thu, 2012-09-20 at 17:18 +0200, Eric Dumazet wrote:
+> > 
+> > > > Note I think the failing packets are dhcp packets, and connman seems to
+> > > > use an AF_INET, SOCK_DGRAM, IPPROTO_UDP socket for those, and binds it
+> > > > to the right device. I'd be quite surprised though if UDP code had
+> > > > issues with paged Rx??
+> > 
+> > > You told me : socket(PF_PACKET, SOCK_RAW, htons(ETH_P_EAPOL))
+> > > 
+> > > So I looked at raw code.
+> > 
+> > and even found an issue. Artem wasn't really sure, but looking at his
+> > information again it seems that the EAPOL packets (those on the raw
+> > sockets) do go through, and then DHCP fails. In the printk he did for
+> > me, I can see that the EAPOL packets are small enough to get pulled in
+> > completely in iwlwifi, and the bigger DHCP packets (~600 bytes) only go
+> > through if we linearize them.
 > 
-> diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-> index acd4373..88c4927 100644
-> --- a/drivers/net/wireless/ath/ath9k/btcoex.c
-> +++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-> @@ -51,6 +51,14 @@ static const u32 ar9462_wlan_weights[ATH_BTCOEX_STOMP_MAX]
->  	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
->  };
->  
-> +static const u32 ar9565_wlan_weights[ATH_BTCOEX_STOMP_MAX]
-> +				    [AR9300_NUM_WLAN_WEIGHTS] = {
-> +	{ 0x01017d01, 0x7d7d7d01, 0x7d7d7d01, 0x7d7d7d7d }, /* STOMP_ALL */
-> +	{ 0x01017d01, 0x3b3b3b01, 0x3b3b3b01, 0x3b3b3b3b }, /* STOMP_LOW */
-> +	{ 0x01017d01, 0x01010101, 0x01010101, 0x01010101 }, /* STOMP_NONE */
-> +	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
-> +};
-> +
-Can you please confirm STOMP_ALL weights are correct? I assume you are
-using STOMP_ALL_FORCE weights which we don't support. I think we
-can reuse 9462 weight table.
+> OK, its a bug in UDP, I'll send a patch asap.
 
--Rajkumar
->  void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
->  {
->  	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-> @@ -282,7 +290,7 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
->  		ath9k_hw_btcoex_enable_2wire(ah);
->  		break;
->  	case ATH_BTCOEX_CFG_3WIRE:
-> -		if (AR_SREV_9462(ah)) {
-> +		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
->  			ath9k_hw_btcoex_enable_mci(ah);
->  			return;
->  		}
-> @@ -304,7 +312,7 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
->  	int i;
->  
->  	btcoex_hw->enabled = false;
-> -	if (AR_SREV_9462(ah)) {
-> +	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
->  		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
->  		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
->  			REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
-> @@ -339,11 +347,14 @@ static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
->  	const u32 *weight = ar9003_wlan_weights[stomp_type];
->  	int i;
->  
-> -	if (AR_SREV_9462(ah)) {
-> +	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
->  		if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
->  		    btcoex->mci.stomp_ftp)
->  			stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
-> -		weight = ar9462_wlan_weights[stomp_type];
-> +		if (AR_SREV_9565(ah))
-> +			weight = ar9565_wlan_weights[stomp_type];
-> +		else
-> +			weight = ar9462_wlan_weights[stomp_type];
->  	}
->  
->  	for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
-> diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-> index 45f2422..83a204d 100644
-> --- a/drivers/net/wireless/ath/ath9k/gpio.c
-> +++ b/drivers/net/wireless/ath/ath9k/gpio.c
-> @@ -402,7 +402,7 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
->  		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
->  			ath9k_btcoex_timer_pause(sc);
->  		ath9k_hw_btcoex_disable(ah);
-> -		if (AR_SREV_9462(ah))
-> +		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
->  			ath_mci_flush_profile(&sc->btcoex.mci);
->  	}
->  }
-> diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
-> index 44a08eb..a483d51 100644
-> --- a/drivers/net/wireless/ath/ath9k/wow.c
-> +++ b/drivers/net/wireless/ath/ath9k/wow.c
-> @@ -497,7 +497,7 @@ void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
->  
->  	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
->  
-> -	if (AR_SREV_9462(ah)) {
-> +	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
->  		/*
->  		 * this is needed to prevent the chip waking up
->  		 * the host within 3-4 seconds with certain
-> -- 
-> 1.7.4.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Oh well, false alarm.
+
+Artem, could you send one capture of one such DHCP big packet ?
+
+tcpdump -p -n -s 2000 -i wlanX -X
+
+
