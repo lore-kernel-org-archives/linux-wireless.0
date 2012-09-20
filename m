@@ -1,46 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swan.laptop.org ([18.85.2.166]:44313 "EHLO swan.laptop.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756229Ab2ICT5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2012 15:57:44 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com, dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas sdio: fix suspend when interface is down
-Message-Id: <20120903194909.A878DFAA0A@dev.laptop.org> (sfid-20120903_215748_320081_56B5157C)
-Date: Mon,  3 Sep 2012 15:49:09 -0400 (EDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:59857 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754658Ab2ITMpC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2012 08:45:02 -0400
+Received: by pbbrr4 with SMTP id rr4so129304pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 05:45:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	<1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	<1347631355.5263.19.camel@sauron.fi.intel.com>
+	<1347640763.5263.24.camel@sauron.fi.intel.com>
+	<1347892887.7112.9.camel@sauron.fi.intel.com>
+	<1348142775.2388.10.camel@sauron.fi.intel.com>
+	<1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	<CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+Date: Thu, 20 Sep 2012 14:45:01 +0200
+Message-ID: <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com> (sfid-20120920_144510_962319_056B6D29)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <edumazet@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the interface is down, the hardware is powered off.
-However, the suspend handler currently tries to send host sleep commands
-(when wakeup params are set) in this configuration, causing a system hang
-when going into suspend (the commands will never complete).
+I guess you only need to make sure 14 bytes of ethernet header are
+available before eth_type_trans(skb, dev);
 
-Avoid this by detecting this situation and simply returning from
-the suspend handler without doing anything special.
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 61c621e..ffe5f84 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1795,9 +1795,13 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/libertas/if_sdio.c | 5 +++++
- 1 file changed, 5 insertions(+)
+                if (skb) {
+                        /* deliver to local stack */
+-                       skb->protocol = eth_type_trans(skb, dev);
+-                       memset(skb->cb, 0, sizeof(skb->cb));
+-                       netif_receive_skb(skb);
++                       if (pskb_may_pull(skb, sizeof(struct ethhdr))) {
++                               skb->protocol = eth_type_trans(skb, dev);
++                               memset(skb->cb, 0, sizeof(skb->cb));
++                               netif_receive_skb(skb);
++                       } else {
++                               kfree_skb(skb);
++                       }
+                }
+        }
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index e970897..4cb2343 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -1326,6 +1326,11 @@ static int if_sdio_suspend(struct device *dev)
- 
- 	mmc_pm_flag_t flags = sdio_get_host_pm_caps(func);
- 
-+	/* If we're powered off anyway, just let the mmc layer remove the
-+	 * card. */
-+	if (!lbs_iface_active(card->priv))
-+		return -ENOSYS;
-+
- 	dev_info(dev, "%s: suspend: PM flags = 0x%x\n",
- 		 sdio_func_id(func), flags);
- 
--- 
-1.7.11.4
 
+On Thu, Sep 20, 2012 at 2:40 PM, Eric Dumazet <edumazet@google.com> wrote:
+> OK, but which netif_receive_skb(), as I count 5 occurrences in
+> net/mac80211/rx.c ?
+>
+> Instead of skb_linearize() calls
+>
+> you could try several values of XXX in
+>
+> pskb_may_pull(skb, XXX)
+>
+> So that you make sure XXX bytes are available in skb->head, and not
+> the whole frame.
+>
+> One you know the limit for XXX, it might give a clue where a
+> pskb_may_pull(skb, XXX) is missing.
+>
+> On Thu, Sep 20, 2012 at 2:35 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> Hi,
+>>
+>>> >             56138f5 iwlwifi: dont pull too much payload in skb head
+>>> >             3edaf3e mac80211: manage AP netdev carrier state
+>>>
+>>> The second patch (AP carrier state) actually exposed a connman issue
+>>> which I fixed and submitted a connman patch:
+>>> http://lists.connman.net/pipermail/connman/2012-September/011232.html
+>>>
+>>> However, Eric's patch still causes tethering problems to me.
+>>
+>>
+>> Let me recap a bit. Artem is using connman, which sets up the wifi
+>> interface as part of a bridge. It runs wpa_supplicant to create an AP
+>> (only AP and mesh mode interfaces can be bridged anyway).
+>>
+>>
+>> Eric, you said:
+>>
+>>> I would say some part of the stack assumes a header (I dont know wich
+>>> one ?) is pulled in skb->head/data, and thats a bug.
+>>>
+>>> Always use pskb_may_pull(skb, XXX) to make sure you can access XXX
+>>> bytes in skb->data
+>>
+>> I thought we'd figure out which part of the stack assumes a header, so I
+>> asked Artem to test a one-line patch which adds "skb_linearize()" before
+>> "netif_receive_skb()" in mac80211. This makes it work, but I'm not sure
+>> where after that the bad assumption might be.
+>>
+>> johannes
+>>
