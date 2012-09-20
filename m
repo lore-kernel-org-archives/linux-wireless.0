@@ -1,104 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:36825 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831Ab2IXXZP (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43287 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202Ab2ITNEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 19:25:15 -0400
-Received: by lbbgj3 with SMTP id gj3so7548972lbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2012 16:25:13 -0700 (PDT)
+	Thu, 20 Sep 2012 09:04:51 -0400
+Received: by pbbrr4 with SMTP id rr4so166093pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 06:04:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1348483695.10257.8.camel@jlt4.sipsolutions.net>
-References: <504DBBAC.7040300@posedge.com> <CAB=NE6UfQdM6HrVGw3Dn-NBxQupwA3kJD27kv3c9DjLY8DVm1Q@mail.gmail.com>
- <5052E852.8030804@posedge.com> <1347896071.4975.14.camel@jlt4.sipsolutions.net>
- <CAB=NE6VMOvftuxi1zu3=4q-BJgM9rJHY86W-6+MAHmtY=V=6xA@mail.gmail.com> <1348483695.10257.8.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 24 Sep 2012 16:24:53 -0700
-Message-ID: <CAB=NE6Wemx5NCTz-Q-vY4ogTUxbF+RjWdzeTt=qVrgGVhm_y+w@mail.gmail.com> (sfid-20120925_012558_912354_7FE45378)
-Subject: Re: [RFC v3] cfg80211: VHT regulatory
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mahesh Palivela <maheshp@posedge.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1348145936.2388.18.camel@sauron.fi.intel.com>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	<1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	<1347631355.5263.19.camel@sauron.fi.intel.com>
+	<1347640763.5263.24.camel@sauron.fi.intel.com>
+	<1347892887.7112.9.camel@sauron.fi.intel.com>
+	<1348142775.2388.10.camel@sauron.fi.intel.com>
+	<1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	<CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	<CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	<1348145936.2388.18.camel@sauron.fi.intel.com>
+Date: Thu, 20 Sep 2012 15:04:50 +0200
+Message-ID: <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com> (sfid-20120920_150456_332372_3ED7EF4A)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <edumazet@google.com>
+To: artem.bityutskiy@linux.intel.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 24, 2012 at 3:48 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2012-09-17 at 11:56 -0700, Luis R. Rodriguez wrote:
->
->> > I'm not convinced :-)
->> >
->> > Today, we have people who want to use wifi on other parts of the
->> > spectrum, like somewhere in the 800 MHz range for example. If that gets
->> > properly integrated into drivers (rather than pretending it's actually
->> > 2.4 GHz) then you may want to do something different here, and those
->> > channels would never actually have IEEE defined 80 MHz rules.
+Try to pull 40 bytes : Thats OK for tcp performance, because 40 bytes
+is the minimum size of IP+TCP headers
+
+pskb_may_pull(skb, 40);
+
+(instead of your  skb_linearize(skb);)
+
+
+On Thu, Sep 20, 2012 at 2:58 PM, Artem Bityutskiy
+<artem.bityutskiy@linux.intel.com> wrote:
+> On Thu, 2012-09-20 at 14:45 +0200, Eric Dumazet wrote:
+>> I guess you only need to make sure 14 bytes of ethernet header are
+>> available before eth_type_trans(skb, dev);
 >>
->> So we'd have HT20 and HT40 only for 800 MHz?
->
-> Why would we want to restrict bandwidth use to the band we're operating
-> in at all? Fundamentally, the question, in terms of regulatory, is:
->
->  "Can I use a XY MHz around XYZ MHz?"
->
-> It isn't really "Can I use VHT 80 on channel 6".
-
-True, but we won't enable HT on non-HT cards, and so on. As much as we
-can assume code is non IEEE specific cfg80211 builds on IEEE framework
-and adding support to HT-foo or HT-bar to any band would require some
-changes today.
-
->> > Also, those definitions are arbitrary for interoperability and don't
->> > reflect regulatory rules.
+>> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+>> index 61c621e..ffe5f84 100644
+>> --- a/net/mac80211/rx.c
+>> +++ b/net/mac80211/rx.c
+>> @@ -1795,9 +1795,13 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
 >>
->> It seems easier to implement supporting checking for a static set of
->> VHT arrangements rather than figuring out all theoretically possible
->> arrangements given that most other arrangements would be unused /
->> unimplemented / not-supported.
+>>                 if (skb) {
+>>                         /* deliver to local stack */
+>> -                       skb->protocol = eth_type_trans(skb, dev);
+>> -                       memset(skb->cb, 0, sizeof(skb->cb));
+>> -                       netif_receive_skb(skb);
+>> +                       if (pskb_may_pull(skb, sizeof(struct ethhdr))) {
+>> +                               skb->protocol = eth_type_trans(skb, dev);
+>> +                               memset(skb->cb, 0, sizeof(skb->cb));
+>> +                               netif_receive_skb(skb);
+>> +                       } else {
+>> +                               kfree_skb(skb);
+>> +                       }
+>>                 }
+>>         }
 >
-> I think it's only superficially easier since we define regulatory rules
-> in terms of spectrum usage, and not in terms of IEEE channels.
-
-I disagree here. Superficially it would indeed make things easier for
-IEEE usage but in practice also it would make run time checks faster.
-With a dynamic run time checker you are looking at a higher complex
-operation at channel change time. That is what I am concerned about
-ultimately.
-
->> > Yes, it may be easier today to just pretend
->> > that regulatory rules only matter for IEEE defined operation, but I'm
->> > not convinced that we really should have definitions here in the
->> > regulatory database that really only cover specific IEEE 802.11
->> > channels.
->>
->> Agreed, but what I am proposing doesn't necessarily push us to push
->> anything IEEE specific into the wireless regulatory database, but it
->> does however push us to implement IEEE specific use cases on cfg80211.
+> Does not help, this one does:
 >
-> Well, since the regulatory framework is now part of cfg80211 the line is
-> a bit blurred here,
-
-Well I consider regulatory code as code not on the Linux kernel and
-cfg80211 regulatory code as IEEE 802.11 regulatory code. The regdb can
-surely still be used on other subsystems, and surely can be shared
-between them, but today the only user is IEEE 802.11
-
-> but I don't see why a regulatory check should be
-> restricted to 802.11 channels either, even if it uses the 802.11 defines
-> to do the check?
-
-cfg80211 deals with 802.11 ?
-
-> On the contrary, I think that if we frame the question
-> above in terms of 802.11 when asking the regulatory framework, then
-> we'll most likely end up with a regulatory framework that is 802.11
-> specific.
-
-Agreed but I think cfg80211 regulatory code already is 802.11
-specific, but not the userspace stuff. If we have a reason to make and
-separate the cfg80211 regulatory code to be non-802.11 specific I'm
-fine by that, but what's the use case so far and for what gain?
-
-  Luis
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 61c621e..6888586 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1797,6 +1797,7 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+>                         /* deliver to local stack */
+>                         skb->protocol = eth_type_trans(skb, dev);
+>                         memset(skb->cb, 0, sizeof(skb->cb));
+> +                       skb_linearize(skb);
+>                         netif_receive_skb(skb);
+>                 }
+>
+> --
+> Best Regards,
+> Artem Bityutskiy
