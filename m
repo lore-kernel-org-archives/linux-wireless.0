@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34091 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757076Ab2IJLLR (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:51012 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754587Ab2ITMkZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 07:11:17 -0400
-Date: Mon, 10 Sep 2012 13:11:13 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: David Rientjes <rientjes@google.com>
-Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-	johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, Andrew Morton <akpm@osdl.org>,
-	Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-Message-ID: <20120910111113.GA25159@elf.ucw.cz> (sfid-20120910_131138_529665_58436E42)
-References: <20120909213228.GA5538@elf.ucw.cz>
- <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
+	Thu, 20 Sep 2012 08:40:25 -0400
+Received: by pbbrr4 with SMTP id rr4so121231pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 05:40:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
+In-Reply-To: <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	<1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	<1347631355.5263.19.camel@sauron.fi.intel.com>
+	<1347640763.5263.24.camel@sauron.fi.intel.com>
+	<1347892887.7112.9.camel@sauron.fi.intel.com>
+	<1348142775.2388.10.camel@sauron.fi.intel.com>
+	<1348144524.4161.26.camel@jlt4.sipsolutions.net>
+Date: Thu, 20 Sep 2012 14:40:24 +0200
+Message-ID: <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com> (sfid-20120920_144028_758401_14E0E501)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <edumazet@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 2012-09-09 15:40:55, David Rientjes wrote:
-> On Sun, 9 Sep 2012, Pavel Machek wrote:
-> 
-> > On 3.6.0-rc2+, I tried to turn on the wireless, but got
-> > 
-> > root@amd:~# ifconfig wlan0 10.0.0.6 up
-> > SIOCSIFFLAGS: Cannot allocate memory
-> > SIOCSIFFLAGS: Cannot allocate memory
-> > root@amd:~# 
-> > 
-> > It looks like it uses "a bit too big" allocations to allocate
-> > firmware...? Order five allocation....
-> > 
-> > Hmm... then I did "echo 3  > /proc/sys/vm/drop_caches" and now the
-> > network works. Is it VM problem that it failed to allocate memory when
-> > it was freeable?
-> > 
-> 
-> Do you have CONFIG_COMPACTION enabled?
+OK, but which netif_receive_skb(), as I count 5 occurrences in
+net/mac80211/rx.c ?
 
-Yes:
+Instead of skb_linearize() calls
 
-pavel@amd:/data/l/linux-good$ zgrep CONFIG_COMPACTION /proc/config.gz 
-CONFIG_COMPACTION=y
-								Pavel
+you could try several values of XXX in
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+pskb_may_pull(skb, XXX)
+
+So that you make sure XXX bytes are available in skb->head, and not
+the whole frame.
+
+One you know the limit for XXX, it might give a clue where a
+pskb_may_pull(skb, XXX) is missing.
+
+On Thu, Sep 20, 2012 at 2:35 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Hi,
+>
+>> >             56138f5 iwlwifi: dont pull too much payload in skb head
+>> >             3edaf3e mac80211: manage AP netdev carrier state
+>>
+>> The second patch (AP carrier state) actually exposed a connman issue
+>> which I fixed and submitted a connman patch:
+>> http://lists.connman.net/pipermail/connman/2012-September/011232.html
+>>
+>> However, Eric's patch still causes tethering problems to me.
+>
+>
+> Let me recap a bit. Artem is using connman, which sets up the wifi
+> interface as part of a bridge. It runs wpa_supplicant to create an AP
+> (only AP and mesh mode interfaces can be bridged anyway).
+>
+>
+> Eric, you said:
+>
+>> I would say some part of the stack assumes a header (I dont know wich
+>> one ?) is pulled in skb->head/data, and thats a bug.
+>>
+>> Always use pskb_may_pull(skb, XXX) to make sure you can access XXX
+>> bytes in skb->data
+>
+> I thought we'd figure out which part of the stack assumes a header, so I
+> asked Artem to test a one-line patch which adds "skb_linearize()" before
+> "netif_receive_skb()" in mac80211. This makes it work, but I'm not sure
+> where after that the bad assumption might be.
+>
+> johannes
+>
