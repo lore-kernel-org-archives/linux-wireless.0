@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39619 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751768Ab2IYHY0 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:54446 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755297Ab2ITNlg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 03:24:26 -0400
-Message-ID: <1348557902.10041.17.camel@jlt4.sipsolutions.net> (sfid-20120925_092429_866697_BFA99606)
-Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Tue, 25 Sep 2012 09:25:02 +0200
-In-Reply-To: <50614089.6020105@posedge.com>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>
-	 <1348477154.10257.2.camel@jlt4.sipsolutions.net>
-	 <50614089.6020105@posedge.com>
+	Thu, 20 Sep 2012 09:41:36 -0400
+Received: by bkuw11 with SMTP id w11so226495bku.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 06:41:35 -0700 (PDT)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: artem.bityutskiy@linux.intel.com
+Cc: Eric Dumazet <edumazet@google.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1348148385.2388.21.camel@sauron.fi.intel.com>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348147322.31352.69.camel@edumazet-glaptop>
+	 <1348148385.2388.21.camel@sauron.fi.intel.com>
 Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Sep 2012 15:41:31 +0200
+Message-ID: <1348148491.31352.70.camel@edumazet-glaptop> (sfid-20120920_154218_664034_89190957)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-25 at 10:56 +0530, Mahesh Palivela wrote:
+On Thu, 2012-09-20 at 16:39 +0300, Artem Bityutskiy wrote:
+> On Thu, 2012-09-20 at 15:22 +0200, Eric Dumazet wrote:
 
-> > Well I think it'd be better to actually restrict/copy/update the feature
-> > bits correctly, this would simplify drivers.
+> > OK but you cant do that, or small frames will be dropped.
+> > 
+> > Anyway its a hack, we should find the buggy layer.
+> > 
+> > You could use dropwatch (drop_monitor) to check where frame is dropped.
+> > 
+> > modprobe drop_monitor
+> > dropwatch -l kas
 > 
-> I am not sure on what bits to be masked. wanted to keep it as future item.
-> Anyways I attempted few bits below. Let me know if they are ok...
+> I do not have dropwatch in Tizen, I need to find the sources and compile
+> the user-space part. Any hint where to download it?
 > 
->          vht_cap->cap = le16_to_cpu(vht_cap_ie->vht_cap_info) &
->                  (sband->ht_cap.cap |
 
-err, vht_cap
+https://fedorahosted.org/dropwatch/
 
->                   ~(IEEE80211_VHT_CAP_RXLDPC |
->                     IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
->                     IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE |
->                     IEEE80211_VHT_CAP_HTC_VHT));
-
-I don't think that can be right. It seems to me it should be something
-like
-
-cap = cap_info & sband->vht_cap.cap &
-	(MAX_MPDU_LENGTH_... |
-	 SHORT_GI_... | HTC_VHT | ... ? )
-
-if (cap_info & SU_BEAMFORMEE_CAPABLE &&
-    sband->vht_cap.cap & SU_BEAMFORMER_CAPABLE)
-	cap |= SU_BEAMFORMEE_CAPABLE;
-
-etc.?
-
-OTOH, this would only matter to drivers that actually support all these
-features, and those drivers could take care of not enabling the features
-if their hardware doesn't support them. However, think of a driver that
-is for different hardware, some that supports beamforming and some that
-doesn't. Then if we mask out the beamforming capability of a station if
-it's not locally supported, that driver could be simpler? Then again, if
-we don't the driver just has to check if the hardware supports it, which
-seems reasonable as well.
-
-Do you understand the issue?
-
-So maybe if you document it right, your original v2 patch is sufficient.
-Convince me :)
-
-johannes
 
