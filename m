@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:38772 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756958Ab2IKBbw (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:56006 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754658Ab2ITPc0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 21:31:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 05/10] mwifiex: update adapter->bss_prio_tbl[j].bss_prio_cur correctly
-Date: Mon, 10 Sep 2012 18:30:44 -0700
-Message-Id: <1347327049-13665-6-git-send-email-bzhao@marvell.com> (sfid-20120911_033155_630457_3A21122E)
-In-Reply-To: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
-References: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
+	Thu, 20 Sep 2012 11:32:26 -0400
+Received: by bkuw11 with SMTP id w11so301149bku.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 08:32:25 -0700 (PDT)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com,
+	Eric Dumazet <edumazet@google.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1348155067.31352.183.camel@edumazet-glaptop>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348151149.31352.109.camel@edumazet-glaptop>
+	 <1348151876.2388.24.camel@sauron.fi.intel.com>
+	 <1348152971.31352.140.camel@edumazet-glaptop>
+	 (sfid-20120920_165616_301862_3EBAF30C)  <1348153522.4161.37.camel@jlt4.sipsolutions.net>
+	 <1348154294.31352.165.camel@edumazet-glaptop>
+	 (sfid-20120920_171820_134642_A4BA7EB1)  <1348154575.4161.39.camel@jlt4.sipsolutions.net>
+	 <1348154831.31352.177.camel@edumazet-glaptop>
+	 <1348155067.31352.183.camel@edumazet-glaptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Sep 2012 17:32:22 +0200
+Message-ID: <1348155142.31352.187.camel@edumazet-glaptop> (sfid-20120920_173230_616309_26F23ABA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Thu, 2012-09-20 at 17:31 +0200, Eric Dumazet wrote:
 
-"adapter->bss_prio_tbl[j].bss_prio_head" points to linked list of
-interfaces with priority 'j'. "bss_prio_tbl[j].bss_prio_cur" is
-supposed to point to next interface every time the routine for
-dequeuing the packet is called. This ensures that each interface
-gets fair chance.
+> Artem, could you send one capture of one such DHCP big packet ?
+> 
+> tcpdump -p -n -s 2000 -i wlanX -X
+> 
 
-Currently we have AP and station interfaces with priority '0'.
-Therefore "adapter->bss_prio_tbl[0].bss_prio_cur" should
-alternately point to AP and station nodes. Since "bss_prio_cur"
-is not correctly updated, for each packet picked for AP, two
-packets are picked for station interface.
+You also can add the -v flag
 
-This patch fixes the problem by correctly updating "bss_prio_cur".
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 8ccd699..766d452 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -907,17 +907,16 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 		if (adapter->bss_prio_tbl[j].bss_prio_cur ==
- 		    (struct mwifiex_bss_prio_node *)
- 		    &adapter->bss_prio_tbl[j].bss_prio_head) {
--			bssprio_node =
-+			adapter->bss_prio_tbl[j].bss_prio_cur =
- 				list_first_entry(&adapter->bss_prio_tbl[j]
- 						 .bss_prio_head,
- 						 struct mwifiex_bss_prio_node,
- 						 list);
--			bssprio_head = bssprio_node;
--		} else {
--			bssprio_node = adapter->bss_prio_tbl[j].bss_prio_cur;
--			bssprio_head = bssprio_node;
- 		}
- 
-+		bssprio_node = adapter->bss_prio_tbl[j].bss_prio_cur;
-+		bssprio_head = bssprio_node;
-+
- 		do {
- 			priv_tmp = bssprio_node->priv;
- 			hqp = &priv_tmp->wmm.highest_queued_prio;
--- 
-1.7.0.2
 
