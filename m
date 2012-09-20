@@ -1,89 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30365 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894Ab2IPChx (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:56793 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129Ab2ITPTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2012 22:37:53 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20565.15176.803271.736039@gargle.gargle.HOWL> (sfid-20120916_043756_305079_E24891F1)
-Date: Sun, 16 Sep 2012 08:06:56 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 7/8] ath9k: Add a module parameter to enable diversity
+	Thu, 20 Sep 2012 11:19:44 -0400
+Received: by bkuw11 with SMTP id w11so292228bku.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 08:19:42 -0700 (PDT)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com,
+	Eric Dumazet <edumazet@google.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1348153522.4161.37.camel@jlt4.sipsolutions.net>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348151149.31352.109.camel@edumazet-glaptop>
+	 <1348151876.2388.24.camel@sauron.fi.intel.com>
+	 <1348152971.31352.140.camel@edumazet-glaptop>
+	 (sfid-20120920_165616_301862_3EBAF30C)  <1348153522.4161.37.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Sep 2012 17:19:39 +0200
+Message-ID: <1348154379.31352.169.camel@edumazet-glaptop> (sfid-20120920_171946_597386_256EDAAC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath.h           |  1 +
- drivers/net/wireless/ath/ath9k/antenna.c |  4 ++++
- drivers/net/wireless/ath/ath9k/init.c    | 12 ++++++++++++
- 3 files changed, 17 insertions(+)
+On Thu, 2012-09-20 at 17:05 +0200, Johannes Berg wrote:
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 6169fbd..4521342 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -159,6 +159,7 @@ struct ath_common {
- 
- 	bool btcoex_enabled;
- 	bool disable_ani;
-+	bool antenna_diversity;
- };
- 
- struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
-diff --git a/drivers/net/wireless/ath/ath9k/antenna.c b/drivers/net/wireless/ath/ath9k/antenna.c
-index 8eb274f..664844c 100644
---- a/drivers/net/wireless/ath/ath9k/antenna.c
-+++ b/drivers/net/wireless/ath/ath9k/antenna.c
-@@ -776,6 +776,7 @@ div_comb_done:
- void ath_ant_comb_update(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_hw_antcomb_conf div_ant_conf;
- 	u8 lna_conf;
- 
-@@ -790,4 +791,7 @@ void ath_ant_comb_update(struct ath_softc *sc)
- 	div_ant_conf.alt_lna_conf = lna_conf;
- 
- 	ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
-+
-+	if (common->antenna_diversity)
-+		ath9k_hw_antctrl_shared_chain_lnadiv(ah, true);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index f3ce5ca..ce20831 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -46,6 +46,10 @@ static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
- 
-+static int ath9k_enable_diversity;
-+module_param_named(enable_diversity, ath9k_enable_diversity, int, 0444);
-+MODULE_PARM_DESC(enable_diversity, "Enable Antenna diversity for AR9565");
-+
- bool is_ath9k_unloaded;
- /* We use the hw_value as an index into our private channel structure */
- 
-@@ -546,6 +550,14 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	common->debug_mask = ath9k_debug;
- 	common->btcoex_enabled = ath9k_btcoex_enable == 1;
- 	common->disable_ani = false;
-+
-+	/*
-+	 * Enable Antenna diversity only when BTCOEX is disabled
-+	 * and the user manually requests the feature.
-+	 */
-+	if (!common->btcoex_enabled && ath9k_enable_diversity)
-+		common->antenna_diversity = 1;
-+
- 	spin_lock_init(&common->cc_lock);
- 
- 	spin_lock_init(&sc->sc_serial_rw);
--- 
-1.7.12
+> Note I think the failing packets are dhcp packets, and connman seems to
+> use an AF_INET, SOCK_DGRAM, IPPROTO_UDP socket for those, and binds it
+> to the right device. I'd be quite surprised though if UDP code had
+> issues with paged Rx??
+> 
+
+It could be a checksum issue ?
+
+"netstat -s" could give a clue...
+
 
