@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42056 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017Ab2IGRFY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 13:05:24 -0400
-Received: by eaac11 with SMTP id c11so1002587eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 10:05:23 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH v3] p54: connect to 11w protected networks
-Date: Fri, 7 Sep 2012 19:05:16 +0200
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>
-References: <E1TA0re-00059m-CD@debian64.localnet> <1347036664.8913.1.camel@dcbw.foobar.com>
-In-Reply-To: <1347036664.8913.1.camel@dcbw.foobar.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4989 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751275Ab2ITNwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2012 09:52:45 -0400
+Message-ID: <505B1FA0.6030100@broadcom.com> (sfid-20120920_155302_137295_FDFBFB49)
+Date: Thu, 20 Sep 2012 15:52:32 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209071905.16432.chunkeey@googlemail.com> (sfid-20120907_190528_558094_8570F378)
+To: "Nico Schottelius" <nico-kernel20120920@schottelius.org>
+cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Out of memory on 3.5 kernels
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 September 2012 18:51:04 Dan Williams wrote:
-> On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
-> > Previously, it was not possible to connect
-> > to networks which requires 11w to be supported
-> > by the stations.
-> 
-> If at all possible if we can do this without module parameters, that
-> would be great.
-Hm, just a odd question. How does 11w work with
-TDLS and networks with mandatory 11w. So what
-happens if a station with 11w wants to connect
-to a station without over TDLS? So, do we need
-to have a MFP flag at a per-station level, or
-is it enough if we have it per-vif?
+Thanks, Nico
 
-Regards,
-	Chr
+ > just while running, I got the following brcmsmac related error:
+ >
+ > [17336.572558] WARNING: at 
+drivers/net/wireless/brcm80211/brcmsmac/main.c:7968 
+brcms_c_wait_for_tx_completion+0x99/0xb0 [brcmsmac]()
+ > [17336.572562] Hardware name: MacBookAir4,2
+ > [17336.572565] Modules linked in: sha256_generic snd_hda_codec_hdmi 
+snd_hda_codec_cirrus ext4 jbd2 mbcache arc4 uvcvideo brcmsmac 
+videobuf2_vmalloc videobuf2_memops cordic brcmutil btusb bluetooth i915 
+videobuf2_core mac80211 videodev crc16 acpi_cpufreq snd_hda_intel media 
+i2c_algo_bit cfg80211 mperf drm_kms_helper snd_hda_codec rfkill joydev 
+bcm5974 iTCO_wdt iTCO_vendor_support i2c_i801 intel_agp lpc_ich applesmc 
+evdev microcode drm coretemp input_polldev pcspkr intel_gtt mfd_core 
+i2c_core processor bcma snd_hwdep video button battery apple_bl mei ac 
+snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc snd_timer snd soundcore 
+kvm_intel kvm nfs nfs_acl lockd auth_rpcgss sunrpc fscache autofs4 jfs 
+xts gf128mul dm_crypt dm_mod sd_mod pata_acpi ata_generic hid_generic 
+usb_storage hid_apple usbhid hid uhci_hcd aesni_intel aes_x86_64 
+aes_generic ghash_clmulni_intel cryptd crc32c_intel ata_piix libata 
+scsi_mod ehci_hcd usbcore usb_common
+ > [17336.572716] Pid: 27714, comm: kworker/u:1 Not tainted 3.5.4-1-ARCH #1
+ > [17336.572719] Call Trace:
+ > [17336.572734]  [<ffffffff81051a3f>] warn_slowpath_common+0x7f/0xc0
+ > [17336.572743]  [<ffffffff81051a9a>] warn_slowpath_null+0x1a/0x20
+ > [17336.572759]  [<ffffffffa063bd29>] 
+brcms_c_wait_for_tx_completion+0x99/0xb0 [brcmsmac]
+ > [17336.572769]  [<ffffffffa062e1bb>] brcms_ops_flush+0x3b/0x60 [brcmsmac]
+
+This issue is bugging me for quite a while and some patch do patch up 
+the issue, but it is still bleeding. Nasty one to get to the root cause 
+of it, but I am testing my pitbull mentality on it ;-)
+
+Gr. AvS
+
