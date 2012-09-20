@@ -1,72 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:41059 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751605Ab2IZD3R (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:63162 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129Ab2ITPSU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Sep 2012 23:29:17 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 07/15] mwifiex: process remain on channel expired event
-Date: Tue, 25 Sep 2012 20:23:37 -0700
-Message-Id: <1348629825-12001-8-git-send-email-bzhao@marvell.com> (sfid-20120926_052919_864771_FB4D423C)
-In-Reply-To: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
-References: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
+	Thu, 20 Sep 2012 11:18:20 -0400
+Received: by bkuw11 with SMTP id w11so291283bku.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 08:18:18 -0700 (PDT)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com,
+	Eric Dumazet <edumazet@google.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1348153522.4161.37.camel@jlt4.sipsolutions.net>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348151149.31352.109.camel@edumazet-glaptop>
+	 <1348151876.2388.24.camel@sauron.fi.intel.com>
+	 <1348152971.31352.140.camel@edumazet-glaptop>
+	 (sfid-20120920_165616_301862_3EBAF30C)  <1348153522.4161.37.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Sep 2012 17:18:14 +0200
+Message-ID: <1348154294.31352.165.camel@edumazet-glaptop> (sfid-20120920_171822_897291_7C5CD517)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+On Thu, 2012-09-20 at 17:05 +0200, Johannes Berg wrote:
+> On Thu, 2012-09-20 at 16:56 +0200, Eric Dumazet wrote:
+> > On Thu, 2012-09-20 at 17:37 +0300, Artem Bityutskiy wrote:
+> > > On Thu, 2012-09-20 at 16:25 +0200, Eric Dumazet wrote:
+> > > > Please remove this hack and try the following bugfix in raw handler
+> > > > 
+> > > > icmp_filter() should not modify skb, or else its caller should not
+> > > > assume ip_hdr() is unchanged.
+> > > 
+> > > Did not help :(
+> > > 
+> > 
+> > What gives (after some failures)
+> > 
+> > cat /proc/net/raw
+> 
+> Note I think the failing packets are dhcp packets, and connman seems to
+> use an AF_INET, SOCK_DGRAM, IPPROTO_UDP socket for those, and binds it
+> to the right device. I'd be quite surprised though if UDP code had
+> issues with paged Rx??
+> 
+> johannes
+> 
 
-Process remain on channel expired event, and notify cfg80211.
+You told me : socket(PF_PACKET, SOCK_RAW, htons(ETH_P_EAPOL))
 
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h        |    1 +
- drivers/net/wireless/mwifiex/sta_event.c |   12 ++++++++++++
- 2 files changed, 13 insertions(+), 0 deletions(-)
+So I looked at raw code.
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 9818cae..b8a07ad 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -392,6 +392,7 @@ enum ENH_PS_MODES {
- #define EVENT_BW_CHANGE                 0x00000048
- #define EVENT_UAP_MIC_COUNTERMEASURES   0x0000004c
- #define EVENT_HOSTWAKE_STAIE		0x0000004d
-+#define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
- 
- #define EVENT_ID_MASK                   0xffff
- #define BSS_NUM_MASK                    0xf
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index dff51d5..aafde30 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -410,6 +410,18 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		dev_dbg(adapter->dev, "event: HOSTWAKE_STAIE %d\n", eventcause);
- 		break;
- 
-+	case EVENT_REMAIN_ON_CHAN_EXPIRED:
-+		dev_dbg(adapter->dev, "event: Remain on channel expired\n");
-+		cfg80211_remain_on_channel_expired(priv->wdev,
-+						   priv->roc_cfg.cookie,
-+						   &priv->roc_cfg.chan,
-+						   priv->roc_cfg.chan_type,
-+						   GFP_ATOMIC);
-+
-+		memset(&priv->roc_cfg, 0x00, sizeof(struct mwifiex_roc_cfg));
-+
-+		break;
-+
- 	default:
- 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
- 			eventcause);
--- 
-1.7.0.2
+
+
 
