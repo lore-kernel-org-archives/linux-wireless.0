@@ -1,135 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52015 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49211 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736Ab2IGIMc (ORCPT
+	with ESMTP id S1755661Ab2ITPZx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 04:12:32 -0400
+	Thu, 20 Sep 2012 11:25:53 -0400
+Message-ID: <1348154789.4161.40.camel@jlt4.sipsolutions.net> (sfid-20120920_172556_978523_4224D774)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] iwlwifi: remove unused IDI code stubs
-Date: Fri,  7 Sep 2012 10:13:08 +0200
-Message-Id: <1347005588-16110-1-git-send-email-johannes@sipsolutions.net> (sfid-20120907_101239_551428_FB88B8E9)
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: artem.bityutskiy@linux.intel.com,
+	Eric Dumazet <edumazet@google.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 20 Sep 2012 17:26:29 +0200
+In-Reply-To: <1348154379.31352.169.camel@edumazet-glaptop> (sfid-20120920_171943_734306_37BE61D5)
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348151149.31352.109.camel@edumazet-glaptop>
+	 <1348151876.2388.24.camel@sauron.fi.intel.com>
+	 <1348152971.31352.140.camel@edumazet-glaptop>
+	 (sfid-20120920_165616_301862_3EBAF30C)  <1348153522.4161.37.camel@jlt4.sipsolutions.net>
+	 <1348154379.31352.169.camel@edumazet-glaptop>
+	 (sfid-20120920_171943_734306_37BE61D5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2012-09-20 at 17:19 +0200, Eric Dumazet wrote:
+> On Thu, 2012-09-20 at 17:05 +0200, Johannes Berg wrote:
+> 
+> > Note I think the failing packets are dhcp packets, and connman seems to
+> > use an AF_INET, SOCK_DGRAM, IPPROTO_UDP socket for those, and binds it
+> > to the right device. I'd be quite surprised though if UDP code had
+> > issues with paged Rx??
+> > 
+> 
+> It could be a checksum issue ?
 
-These stubs are from internal experimental code
-and aren't needed in the driver in the kernel
-so just remove them.
+Hmm, would paged RX make a difference there? But I guess it could be,
+our packets are all CHECKSUM_NONE.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/drv.c   |   13 -------------
- drivers/net/wireless/iwlwifi/pcie/rx.c    |   10 ++--------
- drivers/net/wireless/iwlwifi/pcie/trans.c |    8 ++------
- 3 files changed, 4 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 89bfb43..2a46753 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -263,8 +263,6 @@ MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
- 
--#ifndef CONFIG_IWLWIFI_IDI
--
- static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	const struct iwl_cfg *cfg = (struct iwl_cfg *)(ent->driver_data);
-@@ -307,8 +305,6 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
- 	pci_set_drvdata(pdev, NULL);
- }
- 
--#endif /* CONFIG_IWLWIFI_IDI */
--
- #ifdef CONFIG_PM_SLEEP
- 
- static int iwl_pci_suspend(struct device *device)
-@@ -353,15 +349,6 @@ static SIMPLE_DEV_PM_OPS(iwl_dev_pm_ops, iwl_pci_suspend, iwl_pci_resume);
- 
- #endif
- 
--#ifdef CONFIG_IWLWIFI_IDI
--/*
-- * Defined externally in iwl-idi.c
-- */
--int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent);
--void __devexit iwl_pci_remove(struct pci_dev *pdev);
--
--#endif /* CONFIG_IWLWIFI_IDI */
--
- static struct pci_driver iwl_pci_driver = {
- 	.name = DRV_NAME,
- 	.id_table = iwl_hw_card_ids,
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index d80604a..7b2ac67 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -35,10 +35,6 @@
- #include "internal.h"
- #include "iwl-op-mode.h"
- 
--#ifdef CONFIG_IWLWIFI_IDI
--#include "iwl-amfh.h"
--#endif
--
- /******************************************************************************
-  *
-  * RX path functions
-@@ -723,11 +719,9 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
- 		/* Disable periodic interrupt; we use it as just a one-shot. */
- 		iwl_write8(trans, CSR_INT_PERIODIC_REG,
- 			    CSR_INT_PERIODIC_DIS);
--#ifdef CONFIG_IWLWIFI_IDI
--		iwl_amfh_rx_handler();
--#else
-+
- 		iwl_rx_handle(trans);
--#endif
-+
- 		/*
- 		 * Enable periodic interrupt in 8 msec only if we received
- 		 * real RX interrupt (instead of just periodic int), to catch
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 38f51b0..e555dff 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -855,10 +855,8 @@ static int iwl_nic_init(struct iwl_trans *trans)
- 
- 	iwl_op_mode_nic_config(trans->op_mode);
- 
--#ifndef CONFIG_IWLWIFI_IDI
- 	/* Allocate the RX queue, or reset if it is already allocated */
- 	iwl_rx_init(trans);
--#endif
- 
- 	/* Allocate or reset and init all Tx and Command queues */
- 	if (iwl_tx_init(trans))
-@@ -1184,9 +1182,8 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	 */
- 	if (test_bit(STATUS_DEVICE_ENABLED, &trans_pcie->status)) {
- 		iwl_trans_tx_stop(trans);
--#ifndef CONFIG_IWLWIFI_IDI
- 		iwl_trans_rx_stop(trans);
--#endif
-+
- 		/* Power-down device's busmaster DMA clocks */
- 		iwl_write_prph(trans, APMG_CLK_DIS_REG,
- 			       APMG_CLK_VAL_DMA_CLK_RQT);
-@@ -1551,9 +1548,8 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 	iwl_trans_pcie_tx_free(trans);
--#ifndef CONFIG_IWLWIFI_IDI
- 	iwl_trans_pcie_rx_free(trans);
--#endif
-+
- 	if (trans_pcie->irq_requested == true) {
- 		free_irq(trans_pcie->irq, trans);
- 		iwl_free_isr_ict(trans);
--- 
-1.7.10.4
+johannes
 
