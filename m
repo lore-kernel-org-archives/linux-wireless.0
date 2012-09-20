@@ -1,18 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:54446 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755297Ab2ITNlg (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427Ab2ITMxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 09:41:36 -0400
-Received: by bkuw11 with SMTP id w11so226495bku.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 06:41:35 -0700 (PDT)
+	Thu, 20 Sep 2012 08:53:45 -0400
+Message-ID: <1348145661.4161.34.camel@jlt4.sipsolutions.net> (sfid-20120920_145353_607695_2F98D912)
 Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: artem.bityutskiy@linux.intel.com
-Cc: Eric Dumazet <edumazet@google.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1348148385.2388.21.camel@sauron.fi.intel.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <edumazet@google.com>
+Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Date: Thu, 20 Sep 2012 14:54:21 +0200
+In-Reply-To: <CANn89iLudX29yU8ziNyN+8gN3b2L55L9m5p6ob_wnfZ3fp_TDg@mail.gmail.com> (sfid-20120920_145113_728996_FFF92D50)
 References: <1347361823.26457.3.camel@sauron.fi.intel.com>
 	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
 	 <1347631355.5263.19.camel@sauron.fi.intel.com>
@@ -22,34 +21,38 @@ References: <1347361823.26457.3.camel@sauron.fi.intel.com>
 	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
 	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
 	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-	 <1348145936.2388.18.camel@sauron.fi.intel.com>
-	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
-	 <1348147353.2388.19.camel@sauron.fi.intel.com>
-	 <1348147322.31352.69.camel@edumazet-glaptop>
-	 <1348148385.2388.21.camel@sauron.fi.intel.com>
+	 <1348145269.4161.28.camel@jlt4.sipsolutions.net>
+	 <CANn89iLksBMJ=Ep+VcPSAOPzqst70hk8hR5=mGte2vSx=49zUA@mail.gmail.com>
+	 <1348145450.4161.31.camel@jlt4.sipsolutions.net>
+	 <CANn89iLudX29yU8ziNyN+8gN3b2L55L9m5p6ob_wnfZ3fp_TDg@mail.gmail.com>
+	 (sfid-20120920_145113_728996_FFF92D50)
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Sep 2012 15:41:31 +0200
-Message-ID: <1348148491.31352.70.camel@edumazet-glaptop> (sfid-20120920_154218_664034_89190957)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-20 at 16:39 +0300, Artem Bityutskiy wrote:
-> On Thu, 2012-09-20 at 15:22 +0200, Eric Dumazet wrote:
+On Thu, 2012-09-20 at 14:51 +0200, Eric Dumazet wrote:
+> So its using a RAW socket ?
 
-> > OK but you cant do that, or small frames will be dropped.
-> > 
-> > Anyway its a hack, we should find the buggy layer.
-> > 
-> > You could use dropwatch (drop_monitor) to check where frame is dropped.
-> > 
-> > modprobe drop_monitor
-> > dropwatch -l kas
-> 
-> I do not have dropwatch in Tizen, I need to find the sources and compile
-> the user-space part. Any hint where to download it?
-> 
+Yes:
 
-https://fedorahosted.org/dropwatch/
+socket(PF_PACKET, SOCK_RAW, htons(ETH_P_EAPOL))
+
+johannes
+
+> On Thu, Sep 20, 2012 at 2:50 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2012-09-20 at 14:48 +0200, Eric Dumazet wrote:
+> >> Or its a buggy protocol ?
+> >>
+> >> IP/UDP/TCP definitely works, but maybe another protocol assumes its
+> >> header is in skb->head
+> >
+> > It could be, I think it failed either on EAPOL (which is just userspace
+> > registering a protocol socket) or DHCP (same?)
+> >
+> > johannes
+> >
+> 
 
 
