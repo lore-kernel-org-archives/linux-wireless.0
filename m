@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:60354 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760812Ab2ILSbQ (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:33926 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751523Ab2ITMvL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 14:31:16 -0400
-Date: Wed, 12 Sep 2012 21:31:06 +0300
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2012-09-08
-Message-ID: <20120912183106.GA10402@x220.P-661HNU-F1> (sfid-20120912_203143_139105_F10B13BF)
-References: <20120908215956.GP5788@joana>
- <20120912181309.GB28823@tuxdriver.com>
+	Thu, 20 Sep 2012 08:51:11 -0400
+Received: by pbbrr4 with SMTP id rr4so140588pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 05:51:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120912181309.GB28823@tuxdriver.com>
+In-Reply-To: <1348145450.4161.31.camel@jlt4.sipsolutions.net>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	<1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	<1347631355.5263.19.camel@sauron.fi.intel.com>
+	<1347640763.5263.24.camel@sauron.fi.intel.com>
+	<1347892887.7112.9.camel@sauron.fi.intel.com>
+	<1348142775.2388.10.camel@sauron.fi.intel.com>
+	<1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	<CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	<CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	<1348145269.4161.28.camel@jlt4.sipsolutions.net>
+	<CANn89iLksBMJ=Ep+VcPSAOPzqst70hk8hR5=mGte2vSx=49zUA@mail.gmail.com>
+	<1348145450.4161.31.camel@jlt4.sipsolutions.net>
+Date: Thu, 20 Sep 2012 14:51:10 +0200
+Message-ID: <CANn89iLudX29yU8ziNyN+8gN3b2L55L9m5p6ob_wnfZ3fp_TDg@mail.gmail.com> (sfid-20120920_145119_521746_E8E29FA1)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <edumazet@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+So its using a RAW socket ?
 
-On Wed, Sep 12, 2012, John W. Linville wrote:
-> "Bluetooth: mgmt: Implement support for passkey notification" doesn't
-> look like a fix at all.
-
-This fixes pairing with keyboards that have a "KeyboardOnly" IO
-capability. This used to work previously in a world where user space
-spoke HCI directly to the Bluetooth controller but is broken with any
-user space version using the recently introduced management interface.
-
-> "Bluetooth: Update management interface revision" is suspect.  It kinda
-> makes sense, but if it is so important than it should have been merged
-> much earlier, no?
-
-This patch is due to the first one. We increment the revision every time
-something gets added to the management interface. FWIW, I've tested that
-pairing now works with keyboards of this kind with these patches.
-
-Johan
+On Thu, Sep 20, 2012 at 2:50 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-09-20 at 14:48 +0200, Eric Dumazet wrote:
+>> Or its a buggy protocol ?
+>>
+>> IP/UDP/TCP definitely works, but maybe another protocol assumes its
+>> header is in skb->head
+>
+> It could be, I think it failed either on EAPOL (which is just userspace
+> registering a protocol socket) or DHCP (same?)
+>
+> johannes
+>
