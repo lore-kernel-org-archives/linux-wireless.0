@@ -1,40 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:2001 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758977Ab2INKXr (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:34315 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755741Ab2ITOZy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 06:23:47 -0400
-Message-ID: <1347617853.14216.18.camel@x61.thuisdomein> (sfid-20120914_122351_352031_0F87CCFF)
-Subject: iwlegacy:  "Can't stop Rx DMA." error
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 14 Sep 2012 12:17:33 +0200
+	Thu, 20 Sep 2012 10:25:54 -0400
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: artem.bityutskiy@linux.intel.com
+Cc: Eric Dumazet <edumazet@google.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+In-Reply-To: <1348147353.2388.19.camel@sauron.fi.intel.com>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
 Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Sep 2012 16:25:49 +0200
+Message-ID: <1348151149.31352.109.camel@edumazet-glaptop> (sfid-20120920_162616_839682_65056D98)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0) Every now and then an error appears in the logs of a laptop:
-     iwl4965 [...]: Can't stop Rx DMA.
+On Thu, 2012-09-20 at 16:22 +0300, Artem Bityutskiy wrote:
+> On Thu, 2012-09-20 at 15:04 +0200, Eric Dumazet wrote:
+> > Try to pull 40 bytes : Thats OK for tcp performance, because 40 bytes
+> > is the minimum size of IP+TCP headers
+> > 
+> > pskb_may_pull(skb, 40);
+> 
+> OK, I've tried almost this (see below) and it solves my issue:
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 965e6ec..7f079d0 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1798,9 +1798,13 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+>  
+>                 if (skb) {
+>                         /* deliver to local stack */
+> -                       skb->protocol = eth_type_trans(skb, dev);
+> -                       memset(skb->cb, 0, sizeof(skb->cb));
+> -                       netif_receive_skb(skb);
+> +                       if (pskb_may_pull(skb, 40)) {
+> +                               skb->protocol = eth_type_trans(skb, dev);
+> +                               memset(skb->cb, 0, sizeof(skb->cb));
+> +                               netif_receive_skb(skb);
+> +                       } else {
+> +                               kfree_skb(skb);
+> +                       }
+>                 }
+>         }
+> 
 
-Last time it was triggered while suspending this laptop.
+Please remove this hack and try the following bugfix in raw handler
 
-1) This error is printed by il4965_rxq_stop() in
-drivers/net/wireless/iwlegacy/4965-mac.c. (An identical function is
-il3945_hw_rxq_stop() in drivers/net/wireless/iwlegacy/3945.c.)
+icmp_filter() should not modify skb, or else its caller should not
+assume ip_hdr() is unchanged.
 
-A similar function is iwl_trans_rx_stop() in
-drivers/net/wireless/iwlwifi/pcie/trans.c. That function will never
-print any messages.
+ net/ipv4/raw.c |   29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-2) Why is this error needed? This function will always return 0,
-regardless whether that error was printed or not, and the sole caller of
-this function ignores the returned zero anyway. Can't it be downgraded
-to debug level or perhaps even removed? If so, I'd be happy to submit
-the trivial patch to do so.
+diff --git a/net/ipv4/raw.c b/net/ipv4/raw.c
+index f242578..3fa8c96 100644
+--- a/net/ipv4/raw.c
++++ b/net/ipv4/raw.c
+@@ -128,25 +128,30 @@ found:
+ }
+ 
+ /*
+- *	0 - deliver
+- *	1 - block
++ *	false - deliver
++ *	true - block
+  */
+-static __inline__ int icmp_filter(struct sock *sk, struct sk_buff *skb)
++static bool icmp_filter(struct sock *sk, const struct sk_buff *skb)
+ {
+-	int type;
+-
+-	if (!pskb_may_pull(skb, sizeof(struct icmphdr)))
+-		return 1;
+-
+-	type = icmp_hdr(skb)->type;
+-	if (type < 32) {
++	__u8 _type;
++	const __u8 *type;
++
++	type = skb_header_pointer(skb,
++				  skb_transport_offset(skb) +
++				  offsetof(struct icmphdr, type),
++				  sizeof(_type),
++				  &_type);
++	if (!type)
++		return true;
++
++	if (*type < 32) {
+ 		__u32 data = raw_sk(sk)->filter.data;
+ 
+-		return ((1 << type) & data) != 0;
++		return ((1U << *type) & data) != 0;
+ 	}
+ 
+ 	/* Do not block unknown ICMP types */
+-	return 0;
++	return false;
+ }
+ 
+ /* IP input processing comes here for RAW socket delivery.
 
-
-Paul Bolle
 
