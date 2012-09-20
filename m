@@ -1,93 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:58241 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753425Ab2IHWAE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Sep 2012 18:00:04 -0400
-Date: Sat, 8 Sep 2012 18:59:56 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2012-09-08
-Message-ID: <20120908215956.GP5788@joana> (sfid-20120909_000017_896777_DEEAEACF)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
+Received: from mga01.intel.com ([192.55.52.88]:60896 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755187Ab2ITNel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2012 09:34:41 -0400
+Message-ID: <1348148385.2388.21.camel@sauron.fi.intel.com> (sfid-20120920_153446_099457_58741F5F)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
+Reply-To: artem.bityutskiy@linux.intel.com
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Eric Dumazet <edumazet@google.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 20 Sep 2012 16:39:45 +0300
+In-Reply-To: <1348147322.31352.69.camel@edumazet-glaptop>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348147322.31352.69.camel@edumazet-glaptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-mor3c7Q7tAwCs+pa4ui3"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-mor3c7Q7tAwCs+pa4ui3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi John,
+On Thu, 2012-09-20 at 15:22 +0200, Eric Dumazet wrote:
+> On Thu, 2012-09-20 at 16:22 +0300, Artem Bityutskiy wrote:
+>=20
+> >=20
+> > OK, I've tried almost this (see below) and it solves my issue:
+> >=20
+> > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> > index 965e6ec..7f079d0 100644
+> > --- a/net/mac80211/rx.c
+> > +++ b/net/mac80211/rx.c
+> > @@ -1798,9 +1798,13 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *=
+rx)
+> > =20
+> >                 if (skb) {
+> >                         /* deliver to local stack */
+> > -                       skb->protocol =3D eth_type_trans(skb, dev);
+> > -                       memset(skb->cb, 0, sizeof(skb->cb));
+> > -                       netif_receive_skb(skb);
+> > +                       if (pskb_may_pull(skb, 40)) {
+> > +                               skb->protocol =3D eth_type_trans(skb, d=
+ev);
+> > +                               memset(skb->cb, 0, sizeof(skb->cb));
+> > +                               netif_receive_skb(skb);
+> > +                       } else {
+> > +                               kfree_skb(skb);
+> > +                       }
+> >                 }
+> >         }
+> >=20
+>=20
+> OK but you cant do that, or small frames will be dropped.
+>=20
+> Anyway its a hack, we should find the buggy layer.
+>=20
+> You could use dropwatch (drop_monitor) to check where frame is dropped.
+>=20
+> modprobe drop_monitor
+> dropwatch -l kas
 
-A few more fixes to 3.6, here we have four important fix to the MGMT interface,
-two from Johan Hedberg and Andrzej Kaczmarek. Andrei fixed a free on
-uninitialized memory and I added support for Broadcom/Foxconn devices.
+I do not have dropwatch in Tizen, I need to find the sources and compile
+the user-space part. Any hint where to download it?
 
-Please pull, or let me know of any problems. Thanks.
+--=20
+Best Regards,
+Artem Bityutskiy
 
-	Gustavo
-
-The following changes since commit f10723841e624c0726c70356b31d91befed01dd6:
-
-  libertas sdio: fix suspend when interface is down (2012-09-05 14:53:36 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-
-for you to fetch changes up to b6f04c364ef853d8baa8949be20ef708000bcb97:
-
-  Bluetooth: Fix freeing uninitialized delayed works (2012-09-08 17:27:52 -0300)
-
-----------------------------------------------------------------
-Andrei Emeltchenko (1):
-      Bluetooth: Fix freeing uninitialized delayed works
-
-Andrzej Kaczmarek (2):
-      Bluetooth: mgmt: Fix enabling SSP while powered off
-      Bluetooth: mgmt: Fix enabling LE while powered off
-
-Gustavo Padovan (1):
-      Bluetooth: Add USB_VENDOR_AND_INTERFACE_INFO() for Broadcom/Foxconn
-
-Johan Hedberg (2):
-      Bluetooth: mgmt: Implement support for passkey notification
-      Bluetooth: Update management interface revision
-
- drivers/bluetooth/btusb.c        |  2 +-
- include/net/bluetooth/hci.h      | 18 ++++++++++++
- include/net/bluetooth/hci_core.h |  5 ++++
- include/net/bluetooth/mgmt.h     |  7 +++++
- net/bluetooth/hci_event.c        | 67 ++++++++++++++++++++++++++++++++++++++++++
- net/bluetooth/l2cap_core.c       |  2 +-
- net/bluetooth/mgmt.c             | 35 +++++++++++++++++++++-
- 7 files changed, 133 insertions(+), 3 deletions(-)
-
-
---YZ5djTAD1cGYuMQK
-Content-Type: application/pgp-signature
+--=-mor3c7Q7tAwCs+pa4ui3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIcBAEBAgAGBQJQS7/cAAoJEPs3PUX4s20oo/4P/2SfqurEsM04BlBQZ5HsAaBE
-qEc4xhiZ+T1zoL8rzRezlc8wyjGXGm8xA6ZXMe64yr+/soi6L/2y9pFV4MK6vg19
-/QIDsr58mL0oAqDOiJ81U2TmDaWICJHEbuT1rqzQvif5ntOdnF4fXAHcJSab+6eE
-DPDGfOSimYocpDDEnafurohPTtr3Hkux86nEO02aU+xJmyUrwHiWNLnnEnbfD29W
-4nNKGTpiHi5F3ncP/1kCI2HN95GQr2K1juCwAeTrD38rnrr7U6+jVrWbrpoexsPk
-5eVKF0udX6lkJFGEICLltWLN6urSLuS7JU7GnGl0xzZH4BZe/MnfH+r4QpbT1/hv
-gqPlLo9On5ppqEHeMzMYqVqWbaW0Rq9ynuND/Dn4VS3nlOj7y05ZQVRA6gYZ7OPp
-C9p1qblSttySbZidVGXTlhDUN32CHXn/Drbe0e7HLyzupNgQi74SsKjxKa8b+NJ8
-tvwTC0gKARmVv55Zrl4KlOHuu7/wx17Vjbpas9RXfk7a0+JflURItpnuWvmSX+NZ
-eLrEB/EACPbygqDQ7UsV3T24fpt2b9gCVpMhS/tNymiuwx943sXy7HSz9VCexdUq
-NwxdUgZt9IG19qmSohRdrT1i33yWwzQXnhVJfV2WObwAmRwc6DtiVkMHEvfVFh5W
-SfDKmUvvpRogtlUa755C
-=bQlT
+iQIcBAABAgAGBQJQWxyhAAoJECmIfjd9wqK0vx4QAKcuHMUc6feLooix0F13fX9b
+m7J9Ass2qLWVT555YD33uw/gaknUvX5eD4ihe8Z8I5mtdi5W4lenC7GoB1Jhp3f3
+FVEtCw2XwuPjk8Dgve3RkVLo2S2BD8Uwuj5tMuEC5LtCyWSn5U1cwyUMM+n8HS+x
+FaW5nYoiUqm0P9tQUltdtEEGXszPPIZo6ke6EGeRG78szHbGGQiJMSzy0YQ9LrCr
+Qp/LrB1XYxRNX58+qX5zLZI+qFP+F/GVVosC0mxjkn0KQd1+NNWu5ercgzFCMOCo
+VRTG+9rEjXzT3KjXH6AUe+oQbCJKBKYqNVE3T6OZzlFLJ7ToKrC/5xwUwc7/z000
+AYoTRnUhiBTjuQNh8gFyi3vZ1iSzDoO/taN1axmeWhv8wa+qRkQPPytAzfaFtxMe
+XT1l78CtJulbfyCU9tml/0k0oNb3ZdHr0X35ZxY6QXVB3neihg6/fo8LI+1KJ7zv
+HwtksWxZe3CKnqz4VUSY+doztRM4fjH3sHE3gVIgXqEH5gge+UDQEU5YLZnUM8Ss
+Qx5CPN4qG2IeXhWV9kzUrwBIdrimYccUpEQk73peeWx5/NLkgwR7C2Pi/CXWHBoV
+5Tku4TSwkf1gRZ2eqUGUwOAHt2A1mXx1l1x6JMdjOd3XUCmFVbyGMHL0psCyjeOv
+hf0JZ2ETS4join8JKIeJ
+=xiw3
 -----END PGP SIGNATURE-----
 
---YZ5djTAD1cGYuMQK--
+--=-mor3c7Q7tAwCs+pa4ui3--
+
