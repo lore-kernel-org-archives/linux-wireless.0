@@ -1,80 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:2043 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752683Ab2IPU36 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:57718 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755239Ab2ITNad (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2012 16:29:58 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 5/5] rt2x00: Clean up RFCSR1 programming in rt2800_config_channel_rf3xxx.
-Date: Sun, 16 Sep 2012 22:29:53 +0200
-Message-Id: <1347827393-26948-6-git-send-email-gwingerde@gmail.com> (sfid-20120916_223100_161879_AF20D8D9)
-In-Reply-To: <1347827393-26948-5-git-send-email-gwingerde@gmail.com>
-References: <1347827393-26948-1-git-send-email-gwingerde@gmail.com>
- <1347827393-26948-2-git-send-email-gwingerde@gmail.com>
- <1347827393-26948-3-git-send-email-gwingerde@gmail.com>
- <1347827393-26948-4-git-send-email-gwingerde@gmail.com>
- <1347827393-26948-5-git-send-email-gwingerde@gmail.com>
+	Thu, 20 Sep 2012 09:30:33 -0400
+Message-ID: <1348147820.13371.2.camel@aeonflux> (sfid-20120920_153050_677642_82C32DFB)
+Subject: Re: Agenda (v2) for Linux Wireless (802.11/Bluetooth/NFC)
+ Mini-Summit 2012 (Barcelona!)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com
+Date: Thu, 20 Sep 2012 15:30:20 +0200
+In-Reply-To: <20120911201729.GJ7015@tuxdriver.com>
+References: <20120911201729.GJ7015@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setting of the individual fields of the RF register can be simplified.
+Hi John,
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> OK, making progress...still, we need some more discussion topics...
+> 
+> We have one room on the first day, and three rooms on the second day.
+> I figure that the Bluetooth and 802.11 groups should each get a
+> break-out room for their own in-depth discussons on the second day and
+> the third room can be used for more general topics and presentations.
+> 
+> Below is my strawman agenda proposal.  Please make suggestions for
+> improvements!
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index d745c32..540c94f 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1763,36 +1763,15 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 0);
-+	rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD,
-+			  rt2x00dev->default_ant.rx_chain_num <= 1);
-+	rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD,
-+			  rt2x00dev->default_ant.rx_chain_num <= 2);
- 	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 0);
--	if (rt2x00_rt(rt2x00dev, RT3390)) {
--		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD,
--				  rt2x00dev->default_ant.rx_chain_num == 1);
--		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD,
--				  rt2x00dev->default_ant.tx_chain_num == 1);
--	} else {
--		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
--		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
--		rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
--		rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
--
--		switch (rt2x00dev->default_ant.tx_chain_num) {
--		case 1:
--			rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
--			/* fall through */
--		case 2:
--			rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 1);
--			break;
--		}
--
--		switch (rt2x00dev->default_ant.rx_chain_num) {
--		case 1:
--			rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
--			/* fall through */
--		case 2:
--			rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 1);
--			break;
--		}
--	}
-+	rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD,
-+			  rt2x00dev->default_ant.tx_chain_num <= 1);
-+	rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD,
-+			  rt2x00dev->default_ant.tx_chain_num <= 2);
- 	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
- 
- 	rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
--- 
-1.7.11.1
+I think this looks pretty good. Lets see if we can find some volunteers
+for the empty slots. Should be make sure that this schedule so far gets
+published on the LinuxCon website?
+
+Regards
+
+Marcel
+
 
