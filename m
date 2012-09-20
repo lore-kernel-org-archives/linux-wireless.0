@@ -1,86 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:36667 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941Ab2IJG35 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:62400 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752533Ab2ITNWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 02:29:57 -0400
-Message-ID: <20120910092954.10172gr8hhsdupc0@www.81.fi> (sfid-20120910_083002_299131_48559819)
-Date: Mon, 10 Sep 2012 09:29:54 +0300
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] rndis_wlan: move the dereference below the NULL test
-References: <CAPgLHd97uPhcX-dTkur_Ceb=8YOwWQtbRk7MqirNvsYBbDoZ1A@mail.gmail.com>
-In-Reply-To: <CAPgLHd97uPhcX-dTkur_Ceb=8YOwWQtbRk7MqirNvsYBbDoZ1A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+	Thu, 20 Sep 2012 09:22:08 -0400
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: artem.bityutskiy@linux.intel.com
+Cc: Eric Dumazet <edumazet@google.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+In-Reply-To: <1348147353.2388.19.camel@sauron.fi.intel.com>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 Sep 2012 15:22:02 +0200
+Message-ID: <1348147322.31352.69.camel@edumazet-glaptop> (sfid-20120920_152218_043454_F0863AEC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Wei Yongjun <weiyj.lk@gmail.com>:
+On Thu, 2012-09-20 at 16:22 +0300, Artem Bityutskiy wrote:
 
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
-> The dereference should be moved below the NULL test.
->
-> spatch with a semantic match is used to found this.
-> (http://coccinelle.lip6.fr/)
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  drivers/net/wireless/rndis_wlan.c | 16 ++++++++++------
->  1 file changed, 10 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> b/drivers/net/wireless/rndis_wlan.c
-> index 7a4ae9e..de2a673 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -1946,12 +1946,19 @@ static int rndis_get_tx_power(struct wiphy  
-> *wiphy, int *dbm)
->  static int rndis_scan(struct wiphy *wiphy,
->  			struct cfg80211_scan_request *request)
->  {
-> -	struct net_device *dev = request->wdev->netdev;
-> -	struct usbnet *usbdev = netdev_priv(dev);
-> -	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-> +	struct net_device *dev;
-> +	struct usbnet *usbdev;
-> +	struct rndis_wlan_private *priv;
->  	int ret;
->  	int delay = SCAN_DELAY_JIFFIES;
->
-> +	if (!request)
-> +		return -EINVAL;
-> +
-> +	dev = request->wdev->netdev;
-> +	usbdev = netdev_priv(dev);
-> +	priv = get_rndis_wlan_priv(usbdev);
-> +
+> 
+> OK, I've tried almost this (see below) and it solves my issue:
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 965e6ec..7f079d0 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1798,9 +1798,13 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+>  
+>                 if (skb) {
+>                         /* deliver to local stack */
+> -                       skb->protocol = eth_type_trans(skb, dev);
+> -                       memset(skb->cb, 0, sizeof(skb->cb));
+> -                       netif_receive_skb(skb);
+> +                       if (pskb_may_pull(skb, 40)) {
+> +                               skb->protocol = eth_type_trans(skb, dev);
+> +                               memset(skb->cb, 0, sizeof(skb->cb));
+> +                               netif_receive_skb(skb);
+> +                       } else {
+> +                               kfree_skb(skb);
+> +                       }
+>                 }
+>         }
+> 
 
-'request' is actually always valid pointer and the !request check is  
-unneeded. Correct fix is to remove the check.
+OK but you cant do that, or small frames will be dropped.
 
->  	netdev_dbg(usbdev->net, "cfg80211.scan\n");
->
->  	/* Get current bssid list from device before new scan, as new scan
-> @@ -1959,9 +1966,6 @@ static int rndis_scan(struct wiphy *wiphy,
->  	 */
->  	rndis_check_bssid_list(usbdev, NULL, NULL);
->
-> -	if (!request)
-> -		return -EINVAL;
-> -
+Anyway its a hack, we should find the buggy layer.
 
-Only this part is needed.
+You could use dropwatch (drop_monitor) to check where frame is dropped.
 
--Jussi
+modprobe drop_monitor
+dropwatch -l kas
 
->  	if (priv->scan_request && priv->scan_request != request)
->  		return -EBUSY;
->
+
 
