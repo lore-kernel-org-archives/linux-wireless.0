@@ -1,97 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49385 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753113Ab2IUOKZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 10:10:25 -0400
-Message-ID: <1348180259.4801.9.camel@deadeye.wl.decadent.org.uk> (sfid-20120921_161051_431179_97DE7EC7)
-Subject: Re: [PATCH] rtlwifi/rtl8712u Revert firmware
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dwmw2@infradead.org, Eric Dumazet <eric.dumazet@gmail.com>,
-	Jan Terstegge <jan@terstegge.net>
-In-Reply-To: <1347294365-6509-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1347294365-6509-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-iojFm8NyISB3K0CowScz"
-Date: Thu, 20 Sep 2012 23:31:00 +0100
+Received: from mga03.intel.com ([143.182.124.21]:22810 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752474Ab2ITPEC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Sep 2012 11:04:02 -0400
+Message-ID: <1348153746.2388.25.camel@sauron.fi.intel.com> (sfid-20120920_170406_385652_63383D21)
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+From: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
+Reply-To: artem.bityutskiy@linux.intel.com
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Eric Dumazet <edumazet@google.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 20 Sep 2012 18:09:06 +0300
+In-Reply-To: <1348152971.31352.140.camel@edumazet-glaptop>
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+	 <1347631355.5263.19.camel@sauron.fi.intel.com>
+	 <1347640763.5263.24.camel@sauron.fi.intel.com>
+	 <1347892887.7112.9.camel@sauron.fi.intel.com>
+	 <1348142775.2388.10.camel@sauron.fi.intel.com>
+	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
+	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
+	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
+	 <1348145936.2388.18.camel@sauron.fi.intel.com>
+	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
+	 <1348147353.2388.19.camel@sauron.fi.intel.com>
+	 <1348151149.31352.109.camel@edumazet-glaptop>
+	 <1348151876.2388.24.camel@sauron.fi.intel.com>
+	 <1348152971.31352.140.camel@edumazet-glaptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-TQXa6hhPnJKigFt67HgM"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-iojFm8NyISB3K0CowScz
+--=-TQXa6hhPnJKigFt67HgM
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2012-09-10 at 11:26 -0500, Larry Finger wrote:
-> Although the newest firmware for the RTL8192SU, which is found in vendor
-> driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404, works with mo=
-st
-> devices, it causes drops of the wireless connection for the ASUS WL-167G =
-V3
-> (USB ID 0b05:1791), the D-Link DWA131 (07d1:3303), and probably others.
-> Tests show that the firmware from vendor driver
-> rtl8712_8188_8191_8192SU_usb_linux_v7_0.20100831 works better.
+On Thu, 2012-09-20 at 16:56 +0200, Eric Dumazet wrote:
+> On Thu, 2012-09-20 at 17:37 +0300, Artem Bityutskiy wrote:
+> > On Thu, 2012-09-20 at 16:25 +0200, Eric Dumazet wrote:
+> > > Please remove this hack and try the following bugfix in raw handler
+> > >=20
+> > > icmp_filter() should not modify skb, or else its caller should not
+> > > assume ip_hdr() is unchanged.
+> >=20
+> > Did not help :(
+> >=20
 >=20
-> This commerts reverts to that older firmware.
+> What gives (after some failures)
 >=20
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-[...]
+> cat /proc/net/raw
 
-This is the original blob added by:
+-sh-4.1# cat /proc/net/raw
+  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt=
+   uid  timeout inode ref pointer drops
 
-commit 8f919160792e4702c6b7a67a243cea4f757407e4
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Mon Nov 1 23:56:52 2010 -0500
-
-    linux-firmware: Add firmware files for Realtek RTL8712U and RTL8192CE
-
-There have been two updates since then:
-
-commit f8ddc05e13c4c6dd9d725bc376b287f307eb223a
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Tue Aug 16 11:12:14 2011 -0500
-
-    rtlwifi: rtl8712u: Upgrade to firmware found in vendor's V2.6.6
-
-commit d8f60751d3f09545f51aac5d8e451f7668063ebf
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Wed Jul 11 13:18:30 2012 -0500
-
-    r8712u: Update to latest firmware
-   =20
-    A new firmware file is used in the vendor driver with name/version
-    rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404.
-
-Sure you want to revert both of these, not just the latest?
-
-Ben.
 
 --=20
-Ben Hutchings
-The world is coming to an end.	Please log off.
+Best Regards,
+Artem Bityutskiy
 
---=-iojFm8NyISB3K0CowScz
+--=-TQXa6hhPnJKigFt67HgM
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIVAwUAUFuZI+e/yOyVhhEJAQozihAAsKx1mpxbBV5mVysiB4qn2JzvKImJcyav
-ahLjTwTkmN91L83SacV1O+fh7H7B4aWYpvyPsnjabnrMqrGD06RlB7HkeweJHjIg
-p3fnRRghK52p43wW+2x7BYawiyxd0K/nke68OypBdQRtOdjCj16vrmS1ja1GYH8M
-JgAKLQ+rUr1aksT/fNHoadq5rm40pWNplmUKOw1PFgT7lSWUZH+i3BtGG8tjP5JE
-mv20rk40+b5xFMmSs//famBLvSsOYk1uTvAOZ8yjr13K5UKo0ng08tCHDvI36TDP
-+8T2lhI7F8RbYhe9VAU6xODyTlLVYxsE6Lhe3dvyglO23H1DgctFIxC4BOwfcllr
-+Ddbr6BF1foUCUVHQ4+NU+dl22UCefMtgO2imwJ1sSBmjdqa6TDPLQD3Ft80AR/X
-xfLiucKIbE56zf+OhUKEUwHbzyQZR4KvgfhYQjSrjc2FESDR634SVA41zrzxeUgH
-BSRBVHB3wtXVF+NN96gcFvGOMB7At3jFriZcSfZpRuICvn3WmFDcXmCkrKTIQpz/
-c4IqBK5z5xbbovmaLc4Nuj7Ixa9aFM7Ybt/VAaTAyNMygtmorxQYqGfYCQ/TbDzm
-r17XG1BjmTTAV03J9zSnVKoaUQMinWg+maQCQ/nfJgXd1Ez0QBLFgsp1MCeSxFkS
-NDgrQngtYKw=
-=26Aw
+iQIcBAABAgAGBQJQWzGSAAoJECmIfjd9wqK0FcwP/0ohCK2xcawjxkCuw06F3JeT
+wOYd8l44PuUreE/uUcZqJ9NTpjWK5Gu4VJAVpzKpbcHTv695VTjH/psEGxp0ERv9
+sdzzKSnyIEA+1x/zB3i0Bf12QHV8OOA7ly5nBciFkQKF+L4v/ZTNI+DpHGVZLOYP
+QbG/cYzG7vnt1GWQU5Mt/NZNoArbCx4dLsjtkLE5itJrYSv4hkQaG6m/1MlYmhwL
+N08jR6i201CPZzkMOFRentHsQAK5ReOfnlad571T7oBl9iYSjyXoqgJmWyi2v8eD
+SZ/KivTxwMSudoJ+/sSfn8F4FCrVFizGvujLcHIIBNajhhm3WCQKHwYO2l/Lz/eH
+sqGTeDETd1hWCLIkHTNaj6IlZ+QGKPsd60nZl5faNbkTQFio2wZ1dHEYUKtjws61
+xWBeQWBKj6gx7AsRqaVGAjJt27tkigblAGr+lc6FPRQuypQTuKI8heu1mlKwy9Xp
+Cu52VprFWt6QVUt1yerSOlH3JtfSw+XV3Z+7T6xF/mirh7GKlnViBzt6swRzXtrR
+WV3CpJcECyeA+SOfKkyPRzarnzR06Lp+GQaxKFJxViioMT21hik03g988zIC78BK
+BwZ0sapjz2NBncyDaZy28jCq+YVhj37acq5SCx3az87WZCZXMXjMd0RXjGbHEjH7
+JRo1TY9Wb8PctRbohxU8
+=aTFN
 -----END PGP SIGNATURE-----
 
---=-iojFm8NyISB3K0CowScz--
+--=-TQXa6hhPnJKigFt67HgM--
+
