@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:35876 "EHLO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932188Ab2IRWpN (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51489 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755239Ab2IUOlz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2012 18:45:13 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: fix issue in resumed scan operation
-Date: Tue, 18 Sep 2012 15:33:32 -0700
-Message-Id: <1348007612-28202-1-git-send-email-bzhao@marvell.com> (sfid-20120919_004519_842349_41AB5D84)
+	Fri, 21 Sep 2012 10:41:55 -0400
+From: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <kvalo@qca.qualcomm.com>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V2] ath6kl: Array index out of bounds check
+Date: Fri, 21 Sep 2012 20:11:46 +0530
+Message-ID: <1348238506-9691-1-git-send-email-c_ppitch@qca.qualcomm.com> (sfid-20120921_164159_644635_B4709F52)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+The variable assigned_ep can be assigned value of -1 and is never
+checked if it equals -1. So the endpoint array can have -1  as the index
+value and can be out of bounds.
 
-When delayed scan operation is resumed, we just add next scan
-command in queue but don't wakeup main thread to process the
-command. Hence the command is downloaded to firmware only after
-waking up the main thread by any other means.
+The value of assigned_ep is checked for -1 and is ensured that the
+endpoint array doesn't go out of bounds.
 
-This bug which was introduced after "mwifiex: improve scan delay
-logic.." patch is fixed here.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/init.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 9c1549e..b2ba262 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -118,6 +118,7 @@ static void scan_delay_timer_fn(unsigned long data)
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+index cd0e1ba..ceaf921 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+@@ -2492,7 +2492,8 @@ static int ath6kl_htc_mbox_conn_service(struct htc_target *target,
+ 		max_msg_sz = le16_to_cpu(resp_msg->max_msg_sz);
+ 	}
  
- 			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
- 							true);
-+			queue_work(adapter->workqueue, &adapter->main_work);
- 			goto done;
- 		}
- 	} else {
+-	if (assigned_ep >= ENDPOINT_MAX || !max_msg_sz) {
++	if (WARN_ON_ONCE(assigned_ep == ENDPOINT_UNUSED ||
++			 assigned_ep >= ENDPOINT_MAX || !max_msg_sz)) {
+ 		status = -ENOMEM;
+ 		goto fail_tx;
+ 	}
 -- 
-1.7.0.2
+1.7.9.5
 
