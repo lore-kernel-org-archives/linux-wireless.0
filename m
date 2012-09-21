@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:1917 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752619Ab2IPU35 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13794 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757111Ab2IUJgn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Sep 2012 16:29:57 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 2/5] rt2x00: rt2800 - Fix default vgc values for RT3572
-Date: Sun, 16 Sep 2012 22:29:50 +0200
-Message-Id: <1347827393-26948-3-git-send-email-gwingerde@gmail.com> (sfid-20120916_223058_831585_A009E212)
-In-Reply-To: <1347827393-26948-2-git-send-email-gwingerde@gmail.com>
-References: <1347827393-26948-1-git-send-email-gwingerde@gmail.com>
- <1347827393-26948-2-git-send-email-gwingerde@gmail.com>
+	Fri, 21 Sep 2012 05:36:43 -0400
+From: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <kvalo@qca.qualcomm.com>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Max clients reached notification
+Date: Fri, 21 Sep 2012 15:06:14 +0530
+Message-ID: <1348220174-5324-1-git-send-email-c_ppitch@qca.qualcomm.com> (sfid-20120921_113647_471996_9298D1B8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Align with the values used by the RT3572 Ralink vendor driver v2.5.0.0.
+When a station requests connection to an AP, that has already been
+connected to the maximum number of stations it can support, an event
+is sent to user space via NL80211_CMD_CONN_FAILED command and reason
+attribute NL80211_ATTR_CONN_FAILED_REASON with
+NL80211_CONN_FAIL_MAX_CLIENTS as reason.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index cec4a99..17b8a28 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2904,16 +2904,21 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- 		    rt2x00_rt(rt2x00dev, RT3090) ||
- 		    rt2x00_rt(rt2x00dev, RT3290) ||
- 		    rt2x00_rt(rt2x00dev, RT3390) ||
-+		    rt2x00_rt(rt2x00dev, RT3572) ||
- 		    rt2x00_rt(rt2x00dev, RT5390) ||
- 		    rt2x00_rt(rt2x00dev, RT5392))
- 			vgc = 0x1c + (2 * rt2x00dev->lna_gain);
- 		else
- 			vgc = 0x2e + rt2x00dev->lna_gain;
- 	} else { /* 5GHZ band */
--		if (!test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
--			vgc = 0x32 + (rt2x00dev->lna_gain * 5) / 3;
--		else
--			vgc = 0x3a + (rt2x00dev->lna_gain * 5) / 3;
-+		if (rt2x00_rt(rt2x00dev, RT3572))
-+			vgc = 0x22 + (rt2x00dev->lna_gain * 5) / 3;
-+		else {
-+			if (!test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
-+				vgc = 0x32 + (rt2x00dev->lna_gain * 5) / 3;
-+			else
-+				vgc = 0x3a + (rt2x00dev->lna_gain * 5) / 3;
-+		}
- 	}
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 9533558..cc2749a 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1004,6 +1004,13 @@ void ath6kl_disconnect_event(struct ath6kl_vif *vif, u8 reason, u8 *bssid,
+ 			ar->last_ch = le16_to_cpu(vif->profile.ch);
+ 		}
  
- 	return vgc;
++		if (prot_reason_status == WMI_AP_REASON_MAX_STA) {
++			/* send max client reached notification to user space */
++			cfg80211_conn_failed(vif->ndev, bssid,
++					     NL80211_CONN_FAIL_MAX_CLIENTS,
++					     GFP_KERNEL);
++		}
++
+ 		if (!ath6kl_remove_sta(ar, bssid, prot_reason_status))
+ 			return;
+ 
 -- 
-1.7.11.1
+1.7.9.5
 
