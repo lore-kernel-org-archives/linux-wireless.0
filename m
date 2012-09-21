@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4829 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752918Ab2INMRO (ORCPT
+Received: from oproxy11-pub.bluehost.com ([173.254.64.10]:41419 "HELO
+	oproxy11-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753684Ab2IUPbY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 08:17:14 -0400
-Message-ID: <1347625024.14216.28.camel@x61.thuisdomein> (sfid-20120914_141718_999871_FB317E0E)
-Subject: Re: [iwl4965] Microcode SW error detected
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Bernhard Schmidt <bschmidt@freebsd.org>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 14 Sep 2012 14:17:04 +0200
-References: <1306151106.2066.60.camel@x61.thuisdomein>
-	 <201106070832.49048.bschmidt@freebsd.org>
-	 <20110607145435.GA5179@redhat.com>
-	 <1315124915.5239.21.camel@x61.thuisdomein>
-	 <20110905093349.GE2221@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 21 Sep 2012 11:31:24 -0400
+Message-ID: <505C8822.6080605@xenotime.net> (sfid-20120921_173128_793446_D24D8BA2)
+Date: Fri, 21 Sep 2012 08:30:42 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+MIME-Version: 1.0
+To: Ouyang <ilhebe999@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: could anyone please help me with make modules error
+References: <loom.20120921T071134-64@post.gmane.org>
+In-Reply-To: <loom.20120921T071134-64@post.gmane.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-09-05 at 12:32 +0200, Paul Bolle wrote:
-> On Mon, 2011-09-05 at 11:33 +0200, Stanislaw Gruszka wrote:
-> > Does wifi stop working after an
-> > error, or there is some other negative impact? Or only that messages
-> > are printed and driver recover itself?
-> 
-> There doesn't seem to be any impact (ie, it might have some impact but
-> I'm too insensitive to notice). The driver does recover itself and I do
-> not have to mess with rfkill or "modprobe -r" or whatever. I actually
-> discovered this because I tend to regularly do
->     dmesg -r |  grep "^<[123]>"
-> 
-> to keep myself informed of any kernel errors (or worse). And then these
-> few dozen lines can't go unnoticed.
+On 09/20/2012 10:19 PM, Ouyang wrote:
 
-0) It's one year later now and this Microcode SW error again showed up
-in the logs. I recently upgraded and I haven't kept any logs, but my
-guess would be that I have run into that error once every week. (This
-laptop is now running a v3.5.3 based kernel as shipped for Fedora 17.)
-
-1) Would you have any suggestions how to pinpoint the cause of this
-error? It is mainly annoying, and I managed to ignore it since my
-previous message, but I still would like to free the logs from the noise
-it makes.
+>> drivers/net/igbvf/igbvf.h: At top level:
+>> drivers/net/igbvf/igbvf.h:128:15: error: duplicate member ‘page’
+>> make[3]: *** [drivers/net/igbvf/ethtool.o] Error 1
+>> make[2]: *** [drivers/net/igbvf] Error 2
+>> make[1]: *** [drivers/net] Error 2
+>> make: *** [drivers] Error 2
+> I just google it and one had met the same problem. Is it possible 
+> just because of 
+> the version of gcc?
 
 
-Paul Bolle
+1.  Not a question for linux-wireless mailing list.
+That driver is not a wireless driver.
+Please try the netdev mailing list.
 
+2.  Also specify what kernel version this is, what gcc version
+you are using, and if any kernel patches have been applied
+locally to the kernel.
+
+
+-- 
+~Randy
