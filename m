@@ -1,29 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:38057 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757366Ab2IJLtn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 07:49:43 -0400
-Received: by ieje11 with SMTP id e11so2867279iej.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 04:49:42 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:31421 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754005Ab2IUNIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Sep 2012 09:08:01 -0400
+Date: Fri, 21 Sep 2012 15:07:11 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: Re: [RFC] mac80211: validate key before MIC verify
+Message-ID: <20120921130711.GC3100@redhat.com> (sfid-20120921_150806_097138_D337ADD6)
+References: <20120921124141.GA3100@redhat.com>
+ <1348232380.4160.7.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Date: Mon, 10 Sep 2012 12:49:42 +0100
-Message-ID: <CAN6WCkZBmR7b8fWubjgHgkHnrr9Kn_qEO7Y56ySPdWEebjpFzQ@mail.gmail.com> (sfid-20120910_134947_027385_9F81D0DF)
-Subject: linuxwireless.org documentation outdated
-From: =?ISO-8859-1?Q?Crist=F3v=E3o_Cruz?= <cristovao.a.cruz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1348232380.4160.7.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+On Fri, Sep 21, 2012 at 02:59:40PM +0200, Johannes Berg wrote:
+> On Fri, 2012-09-21 at 14:41 +0200, Stanislaw Gruszka wrote:
+> 
+> > --- a/net/mac80211/wpa.c
+> > +++ b/net/mac80211/wpa.c
+> > @@ -97,6 +97,14 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+> >  		return RX_CONTINUE;
+> >  
+> >  	/*
+> > +	 * Some hardware seems to generate Michael MIC failure reports; even
+> > +	 * though, the frame was not encrypted with TKIP and therefore has no
+> > +	 * MIC. Ignore the flag them to avoid triggering countermeasures.
+> > +	 */
+> > +	if (!rx->key || rx->key->conf.cipher != WLAN_CIPHER_SUITE_TKIP)
+> > +		return RX_CONTINUE;
+> > +
+> > +	/*
+> >  	 * No way to verify the MIC if the hardware stripped it or
+> >  	 * the IV with the key index. In this case we have solely rely
+> >  	 * on the driver to set RX_FLAG_MMIC_ERROR in the event of a
+> 
+> Hm, this doesn't seem _quite_ right, but I'm not sure: it seems that
+> previously it was possible that we don't have a key pointer but the
+> driver set all of RX_FLAG_MMIC_STRIPPED, RX_FLAG_IV_STRIPPED and
+> RX_FLAG_MMIC_ERROR, in which case after your change the frame will be
+> accepted rather than rejected.
 
-I am reading documentation about the 80211 kernel subsystem and
-noticed that the website kerneldocs are outdated
-(http://linuxwireless.org/en/developers/Documentation/kerneldoc/include/net/mac80211.h).
->From what I could understand they should be automatically updated to
-be in sync with kernel tree.
-Is there any reason for the docs to be outdated?
-I would be glad to help if help is needed.
+I wanted to cleanup stuff, but yeah, that seem to be wrong. I guess
+I can just add check before rx->key->u.tkip.rx usage to fix the
+problem. Eventually fix flags setting in driver.
 
-Cristóvão Cruz.
+Stanislaw 
