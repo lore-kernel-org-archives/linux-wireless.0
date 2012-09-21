@@ -1,163 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:52839 "EHLO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755100Ab2I1CBu (ORCPT
+Received: from mail-we0-f202.google.com ([74.125.82.202]:58965 "EHLO
+	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757352Ab2IZQ77 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 22:01:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: enhance RX reordering to avoid packet drop during host sleep
-Date: Thu, 27 Sep 2012 19:00:10 -0700
-Message-Id: <1348797610-16623-1-git-send-email-bzhao@marvell.com> (sfid-20120928_040154_542319_59A6053A)
+	Wed, 26 Sep 2012 12:59:59 -0400
+Received: by weyx43 with SMTP id x43so16304wey.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 09:59:54 -0700 (PDT)
+From: Sam Leffler <sleffler@chromium.org>
+Date: Fri, 21 Sep 2012 11:01:21 -0700
+Subject: [PATCH 2/3] mac80211: add support for tx to abort scan requests
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20120926165952.D09471E102A@sleffler.sfo.corp.google.com> (sfid-20120926_190010_283755_F2AA12F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Add an NL80211_SCAN_FLAG_TX_ABORT flag that causes scan operations to
+be prematurely terminated if outbound traffic collides and honor it in
+mac80211's scan state machine.  This is useful for marking background
+scans so they don't affect throughput.
 
-Once hostsleep is activated, this patch takes care of not
-dropping packets in RX reorder table.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Change-Id: I998bc2fc085f38c964fea220990fe9b1f6a30b5c
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
 ---
- drivers/net/wireless/mwifiex/11n_rxreorder.c |   49 +++++++++++++++++++++----
- drivers/net/wireless/mwifiex/11n_rxreorder.h |    5 +++
- drivers/net/wireless/mwifiex/cmdevt.c        |    2 +
- drivers/net/wireless/mwifiex/main.h          |    1 +
- 4 files changed, 49 insertions(+), 8 deletions(-)
+ include/linux/nl80211.h    |    3 +++
+ include/net/cfg80211.h     |    3 +++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/scan.c        |   18 +++++++++++++++---
+ 4 files changed, 23 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 24e2582..9402b93 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -302,6 +302,7 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
- 		new_node->start_win = last_seq + 1;
- 
- 	new_node->win_size = win_size;
-+	new_node->flags = 0;
- 
- 	new_node->rx_reorder_ptr = kzalloc(sizeof(void *) * win_size,
- 					GFP_KERNEL);
-@@ -457,13 +458,20 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
- 	 * If seq_num is less then starting win then ignore and drop the
- 	 * packet
- 	 */
--	if ((start_win + TWOPOW11) > (MAX_TID_VALUE - 1)) {/* Wrap */
--		if (seq_num >= ((start_win + TWOPOW11) &
--				(MAX_TID_VALUE - 1)) && (seq_num < start_win))
-+	if (tbl->flags & RXREOR_FORCE_NO_DROP) {
-+		dev_dbg(priv->adapter->dev,
-+			"RXREOR_FORCE_NO_DROP when HS is activated\n");
-+		tbl->flags &= ~RXREOR_FORCE_NO_DROP;
-+	} else {
-+		if ((start_win + TWOPOW11) > (MAX_TID_VALUE - 1)) {
-+			if (seq_num >= ((start_win + TWOPOW11) &
-+					(MAX_TID_VALUE - 1)) &&
-+			    seq_num < start_win)
-+				return -1;
-+		} else if ((seq_num < start_win) ||
-+			   (seq_num > (start_win + TWOPOW11))) {
- 			return -1;
--	} else if ((seq_num < start_win) ||
--		   (seq_num > (start_win + TWOPOW11))) {
--		return -1;
-+		}
- 	}
- 
- 	/*
-@@ -474,8 +482,7 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
- 		seq_num = ((seq_num + win_size) - 1) & (MAX_TID_VALUE - 1);
- 
- 	if (((end_win < start_win) &&
--	     (seq_num < (TWOPOW11 - (MAX_TID_VALUE - start_win))) &&
--	     (seq_num > end_win)) ||
-+	     (seq_num < start_win) && (seq_num > end_win)) ||
- 	    ((end_win > start_win) && ((seq_num > end_win) ||
- 				       (seq_num < start_win)))) {
- 		end_win = seq_num;
-@@ -637,3 +644,29 @@ void mwifiex_11n_cleanup_reorder_tbl(struct mwifiex_private *priv)
- 	INIT_LIST_HEAD(&priv->rx_reorder_tbl_ptr);
- 	mwifiex_reset_11n_rx_seq_num(priv);
- }
-+
-+/*
-+ * This function updates all rx_reorder_tbl's flags.
-+ */
-+void mwifiex_update_rxreor_flags(struct mwifiex_adapter *adapter, u8 flags)
-+{
-+	struct mwifiex_private *priv;
-+	struct mwifiex_rx_reorder_tbl *tbl;
-+	unsigned long lock_flags;
-+	int i;
-+
-+	for (i = 0; i < adapter->priv_num; i++) {
-+		priv = adapter->priv[i];
-+		if (!priv)
-+			continue;
-+		if (list_empty(&priv->rx_reorder_tbl_ptr))
-+			continue;
-+
-+		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, lock_flags);
-+		list_for_each_entry(tbl, &priv->rx_reorder_tbl_ptr, list)
-+			tbl->flags = flags;
-+		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, lock_flags);
-+	}
-+
-+	return;
-+}
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-index 7284859..4064041 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-@@ -41,6 +41,10 @@
- #define BA_SETUP_MAX_PACKET_THRESHOLD	16
- #define BA_SETUP_PACKET_OFFSET		16
- 
-+enum mwifiex_rxreor_flags {
-+	RXREOR_FORCE_NO_DROP	= 1<<0,
-+};
-+
- static inline void mwifiex_reset_11n_rx_seq_num(struct mwifiex_private *priv)
- {
- 	memset(priv->rx_seq, 0xff, sizeof(priv->rx_seq));
-@@ -73,5 +77,6 @@ struct mwifiex_rx_reorder_tbl *mwifiex_11n_get_rxreorder_tbl(struct
- struct mwifiex_rx_reorder_tbl *
- mwifiex_11n_get_rx_reorder_tbl(struct mwifiex_private *priv, int tid, u8 *ta);
- void mwifiex_11n_del_rx_reorder_tbl_by_ta(struct mwifiex_private *priv, u8 *ta);
-+void mwifiex_update_rxreor_flags(struct mwifiex_adapter *adapter, u8 flags);
- 
- #endif /* _MWIFIEX_11N_RXREORDER_H_ */
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 225c1a4..8d46510 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -1088,6 +1088,8 @@ mwifiex_hs_activated_event(struct mwifiex_private *priv, u8 activated)
- 	if (activated) {
- 		if (priv->adapter->is_hs_configured) {
- 			priv->adapter->hs_activated = true;
-+			mwifiex_update_rxreor_flags(priv->adapter,
-+						    RXREOR_FORCE_NO_DROP);
- 			dev_dbg(priv->adapter->dev, "event: hs_activated\n");
- 			priv->adapter->hs_activate_wait_q_woken = true;
- 			wake_up_interruptible(
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 956312f..bfb3fa6 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -535,6 +535,7 @@ struct mwifiex_rx_reorder_tbl {
- 	int win_size;
- 	void **rx_reorder_ptr;
- 	struct reorder_tmr_cnxt timer_context;
-+	u8 flags;
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 5f2d9ae..0b37d1d 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -3055,8 +3055,11 @@ enum nl80211_probe_resp_offload_support_attr {
+  * Scan request control flags are used to control the handling
+  * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
+  * requests.
++ *
++ * @NL80211_SCAN_FLAG_TX_ABORT: abort scan if tx collides
+  */
+ enum nl80211_scan_flags {
++	NL80211_SCAN_FLAG_TX_ABORT			= 1<<0,
  };
  
- struct mwifiex_bss_prio_node {
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index aac20e3..a6a10ff 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -993,8 +993,11 @@ struct cfg80211_ssid {
+ 
+ /**
+  * enum cfg80211_scan_flags -  scan request control flags
++ *
++ * @CFG80211_SCAN__FLAG_TX_ABORT: abort scan on pending transmit
+  */
+ enum cfg80211_scan_flags {
++	CFG80211_SCAN_FLAG_TX_ABORT	= NL80211_SCAN_FLAG_TX_ABORT,
+ };
+ 
+ /**
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8c80455..5113a4c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -821,6 +821,7 @@ enum {
+  * @SCAN_SUSPEND: Suspend the scan and go back to operating channel to
+  *	send out data
+  * @SCAN_RESUME: Resume the scan and scan the next channel
++ * @SCAN_ABORT: Abort the scan and go back to operating channel
+  */
+ enum mac80211_scan_state {
+ 	SCAN_DECISION,
+@@ -828,6 +829,7 @@ enum mac80211_scan_state {
+ 	SCAN_SEND_PROBE,
+ 	SCAN_SUSPEND,
+ 	SCAN_RESUME,
++	SCAN_ABORT,
+ };
+ 
+ struct ieee80211_local {
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 2535418..b88b75f 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -563,6 +563,7 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	unsigned long min_beacon_int = 0;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_channel *next_chan;
++	enum mac80211_scan_state next_scan_state;
+ 
+ 	/*
+ 	 * check if at least one STA interface is associated,
+@@ -621,10 +622,18 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 			usecs_to_jiffies(min_beacon_int * 1024) *
+ 			local->hw.conf.listen_interval);
+ 
+-	if (associated && (!tx_empty || bad_latency || listen_int_exceeded))
+-		local->next_scan_state = SCAN_SUSPEND;
++	if (associated && !tx_empty) {
++		if (unlikely(local->scan_req->flags &
++			    CFG80211_SCAN_FLAG_TX_ABORT))
++			next_scan_state = SCAN_ABORT;
++		else
++			next_scan_state = SCAN_SUSPEND;
++	} else if (associated && (bad_latency || listen_int_exceeded))
++		next_scan_state = SCAN_SUSPEND;
+ 	else
+-		local->next_scan_state = SCAN_SET_CHANNEL;
++		next_scan_state = SCAN_SET_CHANNEL;
++
++	local->next_scan_state = next_scan_state;
+ 
+ 	*next_delay = 0;
+ }
+@@ -795,6 +804,9 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		case SCAN_RESUME:
+ 			ieee80211_scan_state_resume(local, &next_delay);
+ 			break;
++		case SCAN_ABORT:
++			aborted = true;
++			goto out_complete;
+ 		}
+ 	} while (next_delay == 0);
+ 
 -- 
-1.7.0.2
+1.7.7.3
 
