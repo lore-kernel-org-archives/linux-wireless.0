@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43920 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841Ab2IEEuE (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46431 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752843Ab2IUO2e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 00:50:04 -0400
-Received: by eaac11 with SMTP id c11so21137eaa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2012 21:50:03 -0700 (PDT)
+	Fri, 21 Sep 2012 10:28:34 -0400
+Message-ID: <505C7984.1090600@candelatech.com> (sfid-20120921_162837_476031_17907259)
+Date: Fri, 21 Sep 2012 07:28:20 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <5046D8E9.3050505@posedge.com>
-References: <50457491.9020604@posedge.com> <1346747134.3737.10.camel@jlt4.sipsolutions.net>
- <5046D8E9.3050505@posedge.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 5 Sep 2012 14:49:42 +1000
-Message-ID: <CAGRGNgXkjKKoykWYAev=JpS+owTopCj0j9tLbvwDC+NDM0vzVw@mail.gmail.com> (sfid-20120905_065008_895494_9E17AEFC)
-Subject: Re: [RFC] cfg80211: VHT regulatory
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Sujith Manoharan <c_manoha@qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath9k: Add a debugfs file to adjust antenna diversity
+References: <20572.4308.801973.961874@gargle.gargle.HOWL>
+In-Reply-To: <20572.4308.801973.961874@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mahesh,
+On 09/21/2012 12:01 AM, Sujith Manoharan wrote:
+> Location: /<debugfs>/ieee80211/phy#/ath9k/diversity
 
-On Wed, Sep 5, 2012 at 2:45 PM, Mahesh Palivela <maheshp@posedge.com> wrote:
-> On 09/04/2012 01:55 PM, Johannes Berg wrote:
->>
->> On Tue, 2012-09-04 at 08:55 +0530, Mahesh Palivela wrote:
->>> +       left_end_freq -= MHZ_TO_KHZ(10);
->>> +       right_end_freq -= MHZ_TO_KHZ(10);
->>
->>
->> Hmm? Shouldn't you add 10 MHz to the lower end, if anything?
->>
->
-> Nope. For example 80 MHz BW, take channel 36, 40, 44 and 48. Center freq
-> value is chan 42. so left end will be chan 34 and right end will be chan 50.
-> so I am subtracting 10MHz on both ends to get chan 36 and 48
+Can you document what the various settings mean?
 
-Surely if you subtract 10MHz from chan 34, you'd end up with chan 32, right?
+Also, what is the difference between antenna diversity
+and selecting the tx/rx chainmask?
 
 Thanks,
+Ben
 
 -- 
-Julian Calaby
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+
