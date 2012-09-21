@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51760 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab2ILJaz (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:43783 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754407Ab2IUQOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 05:30:55 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Fri, 21 Sep 2012 12:14:17 -0400
+Message-ID: <505C9254.5090101@lwfinger.net> (sfid-20120921_181437_354370_89C66E09)
+Date: Fri, 21 Sep 2012 11:14:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20560.22038.518027.522745@gargle.gargle.HOWL> (sfid-20120912_113058_594219_BEF2E243)
-Date: Wed, 12 Sep 2012 14:59:58 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Enable SGI correctly
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dwmw2@infradead.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	Jan Terstegge <jan@terstegge.net>
+Subject: Re: [PATCH] rtlwifi/rtl8712u Revert firmware
+References: <1347294365-6509-1-git-send-email-Larry.Finger@lwfinger.net> <1348180259.4801.9.camel@deadeye.wl.decadent.org.uk>
+In-Reply-To: <1348180259.4801.9.camel@deadeye.wl.decadent.org.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the driver specific SGI flag based on the station's
-HT capabilities, otherwise rate control uses the wrong rate.
+On 09/20/2012 05:31 PM, Ben Hutchings wrote:
+> On Mon, 2012-09-10 at 11:26 -0500, Larry Finger wrote:
+>> Although the newest firmware for the RTL8192SU, which is found in vendor
+>> driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404, works with most
+>> devices, it causes drops of the wireless connection for the ASUS WL-167G V3
+>> (USB ID 0b05:1791), the D-Link DWA131 (07d1:3303), and probably others.
+>> Tests show that the firmware from vendor driver
+>> rtl8712_8188_8191_8192SU_usb_linux_v7_0.20100831 works better.
+>>
+>> This commerts reverts to that older firmware.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> [...]
+>
+> This is the original blob added by:
+>
+> commit 8f919160792e4702c6b7a67a243cea4f757407e4
+> Author: Larry Finger <Larry.Finger@lwfinger.net>
+> Date:   Mon Nov 1 23:56:52 2010 -0500
+>
+>      linux-firmware: Add firmware files for Realtek RTL8712U and RTL8192CE
+>
+> There have been two updates since then:
+>
+> commit f8ddc05e13c4c6dd9d725bc376b287f307eb223a
+> Author: Larry Finger <Larry.Finger@lwfinger.net>
+> Date:   Tue Aug 16 11:12:14 2011 -0500
+>
+>      rtlwifi: rtl8712u: Upgrade to firmware found in vendor's V2.6.6
+>
+> commit d8f60751d3f09545f51aac5d8e451f7668063ebf
+> Author: Larry Finger <Larry.Finger@lwfinger.net>
+> Date:   Wed Jul 11 13:18:30 2012 -0500
+>
+>      r8712u: Update to latest firmware
+>
+>      A new firmware file is used in the vendor driver with name/version
+>      rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404.
+>
+> Sure you want to revert both of these, not just the latest?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+Yes. Both of the updates work on my hardware (D-Link and Rosewill), but both 
+fail on an ASUS WL-167g v3 as reported privately to me. I will work with Realtek 
+and the OP to resolve the problem, and then update the fw once again.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 4b12c34..27ed80b 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1222,11 +1222,14 @@ static u8 ath_rc_build_ht_caps(struct ath_softc *sc, struct ieee80211_sta *sta)
- 			caps |= WLAN_RC_TS_FLAG | WLAN_RC_DS_FLAG;
- 		else if (sta->ht_cap.mcs.rx_mask[1])
- 			caps |= WLAN_RC_DS_FLAG;
--		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
-+		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
- 			caps |= WLAN_RC_40_FLAG;
--		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40 ||
--		    sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20)
--			caps |= WLAN_RC_SGI_FLAG;
-+			if (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40)
-+				caps |= WLAN_RC_SGI_FLAG;
-+		} else {
-+			if (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20)
-+				caps |= WLAN_RC_SGI_FLAG;
-+		}
- 	}
- 
- 	return caps;
--- 
-1.7.12
+Thanks,
+
+Larry
+
 
