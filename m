@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40304 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754808Ab2IKNZw (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:41459 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160Ab2IUGi0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 09:25:52 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 10/12] mac80211: fix power constraint patch for multi-channel
-Date: Tue, 11 Sep 2012 15:26:21 +0200
-Message-Id: <1347369983-12459-11-git-send-email-johannes@sipsolutions.net> (sfid-20120911_152559_792886_9CBEDEEB)
-In-Reply-To: <1347369983-12459-1-git-send-email-johannes@sipsolutions.net>
-References: <1347369983-12459-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 21 Sep 2012 02:38:26 -0400
+Received: by weyx8 with SMTP id x8so1760556wey.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 23:38:25 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RESEND][PATCH] bcma: handle BCM43227
+Date: Fri, 21 Sep 2012 08:38:38 +0200
+Message-Id: <1348209518-1378-1-git-send-email-zajec5@gmail.com> (sfid-20120921_083830_524381_D0EC227F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-TBD: need to combine with one of the two patches involved
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Tested-by: Jack <x6719620@gmail.com>
 ---
- net/mac80211/mlme.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+John: this is the same patch I've sent last time. It applies cleanly in
+wireless-testing tree for me.
+Can you give it one more try, please?
+---
+ drivers/bcma/host_pci.c |    1 +
+ drivers/bcma/sprom.c    |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f359af1..a717392 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2411,7 +2411,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
--	enum ieee80211_band band;
-+	struct ieee80211_channel *chan;
- 	u32 changed = 0;
- 	bool erp_valid, directed_tim = false;
- 	u8 erp_value = 0;
-@@ -2436,7 +2436,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		rcu_read_unlock();
- 		return;
- 	}
--	band = chanctx_conf->channel->band;
-+	chan = chanctx_conf->channel;
- 	rcu_read_unlock();
- 
- 	if (ifmgd->assoc_data && !ifmgd->assoc_data->have_beacon &&
-@@ -2600,7 +2600,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N)) {
- 		struct ieee80211_supported_band *sband;
- 
--		sband = local->hw.wiphy->bands[band];
-+		sband = local->hw.wiphy->bands[chan->band];
- 
- 		changed |= ieee80211_config_ht_tx(sdata, elems.ht_operation,
- 						  bssid, true);
-@@ -2609,7 +2609,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (elems.country_elem && elems.pwr_constr_elem &&
- 	    mgmt->u.probe_resp.capab_info &
- 				cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT))
--		ieee80211_handle_pwr_constr(sdata, local->oper_channel,
-+		ieee80211_handle_pwr_constr(sdata, chan,
- 					    elems.country_elem,
- 					    elems.country_elem_len,
- 					    elems.pwr_constr_elem);
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index f7b0af7..b6b4b5e 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -273,6 +273,7 @@ static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4358) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
+ 	{ 0, },
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index 9ea4627..0d546b6 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -507,7 +507,9 @@ static bool bcma_sprom_onchip_available(struct bcma_bus *bus)
+ 		/* for these chips OTP is always available */
+ 		present = true;
+ 		break;
++	case BCMA_CHIP_ID_BCM43227:
+ 	case BCMA_CHIP_ID_BCM43228:
++	case BCMA_CHIP_ID_BCM43428:
+ 		present = chip_status & BCMA_CC_CHIPST_43228_OTP_PRESENT;
+ 		break;
+ 	default:
 -- 
-1.7.10.4
+1.7.7
 
