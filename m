@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:38347 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752288Ab2IZRGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 13:06:51 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: kiranaab ki <kiranaab@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: Re: Which tree to pull for submitting patches to net/mac80211
-References: <CACuskh++j1QPgvBNhpGmhUOjwozk2vybHq=3_-iSoWaAVxkEvw@mail.gmail.com>
-Date: Wed, 26 Sep 2012 20:06:44 +0300
-In-Reply-To: <CACuskh++j1QPgvBNhpGmhUOjwozk2vybHq=3_-iSoWaAVxkEvw@mail.gmail.com>
-	(kiranaab ki's message of "Wed, 26 Sep 2012 21:51:56 +0530")
-Message-ID: <87k3vg3e8r.fsf@purkki.adurom.net> (sfid-20120926_190654_965449_3E9050AE)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50861 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932198Ab2IUJQy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Sep 2012 05:16:54 -0400
+Message-ID: <505C3083.9090408@qca.qualcomm.com> (sfid-20120921_111659_065807_F8393C4D)
+Date: Fri, 21 Sep 2012 12:16:51 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/3] ath6kl: Check for valid rate table index
+References: <1348122068-24648-1-git-send-email-rmani@qca.qualcomm.com> <1348122068-24648-2-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1348122068-24648-2-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kiranaab ki <kiranaab@gmail.com> writes:
+On 09/20/2012 09:21 AM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> There are 28 items defined in rate table array 'wmi_rate_tbl'.
+> The rate table index (reply->rate_index) in ath6kl_wmi_bitrate_reply_rx()
+> func is not checked for the valid max limit index before accessing
+> rate table array. There may be some incidents to get memory crashes
+> without safe max check. Fix this.
+> 
+> Found this on code review.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/wmi.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+> index d5263ff..666f56d 100644
+> --- a/drivers/net/wireless/ath/ath6kl/wmi.c
+> +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+> @@ -1171,6 +1171,9 @@ static int ath6kl_wmi_bitrate_reply_rx(struct wmi *wmi, u8 *datap, int len)
+>  		rate = RATE_AUTO;
+>  	} else {
+>  		index = reply->rate_index & 0x7f;
+> +		if (index > (RATE_MCS_7_40 + 1))
+> +			return -EINVAL;
 
-> I also see in MAINTAINERS list that Johannes Berg maintains two trees
->    mac80211.git,
->    mac80211-next.git
->
-> If I want to send the patches for net/mac80211 and net/cfg8011
-> do I need to pull wireless-testing.git and send the patches so that
-> John W Linwille reviews them
->
->      or
->
-> do I need to pull mac80211-next.git and send the patches so that
-> Johannes Berg will review the patches and later John W Linville
-> pulls the changes from Johannes's tree along the development process ?
+Please add WARN_ON_ONCE() to catch this easily:
 
-For new people in the Linux development I would recommend to use
-wireless-testing and submit patches to the linux-wireless mailing, just
-to keep things simple. Johannes when picks up the patch whenever he has
-time.
+if (WARN_ON_ONCE(index > (RATE_MCS_7_40 + 1)))
+	return -EINVAL;
 
-In rare occasions your patch might conflict with something which is in
-mac80211-next and Johannes might ask you to rebase your patch. But this
-usually happens when making more extensive changes to mac80211, for
-smaller patches this is really rare.
-
--- 
-Kalle Valo
+Kalle
