@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52682 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932894Ab2IGMEx (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48033 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932377Ab2IUJO7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 08:04:53 -0400
-Message-ID: <1347019529.4256.20.camel@jlt4.sipsolutions.net> (sfid-20120907_140457_098050_9523D7C5)
-Subject: Re: [PATCHv2 1/2] mac80211: export ieee80211_send_deauth_disassoc
- for usage outside of mlme.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: Antonio Quartulli <ordex@autistici.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 07 Sep 2012 14:05:29 +0200
-In-Reply-To: <5049E236.2020502@lri.fr>
-References: <1346951275-32081-1-git-send-email-ordex@autistici.org>
-	   (sfid-20120906_190828_405993_603EB9FF) <1347006332.4256.9.camel@jlt4.sipsolutions.net>
-	  <5049C35A.1050601@lri.fr> <1347016689.4256.10.camel@jlt4.sipsolutions.net>
-	 <5049E236.2020502@lri.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 21 Sep 2012 05:14:59 -0400
+Message-ID: <505C300F.3060407@qca.qualcomm.com> (sfid-20120921_111503_700951_A8D3A08B)
+Date: Fri, 21 Sep 2012 12:14:55 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 1/3] ath6kl: Avoid null ptr dereference while printing
+ reg domain pair
+References: <1348122068-24648-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1348122068-24648-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-09-07 at 14:01 +0200, Nicolas Cavallari wrote:
-
-> >> Or just never set TX_INTFL_DONT_ENCRYPT at all and rely on
-> >> ieee80211_tx_h_select_key() to do the right thing ?
-> > 
-> > I don't think it can do the right thing, it doesn't check whether MFP is
-> > enabled or not...
+On 09/20/2012 09:21 AM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
 > 
-> It does; The first part try to encrypt everything, the second part
-> disable encryption if ccmp is selected and !ieee80211_is_data_present &&
-> !ieee80211_use_mfp,
-> which test, among other things, for the sta's WLAN_STA_MFP flag if sta
-> != null.
-
-Good point.
-
-> If tx_h_select_key does not select the right key in this case, i think
-> we have bigger problems.
-
-Maybe, maybe not. But it looks like it would be safe.
-
-> > unless you want to test all those cases I'd rather not
-> > change it :)
+> Return value of ath6kl_get_regpair() is stored in 'regpair' in
+> ath6kl_wmi_regdomain_event() func and it's directly accessed
+> in the debug prints without checking for NULL value. There are
+> situation to get NULL pointer as a return value from
+> ath6kl_get_regpair() func. Fix this.
 > 
-> Not worth the trouble in this case, but i think there is too much code
-> that sets TX_INTFL_DONT_ENCRYPT when it shouldn't.
+> Found this on code review.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/wmi.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+> index 68b46bd..d5263ff 100644
+> --- a/drivers/net/wireless/ath/ath6kl/wmi.c
+> +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+> @@ -936,8 +936,9 @@ static void ath6kl_wmi_regdomain_event(struct wmi *wmi, u8 *datap, int len)
+>  
+>  		regpair = ath6kl_get_regpair((u16) reg_code);
+>  		country = ath6kl_regd_find_country_by_rd((u16) reg_code);
+> -		ath6kl_dbg(ATH6KL_DBG_WMI, "Regpair used: 0x%0x\n",
+> -			   regpair->regDmnEnum);
+> +		if (regpair)
+> +			ath6kl_dbg(ATH6KL_DBG_WMI, "Regpair used: 0x%0x\n",
+> +				   regpair->regDmnEnum);
 
-I already applied the v3 patchset, but even if I hadn't I'd say it
-should be a separate patch(set), want to send some patches to remove
-them? :)
+The problem with this is that the regpair debug print is not printed at
+all. Maybe something like this:
 
-johannes
+if (regpair)
+	ath6kl_dbg(ATH6KL_DBG_WMI, "Regpair used: 0x%0x\n",
+			   regpair->regDmnEnum);
+else
+	ath6kl_warn("Regpair not found reg_code 0x%0x\n",
+			reg_code);
+
+I used the ath6kl_warn() here as this should not happen and we can more
+easily notice the issue with ath6kl_warn(). Actually someone reported
+about this crash on IRC earlier this week.
+
+Kalle
 
