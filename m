@@ -1,110 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:56843 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811Ab2IOEPQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27417 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604Ab2IUHCZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2012 00:15:16 -0400
-Date: Sat, 15 Sep 2012 13:15:14 +0900
-From: Norbert Preining <preining@logic.at>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Borislav Petkov <bp@alien8.de>
-Subject: Re: rtl8192se: ping router gives mdev of 25387.102???
-Message-ID: <20120915041513.GF30623@gamma.logic.tuwien.ac.at> (sfid-20120915_061537_991013_42CF4C44)
-References: <505251FD.2090901@lwfinger.net> <5051EF3C.3020401@lwfinger.net> <20120913222850.GA438@gandalf.dynalias.org>
+	Fri, 21 Sep 2012 03:02:25 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120913222850.GA438@gandalf.dynalias.org>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20572.4293.744661.489191@gargle.gargle.HOWL> (sfid-20120921_090234_033308_6C53FE17)
+Date: Fri, 21 Sep 2012 12:31:25 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath9k: Handle errors properly in MCI initialization
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry, hi all,
+The MCI initialization path has various points of failures,
+handle these to ensure that we bail out correctly in such
+cases.
 
-On Fr, 14 Sep 2012,  wrote:
-> I am running on top of default kernel git, will try wireless-testing, too.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 21 +++++++++++----------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |  8 ++++----
+ drivers/net/wireless/ath/ath9k/mci.c        | 11 ++++++++---
+ 3 files changed, 23 insertions(+), 17 deletions(-)
 
-I tried now with wireless-testing from yesterday, and had the same problem.
-Actually, I got even *better* results:
-64 bytes from 192.168.0.1: icmp_req=75 ttl=255 time=137856 ms
-64 bytes from 192.168.0.1: icmp_req=76 ttl=255 time=136848 ms
-64 bytes from 192.168.0.1: icmp_req=78 ttl=255 time=134943 ms
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 8d8df4b..cea3b1c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -813,8 +813,8 @@ static void ar9003_mci_osla_setup(struct ath_hw *ah, bool enable)
+ 		      AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN, 1);
+ }
+ 
+-void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+-		      bool is_full_sleep)
++int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
++		     bool is_full_sleep)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+@@ -824,14 +824,13 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		is_full_sleep, is_2g);
+ 
+ 	if (!mci->gpm_addr && !mci->sched_addr) {
+-		ath_dbg(common, MCI,
+-			"MCI GPM and schedule buffers are not allocated\n");
+-		return;
++		ath_err(common, "MCI GPM and schedule buffers are not allocated\n");
++		return -ENOMEM;
+ 	}
+ 
+ 	if (REG_READ(ah, AR_BTCOEX_CTRL) == 0xdeadbeef) {
+-		ath_dbg(common, MCI, "BTCOEX control register is dead\n");
+-		return;
++		ath_err(common, "BTCOEX control register is dead\n");
++		return -EINVAL;
+ 	}
+ 
+ 	/* Program MCI DMA related registers */
+@@ -913,6 +912,8 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 
+ 	if (en_int)
+ 		ar9003_mci_enable_interrupt(ah);
++
++	return 0;
+ }
+ 
+ void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
+@@ -1144,8 +1145,8 @@ void ar9003_mci_init_cal_done(struct ath_hw *ah)
+ 	ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
+ }
+ 
+-void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+-		      u16 len, u32 sched_addr)
++int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
++		     u16 len, u32 sched_addr)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 
+@@ -1154,7 +1155,7 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 	mci->gpm_len = len;
+ 	mci->sched_addr = sched_addr;
+ 
+-	ar9003_mci_reset(ah, true, true, true);
++	return ar9003_mci_reset(ah, true, true, true);
+ }
+ EXPORT_SYMBOL(ar9003_mci_setup);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 30acf28..2a2d018 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -249,8 +249,8 @@ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ 			     u32 *payload, u8 len, bool wait_done,
+ 			     bool check_bt);
+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type);
+-void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+-		      u16 len, u32 sched_addr);
++int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
++		     u16 len, u32 sched_addr);
+ void ar9003_mci_cleanup(struct ath_hw *ah);
+ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ 			      u32 *rx_msg_intr);
+@@ -272,8 +272,8 @@ void ar9003_mci_check_bt(struct ath_hw *ah);
+ bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
+ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			 struct ath9k_hw_cal_data *caldata);
+-void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+-		      bool is_full_sleep);
++int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
++		     bool is_full_sleep);
+ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
+ void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
+ void ar9003_mci_set_power_awake(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 8f51e9e..ec2d7c8 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -392,6 +392,7 @@ int ath_mci_setup(struct ath_softc *sc)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_mci_coex *mci = &sc->mci_coex;
+ 	struct ath_mci_buf *buf = &mci->sched_buf;
++	int ret;
+ 
+ 	buf->bf_addr = dma_alloc_coherent(sc->dev,
+ 				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
+@@ -411,9 +412,13 @@ int ath_mci_setup(struct ath_softc *sc)
+ 	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr + mci->sched_buf.bf_len;
+ 	mci->gpm_buf.bf_paddr = mci->sched_buf.bf_paddr + mci->sched_buf.bf_len;
+ 
+-	ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
+-			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
+-			 mci->sched_buf.bf_paddr);
++	ret = ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
++			       mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
++			       mci->sched_buf.bf_paddr);
++	if (ret) {
++		ath_err(common, "Failed to initialize MCI\n");
++		return ret;
++	}
+ 
+ 	INIT_WORK(&sc->mci_work, ath9k_mci_work);
+ 	ath_dbg(common, MCI, "MCI Initialized\n");
+-- 
+1.7.12
 
-...
-rtt min/avg/max/mdev = 1.110/46967.879/137856.232/49666.671 ms, pipe 138
-
-
-So now we are mdev of 50secs sometimes ;-)
-
-
-Another interesting things:
-At home I have the problems with the NEC router, but I am now at
-the university. I am writing this email over a very very stable 
-ssh link to another server.
-
-Here is the output iof ifconfig:
-$ ifconfig
-eth0      Link encap:Ethernet  HWaddr 60:eb:69:c9:0c:ea  
-          UP BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-
-lo        Link encap:Local Loopback  
-          inet addr:127.0.0.1  Mask:255.0.0.0
-          UP LOOPBACK RUNNING  MTU:16436  Metric:1
-          RX packets:20418 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:20418 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:0 
-          RX bytes:1950587 (1.8 MiB)  TX bytes:1950587 (1.8 MiB)
-
-wlan0     Link encap:Ethernet  HWaddr 88:9f:fa:f9:07:28  
-          inet addr:150.65.206.200  Bcast:150.65.207.255  Mask:255.255.252.0
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:232640 errors:0 dropped:1 overruns:0 frame:0
-          TX packets:69798 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:85599897 (81.6 MiB)  TX bytes:8925832 (8.5 MiB)
-
-
-But the kernel is convinced that I am not connected ...:
-$ iw dev wlan0 link
-Not connected.
-$ iwconfig wlan0
-wlan0     IEEE 802.11bgn  ESSID:off/any  
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm   
-          Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-
-
-And no, I guarantee you there is no ethernet cable plugged in ;-)
-
-I can only assume that is a problem with iwconfig/iw being too old,
-although according to the output of iwconfig it is fine:
-# iw --version
-iw version 3.4
-# iwconfig --version
-iwconfig  Wireless-Tools version 30
-          Compatible with Wireless Extension v11 to v22.
-
-Kernel    Currently compiled with Wireless Extension v22.
-
-wlan0     Recommend Wireless Extension v21 or later,
-          Currently compiled with Wireless Extension v22.
-
-#  uname -a
-Linux tofuschnitzel 3.6.0-rc5-wl+ #19 SMP PREEMPT Fri Sep 14 13:14:15 JST 2012 x86_64 GNU/Linux
-
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-CHICAGO (n.)
-The foul-smelling wind which precedes an underground railway train.
-			--- Douglas Adams, The Meaning of Liff
