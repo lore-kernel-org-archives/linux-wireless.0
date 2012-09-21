@@ -1,53 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4303 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752372Ab2IQFRq (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:34952 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752440Ab2IUGRg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 01:17:46 -0400
-Message-ID: <5056B274.5050901@qca.qualcomm.com> (sfid-20120917_071750_585012_0DA981F0)
-Date: Mon, 17 Sep 2012 10:47:40 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Fri, 21 Sep 2012 02:17:36 -0400
+Received: by weyx8 with SMTP id x8so1751606wey.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 23:17:34 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC][PATCH V2] bcma: change delays to follow timers-howto guide
+Date: Fri, 21 Sep 2012 08:17:42 +0200
+Message-Id: <1348208262-28230-1-git-send-email-zajec5@gmail.com> (sfid-20120921_081741_185784_4ED1E054)
 MIME-Version: 1.0
-To: Thomas Wagner <thomas.wagner@hs-rm.de>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<ath9k-devel@venema.h4ckr.net>,
-	Javier Cardona <javier@cozybit.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath9k: Fix mesh related rx filtering issue for older
- chips
-References: <1347634168-20706-1-git-send-email-mohammed@qca.qualcomm.com> <50534AE3.3060107@openwrt.org> <1518263.XlGm7EvTdD@buri>
-In-Reply-To: <1518263.XlGm7EvTdD@buri>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tom,
 
-+ linux-wireless
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/core.c                  |    2 +-
+ drivers/bcma/driver_chipcommon_pmu.c |    5 ++++-
+ drivers/bcma/driver_pci.c            |    6 +++---
+ drivers/bcma/driver_pci_host.c       |    8 ++++----
+ 4 files changed, 12 insertions(+), 9 deletions(-)
 
-On Saturday 15 September 2012 12:24 AM, Thomas Wagner wrote:
-> Hi,
->
->> I'm really not sure about this being tied to sc->nvifs.
->> If it's mesh related, how about just adding a check for the number of mesh interfaces [...]
-> No, it is not mesh related!
-> Several frames where filtered out.
-> I discovered this on trying to set up a mesh.
-> But the where filtered frames beyond  the mesh: e.g. a beacon of 802.11b Sitecom Router
->
-> @Felix: Pleas forward this mail to:
-> linux-wireless@vger.kernel.org
-> ath9k-devel@venema.h4ckr.net
->
->
-
-thanks for the clarification.
-
-
+diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
+index 63c8b47..03bbe10 100644
+--- a/drivers/bcma/core.c
++++ b/drivers/bcma/core.c
+@@ -65,7 +65,7 @@ void bcma_core_set_clockmode(struct bcma_device *core,
+ 	switch (clkmode) {
+ 	case BCMA_CLKMODE_FAST:
+ 		bcma_set32(core, BCMA_CLKCTLST, BCMA_CLKCTLST_FORCEHT);
+-		udelay(64);
++		usleep_range(64, 300);
+ 		for (i = 0; i < 1500; i++) {
+ 			if (bcma_read32(core, BCMA_CLKCTLST) &
+ 			    BCMA_CLKCTLST_HAVEHT) {
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 8b8f2f3..201faf1 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -76,7 +76,10 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
+ 	if (max_msk)
+ 		bcma_cc_write32(cc, BCMA_CC_PMU_MAXRES_MSK, max_msk);
+ 
+-	/* Add some delay; allow resources to come up and settle. */
++	/*
++	 * Add some delay; allow resources to come up and settle.
++	 * Delay is required for SoC (early init).
++	 */
+ 	mdelay(2);
+ }
+ 
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index c32ebd5..c39ee6d 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -51,7 +51,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u8 phy)
+ 		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
+ 		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
+ 			break;
+-		msleep(1);
++		usleep_range(1000, 2000);
+ 	}
+ }
+ 
+@@ -92,7 +92,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
+ 			ret = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_DATA);
+ 			break;
+ 		}
+-		msleep(1);
++		usleep_range(1000, 2000);
+ 	}
+ 	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
+ 	return ret;
+@@ -132,7 +132,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u8 device,
+ 		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
+ 		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
+ 			break;
+-		msleep(1);
++		usleep_range(1000, 2000);
+ 	}
+ 	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
+ }
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index cbae2c2..9baf886 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -425,9 +425,9 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
+ 	pc_host->io_resource.flags = IORESOURCE_IO | IORESOURCE_PCI_FIXED;
+ 
+ 	/* Reset RC */
+-	udelay(3000);
++	usleep_range(3000, 5000);
+ 	pcicore_write32(pc, BCMA_CORE_PCI_CTL, BCMA_CORE_PCI_CTL_RST_OE);
+-	udelay(1000);
++	usleep_range(1000, 2000);
+ 	pcicore_write32(pc, BCMA_CORE_PCI_CTL, BCMA_CORE_PCI_CTL_RST |
+ 			BCMA_CORE_PCI_CTL_RST_OE);
+ 
+@@ -481,7 +481,7 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
+ 	 * before issuing configuration requests to PCI Express
+ 	 * devices.
+ 	 */
+-	udelay(100000);
++	msleep(100);
+ 
+ 	bcma_core_pci_enable_crs(pc);
+ 
+@@ -501,7 +501,7 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
+ 	set_io_port_base(pc_host->pci_controller.io_map_base);
+ 	/* Give some time to the PCI controller to configure itself with the new
+ 	 * values. Not waiting at this point causes crashes of the machine. */
+-	mdelay(10);
++	usleep_range(10000, 15000);
+ 	register_pci_controller(&pc_host->pci_controller);
+ 	return;
+ }
 -- 
-thanks,
-shafi
-
+1.7.7
 
