@@ -1,172 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:59937 "EHLO
-	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754082Ab2I0S7f (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26447 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757111Ab2IUJjz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 14:59:35 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 1/5] {nl,cfg}80211: add a flags word to scan requests
-Date: Thu, 27 Sep 2012 11:59:10 -0700
-Message-Id: <1348772354-15936-2-git-send-email-bzhao@marvell.com> (sfid-20120927_205943_073603_38D3295A)
-In-Reply-To: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
-References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
+	Fri, 21 Sep 2012 05:39:55 -0400
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH v2 2/3] ath6kl: Check for valid rate table index
+Date: Fri, 21 Sep 2012 15:08:54 +0530
+Message-ID: <1348220335-29711-2-git-send-email-rmani@qca.qualcomm.com> (sfid-20120921_113958_038082_B43CCFB7)
+In-Reply-To: <1348220335-29711-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1348220335-29711-1-git-send-email-rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sam Leffler <sleffler@chromium.org>
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Add a flags word to direct and scheduled scan requests; it will
-be used for control of optional behaviours such as flushing the
-bss cache prior to doing a scan.
+There are 28 items defined in rate table array 'wmi_rate_tbl'.
+The rate table index (reply->rate_index) in ath6kl_wmi_bitrate_reply_rx()
+func is not checked for the valid max limit index before accessing
+rate table array. There may be some incidents to get memory crashes
+without safe max check. Fix this.
 
-Signed-off-by: Sam Leffler <sleffler@chromium.org>
-Tested-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Found this on code review.
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- include/linux/nl80211.h |   14 ++++++++++++++
- include/net/cfg80211.h  |   10 ++++++++++
- net/wireless/nl80211.c  |   11 +++++++++++
- 3 files changed, 35 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 7df9b50..109f75d 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1273,6 +1273,8 @@ enum nl80211_commands {
-  *	the connection request from a station. nl80211_connect_failed_reason
-  *	enum has different reasons of connection failure.
-  *
-+ * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1530,6 +1532,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_CONN_FAILED_REASON,
- 
-+	NL80211_ATTR_SCAN_FLAGS,
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 64b81fd..f3aeebb 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1174,6 +1174,9 @@ static int ath6kl_wmi_bitrate_reply_rx(struct wmi *wmi, u8 *datap, int len)
+ 		rate = RATE_AUTO;
+ 	} else {
+ 		index = reply->rate_index & 0x7f;
++		if (WARN_ON_ONCE(index > (RATE_MCS_7_40 + 1)))
++			return -EINVAL;
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3069,4 +3073,14 @@ enum nl80211_connect_failed_reason {
- 	NL80211_CONN_FAIL_BLOCKED_CLIENT,
- };
- 
-+/**
-+ * enum nl80211_scan_flags -  scan request control flags
-+ *
-+ * Scan request control flags are used to control the handling
-+ * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
-+ * requests.
-+ */
-+enum nl80211_scan_flags {
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ab78b53..2c0c14a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -992,6 +992,12 @@ struct cfg80211_ssid {
- };
- 
- /**
-+ * enum cfg80211_scan_flags -  scan request control flags
-+ */
-+enum cfg80211_scan_flags {
-+};
-+
-+/**
-  * struct cfg80211_scan_request - scan request description
-  *
-  * @ssids: SSIDs to scan for (active scan only)
-@@ -1000,6 +1006,7 @@ struct cfg80211_ssid {
-  * @n_channels: total number of channels to scan
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @flags: bit field of flags controlling operation
-  * @rates: bitmap of rates to advertise for each band
-  * @wiphy: the wiphy this was for
-  * @wdev: the wireless device to scan for
-@@ -1012,6 +1019,7 @@ struct cfg80211_scan_request {
- 	u32 n_channels;
- 	const u8 *ie;
- 	size_t ie_len;
-+	u32 flags;
- 
- 	u32 rates[IEEE80211_NUM_BANDS];
- 
-@@ -1044,6 +1052,7 @@ struct cfg80211_match_set {
-  * @interval: interval between each scheduled scan cycle
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @flags: bit field of flags controlling operation
-  * @match_sets: sets of parameters to be matched for a scan result
-  * 	entry to be considered valid and to be passed to the host
-  * 	(others are filtered out).
-@@ -1061,6 +1070,7 @@ struct cfg80211_sched_scan_request {
- 	u32 interval;
- 	const u8 *ie;
- 	size_t ie_len;
-+	u32 flags;
- 	struct cfg80211_match_set *match_sets;
- 	int n_match_sets;
- 	s32 rssi_thold;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f1047ae..e4312f6 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -355,6 +355,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
- 	[NL80211_ATTR_WDEV] = { .type = NLA_U64 },
- 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
-+	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -4337,6 +4338,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		}
+ 		sgi = (reply->rate_index & 0x80) ? 1 : 0;
+ 		rate = wmi_rate_tbl[index][sgi];
  	}
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
-+		request->flags = nla_get_u32(
-+			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
- 	request->no_cck =
- 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
-@@ -4568,6 +4573,10 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 		       request->ie_len);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
-+		request->flags = nla_get_u32(
-+			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
- 	request->dev = dev;
- 	request->wiphy = &rdev->wiphy;
- 	request->interval = interval;
-@@ -7622,6 +7631,8 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
- 	    nla_put(msg, NL80211_ATTR_IE, req->ie_len, req->ie))
- 		goto nla_put_failure;
- 
-+	nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
-+
- 	return 0;
-  nla_put_failure:
- 	return -ENOBUFS;
 -- 
-1.7.0.2
+1.7.1
 
