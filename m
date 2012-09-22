@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:53615 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176Ab2IJPeh (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:34863 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329Ab2IVTvm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 11:34:37 -0400
-Date: Mon, 10 Sep 2012 08:34:31 -0700
-From: Marc MERLIN <marc@merlins.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org, netdev@ger.kernel.org
-Subject: Re: kernel 3.5.2/amd64: iwlwifi 0000:03:00.0: failed to allocate pci memory
-Message-ID: <20120910153431.GD5053@merlins.org> (sfid-20120910_173450_291878_EB5FA821)
-References: <20120908161038.GF3347@merlins.org> <1347122927.1234.849.camel@edumazet-glaptop> <20120904003014.GB6287@merlins.org> <20120908170128.GK3347@merlins.org> <1347130641.11167.0.camel@jlt4.sipsolutions.net> <1347272641.4272.1.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1347272641.4272.1.camel@jlt4.sipsolutions.net>
+	Sat, 22 Sep 2012 15:51:42 -0400
+Date: Sat, 22 Sep 2012 15:51:33 -0400 (EDT)
+Message-Id: <20120922.155133.484429173339077143.davem@davemloft.net> (sfid-20120922_215145_872287_A1CCEDFD)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-09-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120922171341.GB2101@tuxdriver.com>
+References: <20120922171341.GB2101@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 10, 2012 at 12:24:01PM +0200, Johannes Berg wrote:
-> On Sat, 2012-09-08 at 20:57 +0200, Johannes Berg wrote:
-> 
-> > > [856806.497959]  [<ffffffff810cf54c>] warn_alloc_failed+0x117/0x12c
-> > > [856806.497963]  [<ffffffff810d23af>] __alloc_pages_nodemask+0x6e3/0x792
-> > > [856806.497969]  [<ffffffff812b7f41>] ? pfn_to_dma_pte+0x116/0x15e
-> > > [856806.497976]  [<ffffffff810ff58b>] alloc_pages_current+0xcd/0xee
-> > > [856806.497979]  [<ffffffff810cecca>] __get_free_pages+0x9/0x45
-> > > [856806.497982]  [<ffffffff812ba67d>] intel_alloc_coherent+0x84/0xe7
-> > > [856806.497986]  [<ffffffff81085cf8>] ? arch_local_irq_save+0x15/0x1b
-> > > [856806.497999]  [<ffffffffa0b84afc>] iwl_ucode_callback+0xa49/0xc0d [iwlwifi]
-> > 
-> > Yes, unfortunately we need a whole bunch of contiguous memory to load
-> > the firmware.
-> > 
-> > > Any ideas?
-> > 
-> > Nothing we can do from the driver side, I'm afraid.
-> 
-> Turns out I was wrong. Here's a patch you can test. Note that we still
-> need a lot of DMA-coherent memory for other things, but at least for the
-> firmware image we don't.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Sat, 22 Sep 2012 13:13:42 -0400
 
-Thanks for that, I'll try it out and report back if I have other problems
-(it's hard to prove that it worked since I don't have the fragmented memory
-right away).
+> Please pull this last(?) batch of fixes intended for 3.6...
+> 
+> For the Bluetooth bits, Gustavo says this:
+> 
+> "Here goes probably my last update to 3.6. It includes the two patches
+> you were ok last week(from Andrzej Kaczmarek), those are critical
+> ones, and two other fixes one for a system crash and the other for
+> a missing lockdep annotation."
+> 
+> The referenced fixes from Andrzej prevent attempts to configure devices
+> that are powered-off.
+> 
+> Along with the Bluetooth fixes, there are a couple of 802.11 fixes.
+> Emmanuel Grumbach gives us an iwlwifi fix to prevent releasing an
+> interrupt twice.  Luis R. Rodriguez provides a fix for a possible
+> circular lock dependency in the cfg80211 regulatory enforcement code.
+> 
+> All of these have been in linux-next for a few days.  I hope they are
+> not too late to make the 3.6 release!
 
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+Pulled, thanks John.
