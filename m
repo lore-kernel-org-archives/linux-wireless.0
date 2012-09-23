@@ -1,58 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53804 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755537Ab2IXRUq (ORCPT
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1791 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752997Ab2IWSXR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 13:20:46 -0400
-Message-ID: <50609661.3010100@candelatech.com> (sfid-20120924_192050_368058_BD69AA58)
-Date: Mon, 24 Sep 2012 10:20:33 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: info <info@tonyspcrepairs.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: compile error iw on centos 5
-References: <CAPU73_t5_XjvPURXedOJGmfpRKZi9UG=_6rm7DXUBcRMDaqU8w@mail.gmail.com>  <20120924154646.GC32351@tuxdriver.com>  <07A9A66798FE4AEEBDD199D961D87597@asusPC> <1348505103.8464.16.camel@dcbw.foobar.com>
-In-Reply-To: <1348505103.8464.16.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 23 Sep 2012 14:23:17 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Paul Fertser <fercerpav@gmail.com>
+Subject: [PATCH 1/2] rt2x00: Deprecate max_sta_intf field of struct rt2x00_ops.
+Date: Sun, 23 Sep 2012 20:22:53 +0200
+Message-Id: <1348424574-1573-1-git-send-email-gwingerde@gmail.com> (sfid-20120923_202323_450578_F70DA879)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2012 09:45 AM, Dan Williams wrote:
-> On Mon, 2012-09-24 at 17:06 +0100, info wrote:
->> sadly no, I've tried later versions and even iw-latest.tar.bz2 but each one
->> fails to compile with each version giving a different reason for the fail.
->
-> Well, the point here was that trying to run anything nl80211-based (like
-> 'iw') on Centos 5 is simply not expected to work, because Centos 5 is
-> too old to support most of what 'iw' needs, both compile-time stuff and
-> likely runtime stuff.  The 2.6.18 kernel that Centos 5 has was
-> originally released in 2006, and that was *long* before any
-> nl80211-based wifi stuff was usable.  Which means iw is quite unlikely
-> to ever work there.
->
-> RHEL 6 (or Centos 6) have good nl80211 support and thus would be  much
-> more likely to work with 'iw'.
+All drivers set this value to 1, so there is no need (currently) to let
+drivers set this.
+Therefor, remove the field; we can always add it back when it is needed.
 
-You can compile your own libraries and kernel and run on an old
-OS though.  We end up doing that just to support older systems in
-the field, and folks stuck on old OSs for whatever reason.
+Inspired by an earlier patch from Paul Fertser.
 
-I think the only useful patch for this that I carry is something
-for 'ip', but my trees are on github if anyone wants to give
-them a try.  They mostly track upstream, but are a few months out
-of date most of the time....
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Paul Fertser <fercerpav@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c | 1 -
+ drivers/net/wireless/rt2x00/rt2500pci.c | 1 -
+ drivers/net/wireless/rt2x00/rt2500usb.c | 1 -
+ drivers/net/wireless/rt2x00/rt2800pci.c | 1 -
+ drivers/net/wireless/rt2x00/rt2800usb.c | 1 -
+ drivers/net/wireless/rt2x00/rt2x00.h    | 1 -
+ drivers/net/wireless/rt2x00/rt2x00mac.c | 5 ++---
+ drivers/net/wireless/rt2x00/rt61pci.c   | 1 -
+ drivers/net/wireless/rt2x00/rt73usb.c   | 1 -
+ 9 files changed, 2 insertions(+), 11 deletions(-)
 
-https://github.com/greearb
-
-I know these compile back as far as Fedora Core 8.  Not sure it will
-work on CentOS 5 or not...
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 6458ab8..e3a2d90 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1789,7 +1789,6 @@ static const struct data_queue_desc rt2400pci_queue_atim = {
+ 
+ static const struct rt2x00_ops rt2400pci_ops = {
+ 	.name			= KBUILD_MODNAME,
+-	.max_sta_intf		= 1,
+ 	.max_ap_intf		= 1,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 68bca14..479d756 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -2081,7 +2081,6 @@ static const struct data_queue_desc rt2500pci_queue_atim = {
+ 
+ static const struct rt2x00_ops rt2500pci_ops = {
+ 	.name			= KBUILD_MODNAME,
+-	.max_sta_intf		= 1,
+ 	.max_ap_intf		= 1,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index f95b551..a12e84f 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1896,7 +1896,6 @@ static const struct data_queue_desc rt2500usb_queue_atim = {
+ 
+ static const struct rt2x00_ops rt2500usb_ops = {
+ 	.name			= KBUILD_MODNAME,
+-	.max_sta_intf		= 1,
+ 	.max_ap_intf		= 1,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 391e08f..27829e1 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1088,7 +1088,6 @@ static const struct data_queue_desc rt2800pci_queue_bcn = {
+ static const struct rt2x00_ops rt2800pci_ops = {
+ 	.name			= KBUILD_MODNAME,
+ 	.drv_data_size		= sizeof(struct rt2800_drv_data),
+-	.max_sta_intf		= 1,
+ 	.max_ap_intf		= 8,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 603b65d..c9e9370 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -870,7 +870,6 @@ static const struct data_queue_desc rt2800usb_queue_bcn = {
+ static const struct rt2x00_ops rt2800usb_ops = {
+ 	.name			= KBUILD_MODNAME,
+ 	.drv_data_size		= sizeof(struct rt2800_drv_data),
+-	.max_sta_intf		= 1,
+ 	.max_ap_intf		= 8,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 49375c8..09bf01c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -656,7 +656,6 @@ struct rt2x00lib_ops {
+ struct rt2x00_ops {
+ 	const char *name;
+ 	const unsigned int drv_data_size;
+-	const unsigned int max_sta_intf;
+ 	const unsigned int max_ap_intf;
+ 	const unsigned int eeprom_size;
+ 	const unsigned int rf_size;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index c3d0f2f..2f98d3d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -243,10 +243,9 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+ 			return -ENOBUFS;
+ 
+ 		/*
+-		 * Check if we exceeded the maximum amount
+-		 * of supported interfaces.
++		 * We don't support multiple STA interfaces.
+ 		 */
+-		if (rt2x00dev->intf_sta_count >= rt2x00dev->ops->max_sta_intf)
++		if (rt2x00dev->intf_sta_count)
+ 			return -ENOBUFS;
+ 
+ 		break;
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 2673e05..d6582a2 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -3045,7 +3045,6 @@ static const struct data_queue_desc rt61pci_queue_bcn = {
+ 
+ static const struct rt2x00_ops rt61pci_ops = {
+ 	.name			= KBUILD_MODNAME,
+-	.max_sta_intf		= 1,
+ 	.max_ap_intf		= 4,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index cfa9f37..e5eb43b 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2382,7 +2382,6 @@ static const struct data_queue_desc rt73usb_queue_bcn = {
+ 
+ static const struct rt2x00_ops rt73usb_ops = {
+ 	.name			= KBUILD_MODNAME,
+-	.max_sta_intf		= 1,
+ 	.max_ap_intf		= 4,
+ 	.eeprom_size		= EEPROM_SIZE,
+ 	.rf_size		= RF_SIZE,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.12.1
 
