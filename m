@@ -1,52 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926Ab2IGQOo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 12:14:44 -0400
-Message-ID: <1347034503.4256.31.camel@jlt4.sipsolutions.net> (sfid-20120907_181448_507646_CB59D4DD)
-Subject: Re: [PATCH v2] p54: connect to 11w protected networks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Date: Fri, 07 Sep 2012 18:15:03 +0200
-In-Reply-To: <201209071810.18821.chunkeey@googlemail.com> (sfid-20120907_181023_591417_EF39566A)
-References: <1346622538.10113.3.camel@jlt4.sipsolutions.net>
-	 <201209071747.09666.chunkeey@googlemail.com>
-	 <1347033342.4256.28.camel@jlt4.sipsolutions.net>
-	 <201209071810.18821.chunkeey@googlemail.com>
-	 (sfid-20120907_181023_591417_EF39566A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from narfation.org ([79.140.41.39]:34471 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751980Ab2IWKEv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Sep 2012 06:04:51 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: ath9k-devel@lists.ath9k.org, adrian.chadd@gmail.com,
+	linux-wireless@vger.kernel.org, shafi.wireless@gmail.com,
+	lindner_marek@yahoo.de, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: Re: [RFC] ath9k: Work around complete stuck of hw
+Date: Sun, 23 Sep 2012 12:04:47 +0200
+Message-ID: <1822413.FOnaUoKYHo@sven-desktop.home.narfation.org> (sfid-20120923_120543_776939_DFDABEC0)
+In-Reply-To: <5053160B.8060908@openwrt.org>
+References: <50521E02.4030809@openwrt.org> <1347616045-29336-1-git-send-email-sven@narfation.org> <5053160B.8060908@openwrt.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart9177922.zYgzQUEvc6"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-09-07 at 18:10 +0200, Christian Lamparter wrote:
-> On Friday 07 September 2012 17:55:42 Johannes Berg wrote:
-> > On Fri, 2012-09-07 at 17:47 +0200, Christian Lamparter wrote:
-> > > On Friday 07 September 2012 14:17:14 Johannes Berg wrote:
-> > > > On Tue, 2012-09-04 at 16:54 +0200, Johannes Berg wrote:
-> > > >
-> > > > If you want this for your driver, I'll commit this:
-> > > > 
-> > > > http://p.sipsolutions.net/ea2e3dbe980f5db8.txt
-> > > 
-> > > Won't this totally disable the crypto offload
-> > > capabilities in AP mode?
+
+--nextPart9177922.zYgzQUEvc6
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="ISO-8859-1"
+
+On Friday 14 September 2012 13:33:31 Felix Fietkau wrote:
+[..]
+> > ---
+> > This check is currently tested. This takes quite a long time and maybe
+> > someone with more knowledge of atheros devices can check whether this one
+> > is completely and utterly wrong.
 > > 
-> > Yes, though we could add an nl80211 attribute that
-> > allows hostapd to tell us, and then if it did tell
-> > us we could know and do the right thing here.
+> > The type RESET_TYPE_FATAL_INT was chosen in this test to allow us to see
+> > whether this condition was already true by reading from
+> > /sys/kernel/debug/ieee80211/phy0/ath9k/reset
 > 
-> Well, if we want to do the right thing here, then I
-> guess we should go for another alternative: a rxkey
-> manager of some sorts. So, we delete keys from the
-> firmware context once MFP comes into the game.
+> Your debug patch should not be silent when it resets the hw. We need
+> to make sure that this bug gets fixed properly. If my patch below does
+> not fix it, then at least add a WARN_ON to ensure that we don't just
+> hide the bug and move on.
 
-That's kinda what I do though, the flag tells you (at key installation)
-whether MFP will be used or not. It's just that in the AP case, mac80211
-doesn't actually know.
+It is not silent for me and is not a patch that should be applied to the 
+upstream kernel. Just wanted to ask whether this is the right place and 
+approach
 
-johannes
+> Somebody on the openwrt-devel list pointed out that there is some code
+> missing in the ar933x wmac reset function. Please try this patch (apply
+> it to your kernel tree):
+
+Neither mine nor your patch has an effect. One node is now again dead after ~8 
+1/2 days. It looks like the check isn't done (correctly). I will investigate 
+this further tomorrow.
+
+Kind regards,
+	Sven
+--nextPart9177922.zYgzQUEvc6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABCgAGBQJQXt6/AAoJEF2HCgfBJntGaoIQALz7kfkIcc6S4pLmVc0Gl4Ez
+0dah942nNq3ONPhuG8pT5E02ShBo5QY+aUV2sKqsk5u1wW5XgEAUODFS7mRViLcI
+Ugt6wn0pWtTYWtkYU5IAXloMi6E9LN0f+B4SxiWtuUlvxrqFNeLbtw3ZcUS0x3xH
+KWvRfo4IUSLseXGmEVh1zL8EICsPkatuM/+z5TxhUqzjRHR7wabsZtIohBinWrrs
+2EeR5gieVbGqXF/8E8r378fto6q4/sTqh89mpsLWZuTzn8AZVMlKOv80J02H1bW5
+MmYAZv0zZP9EHwogv8avdhQjJ7dsaWc7ABggk6PcFA/AIbPXHbPgd3EtXXWSr7cQ
+UEePdNH8DLZsvtsHC4yFquVbvgAS6V1yfA48QTaVC3VUNo1U7hc1esRwf5MWtrga
+hRLOvl+hiCwidvKRu+zIoYuTp6/n4MaKEBHpEuhniBKNV7u9G/sAdGZnEgw5m8RR
+HHpBdKryArnPGlNII2k8Zn3NjjSRCIlqXmXHZg889m8z0us7vBvv+yY4luQdmnqf
+iN7QOnnuCwN3wMXgDUB6gGRf3CX6gIeG/ijBkcVYurh/PYIMSRlC3I6ohOJ/8A7L
+Q3ALg/lJlEMdxkwVvo2YGJl9i4D0xlZpnyGV2ci5b8TUtzInTMjak5YvzkxqjWeH
+QxrNU+jHutIL+L1wJ0sK
+=MAis
+-----END PGP SIGNATURE-----
+
+--nextPart9177922.zYgzQUEvc6--
 
