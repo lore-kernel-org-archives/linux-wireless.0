@@ -1,48 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:50775 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756738Ab2IFKWf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 06:22:35 -0400
-From: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-To: <linux-wireless@vger.kernel.org>, <linux-nfc@lists.01.org>,
-	<sameo@linux.intel.com>
-CC: <lauro.venancio@openbossa.org>, <aloisio.almeida@openbossa.org>,
-	<eric.lapuyade@intel.com>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: [PATCH 2/2] NFC: Correct outgoing frame before requeueing
-Date: Thu, 6 Sep 2012 12:22:17 +0200
-Message-ID: <1346926937-4968-2-git-send-email-waldemar.rymarkiewicz@tieto.com> (sfid-20120906_122238_170638_5B3AB231)
-In-Reply-To: <1346926937-4968-1-git-send-email-waldemar.rymarkiewicz@tieto.com>
-References: <1346926937-4968-1-git-send-email-waldemar.rymarkiewicz@tieto.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:46613 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756345Ab2IXSq3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Sep 2012 14:46:29 -0400
+Date: Mon, 24 Sep 2012 15:46:22 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2012-09-18
+Message-ID: <20120924184622.GA7922@joana> (sfid-20120924_204651_035437_5989722D)
+References: <20120919013113.GG24689@joana>
+ <CAB=NE6XKNSMeS3_uzcGsGBhcm6ZKtJwJ=DdAq_DoWmKTXQvV=Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAB=NE6XKNSMeS3_uzcGsGBhcm6ZKtJwJ=DdAq_DoWmKTXQvV=Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Purge data added by lower layers (len and crc) in the head and tail of the frame
-during initial send. Now, the frame is correct to be resent.
+* Luis R. Rodriguez <mcgrof@do-not-panic.com> [2012-09-21 18:06:42 -0700]:
 
-Signed-off-by: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
----
- net/nfc/hci/shdlc.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> On Tue, Sep 18, 2012 at 6:31 PM, Gustavo Padovan <gustavo@padovan.org> wrote:
+> 
+> > Johan Hedberg (2):
+> >       Bluetooth: mgmt: Implement support for passkey notification
+> 
+> Too late now... but why did we allow this a stable fix? I get its a
+> feature that is important and likely overlooked / someone had a brain
+> fart, but from what I gather this is not on v3.5.4 and yet may make it
+> to v3.5.5. At least for backporting this was a bitch:
+> 
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3290:52:
+> error: dereferencing pointer to incomplete type
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3294:6:
+> error: ‘struct hci_conn’ has no member named ‘passkey_notify’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3294:25:
+> error: dereferencing pointer to incomplete type
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3295:6:
+> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3298:3:
+> error: implicit declaration of function ‘mgmt_user_passkey_notify’
+> [-Werror=implicit-function-declaration]
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3299:27:
+> error: ‘struct hci_conn’ has no member named ‘passkey_notify’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3300:11:
+> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:
+> In function ‘hci_keypress_notify_evt’:
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3310:52:
+> error: dereferencing pointer to incomplete type
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3314:12:
+> error: dereferencing pointer to incomplete type
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3315:7:
+> error: ‘HCI_KEYPRESS_STARTED’ undeclared (first use in this function)
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3315:7:
+> note: each undeclared identifier is reported only once for each
+> function it appears in
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3316:7:
+> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3319:7:
+> error: ‘HCI_KEYPRESS_ENTERED’ undeclared (first use in this function)
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3320:7:
+> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3323:7:
+> error: ‘HCI_KEYPRESS_ERASED’ undeclared (first use in this function)
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3324:7:
+> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3327:7:
+> error: ‘HCI_KEYPRESS_CLEARED’ undeclared (first use in this function)
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3328:7:
+> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3331:7:
+> error: ‘HCI_KEYPRESS_COMPLETED’ undeclared (first use in this
+> function)
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3337:27:
+> error: ‘struct hci_conn’ has no member named ‘passkey_notify’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3338:11:
+> error: ‘struct hci_conn’ has no member named ‘passkey_entered’
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:
+> In function ‘hci_event_packet’:
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3701:7:
+> error: ‘HCI_EV_USER_PASSKEY_NOTIFY’ undeclared (first use in this
+> function)
+> /home/mcgrof/staging/v3.5.4/compat-wireless-3.5.3-2-snpc/net/bluetooth/hci_event.c:3705:7:
+> error: ‘HCI_EV_KEYPRESS_NOTIFY’ undeclared (first use in this
+> function)
+> 
+> I'd much prefer to see things like these identified as 'important' but
+> not 'fuck, this fixes that crash'. The fact that kernel maintainers
+> may be anal about these sorts of patches is *good* for many reasons
+> and figuring out a way to categorize, identify and allow users to reap
+> benefits of backporting suck fixes / cherry picking a full solution is
+> what something that should not interfere and hopefully be transparent
+> to Linux upstream development.
+> 
+> Here's one way I dealt with these type of patches:
+> 
+> https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/additional-patches
+> 
+> If you look at the patch 'Bluetooth: mgmt: Implement support for
+> passkey' its  a clear "feature" implementation, not a fucking fix.
 
-diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
-index 8a5f034..30e353e 100644
---- a/net/nfc/hci/shdlc.c
-+++ b/net/nfc/hci/shdlc.c
-@@ -241,8 +241,9 @@ static void nfc_shdlc_requeue_ack_pending(struct nfc_shdlc *shdlc)
- 	pr_debug("ns reset to %d\n", shdlc->dnr);
- 
- 	while ((skb = skb_dequeue_tail(&shdlc->ack_pending_q))) {
--		skb_pull(skb, 2);	/* remove len+control */
--		skb_trim(skb, skb->len - 2);	/* remove crc */
-+		/* remove client head + shdlc control field */
-+		skb_pull(skb, shdlc->client_headroom + 1);
-+		skb_trim(skb, skb->len - shdlc->client_tailroom);
- 		skb_queue_head(&shdlc->send_q, skb);
- 	}
- 	shdlc->ns = shdlc->dnr;
--- 
-1.7.10
+Yes, this patch is wrongly marked as stable, it is not even going to 3.5. I'm
+just removing the tag from it and resending the pull request to John.
 
+	Gustavo
