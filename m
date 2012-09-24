@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58988 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757358Ab2I2Sd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 14:33:59 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/5] bcma: some small improvements to the flash driver part.
-Date: Sat, 29 Sep 2012 20:33:48 +0200
-Message-Id: <1348943633-22800-1-git-send-email-hauke@hauke-m.de> (sfid-20120929_203402_697955_3EFD3D94)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49653 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756378Ab2IXSpa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Sep 2012 14:45:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Binderman <dcb314@hotmail.com>, me@bobcopeland.com,
+	mickflemm@gmail.com, "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k: add missing breaks in ath5k_hw_set_spur_mitigation_filter
+Date: Mon, 24 Sep 2012 14:30:19 -0400
+Message-Id: <1348511419-11881-1-git-send-email-linville@tuxdriver.com> (sfid-20120924_204533_778273_29555E38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was mostly done in preparation for an improvement for
-arch/mips/bcm47xx/nvram.c
+From: "John W. Linville" <linville@tuxdriver.com>
 
-Hauke Mehrtens (5):
-  bcma: mark pflash as present when available
-  bcma: add and use constants for the flash windows
-  bcma: mark nflash if it is the boot flash
-  bcma: extract drv_cc in bcma_core_mips_flash_detect()
-  bcma: add some more flash chips for serial flash
+https://bugzilla.kernel.org/show_bug.cgi?id=47681
 
- drivers/bcma/driver_chipcommon_nflash.c     |    3 +++
- drivers/bcma/driver_chipcommon_sflash.c     |   35 ++++++++++++++++++++++++---
- drivers/bcma/driver_mips.c                  |   22 +++++++++--------
- include/linux/bcma/bcma_driver_chipcommon.h |    2 ++
- include/linux/bcma/bcma_regs.h              |    5 +++-
- 5 files changed, 53 insertions(+), 14 deletions(-)
+Reported-by: David Binderman <dcb314@hotmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 8b71a2d..d605217 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1975,11 +1975,13 @@ ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
+ 			spur_delta_phase = (spur_offset << 18) / 25;
+ 			spur_freq_sigma_delta = (spur_delta_phase >> 10);
+ 			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 2;
++			break;
+ 		case AR5K_BWMODE_5MHZ:
+ 			/* Both sample_freq and chip_freq are 10MHz (?) */
+ 			spur_delta_phase = (spur_offset << 19) / 25;
+ 			spur_freq_sigma_delta = (spur_delta_phase >> 10);
+ 			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 4;
++			break;
+ 		default:
+ 			if (channel->band == IEEE80211_BAND_5GHZ) {
+ 				/* Both sample_freq and chip_freq are 40MHz */
 -- 
-1.7.9.5
+1.7.11.4
 
