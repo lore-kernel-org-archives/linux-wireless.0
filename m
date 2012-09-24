@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:8235 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128Ab2IGIIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 04:08:22 -0400
-Message-ID: <5049AB7C.1020103@linux.intel.com> (sfid-20120907_100830_757490_C7F2A830)
-Date: Fri, 07 Sep 2012 10:08:28 +0200
-From: Eric Lapuyade <eric.lapuyade@linux.intel.com>
-MIME-Version: 1.0
-To: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-CC: eric.lapuyade@intel.com, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org
-Subject: Re: [linux-nfc] [PATCH 1/2] NFC: Remove crc generation from shdlc
- layer
-References: <1346926937-4968-1-git-send-email-waldemar.rymarkiewicz@tieto.com> <5048C901.5010704@linux.intel.com>
-In-Reply-To: <5048C901.5010704@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:35685 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755245Ab2IXIiA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Sep 2012 04:38:00 -0400
+Message-ID: <1348475909.10257.1.camel@jlt4.sipsolutions.net> (sfid-20120924_103805_029432_F76ABBA8)
+Subject: Re: [PATCH/RFC] rfkill: prevent unnecessary event generation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vitaly Wool <vitalywool@gmail.com>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Vitaly Wool <vitaly.wool@sonymobile.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 24 Sep 2012 10:38:29 +0200
+In-Reply-To: <CAMJBoFPkdyZPubJfEEihRgL7YU_rVKKB=fH-3h+-cM23iKTicg@mail.gmail.com> (sfid-20120922_213714_955708_D3F17C54)
+References: <5048ADFC.1010708@sonymobile.com>
+	 <20120906224448.GA16676@khazad-dum.debian.net>
+	 <CAMJBoFMd2sLEScY3j2-wsWQh3Mv_nArPC904dzJ+j-16+pdkgQ@mail.gmail.com>
+	 <1347006078.4256.6.camel@jlt4.sipsolutions.net>
+	 <CAMJBoFNQFpM_do9EVBAQu8vtbsAiZJDJkoL9pcXwVP-Cf1=ZZg@mail.gmail.com>
+	 <1347023063.4256.24.camel@jlt4.sipsolutions.net>
+	 <CAMJBoFPkdyZPubJfEEihRgL7YU_rVKKB=fH-3h+-cM23iKTicg@mail.gmail.com>
+	 (sfid-20120922_213714_955708_D3F17C54)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/06/2012 06:02 PM, Eric Lapuyade wrote:
-> Hi Waldemar,
+On Sat, 2012-09-22 at 21:37 +0200, Vitaly Wool wrote:
+> Hi Johannes,
 > 
-> On 09/06/2012 12:22 PM, Waldemar Rymarkiewicz wrote:
+> On Fri, Sep 7, 2012 at 3:04 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Fri, 2012-09-07 at 15:02 +0200, Vitaly Wool wrote:
+> >
+> >> >> I'm not sure I got your question, but just in case, rfkill is
+> >> >> initialized to all zeroes so rfkill->state is 0 and on each consequent
+> >> >> _real_ change there (prev != curr) == true and the event will be
+> >> >> generated.
+> >> >
+> >> > But maybe applications were expecting an event for registration? Or do
+> >> > we get that anyway maybe?
+> >>
+> >> We should get them anyway. rfkill_fop_open() basically just pushes all
+> >> the startup events into the list so the application will see all the
+> >> _changes_ on registration. And at least wpa_supplicant reads out all
+> >> these events on rfkill registration. If an application does something
+> >> else, then I think it's buggy.
+> >
+> > Aha, good point. I guess I'll apply the patch then :)
+> 
+> provided that I don't see the patch merged, is there anything else we
+> should take care of before it's considered good enough?
 
->>  /* Largest headroom needed for outgoing custom commands */
->>  #define PN544_CMDS_HEADROOM	2
->> +#define PN544_CMDS_TAILROOM	2
+No, my mistake ... applied now.
 
-As a side effect of my comment on the second patch, this should be
-defined like this:
+johannes
 
- #define PN544_CMDS_HEADROOM	2
-+#define PN544_FRAME_HEADROOM	1
-+#define PN544_FRAME_TAILROOM	2
-
->>  static int pn544_hci_xmit(struct nfc_shdlc *shdlc, struct sk_buff *skb)
->>  {
->>  	struct pn544_hci_info *info = nfc_shdlc_get_clientdata(shdlc);
->> @@ -584,6 +599,8 @@ static int pn544_hci_xmit(struct nfc_shdlc
-*shdlc, struct sk_buff *skb)
->>  	if (info->hard_fault != 0)
->>  		return info->hard_fault;
->>
->> +	pn544_hci_add_len_crc(skb);
->> +
->>  	return pn544_hci_i2c_write(client, skb->data, skb->len);
-
-Here, we would have:
-
-	r = pn544_hci_i2c_write(client, skb->data, skb->len);
-	pn544_hci_remove_len_crc(skb);
-	return r;
-
->>  	info->shdlc = nfc_shdlc_allocate(&pn544_shdlc_ops,
->>  					 &init_data, protocols,
->> -					 PN544_CMDS_HEADROOM, 0,
->> +					 PN544_CMDS_HEADROOM, PN544_CMDS_TAILROOM,
->>  					 PN544_HCI_LLC_MAX_PAYLOAD,
->>  					 dev_name(&client->dev));
-
-And this should be:
-
-  	info->shdlc = nfc_shdlc_allocate(&pn544_shdlc_ops,
-  					 &init_data, protocols,
- 					 PN544_CMDS_HEADROOM +
-					 PN544_FRAME_HEADROOM,
-					 PN544_FRAME_TAILROOM,
-  					 PN544_HCI_LLC_MAX_PAYLOAD,
-  					 dev_name(&client->dev));
-
-note that PN544_CMDS_HEADROOM is really only for skb allocated by HCI
-(or NFC Core), not by those allocated by shdlc, but we aggregate it all
-in a single parameter for simplicity.
-
-Eric
