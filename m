@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20048 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208Ab2ICHUA (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:45205 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754135Ab2IXOqT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2012 03:20:00 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 1/4] ath6kl: Fix bug in scheduling hb_timer
-Date: Mon, 3 Sep 2012 12:49:34 +0530
-Message-ID: <1346656777-15197-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120903_092006_834051_5314C4E5)
+	Mon, 24 Sep 2012 10:46:19 -0400
+Received: by oago6 with SMTP id o6so5464303oag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2012 07:46:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <50606746.1060702@rwth-aachen.de>
+References: <505B03D7.2050300@rwth-aachen.de>
+	<201209201415.17078.chunkeey@googlemail.com>
+	<50606746.1060702@rwth-aachen.de>
+Date: Mon, 24 Sep 2012 20:16:19 +0530
+Message-ID: <CAD2nsn3m2sDo9e5bU4Km_9hG42XrgGxicFUguTg8CX0G6yaimg@mail.gmail.com> (sfid-20120924_164627_084367_3F066D02)
+Subject: Re: communication between driver and wpa_supplicant
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Sabrina Schulte <sabrina.schulte@rwth-aachen.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hb_timer should be scheduled only when hb_poll is non-zero.
-But in ath6kl_recovery_work() the timer is scheduled based
-on fw_recovery.enable instead which is wrong.
+On Mon, Sep 24, 2012 at 7:29 PM, Sabrina Schulte
+<sabrina.schulte@rwth-aachen.de> wrote:
+> Hi,
+>
+> I do not know if this is the right mailing list for this question, but I am
+> looking for a way to handle the communication between the driver and the
+> wpa_supplicant. Is there an interface that I could use to handle this
+> communication, e.g. calling a function from the kernel in the userspace?
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/recovery.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ex: nl80211 helps us to do it.
+http://linuxwireless.org/en/users/Documentation
+To the very curious user :)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/recovery.c b/drivers/net/wireless/ath/ath6kl/recovery.c
-index 03edeb8..c30df50 100644
---- a/drivers/net/wireless/ath/ath6kl/recovery.c
-+++ b/drivers/net/wireless/ath/ath6kl/recovery.c
-@@ -34,7 +34,7 @@ static void ath6kl_recovery_work(struct work_struct *work)
- 
- 	ar->fw_recovery.err_reason = 0;
- 
--	if (ar->fw_recovery.enable)
-+	if (ar->fw_recovery.hb_poll)
- 		mod_timer(&ar->fw_recovery.hb_timer, jiffies +
- 			  msecs_to_jiffies(ar->fw_recovery.hb_poll));
- }
+>
+> I am very thankful for every hint.
+>
+> Regards,
+> Sabrina
+>
+> --
+> sabrina.schulte@rwth-aachen.de
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.0.4
-
+thanks,
+shafi
