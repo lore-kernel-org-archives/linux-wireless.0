@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:41134 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756760Ab2I0Kiq (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50787 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755369Ab2IXIec (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 06:38:46 -0400
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH 30/31] wlcore: decrease elp timeout
-Date: Thu, 27 Sep 2012 13:38:08 +0300
-Message-Id: <1348742289-6587-31-git-send-email-luca@coelho.fi> (sfid-20120927_123901_256729_7C39F249)
-In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
-References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+	Mon, 24 Sep 2012 04:34:32 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: fix BT sleep state on chip wakeup
+Date: Mon, 24 Sep 2012 14:04:24 +0530
+Message-ID: <1348475664-22502-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120924_103436_378732_A3DCE6F1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Whenever both WLAN and BT in/out sleep mode, sometimes WLAN
+is not able to take back the shared LNA control after resumes
+from sleep mode. The idea is that for WLAN to check if BT owns
+LNA control and BT is in sleep mode when WLAN just resumes from
+sleep mode. If the condition is true, do a BTCOEX_RC_WARM_RESET
+for WLAN to take back the control of shared LNA.
+Now the issue is the BT sleep value read from MCI register is
+overlooked by assigning u32 into u8. Hence the above condition never
+be met so that WLAN used to report beacon losses and frequent
+connection drops.
 
-The current elp timeout (the same as the dynamic
-ps timeout - 1500ms) is too high. Usually,
-wl1271_ps_elp_sleep() get called right after tx/rx,
-which is fine, but some command might get sent
-even when there is no traffic (e.g. ht changes
-triggered by beacon frames), and leaving the
-device awake for 1500ms in this case is redundant.
-
-Use a timeout of 30ms.
-The fw won't enter elp anyway before the dynamic-ps
-timeout was expired as well (and it entered ps
-successfully).
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Luciano Coelho <luca@coelho.fi>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/ps.c |    8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/ps.c b/drivers/net/wireless/ti/wlcore/ps.c
-index e904d68..4d1414a 100644
---- a/drivers/net/wireless/ti/wlcore/ps.c
-+++ b/drivers/net/wireless/ti/wlcore/ps.c
-@@ -28,7 +28,7 @@
- 
- #define WL1271_WAKEUP_TIMEOUT 500
- 
--#define ELP_ENTRY_DELAY  5
-+#define ELP_ENTRY_DELAY  30
- 
- void wl1271_elp_work(struct work_struct *work)
- {
-@@ -98,11 +98,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
- 			return;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index cab2384..d3fae36 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1410,7 +1410,7 @@ void ar9003_mci_set_power_awake(struct ath_hw *ah)
  	}
+ 	REG_WRITE(ah, AR_DIAG_SW, (diag_sw | BIT(27) | BIT(19) | BIT(18)));
+ 	lna_ctrl = REG_READ(ah, AR_OBS_BUS_CTRL) & 0x3;
+-	bt_sleep = REG_READ(ah, AR_MCI_RX_STATUS) & AR_MCI_RX_REMOTE_SLEEP;
++	bt_sleep = MS(REG_READ(ah, AR_MCI_RX_STATUS), AR_MCI_RX_REMOTE_SLEEP);
  
--	if (wl->conf.conn.forced_ps)
--		timeout = ELP_ENTRY_DELAY;
--	else
--		timeout = wl->conf.conn.dynamic_ps_timeout;
--
-+	timeout = ELP_ENTRY_DELAY;
- 	ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
- 				     msecs_to_jiffies(timeout));
- }
+ 	REG_WRITE(ah, AR_BTCOEX_CTRL2, btcoex_ctrl2);
+ 	REG_WRITE(ah, AR_DIAG_SW, diag_sw);
 -- 
-1.7.10.4
+1.7.12.1
 
