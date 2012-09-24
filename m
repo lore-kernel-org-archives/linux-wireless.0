@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36757 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:35821 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756204Ab2IQPRx (ORCPT
+	with ESMTP id S1751454Ab2IXJOe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 11:17:53 -0400
-Message-ID: <1347895109.4975.8.camel@jlt4.sipsolutions.net> (sfid-20120917_171756_999251_8DA9CBAF)
-Subject: Re: [PATCH] cfg80211: fix possible circular lock on
- reg_regdb_search()
+	Mon, 24 Sep 2012 05:14:34 -0400
+Message-ID: <1348478089.10257.3.camel@jlt4.sipsolutions.net> (sfid-20120924_111452_594847_C60521D6)
+Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 17 Sep 2012 17:18:29 +0200
-In-Reply-To: <1347662217-4292-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20120915_003707_554322_87F22985)
-References: <1347662217-4292-1-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20120915_003707_554322_87F22985)
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Marc MERLIN <marc@merlins.org>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	David Rientjes <rientjes@google.com>, sgruszka@redhat.com,
+	linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, Andrew Morton <akpm@osdl.org>,
+	Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org
+Date: Mon, 24 Sep 2012 11:14:49 +0200
+In-Reply-To: <20120924090353.GA5368@mwanda>
+References: <20120909213228.GA5538@elf.ucw.cz>
+	 <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
+	 <20120910111113.GA25159@elf.ucw.cz>
+	 <20120911162536.bd5171a1.akpm@linux-foundation.org>
+	 <1347426988.13103.684.camel@edumazet-glaptop>
+	 <20120912055712.GE11613@merlins.org>
+	 <1347432846.4293.0.camel@jlt4.sipsolutions.net>
+	 <20120924090353.GA5368@mwanda>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-09-14 at 15:36 -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Mon, 2012-09-24 at 12:03 +0300, Dan Carpenter wrote:
+
+> > > > iwl_alloc_ucode() -> iwl_alloc_fw_desc() -> dma_alloc_coherent()
 > 
-> When call_crda() is called we kick off a witch hunt search
-> for the same regulatory domain on our internal regulatory
-> database and that work gets kicked off on a workqueue, this
-> is done while the cfg80211_mutex is held. If that workqueue
-> kicks off it will first lock reg_regdb_search_mutex and
-> later cfg80211_mutex but to ensure two CPUs will not contend
-> against cfg80211_mutex the right thing to do is to have the
-> reg_regdb_search() wait until the cfg80211_mutex is let go.
-> 
-> The lockdep report is pasted below.
+> I'm filing bugzilla entries for regressions.  What's the status on
+> this?
 
-[...]
-
-This looks fine to me,
-
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-
-John, if you think this can still go to wireless.git can you please
-apply it? Otherwise I'll take it into mac80211-next.git.
+It looks like a VM change caused it, but I merged a patch for -next to
+not require such large DMA allocations any more.
 
 johannes
 
