@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45121 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756419Ab2IENxq (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:59212 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006Ab2IXWb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 09:53:46 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Subject: [PATCH] cfg80211: add kerneldoc entry for "vht_cap"
-Date: Wed,  5 Sep 2012 15:54:23 +0200
-Message-Id: <1346853263-17817-1-git-send-email-johannes@sipsolutions.net> (sfid-20120905_155349_779515_4FCDD520)
+	Mon, 24 Sep 2012 18:31:57 -0400
+Date: Mon, 24 Sep 2012 19:31:49 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2012-09-18
+Message-ID: <20120924223149.GB7922@joana> (sfid-20120925_003216_680138_5405F292)
+References: <20120919013113.GG24689@joana>
+ <CAB=NE6XKNSMeS3_uzcGsGBhcm6ZKtJwJ=DdAq_DoWmKTXQvV=Q@mail.gmail.com>
+ <20120924184622.GA7922@joana>
+ <20120924195422.GF32351@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120924195422.GF32351@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+* John W. Linville <linville@tuxdriver.com> [2012-09-24 15:54:22 -0400]:
 
-Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |    1 +
- 1 file changed, 1 insertion(+)
+> On Mon, Sep 24, 2012 at 03:46:22PM -0300, Gustavo Padovan wrote:
+> > * Luis R. Rodriguez <mcgrof@do-not-panic.com> [2012-09-21 18:06:42 -0700]:
+> > 
+> > > On Tue, Sep 18, 2012 at 6:31 PM, Gustavo Padovan <gustavo@padovan.org> wrote:
+> > > 
+> > > > Johan Hedberg (2):
+> > > >       Bluetooth: mgmt: Implement support for passkey notification
+> > > 
+> > > Too late now... but why did we allow this a stable fix? I get its a
+> > > feature that is important and likely overlooked / someone had a brain
+> > > fart, but from what I gather this is not on v3.5.4 and yet may make it
+> > > to v3.5.5. At least for backporting this was a bitch:
+> 
+> <snip>
+> 
+> > Yes, this patch is wrongly marked as stable, it is not even going to 3.5. I'm
+> > just removing the tag from it and resending the pull request to John.
+> 
+> Hmmm...well, I already pulled it, and I just pushed it out.  Can we live with it?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4c518f1..60597cf 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -243,6 +243,7 @@ struct ieee80211_sta_vht_cap {
-  *	rates" IE, i.e. CCK rates first, then OFDM.
-  * @n_bitrates: Number of bitrates in @bitrates
-  * @ht_cap: HT capabilities in this band
-+ * @vht_cap: VHT capabilities in this band
-  */
- struct ieee80211_supported_band {
- 	struct ieee80211_channel *channels;
--- 
-1.7.10.4
+Yes, that would be ok for me.
 
+	Gustavo
