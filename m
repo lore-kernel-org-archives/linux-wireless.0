@@ -1,154 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49178 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756657Ab2IFPEB (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:37508 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755803Ab2IXOkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 11:04:01 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: disconnect if channel switch fails
-Date: Thu,  6 Sep 2012 17:04:37 +0200
-Message-Id: <1346943877-24194-1-git-send-email-johannes@sipsolutions.net> (sfid-20120906_170407_756731_24F5E2E9)
+	Mon, 24 Sep 2012 10:40:37 -0400
+Received: by oago6 with SMTP id o6so5456753oag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2012 07:40:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAEZZmbG78oO5_D3zncanXStYpuf_faoqq6rp3usPpd3_5+tBQA@mail.gmail.com>
+References: <CC53EBAA.16239%sunil2@telenetsystems.com>
+	<503318FD.7070108@qca.qualcomm.com>
+	<CAEZZmbG78oO5_D3zncanXStYpuf_faoqq6rp3usPpd3_5+tBQA@mail.gmail.com>
+Date: Mon, 24 Sep 2012 20:10:36 +0530
+Message-ID: <CAD2nsn3h+_SCG8HBzNT_onAN-Tg2qVDBbYrpTHM8LRFX+Z-wTg@mail.gmail.com> (sfid-20120924_164041_140093_9FEC9583)
+Subject: Re: [ath9k-devel] :
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Ravi Sharma <sharmaravi.lx@gmail.com>
+Cc: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Sunil Mehta <sunil2@telenetsystems.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Mohammed@venema.h4ckr.net,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org,
+	Felix Bitterli <felixb@qca.qualcomm.com>
+Content-Type: multipart/mixed; boundary=f46d04479f7795540504ca739249
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+--f46d04479f7795540504ca739249
+Content-Type: text/plain; charset=ISO-8859-1
 
-Disconnect from the AP if channel switching in the
-driver failed or if the new channel is unavailable.
+On Thu, Sep 20, 2012 at 4:07 PM, Ravi Sharma <sharmaravi.lx@gmail.com> wrote:
+> Hi,
+>
+> I am trying to setup concurrent mode for TL-WL722N (TP-LINK) (ath9k)
+> and upgraded& used the driver with the latest compat release. I am
+> trying to run STA & P2P concurrently with two supplicant. Is this
+> configuration possible?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   55 +++++++++++++++++++++++++++++---------------
- 2 files changed, 38 insertions(+), 18 deletions(-)
+yes.
+please note you goto add vif1 as a virtual STA interface using
+interface add command
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0a983fb..e2ab03c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -411,6 +411,7 @@ struct ieee80211_if_managed {
- 	struct work_struct monitor_work;
- 	struct work_struct chswitch_work;
- 	struct work_struct beacon_connection_loss_work;
-+	struct work_struct csa_connection_drop_work;
- 
- 	unsigned long beacon_timeout;
- 	unsigned long probe_timeout;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5d77650..6e374cb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -730,16 +730,13 @@ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
- 
- 	trace_api_chswitch_done(sdata, success);
- 	if (!success) {
--		/*
--		 * If the channel switch was not successful, stay
--		 * around on the old channel. We currently lack
--		 * good handling of this situation, possibly we
--		 * should just drop the association.
--		 */
--		sdata->local->csa_channel = sdata->local->oper_channel;
-+		sdata_info(sdata,
-+			   "driver channel switch failed, disconnecting\n");
-+		ieee80211_queue_work(&sdata->local->hw,
-+				     &ifmgd->csa_connection_drop_work);
-+	} else {
-+		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
- 	}
--
--	ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
- }
- EXPORT_SYMBOL(ieee80211_chswitch_done);
- 
-@@ -784,8 +781,14 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
--	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED)
-+	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED) {
-+		sdata_info(sdata,
-+			   "AP %pM switches to unsupported channel (%d MHz), disconnecting\n",
-+			   ifmgd->associated->bssid, new_freq);
-+		ieee80211_queue_work(&sdata->local->hw,
-+				     &ifmgd->csa_connection_drop_work);
- 		return;
-+	}
- 
- 	sdata->local->csa_channel = new_ch;
- 
-@@ -1692,7 +1695,8 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_ap_probereq_get);
- 
--static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
-+static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata,
-+				   bool transmit_frame)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_local *local = sdata->local;
-@@ -1704,12 +1708,10 @@ static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
- 		return;
- 	}
- 
--	sdata_info(sdata, "Connection to AP %pM lost\n",
--		   ifmgd->associated->bssid);
--
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
--			       false, frame_buf);
-+			       transmit_frame, frame_buf);
-+	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
- 	mutex_unlock(&ifmgd->mtx);
- 
- 	/*
-@@ -1739,10 +1741,24 @@ static void ieee80211_beacon_connection_loss_work(struct work_struct *work)
- 		rcu_read_unlock();
- 	}
- 
--	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
--		__ieee80211_connection_loss(sdata);
--	else
-+	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR) {
-+		sdata_info(sdata, "Connection to AP %pM lost\n",
-+			   ifmgd->bssid);
-+		__ieee80211_disconnect(sdata, false);
-+	} else {
- 		ieee80211_mgd_probe_ap(sdata, true);
-+	}
-+}
-+
-+static void ieee80211_csa_connection_drop_work(struct work_struct *work)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		container_of(work, struct ieee80211_sub_if_data,
-+			     u.mgd.csa_connection_drop_work);
-+
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+					IEEE80211_QUEUE_STOP_REASON_CSA);
-+	__ieee80211_disconnect(sdata, true);
- }
- 
- void ieee80211_beacon_loss(struct ieee80211_vif *vif)
-@@ -2929,6 +2945,7 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
- 
- 	cancel_work_sync(&ifmgd->monitor_work);
- 	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
-+	cancel_work_sync(&ifmgd->csa_connection_drop_work);
- 	if (del_timer_sync(&ifmgd->timer))
- 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
- 
-@@ -2985,6 +3002,8 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
- 	INIT_WORK(&ifmgd->beacon_connection_loss_work,
- 		  ieee80211_beacon_connection_loss_work);
-+	INIT_WORK(&ifmgd->csa_connection_drop_work,
-+		  ieee80211_csa_connection_drop_work);
- 	INIT_WORK(&ifmgd->request_smps_work, ieee80211_request_smps_work);
- 	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
- 		    (unsigned long) sdata);
+./wpa_supplicant  -i vif1 -c wpa_supplicant/open-con.conf -N  -i wlan1
+   -c ./wpa_supplicant/p2p.conf
+
+http://wireless.kernel.org/en/developers/p2p/howto
+
+PFA
+
+>
+>
+>
+> I am using Ubuntu with kernel 3.2
+
+please use the latest compat, but there are issues with p2p concurrency
+for p2p-go incase the STA scans
+
+>
+> Can you please share the setup you are using to validate the ath9k
+> mac80211 for concurrent mode?
+>
+> Regards,
+> Ravi
+>
+> On Tue, Aug 21, 2012 at 10:43 AM, Mohammed Shafi Shajakhan
+> <mohammed@qca.qualcomm.com> wrote:
+>> Hi,
+>>
+>>
+>> On Friday 17 August 2012 12:42 PM, Sunil Mehta wrote:
+>>>>
+>>>>
+>>>> Hi
+>>>
+>>>
+>>> We are using AR9331 and are currently using the device in - AP mode, and
+>>> Station mode.
+>>>
+>>> We would like to use the device for a P2P application. Can you suggest
+>>> what we need to do.
+>>
+>>
+>> sorry for the delayed reply, i was on leave(did not check any mails!) for
+>> the past 6 days.
+>>
+>> please read this and check this out, if it helps and works for you
+>> http://linuxwireless.org/en/developers/p2p/howto.
+>>
+>> please let me know if there any basic configuration issues.
+>>
+>> technical issues related to p2p are discussed in hostap mailing lists
+>> http://lists.shmoo.com/mailman/listinfo/hostap
+>>
+>>
+>>
+>>>
+>>> Regards,
+>>> Sunil.
+>>>
+>>>
+>>
+>>
+>> --
+>> thanks,
+>> shafi
+>>
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.10.4
+thanks,
+shafi
 
+--f46d04479f7795540504ca739249
+Content-Type: application/octet-stream; name="open-con.conf"
+Content-Disposition: attachment; filename="open-con.conf"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h7honrpr0
+
+Y3RybF9pbnRlcmZhY2U9L3Zhci9ydW4vd3BhX3N1cHBsaWNhbnQKbmV0d29yaz17Cglzc2lkPSJB
+VEg5Sy01RyIKCWtleV9tZ210PU5PTkUKfQoKCg==
+--f46d04479f7795540504ca739249
+Content-Type: application/octet-stream; name="p2p.conf"
+Content-Disposition: attachment; filename="p2p.conf"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h7honz0o1
+
+Y3RybF9pbnRlcmZhY2U9L3Zhci9ydW4vd3BhX3N1cHBsaWNhbnQKYXBfc2Nhbj0xCgpkZXZpY2Vf
+bmFtZT1OYWRhbC1wMnAtZGV2aWNlCmRldmljZV90eXBlPTEtMDA1MEYyMDQtMQoKIyBJZiB5b3Ug
+bmVlZCB0byBtb2RpZnkgdGhlIGdyb3VwIG93bmVyIGludGVudCwgMC0xNSwgdGhlIGhpZ2hlcgoj
+IG51bWJlciBpbmRpY2F0ZXMgcHJlZmVyZW5jZSB0byBiZWNvbWUgdGhlIEdPLiBZb3UgY2FuIGFs
+c28gc2V0CiMgdGhpcyBvbiBwMnBfY29ubmVjdCBjb21tYW5kcy4KI3AycF9nb19pbnRlbnQ9OAoK
+IyBvcHRpb25hbCwgY2FuIGJlIHVzZWZ1bCBmb3IgbW9uaXRvcmluZywgZm9yY2VzCiMgd3BhX3N1
+cHBsaWNhbnQgdG8gdXNlIG9ubHkgY2hhbm5lbCAxIHJhdGhlciB0aGFuCiMgMSwgNiBhbmQgMTE6
+CiNwMnBfbGlzdGVuX3JlZ19jbGFzcz04MQojcDJwX2xpc3Rlbl9jaGFubmVsPTEKI3AycF9vcGVy
+X3JlZ19jbGFzcz04MQojcDJwX29wZXJfY2hhbm5lbD0xCg==
+--f46d04479f7795540504ca739249--
