@@ -1,68 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:59527 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753751Ab2IFWox (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49994 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757663Ab2IXTAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 18:44:53 -0400
-Date: Thu, 6 Sep 2012 19:44:48 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Vitaly Wool <vitaly.wool@sonymobile.com>
-Cc: linux-wireless@vger.kernel.org, vitalywool@gmail.com
-Subject: Re: [PATCH/RFC] rfkill: prevent unnecessary event generation
-Message-ID: <20120906224448.GA16676@khazad-dum.debian.net> (sfid-20120907_004457_578029_798E6462)
-References: <5048ADFC.1010708@sonymobile.com>
+	Mon, 24 Sep 2012 15:00:21 -0400
+Date: Mon, 24 Sep 2012 14:54:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcma: export PLL reading function
+Message-ID: <20120924185442.GE32351@tuxdriver.com> (sfid-20120924_210025_159800_B0E408E6)
+References: <1347483216-2309-1-git-send-email-zajec5@gmail.com>
+ <CACna6ryBiRQF5Xwjb0ysJ6YFnuSZSb5_st2A8eaL3BJ=b-exqA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5048ADFC.1010708@sonymobile.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6ryBiRQF5Xwjb0ysJ6YFnuSZSb5_st2A8eaL3BJ=b-exqA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 06 Sep 2012, Vitaly Wool wrote:
-> Prevent unnecessary rfkill event generation when the state has
-> not actually changed. These events have to be delivered to
-> relevant userspace processes, causing these processes to wake
-> up and do something while they could as well have slept. This
-> obviously results in more CPU usage, longer time-to-sleep-again
-> and therefore higher power consumption.
+On Fri, Sep 21, 2012 at 10:27:51AM +0200, Rafał Miłecki wrote:
+> 2012/9/12 Rafał Miłecki <zajec5@gmail.com>:
+> > This is required by NAND flash driver for initializing wait counters.
+> 
+> John: have you take a look at this patch? Can you take it or would you
+> prefer it to be submitted together with NAND driver (using different
+> than wireless tree)?
 
-Could this supress the first event when a switch is registered? Would that
-be a concern?
+I think you should just send it as part of a series with the driver
+that makes use of it.
 
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index 752b723..520617c 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -256,6 +256,7 @@ static bool __rfkill_set_hw_state(struct rfkill *rfkill,
->  static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
->  {
->  	unsigned long flags;
-> +	bool prev, curr;
->  	int err;
->  	if (unlikely(rfkill->dev.power.power_state.event & PM_EVENT_SLEEP))
-> @@ -270,6 +271,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
->  		rfkill->ops->query(rfkill, rfkill->data);
->  	spin_lock_irqsave(&rfkill->lock, flags);
-> +	prev = rfkill->state & RFKILL_BLOCK_SW;
-> +
->  	if (rfkill->state & RFKILL_BLOCK_SW)
->  		rfkill->state |= RFKILL_BLOCK_SW_PREV;
->  	else
-> @@ -299,10 +302,13 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
->  	}
->  	rfkill->state &= ~RFKILL_BLOCK_SW_SETCALL;
->  	rfkill->state &= ~RFKILL_BLOCK_SW_PREV;
-> +	curr = rfkill->state & RFKILL_BLOCK_SW;
->  	spin_unlock_irqrestore(&rfkill->lock, flags);
->  	rfkill_led_trigger_event(rfkill);
-> -	rfkill_event(rfkill);
-> +
-> +	if (prev != curr)
-> +		rfkill_event(rfkill);
->  }
->  #ifdef CONFIG_RFKILL_INPUT
+Thanks,
 
+John
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
