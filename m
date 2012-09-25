@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:57718 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755239Ab2ITNad (ORCPT
+Received: from mail-wg0-f74.google.com ([74.125.82.74]:34018 "EHLO
+	mail-wg0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757362Ab2IZQ7z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 09:30:33 -0400
-Message-ID: <1348147820.13371.2.camel@aeonflux> (sfid-20120920_153050_677642_82C32DFB)
-Subject: Re: Agenda (v2) for Linux Wireless (802.11/Bluetooth/NFC)
- Mini-Summit 2012 (Barcelona!)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com
-Date: Thu, 20 Sep 2012 15:30:20 +0200
-In-Reply-To: <20120911201729.GJ7015@tuxdriver.com>
-References: <20120911201729.GJ7015@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 26 Sep 2012 12:59:55 -0400
+Received: by wgbdt11 with SMTP id dt11so66992wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 09:59:54 -0700 (PDT)
+From: Sam Leffler <sleffler@chromium.org>
+Date: Tue, 25 Sep 2012 15:49:23 -0700
+Subject: [PATCH 0/3] add scan flags support
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20120926165952.766801E10D3@sleffler.sfo.corp.google.com> (sfid-20120926_190007_974806_542DE774)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+These add per-scan request controls for optional behaviours we've found
+useful (they've been in Chrome OS for a long time).  A patch for iw will
+follow separately and the mods for wpa_supplicant are in our repo and
+I'll push them to Jouni if these are accepted.
 
-> OK, making progress...still, we need some more discussion topics...
-> 
-> We have one room on the first day, and three rooms on the second day.
-> I figure that the Bluetooth and 802.11 groups should each get a
-> break-out room for their own in-depth discussons on the second day and
-> the third room can be used for more general topics and presentations.
-> 
-> Below is my strawman agenda proposal.  Please make suggestions for
-> improvements!
+Sam Leffler (3):
+  {nl,cfg}80211: add a flags word to scan requests
+  mac80211: add support for tx to abort scan requests
+  cfg80211: add support for flushing old scan results
 
-I think this looks pretty good. Lets see if we can find some volunteers
-for the empty slots. Should be make sure that this schedule so far gets
-published on the LinuxCon website?
+ include/linux/nl80211.h    |   19 +++++++++++++++++++
+ include/net/cfg80211.h     |   17 +++++++++++++++++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/scan.c        |   19 ++++++++++++++++---
+ net/wireless/nl80211.c     |   12 ++++++++++++
+ net/wireless/scan.c        |   24 +++++++++++++++++++++---
+ net/wireless/sme.c         |    1 +
+ 7 files changed, 88 insertions(+), 6 deletions(-)
 
-Regards
-
-Marcel
-
+-- 
+1.7.7.3
 
