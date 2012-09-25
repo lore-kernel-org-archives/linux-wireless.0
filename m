@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:63162 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129Ab2ITPSU (ORCPT
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:13341
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754371Ab2IYJtk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 11:18:20 -0400
-Received: by bkuw11 with SMTP id w11so291283bku.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2012 08:18:18 -0700 (PDT)
-Subject: Re: regression: tethering fails in 3.5 with iwlwifi
-From: Eric Dumazet <eric.dumazet@gmail.com>
+	Tue, 25 Sep 2012 05:49:40 -0400
+Message-ID: <50617E2C.6050000@posedge.com> (sfid-20120925_114944_100508_F8B45EC9)
+Date: Tue, 25 Sep 2012 15:19:32 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: artem.bityutskiy@linux.intel.com,
-	Eric Dumazet <edumazet@google.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1348153522.4161.37.camel@jlt4.sipsolutions.net>
-References: <1347361823.26457.3.camel@sauron.fi.intel.com>
-	 <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
-	 <1347631355.5263.19.camel@sauron.fi.intel.com>
-	 <1347640763.5263.24.camel@sauron.fi.intel.com>
-	 <1347892887.7112.9.camel@sauron.fi.intel.com>
-	 <1348142775.2388.10.camel@sauron.fi.intel.com>
-	 <1348144524.4161.26.camel@jlt4.sipsolutions.net>
-	 <CANn89iJkXrZPB14KU8xA-Dn8_n=H3J4-R60BTZFV+STF9_ASdA@mail.gmail.com>
-	 <CANn89iKStHAwVZtpgQMzEpByGYG2FKpjSQsJFT-9qQmjw+KJ8g@mail.gmail.com>
-	 <1348145936.2388.18.camel@sauron.fi.intel.com>
-	 <CANn89i+9Th=xVgDgoy7tHwKtLNpOC8rgJkA09nQ1Yf0zvqBw6w@mail.gmail.com>
-	 <1348147353.2388.19.camel@sauron.fi.intel.com>
-	 <1348151149.31352.109.camel@edumazet-glaptop>
-	 <1348151876.2388.24.camel@sauron.fi.intel.com>
-	 <1348152971.31352.140.camel@edumazet-glaptop>
-	 (sfid-20120920_165616_301862_3EBAF30C)  <1348153522.4161.37.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Sep 2012 17:18:14 +0200
-Message-ID: <1348154294.31352.165.camel@edumazet-glaptop> (sfid-20120920_171822_897291_7C5CD517)
-Mime-Version: 1.0
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>  <1348477154.10257.2.camel@jlt4.sipsolutions.net>  <50614089.6020105@posedge.com> <1348557902.10041.17.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1348557902.10041.17.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-20 at 17:05 +0200, Johannes Berg wrote:
-> On Thu, 2012-09-20 at 16:56 +0200, Eric Dumazet wrote:
-> > On Thu, 2012-09-20 at 17:37 +0300, Artem Bityutskiy wrote:
-> > > On Thu, 2012-09-20 at 16:25 +0200, Eric Dumazet wrote:
-> > > > Please remove this hack and try the following bugfix in raw handler
-> > > > 
-> > > > icmp_filter() should not modify skb, or else its caller should not
-> > > > assume ip_hdr() is unchanged.
-> > > 
-> > > Did not help :(
-> > > 
-> > 
-> > What gives (after some failures)
-> > 
-> > cat /proc/net/raw
-> 
-> Note I think the failing packets are dhcp packets, and connman seems to
-> use an AF_INET, SOCK_DGRAM, IPPROTO_UDP socket for those, and binds it
-> to the right device. I'd be quite surprised though if UDP code had
-> issues with paged Rx??
-> 
+On 09/25/2012 12:55 PM, Johannes Berg wrote:
+>>
+>>           vht_cap->cap = le16_to_cpu(vht_cap_ie->vht_cap_info) &
+>>                   (sband->ht_cap.cap |
+>
+> err, vht_cap
+
+Sorry, I meant vht_cap only. Typo..
+
+>
+>>                    ~(IEEE80211_VHT_CAP_RXLDPC |
+>>                      IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
+>>                      IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE |
+>>                      IEEE80211_VHT_CAP_HTC_VHT));
+>
+> I don't think that can be right. It seems to me it should be something
+> like
+>
+> cap = cap_info & sband->vht_cap.cap &
+> 	(MAX_MPDU_LENGTH_... |
+> 	 SHORT_GI_... | HTC_VHT | ... ? )
+>
+> if (cap_info & SU_BEAMFORMEE_CAPABLE &&
+>      sband->vht_cap.cap & SU_BEAMFORMER_CAPABLE)
+> 	cap |= SU_BEAMFORMEE_CAPABLE;
+>
+> etc.?
+>
+> OTOH, this would only matter to drivers that actually support all these
+> features, and those drivers could take care of not enabling the features
+> if their hardware doesn't support them. However, think of a driver that
+> is for different hardware, some that supports beamforming and some that
+> doesn't. Then if we mask out the beamforming capability of a station if
+> it's not locally supported, that driver could be simpler? Then again, if
+> we don't the driver just has to check if the hardware supports it, which
+> seems reasonable as well.
+>
+> Do you understand the issue?
+>
+
+why should we mask out remote STA caps bits. Our local hw caps are in 
+sband->sta.vht_caps. remote caps sta_info->sta.vht_caps. In what way 
+drivers are connected with remote STA vht caps bits.
+
+> So maybe if you document it right, your original v2 patch is sufficient.
+> Convince me :)
+>
 > johannes
-> 
-
-You told me : socket(PF_PACKET, SOCK_RAW, htons(ETH_P_EAPOL))
-
-So I looked at raw code.
-
-
-
-
+>
