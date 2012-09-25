@@ -1,63 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:56779 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751235Ab2I1JIw convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40862 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab2IYOIh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 05:08:52 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 24597-05 for <linux-wireless@vger.kernel.org>;
- Fri, 28 Sep 2012 10:08:48 +0100 (BST)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Subject: RE: [PATCH] rtlwifi: use %*ph[C] to dump small buffers
-Date: Fri, 28 Sep 2012 10:04:41 +0100
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B700D@saturn3.aculab.com> (sfid-20120928_110857_756066_02E13600)
-In-Reply-To: <1348802023.3030.11.camel@joe-AO722>
-References: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com> <1348677946.15175.8.camel@joe-AO722> <5064D318.6090705@lwfinger.net> <1348802023.3030.11.camel@joe-AO722>
-From: "David Laight" <David.Laight@ACULAB.COM>
-To: "Joe Perches" <joe@perches.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Cc: "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
-	"Chaoming Li" <chaoming_li@realsil.com.cn>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+	Tue, 25 Sep 2012 10:08:37 -0400
+Message-ID: <1348582152.10041.36.camel@jlt4.sipsolutions.net> (sfid-20120925_160841_662058_C8D1B121)
+Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Tue, 25 Sep 2012 16:09:12 +0200
+In-Reply-To: <50617E2C.6050000@posedge.com>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>
+	  <1348477154.10257.2.camel@jlt4.sipsolutions.net>
+	  <50614089.6020105@posedge.com>
+	 <1348557902.10041.17.camel@jlt4.sipsolutions.net>
+	 <50617E2C.6050000@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> > ===================================================================
-> > --- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> > +++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> > @@ -1964,8 +1965,9 @@ static void rtl92ce_update_hal_rate_mask
+On Tue, 2012-09-25 at 15:19 +0530, Mahesh Palivela wrote:
+
+> > OTOH, this would only matter to drivers that actually support all these
+> > features, and those drivers could take care of not enabling the features
+> > if their hardware doesn't support them. However, think of a driver that
+> > is for different hardware, some that supports beamforming and some that
+> > doesn't. Then if we mask out the beamforming capability of a station if
+> > it's not locally supported, that driver could be simpler? Then again, if
+> > we don't the driver just has to check if the hardware supports it, which
+> > seems reasonable as well.
 > >
-> >          RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
-> >                   "ratr_bitmap :%x\n", ratr_bitmap);
-> > -       *(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
-> > -                                    (ratr_index << 28);
-> > +       for (i = 0; i < 3; i++)
-> > +               rate_mask[i] = ratr_bitmap & (0xff << (i * 4));
+> > Do you understand the issue?
+> >
 > 
-> rate_mask is u8, doesn't this needs (calc) >> (i * 8)
-> 
-> > +       rate_mask[3] = (ratr_bitmap & 0x0f000000) | (ratr_index << 28);
-> 
-> Perhaps you meant:
-> 
-> 		((ratr_bitmap & 0x0f000000) >> 24) | (ratr_index << 4)
+> why should we mask out remote STA caps bits. Our local hw caps are in 
+> sband->sta.vht_caps. remote caps sta_info->sta.vht_caps. In what way 
+> drivers are connected with remote STA vht caps bits.
 
-I'd just do:
-	rate_mask[0] = ratr_bitmap;
-	rate_mask[1] = ratr_bitmap >>= 8;
-	rate_mask[2] = ratr_bitmap >>= 8;
-	rate_mask[3] = (ratr_bitmap >> 8) & 0xf | ratr_index << 4;
-which is, of course, little endian.
-Which means it is different from the original code on big-endian systems.
-So changing this here ought to require a change when the data is read.
-So this either fixes, or adds, an endianness bug.
+Well imagine you have a driver for some hardware that can do
+beamforming, and the same driver can also work with hardware that
+doesn't. If we restrict remote caps, like we do for HT, the driver
+doesn't have to worry about this but can just do whatever the remote
+caps say is possible. If we don't restrict it, the driver has to also
+check its own caps.
 
-	David
+We can do this, and I suspect it will be simpler, but it needs to be
+*very clearly* documented since VHT will then be different from HT.
 
-
+johannes
 
