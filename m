@@ -1,89 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3865 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751730Ab2ISUVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 16:21:44 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/13] brcmfmac: fix debug printout of event data.
-Date: Wed, 19 Sep 2012 22:21:09 +0200
-Message-ID: <1348086078-19183-5-git-send-email-arend@broadcom.com> (sfid-20120919_222157_604560_EFDE67CB)
-In-Reply-To: <1348086078-19183-1-git-send-email-arend@broadcom.com>
-References: <1348086078-19183-1-git-send-email-arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58526 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754055Ab2IYNlc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2012 09:41:32 -0400
+Date: Tue, 25 Sep 2012 19:10:57 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath9k: Enable MCI for AR9565
+Message-ID: <20120925134055.GA3981@vmraj-lnx.qca.qualcomm.com> (sfid-20120925_154136_751844_125456F7)
+References: <1348573983-5710-1-git-send-email-bkamatch@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1348573983-5710-1-git-send-email-bkamatch@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Tue, Sep 25, 2012 at 05:23:03PM +0530, Bala Shanmugam wrote:
+> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/btcoex.c |   19 +++++++++++++++----
+>  drivers/net/wireless/ath/ath9k/gpio.c   |    2 +-
+>  drivers/net/wireless/ath/ath9k/wow.c    |    2 +-
+>  3 files changed, 17 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+> index acd4373..88c4927 100644
+> --- a/drivers/net/wireless/ath/ath9k/btcoex.c
+> +++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+> @@ -51,6 +51,14 @@ static const u32 ar9462_wlan_weights[ATH_BTCOEX_STOMP_MAX]
+>  	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
+>  };
+>  
+> +static const u32 ar9565_wlan_weights[ATH_BTCOEX_STOMP_MAX]
+> +				    [AR9300_NUM_WLAN_WEIGHTS] = {
+> +	{ 0x01017d01, 0x7d7d7d01, 0x7d7d7d01, 0x7d7d7d7d }, /* STOMP_ALL */
+> +	{ 0x01017d01, 0x3b3b3b01, 0x3b3b3b01, 0x3b3b3b3b }, /* STOMP_LOW */
+> +	{ 0x01017d01, 0x01010101, 0x01010101, 0x01010101 }, /* STOMP_NONE */
+> +	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
+> +};
+> +
+Can you please confirm STOMP_ALL weights are correct? I assume you are
+using STOMP_ALL_FORCE weights which we don't support. I think we
+can reuse 9462 weight table.
 
-Some events result in printing of the buffer when debug is
-enabled. This printing was not very efficient. Changed to
-macro so it comes out nice and clean without filling log buffer.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   13 ++++---------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |    2 ++
- 2 files changed, 6 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index 6afb26c..aa4f719 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -433,13 +433,7 @@ brcmf_c_show_host_event(struct brcmf_event_msg *event, void *event_data)
- 	}
- 
- 	/* show any appended data */
--	if (datalen) {
--		buf = (unsigned char *) event_data;
--		brcmf_dbg(EVENT, " data (%d) : ", datalen);
--		for (i = 0; i < datalen; i++)
--			brcmf_dbg(EVENT, " 0x%02x ", *buf++);
--		brcmf_dbg(EVENT, "\n");
--	}
-+	brcmf_dbg_hex_dump(datalen, event_data, datalen, "Received data");
- }
- #endif				/* DEBUG */
- 
-@@ -530,8 +524,9 @@ brcmf_c_host_event(struct brcmf_pub *drvr, int *ifidx, void *pktdata,
- 	}
- 
- #ifdef DEBUG
--	brcmf_c_show_host_event(event, event_data);
--#endif				/* DEBUG */
-+	if (BRCMF_EVENT_ON())
-+		brcmf_c_show_host_event(event, event_data);
-+#endif /* DEBUG */
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-index b784920..fb508c2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-@@ -55,6 +55,7 @@ do {									\
- #define BRCMF_HDRS_ON()		(brcmf_msg_level & BRCMF_HDRS_VAL)
- #define BRCMF_BYTES_ON()	(brcmf_msg_level & BRCMF_BYTES_VAL)
- #define BRCMF_GLOM_ON()		(brcmf_msg_level & BRCMF_GLOM_VAL)
-+#define BRCMF_EVENT_ON()	(brcmf_msg_level & BRCMF_EVENT_VAL)
- 
- #else	/* (defined DEBUG) || (defined DEBUG) */
- 
-@@ -65,6 +66,7 @@ do {									\
- #define BRCMF_HDRS_ON()		0
- #define BRCMF_BYTES_ON()	0
- #define BRCMF_GLOM_ON()		0
-+#define BRCMF_EVENT_ON()	0
- 
- #endif				/* defined(DEBUG) */
- 
--- 
-1.7.9.5
-
-
+-Rajkumar
+>  void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
+>  {
+>  	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+> @@ -282,7 +290,7 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
+>  		ath9k_hw_btcoex_enable_2wire(ah);
+>  		break;
+>  	case ATH_BTCOEX_CFG_3WIRE:
+> -		if (AR_SREV_9462(ah)) {
+> +		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+>  			ath9k_hw_btcoex_enable_mci(ah);
+>  			return;
+>  		}
+> @@ -304,7 +312,7 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
+>  	int i;
+>  
+>  	btcoex_hw->enabled = false;
+> -	if (AR_SREV_9462(ah)) {
+> +	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+>  		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
+>  		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
+>  			REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
+> @@ -339,11 +347,14 @@ static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
+>  	const u32 *weight = ar9003_wlan_weights[stomp_type];
+>  	int i;
+>  
+> -	if (AR_SREV_9462(ah)) {
+> +	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+>  		if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
+>  		    btcoex->mci.stomp_ftp)
+>  			stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
+> -		weight = ar9462_wlan_weights[stomp_type];
+> +		if (AR_SREV_9565(ah))
+> +			weight = ar9565_wlan_weights[stomp_type];
+> +		else
+> +			weight = ar9462_wlan_weights[stomp_type];
+>  	}
+>  
+>  	for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
+> diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+> index 45f2422..83a204d 100644
+> --- a/drivers/net/wireless/ath/ath9k/gpio.c
+> +++ b/drivers/net/wireless/ath/ath9k/gpio.c
+> @@ -402,7 +402,7 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
+>  		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
+>  			ath9k_btcoex_timer_pause(sc);
+>  		ath9k_hw_btcoex_disable(ah);
+> -		if (AR_SREV_9462(ah))
+> +		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+>  			ath_mci_flush_profile(&sc->btcoex.mci);
+>  	}
+>  }
+> diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+> index 44a08eb..a483d51 100644
+> --- a/drivers/net/wireless/ath/ath9k/wow.c
+> +++ b/drivers/net/wireless/ath/ath9k/wow.c
+> @@ -497,7 +497,7 @@ void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
+>  
+>  	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
+>  
+> -	if (AR_SREV_9462(ah)) {
+> +	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+>  		/*
+>  		 * this is needed to prevent the chip waking up
+>  		 * the host within 3-4 seconds with certain
+> -- 
+> 1.7.4.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
