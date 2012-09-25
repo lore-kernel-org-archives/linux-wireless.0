@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:33327 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487Ab2IHBxp (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:39346 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751521Ab2IYS3Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 21:53:45 -0400
-Received: by mail-qc0-f174.google.com with SMTP id o28so128834qcr.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 18:53:45 -0700 (PDT)
+	Tue, 25 Sep 2012 14:29:24 -0400
+Received: by pbbrr4 with SMTP id rr4so540368pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2012 11:29:24 -0700 (PDT)
 MIME-Version: 1.0
-Date: Sat, 8 Sep 2012 09:53:45 +0800
-Message-ID: <CAPgLHd_gF6X91JPGZK0f7vhSAK+d74YfbcvPn+givzMr=44+Sw@mail.gmail.com> (sfid-20120908_035349_259647_2748BF1B)
-Subject: [PATCH v2] NFC: pn544_hci: move the dereference below the NULL test
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A3190138FB68@sbs2003.acksys.local>
+References: <773DB8A82AB6A046AE0195C68612A3190138FB68@sbs2003.acksys.local>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 25 Sep 2012 11:29:04 -0700
+Message-ID: <CAG6hwVOXXBTyrixToYaFnpiq_WUhSt7uLyHRL=WqQHUdpg4G_g@mail.gmail.com> (sfid-20120925_202928_405780_DFE277D0)
+Subject: Re: Unexpected periodical Wi-Fi speed drop
+To: Cedric Debarge <cedric.debarge@acksys.fr>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Hi Cedric,
 
-The dereference should be moved below the NULL test.
+On Mon, Sep 24, 2012 at 5:57 AM, Cedric Debarge
+<cedric.debarge@acksys.fr> wrote:
+>>I am encountering a periodic (each 1 second) Wi-Fi transmission speed drop (from 54Mbps to 6Mbps) during an iperf between two mesh portals.
+>>The speed stays stuck to 6Mbps during about 300ms and then recovers its 54Mbps rate. About 1 second later this happen again.
 
-spatch with a semantic match is used to found this.
-(http://coccinelle.lip6.fr/)
+This looks like a regression we had where peer rates were
+re-initialized on each beacon and was fixed in
+bae35d92b6a1b6fd8c699415ab90aeeea2a56bc3 "mac80211: don't re-init rate
+control when receiving mesh beacon". You should be able to find this
+fix in compat-wireless since 8/23.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/nfc/pn544_hci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
-index aa71807..7b20f2d 100644
---- a/drivers/nfc/pn544_hci.c
-+++ b/drivers/nfc/pn544_hci.c
-@@ -341,13 +341,14 @@ flush:
- static irqreturn_t pn544_hci_irq_thread_fn(int irq, void *dev_id)
- {
- 	struct pn544_hci_info *info = dev_id;
--	struct i2c_client *client = info->i2c_dev;
-+	struct i2c_client *client;
- 	struct sk_buff *skb = NULL;
- 	int r;
- 
- 	BUG_ON(!info);
- 	BUG_ON(irq != info->i2c_dev->irq);
- 
-+	client = info->i2c_dev;
- 	dev_dbg(&client->dev, "IRQ\n");
- 
- 	if (info->hard_fault != 0)
-
-
+Thomas
