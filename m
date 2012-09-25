@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42756 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341Ab2I2OW4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18932 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751148Ab2IYQzX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 10:22:56 -0400
-Received: by pbbrr4 with SMTP id rr4so6255438pbb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Sep 2012 07:22:55 -0700 (PDT)
+	Tue, 25 Sep 2012 12:55:23 -0400
+Date: Tue, 25 Sep 2012 09:56:30 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] cfg80211: Fix regulatory check for 60GHz band
+ frequencies
+Message-ID: <20120925165630.GG3354@lenteja.do-not-panic.com> (sfid-20120925_185604_701460_7B194E91)
+References: <1348386594-6067-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1348386594-6067-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1348558107.10041.19.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <20120929093118.GA3022@ritirata.org>
-References: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com>
-	<20581.2614.43943.601901@gargle.gargle.HOWL>
-	<50652E56.10303@qca.qualcomm.com>
-	<20581.32544.134606.56158@gargle.gargle.HOWL>
-	<20120929093118.GA3022@ritirata.org>
-Date: Sat, 29 Sep 2012 07:22:55 -0700
-Message-ID: <CAJ-Vmo=DumyyrJ-GEwLryYZgeyb0_SgM7mkfvG_hLgwvPsK3qg@mail.gmail.com> (sfid-20120929_162332_048033_00F73A0A)
-Subject: Re: [RFC 1/2] ath9k_htc: Advertize allowed vif combinations
-From: Adrian Chadd <adrian@freebsd.org>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: Sujith Manoharan <c_manoha@qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1348558107.10041.19.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 September 2012 02:31, Antonio Quartulli <ordex@autistici.org> wrote:
-> On Fri, Sep 28, 2012 at 04:12:40 +0530, Sujith Manoharan wrote:
->> Mohammed Shafi Shajakhan wrote:
->> > oh yeah, you are saying that we will have some issues with IBSS
->> > coexistence with other modes because of TSF sync.
->>
->> Yes, this is a problem.
->
-> Is there anyway to overcome this problem? Can we bind the single TSF to multiple
-> virtualTSF? or must the device somehow support us?
+On Tue, Sep 25, 2012 at 09:28:27AM +0200, Johannes Berg wrote:
+> On Sun, 2012-09-23 at 09:49 +0200, Vladimir Kondratiev wrote:
+> > Without a fix for this even though channels 1-3 are allowed world
+> > wide on the rule (57240 - 63720 @ 2160), channel 2 at 60480 MHz
+> > will end up getting disabled given that it is 3240 MHz from
+> > both the frequency rule start and end frequency. Fix this by
+> > using 2 GHz separation assumption for the 2.4 and 5 GHz bands
+> > but for 60 GHz use a 10 GHz separation before assuming a rule
+> > is not part of the band.
+> 
+> Luis, given that you think the regulatory code in the kernel is 802.11
+> specific, why are we inferring these rules from the frequencies rather
+> than using the 802.11 specific information about the band that it
+> represents? :-D
 
-Just total conjecture here, but the problem with TSF mangaement and
-multiple VIFs will likely show up the most when you start doing NIC
-power save operation.
+Its a good point freq_reg_info() is at the crux of where we do are still
+agnostic to 802.11. To make this 802.11 specific and easier to read I
+suspect we can require passing the chan struct and then we'd use a switch
+statement for the band.
 
-ISTR there's something which causes the NIC to not queue TX frames
-around the beacon interval, to let the AP TX. That will likely be
-based on around TSF sync.
-
-So sure, you could implement some form of software TSF but it won't
-help for the MAC supported stuff like beacon TX and power save / sleep
-state handling.
-
-
-
-Adrian
+  Luis
