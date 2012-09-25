@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41697 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39619 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932361Ab2IDQSI (ORCPT
+	with ESMTP id S1751768Ab2IYHY0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 12:18:08 -0400
-Message-ID: <1346775525.3737.36.camel@jlt4.sipsolutions.net> (sfid-20120904_181813_056853_2E1FE277)
-Subject: Re: mac80211: support P2P Device abstraction
+	Tue, 25 Sep 2012 03:24:26 -0400
+Message-ID: <1348557902.10041.17.camel@jlt4.sipsolutions.net> (sfid-20120925_092429_866697_BFA99606)
+Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 04 Sep 2012 18:18:45 +0200
-In-Reply-To: <20120904161319.GA11494@elgon.mountain> (sfid-20120904_181334_957253_117FCC5D)
-References: <20120904161319.GA11494@elgon.mountain>
-	 (sfid-20120904_181334_957253_117FCC5D)
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Tue, 25 Sep 2012 09:25:02 +0200
+In-Reply-To: <50614089.6020105@posedge.com>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>
+	 <1348477154.10257.2.camel@jlt4.sipsolutions.net>
+	 <50614089.6020105@posedge.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On Tue, 2012-09-25 at 10:56 +0530, Mahesh Palivela wrote:
 
-> The patch f142c6b906da: "mac80211: support P2P Device abstraction" 
-> from Jun 18, 2012, leads to the following Smatch complaint:
+> > Well I think it'd be better to actually restrict/copy/update the feature
+> > bits correctly, this would simplify drivers.
 > 
-> net/mac80211/iface.c:1168 ieee80211_setup_sdata()
-> 	 error: we previously assumed 'sdata->dev' could be null (see line 1134)
+> I am not sure on what bits to be masked. wanted to keep it as future item.
+> Anyways I attempted few bits below. Let me know if they are ok...
 > 
-> net/mac80211/iface.c
->   1133		/* only monitor/p2p-device differ */
->   1134		if (sdata->dev) {
->                     ^^^^^^^^^^
-> New test.
-> 
->   1135			sdata->dev->netdev_ops = &ieee80211_dataif_ops;
->   1136			sdata->dev->type = ARPHRD_ETHER;
->   1137		}
-> 
-> [snip]
-> 
->   1167		case NL80211_IFTYPE_MONITOR:
->   1168			sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
->                         ^^^^^^^^^^^^
-> Old dereference.
+>          vht_cap->cap = le16_to_cpu(vht_cap_ie->vht_cap_info) &
+>                  (sband->ht_cap.cap |
 
-Thanks. I'm aware of the warning (I run smatch), but sdata->dev can only
-be NULL in "case NL80211_IFTYPE_P2P_DEVICE", so adding an extra check in
-the monitor case didn't seem worthwhile.
+err, vht_cap
 
-It might have been better to use sdata->vif.type != P2P_DEVICE in the
-new test I guess, but then it wouldn't be extensible to new interface
-types like Bluetooth AMP.
+>                   ~(IEEE80211_VHT_CAP_RXLDPC |
+>                     IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
+>                     IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE |
+>                     IEEE80211_VHT_CAP_HTC_VHT));
+
+I don't think that can be right. It seems to me it should be something
+like
+
+cap = cap_info & sband->vht_cap.cap &
+	(MAX_MPDU_LENGTH_... |
+	 SHORT_GI_... | HTC_VHT | ... ? )
+
+if (cap_info & SU_BEAMFORMEE_CAPABLE &&
+    sband->vht_cap.cap & SU_BEAMFORMER_CAPABLE)
+	cap |= SU_BEAMFORMEE_CAPABLE;
+
+etc.?
+
+OTOH, this would only matter to drivers that actually support all these
+features, and those drivers could take care of not enabling the features
+if their hardware doesn't support them. However, think of a driver that
+is for different hardware, some that supports beamforming and some that
+doesn't. Then if we mask out the beamforming capability of a station if
+it's not locally supported, that driver could be simpler? Then again, if
+we don't the driver just has to check if the hardware supports it, which
+seems reasonable as well.
+
+Do you understand the issue?
+
+So maybe if you document it right, your original v2 patch is sufficient.
+Convince me :)
 
 johannes
 
