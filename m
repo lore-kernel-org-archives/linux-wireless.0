@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tee.schottelius.org ([77.109.138.222]:44564 "EHLO
-	mx3.schottelius.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752505Ab2IZHmM (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42450 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754277Ab2IYQDG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 03:42:12 -0400
-Date: Wed, 26 Sep 2012 08:06:53 +0200
-From: Nico Schottelius <nico-kernel20120920@schottelius.org>
-To: David Rientjes <rientjes@google.com>
-Cc: Nico Schottelius <nico-kernel20120920@schottelius.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dave Kleikamp <shaggy@kernel.org>,
-	jfs-discussion@lists.sourceforge.net
-Subject: Re: Out of memory on 3.5 kernels
-Message-ID: <20120926060653.GD16575@schottelius.org> (sfid-20120926_094241_536344_E843CBC7)
-References: <505B1FA0.6030100@broadcom.com>
- <20120921194931.GA732@schottelius.org>
- <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com>
+	Tue, 25 Sep 2012 12:03:06 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Thomas Wagner <Thomas.Wagner@hs-rm.de>,
+	Javier Cardona <javier@cozybit.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Fix rx filtering issue for older chips
+Date: Tue, 25 Sep 2012 21:32:55 +0530
+Message-ID: <1348588975-7374-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120925_180311_099059_44FD187F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Thomas Wagner <Thomas.Wagner@hs-rm.de>
 
+We need to have the promiscuous mode enabled for older
+chipsets so that the olderchips hardware does not
+filters out some valid/necessary frames that need
+to be sent to mac80211. Fix this by enabling promiscus
+mode for all the chipsets whose macversion <= AR9160
+chipsets. This should fix
+https://bugzilla.kernel.org/show_bug.cgi?id=45591
 
-David Rientjes [Mon, Sep 24, 2012 at 03:43:27PM -0700]:
->  [...]
-> 
-> And those objects are consuming ~2.3GB of slab on your 4GB machine and 
-> seems to only have occurred between v3.4.2 to v3.5.3.
-> 
-> It would be interesting to see what kmemleak would tell us.
+shafi: made the fix generic by having the frame filtering
+disabled for chipsets older than AR9280.
 
-As the Archlinux kernel does not support kmemleak:
+Cc: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Thomas Wagner <Thomas.Wagner@hs-rm.de>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-[8:04] brief:android-apk% zgrep -i meml /proc/config.gz                
-CONFIG_INPUT_FF_MEMLESS=m
-# CONFIG_DEBUG_KMEMLEAK is not set
-
-I'll give the latest kernel tree from Linus a try this evening and if it
-is in there. If not, I'll go back to 3.5.4 in Linus tree and try again.
-
-Cheers,
-
-Nico
-
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 9b2a8cc..a04028b 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -424,8 +424,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
+ 
+ 	if (sc->nvifs > 1 || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
+-		/* The following may also be needed for other older chips */
+-		if (sc->sc_ah->hw_version.macVersion == AR_SREV_VERSION_9160)
++		/* This is needed for older chips */
++		if (sc->sc_ah->hw_version.macVersion <= AR_SREV_VERSION_9160)
+ 			rfilt |= ATH9K_RX_FILTER_PROM;
+ 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+ 	}
 -- 
-PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
+1.7.0.4
+
