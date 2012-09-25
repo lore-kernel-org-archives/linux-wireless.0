@@ -1,127 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3067 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751679Ab2ISUVi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 16:21:38 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/13] brcmfmac: extend brcmf_term_iscan() to abort
- e-scan
-Date: Wed, 19 Sep 2012 22:21:07 +0200
-Message-ID: <1348086078-19183-3-git-send-email-arend@broadcom.com> (sfid-20120919_222143_277151_4A793854)
-In-Reply-To: <1348086078-19183-1-git-send-email-arend@broadcom.com>
-References: <1348086078-19183-1-git-send-email-arend@broadcom.com>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:41996 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754184Ab2IYTds (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2012 15:33:48 -0400
+Received: by oagh16 with SMTP id h16so652141oag.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2012 12:33:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1348511419-11881-1-git-send-email-linville@tuxdriver.com>
+References: <1348511419-11881-1-git-send-email-linville@tuxdriver.com>
+Date: Tue, 25 Sep 2012 22:33:47 +0300
+Message-ID: <CAFtRNNzCFHe43iCn7G9h-4tjGhWCPpG3ProXnM-zdiDt8h4M2g@mail.gmail.com> (sfid-20120925_213411_025448_2BB68F7D)
+Subject: Re: [PATCH] ath5k: add missing breaks in ath5k_hw_set_spur_mitigation_filter
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	David Binderman <dcb314@hotmail.com>, me@bobcopeland.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the introduction of E-Scan there are two scan mechanisms
-in the driver. I-Scan was aborted on suspend and bringing down
-the device using brcmf_term_iscan(). The function has been
-renamed to brcmf_abort_scanning() and covers e-scan abort as
-well.
+2012/9/24 John W. Linville <linville@tuxdriver.com>:
+> From: "John W. Linville" <linville@tuxdriver.com>
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=47681
+>
+> Reported-by: David Binderman <dcb314@hotmail.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/phy.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index 8b71a2d..d605217 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -1975,11 +1975,13 @@ ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
+>                         spur_delta_phase = (spur_offset << 18) / 25;
+>                         spur_freq_sigma_delta = (spur_delta_phase >> 10);
+>                         symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 2;
+> +                       break;
+>                 case AR5K_BWMODE_5MHZ:
+>                         /* Both sample_freq and chip_freq are 10MHz (?) */
+>                         spur_delta_phase = (spur_offset << 19) / 25;
+>                         spur_freq_sigma_delta = (spur_delta_phase >> 10);
+>                         symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 4;
+> +                       break;
+>                 default:
+>                         if (channel->band == IEEE80211_BAND_5GHZ) {
+>                                 /* Both sample_freq and chip_freq are 40MHz */
+> --
+> 1.7.11.4
+>
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   44 ++++++++++----------
- 1 file changed, 21 insertions(+), 23 deletions(-)
+The idea is that we don't know if these settings for half/quarter rate
+channels even work (that's why I've put the question marks there), I
+just put them there so that others can see them / test them and report
+back (mostly people working on 802.11p with ath5k). Without the breaks
+it always uses the default witch is what we have from HAL sources.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 8e5a01d..6536656 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2591,11 +2591,13 @@ update_bss_info_out:
- 	return err;
- }
- 
--static void brcmf_term_iscan(struct brcmf_cfg80211_priv *cfg_priv)
-+static void brcmf_abort_scanning(struct brcmf_cfg80211_priv *cfg_priv)
- {
- 	struct brcmf_cfg80211_iscan_ctrl *iscan = cfg_to_iscan(cfg_priv);
-+	struct escan_info *escan = &cfg_priv->escan_info;
- 	struct brcmf_ssid ssid;
- 
-+	set_bit(WL_STATUS_SCAN_ABORTING, &cfg_priv->status);
- 	if (cfg_priv->iscan_on) {
- 		iscan->state = WL_ISCAN_STATE_IDLE;
- 
-@@ -2609,7 +2611,20 @@ static void brcmf_term_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 		/* Abort iscan running in FW */
- 		memset(&ssid, 0, sizeof(ssid));
- 		brcmf_run_iscan(iscan, &ssid, WL_SCAN_ACTION_ABORT);
-+
-+		if (cfg_priv->scan_request) {
-+			/* Indidate scan abort to cfg80211 layer */
-+			WL_INFO("Terminating scan in progress\n");
-+			cfg80211_scan_done(cfg_priv->scan_request, true);
-+			cfg_priv->scan_request = NULL;
-+		}
-+	}
-+	if (cfg_priv->escan_on && cfg_priv->scan_request) {
-+		escan->escan_state = WL_ESCAN_STATE_IDLE;
-+		brcmf_notify_escan_complete(cfg_priv, escan->ndev, true, true);
- 	}
-+	clear_bit(WL_STATUS_SCANNING, &cfg_priv->status);
-+	clear_bit(WL_STATUS_SCAN_ABORTING, &cfg_priv->status);
- }
- 
- static void brcmf_notify_iscan_complete(struct brcmf_cfg80211_iscan_ctrl *iscan,
-@@ -3034,18 +3049,10 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
- 		brcmf_delay(500);
- 	}
- 
--	set_bit(WL_STATUS_SCAN_ABORTING, &cfg_priv->status);
- 	if (test_bit(WL_STATUS_READY, &cfg_priv->status))
--		brcmf_term_iscan(cfg_priv);
--
--	if (cfg_priv->scan_request) {
--		/* Indidate scan abort to cfg80211 layer */
--		WL_INFO("Terminating scan in progress\n");
--		cfg80211_scan_done(cfg_priv->scan_request, true);
--		cfg_priv->scan_request = NULL;
--	}
--	clear_bit(WL_STATUS_SCANNING, &cfg_priv->status);
--	clear_bit(WL_STATUS_SCAN_ABORTING, &cfg_priv->status);
-+		brcmf_abort_scanning(cfg_priv);
-+	else
-+		clear_bit(WL_STATUS_SCANNING, &cfg_priv->status);
- 
- 	/* Turn off watchdog timer */
- 	if (test_bit(WL_STATUS_READY, &cfg_priv->status))
-@@ -3952,7 +3959,7 @@ static void wl_deinit_priv(struct brcmf_cfg80211_priv *cfg_priv)
- 	cfg_priv->dongle_up = false;	/* dongle down */
- 	brcmf_flush_eq(cfg_priv);
- 	brcmf_link_down(cfg_priv);
--	brcmf_term_iscan(cfg_priv);
-+	brcmf_abort_scanning(cfg_priv);
- 	brcmf_deinit_priv_mem(cfg_priv);
- }
- 
-@@ -4363,17 +4370,8 @@ static s32 __brcmf_cfg80211_down(struct brcmf_cfg80211_priv *cfg_priv)
- 		brcmf_delay(500);
- 	}
- 
--	set_bit(WL_STATUS_SCAN_ABORTING, &cfg_priv->status);
--	brcmf_term_iscan(cfg_priv);
--	if (cfg_priv->scan_request) {
--		cfg80211_scan_done(cfg_priv->scan_request, true);
--		/* May need to perform this to cover rmmod */
--		/* wl_set_mpc(cfg_to_ndev(wl), 1); */
--		cfg_priv->scan_request = NULL;
--	}
-+	brcmf_abort_scanning(cfg_priv);
- 	clear_bit(WL_STATUS_READY, &cfg_priv->status);
--	clear_bit(WL_STATUS_SCANNING, &cfg_priv->status);
--	clear_bit(WL_STATUS_SCAN_ABORTING, &cfg_priv->status);
- 
- 	brcmf_debugfs_remove_netdev(cfg_priv);
- 
+Anyway I guess enabling them will result more testing and if something
+breaks we 'll hear from the 802.11p people soon, so
+
+
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+
 -- 
-1.7.9.5
-
-
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
