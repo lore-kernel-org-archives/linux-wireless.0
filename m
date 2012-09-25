@@ -1,70 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1975 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752889Ab2IMTM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 15:12:26 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/10] brcmfmac: simplify handling e-scan result
- firmware event
-Date: Thu, 13 Sep 2012 21:12:06 +0200
-Message-ID: <1347563526-12513-11-git-send-email-arend@broadcom.com> (sfid-20120913_212552_076537_CEB2D065)
-In-Reply-To: <1347563526-12513-1-git-send-email-arend@broadcom.com>
-References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:39629 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753364Ab2IYH1x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Sep 2012 03:27:53 -0400
+Message-ID: <1348558107.10041.19.camel@jlt4.sipsolutions.net> (sfid-20120925_092757_197809_8B558E03)
+Subject: Re: [PATCH v3] cfg80211: Fix regulatory check for 60GHz band
+ frequencies
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Tue, 25 Sep 2012 09:28:27 +0200
+In-Reply-To: <1348386594-6067-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1348386594-6067-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1348386594-6067-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon handling an e-scan result event from the firmware in
-brcmf_cfg80211_escan_handler() the status may indicate e-scan
-is completed or aborted. If so brcmf_notify_escan_complete()
-is called. However, that function and brcmf_cfg80211_escan_handler()
-both log the same debug message and both enable MPC flag in the
-firmware.
+On Sun, 2012-09-23 at 09:49 +0200, Vladimir Kondratiev wrote:
+> The current regulatory code on cfg80211 performs a check to
+> see if a regulatory rule belongs to an IEEE band so that if
+> a Country IE is received and no rules are specified for a
+> band (which is allowed by IEEE) those bands are left intact.
+> The current band check assumes a rule is bound to a band
+> if the rule's start or end frequency is less than 2 GHz
+> apart from the center of frequency being inspected.
+> 
+> In order to support 60 GHz for 802.11ad we need to increase
+> this to account for the channel spacing of 2160 MHz whereby
+> a channel somewhere in the middle of a regulatory rule may
+> be more than 2 MHz apart from either the beginning or
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+GHz?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 32ee052..200a6c2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2873,6 +2873,7 @@ brcmf_cfg80211_escan_handler(struct brcmf_cfg80211_priv *cfg_priv,
- 	u32 bi_length;
- 	struct brcmf_scan_results *list;
- 	u32 i;
-+	bool aborted;
- 
- 	status = be32_to_cpu(e->status);
- 
-@@ -2945,16 +2946,9 @@ brcmf_cfg80211_escan_handler(struct brcmf_cfg80211_priv *cfg_priv,
- 			cfg_priv->bss_list = (struct brcmf_scan_results *)
- 				cfg_priv->escan_info.escan_buf;
- 			brcmf_inform_bss(cfg_priv);
--			if (status == BRCMF_E_STATUS_SUCCESS) {
--				WL_SCAN("ESCAN Completed\n");
--				brcmf_notify_escan_complete(cfg_priv, ndev,
--					false, false);
--			} else {
--				WL_ERR("ESCAN Aborted, Event 0x%x\n", status);
--				brcmf_notify_escan_complete(cfg_priv, ndev,
--					true, false);
--			}
--			brcmf_set_mpc(ndev, 1);
-+			aborted = status != BRCMF_E_STATUS_SUCCESS;
-+			brcmf_notify_escan_complete(cfg_priv, ndev, aborted,
-+						    false);
- 		} else
- 			WL_ERR("Unexpected scan result 0x%x\n", status);
- 	}
--- 
-1.7.9.5
+> end of the frequency rule.
+> 
+> Without a fix for this even though channels 1-3 are allowed world
+> wide on the rule (57240 - 63720 @ 2160), channel 2 at 60480 MHz
+> will end up getting disabled given that it is 3240 MHz from
+> both the frequency rule start and end frequency. Fix this by
+> using 2 GHz separation assumption for the 2.4 and 5 GHz bands
+> but for 60 GHz use a 10 GHz separation before assuming a rule
+> is not part of the band.
 
+Luis, given that you think the regulatory code in the kernel is 802.11
+specific, why are we inferring these rules from the frequencies rather
+than using the 802.11 specific information about the band that it
+represents? :-D
+
+johannes
 
