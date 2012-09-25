@@ -1,104 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11248 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757611Ab2IRNr4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39892 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991Ab2IYUAb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Sep 2012 09:47:56 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Tue, 25 Sep 2012 16:00:31 -0400
+Date: Tue, 25 Sep 2012 15:57:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Anisse Astier <anisse@astier.eu>,
+	Li Chaoming <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH NEXT V3] rtlwifi: rtl8192c: rtl8192ce: Add support for
+ B-CUT version of RTL8188CE
+Message-ID: <20120925195731.GE2118@tuxdriver.com> (sfid-20120925_220041_211312_661C2519)
+References: <1347982168-10601-1-git-send-email-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20568.31520.887555.183389@gargle.gargle.HOWL> (sfid-20120918_154800_499051_E06984DD)
-Date: Tue, 18 Sep 2012 19:16:08 +0530
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
-Subject: [ath9k-devel] ath9k: spurious queue reset (beacon stuck) when joining an IBSS.
-In-Reply-To: <5058737E.4090601@lri.fr>
-References: <50582CF8.4020608@lri.fr>
-	<5058737E.4090601@lri.fr>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1347982168-10601-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicolas Cavallari wrote:
-> [resending, as no archive saw my previous message]
+On Tue, Sep 18, 2012 at 10:29:28AM -0500, Larry Finger wrote:
+> Realtek devices with designation RTL8188CE-VL have the so-called B-cut
+> of the wireless chip. This patch adds the special programming needed by
+> these devices. In addition, a variable that was static has been moved into
+> the private data area as it is now needed in two different routines. This
+> change also fixes a minor bug that would be present if a system had more
+> than one RTL81{88,92}CE devices. Other drivers in the rtlwifi family had
+> already made this change, thus the variable already exists in the private
+> data structure.
 > 
-> With an AR9382 (well, i think, its PCI-id is 168c:0030 rev 1/168c:3116),
-> each time I join an IBSS network, the driver repeatedly
-> resets the queue for a while, because of too many missed beacons.  After
-> some time, this stops and the card behave normally.  But many packets
-> are lost in the process.
-> 
-> The problem seems to aggravate when the number of IBSS nodes is higher :
-> When joining a IBSS network with only one node, Only a few (e.g. 4)
-> beacons are lost, and no reset takes places. When joining an IBSS
-> network with two nodes, the queues can be reset up to 224 times in 20
-> seconds. When joining large IBSS networks, it sometimes never stop
-> resetting.  Occasionally, when resetting, the driver fails to reset TX DMA
-> 
-> If i hack the driver to not reset when the beacon is stuck, the beacon
-> tx resumes quickly by itself after 80-200 misses and the network seems
-> to work normally (if not better). On large&clogged ad-hoc networks, the
-> card sometimes miss between 1 and 80 beacons, but it might be due to
-> background scanning i think.
-> 
-> What could be the problem here ? is ad-hoc beaconing kind of broken ?
-> I do not have the problem with AR9285.
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Anisse Astier <anisse@astier.eu>
+> Cc: Li Chaoming <chaoming_li@realsil.com.cn>
+> ---
+>  rtl8192c/phy_common.c |   21 +++++++++++++++++
+>  rtl8192ce/def.h       |    3 ++
+>  rtl8192ce/hw.c        |   60 +++++++++++++++++++++++++++++++++++++++++++++-----
+>  rtl8192ce/phy.c       |    2 +
+>  rtl8192ce/sw.c        |    6 +----
+>  rtl8192ce/trx.c       |    4 +--
+>  6 files changed, 85 insertions(+), 11 deletions(-)
+> ---
+> V1 => V2	Remove extraneous white space.
+> V2 => V3	A change that is not part of the B-cut change and was introduced
+> 		in V2 is moved to a separate patch. 
 
-I think the problem is that we are programming the beacon timers based on
-the beacon interval right after joining, but we base it on the HW TSF which
-has just been reset. We should be updating the timers based on the TSF after a
-HW sync has been done with a received beacon. This is being done for station
-mode, but IBSS mode is missing this.
+/home/linville/git/wireless-next
+[linville-8530p.local]:> git am -s updates.mbox 
+Applying: rtlwifi: rtl8192c: rtl8192ce: Add support for B-CUT version of RTL8188CE
+error: patch failed: drivers/net/wireless/rtlwifi/rtl8192ce/def.h:116
+error: drivers/net/wireless/rtlwifi/rtl8192ce/def.h: patch does not apply
+error: patch failed: drivers/net/wireless/rtlwifi/rtl8192ce/hw.c:1004
+error: drivers/net/wireless/rtlwifi/rtl8192ce/hw.c: patch does not apply
+error: patch failed: drivers/net/wireless/rtlwifi/rtl8192ce/sw.c:162
+error: drivers/net/wireless/rtlwifi/rtl8192ce/sw.c: patch does not apply
+Patch failed at 0001 rtlwifi: rtl8192c: rtl8192ce: Add support for B-CUT version of RTL8188CE
+The copy of the patch that failed is found in:
+   /home/linville/git/wireless-next/.git/rebase-apply/patch
+When you have resolved this problem run "git am --resolved".
+If you would prefer to skip this patch, instead run "git am --skip".
+To restore the original branch and stop patching run "git am --abort".
 
-Here is a very rough patch, it abuses STA-mode flags and doesn't differentiate
-between creator/joiner mode, but can you check if it makes any difference ?
-
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 76f07d8..5a1a89d 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -582,16 +582,19 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 intval, nexttbtt;
-+	unsigned long flags;
- 
- 	ath9k_reset_beacon_status(sc);
- 
- 	intval = TU_TO_USEC(conf->beacon_interval);
- 	nexttbtt = intval;
- 
--	if (conf->enable_beacon)
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	if (conf->enable_beacon && !(sc->ps_flags & PS_BEACON_SYNC))
- 		ah->imask |= ATH9K_INT_SWBA;
- 	else
- 		ah->imask &= ~ATH9K_INT_SWBA;
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
- 	ath_dbg(common, BEACON, "IBSS nexttbtt: %u intval: %u conf_intval: %u\n",
- 		nexttbtt, intval, conf->beacon_interval);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3923ad9..ae1c0bb 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1486,6 +1486,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	int slottime;
-+	unsigned long flags;
- 
- 	ath9k_ps_wakeup(sc);
- 	mutex_lock(&sc->mutex);
-@@ -1517,6 +1518,12 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
- 		common->curaid = bss_conf->aid;
- 		ath9k_hw_write_associd(sc->sc_ah);
-+
-+		if (bss_conf->ibss_joined) {
-+			spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+			sc->ps_flags |= PS_BEACON_SYNC;
-+			spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-+		}
- 	}
- 
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
