@@ -1,78 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:57448 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756383Ab2IQRh4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29743 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755325Ab2IZLiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 13:37:56 -0400
-Message-ID: <50575FF1.7070602@wwwdotorg.org> (sfid-20120917_193803_938126_846A89A4)
-Date: Mon, 17 Sep 2012 11:37:53 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+	Wed, 26 Sep 2012 07:38:09 -0400
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] ath9k: Enable MCI for AR9565
+Date: Wed, 26 Sep 2012 17:04:26 +0530
+Message-ID: <1348659266-4669-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120926_133814_575151_F35EA773)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>, Wei Ni <wni@nvidia.com>
-Subject: Re: [PATCH 07/10] brcmfmac: clear status for in-band interrupt in
- brcmf_sdbrcm_isr
-References: <1347563526-12513-1-git-send-email-arend@broadcom.com> <1347563526-12513-8-git-send-email-arend@broadcom.com> <5053A74D.6080200@wwwdotorg.org> <50544830.4020804@broadcom.com> <5054B6EB.3010608@wwwdotorg.org>
-In-Reply-To: <5054B6EB.3010608@wwwdotorg.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2012 11:12 AM, Stephen Warren wrote:
-> On 09/15/2012 03:19 AM, Arend van Spriel wrote:
->> On 09/14/2012 11:53 PM, Stephen Warren wrote:
->>> On 09/13/2012 01:12 PM, Arend van Spriel wrote:
->>>> From: Franky Lin <frankyl@broadcom.com>
->>>>
->>>> SDIO in-band interrupt is level sensitive according to SDIO standard.
->>>> When the register interrupt handler gets called by SDIO stack it is
->>>> running in non interrupt context and expected to clear the interrupt
->>>> from the dongle. Therefore in-band and out-of-band interrupt need to
->>>> be handled differently.
->>>
->>> Tested-by: Stephen Warren <swarren@wwwdotorg.org>
->>>
->>> For reference, I took next-20120914, applied this patch series, applied
->>> a few patches from Wei Ni to set up the SDIO HW on Tegra correctly, and
->>> tested. The last time I tried this without any patches to the brcmfmac,
->>> this test caused some system instability issues. This time around, I
->>> observed no instability. I tested WPA PSK, ping (or flood ping) plus
->>> playing audio through ALSA.
->>>
->>> Is this series likely to make 3.7?
->>>
->>
->> Thanks, Stephen
->>
->> Good to hear. I suspect we are close to the 3.7 merge window, but we do
->> hope this will make it mainly for the tegra sdio issue that Wei Ni
->> raised. In general the series should resolve issues when used on
->> sdhci/mmc framework with in-band interrupt.
->>
->> Do you still need the patches from Wei Ni and are they SDIO or brcmfmac
->> related?
-> 
-> Some patches are needed, but they're all for Tegra-specific code to
-> configure the pinmux, GPIO, etc. on the Tegra SoC in order to correctly
-> communicate with the SDIO port, and to enable the controller. No patches
-> are required to the brcmfmac driver.
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c |    6 +++---
+ drivers/net/wireless/ath/ath9k/gpio.c   |    2 +-
+ drivers/net/wireless/ath/ath9k/wow.c    |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-Just to be explicit here:
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index acd4373..4ef610e 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -282,7 +282,7 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
+ 		ath9k_hw_btcoex_enable_2wire(ah);
+ 		break;
+ 	case ATH_BTCOEX_CFG_3WIRE:
+-		if (AR_SREV_9462(ah)) {
++		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 			ath9k_hw_btcoex_enable_mci(ah);
+ 			return;
+ 		}
+@@ -304,7 +304,7 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
+ 	int i;
+ 
+ 	btcoex_hw->enabled = false;
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
+ 		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
+ 			REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
+@@ -339,7 +339,7 @@ static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
+ 	const u32 *weight = ar9003_wlan_weights[stomp_type];
+ 	int i;
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
+ 		    btcoex->mci.stomp_ftp)
+ 			stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index bf7d29e..5faa4f7 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -412,7 +412,7 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
+ 		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
+ 			ath9k_btcoex_timer_pause(sc);
+ 		ath9k_hw_btcoex_disable(ah);
+-		if (AR_SREV_9462(ah))
++		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+ 			ath_mci_flush_profile(&sc->btcoex.mci);
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index 44a08eb..a483d51 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -497,7 +497,7 @@ void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
+ 
+ 	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
+ 
+-	if (AR_SREV_9462(ah)) {
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		/*
+ 		 * this is needed to prevent the chip waking up
+ 		 * the host within 3-4 seconds with certain
+-- 
+1.7.4.1
 
-If this patch series (the one at the start of this email thread) makes
-it into 3.7, I'll apply the Tegra patches to enable brcmfmac on Tegra
-for 3.8, and everything will work out nicely.
-
-If this patch series doesn't make it into 3.7, but gets into 3.8
-instead, I'd still like to apply the Tegra patches for 3.8 as well.
-However, I can't apply the Tegra patches to any branch that doesn't
-include this patch series, or it'll cause system instability on Tegra.
-To that end, if this patch series doesn't make 3.7, I'd like to request
-that it be applied to a separate topic branch in the wireless tree, so
-that it can be both merged into the wireless tree for any required
-future work there, /and/ merged into the Tegra tree so that I can use it
-as a baseline to enable wireless on Tegra.
-
-Thanks!
