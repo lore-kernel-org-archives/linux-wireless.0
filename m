@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:40899 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756439Ab2ICOBe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Sep 2012 10:01:34 -0400
-Received: by obbuo13 with SMTP id uo13so9166682obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2012 07:01:34 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1615 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753412Ab2IZJlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2012 05:41:52 -0400
+Message-ID: <5062CDD0.2000008@broadcom.com> (sfid-20120926_114158_564330_E8C42EE4)
+Date: Wed, 26 Sep 2012 11:41:36 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn2CYYP2+VRX0Ph=6Vw2kTqmwRvMn+FVeS3FwMd=jvwy8Q@mail.gmail.com>
-References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
-	<CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com>
-	<20120827065419.GB22073@ritirata.org>
-	<CAD2nsn2CYYP2+VRX0Ph=6Vw2kTqmwRvMn+FVeS3FwMd=jvwy8Q@mail.gmail.com>
-Date: Mon, 3 Sep 2012 19:31:34 +0530
-Message-ID: <CAD2nsn3Q5tCp1ENsT=subp4u1GE6jazSGB=trnb6MjR8AR6m=w@mail.gmail.com> (sfid-20120903_160138_266909_D52D8D7A)
-Subject: Re: [PATCHv2 1/2] ath9k_htc: remove driver specific checks for
- interfaces combinations
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Dan Carpenter" <dan.carpenter@oracle.com>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] brcmfmac: use kcalloc() to prevent integer overflow
+References: <20120926072148.GA3956@elgon.mountain>
+ <20120926073143.GO13767@mwanda>
+In-Reply-To: <20120926073143.GO13767@mwanda>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Antonio,
-
->> Other than that, patch 2/6 should be modified to take into account IBSS mode.
+On 09/26/2012 09:31 AM, Dan Carpenter wrote:
+> Speaking of integer overflows, I had a couple other concerns in this
+> file.
 >
-> yeah saw your patch, that in ath9k_htc IBSS interface can coexist with
-> one more interface.
+> drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c brcmf_enq_event()
+>    4144          total_len = sizeof(struct brcmf_cfg80211_event_q);
+>    4145          if (data)
+>    4146                  data_len = be32_to_cpu(msg->datalen);
+>    4147          else
+>    4148                  data_len = 0;
+>    4149          total_len += data_len;
+>                  ^^^^^^^^^^^^^^^^^^^^^
+> This looks very suspicious like a remote exploitable overflow.
 
-sorry for the delayed response(almost tortoise's pace :) ), the
-ath9k_htc maintainer said
-TSF sync may be an issue if we have IBSS interface coexistence, any
-thoughts about this (or)
-this should be fine based on your testing. please let me know!
+Hi Dan,
 
--- 
-thanks,
-shafi
+The event message is generated in our device so I believe there is 
+little room for exploits.
+
+>    4150          e = kzalloc(total_len, GFP_ATOMIC);
+>
+> drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c brcmf_run_escan()
+>     882          if (request != NULL) {
+>     883                  /* Allocate space for populating ssids in struct */
+>     884                  params_size += sizeof(u32) * ((request->n_channels + 1) / 2);
+>     885
+>     886                  /* Allocate space for populating ssids in struct */
+>     887                  params_size += sizeof(struct brcmf_ssid) * request->n_ssids;
+>     888          }
+>     889
+>     890          params = kzalloc(params_size, GFP_KERNEL);
+>
+> I didn't track back where request comes from so I don't know if
+> that's a problem or not.  I figured you would know better than I
+> would.
+
+This request comes from user-space, ie. nl80211. cfg80211 does make sure 
+that amount channels and ssids are sane (see nl80211_trigger_scan() in 
+net/wireless/nl80211.c).
+
+Gr. AvS
+
+
