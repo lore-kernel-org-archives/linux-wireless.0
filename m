@@ -1,85 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39433 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754544Ab2ITO7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 10:59:18 -0400
-Message-ID: <505B2F3A.9070504@hauke-m.de> (sfid-20120920_165921_853330_D5C293D0)
-Date: Thu, 20 Sep 2012 16:59:06 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:45065 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757011Ab2IZQV5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2012 12:21:57 -0400
+Received: by oagh16 with SMTP id h16so756324oag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 09:21:56 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcma: use udelay for short waits
-References: <1348123339-15210-1-git-send-email-zajec5@gmail.com> <505B11A7.4040001@hauke-m.de>
-In-Reply-To: <505B11A7.4040001@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+Date: Wed, 26 Sep 2012 21:51:56 +0530
+Message-ID: <CACuskh++j1QPgvBNhpGmhUOjwozk2vybHq=3_-iSoWaAVxkEvw@mail.gmail.com> (sfid-20120926_182205_985523_765D990A)
+Subject: Which tree to pull for submitting patches to net/mac80211
+From: kiranaab ki <kiranaab@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2012 02:52 PM, Hauke Mehrtens wrote:
-> On 09/20/2012 08:42 AM, Rafał Miłecki wrote:
->> msleep shouldn't be used for less than 20ms
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/bcma/driver_pci.c |    6 +++---
->>  1 files changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
->> index c32ebd5..e78e6a8 100644
->> --- a/drivers/bcma/driver_pci.c
->> +++ b/drivers/bcma/driver_pci.c
->> @@ -51,7 +51,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u8 phy)
->>  		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
->>  		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
->>  			break;
->> -		msleep(1);
->> +		udelay(1000);
->>  	}
->>  }
->>  
->> @@ -92,7 +92,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
->>  			ret = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_DATA);
->>  			break;
->>  		}
->> -		msleep(1);
->> +		udelay(1000);
->>  	}
->>  	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
->>  	return ret;
->> @@ -132,7 +132,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u8 device,
->>  		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
->>  		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
->>  			break;
->> -		msleep(1);
->> +		udelay(1000);
->>  	}
->>  	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
->>  }
->>
-> 
-> Using msleep(1) here is not correct, but I do not know if udelay(1000)
-> is better. The BCM4706 SoC or more the kernel code you are using seams
-> to have problems with sleeping, at least that is my current assumption.
-> when I add an msleep(1) somewhere into the code the exception stops
-> there without an exception from the CPU.
-> 
-> According to Documentation/timers/timers-howto.txt we should use
-> usleep_range for values from 10us to 20ms, but that also causes the same
-> problem as msleep() on this SoC.
-> 
-> Hauke
+Hi All,
 
-The BCM4706 SoC has problems with the Mips wait instruction and that is
-not activated in the Broadcom SDK, but in the OpenWrt kernel. I
-deactivated it [0] in my kernel and now the device boots without this
-patch for bcma. The patch to deactivate the mips wait instruction can
-not be mainlined, like it is now.
+I am all new to linux-open-source and I would like to contribute to
+linux-wireless development
 
-Please drop this patch and use usleep_range(), that should work now.
+I have gone through linux-wireless materials for understanding
+the development process from the links below,
 
-Hauke
+ http://www.linuxwireless.org/en/developers/Documentation/git-guide
+ http://www.linuxwireless.org/en/developers/Documentation/SubmittingPatches
+ http://www.linuxwireless.org/en/developers/process
 
-[0]:
-https://dev.openwrt.org/browser/trunk/target/linux/brcm47xx/patches-3.3/170-fix-74k-cpu.patch?rev=33496
+The above links explain to me the latest development that happens over
+wireless-testing.git
+I also see in MAINTAINERS list that Johannes Berg maintains two trees
+   mac80211.git,
+   mac80211-next.git
+
+If I want to send the patches for net/mac80211 and net/cfg8011
+do I need to pull wireless-testing.git and send the patches so that
+John W Linwille reviews them
+
+     or
+
+do I need to pull mac80211-next.git and send the patches so that
+Johannes Berg will review the patches and later John W Linville
+pulls the changes from Johannes's tree along the development process ?
+
+Please correct me if my understanding is wrong.
+
+Thanks,
+Kiran
