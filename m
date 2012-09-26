@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:37929 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752890Ab2IXJEf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45653 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757192Ab2IZRxW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 05:04:35 -0400
-Date: Mon, 24 Sep 2012 12:03:53 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marc MERLIN <marc@merlins.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	David Rientjes <rientjes@google.com>, sgruszka@redhat.com,
-	linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, Andrew Morton <akpm@osdl.org>,
-	Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-Message-ID: <20120924090353.GA5368@mwanda> (sfid-20120924_110452_694937_FD2B2F7E)
-References: <20120909213228.GA5538@elf.ucw.cz>
- <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
- <20120910111113.GA25159@elf.ucw.cz>
- <20120911162536.bd5171a1.akpm@linux-foundation.org>
- <1347426988.13103.684.camel@edumazet-glaptop>
- <20120912055712.GE11613@merlins.org>
- <1347432846.4293.0.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1347432846.4293.0.camel@jlt4.sipsolutions.net>
+	Wed, 26 Sep 2012 13:53:22 -0400
+Message-ID: <1348682036.10548.13.camel@jlt4.sipsolutions.net> (sfid-20120926_195326_733826_EFDC6E26)
+Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 26 Sep 2012 19:53:56 +0200
+In-Reply-To: <506339C3.40405@posedge.com>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>
+	    <1348477154.10257.2.camel@jlt4.sipsolutions.net>
+	    <50614089.6020105@posedge.com>
+	   <1348557902.10041.17.camel@jlt4.sipsolutions.net>
+	   <50617E2C.6050000@posedge.com>
+	  <1348582152.10041.36.camel@jlt4.sipsolutions.net>
+	  <5062736B.9060008@posedge.com>
+	 <1348660422.10548.10.camel@jlt4.sipsolutions.net>
+	 <506339C3.40405@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 12, 2012 at 08:54:06AM +0200, Johannes Berg wrote:
-> On Tue, 2012-09-11 at 22:57 -0700, Marc MERLIN wrote:
-> > On Wed, Sep 12, 2012 at 07:16:28AM +0200, Eric Dumazet wrote:
-> > > On Tue, 2012-09-11 at 16:25 -0700, Andrew Morton wrote:
-> > > 
-> > > > Asking for a 256k allocation is pretty crazy - this is an operating
-> > > > system kernel, not a userspace application.
-> > > > 
-> > > > I'm wondering if this is due to a recent change, but I'm having trouble
-> > > > working out where the allocation call site is.
-> > > > --
-> > > 
-> > > (Adding Marc Merlin to CC, since he reported same problem)
-> > > 
-> > > Thats the firmware loading in iwlwifi driver. Not sure if it can use SG.
-> > > 
-> > > drivers/net/wireless/iwlwifi/iwl-drv.c
-> > > 
-> > > iwl_alloc_ucode() -> iwl_alloc_fw_desc() -> dma_alloc_coherent()
+On Wed, 2012-09-26 at 22:52 +0530, Mahesh Palivela wrote:
+> On 9/26/2012 5:23 PM, Johannes Berg wrote:
+> >> you mean to say some drivers which dont provide its own VHT caps, will
+> >> use remote STA VHT caps as its own?
+> >> If so I feel not correct posing remote STA caps as local caps.
+> >
+> > No, no. If you look at HT, then you'll see that if the driver has HT but
+> > isn't capable of doing everything the peer STA can do, then mac80211
+> > restricts tells the driver
+> 
+> Sorry. Where is it telling the driver? I couldn't find this part of code 
+> in mac80211, could you point me?
 
-I'm filing bugzilla entries for regressions.  What's the status on
-this?
+Well struct ieee80211_sta is what the driver uses. That's where it's
+"telling" the driver, by making the data accessible to the driver. Your
+new vht_cap field there is also "telling the driver" that way.
 
-regards,
-dan carpenter
+
+> > I agree that this isn't really necessary and can be rather complex in
+> > VHT, but I think you need to document the difference very clearly in the
+> > documentation for the ieee80211_sta VHT caps.
+> 
+> Can this go as different patch? take my v2 patch as framework. More 
+> implementation of vht.c at later point of time?
+
+I don't think this makes sense, since we're talking only about a
+documentation change to your patch. See:
+
+  * @ht_cap: HT capabilities of this STA; restricted to our own TX capabilities
++ * @vht_cap: VHT capabilities of this STA
+
+The difference is that you don't say "restricted to own", but I think
+you should explicitly say that it isn't restricted.
+
+johannes
 
