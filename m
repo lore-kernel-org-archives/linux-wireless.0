@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-1.ms.rz.rwth-aachen.de ([134.130.7.72]:44264 "EHLO
-	mta-1.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751273Ab2IXWQL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 18:16:11 -0400
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-Received: from mx-out-1.rwth-aachen.de ([134.130.5.186])
- by mta-1.ms.rz.RWTH-Aachen.de
- (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
- with ESMTP id <0MAV006UFJ4WL810@mta-1.ms.rz.RWTH-Aachen.de> for
- linux-wireless@vger.kernel.org; Mon, 24 Sep 2012 23:46:08 +0200 (CEST)
-Received: from pebbles.localnet ([unknown] [78.49.193.32])
- by relay-auth-2.ms.rz.rwth-aachen.de
- (Sun Java(tm) System Messaging Server 7.0-3.01 64bit (built Dec  9 2008))
- with ESMTPA id <0MAV00EUAJ4WGV40@relay-auth-2.ms.rz.rwth-aachen.de> for
- linux-wireless@vger.kernel.org; Mon, 24 Sep 2012 23:46:08 +0200 (CEST)
-From: Stefan =?ISO-8859-1?Q?Br=FCns?= <stefan.bruens@rwth-aachen.de>
-To: linux-wireless@vger.kernel.org
-Subject: Throughput regression in b43 caused by spurious avoidance
- implementation
-Date: Mon, 24 Sep 2012 23:46:05 +0200
-Message-id: <1698401.RCfH1UvLZM@pebbles> (sfid-20120925_001615_466398_7EB90ECF)
+Received: from he.sipsolutions.net ([78.46.109.217]:44575 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755646Ab2IZLxH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2012 07:53:07 -0400
+Message-ID: <1348660422.10548.10.camel@jlt4.sipsolutions.net> (sfid-20120926_135311_685606_7DBB71B1)
+Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 26 Sep 2012 13:53:42 +0200
+In-Reply-To: <5062736B.9060008@posedge.com>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>
+	   <1348477154.10257.2.camel@jlt4.sipsolutions.net>
+	   <50614089.6020105@posedge.com>
+	  <1348557902.10041.17.camel@jlt4.sipsolutions.net>
+	  <50617E2C.6050000@posedge.com>
+	 <1348582152.10041.36.camel@jlt4.sipsolutions.net>
+	 <5062736B.9060008@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+On Wed, 2012-09-26 at 08:45 +0530, Mahesh Palivela wrote:
+> On 09/25/2012 07:39 PM, Johannes Berg wrote:
+> >
+> > Well imagine you have a driver for some hardware that can do
+> > beamforming, and the same driver can also work with hardware that
+> > doesn't. If we restrict remote caps, like we do for HT, the driver
+> > doesn't have to worry about this but can just do whatever the remote
+> > caps say is possible. If we don't restrict it, the driver has to also
+> > check its own caps.
+> 
+> you mean to say some drivers which dont provide its own VHT caps, will 
+> use remote STA VHT caps as its own?
+> If so I feel not correct posing remote STA caps as local caps.
 
-as I have been plagued by the performance regression in b43 between linux 3.2 
-and 3.3, I have bisected it:
+No, no. If you look at HT, then you'll see that if the driver has HT but
+isn't capable of doing everything the peer STA can do, then mac80211
+restricts tells the driver only about the peer capabilities that the
+device can do as well.
 
-git bisect good
-49d55cef5b1925a5c1efb6aaddaa40fc7c693335 is the first bad commit
-commit 49d55cef5b1925a5c1efb6aaddaa40fc7c693335
-Author: Rafał Miłecki <zajec5@gmail.com>
-Date:   Sun Dec 11 13:16:51 2011 +0100
+I agree that this isn't really necessary and can be rather complex in
+VHT, but I think you need to document the difference very clearly in the
+documentation for the ieee80211_sta VHT caps.
 
-    b43: N-PHY: implement spurious tone avoidance
-    
-    Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+johannes
 
-:040000 040000 f6177f4c33e1d382a430ad83db1e4b3f9dd66dfd 
-1b161ac9a16a481f259606edda5039c2be5147f4 M      drivers
-
-lspci -v{n,}:
-08:00.0 0280: 14e4:432b (rev 01)
-        Subsystem: 1028:000d
-        Flags: bus master, fast devsel, latency 0, IRQ 17
-        Memory at f0600000 (64-bit, non-prefetchable) [size=16K]
-        Capabilities: [40] Power Management version 3
-        Capabilities: [58] Vendor Specific Information: Len=78 <?>
-        Capabilities: [e8] MSI: Enable- Count=1/1 Maskable- 64bit+
-        Capabilities: [d0] Express Endpoint, MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [13c] Virtual Channel
-        Capabilities: [160] Device Serial Number 7e-d8-e5-xx-xx-xx-xx
-        Capabilities: [16c] Power Budgeting <?>
-        Kernel driver in use: b43-pci-bridge
-
-08:00.0 Network controller: Broadcom Corporation BCM4322 802.11a/b/g/n 
-Wireless LAN Controller (rev 01)
-        Subsystem: Dell Wireless 1510 Wireless-N WLAN Mini-Card
-
-Used channel is channel 13, 2.472GHz, AP is AVM 7112, "G-only" mode.
-
-Regards,
-
-Stefan
-
-
--- 
-Stefan Brüns  /  Bergstraße 21  /  52062 Aachen
-phone: +49 241 53809034     mobile: +49 151 50412019
