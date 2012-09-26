@@ -1,29 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:11530
-	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756542Ab2I0HV3 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45213 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753549Ab2IZMTa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 03:21:29 -0400
-Message-ID: <5063FE74.2050003@posedge.com> (sfid-20120927_092138_007543_909264A8)
-Date: Thu, 27 Sep 2012 12:51:24 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+	Wed, 26 Sep 2012 08:19:30 -0400
+Received: by obbuo13 with SMTP id uo13so454919obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 05:19:30 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>       <1348477154.10257.2.camel@jlt4.sipsolutions.net>       <50614089.6020105@posedge.com>      <1348557902.10041.17.camel@jlt4.sipsolutions.net>      <50617E2C.6050000@posedge.com>     <1348582152.10041.36.camel@jlt4.sipsolutions.net>     <5062736B.9060008@posedge.com>    <1348660422.10548.10.camel@jlt4.sipsolutions.net>    <506339C3.40405@posedge.com>   <1348682036.10548.13.camel@jlt4.sipsolutions.net>   <5063C6B1.8030301@posedge.com>  <1348727075.10353.0.camel@jlt4.sipsolutions.net>  <5063F372.2040601@posedge.com> <1348729265.10353.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1348729265.10353.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <5062EBCE.70700@lenbrook.com>
+References: <5062E0CB.6040308@gmail.com>
+	<5062EBCE.70700@lenbrook.com>
+Date: Wed, 26 Sep 2012 17:49:30 +0530
+Message-ID: <CAD2nsn3Tkkk92WRhBhBtj8oU5edWZf4tgS2ex8doSAnGDGpcnA@mail.gmail.com> (sfid-20120926_141934_369021_2274EF3B)
+Subject: Re: ath6kl ar6004/ar9374 (hw 1.3) WPA/WPA2 supported ?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Jonathan Bagg <jbagg@lenbrook.com>
+Cc: Ben Gray <ben.r.gray@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/2012 12:31 PM, Johannes Berg wrote:
+On Wed, Sep 26, 2012 at 5:19 PM, Jonathan Bagg <jbagg@lenbrook.com> wrote:
+> I've had the same experience, I can connect with iw, but not with
+> wpa_supplicant with wpa.  I also couldn't get higher than 65Mbps, MCS7
+> (other devices on the same router will go faster).  I'm probably the other
+> post you mentioned.
+
+We have a fix, I shall validate it and send it upstream.
+
 >
-> I think it's fine if you leave the code as is, but change the comment to
-> make the HT/VHT difference clear.
+> Jon
+>
+>
+> On 12-09-26 07:02 AM, Ben Gray wrote:
+>>
+>> Hi,
+>>
+>>     I have a bunch of UB134 USB dongles which have a ath6kl chip with H/W
+>> version 0x31c8088a, I'm trying to get them to work with the ath6kl driver
+>> from the compat-wireless-3.6-rc5-1 package. I've applied this
+>> (https://patchwork.kernel.org/patch/1203191/) patch to the source and pulled
+>> the hw1.3 firmware from the linux-firmware git.
+>>
+>>     The driver works as far as it can scan AP's and connect to unencrypted
+>> networks, however WPA/WPA2 doesn't work when I run wpa_supplicant. I realise
+>> "WPA doesn't work" is a bit vague, and I can post the wpa_supplicant and
+>> driver logs if that helps, but I've seen another post which says they
+>> couldn't get WPA to work either, so I'd like to know if this is a known
+>> issue with the driver and/or firmware? Has anyone had any luck getting
+>> WPA/WPA2 working with ath6kl hw1.3 ?
+>>
+>>     If this is a known issue does anyone know when it might be fixed ?
+>>
+>>
+>> Thanks in advance,
+>> Ben.
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Ok. So we will go with patch v2 with document section clearly mentioning 
-"vht_cap of remote STA taking as is"
 
-Thanks,
-Mahesh
+
+-- 
+thanks,
+shafi
