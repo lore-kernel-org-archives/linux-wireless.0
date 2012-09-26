@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:53439 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005Ab2IQF3z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 01:29:55 -0400
-Date: Mon, 17 Sep 2012 01:29:52 -0400 (EDT)
-Message-Id: <20120917.012952.1057392150531807806.davem@davemloft.net> (sfid-20120917_073104_621745_479AB7D4)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-09-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120914174655.GC17463@tuxdriver.com>
-References: <20120914174655.GC17463@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from purkki.adurom.net ([80.68.90.206]:44215 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753489Ab2IZKe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2012 06:34:26 -0400
+Received: from localhost
+	([127.0.0.1] helo=purkki.adurom.net ident=kvalo)
+	by purkki.adurom.net with esmtp (Exim 4.72)
+	(envelope-from <kvalo@adurom.com>)
+	id 1TGowj-0001pL-N3
+	for linux-wireless@vger.kernel.org; Wed, 26 Sep 2012 13:34:25 +0300
+From: Kalle Valo <kvalo@adurom.com>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi: 11n broken with 6300
+Date: Wed, 26 Sep 2012 13:34:25 +0300
+Message-ID: <87vcf12hu6.fsf@purkki.adurom.net> (sfid-20120926_123429_951225_729FEFEE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 14 Sep 2012 13:46:55 -0400
+Hi,
 
-> Arend van Spriel sends a simple thinko fix to correct a constant,
-> preventing the setting of an invalid power level.
-> 
-> Colin Ian King gives us a simple allocation failure check to avoid a
-> NULL pointer dereference.
-> 
-> Felix Fietkau sends another ath9k tx power patch, this time disabling a
-> feature that has been reported to cause rx problems.
-> 
-> Hante Meuleman provides a pair of endian fixes for brcmfmac.
-> 
-> Larry Finger offers an rtlwifi fix that avoids a system lockup related
-> to loading the wrong firmware for RTL8188CE devices.
-> 
-> These have been in linux-next for a few days and I think they should be
-> included in the final 3.6 kernel if possible.
+I have Intel 6300 on my laptop:
 
-Pulled, thanks John.
+02:00.0 Network controller [0280]: Intel Corporation Centrino Ultimate-N
+6300 [8086:4238] (rev 35)
+
+And since I have had this laptop (1,5 years now) I have had to disable
+11n (11n_disable=1) to get stable wifi, otherwise the TCP connections
+would stall or get really slow. I have been hoping to properly debug
+this at some point but, as usual, never found the time for it.
+
+But today I noticed that this is still a very common problem:
+
+https://plus.google.com/u/0/100920064738447422284/posts/Q32wEwyumdC
+
+Does anyone know what's causing this? Is this bug (or bugs) tracked anywhere?
+
+My AP is Netgear WNDR3700 running openwrt (10.03, r25221) and ath9k.
+Laptop is Lenovo x201 running Ubuntu 12.04.1 64 bit with various
+different kernels.
+
+-- 
+Kalle Valo
