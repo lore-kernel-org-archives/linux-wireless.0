@@ -1,83 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52842 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752140Ab2I3DdK (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:49839 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751719Ab2IZD2y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 23:33:10 -0400
-From: Sujith Manoharan <c_manoha@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20583.48512.616654.53958@gargle.gargle.HOWL> (sfid-20120930_053352_637386_2C816769)
-Date: Sun, 30 Sep 2012 09:03:20 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] ath9k: Use a helper routine for MCI/FTP tuning
+	Tue, 25 Sep 2012 23:28:54 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 03/15] mwifiex: advertise mgmt_stype to cfg80211
+Date: Tue, 25 Sep 2012 20:23:33 -0700
+Message-Id: <1348629825-12001-4-git-send-email-bzhao@marvell.com> (sfid-20120926_052856_900317_33E3CFE5)
+In-Reply-To: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
+References: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/gpio.c | 33 +++++++++++++++++++++------------
- 1 file changed, 21 insertions(+), 12 deletions(-)
+From: Stone Piao <piaoyun@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index d9ed141..334c98d 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -187,6 +187,25 @@ static void ath9k_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
- 	}
- }
+Advertise supported management frame types to cfg80211.
+
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |   30 ++++++++++++++++++++++++++++++
+ 1 files changed, 30 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 11942e5..2befac5 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -867,6 +867,35 @@ static const u32 mwifiex_cipher_suites[] = {
+ 	WLAN_CIPHER_SUITE_AES_CMAC,
+ };
  
-+static void ath_mci_ftp_adjust(struct ath_softc *sc)
-+{
-+	struct ath_btcoex *btcoex = &sc->btcoex;
-+	struct ath_mci_profile *mci = &btcoex->mci;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	btcoex->bt_wait_time += btcoex->btcoex_period;
-+	if (btcoex->bt_wait_time > ATH_BTCOEX_RX_WAIT_TIME) {
-+		if (ar9003_mci_state(ah, MCI_STATE_NEED_FTP_STOMP) &&
-+		    (mci->num_pan || mci->num_other_acl))
-+			ah->btcoex_hw.mci.stomp_ftp =
-+				(sc->rx.num_pkts < ATH_BTCOEX_STOMP_FTP_THRESH);
-+		else
-+			ah->btcoex_hw.mci.stomp_ftp = false;
-+		btcoex->bt_wait_time = 0;
-+		sc->rx.num_pkts = 0;
-+	}
-+}
++/* Supported mgmt frame types to be advertised to cfg80211 */
++static const struct ieee80211_txrx_stypes
++mwifiex_mgmt_stypes[NUM_NL80211_IFTYPES] = {
++	[NL80211_IFTYPE_STATION] = {
++		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
++	},
++	[NL80211_IFTYPE_AP] = {
++		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
++	},
++	[NL80211_IFTYPE_P2P_CLIENT] = {
++		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
++	},
++	[NL80211_IFTYPE_P2P_GO] = {
++		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
++	},
++};
 +
  /*
-  * This is the master bt coex timer which runs for every
-  * 45ms, bt traffic will be given priority during 55% of this
-@@ -197,7 +216,6 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	struct ath_softc *sc = (struct ath_softc *) data;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_btcoex *btcoex = &sc->btcoex;
--	struct ath_mci_profile *mci = &btcoex->mci;
- 	u32 timer_period;
- 	bool is_btscan;
- 	unsigned long flags;
-@@ -214,17 +232,8 @@ static void ath_btcoex_period_timer(unsigned long data)
- 		ath_detect_bt_priority(sc);
- 	is_btscan = test_bit(BT_OP_SCAN, &btcoex->op_flags);
- 
--	btcoex->bt_wait_time += btcoex->btcoex_period;
--	if (btcoex->bt_wait_time > ATH_BTCOEX_RX_WAIT_TIME) {
--		if (ar9003_mci_state(ah, MCI_STATE_NEED_FTP_STOMP) &&
--		    (mci->num_pan || mci->num_other_acl))
--			ah->btcoex_hw.mci.stomp_ftp =
--				(sc->rx.num_pkts < ATH_BTCOEX_STOMP_FTP_THRESH);
--		else
--			ah->btcoex_hw.mci.stomp_ftp = false;
--		btcoex->bt_wait_time = 0;
--		sc->rx.num_pkts = 0;
--	}
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+		ath_mci_ftp_adjust(sc);
- 
- 	spin_lock_bh(&btcoex->btcoex_lock);
- 
+  * CFG802.11 operation handler for setting bit rates.
+  *
+@@ -1935,6 +1964,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	}
+ 	wiphy->max_scan_ssids = MWIFIEX_MAX_SSID_LIST_LENGTH;
+ 	wiphy->max_scan_ie_len = MWIFIEX_MAX_VSIE_LEN;
++	wiphy->mgmt_stypes = mwifiex_mgmt_stypes;
+ 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 				 BIT(NL80211_IFTYPE_ADHOC) |
+ 				 BIT(NL80211_IFTYPE_AP);
 -- 
-1.7.12.1
+1.7.0.2
 
