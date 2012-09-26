@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:56124 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab2IZEZc (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:65365 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752686Ab2IZKTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 00:25:32 -0400
-Received: by ieak13 with SMTP id k13so443573iea.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2012 21:25:31 -0700 (PDT)
-Message-ID: <506283B1.8060900@lwfinger.net> (sfid-20120926_062536_322792_21C604CF)
-Date: Tue, 25 Sep 2012 23:25:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 26 Sep 2012 06:19:32 -0400
+Received: by lbon3 with SMTP id n3so1435802lbo.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 03:19:31 -0700 (PDT)
 MIME-Version: 1.0
-To: kerolasa@gmail.com
-CC: Sami Kerola <kerolasa@iki.fi>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce, system freeze and bios reset
-References: <CAG27Bk3tuw+P34btGic9pKwof3xsDw=dBpm-VEgv-RxN-BgVaQ@mail.gmail.com> <5061B0B5.3040103@lwfinger.net> <CAG27Bk21XrQ_E=VFmDZUPYFkg7o5TN=B8B5W3==s4=mGguFxYg@mail.gmail.com>
-In-Reply-To: <CAG27Bk21XrQ_E=VFmDZUPYFkg7o5TN=B8B5W3==s4=mGguFxYg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Wed, 26 Sep 2012 13:19:31 +0300
+Message-ID: <CAFDG9nuce-T0paZavi3D1wnNLHsJkxH4NOPmayFAM9TPOkQ13Q@mail.gmail.com> (sfid-20120926_121936_067050_C0A83892)
+Subject: 802.1X can associate but can not connect
+From: Alper Yilmaz <alperyilmaz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/25/2012 01:00 PM, Sami Kerola wrote:
->
-> Well, I had no idea about any firmware update before I compiled
-> Linus git
->
-> commit e5e77cf9f9a275083f9a365a20d956fa8a67803e
->
-> and after boot the driver was more broken.  With rmmod & modprobe
-> I realized rtl8192cfwU_B.bin was expected, so I added it to
-> /usr/lib/firmware/ manually from
->
-> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob_plain;f=rtlwifi/rtl8192cfwU_B.bin;hb=HEAD
->
-> That made dmesg telling insmod is happy...
+Hi,
+Not sure if this is the right mail-list but I was referred to this
+mail-list to seek help.
 
-My distro (openSUSE) provides regular updates of the firmware from the 
-linux-firmware git repository. As you noted, the B-cut firmware for the 
-RTL8188CE has been in that repo for some time.
+I already asked for help in #linuxwireles chat room and Ubuntu Forums and
+didn't get any help.
 
-> kerolasa@kerolasa-home ~ dmesg | grep rtl
-> [    7.901371] rtl8192ce: ****** This B_CUT device may not work with
-> kernels 3.6 and earlier
-> [    7.901383] rtl8192ce: Using firmware rtlwifi/rtl8192cfwU_B.bin
-> [    8.104591] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-> [    8.105394] rtlwifi: wireless switch is on
->
-> ...and quite frankly so am I, even tough this is strange way to
-> fix peculiar problem.
+I copy pasted the question from forum post below, I would like to refer to
+URL of the forum post but list-serv does not accept URL in email. (How can
+I include link to forum post?)
+The forum post contains all necessary information (system info, logs, etc.).
 
-What is strange about it? We discovered that certain cards would not work about 
-10 days ago. By comparison with the vendor driver, the fix was found; however, 
-it was too invasive to be applied at this time to kernel 3.6, thus the partial 
-patch was prepared. For most of the affected cards, it is not enough, which is 
-why the message says "may not work". You are lucky that it does. As I said 
-earlier, the real fix will be in kernel 3.7, and the above message is deleted.
+----- * -----
+I need desperate help regarding my wireless connection problem. I cannot
+connect to my university's wireless network which uses WEP802.1X security.
+When I switch to Windows Vista, I can connect to university wireless
+network.
+But when I use Ubuntu, I cannot connect.
+Also, when I use Ubuntu, I can connect to other wireless networks either
+non-password-protected or WEP password protected networks. But I cannot
+connect to enterprise networks.
 
-Larry
+The problem seems not related to Ubuntu per se, but one of the network
+related packages (ie. wpa_supplicant, dhclient, etc).
+I need help from an expert. I hope the right person reads this post and
+helps me.
 
+If you want me to perform debugging tests or tasks please let me know.
 
+----- * -----
 
+Thanks,
+alper
