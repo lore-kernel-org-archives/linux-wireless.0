@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4090 "EHLO mms1.broadcom.com"
+Received: from mga09.intel.com ([134.134.136.24]:33866 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751895Ab2IKTRQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 15:17:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	stable <stable@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 1/2] brcmfmac: fix big endian bug in i-scan.
-Date: Tue, 11 Sep 2012 21:16:47 +0200
-Message-ID: <1347391008-10583-2-git-send-email-arend@broadcom.com> (sfid-20120911_211719_307194_233692AF)
-In-Reply-To: <1347391008-10583-1-git-send-email-arend@broadcom.com>
-References: <1347391008-10583-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752879Ab2IZN5i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Sep 2012 09:57:38 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH] rtlwifi: use %*ph[C] to dump small buffers
+Date: Wed, 26 Sep 2012 16:57:32 +0300
+Message-Id: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120926_155745_624209_3D55A8C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
-
-ssid len is 32 bit and needs endian conversion for big endian systems.
-
-Cc: stable <stable@vger.kernel.org>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
+ 3 files changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index c36e923..50b5553 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -500,8 +500,10 @@ static void wl_iscan_prep(struct brcmf_scan_params_le *params_le,
- 	params_le->active_time = cpu_to_le32(-1);
- 	params_le->passive_time = cpu_to_le32(-1);
- 	params_le->home_time = cpu_to_le32(-1);
--	if (ssid && ssid->SSID_len)
--		memcpy(&params_le->ssid_le, ssid, sizeof(struct brcmf_ssid));
-+	if (ssid && ssid->SSID_len) {
-+		params_le->ssid_le.SSID_len = cpu_to_le32(ssid->SSID_len);
-+		memcpy(&params_le->ssid_le.SSID, ssid->SSID, ssid->SSID_len);
-+	}
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 5b4b4d4..6ba9f80 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+ 	u32 target_content = 0;
+ 	u8 entry_i;
+ 
+-	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
+-		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
+-		 key_cont_128[0], key_cont_128[1],
+-		 key_cont_128[2], key_cont_128[3],
+-		 key_cont_128[4], key_cont_128[5]);
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
++			6, key_cont_128);
+ 
+ 	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
+ 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 86d73b3..932780d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 				     (ratr_index << 28);
+ 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+ 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+-		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+-		 ratr_index, ratr_bitmap,
+-		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
+-		 rate_mask[4]);
++		 "Rate_index:%x, ratr_val:%x, %*phC\n",
++		 ratr_index, ratr_bitmap, 5, rate_mask);
+ 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
+ 
+ 	if (macid != 0)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 4bbb711..7554501 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
+ 				      ratr_index << 28);
+ 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+ 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+-		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+-		 ratr_index, ratr_bitmap,
+-		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
+-		 rate_mask[4]);
++		 "Rate_index:%x, ratr_val:%x, %*phC\n",
++		 ratr_index, ratr_bitmap, 5, rate_mask);
+ 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
  }
  
- static s32
 -- 
-1.7.9.5
-
+1.7.10.4
 
