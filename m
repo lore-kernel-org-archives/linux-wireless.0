@@ -1,71 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41890 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512Ab2IDR1D (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:52182 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751420Ab2IZDbc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 13:27:03 -0400
-Message-ID: <1346779659.3737.41.camel@jlt4.sipsolutions.net> (sfid-20120904_192708_124986_E5542492)
-Subject: Re: mac80211: support P2P Device abstraction
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 04 Sep 2012 19:27:39 +0200
-In-Reply-To: <20120904172057.GB19410@mwanda>
-References: <20120904161319.GA11494@elgon.mountain>
-	 <1346775525.3737.36.camel@jlt4.sipsolutions.net>
-	 <20120904172057.GB19410@mwanda>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 25 Sep 2012 23:31:32 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 13/15] mwifiex: parse P2P IEs from beacon_data
+Date: Tue, 25 Sep 2012 20:23:43 -0700
+Message-Id: <1348629825-12001-14-git-send-email-bzhao@marvell.com> (sfid-20120926_053134_813777_FDE60D28)
+In-Reply-To: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
+References: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+From: Stone Piao <piaoyun@marvell.com>
 
-> > > The patch f142c6b906da: "mac80211: support P2P Device abstraction" 
-> > > from Jun 18, 2012, leads to the following Smatch complaint:
-> > > 
-> > > net/mac80211/iface.c:1168 ieee80211_setup_sdata()
-> > > 	 error: we previously assumed 'sdata->dev' could be null (see line 1134)
-> > > 
-> > > net/mac80211/iface.c
-> > >   1133		/* only monitor/p2p-device differ */
-> > >   1134		if (sdata->dev) {
-> > >                     ^^^^^^^^^^
-> > > New test.
-> > > 
-> > >   1135			sdata->dev->netdev_ops = &ieee80211_dataif_ops;
-> > >   1136			sdata->dev->type = ARPHRD_ETHER;
-> > >   1137		}
-> > > 
-> > > [snip]
-> > > 
-> > >   1167		case NL80211_IFTYPE_MONITOR:
-> > >   1168			sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
-> > >                         ^^^^^^^^^^^^
-> > > Old dereference.
-> > 
-> > Thanks. I'm aware of the warning (I run smatch), but sdata->dev can only
-> > be NULL in "case NL80211_IFTYPE_P2P_DEVICE", so adding an extra check in
-> > the monitor case didn't seem worthwhile.
-> > 
-> > It might have been better to use sdata->vif.type != P2P_DEVICE in the
-> > new test I guess, but then it wouldn't be extensible to new interface
-> > types like Bluetooth AMP.
-> 
-> Gar.  This was my bad.  I didn't realize the warning was so old.  I
-> try to only send the automatic emails for new warnings.  I have been
-> meaning to fix the bug in my script for a while now but this time
-> I will really do that.
+Parse P2P IEs and set them to FW with related masks.
 
-No no, the warning was introduced in that patch on June 18th, so in that
-sense the email was correct. Before that patch, the test didn't exist,
-so the warning didn't show up, because the function *always* assumed
-sdata->dev was set. Now there's one case where this isn't the case any
-more, for vif.type == NL80211_IFTYPE_P2P_DEVICE, but the monitor case
-can still assume sdata->dev is set...
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/ie.c |   86 +++++++++++++++++++++++--------------
+ 1 files changed, 54 insertions(+), 32 deletions(-)
 
-It's really just a false positive since sdata->dev and sdata->vif.type
-are correlated, but smatch can't know that.
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
+index fa3a80f..e38342f 100644
+--- a/drivers/net/wireless/mwifiex/ie.c
++++ b/drivers/net/wireless/mwifiex/ie.c
+@@ -114,9 +114,6 @@ mwifiex_update_autoindex_ies(struct mwifiex_private *priv,
+ 							cpu_to_le16(mask);
+ 
+ 			ie->ie_index = cpu_to_le16(index);
+-			ie->ie_length = priv->mgmt_ie[index].ie_length;
+-			memcpy(&ie->ie_buffer, &priv->mgmt_ie[index].ie_buffer,
+-			       le16_to_cpu(priv->mgmt_ie[index].ie_length));
+ 		} else {
+ 			if (mask != MWIFIEX_DELETE_MASK)
+ 				return -1;
+@@ -214,30 +211,35 @@ mwifiex_update_uap_custom_ie(struct mwifiex_private *priv,
+ 	return ret;
+ }
+ 
+-/* This function checks if WPS IE is present in passed buffer and copies it to
+- * mwifiex_ie structure.
++/* This function checks if the vendor specified IE is present in passed buffer
++ * and copies it to mwifiex_ie structure.
+  * Function takes pointer to struct mwifiex_ie pointer as argument.
+- * If WPS IE is present memory is allocated for mwifiex_ie pointer and filled
+- * in with WPS IE. Caller should take care of freeing this memory.
++ * If the vendor specified IE is present then memory is allocated for
++ * mwifiex_ie pointer and filled in with IE. Caller should take care of freeing
++ * this memory.
+  */
+-static int mwifiex_update_wps_ie(const u8 *ies, int ies_len,
+-				 struct mwifiex_ie **ie_ptr, u16 mask)
++static int mwifiex_update_vs_ie(const u8 *ies, int ies_len,
++				struct mwifiex_ie **ie_ptr, u16 mask,
++				unsigned int oui, u8 oui_type)
+ {
+-	struct ieee_types_header *wps_ie;
+-	struct mwifiex_ie *ie = NULL;
++	struct ieee_types_header *vs_ie;
++	struct mwifiex_ie *ie = *ie_ptr;
+ 	const u8 *vendor_ie;
+ 
+-	vendor_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+-					    WLAN_OUI_TYPE_MICROSOFT_WPS,
+-					    ies, ies_len);
++	vendor_ie = cfg80211_find_vendor_ie(oui, oui_type, ies, ies_len);
+ 	if (vendor_ie) {
+-		ie = kmalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
+-		if (!ie)
+-			return -ENOMEM;
++		if (!*ie_ptr) {
++			*ie_ptr = kzalloc(sizeof(struct mwifiex_ie),
++					  GFP_KERNEL);
++			if (!*ie_ptr)
++				return -ENOMEM;
++			ie = *ie_ptr;
++		}
+ 
+-		wps_ie = (struct ieee_types_header *)vendor_ie;
+-		memcpy(ie->ie_buffer, wps_ie, wps_ie->len + 2);
+-		ie->ie_length = cpu_to_le16(wps_ie->len + 2);
++		vs_ie = (struct ieee_types_header *)vendor_ie;
++		memcpy(ie->ie_buffer + le16_to_cpu(ie->ie_length),
++		       vs_ie, vs_ie->len + 2);
++		le16_add_cpu(&ie->ie_length, vs_ie->len + 2);
+ 		ie->mgmt_subtype_mask = cpu_to_le16(mask);
+ 		ie->ie_index = cpu_to_le16(MWIFIEX_AUTO_IDX_MASK);
+ 	}
+@@ -257,20 +259,40 @@ static int mwifiex_set_mgmt_beacon_data_ies(struct mwifiex_private *priv,
+ 	u16 ar_idx = MWIFIEX_AUTO_IDX_MASK;
+ 	int ret = 0;
+ 
+-	if (data->beacon_ies && data->beacon_ies_len)
+-		mwifiex_update_wps_ie(data->beacon_ies, data->beacon_ies_len,
+-				      &beacon_ie, MGMT_MASK_BEACON);
++	if (data->beacon_ies && data->beacon_ies_len) {
++		mwifiex_update_vs_ie(data->beacon_ies, data->beacon_ies_len,
++				     &beacon_ie, MGMT_MASK_BEACON,
++				     WLAN_OUI_MICROSOFT,
++				     WLAN_OUI_TYPE_MICROSOFT_WPS);
++		mwifiex_update_vs_ie(data->beacon_ies, data->beacon_ies_len,
++				     &beacon_ie, MGMT_MASK_BEACON,
++				     WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P);
++	}
+ 
+-	if (data->proberesp_ies && data->proberesp_ies_len)
+-		mwifiex_update_wps_ie(data->proberesp_ies,
+-				      data->proberesp_ies_len, &pr_ie,
+-				      MGMT_MASK_PROBE_RESP);
++	if (data->proberesp_ies && data->proberesp_ies_len) {
++		mwifiex_update_vs_ie(data->proberesp_ies,
++				     data->proberesp_ies_len, &pr_ie,
++				     MGMT_MASK_PROBE_RESP, WLAN_OUI_MICROSOFT,
++				     WLAN_OUI_TYPE_MICROSOFT_WPS);
++		mwifiex_update_vs_ie(data->proberesp_ies,
++				     data->proberesp_ies_len, &pr_ie,
++				     MGMT_MASK_PROBE_RESP,
++				     WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P);
++	}
+ 
+-	if (data->assocresp_ies && data->assocresp_ies_len)
+-		mwifiex_update_wps_ie(data->assocresp_ies,
+-				      data->assocresp_ies_len, &ar_ie,
+-				      MGMT_MASK_ASSOC_RESP |
+-				      MGMT_MASK_REASSOC_RESP);
++	if (data->assocresp_ies && data->assocresp_ies_len) {
++		mwifiex_update_vs_ie(data->assocresp_ies,
++				     data->assocresp_ies_len, &ar_ie,
++				     MGMT_MASK_ASSOC_RESP |
++				     MGMT_MASK_REASSOC_RESP,
++				     WLAN_OUI_MICROSOFT,
++				     WLAN_OUI_TYPE_MICROSOFT_WPS);
++		mwifiex_update_vs_ie(data->assocresp_ies,
++				     data->assocresp_ies_len, &ar_ie,
++				     MGMT_MASK_ASSOC_RESP |
++				     MGMT_MASK_REASSOC_RESP, WLAN_OUI_WFA,
++				     WLAN_OUI_TYPE_WFA_P2P);
++	}
+ 
+ 	if (beacon_ie || pr_ie || ar_ie) {
+ 		ret = mwifiex_update_uap_custom_ie(priv, beacon_ie,
+-- 
+1.7.0.2
 
