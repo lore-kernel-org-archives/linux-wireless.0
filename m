@@ -1,134 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38041 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4017 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754149Ab2IKOkY (ORCPT
+	with ESMTP id S1753531Ab2IZL5d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 10:40:24 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Wed, 26 Sep 2012 07:57:33 -0400
+Date: Wed, 26 Sep 2012 14:57:27 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Jonathan Bagg <jbagg@lenbrook.com>
+CC: Ben Gray <ben.r.gray@gmail.com>, <linux-wireless@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>
+Subject: Re: ath6kl ar6004/ar9374 (hw 1.3) WPA/WPA2 supported ?
+Message-ID: <20120926115727.GA7872@jouni.qca.qualcomm.com> (sfid-20120926_135737_965627_FF91D533)
+References: <5062E0CB.6040308@gmail.com>
+ <5062EBCE.70700@lenbrook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20559.19734.219610.370383@gargle.gargle.HOWL> (sfid-20120911_164029_334159_546EB458)
-Date: Tue, 11 Sep 2012 20:09:18 +0530
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-CC: Sujith Manoharan <c_manoha@qualcomm.com>, <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/7] ath9k_hw: Add version/revision macros for AR9565
-In-Reply-To: <504F31C5.4020901@qca.qualcomm.com>
-References: <20557.25427.250740.150293@gargle.gargle.HOWL>
-	<504F31C5.4020901@qca.qualcomm.com>
+In-Reply-To: <5062EBCE.70700@lenbrook.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bala Shanmugam wrote:
-> > +#define AR_SREV_9565_10(_ah) \
-> > +	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565)&&  \
-> > +	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10)))
-> > +
-> There is an extra braces. Please check.
+On Wed, Sep 26, 2012 at 07:49:34AM -0400, Jonathan Bagg wrote:
+> I've had the same experience, I can connect with iw, but not with
+> wpa_supplicant with wpa.
 
-Good catch.
+Could someone please post some debug logs from wpa_supplicant showing
+the issue? There is not much that can be done with "WPA doesn't work"..
 
-An updated patch below.
-
-John, I have also updated the patch-set at:
-http://sujith.github.com/patches/wl/wl-ath9k-Sep-11-2012.patch
-
-[PATCH v2] ath9k_hw: Add version/revision macros for AR9565
-
-And recognize the device in the init path.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c  | 7 +++++--
- drivers/net/wireless/ath/ath9k/hw.h  | 1 +
- drivers/net/wireless/ath/ath9k/reg.h | 9 +++++++++
- 3 files changed, 15 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4faf0a3..b9fcb12 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -355,7 +355,7 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 			(val & AR_SREV_VERSION2) >> AR_SREV_TYPE2_S;
- 		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
- 
--		if (AR_SREV_9462(ah))
-+		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
- 			ah->is_pciexpress = true;
- 		else
- 			ah->is_pciexpress = (val &
-@@ -647,6 +647,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	case AR_SREV_VERSION_9340:
- 	case AR_SREV_VERSION_9462:
- 	case AR_SREV_VERSION_9550:
-+	case AR_SREV_VERSION_9565:
- 		break;
- 	default:
- 		ath_err(common,
-@@ -708,7 +709,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	int ret;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
--	/* These are all the AR5008/AR9001/AR9002 hardware family of chipsets */
-+	/* These are all the AR5008/AR9001/AR9002/AR9003 hardware family of chipsets */
- 	switch (ah->hw_version.devid) {
- 	case AR5416_DEVID_PCI:
- 	case AR5416_DEVID_PCIE:
-@@ -728,6 +729,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	case AR9300_DEVID_AR9580:
- 	case AR9300_DEVID_AR9462:
- 	case AR9485_DEVID_AR1111:
-+	case AR9300_DEVID_AR9565:
- 		break;
- 	default:
- 		if (common->bus_ops->ath_bus_type == ATH_USB)
-@@ -3153,6 +3155,7 @@ static struct {
- 	{ AR_SREV_VERSION_9485,         "9485" },
- 	{ AR_SREV_VERSION_9462,         "9462" },
- 	{ AR_SREV_VERSION_9550,         "9550" },
-+	{ AR_SREV_VERSION_9565,         "9565" },
- };
- 
- /* For devices with external radios */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index de6968f..f0798cc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -50,6 +50,7 @@
- #define AR9300_DEVID_AR9330	0x0035
- #define AR9300_DEVID_QCA955X	0x0038
- #define AR9485_DEVID_AR1111	0x0037
-+#define AR9300_DEVID_AR9565     0x0036
- 
- #define AR5416_AR9100_DEVID	0x000b
- 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 87cac8e..4e6760f 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -801,6 +801,8 @@
- #define AR_SREV_REVISION_9580_10	4 /* AR9580 1.0 */
- #define AR_SREV_VERSION_9462		0x280
- #define AR_SREV_REVISION_9462_20	2
-+#define AR_SREV_VERSION_9565            0x2C0
-+#define AR_SREV_REVISION_9565_10        0
- #define AR_SREV_VERSION_9550		0x400
- 
- #define AR_SREV_5416(_ah) \
-@@ -909,6 +911,13 @@
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
- 	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
- 
-+#define AR_SREV_9565(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
-+
-+#define AR_SREV_9565_10(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10))
-+
- #define AR_SREV_9550(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9550))
- 
 -- 
-1.7.12
-
+Jouni Malinen                                            PGP id EFC895FA
