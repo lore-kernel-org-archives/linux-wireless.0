@@ -1,46 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:47423 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754215Ab2IXA0t (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:41059 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751605Ab2IZD3R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Sep 2012 20:26:49 -0400
-Received: by vcbfo13 with SMTP id fo13so5717301vcb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Sep 2012 17:26:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1348221722.1581.12.camel@x61.thuisdomein>
-References: <1348221722.1581.12.camel@x61.thuisdomein>
-Date: Mon, 24 Sep 2012 04:26:48 +0400
-Message-ID: <CA++WF2Ny+RDLXoybrdVM6Vh21NOOE5M3aQr7VfzgYmy1YEvfbQ@mail.gmail.com> (sfid-20120924_022653_986469_FF888555)
-Subject: Re: [PATCH] ipw2x00: silence GCC warning for unused variable 'dev'
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Paul Bolle <pebolle@tiscali.nl>
+	Tue, 25 Sep 2012 23:29:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 07/15] mwifiex: process remain on channel expired event
+Date: Tue, 25 Sep 2012 20:23:37 -0700
+Message-Id: <1348629825-12001-8-git-send-email-bzhao@marvell.com> (sfid-20120926_052919_864771_FB4D423C)
+In-Reply-To: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
+References: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Paul,
+From: Stone Piao <piaoyun@marvell.com>
 
-On 21 September 2012 14:02, Paul Bolle <pebolle@tiscali.nl> wrote:
-> Building the libipw component without CONFIG_LIBIPW_DEBUG set triggers this GCC
-> warning:
->     drivers/net/wireless/ipw2x00/libipw_wx.c:526:21: warning: unused variable 'dev' [-Wunused-variable]
->
-> The cause of this warning is that, without CONFIG_LIBIPW_DEBUG set,
-> LIBIPW_DEBUG_WX compiles away. Fix it by substituting ieee->dev for (its
-> equivalent) dev.
->
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
-> ---
-> 0) I noticed this warning while building v3.6-rc6 on current Fedora 17,
-> using Fedora's default config.
->
-> 1) Compile tested only (by just compiling libipw_wx.o).
->
->  drivers/net/wireless/ipw2x00/libipw_wx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Process remain on channel expired event, and notify cfg80211.
 
-Looks fine, thanks.
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h        |    1 +
+ drivers/net/wireless/mwifiex/sta_event.c |   12 ++++++++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-Stanislav.
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 9818cae..b8a07ad 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -392,6 +392,7 @@ enum ENH_PS_MODES {
+ #define EVENT_BW_CHANGE                 0x00000048
+ #define EVENT_UAP_MIC_COUNTERMEASURES   0x0000004c
+ #define EVENT_HOSTWAKE_STAIE		0x0000004d
++#define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
+ 
+ #define EVENT_ID_MASK                   0xffff
+ #define BSS_NUM_MASK                    0xf
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index dff51d5..aafde30 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -410,6 +410,18 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 		dev_dbg(adapter->dev, "event: HOSTWAKE_STAIE %d\n", eventcause);
+ 		break;
+ 
++	case EVENT_REMAIN_ON_CHAN_EXPIRED:
++		dev_dbg(adapter->dev, "event: Remain on channel expired\n");
++		cfg80211_remain_on_channel_expired(priv->wdev,
++						   priv->roc_cfg.cookie,
++						   &priv->roc_cfg.chan,
++						   priv->roc_cfg.chan_type,
++						   GFP_ATOMIC);
++
++		memset(&priv->roc_cfg, 0x00, sizeof(struct mwifiex_roc_cfg));
++
++		break;
++
+ 	default:
+ 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
+ 			eventcause);
+-- 
+1.7.0.2
+
