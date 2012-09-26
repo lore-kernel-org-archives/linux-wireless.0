@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52056 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011Ab2IGISB (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:43216 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550Ab2IZORq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 04:18:01 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1T9tlI-0004v3-FD
-	for linux-wireless@vger.kernel.org; Fri, 07 Sep 2012 10:18:00 +0200
-Message-ID: <1347005918.4256.1.camel@jlt4.sipsolutions.net> (sfid-20120907_101808_804500_CEBAD2C1)
-Subject: Re: [PATCH] wireless: remove obsolete chan no/center freq
- conversion functions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 07 Sep 2012 10:18:38 +0200
-In-Reply-To: <1343144412-8562-1-git-send-email-johannes@sipsolutions.net> (sfid-20120724_174020_200174_ADAAB4D4)
-References: <1343144412-8562-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120724_174020_200174_ADAAB4D4)
+	Wed, 26 Sep 2012 10:17:46 -0400
+Message-ID: <1348669043.13371.12.camel@aeonflux> (sfid-20120926_161750_583170_12B39BD2)
+Subject: Re: [PATCH] ath3k: Added VID/PID for the Gigabyte GC-WB300D
+ Wifi/Bluetooth card
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Wouter Thielen <wouter@morannon.org>
+Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 26 Sep 2012 16:17:23 +0200
+In-Reply-To: <CACySJQUFfxKNAK7J0Qu7QoQhSjdUk+SJ8eZoE+9RQFMKspewLQ@mail.gmail.com>
+References: <CACySJQUFfxKNAK7J0Qu7QoQhSjdUk+SJ8eZoE+9RQFMKspewLQ@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-24 at 17:40 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> There are a number of functions that shouldn't really
-> be used when modern functions that take the band are
-> available in cfg80211. Remove these, but for now keep
->  * ieee80211_freq_to_dsss_chan and
->  * ieee80211_dsss_chan_to_freq
-> as they're used in older drivers.
+Hi Wouter,
 
-Applied.
+> This card is supplied with the Gigabyte Sniper 3 motherboard (and some
+> others). I followed the information on
+> http://wireless.kernel.org/en/users/Drivers/ath3k and confirmed with
+> lsusb -v that it is using the AR3012 chipset.
 
-johannes
+send this to linux-bluetooth@vger.kernel.org since otherwise it will get
+lost. And we require inclusion of /sys/kernel/debug/usb/devices for this
+one.
+
+Regards
+
+Marcel
+
+
 
