@@ -1,42 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:50742 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838Ab2IGPrR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53941 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104Ab2IZC0U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 11:47:17 -0400
-Received: by eekc1 with SMTP id c1so1255133eek.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2012 08:47:15 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] p54: connect to 11w protected networks
-Date: Fri, 7 Sep 2012 17:47:09 +0200
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-References: <1346622538.10113.3.camel@jlt4.sipsolutions.net> <1346770467.3737.32.camel@jlt4.sipsolutions.net> <1347020234.4256.22.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1347020234.4256.22.camel@jlt4.sipsolutions.net>
+	Tue, 25 Sep 2012 22:26:20 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
+Message-ID: <20578.26510.282967.548435@gargle.gargle.HOWL> (sfid-20120926_042622_578588_17E6B248)
+Date: Wed, 26 Sep 2012 07:55:18 +0530
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209071747.09666.chunkeey@googlemail.com> (sfid-20120907_174720_559870_3928AEA1)
+Content-Type: text/plain; charset="us-ascii"
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/2] ath9k: Add a debugfs file to adjust antenna diversity
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 September 2012 14:17:14 Johannes Berg wrote:
-> On Tue, 2012-09-04 at 16:54 +0200, Johannes Berg wrote:
->
-> If you want this for your driver, I'll commit this:
-> 
-> http://p.sipsolutions.net/ea2e3dbe980f5db8.txt
+Location: /<debugfs>/ieee80211/phy#/ath9k/diversity
 
-Won't this totally disable the crypto offload
-capabilities in AP mode?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |  2 +-
+ drivers/net/wireless/ath/ath9k/debug.c      | 55 +++++++++++++++++++++++++++--
+ 2 files changed, 54 insertions(+), 3 deletions(-)
 
-I sort of prefer the nohwcrypt switch as it won't
-interfere with running user setups as much (so we
-don't burden systems like that weird telekom
-streamin-box (Vision S100 - it's name I think)
-that came with a p54pci minipci card and are
-now used for different purposes by some.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index fc67844..759f5f5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1360,7 +1360,7 @@ static void ar9003_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
+ 	if (enable) {
+ 		REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
+ 			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
+-		if (IS_CHAN_2GHZ(ah->curchan))
++		if (ah->curchan && IS_CHAN_2GHZ(ah->curchan))
+ 			REG_SET_BIT(ah, AR_PHY_RESTART,
+ 				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
+ 		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index e1041a6..6727b56 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -222,6 +222,57 @@ static const struct file_operations fops_disable_ani = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t read_file_ant_diversity(struct file *file, char __user *user_buf,
++				       size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	char buf[32];
++	unsigned int len;
++
++	len = sprintf(buf, "%d\n", common->antenna_diversity);
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_ant_diversity(struct file *file,
++					const char __user *user_buf,
++					size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	unsigned long antenna_diversity;
++	char buf[32];
++	ssize_t len;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
++
++	if (!AR_SREV_9565(sc->sc_ah))
++		goto exit;
++
++	buf[len] = '\0';
++	if (strict_strtoul(buf, 0, &antenna_diversity))
++		return -EINVAL;
++
++	common->antenna_diversity = !!antenna_diversity;
++	ath9k_ps_wakeup(sc);
++	ath_ant_comb_update(sc);
++	ath_dbg(common, CONFIG, "Antenna diversity: %d\n",
++		common->antenna_diversity);
++	ath9k_ps_restore(sc);
++exit:
++	return count;
++}
++
++static const struct file_operations fops_ant_diversity = {
++	.read = read_file_ant_diversity,
++	.write = write_file_ant_diversity,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
+ 			     size_t count, loff_t *ppos)
+ {
+@@ -1601,12 +1652,12 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 	debugfs_create_file("samples", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_samps);
+ #endif
+-
+ 	debugfs_create_u32("gpio_mask", S_IRUSR | S_IWUSR,
+ 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_mask);
+-
+ 	debugfs_create_u32("gpio_val", S_IRUSR | S_IWUSR,
+ 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_val);
++	debugfs_create_file("diversity", S_IRUSR | S_IWUSR,
++			    sc->debug.debugfs_phy, sc, &fops_ant_diversity);
+ 
+ 	return 0;
+ }
+-- 
+1.7.12
 
-Regards,
-	Christian 
