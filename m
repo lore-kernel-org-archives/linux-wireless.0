@@ -1,71 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58062 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764Ab2IMCdp (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:38862 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751811Ab2IZDbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 22:33:45 -0400
-Received: by pbbrr13 with SMTP id rr13so3234905pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2012 19:33:45 -0700 (PDT)
-From: Ming Lei <ming.lei@canonical.com>
+	Tue, 25 Sep 2012 23:31:33 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ming Lei <ming.lei@canonical.com>, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH -next] wireless: ath9k-htc: fix possible use after free
-Date: Thu, 13 Sep 2012 10:33:28 +0800
-Message-Id: <1347503608-3521-1-git-send-email-ming.lei@canonical.com> (sfid-20120913_043349_565821_B4CC953F)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 14/15] mwifiex: set txpd when send a mgmt frame for AP and GO mode
+Date: Tue, 25 Sep 2012 20:23:44 -0700
+Message-Id: <1348629825-12001-15-git-send-email-bzhao@marvell.com> (sfid-20120926_053136_310789_FD09A950)
+In-Reply-To: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
+References: <1348629825-12001-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inside ath9k_hif_usb_firmware_fail(), the instance of
-'struct struct hif_device_usb' may be freed by
-ath9k_hif_usb_disconnect() after
+From: Stone Piao <piaoyun@marvell.com>
 
-	complete(&hif_dev->fw_done);
+Set packet type and packet offset in txpd when send a mgmt frame
+in AP and GO mode.
 
-But 'hif_dev' is still accessed after the line code
-above is executed.
-
-This patch fixes the issue by not accessing 'hif_dev'
-after 'complete(&hif_dev->fw_done)' inside
-ath9k_hif_usb_firmware_fail().
-
-Cc: ath9k-devel@lists.ath9k.org
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Kevin Gan <ganhy@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/uap_txrx.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index ee6e50a..924c461 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -1072,14 +1072,15 @@ static void ath9k_hif_usb_dev_deinit(struct hif_device_usb *hif_dev)
-  */
- static void ath9k_hif_usb_firmware_fail(struct hif_device_usb *hif_dev)
- {
--	struct device *parent = hif_dev->udev->dev.parent;
-+	struct device *dev = &hif_dev->udev->dev;
-+	struct device *parent = dev->parent;
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index 012c143..0966ac2 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -284,6 +284,7 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 	struct uap_txpd *txpd;
+ 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+ 	int pad, len;
++	u16 pkt_type;
  
- 	complete(&hif_dev->fw_done);
+ 	if (!skb->len) {
+ 		dev_err(adapter->dev, "Tx: bad packet length: %d\n", skb->len);
+@@ -291,6 +292,8 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 		return skb->data;
+ 	}
  
- 	if (parent)
- 		device_lock(parent);
++	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
++
+ 	/* If skb->data is not aligned, add padding */
+ 	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
  
--	device_release_driver(&hif_dev->udev->dev);
-+	device_release_driver(dev);
+@@ -318,6 +321,12 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 		    cpu_to_le32(priv->wmm.user_pri_pkt_tx_ctrl[txpd->priority]);
  
- 	if (parent)
- 		device_unlock(parent);
+ 	/* Offset of actual data */
++	if (pkt_type == PKT_TYPE_MGMT) {
++		/* Set the packet type and add header for management frame */
++		txpd->tx_pkt_type = cpu_to_le16(pkt_type);
++		len += MWIFIEX_MGMT_FRAME_HEADER_SIZE;
++	}
++
+ 	txpd->tx_pkt_offset = cpu_to_le16(len);
+ 
+ 	/* make space for INTF_HEADER_LEN */
 -- 
-1.7.9.5
+1.7.0.2
 
