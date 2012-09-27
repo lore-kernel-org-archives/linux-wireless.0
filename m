@@ -1,29 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51915 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab2IUQfi (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:57600 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753649Ab2I0JRV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Sep 2012 12:35:38 -0400
-Message-ID: <505C9746.4060009@qca.qualcomm.com> (sfid-20120921_183542_482296_7C1CE9DB)
-Date: Fri, 21 Sep 2012 19:35:18 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 1/4] ath6kl: Fix bug in scheduling hb_timer
-References: <1346656777-15197-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1346656777-15197-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Thu, 27 Sep 2012 05:17:21 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl12xx: use module_platform_driver
+Date: Thu, 27 Sep 2012 12:06:20 +0300
+Message-Id: <1348736780-3165-1-git-send-email-luca@coelho.fi> (sfid-20120927_111724_622612_DA27C965)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/03/2012 10:19 AM, Vasanthakumar Thiagarajan wrote:
-> hb_timer should be scheduled only when hb_poll is non-zero.
-> But in ath6kl_recovery_work() the timer is scheduled based
-> on fw_recovery.enable instead which is wrong.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Use a module_platform_driver declaration instead of replicating the
+init and exit functions in the driver.
 
-Thanks, all four applied.
+Based on the patch for wl18xx by Devendra Naga.
 
-Kalle
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wl12xx/main.c |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index f429fc1..30ca727 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1714,17 +1714,7 @@ static struct platform_driver wl12xx_driver = {
+ 	}
+ };
+ 
+-static int __init wl12xx_init(void)
+-{
+-	return platform_driver_register(&wl12xx_driver);
+-}
+-module_init(wl12xx_init);
+-
+-static void __exit wl12xx_exit(void)
+-{
+-	platform_driver_unregister(&wl12xx_driver);
+-}
+-module_exit(wl12xx_exit);
++module_platform_driver(wl12xx_driver);
+ 
+ module_param_named(fref, fref_param, charp, 0);
+ MODULE_PARM_DESC(fref, "FREF clock: 19.2, 26, 26x, 38.4, 38.4x, 52");
+-- 
+1.7.10.4
+
