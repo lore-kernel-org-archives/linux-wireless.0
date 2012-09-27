@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:35933 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750732Ab2IXVJq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 17:09:46 -0400
-Date: Mon, 24 Sep 2012 23:09:28 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [RFC] b43-fwcutter: Add support for generating a fw for
- brcmsmac
-Message-ID: <20120924230928.4c2fa4c2@milhouse> (sfid-20120924_230950_667981_AFBF2426)
-In-Reply-To: <1348425562-30730-1-git-send-email-hauke@hauke-m.de>
-References: <1348425562-30730-1-git-send-email-hauke@hauke-m.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Q00ShsraL9rZ3L_V5fAnfBB"; protocol="application/pgp-signature"
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58489 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754924Ab2I0PNN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 11:13:13 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Ensure we set FTP_STOMP_LOW weight when WLAN is idle
+Date: Thu, 27 Sep 2012 20:42:48 +0530
+Message-ID: <1348758768-5228-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120927_171338_477709_D060B625)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/Q00ShsraL9rZ3L_V5fAnfBB
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-I applied this to the git repository and released b43-fwcutter-016.
-There are no other changes since 015.
+We WLAN is idle we can some better bandwidth to FTP by
+setting STOMP_LOW_FTP where stomping the FTP BT is pretty
+much reduced when compared to setting STOMP_LOW weight.
+we calculate WLAN is idle by taking into account of the
+rx data packets, so ensure that we take into account
+of data packets(ignore beacons).
 
---=20
-Greetings, Michael.
+Also update bt_wait_time even if the chip is NETWORK SLEEP
+mode. This should help BT throughput when WLAN is idle,
+when everything else is fine :)
 
-PGP encryption is encouraged / 908D8B0E
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c |    5 ++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
---Sig_/Q00ShsraL9rZ3L_V5fAnfBB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index bf7d29e..97d1ed4 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -204,6 +204,7 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 	if (sc->sc_ah->power_mode == ATH9K_PM_NETWORK_SLEEP) {
++		btcoex->bt_wait_time += btcoex->btcoex_period;
+ 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 		goto skip_hw_wakeup;
+ 	}
+@@ -214,7 +215,6 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 		ath_detect_bt_priority(sc);
+ 	is_btscan = test_bit(BT_OP_SCAN, &btcoex->op_flags);
+ 
+-	btcoex->bt_wait_time += btcoex->btcoex_period;
+ 	if (btcoex->bt_wait_time > ATH_BTCOEX_RX_WAIT_TIME) {
+ 		if (ar9003_mci_state(ah, MCI_STATE_NEED_FTP_STOMP) &&
+ 		    (mci->num_pan || mci->num_other_acl))
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 4480c0c..9b2a8cc 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1105,7 +1105,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		else
+ 			rs.is_mybeacon = false;
+ 
+-		sc->rx.num_pkts++;
++		if (ieee80211_is_data_present(hdr->frame_control) &&
++		    !ieee80211_is_qos_nullfunc(hdr->frame_control))
++			sc->rx.num_pkts++;
++
+ 		ath_debug_stat_rx(sc, &rs);
+ 
+ 		/*
+-- 
+1.7.0.4
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQYMwIAAoJEPUyvh2QjYsOlpQQANDedebiihA0wh8Wnwr4aC7C
-7lPL6d331b/rfsuK/tcopQFM7UN2OEufycGCiIMhieS1/a0obXlikEo6/3Nzd9Ta
-7TKWYE+bPd6mO0GcR/R6MI96uZ9/RL3smQRxMya0gKJyX18xcpWk0FUncc8AVXlp
-w4a3v5KSmSKYQnyeLdaW3DPwmrbJ2Y/IX4JFz8x7SAFgTNxnfU9CHupZ6hTKYuE2
-S0Cwa/4qeB5Z4JP+AnGvNT2KqzCtHiINaWORO/tMD1JiJggK+5mIUqy1E61mLuhx
-uK8D7XGcZr5waHkl8GMGwkzP3UKqb42dHDaCU2ETXxmDuKZIBnFewIf7vnAS1zqz
-Y2MOwPiwv6lMgUTrcBsQ1INW5hTFRmN3I6ZErixxRdKxwi908KfxpHk7ANz75Tg+
-7MicJAL4qwtAzjyWkz0vkbHJ2jyFLkzi0PPXCdQslVEb3C4ny10yD/Cr9RwHAYOo
-wczdrZO1tVCtemR4UtcqmfNO9nF5O1/rPB75FIoPJRv3yVSk9su8OsLLEoGou70G
-w9+2qGl0lW/+Qt+Ibwr/Wl4jWWNZvKexGYgj4MHSq6uz5exNmKYpmEQ0WfqozJ13
-TpJKBANRmbNgKRCMo6NuqdzM1vbTHGjOlm56vtdmHcXzSHz3ewoEtR8ka1sppGtg
-mKR+fsbqaNBQuYuMYVTZ
-=iZgl
------END PGP SIGNATURE-----
-
---Sig_/Q00ShsraL9rZ3L_V5fAnfBB--
