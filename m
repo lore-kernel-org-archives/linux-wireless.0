@@ -1,124 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63966 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750935Ab2IJQjD (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:53719 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756697Ab2I0Kim (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 12:39:03 -0400
-Received: by eekc1 with SMTP id c1so1317314eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2012 09:39:01 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH 07/10] brcmfmac: Fix big endian host configuration data.
-Date: Mon, 10 Sep 2012 18:38:21 +0200
-Message-ID: <2217272.VoFA81WqWx@flexo> (sfid-20120910_183907_462978_5CF3A17C)
-In-Reply-To: <1347283018-24223-8-git-send-email-arend@broadcom.com>
-References: <1347283018-24223-1-git-send-email-arend@broadcom.com> <1347283018-24223-8-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 27 Sep 2012 06:38:42 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 15/31] wlcore: make debug prints work without dynamic debug
+Date: Thu, 27 Sep 2012 13:37:53 +0300
+Message-Id: <1348742289-6587-16-git-send-email-luca@coelho.fi> (sfid-20120927_123937_557609_712B1B28)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 September 2012 15:16:55 Arend van Spriel wrote:
-> From: Hante Meuleman <meuleman@broadcom.com>
-> 
-> Fixes big endian host configuration parameters.
-> 
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-This one too looks like a stable candidate.
+Make debug prints operational when dynamic debug is not defined.
+This allows better debugging in production environments.
 
-> ---
->  .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   26 
-++++++++++++--------
->  1 file changed, 16 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c 
-b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-> index 2621dd3..6f70953 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-> @@ -764,8 +764,11 @@ static void brcmf_c_arp_offload_set(struct brcmf_pub 
-*drvr, int arp_mode)
->  {
->  	char iovbuf[32];
->  	int retcode;
-> +	__le32 arp_mode_le;
->  
-> -	brcmf_c_mkiovar("arp_ol", (char *)&arp_mode, 4, iovbuf, sizeof(iovbuf));
-> +	arp_mode_le = cpu_to_le32(arp_mode);
-> +	brcmf_c_mkiovar("arp_ol", (char *)&arp_mode_le, 4, iovbuf,
-> +			sizeof(iovbuf));
->  	retcode = brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR,
->  				   iovbuf, sizeof(iovbuf));
->  	retcode = retcode >= 0 ? 0 : retcode;
-> @@ -781,8 +784,11 @@ static void brcmf_c_arp_offload_enable(struct brcmf_pub 
-*drvr, int arp_enable)
->  {
->  	char iovbuf[32];
->  	int retcode;
-> +	__le32 arp_enable_le;
->  
-> -	brcmf_c_mkiovar("arpoe", (char *)&arp_enable, 4,
-> +	arp_enable_le = cpu_to_le32(arp_enable);
-> +
-> +	brcmf_c_mkiovar("arpoe", (char *)&arp_enable_le, 4,
->  			iovbuf, sizeof(iovbuf));
->  	retcode = brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR,
->  				   iovbuf, sizeof(iovbuf));
-> @@ -800,10 +806,10 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
->  	char iovbuf[BRCMF_EVENTING_MASK_LEN + 12];	/*  Room for
->  				 "event_msgs" + '\0' + bitvec  */
->  	char buf[128], *ptr;
-> -	u32 roaming = 1;
-> -	uint bcn_timeout = 3;
-> -	int scan_assoc_time = 40;
-> -	int scan_unassoc_time = 40;
-> +	__le32 roaming_le = cpu_to_le32(1);
-> +	__le32 bcn_timeout_le = cpu_to_le32(3);
-> +	__le32 scan_assoc_time_le = cpu_to_le32(40);
-> +	__le32 scan_unassoc_time_le = cpu_to_le32(40);
->  	int i;
->  	struct brcmf_bus_dcmd *cmdlst;
->  	struct list_head *cur, *q;
-> @@ -829,14 +835,14 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
->  
->  	/* Setup timeout if Beacons are lost and roam is off to report
->  		 link down */
-> -	brcmf_c_mkiovar("bcn_timeout", (char *)&bcn_timeout, 4, iovbuf,
-> +	brcmf_c_mkiovar("bcn_timeout", (char *)&bcn_timeout_le, 4, iovbuf,
->  		    sizeof(iovbuf));
->  	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
->  				  sizeof(iovbuf));
->  
->  	/* Enable/Disable build-in roaming to allowed ext supplicant to take
->  		 of romaing */
-> -	brcmf_c_mkiovar("roam_off", (char *)&roaming, 4,
-> +	brcmf_c_mkiovar("roam_off", (char *)&roaming_le, 4,
->  		      iovbuf, sizeof(iovbuf));
->  	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
->  				  sizeof(iovbuf));
-> @@ -848,9 +854,9 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
->  				  sizeof(iovbuf));
->  
->  	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_SCAN_CHANNEL_TIME,
-> -			 (char *)&scan_assoc_time, sizeof(scan_assoc_time));
-> +		 (char *)&scan_assoc_time_le, sizeof(scan_assoc_time_le));
->  	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_SCAN_UNASSOC_TIME,
-> -			 (char *)&scan_unassoc_time, sizeof(scan_unassoc_time));
-> +		 (char *)&scan_unassoc_time_le, sizeof(scan_unassoc_time_le));
->  
->  	/* Set and enable ARP offload feature */
->  	brcmf_c_arp_offload_set(drvr, BRCMF_ARPOL_MODE);
-> -- 
-> 1.7.9.5
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Change the driver prefix to "wlcore" while were at it.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wlcore/debug.h |   16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/debug.h b/drivers/net/wireless/ti/wlcore/debug.h
+index 6b800b3..db4bf5a 100644
+--- a/drivers/net/wireless/ti/wlcore/debug.h
++++ b/drivers/net/wireless/ti/wlcore/debug.h
+@@ -28,7 +28,7 @@
+ #include <linux/bitops.h>
+ #include <linux/printk.h>
+ 
+-#define DRIVER_NAME "wl12xx"
++#define DRIVER_NAME "wlcore"
+ #define DRIVER_PREFIX DRIVER_NAME ": "
+ 
+ enum {
+@@ -73,11 +73,21 @@ extern u32 wl12xx_debug_level;
+ #define wl1271_info(fmt, arg...) \
+ 	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
+ 
++/* define the debug macro differently if dynamic debug is supported */
++#if defined(CONFIG_DYNAMIC_DEBUG)
+ #define wl1271_debug(level, fmt, arg...) \
+ 	do { \
+-		if (level & wl12xx_debug_level) \
+-			pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
++		if (unlikely(level & wl12xx_debug_level)) \
++			dynamic_pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
++	} while (0)
++#else
++#define wl1271_debug(level, fmt, arg...) \
++	do { \
++		if (unlikely(level & wl12xx_debug_level)) \
++			printk(KERN_DEBUG pr_fmt(DRIVER_PREFIX fmt "\n"), \
++			       ##arg); \
+ 	} while (0)
++#endif
+ 
+ /* TODO: use pr_debug_hex_dump when it becomes available */
+ #define wl1271_dump(level, prefix, buf, len)	\
+-- 
+1.7.10.4
+
