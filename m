@@ -1,204 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4917 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753579Ab2I0MSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 08:18:18 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/11] brcmfmac: remove brcmf_update_prof() function
-Date: Thu, 27 Sep 2012 14:17:57 +0200
-Message-ID: <1348748277-21460-12-git-send-email-arend@broadcom.com> (sfid-20120927_141832_243397_DBB349ED)
-In-Reply-To: <1348748277-21460-1-git-send-email-arend@broadcom.com>
-References: <1348748277-21460-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:37745 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756758Ab2I0Kiq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 06:38:46 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Ido Yariv <ido@wizery.com>
+Subject: [PATCH 28/31] wlcore: Refactor probe
+Date: Thu, 27 Sep 2012 13:38:06 +0300
+Message-Id: <1348742289-6587-29-git-send-email-luca@coelho.fi> (sfid-20120927_123931_129637_7CCEE7A1)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_update_prof() only add complexity that is not
-needed.
+From: Ido Yariv <ido@wizery.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Move most of the device-specific probe functionality into setup(), a new
+op. By doing this, wlcore_probe will be the first to request a firmware
+from userspace, making it easier to load the NVS file asynchronously.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   81 +++++---------------
- 1 file changed, 19 insertions(+), 62 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c   |   52 ++++++++++++++++++---------
+ drivers/net/wireless/ti/wl18xx/main.c   |   59 ++++++++++++++++++-------------
+ drivers/net/wireless/ti/wlcore/main.c   |   18 +++++-----
+ drivers/net/wireless/ti/wlcore/wlcore.h |    2 ++
+ 4 files changed, 83 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index d8af418..619c932 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1285,47 +1285,6 @@ done:
- 	return err;
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 630b4d4..dadf1db 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1589,7 +1589,10 @@ static int wl12xx_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+ 	return wlcore_set_key(wl, cmd, vif, sta, key_conf);
  }
  
--static s32
--brcmf_update_prof(struct brcmf_cfg80211_info *cfg,
--		  const struct brcmf_event_msg *e, void *data, s32 item)
--{
--	s32 err = 0;
--	struct brcmf_ssid *ssid;
++static int wl12xx_setup(struct wl1271 *wl);
++
+ static struct wlcore_ops wl12xx_ops = {
++	.setup			= wl12xx_setup,
+ 	.identify_chip		= wl12xx_identify_chip,
+ 	.identify_fw		= wl12xx_identify_fw,
+ 	.boot			= wl12xx_boot,
+@@ -1630,23 +1633,11 @@ static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
+ 		},
+ };
+ 
+-static int __devinit wl12xx_probe(struct platform_device *pdev)
++static int wl12xx_setup(struct wl1271 *wl)
+ {
+-	struct wl12xx_platform_data *pdata = pdev->dev.platform_data;
+-	struct wl1271 *wl;
+-	struct ieee80211_hw *hw;
+-	struct wl12xx_priv *priv;
 -
--	switch (item) {
--	case WL_PROF_SSID:
--		ssid = (struct brcmf_ssid *) data;
--		memset(cfg->profile->ssid.SSID, 0,
--		       sizeof(cfg->profile->ssid.SSID));
--		memcpy(cfg->profile->ssid.SSID,
--		       ssid->SSID, ssid->SSID_len);
--		cfg->profile->ssid.SSID_len = ssid->SSID_len;
--		break;
--	case WL_PROF_BSSID:
--		if (data)
--			memcpy(cfg->profile->bssid, data, ETH_ALEN);
--		else
--			memset(cfg->profile->bssid, 0, ETH_ALEN);
--		break;
--	case WL_PROF_SEC:
--		memcpy(&cfg->profile->sec, data,
--		       sizeof(cfg->profile->sec));
--		break;
--	case WL_PROF_BEACONINT:
--		cfg->profile->beacon_interval = *(u16 *)data;
--		break;
--	case WL_PROF_DTIMPERIOD:
--		cfg->profile->dtim_period = *(u8 *)data;
--		break;
--	default:
--		WL_ERR("unsupported item (%d)\n", item);
--		err = -EOPNOTSUPP;
--		break;
+-	hw = wlcore_alloc_hw(sizeof(*priv), WL12XX_AGGR_BUFFER_SIZE);
+-	if (IS_ERR(hw)) {
+-		wl1271_error("can't allocate hw");
+-		return PTR_ERR(hw);
+-	}
++	struct wl12xx_priv *priv = wl->priv;
++	struct wl12xx_platform_data *pdata = wl->pdev->dev.platform_data;
+ 
+-	wl = hw->priv;
+-	priv = wl->priv;
+-	wl->ops = &wl12xx_ops;
+-	wl->ptable = wl12xx_ptable;
+ 	wl->rtable = wl12xx_rtable;
+ 	wl->num_tx_desc = WL12XX_NUM_TX_DESCRIPTORS;
+ 	wl->num_rx_desc = WL12XX_NUM_RX_DESCRIPTORS;
+@@ -1702,7 +1693,36 @@ static int __devinit wl12xx_probe(struct platform_device *pdev)
+ 			wl1271_error("Invalid tcxo parameter %s", tcxo_param);
+ 	}
+ 
+-	return wlcore_probe(wl, pdev);
++	return 0;
++}
++
++static int __devinit wl12xx_probe(struct platform_device *pdev)
++{
++	struct wl1271 *wl;
++	struct ieee80211_hw *hw;
++	int ret;
++
++	hw = wlcore_alloc_hw(sizeof(struct wl12xx_priv),
++			     WL12XX_AGGR_BUFFER_SIZE);
++	if (IS_ERR(hw)) {
++		wl1271_error("can't allocate hw");
++		ret = PTR_ERR(hw);
++		goto out;
++	}
++
++	wl = hw->priv;
++	wl->ops = &wl12xx_ops;
++	wl->ptable = wl12xx_ptable;
++	ret = wlcore_probe(wl, pdev);
++	if (ret)
++		goto out_free;
++
++	return ret;
++
++out_free:
++	wlcore_free_hw(wl);
++out:
++	return ret;
+ }
+ 
+ static const struct platform_device_id wl12xx_id_table[] __devinitconst = {
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 44e5cad..9e3e10a 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1304,7 +1304,10 @@ static u32 wl18xx_pre_pkt_send(struct wl1271 *wl,
+ 	return buf_offset;
+ }
+ 
++static int wl18xx_setup(struct wl1271 *wl);
++
+ static struct wlcore_ops wl18xx_ops = {
++	.setup		= wl18xx_setup,
+ 	.identify_chip	= wl18xx_identify_chip,
+ 	.boot		= wl18xx_boot,
+ 	.plt_init	= wl18xx_plt_init,
+@@ -1385,24 +1388,11 @@ static struct ieee80211_sta_ht_cap wl18xx_mimo_ht_cap_2ghz = {
+ 		},
+ };
+ 
+-static int __devinit wl18xx_probe(struct platform_device *pdev)
++static int wl18xx_setup(struct wl1271 *wl)
+ {
+-	struct wl1271 *wl;
+-	struct ieee80211_hw *hw;
+-	struct wl18xx_priv *priv;
++	struct wl18xx_priv *priv = wl->priv;
+ 	int ret;
+ 
+-	hw = wlcore_alloc_hw(sizeof(*priv), WL18XX_AGGR_BUFFER_SIZE);
+-	if (IS_ERR(hw)) {
+-		wl1271_error("can't allocate hw");
+-		ret = PTR_ERR(hw);
+-		goto out;
 -	}
 -
--	return err;
--}
--
- static void brcmf_init_prof(struct brcmf_cfg80211_profile *prof)
- {
- 	memset(prof, 0, sizeof(*prof));
-@@ -1381,12 +1340,12 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
- 		      struct cfg80211_ibss_params *params)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct brcmf_cfg80211_profile *profile = cfg->profile;
- 	struct brcmf_join_params join_params;
- 	size_t join_params_size = 0;
- 	s32 err = 0;
- 	s32 wsec = 0;
- 	s32 bcnprd;
--	struct brcmf_ssid ssid;
+-	wl = hw->priv;
+-	priv = wl->priv;
+-	wl->ops = &wl18xx_ops;
+-	wl->ptable = wl18xx_ptable;
+ 	wl->rtable = wl18xx_rtable;
+ 	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
+ 	wl->num_rx_desc = WL18XX_NUM_TX_DESCRIPTORS;
+@@ -1417,9 +1407,9 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 	if (num_rx_desc_param != -1)
+ 		wl->num_rx_desc = num_rx_desc_param;
  
- 	WL_TRACE("Enter\n");
- 	if (!check_sys_up(wiphy))
-@@ -1462,25 +1421,23 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
- 	memset(&join_params, 0, sizeof(struct brcmf_join_params));
+-	ret = wl18xx_conf_init(wl, &pdev->dev);
++	ret = wl18xx_conf_init(wl, wl->dev);
+ 	if (ret < 0)
+-		goto out_free;
++		return ret;
  
- 	/* SSID */
--	ssid.SSID_len = min_t(u32, params->ssid_len, 32);
--	memcpy(ssid.SSID, params->ssid, ssid.SSID_len);
--	memcpy(join_params.ssid_le.SSID, params->ssid, ssid.SSID_len);
--	join_params.ssid_le.SSID_len = cpu_to_le32(ssid.SSID_len);
-+	profile->ssid.SSID_len = min_t(u32, params->ssid_len, 32);
-+	memcpy(profile->ssid.SSID, params->ssid, profile->ssid.SSID_len);
-+	memcpy(join_params.ssid_le.SSID, params->ssid, profile->ssid.SSID_len);
-+	join_params.ssid_le.SSID_len = cpu_to_le32(profile->ssid.SSID_len);
- 	join_params_size = sizeof(join_params.ssid_le);
--	brcmf_update_prof(cfg, NULL, &ssid, WL_PROF_SSID);
- 
- 	/* BSSID */
- 	if (params->bssid) {
- 		memcpy(join_params.params_le.bssid, params->bssid, ETH_ALEN);
- 		join_params_size = sizeof(join_params.ssid_le) +
- 				   BRCMF_ASSOC_PARAMS_FIXED_SIZE;
-+		memcpy(profile->bssid, params->bssid, ETH_ALEN);
- 	} else {
- 		memcpy(join_params.params_le.bssid, ether_bcast, ETH_ALEN);
-+		memset(profile->bssid, 0, ETH_ALEN);
- 	}
- 
--	brcmf_update_prof(cfg, NULL,
--			  &join_params.params_le.bssid, WL_PROF_BSSID);
--
- 	/* Channel */
- 	if (params->channel) {
- 		u32 target_channel;
-@@ -1802,6 +1759,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 		    struct cfg80211_connect_params *sme)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct brcmf_cfg80211_profile *profile = cfg->profile;
- 	struct ieee80211_channel *chan = sme->channel;
- 	struct brcmf_join_params join_params;
- 	size_t join_params_size;
-@@ -1863,11 +1821,11 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 	memset(&join_params, 0, sizeof(join_params));
- 	join_params_size = sizeof(join_params.ssid_le);
- 
--	ssid.SSID_len = min_t(u32, sizeof(ssid.SSID), (u32)sme->ssid_len);
--	memcpy(&join_params.ssid_le.SSID, sme->ssid, ssid.SSID_len);
--	memcpy(&ssid.SSID, sme->ssid, ssid.SSID_len);
--	join_params.ssid_le.SSID_len = cpu_to_le32(ssid.SSID_len);
--	brcmf_update_prof(cfg, NULL, &ssid, WL_PROF_SSID);
-+	profile->ssid.SSID_len = min_t(u32,
-+				       sizeof(ssid.SSID), (u32)sme->ssid_len);
-+	memcpy(&join_params.ssid_le.SSID, sme->ssid, profile->ssid.SSID_len);
-+	memcpy(&profile->ssid.SSID, sme->ssid, profile->ssid.SSID_len);
-+	join_params.ssid_le.SSID_len = cpu_to_le32(profile->ssid.SSID_len);
- 
- 	memcpy(join_params.params_le.bssid, ether_bcast, ETH_ALEN);
- 
-@@ -2783,8 +2741,8 @@ static s32 brcmf_update_bss_info(struct brcmf_cfg80211_info *cfg)
- 		dtim_period = (u8)var;
- 	}
- 
--	brcmf_update_prof(cfg, NULL, &beacon_interval, WL_PROF_BEACONINT);
--	brcmf_update_prof(cfg, NULL, &dtim_period, WL_PROF_DTIMPERIOD);
-+	profile->beacon_interval = beacon_interval;
-+	profile->dtim_period = dtim_period;
- 
- update_bss_info_out:
- 	WL_TRACE("Exit");
-@@ -4658,7 +4616,7 @@ brcmf_bss_roaming_done(struct brcmf_cfg80211_info *cfg,
- 	WL_TRACE("Enter\n");
- 
- 	brcmf_get_assoc_ies(cfg);
--	brcmf_update_prof(cfg, NULL, &e->addr, WL_PROF_BSSID);
-+	memcpy(profile->bssid, e->addr, ETH_ALEN);
- 	brcmf_update_bss_info(cfg);
- 
- 	brcmf_exec_dcmd(ndev, BRCMF_C_GET_CHANNEL, &channel_le,
-@@ -4699,8 +4657,7 @@ brcmf_bss_connect_done(struct brcmf_cfg80211_info *cfg,
- 	if (test_and_clear_bit(WL_STATUS_CONNECTING, &cfg->status)) {
- 		if (completed) {
- 			brcmf_get_assoc_ies(cfg);
--			brcmf_update_prof(cfg, NULL, &e->addr,
--					  WL_PROF_BSSID);
-+			memcpy(profile->bssid, e->addr, ETH_ALEN);
- 			brcmf_update_bss_info(cfg);
+ 	/* If the module param is set, update it in conf */
+ 	if (board_type_param) {
+@@ -1436,16 +1426,14 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		} else {
+ 			wl1271_error("invalid board type '%s'",
+ 				board_type_param);
+-			ret = -EINVAL;
+-			goto out_free;
++			return -EINVAL;
  		}
- 		cfg80211_connect_result(ndev,
-@@ -4765,6 +4722,7 @@ brcmf_notify_connect_status(struct brcmf_cfg80211_info *cfg,
- 			    struct net_device *ndev,
- 			    const struct brcmf_event_msg *e, void *data)
- {
-+	struct brcmf_cfg80211_profile *profile = cfg->profile;
- 	s32 err = 0;
+ 	}
  
- 	if (cfg->conf->mode == WL_MODE_AP) {
-@@ -4772,8 +4730,7 @@ brcmf_notify_connect_status(struct brcmf_cfg80211_info *cfg,
- 	} else if (brcmf_is_linkup(cfg, e)) {
- 		WL_CONN("Linkup\n");
- 		if (brcmf_is_ibssmode(cfg)) {
--			brcmf_update_prof(cfg, NULL, (void *)e->addr,
--				WL_PROF_BSSID);
-+			memcpy(profile->bssid, e->addr, ETH_ALEN);
- 			wl_inform_ibss(cfg, ndev, e->addr);
- 			cfg80211_ibss_joined(ndev, e->addr, GFP_KERNEL);
- 			clear_bit(WL_STATUS_CONNECTING, &cfg->status);
+ 	if (priv->conf.phy.board_type >= NUM_BOARD_TYPES) {
+ 		wl1271_error("invalid board type '%d'",
+ 			priv->conf.phy.board_type);
+-		ret = -EINVAL;
+-		goto out_free;
++		return -EINVAL;
+ 	}
+ 
+ 	if (low_band_component_param != -1)
+@@ -1477,8 +1465,7 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 			priv->conf.ht.mode = HT_MODE_SISO20;
+ 		else {
+ 			wl1271_error("invalid ht_mode '%s'", ht_mode_param);
+-			ret = -EINVAL;
+-			goto out_free;
++			return -EINVAL;
+ 		}
+ 	}
+ 
+@@ -1517,7 +1504,31 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 	/* Enable 11a Band only if we have 5G antennas */
+ 	wl->enable_11a = (priv->conf.phy.number_of_assembled_ant5 != 0);
+ 
+-	return wlcore_probe(wl, pdev);
++	return 0;
++}
++
++static int __devinit wl18xx_probe(struct platform_device *pdev)
++{
++	struct wl1271 *wl;
++	struct ieee80211_hw *hw;
++	int ret;
++
++	hw = wlcore_alloc_hw(sizeof(struct wl18xx_priv),
++			     WL18XX_AGGR_BUFFER_SIZE);
++	if (IS_ERR(hw)) {
++		wl1271_error("can't allocate hw");
++		ret = PTR_ERR(hw);
++		goto out;
++	}
++
++	wl = hw->priv;
++	wl->ops = &wl18xx_ops;
++	wl->ptable = wl18xx_ptable;
++	ret = wlcore_probe(wl, pdev);
++	if (ret)
++		goto out_free;
++
++	return ret;
+ 
+ out_free:
+ 	wlcore_free_hw(wl);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 419c399..7db6384 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5547,9 +5547,17 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+ 
+ 	if (!wl->ops || !wl->ptable) {
+ 		ret = -EINVAL;
+-		goto out_free_hw;
++		goto out;
+ 	}
+ 
++	wl->dev = &pdev->dev;
++	wl->pdev = pdev;
++	platform_set_drvdata(pdev, wl);
++
++	ret = wl->ops->setup(wl);
++	if (ret < 0)
++		goto out;
++
+ 	BUG_ON(wl->num_tx_desc > WLCORE_MAX_TX_DESCRIPTORS);
+ 
+ 	/* adjust some runtime configuration parameters */
+@@ -5558,11 +5566,8 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+ 	wl->irq = platform_get_irq(pdev, 0);
+ 	wl->platform_quirks = pdata->platform_quirks;
+ 	wl->set_power = pdata->set_power;
+-	wl->dev = &pdev->dev;
+ 	wl->if_ops = pdata->ops;
+ 
+-	platform_set_drvdata(pdev, wl);
+-
+ 	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
+ 		irqflags = IRQF_TRIGGER_RISING;
+ 	else
+@@ -5573,7 +5578,7 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+ 				   pdev->name, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("request_irq() failed: %d", ret);
+-		goto out_free_hw;
++		goto out;
+ 	}
+ 
+ #ifdef CONFIG_PM
+@@ -5646,9 +5651,6 @@ out_unreg:
+ out_irq:
+ 	free_irq(wl->irq, wl);
+ 
+-out_free_hw:
+-	wlcore_free_hw(wl);
+-
+ out:
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 8ad5f37..6a04556 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -43,6 +43,7 @@ enum wl_rx_buf_align;
+ struct wl1271_rx_descriptor;
+ 
+ struct wlcore_ops {
++	int (*setup)(struct wl1271 *wl);
+ 	int (*identify_chip)(struct wl1271 *wl);
+ 	int (*identify_fw)(struct wl1271 *wl);
+ 	int (*boot)(struct wl1271 *wl);
+@@ -149,6 +150,7 @@ struct wl1271 {
+ 	bool mac80211_registered;
+ 
+ 	struct device *dev;
++	struct platform_device *pdev;
+ 
+ 	void *if_priv;
+ 
 -- 
-1.7.9.5
-
+1.7.10.4
 
