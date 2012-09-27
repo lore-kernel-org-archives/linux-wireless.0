@@ -1,33 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2261 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751816Ab2IKTRA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 15:17:00 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v3.6 0/2] brcmfmac: few endian fixes
-Date: Tue, 11 Sep 2012 21:16:46 +0200
-Message-ID: <1347391008-10583-1-git-send-email-arend@broadcom.com> (sfid-20120911_211706_861458_9F9F6997)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:39218 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751923Ab2I0THR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 15:07:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 2/5] cfg80211: add scan flag to indicate its priority
+Date: Thu, 27 Sep 2012 11:59:11 -0700
+Message-Id: <1348772354-15936-3-git-send-email-bzhao@marvell.com> (sfid-20120927_210723_153083_785E2C4C)
+In-Reply-To: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
+References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two patches fix endianness issues with firmware that were marked
-by Florian Fianelli as stable patches. These are intended for v3.6 and
-apply to the wireless tree.
+From: Sam Leffler <sleffler@chromium.org>
 
-Hante Meuleman (2):
-  brcmfmac: fix big endian bug in i-scan.
-  brcmfmac: Fix big endian host configuration data.
+Add NL80211_SCAN_FLAG_LOW_PRIORITY flag support. It tells drivers
+that this is a low priority scan request, so that they can take
+necessary action.
 
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   26 ++++++++++++--------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    6 +++--
- 2 files changed, 20 insertions(+), 12 deletions(-)
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/linux/nl80211.h |    3 +++
+ include/net/cfg80211.h  |    3 +++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 109f75d..e512baf 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -3079,8 +3079,11 @@ enum nl80211_connect_failed_reason {
+  * Scan request control flags are used to control the handling
+  * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
+  * requests.
++ *
++ * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+  */
+ enum nl80211_scan_flags {
++	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
+ };
+ 
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2c0c14a..ed659db 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -993,8 +993,11 @@ struct cfg80211_ssid {
+ 
+ /**
+  * enum cfg80211_scan_flags -  scan request control flags
++ *
++ * @CFG80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+  */
+ enum cfg80211_scan_flags {
++	CFG80211_SCAN_FLAG_LOW_PRIORITY	= NL80211_SCAN_FLAG_LOW_PRIORITY,
+ };
+ 
+ /**
 -- 
-1.7.9.5
-
+1.7.0.2
 
