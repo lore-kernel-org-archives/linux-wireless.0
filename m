@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:60021 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852Ab2IDRME (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:47749 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756736Ab2I0Kio (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 13:12:04 -0400
-Date: Tue, 4 Sep 2012 19:12:15 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	openwrt-devel@lists.openwrt.org,
-	Marek Lindner <lindner_marek@yahoo.de>, sven@narfation.org,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Adrian Chadd <adrian.chadd@gmail.com>
-Subject: Re: AR9330 hornet board stops beaconing after a few days
- (0xdeadbeef)
-Message-ID: <20120904171215.GA5953@pandem0nium> (sfid-20120904_191209_882467_982997F2)
-References: <20120813165340.GA10044@pandem0nium>
- <20120819220436.GA9899@pandem0nium>
- <CAD2nsn0O+dfJLnKroRUJF6TEVWUmgwvriF7M+Oy4YL2ug0gSNA@mail.gmail.com>
- <CAD2nsn2_V-p+8u0VSnkJnjtFF-+nkT=vOLCBqmK9+H=Sj=uhCA@mail.gmail.com>
- <20120902200102.GA28313@pandem0nium>
- <CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
-In-Reply-To: <CAD2nsn2wGCsYV2NW9VSVnvmQhnEk0EXW1vn6eaTYg_4-1w8ecQ@mail.gmail.com>
+	Thu, 27 Sep 2012 06:38:44 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 25/31] wlcore: invalidate keep-alive template on disconnection
+Date: Thu, 27 Sep 2012 13:38:03 +0300
+Message-Id: <1348742289-6587-26-git-send-email-luca@coelho.fi> (sfid-20120927_123924_379270_8588FE30)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Eliad Peller <eliad@wizery.com>
 
---YiEDa0DAkWCtVeE4
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Previously, invalidation of the keep-alive template was
+done when going idle. However, while removing the
+idle-handling we didn't move the keep-alive template
+invalidation to another place.
 
-Shafi,
+This finally resulted in fw error when trying to use
+the keep-alive template by another role.
 
-On Mon, Sep 03, 2012 at 07:23:26PM +0530, Mohammed Shafi wrote:
-> seems we are getting beacon stuck, though its not sufficient for triggering
-> chip reset (or) atleast start noise floor calibration. Is this is in a congested
-> environment ? we can dump cycle counters . I think we need to have a
-> WAR of chip reset if the cycle counters (busy is too high) inspite the MAC hang
-> signature . let me try too to figure out that WAR is already available (or)
-> we got to enable it.
+(Note that we still have an error here - each role
+should have its unique keep-alive template id, while
+currently they all use CMD_TEMPL_KLV_IDX_NULL_DATA (0).
+This only works now because we don't support concurrent
+connected stations yet)
 
-I'm living at a small village, and one or two neighbors may have access points too,
-but that's it - this should be far from beeing busy. We mostly use these APs for
-surfing with smart phones, this is also far from congesting them. ;)
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-TBH I don't really understand what you are talking about regarding WAR, etc, can
-you please explain? What can we do to analyse the problem better?
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 3f5d87e..7c04b0b 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2544,6 +2544,11 @@ static int wl1271_unjoin(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 		ieee80211_chswitch_done(vif, false);
+ 	}
+ 
++	/* invalidate keep-alive template */
++	wl1271_acx_keep_alive_config(wl, wlvif,
++				     CMD_TEMPL_KLV_IDX_NULL_DATA,
++				     ACX_KEEP_ALIVE_TPL_INVALID);
++
+ 	/* to stop listening to a channel, we disconnect */
+ 	ret = wl12xx_cmd_role_stop_sta(wl, wlvif);
+ 	if (ret < 0)
+-- 
+1.7.10.4
 
-Thanks,
-	Simon
-
---YiEDa0DAkWCtVeE4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlBGNm8ACgkQrzg/fFk7axbuNwCg626AvtDTWoeaSrVGjB92XN+7
-5tEAnAjEXI04gSS102VwlSKQqBHEPFyG
-=9pIv
------END PGP SIGNATURE-----
-
---YiEDa0DAkWCtVeE4--
