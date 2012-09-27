@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f74.google.com ([74.125.82.74]:34018 "EHLO
-	mail-wg0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757362Ab2IZQ7z (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:46693 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756138Ab2I0Kii (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Sep 2012 12:59:55 -0400
-Received: by wgbdt11 with SMTP id dt11so66992wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2012 09:59:54 -0700 (PDT)
-From: Sam Leffler <sleffler@chromium.org>
-Date: Tue, 25 Sep 2012 15:49:23 -0700
-Subject: [PATCH 0/3] add scan flags support
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20120926165952.766801E10D3@sleffler.sfo.corp.google.com> (sfid-20120926_190007_974806_542DE774)
+	Thu, 27 Sep 2012 06:38:38 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 02/31] wlcore: consider single fw case
+Date: Thu, 27 Sep 2012 13:37:40 +0300
+Message-Id: <1348742289-6587-3-git-send-email-luca@coelho.fi> (sfid-20120927_124033_565126_6E5A9E98)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These add per-scan request controls for optional behaviours we've found
-useful (they've been in Chrome OS for a long time).  A patch for iw will
-follow separately and the mods for wpa_supplicant are in our repo and
-I'll push them to Jouni if these are accepted.
+From: Eliad Peller <eliad@wizery.com>
 
-Sam Leffler (3):
-  {nl,cfg}80211: add a flags word to scan requests
-  mac80211: add support for tx to abort scan requests
-  cfg80211: add support for flushing old scan results
+When a single fw is being used for both single-role
+and multi-role cases (e.g. 18xx), wl->mr_fw_name is
+NULL, which results in NULL dereference while trying
+to load the multi-role fw.
 
- include/linux/nl80211.h    |   19 +++++++++++++++++++
- include/net/cfg80211.h     |   17 +++++++++++++++++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/scan.c        |   19 ++++++++++++++++---
- net/wireless/nl80211.c     |   12 ++++++++++++
- net/wireless/scan.c        |   24 +++++++++++++++++++++---
- net/wireless/sme.c         |    1 +
- 7 files changed, 88 insertions(+), 6 deletions(-)
+In this case, always use the single-role fw, and avoid
+redundant fw switch by checking for this case in
+wl12xx_need_fw_change() as well.
 
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 600af8e..f421c42 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -696,7 +696,7 @@ static int wl12xx_fetch_firmware(struct wl1271 *wl, bool plt)
+ 		 * we can't call wl12xx_get_vif_count() here because
+ 		 * wl->mutex is taken, so use the cached last_vif_count value
+ 		 */
+-		if (wl->last_vif_count > 1) {
++		if (wl->last_vif_count > 1 && wl->mr_fw_name) {
+ 			fw_type = WL12XX_FW_TYPE_MULTI;
+ 			fw_name = wl->mr_fw_name;
+ 		} else {
+@@ -2170,6 +2170,10 @@ static bool wl12xx_need_fw_change(struct wl1271 *wl,
+ 	if (wl->state == WL1271_STATE_OFF)
+ 		return false;
+ 
++	/* no need for fw change if a single fw is used */
++	if (!wl->mr_fw_name)
++		return false;
++
+ 	if (vif_count > 1 && current_fw == WL12XX_FW_TYPE_NORMAL)
+ 		return true;
+ 	if (vif_count <= 1 && current_fw == WL12XX_FW_TYPE_MULTI)
 -- 
-1.7.7.3
+1.7.10.4
 
