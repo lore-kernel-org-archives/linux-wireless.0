@@ -1,51 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:41669 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756591Ab2I0Kil (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:52138 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754836Ab2I0W2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 06:38:41 -0400
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH 13/31] wlcore: resume() only if sta is associated
-Date: Thu, 27 Sep 2012 13:37:51 +0300
-Message-Id: <1348742289-6587-14-git-send-email-luca@coelho.fi> (sfid-20120927_124006_202707_C74C5415)
-In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
-References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+	Thu, 27 Sep 2012 18:28:44 -0400
+Message-ID: <5064D318.6090705@lwfinger.net> (sfid-20120928_002855_186928_4F93DA05)
+Date: Thu, 27 Sep 2012 17:28:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: use %*ph[C] to dump small buffers
+References: <1348667852-5957-1-git-send-email-andriy.shevchenko@linux.intel.com> <1348677946.15175.8.camel@joe-AO722>
+In-Reply-To: <1348677946.15175.8.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On 09/26/2012 11:45 AM, Joe Perches wrote:
+> On Wed, 2012-09-26 at 16:57 +0300, Andy Shevchenko wrote:
+>> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+>
+> Hi Andy.
+>
+> (adding Larry and Chaoming to cc's)
+>
+> Please use scripts/get_maintainer.pl on your patches to
+> see who maintains these files so you can cc them.
+>
+> One comment below, it looks like a possible endian bug.
+> (not in your patch)
+>
+>> ---
+>>   drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
+>>   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
+>>   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
+>>   3 files changed, 6 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+>> index 5b4b4d4..6ba9f80 100644
+>> --- a/drivers/net/wireless/rtlwifi/cam.c
+>> +++ b/drivers/net/wireless/rtlwifi/cam.c
+>> @@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+>>   	u32 target_content = 0;
+>>   	u8 entry_i;
+>>
+>> -	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
+>> -		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
+>> -		 key_cont_128[0], key_cont_128[1],
+>> -		 key_cont_128[2], key_cont_128[3],
+>> -		 key_cont_128[4], key_cont_128[5]);
+>> +	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
+>> +			6, key_cont_128);
+>>
+>>   	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
+>>   		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+>> index 86d73b3..932780d 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+>> @@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
+>>   				     (ratr_index << 28);
+>>   	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+>>   	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+>> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+>> -		 ratr_index, ratr_bitmap,
+>> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
+>> -		 rate_mask[4]);
+>> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
+>> +		 ratr_index, ratr_bitmap, 5, rate_mask);
+>>   	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
+>>
+>>   	if (macid != 0)
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+>> index 4bbb711..7554501 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+>> @@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
+>>   				      ratr_index << 28);
+>>   	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+>>   	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+>> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+>> -		 ratr_index, ratr_bitmap,
+>> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
+>> -		 rate_mask[4]);
+>> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
+>> +		 ratr_index, ratr_bitmap, 5, rate_mask);
+>>   	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
+>>   }
+>>
+>
+> rate_mask uses:
+>
+> 	u32 ratr_bitmap = (u32) mac->basic_rates;
+> ...
+> 	u8 rate_mask[5];
+> ...
+> 	[sets ratr_bitmap as u32]
+> ...
+> 	*(u32 *)&rate_mask = ((ratr_bitmap & 0x0fffffff) |
+> 				      ratr_index << 28);
+> ...
+> 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
+>
+> Looks like a possible endian misuse to me.
 
-mac80211's resume() callback might get called even if
-the sta is not associated (but only up). The
-resume sequence in this case results in configuring
-the wake-up conditions of a non-started role, which
-causes fw assertion.
+After a second look at the code, I don't think this is an endian issue; however, 
+I am proposing the following changes to remove any doubt:
 
-Fix it by bailing out if the STA is not connected
-(like we do on suspend()).
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1964,8 +1965,9 @@ static void rtl92ce_update_hal_rate_mask
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Luciano Coelho <luca@coelho.fi>
----
- drivers/net/wireless/ti/wlcore/main.c |    3 +++
- 1 file changed, 3 insertions(+)
+         RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+                  "ratr_bitmap :%x\n", ratr_bitmap);
+-       *(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
+-                                    (ratr_index << 28);
++       for (i = 0; i < 3; i++)
++               rate_mask[i] = ratr_bitmap & (0xff << (i * 4));
++       rate_mask[3] = (ratr_bitmap & 0x0f000000) | (ratr_index << 28);
+         rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+         RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+                  "Rate_index:%x, ratr_val:%x, %*phC\n",
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index a797ce7..ae2b0fd 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1672,6 +1672,9 @@ static void wl1271_configure_resume(struct wl1271 *wl,
- 	if ((!is_ap) && (!is_sta))
- 		return;
- 
-+	if (is_sta && !test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
-+		return;
-+
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		return;
--- 
-1.7.10.4
+The downstream routine uses this info as an array of u8, thus it is OK. A proper 
+patch will be sent later. At least we avoid that ugly cast.
+
+Larry
+
 
