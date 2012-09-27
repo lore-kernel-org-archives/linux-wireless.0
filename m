@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52522 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759515Ab2INMGF (ORCPT
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:26398
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751376Ab2I0DXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 08:06:05 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TCUep-0006Eo-GJ
-	for linux-wireless@vger.kernel.org; Fri, 14 Sep 2012 14:06:03 +0200
-Message-ID: <1347624398.4060.0.camel@jlt4.sipsolutions.net> (sfid-20120914_140858_693676_61C0F4DA)
-Subject: Re: [PATCH] mac80211: handle power constraint/country IE better
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 14 Sep 2012 14:06:38 +0200
-In-Reply-To: <1347367364-16642-1-git-send-email-johannes@sipsolutions.net> (sfid-20120911_144214_003264_1C6B0911)
-References: <1347367364-16642-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120911_144214_003264_1C6B0911)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 26 Sep 2012 23:23:37 -0400
+Message-ID: <5063C6B1.8030301@posedge.com> (sfid-20120927_052420_567198_E9721BDD)
+Date: Thu, 27 Sep 2012 08:53:29 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>     <1348477154.10257.2.camel@jlt4.sipsolutions.net>     <50614089.6020105@posedge.com>    <1348557902.10041.17.camel@jlt4.sipsolutions.net>    <50617E2C.6050000@posedge.com>   <1348582152.10041.36.camel@jlt4.sipsolutions.net>   <5062736B.9060008@posedge.com>  <1348660422.10548.10.camel@jlt4.sipsolutions.net>  <506339C3.40405@posedge.com> <1348682036.10548.13.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1348682036.10548.13.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-11 at 14:42 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Currently, mac80211 uses the power constraint IE, and reduces
-> the regulatory max TX power by it. This can cause issues if
-> the AP is advertising a large power constraint value matching
-> a high TX power in its country IE, for example in this case:
-> 
-> ...
-> Country: US  Environment: Indoor/Outdoor
->     ...
->     Channels [157 - 157] @ 30 dBm
->     ...
-> Power constraint: 13 dB
-> ...
+On 09/26/2012 11:23 PM, Johannes Berg wrote:
+>
+> Well struct ieee80211_sta is what the driver uses. That's where it's
+> "telling" the driver, by making the data accessible to the driver. Your
+> new vht_cap field there is also "telling the driver" that way.
+>
+Thanks for the pointer. will revert with code change.
+>
+>
+> I don't think this makes sense, since we're talking only about a
+> documentation change to your patch. See:
+>
+>    * @ht_cap: HT capabilities of this STA; restricted to our own TX capabilities
+> + * @vht_cap: VHT capabilities of this STA
+>
+> The difference is that you don't say "restricted to own", but I think
+> you should explicitly say that it isn't restricted.
 
-Applied.
+Oh, I got it. Thanks Johannes.
 
-johannes
-
+Thanks
+Mahesh
