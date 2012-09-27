@@ -1,158 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46476 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757843Ab2IMMRQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 08:17:16 -0400
-Message-ID: <5051CEC3.8090806@openwrt.org> (sfid-20120913_141720_111146_D65FD9A9)
-Date: Thu, 13 Sep 2012 14:17:07 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFT] cfg80211: fix possible circular lock on reg_regdb_search()
-References: <1347408735-25745-1-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1347408735-25745-1-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:33996 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754321Ab2I0THR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 15:07:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 3/5] cfg80211: add support for flushing old scan results
+Date: Thu, 27 Sep 2012 11:59:12 -0700
+Message-Id: <1348772354-15936-4-git-send-email-bzhao@marvell.com> (sfid-20120927_210726_308867_3C5A92A5)
+In-Reply-To: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
+References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-09-12 2:12 AM, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> 
-> When call_crda() is called we kick off a witch hunt search
-> for the same regulatory domain on our internal regulatory
-> database and that work gets scheuled on a workqueue, this
-> is done while the cfg80211_mutex is held. If that workqueue
-> kicks off it will first lock reg_regdb_search_mutex and
-> later cfg80211_mutex but to ensure two CPUs will not contend
-> against cfg80211_mutex the right thing to do is to have the
-> reg_regdb_search() wait until the cfg80211_mutex is let go.
-> 
-> The lockdep report is pasted below.
-> 
-> cfg80211: Calling CRDA to update world regulatory domain
-> 
-> ======================================================
-> [ INFO: possible circular locking dependency detected ]
-> 3.3.8 #3 Tainted: G           O
-> -------------------------------------------------------
-> kworker/0:1/235 is trying to acquire lock:
->  (cfg80211_mutex){+.+...}, at: [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
-> 
-> but task is already holding lock:
->  (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
-> 
-> which lock already depends on the new lock.
-> 
-> the existing dependency chain (in reverse order) is:
-> 
-> -> #2 (reg_regdb_search_mutex){+.+...}:
->        [<800a8384>] lock_acquire+0x60/0x88
->        [<802950a8>] mutex_lock_nested+0x54/0x31c
->        [<81645778>] is_world_regdom+0x9f8/0xc74 [cfg80211]
-> 
-> -> #1 (reg_mutex#2){+.+...}:
->        [<800a8384>] lock_acquire+0x60/0x88
->        [<802950a8>] mutex_lock_nested+0x54/0x31c
->        [<8164539c>] is_world_regdom+0x61c/0xc74 [cfg80211]
-> 
-> -> #0 (cfg80211_mutex){+.+...}:
->        [<800a77b8>] __lock_acquire+0x10d4/0x17bc
->        [<800a8384>] lock_acquire+0x60/0x88
->        [<802950a8>] mutex_lock_nested+0x54/0x31c
->        [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
-> 
-> other info that might help us debug this:
-> 
-> Chain exists of:
->   cfg80211_mutex --> reg_mutex#2 --> reg_regdb_search_mutex
-> 
->  Possible unsafe locking scenario:
-> 
->        CPU0                    CPU1
->        ----                    ----
->   lock(reg_regdb_search_mutex);
->                                lock(reg_mutex#2);
->                                lock(reg_regdb_search_mutex);
->   lock(cfg80211_mutex);
-> 
->  *** DEADLOCK ***
-> 
-> 3 locks held by kworker/0:1/235:
->  #0:  (events){.+.+..}, at: [<80089a00>] process_one_work+0x230/0x460
->  #1:  (reg_regdb_work){+.+...}, at: [<80089a00>] process_one_work+0x230/0x460
->  #2:  (reg_regdb_search_mutex){+.+...}, at: [<81646828>] set_regdom+0x710/0x808 [cfg80211]
-> 
-> stack backtrace:
-> Call Trace:
-> [<80290fd4>] dump_stack+0x8/0x34
-> [<80291bc4>] print_circular_bug+0x2ac/0x2d8
-> [<800a77b8>] __lock_acquire+0x10d4/0x17bc
-> [<800a8384>] lock_acquire+0x60/0x88
-> [<802950a8>] mutex_lock_nested+0x54/0x31c
-> [<816468a4>] set_regdom+0x78c/0x808 [cfg80211]
-> 
-> Reported-by: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-With this patch I get a slightly different report:
+From: Sam Leffler <sleffler@chromium.org>
 
-[    9.480000] cfg80211: Calling CRDA to update world regulatory domain
-[    9.490000] 
-[    9.490000] ======================================================
-[    9.490000] [ INFO: possible circular locking dependency detected ]
-[    9.490000] 3.3.8 #4 Tainted: G           O
-[    9.490000] -------------------------------------------------------
-[    9.490000] kworker/0:1/235 is trying to acquire lock:
-[    9.490000]  (reg_mutex#2){+.+...}, at: [<8164617c>] set_regdom+0x64/0x80c [cfg80211]
-[    9.490000] 
-[    9.490000] but task is already holding lock:
-[    9.490000]  (reg_regdb_search_mutex){+.+...}, at: [<81646830>] set_regdom+0x718/0x80c [cfg80211]
-[    9.490000] 
-[    9.490000] which lock already depends on the new lock.
-[    9.490000] 
-[    9.490000] 
-[    9.490000] the existing dependency chain (in reverse order) is:
-[    9.490000] 
-[    9.490000] -> #1 (reg_regdb_search_mutex){+.+...}:
-[    9.490000]        [<800a8384>] lock_acquire+0x60/0x88
-[    9.490000]        [<802950a8>] mutex_lock_nested+0x54/0x31c
-[    9.490000]        [<81645778>] is_world_regdom+0x9f8/0xc74 [cfg80211]
-[    9.490000] 
-[    9.490000] -> #0 (reg_mutex#2){+.+...}:
-[    9.490000]        [<800a77b8>] __lock_acquire+0x10d4/0x17bc
-[    9.490000]        [<800a8384>] lock_acquire+0x60/0x88
-[    9.490000]        [<802950a8>] mutex_lock_nested+0x54/0x31c
-[    9.490000]        [<8164617c>] set_regdom+0x64/0x80c [cfg80211]
-[    9.490000]        [<816468ac>] set_regdom+0x794/0x80c [cfg80211]
-[    9.490000] 
-[    9.490000] other info that might help us debug this:
-[    9.490000] 
-[    9.490000]  Possible unsafe locking scenario:
-[    9.490000] 
-[    9.490000]        CPU0                    CPU1
-[    9.490000]        ----                    ----
-[    9.490000]   lock(reg_regdb_search_mutex);
-[    9.490000]                                lock(reg_mutex#2);
-[    9.490000]                                lock(reg_regdb_search_mutex);
-[    9.490000]   lock(reg_mutex#2);
-[    9.490000] 
-[    9.490000]  *** DEADLOCK ***
-[    9.490000] 
-[    9.490000] 4 locks held by kworker/0:1/235:
-[    9.490000]  #0:  (events){.+.+..}, at: [<80089a00>] process_one_work+0x230/0x460
-[    9.490000]  #1:  (reg_regdb_work){+.+...}, at: [<80089a00>] process_one_work+0x230/0x460
-[    9.490000]  #2:  (cfg80211_mutex){+.+...}, at: [<81646824>] set_regdom+0x70c/0x80c [cfg80211]
-[    9.490000]  #3:  (reg_regdb_search_mutex){+.+...}, at: [<81646830>] set_regdom+0x718/0x80c [cfg80211]
-[    9.490000] 
-[    9.490000] stack backtrace:
-[    9.490000] Call Trace:
-[    9.490000] [<80290fd4>] dump_stack+0x8/0x34
-[    9.490000] [<80291bc4>] print_circular_bug+0x2ac/0x2d8
-[    9.490000] [<800a77b8>] __lock_acquire+0x10d4/0x17bc
-[    9.490000] [<800a8384>] lock_acquire+0x60/0x88
-[    9.490000] [<802950a8>] mutex_lock_nested+0x54/0x31c
-[    9.490000] [<8164617c>] set_regdom+0x64/0x80c [cfg80211]
-[    9.490000] [<816468ac>] set_regdom+0x794/0x80c [cfg80211]
-[    9.490000] 
+Add an NL80211_SCAN_FLAG_FLUSH flag that causes old bss cache
+entries to be flushed on scan completion.  This is useful for
+collecting guaranteed fresh scan/survey results (e.g. on resume).
+Flushing only happens on successful completion of a scan;
+i.e. it does not happen if the scan is aborted/canceled.
 
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/linux/nl80211.h |    2 ++
+ include/net/cfg80211.h  |    4 ++++
+ net/wireless/nl80211.c  |    1 +
+ net/wireless/scan.c     |   31 +++++++++++++++++++++++++++----
+ net/wireless/sme.c      |    1 +
+ 5 files changed, 35 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index e512baf..71400e7 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -3081,9 +3081,11 @@ enum nl80211_connect_failed_reason {
+  * requests.
+  *
+  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
++ * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
++	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
+ };
+ 
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ed659db..cc63a3a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -995,9 +995,11 @@ struct cfg80211_ssid {
+  * enum cfg80211_scan_flags -  scan request control flags
+  *
+  * @CFG80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
++ * @CFG80211_SCAN__FLAG_FLUSH: flush cache before scanning
+  */
+ enum cfg80211_scan_flags {
+ 	CFG80211_SCAN_FLAG_LOW_PRIORITY	= NL80211_SCAN_FLAG_LOW_PRIORITY,
++	CFG80211_SCAN_FLAG_FLUSH	= NL80211_SCAN_FLAG_FLUSH,
+ };
+ 
+ /**
+@@ -1012,6 +1014,7 @@ enum cfg80211_scan_flags {
+  * @flags: bit field of flags controlling operation
+  * @rates: bitmap of rates to advertise for each band
+  * @wiphy: the wiphy this was for
++ * @scan_start: time (in jiffies) when the scan started
+  * @wdev: the wireless device to scan for
+  * @aborted: (internal) scan request was notified as aborted
+  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
+@@ -1030,6 +1033,7 @@ struct cfg80211_scan_request {
+ 
+ 	/* internal */
+ 	struct wiphy *wiphy;
++	unsigned long scan_start;
+ 	bool aborted;
+ 	bool no_cck;
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e4312f6..7133477 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4347,6 +4347,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
++	request->scan_start = jiffies;
+ 
+ 	rdev->scan_req = request;
+ 	err = rdev->ops->scan(&rdev->wiphy, request);
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 9730c98..392e5a9 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -20,6 +20,9 @@
+ 
+ #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
+ 
++static void __cfg80211_bss_expire(struct cfg80211_registered_device *dev,
++				  int maxage, unsigned long expire_time);
++
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ {
+ 	struct cfg80211_scan_request *request;
+@@ -47,8 +50,15 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ 
+ 	if (request->aborted)
+ 		nl80211_send_scan_aborted(rdev, wdev);
+-	else
++	else {
++		if (request->flags & CFG80211_SCAN_FLAG_FLUSH) {
++			/* flush entries from previous scans */
++			spin_lock_bh(&rdev->bss_lock);
++			__cfg80211_bss_expire(rdev, 0, request->scan_start);
++			spin_unlock_bh(&rdev->bss_lock);
++		}
+ 		nl80211_send_scan_done(rdev, wdev);
++	}
+ 
+ #ifdef CONFIG_CFG80211_WEXT
+ 	if (wdev->netdev && !request->aborted) {
+@@ -198,7 +208,8 @@ static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
+ }
+ 
+ /* must hold dev->bss_lock! */
+-void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
++static void __cfg80211_bss_expire(struct cfg80211_registered_device *dev,
++				  int maxage, unsigned long expire_time)
+ {
+ 	struct cfg80211_internal_bss *bss, *tmp;
+ 	bool expired = false;
+@@ -206,8 +217,14 @@ void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
+ 	list_for_each_entry_safe(bss, tmp, &dev->bss_list, list) {
+ 		if (atomic_read(&bss->hold))
+ 			continue;
+-		if (!time_after(jiffies, bss->ts + IEEE80211_SCAN_RESULT_EXPIRE))
+-			continue;
++		if (maxage) {
++			if (!time_after(jiffies, bss->ts + maxage))
++				continue;
++		} else {
++			if (!time_after(expire_time, bss->ts))
++				continue;
++		}
++
+ 		__cfg80211_unlink_bss(dev, bss);
+ 		expired = true;
+ 	}
+@@ -216,6 +233,11 @@ void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
+ 		dev->bss_generation++;
+ }
+ 
++void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
++{
++	__cfg80211_bss_expire(dev, IEEE80211_SCAN_RESULT_EXPIRE, 0);
++}
++
+ const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
+ {
+ 	while (len > 2 && ies[0] != eid) {
+@@ -962,6 +984,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 	creq->ssids = (void *)&creq->channels[n_channels];
+ 	creq->n_channels = n_channels;
+ 	creq->n_ssids = 1;
++	creq->scan_start = jiffies;
+ 
+ 	/* translate "Scan on frequencies" request */
+ 	i = 0;
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 6f39cb8..dde1d47 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -138,6 +138,7 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+ 
+ 	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
++	request->scan_start = jiffies;
+ 
+ 	rdev->scan_req = request;
+ 
+-- 
+1.7.0.2
 
