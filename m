@@ -1,55 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:49429 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757081Ab2IXQtu (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:53711 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754108Ab2I0Kil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 12:49:50 -0400
-Received: by mail-lb0-f174.google.com with SMTP id gj3so7037885lbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2012 09:49:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1348386594-6067-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1348386594-6067-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1348386594-6067-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 24 Sep 2012 09:49:29 -0700
-Message-ID: <CAB=NE6Xuw09qVPozdDcYqK9ai_ZK7DzyXi_VnzgtBPCERu-LhA@mail.gmail.com> (sfid-20120924_185000_974117_D831F120)
-Subject: Re: [PATCH v3] cfg80211: Fix regulatory check for 60GHz band frequencies
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 27 Sep 2012 06:38:41 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Igal Chernobelsky <igalc@ti.com>
+Subject: [PATCH 10/31] wl18xx/wl12xx: defines for Tx/Rx descriptors num
+Date: Thu, 27 Sep 2012 13:37:48 +0300
+Message-Id: <1348742289-6587-11-git-send-email-luca@coelho.fi> (sfid-20120927_123948_557678_C041411A)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 23, 2012 at 12:49 AM, Vladimir Kondratiev
-<qca_vkondrat@qca.qualcomm.com> wrote:
-> The current regulatory code on cfg80211 performs a check to
-> see if a regulatory rule belongs to an IEEE band so that if
-> a Country IE is received and no rules are specified for a
-> band (which is allowed by IEEE) those bands are left intact.
-> The current band check assumes a rule is bound to a band
-> if the rule's start or end frequency is less than 2 GHz
-> apart from the center of frequency being inspected.
->
-> In order to support 60 GHz for 802.11ad we need to increase
-> this to account for the channel spacing of 2160 MHz whereby
-> a channel somewhere in the middle of a regulatory rule may
-> be more than 2 MHz apart from either the beginning or
-> end of the frequency rule.
->
-> Without a fix for this even though channels 1-3 are allowed world
-> wide on the rule (57240 - 63720 @ 2160), channel 2 at 60480 MHz
-> will end up getting disabled given that it is 3240 MHz from
-> both the frequency rule start and end frequency. Fix this by
-> using 2 GHz separation assumption for the 2.4 and 5 GHz bands
-> but for 60 GHz use a 10 GHz separation before assuming a rule
-> is not part of the band.
->
-> Since we have no 802.11ad drivers yet merged this change has
-> no impact to existing Linux upstream device drivers.
->
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+From: Igal Chernobelsky <igalc@ti.com>
 
-Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Use defines for number of Tx/Rx descriptors.
 
-  Luis
+Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wl12xx/main.c   |    4 ++--
+ drivers/net/wireless/ti/wl12xx/wl12xx.h |    3 +++
+ drivers/net/wireless/ti/wl18xx/main.c   |    4 ++--
+ drivers/net/wireless/ti/wl18xx/wl18xx.h |    3 +++
+ 4 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 9ab85c0..f38e769 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1641,8 +1641,8 @@ static int __devinit wl12xx_probe(struct platform_device *pdev)
+ 	wl->ops = &wl12xx_ops;
+ 	wl->ptable = wl12xx_ptable;
+ 	wl->rtable = wl12xx_rtable;
+-	wl->num_tx_desc = 16;
+-	wl->num_rx_desc = 8;
++	wl->num_tx_desc = WL12XX_NUM_TX_DESCRIPTORS;
++	wl->num_rx_desc = WL12XX_NUM_RX_DESCRIPTORS;
+ 	wl->band_rate_to_idx = wl12xx_band_rate_to_idx;
+ 	wl->hw_tx_rate_tbl_size = WL12XX_CONF_HW_RXTX_RATE_MAX;
+ 	wl->hw_min_ht_rate = WL12XX_CONF_HW_RXTX_RATE_MCS0;
+diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+index 26990fb..c8ff7ec 100644
+--- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+@@ -38,6 +38,9 @@
+ #define WL128X_SUBTYPE_VER	2
+ #define WL128X_MINOR_VER	115
+ 
++#define WL12XX_NUM_TX_DESCRIPTORS 16
++#define WL12XX_NUM_RX_DESCRIPTORS 8
++
+ struct wl127x_rx_mem_pool_addr {
+ 	u32 addr;
+ 	u32 addr_extra;
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 181cd94..934708b 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1392,8 +1392,8 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 	wl->ops = &wl18xx_ops;
+ 	wl->ptable = wl18xx_ptable;
+ 	wl->rtable = wl18xx_rtable;
+-	wl->num_tx_desc = 32;
+-	wl->num_rx_desc = 32;
++	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
++	wl->num_rx_desc = WL18XX_NUM_TX_DESCRIPTORS;
+ 	wl->band_rate_to_idx = wl18xx_band_rate_to_idx;
+ 	wl->hw_tx_rate_tbl_size = WL18XX_CONF_HW_RXTX_RATE_MAX;
+ 	wl->hw_min_ht_rate = WL18XX_CONF_HW_RXTX_RATE_MCS0;
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index 6452396..9882e29 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -33,6 +33,9 @@
+ 
+ #define WL18XX_CMD_MAX_SIZE          740
+ 
++#define WL18XX_NUM_TX_DESCRIPTORS 32
++#define WL18XX_NUM_RX_DESCRIPTORS 32
++
+ struct wl18xx_priv {
+ 	/* buffer for sending commands to FW */
+ 	u8 cmd_buf[WL18XX_CMD_MAX_SIZE];
+-- 
+1.7.10.4
+
