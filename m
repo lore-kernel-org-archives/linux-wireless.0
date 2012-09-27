@@ -1,82 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:53714 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756738Ab2I0Kip (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 06:38:45 -0400
-From: Luciano Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Ido Yariv <ido@wizery.com>
-Subject: [PATCH 27/31] wlcore: Allow memory access when the FW crashes
-Date: Thu, 27 Sep 2012 13:38:05 +0300
-Message-Id: <1348742289-6587-28-git-send-email-luca@coelho.fi> (sfid-20120927_123926_509440_3E1E948B)
-In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
-References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+Received: from mms1.broadcom.com ([216.31.210.17]:4902 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753278Ab2I0MSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 08:18:18 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/11] brcmfmac: notify common driver about usb tx
+ completion.
+Date: Thu, 27 Sep 2012 14:17:50 +0200
+Message-ID: <1348748277-21460-5-git-send-email-arend@broadcom.com> (sfid-20120927_141839_572389_326DBBA1)
+In-Reply-To: <1348748277-21460-1-git-send-email-arend@broadcom.com>
+References: <1348748277-21460-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-When the no_recovery flag is used, the recovery work will not restart
-the FW and the state will not be set to 'on'. To enable post-mortem
-analysis, allow memory access in the 'restarting' state.
+brcmf_usb_tx_complete now calls brcmf_txcomplete to correct
+eapol counter.
 
-Also, since the FW might not be operational, don't fail the read/write
-operations if elp_wakeup fails.
-
-Reported-by: Arkady Miasnikov <a-miasnikov@ti.com>
-Signed-off-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Luciano Coelho <luca@coelho.fi>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ti/wlcore/debugfs.c |   20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index 3d39784d..c86bb00 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -1064,14 +1064,16 @@ static ssize_t dev_mem_read(struct file *file,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 555ccdd..a2b4b1e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -465,6 +465,8 @@ static void brcmf_usb_tx_complete(struct urb *urb)
+ 	else
+ 		devinfo->bus_pub.bus->dstats.tx_errors++;
  
- 	mutex_lock(&wl->mutex);
- 
--	if (unlikely(wl->state != WLCORE_STATE_ON)) {
-+	if (unlikely(wl->state == WLCORE_STATE_OFF)) {
- 		ret = -EFAULT;
- 		goto skip_read;
- 	}
- 
--	ret = wl1271_ps_elp_wakeup(wl);
--	if (ret < 0)
--		goto skip_read;
-+	/*
-+	 * Don't fail if elp_wakeup returns an error, so the device's memory
-+	 * could be read even if the FW crashed
-+	 */
-+	wl1271_ps_elp_wakeup(wl);
- 
- 	/* store current partition and switch partition */
- 	memcpy(&old_part, &wl->curr_part, sizeof(old_part));
-@@ -1149,14 +1151,16 @@ static ssize_t dev_mem_write(struct file *file, const char __user *user_buf,
- 
- 	mutex_lock(&wl->mutex);
- 
--	if (unlikely(wl->state != WLCORE_STATE_ON)) {
-+	if (unlikely(wl->state == WLCORE_STATE_OFF)) {
- 		ret = -EFAULT;
- 		goto skip_write;
- 	}
- 
--	ret = wl1271_ps_elp_wakeup(wl);
--	if (ret < 0)
--		goto skip_write;
-+	/*
-+	 * Don't fail if elp_wakeup returns an error, so the device's memory
-+	 * could be read even if the FW crashed
-+	 */
-+	wl1271_ps_elp_wakeup(wl);
- 
- 	/* store current partition and switch partition */
- 	memcpy(&old_part, &wl->curr_part, sizeof(old_part));
++	brcmf_txcomplete(devinfo->dev, req->skb, urb->status == 0);
++
+ 	brcmu_pkt_buf_free_skb(req->skb);
+ 	req->skb = NULL;
+ 	brcmf_usb_enq(devinfo, &devinfo->tx_freeq, req, &devinfo->tx_freecount);
 -- 
-1.7.10.4
+1.7.9.5
+
 
