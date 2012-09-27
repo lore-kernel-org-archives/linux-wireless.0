@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4906 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752861Ab2I0MSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 08:18:18 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/11] brcmfmac: cleanup and support for AP mode
-Date: Thu, 27 Sep 2012 14:17:46 +0200
-Message-ID: <1348748277-21460-1-git-send-email-arend@broadcom.com> (sfid-20120927_141826_039303_CD070341)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:47726 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756138Ab2I0Kik (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 06:38:40 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Arik Nemtsov <arik@wizery.com>,
+	Igal Chernobelsky <igalc@ti.com>
+Subject: [PATCH 06/31] wlcore: AP mode - send non-data packets with basic rates
+Date: Thu, 27 Sep 2012 13:37:44 +0300
+Message-Id: <1348742289-6587-7-git-send-email-luca@coelho.fi> (sfid-20120927_124027_555309_E0FD2E84)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series delivers AP mode functionality for the brcmfmac
-driver. Other changes involve cleanup or minor fixes.
+From: Arik Nemtsov <arik@wizery.com>
 
-This series is intended for v3.7 and depends on patch sent by Dan
-Carpenter identified by:
+This solves interoperability issues with peer that don't seem to "hear"
+management packets transmitted in higher rates. Based on a previous
+patch by Igal Chernobelsky.
 
-Message-ID: <20120926072148.GA3956@elgon.mountain>
-  brcmfmac: use kcalloc() to prevent integer overflow
+Cc: Igal Chernobelsky <igalc@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wlcore/tx.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Arend van Spriel (6):
-  brcmfmac: get rid of extern keyword in wl_cfg80211.h
-  brcmfmac: use brcmf_cfg80211_priv to interface with wl_cfg80211 code
-  brcmfmac: remove two obsolete structure definitions
-  brcmfmac: rename structure brcmf_cfg80211_priv
-  brcmfmac: remove brcmf_read_prof() function
-  brcmfmac: remove brcmf_update_prof() function
-
-Hante Meuleman (5):
-  brcmfmac: use wait_event_timeout for fw control packets over usb.
-  brcmfmac: use different fw api for encryption,auth. config
-  brcmfmac: use define instead of hardcoded values.
-  brcmfmac: notify common driver about usb tx completion.
-  brcmfmac: add hostap supoort.
-
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   33 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   46 +
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   48 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 2412 +++++++++++++-------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   81 +-
- 5 files changed, 1762 insertions(+), 858 deletions(-)
-
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 4f66e75..24ac8ec 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -319,8 +319,12 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		if (hlid == wlvif->ap.global_hlid)
+ 			rate_idx = wlvif->ap.mgmt_rate_idx;
+ 		else if (hlid == wlvif->ap.bcast_hlid ||
+-			 skb->protocol == cpu_to_be16(ETH_P_PAE))
+-			/* send AP bcast and EAPOLs using the min basic rate */
++			 skb->protocol == cpu_to_be16(ETH_P_PAE) ||
++			 !ieee80211_is_data(frame_control))
++			/*
++			 * send non-data, bcast and EAPOLs using the
++			 * min basic rate
++			 */
+ 			rate_idx = wlvif->ap.bcast_rate_idx;
+ 		else
+ 			rate_idx = wlvif->ap.ucast_rate_idx[ac];
 -- 
-1.7.9.5
-
+1.7.10.4
 
