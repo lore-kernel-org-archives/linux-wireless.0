@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:49549 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131Ab2IAFLe (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:41669 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756591Ab2I0Kil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Sep 2012 01:11:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <1345536267-9449-1-git-send-email-ming.lei@canonical.com>
-References: <1345536267-9449-1-git-send-email-ming.lei@canonical.com>
-Date: Sat, 1 Sep 2012 13:11:32 +0800
-Message-ID: <CACVXFVPX1NB5uJ6yXkNbDWoX4OVdYfRU_=tsWC529-tH+3WfDA@mail.gmail.com> (sfid-20120901_071223_988055_DB2A20B1)
-Subject: Re: [PATCH -next v1] wireless: ath9k-htc: only load firmware in need
-From: Ming Lei <ming.lei@canonical.com>
+	Thu, 27 Sep 2012 06:38:41 -0400
+From: Luciano Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ming Lei <ming.lei@canonical.com>,
-	ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: coelho@ti.com, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 13/31] wlcore: resume() only if sta is associated
+Date: Thu, 27 Sep 2012 13:37:51 +0300
+Message-Id: <1348742289-6587-14-git-send-email-luca@coelho.fi> (sfid-20120927_124006_202707_C74C5415)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 21, 2012 at 4:04 PM, Ming Lei <ming.lei@canonical.com> wrote:
-> It is not necessary to hold the firmware memory during the whole
-> driver lifetime, and obviously it does waste memory. Suppose there
-> are 4 ath9k-htc usb dongles working, kernel has to consume about
-> 4*50KBytes RAM to cache firmware for all dongles. After applying the
-> patch, kernel only caches one single firmware image in RAM for
-> all ath9k-htc devices just during system suspend/resume cycle.
->
-> When system is ready for loading firmware, ath9k-htc can request
-> the loading from usersapce. During system resume, ath9k-htc still
-> can load the firmware which was cached in kernel memory before
-> system suspend.
->
-> Cc: ath9k-devel@lists.ath9k.org
-> Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-> Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-> Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
-> v1:
->         fix double free of firmware in failue path of
->         ath9k_hif_usb_firmware_cb
+From: Eliad Peller <eliad@wizery.com>
 
-Gentle ping, :-)
+mac80211's resume() callback might get called even if
+the sta is not associated (but only up). The
+resume sequence in this case results in configuring
+the wake-up conditions of a non-started role, which
+causes fw assertion.
 
+Fix it by bailing out if the STA is not connected
+(like we do on suspend()).
 
-Thanks,
---
-Ming Lei
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index a797ce7..ae2b0fd 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1672,6 +1672,9 @@ static void wl1271_configure_resume(struct wl1271 *wl,
+ 	if ((!is_ap) && (!is_sta))
+ 		return;
+ 
++	if (is_sta && !test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
++		return;
++
+ 	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		return;
+-- 
+1.7.10.4
+
