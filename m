@@ -1,47 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:57456 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750991Ab2IEHMB (ORCPT
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:59937 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754082Ab2I0S7f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 03:12:01 -0400
-Date: Wed, 5 Sep 2012 10:11:22 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-Message-ID: <20120905071122.GA3629@w1.fi> (sfid-20120905_091206_498957_9D498B2A)
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
- <1346746298.3737.0.camel@jlt4.sipsolutions.net>
- <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
- <20120904102204.GA2541@w1.fi>
- <CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
- <CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
- <1346758521.3737.28.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1346758521.3737.28.camel@jlt4.sipsolutions.net>
+	Thu, 27 Sep 2012 14:59:35 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 1/5] {nl,cfg}80211: add a flags word to scan requests
+Date: Thu, 27 Sep 2012 11:59:10 -0700
+Message-Id: <1348772354-15936-2-git-send-email-bzhao@marvell.com> (sfid-20120927_205943_073603_38D3295A)
+In-Reply-To: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
+References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 04, 2012 at 01:35:21PM +0200, Johannes Berg wrote:
-> I would guess that hardware *decryption* is faulty, maybe only one
-> action frame needs to be correct and so if one of them is nohwcrypt=1 it
-> still works?
+From: Sam Leffler <sleffler@chromium.org>
 
-Yes, I was assuming that receiving robust unicast management frames
-would fail with ath5k. This is exactly the reason why I adding
-IEEE80211_HW_MFP_CAPABLE conditionally in ath9k only for the hardware
-revisions that support the new CCMP rules.
+Add a flags word to direct and scheduled scan requests; it will
+be used for control of optional behaviours such as flushing the
+bss cache prior to doing a scan.
 
-It should be possible to work around this if someone really cares, but
-that require the driver to re-encrypt the incorrectly decrypted frame
-(i.e., using the pre-802.11w rules on CCMP exactly in the way the
-hardware did it) and then pass that end result for masc80211 to decrypt
-it correctly. I considered doing that for a while, but did not find
-enough justification to work with that.
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/linux/nl80211.h |   14 ++++++++++++++
+ include/net/cfg80211.h  |   10 ++++++++++
+ net/wireless/nl80211.c  |   11 +++++++++++
+ 3 files changed, 35 insertions(+), 0 deletions(-)
 
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 7df9b50..109f75d 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1273,6 +1273,8 @@ enum nl80211_commands {
+  *	the connection request from a station. nl80211_connect_failed_reason
+  *	enum has different reasons of connection failure.
+  *
++ * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1530,6 +1532,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_CONN_FAILED_REASON,
+ 
++	NL80211_ATTR_SCAN_FLAGS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3069,4 +3073,14 @@ enum nl80211_connect_failed_reason {
+ 	NL80211_CONN_FAIL_BLOCKED_CLIENT,
+ };
+ 
++/**
++ * enum nl80211_scan_flags -  scan request control flags
++ *
++ * Scan request control flags are used to control the handling
++ * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
++ * requests.
++ */
++enum nl80211_scan_flags {
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ab78b53..2c0c14a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -992,6 +992,12 @@ struct cfg80211_ssid {
+ };
+ 
+ /**
++ * enum cfg80211_scan_flags -  scan request control flags
++ */
++enum cfg80211_scan_flags {
++};
++
++/**
+  * struct cfg80211_scan_request - scan request description
+  *
+  * @ssids: SSIDs to scan for (active scan only)
+@@ -1000,6 +1006,7 @@ struct cfg80211_ssid {
+  * @n_channels: total number of channels to scan
+  * @ie: optional information element(s) to add into Probe Request or %NULL
+  * @ie_len: length of ie in octets
++ * @flags: bit field of flags controlling operation
+  * @rates: bitmap of rates to advertise for each band
+  * @wiphy: the wiphy this was for
+  * @wdev: the wireless device to scan for
+@@ -1012,6 +1019,7 @@ struct cfg80211_scan_request {
+ 	u32 n_channels;
+ 	const u8 *ie;
+ 	size_t ie_len;
++	u32 flags;
+ 
+ 	u32 rates[IEEE80211_NUM_BANDS];
+ 
+@@ -1044,6 +1052,7 @@ struct cfg80211_match_set {
+  * @interval: interval between each scheduled scan cycle
+  * @ie: optional information element(s) to add into Probe Request or %NULL
+  * @ie_len: length of ie in octets
++ * @flags: bit field of flags controlling operation
+  * @match_sets: sets of parameters to be matched for a scan result
+  * 	entry to be considered valid and to be passed to the host
+  * 	(others are filtered out).
+@@ -1061,6 +1070,7 @@ struct cfg80211_sched_scan_request {
+ 	u32 interval;
+ 	const u8 *ie;
+ 	size_t ie_len;
++	u32 flags;
+ 	struct cfg80211_match_set *match_sets;
+ 	int n_match_sets;
+ 	s32 rssi_thold;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f1047ae..e4312f6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -355,6 +355,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_WDEV] = { .type = NLA_U64 },
+ 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
++	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4337,6 +4338,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
++		request->flags = nla_get_u32(
++			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
++
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+@@ -4568,6 +4573,10 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 		       request->ie_len);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
++		request->flags = nla_get_u32(
++			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
++
+ 	request->dev = dev;
+ 	request->wiphy = &rdev->wiphy;
+ 	request->interval = interval;
+@@ -7622,6 +7631,8 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
+ 	    nla_put(msg, NL80211_ATTR_IE, req->ie_len, req->ie))
+ 		goto nla_put_failure;
+ 
++	nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
++
+ 	return 0;
+  nla_put_failure:
+ 	return -ENOBUFS;
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.0.2
+
