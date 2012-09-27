@@ -1,142 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40252 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544Ab2IDIY4 (ORCPT
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:34824 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754012Ab2I0S7f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 04:24:56 -0400
-Message-ID: <1346747134.3737.10.camel@jlt4.sipsolutions.net> (sfid-20120904_102501_159627_DCB05000)
-Subject: Re: [RFC] cfg80211: VHT regulatory
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Tue, 04 Sep 2012 10:25:34 +0200
-In-Reply-To: <50457491.9020604@posedge.com>
-References: <50457491.9020604@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Sep 2012 14:59:35 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 0/5] add scan flags support
+Date: Thu, 27 Sep 2012 11:59:09 -0700
+Message-Id: <1348772354-15936-1-git-send-email-bzhao@marvell.com> (sfid-20120927_205942_356492_E66F4676)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-04 at 08:55 +0530, Mahesh Palivela wrote:
+This is the v2 series prepared by Amitkumar Karwar.
 
->   include/net/cfg80211.h |   36 ++++++++++++++++
->   net/wireless/reg.c     |  104 
-> ++++++++++++++++++++++++++++++++++++++++++++++++
+1) TX_ABORT flag is renamed to LOW_PRIORITY to have more generic
+approach. Let the drivers decide behaviour for background scan. 
+2) An extra parameter is added to __cfg80211_bss_expire() to
+avoid race condition pointed by Johannes.
 
-Even for an RFC patch it'd be nice to not mangle it :)
+Note that "PATCH v2 5/5 mwifiex: use LOW_PRIORITY flag ..."
+does not apply to mac80211-next cleanly because some recent
+mwifiex patches in wireless-testing have not been pulled yet.
 
->   /**
-> + * struct ieee80211_channel_config - channel config definition
-> + *
-> + * This structure describes channel configuration
-> + *
-> + * @chan_width1: channel bandwidth
-> + * @center_freq1: center frequency of 1 st frequency segment
-> + * @center_freq2: center frequency of 2 nd frequency segment
+=== original post (v1) by Sam Leffler ===
 
-I'd add a note here that the 2nd is only used for 80+80
+These add per-scan request controls for optional behaviours we've found
+useful (they've been in Chrome OS for a long time).  A patch for iw will
+follow separately and the mods for wpa_supplicant are in our repo and
+I'll push them to Jouni if these are accepted.
 
-> + * @prim_chan_freq: primary channel frequency
+Amitkumar Karwar (1):
+  mwifiex: use LOW_PRIORITY flag provided in scan request
 
-You said you wanted to change it to be like the standard, that's not how
-it works though, the standard says (copying from your email)
+Sam Leffler (4):
+  {nl,cfg}80211: add a flags word to scan requests
+  cfg80211: add scan flag to indicate its priority
+  cfg80211: add support for flushing old scan results
+  mac80211: add support for tx to abort low priority scan requests
 
-dot11CurrentPrimaryChannel
-       Denotes the location of the primary 20 MHz channel.
-       Valid range is 1 to 200.
-
-
-> +static bool reg_sec_chans_permitted(struct wiphy *wiphy,
-> +				    u32 center_freq,
-> +				    u32 bw_khz)
-> +{
-> +	struct ieee80211_channel *chan;
-> +	u32 left_end_freq, right_end_freq;
-> +
-> +	if (center_freq == 0 || bw_khz == 0)
-> +		return false;
-> +
-> +	/* find left and right arms of center freq */
-> +	left_end_freq = center_freq - (bw_khz/2);
-> +	right_end_freq = center_freq + (bw_khz/2);
-> +
-> +	/* left_end_freq and right_end_freq are edge of left and right
-> +	 * channels. Get center freq of left and right channels
-> +	 * by subtracting 10 MHZ from each of them.
-> +	 */
-> +	left_end_freq -= MHZ_TO_KHZ(10);
-> +	right_end_freq -= MHZ_TO_KHZ(10);
-
-Hmm? Shouldn't you add 10 MHz to the lower end, if anything?
-
-> +	/* find out all possible secondary channels */
-> +	while (left_end_freq < right_end_freq) {
-> +		chan = ieee80211_get_channel(wiphy, left_end_freq);
-> +		if (chan == NULL ||
-> +		    chan->flags & IEEE80211_CHAN_DISABLED) {
-> +			return false;
-> +		}
-> +		left_end_freq -= MHZ_TO_KHZ(20);
-> +	}
-> +
-> +	return true;
-> +}
-
-Overall I'm not sure I'd go to the channel structs for this function at
-all though, I'd rather go to the regulatory definition, I think that
-would make more sense.
-
-OTOH, this may be needed to keep the ability for the driver to disable
-certain channels etc.
-
-> +bool reg_chan_use_permitted(struct wiphy *wiphy,
-> +			    struct ieee80211_channel_config *chan_config,
-> +			    const struct ieee80211_regdomain *regd)
-> +{
-> +	int r;
-> +	u32 desired_bw_khz = MHZ_TO_KHZ(20);
-> +	const struct ieee80211_reg_rule *reg_rule = NULL;
-> +	const struct ieee80211_freq_range *freq_range = NULL;
-
-Don't initialize to values you don't need.
-
-> +	bool ret;
-> +
-> +	assert_reg_lock();
-> +
-> +	// get chan BW from config
-> +	switch (chan_config->chan_width) {
-> +	case IEEE80211_CHAN_WIDTH_20MHZ_NOHT:
-> +	case IEEE80211_CHAN_WIDTH_20MHZ:
-> ...
-
-> +	case IEEE80211_CHAN_WIDTH_80P80MHZ:
-> +		desired_bw_khz = MHZ_TO_KHZ(160);
-
-This is not true at all.
-
-> +		break;
-> +	}
-
-Missing a default case with a warning/error return?
-
-> +	r = freq_reg_info_regd(wiphy,
-> +			       chan_config->prim_chan_freq,
-> +			       desired_bw_khz,
-> +			       &reg_rule,
-> +			       regd);
-> +
-> +	if (r) {
-> +		REG_DBG_PRINT("Disabling freq %d MHz as custom "
-> +			      "regd has no rule that fits a %d MHz "
-> +			      "wide channel\n",
-> +			      chan_config->prim_chan_freq,
-> +			      KHZ_TO_MHZ(desired_bw_khz));
-
-That's not a good message in this context now. Clearly it came from the
-channel flag settings, but now we don't do that so ...
-
-johannes
+ drivers/net/wireless/mwifiex/cfg80211.c |    3 ++-
+ drivers/net/wireless/mwifiex/scan.c     |    6 +++++-
+ include/linux/nl80211.h                 |   19 +++++++++++++++++++
+ include/net/cfg80211.h                  |   17 +++++++++++++++++
+ net/mac80211/ieee80211_i.h              |    2 ++
+ net/mac80211/scan.c                     |   22 ++++++++++++++++++----
+ net/wireless/nl80211.c                  |   12 ++++++++++++
+ net/wireless/scan.c                     |   31 +++++++++++++++++++++++++++----
+ net/wireless/sme.c                      |    1 +
+ 9 files changed, 103 insertions(+), 10 deletions(-)
 
