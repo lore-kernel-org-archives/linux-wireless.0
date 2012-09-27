@@ -1,147 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:51363 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757301Ab2IKBca (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:41680 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756726Ab2I0Kio (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 21:32:30 -0400
-From: Bing Zhao <bzhao@marvell.com>
+	Thu, 27 Sep 2012 06:38:44 -0400
+From: Luciano Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 10/10] mwifiex: separate TxPD processing routine for AP
-Date: Mon, 10 Sep 2012 18:30:49 -0700
-Message-Id: <1347327049-13665-11-git-send-email-bzhao@marvell.com> (sfid-20120911_033234_384189_7AFDFE4C)
-In-Reply-To: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
-References: <1347327049-13665-1-git-send-email-bzhao@marvell.com>
+Cc: coelho@ti.com, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 20/31] wlcore: spi: use private max-buf-size limit
+Date: Thu, 27 Sep 2012 13:37:58 +0300
+Message-Id: <1348742289-6587-21-git-send-email-luca@coelho.fi> (sfid-20120927_123900_471855_664BA794)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-This patch adds separate tx packet descriptor routine for AP
-interface. This function fills bss_type, bss_num, wmm packet
-delay information etc for TxPD going on AP interface.
+Limit SPI transmissions to the wl12xx max buffer size, as only 12xx was
+tested with SPI.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+This allows us to remove the global aggregation buffer constant.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
 ---
- drivers/net/wireless/mwifiex/main.h     |    1 +
- drivers/net/wireless/mwifiex/txrx.c     |    6 ++-
- drivers/net/wireless/mwifiex/uap_txrx.c |   70 +++++++++++++++++++++++++++++++
- 3 files changed, 76 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ti/wlcore/spi.c      |   10 ++++++++--
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    2 --
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index bb75390..12ceea4 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -812,6 +812,7 @@ struct mwifiex_sta_node *
- mwifiex_get_sta_entry(struct mwifiex_private *priv, u8 *mac);
- void mwifiex_delete_all_station_list(struct mwifiex_private *priv);
- void *mwifiex_process_sta_txpd(struct mwifiex_private *, struct sk_buff *skb);
-+void *mwifiex_process_uap_txpd(struct mwifiex_private *, struct sk_buff *skb);
- int mwifiex_sta_init_cmd(struct mwifiex_private *, u8 first_sta);
- int mwifiex_cmd_802_11_scan(struct host_cmd_ds_command *cmd,
- 			    struct mwifiex_scan_cmd_config *scan_cfg);
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index 985073d..2af2639 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -75,7 +75,11 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
- 	u8 *head_ptr;
- 	struct txpd *local_tx_pd = NULL;
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index 8da4ed2..a519bc3 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -66,7 +66,13 @@
+ /* HW limitation: maximum possible chunk size is 4095 bytes */
+ #define WSPI_MAX_CHUNK_SIZE    4092
  
--	head_ptr = mwifiex_process_sta_txpd(priv, skb);
-+	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
-+		head_ptr = mwifiex_process_uap_txpd(priv, skb);
-+	else
-+		head_ptr = mwifiex_process_sta_txpd(priv, skb);
-+
- 	if (head_ptr) {
- 		if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA)
- 			local_tx_pd =
-diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-index 6d814f0..df17d08 100644
---- a/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -253,3 +253,73 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_adapter *adapter,
- 
- 	return ret;
- }
-+
+-#define WSPI_MAX_NUM_OF_CHUNKS (WL1271_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE)
 +/*
-+ * This function fills the TxPD for AP tx packets.
-+ *
-+ * The Tx buffer received by this function should already have the
-+ * header space allocated for TxPD.
-+ *
-+ * This function inserts the TxPD in between interface header and actual
-+ * data and adjusts the buffer pointers accordingly.
-+ *
-+ * The following TxPD fields are set by this function, as required -
-+ *      - BSS number
-+ *      - Tx packet length and offset
-+ *      - Priority
-+ *      - Packet delay
-+ *      - Priority specific Tx control
-+ *      - Flags
++ * only support SPI for 12xx - this code should be reworked when 18xx
++ * support is introduced
 + */
-+void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
-+			       struct sk_buff *skb)
-+{
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	struct uap_txpd *txpd;
-+	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
-+	int pad, len;
++#define SPI_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
 +
-+	if (!skb->len) {
-+		dev_err(adapter->dev, "Tx: bad packet length: %d\n", skb->len);
-+		tx_info->status_code = -1;
-+		return skb->data;
-+	}
-+
-+	/* If skb->data is not aligned, add padding */
-+	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
-+
-+	len = sizeof(*txpd) + pad;
-+
-+	BUG_ON(skb_headroom(skb) < len + INTF_HEADER_LEN);
-+
-+	skb_push(skb, len);
-+
-+	txpd = (struct uap_txpd *)skb->data;
-+	memset(txpd, 0, sizeof(*txpd));
-+	txpd->bss_num = priv->bss_num;
-+	txpd->bss_type = priv->bss_type;
-+	txpd->tx_pkt_length = cpu_to_le16((u16)(skb->len - len));
-+
-+	txpd->priority = (u8)skb->priority;
-+	txpd->pkt_delay_2ms = mwifiex_wmm_compute_drv_pkt_delay(priv, skb);
-+
-+	if (txpd->priority < ARRAY_SIZE(priv->wmm.user_pri_pkt_tx_ctrl))
-+		/*
-+		 * Set the priority specific tx_control field, setting of 0 will
-+		 * cause the default value to be used later in this function.
-+		 */
-+		txpd->tx_control =
-+		    cpu_to_le32(priv->wmm.user_pri_pkt_tx_ctrl[txpd->priority]);
-+
-+	/* Offset of actual data */
-+	txpd->tx_pkt_offset = cpu_to_le16(len);
-+
-+	/* make space for INTF_HEADER_LEN */
-+	skb_push(skb, INTF_HEADER_LEN);
-+
-+	if (!txpd->tx_control)
-+		/* TxCtrl set by user or default */
-+		txpd->tx_control = cpu_to_le32(priv->pkt_tx_ctrl);
-+
-+	return skb->data;
-+}
++#define WSPI_MAX_NUM_OF_CHUNKS (SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE)
+ 
+ struct wl12xx_spi_glue {
+ 	struct device *dev;
+@@ -271,7 +277,7 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+ 	u32 chunk_len;
+ 	int i;
+ 
+-	WARN_ON(len > WL1271_AGGR_BUFFER_SIZE);
++	WARN_ON(len > SPI_AGGR_BUFFER_SIZE);
+ 
+ 	spi_message_init(&m);
+ 	memset(t, 0, sizeof(t));
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 58fbdca..a7472bf 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -83,8 +83,6 @@
+ #define WL1271_AP_BSS_INDEX        0
+ #define WL1271_AP_DEF_BEACON_EXP   20
+ 
+-#define WL1271_AGGR_BUFFER_SIZE (5 * PAGE_SIZE)
+-
+ enum wlcore_state {
+ 	WLCORE_STATE_OFF,
+ 	WLCORE_STATE_RESTARTING,
 -- 
-1.7.0.2
+1.7.10.4
 
