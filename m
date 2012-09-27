@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43352 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753035Ab2IKGdF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 02:33:05 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <mcgrof@do-not-panic.com>
-CC: <mcgrof@frijolero.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] compat-drivers: Use GIT_TREE variable.
-Date: Tue, 11 Sep 2012 11:59:24 +0530
-Message-ID: <1347344964-4120-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120911_083310_203616_89B53CBF)
+Received: from mms1.broadcom.com ([216.31.210.17]:4906 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752861Ab2I0MSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 08:18:18 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/11] brcmfmac: cleanup and support for AP mode
+Date: Thu, 27 Sep 2012 14:17:46 +0200
+Message-ID: <1348748277-21460-1-git-send-email-arend@broadcom.com> (sfid-20120927_141826_039303_CD070341)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In gen-stable-release.sh stable git tree path is hardcoded.
-Use GIT_TREE environment variable if specified.
+This patch series delivers AP mode functionality for the brcmfmac
+driver. Other changes involve cleanup or minor fixes.
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
- scripts/gen-stable-release.sh | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+This series is intended for v3.7 and depends on patch sent by Dan
+Carpenter identified by:
 
-diff --git a/scripts/gen-stable-release.sh b/scripts/gen-stable-release.sh
-index 5a7dc5f..fee1ac7 100755
---- a/scripts/gen-stable-release.sh
-+++ b/scripts/gen-stable-release.sh
-@@ -21,6 +21,7 @@ RED="\033[31m"
- PURPLE="\033[35m"
- CYAN="\033[36m"
- UNDERLINE="\033[02m"
-+GIT_STABLE_URL="git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
- 
- # Note that this tree may not have the latest RC stuff, so you should also add
- # Linus' tree as a remote and fetch those objects if you want to make an RC
-@@ -47,7 +48,21 @@ function usage()
- UPDATE_ARGS=""
- POSTFIX_RELEASE_TAG="-"
- 
--export GIT_TREE=$HOME/$ALL_STABLE_TREE
-+if [ -z $GIT_TREE ]; then
-+	export GIT_TREE=$HOME/$ALL_STABLE_TREE
-+	if [ ! -d $GIT_TREE ]; then
-+		echo "Please tell me where your linux-stable git tree is."
-+		echo "You can do this by exporting its location as follows:"
-+		echo
-+		echo "  export GIT_TREE=/home/$USER/linux-stable/"
-+		echo
-+		echo "If you do not have one you can clone the repository:"
-+		echo "  git clone $GIT_STABLE_URL"
-+		exit 1
-+	fi
-+else
-+	echo "You said to use git tree at: $GIT_TREE for linux-stable"
-+fi
- COMPAT_WIRELESS_DIR=$(pwd)
- COMPAT_WIRELESS_BRANCH=$(git branch | grep \* | awk '{print $2}')
- 
+Message-ID: <20120926072148.GA3956@elgon.mountain>
+  brcmfmac: use kcalloc() to prevent integer overflow
+
+Arend van Spriel (6):
+  brcmfmac: get rid of extern keyword in wl_cfg80211.h
+  brcmfmac: use brcmf_cfg80211_priv to interface with wl_cfg80211 code
+  brcmfmac: remove two obsolete structure definitions
+  brcmfmac: rename structure brcmf_cfg80211_priv
+  brcmfmac: remove brcmf_read_prof() function
+  brcmfmac: remove brcmf_update_prof() function
+
+Hante Meuleman (5):
+  brcmfmac: use wait_event_timeout for fw control packets over usb.
+  brcmfmac: use different fw api for encryption,auth. config
+  brcmfmac: use define instead of hardcoded values.
+  brcmfmac: notify common driver about usb tx completion.
+  brcmfmac: add hostap supoort.
+
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   33 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   46 +
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   48 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 2412 +++++++++++++-------
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   81 +-
+ 5 files changed, 1762 insertions(+), 858 deletions(-)
+
 -- 
-1.7.11.4
+1.7.9.5
+
 
