@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:60208 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751044Ab2ISTp4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48421 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060Ab2I0JPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 15:45:56 -0400
-Received: by weyx8 with SMTP id x8so797826wey.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2012 12:45:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1348083291.7081.11.camel@jlt4.sipsolutions.net>
-References: <1348049313-7650-1-git-send-email-johannes@sipsolutions.net>
- <CA+XVXfcxHENu1HzY+-WkyMr6g+3P2wSyj7BhDsfKgZoB7fZHRg@mail.gmail.com> <1348083291.7081.11.camel@jlt4.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 19 Sep 2012 22:45:39 +0300
-Message-ID: <CA+XVXfd1ZiYjZaRUFeZvDVvi5gqmE6fVs=qjZW-JshRaWxSoRA@mail.gmail.com> (sfid-20120919_214559_747282_57594F11)
-Subject: Re: [PATCH 0/3] mac80211: avoid useless delBA frames
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 27 Sep 2012 05:15:23 -0400
+Message-ID: <1348737359.10353.8.camel@jlt4.sipsolutions.net> (sfid-20120927_111526_802295_C19C5226)
+Subject: Re: [PATCH 3/3] cfg80211: add support for flushing old scan results
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Leffler <sleffler@chromium.org>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 27 Sep 2012 11:15:59 +0200
+In-Reply-To: <20120926165952.BC0E71E051D@sleffler.sfo.corp.google.com> (sfid-20120926_185956_248675_62A4C8CC)
+References: <20120926165952.BC0E71E051D@sleffler.sfo.corp.google.com>
+	 (sfid-20120926_185956_248675_62A4C8CC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2012 at 10:34 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-09-19 at 22:32 +0300, Arik Nemtsov wrote:
->> On Wed, Sep 19, 2012 at 1:08 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > There are a few situations where it's completely pointless
->> > to send delBA action frames, so let's remove them.
->>
->> Maybe it's a good opportunity to also fix ieee80211_reconfig? I
->> remember you mentioned some FW/HW issue there, perhaps this was solved
->> in the meantime. Otherwise we can add a HW flag for that I guess.
->
-> Not sure what you mean?
+On Fri, 2012-09-21 at 11:08 -0700, Sam Leffler wrote:
 
-All BA sessions are destroyed right after reconfig. For devices that
-manage these in FW, the FW was just reloaded and doesn't know about
-existing sessions at all.
-So I guess there's sense in sending the delBA, but no sense calling
-the driver ampdu callback (at least for how 12xx works).
+>  void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+>  {
+>  	struct cfg80211_scan_request *request;
+> @@ -47,8 +50,16 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+>  
+>  	if (request->aborted)
+>  		nl80211_send_scan_aborted(rdev, wdev);
+> -	else
+> +	else {
+> +		if (request->flags & CFG80211_SCAN_FLAG_FLUSH) {
+> +			/* flush entries from previous scans */
+> +			spin_lock_bh(&rdev->bss_lock);
+> +			__cfg80211_bss_expire(rdev,
+> +				jiffies - request->scan_start);
 
->
-> FWIW these patches were sitting in my tree as part of a larger set of
-> changes around the driver ampdu callback to help drivers with internal
-> queues drop or flush frames appropriately and to react to the different
-> situations. I didn't think about reconfig at all with this.
+I wonder if we should pass an absolute time instead? jiffies will
+continue to advance while we iterate the list etc., if we pass the
+absolute time in both cases we can avoid this small race condition.
 
-Yea. These handle other situations.
+The race really isn't important, but it still seems a bit cleaner to me
+overall.
+
+johannes
+
