@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:1513 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755912Ab2INOv0 (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:46683 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756138Ab2I0Kig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Sep 2012 10:51:26 -0400
-Message-ID: <50534465.3080205@qca.qualcomm.com> (sfid-20120914_165130_225207_32BAA274)
-Date: Fri, 14 Sep 2012 20:21:17 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH] ath9k: Fix mesh related filtering issue for older chips
-References: <1347633965-20218-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1347633965-20218-1-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Thu, 27 Sep 2012 06:38:36 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Ido Reis <idor@ti.com>
+Subject: [PATCH 01/31] wl18xx: update default phy configuration for pg2
+Date: Thu, 27 Sep 2012 13:37:39 +0300
+Message-Id: <1348742289-6587-2-git-send-email-luca@coelho.fi> (sfid-20120927_123841_897858_AA1E66C6)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 14 September 2012 08:16 PM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
->
-> We need to have the promiscus mode enabled for older
-> chipset(ie rule out many frames being filtered in the
-> hardware itself)if 'FIF_OTHER_BSS' flag is set, when we
-> start the mesh mode. Fix this by enabling promiscus
-> mode for all chipsets whose macversion <= AR9160
-> chipsets. This should fix
-> https://bugzilla.kernel.org/show_bug.cgi?id=45591
->
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 4480c0c..76db0b3 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -424,8 +424,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
->   		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
->
->   	if (sc->nvifs > 1 || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
-> -		/* The following may also be needed for other older chips */
-> -		if (sc->sc_ah->hw_version.macVersion == AR_SREV_VERSION_9160)
-> +		/* This is needed for older chips, especially for mesh mode */
-> +		if (sc->sc_ah->hw_version.macVersion <= AR_SREV_VERSION_9160)
->   			rfilt |= ATH9K_RX_FILTER_PROM;
->   		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
->   	}
->
+From: Ido Reis <idor@ti.com>
 
-John, kindly drop this. Had resent the v2 with proper author
-name (Thomas) who suggested the change.
+default switch configuration set to pg2 chips (rdl 1/2/3/4).
+removed hacks for specific board types.
+pg1.x boards are now supported only using module params
+or specific conf files.
 
+Signed-off-by: Ido Reis <idor@ti.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |   17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 99364d4..3c274eb 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -505,8 +505,8 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
+ 		.rdl				= 0x01,
+ 		.auto_detect			= 0x00,
+ 		.dedicated_fem			= FEM_NONE,
+-		.low_band_component		= COMPONENT_2_WAY_SWITCH,
+-		.low_band_component_type	= 0x06,
++		.low_band_component		= COMPONENT_3_WAY_SWITCH,
++		.low_band_component_type	= 0x04,
+ 		.high_band_component		= COMPONENT_2_WAY_SWITCH,
+ 		.high_band_component_type	= 0x09,
+ 		.tcxo_ldo_voltage		= 0x00,
+@@ -1428,18 +1428,7 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	/* HACK! Just for now we hardcode COM8 and HDK to 0x06 */
+-	switch (priv->conf.phy.board_type) {
+-	case BOARD_TYPE_HDK_18XX:
+-	case BOARD_TYPE_COM8_18XX:
+-		priv->conf.phy.low_band_component_type = 0x06;
+-		break;
+-	case BOARD_TYPE_FPGA_18XX:
+-	case BOARD_TYPE_DVP_18XX:
+-	case BOARD_TYPE_EVB_18XX:
+-		priv->conf.phy.low_band_component_type = 0x05;
+-		break;
+-	default:
++	if (priv->conf.phy.board_type >= NUM_BOARD_TYPES) {
+ 		wl1271_error("invalid board type '%d'",
+ 			priv->conf.phy.board_type);
+ 		ret = -EINVAL;
 -- 
-thanks,
-shafi
-
+1.7.10.4
 
