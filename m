@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:52134 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320Ab2ITGmL (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:37718 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756447Ab2I0Kik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 02:42:11 -0400
-Received: by weyx8 with SMTP id x8so1054680wey.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2012 23:42:10 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: use udelay for short waits
-Date: Thu, 20 Sep 2012 08:42:19 +0200
-Message-Id: <1348123339-15210-1-git-send-email-zajec5@gmail.com> (sfid-20120920_084215_013540_4D8DA715)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 27 Sep 2012 06:38:40 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 05/31] wlcore: cancel recovery_work on stop() instead of remove_interface()
+Date: Thu, 27 Sep 2012 13:37:43 +0300
+Message-Id: <1348742289-6587-6-git-send-email-luca@coelho.fi> (sfid-20120927_124025_504647_D76E7A6B)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-msleep shouldn't be used for less than 20ms
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+recovery_work should be cancelled when stopping the device,
+not when removing an interface (this is probably a leftover
+from the single-role days)
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
 ---
- drivers/bcma/driver_pci.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index c32ebd5..e78e6a8 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -51,7 +51,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u8 phy)
- 		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
- 		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
- 			break;
--		msleep(1);
-+		udelay(1000);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 21267c5..612008f 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1857,6 +1857,8 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	wlcore_synchronize_interrupts(wl);
++	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags))
++		cancel_work_sync(&wl->recovery_work);
+ 	wl1271_flush_deferred_work(wl);
+ 	cancel_delayed_work_sync(&wl->scan_complete_work);
+ 	cancel_work_sync(&wl->netstack_work);
+@@ -2437,7 +2439,6 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+ 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	struct wl12xx_vif *iter;
+ 	struct vif_counter_data vif_count;
+-	bool cancel_recovery = true;
+ 
+ 	wl12xx_get_vif_count(hw, vif, &vif_count);
+ 	mutex_lock(&wl->mutex);
+@@ -2462,12 +2463,9 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+ 		wl12xx_force_active_psm(wl);
+ 		set_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags);
+ 		wl12xx_queue_recovery_work(wl);
+-		cancel_recovery = false;
  	}
+ out:
+ 	mutex_unlock(&wl->mutex);
+-	if (cancel_recovery)
+-		cancel_work_sync(&wl->recovery_work);
  }
  
-@@ -92,7 +92,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
- 			ret = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_DATA);
- 			break;
- 		}
--		msleep(1);
-+		udelay(1000);
- 	}
- 	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
- 	return ret;
-@@ -132,7 +132,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u8 device,
- 		v = pcicore_read32(pc, BCMA_CORE_PCI_MDIO_CONTROL);
- 		if (v & BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE)
- 			break;
--		msleep(1);
-+		udelay(1000);
- 	}
- 	pcicore_write32(pc, BCMA_CORE_PCI_MDIO_CONTROL, 0);
- }
+ static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
 -- 
-1.7.7
+1.7.10.4
 
