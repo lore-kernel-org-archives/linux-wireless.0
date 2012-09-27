@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41426 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757100Ab2IDOxw (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12896 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071Ab2I0MuS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 10:53:52 -0400
-Message-ID: <1346770467.3737.32.camel@jlt4.sipsolutions.net> (sfid-20120904_165356_208297_322195F0)
-Subject: Re: [PATCH v2] p54: connect to 11w protected networks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Tue, 04 Sep 2012 16:54:27 +0200
-In-Reply-To: <1346769429.3737.30.camel@jlt4.sipsolutions.net> (sfid-20120904_163651_735748_490095D0)
-References: <1346622538.10113.3.camel@jlt4.sipsolutions.net>
-	 <E1T8tYj-00051o-3z@debian64.localnet>
-	 (sfid-20120904_155321_955424_2D6B3F4B) <1346768149.3737.29.camel@jlt4.sipsolutions.net>
-	 <1346769184.26638.7.camel@dcbw.foobar.com>
-	 <1346769429.3737.30.camel@jlt4.sipsolutions.net>
-	 (sfid-20120904_163651_735748_490095D0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Sep 2012 08:50:18 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <ath6kl-devel@qualcomm.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 1/6] ath6kl: Remove obselete USB device related checks
+Date: Thu, 27 Sep 2012 18:19:48 +0530
+Message-ID: <1348750193-2665-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120927_145023_099055_0F09AE6C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-09-04 at 16:37 +0200, Johannes Berg wrote:
-> On Tue, 2012-09-04 at 09:33 -0500, Dan Williams wrote:
-> > On Tue, 2012-09-04 at 16:15 +0200, Johannes Berg wrote:
-> > > On Tue, 2012-09-04 at 15:19 +0200, Christian Lamparter wrote:
-> > > 
-> > > > As you feared: the firmware is corrupting incoming management
-> > > > frames. However, it does so only when a rxkey was configured.
-> > > > So as a possible trade-off, MFP will only be supported by p54,
-> > > > when the firmware crypto offloading is relieved of his duties
-> > > > (disabled). 
-> > > > 
-> > > > Note: Strictly speaking, it would be enough to no longer upload
-> > > > any rx key which could affect management frames, as the firmware
-> > > > does not decrypt any frames unless there is a fitting key candidate.
-> > > 
-> > > Right, however, that would kinda defeat the point. Unless ... maybe we
-> > > can tell the driver if 11w is going to be used at all? If we did that,
-> > > we could make it work in the set_key callback.
-> > > 
-> > > For now your patch looks good though.
-> > 
-> > We can't get this to happen without a module option?  Is there a way to
-> > turn the crypto offloading off when we know we're connecting to a W
-> > protected AP?
-> 
-> Yeah that's what I was thinking. I suppose we *could* somehow do this by
-> setting some key flag in mac80211 that the driver can check.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Something like this perhaps:
+These checks are no longer needed as the necessary
+USB support is already present in the driver.
 
-http://p.sipsolutions.net/76d17d49f4685cda.txt
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/hif.c      |    5 -----
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |   10 +---------
+ 2 files changed, 1 insertions(+), 14 deletions(-)
 
-But I'd want somebody to check if the mesh code is right and maybe we
-need to think about the AP case (have hostapd tell us whether it uses
-MFP or not) ... and maybe docs should be improved
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
+index 029914a..a7a1ec4 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.c
++++ b/drivers/net/wireless/ath/ath6kl/hif.c
+@@ -696,11 +696,6 @@ int ath6kl_hif_setup(struct ath6kl_device *dev)
+ 	ath6kl_dbg(ATH6KL_DBG_HIF, "hif block size %d mbox addr 0x%x\n",
+ 		   dev->htc_cnxt->block_sz, dev->ar->mbox_info.htc_addr);
+ 
+-	/* usb doesn't support enabling interrupts */
+-	/* FIXME: remove check once USB support is implemented */
+-	if (dev->ar->hif_type == ATH6KL_HIF_TYPE_USB)
+-		return 0;
+-
+ 	status = ath6kl_hif_disable_intrs(dev);
+ 
+ fail_setup:
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+index cd0e1ba..26685de 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+@@ -2655,12 +2655,6 @@ static int ath6kl_htc_mbox_wait_target(struct htc_target *target)
+ 	struct htc_service_connect_resp resp;
+ 	int status;
+ 
+-	/* FIXME: remove once USB support is implemented */
+-	if (target->dev->ar->hif_type == ATH6KL_HIF_TYPE_USB) {
+-		ath6kl_err("HTC doesn't support USB yet. Patience!\n");
+-		return -EOPNOTSUPP;
+-	}
+-
+ 	/* we should be getting 1 control message that the target is ready */
+ 	packet = htc_wait_for_ctrl_msg(target);
+ 
+@@ -2890,9 +2884,7 @@ static void ath6kl_htc_mbox_cleanup(struct htc_target *target)
+ {
+ 	struct htc_packet *packet, *tmp_packet;
+ 
+-	/* FIXME: remove check once USB support is implemented */
+-	if (target->dev->ar->hif_type != ATH6KL_HIF_TYPE_USB)
+-		ath6kl_hif_cleanup_scatter(target->dev->ar);
++	ath6kl_hif_cleanup_scatter(target->dev->ar);
+ 
+ 	list_for_each_entry_safe(packet, tmp_packet,
+ 				 &target->free_ctrl_txbuf, list) {
+-- 
+1.7.0.4
 
