@@ -1,81 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46547 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756728Ab2IXQAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Sep 2012 12:00:24 -0400
-Date: Mon, 24 Sep 2012 11:46:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Anthony Griffiths <neuronetv@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: compile error iw on centos 5
-Message-ID: <20120924154646.GC32351@tuxdriver.com> (sfid-20120924_180155_640136_AE4575DF)
-References: <CAPU73_t5_XjvPURXedOJGmfpRKZi9UG=_6rm7DXUBcRMDaqU8w@mail.gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4915 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753424Ab2I0MSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 08:18:18 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/11] brcmfmac: use brcmf_cfg80211_priv to interface
+ with wl_cfg80211 code
+Date: Thu, 27 Sep 2012 14:17:52 +0200
+Message-ID: <1348748277-21460-7-git-send-email-arend@broadcom.com> (sfid-20120927_141831_534140_0ECAB9D6)
+In-Reply-To: <1348748277-21460-1-git-send-email-arend@broadcom.com>
+References: <1348748277-21460-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAPU73_t5_XjvPURXedOJGmfpRKZi9UG=_6rm7DXUBcRMDaqU8w@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wireless stack in RHEL 5 (and therefore CentOS 5) is rather old.
-I'm not sure that trying to run an updated iw on it will be a fruitful
-exercise...?
+The low-level driver part interfaces with wl_cfg80211 part using
+brcmf_cfg80211_dev structure as handle. As brcmf_cfg80211_priv
+is defined in interface it is more efficient to use that as handle
+in function calls.
 
-On Mon, Sep 24, 2012 at 09:59:52AM +0100, Anthony Griffiths wrote:
-> I'm trying to compile iw in centos5.8 server (command line only). I
-> have libnl and libnl-devel installed:
-> ]# rpm -q libnl
-> libnl-1.0-0.10.pre5.5
-> I've tried 4 different versions of iw*.tar.bz2 but all give compile
-> errors that i can't resolve. The last one I tried was iw-0.9.1 but
-> make gives:
-> ]# make
->  CC   interface.o
-> In file included from /usr/include/net/if.h:26,
->                  from interface.c:2:
-> /usr/include/sys/types.h:62: error: conflicting types for ‘dev_t’
-> /lib/modules/2.6.18-308.13.1.el5/source//include/linux/types.h:22:
-> error: previous declaration of ‘d                 ev_t’ was here
-> /usr/include/sys/types.h:67: error: conflicting types for ‘gid_t’
-> /lib/modules/2.6.18-308.13.1.el5/source//include/linux/types.h:54:
-> error: previous declaration of ‘g                 id_t’ was here
-> /usr/include/sys/types.h:72: error: conflicting types for ‘mode_t’
-> /lib/modules/2.6.18-308.13.1.el5/source//include/linux/types.h:24:
-> error: previous declaration of ‘m                 ode_t’ was here
-> /usr/include/sys/types.h:77: error: conflicting types for ‘nlink_t’
-> /lib/modules/2.6.18-308.13.1.el5/source//include/linux/types.h:25:
-> error: previous declaration of ‘n                 link_t’ was here
-> /usr/include/sys/types.h:82: error: conflicting types for ‘uid_t’
-> /lib/modules/2.6.18-308.13.1.el5/source//include/linux/types.h:53:
-> error: previous declaration of ‘u                 id_t’ was here
-> In file included from /usr/include/sys/types.h:133,
->                  from /usr/include/net/if.h:26,
->                  from interface.c:2:
-> /usr/include/time.h:105: error: conflicting types for ‘timer_t’
-> /lib/modules/2.6.18-308.13.1.el5/source//include/linux/types.h:31:
-> error: previous declaration of ‘t                 imer_t’ was here
-> In file included from /usr/include/sys/types.h:220,
->                  from /usr/include/net/if.h:26,
->                  from interface.c:2:
-> /usr/include/sys/select.h:78: error: conflicting types for ‘fd_set’
-> /lib/modules/2.6.18-308.13.1.el5/source//include/linux/types.h:21:
-> error: previous declaration of ‘f                 d_set’ was here
-> In file included from /usr/include/net/if.h:26,
->                  from interface.c:2:
-> /usr/include/sys/types.h:235: error: conflicting types for ‘blkcnt_t’
-> /lib/modules/2.6.18-308.13.1.el5/source//include/linux/types.h:142:
-> error: previous declaration of ‘                 blkcnt_t’ was here
-> make: *** [interface.o] Error 1
-> 
-> There is no iw yum package for centos5 that I can find.
-> I've been searching google but cannot find a solution to the above
-> error, thanks for any help.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   48 ++++----------------
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   12 ++---
+ 3 files changed, 15 insertions(+), 47 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 9bb23b3..fc4bc6d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -585,7 +585,7 @@ struct brcmf_pub {
+ 	/* Linkage ponters */
+ 	struct brcmf_bus *bus_if;
+ 	struct brcmf_proto *prot;
+-	struct brcmf_cfg80211_dev *config;
++	struct brcmf_cfg80211_priv *config;
+ 	struct device *dev;		/* fullmac dongle device pointer */
+ 
+ 	/* Internal brcmf items */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 63dbb2a..7be3ec5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -57,27 +57,6 @@ static const u8 ether_bcast[ETH_ALEN] = {255, 255, 255, 255, 255, 255};
+ 
+ static u32 brcmf_dbg_level = WL_DBG_ERR;
+ 
+-static void brcmf_set_drvdata(struct brcmf_cfg80211_dev *dev, void *data)
+-{
+-	dev->driver_data = data;
+-}
+-
+-static void *brcmf_get_drvdata(struct brcmf_cfg80211_dev *dev)
+-{
+-	void *data = NULL;
+-
+-	if (dev)
+-		data = dev->driver_data;
+-	return data;
+-}
+-
+-static
+-struct brcmf_cfg80211_priv *brcmf_priv_get(struct brcmf_cfg80211_dev *cfg_dev)
+-{
+-	struct brcmf_cfg80211_iface *ci = brcmf_get_drvdata(cfg_dev);
+-	return ci->cfg_priv;
+-}
+-
+ static bool check_sys_up(struct wiphy *wiphy)
+ {
+ 	struct brcmf_cfg80211_priv *cfg_priv = wiphy_to_cfg(wiphy);
+@@ -4340,9 +4319,9 @@ static void wl_deinit_priv(struct brcmf_cfg80211_priv *cfg_priv)
+ 	brcmf_deinit_priv_mem(cfg_priv);
+ }
+ 
+-struct brcmf_cfg80211_dev *brcmf_cfg80211_attach(struct net_device *ndev,
+-						 struct device *busdev,
+-						 struct brcmf_pub *drvr)
++struct brcmf_cfg80211_priv *brcmf_cfg80211_attach(struct net_device *ndev,
++						  struct device *busdev,
++						  struct brcmf_pub *drvr)
+ {
+ 	struct wireless_dev *wdev;
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+@@ -4378,9 +4357,8 @@ struct brcmf_cfg80211_dev *brcmf_cfg80211_attach(struct net_device *ndev,
+ 		WL_ERR("Failed to init iwm_priv (%d)\n", err);
+ 		goto cfg80211_attach_out;
+ 	}
+-	brcmf_set_drvdata(cfg_dev, ci);
+-
+-	return cfg_dev;
++	kfree(cfg_dev);
++	return cfg_priv;
+ 
+ cfg80211_attach_out:
+ 	brcmf_free_wdev(cfg_priv);
+@@ -4388,16 +4366,10 @@ cfg80211_attach_out:
+ 	return NULL;
+ }
+ 
+-void brcmf_cfg80211_detach(struct brcmf_cfg80211_dev *cfg_dev)
++void brcmf_cfg80211_detach(struct brcmf_cfg80211_priv *cfg_priv)
+ {
+-	struct brcmf_cfg80211_priv *cfg_priv;
+-
+-	cfg_priv = brcmf_priv_get(cfg_dev);
+-
+ 	wl_deinit_priv(cfg_priv);
+ 	brcmf_free_wdev(cfg_priv);
+-	brcmf_set_drvdata(cfg_dev, NULL);
+-	kfree(cfg_dev);
+ }
+ 
+ void
+@@ -4756,12 +4728,10 @@ static s32 __brcmf_cfg80211_down(struct brcmf_cfg80211_priv *cfg_priv)
+ 	return 0;
+ }
+ 
+-s32 brcmf_cfg80211_up(struct brcmf_cfg80211_dev *cfg_dev)
++s32 brcmf_cfg80211_up(struct brcmf_cfg80211_priv *cfg_priv)
+ {
+-	struct brcmf_cfg80211_priv *cfg_priv;
+ 	s32 err = 0;
+ 
+-	cfg_priv = brcmf_priv_get(cfg_dev);
+ 	mutex_lock(&cfg_priv->usr_sync);
+ 	err = __brcmf_cfg80211_up(cfg_priv);
+ 	mutex_unlock(&cfg_priv->usr_sync);
+@@ -4769,12 +4739,10 @@ s32 brcmf_cfg80211_up(struct brcmf_cfg80211_dev *cfg_dev)
+ 	return err;
+ }
+ 
+-s32 brcmf_cfg80211_down(struct brcmf_cfg80211_dev *cfg_dev)
++s32 brcmf_cfg80211_down(struct brcmf_cfg80211_priv *cfg_priv)
+ {
+-	struct brcmf_cfg80211_priv *cfg_priv;
+ 	s32 err = 0;
+ 
+-	cfg_priv = brcmf_priv_get(cfg_dev);
+ 	mutex_lock(&cfg_priv->usr_sync);
+ 	err = __brcmf_cfg80211_down(cfg_priv);
+ 	mutex_unlock(&cfg_priv->usr_sync);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index 9e478e0..618a600 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -497,15 +497,15 @@ brcmf_cfg80211_connect_info *cfg_to_conn(struct brcmf_cfg80211_priv *cfg)
+ 	return &cfg->conn_info;
+ }
+ 
+-struct brcmf_cfg80211_dev *brcmf_cfg80211_attach(struct net_device *ndev,
+-						 struct device *busdev,
+-						 struct brcmf_pub *drvr);
+-void brcmf_cfg80211_detach(struct brcmf_cfg80211_dev *cfg);
++struct brcmf_cfg80211_priv *brcmf_cfg80211_attach(struct net_device *ndev,
++						  struct device *busdev,
++						  struct brcmf_pub *drvr);
++void brcmf_cfg80211_detach(struct brcmf_cfg80211_priv *cfg_priv);
+ 
+ /* event handler from dongle */
+ void brcmf_cfg80211_event(struct net_device *ndev,
+ 			  const struct brcmf_event_msg *e, void *data);
+-s32 brcmf_cfg80211_up(struct brcmf_cfg80211_dev *cfg_dev);
+-s32 brcmf_cfg80211_down(struct brcmf_cfg80211_dev *cfg_dev);
++s32 brcmf_cfg80211_up(struct brcmf_cfg80211_priv *cfg_priv);
++s32 brcmf_cfg80211_down(struct brcmf_cfg80211_priv *cfg_priv);
+ 
+ #endif				/* _wl_cfg80211_h_ */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.5
+
+
