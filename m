@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59006 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757358Ab2I2SeC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Sep 2012 14:34:02 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/5] bcma: add and use constants for the flash windows
-Date: Sat, 29 Sep 2012 20:33:50 +0200
-Message-Id: <1348943633-22800-3-git-send-email-hauke@hauke-m.de> (sfid-20120929_203406_951759_70878FB6)
-In-Reply-To: <1348943633-22800-1-git-send-email-hauke@hauke-m.de>
-References: <1348943633-22800-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:14946 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949Ab2I0Oux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Sep 2012 10:50:53 -0400
+Message-ID: <1348757655.32301.6.camel@dcbw.foobar.com> (sfid-20120927_165057_299662_1EBEF057)
+Subject: Re: [PATCH 3/3] cfg80211: add support for flushing old scan results
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sam Leffler <sleffler@chromium.org>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 27 Sep 2012 09:54:15 -0500
+In-Reply-To: <1348737359.10353.8.camel@jlt4.sipsolutions.net>
+References: <20120926165952.BC0E71E051D@sleffler.sfo.corp.google.com>
+	 (sfid-20120926_185956_248675_62A4C8CC) <1348737359.10353.8.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2012-09-27 at 11:15 +0200, Johannes Berg wrote:
+> On Fri, 2012-09-21 at 11:08 -0700, Sam Leffler wrote:
+> 
+> >  void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+> >  {
+> >  	struct cfg80211_scan_request *request;
+> > @@ -47,8 +50,16 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+> >  
+> >  	if (request->aborted)
+> >  		nl80211_send_scan_aborted(rdev, wdev);
+> > -	else
+> > +	else {
+> > +		if (request->flags & CFG80211_SCAN_FLAG_FLUSH) {
+> > +			/* flush entries from previous scans */
+> > +			spin_lock_bh(&rdev->bss_lock);
+> > +			__cfg80211_bss_expire(rdev,
+> > +				jiffies - request->scan_start);
+> 
+> I wonder if we should pass an absolute time instead? jiffies will
+> continue to advance while we iterate the list etc., if we pass the
+> absolute time in both cases we can avoid this small race condition.
+> 
+> The race really isn't important, but it still seems a bit cleaner to me
+> overall.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_chipcommon_sflash.c |    4 ++--
- drivers/bcma/driver_mips.c              |    4 ++--
- include/linux/bcma/bcma_regs.h          |    5 ++++-
- 3 files changed, 8 insertions(+), 5 deletions(-)
+jiffies are also complicated by suspend/resume.  Absolute time would be
+better.
 
-diff --git a/drivers/bcma/driver_chipcommon_sflash.c b/drivers/bcma/driver_chipcommon_sflash.c
-index 2c4eec2..a0993fc 100644
---- a/drivers/bcma/driver_chipcommon_sflash.c
-+++ b/drivers/bcma/driver_chipcommon_sflash.c
-@@ -12,7 +12,7 @@
- 
- static struct resource bcma_sflash_resource = {
- 	.name	= "bcma_sflash",
--	.start	= BCMA_SFLASH,
-+	.start	= BCMA_SOC_FLASH2,
- 	.end	= 0,
- 	.flags  = IORESOURCE_MEM | IORESOURCE_READONLY,
- };
-@@ -116,7 +116,7 @@ int bcma_sflash_init(struct bcma_drv_cc *cc)
- 		return -ENOTSUPP;
- 	}
- 
--	sflash->window = BCMA_SFLASH;
-+	sflash->window = BCMA_SOC_FLASH2;
- 	sflash->blocksize = e->blocksize;
- 	sflash->numblocks = e->numblocks;
- 	sflash->size = sflash->blocksize * sflash->numblocks;
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 2786bc1..8470192 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -191,8 +191,8 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- 	case BCMA_CC_FLASHT_PARA:
- 		bcma_debug(bus, "Found parallel flash\n");
- 		bus->drv_cc.pflash.present = true;
--		bus->drv_cc.pflash.window = 0x1c000000;
--		bus->drv_cc.pflash.window_size = 0x02000000;
-+		bus->drv_cc.pflash.window = BCMA_SOC_FLASH2;
-+		bus->drv_cc.pflash.window_size = BCMA_SOC_FLASH2_SZ;
- 
- 		if ((bcma_read32(bus->drv_cc.core, BCMA_CC_FLASH_CFG) &
- 		     BCMA_CC_FLASH_CFG_DS) == 0)
-diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
-index 6c9cb93..7e8104b 100644
---- a/include/linux/bcma/bcma_regs.h
-+++ b/include/linux/bcma/bcma_regs.h
-@@ -85,6 +85,9 @@
- 							 * (2 ZettaBytes), high 32 bits
- 							 */
- 
--#define BCMA_SFLASH			0x1c000000
-+#define BCMA_SOC_FLASH1			0x1fc00000	/* MIPS Flash Region 1 */
-+#define BCMA_SOC_FLASH1_SZ		0x00400000	/* MIPS Size of Flash Region 1 */
-+#define BCMA_SOC_FLASH2			0x1c000000	/* Flash Region 2 (region 1 shadowed here) */
-+#define BCMA_SOC_FLASH2_SZ		0x02000000	/* Size of Flash Region 2 */
- 
- #endif /* LINUX_BCMA_REGS_H_ */
--- 
-1.7.9.5
+Dan
 
