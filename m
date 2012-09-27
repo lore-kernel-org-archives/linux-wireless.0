@@ -1,79 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24035 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187Ab2I0MvU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48052 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756312Ab2I0HA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Sep 2012 08:51:20 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <ath6kl-devel@qualcomm.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 6/6] ath6kl: Add a hardware flag for SDIO CRC error workaround
-Date: Thu, 27 Sep 2012 18:19:53 +0530
-Message-ID: <1348750193-2665-6-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120927_145123_278426_2CA0C741)
-In-Reply-To: <1348750193-2665-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1348750193-2665-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 27 Sep 2012 03:00:29 -0400
+Message-ID: <1348729265.10353.1.camel@jlt4.sipsolutions.net> (sfid-20120927_090040_257767_1B31616F)
+Subject: Re: [PATCH v2] mac80211: VHT peer STA caps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 27 Sep 2012 09:01:05 +0200
+In-Reply-To: <5063F372.2040601@posedge.com>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCF5269@mbx022-e1-nj-10.exch022.domain.local>
+	      <1348477154.10257.2.camel@jlt4.sipsolutions.net>
+	      <50614089.6020105@posedge.com>
+	     <1348557902.10041.17.camel@jlt4.sipsolutions.net>
+	     <50617E2C.6050000@posedge.com>
+	    <1348582152.10041.36.camel@jlt4.sipsolutions.net>
+	    <5062736B.9060008@posedge.com>
+	   <1348660422.10548.10.camel@jlt4.sipsolutions.net>
+	   <506339C3.40405@posedge.com>
+	  <1348682036.10548.13.camel@jlt4.sipsolutions.net>
+	  <5063C6B1.8030301@posedge.com>
+	 <1348727075.10353.0.camel@jlt4.sipsolutions.net>
+	 <5063F372.2040601@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Thu, 2012-09-27 at 12:04 +0530, Mahesh Palivela wrote:
+> On 09/27/2012 11:54 AM, Johannes Berg wrote:
+> >> Thanks for the pointer. will revert with code change.
+> >
+> > Well, reverting that change would be pointless?
+> >
+> > Better just add some text there to the docs.
+> >
+> 
+> Sorry wrong usage of word revert. what I meant was get back with proper 
+> mask bits code change.
+> Also update docs section accordingly.
 
-Make use of SDIO CRC error workaround hardware flag and avoid
-target revision checks.
+I think it's fine if you leave the code as is, but change the comment to
+make the HT/VHT difference clear.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    1 +
- drivers/net/wireless/ath/ath6kl/init.c |    7 +++----
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 1778bd3..189d8fa 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -152,6 +152,7 @@ enum ath6kl_hw_flags {
- 	ATH6KL_HW_64BIT_RATES		= BIT(0),
- 	ATH6KL_HW_AP_INACTIVITY_MINS	= BIT(1),
- 	ATH6KL_HW_MAP_LP_ENDPOINT	= BIT(2),
-+	ATH6KL_HW_SDIO_CRC_ERROR_WAR	= BIT(3),
- };
- 
- #define ATH6KL_FW_API2_FILE "fw-2.bin"
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index bb6aeea..f21fa32 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -42,7 +42,7 @@ static const struct ath6kl_hw hw_list[] = {
- 		.reserved_ram_size		= 6912,
- 		.refclk_hz			= 26000000,
- 		.uarttx_pin			= 8,
--		.flags				= 0,
-+		.flags				= ATH6KL_HW_SDIO_CRC_ERROR_WAR,
- 
- 		/* hw2.0 needs override address hardcoded */
- 		.app_start_override_addr	= 0x944C00,
-@@ -68,7 +68,7 @@ static const struct ath6kl_hw hw_list[] = {
- 		.refclk_hz			= 26000000,
- 		.uarttx_pin			= 8,
- 		.testscript_addr		= 0x57ef74,
--		.flags				= 0,
-+		.flags				= ATH6KL_HW_SDIO_CRC_ERROR_WAR,
- 
- 		.fw = {
- 			.dir		= AR6003_HW_2_1_1_FW_DIR,
-@@ -1431,8 +1431,7 @@ static int ath6kl_init_upload(struct ath6kl *ar)
- 		return status;
- 
- 	/* WAR to avoid SDIO CRC err */
--	if (ar->version.target_ver == AR6003_HW_2_0_VERSION ||
--	    ar->version.target_ver == AR6003_HW_2_1_1_VERSION) {
-+	if (ar->hw.flags & ATH6KL_HW_SDIO_CRC_ERROR_WAR) {
- 		ath6kl_err("temporary war to avoid sdio crc error\n");
- 
- 		param = 0x28;
--- 
-1.7.0.4
+johannes
 
