@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38105 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076Ab2IGPY7 (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:37722 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756481Ab2I0Kik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 11:24:59 -0400
-Message-ID: <504A11C0.5030602@candelatech.com> (sfid-20120907_172502_919374_4D63A21C)
-Date: Fri, 07 Sep 2012 08:24:48 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH 1/2] mac80211: validate skb->dev in the tx status path
-References: <1347029656-41430-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1347029656-41430-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 27 Sep 2012 06:38:40 -0400
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 07/31] wlcore: allow only the lowest OFDM rate for p2p setup frames
+Date: Thu, 27 Sep 2012 13:37:45 +0300
+Message-Id: <1348742289-6587-8-git-send-email-luca@coelho.fi> (sfid-20120927_124022_921509_871E527C)
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/07/2012 07:54 AM, Felix Fietkau wrote:
-> skb->dev might contain a stale reference to a device that was already
-> deleted, and using it unchecked can lead to invalid pointer accesses.
-> Since this is only used for nl80211 tx, iterate over active interfaces
-> to find a match for skb->dev, and discard the tx status if the device
-> is gone.
+From: Arik Nemtsov <arik@wizery.com>
 
-Nasty performance hit if we have lots of virtual
-interfaces, eh?  Maybe some sort of ref-counting
-would be better?  Or a hashed lookup on the netdev
-pointer/token?
+The IEEE80211_TX_CTL_NO_CCK_RATE flag is only set for mgmt packets
+transmitted during p2p connection setup. Make sure to use the lowest
+OFDM rate guarantee the peer always hears us.
+Change the p2p rate policy to contain only the 6mpbs rate to acheive
+this effect.
 
-Thanks,
-Ben
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
+ drivers/net/wireless/ti/wlcore/conf.h |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index d77224f..9e40760 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -412,8 +412,7 @@ struct conf_rx_settings {
+ #define CONF_TX_RATE_RETRY_LIMIT       10
+ 
+ /* basic rates for p2p operations (probe req/resp, etc.) */
+-#define CONF_TX_RATE_MASK_BASIC_P2P    (CONF_HW_BIT_RATE_6MBPS | \
+-	CONF_HW_BIT_RATE_12MBPS | CONF_HW_BIT_RATE_24MBPS)
++#define CONF_TX_RATE_MASK_BASIC_P2P    CONF_HW_BIT_RATE_6MBPS
+ 
+ /*
+  * Rates supported for data packets when operating as AP. Note the absence
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
