@@ -1,105 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:46839 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754314Ab2ISOtL convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52266 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877Ab2I0Pwb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 10:49:11 -0400
-Received: by vbbff1 with SMTP id ff1so1285745vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2012 07:49:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120911201729.GJ7015@tuxdriver.com>
-References: <20120911201729.GJ7015@tuxdriver.com>
-From: Joao Paulo Rechi Vita <jprvita@openbossa.org>
-Date: Wed, 19 Sep 2012 11:48:49 -0300
-Message-ID: <CAAngNMZ21mecau7xP2b-1gGh28Q6VaM4i_vRSqhsqyzw8ggjcQ@mail.gmail.com> (sfid-20120919_164929_387123_D6E55328)
-Subject: Re: Agenda (v2) for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona!)
+	Thu, 27 Sep 2012 11:52:31 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com,
-	Claudio Takahasi <claudio.takahasi@openbossa.org>
-Content-Type: text/plain; charset=UTF-8
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [RFC 2/2] ath9k_htc: Remove interface combination specific checks
+Date: Thu, 27 Sep 2012 21:22:12 +0530
+Message-ID: <1348761132-8344-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120927_175235_982777_09F05317)
+In-Reply-To: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello John,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-On Tue, Sep 11, 2012 at 5:17 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> OK, making progress...still, we need some more discussion topics...
->
-> We have one room on the first day, and three rooms on the second day.
-> I figure that the Bluetooth and 802.11 groups should each get a
-> break-out room for their own in-depth discussons on the second day and
-> the third room can be used for more general topics and presentations.
->
-> Below is my strawman agenda proposal.  Please make suggestions for
-> improvements!
->
-> Day 1
-> -----
->
-> Everyone together in a single room...
->
-> Time    Topic                                           Speaker
-> ----    -----                                           -------
-> 0930    Welcome/Intro/Agenda                            John Linville
->
-> 1000    802.15.4 stack, 6lowpan                         Alexander Smirnov
->
-> 1100    Break
->
-> 1130    Bluetooth: state of the union                   Marcel Holtmann
->
-> 1230    Lunch
->
-> 1400    NFC "state of the union", etc.                  Ortiz / Elias / Chlad
->
-> 1500    Break
->
-> ...
->
-> 1800    Adjourn
->
->
-> Day 2
-> -----
->
-> 802.11 break-out room...
->
-> Time    Topic                                           Speaker
-> ----    -----                                           -------
-> 1000    Regulatory updates                              Luis Rodriguez
->
-> 1100    Break
->
-> 1130    Virtual Bluetooth AMP Controller for mac80211   Andrei Emeltchenko
->
-> 1230    Lunch
->
-> 1400    IEEE802.11/WFA Update & HotSpot 2.0             Jouni Malinen
->
-> ...
->
-> 1800    Adjourn
->
->
-> Bluetooth break-out room...
->
-> Time    Topic                                           Speaker
-> ----    -----                                           -------
-> 1000    Bluetooth Broadcaster/Observer API              Lizardo & Delfes
->
-> 1100    Break
->
-> 1130    status and roadmap of Bluetooth LE              Joao Paulo Rechi Vita
->
+Once the driver advertizes interface combination logic
+based on its firmware/hardware limitation, cfg80211
+takes care of all the necessary logic such as maximum
+beaconing vifs, standlone interface etc.
 
-Claudio Takahasi will present this talk with me, could you please add
-his name to the agenda as well?
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   20 --------------------
+ 1 files changed, 0 insertions(+), 20 deletions(-)
 
-Thanks!
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index ca78e33..66f6a74 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1036,26 +1036,6 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&priv->mutex);
+ 
+-	if (priv->nvifs >= ATH9K_HTC_MAX_VIF) {
+-		mutex_unlock(&priv->mutex);
+-		return -ENOBUFS;
+-	}
+-
+-	if (priv->num_ibss_vif ||
+-	    (priv->nvifs && vif->type == NL80211_IFTYPE_ADHOC)) {
+-		ath_err(common, "IBSS coexistence with other modes is not allowed\n");
+-		mutex_unlock(&priv->mutex);
+-		return -ENOBUFS;
+-	}
+-
+-	if (((vif->type == NL80211_IFTYPE_AP) ||
+-	     (vif->type == NL80211_IFTYPE_ADHOC)) &&
+-	    ((priv->num_ap_vif + priv->num_ibss_vif) >= ATH9K_HTC_MAX_BCN_VIF)) {
+-		ath_err(common, "Max. number of beaconing interfaces reached\n");
+-		mutex_unlock(&priv->mutex);
+-		return -ENOBUFS;
+-	}
+-
+ 	ath9k_htc_ps_wakeup(priv);
+ 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
+ 	memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
 -- 
-João Paulo Rechi Vita
-Openbossa Labs - INdT
+1.7.0.4
+
