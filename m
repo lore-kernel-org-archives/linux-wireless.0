@@ -1,93 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35943 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab2IJLXL (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:51196 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751645Ab2I0Jnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 07:23:11 -0400
-Message-ID: <1347276227.4272.17.camel@jlt4.sipsolutions.net> (sfid-20120910_132315_444084_B48A08F0)
-Subject: Re: [PATCH v3 5/7] nl80211/cfg80211: add ap channel switch command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
-Date: Mon, 10 Sep 2012 13:23:47 +0200
-In-Reply-To: <1344426823-1795-6-git-send-email-victorg@ti.com>
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
-	 <1344426823-1795-6-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Sep 2012 05:43:53 -0400
+Received: by weyt9 with SMTP id t9so500653wey.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2012 02:43:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB3XZEfFy58mDxSWjO3whptsGhHjBMLJDWkkh6K6CQtW-KnMBg@mail.gmail.com>
+References: <20120926165952.766801E10D3@sleffler.sfo.corp.google.com>
+ <1348737219.10353.6.camel@jlt4.sipsolutions.net> <CAB3XZEfFy58mDxSWjO3whptsGhHjBMLJDWkkh6K6CQtW-KnMBg@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 27 Sep 2012 11:43:36 +0200
+Message-ID: <CA+XVXff3J=9rqQjcFSstib=ptOsq62a8o5dqMgneperL=vUk2w@mail.gmail.com> (sfid-20120927_114404_946029_C1BAC6F9)
+Subject: Re: [PATCH 0/3] add scan flags support
+To: Eliad Peller <eliad@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Sam Leffler <sleffler@chromium.org>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Sep 27, 2012 at 11:31 AM, Eliad Peller <eliad@wizery.com> wrote:
+> On Thu, Sep 27, 2012 at 11:13 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2012-09-25 at 15:49 -0700, Sam Leffler wrote:
+>>> These add per-scan request controls for optional behaviours we've found
+>>> useful (they've been in Chrome OS for a long time).  A patch for iw will
+>>> follow separately and the mods for wpa_supplicant are in our repo and
+>>> I'll push them to Jouni if these are accepted.
+>>>
+>>> Sam Leffler (3):
+>>>   {nl,cfg}80211: add a flags word to scan requests
+>>>   mac80211: add support for tx to abort scan requests
+>>>   cfg80211: add support for flushing old scan results
+>>
+>> I like the flushing one, but I'm not so sure about the TX abort thing.
+>> How do you suggest to handle that when scanning is offloaded to the
+>> driver and/or firmware? Especially given that multi-channel is going to
+>> require a firmware implementation, I'm not sure how to achieve good
+>> behaviour across the different implementations.
+>>
+>> Maybe it'd be worthwhile to go for a more generic approach, marking
+>> scans as "low priority" or "high priority" or similar, and then
+>> implementing such behaviour based on such settings? Our device for
+>> example has a notion of "background scan" vs. "forced scan", which
+>> behave differently in the firmware, and it would be useful to be able to
+>> use these different behaviours. However, I can't say that "TX abort"
+>> would be a guaranteed scan behaviour for a "background scan".
+>>
+> we also have some "urgency" option in our hw scan, but we currently
+> never use it (not really sure when it should be used... maybe for
+> roaming on beacon loss?)
+>
+> the TX abort is relevant mainly for sw scan.
+> i'm not sure we really want to couple it with scan priority, though.
+> otoh, userspace doesn't really care (or know) if we use sw or hw scan,
+> so configuring it all with a single "scan priority" option does make
+> sense.
 
-> + * @NL80211_CMD_AP_CH_SWITCH: Perform a channel switch in the driver (for
-> + *	AP/GO).
-> + *	%NL80211_ATTR_WIPHY_FREQ: new channel frequency.
-> + *	%NL80211_ATTR_CH_SWITCH_BLOCK_TX: block tx on the current channel.
-> + *	%NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX: block tx on the target channel.
-> + *	%NL80211_FREQ_ATTR_CH_SWITCH_COUNT: number of TBTT's until the channel
-> + *	switch event.
-
-Needs more documentation.
-
-> @@ -720,6 +728,8 @@ enum nl80211_commands {
->  
->  	NL80211_CMD_CH_SWITCH_NOTIFY,
->  
-> +	NL80211_CMD_AP_CH_SWITCH,
-> +
->  	NL80211_CMD_RADAR_DETECT,
->  
->  	NL80211_CMD_DFS_ENABLE_TX,
-
-Ahem.
-
-> @@ -1267,6 +1277,14 @@ enum nl80211_commands {
->   *	was used to provide the hint. For the different types of
->   *	allowed user regulatory hints see nl80211_user_reg_hint_type.
->   *
-> + * @NL80211_ATTR_CH_SWITCH_COUNT: the number of TBTT's until the channel
-> + *	switch event
-> + * @NL80211_ATTR_CH_SWITCH_BLOCK_TX: block tx on the current channel before the
-> + *	channel switch operation.
-> + * @NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX: block tx on the target channel after
-> + *	the channel switch operation, should be set if the target channel is
-> + *	DFS channel.
-
-Need to document the types.
-
->   * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
-> + * @NL80211_FEATURE_AP_CH_SWITCH: This driver supports AP channel switch.
-
-I have a nagging feeling I keep asking this, but what's the point of
-radar detection without channel switch? Or is it the other way around
-that's interesting? Maybe should verify that if you have DFS you also
-have chanswitch?
-
->  /**
-> + * struct ieee80211_ap_ch_switch - holds the ap channel switch data
-> + *
-> + * The information provided in this structure is required for the ap channel
-> + * switch operation.
-> + *
-> + * @timestamp: value in microseconds of the 64-bit Time Synchronization
-> + *	Function (TSF) timer when the frame containing the channel switch
-> + *	announcement was received. This is simply the rx.mactime parameter
-> + *	the driver passed into mac80211.
-> + * @block_tx: Indicates whether transmission must be blocked before the
-> + *	scheduled channel switch, as indicated by the AP.
-> + * @post_switch_block_tx: Indicates whether transmission must be blocked after
-> + *	the scheduled channel switch, this should be set if the target channel
-> + *	is DFS channel.
-> + * @channel: the new channel to switch to
-> + * @channel_type: the type of the new channel
-> + * @count: the number of TBTT's until the channel switch event
-> + */
-
-Bogus documentation.
-
-johannes
-
+I think the wl12xx FW does something similar with Tx during scan
+automatically - it makes the scan last longer, and hops on the Tx
+channel so packets get sent. So at least their intended use-case we
+have covered.
