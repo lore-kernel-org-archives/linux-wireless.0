@@ -1,72 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1577 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030494Ab2I2Bgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 21:36:52 -0400
-Date: Sat, 29 Sep 2012 09:32:59 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Hante Meuleman <meuleman@broadcom.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: [wireless-testing:master 229/238]
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:2724:21: sparse:
- symbol 'brcmf_find_wpaie' was not declared. Should it be static?
-Message-ID: <20120929013259.GA11675@localhost> (sfid-20120929_033658_245678_DE6AACF0)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33898 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900Ab2I1Fp1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Sep 2012 01:45:27 -0400
+From: Sujith Manoharan <c_manoha@qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="1yeeQ81UyVL57Vl7"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20581.14615.753444.280006@gargle.gargle.HOWL> (sfid-20120928_074532_167045_C8343583)
+Date: Fri, 28 Sep 2012 11:13:51 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Fix BTCOEX weight initialization
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The WLAN/BT weights have to set correctly before BTCOEX
+is initialized. Currently, this is not done for all chips
+in the AR9003 family. This patch fixes this issue by setting
+the weights in the init path. While at it, rename ar9462_wlan_weights
+to mci_wlan_weights since it is common to both AR9462 and AR9565.
 
---1yeeQ81UyVL57Vl7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi Hante,
-
-FYI, there are new sparse warnings show up in
-
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git master
-head:   96df9f3dca2428ac1e0b46d378b6f68ff64db67b
-commit: 1a87334239757b69eb9885979c32bbf871b3ec88 [229/238] brcmfmac: add hostap supoort.
-
-+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:2724:21: sparse: symbol 'brcmf_find_wpaie' was not declared. Should it be static?
-+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:4022:28: sparse: Using plain integer as NULL pointer
-+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:4013:1: sparse: symbol 'brcmf_set_management_ie' was not declared. Should it be static?
-
-Please consider folding the attached diff :-)
-
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-0-DAY kernel build testing backend         Open Source Technology Centre
-Fengguang Wu, Yuanhan Liu                              Intel Corporation
+ drivers/net/wireless/ath/ath9k/btcoex.c       | 61 ++++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/btcoex.h       |  3 +-
+ drivers/net/wireless/ath/ath9k/gpio.c         |  5 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |  2 +-
+ 4 files changed, 39 insertions(+), 32 deletions(-)
 
---1yeeQ81UyVL57Vl7
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="make-it-static-1a87334.diff"
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 0ecd0df..b42ccb1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2721,7 +2721,7 @@ brcmf_tlv_has_ie(u8 *ie, u8 **tlvs, u32 *tlvs_len,
- 	return false;
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 4ef610e..419e9a3 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -43,8 +43,8 @@ static const u32 ar9003_wlan_weights[ATH_BTCOEX_STOMP_MAX]
+ 	{ 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, /* STOMP_NONE */
+ };
+ 
+-static const u32 ar9462_wlan_weights[ATH_BTCOEX_STOMP_MAX]
+-				    [AR9300_NUM_WLAN_WEIGHTS] = {
++static const u32 mci_wlan_weights[ATH_BTCOEX_STOMP_MAX]
++				 [AR9300_NUM_WLAN_WEIGHTS] = {
+ 	{ 0x01017d01, 0x41414101, 0x41414101, 0x41414141 }, /* STOMP_ALL */
+ 	{ 0x01017d01, 0x3b3b3b01, 0x3b3b3b01, 0x3b3b3b3b }, /* STOMP_LOW */
+ 	{ 0x01017d01, 0x01010101, 0x01010101, 0x01010101 }, /* STOMP_NONE */
+@@ -208,14 +208,37 @@ static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
+ 			    AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
  }
  
--struct brcmf_vs_tlv *
-+static struct brcmf_vs_tlv *
- brcmf_find_wpaie(u8 *parse, u32 len)
++/*
++ * For AR9002, bt_weight/wlan_weight are used.
++ * For AR9003 and above, stomp_type is used.
++ */
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+ 				u32 bt_weight,
+-				u32 wlan_weight)
++				u32 wlan_weight,
++				enum ath_stomp_type stomp_type)
  {
- 	struct brcmf_tlv *ie;
-@@ -4009,7 +4009,7 @@ brcmf_vndr_ie(u8 *iebuf, s32 pktflag, u8 *ie_ptr, u32 ie_len, s8 *add_del_cmd)
- 	return ie_len + VNDR_IE_HDR_SIZE;
- }
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
  
--s32
-+static s32
- brcmf_set_management_ie(struct brcmf_cfg80211_priv *cfg_priv,
- 			struct net_device *ndev, s32 bssidx, s32 pktflag,
- 			u8 *vndr_ie_buf, u32 vndr_ie_len)
+-	btcoex_hw->bt_coex_weights = SM(bt_weight, AR_BTCOEX_BT_WGHT) |
+-				     SM(wlan_weight, AR_BTCOEX_WL_WGHT);
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		const u32 *weight = ar9003_wlan_weights[stomp_type];
++		int i;
++
++		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
++			if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
++			    btcoex_hw->mci.stomp_ftp)
++				stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
++			weight = mci_wlan_weights[stomp_type];
++		}
++
++		for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
++			btcoex_hw->bt_weight[i] = AR9300_BT_WGHT;
++			btcoex_hw->wlan_weight[i] = weight[i];
++		}
++	} else {
++		btcoex_hw->bt_coex_weights =
++			SM(bt_weight, AR_BTCOEX_BT_WGHT) |
++			SM(wlan_weight, AR_BTCOEX_WL_WGHT);
++	}
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_set_weight);
+ 
+@@ -332,26 +355,6 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_disable);
+ 
+-static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
+-			 enum ath_stomp_type stomp_type)
+-{
+-	struct ath_btcoex_hw *btcoex = &ah->btcoex_hw;
+-	const u32 *weight = ar9003_wlan_weights[stomp_type];
+-	int i;
+-
+-	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+-		if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
+-		    btcoex->mci.stomp_ftp)
+-			stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
+-		weight = ar9462_wlan_weights[stomp_type];
+-	}
+-
+-	for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
+-		btcoex->bt_weight[i] = AR9300_BT_WGHT;
+-		btcoex->wlan_weight[i] = weight[i];
+-	}
+-}
+-
+ /*
+  * Configures appropriate weight based on stomp type.
+  */
+@@ -359,22 +362,22 @@ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
+ 			      enum ath_stomp_type stomp_type)
+ {
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		ar9003_btcoex_bt_stomp(ah, stomp_type);
++		ath9k_hw_btcoex_set_weight(ah, 0, 0, stomp_type);
+ 		return;
+ 	}
+ 
+ 	switch (stomp_type) {
+ 	case ATH_BTCOEX_STOMP_ALL:
+ 		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
+-				AR_STOMP_ALL_WLAN_WGHT);
++					   AR_STOMP_ALL_WLAN_WGHT, 0);
+ 		break;
+ 	case ATH_BTCOEX_STOMP_LOW:
+ 		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
+-				AR_STOMP_LOW_WLAN_WGHT);
++					   AR_STOMP_LOW_WLAN_WGHT, 0);
+ 		break;
+ 	case ATH_BTCOEX_STOMP_NONE:
+ 		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
+-				AR_STOMP_NONE_WLAN_WGHT);
++					   AR_STOMP_NONE_WLAN_WGHT, 0);
+ 		break;
+ 	default:
+ 		ath_dbg(ath9k_hw_common(ah), BTCOEX, "Invalid Stomptype\n");
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 20092f9..385197a 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -107,7 +107,8 @@ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
+ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+ 				u32 bt_weight,
+-				u32 wlan_weight);
++				u32 wlan_weight,
++				enum ath_stomp_type stomp_type);
+ void ath9k_hw_btcoex_disable(struct ath_hw *ah);
+ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
+ 			      enum ath_stomp_type stomp_type);
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 5faa4f7..d9ed141 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -395,7 +395,10 @@ void ath9k_start_btcoex(struct ath_softc *sc)
+ 	    !ah->btcoex_hw.enabled) {
+ 		if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
+ 			ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
+-						   AR_STOMP_LOW_WLAN_WGHT);
++						   AR_STOMP_LOW_WLAN_WGHT, 0);
++		else
++			ath9k_hw_btcoex_set_weight(ah, 0, 0,
++						   ATH_BTCOEX_STOMP_NONE);
+ 		ath9k_hw_btcoex_enable(ah);
+ 
+ 		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 8fd64a6..0eacfc1 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -161,7 +161,7 @@ void ath9k_htc_start_btcoex(struct ath9k_htc_priv *priv)
+ 
+ 	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE) {
+ 		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
+-					   AR_STOMP_LOW_WLAN_WGHT);
++					   AR_STOMP_LOW_WLAN_WGHT, 0);
+ 		ath9k_hw_btcoex_enable(ah);
+ 		ath_htc_resume_btcoex_work(priv);
+ 	}
+-- 
+1.7.12.1
 
---1yeeQ81UyVL57Vl7--
