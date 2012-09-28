@@ -1,62 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:54269 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751077Ab2IJPEM (ORCPT
+Received: from hub022-nj-6.exch022.serverdata.net ([206.225.164.189]:9976 "EHLO
+	HUB022-nj-6.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755300Ab2I1DlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Sep 2012 11:04:12 -0400
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <504DFEFF.6060004@lwfinger.net>
-References: <50369925.3050705@lwfinger.net>
-	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
-	 <20120824.111948.680531915905273128.davem@davemloft.net>
-	 <5037A4B0.3080208@lwfinger.net>
-	 <1345825095.19483.19.camel@edumazet-glaptop>
-	 <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>
-	 <1345830424.19483.69.camel@edumazet-glaptop>
-	 <503BB49C.5010402@lwfinger.net>
-	 <1347266366.1234.1267.camel@edumazet-glaptop>
-	 <504DFEFF.6060004@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Sep 2012 17:04:06 +0200
-Message-ID: <1347289446.1234.1717.camel@edumazet-glaptop> (sfid-20120910_170421_599720_8C9292BA)
-Mime-Version: 1.0
+	Thu, 27 Sep 2012 23:41:07 -0400
+Message-ID: <50651C4D.7050002@posedge.com> (sfid-20120928_054112_832265_30841674)
+Date: Fri, 28 Sep 2012 09:11:01 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [RFC v3] cfg80211: VHT regulatory
+References: <504DBBAC.7040300@posedge.com> <CAB=NE6UfQdM6HrVGw3Dn-NBxQupwA3kJD27kv3c9DjLY8DVm1Q@mail.gmail.com> <5052E852.8030804@posedge.com> <1347896071.4975.14.camel@jlt4.sipsolutions.net> <CAB=NE6VMOvftuxi1zu3=4q-BJgM9rJHY86W-6+MAHmtY=V=6xA@mail.gmail.com> <1348483695.10257.8.camel@jlt4.sipsolutions.net> <CAB=NE6Wemx5NCTz-Q-vY4ogTUxbF+RjWdzeTt=qVrgGVhm_y+w@mail.gmail.com> <1348557403.10041.10.camel@jlt4.sipsolutions.net> <CAB=NE6URYEr4d6ti0W7Go37x1fRM_9XD09cQXx4EJ6afhpPuXA@mail.gmail.com>
+In-Reply-To: <CAB=NE6URYEr4d6ti0W7Go37x1fRM_9XD09cQXx4EJ6afhpPuXA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-09-10 at 09:53 -0500, Larry Finger wrote:
+On 09/26/2012 12:36 AM, Luis R. Rodriguez wrote:
+>
+> OK lets go with dynamic poo checks.
+>
 
-> Eric,
-> 
-> What is the md5sum for the firmware file /lib/firmware/rtlwifi/rtl8712u.bin? 
-> Over the weekend, there was a report of another device that had problems with 
-> firmware that was added to the linux-firmware repo in July with md5sum of 
-> c6f3b7b880aefb7b3f249428d659bdbb. An older version with md5sum of 
-> 200fd952db3cc9259b1fd05e3e51966f works in that case. I'll send you this one 
-> privately.
-> 
-> I have a Netgear WNDR3300 and also get the addbareq events, but I do not get 
-> freezes. I'm not sure the message is correlated.
-> 
+Ok. I will continue with the dynamic permitted channel config from 
+regulatory.
 
-It seems I have the c6f3b7b880aefb7b3f249428d659bdbb one
-# md5sum /data/src/linux-firmware/rtlwifi/rtl8712u.bin /lib/firmware/rtlwifi/rtl8712u.bin
-c6f3b7b880aefb7b3f249428d659bdbb  /data/src/linux-firmware/rtlwifi/rtl8712u.bin
-c6f3b7b880aefb7b3f249428d659bdbb  /lib/firmware/rtlwifi/rtl8712u.bin
-
-Since I have linux-firmware tree, should I go back to initial commit 
-commit 8f919160792e4702c6b7a67a243cea4f757407e4
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Mon Nov 1 23:56:52 2010 -0500
-
-    linux-firmware: Add firmware files for Realtek RTL8712U and
-RTL8192CE
-
-Thanks !
-
-
-
+>    Luis
+>
