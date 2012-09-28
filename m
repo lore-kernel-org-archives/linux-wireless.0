@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:44734 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932949Ab2ISS4n (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:56866 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032604Ab2I1U1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Sep 2012 14:56:43 -0400
-Received: by qaas11 with SMTP id s11so1232010qaa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2012 11:56:43 -0700 (PDT)
+	Fri, 28 Sep 2012 16:27:46 -0400
+Received: by ieak13 with SMTP id k13so8323150iea.19
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2012 13:27:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <505A1206.4020606@msgid.tls.msk.ru>
-References: <1348053493-22955-1-git-send-email-jarl@softace.dk> <505A1206.4020606@msgid.tls.msk.ru>
-From: Jarl Friis <jarl@softace.dk>
-Date: Wed, 19 Sep 2012 20:56:22 +0200
-Message-ID: <CAOjsGA3BgzBn-YOEFYFs5HqLAh4_d46Juj1M-XYooqXeVtn9uw@mail.gmail.com> (sfid-20120919_205655_253029_4567AE8B)
-Subject: Re: [PATCH 1/2] Added information about which firmware file is being requested.
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, "John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1348829840.13298.17.camel@jlt4.sipsolutions.net>
+References: <20120926165952.766801E10D3@sleffler.sfo.corp.google.com>
+	<1348737219.10353.6.camel@jlt4.sipsolutions.net>
+	<CA+yqC4bo9Xcy9HMeJYAFHqEYBCUErF+Y4ivfe9s+xQ+endCU-Q@mail.gmail.com>
+	<1348829840.13298.17.camel@jlt4.sipsolutions.net>
+Date: Fri, 28 Sep 2012 13:27:45 -0700
+Message-ID: <CA+yqC4ZMZ+2jDoNW3dyetJB40gdAVUm7sAGQb5e-FyhNV9VHnA@mail.gmail.com> (sfid-20120928_233319_728275_94A374B9)
+Subject: Re: [PATCH 0/3] add scan flags support
+From: Sam Leffler <sleffler@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, eliad <eliad@wizery.com>,
+	coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/9/19 Michael Tokarev <mjt@tls.msk.ru>:
-> On 19.09.2012 15:18, Jarl Friis wrote:
+On Fri, Sep 28, 2012 at 3:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-09-27 at 09:39 -0700, Sam Leffler wrote:
 >
->> +     b43info(ctx->dev->wl, "Requesting firmware file '%s'\n", ctx->fwname);
->>       err = request_firmware(&blob, ctx->fwname, ctx->dev->dev->dev);
+>> > Maybe it'd be worthwhile to go for a more generic approach, marking
+>> > scans as "low priority" or "high priority" or similar, and then
+>> > implementing such behaviour based on such settings? Our device for
+>> > example has a notion of "background scan" vs. "forced scan", which
+>> > behave differently in the firmware, and it would be useful to be able to
+>> > use these different behaviours. However, I can't say that "TX abort"
+>> > would be a guaranteed scan behaviour for a "background scan".
+>>
+>> Having a priority mechanism or similar would be fine. I usually
+>> hesitate doing the generic thing because the actual semantics can very
+>> so significantly from driver to driver that applications may end up
+>> having to build in knowledge of which driver is being used to get what
+>> they way want. But in fact what you suggest is how txabort is used--we
+>> mark wpa_supplicant bgscan's w/ txabort while fgscan's are not marked
+>> in this way.
 >
-> Hmm.  I wonder if this should be printed in request_firmware()
-> itself instead of in all callers?
+> Yes, I agree it's a slippery slope, however with all the different
+> mechanisms that can be built in drivers/firmware/... I'm not really sure
+> how else to treat them?
+>
+> In theory we could say that we have
+>  * TX abort
+>  * Intel BG scan (otherwise opaque, in firmware)
+>  * TI BG scan (otherwise opaque, in firmware)
+>  * ...
+>
+> as separate flags/settings/..., but ultimately it seems that all that
+> would happen is that everybody would patch the supplicant to use their
+> mechanism for background scanning if available. Then, in theory, the
+> supplicant would know which one it's using, but since it doesn't really
+> know the semantics it doesn't really make a difference?
+>
+> Maybe we should agree on a few basic rules for the "generic" BG scan,
+> but I'm not sure what sensible rules would be. They can't be rules on
+> reliability, as then "tx-abort" wouldn't be a valid implementation
+> (unless you retried, but that could literally run forever), and I'm not
+> sure what other kind of rule would make sense. Either way, the
+> supplicant is going to have to assume that a finished "BG scan" has a
+> smaller result set than a "regular" scan ...
+>
+> There might be value in having more information about the actual "abort
+> due to TX" (whether it happened or not), but again that would be tied to
+> the specific implementation, and I'm not sure how to formulate any such
+> thing more generically. Right now, I don't even know how our or TI's
+> implementation behaves differently for the different types of scan.
 
-Now that you mention it, I also think that is a much better idea.
-However that would be a much more central place to do the change, so I
-would gladly see somebody else do that patch (in replacement of mine)
+In my experience the reason why a bgscan was aborted is not important;
+you just want to know true/false so you know if you have a "complete
+picture" of the environment to make decisions. I also find the abort
+model much preferable to extending the scan work because unless
+results are sent back immediately you can easily end up sending back
+stale results.
 
-Jarl
+-Sam
