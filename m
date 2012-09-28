@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19801 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11013 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757157Ab2IDOEK (ORCPT
+	with ESMTP id S1750924Ab2I1E6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 10:04:10 -0400
+	Fri, 28 Sep 2012 00:58:06 -0400
+Message-ID: <50652E56.10303@qca.qualcomm.com> (sfid-20120928_065811_097345_6D7745E2)
+Date: Fri, 28 Sep 2012 10:27:58 +0530
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
+MIME-Version: 1.0
+To: Sujith Manoharan <c_manoha@qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
 	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
 	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 3/8] ath9k: Make use of ath_stop_ani wrapper
-Date: Tue, 4 Sep 2012 19:33:34 +0530
-Message-ID: <1346767419-12359-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120904_160413_795174_A964E236)
-In-Reply-To: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1346767419-12359-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Antonio Quartulli <ordex@autistici.org>
+Subject: Re: [RFC 1/2] ath9k_htc: Advertize allowed vif combinations
+References: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com> <20581.2614.43943.601901@gargle.gargle.HOWL>
+In-Reply-To: <20581.2614.43943.601901@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Hi Sujith,
 
-Additionally it has a neat debug message informing us
-that we are stopping the ANI algorithm.
+On Friday 28 September 2012 07:53 AM, Sujith Manoharan wrote:
+> Mohammed Shafi Shajakhan wrote:
+>> From: Antonio Quartulli <ordex@autistici.org>
+>>
+>> Advertize allowed VIFs combinations to the cfg80211 sublayer.
+>> Other than that, practical tests shown that ath9k_htc devices allow an
+>> IBSS VIF to coexist with VIF set up on other modes, so advertize
+>> that to. We can also further add p2p/mesh mode to be advertized
+>> in the combinations allowed.
+>
+> I don't think IBSS can co-exist with other op-modes.
+>
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+oh yeah, you are saying that we will have some issues with IBSS
+coexistence with other modes because of TSF sync.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 8a2b04d..a0bdb4b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2260,7 +2260,7 @@ static int ath9k_suspend(struct ieee80211_hw *hw,
- 	mutex_lock(&sc->mutex);
- 
- 	ath_cancel_work(sc);
--	del_timer_sync(&common->ani.timer);
-+	ath_stop_ani(sc);
- 	del_timer_sync(&sc->rx_poll_timer);
- 
- 	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+Antonio seems to be testing this sometime back and came up with the 
+following observation :
+
+"ath9k_htc is running since some hours with AP+IBSS without any 
+problems.What I think that the maintainer was referring to is a general 
+problem of IBSS+AP: in most devices, TFS is unique among VIFs, therefore 
+TSF jumps introduced by IBSS can be reflected in a bad way on the AP VIF".
+
+please let us know if you have further thoughts about this.
+I will just look into the code if we have some more limitations.
+thanks for your review!
+
 -- 
-1.7.0.4
+thanks,
+shafi
+
 
