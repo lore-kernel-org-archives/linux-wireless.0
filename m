@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:43820 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777Ab2IDQNb (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:60639 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279Ab2I1Itu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 12:13:31 -0400
-Date: Tue, 4 Sep 2012 19:13:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: johannes.berg@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: mac80211: support P2P Device abstraction
-Message-ID: <20120904161319.GA11494@elgon.mountain> (sfid-20120904_181334_957253_117FCC5D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 28 Sep 2012 04:49:50 -0400
+Message-ID: <1348822162.15949.4.camel@cumari.coelho.fi> (sfid-20120928_104954_641300_A439E268)
+Subject: Re: [PATCH] wl18xx: use module_platform_driver
+From: Luciano Coelho <luca@coelho.fi>
+To: Devendra Naga <devendra.aaru@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>, Ido Reis <idor@ti.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 28 Sep 2012 11:49:22 +0300
+In-Reply-To: <1346261581-21613-1-git-send-email-devendra.aaru@gmail.com>
+References: <1346261581-21613-1-git-send-email-devendra.aaru@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes Berg,
+On Wed, 2012-08-29 at 23:03 +0530, Devendra Naga wrote:
+> the driver's init and exit routines can be implemented with the
+> module_platform_driver, as the init and exit code is same as
+> that of the module_platform_driver
+> 
+> Signed-off-by: Devendra Naga <devendra.aaru@gmail.com>
+> ---
 
-This is a semi-automatic email about new static checker warnings.
+Applied, thanks!
 
-The patch f142c6b906da: "mac80211: support P2P Device abstraction" 
-from Jun 18, 2012, leads to the following Smatch complaint:
-
-net/mac80211/iface.c:1168 ieee80211_setup_sdata()
-	 error: we previously assumed 'sdata->dev' could be null (see line 1134)
-
-net/mac80211/iface.c
-  1133		/* only monitor/p2p-device differ */
-  1134		if (sdata->dev) {
-                    ^^^^^^^^^^
-New test.
-
-  1135			sdata->dev->netdev_ops = &ieee80211_dataif_ops;
-  1136			sdata->dev->type = ARPHRD_ETHER;
-  1137		}
-
-[snip]
-
-  1167		case NL80211_IFTYPE_MONITOR:
-  1168			sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
-                        ^^^^^^^^^^^^
-Old dereference.
-
-  1169			sdata->dev->netdev_ops = &ieee80211_monitorif_ops;
-  1170			sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
-
-regards,
-dan carpenter
+--
+Luca.
 
