@@ -1,102 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:59486 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671Ab2IMVhF (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:48234 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759Ab2I1JAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 17:37:05 -0400
-Message-ID: <505251FD.2090901@lwfinger.net> (sfid-20120913_233729_185351_C38BA86D)
-Date: Thu, 13 Sep 2012 16:37:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Norbert Preining <preining@logic.at>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Borislav Petkov <bp@alien8.de>
-Subject: Re: rtl8192se: ping router gives mdev of 25387.102???
-References: <20120913101828.GA3309@gandalf.dynalias.org>
-In-Reply-To: <20120913101828.GA3309@gandalf.dynalias.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 28 Sep 2012 05:00:18 -0400
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh01.mail.saunalahti.fi (Postfix) with SMTP id 3A5589002B
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2012 12:00:16 +0300 (EEST)
+Received: from [192.168.100.26] (a88-113-65-16.elisa-laajakaista.fi [88.113.65.16])
+	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id 1CB7A40A6
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2012 12:00:15 +0300 (EEST)
+Message-ID: <1348822793.15949.7.camel@cumari.coelho.fi> (sfid-20120928_110024_697534_4853CF16)
+Subject: Re: [PATCH 00/31] wlcore/wl18xx/wl12xx patches for 3.7
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 28 Sep 2012 11:59:53 +0300
+In-Reply-To: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+References: <1348742289-6587-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/2012 05:18 AM, Norbert Preining wrote:
-> Hi everyone,
->
-> (please cc)
->
-> see $subject ...
->
-> No warning, nothing in the logs, but pinging my router I get
-> things like:
-> --- 192.168.0.1 ping statistics ---
-> 376 packets transmitted, 315 received, +33 errors, 16% packet loss, time 405164ms
-> rtt min/avg/max/mdev = 0.873/10077.793/95935.698/25387.102 ms, pipe 68
->
-> or
-> --- 192.168.0.1 ping statistics ---
-> 1252 packets transmitted, 1225 received, 2% packet loss, time 1252976ms
-> rtt min/avg/max/mdev = 0.941/764.171/19929.265/2758.225 ms, pipe 20
->
->
-> Has anyone *ever* seen a mdev of 25387.102 ms ???
+On Thu, 2012-09-27 at 13:37 +0300, Luciano Coelho wrote:
+> Hi,
+> 
+> This is a bunch of patches that have accumulated in our internal tree
+> and are intended for 3.7.  Mostly bug-fixes and small improvements all
+> over.
+> 
+> Cheers,
+> Luca.
+> 
+> Arik Nemtsov (9):
+>   wlcore: AP mode - send non-data packets with basic rates
+>   wlcore: allow only the lowest OFDM rate for p2p setup frames
+>   wlcore: make Tx flush timings more verbose
+>   wlcore: tx_flush - optimize flow and force Tx during the flush
+>   wlcore/wl18xx/wl12xx: allow up to 3 mac addresses
+>   wlcore: make debug prints work without dynamic debug
+>   wlcore: allow up to 3 running STA interfaces in combinations
+>   wlcore: spi: use private max-buf-size limit
+>   wl18xx: default to siso40 in 2.4ghz with a single antenna
+> 
+> Eliad Peller (9):
+>   wlcore: consider single fw case
+>   wlcore: cancel recovery_work on stop() instead of remove_interface()
+>   wlcore: resume() only if sta is associated
+>   wlcore: always use wlvif->role_id for scans
+>   wlcore: lazy-enable device roles
+>   wlcore: invalidate keep-alive template on disconnection
+>   wlcore: use dynamic keep-alive template ids
+>   wlcore: decrease elp timeout
+>   wlcore: protect wlcore_op_set_key with mutex
+> 
+> Eyal Shapira (1):
+>   wlcore: configure wowlan regardless of wakeup conditions
+> 
+> Ido Reis (2):
+>   wl18xx: update default phy configuration for pg2
+>   wl18xx: increase rx_ba_win_size to 32
+> 
+> Ido Yariv (6):
+>   wlcore: Prevent interaction with HW after recovery is queued
+>   wlcore: Don't recover during boot
+>   wlcore: Fix unbalanced interrupts enablement
+>   wlcore: Allow memory access when the FW crashes
+>   wlcore: Refactor probe
+>   wlcore: Load the NVS file asynchronously
+> 
+> Igal Chernobelsky (2):
+>   wl18xx/wl12xx: defines for Tx/Rx descriptors num
+>   wlcore/wl18xx/wl12xx: aggregation buffer size set
+> 
+> Yair Shapira (2):
+>   wl18xx: number_of_assembled_ant5 indicates if A band is enabled
+>   wlcore/wl18xx: add phy_fw_version_str to debugfs driver_state
 
-No, but packets that are not returned for 19+ or 95+ seconds are usually counted 
-as lost.
+Applied the series.  Thanks to all the contributers!
 
-I have 4 different cards that use rtl8192se. With the current wireless-testing 
-git, I get the following:
-
-Card 1: Antenna config not known
---------------------------------
-Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless 
-LAN Controller [10ec:8172] (rev 10)
-
-100 packets transmitted, 100 received, 0% packet loss, time 99138ms
-rtt min/avg/max/mdev = 1.106/2.824/107.634/10.684 ms
-
-Card 2: Labeled 1x1
--------------------
-Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvA Wireless 
-LAN Controller [10ec:8171] (rev 10)
-
-100 packets transmitted, 100 received, 0% packet loss, time 99139ms
-rtt min/avg/max/mdev = 0.986/1.954/26.982/3.005 ms
-
-Card 3: Labeled 1x2
--------------------
-Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless 
-LAN Controller [10ec:8172] (rev 10)
-
-100 packets transmitted, 100 received, 0% packet loss, time 99141ms
-rtt min/avg/max/mdev = 0.996/2.507/50.636/5.989 ms
-
-Card 4: Labeled 2x2
--------------------
-Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8192SE Wireless 
-LAN Controller [10ec:8174] (rev 10)
-
-100 packets transmitted, 99 received, 1% packet loss, time 99146ms
-rtt min/avg/max/mdev = 0.974/1.768/31.183/3.016 ms
-
-My AP is a Netgear WNDR3300 with a max rate of 270 Mbps in the 2.4 GHz band. The 
-distance between my laptop and the AP is about 2m. The card is on an Express 
-Card PCIe extender, and I have 2 7 dBi antennas connected. They likely boost the 
-signal more than the ordinary laptop antennas would. The iwconfig output for 
-card 4 is
-
-wlan26    IEEE 802.11bgn  ESSID:"lwfdjf-n"
-           Mode:Managed  Frequency:2.422 GHz  Access Point: C0:3F:0E:BE:2B:44
-           Bit Rate=270 Mb/s   Tx-Power=20 dBm
-           Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
-           Power Management:off
-           Link Quality=70/70  Signal level=-35 dBm
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
- From what you posted earlier, I think your card is like my Cards 1 & 3, but the 
-PCI ID will tell for sure. These tests were run with commit 0a92aec2f22d of 
-wireless-testing. There are some test patches installed, but non of them affect 
-rtl8192se.
-
-Larry
-
+--
+Luca.
 
