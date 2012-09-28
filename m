@@ -1,132 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25031 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755694Ab2ILNaH (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:47692 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759067Ab2I1UgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Sep 2012 09:30:07 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 5/6] ath9k: fill led_pin before drv_start
-Date: Wed, 12 Sep 2012 18:59:23 +0530
-Message-ID: <1347456564-8222-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120912_153011_956456_06280397)
-In-Reply-To: <1347456564-8222-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1347456564-8222-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Fri, 28 Sep 2012 16:36:10 -0400
+Received: by ieak13 with SMTP id k13so8342713iea.19
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2012 13:36:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1348830066.13298.21.camel@jlt4.sipsolutions.net>
+References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
+	<1348772354-15936-2-git-send-email-bzhao@marvell.com>
+	<1348830066.13298.21.camel@jlt4.sipsolutions.net>
+Date: Fri, 28 Sep 2012 13:36:09 -0700
+Message-ID: <CA+yqC4bMwqLr8oMuWYKWz+QhVscBe_KGnzHLEORKLVh2Ruj3bw@mail.gmail.com> (sfid-20120928_223619_372518_296BEACF)
+Subject: Re: [PATCH v2 1/5] {nl,cfg}80211: add a flags word to scan requests
+From: Sam Leffler <sleffler@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ensure that led pin is filled and set to OFF before starting
-the driver. With recent changes, drv_start is being called even
-before led_init is being completed. This is causing led is always
-OFF on driver load when the interface is UP. This patch splits the
-led init and fills the led pin before register hw.
+On Fri, Sep 28, 2012 at 4:01 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-09-27 at 11:59 -0700, Bing Zhao wrote:
+>> From: Sam Leffler <sleffler@chromium.org>
+>>
+>> Add a flags word to direct and scheduled scan requests; it will
+>> be used for control of optional behaviours such as flushing the
+>> bss cache prior to doing a scan.
+>
+> Why for scheduled scan as well?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  4 ++++
- drivers/net/wireless/ath/ath9k/gpio.c  | 44 +++++++++++++++++++---------------
- drivers/net/wireless/ath/ath9k/init.c  |  1 +
- 3 files changed, 30 insertions(+), 19 deletions(-)
+Because I thought the scheduled scan mechanism is used to trigger
+periodic scans w/o involving user space and so might be used to do
+bgscan's.  Please enlighten me.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 96b8331..fd24535 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -537,6 +537,7 @@ struct ath9k_wow_pattern {
- #ifdef CONFIG_MAC80211_LEDS
- void ath_init_leds(struct ath_softc *sc);
- void ath_deinit_leds(struct ath_softc *sc);
-+void ath_fill_led_pin(struct ath_softc *sc);
- #else
- static inline void ath_init_leds(struct ath_softc *sc)
- {
-@@ -545,6 +546,9 @@ static inline void ath_init_leds(struct ath_softc *sc)
- static inline void ath_deinit_leds(struct ath_softc *sc)
- {
- }
-+static inline void ath_fill_led_pin(struct ath_softc *sc)
-+{
-+}
- #endif
- 
- /*******************************/
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 45f2422..1934cca 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -44,25 +44,6 @@ void ath_init_leds(struct ath_softc *sc)
- 	if (AR_SREV_9100(sc->sc_ah))
- 		return;
- 
--	if (sc->sc_ah->led_pin < 0) {
--		if (AR_SREV_9287(sc->sc_ah))
--			sc->sc_ah->led_pin = ATH_LED_PIN_9287;
--		else if (AR_SREV_9485(sc->sc_ah))
--			sc->sc_ah->led_pin = ATH_LED_PIN_9485;
--		else if (AR_SREV_9300(sc->sc_ah))
--			sc->sc_ah->led_pin = ATH_LED_PIN_9300;
--		else if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
--			sc->sc_ah->led_pin = ATH_LED_PIN_9462;
--		else
--			sc->sc_ah->led_pin = ATH_LED_PIN_DEF;
--	}
--
--	/* Configure gpio 1 for output */
--	ath9k_hw_cfg_output(sc->sc_ah, sc->sc_ah->led_pin,
--			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
--	/* LED off, active low */
--	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
--
- 	if (!led_blink)
- 		sc->led_cdev.default_trigger =
- 			ieee80211_get_radio_led_name(sc->hw);
-@@ -78,6 +59,31 @@ void ath_init_leds(struct ath_softc *sc)
- 
- 	sc->led_registered = true;
- }
-+
-+void ath_fill_led_pin(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (AR_SREV_9100(ah) || (ah->led_pin >= 0))
-+		return;
-+
-+	if (AR_SREV_9287(ah))
-+		ah->led_pin = ATH_LED_PIN_9287;
-+	else if (AR_SREV_9485(sc->sc_ah))
-+		ah->led_pin = ATH_LED_PIN_9485;
-+	else if (AR_SREV_9300(sc->sc_ah))
-+		ah->led_pin = ATH_LED_PIN_9300;
-+	else if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
-+		ah->led_pin = ATH_LED_PIN_9462;
-+	else
-+		ah->led_pin = ATH_LED_PIN_DEF;
-+
-+	/* Configure gpio 1 for output */
-+	ath9k_hw_cfg_output(ah, ah->led_pin, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+
-+	/* LED off, active low */
-+	ath9k_hw_set_gpio(ah, ah->led_pin, 1);
-+}
- #endif
- 
- /*******************/
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index f3ce5ca..7062552 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -597,6 +597,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 
- 	ath9k_cmn_init_crypto(sc->sc_ah);
- 	ath9k_init_misc(sc);
-+	ath_fill_led_pin(sc);
- 
- 	if (common->bus_ops->aspm_init)
- 		common->bus_ops->aspm_init(common);
--- 
-1.7.12
+>
+>> + * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
+>
+> One thing that might be useful is to advertise which flags are even
+> supported at all by a driver, if we add different ones? We might then
+> ignore the flags that we don't support anyway, but at least userspace
+> would know that it can't expect flushing (for example) on an older
+> kernel version and might have to use some workarounds or whatever.
 
+Yes I considered this. I don't know what the model is for nl80211 in
+this regard (think we've talked about this in the past).  The low
+priority scan flag is somewhat advisory so applications should be able
+to deal w/ it being ignored.  The flush flag however may be cause some
+misbehaviour--e.g. you wakeup, scan, and then act on stale results
+that may cause you try and associate to an ap that's out of range in
+which case you'll end up doing the equivalent to the flush in user
+space to make sure the right thing happens.
+
+>
+>> +/**
+>> + * enum nl80211_scan_flags -  scan request control flags
+>> + *
+>> + * Scan request control flags are used to control the handling
+>> + * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
+>> + * requests.
+>> + */
+>> +enum nl80211_scan_flags {
+>> +};
+>> +
+>
+>>  /**
+>> + * enum cfg80211_scan_flags -  scan request control flags
+>> + */
+>> +enum cfg80211_scan_flags {
+>> +};
+>
+> That doesn't make a lot of sense? A single enum seems sufficient?
+
+I thought cfg80211's name space was separate from nl80211's?  Was just
+trying to follow what I found elsewhere...
+
+>
+>> +     nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
+>
+> Missing error check, also, is there nothing that re-publishes
+> information about scheduled scans?
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
