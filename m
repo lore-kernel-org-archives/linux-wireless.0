@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52956 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53026 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752908Ab2I1KjO (ORCPT
+	with ESMTP id S1757247Ab2I1K4s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 06:39:14 -0400
-Message-ID: <1348828789.13298.5.camel@jlt4.sipsolutions.net> (sfid-20120928_123917_337659_1AA6C9C6)
-Subject: Re: [RFC v2] cfg80211: VHT regulatory
+	Fri, 28 Sep 2012 06:56:48 -0400
+Message-ID: <1348829840.13298.17.camel@jlt4.sipsolutions.net> (sfid-20120928_125651_682478_B19AE839)
+Subject: Re: [PATCH 0/3] add scan flags support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Fri, 28 Sep 2012 12:39:49 +0200
-In-Reply-To: <50655B36.5060500@posedge.com>
-References: <5046FB3D.6090803@posedge.com>
-	   <1346852356.4364.9.camel@jlt4.sipsolutions.net>
-	   <50481C2E.5040303@posedge.com>
-	  <1346925298.5469.4.camel@jlt4.sipsolutions.net>
-	  <50489165.1080902@posedge.com>
-	 <1347019809.4256.21.camel@jlt4.sipsolutions.net>
-	 <50655B36.5060500@posedge.com>
+To: Sam Leffler <sleffler@chromium.org>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, eliad <eliad@wizery.com>,
+	coelho <coelho@ti.com>
+Date: Fri, 28 Sep 2012 12:57:20 +0200
+In-Reply-To: <CA+yqC4bo9Xcy9HMeJYAFHqEYBCUErF+Y4ivfe9s+xQ+endCU-Q@mail.gmail.com> (sfid-20120927_183915_117447_7AEFBA98)
+References: <20120926165952.766801E10D3@sleffler.sfo.corp.google.com>
+	 <1348737219.10353.6.camel@jlt4.sipsolutions.net>
+	 <CA+yqC4bo9Xcy9HMeJYAFHqEYBCUErF+Y4ivfe9s+xQ+endCU-Q@mail.gmail.com>
+	 (sfid-20120927_183915_117447_7AEFBA98)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-09-28 at 13:39 +0530, Mahesh Palivela wrote:
-> On 09/07/2012 05:40 PM, Johannes Berg wrote:
-> >
-> > We don't have to do any calculation in kernel though as far as I can
-> > tell? Maybe we do need the channel, but I think in terms of
-> > *specifying*, in particular in the nl80211 and cfg80211 APIs, we should
-> > stick to the standard if we're going to change it now.
-> >
-> 
-> struct ieee80211_channel_config {
->          enum ieee80211_chan_width chan_width;
->          u16 center_freq1;
->          u16 center_freq2;
->          u16 prim_chan_freq;
-> };
-> 
-> If we stick to standard, all u16 become u8, as their values range is 
-> from 1-200. But these numbers have to be converted to freqKHz in 
-> reg_chan_use_permitted() to find fits in reg rule or not?
-> Is that ok?
+On Thu, 2012-09-27 at 09:39 -0700, Sam Leffler wrote:
 
-I prefer MHz for center freqs, but offset for the primary channel, and
-this is exactly like table 22-22 in the 802.11ac draft, so only the "u16
-primary_channel_freq" becomes "u8 primary_channel_offset", not all of
-them change, no?
+> > Maybe it'd be worthwhile to go for a more generic approach, marking
+> > scans as "low priority" or "high priority" or similar, and then
+> > implementing such behaviour based on such settings? Our device for
+> > example has a notion of "background scan" vs. "forced scan", which
+> > behave differently in the firmware, and it would be useful to be able to
+> > use these different behaviours. However, I can't say that "TX abort"
+> > would be a guaranteed scan behaviour for a "background scan".
+> 
+> Having a priority mechanism or similar would be fine. I usually
+> hesitate doing the generic thing because the actual semantics can very
+> so significantly from driver to driver that applications may end up
+> having to build in knowledge of which driver is being used to get what
+> they way want. But in fact what you suggest is how txabort is used--we
+> mark wpa_supplicant bgscan's w/ txabort while fgscan's are not marked
+> in this way.
+
+Yes, I agree it's a slippery slope, however with all the different
+mechanisms that can be built in drivers/firmware/... I'm not really sure
+how else to treat them?
+
+In theory we could say that we have
+ * TX abort
+ * Intel BG scan (otherwise opaque, in firmware)
+ * TI BG scan (otherwise opaque, in firmware)
+ * ...
+
+as separate flags/settings/..., but ultimately it seems that all that
+would happen is that everybody would patch the supplicant to use their
+mechanism for background scanning if available. Then, in theory, the
+supplicant would know which one it's using, but since it doesn't really
+know the semantics it doesn't really make a difference?
+
+Maybe we should agree on a few basic rules for the "generic" BG scan,
+but I'm not sure what sensible rules would be. They can't be rules on
+reliability, as then "tx-abort" wouldn't be a valid implementation
+(unless you retried, but that could literally run forever), and I'm not
+sure what other kind of rule would make sense. Either way, the
+supplicant is going to have to assume that a finished "BG scan" has a
+smaller result set than a "regular" scan ...
+
+There might be value in having more information about the actual "abort
+due to TX" (whether it happened or not), but again that would be tied to
+the specific implementation, and I'm not sure how to formulate any such
+thing more generically. Right now, I don't even know how our or TI's
+implementation behaves differently for the different types of scan.
 
 johannes
 
