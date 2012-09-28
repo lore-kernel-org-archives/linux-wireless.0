@@ -1,141 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:57066 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532Ab2IQVTP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52966 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753736Ab2I1KmG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 17:19:15 -0400
-Message-ID: <505793d0.e8a1320a.44f7.fffff8d0@mx.google.com> (sfid-20120917_231925_418963_FD02BD5C)
-Date: Mon, 17 Sep 2012 14:19:12 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 28 Sep 2012 06:42:06 -0400
+Message-ID: <1348828963.13298.8.camel@jlt4.sipsolutions.net> (sfid-20120928_124210_433775_FDAC220B)
+Subject: Re: [RFC v2] cfg80211: VHT regulatory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Fri, 28 Sep 2012 12:42:43 +0200
+In-Reply-To: <1348828789.13298.5.camel@jlt4.sipsolutions.net> (sfid-20120928_123917_337659_1AA6C9C6)
+References: <5046FB3D.6090803@posedge.com>
+	 <1346852356.4364.9.camel@jlt4.sipsolutions.net>
+	 <50481C2E.5040303@posedge.com>
+	 <1346925298.5469.4.camel@jlt4.sipsolutions.net>
+	 <50489165.1080902@posedge.com>
+	 <1347019809.4256.21.camel@jlt4.sipsolutions.net>
+	 <50655B36.5060500@posedge.com>
+	 <1348828789.13298.5.camel@jlt4.sipsolutions.net>
+	 (sfid-20120928_123917_337659_1AA6C9C6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-,
-	netdev@vger.kernel.org,
-	<chaoming_li@realsil.com.cn>
-Subject: [PATCH 00/15] Add new driver RTL8723AE
-Date: Mon, 17 Sep 2012 16:18:39 -0500
-Message-Id: <1347483294-6943-1-git-send-email-Larry.Finger@lwfinger.net>
-X-Mailer: git-send-email 1.7.10.4
-X-Account-Key: account11
-X-UIDL: GmailId139bc43b51cd682c
-X-Mozilla-Status: 0001
-Return-Path: <larry.finger@gmail.com>
-Received: from localhost.localdomain (CPE-75-81-36-228.kc.res.rr.com. [75.81.36.228])
- by mx.google.com with ESMTPS id ng5sm5862034igc.0.2012.09.12.13.55.15
- (version=TLSv1/SSLv3 cipher=OTHER);
- Wed, 12 Sep 2012 13:55:16 -0700 (PDT)
-Sender: Larry Finger <larry.finger@gmail.com>
-X-Mailer: git-send-email 1.7.10.4
+On Fri, 2012-09-28 at 12:39 +0200, Johannes Berg wrote:
+> On Fri, 2012-09-28 at 13:39 +0530, Mahesh Palivela wrote:
+> > On 09/07/2012 05:40 PM, Johannes Berg wrote:
+> > >
+> > > We don't have to do any calculation in kernel though as far as I can
+> > > tell? Maybe we do need the channel, but I think in terms of
+> > > *specifying*, in particular in the nl80211 and cfg80211 APIs, we should
+> > > stick to the standard if we're going to change it now.
+> > >
+> > 
+> > struct ieee80211_channel_config {
+> >          enum ieee80211_chan_width chan_width;
+> >          u16 center_freq1;
+> >          u16 center_freq2;
+> >          u16 prim_chan_freq;
+> > };
+> > 
+> > If we stick to standard, all u16 become u8, as their values range is 
+> > from 1-200. But these numbers have to be converted to freqKHz in 
+> > reg_chan_use_permitted() to find fits in reg rule or not?
+> > Is that ok?
+> 
+> I prefer MHz for center freqs, but offset for the primary channel, and
+> this is exactly like table 22-22 in the 802.11ac draft, so only the "u16
+> primary_channel_freq" becomes "u8 primary_channel_offset", not all of
+> them change, no?
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Ohh, wait, it's called frequency in table 22-22 but actually says the
+valid range is 1-200 ... wtf? Ok you're right, then it uses the equation
+22-99, but ... hmm that's a bit stupid since it needs the (non-constant)
+"Channel starting frequency".
 
-This set of patches add the new driver rtl8723ae to the rtlwifi family
-of drivers. It handles the RTL8723AE, which is now being included in
-some Toshiba laptops. This driver is derived from version 0007.0809.2012
-of the vendor driver.
+Ok so maybe that wasn't such a good idea. How about we just change
+prim_chan_freq to prim_chan_offset and leave the other two unchanged?
 
-Depending on how long the review process takes, I am hoping to include
-this driver in kernel 3.7.
+Sorry.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry Finger (15):
-  rtlwifi: rtl8723ae: Add new driver - Part 1
-  rtlwifi: rtl8723ae: Add new driver - Part 2
-  rtlwifi: rtl8723ae: Add new driver - Part 3
-  rtlwifi: rtl8723ae: Add new driver - Part 4
-  rtlwifi: rtl8723ae: Add new driver - Part 5
-  rtlwifi: rtl8723ae: Add new driver - Part 6
-  rtlwifi: rtl8723ae: Add new driver - Part 7
-  rtlwifi: rtl8723ae: Add new driver - Part 8
-  rtlwifi: rtl8723ae: Add new driver - Part 9
-  rtlwifi: rtl8723ae: Add new driver - Part 10
-  rtlwifi: rtl8723ae: Add new driver - Part 11
-  rtlwifi: rtl8723ae: Add new driver - Part 12
-  rtlwifi: rtl8723ae: Add new driver - Part 13
-  rtlwifi: Modify files for addition of rtl8723ae
-  rtlwifi: rtl8192ce: rtl8192cu: rtl8192se: rtl81723ae: Turn on
-    building of the new driver
-
- drivers/net/wireless/rtlwifi/Kconfig               |   19 +-
- drivers/net/wireless/rtlwifi/Makefile              |    4 +-
- drivers/net/wireless/rtlwifi/debug.h               |    2 +
- drivers/net/wireless/rtlwifi/pci.h                 |    1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   83 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   10 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |    6 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/Makefile    |   23 +
- drivers/net/wireless/rtlwifi/rtl8723ae/btc.h       |   41 +
- drivers/net/wireless/rtlwifi/rtl8723ae/def.h       |  291 +++
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |  952 ++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |  174 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |  758 ++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |   99 +
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c    |  554 +++++
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h    |  161 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   | 1807 ++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |  161 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        | 2559 ++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.h        |   70 +
- drivers/net/wireless/rtlwifi/rtl8723ae/led.c       |  158 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/led.h       |   40 +
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       | 2160 +++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |  228 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c    |  113 +
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h    |  313 +++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c |  145 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h |  101 +
- drivers/net/wireless/rtlwifi/rtl8723ae/reg.h       | 2129 ++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.c        |  518 ++++
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.h        |   45 +
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |  405 ++++
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.h        |   38 +
- drivers/net/wireless/rtlwifi/rtl8723ae/table.c     |  744 ++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/table.h     |   51 +
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |  830 +++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |  725 ++++++
- drivers/net/wireless/rtlwifi/stats.c               |  274 +++
- drivers/net/wireless/rtlwifi/stats.h               |   47 +
- drivers/net/wireless/rtlwifi/wifi.h                |  112 +-
- 40 files changed, 16919 insertions(+), 32 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/Makefile
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/btc.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/def.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/reg.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.h
- create mode 100644 drivers/net/wireless/rtlwifi/stats.c
- create mode 100644 drivers/net/wireless/rtlwifi/stats.h
-
--- 
-1.7.10.4
-
+johannes
 
