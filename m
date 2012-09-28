@@ -1,118 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3441 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752257Ab2IMTMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Sep 2012 15:12:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/10] brcmfmac: use atomic variable for interrupt
- pending flag
-Date: Thu, 13 Sep 2012 21:11:59 +0200
-Message-ID: <1347563526-12513-4-git-send-email-arend@broadcom.com> (sfid-20120913_211231_108309_FE32A2BA)
-In-Reply-To: <1347563526-12513-1-git-send-email-arend@broadcom.com>
-References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:52956 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752908Ab2I1KjO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Sep 2012 06:39:14 -0400
+Message-ID: <1348828789.13298.5.camel@jlt4.sipsolutions.net> (sfid-20120928_123917_337659_1AA6C9C6)
+Subject: Re: [RFC v2] cfg80211: VHT regulatory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Fri, 28 Sep 2012 12:39:49 +0200
+In-Reply-To: <50655B36.5060500@posedge.com>
+References: <5046FB3D.6090803@posedge.com>
+	   <1346852356.4364.9.camel@jlt4.sipsolutions.net>
+	   <50481C2E.5040303@posedge.com>
+	  <1346925298.5469.4.camel@jlt4.sipsolutions.net>
+	  <50489165.1080902@posedge.com>
+	 <1347019809.4256.21.camel@jlt4.sipsolutions.net>
+	 <50655B36.5060500@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Fri, 2012-09-28 at 13:39 +0530, Mahesh Palivela wrote:
+> On 09/07/2012 05:40 PM, Johannes Berg wrote:
+> >
+> > We don't have to do any calculation in kernel though as far as I can
+> > tell? Maybe we do need the channel, but I think in terms of
+> > *specifying*, in particular in the nl80211 and cfg80211 APIs, we should
+> > stick to the standard if we're going to change it now.
+> >
+> 
+> struct ieee80211_channel_config {
+>          enum ieee80211_chan_width chan_width;
+>          u16 center_freq1;
+>          u16 center_freq2;
+>          u16 prim_chan_freq;
+> };
+> 
+> If we stick to standard, all u16 become u8, as their values range is 
+> from 1-200. But these numbers have to be converted to freqKHz in 
+> reg_chan_use_permitted() to find fits in reg rule or not?
+> Is that ok?
 
-Interrupt pending flag used in SDIO bus layer could be used in
-multiple processes in different context. Use atomic_t make sure
-every interrupt is handled.
+I prefer MHz for center freqs, but offset for the primary channel, and
+this is exactly like table 22-22 in the 802.11ac draft, so only the "u16
+primary_channel_freq" becomes "u8 primary_channel_offset", not all of
+them change, no?
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 2ca9e8c..b0794e8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -531,7 +531,7 @@ struct brcmf_sdio {
- 
- 	bool intr;		/* Use interrupts */
- 	bool poll;		/* Use polling */
--	bool ipend;		/* Device interrupt is pending */
-+	atomic_t ipend;		/* Device interrupt is pending */
- 	uint spurious;		/* Count of spurious interrupts */
- 	uint pollrate;		/* Ticks between device polls */
- 	uint polltick;		/* Tick counter */
-@@ -2151,7 +2151,7 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 			if (ret != 0)
- 				break;
- 			if (intstatus & bus->hostintmask)
--				bus->ipend = true;
-+				atomic_set(&bus->ipend, 1);
- 		}
- 	}
- 
-@@ -2249,7 +2249,7 @@ static inline void brcmf_sdbrcm_clrintr(struct brcmf_sdio *bus)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&bus->sdiodev->irq_en_lock, flags);
--	if (!bus->sdiodev->irq_en && !bus->ipend) {
-+	if (!bus->sdiodev->irq_en && !atomic_read(&bus->ipend)) {
- 		enable_irq(bus->sdiodev->irq);
- 		bus->sdiodev->irq_en = true;
- 	}
-@@ -2332,8 +2332,8 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		goto clkwait;
- 
- 	/* Pending interrupt indicates new device status */
--	if (bus->ipend) {
--		bus->ipend = false;
-+	if (atomic_read(&bus->ipend) > 0) {
-+		atomic_set(&bus->ipend, 0);
- 		err = r_sdreg32(bus, &newstatus,
- 				offsetof(struct sdpcmd_regs, intstatus));
- 		bus->sdcnt.f1regdata++;
-@@ -2478,7 +2478,7 @@ clkwait:
- 	} else if (bus->clkstate == CLK_PENDING) {
- 		brcmf_dbg(INFO, "rescheduled due to CLK_PENDING awaiting I_CHIPACTIVE interrupt\n");
- 		resched = true;
--	} else if (bus->intstatus || bus->ipend ||
-+	} else if (bus->intstatus || atomic_read(&bus->ipend) > 0 ||
- 		(!bus->fcstate && brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol)
- 		 && data_ok(bus)) || PKT_AVAILABLE()) {
- 		resched = true;
-@@ -3692,7 +3692,7 @@ void brcmf_sdbrcm_isr(void *arg)
- 	}
- 	/* Count the interrupt call */
- 	bus->sdcnt.intrcount++;
--	bus->ipend = true;
-+	atomic_set(&bus->ipend, 1);
- 
- 	/* Disable additional interrupts (is this needed now)? */
- 	if (!bus->intr)
-@@ -3740,7 +3740,7 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
- 				 schedule the DPC */
- 			if (intstatus) {
- 				bus->sdcnt.pollcnt++;
--				bus->ipend = true;
-+				atomic_set(&bus->ipend, 1);
- 
- 				bus->dpc_sched = true;
- 				if (bus->dpc_tsk) {
-@@ -3784,7 +3784,7 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
- 
- 	up(&bus->sdsem);
- 
--	return bus->ipend;
-+	return (atomic_read(&bus->ipend) > 0);
- }
- 
- static bool brcmf_sdbrcm_chipmatch(u16 chipid)
--- 
-1.7.9.5
-
+johannes
 
