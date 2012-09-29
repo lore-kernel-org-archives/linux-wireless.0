@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47780 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751982Ab2ITHdR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Sep 2012 03:33:17 -0400
-Message-ID: <1348126434.4161.9.camel@jlt4.sipsolutions.net> (sfid-20120920_093321_231376_209B9FD7)
-Subject: Re: [PATCH 0/3] mac80211: avoid useless delBA frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 20 Sep 2012 09:33:54 +0200
-In-Reply-To: <CA+XVXfd1ZiYjZaRUFeZvDVvi5gqmE6fVs=qjZW-JshRaWxSoRA@mail.gmail.com> (sfid-20120919_214556_074969_D42F77F2)
-References: <1348049313-7650-1-git-send-email-johannes@sipsolutions.net>
-	 <CA+XVXfcxHENu1HzY+-WkyMr6g+3P2wSyj7BhDsfKgZoB7fZHRg@mail.gmail.com>
-	 <1348083291.7081.11.camel@jlt4.sipsolutions.net>
-	 <CA+XVXfd1ZiYjZaRUFeZvDVvi5gqmE6fVs=qjZW-JshRaWxSoRA@mail.gmail.com>
-	 (sfid-20120919_214556_074969_D42F77F2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58993 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757358Ab2I2SeA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Sep 2012 14:34:00 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/5] bcma: mark pflash as present when available
+Date: Sat, 29 Sep 2012 20:33:49 +0200
+Message-Id: <1348943633-22800-2-git-send-email-hauke@hauke-m.de> (sfid-20120929_203404_208967_4FE14111)
+In-Reply-To: <1348943633-22800-1-git-send-email-hauke@hauke-m.de>
+References: <1348943633-22800-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-09-19 at 22:45 +0300, Arik Nemtsov wrote:
 
-> >> Maybe it's a good opportunity to also fix ieee80211_reconfig? I
-> >> remember you mentioned some FW/HW issue there, perhaps this was solved
-> >> in the meantime. Otherwise we can add a HW flag for that I guess.
-> >
-> > Not sure what you mean?
-> 
-> All BA sessions are destroyed right after reconfig. For devices that
-> manage these in FW, the FW was just reloaded and doesn't know about
-> existing sessions at all.
-> So I guess there's sense in sending the delBA, but no sense calling
-> the driver ampdu callback (at least for how 12xx works).
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_mips.c                  |    1 +
+ include/linux/bcma/bcma_driver_chipcommon.h |    1 +
+ 2 files changed, 2 insertions(+)
 
-Oh right. This is more of a workaround I guess, since we can't restore
-them very well after a firmware reload won't know anything about them. I
-haven't really thought much about this at all.
-
-johannes
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index cc65b45..2786bc1 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -190,6 +190,7 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ 		break;
+ 	case BCMA_CC_FLASHT_PARA:
+ 		bcma_debug(bus, "Found parallel flash\n");
++		bus->drv_cc.pflash.present = true;
+ 		bus->drv_cc.pflash.window = 0x1c000000;
+ 		bus->drv_cc.pflash.window_size = 0x02000000;
+ 
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 6ba45d2..b9d7eeb 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -510,6 +510,7 @@ struct bcma_chipcommon_pmu {
+ 
+ #ifdef CONFIG_BCMA_DRIVER_MIPS
+ struct bcma_pflash {
++	bool present;
+ 	u8 buswidth;
+ 	u32 window;
+ 	u32 window_size;
+-- 
+1.7.9.5
 
