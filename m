@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43317 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024Ab2IGTAR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Sep 2012 15:00:17 -0400
-Date: Fri, 7 Sep 2012 14:54:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Golle <dgolle@allnet.de>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"gwingerde@gmail.com" <gwingerde@gmail.com>,
-	"heinold@inf.fu-berlin.de" <heinold@inf.fu-berlin.de>
-Subject: Re: [PATCH v2] rt2x00: add MediaTek/RaLink Rt3352 WiSoC
-Message-ID: <20120907185407.GB1854@tuxdriver.com> (sfid-20120907_210023_029955_30C82A9E)
-References: <20120821235349.GA14648@earthship.home>
- <20120822105110.GC6082@redhat.com>
- <20120824152542.GA32145@earthship.home>
- <20120828124214.GA8426@redhat.com>
- <503CBEF8.7010505@allnet.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <503CBEF8.7010505@allnet.de>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58988 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757358Ab2I2Sd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Sep 2012 14:33:59 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/5] bcma: some small improvements to the flash driver part.
+Date: Sat, 29 Sep 2012 20:33:48 +0200
+Message-Id: <1348943633-22800-1-git-send-email-hauke@hauke-m.de> (sfid-20120929_203402_697955_3EFD3D94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 28, 2012 at 03:52:08PM +0300, Daniel Golle wrote:
-> Hi Stanislaw,
-> 
-> On 28/08/12 15:42, Stanislaw Gruszka wrote:
-> > Thanks. Could you also provide information what was the source
-> > (registers programming) you based when writing this patch?
-> The vendor-driver Allnet got for that board (which is not publicly available and
-> we can't release its source)
-> 
-> >> +	if (rt2x00_rt(rt2x00dev, RT3352)) {
-> >> +		rt2800_bbp_write(rt2x00dev, 27, 0x0);
-> >> +		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
-> >> +		rt2800_bbp_write(rt2x00dev, 27, 0x20);
-> >> +		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
-> > 
-> > Writes two times to the same registers are intended?
-> Yes, as this is how it is done in the vendor driver, to me it looks like
-> register 27 acts as a switch selecting the destination for the value written to
-> register 62 or something like that.
+This was mostly done in preparation for an improvement for
+arch/mips/bcm47xx/nvram.c
 
-Daniel,
+Hauke Mehrtens (5):
+  bcma: mark pflash as present when available
+  bcma: add and use constants for the flash windows
+  bcma: mark nflash if it is the boot flash
+  bcma: extract drv_cc in bcma_core_mips_flash_detect()
+  bcma: add some more flash chips for serial flash
 
-Could you perhaps repost a new patch with a "finalized" commit message
-that covers the original patch and addresses Stanislaw's concerns
-in a single, neat message?
+ drivers/bcma/driver_chipcommon_nflash.c     |    3 +++
+ drivers/bcma/driver_chipcommon_sflash.c     |   35 ++++++++++++++++++++++++---
+ drivers/bcma/driver_mips.c                  |   22 +++++++++--------
+ include/linux/bcma/bcma_driver_chipcommon.h |    2 ++
+ include/linux/bcma/bcma_regs.h              |    5 +++-
+ 5 files changed, 53 insertions(+), 14 deletions(-)
 
-Thanks!
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.5
+
