@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60321 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751077Ab2IEGwJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Sep 2012 02:52:09 -0400
-Received: by iahk25 with SMTP id k25so305537iah.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2012 23:52:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1346777666.3737.38.camel@jlt4.sipsolutions.net>
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-	<1346746298.3737.0.camel@jlt4.sipsolutions.net>
-	<CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
-	<20120904102204.GA2541@w1.fi>
-	<CAEFj984r=4HN5qC6yJqFEuFud1z+J5F7gz=oahnpv6y-_a-MyQ@mail.gmail.com>
-	<CAEFj986jSwLb0bdsW_-moOZ_WwrsmW5aHW+7SEq-jKcXbmk5FA@mail.gmail.com>
-	<1346758521.3737.28.camel@jlt4.sipsolutions.net>
-	<CAEFj986eBvbndfY8QSM_JccViug-Cr6nyM+p-qz_EnNcB_67dA@mail.gmail.com>
-	<1346777666.3737.38.camel@jlt4.sipsolutions.net>
-Date: Wed, 5 Sep 2012 14:52:08 +0800
-Message-ID: <CAEFj9866ZAaZ1T-RSVj7Rp8-7giBF9xgtsvnwa_+Wi+ShTfVeA@mail.gmail.com> (sfid-20120905_085215_043128_2134E4E6)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59020 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757358Ab2I2SeG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Sep 2012 14:34:06 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/5] bcma: extract drv_cc in bcma_core_mips_flash_detect()
+Date: Sat, 29 Sep 2012 20:33:52 +0200
+Message-Id: <1348943633-22800-5-git-send-email-hauke@hauke-m.de> (sfid-20120929_203412_182976_8DF04967)
+In-Reply-To: <1348943633-22800-1-git-send-email-hauke@hauke-m.de>
+References: <1348943633-22800-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes
+This makes the code more readable
 
-> Well, that's a separate question. Of course we could enable it, but what
-> would the point be? You don't have CCM for management frames right now,
-> so CMAC is pretty useless? And if you had CCM for management frames, say
-> with the things discussed in the p54 thread, then you could just enable
-> both, right?
-
-We will load the ath5k with nohwcrypt=, so no hardware encryption at
-all. But to proceed with key installation using AES CMAC to be
-processed in software, we need somethings related to:
-http://www.spinics.net/lists/linux-wireless/msg96187.html
-
-Otherwise, we may need to bypass the cfg80211_supported_cipher_suite checking:
-http://www.spinics.net/lists/linux-wireless/msg95951.html
-
-Is this relevant?
-
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-Chun-Yeow
+ drivers/bcma/driver_mips.c |   23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 8470192..584a506 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -181,34 +181,35 @@ EXPORT_SYMBOL(bcma_cpu_clock);
+ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ {
+ 	struct bcma_bus *bus = mcore->core->bus;
++	struct bcma_drv_cc *cc = &bus->drv_cc;
+ 
+-	switch (bus->drv_cc.capabilities & BCMA_CC_CAP_FLASHT) {
++	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
+ 	case BCMA_CC_FLASHT_STSER:
+ 	case BCMA_CC_FLASHT_ATSER:
+ 		bcma_debug(bus, "Found serial flash\n");
+-		bcma_sflash_init(&bus->drv_cc);
++		bcma_sflash_init(cc);
+ 		break;
+ 	case BCMA_CC_FLASHT_PARA:
+ 		bcma_debug(bus, "Found parallel flash\n");
+-		bus->drv_cc.pflash.present = true;
+-		bus->drv_cc.pflash.window = BCMA_SOC_FLASH2;
+-		bus->drv_cc.pflash.window_size = BCMA_SOC_FLASH2_SZ;
++		cc->pflash.present = true;
++		cc->pflash.window = BCMA_SOC_FLASH2;
++		cc->pflash.window_size = BCMA_SOC_FLASH2_SZ;
+ 
+-		if ((bcma_read32(bus->drv_cc.core, BCMA_CC_FLASH_CFG) &
++		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
+ 		     BCMA_CC_FLASH_CFG_DS) == 0)
+-			bus->drv_cc.pflash.buswidth = 1;
++			cc->pflash.buswidth = 1;
+ 		else
+-			bus->drv_cc.pflash.buswidth = 2;
++			cc->pflash.buswidth = 2;
+ 		break;
+ 	default:
+ 		bcma_err(bus, "Flash type not supported\n");
+ 	}
+ 
+-	if (bus->drv_cc.core->id.rev == 38 ||
++	if (cc->core->id.rev == 38 ||
+ 	    bus->chipinfo.id == BCMA_CHIP_ID_BCM4706) {
+-		if (bus->drv_cc.capabilities & BCMA_CC_CAP_NFLASH) {
++		if (cc->capabilities & BCMA_CC_CAP_NFLASH) {
+ 			bcma_debug(bus, "Found NAND flash\n");
+-			bcma_nflash_init(&bus->drv_cc);
++			bcma_nflash_init(cc);
+ 		}
+ 	}
+ }
+-- 
+1.7.9.5
+
