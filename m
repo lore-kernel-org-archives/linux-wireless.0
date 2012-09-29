@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:56864 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756773Ab2IDLGD (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:34572 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713Ab2I2Jby (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Sep 2012 07:06:03 -0400
-Date: Tue, 4 Sep 2012 13:22:04 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-Message-ID: <20120904102204.GA2541@w1.fi> (sfid-20120904_130615_423185_E5733558)
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
- <1346746298.3737.0.camel@jlt4.sipsolutions.net>
- <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+	Sat, 29 Sep 2012 05:31:54 -0400
+Date: Sat, 29 Sep 2012 11:31:18 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Sujith Manoharan <c_manoha@qualcomm.com>
+Cc: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [RFC 1/2] ath9k_htc: Advertize allowed vif combinations
+Message-ID: <20120929093118.GA3022@ritirata.org> (sfid-20120929_113243_550540_8A53F476)
+References: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com>
+ <20581.2614.43943.601901@gargle.gargle.HOWL>
+ <50652E56.10303@qca.qualcomm.com>
+ <20581.32544.134606.56158@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAEFj9861rR+yEcJbtZjnwqO5LQXEbjRgxaM+StTBkJKxXPximw@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J/dobhs11T7y2rNN"
+In-Reply-To: <20581.32544.134606.56158@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 04, 2012 at 05:28:40PM +0800, Yeoh Chun-Yeow wrote:
-> Hi, Johannes
-> 
-> > _How_ did you test this? Did you test that management frames are
-> > properly encrypted using AES CCM, and not mangled when decrypted?
-> 
-> I have setup the two mesh nodes using the secured mesh with the
-> following key installation:
-> 
-> /* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
-> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
-> 
-> I confirm that the hardware key for CCMP is set and
-> IEEE80211_KEY_FLAG_SW_MGMT is not enabled in mac80211-ops.c. Both
-> nodes are able to ping each others. Is this enough?
 
-Depends on what those nodes were.. If they were both using the same
-ath5k implementation, then no, that would not be enough. If the CCMP
-processing is done incorrectly, they could both mangle the results in
-the same way to hide the issue. It should also be noted that there has
-been key cache changes between hardware revisions, so working with
-AR2414 or even AR5213 does not necessarily mean that this would work
-with AR5210, AR5211, or AR5212.
+--J/dobhs11T7y2rNN
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-You would need to test an ath5k-based device with another device that is
-known to handle unicast robust management frame protection correctly. If
-you do not have a suitable other device for this, it should be possible
-to force one of the devices to use software encryption for everything
-(i.e., make sure it does not configure any CCMP keys in the hardware key
-cache) and then run a test that exchanges robust unicast management
-frames (both TX and RX using the modified ath5k driver). I would also
-verify that unicast data frames get processed in hardware and robust
-management frames in software.
+On Fri, Sep 28, 2012 at 04:12:40 +0530, Sujith Manoharan wrote:
+> Mohammed Shafi Shajakhan wrote:
+> > oh yeah, you are saying that we will have some issues with IBSS
+> > coexistence with other modes because of TSF sync.
+>=20
+> Yes, this is a problem.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Is there anyway to overcome this problem? Can we bind the single TSF to mul=
+tiple
+virtualTSF? or must the device somehow support us?
+
+Cheers,
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--J/dobhs11T7y2rNN
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlBmv+YACgkQpGgxIkP9cwdDNwCeP8lEog9PLFP5lh0cEl7Vc1Fa
+aMgAn3vT0YxTWisSoj9N5wgDq5CzuQGn
+=1NAS
+-----END PGP SIGNATURE-----
+
+--J/dobhs11T7y2rNN--
