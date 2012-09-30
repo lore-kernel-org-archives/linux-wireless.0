@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4209 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752203Ab2IOJUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2012 05:20:06 -0400
-Message-ID: <50544830.4020804@broadcom.com> (sfid-20120915_112101_610212_BC0E5EA3)
-Date: Sat, 15 Sep 2012 11:19:44 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Stephen Warren" <swarren@wwwdotorg.org>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>, "Wei Ni" <wni@nvidia.com>
-Subject: Re: [PATCH 07/10] brcmfmac: clear status for in-band interrupt
- in brcmf_sdbrcm_isr
-References: <1347563526-12513-1-git-send-email-arend@broadcom.com>
- <1347563526-12513-8-git-send-email-arend@broadcom.com>
- <5053A74D.6080200@wwwdotorg.org>
-In-Reply-To: <5053A74D.6080200@wwwdotorg.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:37226 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727Ab2I3TV0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2012 15:21:26 -0400
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+To: mcgrof@qca.qualcomm.com
+Cc: jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Peter Senna Tschudin <peter.senna@gmail.com>
+Subject: [PATCH] ath/ath9k/ar9003_eeprom.c: Remove unnecessary semicolon
+Date: Sun, 30 Sep 2012 21:21:10 +0200
+Message-Id: <1349032870-4780-1-git-send-email-peter.senna@gmail.com> (sfid-20120930_212132_608267_30BA39AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2012 11:53 PM, Stephen Warren wrote:
-> On 09/13/2012 01:12 PM, Arend van Spriel wrote:
->> From: Franky Lin <frankyl@broadcom.com>
->>
->> SDIO in-band interrupt is level sensitive according to SDIO standard.
->> When the register interrupt handler gets called by SDIO stack it is
->> running in non interrupt context and expected to clear the interrupt
->> from the dongle. Therefore in-band and out-of-band interrupt need to
->> be handled differently.
->
-> Tested-by: Stephen Warren <swarren@wwwdotorg.org>
->
-> For reference, I took next-20120914, applied this patch series, applied
-> a few patches from Wei Ni to set up the SDIO HW on Tegra correctly, and
-> tested. The last time I tried this without any patches to the brcmfmac,
-> this test caused some system instability issues. This time around, I
-> observed no instability. I tested WPA PSK, ping (or flood ping) plus
-> playing audio through ALSA.
->
-> Is this series likely to make 3.7?
->
+The semantic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-Thanks, Stephen
+// <smpl>
+@r1@
+position p;
+@@
+if (...);@p
 
-Good to hear. I suspect we are close to the 3.7 merge window, but we do 
-hope this will make it mainly for the tegra sdio issue that Wei Ni 
-raised. In general the series should resolve issues when used on 
-sdhci/mmc framework with in-band interrupt.
+@script:python@
+p0 << r1.p;
+@@
+// Emacs org-mode output
+cocci.print_main("", p0)
+cocci.print_secs("", p0)
+// </smpl>
 
-Do you still need the patches from Wei Ni and are they SDIO or brcmfmac 
-related?
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 5bbe505..189aeb2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2989,7 +2989,7 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 	case EEP_PAPRD:
+ 		if (AR_SREV_9462(ah))
+ 			return false;
+-		if (!ah->config.enable_paprd);
++		if (!ah->config.enable_paprd)
+ 			return false;
+ 		return !!(pBase->featureEnable & BIT(5));
+ 	case EEP_CHAIN_MASK_REDUCE:
+-- 
+1.7.11.4
 
