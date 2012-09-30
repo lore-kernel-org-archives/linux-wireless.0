@@ -1,70 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53038 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752908Ab2I1LAb (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:51884 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab2I3U4v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Sep 2012 07:00:31 -0400
-Message-ID: <1348830066.13298.21.camel@jlt4.sipsolutions.net> (sfid-20120928_130034_522377_2040934C)
-Subject: Re: [PATCH v2 1/5] {nl,cfg}80211: add a flags word to scan requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Fri, 28 Sep 2012 13:01:06 +0200
-In-Reply-To: <1348772354-15936-2-git-send-email-bzhao@marvell.com>
-References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
-	 <1348772354-15936-2-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 30 Sep 2012 16:56:51 -0400
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+To: mcgrof@qca.qualcomm.com
+Cc: jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Peter Senna Tschudin <peter.senna@gmail.com>
+Subject: [PATCH V2] ath/ath9k/ar9003_eeprom.c: Remove semicolon after if
+Date: Sun, 30 Sep 2012 22:56:39 +0200
+Message-Id: <1349038599-22026-1-git-send-email-peter.senna@gmail.com> (sfid-20120930_225821_321994_BF0ABA91)
+In-Reply-To: <1349032870-4780-1-git-send-email-peter.senna@gmail.com>
+References: <1349032870-4780-1-git-send-email-peter.senna@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-09-27 at 11:59 -0700, Bing Zhao wrote:
-> From: Sam Leffler <sleffler@chromium.org>
-> 
-> Add a flags word to direct and scheduled scan requests; it will
-> be used for control of optional behaviours such as flushing the
-> bss cache prior to doing a scan.
+The semantic patch that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-Why for scheduled scan as well?
+// <smpl>
+@r1@
+position p;
+@@
+if (...);@p
 
-> + * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
+@script:python@
+p0 << r1.p;
+@@
+// Emacs org-mode output
+cocci.print_main("", p0)
+cocci.print_secs("", p0)
+// </smpl>
 
-One thing that might be useful is to advertise which flags are even
-supported at all by a driver, if we add different ones? We might then
-ignore the flags that we don't support anyway, but at least userspace
-would know that it can't expect flushing (for example) on an older
-kernel version and might have to use some workarounds or whatever.
- 
-> +/**
-> + * enum nl80211_scan_flags -  scan request control flags
-> + *
-> + * Scan request control flags are used to control the handling
-> + * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
-> + * requests.
-> + */
-> +enum nl80211_scan_flags {
-> +};
-> +
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+---
+NOTE: This patch changes the semantics.
 
->  /**
-> + * enum cfg80211_scan_flags -  scan request control flags
-> + */
-> +enum cfg80211_scan_flags {
-> +};
+Changes from V1:
+Commit message
+Added a note about semantics change
 
-That doesn't make a lot of sense? A single enum seems sufficient?
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +	nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
-
-Missing error check, also, is there nothing that re-publishes
-information about scheduled scans?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 5bbe505..189aeb2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2989,7 +2989,7 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 	case EEP_PAPRD:
+ 		if (AR_SREV_9462(ah))
+ 			return false;
+-		if (!ah->config.enable_paprd);
++		if (!ah->config.enable_paprd)
+ 			return false;
+ 		return !!(pBase->featureEnable & BIT(5));
+ 	case EEP_CHAIN_MASK_REDUCE:
+-- 
+1.7.11.4
 
