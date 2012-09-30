@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47385 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880Ab2JOKB7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 06:01:59 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 08/11] ath9k_hw: Configure new switch table for AR9565 BTCOEX
-Date: Mon, 15 Oct 2012 15:29:52 +0530
-Message-ID: <1350295195-23410-9-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120204_705508_A89DC113)
-In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58433 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751487Ab2I3WND (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Sep 2012 18:13:03 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] bcma: do not initialize deactivated PCIe cores
+Date: Mon,  1 Oct 2012 00:12:54 +0200
+Message-Id: <1349043174-5371-1-git-send-email-hauke@hauke-m.de> (sfid-20121001_001308_516363_ADC1DABA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
- drivers/net/wireless/ath/ath9k/reg.h           | 4 ----
- drivers/net/wireless/ath/ath9k/wow.c           | 2 +-
- 3 files changed, 2 insertions(+), 6 deletions(-)
+Before it was tried to initialize the deactivated PCIe core in client
+mode, but this causes the SoC to hang. Just do not initialize it at all
+and ignore the core it is not working and nothing is connected to it
+when the specific bit is set in the boardflags.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index f3784eb..52249e6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3601,7 +3601,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 	 *   7:4 R/W  SWITCH_TABLE_COM_SPDT_WLAN_IDLE
- 	 * SWITCH_TABLE_COM_SPDT_WLAN_IDLE
- 	 */
--	if (AR_SREV_9462_20_OR_LATER(ah)) {
-+	if (AR_SREV_9462_20(ah) || AR_SREV_9565(ah)) {
- 		value = ar9003_switch_com_spdt_get(ah, is2ghz);
- 		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
- 				AR_SWITCH_TABLE_COM_SPDT_ALL, value);
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 8f40dba..e9dec13 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -907,10 +907,6 @@
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
- 	((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_20))
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_pci_host.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index 63172c9..e564495 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -35,11 +35,6 @@ bool __devinit bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc)
+ 	    chipid_top != 0x5300)
+ 		return false;
  
--#define AR_SREV_9462_20_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
--	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
+-	if (bus->sprom.boardflags_lo & BCMA_CORE_PCI_BFL_NOPCI) {
+-		bcma_info(bus, "This PCI core is disabled and not working\n");
+-		return false;
+-	}
 -
- #define AR_SREV_9565(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
+ 	bcma_core_enable(pc->core, 0);
  
-diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
-index a483d51..9f85630 100644
---- a/drivers/net/wireless/ath/ath9k/wow.c
-+++ b/drivers/net/wireless/ath/ath9k/wow.c
-@@ -118,7 +118,7 @@ static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
- 		       (ap_mac_addr[1] << 8) | (ap_mac_addr[0]);
- 	data_word[5] = (ap_mac_addr[5] << 8) | (ap_mac_addr[4]);
+ 	return !mips_busprobe32(tmp, pc->core->io_addr);
+@@ -396,6 +391,11 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
  
--	if (AR_SREV_9462_20_OR_LATER(ah)) {
-+	if (AR_SREV_9462_20(ah)) {
- 		/* AR9462 2.0 has an extra descriptor word (time based
- 		 * discard) compared to other chips */
- 		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + (12 * 4)), 0);
+ 	bcma_info(bus, "PCIEcore in host mode found\n");
+ 
++	if (bus->sprom.boardflags_lo & BCMA_CORE_PCI_BFL_NOPCI) {
++		bcma_info(bus, "This PCIE core is disabled and not working\n");
++		return;
++	}
++
+ 	pc_host = kzalloc(sizeof(*pc_host), GFP_KERNEL);
+ 	if (!pc_host)  {
+ 		bcma_err(bus, "can not allocate memory");
 -- 
-1.7.12.2
+1.7.9.5
 
