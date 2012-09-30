@@ -1,131 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7042 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759108Ab2IKLwf (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:47107 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750916Ab2I3Qap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Sep 2012 07:52:35 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v1] cfg80211: Fix regulatory check for 60GHz band frequencies
-Date: Tue, 11 Sep 2012 14:52:09 +0300
-Message-ID: <1347364329-19443-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120911_135238_462538_5A410BD0)
-In-Reply-To: <1347364329-19443-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1347364329-19443-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 30 Sep 2012 12:30:45 -0400
+Message-Id: <20120930163038.460058465@w1.fi> (sfid-20120930_183127_293779_8168D587)
+Date: Sun, 30 Sep 2012 19:29:37 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [PATCH 1/4] mac80211: Take status code as parameter to ieee80211_send_auth
+References: <20120930162936.046757966@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove freq_in_rule_band, that was used to optimize regulatory rules check.
-Approach used in the freq_in_rule_band is incorrect for 60GHz band,
-where channel spacing is 2.160GHz.
-Also, it does not really add any optimization, since real check for frequency fit is
-always performed.
+Non-zero status code may be needed for Authentication frames, e.g.,
+when using SAE.
 
-Issue exposed in the following way: 60g band defines 3 channels supported wold-wide:
-channels 1..3 or 58320, 60480, 62640 MHz, and channel 4, or 64800 MHz,
-in the most of the world, with 2160 MHz spacing.
-Corresponded regulatory rule for channels 1..3 would be
-(57240 - 63720 @ 2160)
-
-And, when regulatory applies to the channel 2 (60480), it get disabled since it is
-more then 2GHz from either frequency boundary and freq_in_rule_band fails
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <j@w1.fi>
 ---
- net/wireless/reg.c |   54 ++++++----------------------------------------------
- 1 file changed, 6 insertions(+), 48 deletions(-)
+ net/mac80211/ibss.c        |    4 ++--
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/mlme.c        |    4 ++--
+ net/mac80211/util.c        |    4 ++--
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ad04e5..5b0dc05 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -497,31 +497,6 @@ static bool reg_does_bw_fit(const struct ieee80211_freq_range *freq_range,
- 	return false;
- }
- 
--/**
-- * freq_in_rule_band - tells us if a frequency is in a frequency band
-- * @freq_range: frequency rule we want to query
-- * @freq_khz: frequency we are inquiring about
-- *
-- * This lets us know if a specific frequency rule is or is not relevant to
-- * a specific frequency's band. Bands are device specific and artificial
-- * definitions (the "2.4 GHz band" and the "5 GHz band"), however it is
-- * safe for now to assume that a frequency rule should not be part of a
-- * frequency's band if the start freq or end freq are off by more than 2 GHz.
-- * This resolution can be lowered and should be considered as we add
-- * regulatory rule support for other "bands".
-- **/
--static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
--	u32 freq_khz)
--{
--#define ONE_GHZ_IN_KHZ	1000000
--	if (abs(freq_khz - freq_range->start_freq_khz) <= (2 * ONE_GHZ_IN_KHZ))
--		return true;
--	if (abs(freq_khz - freq_range->end_freq_khz) <= (2 * ONE_GHZ_IN_KHZ))
--		return true;
--	return false;
--#undef ONE_GHZ_IN_KHZ
--}
--
- /*
-  * Helper for regdom_intersect(), this does the real
-  * mathematical intersection fun
-@@ -692,9 +667,7 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- 			      const struct ieee80211_regdomain *custom_regd)
- {
- 	int i;
--	bool band_rule_found = false;
- 	const struct ieee80211_regdomain *regd;
--	bool bw_fits = false;
- 
- 	if (!desired_bw_khz)
- 		desired_bw_khz = MHZ_TO_KHZ(20);
-@@ -715,33 +688,18 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- 		return -EINVAL;
- 
- 	for (i = 0; i < regd->n_reg_rules; i++) {
--		const struct ieee80211_reg_rule *rr;
--		const struct ieee80211_freq_range *fr = NULL;
-+		const struct ieee80211_reg_rule *rr = &regd->reg_rules[i];
-+		const struct ieee80211_freq_range *fr = &rr->freq_range;
-+		bool bw_fits = reg_does_bw_fit(fr,
-+					       center_freq,
-+					       desired_bw_khz);
- 
--		rr = &regd->reg_rules[i];
--		fr = &rr->freq_range;
--
--		/*
--		 * We only need to know if one frequency rule was
--		 * was in center_freq's band, that's enough, so lets
--		 * not overwrite it once found
--		 */
--		if (!band_rule_found)
--			band_rule_found = freq_in_rule_band(fr, center_freq);
--
--		bw_fits = reg_does_bw_fit(fr,
--					  center_freq,
--					  desired_bw_khz);
--
--		if (band_rule_found && bw_fits) {
-+		if (bw_fits) {
- 			*reg_rule = rr;
- 			return 0;
- 		}
+Index: wireless-testing/net/mac80211/ibss.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/ibss.c	2012-09-30 19:16:51.487842602 +0300
++++ wireless-testing/net/mac80211/ibss.c	2012-09-30 19:16:52.587842581 +0300
+@@ -279,7 +279,7 @@ static struct sta_info *ieee80211_ibss_f
+ 		ibss_dbg(sdata,
+ 			 "TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=1)\n",
+ 			 sdata->vif.addr, addr, sdata->u.ibss.bssid);
+-		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
++		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, 0, NULL, 0,
+ 				    addr, sdata->u.ibss.bssid, NULL, 0, 0);
  	}
- 
--	if (!band_rule_found)
--		return -ERANGE;
--
- 	return -EINVAL;
+ 	return sta;
+@@ -389,7 +389,7 @@ static void ieee80211_rx_mgmt_auth_ibss(
+ 	 * However, try to reply to authentication attempts if someone
+ 	 * has actually implemented this.
+ 	 */
+-	ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0,
++	ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, 0, NULL, 0,
+ 			    mgmt->sa, sdata->u.ibss.bssid, NULL, 0, 0);
  }
  
--- 
-1.7.9.5
+Index: wireless-testing/net/mac80211/ieee80211_i.h
+===================================================================
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2012-09-30 19:16:51.467842603 +0300
++++ wireless-testing/net/mac80211/ieee80211_i.h	2012-09-30 19:16:52.591842581 +0300
+@@ -1444,7 +1444,7 @@ static inline void ieee80211_add_pending
+ }
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+-			 u16 transaction, u16 auth_alg,
++			 u16 transaction, u16 auth_alg, u16 status,
+ 			 u8 *extra, size_t extra_len, const u8 *bssid,
+ 			 const u8 *da, const u8 *key, u8 key_len, u8 key_idx);
+ void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+Index: wireless-testing/net/mac80211/mlme.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/mlme.c	2012-09-30 19:16:51.499842602 +0300
++++ wireless-testing/net/mac80211/mlme.c	2012-09-30 19:16:52.591842581 +0300
+@@ -1824,7 +1824,7 @@ static void ieee80211_auth_challenge(str
+ 		return;
+ 	auth_data->expected_transaction = 4;
+ 	drv_mgd_prepare_tx(sdata->local, sdata);
+-	ieee80211_send_auth(sdata, 3, auth_data->algorithm,
++	ieee80211_send_auth(sdata, 3, auth_data->algorithm, 0,
+ 			    elems.challenge - 2, elems.challenge_len + 2,
+ 			    auth_data->bss->bssid, auth_data->bss->bssid,
+ 			    auth_data->key, auth_data->key_len,
+@@ -2708,7 +2708,7 @@ static int ieee80211_probe_auth(struct i
+ 			   IEEE80211_AUTH_MAX_TRIES);
+ 
+ 		auth_data->expected_transaction = 2;
+-		ieee80211_send_auth(sdata, 1, auth_data->algorithm,
++		ieee80211_send_auth(sdata, 1, auth_data->algorithm, 0,
+ 				    auth_data->ie, auth_data->ie_len,
+ 				    auth_data->bss->bssid,
+ 				    auth_data->bss->bssid, NULL, 0, 0);
+Index: wireless-testing/net/mac80211/util.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/util.c	2012-09-30 19:16:51.479842602 +0300
++++ wireless-testing/net/mac80211/util.c	2012-09-30 19:16:52.591842581 +0300
+@@ -968,7 +968,7 @@ u32 ieee80211_mandatory_rates(struct iee
+ }
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+-			 u16 transaction, u16 auth_alg,
++			 u16 transaction, u16 auth_alg, u16 status,
+ 			 u8 *extra, size_t extra_len, const u8 *da,
+ 			 const u8 *bssid, const u8 *key, u8 key_len, u8 key_idx)
+ {
+@@ -993,7 +993,7 @@ void ieee80211_send_auth(struct ieee8021
+ 	memcpy(mgmt->bssid, bssid, ETH_ALEN);
+ 	mgmt->u.auth.auth_alg = cpu_to_le16(auth_alg);
+ 	mgmt->u.auth.auth_transaction = cpu_to_le16(transaction);
+-	mgmt->u.auth.status_code = cpu_to_le16(0);
++	mgmt->u.auth.status_code = cpu_to_le16(status);
+ 	if (extra)
+ 		memcpy(skb_put(skb, extra_len), extra, extra_len);
+ 
 
