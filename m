@@ -1,20 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:47105 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750916Ab2I3Qal (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:55085 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955Ab2I3Gay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2012 12:30:41 -0400
-Message-Id: <20120930162936.046757966@w1.fi> (sfid-20120930_183125_666301_12D29724)
-Date: Sun, 30 Sep 2012 19:29:36 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] cfg80211/mac80211: Station mode SAE
+	Sun, 30 Sep 2012 02:30:54 -0400
+Date: Sun, 30 Sep 2012 02:30:52 -0400 (EDT)
+Message-Id: <20120930.023052.1687282076693887441.davem@davemloft.net> (sfid-20120930_083100_780603_0DD71137)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-09-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120928173425.GA15886@tuxdriver.com>
+References: <20120928173425.GA15886@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds support to allow simultaneous authentication of equals
-(SAE) to be implemented in station mode with user space SME.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 28 Sep 2012 13:34:26 -0400
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> Here is another batch of updates intended for 3.7...
+> 
+> Highlights include an hci_connect re-write in Bluetooth, HCI/LLC
+> layer separation in NFC, removal of the raw pn544 NFC driver, NFC LLCP
+> raw sockets support, improved IBSS auth frame handling in mac80211,
+> full-MAC AP mode notification support in mac80211, a lot of attention
+> paid to brcmfmac, and the usual level of updates to iwlwifi, ath9k,
+> mwifiex, and rt2x00, and various other updates.
+
+Pulled, thanks John.
