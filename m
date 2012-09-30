@@ -1,38 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32070 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894Ab2IPCiH (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:47115 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751407Ab2I3Qrq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Sep 2012 22:38:07 -0400
-From: Sujith Manoharan <c_manoha@qualcomm.com>
+	Sun, 30 Sep 2012 12:47:46 -0400
+Date: Sun, 30 Sep 2012 19:47:40 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Fix FC masking in BIP AAD generation
+Message-ID: <20120930164740.GA16910@w1.fi> (sfid-20120930_184837_329663_6CAB434E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20565.15192.132342.355053@gargle.gargle.HOWL> (sfid-20120916_043811_413252_798C51D6)
-Date: Sun, 16 Sep 2012 08:07:12 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 8/8] ath9k_hw: Enable WLAN RX diversity for AR9565
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The bits used in the mask were off-by-one and ended up masking PwrMgt,
+MoreData, Protected fields instead of Retry, PwrMgt, MoreData. Fix this
+and to mask the correct fields. While doing so, convert the code to mask
+the full FC using IEEE80211_FCTL_* defines similarly to how CCMP AAD is
+built.
+
+Since BIP is used only with broadcast/multicast management frames, the
+Retry field is always 0 in these frames. The Protected field is also
+zero to maintain backwards compatibility. As such, the incorrect mask
+here does not really cause any problems for valid frames. In theory, an
+invalid BIP frame with Retry or Protected field set to 1 could be
+rejected because of BIP validation. However, no such frame should show
+up with standard compliant implementations, so this does not cause
+problems in normal BIP use.
+
+Signed-off-by: Jouni Malinen <j@w1.fi>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/wpa.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index c562f13..8afd044 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2539,7 +2539,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
+This incorrect mask value was reported to me through private email and I
+have not received permission to add a Reported-by: tag, so I can only
+credit the anonymous reporter here. Thanks!
+
+
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index bdb53ab..e58bf3f 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -545,14 +545,19 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 
+ static void bip_aad(struct sk_buff *skb, u8 *aad)
+ {
++	__le16 mask_fc;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++
+ 	/* BIP AAD: FC(masked) || A1 || A2 || A3 */
+ 
+ 	/* FC type/subtype */
+-	aad[0] = skb->data[0];
+ 	/* Mask FC Retry, PwrMgt, MoreData flags to zero */
+-	aad[1] = skb->data[1] & ~(BIT(4) | BIT(5) | BIT(6));
++	mask_fc = hdr->frame_control;
++	mask_fc &= ~cpu_to_le16(IEEE80211_FCTL_RETRY | IEEE80211_FCTL_PM |
++				IEEE80211_FCTL_MOREDATA);
++	put_unaligned(mask_fc, (__le16 *) &aad[0]);
+ 	/* A1 || A2 || A3 */
+-	memcpy(aad + 2, skb->data + 4, 3 * ETH_ALEN);
++	memcpy(aad + 2, &hdr->addr1, 3 * ETH_ALEN);
+ }
  
  
--	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
-+	if (AR_SREV_9330(ah) || AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
- 		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
- 		/*
- 		 * enable the diversity-combining algorithm only when
 -- 
-1.7.12
+1.7.9.5
 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
