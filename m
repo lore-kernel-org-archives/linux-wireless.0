@@ -1,101 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:23203 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932329Ab2IFRIT (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28549 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752140Ab2I3DXb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Sep 2012 13:08:19 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCHv2 2/2] mac80211: reply to AUTH frame with a DEAUTH if sta allocation fails
-Date: Thu,  6 Sep 2012 19:07:55 +0200
-Message-Id: <1346951275-32081-2-git-send-email-ordex@autistici.org> (sfid-20120906_190825_608451_5B528E08)
-In-Reply-To: <1346951275-32081-1-git-send-email-ordex@autistici.org>
-References: <1346951275-32081-1-git-send-email-ordex@autistici.org>
+	Sat, 29 Sep 2012 23:23:31 -0400
+From: Sujith Manoharan <c_manoha@qti.qualcomm.com>
+Cc: Sujith Manoharan <c_manoha@qti.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20583.47899.75784.778766@gargle.gargle.HOWL> (sfid-20120930_052415_589884_638C093A)
+Date: Sun, 30 Sep 2012 08:53:07 +0530
+To: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
+Subject: Fwd: Re: Atheros AR9485 receiving error -5 in init [SOLVED]
+In-Reply-To: <1348939164.30839.140661134325425.07BE8393@webmail.messagingengine.com>
+References: <207925.414c3561696d494141546e6c55467952375171314f324a73417855@popretr.messagingengine.com>
+	<1348939164.30839.140661134325425.07BE8393@webmail.messagingengine.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever a host gets an AUTH frame it first allocates a new station and then
-replies with another AUTH frame. However, if sta allocations fails the host
-should send a DEAUTH frame instead to tell the other end that something went
-wrong
+Luiz Carlos Ramos wrote:
+> Hello,
+> 
+> I changed the way the test of the new kmods was done, and it worked out
+> of the box. Although no reply was received, I would like to thank you
+> for your attention.
+> 
+> The details are here. The first tests performed was just like that:
+> 
+>   boot the OS -> load the original (2.6.38) kmods -> rmmod them ->
+>   install the newer kmods (compat-wireless-3.5.3-2-sn)
+> 
+> I couldn't stop the load of the original kmods, until they were
+> explictly blacklisted.
+> 
+> This leads to error -19 in the loading of the original kmods, and -5 in
+> the newer ones.
+> 
+> Repeating the test this way everything works:
+> 
+>   boot the OS -> load the newer kmods (compat-wireless-3.5.3-2-sn)
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
+Sorry, this thread fell off the radar. :)
+Good to know that things are working, though !
 
-v2:
-- noop
-
- net/mac80211/ibss.c | 33 ++++++++++++++++++++++++++++++++-
- 1 file changed, 32 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index a9d9328..7c08251 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -332,11 +332,27 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	return ieee80211_ibss_finish_sta(sta, auth);
- }
- 
-+static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_mgmt *mgmt,
-+					  size_t len)
-+{
-+	u16 reason = le16_to_cpu(mgmt->u.deauth.reason_code);
-+
-+	if (len < IEEE80211_DEAUTH_FRAME_LEN)
-+		return;
-+
-+	ibss_dbg(sdata, "RX DeAuth SA=%pM DA=%pM BSSID=%pM (reason: %d)\n",
-+		 mgmt->sa, mgmt->da, mgmt->bssid, reason);
-+	sta_info_destroy_addr(sdata, mgmt->sa);
-+}
-+
- static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
- 					struct ieee80211_mgmt *mgmt,
- 					size_t len)
- {
- 	u16 auth_alg, auth_transaction;
-+	struct sta_info *sta;
-+	u8 deauth_frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
- 
- 	lockdep_assert_held(&sdata->u.ibss.mtx);
- 
-@@ -352,10 +368,22 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
- 		 "RX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=%d)\n",
- 		 mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
- 	sta_info_destroy_addr(sdata, mgmt->sa);
--	ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
-+	sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
- 	rcu_read_unlock();
- 
- 	/*
-+	 * if we have any problem in allocating the new station, we reply with a
-+	 * DEAUTH frame to tell the other end that we had a problem
-+	 */
-+	if (!sta) {
-+		ieee80211_send_deauth_disassoc(sdata, sdata->u.ibss.bssid,
-+					       IEEE80211_STYPE_DEAUTH,
-+					       WLAN_REASON_UNSPECIFIED, true,
-+					       deauth_frame_buf);
-+		return;
-+	}
-+
-+	/*
- 	 * IEEE 802.11 standard does not require authentication in IBSS
- 	 * networks and most implementations do not seem to use it.
- 	 * However, try to reply to authentication attempts if someone
-@@ -902,6 +930,9 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 	case IEEE80211_STYPE_AUTH:
- 		ieee80211_rx_mgmt_auth_ibss(sdata, mgmt, skb->len);
- 		break;
-+	case IEEE80211_STYPE_DEAUTH:
-+		ieee80211_rx_mgmt_deauth_ibss(sdata, mgmt, skb->len);
-+		break;
- 	}
- 
-  mgmt_out:
--- 
-1.7.12
+Sujith
 
