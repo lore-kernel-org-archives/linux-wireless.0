@@ -1,93 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36774 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756824Ab2IQPY3 (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:47113 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751215Ab2I3Qa5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Sep 2012 11:24:29 -0400
-Message-ID: <1347895505.4975.10.camel@jlt4.sipsolutions.net> (sfid-20120917_172436_068812_67BAA885)
-Subject: Re: [RFC V2] cfg80211/nl80211: Notify connection request failure in
- AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 17 Sep 2012 17:25:05 +0200
-In-Reply-To: <1347881834-31615-1-git-send-email-c_ppitch@qca.qualcomm.com>
-References: <1347881834-31615-1-git-send-email-c_ppitch@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 30 Sep 2012 12:30:57 -0400
+Message-Id: <20120930163050.031259011@w1.fi> (sfid-20120930_183129_569108_79A6DA1D)
+Date: Sun, 30 Sep 2012 19:29:40 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [PATCH 4/4] mac80211: Allow station mode SAE to be implemented in user space
+References: <20120930162936.046757966@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-09-17 at 17:07 +0530, Pandiyarajan Pitchaimuthu wrote:
-> In AP mode, when a station requests connection to an AP and if the
-> request is failed for particular reason, userspace is notified about the
-> failure through NL80211_CMD_CONN_FAILED command. Reason for the failure
-> is sent through the attribute NL80211_ATTR_CONN_FAILED_REASON.
-> 
-> Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-> ---
->  include/linux/nl80211.h |   19 +++++++++++++++++++
->  include/net/cfg80211.h  |   19 +++++++++++++++++++
->  net/wireless/mlme.c     |   11 +++++++++++
->  net/wireless/nl80211.c  |   34 ++++++++++++++++++++++++++++++++++
->  net/wireless/nl80211.h  |    5 +++++
->  5 files changed, 88 insertions(+)
-> 
-> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> index 2f38788..55c01d0 100644
-> --- a/include/linux/nl80211.h
-> +++ b/include/linux/nl80211.h
-> @@ -565,6 +565,11 @@
->   *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
->   *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
->   *
-> + * @NL80211_CMD_CONN_FAILED: connection request to an AP failed; used to
-> + *	notify userspace that AP has rejected the connection request from a
-> + *	station, due to particular reason. %NL80211_ATTR_CONN_FAILED_REASON
-> + *	is used for this.
-> + *
->   * @NL80211_CMD_MAX: highest used command number
->   * @__NL80211_CMD_AFTER_LAST: internal use
->   */
-> @@ -708,6 +713,8 @@ enum nl80211_commands {
->  
->  	NL80211_CMD_CH_SWITCH_NOTIFY,
->  
-> +	NL80211_CMD_CONN_FAILED,
-> +
->  	/* add new commands above here */
->  
->  	/* used to define NL80211_CMD_MAX below */
-> @@ -1251,6 +1258,10 @@ enum nl80211_commands {
->   *	was used to provide the hint. For the different types of
->   *	allowed user regulatory hints see nl80211_user_reg_hint_type.
->   *
-> + * @NL80211_ATTR_CONN_FAILED_REASON: The reason for which AP has rejected
-> + *	the connection request from a station. nl80211_connect_failed_reason
-> + *	enum has different reasons of connection failure.
-> + *
->   * @NL80211_ATTR_MAX: highest attribute number currently defined
->   * @__NL80211_ATTR_AFTER_LAST: internal use
->   */
-> @@ -1506,6 +1517,8 @@ enum nl80211_attrs {
->  
->  	NL80211_ATTR_USER_REG_HINT_TYPE,
->  
-> +	NL80211_ATTR_CONN_FAILED_REASON,
-> +
->  	/* add attributes here, update the policy in nl80211.c */
->  
->  	__NL80211_ATTR_AFTER_LAST,
-> @@ -3023,4 +3036,10 @@ enum nl80211_probe_resp_offload_support_attr {
->  	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U =	1<<3,
->  };
->  
-> +/* AP mode - sta's connection request failed reasons */
-> +enum nl80211_connect_failed_reason {
+SAE uses two rounds of Authentication frames and both rounds require
+considerable calculation to be done. This commit extends the existing
+station mode authentication request to allow more control for user
+space programs to build the SAE fields and to run the authentication
+step ones. Only the second round with authentication transaction
+sequence 2 will result in moving to authenticated state.
 
-Kernel-doc descriptions here would be nice.
+Signed-off-by: Jouni Malinen <j@w1.fi>
+---
+ net/mac80211/ieee80211_i.h |    5 +++--
+ net/mac80211/main.c        |    1 +
+ net/mac80211/mlme.c        |   43 ++++++++++++++++++++++++++++++++++++++-----
+ 3 files changed, 42 insertions(+), 7 deletions(-)
 
-Otherwise looks fine, thanks.
-
-johannes
+Index: wireless-testing/net/mac80211/ieee80211_i.h
+===================================================================
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2012-09-30 19:16:52.591842581 +0300
++++ wireless-testing/net/mac80211/ieee80211_i.h	2012-09-30 19:16:59.375842452 +0300
+@@ -378,8 +378,9 @@ struct ieee80211_mgd_auth_data {
+ 	u8 key_len, key_idx;
+ 	bool done;
+ 
+-	size_t ie_len;
+-	u8 ie[];
++	u16 sae_trans, sae_status;
++	size_t data_len;
++	u8 data[];
+ };
+ 
+ struct ieee80211_mgd_assoc_data {
+Index: wireless-testing/net/mac80211/main.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/main.c	2012-09-30 19:16:51.227842607 +0300
++++ wireless-testing/net/mac80211/main.c	2012-09-30 19:16:59.375842452 +0300
+@@ -585,6 +585,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 		wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 
+ 	wiphy->features = NL80211_FEATURE_SK_TX_STATUS |
++			  NL80211_FEATURE_SAE |
+ 			  NL80211_FEATURE_HT_IBSS;
+ 
+ 	if (!ops->set_key)
+Index: wireless-testing/net/mac80211/mlme.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/mlme.c	2012-09-30 19:16:55.831842519 +0300
++++ wireless-testing/net/mac80211/mlme.c	2012-09-30 19:16:59.375842452 +0300
+@@ -1877,6 +1877,7 @@ ieee80211_rx_mgmt_auth(struct ieee80211_
+ 	case WLAN_AUTH_OPEN:
+ 	case WLAN_AUTH_LEAP:
+ 	case WLAN_AUTH_FT:
++	case WLAN_AUTH_SAE:
+ 		break;
+ 	case WLAN_AUTH_SHARED_KEY:
+ 		if (ifmgd->auth_data->expected_transaction != 4) {
+@@ -1896,6 +1897,15 @@ ieee80211_rx_mgmt_auth(struct ieee80211_
+ 	ifmgd->auth_data->timeout = jiffies + IEEE80211_AUTH_WAIT_ASSOC;
+ 	run_again(ifmgd, ifmgd->auth_data->timeout);
+ 
++	if (ifmgd->auth_data->algorithm == WLAN_AUTH_SAE &&
++	    ifmgd->auth_data->expected_transaction != 2) {
++		/*
++		 * Report auth frame to user space for processing since another
++		 * round of Authentication frames is still needed.
++		 */
++		return RX_MGMT_CFG80211_RX_AUTH;
++	}
++
+ 	/* move station state to auth */
+ 	mutex_lock(&sdata->local->sta_mtx);
+ 	sta = sta_info_get(sdata, bssid);
+@@ -2708,13 +2718,23 @@ static int ieee80211_probe_auth(struct i
+ 	drv_mgd_prepare_tx(local, sdata);
+ 
+ 	if (auth_data->bss->proberesp_ies) {
++		u16 trans = 1;
++		u16 status = 0;
++
+ 		sdata_info(sdata, "send auth to %pM (try %d/%d)\n",
+ 			   auth_data->bss->bssid, auth_data->tries,
+ 			   IEEE80211_AUTH_MAX_TRIES);
+ 
+ 		auth_data->expected_transaction = 2;
+-		ieee80211_send_auth(sdata, 1, auth_data->algorithm, 0,
+-				    auth_data->ie, auth_data->ie_len,
++
++		if (auth_data->algorithm == WLAN_AUTH_SAE) {
++			trans = auth_data->sae_trans;
++			status = auth_data->sae_status;
++			auth_data->expected_transaction = trans;
++		}
++
++		ieee80211_send_auth(sdata, trans, auth_data->algorithm, status,
++				    auth_data->data, auth_data->data_len,
+ 				    auth_data->bss->bssid,
+ 				    auth_data->bss->bssid, NULL, 0, 0);
+ 	} else {
+@@ -3268,19 +3288,32 @@ int ieee80211_mgd_auth(struct ieee80211_
+ 	case NL80211_AUTHTYPE_NETWORK_EAP:
+ 		auth_alg = WLAN_AUTH_LEAP;
+ 		break;
++	case NL80211_AUTHTYPE_SAE:
++		auth_alg = WLAN_AUTH_SAE;
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	auth_data = kzalloc(sizeof(*auth_data) + req->ie_len, GFP_KERNEL);
++	auth_data = kzalloc(sizeof(*auth_data) + req->sae_data_len +
++			    req->ie_len, GFP_KERNEL);
+ 	if (!auth_data)
+ 		return -ENOMEM;
+ 
+ 	auth_data->bss = req->bss;
+ 
++	if (req->sae_data_len >= 4) {
++		__le16 *pos = (__le16 *) req->sae_data;
++		auth_data->sae_trans = le16_to_cpu(pos[0]);
++		auth_data->sae_status = le16_to_cpu(pos[1]);
++		memcpy(auth_data->data, req->sae_data + 4,
++		       req->sae_data_len - 4);
++		auth_data->data_len += req->sae_data_len - 4;
++	}
+ 	if (req->ie && req->ie_len) {
+-		memcpy(auth_data->ie, req->ie, req->ie_len);
+-		auth_data->ie_len = req->ie_len;
++		memcpy(&auth_data->data[auth_data->data_len],
++		       req->ie, req->ie_len);
++		auth_data->data_len += req->ie_len;
+ 	}
+ 
+ 	if (req->key && req->key_len) {
 
