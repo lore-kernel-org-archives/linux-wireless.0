@@ -1,226 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41083 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:36983 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754987Ab2J3IHL (ORCPT
+	with ESMTP id S1750848Ab2JAOB3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 04:07:11 -0400
+	Mon, 1 Oct 2012 10:01:29 -0400
+Message-ID: <1349100121.10330.36.camel@jlt4.sipsolutions.net> (sfid-20121001_160132_854322_0F7EDEE5)
+Subject: [RFC] mac80211: connect with HT20 if HT40 is not permitted
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/4] iwlwifi: support host command with copied data
-Date: Tue, 30 Oct 2012 09:07:42 +0100
-Message-Id: <1351584463-11469-4-git-send-email-johannes@sipsolutions.net> (sfid-20121030_090738_029306_5CB65995)
-In-Reply-To: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
-References: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Paul Stewart <pstew@chromium.org>
+Date: Mon, 01 Oct 2012 16:02:01 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-In addition to the NOCOPY flag, add a DUP flag that
-tells the transport to kmemdup() the buffer and free
-it after the command completes.
+Some changes to fix issues with HT40 APs in Korea
+and follow-up changes to allow using HT40 even if
+the local regulatory database disallows it caused
+issues with iwlwifi (and could cause issues with
+other devices); iwlwifi firmware would assert if
+you tried to connect to an AP that has an invalid
+configuration (e.g. using HT40- on channel 140.)
 
-Currently this is only supported for a single buffer
-in a given command, but that could be extended if it
-should be needed.
+Fix this, while avoiding the "Korean AP" issue by
+disabling HT40 and advertising HT20 to the AP
+when connecting.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: stable@vger.kernel.org [3.6]
+Reported-by: Florian Reitmeir <florian@reitmeir.org>
+Tested-by: Florian Reitmeir <florian@reitmeir.org>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h     |    6 ++-
- drivers/net/wireless/iwlwifi/pcie/internal.h |    2 +
- drivers/net/wireless/iwlwifi/pcie/rx.c       |    3 ++
- drivers/net/wireless/iwlwifi/pcie/trans.c    |    1 +
- drivers/net/wireless/iwlwifi/pcie/tx.c       |   57 ++++++++++++++++++++++----
- 5 files changed, 59 insertions(+), 10 deletions(-)
+ net/mac80211/mlme.c |   40 ++++++++++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index f75ea6d..76c5237 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -221,14 +221,18 @@ struct iwl_device_cmd {
- /**
-  * struct iwl_hcmd_dataflag - flag for each one of the chunks of the command
-  *
-- * IWL_HCMD_DFL_NOCOPY: By default, the command is copied to the host command's
-+ * @IWL_HCMD_DFL_NOCOPY: By default, the command is copied to the host command's
-  *	ring. The transport layer doesn't map the command's buffer to DMA, but
-  *	rather copies it to an previously allocated DMA buffer. This flag tells
-  *	the transport layer not to copy the command, but to map the existing
-  *	buffer. This can save memcpy and is worth with very big comamnds.
-+ * @IWL_HCMD_DFL_DUP: Only valid without NOCOPY, duplicate the memory for this
-+ *	chunk internally and free it again after the command completes. This
-+ *	can (currently) be used only once per command.
-  */
- enum iwl_hcmd_dataflag {
- 	IWL_HCMD_DFL_NOCOPY	= BIT(0),
-+	IWL_HCMD_DFL_DUP	= BIT(1),
- };
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
-index 6ce58f0..ae0f87e 100644
---- a/drivers/net/wireless/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
-@@ -186,6 +186,8 @@ struct iwl_pcie_tx_queue_entry {
- 	struct iwl_device_cmd *cmd;
- 	struct iwl_device_cmd *copy_cmd;
- 	struct sk_buff *skb;
-+	/* buffer to free after command completes */
-+	const void *free_buf;
- 	struct iwl_cmd_meta meta;
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 137af4c..3f03f6e 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -452,6 +452,9 @@ static void iwl_rx_handle_rxbuf(struct iwl_trans *trans,
- 			/* The original command isn't needed any more */
- 			kfree(txq->entries[cmd_index].copy_cmd);
- 			txq->entries[cmd_index].copy_cmd = NULL;
-+			/* nor is the duplicated part of the command */
-+			kfree(txq->entries[cmd_index].free_buf);
-+			txq->entries[cmd_index].free_buf = NULL;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index fe4b744..3b05952 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3199,27 +3199,39 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 				   ht_cfreq, ht_oper->primary_chan,
+ 				   cbss->channel->band);
+ 			ht_oper = NULL;
++		} else {
++			channel_type = NL80211_CHAN_HT20;
  		}
+ 	}
  
- 		/*
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index a6a5181..b8a155a 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -496,6 +496,7 @@ static void iwl_tx_queue_free(struct iwl_trans *trans, int txq_id)
- 		for (i = 0; i < txq->q.n_window; i++) {
- 			kfree(txq->entries[i].cmd);
- 			kfree(txq->entries[i].copy_cmd);
-+			kfree(txq->entries[i].free_buf);
- 		}
+-	if (ht_oper) {
+-		const u8 *ht_cap_ie;
+-		const struct ieee80211_ht_cap *ht_cap;
+-		u8 chains = 1;
+-
+-		channel_type = NL80211_CHAN_HT20;
++	if (ht_oper && sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
++		/*
++		 * cfg80211 already verified that the channel itself can
++		 * be used, but it didn't check that we can do the right
++		 * HT type, so do that here as well. If HT40 isn't allowed
++		 * on this channel, disable 40 MHz operation.
++		 */
  
- 	/* De-alloc circular buffer of TFDs */
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 5db0314..9cb30ae 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -517,8 +517,9 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	struct iwl_queue *q = &txq->q;
- 	struct iwl_device_cmd *out_cmd;
- 	struct iwl_cmd_meta *out_meta;
-+	void *dup_buf = NULL;
- 	dma_addr_t phys_addr;
--	u32 idx;
-+	int idx;
- 	u16 copy_size, cmd_size;
- 	bool had_nocopy = false;
- 	int i;
-@@ -535,10 +536,33 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 			continue;
- 		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY) {
- 			had_nocopy = true;
-+			if (WARN_ON(cmd->dataflags[i] & IWL_HCMD_DFL_DUP)) {
-+				idx = -EINVAL;
-+				goto free_dup_buf;
-+			}
-+		} else if (cmd->dataflags[i] & IWL_HCMD_DFL_DUP) {
-+			/*
-+			 * This is also a chunk that isn't copied
-+			 * to the static buffer so set had_nocopy.
-+			 */
-+			had_nocopy = true;
-+
-+			/* only allowed once */
-+			if (WARN_ON(dup_buf)) {
-+				idx = -EINVAL;
-+				goto free_dup_buf;
-+			}
-+
-+			dup_buf = kmemdup(cmd->data[i], cmd->len[i],
-+					  GFP_ATOMIC);
-+			if (!dup_buf)
-+				return -ENOMEM;
- 		} else {
- 			/* NOCOPY must not be followed by normal! */
--			if (WARN_ON(had_nocopy))
--				return -EINVAL;
-+			if (WARN_ON(had_nocopy)) {
-+				idx = -EINVAL;
-+				goto free_dup_buf;
-+			}
- 			copy_size += cmd->len[i];
+-		if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
+-			switch (ht_oper->ht_param &
+-					IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+-			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++		switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
++		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++			if (cbss->channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
++				ifmgd->flags |= IEEE80211_STA_DISABLE_40MHZ;
++			else
+ 				channel_type = NL80211_CHAN_HT40PLUS;
+-				break;
+-			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++			break;
++		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++			if (cbss->channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
++				ifmgd->flags |= IEEE80211_STA_DISABLE_40MHZ;
++			else
+ 				channel_type = NL80211_CHAN_HT40MINUS;
+-				break;
+-			}
++			break;
  		}
- 		cmd_size += cmd->len[i];
-@@ -553,8 +577,10 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	if (WARN(copy_size > TFD_MAX_PAYLOAD_SIZE,
- 		 "Command %s (%#x) is too large (%d bytes)\n",
- 		 trans_pcie_get_cmd_string(trans_pcie, cmd->id),
--		 cmd->id, copy_size))
--		return -EINVAL;
-+		 cmd->id, copy_size)) {
-+		idx = -EINVAL;
-+		goto free_dup_buf;
 +	}
- 
- 	spin_lock_bh(&txq->lock);
- 
-@@ -563,7 +589,8 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 
- 		IWL_ERR(trans, "No space in command queue\n");
- 		iwl_op_mode_cmd_queue_full(trans->op_mode);
--		return -ENOSPC;
-+		idx = -ENOSPC;
-+		goto free_dup_buf;
- 	}
- 
- 	idx = get_cmd_index(q, q->write_ptr);
-@@ -587,7 +614,8 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
- 		if (!cmd->len[i])
- 			continue;
--		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY)
-+		if (cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
-+					 IWL_HCMD_DFL_DUP))
- 			break;
- 		memcpy((u8 *)out_cmd + cmd_pos, cmd->data[i], cmd->len[i]);
- 		cmd_pos += cmd->len[i];
-@@ -629,11 +657,16 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	iwlagn_txq_attach_buf_to_tfd(trans, txq, phys_addr, copy_size, 1);
- 
- 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
-+		const void *data = cmd->data[i];
 +
- 		if (!cmd->len[i])
- 			continue;
--		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
-+		if (!(cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
-+					   IWL_HCMD_DFL_DUP)))
- 			continue;
--		phys_addr = dma_map_single(trans->dev, (void *)cmd->data[i],
-+		if (cmd->dataflags[i] & IWL_HCMD_DFL_DUP)
-+			data = dup_buf;
-+		phys_addr = dma_map_single(trans->dev, (void *)data,
- 					   cmd->len[i], DMA_BIDIRECTIONAL);
- 		if (dma_mapping_error(trans->dev, phys_addr)) {
- 			iwl_unmap_tfd(trans, out_meta,
-@@ -648,6 +681,9 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	}
++	if (ht_oper) {
++		const u8 *ht_cap_ie;
++		const struct ieee80211_ht_cap *ht_cap;
++		u8 chains = 1;
  
- 	out_meta->flags = cmd->flags;
-+	if (WARN_ON_ONCE(txq->entries[idx].free_buf))
-+		kfree(txq->entries[idx].free_buf);
-+	txq->entries[idx].free_buf = dup_buf;
- 
- 	txq->need_update = 1;
- 
-@@ -664,6 +700,9 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 
-  out:
- 	spin_unlock_bh(&txq->lock);
-+ free_dup_buf:
-+	if (idx < 0)
-+		kfree(dup_buf);
- 	return idx;
- }
- 
+ 		ht_cap_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY,
+ 					     cbss->information_elements,
 -- 
 1.7.10.4
+
+
 
