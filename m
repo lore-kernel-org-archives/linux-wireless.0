@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755883Ab2JPTDV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 15:03:21 -0400
-Message-ID: <1350414234.10177.14.camel@jlt4.sipsolutions.net> (sfid-20121016_210325_443997_E4EDFBA3)
-Subject: Re: [PATCH v4 4/6] mac80211: add ability to enable TX on op-channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	igalc@ti.com, adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Date: Tue, 16 Oct 2012 21:03:54 +0200
-In-Reply-To: <1350226137-13704-5-git-send-email-victorg@ti.com>
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
-	 <1350226137-13704-5-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:54545 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751332Ab2JANxU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Oct 2012 09:53:20 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 trees during the merge window
+References: <1349076058.10330.3.camel@jlt4.sipsolutions.net>
+Date: Mon, 01 Oct 2012 16:53:19 +0300
+In-Reply-To: <1349076058.10330.3.camel@jlt4.sipsolutions.net> (Johannes Berg's
+	message of "Mon, 01 Oct 2012 09:20:58 +0200")
+Message-ID: <87y5jq1epc.fsf@purkki.adurom.net> (sfid-20121001_155324_547385_98C0F229)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-10-14 at 16:48 +0200, Victor Goldenshtein wrote:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> +static int ieee80211_dfs_en_tx(struct wiphy *wiphy, struct net_device *dev,
-> +			       struct ieee80211_channel *chan)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	struct ieee80211_local *local = sdata->local;
-> +	int ret = -ENOENT;
-> +
-> +	if (!local->ops->dfs_en_tx)
-> +		return -EOPNOTSUPP;
-> +
-> +	ret = drv_dfs_en_tx(local, sdata, chan);
-> +	return ret;
+> In order to not lose patches or have too many to catch up to, I'm going
+> to keep applying patches to the mac80211{,-next} trees. That does mean,
+> however, that I'm going to have to _rebase_ once the merge window closes
+> and John respins his trees.
 
-What's with the "ret" variable here?
+Good idea. But why do you need to rebase?
 
-johannes
+I think it's ok just send a merge request even if the base commit is not
+Linville's HEAD, but few weeks older. And once John has merged your pull
+request you just merge back John's tree (which apparently looks like a
+rebase, at least it did for me) and both trees have same HEAD again. I
+recall doing this with ath6kl.git and it didn't have any problems, and
+it's so much nicer for the users of your tree.
 
+-- 
+Kalle Valo
