@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3070 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751423Ab2JRSca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2012 14:32:30 -0400
-Message-ID: <50804B35.5080907@broadcom.com> (sfid-20121018_203234_561004_70404CE8)
-Date: Thu, 18 Oct 2012 11:32:21 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Yuanhan Liu" <yuanhan.liu@linux.intel.com>
-cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	fengguang.wu@intel.com, "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] brcmfmac: fix potential NULL dereference
-References: <1350555056-17775-1-git-send-email-yuanhan.liu@linux.intel.com>
-In-Reply-To: <1350555056-17775-1-git-send-email-yuanhan.liu@linux.intel.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:38015 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104Ab2JATUU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Oct 2012 15:20:20 -0400
+Message-ID: <1349119253.10330.44.camel@jlt4.sipsolutions.net> (sfid-20121001_212024_576656_FEDEE2BA)
+Subject: Re: 802.11w   bip_aad() bug ?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 01 Oct 2012 21:20:53 +0200
+In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D075EB5FF@RockMX01.rock.corp> (sfid-20121001_172613_798023_EF8A5536)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D075EB5FF@RockMX01.rock.corp>
+	 (sfid-20121001_172613_798023_EF8A5536)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2012 03:10 AM, Yuanhan Liu wrote:
-> Fix a samtch warnings catched by Fengguang's 0-DAY system:
-> + drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:3572 brcmf_cfg80211_sched_scan_start() error: we previously assumed 'request' could be null (see line 3571)
->
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> ---
+On Mon, 2012-10-01 at 15:13 +0000, Chaoxing Lin wrote:
+> Gentlemen,
+> 
+> In kernel/net/mac80211/wpa.c function bip_add is as below (in the end).
+> 
+> I think the aad[1] should be 
+> aad[1] = skb->data[1] & ~(BIT(3) | BIT(4) | BIT(5));
+> 
+> 
+> Reference 1: ieee802.11-2012 page 1212
+> "FC-MPDU Frame Control field, with:
+> 1) Retry bit (bit 11) masked to 0
+> 2) Power Management bit (bit 12) masked to 0
+> 3) More Data bit (bit 13) masked to 0"
+> 
+> Reference 2: ieee80211-2012, page 404, Figure 8-12
+> 
+> The bit 11 should be bit 3 of second byte.
+> The bit 12 should be bit 4 of second byte.
+> The bit 13 should be bit 5 of second byte.
+> 
+> 
+> What did I miss??
 
-Thanks
+Nothing, we just fixed that:
+http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211.git;a=commitdiff;h=33766368f6532313571534f9112b1796d6651bbe
 
-Acked-by: Franky Lin <frankyl@broadcom.com>
+(note that the URL might not be accessible yet, I pieced it together and
+had evidently forgotten to push out this change before, so you may have
+to wait for git.kernel.org to sync with the master)
 
-Franky
-
+johannes
 
