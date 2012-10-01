@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:32923 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757240Ab2JWRt3 (ORCPT
+Received: from eazy.amigager.de ([213.239.192.238]:47602 "EHLO
+	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752591Ab2JAQPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2012 13:49:29 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so3314991wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2012 10:49:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1350912743.10166.10.camel@jlt4.sipsolutions.net>
-References: <1350784990-14242-1-git-send-email-thomas@cozybit.com> <1350912743.10166.10.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Tue, 23 Oct 2012 10:49:07 -0700
-Message-ID: <CAG6hwVNN1wSAbX8yvjU3ooA_WifG5-x+iS5R5WBeLgFDb3E3bg@mail.gmail.com> (sfid-20121023_194934_981530_E25E5891)
-Subject: Re: [PATCH] mac80211: mesh STAs only process mesh beacons
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 1 Oct 2012 12:15:23 -0400
+Received: from mac.home (mnch-5d85f266.pool.mediaWays.net [93.133.242.102])
+	by eazy.amigager.de (Postfix) with ESMTPA id 2D369C8C03F
+	for <linux-wireless@vger.kernel.org>; Mon,  1 Oct 2012 18:06:40 +0200 (CEST)
+Date: Mon, 1 Oct 2012 18:06:52 +0200
+From: Tino Keitel <tino.keitel@tikei.de>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: Power saving features for iwl4965
+Message-ID: <20121001160652.GA24174@mac.home> (sfid-20121001_181527_959126_D8254EA7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 22, 2012 at 6:32 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2012-10-20 at 19:03 -0700, Thomas Pedersen wrote:
->> Before, a mesh STA would execute some code on behalf of AP or IBSS
->> beacons. Since the mesh stack currently does not consider anything but
->> other mesh STAs interesting, limit processing to just these and save a
->> little overhead.
->
-> I can apply this, but I think while you're at it the function deserves a
-> bit more thought:
->
->> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
->
->> -     if (elems.mesh_id && elems.mesh_config &&
->> -         mesh_matches_local(sdata, &elems))
->> +     if (mesh_matches_local(sdata, &elems))
->>               mesh_neighbour_update(sdata, mgmt->sa, &elems);
->>
->>       if (ifmsh->sync_ops)
->
-> Why would you want to invoke sync_ops when the mesh is somebody else's
-> mesh, i.e. doesn't match local?
+On Wed, Apr 25, 2012 at 14:25:55 +0200, Stanislaw Gruszka wrote:
+> On Wed, Apr 18, 2012 at 10:35:43PM +0200, Tino Keitel wrote:
+> > up to 2.6.38, the iwl4965 driver was able to use power saving features
+> > by invoking "iwconfig <interface> power on", at least when unsetting
+> > the broken_powersave variable.
+> > 
+> > 2.6.39 introduced a new iwlegacy driver for iwl4965 hardware, which was
+> > missing power saving.  I was able to port the 2.6.38 driver up to
+> > kernel 3.1, but it got too complicated for me with 3.2. 
+> > 
+> > Are there any plans to fix this power usage regression at some point in
+> > the iwlegacy driver? I think there are still a lot of iwl4965 users out
+> > there.
+> Yes, adding PS support is on my iwlegacy TODO list.
 
-Right now we only allocate a sta_info if mesh_matches_local, so
-sync_ops should simply fail its sta_info lookup and return.
+Hi,
 
-In the future we might want to allocate station entries for non-peers
-as well since it is useful to track the Toffset of non-peer neighbors
-for beacon collision avoidance and scheduling MCCAOP interference
-periods. This is also required by the standard FWIW.
+is there any progress regarding this? I didn't see something obvious in
+the git log.
 
-Thomas
+Regards,
+Tino
