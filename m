@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1238 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933185Ab2JLNHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 09:07:08 -0400
-Message-ID: <507815EE.5010508@broadcom.com> (sfid-20121012_150713_695740_6DD983D3)
-Date: Fri, 12 Oct 2012 15:06:54 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Kalle Valo" <kvalo@qca.qualcomm.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Jouni Malinen" <j@w1.fi>,
-	"Stanislav Yakovlev" <stas.yakovlev@gmail.com>,
-	"Dan Williams" <dcbw@redhat.com>, "Bing Zhao" <bzhao@marvell.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 1/3] wireless: drivers: make use of
- WLAN_EID_VENDOR_SPECIFIC
-References: <1350037696-23747-1-git-send-email-arend@broadcom.com>
- <1350037696-23747-2-git-send-email-arend@broadcom.com>
- <5077F4F3.8030409@qca.qualcomm.com>
-In-Reply-To: <5077F4F3.8030409@qca.qualcomm.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:36518 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968Ab2JALOi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Oct 2012 07:14:38 -0400
+Message-ID: <1349090111.10330.24.camel@jlt4.sipsolutions.net> (sfid-20121001_131442_086223_C0A68BB6)
+Subject: Re: [PATCH v2 4/5] mac80211: add support for tx to abort low
+ priority scan requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Leffler <sleffler@chromium.org>
+Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 01 Oct 2012 13:15:11 +0200
+In-Reply-To: <CA+yqC4aGJ4wpBNvyZRuPvSMdmQf8o2CHW=S=Uxry3CCT_RxwFw@mail.gmail.com> (sfid-20120928_223812_285836_7DBC4592)
+References: <1348772354-15936-1-git-send-email-bzhao@marvell.com>
+	 <1348772354-15936-5-git-send-email-bzhao@marvell.com>
+	 <1348830401.13298.27.camel@jlt4.sipsolutions.net>
+	 <CA+yqC4aGJ4wpBNvyZRuPvSMdmQf8o2CHW=S=Uxry3CCT_RxwFw@mail.gmail.com>
+	 (sfid-20120928_223812_285836_7DBC4592)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2012 12:46 PM, Kalle Valo wrote:
-> On 10/12/2012 01:28 PM, Arend van Spriel wrote:
->> The include file linux/ieee80211.h contains three definitions for
->> the same thing in enum ieee80211_eid due to historic changes:
->>
->> /* Information Element IDs */
->> enum ieee80211_eid {
->>      :
->>      WLAN_EID_WPA = 221,
->>      WLAN_EID_GENERIC = 221,
->>      WLAN_EID_VENDOR_SPECIFIC = 221,
->>      :
->> };
->>
->> The standard refers to this as "vendor specific" element so the
->> other two definitions are better not used. This patch changes the
->> wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
->
-> Why not remove _WPA and _GENERIC from ieee80211.h at the same time so
-> that nobody else won't use them in the future?
+On Fri, 2012-09-28 at 13:38 -0700, Sam Leffler wrote:
 
-Actually doing that in patch #3/3.
+> > Maybe we should have different flags though ... I mean, this is the
+> > first implementation that I hear of that interprets a background scan as
+> > "ok to abort at any time"? It seems very unlikely that other
+> > implementations would do that. I *think* (like I said before, I don't
+> > really know) that ours (Intel's) will just shorten the dwell time, or
+> > similar instead.
+> 
+> Well previous implementations I've done have used this technique for
+> many years and you can find them in various products (assuming they
+> haven't been totally rewritten) :-)
 
-Regards,
-Arend
+:-)
 
+You convinced me before though with the abort/not-abort notification
+being sufficient, so I think we can do with the low-priority flag and
+any kind of implementation.
+
+johannes
 
