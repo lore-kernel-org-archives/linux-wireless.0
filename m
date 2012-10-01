@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:54875 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753229Ab2JYLrH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 07:47:07 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/4] ath9k_hw: Fix concurrent tx on lower tx power
-Date: Thu, 25 Oct 2012 17:16:52 +0530
-Message-ID: <1351165614-12691-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121025_134712_365163_BD714488)
-In-Reply-To: <1351165614-12691-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1351165614-12691-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:14506 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751492Ab2JAKzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Oct 2012 06:55:07 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"David S . Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCHv2] rtlwifi: rtl8192ce: rtl8192cu: use %*ph[C] to dump small buffers
+Date: Mon,  1 Oct 2012 13:54:59 +0300
+Message-Id: <1349088899-15863-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20121001_125512_339978_E9D2E655)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever WLAN receives scheduling msg from BT, it reduces tx power
-based on RSSI level. And then BT starts simultaneous transmission
-along with WLAN. Sometimes HW MAC compares tx power that is used
-prior to power reduction which is causing BT transmission to defer.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 5 ++++-
- drivers/net/wireless/ath/ath9k/reg.h        | 2 ++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
+ 3 files changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index b04fa46..42b4412 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -881,9 +881,12 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 	REG_RMW_FIELD(ah, AR_BTCOEX_CTRL3,
- 		      AR_BTCOEX_CTRL3_CONT_INFO_TIMEOUT, 20);
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 5b4b4d4..6ba9f80 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+ 	u32 target_content = 0;
+ 	u8 entry_i;
  
--	REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2, AR_BTCOEX_CTRL2_RX_DEWEIGHT, 1);
-+	REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2, AR_BTCOEX_CTRL2_RX_DEWEIGHT, 0);
- 	REG_RMW_FIELD(ah, AR_PCU_MISC, AR_PCU_BT_ANT_PREVENT_RX, 0);
+-	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
+-		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
+-		 key_cont_128[0], key_cont_128[1],
+-		 key_cont_128[2], key_cont_128[3],
+-		 key_cont_128[4], key_cont_128[5]);
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
++			6, key_cont_128);
  
-+	/* Set the time out to 3.125ms (5 BT slots) */
-+	REG_RMW_FIELD(ah, AR_BTCOEX_WL_LNA, AR_BTCOEX_WL_LNA_TIMEOUT, 0x3D090);
-+
- 	/* concurrent tx priority */
- 	if (mci->config & ATH_MCI_CONFIG_CONCUR_TX) {
- 		REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2,
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index e9dec13..ad3c82c 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -2311,6 +2311,8 @@ enum {
- #define AR_BTCOEX_MAX_TXPWR(_x)				(0x18c0 + ((_x) << 2))
- #define AR_BTCOEX_WL_LNA				0x1940
- #define AR_BTCOEX_RFGAIN_CTRL				0x1944
-+#define AR_BTCOEX_WL_LNA_TIMEOUT			0x003FFFFF
-+#define AR_BTCOEX_WL_LNA_TIMEOUT_S			0
+ 	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
+ 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 86d73b3..932780d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 				     (ratr_index << 28);
+ 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+ 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+-		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+-		 ratr_index, ratr_bitmap,
+-		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
+-		 rate_mask[4]);
++		 "Rate_index:%x, ratr_val:%x, %*phC\n",
++		 ratr_index, ratr_bitmap, 5, rate_mask);
+ 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
  
- #define AR_BTCOEX_CTRL2					0x1948
- #define AR_BTCOEX_CTRL2_TXPWR_THRESH			0x0007F800
+ 	if (macid != 0)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 4bbb711..7554501 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
+ 				      ratr_index << 28);
+ 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+ 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+-		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+-		 ratr_index, ratr_bitmap,
+-		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
+-		 rate_mask[4]);
++		 "Rate_index:%x, ratr_val:%x, %*phC\n",
++		 ratr_index, ratr_bitmap, 5, rate_mask);
+ 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
+ }
+ 
 -- 
-1.8.0
+1.7.10.4
 
