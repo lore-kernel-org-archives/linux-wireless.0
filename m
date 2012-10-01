@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:57052 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752417Ab2JXVWw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35826 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751970Ab2JAHYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 17:22:52 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so1496678pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 14:22:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20121024194547.GA19060@shredder>
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
-	<CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
-	<20121024194547.GA19060@shredder>
-Date: Wed, 24 Oct 2012 14:22:51 -0700
-Message-ID: <CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com> (sfid-20121024_232256_554200_55DD4CBD)
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 1 Oct 2012 03:24:16 -0400
+Message-ID: <1349076289.10330.5.camel@jlt4.sipsolutions.net> (sfid-20121001_092455_084954_E54E378A)
+Subject: Re: [PATCH] mac80211: Fix FC masking in BIP AAD generation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 01 Oct 2012 09:24:49 +0200
+In-Reply-To: <20120930164740.GA16910@w1.fi>
+References: <20120930164740.GA16910@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, 2012-09-30 at 19:47 +0300, Jouni Malinen wrote:
+> The bits used in the mask were off-by-one and ended up masking PwrMgt,
+> MoreData, Protected fields instead of Retry, PwrMgt, MoreData. Fix this
+> and to mask the correct fields. While doing so, convert the code to mask
+> the full FC using IEEE80211_FCTL_* defines similarly to how CCMP AAD is
+> built.
+> 
+> Since BIP is used only with broadcast/multicast management frames, the
+> Retry field is always 0 in these frames. The Protected field is also
+> zero to maintain backwards compatibility. As such, the incorrect mask
+> here does not really cause any problems for valid frames. In theory, an
+> invalid BIP frame with Retry or Protected field set to 1 could be
+> rejected because of BIP validation. However, no such frame should show
+> up with standard compliant implementations, so this does not cause
+> problems in normal BIP use.
+> 
+> Signed-off-by: Jouni Malinen <j@w1.fi>
+> ---
+>  net/mac80211/wpa.c |   11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> This incorrect mask value was reported to me through private email and I
+> have not received permission to add a Reported-by: tag, so I can only
+> credit the anonymous reporter here. Thanks!
 
-can you please repeat this experiment but dump the TSF32/TSF64 fields
-there as hexadecimal, rather than decimal?
+:-)
 
-I'd like to see if this is an example of "bad TSF32->TSF64 promotion".
+Applied, thanks!
 
+johannes
 
-
-adrian
