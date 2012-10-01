@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37241 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552Ab2J2JJc (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:33599 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822Ab2JAExz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 05:09:32 -0400
-Message-ID: <1351501806.10925.8.camel@jlt4.sipsolutions.net> (sfid-20121029_100936_092523_739B7AF1)
-Subject: Re: [PATCH] wireless: drop invalid mesh address extension frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com
-Date: Mon, 29 Oct 2012 10:10:06 +0100
-In-Reply-To: <1351195011-30148-1-git-send-email-johannes@sipsolutions.net> (sfid-20121025_215622_269216_205911A7)
-References: <1351195011-30148-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121025_215622_269216_205911A7)
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 1 Oct 2012 00:53:55 -0400
+Date: Mon, 01 Oct 2012 00:53:53 -0400 (EDT)
+Message-Id: <20121001.005353.1893936334196650641.davem@davemloft.net> (sfid-20121001_065405_297310_52BE7802)
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: [README] Merge window has openned
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-10-25 at 21:56 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The mesh header can have address extension by a 4th
-> or a 5th and 6th address, but never both. Drop such
-> frames in 802.11 -> 802.3 conversion.
 
-Applied.
+You all know what this means.
 
-johannes
+Anything not in patchwork already is not going to make it into this
+merge window.
 
+I'm allowing a minor exception for the bnx2x driver firmware update
+which needs a respin to fix build errors.
+
+Please do not submit new features until the merge window closes and I
+reopen net-next for development.  Do not ask me for an exception, the
+net-next tree was open for about two months.
+
+Bug fixes may be submitted at any time.
+
+I intend to send a pull request to Linus for net-next on Wednesday.
+
+This assumes I can work through the patchwork backlog and get the
+bnx2x respin by the end of Monday so that everything gets at least one
+day of exposure in linux-next.  So if things don't fall into place by
+Monday night I'll push the pull request back a day or two, as needed.
+
+Thanks.
