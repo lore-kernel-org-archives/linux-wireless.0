@@ -1,71 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47239 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964Ab2JOKBZ (ORCPT
+Received: from nm20.bullet.mail.sp2.yahoo.com ([98.139.91.90]:39139 "HELO
+	nm20.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758198Ab2JAXPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 06:01:25 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Subject: [PATCH v2 04/11] ath9k: turn off RXIQ calibration while re-calibrating radio
-Date: Mon, 15 Oct 2012 15:29:48 +0530
-Message-ID: <1350295195-23410-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120142_085645_FA88CFB2)
-In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Mon, 1 Oct 2012 19:15:44 -0400
+References: <1348086305.81224.YahooMailNeo@web164004.mail.gq1.yahoo.com>  <20120928121917.GF5368@mwanda>  <1348870515.1973.YahooMailNeo@web164005.mail.gq1.yahoo.com>  <20120929072527.GA13767@mwanda>  <1349102641.41622.YahooMailNeo@web164005.mail.gq1.yahoo.com>  <20121001150913.GC13767@mwanda>  <1349109750.55372.YahooMailNeo@web164005.mail.gq1.yahoo.com>  (sfid-20121001_184314_573998_F50474BE) <1349119899.10330.53.camel@jlt4.sipsolutions.net> <1349132818.58475.YahooMailNeo@web164006.mail.gq1.yahoo.com>
+Message-ID: <1349133342.57103.YahooMailNeo@web164001.mail.gq1.yahoo.com> (sfid-20121002_021729_661520_BADB35D4)
+Date: Mon, 1 Oct 2012 16:15:42 -0700 (PDT)
+From: Kevin Cruz <skate_ops@yahoo.com>
+Reply-To: Kevin Cruz <skate_ops@yahoo.com>
+Subject: Re: How do I get mac80211 debugfs?
+To: Intel Wireless <ilw@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1349132818.58475.YahooMailNeo@web164006.mail.gq1.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-
-TXIQ and RXIQ share the same data path to upload the measurement
-result, we should turn off RXIQ calibration while re-calibrating radio
-
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 6 ++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h | 1 +
- 2 files changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index b2b9941..c46d8f1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -750,6 +750,9 @@ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	mci_hw->bt_state = MCI_BT_AWAKE;
- 
-+	REG_CLR_BIT(ah, AR_PHY_TIMING4,
-+		    1 << AR_PHY_TIMING_CONTROL4_DO_GAIN_DC_IQ_CAL_SHIFT);
-+
- 	if (caldata) {
- 		caldata->done_txiqcal_once = false;
- 		caldata->done_txclcal_once = false;
-@@ -759,6 +762,9 @@ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (!ath9k_hw_init_cal(ah, chan))
- 		return -EIO;
- 
-+	REG_SET_BIT(ah, AR_PHY_TIMING4,
-+		    1 << AR_PHY_TIMING_CONTROL4_DO_GAIN_DC_IQ_CAL_SHIFT);
-+
- exit:
- 	ar9003_mci_enable_interrupt(ah);
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 9a48e3d..8f58523 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -32,6 +32,7 @@
- #define AR_PHY_SPUR_REG     (AR_CHAN_BASE + 0x1c)
- #define AR_PHY_RX_IQCAL_CORR_B0    (AR_CHAN_BASE + 0xdc)
- #define AR_PHY_TX_IQCAL_CONTROL_3  (AR_CHAN_BASE + 0xb0)
-+#define AR_PHY_TIMING_CONTROL4_DO_GAIN_DC_IQ_CAL_SHIFT 16
- 
- #define AR_PHY_TIMING11_SPUR_FREQ_SD    0x3FF00000
- #define AR_PHY_TIMING11_SPUR_FREQ_SD_S  20
--- 
-1.7.12.2
+I accidentally changed the subject name. This should be part of
+"iwlwifi can't connect to router after suspend resuming from suspend."
 
