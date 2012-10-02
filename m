@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37931 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753911Ab2JVNdo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 09:33:44 -0400
-Message-ID: <1350912857.10166.11.camel@jlt4.sipsolutions.net> (sfid-20121022_153348_442042_704AC5DF)
-Subject: Re: [PATCH v2] iw: add lowpri and flush scan operands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Mon, 22 Oct 2012 15:34:17 +0200
-In-Reply-To: <1350501604-25253-1-git-send-email-bzhao@marvell.com>
-References: <1350501604-25253-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:62810 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753480Ab2JBTfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Oct 2012 15:35:20 -0400
+Date: Tue, 2 Oct 2012 21:34:23 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: check if key has TKIP type before updating IV
+Message-ID: <20121002193422.GA12214@redhat.com> (sfid-20121002_213525_354313_6F7534A3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-17 at 12:20 -0700, Bing Zhao wrote:
-> From: Sam Leffler <sleffler@chromium.org>
-> 
-> Add lowpri (low priority) and flush operands to the scan cmd to
-> request the equivalent flags be set in the scan request. Note
-> these are applied regardless of the feature flags to support
-> testing drivers that do not implement them.
-> 
-> Signed-off-by: Sam Leffler <sleffler@chromium.org>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
-> v2: give lowpri/flush flags before ssid (Johannes Berg)
+This patch fix corruption which can manifest itself by following crash
+when switching on rfkill switch with rt2x00 driver:
+https://bugzilla.redhat.com/attachment.cgi?id=615362
 
-Applied, thanks. I changed it to 
+Pointer key->u.ccmp.tfm of group key get corrupted in:
 
-[lowpri,flush]
+ieee80211_rx_h_michael_mic_verify():
 
-instead of
+        /* update IV in key information to be able to detect replays */
+        rx->key->u.tkip.rx[rx->security_idx].iv32 = rx->tkip_iv32;
+        rx->key->u.tkip.rx[rx->security_idx].iv16 = rx->tkip_iv16;
 
-[lowpri|flush]
+because rt2x00 always set RX_FLAG_MMIC_STRIPPED, even if key is not TKIP.
 
-since they aren't exclusive like other things where we used the [|]
-notation.
+We already check type of the key in different path in
+ieee80211_rx_h_michael_mic_verify() function, so adding additional
+check here is reasonable.
 
-johannes
+Cc: stable@vger.kernel.org # 3.0+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/wpa.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index bdb53ab..e72562a 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -106,7 +106,8 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ 		if (status->flag & RX_FLAG_MMIC_ERROR)
+ 			goto mic_fail;
+ 
+-		if (!(status->flag & RX_FLAG_IV_STRIPPED) && rx->key)
++		if (!(status->flag & RX_FLAG_IV_STRIPPED) && rx->key &&
++		    rx->key->conf.cipher == WLAN_CIPHER_SUITE_TKIP)
+ 			goto update_iv;
+ 
+ 		return RX_CONTINUE;
+-- 
+1.7.1
 
