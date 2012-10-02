@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54500 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39898 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755381Ab2JZKTH (ORCPT
+	with ESMTP id S1753853Ab2JBGph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 06:19:07 -0400
-Message-ID: <1351246782.10813.9.camel@jlt4.sipsolutions.net> (sfid-20121026_121912_401528_AD9E4EDC)
-Subject: Re: [PATCH 2/3] mac80211: verify that skb data is present
+	Tue, 2 Oct 2012 02:45:37 -0400
+Message-ID: <1349160371.10698.7.camel@jlt4.sipsolutions.net> (sfid-20121002_084541_014049_8C405056)
+Subject: Re: broadcast buffer / TIM map in mesh mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 26 Oct 2012 12:19:42 +0200
-In-Reply-To: <20121026005748.GA30982@shredder> (sfid-20121026_025756_120637_43AD3510)
-References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
-	 <1351205200-18094-3-git-send-email-johannes@sipsolutions.net>
-	 <20121025230505.GD20609@shredder> <20121025235816.GE20609@shredder>
-	 <20121026005748.GA30982@shredder> (sfid-20121026_025756_120637_43AD3510)
+Date: Tue, 02 Oct 2012 08:46:11 +0200
+In-Reply-To: <5069ED50.4050307@etit.tu-chemnitz.de> (sfid-20121001_214401_534723_29DE8446)
+References: <5069ED50.4050307@etit.tu-chemnitz.de>
+	 (sfid-20121001_214401_534723_29DE8446)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-10-25 at 17:57 -0700, Thomas Pedersen wrote:
+Hi Marco,
 
-> Oh, that hunk is already inside the MESH_FLAGS_AE check... so:
+> I am working on a mesh powersave implementation. One requirement for 
+> that is to buffer broadcasts, set the TIM map and count powersave 
+> neighbors. All of these routines are currently bound to the AP-specific 
+> ieee80211_if_ap structure.
+> Do you have any recommendations how to properly implement this for mesh 
+> interfaces?
 > 
-> 
->    		if (mesh_hdr->flags & MESH_FLAGS_AE_A4) {
->   			mpp_addr = hdr->addr3;
->   			proxied_addr = mesh_hdr->eaddr1;
->    		} else if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
->   			mpp_addr = hdr->addr4;
->   			proxied_addr = mesh_hdr->eaddr2;
->   		} else
-> 			return RX_DROP_MONITOR;
-> 
-> Should be ok since we already made sure to have enough data for each
-> address extension size.
+> a) allocate/free ieee80211_if_ap in 
+> iface.c:ieee80211_do_open/ieee80211_do_stop and bind to sdata->bss pointer?
+> b) include ieee80211_if_ap into ieee80211_if_mesh structure and use 
+> sdata->bss?
+> c) completely different?
 
-But that loses the is_multicast_ether_addr() check now, no? I mean, we
-wouldn't want to accept an AE_A4 frame unless A1 was multicast, at least
-not according to the original code?
+I don't think a) or b) are appropriate since the if_ap structure
+contains a number of fields that you won't use or need. I would
+therefore suggest to split out the PS related fields of that structure
+into a substructure that you embed in both if_ap and if_mesh, and in the
+code you could then pass a pointer to that structure to the powersave
+handling functions.
 
-All I was trying to make sure is that eaddr1/2 exist when they're used,
-and that's the length check, but is equivalent (due to earlier checks)
-to testing AE_A4/AE_A5_A6, I think?
-
-None of your versions seem to be equivalent of the original code, which
-says that
- * multicast -> use addr3/eaddr1
- * unicast -> use addr4/eaddr2
-
-and I'm just adding checks that eaddr1/eaddr2 actually exist.
+Please do a separate patch to separate it out though, not just one huge
+patch to do both mesh & the splitting up :)
 
 
-Ohh, ok, no I see, I'm not doing that. What we really need to do is
-something entirely different:
+> Also, what is the purpose of the sdata->bss pointer? It seems to be used 
+> at times and not at others.
 
-                if (is_multicast_ether_addr(hdr->addr1)) {
-                        mpp_addr = hdr->addr3;
-                        proxied_addr = mesh_hdr->eaddr1;
-                } else if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
-                        /* has_a4 already checked in ieee80211_rx_mesh_check */
-                        mpp_addr = hdr->addr4;
-                        proxied_addr = mesh_hdr->eaddr2;
-                } else {
-                        return RX_DROP_MONITOR;
-                }
-
-johannes
+The sdata->bss pointer should be used in *most* cases, it's a link to
+the "AP data" for the AP interface (where it just points to itself) and
+any AP_VLAN interface (where it points to the master AP interface)
 
