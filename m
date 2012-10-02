@@ -1,33 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37240 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:40632 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755128Ab2J2JJM (ORCPT
+	with ESMTP id S1751188Ab2JBLTs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 05:09:12 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TSlLL-00035g-Ng
-	for linux-wireless@vger.kernel.org; Mon, 29 Oct 2012 10:09:11 +0100
-Message-ID: <1351501787.10925.7.camel@jlt4.sipsolutions.net> (sfid-20121029_100920_684778_E8719A9B)
-Subject: Re: [PATCH 0/3] mac80211: audit for access to skb data
+	Tue, 2 Oct 2012 07:19:48 -0400
+Message-ID: <1349176819.10698.16.camel@jlt4.sipsolutions.net> (sfid-20121002_131954_449864_B559F932)
+Subject: Re: How do I get mac80211 debugfs?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 29 Oct 2012 10:09:47 +0100
-In-Reply-To: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net> (sfid-20121026_004611_616574_5C6C9420)
-References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121026_004611_616574_5C6C9420)
+To: Kevin Cruz <skate_ops@yahoo.com>
+Cc: Intel Wireless <ilw@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 02 Oct 2012 13:20:19 +0200
+In-Reply-To: <1349159890.10698.2.camel@jlt4.sipsolutions.net> (sfid-20121002_083802_746542_57596E7B)
+References: <1348086305.81224.YahooMailNeo@web164004.mail.gq1.yahoo.com>
+	 <20120928121917.GF5368@mwanda>
+	 <1348870515.1973.YahooMailNeo@web164005.mail.gq1.yahoo.com>
+	 <20120929072527.GA13767@mwanda>
+	 <1349102641.41622.YahooMailNeo@web164005.mail.gq1.yahoo.com>
+	 <20121001150913.GC13767@mwanda>
+	 <1349109750.55372.YahooMailNeo@web164005.mail.gq1.yahoo.com>
+	 (sfid-20121001_184314_573998_F50474BE) <1349119899.10330.53.camel@jlt4.sipsolutions.net>
+	 <1349132818.58475.YahooMailNeo@web164006.mail.gq1.yahoo.com>
+	 <1349159890.10698.2.camel@jlt4.sipsolutions.net>
+	 (sfid-20121002_083802_746542_57596E7B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-10-26 at 00:46 +0200, Johannes Berg wrote:
-> While looking at Javier's patch and some other things I found
-> a number of places that don't make sure the skb data is there
-> when it's accessed, fix them.
+On Tue, 2012-10-02 at 08:38 +0200, Johannes Berg wrote:
+> Hi Kevin,
+> 
+> > So I tried that but all I got back was:
+> > 
+> >     cat: /sys/kernel/debug/ieee80211/phy*/queues: No such file or directory
+> > 
+> > so I'm assuming it's because I must not have mac80211 debugfs.  So how
+> > do I get it?
+> 
+> First, make sure it's mounted, check "mount" and if not mount it:
+> 
+> sudo mount -t debugfs debugfs /sys/kernel/debug
+> 
+> If that doesn't work you don't have it enabled in the kernel config,
+> check for CONFIG_DEBUG_FS. If you do have it, but not mac80211's files,
+> check for CONFIG_MAC80211_DEBUGFS.
 
-Applied all three to mac80211.git.
+Oh also, if tracing already works, that'd be sufficient. No need to
+enable debugfs just to confirm the issue, tracing would let me confirm
+it as well. I just thought debugfs would let me confirm the issue first
+before going to the trouble of enabling tracing.
 
 johannes
 
