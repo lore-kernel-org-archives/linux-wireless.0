@@ -1,144 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:42744 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758016Ab2JTCUa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 22:20:30 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/7] mwifiex: abort scan upon interface down
-Date: Fri, 19 Oct 2012 19:19:16 -0700
-Message-Id: <1350699561-852-3-git-send-email-bzhao@marvell.com> (sfid-20121020_042033_200559_B1D6A941)
-In-Reply-To: <1350699561-852-1-git-send-email-bzhao@marvell.com>
-References: <1350699561-852-1-git-send-email-bzhao@marvell.com>
+Received: from nbd.name ([46.4.11.11]:35837 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751692Ab2JBNdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Oct 2012 09:33:40 -0400
+Message-ID: <506AED28.4050903@openwrt.org> (sfid-20121002_153457_652313_4344CEA4)
+Date: Tue, 02 Oct 2012 15:33:28 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Sven Eckelmann <sven@narfation.org>, lindner_marek@yahoo.de,
+	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL
+ on AR9003
+References: <1348756862-8788-1-git-send-email-sven@narfation.org> <1349174009-16496-1-git-send-email-sven@narfation.org> <CAJ-VmontNVV4TyRO5kEM30T=OmfEN8YUciJSW=j_0HnbadF4JA@mail.gmail.com>
+In-Reply-To: <CAJ-VmontNVV4TyRO5kEM30T=OmfEN8YUciJSW=j_0HnbadF4JA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 2012-10-02 3:13 PM, Adrian Chadd wrote:
+> .. well, the rule here is "You shouldn't get PERR/FATAL interrupts."
+> 
+> Haven't I posted a summary of what those errors are?
+> 
+> Ok. So they're signals from the PCIe core (named host1_fatal and
+> host1_perr. Helpfully.) Those errors occured during a DMA transfer.
+> 
+> So the question is why you're seeing PERR interrupts when creating an
+> adhoc interface. That hints to me that something odd is going on..
+> 
+> I've seen these issues creep up when the NIC is in some way behaving
+> very, very badly (lots of timeouts and sync errors with little to no
+> traffic at all), which resulted in all kinds of odd and weird,
+> unstable behaviour. After replacing the NIC with another NIC (in my
+> case, an AR9280 -> AR9280 NIC :-) the errors went away and things
+> continued swimmingly.
+> 
+> I'd have to go digging through the PCIe core source to figure out
+> exactly what host1_peer and host1_fatal mean. I can if you'd like,
+> it'll just take some time as I'm not familiar at all with the PCIe
+> host interface.
+According to the datasheet, AR_INTR_SYNC_HOST1_PERR is triggered by an
+invalid register access, and AR_INTR_SYNC_HOST1_FATAL is triggered by
+corrupt descriptors or other DMA issues.
+Maybe you can get some information on the source of this PERR error if
+you record the last register accesses outside of the irq context and
+print them once this IRQ comes in.
 
-When the interface is down, we will abort scan by calling
-cfg80211_scan_done() with abort option. This fixes WARN_ON
-triggered by cfg80211 in wdev_cleanup_work().
-
-Driver's internal variables/flags are cleared once we get
-response for current scan command. Meanwhile we will block
-new scan request from cfg80211.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    5 +++++
- drivers/net/wireless/mwifiex/init.c     |   14 ++++++++++----
- drivers/net/wireless/mwifiex/main.c     |    8 ++++++++
- drivers/net/wireless/mwifiex/scan.c     |   25 +++++++++++++++++++------
- 4 files changed, 42 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 234ee1e..9c8d0b7 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1826,6 +1826,11 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 		return -EBUSY;
- 	}
- 
-+	if (priv->user_scan_cfg) {
-+		dev_err(priv->adapter->dev, "cmd: Scan already in process..\n");
-+		return -EBUSY;
-+	}
-+
- 	priv->user_scan_cfg = kzalloc(sizeof(struct mwifiex_user_scan_cfg),
- 				      GFP_KERNEL);
- 	if (!priv->user_scan_cfg) {
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index b5d37a8..37f2d95 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -84,10 +84,16 @@ static void scan_delay_timer_fn(unsigned long data)
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
- 
- 		if (priv->user_scan_cfg) {
--			dev_dbg(priv->adapter->dev,
--				"info: %s: scan aborted\n", __func__);
--			cfg80211_scan_done(priv->scan_request, 1);
--			priv->scan_request = NULL;
-+			if (priv->scan_request) {
-+				dev_dbg(priv->adapter->dev,
-+					"info: aborting scan\n");
-+				cfg80211_scan_done(priv->scan_request, 1);
-+				priv->scan_request = NULL;
-+			} else {
-+				dev_dbg(priv->adapter->dev,
-+					"info: scan already aborted\n");
-+			}
-+
- 			kfree(priv->user_scan_cfg);
- 			priv->user_scan_cfg = NULL;
- 		}
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index eb22dd2..1df767b 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -472,6 +472,14 @@ mwifiex_open(struct net_device *dev)
- static int
- mwifiex_close(struct net_device *dev)
- {
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+
-+	if (priv->scan_request) {
-+		dev_dbg(priv->adapter->dev, "aborting scan on ndo_stop\n");
-+		cfg80211_scan_done(priv->scan_request, 1);
-+		priv->scan_request = NULL;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index b99f47b..8137dfc 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1768,16 +1768,29 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 		}
- 
- 		if (priv->user_scan_cfg) {
--			dev_dbg(priv->adapter->dev,
--				"info: %s: sending scan results\n", __func__);
--			cfg80211_scan_done(priv->scan_request, 0);
--			priv->scan_request = NULL;
-+			if (priv->scan_request) {
-+				dev_dbg(priv->adapter->dev,
-+					"info: notifying scan done\n");
-+				cfg80211_scan_done(priv->scan_request, 0);
-+				priv->scan_request = NULL;
-+			} else {
-+				dev_dbg(priv->adapter->dev,
-+					"info: scan already aborted\n");
-+			}
-+
- 			kfree(priv->user_scan_cfg);
- 			priv->user_scan_cfg = NULL;
- 		}
- 	} else {
--		if (!mwifiex_wmm_lists_empty(adapter) &&
--		    (priv->scan_request && (priv->scan_request->flags &
-+		if (priv->user_scan_cfg && !priv->scan_request) {
-+			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
-+					       flags);
-+			adapter->scan_delay_cnt = MWIFIEX_MAX_SCAN_DELAY_CNT;
-+			mod_timer(&priv->scan_delay_timer, jiffies);
-+			dev_dbg(priv->adapter->dev,
-+				"info: %s: triggerring scan abort\n", __func__);
-+		} else if (!mwifiex_wmm_lists_empty(adapter) &&
-+			   (priv->scan_request && (priv->scan_request->flags &
- 					    NL80211_SCAN_FLAG_LOW_PRIORITY))) {
- 			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
- 					       flags);
--- 
-1.7.0.2
+- Felix
 
