@@ -1,92 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55764 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:27047 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751002Ab2JHVBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2012 17:01:32 -0400
-Message-ID: <50733F2A.2060306@openwrt.org> (sfid-20121008_230135_319741_718C383D)
-Date: Mon, 08 Oct 2012 23:01:30 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, arend@broadcom.com
-Subject: Re: [PATCH v2 3.7 2/2] cfg80211: fix initialization of chan->max_reg_power
-References: <1349527254-41080-1-git-send-email-nbd@openwrt.org> <1349527254-41080-2-git-send-email-nbd@openwrt.org> <20121008190156.GK3354@lenteja.do-not-panic.com>
-In-Reply-To: <20121008190156.GK3354@lenteja.do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1753858Ab2JBOTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Oct 2012 10:19:52 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"David S . Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCHv4] rtlwifi: rtl8192ce: rtl8192cu: use %*phC to dump small buffers
+Date: Tue,  2 Oct 2012 17:19:44 +0300
+Message-Id: <1349187584-13401-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20121002_162116_488789_F88B0B77)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-08 9:01 PM, Luis R. Rodriguez wrote:
-> On Sat, Oct 06, 2012 at 02:40:54PM +0200, Felix Fietkau wrote:
->> A few places touch chan->max_power based on updated tx power rules, but
->> forget to do the same to chan->max_reg_power.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> Cc: stable@vger.kernel.org
->> ---
->>  net/wireless/reg.c |    5 +++--
->>  1 file changed, 3 insertions(+), 2 deletions(-)
->> 
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index 3b8cbbc..bcc7d7e 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -908,7 +908,7 @@ static void handle_channel(struct wiphy *wiphy,
->>  			map_regdom_flags(reg_rule->flags) | bw_flags;
->>  		chan->max_antenna_gain = chan->orig_mag =
->>  			(int) MBI_TO_DBI(power_rule->max_antenna_gain);
->> -		chan->max_power = chan->orig_mpwr =
->> +		chan->max_reg_power = chan->max_power = chan->orig_mpwr =
->>  			(int) MBM_TO_DBM(power_rule->max_eirp);
->>  		return;
->>  	}
->> @@ -1331,7 +1331,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
->>  
->>  	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
->>  	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
->> -	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
->> +	chan->max_reg_power = chan->max_power =
->> +		(int) MBM_TO_DBM(power_rule->max_eirp);
-> 
-> This looks good to me, good catch! The commit log could use some love,
-> given that this is a stable patch it is worthy to describe the
-> consequences of not applying this patch. Can you describe what you
-> observed that makes this a critical patch? The only piece of code
-> that uses max_reg_power in cfg80211, mac80211 or drivers is on
-> net/wireless/reg.c and drivers/net/wireless/mwifiex/cfg80211.c.
-> In either case the issue the code you are patching is for code
-> that deals with drivers that have a custom regulatory domain
-> in which orig_mpwr would have been initialized to a non-zero value
-> upon registration. In such cases we could only potenially run into
-> an issue on this piece of code on handle_channel():
-> 
->         chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
->         if (chan->orig_mpwr) {
->                 /*
->                  * Devices that have their own custom regulatory domain
->                  * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
->                  * passed country IE power settings.
->                  */
->                 if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
->                     wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
->                     wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
->                         chan->max_power = chan->max_reg_power;
->                 else
->                         chan->max_power = min(chan->orig_mpwr,
->                                               chan->max_reg_power);
->         } else
->                 chan->max_power = chan->max_reg_power;
-> 
-> The issue would happen if orig_mpwr is non zero (custom) and
-> then max_reg_power would not have been initialized. This runs
-> when you change a regulatory domain on a card with a custom
-> regulatory domain and this would be an issue if max_reg_power
-> would not be initialized. This however does not happen due to
-> the first line above.
-> 
-> So I agree with this patch but do not see the requirement for
-> it to go in as a stable fix to older stable kernels.
-OK, I'll extend the commit log and resend without the stable-Cc.
+The patch changes a bit trace output format in the rtl_cam_program_entry() to
+print prefix and the actual data on the same line. Moreover the %*phC outputs
+each byte as 2 hex digits, which is slightly different to the original %x.
 
-- Felix
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
+ 3 files changed, 6 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 5b4b4d4..ca69e35 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+ 	u32 target_content = 0;
+ 	u8 entry_i;
+ 
+-	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
+-		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
+-		 key_cont_128[0], key_cont_128[1],
+-		 key_cont_128[2], key_cont_128[3],
+-		 key_cont_128[4], key_cont_128[5]);
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %6phC\n",
++		 key_cont_128);
+ 
+ 	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
+ 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 86d73b3..038c02c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 				     (ratr_index << 28);
+ 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+ 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+-		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+-		 ratr_index, ratr_bitmap,
+-		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
+-		 rate_mask[4]);
++		 "Rate_index:%x, ratr_val:%x, %5phC\n",
++		 ratr_index, ratr_bitmap, rate_mask);
+ 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
+ 
+ 	if (macid != 0)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 4bbb711..7d36a94 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
+ 				      ratr_index << 28);
+ 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
+ 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
+-		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
+-		 ratr_index, ratr_bitmap,
+-		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
+-		 rate_mask[4]);
++		 "Rate_index:%x, ratr_val:%x, %5phC\n",
++		 ratr_index, ratr_bitmap, rate_mask);
+ 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
+ }
+ 
+-- 
+1.7.10.4
+
