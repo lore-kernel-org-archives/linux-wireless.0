@@ -1,188 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:38503 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756093Ab2JXT7w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 15:59:52 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so403982dak.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 12:59:52 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linville@tuxdriver.com
-Cc: Javier Cardona <javier@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	johannes@sipsolutions.net
-Subject: [PATCH 1/2] ath9k_htc: Add support for NL80211_IFTYPE_MESH_POINT interfaces
-Date: Wed, 24 Oct 2012 12:59:33 -0700
-Message-Id: <1351108774-7450-2-git-send-email-javier@cozybit.com> (sfid-20121024_215955_294979_05857005)
-In-Reply-To: <1351108774-7450-1-git-send-email-javier@cozybit.com>
-References: <1351108774-7450-1-git-send-email-javier@cozybit.com>
+Received: from narfation.org ([79.140.41.39]:34859 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753862Ab2JBPCe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Oct 2012 11:02:34 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	lindner_marek@yahoo.de
+Subject: Re: [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL on AR9003
+Date: Tue, 02 Oct 2012 17:02:30 +0200
+Message-ID: <7670031.sYFb4t8Iqn@bentobox> (sfid-20121002_170241_339974_6B18AF60)
+In-Reply-To: <CAJ-VmomddCMRxx6Vh_i8AJsqYMUCyguUwFt_PQHpDY7-+Gs88A@mail.gmail.com>
+References: <1348756862-8788-1-git-send-email-sven@narfation.org> <20121002133533.GA19403@pandem0nium> <CAJ-VmomddCMRxx6Vh_i8AJsqYMUCyguUwFt_PQHpDY7-+Gs88A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart16869054.HR4UOUtFXv"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-More specifically, enable AP-style beaconing on mesh ifaces, honor
-FIF_OTHER_BSS filter and change the hw capabilities to reflect mesh
-support.
 
-Also enable IEEE80211_HW_SUPPORTS_PER_STA_GTK, IEEE80211_HW_MFP_CAPABLE
-and WIPHY_FLAG_IBSS_RSN.  Probably these should depend on the
-capabilities of the hardware but I don't know which hardware supports
-what.  But these are required for secured mesh and work fine on our
-TL-WN821N
+--nextPart16869054.HR4UOUtFXv
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/ath/ath9k/htc.h            |    7 +++++++
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   17 ++++++++++++++++-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |    6 +++++-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   14 ++++++++++++++
- 4 files changed, 42 insertions(+), 2 deletions(-)
+On Tuesday 02 October 2012 07:06:03 Adrian Chadd wrote:
+> Hm, there are still issues on Hornet?
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index b30596f..c64dd0f 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -207,6 +207,9 @@ struct ath9k_htc_target_rx_stats {
- 		case NL80211_IFTYPE_AP:		\
- 			_priv->num_ap_vif++;	\
- 			break;			\
-+		case NL80211_IFTYPE_MESH_POINT:	\
-+			_priv->num_mbss_vif++;	\
-+			break;			\
- 		default:			\
- 			break;			\
- 		}				\
-@@ -223,6 +226,9 @@ struct ath9k_htc_target_rx_stats {
- 		case NL80211_IFTYPE_AP:		\
- 			_priv->num_ap_vif--;	\
- 			break;			\
-+		case NL80211_IFTYPE_MESH_POINT:	\
-+			_priv->num_mbss_vif--;	\
-+			break;			\
- 		default:			\
- 			break;			\
- 		}				\
-@@ -449,6 +455,7 @@ struct ath9k_htc_priv {
- 	u8 sta_slot;
- 	u8 vif_sta_pos[ATH9K_HTC_MAX_VIF];
- 	u8 num_ibss_vif;
-+	u8 num_mbss_vif;
- 	u8 num_sta_vif;
- 	u8 num_sta_assoc_vif;
- 	u8 num_ap_vif;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index f42d2eb..263f9b7 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -28,7 +28,8 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
- 
- 	ath9k_hw_get_txq_props(ah, priv->beaconq, &qi);
- 
--	if (priv->ah->opmode == NL80211_IFTYPE_AP) {
-+	if (priv->ah->opmode == NL80211_IFTYPE_AP ||
-+	    priv->ah->opmode == NL80211_IFTYPE_MESH_POINT) {
- 		qi.tqi_aifs = 1;
- 		qi.tqi_cwmin = 0;
- 		qi.tqi_cwmax = 0;
-@@ -628,6 +629,13 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
- 	case NL80211_IFTYPE_ADHOC:
- 		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		/* 802.11s defines a different beaconing method for
-+		 * mesh points that closely resembles AP-style
-+		 * beaconing.  Until that is implemented, just use
-+		 * AP-style beaconing for mesh points.
-+		 */
-+		/* Fall through */
- 	case NL80211_IFTYPE_AP:
- 		ath9k_htc_beacon_config_ap(priv, cur_conf);
- 		break;
-@@ -649,6 +657,13 @@ void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
- 	case NL80211_IFTYPE_ADHOC:
- 		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		/* 802.11s defines a different beaconing method for
-+		 * mesh points that closely resembles AP-style
-+		 * beaconing.  Until that is implemented, just use
-+		 * AP-style beaconing for mesh points.
-+		 */
-+		/* Fall through */
- 	case NL80211_IFTYPE_AP:
- 		ath9k_htc_beacon_config_ap(priv, cur_conf);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index d98255e..9c5c63c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -707,6 +707,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		IEEE80211_HW_SUPPORTS_PS |
- 		IEEE80211_HW_PS_NULLFUNC_STACK |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-+		IEEE80211_HW_SUPPORTS_PER_STA_GTK |
-+		IEEE80211_HW_MFP_CAPABLE |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING;
- 
- 	hw->wiphy->interface_modes =
-@@ -714,9 +716,11 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_P2P_GO) |
--		BIT(NL80211_IFTYPE_P2P_CLIENT);
-+		BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+		BIT(NL80211_IFTYPE_MESH_POINT);
- 
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-+	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
- 			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index ca78e33..d763423 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -178,6 +178,8 @@ static void ath9k_htc_set_opmode(struct ath9k_htc_priv *priv)
- 		priv->ah->opmode = NL80211_IFTYPE_ADHOC;
- 	else if (priv->num_ap_vif)
- 		priv->ah->opmode = NL80211_IFTYPE_AP;
-+	else if (priv->num_mbss_vif)
-+		priv->ah->opmode = NL80211_IFTYPE_MESH_POINT;
- 	else
- 		priv->ah->opmode = NL80211_IFTYPE_STATION;
- 
-@@ -1048,6 +1050,13 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 		return -ENOBUFS;
- 	}
- 
-+	if (priv->num_mbss_vif ||
-+	    (priv->nvifs && vif->type == NL80211_IFTYPE_MESH_POINT)) {
-+		ath_err(common, "Mesh BSS coexistence with other modes is not allowed\n");
-+		mutex_unlock(&priv->mutex);
-+		return -ENOBUFS;
-+	}
-+
- 	if (((vif->type == NL80211_IFTYPE_AP) ||
- 	     (vif->type == NL80211_IFTYPE_ADHOC)) &&
- 	    ((priv->num_ap_vif + priv->num_ibss_vif) >= ATH9K_HTC_MAX_BCN_VIF)) {
-@@ -1070,6 +1079,10 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_AP:
- 		hvif.opmode = HTC_M_HOSTAP;
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		/* close enough */
-+		hvif.opmode = HTC_M_WDS;
-+		break;
- 	default:
- 		ath_err(common,
- 			"Interface type %d not yet supported\n", vif->type);
-@@ -1102,6 +1115,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 	INC_VIF(priv, vif->type);
- 
- 	if ((vif->type == NL80211_IFTYPE_AP) ||
-+	    (vif->type == NL80211_IFTYPE_MESH_POINT) ||
- 	    (vif->type == NL80211_IFTYPE_ADHOC))
- 		ath9k_htc_assign_bslot(priv, vif);
- 
--- 
-1.7.5.4
+Yes, we still have problems with hornet. The issue I am trying to "fix" with 
+this patch is an interrupt storm on AR9330 devices with sta interface(s). 
+Random devices crash after getting a stacktrace reporting __report_bad_irq. 
+The crash either results in a reboot or hang of the device
+
+[  952.950000] irq 2: nobody cared (try booting with the "irqpoll" option)
+[  952.950000] Call Trace:
+[  952.950000] [<8026ade8>] dump_stack+0x8/0x34
+[  952.950000] [<800a75d0>] __report_bad_irq+0x44/0xf4
+[  952.950000] [<800a78ec>] note_interrupt+0x200/0x2a4
+[  952.950000] [<800a58c8>] handle_irq_event_percpu+0x19c/0x1e0
+[  952.950000] [<800a86cc>] handle_percpu_irq+0x54/0x88
+[  952.950000] [<800a501c>] generic_handle_irq+0x3c/0x4c
+[  952.950000] [<80064748>] do_IRQ+0x1c/0x34
+[  952.950000] [<80062d6c>] ret_from_irq+0x0/0x4
+[  952.950000] [<8007673c>] tasklet_action+0xb8/0xd4
+[  952.950000] [<80076c24>] __do_softirq+0xa0/0x154
+[  952.950000] [<80076e30>] do_softirq+0x48/0x68
+[  952.950000] [<80076f94>] local_bh_enable+0x94/0xb0
+[  952.950000] [<83406d60>] cfg80211_scan_done+0x670/0x6d0 [cfg80211]
+[  952.950000] 
+[  952.950000] handlers:
+[  952.950000] [<83564d48>] ath_isr
+[  952.950000] Disabling IRQ #2
+
+The test setup is using 30 AR9330 devices running OpenWRT 32727/33559. 32727 
+is using compat-wireless-2012-04-17 (+ many OpenWRT patches) and 33559 is 
+running compat-wireless-2012-09-07 (+many more patches from Felix). 1 device 
+is running an open AP device (standard OpenWRT settings) and 29 devices are 
+trying to connect. Random devices will now fail. To debug this problem, I used 
+one devices with 8 vif devices and restarted the network script again and 
+again to force the recreation of the vif and reconnect.
+
+The stack trace doesn't seem to be very helpful. Therefore, I checked ath_isr 
+and noticed that the interrupts right before the device crash get the status 0 
+from ar9003_hw_get_isr. Digging a little but further also revealed that the 
+interrupts in the interrupt storm also have async_cause 0 and sync_cause 0x20.
+
+This sync cause 0x20 isn't handled anywhere and may be the cause of the 
+hang/crash. At least this is the symptom which can be fixed without crashing 
+the system.
+
+I hope that helps to track down the problem.
+
+Kind regards,
+        Sven
+--nextPart16869054.HR4UOUtFXv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABCgAGBQJQawIGAAoJEF2HCgfBJntGqqIQANbDchedUroWCI+Hgx1a+KEf
+1LDzldlcajoY4WRalUwH7Lm+HkP6D5TralEa0E93S9Wo14H1PEyhUfErA5W5aTLQ
+EOxZEPVgXoBuKfKZFcXk7AYi/BZxZuc4p71T7bGrvWcL5Rq3qKfapzGht4gkYJyE
+HWzJ1mLGIZZkCp9J8fPBf+4nmhgxWLDzK/qdzfvcetQgHEPFov/uISQVRPxQoBf2
+chEx5v9l3P/ZGa9eFmCoWYzo8zVOzI8KhdfaOUrmhZfWh96dkFVCrLJfXTog306q
+Au9eU4k2LUg+IsaJynWcxWaId0QnrXdSmJ/8JkmlDLX1UF69qPAtOpbbkEG1TSf9
+Jbo84zZzrCR5Szs7oHDIXcSqh1eHXcAaFD0gnRHTQg3IpDHdVVETbdxWQWZkfV6J
+9M6zzNMcE01ayjNunZaUzl4/91G9/n6Kb7YYQBc5pjRBmMo+tWdOCCLiJ29IlkCa
+Wcxp78XueQDbrKkCdBt+6WQpq4sfT84dtqCLRAm9wCpq6FrnWq42cDuakCd4QaEQ
+H4A2847fayTdrOWTKNB4XdDqGXW0tAFxOkAHhA6jsvwHArCBWF6EduSC1GMPPXbz
+UDgeGJAlq8uLw6feJH/xqd2RKmEaMJvsGI1vvpI11kzwlaKFYLeVFknZYBQ1O8Ao
+jfvpVVnd9Anlz0mASket
+=qgbi
+-----END PGP SIGNATURE-----
+
+--nextPart16869054.HR4UOUtFXv--
 
