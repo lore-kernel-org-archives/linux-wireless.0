@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:49154 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237Ab2JFMIx (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:59677 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754048Ab2JCJd0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2012 08:08:53 -0400
-Date: Sat, 6 Oct 2012 14:08:50 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: David Rientjes <rientjes@google.com>, Mel Gorman <mgorman@suse.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-Message-ID: <20121006120850.GB18025@elf.ucw.cz> (sfid-20121006_140858_621638_68F20AB8)
-References: <20120909213228.GA5538@elf.ucw.cz>
- <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
- <20120910111113.GA25159@elf.ucw.cz>
- <20120911162536.bd5171a1.akpm@linux-foundation.org>
- <20120912101826.GL11266@suse.de>
- <20121003113659.GD2259@redhat.com>
- <alpine.DEB.2.00.1210031104120.29765@chino.kir.corp.google.com>
- <20121005083659.GA2819@redhat.com>
+	Wed, 3 Oct 2012 05:33:26 -0400
+Received: by vbbff1 with SMTP id ff1so7581609vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 02:33:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121005083659.GA2819@redhat.com>
+In-Reply-To: <1349202079-14115-1-git-send-email-linville@tuxdriver.com>
+References: <1349202079-14115-1-git-send-email-linville@tuxdriver.com>
+Date: Wed, 3 Oct 2012 11:33:25 +0200
+Message-ID: <CAOZOX0URb51i=6wko1MJVsi7du2kyYo9W=LLZSpH7Svh9BgAMw@mail.gmail.com> (sfid-20121003_113332_195497_FE0C4680)
+Subject: Re: [RFC] rt2x00: check return from dma_map_single
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-On Fri 2012-10-05 10:37:00, Stanislaw Gruszka wrote:
-> On Wed, Oct 03, 2012 at 11:07:13AM -0700, David Rientjes wrote:
-> > On Wed, 3 Oct 2012, Stanislaw Gruszka wrote:
-> > 
-> > > So, can this problem be solved like on below patch, or I should rather
-> > > split firmware loading into chunks similar like was already iwlwifi did?
-> 
-> Hmm, I looked at iwl3945 code and looks loading firmware in chunks is
-> nothing that can be easily done. 3945 bootstrap code expect that runtime
-> ucode will be placed in physically continue memory, and there are no
-> separate instructions for copy and for execute, just one to perform both
-> those actions. Maybe loading firmware in chunks can be done using
-> undocumented features of the device, but I'm eager to do this.
+Hi,
 
-Just allocate memory during boot?
+On Tue, Oct 2, 2012 at 8:21 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+>
+> dma_map_single can fail, so it's return value needs to be checked and
+> handled accordingly.  Failure to do so is akin to failing to check the
+> return from a kmalloc.
+>
+> http://linuxdriverproject.org/mediawiki/index.php/DMA_Mapping_Error_Analysis
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
+> Compile tested only...can the experts take a look at how the failures
+> are handled?
 
-> Pavel, do you still can reproduce this problem on released 3.6 ? 
+<snip>
 
-It happened again yesterday on 3.6.0-rc6+. I don't think mm changed
-between -rc6 and final...
-								Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 0751b35..50ff18d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -605,8 +605,8 @@ struct rt2x00lib_ops {
+>                                struct txentry_desc *txdesc);
+>         void (*write_tx_data) (struct queue_entry *entry,
+>                                struct txentry_desc *txdesc);
+> -       void (*write_beacon) (struct queue_entry *entry,
+> -                             struct txentry_desc *txdesc);
+> +       int (*write_beacon) (struct queue_entry *entry,
+> +                            struct txentry_desc *txdesc);
+>         void (*clear_beacon) (struct queue_entry *entry);
+>         int (*get_tx_data_len) (struct queue_entry *entry);
+
+The only thing I am missing in the commit, is the check for
+the return value when write_beacon is being called.
+
+Ivo
