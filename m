@@ -1,124 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:45942 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757678Ab2JKQU3 (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:43786 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754447Ab2JCNxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 12:20:29 -0400
-From: Antonio Quartulli <ordex@autistici.org>
+	Wed, 3 Oct 2012 09:53:47 -0400
+Received: by oagh16 with SMTP id h16so7401585oag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 06:53:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1347274394.4272.8.camel@jlt4.sipsolutions.net>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	<1344426823-1795-2-git-send-email-victorg@ti.com>
+	<1347274394.4272.8.camel@jlt4.sipsolutions.net>
+Date: Wed, 3 Oct 2012 15:53:45 +0200
+Message-ID: <CAK80WHYAH3FdoTDGQh54NdLkYMpv7heGsNjn7venC9fHj65RFw@mail.gmail.com> (sfid-20121003_155352_471166_7BFDE32C)
+Subject: Re: [PATCH v3 1/7] nl80211/cfg80211: add radar detection command/event
+From: "Goldenshtein, Victor" <victorg@ti.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH] nl/cfg80211: force scan using an AP vif if requested
-Date: Thu, 11 Oct 2012 18:19:50 +0200
-Message-Id: <1349972390-14133-1-git-send-email-ordex@autistici.org> (sfid-20121011_182035_435411_A0E3DE8F)
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the user wants to scan using a vif configured as AP, cfg80211 must give him a
-chance to do it, even if this will disrupt the stations performance due to
-off-channel scanning. To do so, this patch adds a 'force' flag to the
-SCAN_TRIGGER command which tells cfg80211 to perform the scanning operation even
-if the vif is an AP and the beaconing has already started.
+Thanks for the review and sorry for the delayed response.
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
+On Mon, Sep 10, 2012 at 1:53 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
+>
+>> + * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
+>
+> How will you know what kind of radar detection is supported? That is, HT
+> 20, HT 40, in the future VHT80/160/80+80?
+>
 
-* in several scenarios the user would like to perform a scan while an AP vif is
-  running. This can happen when the user wants to check if there is a less
-  polluted channel on which he wants to move the AP. In the current
-  implementation this is not allowed at all. The only way to perform this
-  operation consists in creating another vif configured as managed and scan
-  channels using it. With the approach proposed by this patch, instead, the
-  user can simply "force" the scan on the AP interface (e.g. using iw).
+only 20 Mhz is supported at first stage, do you prefer to rename it to
+something like: NL80211_FEATURE_20MHZ_DFS
 
+>> +     int     (*start_radar_detection)(struct wiphy *wiphy,
+>> +                                      struct net_device *dev,
+>> +                                      struct ieee80211_channel *chan);
+>
+> Channel type/bandwidth might be needed?
+>
 
+np, will add also the channel type here.
 
- include/linux/nl80211.h | 8 ++++++++
- include/net/cfg80211.h  | 2 ++
- net/mac80211/cfg.c      | 9 ++++++++-
- net/wireless/nl80211.c  | 2 ++
- 4 files changed, 20 insertions(+), 1 deletion(-)
+>> +void cfg80211_radar_detected(struct net_device *dev,
+>> +                          struct ieee80211_channel *chan, gfp_t gfp);
+>
+> Is the channel parameter useful? Only one detection can be triggered at
+> any given time.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 179a0c2..7e347c1 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1276,6 +1276,12 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SAE_DATA: SAE elements in Authentication frames. This starts
-  *	with the Authentication transaction sequence number field.
-  *
-+ * @NL80211_ATTR_SCAN_FORCE: force a scan even if the interface is configured as
-+ *	AP and the beaconing has already been configured. This attribute is
-+ *	dangerous because will destroy stations performance as a lot of frames
-+ *	will be lost while scanning off-channel, therefore it must be used only
-+ *	when really needed.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1535,6 +1541,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SAE_DATA,
- 
-+	NL80211_ATTR_SCAN_FORCE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 04df773..600e2c7 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1005,6 +1005,7 @@ struct cfg80211_ssid {
-  * @wdev: the wireless device to scan for
-  * @aborted: (internal) scan request was notified as aborted
-  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
-+ * @force: scan even if the vif is in AP mode and beacon has been set already
-  */
- struct cfg80211_scan_request {
- 	struct cfg80211_ssid *ssids;
-@@ -1021,6 +1022,7 @@ struct cfg80211_scan_request {
- 	struct wiphy *wiphy;
- 	bool aborted;
- 	bool no_cck;
-+	bool force;
- 
- 	/* keep last */
- 	struct ieee80211_channel *channels[0];
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 03216b0..4f932c5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1850,7 +1850,14 @@ static int ieee80211_scan(struct wiphy *wiphy,
- 		 * beaconing hasn't been configured yet
- 		 */
- 	case NL80211_IFTYPE_AP:
--		if (sdata->u.ap.beacon)
-+		/*
-+		 * If the scan has been forced, don't care about being beaconing
-+		 * already.
-+		 * This will create problems to the attached stations (e.g. all
-+		 * the  frames sent while scanning on other channel will be
-+		 * lost)
-+		 */
-+		if (sdata->u.ap.beacon && !req->force)
- 			return -EOPNOTSUPP;
- 		break;
- 	default:
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 746f649..94758df 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4362,6 +4362,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
-+	request->force = nla_get_flag(info->attrs[NL80211_ATTR_SCAN_FORCE]);
-+
- 	request->no_cck =
- 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
+yes, for MC platforms and for sanity checks.
+
+>
+>>  void cfg80211_send_rx_auth(struct net_device *dev, const u8 *buf, size_t len)
+>>  {
+>>       struct wireless_dev *wdev = dev->ieee80211_ptr;
+>> @@ -1006,3 +1008,39 @@ bool cfg80211_rx_unexpected_4addr_frame(struct net_device *dev,
+>>       return nl80211_unexpected_4addr_frame(dev, addr, gfp);
+>>  }
+>>  EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
+>> +
+>> +int cfg80211_start_radar_detection(struct cfg80211_registered_device *rdev,
+>> +                                struct net_device *dev,
+>> +                                struct ieee80211_channel *chan)
+>> +{
+>> +     int err;
+>> +
+>> +     if (!rdev->ops->start_radar_detection)
+>> +             return -EOPNOTSUPP;
+>> +
+>> +     err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, chan);
+>> +     if (!err)
+>> +             chan->radar_detect_timeout = jiffies +
+>> +                     msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
+>> +     else {
+>> +             chan->radar_detect_timeout = 0;
+>> +             chan->cac_type = 0;
+>> +     }
+>
+> You're not setting cac_type in the good case, and also
+> radar_detect_timeout can actually be 0 in the good case due to jiffies
+> wrap. How is that handled?
+>
+
+I'm using time_is_after_jiffies() in nl80211_dfs_en_tx() which AFAIK
+can handle jiffies wrap.
+
+>> +     chan->cac_type = 0;
+>
+> Also here and above you should use channel type enums. In fact, 0 is
+> "NOHT". Oops. Need a boolean I guess that indicates validity.
+>
+
+right, since NOHT is 0 we probably need additional flag something like
+"chan->cac_started"
+alternatively we can add "__NL80211_CHAN_INVALID" at index 0  to the
+enum nl80211_channel_type.
+
+>> +     bool dfs_supported = (rdev->wiphy.features & NL80211_FEATURE_DFS);
+>
+> why bother with the variable?
+>
+
+IMHO in that way the if expression is shorter and more readable.
+
+>> +     if (!chan || !(chan->flags & IEEE80211_CHAN_RADAR))
+>> +             return -EINVAL;
+>> +
+>> +     if (chan->cac_type)
+>> +             return -EBUSY;
+>> +
+>> +     chan->cac_type = cac_type;
+>
+> Aha. But these things probably should be in the function:
+>
+>> +     return cfg80211_start_radar_detection(rdev, dev, chan);
+>
+> so it's actually a potentially useful function for other places.
+> Otherwise you could just manually inline it here, I see no issues with
+> that either.
+>
+
+will manually inline cfg80211_start_radar_detection() into
+nl80211_start_radar_detection().
+
 -- 
-1.7.12
-
+Thanks,
+Victor.
