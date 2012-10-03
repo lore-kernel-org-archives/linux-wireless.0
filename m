@@ -1,91 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:60495 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753208Ab2JEKJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 06:09:54 -0400
-Date: Fri, 5 Oct 2012 13:11:00 +0300
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	bzhao@marvell.com
-Subject: Re: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
-Message-ID: <20121005101058.GE12229@aemeltch-MOBL1> (sfid-20121005_120957_444459_FBF74F19)
-References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
- <1349368379.2008.16.camel@joe-AO722>
- <1349419996.10584.5.camel@smile>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1349419996.10584.5.camel@smile>
+Received: from contumacia.investici.org ([178.255.144.35]:27289 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845Ab2JCIzX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Oct 2012 04:55:23 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [RFC] nl/cfg80211: force scan using an AP vif if requested
+Date: Wed,  3 Oct 2012 10:54:42 +0200
+Message-Id: <1349254482-31743-1-git-send-email-ordex@autistici.org> (sfid-20121003_105939_571713_10D0C349)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andy,
+If the user wants to scan using a vif configured as AP, cfg80211 must give him a
+chance to do it, even if this will disrupt the stations performance due to
+off-channel scanning. To do so, this patch adds a 'force' flag to the
+SCAN_TRIGGER command which tells cfg80211 to perform the scanning operation even
+if the vif is an AP and the beaconing has already started.
 
-On Fri, Oct 05, 2012 at 09:53:16AM +0300, Andy Shevchenko wrote:
-> On Thu, 2012-10-04 at 09:32 -0700, Joe Perches wrote: 
-> > On Thu, 2012-10-04 at 12:16 +0300, Andrei Emeltchenko wrote:
-> > > From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
-> > > 
-> > > Make output more readable and remove unneeded function call.
-> > > 
-> > > ...
-> > > mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
-> > > last_cmd_id: 00000000: 28 00 28 00 28                            (.(.(
-> > > ...
-> > > 
-> > > would be changed to:
-> > > 
-> > > ...
-> > > mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
-> > > mwifiex_sdio mmc0:0001:1: last_cmd_id: 28 00 28 00 28
-> > > ...
-> > 
-> > (added Andy Shevchenko)
-> > 
-> > Hi Andrei.  That's probably a better output style too
-> > as the ascii isn't likely useful.
-> > 
-> > One non-nit as a style issue for Andy Shevchenko:
-> > 
-> > > diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-> > []
-> > > @@ -917,21 +917,20 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
-> > []
-> > > +		dev_err(adapter->dev, "last_cmd_id: %*ph\n", DBG_CMD_NUM,
-> > > +			adapter->dbg.last_cmd_id);
-> > > +		dev_err(adapter->dev, "last_cmd_act: %*ph\n", DBG_CMD_NUM,
-> > > +			adapter->dbg.last_cmd_act);
-> > 
-> > When the number of bytes is fixed, it might be nicer
-> > to use a format like "%<num>ph" so that the function
-> > argument stack doesn't have the width pushed but it's
-> > fixed in the format.
-> > 
-> > This case would definitely not work well though as it's
-> > a #define rather than a simple number and I think
-> > using "%" stringize(some_define) "ph" is not nice.
-> > 
-> > Maybe this case argues more for always using "%*ph".
-> > At least that's easily greppable.
-> > 
-> > Andy?
-> First of all, the current linux-next has at least two definitions of
-> that constant:
-> drivers/net/wireless/mwifiex/ioctl.h:175:#define DBG_CMD_NUM    5
-> drivers/net/wireless/mwifiex/main.h:118:#define DBG_CMD_NUM 5
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
 
-Please send patch fixing this. This is unrelated to the patch in
-question.
+* in several scenarios the user would like to perform a scan while an AP vif is
+  running. This can happen when the user wants to check if there is a less
+  polluted channel on which he wants to move the AP. In the current
+  implementation this is not allowed at all. The only way to perform this
+  operation consists in creating another vif configured as managed and scan
+  channels using it. With the approach proposed by this patch, instead, the
+  user can simply "force" the scan on the AP interface (e.g. using iw).
 
-> I checked briefly the code and found that the constant is heavily used
-> as a definition for the length of static byte arrays. So, in that case
-> probably better to use %*ph, but apply sizeof(cool_var) instead of
-> putting constant there.
 
-I did not touch logic that print buffer, the buffer might have lots of
-data (even significantly more then you may want to print to logs) so
-using sizeof is not the best idea in these cases.
 
-Best regards 
-Andrei Emeltchenko 
+
+ include/linux/nl80211.h | 8 ++++++++
+ include/net/cfg80211.h  | 2 ++
+ net/mac80211/cfg.c      | 9 ++++++++-
+ net/wireless/nl80211.c  | 2 ++
+ 4 files changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 179a0c2..7e347c1 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1276,6 +1276,12 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SAE_DATA: SAE elements in Authentication frames. This starts
+  *	with the Authentication transaction sequence number field.
+  *
++ * @NL80211_ATTR_SCAN_FORCE: force a scan even if the interface is configured as
++ *	AP and the beaconing has already been configured. This attribute is
++ *	dangerous because will destroy stations performance as a lot of frames
++ *	will be lost while scanning off-channel, therefore it must be used only
++ *	when really needed.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1535,6 +1541,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_SAE_DATA,
+ 
++	NL80211_ATTR_SCAN_FORCE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 04df773..600e2c7 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1005,6 +1005,7 @@ struct cfg80211_ssid {
+  * @wdev: the wireless device to scan for
+  * @aborted: (internal) scan request was notified as aborted
+  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
++ * @force: scan even if the vif is in AP mode and beacon has been set already
+  */
+ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -1021,6 +1022,7 @@ struct cfg80211_scan_request {
+ 	struct wiphy *wiphy;
+ 	bool aborted;
+ 	bool no_cck;
++	bool force;
+ 
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 03216b0..4f932c5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1850,7 +1850,14 @@ static int ieee80211_scan(struct wiphy *wiphy,
+ 		 * beaconing hasn't been configured yet
+ 		 */
+ 	case NL80211_IFTYPE_AP:
+-		if (sdata->u.ap.beacon)
++		/*
++		 * If the scan has been forced, don't care about being beaconing
++		 * already.
++		 * This will create problems to the attached stations (e.g. all
++		 * the  frames sent while scanning on other channel will be
++		 * lost)
++		 */
++		if (sdata->u.ap.beacon && !req->force)
+ 			return -EOPNOTSUPP;
+ 		break;
+ 	default:
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 746f649..94758df 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4362,6 +4362,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
++	request->force = nla_get_flag(info->attrs[NL80211_ATTR_SCAN_FORCE]);
++
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+-- 
+1.7.12
 
