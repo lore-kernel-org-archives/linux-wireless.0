@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:34728 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859Ab2JDJh1 (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33075 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756250Ab2JCOv3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 05:37:27 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hr7so490786wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 02:37:26 -0700 (PDT)
+	Wed, 3 Oct 2012 10:51:29 -0400
+Received: by padhz1 with SMTP id hz1so6410624pad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 07:51:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20121003232034.GA19388@localhost.arig>
-References: <20121003232034.GA19388@localhost.arig>
-Date: Thu, 4 Oct 2012 11:37:25 +0200
-Message-ID: <CAL1gcdOH_Au3kVMQTZg9Je4uap3S0r8fK6RjygjO9TZHCRZdZw@mail.gmail.com> (sfid-20121004_113733_958172_C00E337E)
-Subject: Re: [PATCH] rt2x00/rt3352: Fix lnagain assignment to use register 66.
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Daniel Golle <dgolle@allnet.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <506B0628.6070201@openwrt.org>
+References: <1348756862-8788-1-git-send-email-sven@narfation.org>
+	<20121002133533.GA19403@pandem0nium>
+	<CAJ-VmomddCMRxx6Vh_i8AJsqYMUCyguUwFt_PQHpDY7-+Gs88A@mail.gmail.com>
+	<7670031.sYFb4t8Iqn@bentobox>
+	<506B0628.6070201@openwrt.org>
+Date: Wed, 3 Oct 2012 07:51:28 -0700
+Message-ID: <CAJ-Vmo=bu=j+=z_TAeE3--Sn5oAEbkEG-HDqK=6okR8xmmWpSQ@mail.gmail.com> (sfid-20121003_165140_374414_D0CBB9B4)
+Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL
+ on AR9003
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Sven Eckelmann <sven@narfation.org>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	lindner_marek@yahoo.de
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 4, 2012 at 1:20 AM, Daniel Golle <dgolle@allnet.de> wrote:
-> This should be register 66 instead of 62.
-> (probably happened by copy&past'ing from the lines below)
->
-> Signed-off-by: Daniel Golle <dgolle@allnet.de>
+On 2 October 2012 08:20, Felix Fietkau <nbd@openwrt.org> wrote:
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> This sync cause 0x20 isn't handled anywhere and may be the cause of the
+>> hang/crash. At least this is the symptom which can be fixed without crashing
+>> the system.
+> I checked the AR933x datasheet, and it says that cause 0x20 is tx
+> descriptor corruption.
 
-John, please apply to the wireless tree for inclusion in 3.7.
+Ah hey, for Hornet they redefined those bits:
 
->
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 540c94f..01dc889 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2252,9 +2252,9 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->          */
->         if (rt2x00_rt(rt2x00dev, RT3352)) {
->                 rt2800_bbp_write(rt2x00dev, 27, 0x0);
-> -               rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
-> +               rt2800_bbp_write(rt2x00dev, 66, 0x26 + rt2x00dev->lna_gain);
->                 rt2800_bbp_write(rt2x00dev, 27, 0x20);
-> -               rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
-> +               rt2800_bbp_write(rt2x00dev, 66, 0x26 + rt2x00dev->lna_gain);
->         } else {
->                 rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
->                 rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
-> --
-> 1.7.12.2
->
+5: MAC_TXC_CORRUPTION_FLAG_SYNC (TX descriptor integrity flag)
+6: INVALID_ADDRESS_ACCESS (invalid register access)
+
+Good catch. That's definitely something in the right direction.
 
 
 
--- 
----
-Gertjan
+Adrian
