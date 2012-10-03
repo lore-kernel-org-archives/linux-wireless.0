@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47909 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754836Ab2JEK0q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 06:26:46 -0400
-Date: Fri, 5 Oct 2012 13:27:52 +0300
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	bzhao@marvell.com
-Subject: Re: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
-Message-ID: <20121005102750.GG12229@aemeltch-MOBL1> (sfid-20121005_122649_751128_2F9FA991)
-References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
- <1349368379.2008.16.camel@joe-AO722>
- <1349419996.10584.5.camel@smile>
- <20121005101058.GE12229@aemeltch-MOBL1>
- <1349432305.10584.29.camel@smile>
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:57407 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756061Ab2JCNxy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Oct 2012 09:53:54 -0400
+Received: by obbuo13 with SMTP id uo13so7274031obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 06:53:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1349432305.10584.29.camel@smile>
+In-Reply-To: <1347276044.4272.14.camel@jlt4.sipsolutions.net>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	<1344426823-1795-5-git-send-email-victorg@ti.com>
+	<1347276044.4272.14.camel@jlt4.sipsolutions.net>
+Date: Wed, 3 Oct 2012 15:53:53 +0200
+Message-ID: <CAK80WHZgaCHcPpV8MqRCozLk7dw1wdaHU2CQcShqeu+rOA1MKw@mail.gmail.com> (sfid-20121003_155500_944109_BC7DEA46)
+Subject: Re: [PATCH v3 4/7] mac80211: add ability to enable TX on op-channel
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andy,
+On Mon, Sep 10, 2012 at 2:20 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
+>> Prior starting tx on DFS channels, the DFS master
+>> device shall perform a Channel Availability Check
+>> to ensure that there is no radar interference on
+>> those channels. Once CAC done, the tx can be
+>> enabled with ieee80211_dfs_en_tx().
+>>
+>> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+>> ---
+>>  include/net/mac80211.h    |    4 ++++
+>>  net/mac80211/cfg.c        |   15 +++++++++++++++
+>>  net/mac80211/driver-ops.h |   14 ++++++++++++++
+>>  net/mac80211/trace.h      |    6 ++++++
+>>  4 files changed, 39 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>> index d29c99a..ecdfb6a 100644
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -2266,6 +2266,8 @@ enum ieee80211_rate_control_changed {
+>>  * @start_radar_detection: Start radar detection on current operational
+>>   *   channel, once started it will continuously monitor for radars as long
+>>   *   as the channel active.
+>> + * @dfs_en_tx: Once channel pass the DFS initial channel availability check,
+>> + *   initiate the tx on the channel with this command.
+>
+> Please also document (for both!) the fact that they can sleep.
+>
 
-On Fri, Oct 05, 2012 at 01:18:25PM +0300, Andy Shevchenko wrote:
-> On Fri, 2012-10-05 at 13:11 +0300, Andrei Emeltchenko wrote: 
-> > On Fri, Oct 05, 2012 at 09:53:16AM +0300, Andy Shevchenko wrote:
-> > > On Thu, 2012-10-04 at 09:32 -0700, Joe Perches wrote: 
-> 
-> > > > When the number of bytes is fixed, it might be nicer
-> > > > to use a format like "%<num>ph" so that the function
-> > > > argument stack doesn't have the width pushed but it's
-> > > > fixed in the format.
-> > > > 
-> > > > This case would definitely not work well though as it's
-> > > > a #define rather than a simple number and I think
-> > > > using "%" stringize(some_define) "ph" is not nice.
-> > > > 
-> > > > Maybe this case argues more for always using "%*ph".
-> > > > At least that's easily greppable.
-> 
-> 
-> > > I checked briefly the code and found that the constant is heavily used
-> > > as a definition for the length of static byte arrays. So, in that case
-> > > probably better to use %*ph, but apply sizeof(cool_var) instead of
-> > > putting constant there.
-> > 
-> > I did not touch logic that print buffer, the buffer might have lots of
-> > data (even significantly more then you may want to print to logs) so
-> > using sizeof is not the best idea in these cases.
-> Then you probably need to decide how much you would like to print
-> exactly and put that constant directly to the %*ph (instead of
-> asterisk), like %5ph. Otherwise it's unclear what DBG_CMD_NUM stands
+ok.
 
-I do not like much magic numbers. Defines are the same as those magic
-numbers. You always see them with one jump and usually you do reuse them
-anyway.
+>
+>> +DEFINE_EVENT(local_sdata_evt, drv_dfs_en_tx,
+>> +     TP_PROTO(struct ieee80211_local *local,
+>> +              struct ieee80211_sub_if_data *sdata),
+>> +     TP_ARGS(local, sdata)
+>> +);
+>
+> Again, parameters.
+>
 
-Best regards 
-Andrei Emeltchenko 
+will add channel frequency.
+
+-- 
+Thanks,
+Victor.
