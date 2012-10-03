@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:33100 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab2J1PtK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2012 11:49:10 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so1677222bkc.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2012 08:49:08 -0700 (PDT)
-Message-ID: <508D53EE.7050405@gmail.com> (sfid-20121028_164916_299124_3D8FCE4A)
-Date: Sun, 28 Oct 2012 16:49:02 +0100
-From: Daniel Mack <zonque@gmail.com>
-MIME-Version: 1.0
-To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>,
-	Bing Zhao <bzhao@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	"Porter, Matt" <mporter@ti.com>
-Subject: Re: mwifiex_sdio problem: firmware fails to be active in time
-References: <507F4448.2040707@gmail.com> <477F20668A386D41ADCC57781B1F7043083B80E44A@SC-VEXCH1.marvell.com> <50802984.6070203@gmail.com> <CAMXE1-qWOKphtOjUYWUz1CLDUtAynODvHmLm60rJMC=jBtRsNw@mail.gmail.com> <508AF992.8070606@gmail.com>
-In-Reply-To: <508AF992.8070606@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:60107 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965457Ab2JCRwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Oct 2012 13:52:10 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.7 2/2] cfg80211: fix initialization of chan->max_reg_power
+Date: Wed,  3 Oct 2012 19:51:47 +0200
+Message-Id: <1349286707-64433-2-git-send-email-nbd@openwrt.org> (sfid-20121003_195335_988192_C6EB191F)
+In-Reply-To: <1349286707-64433-1-git-send-email-nbd@openwrt.org>
+References: <1349286707-64433-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26.10.2012 22:58, Daniel Mack wrote:
-> [have to re-open this issue again]
-> 
-> On 21.10.2012 16:16, Andrei Emeltchenko wrote:
->> I have the same board and see this problem sometimes. Reloading modules
->> might help, if not reboot always works :).
-> 
-> I thought I solved this issue, but I can't reproduce the running version
-> anymore unfortunately. It constantly fails with the error I described,
-> even though the clock and all voltages etc are definitely stable.
+A few places touch chan->max_power based on updated tx power rules, but
+forget to do the same to chan->max_reg_power.
 
-Ok, following up on my own writings: I solved this issue. It took me
-awhile to figure out that the 88WSD8787 is really picky about the
-clock/power sequencing. It really needs >= 1ms delay in the startup
-phase, otherwise the firmware won't start up.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@vger.kernel.org
+---
+ net/wireless/reg.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-So if anyone has this problem, make sure to care for that very detail.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1a16f19..7062475 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -908,7 +908,7 @@ static void handle_channel(struct wiphy *wiphy,
+ 			map_regdom_flags(reg_rule->flags) | bw_flags;
+ 		chan->max_antenna_gain = chan->orig_mag =
+ 			(int) MBI_TO_DBI(power_rule->max_antenna_gain);
+-		chan->max_power = chan->orig_mpwr =
++		chan->max_reg_power = chan->max_power = chan->orig_mpwr =
+ 			(int) MBM_TO_DBM(power_rule->max_eirp);
+ 		return;
+ 	}
+@@ -1330,7 +1330,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 
+ 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
+ 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+-	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
++	chan->max_reg_power = chan->max_power =
++		(int) MBM_TO_DBM(power_rule->max_eirp);
+ }
+ 
+ static void handle_band_custom(struct wiphy *wiphy, enum ieee80211_band band,
+-- 
+1.7.9.6 (Apple Git-31.1)
 
-
-
-Daniel
