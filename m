@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5019 "EHLO mga01.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4510 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758549Ab2J2LAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 07:00:31 -0400
-Date: Mon, 29 Oct 2012 12:00:28 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] NFC: Move pn544.h to linux/platform_data/
-Message-ID: <20121029110028.GG5411@sortiz-mobl> (sfid-20121029_120040_081578_052EE3E9)
-References: <1351104326-5206-1-git-send-email-marcel@holtmann.org>
+	id S1754461Ab2JCHHn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Oct 2012 03:07:43 -0400
+Message-ID: <506BE42F.4070203@broadcom.com> (sfid-20121003_090748_196945_2DFD8D7A)
+Date: Wed, 3 Oct 2012 09:07:27 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1351104326-5206-1-git-send-email-marcel@holtmann.org>
+To: "Dan Carpenter" <dan.carpenter@oracle.com>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch 1/3] brcmfmac: cleanup casts in
+ brcmf_c_mkiovar_bsscfg()
+References: <20121003060515.GA3802@elgon.mountain>
+In-Reply-To: <20121003060515.GA3802@elgon.mountain>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+On 10/03/2012 08:05 AM, Dan Carpenter wrote:
+> Remove some pointless casts from the return value of strlen().  The
+> "buflen" variable is already an unsigned int so it's never less than
+> zero and doesn't need to be casted to u32.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+> index 15c5db5..ae0978c 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+> @@ -102,11 +102,11 @@ brcmf_c_mkiovar_bsscfg(char *name, char *data, uint datalen,
 
-On Wed, Oct 24, 2012 at 11:45:26AM -0700, Marcel Holtmann wrote:
-> The pn544.h just provides the platform data struct and defines and
-> nothing else. So move it to to linux/platform_data/ now.
-> 
-> Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
-> ---
->  drivers/nfc/pn544_hci.c             |  2 +-
->  include/linux/nfc/pn544.h           | 44 -------------------------------------
->  include/linux/platform_data/pn544.h | 44 +++++++++++++++++++++++++++++++++++++
->  3 files changed, 45 insertions(+), 45 deletions(-)
->  delete mode 100644 include/linux/nfc/pn544.h
->  create mode 100644 include/linux/platform_data/pn544.h
-We moved the pn544 driver into his own directory, so I applied this patch to
-my nfc-next branch after fixing it up.
+Internally we reworked this code and moved the function to another file. 
+The casts are no longer there.
 
-Cheers,
-Samuel.
+>   	if (bssidx == 0)
+>   		return brcmf_c_mkiovar(name, data, datalen, buf, buflen);
+>
+> -	prefixlen = (u32) strlen(prefix); /* lengh of bsscfg prefix */
+> -	namelen = (u32) strlen(name) + 1; /* lengh of iovar  name + null */
+> +	prefixlen = strlen(prefix); /* lengh of bsscfg prefix */
+> +	namelen = strlen(name) + 1; /* lengh of iovar name + null */
+>   	iolen = prefixlen + namelen + sizeof(bssidx_le) + datalen;
+>
+> -	if (buflen < 0 || iolen > (u32)buflen) {
+> +	if (buflen < iolen) {
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+This is still wrong internally so we will fix this with the appropriate 
+credits ;-)
+
+>   		brcmf_dbg(ERROR, "buffer is too short\n");
+>   		return 0;
+>   	}
+>
+
+Thanks.
+
+Gr. AvS
+
