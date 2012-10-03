@@ -1,56 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36173 "EHLO purkki.adurom.net"
+Received: from mx1.redhat.com ([209.132.183.28]:17927 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751507Ab2JMFiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2012 01:38:46 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
-References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
-	<20121011203112.GB3317@kroah.com> <87haq017wi.fsf@purkki.adurom.net>
-	<20121012143355.GA25235@tuxdriver.com>
-Date: Sat, 13 Oct 2012 08:38:42 +0300
-In-Reply-To: <20121012143355.GA25235@tuxdriver.com> (John W. Linville's
-	message of "Fri, 12 Oct 2012 10:33:56 -0400")
-Message-ID: <87a9vr0w4d.fsf@purkki.adurom.net> (sfid-20121013_073859_524465_A5E0B17B)
+	id S1751922Ab2JCLh7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Oct 2012 07:37:59 -0400
+Date: Wed, 3 Oct 2012 13:37:00 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Mel Gorman <mgorman@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	David Rientjes <rientjes@google.com>,
+	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
+Message-ID: <20121003113659.GD2259@redhat.com> (sfid-20121003_133807_885637_EE0C2624)
+References: <20120909213228.GA5538@elf.ucw.cz>
+ <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
+ <20120910111113.GA25159@elf.ucw.cz>
+ <20120911162536.bd5171a1.akpm@linux-foundation.org>
+ <20120912101826.GL11266@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120912101826.GL11266@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+On Wed, Sep 12, 2012 at 11:18:26AM +0100, Mel Gorman wrote:
+> On Tue, Sep 11, 2012 at 04:25:36PM -0700, Andrew Morton wrote:
+> > On Mon, 10 Sep 2012 13:11:13 +0200
+> > Pavel Machek <pavel@ucw.cz> wrote:
+> > 
+> > > On Sun 2012-09-09 15:40:55, David Rientjes wrote:
+> > > > On Sun, 9 Sep 2012, Pavel Machek wrote:
+> > > > 
+> > > > > On 3.6.0-rc2+, I tried to turn on the wireless, but got
+> > > > > 
+> > > > > root@amd:~# ifconfig wlan0 10.0.0.6 up
+> > > > > SIOCSIFFLAGS: Cannot allocate memory
+> > > > > SIOCSIFFLAGS: Cannot allocate memory
+> > > > > root@amd:~# 
+> > > > > 
+> > > > > It looks like it uses "a bit too big" allocations to allocate
+> > > > > firmware...? Order five allocation....
+> > > > > 
+> > > > > Hmm... then I did "echo 3  > /proc/sys/vm/drop_caches" and now the
+> > > > > network works. Is it VM problem that it failed to allocate memory when
+> > > > > it was freeable?
+> > > > > 
+> > > > 
+> > > > Do you have CONFIG_COMPACTION enabled?
+> > > 
+> > > Yes:
+> > > 
+> > > pavel@amd:/data/l/linux-good$ zgrep CONFIG_COMPACTION /proc/config.gz 
+> > > CONFIG_COMPACTION=y
+> > 
+> > Asking for a 256k allocation is pretty crazy - this is an operating
+> > system kernel, not a userspace application.
+> > 
+> > I'm wondering if this is due to a recent change, but I'm having trouble
+> > working out where the allocation call site is.
+> 
+> It may be indirectly due to a recent change and this was somewhat
+> deliberate. Order-5 is larger than PAGE_ALLOC_COSTLY_ORDER and I doubt
+> __GFP_REPEAT was set so it is treated as something that can fail in
+> preference to aggressively reclaiming pages to satisfy the allocation. In
+> older kernels with lumpy reclaim and an aggressive kswapd it would have
+> probably succeeded but now it errs on the side of failing early instead
+> assuming that the caller can recover. Drivers that depend on order-5
+> allocations to succeed for correct operation are somewhat frowned upon.
 
->> I did a really quick 5 min review of this driver and IMHO this should go
->> directly to drivers/net/wireless/ (or maybe to drivers/net/wireless/ath,
->> Luis?), I don't see any reason why this should go to staging. The code
->> looks clean and is only 2 kLOC. But I'll review this better during the
->> weekend and also run some build tests.
->
-> I have no particular objection to that.  FWIW, Pontus contacted me
-> and said something like "I've got this driver that sucks and needs
-> a lot of work, should it go to staging?"  Perhaps he was being too
-> hard on himself? :-)
+So, can this problem be solved like on below patch, or I should rather
+split firmware loading into chunks similar like was already iwlwifi did?
 
-Well, we are not exactly famous about giving positive feedback ;) So no
-wonder new people are extra cautious.
-
-But after a more thorough review I still think that this driver should
-go to drivers/net/wireless. For example, it has proper endian support,
-it's both gcc and sparse warning free and the code is a pleasure to
-read(!).
-
-Here are my comments:
-
-* use ALIGN() and IS_ALIGNED() macros instead of doing it manually
-* checkpatch complains about DOS line endings (but that might be due to
-  mail server, not sure)
-* git-am complained about whitespace damage
-* defines inside structures is not common, kernel style is to have the
-  defines on top of the structure definition
-
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 5f50177..1b58222 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -2247,7 +2247,7 @@ il_alloc_fw_desc(struct pci_dev *pci_dev, struct fw_desc *desc)
+ 
+ 	desc->v_addr =
+ 	    dma_alloc_coherent(&pci_dev->dev, desc->len, &desc->p_addr,
+-			       GFP_KERNEL);
++			       GFP_KERNEL | __GFP_REPEAT);
+ 	return (desc->v_addr != NULL) ? 0 : -ENOMEM;
+ }
+ 
