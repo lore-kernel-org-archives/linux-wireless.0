@@ -1,125 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:27289 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751845Ab2JCIzX (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:50802 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755679Ab2JCNx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 04:55:23 -0400
-From: Antonio Quartulli <ordex@autistici.org>
+	Wed, 3 Oct 2012 09:53:58 -0400
+Received: by oagh16 with SMTP id h16so7401777oag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 06:53:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1347276227.4272.17.camel@jlt4.sipsolutions.net>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	<1344426823-1795-6-git-send-email-victorg@ti.com>
+	<1347276227.4272.17.camel@jlt4.sipsolutions.net>
+Date: Wed, 3 Oct 2012 15:53:56 +0200
+Message-ID: <CAK80WHarUE=6tne+BD=cvMHVT7Yyq+kK2ce=cHvfuapxqyo35w@mail.gmail.com> (sfid-20121003_155459_077674_832A09F5)
+Subject: Re: [PATCH v3 5/7] nl80211/cfg80211: add ap channel switch command
+From: "Goldenshtein, Victor" <victorg@ti.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [RFC] nl/cfg80211: force scan using an AP vif if requested
-Date: Wed,  3 Oct 2012 10:54:42 +0200
-Message-Id: <1349254482-31743-1-git-send-email-ordex@autistici.org> (sfid-20121003_105939_571713_10D0C349)
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the user wants to scan using a vif configured as AP, cfg80211 must give him a
-chance to do it, even if this will disrupt the stations performance due to
-off-channel scanning. To do so, this patch adds a 'force' flag to the
-SCAN_TRIGGER command which tells cfg80211 to perform the scanning operation even
-if the vif is an AP and the beaconing has already started.
+On Mon, Sep 10, 2012 at 2:23 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> + * @NL80211_CMD_AP_CH_SWITCH: Perform a channel switch in the driver (for
+>> + *   AP/GO).
+>> + *   %NL80211_ATTR_WIPHY_FREQ: new channel frequency.
+>> + *   %NL80211_ATTR_CH_SWITCH_BLOCK_TX: block tx on the current channel.
+>> + *   %NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX: block tx on the target channel.
+>> + *   %NL80211_FREQ_ATTR_CH_SWITCH_COUNT: number of TBTT's until the channel
+>> + *   switch event.
+>
+> Needs more documentation.
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
+I'll elaborate a bit..
 
-* in several scenarios the user would like to perform a scan while an AP vif is
-  running. This can happen when the user wants to check if there is a less
-  polluted channel on which he wants to move the AP. In the current
-  implementation this is not allowed at all. The only way to perform this
-  operation consists in creating another vif configured as managed and scan
-  channels using it. With the approach proposed by this patch, instead, the
-  user can simply "force" the scan on the AP interface (e.g. using iw).
+>
+>> @@ -720,6 +728,8 @@ enum nl80211_commands {
+>>
+>>       NL80211_CMD_CH_SWITCH_NOTIFY,
+>>
+>> +     NL80211_CMD_AP_CH_SWITCH,
+>> +
+>>       NL80211_CMD_RADAR_DETECT,
+>>
+>>       NL80211_CMD_DFS_ENABLE_TX,
+>
+> Ahem.
+>
+
+just thought to put the channel switch stuff together.
+don't might to move it down.
+
+>> @@ -1267,6 +1277,14 @@ enum nl80211_commands {
+>>   *   was used to provide the hint. For the different types of
+>>   *   allowed user regulatory hints see nl80211_user_reg_hint_type.
+>>   *
+>> + * @NL80211_ATTR_CH_SWITCH_COUNT: the number of TBTT's until the channel
+>> + *   switch event
+>> + * @NL80211_ATTR_CH_SWITCH_BLOCK_TX: block tx on the current channel before the
+>> + *   channel switch operation.
+>> + * @NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX: block tx on the target channel after
+>> + *   the channel switch operation, should be set if the target channel is
+>> + *   DFS channel.
+>
+> Need to document the types.
+
+np.
+
+>
+>>   * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
+>> + * @NL80211_FEATURE_AP_CH_SWITCH: This driver supports AP channel switch.
+>
+> I have a nagging feeling I keep asking this, but what's the point of
+> radar detection without channel switch? Or is it the other way around
+> that's interesting? Maybe should verify that if you have DFS you also
+> have chanswitch?
+
+one might support a channel switch without DFS, but the one who sets
+the "NL80211_FEATURE_DFS" must support channel switch.
+I don't might to check both these flags, but then I think it would be
+cleaner (more readable) to leave the "dfs_supported" flag.
+something like:
+bool dfs_supported = ((local->hw.wiphy->features & NL80211_FEATURE_DFS) &&
+(local->hw.wiphy->features & NL80211_FEATURE_AP_CH_SWITCH));
 
 
+>
+>>  /**
+>> + * struct ieee80211_ap_ch_switch - holds the ap channel switch data
+>> + *
+>> + * The information provided in this structure is required for the ap channel
+>> + * switch operation.
+>> + *
+>> + * @timestamp: value in microseconds of the 64-bit Time Synchronization
+>> + *   Function (TSF) timer when the frame containing the channel switch
+>> + *   announcement was received. This is simply the rx.mactime parameter
+>> + *   the driver passed into mac80211.
+>> + * @block_tx: Indicates whether transmission must be blocked before the
+>> + *   scheduled channel switch, as indicated by the AP.
+>> + * @post_switch_block_tx: Indicates whether transmission must be blocked after
+>> + *   the scheduled channel switch, this should be set if the target channel
+>> + *   is DFS channel.
+>> + * @channel: the new channel to switch to
+>> + * @channel_type: the type of the new channel
+>> + * @count: the number of TBTT's until the channel switch event
+>> + */
+>
+> Bogus documentation.
 
+can you please elaborate on this one.
+note that it's almost identical to "ieee80211_channel_switch" struct,
+the two new parameters here are "post_switch_block_tx" and
+"channel_type".
 
- include/linux/nl80211.h | 8 ++++++++
- include/net/cfg80211.h  | 2 ++
- net/mac80211/cfg.c      | 9 ++++++++-
- net/wireless/nl80211.c  | 2 ++
- 4 files changed, 20 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 179a0c2..7e347c1 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1276,6 +1276,12 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SAE_DATA: SAE elements in Authentication frames. This starts
-  *	with the Authentication transaction sequence number field.
-  *
-+ * @NL80211_ATTR_SCAN_FORCE: force a scan even if the interface is configured as
-+ *	AP and the beaconing has already been configured. This attribute is
-+ *	dangerous because will destroy stations performance as a lot of frames
-+ *	will be lost while scanning off-channel, therefore it must be used only
-+ *	when really needed.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1535,6 +1541,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SAE_DATA,
- 
-+	NL80211_ATTR_SCAN_FORCE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 04df773..600e2c7 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1005,6 +1005,7 @@ struct cfg80211_ssid {
-  * @wdev: the wireless device to scan for
-  * @aborted: (internal) scan request was notified as aborted
-  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
-+ * @force: scan even if the vif is in AP mode and beacon has been set already
-  */
- struct cfg80211_scan_request {
- 	struct cfg80211_ssid *ssids;
-@@ -1021,6 +1022,7 @@ struct cfg80211_scan_request {
- 	struct wiphy *wiphy;
- 	bool aborted;
- 	bool no_cck;
-+	bool force;
- 
- 	/* keep last */
- 	struct ieee80211_channel *channels[0];
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 03216b0..4f932c5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1850,7 +1850,14 @@ static int ieee80211_scan(struct wiphy *wiphy,
- 		 * beaconing hasn't been configured yet
- 		 */
- 	case NL80211_IFTYPE_AP:
--		if (sdata->u.ap.beacon)
-+		/*
-+		 * If the scan has been forced, don't care about being beaconing
-+		 * already.
-+		 * This will create problems to the attached stations (e.g. all
-+		 * the  frames sent while scanning on other channel will be
-+		 * lost)
-+		 */
-+		if (sdata->u.ap.beacon && !req->force)
- 			return -EOPNOTSUPP;
- 		break;
- 	default:
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 746f649..94758df 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4362,6 +4362,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
-+	request->force = nla_get_flag(info->attrs[NL80211_ATTR_SCAN_FORCE]);
-+
- 	request->no_cck =
- 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
 -- 
-1.7.12
-
+Thanks,
+Victor.
