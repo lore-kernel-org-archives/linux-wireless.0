@@ -1,85 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:62497 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933098Ab2JXRZR (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:45179 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411Ab2JCGHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 13:25:17 -0400
-Received: by mail-we0-f174.google.com with SMTP id t9so383574wey.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 10:25:16 -0700 (PDT)
+	Wed, 3 Oct 2012 02:07:33 -0400
+Date: Wed, 3 Oct 2012 09:07:13 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kernel-janitors@vger.kernel.org
+Subject: [patch 3/3] brcmfmac: Using zero instead of NULL
+Message-ID: <20121003060713.GC3802@elgon.mountain> (sfid-20121003_080737_617346_0CF6D343)
 MIME-Version: 1.0
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D075EC214@RockMX01.rock.corp>
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D075EC214@RockMX01.rock.corp>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 24 Oct 2012 10:24:55 -0700
-Message-ID: <CAG6hwVNuijKqzNnyQMS9dxvRy3YdxuY_WkJ+k5L18yXc7jHe_Q@mail.gmail.com> (sfid-20121024_192527_211547_BF2924DC)
-Subject: Re: 802.11s bug in ieee80211_rx_h_mesh_fwding() result in bogus MAC
- in mpp table
-To: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Javier Cardona <javier@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Chaoxing,
+Sparse complains that we use zero instead of NULL here.  In fact, the
+initialization is wrong and should be removed.  Doing these kinds of
+bogus initializations means that GCC can't detect unitialized variables
+and leads to bugs.
 
-On Wed, Oct 24, 2012 at 9:36 AM, Chaoxing Lin
-<Chaoxing.Lin@ultra-3eti.com> wrote:
-> And mpp table grows fast, which can affect mpp lookup efficiency severely.
->
-> Here is the problem (code line number is based on 3.6.3 kernel)
->
-> It happens when user turns on encryption.
->
->
-> 1835 #ifdef CONFIG_MAC80211_MESH
-> 1836 static ieee80211_rx_result
-> 1837 ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
-> 1838 {
-> ...
-> 1849
-> 1850     hdr = (struct ieee80211_hdr *) skb->data;
-> 1851     hdrlen = ieee80211_hdrlen(hdr->frame_control);
-> 1852     mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
-> ...
-> 1865
-> 1866     if (mesh_hdr->flags & MESH_FLAGS_AE) {             //CLIN: mesh_hdr is pointed at ENCRYPTED part
->                                                             // if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
-> 1867         struct mesh_path *mppath;
-> 1868         char *proxied_addr;
-> 1869         char *mpp_addr;
-> 1870
-> 1871         if (is_multicast_ether_addr(hdr->addr1)) {
-> 1872             mpp_addr = hdr->addr3;
-> 1873             proxied_addr = mesh_hdr->eaddr1;           //CLIN: deference random data result in random MAC for proxied_addr
-> 1874         } else {
-> 1875             mpp_addr = hdr->addr4;
-> 1876             proxied_addr = mesh_hdr->eaddr2;           //CLIN: deference random data result in random MAC for proxied_addr
-> 1877         }
-> 1878
-> 1879         rcu_read_lock();
-> 1880         mppath = mpp_path_lookup(proxied_addr, sdata);
-> 1881         if (!mppath) {
-> 1882             mpp_path_add(proxied_addr, mpp_addr, sdata);  //CLIN: mpp table grows fast, almost as fast as packet in air
-> 1883         } else {
-> 1884             spin_lock_bh(&mppath->state_lock);
-> 1885             if (!ether_addr_equal(mppath->mpp, mpp_addr))
-> 1886                 memcpy(mppath->mpp, mpp_addr, ETH_ALEN);
-> 1887             spin_unlock_bh(&mppath->state_lock);
-> 1888         }
-> 1889         rcu_read_unlock();
-> 1890     }
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-<snip>
-
-> The cure is to move below early in this function when packet is encrypted.
->
-> 1904     if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
-> 1905         goto out;
-
-Yes, I think it makes sense to put that check early in the function.
-All forwarded frames need to pass that condition anyway.
-
-Will you submit a proper patch for this?
-
-Thomas
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index ed83b54..9ddafc2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3973,7 +3973,7 @@ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
+ 	u8  *curr_ie_buf;
+ 	u8  *mgmt_ie_buf = NULL;
+ 	int mgmt_ie_buf_len;
+-	u32 *mgmt_ie_len = 0;
++	u32 *mgmt_ie_len;
+ 	u32 del_add_ie_buf_len = 0;
+ 	u32 total_ie_buf_len = 0;
+ 	u32 parsed_ie_buf_len = 0;
