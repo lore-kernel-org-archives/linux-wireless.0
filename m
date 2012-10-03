@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:44994 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932223Ab2JWSeJ (ORCPT
+Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:50709
+	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751763Ab2JCEaV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2012 14:34:09 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n3so558125lbo.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2012 11:34:07 -0700 (PDT)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH v3 0/4]  Driver for the ar5523 chipset
-Date: Tue, 23 Oct 2012 20:33:56 +0200
-Message-Id: <1351017240-2797-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20121023_203414_836689_C4EED534)
+	Wed, 3 Oct 2012 00:30:21 -0400
+Message-ID: <506BBF57.8060608@posedge.com> (sfid-20121003_063122_364291_CDD41FB9)
+Date: Wed, 3 Oct 2012 10:00:15 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH v4 0/2] mac80211: VHT peer STA caps
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some time ago I found an old USB wireless dongle in my drawer. I was
-surprised it wasn't supported in Linux. Google gave me an old
-unfinished driver created by Christoph Hellwig. Armed with some
-spare time and naivity I picked up where Christoph left in 2007 and
-now it's actually working pretty fine. It does not crash for me and
-throughput is decent.
+As per Johannes review comments on PATCH v3, split into 2 patches and 
+removed incomplete code of AP mode saving STA vht caps.
 
-It's based on the FreeBSD driver, which in turn is based on the
-reverse engineered Windows driver, hence a very limited feature set.
-Not even HW crypto offload is supported. But at least there is a
-firmware which has a suitable license:
+[PATCH v4 1/2]
+Rename vht_capabilities to vht_cap
 
-http://www.freebsd.org/cgi/cvsweb.cgi/src/sys/contrib/dev/uath/ar5523.bin.uu
+  include/linux/ieee80211.h |    2 +-
+  net/mac80211/main.c       |    2 +-
+  net/mac80211/mlme.c       |    4 ++--
+  net/mac80211/util.c       |    4 ++--
+  4 files changed, 6 insertions(+), 6 deletions(-)
 
-Changes v2 to v3:
+[PATCH v4 2/2]
+To save APs VHT capabilities in mac80211 under STA mode
 
-* Replace homebrew workaround with USB_ZERO_PACKET.
-* Sort and clean up copyright holders.
-
-Pontus Fuchs (4):
-  ar5523: Add main driver file
-  ar5523: Add driver header file
-  Add Firmware API header file
-  Add Kconfig and Makefile. Add MAINTAINERS entry
-
- MAINTAINERS                                 |    6 +
- drivers/net/wireless/ath/Kconfig            |    1 +
- drivers/net/wireless/ath/Makefile           |    1 +
- drivers/net/wireless/ath/ar5523/Kconfig     |    7 +
- drivers/net/wireless/ath/ar5523/Makefile    |    1 +
- drivers/net/wireless/ath/ar5523/ar5523.c    | 1806 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ar5523/ar5523.h    |  152 +++
- drivers/net/wireless/ath/ar5523/ar5523_hw.h |  431 +++++++
- 8 files changed, 2405 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ar5523/Kconfig
- create mode 100644 drivers/net/wireless/ath/ar5523/Makefile
- create mode 100644 drivers/net/wireless/ath/ar5523/ar5523.c
- create mode 100644 drivers/net/wireless/ath/ar5523/ar5523.h
- create mode 100644 drivers/net/wireless/ath/ar5523/ar5523_hw.h
-
--- 
-1.7.9.5
-
+  include/net/mac80211.h     |    3 +++
+  net/mac80211/Makefile      |    1 +
+  net/mac80211/ieee80211_i.h |    7 +++++++
+  net/mac80211/mlme.c        |    5 +++++
+  net/mac80211/util.c        |   12 ++++++++++++
+  net/mac80211/vht.c         |   36 ++++++++++++++++++++++++++++++++++++
+  6 files changed, 64 insertions(+), 0 deletions(-)
