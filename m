@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59087 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950Ab2JVV0m (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:42820 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194Ab2JCGFi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 17:26:42 -0400
-Message-ID: <5085BA0E.6080903@candelatech.com> (sfid-20121022_232645_395818_95525E1C)
-Date: Mon, 22 Oct 2012 14:26:38 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 3 Oct 2012 02:05:38 -0400
+Date: Wed, 3 Oct 2012 09:05:15 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Alwin Beukers <alwin@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kernel-janitors@vger.kernel.org
+Subject: [patch 1/3] brcmfmac: cleanup casts in brcmf_c_mkiovar_bsscfg()
+Message-ID: <20121003060515.GA3802@elgon.mountain> (sfid-20121003_080649_589382_FFFD069A)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Cannot bring up second VAP on recent kernels?
-References: <5085AA78.1080809@candelatech.com> <5085B866.8060306@openwrt.org>
-In-Reply-To: <5085B866.8060306@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/2012 02:19 PM, Felix Fietkau wrote:
-> On 2012-10-22 10:20 PM, Ben Greear wrote:
->> Anyone successfully using more than one virtual AP on
->> 3.3 or higher kernels?  It works fine for me on 3.0.32,
->> but my 3.3.8 and 3.5.7 kernels (and a few similar ones)
->> all fail with errors like this below:
->>
->> Hardware is ath9k 3x3 9380 NIC.
-> Are you using one hostapd instance per vap, or one hostapd instance for
-> all of them?
+Remove some pointless casts from the return value of strlen().  The
+"buflen" variable is already an unsigned int so it's never less than
+zero and doesn't need to be casted to u32.
 
-One hostapd per VAP.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 15c5db5..ae0978c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -102,11 +102,11 @@ brcmf_c_mkiovar_bsscfg(char *name, char *data, uint datalen,
+ 	if (bssidx == 0)
+ 		return brcmf_c_mkiovar(name, data, datalen, buf, buflen);
+ 
+-	prefixlen = (u32) strlen(prefix); /* lengh of bsscfg prefix */
+-	namelen = (u32) strlen(name) + 1; /* lengh of iovar  name + null */
++	prefixlen = strlen(prefix); /* lengh of bsscfg prefix */
++	namelen = strlen(name) + 1; /* lengh of iovar name + null */
+ 	iolen = prefixlen + namelen + sizeof(bssidx_le) + datalen;
+ 
+-	if (buflen < 0 || iolen > (u32)buflen) {
++	if (buflen < iolen) {
+ 		brcmf_dbg(ERROR, "buffer is too short\n");
+ 		return 0;
+ 	}
