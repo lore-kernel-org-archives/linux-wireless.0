@@ -1,68 +1,369 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ultra-3eti.com ([173.13.207.162]:44700 "EHLO
-	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759169Ab2JSRnH convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40089 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752609Ab2JCTpg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 13:43:07 -0400
-Received: from webmail.3eti.com (rockmx01.rock.corp [192.168.200.4]) by mail.ultra-3eti.com with ESMTP id bsxBPtgM0GpQcBiw (version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2012 13:43:05 -0400 (EDT)
-From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: bug in mesh_sync_adjust_tbtt()
-Date: Fri, 19 Oct 2012 17:43:03 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D075EBFDE@RockMX01.rock.corp> (sfid-20121019_194319_850823_0C6D9E48)
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+	Wed, 3 Oct 2012 15:45:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC v2] rt2x00: check return from dma_map_single
+Date: Wed,  3 Oct 2012 15:32:10 -0400
+Message-Id: <1349292730-19847-1-git-send-email-linville@tuxdriver.com> (sfid-20121003_214541_166308_CCF28196)
+In-Reply-To: <1349202079-14115-1-git-send-email-linville@tuxdriver.com>
+References: <1349202079-14115-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have checked a few kernel versions between 3.5 and 3.6.2, even the latest version 3.6.2 has the same problem.
+From: "John W. Linville" <linville@tuxdriver.com>
 
+dma_map_single can fail, so it's return value needs to be checked and
+handled accordingly.  Failure to do so is akin to failing to check the
+return from a kmalloc.
 
-In file net/mac80211/mesh_sync.c
+http://linuxdriverproject.org/mediawiki/index.php/DMA_Mapping_Error_Analysis
 
-Function: coid  mesh_sync_adjust_tbtt()
-{
-    spin_lock_bh(&ifmsh->sync_offset_lock);
-..
-    tsf = drv_get_tsf(local, sdata);
-    if (tsf != -1ULL)
-        drv_set_tsf(local, sdata, tsf + tsfdelta);
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+---
+Base on feedback from Ivo and Gertjan...
 
-    spin_unlock_bh(&ifmsh->sync_offset_lock);
-}
+-- wrap dma_mapping_error calls in unlikely();
 
+-- add an ERROR message for dma_mapping_error clause in
+   rt2x00queue_alloc_rxskb;
 
-In file net/mac80211/driver-ops.h
+-- actually check the return value from write_beacon.
 
-static inline u64 drv_get_tsf(struct ieee80211_local *local,
-                  struct ieee80211_sub_if_data *sdata)
-{   
-.
-    might_sleep(); 
-.
-}
+I'm still not entirely convinced that the failures are being handled
+correctly.  Also, the call-chain above write_beacon don't seem to check
+the existing return codes?
 
-The problem is drv_get_tsf() can sleep, but it's called in sleep-prohibit context (enclosed by spin_lock_bh() and    spin_unlock_bh())
+ drivers/net/wireless/rt2x00/rt2400pci.c   | 11 ++++++++---
+ drivers/net/wireless/rt2x00/rt2500pci.c   | 11 ++++++++---
+ drivers/net/wireless/rt2x00/rt2500usb.c   |  4 +++-
+ drivers/net/wireless/rt2x00/rt2800lib.c   |  6 ++++--
+ drivers/net/wireless/rt2x00/rt2800lib.h   |  2 +-
+ drivers/net/wireless/rt2x00/rt2x00.h      |  6 +++---
+ drivers/net/wireless/rt2x00/rt2x00queue.c | 30 ++++++++++++++++++++++++++----
+ drivers/net/wireless/rt2x00/rt61pci.c     |  8 +++++---
+ drivers/net/wireless/rt2x00/rt73usb.c     |  8 +++++---
+ 9 files changed, 63 insertions(+), 23 deletions(-)
 
-As a result, when running mesh traffic for a while, kernel keeps complaining like below.
-
-One question is, can I get rid of might_sleep() in drv_get/set_tsf()? What would be the impact?
-
-
-Jan 10 01:46:36 2005 default user.err kernel: BUG: scheduling while atomic: kworker/u:1/37/0x10000200
-Jan 10 01:46:36 2005 default user.warn kernel: Modules linked in: ip6table_filter ip6_tables iptable_filter ip_tables x_tables staNat(PO) arc4 ath9k(O
-Jan 10 01:46:36 2005 default user.warn kernel: Call Trace:
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbd20] [c00072b0] show_stack+0x58/0x148 (unreliable)
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbd60] [c00413dc] __schedule_bug+0x48/0x60
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbd70] [c035273c] __schedule+0x68/0x46c
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbe60] [c0041418] __cond_resched+0x24/0x38
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbe80] [c0352bd4] _cond_resched+0x2c/0x48
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbe90] [d53af420] mesh_sync_adjust_tbtt+0x8c/0x160 [mac80211]
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbec0] [d53aa53c] ieee80211_mesh_work+0x17c/0x184 [mac80211]
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbee0] [d538e384] ieee80211_iface_work+0x2a8/0x2b0 [mac80211]
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbf20] [c00321d8] process_one_work+0x1e0/0x2dc
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbf50] [c0033b84] worker_thread+0x24c/0x348
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbfa0] [c003804c] kthread+0xa4/0xa8
-Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbff0] [c000ccac] kernel_thread+0x4c/0x68
-
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index e3a2d90..e79ada9 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1171,11 +1171,12 @@ static void rt2400pci_write_tx_desc(struct queue_entry *entry,
+ /*
+  * TX data initialization
+  */
+-static void rt2400pci_write_beacon(struct queue_entry *entry,
+-				   struct txentry_desc *txdesc)
++static int rt2400pci_write_beacon(struct queue_entry *entry,
++				  struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	u32 reg;
++	int err;
+ 
+ 	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+@@ -1185,7 +1186,9 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
+ 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
+ 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
+ 
+-	rt2x00queue_map_txskb(entry);
++	err = rt2x00queue_map_txskb(entry);
++	if (err)
++		return err;
+ 
+ 	/*
+ 	 * Write the TX descriptor for the beacon.
+@@ -1202,6 +1205,8 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
+ 	 */
+ 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 1);
+ 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
++
++	return 0;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 479d756..988b38e 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1324,11 +1324,12 @@ static void rt2500pci_write_tx_desc(struct queue_entry *entry,
+ /*
+  * TX data initialization
+  */
+-static void rt2500pci_write_beacon(struct queue_entry *entry,
+-				   struct txentry_desc *txdesc)
++static int rt2500pci_write_beacon(struct queue_entry *entry,
++				  struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	u32 reg;
++	int err;
+ 
+ 	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+@@ -1338,7 +1339,9 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
+ 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
+ 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
+ 
+-	rt2x00queue_map_txskb(entry);
++	err = rt2x00queue_map_txskb(entry);
++	if (err)
++		return err;
+ 
+ 	/*
+ 	 * Write the TX descriptor for the beacon.
+@@ -1355,6 +1358,8 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
+ 	 */
+ 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 1);
+ 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
++
++	return 0;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index a12e84f..c476129 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1140,7 +1140,7 @@ static void rt2500usb_write_tx_desc(struct queue_entry *entry,
+  */
+ static void rt2500usb_beacondone(struct urb *urb);
+ 
+-static void rt2500usb_write_beacon(struct queue_entry *entry,
++static int rt2500usb_write_beacon(struct queue_entry *entry,
+ 				   struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+@@ -1219,6 +1219,8 @@ static void rt2500usb_write_beacon(struct queue_entry *entry,
+ 	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
+ 	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg0);
+ 	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
++
++	return 0;
+ }
+ 
+ static int rt2500usb_get_tx_data_len(struct queue_entry *entry)
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 540c94f..31ae4c3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -762,7 +762,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32 *txwi)
+ }
+ EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
+ 
+-void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
++int rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+@@ -810,7 +810,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 		/* skb freed by skb_pad() on failure */
+ 		entry->skb = NULL;
+ 		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
+-		return;
++		return 0; /* still use old beacon info */
+ 	}
+ 
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+@@ -828,6 +828,8 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 	 */
+ 	dev_kfree_skb_any(entry->skb);
+ 	entry->skb = NULL;
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rt2800_write_beacon);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+index a128cea..ad766bd 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+@@ -171,7 +171,7 @@ void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *tx
+ 
+ void rt2800_txdone_entry(struct queue_entry *entry, u32 status, __le32* txwi);
+ 
+-void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
++int rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
+ void rt2800_clear_beacon(struct queue_entry *entry);
+ 
+ extern const struct rt2x00debug rt2800_rt2x00debug;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 0751b35..50ff18d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -605,8 +605,8 @@ struct rt2x00lib_ops {
+ 			       struct txentry_desc *txdesc);
+ 	void (*write_tx_data) (struct queue_entry *entry,
+ 			       struct txentry_desc *txdesc);
+-	void (*write_beacon) (struct queue_entry *entry,
+-			      struct txentry_desc *txdesc);
++	int (*write_beacon) (struct queue_entry *entry,
++			     struct txentry_desc *txdesc);
+ 	void (*clear_beacon) (struct queue_entry *entry);
+ 	int (*get_tx_data_len) (struct queue_entry *entry);
+ 
+@@ -1152,7 +1152,7 @@ static inline bool rt2x00_is_soc(struct rt2x00_dev *rt2x00dev)
+  * rt2x00queue_map_txskb - Map a skb into DMA for TX purposes.
+  * @entry: Pointer to &struct queue_entry
+  */
+-void rt2x00queue_map_txskb(struct queue_entry *entry);
++int rt2x00queue_map_txskb(struct queue_entry *entry);
+ 
+ /**
+  * rt2x00queue_unmap_skb - Unmap a skb from DMA.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index e488b94..cb8b9e6 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -91,20 +91,35 @@ struct sk_buff *rt2x00queue_alloc_rxskb(struct queue_entry *entry, gfp_t gfp)
+ 						  skb->data,
+ 						  skb->len,
+ 						  DMA_FROM_DEVICE);
++		if (unlikely(dma_mapping_error(rt2x00dev->dev,
++					       skbdesc->skb_dma))) {
++			ERROR(rt2x00dev,
++			      "rt2x00queue_alloc_rxskb(): can't map skb\n");
++			dev_kfree_skb_any(skb);
++			return NULL;
++		}
+ 		skbdesc->flags |= SKBDESC_DMA_MAPPED_RX;
+ 	}
+ 
+ 	return skb;
+ }
+ 
+-void rt2x00queue_map_txskb(struct queue_entry *entry)
++int rt2x00queue_map_txskb(struct queue_entry *entry)
+ {
+ 	struct device *dev = entry->queue->rt2x00dev->dev;
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 
+ 	skbdesc->skb_dma =
+ 	    dma_map_single(dev, entry->skb->data, entry->skb->len, DMA_TO_DEVICE);
++	if (unlikely(dma_mapping_error(dev, skbdesc->skb_dma))) {
++		ERROR(entry->queue->rt2x00dev,
++		      "rt2x00queue_map_txskb(): can't map skb\n");
++		return -EIO;
++	}
++
+ 	skbdesc->flags |= SKBDESC_DMA_MAPPED_TX;
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rt2x00queue_map_txskb);
+ 
+@@ -546,7 +561,7 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
+ 	 * Map the skb to DMA.
+ 	 */
+ 	if (test_bit(REQUIRE_DMA, &rt2x00dev->cap_flags))
+-		rt2x00queue_map_txskb(entry);
++		return rt2x00queue_map_txskb(entry);
+ 
+ 	return 0;
+ }
+@@ -724,6 +739,7 @@ int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
+ 	struct rt2x00_intf *intf = vif_to_intf(vif);
+ 	struct skb_frame_desc *skbdesc;
+ 	struct txentry_desc txdesc;
++	int ret;
+ 
+ 	if (unlikely(!intf->beacon))
+ 		return -ENOBUFS;
+@@ -754,10 +770,16 @@ int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Send beacon to hardware.
+ 	 */
+-	rt2x00dev->ops->lib->write_beacon(intf->beacon, &txdesc);
++	ret = rt2x00dev->ops->lib->write_beacon(intf->beacon, &txdesc);
++	if (ret) {
++		/*
++		 * Something went wrong...
++		 */
++		rt2x00queue_free_skb(intf->beacon);
++		return -EIO;
++	}
+ 
+ 	return 0;
+-
+ }
+ 
+ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index d6582a2..45f2b2a 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1962,8 +1962,8 @@ static void rt61pci_write_tx_desc(struct queue_entry *entry,
+ /*
+  * TX data initialization
+  */
+-static void rt61pci_write_beacon(struct queue_entry *entry,
+-				 struct txentry_desc *txdesc)
++static int rt61pci_write_beacon(struct queue_entry *entry,
++				struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
+@@ -1999,7 +1999,7 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+ 		/* skb freed by skb_pad() on failure */
+ 		entry->skb = NULL;
+ 		rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, orig_reg);
+-		return;
++		return 0; /* still use old beacon info */
+ 	}
+ 
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+@@ -2025,6 +2025,8 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+ 	 */
+ 	dev_kfree_skb_any(entry->skb);
+ 	entry->skb = NULL;
++
++	return 0;
+ }
+ 
+ static void rt61pci_clear_beacon(struct queue_entry *entry)
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index e5eb43b..97612061 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1529,8 +1529,8 @@ static void rt73usb_write_tx_desc(struct queue_entry *entry,
+ /*
+  * TX data initialization
+  */
+-static void rt73usb_write_beacon(struct queue_entry *entry,
+-				 struct txentry_desc *txdesc)
++static int rt73usb_write_beacon(struct queue_entry *entry,
++				struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	unsigned int beacon_base;
+@@ -1571,7 +1571,7 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+ 		/* skb freed by skb_pad() on failure */
+ 		entry->skb = NULL;
+ 		rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, orig_reg);
+-		return;
++		return 0; /* still use old beacon info */
+ 	}
+ 
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+@@ -1594,6 +1594,8 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+ 	 */
+ 	dev_kfree_skb(entry->skb);
+ 	entry->skb = NULL;
++
++	return 0;
+ }
+ 
+ static void rt73usb_clear_beacon(struct queue_entry *entry)
+-- 
+1.7.11.4
 
