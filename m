@@ -1,40 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:36653 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932214Ab2JDRqc (ORCPT
+Received: from lists.bufferbloat.net ([149.20.54.82]:44887 "EHLO
+	huchra.bufferbloat.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752923Ab2JCUBm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 13:46:32 -0400
-Received: by mail-la0-f46.google.com with SMTP id h6so379506lag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 10:46:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <6280245.pW1SF1FHQv@bentobox>
-References: <1349366701-23154-1-git-send-email-sven@narfation.org>
- <CAB=NE6XrTVQuAqGqD2wjyjN6ynyfB+yHXqBcAhRgOn=njBpAuA@mail.gmail.com> <6280245.pW1SF1FHQv@bentobox>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Thu, 4 Oct 2012 10:46:11 -0700
-Message-ID: <CAB=NE6X7DytHOapoX1HyxSz7kEtaredsmtg_xZFUp=4VXjw8zA@mail.gmail.com> (sfid-20121004_194644_203176_36E46994)
-Subject: Re: [PATCH] ath_hw: Use common REG_WRITE parameter order
-To: Sven Eckelmann <sven@narfation.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Oct 2012 16:01:42 -0400
+From: =?UTF-8?q?Dave=20T=C3=A4ht?= <dave.taht@bufferbloat.net>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Dave=20T=C3=A4ht?= <dave.taht@bufferbloat.net>
+Subject: [RFC PATCH] Add full diffserv support to wireless
+Date: Wed,  3 Oct 2012 12:51:36 -0700
+Message-Id: <1349293896-18268-2-git-send-email-dave.taht@bufferbloat.net> (sfid-20121003_220146_425861_FA0B893B)
+In-Reply-To: <1349293896-18268-1-git-send-email-dave.taht@bufferbloat.net>
+References: <1349293896-18268-1-git-send-email-dave.taht@bufferbloat.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 4, 2012 at 10:42 AM, Sven Eckelmann <sven@narfation.org> wrote:
-> On Thursday 04 October 2012 10:29:59 Luis R. Rodriguez wrote:
->> On Thu, Oct 4, 2012 at 9:05 AM, Sven Eckelmann <sven@narfation.org> wrote:
->> > All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
->> > "register" and "value". hw.c is the only file using the order "ah",
->> > "value" and "register". This inconsistent definition can easily lead to
->> > implementation errors.
->> >
->> > Signed-off-by: Sven Eckelmann <sven@narfation.org>
->>
->> Good catch! But can you resend specifying in your commit log that this
->> change is a no-op?
->
-> I really don't know what you want from me here.
+The previous dscp scheme in linux wireless only respected the topmost
+3 diffserv priority bits (e.g. CS0 through CS7). This patch respects
+all the diffserv bits and all the old-style tos bits that make sense.
 
-Just specify in the commit log that this change causes no functional changes.
+It moves all but EF marked traffic out of the VO queue, where CS6 and
+CS7 have been going.
 
-  Luis
+The imm bit (set by ssh) now moves to VI
+Background goes to BK
+Most other (obsolete) options move into VI, notably CS6 and CS7 traffic.
+
+Sort of in keeping with the 802.1q spirit, but not along the actual
+performance of 802.1q, the queues are marked with the range 0-7.
+---
+ net/wireless/util.c |   73 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 71 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 316cfd0..304a6c7 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -12,6 +12,8 @@
+ #include <net/dsfield.h>
+ #include "core.h"
+ 
++/* VI, VO, BE, BK */
++
+ struct ieee80211_rate *
+ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
+ 			    u32 basic_rates, int bitrate)
+@@ -635,10 +637,77 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ }
+ EXPORT_SYMBOL(ieee80211_amsdu_to_8023s);
+ 
++static u8 dscp_table[] = {
++	 0, /* BE = 0x0 */
++	 0, /* Max-Reliability = 0x1 */
++	 3, /* Max-Throughput = 0x2 */
++	 0, /* 0x3 Undefined */
++	 5, /* Min-Delay = 0x4 */
++	 0, /* 0x5 Undefined */
++	 0, /* 0x6 Undefined */
++	 0, /* 0x7 Undefined */
++	 1, /* CS1 = 0x8 */
++	 0, /* 0x9 Undefined */
++	 3, /* AF11 = 0xa */
++	 0, /* 0xb Undefined */
++	 3, /* AF12 = 0xc */
++	 0, /* 0xd Undefined */
++	 3, /* AF13 = 0xe */
++	 0, /* 0xf Undefined */
++	 2, /* CS2 = 0x10 */
++	 0, /* 0x11 Undefined */
++	 3, /* AF21 = 0x12 */
++	 0, /* 0x13 Undefined */
++	 3, /* AF22 = 0x14 */
++	 0, /* 0x15 Undefined */
++	 3, /* AF23 = 0x16 */
++	 0, /* 0x17 Undefined */
++	 4, /* CS3 = 0x18 */
++	 0, /* 0x19 Undefined */
++	 3, /* AF31 = 0x1a */
++	 0, /* 0x1b Undefined */
++	 3, /* AF32 = 0x1c */
++	 0, /* 0x1d Undefined */
++	 3, /* AF33 = 0x1e */
++	 0, /* 0x1f Undefined */
++	 5, /* CS4 = 0x20 */
++	 0, /* 0x21 Undefined */
++	 5, /* AF41 = 0x22 */
++	 0, /* 0x23 Undefined */
++	 5, /* AF42 = 0x24 */
++	 0, /* 0x25 Undefined */
++	 4, /* AF43 = 0x26 */
++	 0, /* 0x27 Undefined */
++	 5, /* CS5 = 0x28 */
++	 0, /* 0x29 Undefined */
++	 0, /* 0x2a Undefined */
++	 0, /* 0x2b Undefined */
++	 4, /* VA = 0x2c */
++	 0, /* 0x2d Undefined */
++	 6, /* EF = 0x2e */
++	 0, /* 0x2f Undefined */
++	 5, /* CS6 = 0x30 */
++	 0, /* 0x31 Undefined */
++	 0, /* 0x32 Undefined */
++	 0, /* 0x33 Undefined */
++	 0, /* 0x34 Undefined */
++	 0, /* 0x35 Undefined */
++	 0, /* 0x36 Undefined */
++	 0, /* 0x37 Undefined */
++	 5, /* CS7 = 0x38 */
++	 0, /* 0x39 Undefined */
++	 0, /* 0x3a Undefined */
++	 0, /* 0x3b Undefined */
++	 0, /* 0x3c Undefined */
++	 0, /* 0x3d Undefined */
++	 0, /* 0x3e Undefined */
++	 0, /* 0x3f Undefined */
++};
++
+ /* Given a data frame determine the 802.1p/1d tag to use. */
+ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+ {
+-	unsigned int dscp;
++	unsigned char dscp;
+ 
+ 	/* skb->priority values from 256->263 are magic values to
+ 	 * directly indicate a specific 802.1d priority.  This is used
+@@ -659,7 +728,7 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+ 		return 0;
+ 	}
+ 
+-	return dscp >> 5;
++	return (dscp_table[dscp>>2]);
+ }
+ EXPORT_SYMBOL(cfg80211_classify8021d);
+ 
+-- 
+1.7.9.5
+
