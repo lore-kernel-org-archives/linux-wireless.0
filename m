@@ -1,139 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34517 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933268Ab2JZOXu (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:40123 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753824Ab2JCSHP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 10:23:50 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace support
-Date: Fri, 26 Oct 2012 09:23:15 -0500
-Message-Id: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162354_545445_35E07215)
+	Wed, 3 Oct 2012 14:07:15 -0400
+Received: by pbbrr4 with SMTP id rr4so10112851pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 11:07:15 -0700 (PDT)
+Date: Wed, 3 Oct 2012 11:07:13 -0700 (PDT)
+From: David Rientjes <rientjes@google.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: Mel Gorman <mgorman@suse.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Pavel Machek <pavel@ucw.cz>, linux-wireless@vger.kernel.org,
+	johannes.berg@intel.com, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
+In-Reply-To: <20121003113659.GD2259@redhat.com>
+Message-ID: <alpine.DEB.2.00.1210031104120.29765@chino.kir.corp.google.com> (sfid-20121003_200723_895448_68605CE8)
+References: <20120909213228.GA5538@elf.ucw.cz> <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com> <20120910111113.GA25159@elf.ucw.cz> <20120911162536.bd5171a1.akpm@linux-foundation.org> <20120912101826.GL11266@suse.de>
+ <20121003113659.GD2259@redhat.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been looking into the issues with brcmsmac performance reported at
-[0] and [1]. I started out looking into the tx queueing based on the "No
-where to go" messages in the logs. This code has a number of
-shortcomings:
+On Wed, 3 Oct 2012, Stanislaw Gruszka wrote:
 
- - The amount of bufferring is excessive. The tx queue will buffer up to
-   228 packets, and each of the tx DMA rings will queue up to 256 more.
+> So, can this problem be solved like on below patch, or I should rather
+> split firmware loading into chunks similar like was already iwlwifi did?
+> 
+> diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+> index 5f50177..1b58222 100644
+> --- a/drivers/net/wireless/iwlegacy/common.h
+> +++ b/drivers/net/wireless/iwlegacy/common.h
+> @@ -2247,7 +2247,7 @@ il_alloc_fw_desc(struct pci_dev *pci_dev, struct fw_desc *desc)
+>  
+>  	desc->v_addr =
+>  	    dma_alloc_coherent(&pci_dev->dev, desc->len, &desc->p_addr,
+> -			       GFP_KERNEL);
+> +			       GFP_KERNEL | __GFP_REPEAT);
+>  	return (desc->v_addr != NULL) ? 0 : -ENOMEM;
+>  }
+>  
 
- - There's no flow control. If the queue fills up packets begin to get
-   dropped, as evidenced by the "No where to go" messages.
-
- - Without flow control the tx queue probably helps avoid dropping
-   packets for short bursts due to the sheer number of packets that will
-   be buffered, but if flow control is added the only remaining benefit
-   that I can see is that it accumulates packets for aggregation. The tx
-   queue is far more complex than needed for supporting aggergation,
-   however.
-
-As a result I worked up the following patches to add flow control remove
-the tx queue.
-
-These patches change the tx handler to directly hand off packets to the
-DMA code. The convoluted priority->precedence->fifo mapping is converted
-to a simple one-to-one mapping of the mac80211 queues to fifos. Non-
-aggregate frames are immediately inserted into the DMA ring.
-
-Handling of aggregate frames is not as simple, as some of the tx header
-fixups can only happen once we have all the frames for an AMPDU.  To
-support this without resyncing buffers after they've been added to the
-DMA ring I've added the concept of AMPDU sessions. An AMPDU session
-simply queues up the frames for a single AMPDU until we are ready to
-insert them into the tx ring. There is one session per DMA ring, and
-descriptors are reserved in the corresponding ring for all frames queued
-in the AMPDU session. This also has the benefit of allowing non-
-aggregate frames to be sent without affecting aggregation and without
-mapping these frames to a different fifo.
-
-The patches also add flow control to stop incoming tx packets when the
-DMA ring is full. In practice I found that we will sometimes receive a
-single frame from mac80211 after stopping the queues, so some headroom
-is reserved when stopping the queues. I also reduced the number of tx
-descriptors per ring to 64 and fixed a bug that prevented having
-differing non-zero numbers of tx and rx descriptors for a given ring.
-
-When workig on this I made extensive use of ftrace for debug and
-verification. I'm including patches I wrote which expand the trace
-support and introduce debug macros which can log messages both to dmesg
-and the trace buffer. iwlwifi has similar trace support which we've
-enabled in Ubuntu, making it easier to collect debug information from
-users experiencing wireless problems.
-
-With these changes I'm no longer seeing dropped frames when the tx
-queues are full. Anecdotally I'd also say that my testing with iperf
-using TCP seems to show more consistent data rates, resulting in a
-higher average data rate (sometimes significantly so), but I don't have
-sufficient amounts of data to be sure this is the case.
-
-I'm still observing a few problems when testing with iperf, however. The
-first is "Pkt tx suppressed, illegal channel" messages. There are also
-large drops in the data rate reported when using TCP, sometimes even
-resulting in iperf reporting that no data was transferred for several
-seconds. Finally, when using iperf with UDP the number of dropped frames
-periodically spikes to high levels. I'm not sure yet, but it looks like
-the second and third problems may coincide with scanning.
-
-I also continue to see flush timeouts, but the frequency seems to be
-reduced with these changes. Likely this is related to the much smaller
-number of packets that will be queued internally for tx.
-
-Thanks,
-Seth
-
-[0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1046507
-[1] http://www.spinics.net/lists/linux-wireless/msg96287.html
-
-
-Seth Forshee (18):
-  brcmsmac: Rework tx code to avoid internal buffering of packets
-  brcmsmac: Use correct descriptor count when calculating next rx
-    descriptor
-  brcmsmac: Reduce number of entries in tx DMA rings
-  brcm80211: Allow trace support to be enabled separately from debug
-  brcm80211: Add macro for checking if debug log levels are enabled
-  brcm80211: Convert log message levels to debug levels
-  brcmsmac: Add module parameter for setting the debug level
-  brcmsmac: Add support for writing debug messages to the trace buffer
-  brcmsmac: Use debug macros for general error and debug statements
-  brcmsmac: Add BRCMS_DBG_MAC80211 debug macro
-  brcmsmac: Add RX and TX debug macros
-  brcmsmac: Add INT debug macro
-  brcmsmac: Add DMA debug macro
-  brcmsmac: Add HT debug macro
-  brcmsmac: Improve tx trace and debug support
-  brcmsmac: Add tracepoint for macintstatus
-  brcmsmac: Add tracepoint for AMPDU session information
-  brcmsmac: Remove some noisy but uninformative debug messages
-
- drivers/net/wireless/brcm80211/Kconfig             |   12 +
- drivers/net/wireless/brcm80211/brcmsmac/Makefile   |    3 +-
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    |  726 ++++++------
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.h    |   29 +-
- drivers/net/wireless/brcm80211/brcmsmac/antsel.c   |    4 +-
- .../net/wireless/brcm80211/brcmsmac/brcms_debug.c  |   44 +
- .../net/wireless/brcm80211/brcmsmac/brcms_debug.h  |   46 +
- .../brcm80211/brcmsmac/brcms_trace_events.h        |  175 ++-
- drivers/net/wireless/brcm80211/brcmsmac/channel.c  |   10 +-
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |  343 ++++--
- drivers/net/wireless/brcm80211/brcmsmac/dma.h      |   11 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  123 ++-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     | 1157 ++++++--------------
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |   48 +-
- drivers/net/wireless/brcm80211/brcmsmac/stf.c      |    8 +-
- drivers/net/wireless/brcm80211/brcmsmac/types.h    |    5 +-
- drivers/net/wireless/brcm80211/include/defs.h      |   11 +-
- 17 files changed, 1302 insertions(+), 1453 deletions(-)
- create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
-
+I think this will certainly make memory compaction more aggressive by 
+avoiding the logic to defer calling compaction in the page allocator, but 
+because we lack lumpy reclaim this still has a higher probability of 
+failing than it had in the past because it will fail if 128KB of memory is 
+reclaimed that may not happen to be contiguous for an order-5 allocation 
+to succeed.
