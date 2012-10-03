@@ -1,117 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1985 "EHLO mms3.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:54660 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755894Ab2JVRgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 13:36:41 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 09/14] brcmfmac: add function converting
- ieee80211_channel to chanspec
-Date: Mon, 22 Oct 2012 10:36:22 -0700
-Message-ID: <1350927387-25608-10-git-send-email-frankyl@broadcom.com> (sfid-20121022_193654_413370_22F182FE)
-In-Reply-To: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
-References: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1750952Ab2JCTIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Oct 2012 15:08:14 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.7 2/3] ath9k: improve suspend/resume reliability
+Date: Wed,  3 Oct 2012 21:07:51 +0200
+Message-Id: <1349291272-93080-2-git-send-email-nbd@openwrt.org> (sfid-20121003_210817_824567_2F6460D9)
+In-Reply-To: <1349291272-93080-1-git-send-email-nbd@openwrt.org>
+References: <1349291272-93080-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Ensure that drv_start() always returns true, as a failing hw start usually
+eventually leads to crashes when there's still a station entry present.
+Call a power-on reset after a resume and after a hw reset failure to bring
+the hardware back to life again.
 
-The firmware carries channel information in a different format
-as the provided ieee80211_channel structure. Conversion is needed
-when receiving requests from cfg80211 carrying ieee80211_channel
-structures. This patch adds a utility function to do that.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   52 ++++++++++---------
- 1 files changed, 27 insertions(+), 25 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c   |    5 +++++
+ drivers/net/wireless/ath/ath9k/hw.h   |    1 +
+ drivers/net/wireless/ath/ath9k/main.c |   13 ++++---------
+ drivers/net/wireless/ath/ath9k/pci.c  |    4 +++-
+ 4 files changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index cb491d9..5a3093d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -392,6 +392,31 @@ static u8 brcmf_mw_to_qdbm(u16 mw)
- 	return qdbm;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f9a6ec5..8e1559a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1450,9 +1450,14 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+ 	REG_WRITE(ah, AR_RTC_FORCE_WAKE,
+ 		  AR_RTC_FORCE_WAKE_EN | AR_RTC_FORCE_WAKE_ON_INT);
+ 
++	if (!ah->reset_power_on)
++		type = ATH9K_RESET_POWER_ON;
++
+ 	switch (type) {
+ 	case ATH9K_RESET_POWER_ON:
+ 		ret = ath9k_hw_set_reset_power_on(ah);
++		if (!ret)
++			ah->reset_power_on = true;
+ 		break;
+ 	case ATH9K_RESET_WARM:
+ 	case ATH9K_RESET_COLD:
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 566a4ce..dbc1b7a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -741,6 +741,7 @@ struct ath_hw {
+ 	u32 rfkill_polarity;
+ 	u32 ah_flags;
+ 
++	bool reset_power_on;
+ 	bool htc_reset_init;
+ 
+ 	enum nl80211_iftype opmode;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 31ab82e..e2fe713 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -639,8 +639,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		ath_err(common,
+ 			"Unable to reset hardware; reset status %d (freq %u MHz)\n",
+ 			r, curchan->center_freq);
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+-		goto mutex_unlock;
++		ah->reset_power_on = false;
+ 	}
+ 
+ 	/* Setup our intr mask. */
+@@ -665,11 +664,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	clear_bit(SC_OP_INVALID, &sc->sc_flags);
+ 	sc->sc_ah->is_monitoring = false;
+ 
+-	if (!ath_complete_reset(sc, false)) {
+-		r = -EIO;
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+-		goto mutex_unlock;
+-	}
++	if (!ath_complete_reset(sc, false))
++		ah->reset_power_on = false;
+ 
+ 	if (ah->led_pin >= 0) {
+ 		ath9k_hw_cfg_output(ah, ah->led_pin,
+@@ -688,12 +684,11 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
+ 		common->bus_ops->extn_synch_en(common);
+ 
+-mutex_unlock:
+ 	mutex_unlock(&sc->mutex);
+ 
+ 	ath9k_ps_restore(sc);
+ 
+-	return r;
++	return 0;
  }
  
-+static u16 channel_to_chanspec(struct ieee80211_channel *ch)
-+{
-+	u16 chanspec;
-+
-+	chanspec = ieee80211_frequency_to_channel(ch->center_freq);
-+	chanspec &= WL_CHANSPEC_CHAN_MASK;
-+
-+	if (ch->band == IEEE80211_BAND_2GHZ)
-+		chanspec |= WL_CHANSPEC_BAND_2G;
-+	else
-+		chanspec |= WL_CHANSPEC_BAND_5G;
-+
-+	if (ch->flags & IEEE80211_CHAN_NO_HT40) {
-+		chanspec |= WL_CHANSPEC_BW_20;
-+		chanspec |= WL_CHANSPEC_CTL_SB_NONE;
-+	} else {
-+		chanspec |= WL_CHANSPEC_BW_40;
-+		if (ch->flags & IEEE80211_CHAN_NO_HT40PLUS)
-+			chanspec |= WL_CHANSPEC_CTL_SB_LOWER;
-+		else
-+			chanspec |= WL_CHANSPEC_CTL_SB_UPPER;
-+	}
-+	return chanspec;
-+}
-+
- static void convert_key_from_CPU(struct brcmf_wsec_key *key,
- 				 struct brcmf_wsec_key_le *key_le)
- {
-@@ -701,8 +726,6 @@ static void brcmf_escan_prep(struct brcmf_scan_params_le *params_le,
- 	s32 i;
- 	s32 offset;
- 	u16 chanspec;
--	u16 channel;
--	struct ieee80211_channel *req_channel;
- 	char *ptr;
- 	struct brcmf_ssid_le ssid_le;
+ static void ath9k_tx(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index ea1d59e..9fa8c51 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -335,7 +335,8 @@ static int ath_pci_resume(struct device *device)
+ 	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_softc *sc = hw->priv;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 val;
  
-@@ -726,30 +749,9 @@ static void brcmf_escan_prep(struct brcmf_scan_params_le *params_le,
- 	WL_SCAN("### List of channelspecs to scan ### %d\n", n_channels);
- 	if (n_channels > 0) {
- 		for (i = 0; i < n_channels; i++) {
--			chanspec = 0;
--			req_channel = request->channels[i];
--			channel = ieee80211_frequency_to_channel(
--					req_channel->center_freq);
--			if (req_channel->band == IEEE80211_BAND_2GHZ)
--				chanspec |= WL_CHANSPEC_BAND_2G;
--			else
--				chanspec |= WL_CHANSPEC_BAND_5G;
--
--			if (req_channel->flags & IEEE80211_CHAN_NO_HT40) {
--				chanspec |= WL_CHANSPEC_BW_20;
--				chanspec |= WL_CHANSPEC_CTL_SB_NONE;
--			} else {
--				chanspec |= WL_CHANSPEC_BW_40;
--				if (req_channel->flags &
--						IEEE80211_CHAN_NO_HT40PLUS)
--					chanspec |= WL_CHANSPEC_CTL_SB_LOWER;
--				else
--					chanspec |= WL_CHANSPEC_CTL_SB_UPPER;
--			}
--
--			chanspec |= (channel & WL_CHANSPEC_CHAN_MASK);
-+			chanspec = channel_to_chanspec(request->channels[i]);
- 			WL_SCAN("Chan : %d, Channel spec: %x\n",
--				channel, chanspec);
-+				request->channels[i]->hw_value, chanspec);
- 			params_le->channel_list[i] = cpu_to_le16(chanspec);
- 		}
- 	} else {
+ 	/*
+@@ -348,6 +349,7 @@ static int ath_pci_resume(struct device *device)
+ 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+ 
+ 	ath_pci_aspm_init(common);
++	ah->reset_power_on = false;
+ 
+ 	return 0;
+ }
 -- 
-1.7.6
-
+1.7.9.6 (Apple Git-31.1)
 
