@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40234 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756685Ab2JLOpy (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:47934 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932372Ab2JDRaV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 10:45:54 -0400
-Date: Fri, 12 Oct 2012 10:33:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
-Message-ID: <20121012143355.GA25235@tuxdriver.com> (sfid-20121012_164558_009423_AEF12E23)
-References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
- <20121011203112.GB3317@kroah.com>
- <87haq017wi.fsf@purkki.adurom.net>
+	Thu, 4 Oct 2012 13:30:21 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n3so595318lbo.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 10:30:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87haq017wi.fsf@purkki.adurom.net>
+In-Reply-To: <1349366701-23154-1-git-send-email-sven@narfation.org>
+References: <1349366701-23154-1-git-send-email-sven@narfation.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Thu, 4 Oct 2012 10:29:59 -0700
+Message-ID: <CAB=NE6XrTVQuAqGqD2wjyjN6ynyfB+yHXqBcAhRgOn=njBpAuA@mail.gmail.com> (sfid-20121004_193033_191443_8C5317CB)
+Subject: Re: [PATCH] ath_hw: Use common REG_WRITE parameter order
+To: Sven Eckelmann <sven@narfation.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 12, 2012 at 10:11:57AM +0300, Kalle Valo wrote:
-> Greg KH <gregkh@linuxfoundation.org> writes:
-> 
-> > Very nice.
-> 
-> Indeed.
-> 
-> > But what is keeping this driver from going to the "proper" place in the
-> > kernel tree (i.e. drivers/net/...)?  I don't have a problem adding it to
-> > the staging tree, but it would need a TODO file to list what is needed
-> > to get it out of the staging tree.
-> 
-> I did a really quick 5 min review of this driver and IMHO this should go
-> directly to drivers/net/wireless/ (or maybe to drivers/net/wireless/ath,
-> Luis?), I don't see any reason why this should go to staging. The code
-> looks clean and is only 2 kLOC. But I'll review this better during the
-> weekend and also run some build tests.
+On Thu, Oct 4, 2012 at 9:05 AM, Sven Eckelmann <sven@narfation.org> wrote:
+> All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
+> "register" and "value". hw.c is the only file using the order "ah", "value" and
+> "register". This inconsistent definition can easily lead to implementation
+> errors.
+>
+> Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
-I have no particular objection to that.  FWIW, Pontus contacted me
-and said something like "I've got this driver that sucks and needs
-a lot of work, should it go to staging?"  Perhaps he was being too
-hard on himself? :-)
+Good catch! But can you resend specifying in your commit log that this
+change is a no-op? Also it may help the reader for you to git grep and
+show the other REG_WRITE() definitions on the other c files within the
+commit log.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
