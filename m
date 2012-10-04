@@ -1,97 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41179 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751163Ab2J3Ik6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 04:40:58 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: send deauth only with channel context
-Date: Tue, 30 Oct 2012 09:41:31 +0100
-Message-Id: <1351586491-28634-1-git-send-email-johannes@sipsolutions.net> (sfid-20121030_094102_786162_CFCF33FC)
+Received: from nbd.name ([46.4.11.11]:56196 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755146Ab2JDJd6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2012 05:33:58 -0400
+Message-ID: <506D5804.4090806@openwrt.org> (sfid-20121004_113402_327792_6E6AD646)
+Date: Thu, 04 Oct 2012 11:33:56 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <c_manoha@qti.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH 3.7 2/3] ath9k: improve suspend/resume reliability
+References: <1349291272-93080-1-git-send-email-nbd@openwrt.org> <1349291272-93080-2-git-send-email-nbd@openwrt.org> <20588.62828.845432.706022@gargle.gargle.HOWL>
+In-Reply-To: <20588.62828.845432.706022@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2012-10-04 4:33 AM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> Ensure that drv_start() always returns true, as a failing hw start usually
+>> eventually leads to crashes when there's still a station entry present.
+>> Call a power-on reset after a resume and after a hw reset failure to bring
+>> the hardware back to life again.
+> 
+> In what situations did HW reset (via start() or resume()) fail ?
+I don't know what situations caused it, but this happened on a few
+ChromeOS devices in the wild, and my patch fixed it.
 
-When userspace asks to deauthenticate and we're just
-authenticated (or still authenticating) send a deauth
-frame instead of deleting the auth request.
-
-On the other hand, if we've just disassociated and
-therefore deleted all our state already, drop the
-deauth request because we no longer have a channel
-context to send it on.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |   32 ++++++++++++++++++--------------
- 1 file changed, 18 insertions(+), 14 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fb9fd65..35afbbc 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3688,40 +3688,44 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
- 	bool tx = !req->local_state_change;
-+	bool sent_frame = false;
- 
- 	mutex_lock(&ifmgd->mtx);
- 
--	if (ifmgd->auth_data) {
--		ieee80211_destroy_auth_data(sdata, false);
--		mutex_unlock(&ifmgd->mtx);
--		return 0;
--	}
--
- 	sdata_info(sdata,
- 		   "deauthenticating from %pM by local choice (reason=%d)\n",
- 		   req->bssid, req->reason_code);
- 
--	if (ifmgd->associated &&
--	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
--		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
--				       req->reason_code, tx, frame_buf);
--	} else {
-+	if (ifmgd->auth_data) {
- 		drv_mgd_prepare_tx(sdata->local, sdata);
- 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
- 					       IEEE80211_STYPE_DEAUTH,
- 					       req->reason_code, tx,
- 					       frame_buf);
-+		ieee80211_destroy_auth_data(sdata, false);
-+		mutex_unlock(&ifmgd->mtx);
-+
-+		sent_frame = tx;
-+		goto out;
- 	}
- 
-+	if (ifmgd->associated &&
-+	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
-+		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
-+				       req->reason_code, tx, frame_buf);
-+		sent_frame = tx;
-+	}
- 	mutex_unlock(&ifmgd->mtx);
- 
--	__cfg80211_send_deauth(sdata->dev, frame_buf,
--			       IEEE80211_DEAUTH_FRAME_LEN);
--
-+ out:
- 	mutex_lock(&sdata->local->mtx);
- 	ieee80211_recalc_idle(sdata->local);
- 	mutex_unlock(&sdata->local->mtx);
- 
-+	if (sent_frame)
-+		__cfg80211_send_deauth(sdata->dev, frame_buf,
-+				       IEEE80211_DEAUTH_FRAME_LEN);
-+
- 	return 0;
- }
- 
--- 
-1.7.10.4
-
+- Felix
