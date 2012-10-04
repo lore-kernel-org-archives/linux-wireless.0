@@ -1,104 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38370 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754303Ab2JIAK6 (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:53925 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752582Ab2JDEsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2012 20:10:58 -0400
-Date: Mon, 8 Oct 2012 17:12:40 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<johannes@sipsolutions.net>, <arend@broadcom.com>
-Subject: Re: [PATCH v2 3.7 2/2] cfg80211: fix initialization of
- chan->max_reg_power
-Message-ID: <20121009001240.GM3354@lenteja.do-not-panic.com> (sfid-20121009_021109_024861_72137FB3)
-References: <1349527254-41080-1-git-send-email-nbd@openwrt.org>
- <1349527254-41080-2-git-send-email-nbd@openwrt.org>
- <20121008190156.GK3354@lenteja.do-not-panic.com>
- <50733F2A.2060306@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <50733F2A.2060306@openwrt.org>
+	Thu, 4 Oct 2012 00:48:13 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v3 2/5] cfg80211: add scan flag to indicate its priority
+Date: Wed,  3 Oct 2012 21:47:43 -0700
+Message-Id: <1349326066-28501-3-git-send-email-bzhao@marvell.com> (sfid-20121004_064816_487132_FCF2DDB2)
+In-Reply-To: <1349326066-28501-1-git-send-email-bzhao@marvell.com>
+References: <1349326066-28501-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 08, 2012 at 11:01:30PM +0200, Felix Fietkau wrote:
-> On 2012-10-08 9:01 PM, Luis R. Rodriguez wrote:
-> > On Sat, Oct 06, 2012 at 02:40:54PM +0200, Felix Fietkau wrote:
-> >> A few places touch chan->max_power based on updated tx power rules, but
-> >> forget to do the same to chan->max_reg_power.
-> >> 
-> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> >> Cc: stable@vger.kernel.org
-> >> ---
-> >>  net/wireless/reg.c |    5 +++--
-> >>  1 file changed, 3 insertions(+), 2 deletions(-)
-> >> 
-> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> >> index 3b8cbbc..bcc7d7e 100644
-> >> --- a/net/wireless/reg.c
-> >> +++ b/net/wireless/reg.c
-> >> @@ -908,7 +908,7 @@ static void handle_channel(struct wiphy *wiphy,
-> >>  			map_regdom_flags(reg_rule->flags) | bw_flags;
-> >>  		chan->max_antenna_gain = chan->orig_mag =
-> >>  			(int) MBI_TO_DBI(power_rule->max_antenna_gain);
-> >> -		chan->max_power = chan->orig_mpwr =
-> >> +		chan->max_reg_power = chan->max_power = chan->orig_mpwr =
-> >>  			(int) MBM_TO_DBM(power_rule->max_eirp);
-> >>  		return;
-> >>  	}
-> >> @@ -1331,7 +1331,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
-> >>  
-> >>  	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
-> >>  	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
-> >> -	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
-> >> +	chan->max_reg_power = chan->max_power =
-> >> +		(int) MBM_TO_DBM(power_rule->max_eirp);
-> > 
-> > This looks good to me, good catch! The commit log could use some love,
-> > given that this is a stable patch it is worthy to describe the
-> > consequences of not applying this patch. Can you describe what you
-> > observed that makes this a critical patch? The only piece of code
-> > that uses max_reg_power in cfg80211, mac80211 or drivers is on
-> > net/wireless/reg.c and drivers/net/wireless/mwifiex/cfg80211.c.
-> > In either case the issue the code you are patching is for code
-> > that deals with drivers that have a custom regulatory domain
-> > in which orig_mpwr would have been initialized to a non-zero value
-> > upon registration. In such cases we could only potenially run into
-> > an issue on this piece of code on handle_channel():
-> > 
-> >         chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
-> >         if (chan->orig_mpwr) {
-> >                 /*
-> >                  * Devices that have their own custom regulatory domain
-> >                  * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
-> >                  * passed country IE power settings.
-> >                  */
-> >                 if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-> >                     wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
-> >                     wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-> >                         chan->max_power = chan->max_reg_power;
-> >                 else
-> >                         chan->max_power = min(chan->orig_mpwr,
-> >                                               chan->max_reg_power);
-> >         } else
-> >                 chan->max_power = chan->max_reg_power;
-> > 
-> > The issue would happen if orig_mpwr is non zero (custom) and
-> > then max_reg_power would not have been initialized. This runs
-> > when you change a regulatory domain on a card with a custom
-> > regulatory domain and this would be an issue if max_reg_power
-> > would not be initialized. This however does not happen due to
-> > the first line above.
-> > 
-> > So I agree with this patch but do not see the requirement for
-> > it to go in as a stable fix to older stable kernels.
-> OK, I'll extend the commit log and resend without the stable-Cc.
+From: Sam Leffler <sleffler@chromium.org>
 
-Great in that case please feel free to add:
+Add NL80211_SCAN_FLAG_LOW_PRIORITY flag support. It tells drivers
+that this is a low priority scan request, so that they can take
+necessary action.
+Drivers need to advertise low priority scan capability during
+registration.
 
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+v3: Add WIPHY_FLAG_LOW_PRIORITY_SCAN flag so that device can advertise
+    low priority scan capability. An error will be returned to the
+    application if device doesn't support this feature.
+    Flush scan table feature is by default enabled.
+    (Johannes Berg)
 
-Thanks!
+ include/linux/nl80211.h |    3 +++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |   12 ++++++++++--
+ 3 files changed, 15 insertions(+), 2 deletions(-)
 
-   Luis
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index bac473a..a1d5704 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -3090,8 +3090,11 @@ enum nl80211_connect_failed_reason {
+  * Scan request control flags are used to control the handling
+  * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
+  * requests.
++ *
++ * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+  */
+ enum nl80211_scan_flags {
++	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
+ };
+ 
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7c70e99..dcad5cd 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1915,6 +1915,7 @@ struct cfg80211_ops {
+  *	responds to probe-requests in hardware.
+  * @WIPHY_FLAG_OFFCHAN_TX: Device supports direct off-channel TX.
+  * @WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL: Device supports remain-on-channel call.
++ * @WIPHY_FLAG_LOW_PRIORITY_SCAN: Device handles low priority scan differently.
+  */
+ enum wiphy_flags {
+ 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
+@@ -1938,6 +1939,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD	= BIT(19),
+ 	WIPHY_FLAG_OFFCHAN_TX			= BIT(20),
+ 	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
++	WIPHY_FLAG_LOW_PRIORITY_SCAN		= BIT(22),
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 714e46d..b26b7f7 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4363,9 +4363,13 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
++	if (info->attrs[NL80211_ATTR_SCAN_FLAGS]) {
+ 		request->flags = nla_get_u32(
+ 			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
++		if (!(wiphy->flags & WIPHY_FLAG_LOW_PRIORITY_SCAN) &&
++		    (request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY))
++			return -EOPNOTSUPP;
++	}
+ 
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+@@ -4598,9 +4602,13 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 		       request->ie_len);
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
++	if (info->attrs[NL80211_ATTR_SCAN_FLAGS]) {
+ 		request->flags = nla_get_u32(
+ 			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
++		if (!(wiphy->flags & WIPHY_FLAG_LOW_PRIORITY_SCAN) &&
++		    (request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY))
++			return -EOPNOTSUPP;
++	}
+ 
+ 	request->dev = dev;
+ 	request->wiphy = &rdev->wiphy;
+-- 
+1.7.0.4
+
