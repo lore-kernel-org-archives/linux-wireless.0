@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:44515 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764Ab2JUCDQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Oct 2012 22:03:16 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so814760dak.19
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Oct 2012 19:03:16 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH] mac80211: mesh STAs only process mesh beacons
-Date: Sat, 20 Oct 2012 19:03:10 -0700
-Message-Id: <1350784990-14242-1-git-send-email-thomas@cozybit.com> (sfid-20121021_040320_486970_F18D8FC0)
+Received: from narfation.org ([79.140.41.39]:53354 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932279Ab2JDRnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2012 13:43:03 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] ath_hw: Use common REG_WRITE parameter order
+Date: Thu, 04 Oct 2012 19:42:59 +0200
+Message-ID: <6280245.pW1SF1FHQv@bentobox> (sfid-20121004_194318_368614_ABC13789)
+In-Reply-To: <CAB=NE6XrTVQuAqGqD2wjyjN6ynyfB+yHXqBcAhRgOn=njBpAuA@mail.gmail.com>
+References: <1349366701-23154-1-git-send-email-sven@narfation.org> <CAB=NE6XrTVQuAqGqD2wjyjN6ynyfB+yHXqBcAhRgOn=njBpAuA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart3327671.PMkRRnuHg5"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before, a mesh STA would execute some code on behalf of AP or IBSS
-beacons. Since the mesh stack currently does not consider anything but
-other mesh STAs interesting, limit processing to just these and save a
-little overhead.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+--nextPart3327671.PMkRRnuHg5
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index c1e6a5c..41c2d26 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -681,8 +681,12 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	ieee802_11_parse_elems(mgmt->u.probe_resp.variable, len - baselen,
- 			       &elems);
- 
--	/* ignore beacons from secure mesh peers if our security is off */
--	if (elems.rsn_len && sdata->u.mesh.security == IEEE80211_MESH_SEC_NONE)
-+	/* ignore non-mesh or secure / unsecure mismatch */
-+	if ((!elems.mesh_id || !elems.mesh_config) ||
-+	    (elems.rsn &&
-+	     sdata->u.mesh.security == IEEE80211_MESH_SEC_NONE) ||
-+	    (!elems.rsn &&
-+	     sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE))
- 		return;
- 
- 	if (elems.ds_params && elems.ds_params_len == 1)
-@@ -695,8 +699,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
- 		return;
- 
--	if (elems.mesh_id && elems.mesh_config &&
--	    mesh_matches_local(sdata, &elems))
-+	if (mesh_matches_local(sdata, &elems))
- 		mesh_neighbour_update(sdata, mgmt->sa, &elems);
- 
- 	if (ifmsh->sync_ops)
--- 
-1.7.9.5
+On Thursday 04 October 2012 10:29:59 Luis R. Rodriguez wrote:
+> On Thu, Oct 4, 2012 at 9:05 AM, Sven Eckelmann <sven@narfation.org> wrote:
+> > All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
+> > "register" and "value". hw.c is the only file using the order "ah",
+> > "value" and "register". This inconsistent definition can easily lead to
+> > implementation errors.
+> > 
+> > Signed-off-by: Sven Eckelmann <sven@narfation.org>
+> 
+> Good catch! But can you resend specifying in your commit log that this
+> change is a no-op?
+
+I really don't know what you want from me here.
+
+> Also it may help the reader for you to git grep and
+> show the other REG_WRITE() definitions on the other c files within the
+> commit log.
+
+Ehrm, ok.
+
+Kind regards,
+	Sven
+--nextPart3327671.PMkRRnuHg5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABCgAGBQJQbcqjAAoJEF2HCgfBJntGgRUQAJILcboPdNndZCVueFEDbvMa
+6iKzKaTaFjqrlGEkvn55BXpXQSh1rHD9kZufJXEvzgkjDJrKmD2R+stL9Oljx2Ob
+ZE/AVB5xXIXhscgl21dgD427D9w+1INnYb1f7/+bJPNNtGE9dV41TkFI8DyBdi5E
+mz8n/cHB3zngw4qc3u5u8qkz+NR48+kkbein+RuRGVOPleFFiQVCq8glSUa8q0YQ
+uCAleNpip6YRGFinGoS4nal6jjJAsCkoQERknJP7UXj/6+kv7+ymBkPbNW5qfRBJ
+FrPm4WC3TpWaeSJuje/hl+TClmr9ZpZ8HoE42pRzrUL3WlhxLfLe4Sadm1O98O05
+P47PpADTm8FrIZhL/o8xak38X2OUXr+brJopjcJjefqUBpg7MxH1D1tp1aHzHeiy
+/enDbvD7kUWGKqDMx2gLY5tmQBEJJP+RGoaLtJpWDYa6RUukk5XgaGAyRf7H9/br
+Uvcg/aIC8MeQwCkYInmiIrkRviv2Vov5SYCzkl3xznlkeRm8Ze5M5H9eL3QoINfw
+lPtfkHrsYfERZIl0zIgGjukxbZn3wTnWaUKHRCVdvxC4VLrCQvyvM3PYZdb3EVtu
+7/N1j+dVjiTk3+oEeT6nHGWdFFOrkaq97y4ssKFiTnKk5zLdjK9gH+OC+omHGFts
+HtIKHbXIaYRMdR/BMBei
+=Qmq8
+-----END PGP SIGNATURE-----
+
+--nextPart3327671.PMkRRnuHg5--
 
