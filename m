@@ -1,71 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:34464 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753713Ab2JTCbg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 22:31:36 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Joe Perches <joe@perches.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-CC: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Luciano Coelho <coelho@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Date: Fri, 19 Oct 2012 19:30:06 -0700
-Subject: RE: [PATCH net-next 04/21] wireless: Convert is_<foo>_ether_addr
- uses to eth_addr_<foo>
-Message-ID: <477F20668A386D41ADCC57781B1F7043083B8EC57E@SC-VEXCH1.marvell.com> (sfid-20121020_043159_443347_501B9719)
-References: <cover.1350618006.git.joe@perches.com>
- <bb2235c257e347354d94478bd1be35b89bf90186.1350618009.git.joe@perches.com>
-In-Reply-To: <bb2235c257e347354d94478bd1be35b89bf90186.1350618009.git.joe@perches.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from narfation.org ([79.140.41.39]:53358 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933546Ab2JDRnU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2012 13:43:20 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	Sven Eckelmann <sven@narfation.org>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2] ath_hw: Use common REG_WRITE parameter order
+Date: Thu,  4 Oct 2012 19:43:15 +0200
+Message-Id: <1349372595-19966-1-git-send-email-sven@narfation.org> (sfid-20121004_194336_076559_FF3C8B09)
+In-Reply-To: <1349366701-23154-1-git-send-email-sven@narfation.org>
+References: <1349366701-23154-1-git-send-email-sven@narfation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
+"register" and "value". hw.c is the only file using the order "ah", "value" and
+"register".
 
-> Subject: [PATCH net-next 04/21] wireless: Convert is_<foo>_ether_addr uses to eth_addr_<foo>
-> 
-> Convert the old ether_addr tests to eth_addr_<foo>.
-> Adds api consistency.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+drivers/net/wireless/ath/ath9k/hw.h:#define REG_WRITE(_ah, _reg, _val) \
+drivers/net/wireless/ath/key.c:#define REG_WRITE(_ah, _reg, _val) (common->ops->write)(_ah, _val, _reg)
 
-Acked-by: Bing Zhao <bzhao@marvell.com> [mwifiex]
+This inconsistent definition can easily lead to implementation errors. The
+modification doesn't change the behavior of the driver or the generated code.
 
-Thanks,
-Bing
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+Changed commit message
+
+ drivers/net/wireless/ath/hw.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
+index 19befb3..39e8a59 100644
+--- a/drivers/net/wireless/ath/hw.c
++++ b/drivers/net/wireless/ath/hw.c
+@@ -20,8 +20,8 @@
+ #include "ath.h"
+ #include "reg.h"
+ 
+-#define REG_READ	(common->ops->read)
+-#define REG_WRITE	(common->ops->write)
++#define REG_READ			(common->ops->read)
++#define REG_WRITE(_ah, _reg, _val)	(common->ops->write)(_ah, _val, _reg)
+ 
+ /**
+  * ath_hw_set_bssid_mask - filter out bssids we listen
+@@ -119,8 +119,8 @@ void ath_hw_setbssidmask(struct ath_common *common)
+ {
+ 	void *ah = common->ah;
+ 
+-	REG_WRITE(ah, get_unaligned_le32(common->bssidmask), AR_BSSMSKL);
+-	REG_WRITE(ah, get_unaligned_le16(common->bssidmask + 4), AR_BSSMSKU);
++	REG_WRITE(ah, AR_BSSMSKL, get_unaligned_le32(common->bssidmask));
++	REG_WRITE(ah, AR_BSSMSKU, get_unaligned_le16(common->bssidmask + 4));
+ }
+ EXPORT_SYMBOL(ath_hw_setbssidmask);
+ 
+@@ -139,7 +139,7 @@ void ath_hw_cycle_counters_update(struct ath_common *common)
+ 	void *ah = common->ah;
+ 
+ 	/* freeze */
+-	REG_WRITE(ah, AR_MIBC_FMC, AR_MIBC);
++	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
+ 
+ 	/* read */
+ 	cycles = REG_READ(ah, AR_CCCNT);
+@@ -148,13 +148,13 @@ void ath_hw_cycle_counters_update(struct ath_common *common)
+ 	tx = REG_READ(ah, AR_TFCNT);
+ 
+ 	/* clear */
+-	REG_WRITE(ah, 0, AR_CCCNT);
+-	REG_WRITE(ah, 0, AR_RFCNT);
+-	REG_WRITE(ah, 0, AR_RCCNT);
+-	REG_WRITE(ah, 0, AR_TFCNT);
++	REG_WRITE(ah, AR_CCCNT, 0);
++	REG_WRITE(ah, AR_RFCNT, 0);
++	REG_WRITE(ah, AR_RCCNT, 0);
++	REG_WRITE(ah, AR_TFCNT, 0);
+ 
+ 	/* unfreeze */
+-	REG_WRITE(ah, 0, AR_MIBC);
++	REG_WRITE(ah, AR_MIBC, 0);
+ 
+ 	/* update all cycle counters here */
+ 	common->cc_ani.cycles += cycles;
+-- 
+1.7.10.4
+
