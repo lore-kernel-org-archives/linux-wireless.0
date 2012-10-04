@@ -1,83 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51068 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757694Ab2JXQ16 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 12:27:58 -0400
-Message-ID: <50881709.4050405@candelatech.com> (sfid-20121024_182802_049529_23C5FCA5)
-Date: Wed, 24 Oct 2012 09:27:53 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 2/4] cfg80211: make TX power setting per interface
-References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net> <1351073603-11616-3-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1351073603-11616-3-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from narfation.org ([79.140.41.39]:53342 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757118Ab2JDQKa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2012 12:10:30 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH] ath_hw: Use common REG_WRITE parameter order
+Date: Thu,  4 Oct 2012 18:05:01 +0200
+Message-Id: <1349366701-23154-1-git-send-email-sven@narfation.org> (sfid-20121004_181040_093141_83F3EA3D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/24/2012 03:13 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> The TX power setting is currently per wiphy (hardware
-> device) but with multi-channel capabilities that doesn't
-> make much sense any more.
->
-> Unfortunately, by making it per interface, we loose some
-> backward compatibility with userspace, but that isn't a
-> big issue since userspace must already accept that not
-> all drivers support TX power setting, and mostly uses a
-> netdev to identify the hardware anyway.
->
+All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
+"register" and "value". hw.c is the only file using the order "ah", "value" and
+"register". This inconsistent definition can easily lead to implementation
+errors.
 
-> @@ -1971,6 +1971,7 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
->   }
->
->   static int ieee80211_set_tx_power(struct wiphy *wiphy,
-> +				  struct wireless_dev *wdev,
->   				  enum nl80211_tx_power_setting type, int mbm)
->   {
->   	struct ieee80211_local *local = wiphy_priv(wiphy);
-> @@ -2005,7 +2006,9 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
->   	return 0;
->   }
->
-> -static int ieee80211_get_tx_power(struct wiphy *wiphy, int *dbm)
-> +static int ieee80211_get_tx_power(struct wiphy *wiphy,
-> +				  struct wireless_dev *wdev,
-> +				  int *dbm)
->   {
->   	struct ieee80211_local *local = wiphy_priv(wiphy);
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ drivers/net/wireless/ath/hw.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-Do we really set mbm and read back dbm?
-
-
->
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 879ca62..24175e2 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -1588,6 +1588,11 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
->   		enum nl80211_tx_power_setting type;
->   		int idx, mbm = 0;
->
-> +		if (!wdev) {
-> +			result = -EOPNOTSUPP;
-> +			goto bad_res;
-> +		}
-
-I guess this is the part that breaks backwards compat when trying to set wiphy?
-If it does stay like this, maybe add a WARN_ON_ONCE that tells users to fix their
-user-space?
-
-Too bad there is not an -EUSEVIFINSTEAD :P
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
+index 19befb3..39e8a59 100644
+--- a/drivers/net/wireless/ath/hw.c
++++ b/drivers/net/wireless/ath/hw.c
+@@ -20,8 +20,8 @@
+ #include "ath.h"
+ #include "reg.h"
+ 
+-#define REG_READ	(common->ops->read)
+-#define REG_WRITE	(common->ops->write)
++#define REG_READ			(common->ops->read)
++#define REG_WRITE(_ah, _reg, _val)	(common->ops->write)(_ah, _val, _reg)
+ 
+ /**
+  * ath_hw_set_bssid_mask - filter out bssids we listen
+@@ -119,8 +119,8 @@ void ath_hw_setbssidmask(struct ath_common *common)
+ {
+ 	void *ah = common->ah;
+ 
+-	REG_WRITE(ah, get_unaligned_le32(common->bssidmask), AR_BSSMSKL);
+-	REG_WRITE(ah, get_unaligned_le16(common->bssidmask + 4), AR_BSSMSKU);
++	REG_WRITE(ah, AR_BSSMSKL, get_unaligned_le32(common->bssidmask));
++	REG_WRITE(ah, AR_BSSMSKU, get_unaligned_le16(common->bssidmask + 4));
+ }
+ EXPORT_SYMBOL(ath_hw_setbssidmask);
+ 
+@@ -139,7 +139,7 @@ void ath_hw_cycle_counters_update(struct ath_common *common)
+ 	void *ah = common->ah;
+ 
+ 	/* freeze */
+-	REG_WRITE(ah, AR_MIBC_FMC, AR_MIBC);
++	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
+ 
+ 	/* read */
+ 	cycles = REG_READ(ah, AR_CCCNT);
+@@ -148,13 +148,13 @@ void ath_hw_cycle_counters_update(struct ath_common *common)
+ 	tx = REG_READ(ah, AR_TFCNT);
+ 
+ 	/* clear */
+-	REG_WRITE(ah, 0, AR_CCCNT);
+-	REG_WRITE(ah, 0, AR_RFCNT);
+-	REG_WRITE(ah, 0, AR_RCCNT);
+-	REG_WRITE(ah, 0, AR_TFCNT);
++	REG_WRITE(ah, AR_CCCNT, 0);
++	REG_WRITE(ah, AR_RFCNT, 0);
++	REG_WRITE(ah, AR_RCCNT, 0);
++	REG_WRITE(ah, AR_TFCNT, 0);
+ 
+ 	/* unfreeze */
+-	REG_WRITE(ah, 0, AR_MIBC);
++	REG_WRITE(ah, AR_MIBC, 0);
+ 
+ 	/* update all cycle counters here */
+ 	common->cc_ani.cycles += cycles;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
