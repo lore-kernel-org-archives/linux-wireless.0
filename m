@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932947Ab2JXR3q (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50969 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755203Ab2JDWmB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 13:29:46 -0400
-Message-ID: <1351099817.10709.6.camel@jlt4.sipsolutions.net> (sfid-20121024_192951_972852_9F737875)
-Subject: Re: [PATCH 0/4] multi-channel/interface TX power handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 24 Oct 2012 19:30:17 +0200
-In-Reply-To: <508817E0.5050504@candelatech.com>
-References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>
-	  <50880BD0.6080603@candelatech.com>
-	 <1351093332.10709.5.camel@jlt4.sipsolutions.net>
-	 <508817E0.5050504@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 4 Oct 2012 18:42:01 -0400
+Message-ID: <506E10B7.4060406@candelatech.com> (sfid-20121005_004208_332055_06ABED6F)
+Date: Thu, 04 Oct 2012 15:41:59 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
+References: <506DDA1D.1090106@candelatech.com> <CAGRGNgVAehhN8CdwYrG8H4kuad=Kt5tPOHSKCSH8xm-OC=z6aw@mail.gmail.com>
+In-Reply-To: <CAGRGNgVAehhN8CdwYrG8H4kuad=Kt5tPOHSKCSH8xm-OC=z6aw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-24 at 09:31 -0700, Ben Greear wrote:
+On 10/04/2012 03:36 PM, Julian Calaby wrote:
+> Hi Ben,
+>
+> On Fri, Oct 5, 2012 at 4:49 AM, Ben Greear <greearb@candelatech.com> wrote:
+>> I finally got my 3-attenuator system up and running,
+>> and I'm starting to do some tests.
+>>
+>> AP and Station are running 3.5.5+, ath9k ar9380 NICs.
+>> Channel 157, HT40, no encryption.
+>>
+>> One question right away:  Should I expect decent performance
+>> if I directly cable 2 wifi NICs, where one is acting as AP and
+>> the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
+>
+> Going off on a tangent: arguably it shouldn't matter which channel on
+> the AP card is connected to which channel on the STA card. I wonder
+> what results you'd get if you cabled them in each combination and
+> tested the throughput keeping the other variables the same. I also
+> wonder what impact it would have on the throughput if you started
+> disconnecting the cables.
 
-> > Yeah that'd be the only way, most scripts I've seen always just use the
-> > interface anyway though? I'm not totally happy about this, maybe we
-> > should iterate all interfaces? Not really sure ...
-> 
-> Well, I think we should make setting the wiphy work...just iterate
-> all interfaces.  Breaking backwards compatibility just causes too
-> much problems for user-space, and many users may either not notice,
-> or not be able to change whatever software is screwing up.
+I doubt it matters either....just seemed sane to start with something
+I could easily keep track of in my head :)
 
-Yeah I guess.
+I had really shitty performance when I had only one cable connected
+to the station, but I think it is probably related to rate-control,
+which seems too aggressive.  When I force things to slower speeds
+it works fine.  I'm starting to look into that now.
 
-> But, I think we also need some way to know if we can set individual
-> vifs to different tx-power successfully.
-> 
-> Maybe a /sys/class/netdev/wlan0/tx-power file to read current power could
-> be added in this patch series?  Then user-space could key off of it's
-> existence, and it would give a simple way to read the current tx-power
-> settings (and possibly set it as well)...
+I hope to eventually produce big pretty graphs reporting signal, rx-rate,
+etc over various attenuations...but still got a ways to go first!
 
-sysfs file sounds like about the worst possible way (except maybe for
-procfs), an nl80211 feature flag could be worthwhile though :)
+Thanks,
+Ben
 
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
