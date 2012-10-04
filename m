@@ -1,73 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42912 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753904Ab2JWN2L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2012 09:28:11 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mga14.intel.com ([143.182.124.37]:39837 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751777Ab2JDJO7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2012 05:14:59 -0400
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/2] iwlwifi: don't leak Tx skb when a queue is disabled
-Date: Tue, 23 Oct 2012 15:28:38 +0200
-Message-Id: <1350998919-18645-1-git-send-email-johannes@sipsolutions.net> (sfid-20121023_152815_002257_1A86E6DF)
+Cc: bzhao@marvell.com
+Subject: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
+Date: Thu,  4 Oct 2012 12:16:01 +0300
+Message-Id: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20121004_111504_334272_7ACCC1F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 
-Since the queue might not be empty, we need to free the
-pending Tx packets.
+Make output more readable and remove unneeded function call.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+...
+mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+last_cmd_id: 00000000: 28 00 28 00 28                            (.(.(
+...
+
+would be changed to:
+
+...
+mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+mwifiex_sdio mmc0:0001:1: last_cmd_id: 28 00 28 00 28
+...
+
+Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/internal.h |    1 +
- drivers/net/wireless/iwlwifi/pcie/trans.c    |    4 ++--
- drivers/net/wireless/iwlwifi/pcie/tx.c       |    2 ++
- 3 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/cmdevt.c |   17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
-index 401178f..6ce58f0 100644
---- a/drivers/net/wireless/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
-@@ -346,6 +346,7 @@ void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
- 		      enum dma_data_direction dma_dir);
- int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
- 			 struct sk_buff_head *skbs);
-+void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id);
- int iwl_queue_space(const struct iwl_queue *q);
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 225c1a4..e6a0600 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -917,21 +917,20 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
  
- /*****************************************************
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index f95d88d..a6a5181 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -442,10 +442,10 @@ static int iwl_trans_txq_init(struct iwl_trans *trans, struct iwl_tx_queue *txq,
- 	return 0;
- }
+ 		dev_err(adapter->dev, "last_cmd_index = %d\n",
+ 			adapter->dbg.last_cmd_index);
+-		print_hex_dump_bytes("last_cmd_id: ", DUMP_PREFIX_OFFSET,
+-				     adapter->dbg.last_cmd_id, DBG_CMD_NUM);
+-		print_hex_dump_bytes("last_cmd_act: ", DUMP_PREFIX_OFFSET,
+-				     adapter->dbg.last_cmd_act, DBG_CMD_NUM);
++		dev_err(adapter->dev, "last_cmd_id: %*ph\n", DBG_CMD_NUM,
++			adapter->dbg.last_cmd_id);
++		dev_err(adapter->dev, "last_cmd_act: %*ph\n", DBG_CMD_NUM,
++			adapter->dbg.last_cmd_act);
  
--/**
-+/*
-  * iwl_tx_queue_unmap -  Unmap any remaining DMA mappings and free skb's
-  */
--static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
-+void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_tx_queue *txq = &trans_pcie->txq[txq_id];
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index db3efbb..5db0314 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -494,6 +494,8 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
- 	_iwl_write_targ_mem_dwords(trans, stts_addr,
- 				   zero_val, ARRAY_SIZE(zero_val));
+ 		dev_err(adapter->dev, "last_cmd_resp_index = %d\n",
+ 			adapter->dbg.last_cmd_resp_index);
+-		print_hex_dump_bytes("last_cmd_resp_id: ", DUMP_PREFIX_OFFSET,
+-				     adapter->dbg.last_cmd_resp_id,
+-				     DBG_CMD_NUM);
++		dev_err(adapter->dev, "last_cmd_resp_id: %*ph\n", DBG_CMD_NUM,
++			adapter->dbg.last_cmd_resp_id);
  
-+	iwl_tx_queue_unmap(trans, txq_id);
-+
- 	IWL_DEBUG_TX_QUEUES(trans, "Deactivate queue %d\n", txq_id);
- }
+ 		dev_err(adapter->dev, "last_event_index = %d\n",
+ 			adapter->dbg.last_event_index);
+-		print_hex_dump_bytes("last_event: ", DUMP_PREFIX_OFFSET,
+-				     adapter->dbg.last_event, DBG_CMD_NUM);
++		dev_err(adapter->dev, "last_event: %*ph\n", DBG_CMD_NUM,
++				     adapter->dbg.last_event);
  
+ 		dev_err(adapter->dev, "data_sent=%d cmd_sent=%d\n",
+ 			adapter->data_sent, adapter->cmd_sent);
 -- 
-1.7.10.4
+1.7.9.5
 
