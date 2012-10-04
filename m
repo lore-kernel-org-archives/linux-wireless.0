@@ -1,87 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53504 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757252Ab2JJUkk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 16:40:40 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH 3.7] mac80211: use ieee80211_free_txskb in a few more places
-Date: Wed, 10 Oct 2012 22:40:23 +0200
-Message-Id: <1349901623-63864-1-git-send-email-nbd@openwrt.org> (sfid-20121010_224044_091345_DDECE997)
+Received: from mail.candelatech.com ([208.74.158.172]:33775 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753854Ab2JDStM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2012 14:49:12 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q94In1CR003060
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 4 Oct 2012 11:49:02 -0700
+Message-ID: <506DDA1D.1090106@candelatech.com> (sfid-20121004_204916_633988_0E39C533)
+Date: Thu, 04 Oct 2012 11:49:01 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Questions on direct-cabling 3x3 MIMO systems (ath9k)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Free tx status skbs when draining power save buffers, pending frames, or
-when tearing down a vif.
-Fixes remaining conditions that can lead to hostapd/wpa_supplicant hangs when
-running out of socket write memory.
+I finally got my 3-attenuator system up and running,
+and I'm starting to do some tests.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
----
- net/mac80211/iface.c    | 2 +-
- net/mac80211/sta_info.c | 4 ++--
- net/mac80211/util.c     | 4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+AP and Station are running 3.5.5+, ath9k ar9380 NICs.
+Channel 157, HT40, no encryption.
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6f8a73c..7de7717 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -853,7 +853,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 			if (info->control.vif == &sdata->vif) {
- 				__skb_unlink(skb, &local->pending[i]);
--				dev_kfree_skb_irq(skb);
-+				ieee80211_free_txskb(&local->hw, skb);
- 			}
- 		}
- 	}
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 797dd36..0a4e4c0 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -650,7 +650,7 @@ static bool sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
- 		 */
- 		if (!skb)
- 			break;
--		dev_kfree_skb(skb);
-+		ieee80211_free_txskb(&local->hw, skb);
- 	}
- 
- 	/*
-@@ -679,7 +679,7 @@ static bool sta_info_cleanup_expire_buffered_ac(struct ieee80211_local *local,
- 		local->total_ps_buffered--;
- 		ps_dbg(sta->sdata, "Buffered frame expired (STA %pM)\n",
- 		       sta->sta.addr);
--		dev_kfree_skb(skb);
-+		ieee80211_free_txskb(&local->hw, skb);
- 	}
- 
- 	/*
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 22ca350..94e5868 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -406,7 +406,7 @@ void ieee80211_add_pending_skb(struct ieee80211_local *local,
- 	int queue = info->hw_queue;
- 
- 	if (WARN_ON(!info->control.vif)) {
--		kfree_skb(skb);
-+		ieee80211_free_txskb(&local->hw, skb);
- 		return;
- 	}
- 
-@@ -431,7 +431,7 @@ void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
- 		if (WARN_ON(!info->control.vif)) {
--			kfree_skb(skb);
-+			ieee80211_free_txskb(&local->hw, skb);
- 			continue;
- 		}
- 
+One question right away:  Should I expect decent performance
+if I directly cable 2 wifi NICs, where one is acting as AP and
+the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
+
+If I add about 15dBm of attenuation in this setup, max download
+speed is about 70Mbps, though the station may train up to 450Mbps
+rate.  Signal is reported as -23, and noise at -93.
+
+Throughput stays about the same all the way to signal of -68 or so, though
+the trained rate drops to around 270Mbps.
+
+I can't make the signal quality go lower (even by attaching terminators
+directly to the antenna mounts on the AP).  Guess I'll need some sort of
+box to double-box these systems and hopefully drown out more of the RF.
+
+Thanks,
+Ben
+
 -- 
-1.7.12.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
