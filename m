@@ -1,81 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:50737 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751947Ab2JALO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2012 07:14:56 -0400
-Message-ID: <1349090095.7740.9.camel@joe-AO722> (sfid-20121001_131506_493815_7689E3BC)
-Subject: Re: [PATCHv2] rtlwifi: rtl8192ce: rtl8192cu: use %*ph[C] to dump
- small buffers
-From: Joe Perches <joe@perches.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"David S . Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 01 Oct 2012 04:14:55 -0700
-In-Reply-To: <1349088899-15863-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1349088899-15863-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-la0-f46.google.com ([209.85.215.46]:36653 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932214Ab2JDRqc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2012 13:46:32 -0400
+Received: by mail-la0-f46.google.com with SMTP id h6so379506lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 10:46:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <6280245.pW1SF1FHQv@bentobox>
+References: <1349366701-23154-1-git-send-email-sven@narfation.org>
+ <CAB=NE6XrTVQuAqGqD2wjyjN6ynyfB+yHXqBcAhRgOn=njBpAuA@mail.gmail.com> <6280245.pW1SF1FHQv@bentobox>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Thu, 4 Oct 2012 10:46:11 -0700
+Message-ID: <CAB=NE6X7DytHOapoX1HyxSz7kEtaredsmtg_xZFUp=4VXjw8zA@mail.gmail.com> (sfid-20121004_194644_203176_36E46994)
+Subject: Re: [PATCH] ath_hw: Use common REG_WRITE parameter order
+To: Sven Eckelmann <sven@narfation.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-10-01 at 13:54 +0300, Andy Shevchenko wrote:
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Thu, Oct 4, 2012 at 10:42 AM, Sven Eckelmann <sven@narfation.org> wrote:
+> On Thursday 04 October 2012 10:29:59 Luis R. Rodriguez wrote:
+>> On Thu, Oct 4, 2012 at 9:05 AM, Sven Eckelmann <sven@narfation.org> wrote:
+>> > All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
+>> > "register" and "value". hw.c is the only file using the order "ah",
+>> > "value" and "register". This inconsistent definition can easily lead to
+>> > implementation errors.
+>> >
+>> > Signed-off-by: Sven Eckelmann <sven@narfation.org>
+>>
+>> Good catch! But can you resend specifying in your commit log that this
+>> change is a no-op?
+>
+> I really don't know what you want from me here.
 
-Hey Andy.
+Just specify in the commit log that this change causes no functional changes.
 
-The conversions are not all the same.
-One uses "%*ph", the others use "%*phC"
-even though all origin hex formats are "%x:%x:..."
-Ideally all the conversions would use the same format style.
-
-> diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-
-> @@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
-[]
-> -	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
-> -		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
-> -		 key_cont_128[0], key_cont_128[1],
-> -		 key_cont_128[2], key_cont_128[3],
-> -		 key_cont_128[4], key_cont_128[5]);
-> +	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
-> +			6, key_cont_128);
-
-Uses "%*ph"
-You removed a newline.
-That should probably be mentioned in the changelog.
-
-It would be a bit nicer as well to align the arguments
-after the open paren like:
-
-	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
-		 6, key_cont_128);
-
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-[]
-> @@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
-[]
-> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
-> -		 ratr_index, ratr_bitmap,
-> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
-> -		 rate_mask[4]);
-> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
-> +		 ratr_index, ratr_bitmap, 5, rate_mask);
-
-Uaes "%*phC", etc...
-
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-[]
-> @@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
-[]
-> -		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
-> -		 ratr_index, ratr_bitmap,
-> -		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
-> -		 rate_mask[4]);
-> +		 "Rate_index:%x, ratr_val:%x, %*phC\n",
-> +		 ratr_index, ratr_bitmap, 5, rate_mask);
-
-here too
-
+  Luis
