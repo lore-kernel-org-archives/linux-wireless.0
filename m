@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47054 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759729Ab2JaTUW (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:51160 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752310Ab2JDSmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 15:20:22 -0400
-Message-ID: <1351711256.5419.2.camel@jlt4.sipsolutions.net> (sfid-20121031_202024_722038_8759DAC1)
-Subject: Re: WARNING in agg-tx.c (3.5.7+, not tainted)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 31 Oct 2012 20:20:56 +0100
-In-Reply-To: <5091798A.7010104@candelatech.com>
-References: <509173D0.9010701@candelatech.com>
-	  (sfid-20121031_195414_905498_198D44C4) <1351710647.6281.10.camel@jlt4.sipsolutions.net>
-	 <5091798A.7010104@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 4 Oct 2012 14:42:52 -0400
+Date: Thu, 4 Oct 2012 21:42:12 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch 2/3] brcmfmac: fix end of loop check (signedness bug)
+Message-ID: <20121004184212.GO13767@mwanda> (sfid-20121004_204257_411825_516F71CA)
+References: <20121003060631.GB3802@elgon.mountain>
+ <506DB82B.9010106@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <506DB82B.9010106@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-31 at 12:18 -0700, Ben Greear wrote:
-
-> >> 	mutex_lock(&sta->ampdu_mlme.mtx);
-> >> 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-> >>
-> >> 	if (WARN_ON(!tid_tx)) {
-> >> #ifdef CONFIG_MAC80211_HT_DEBUG
-> >> 		printk(KERN_DEBUG "addBA was not requested!\n");
-> >> #endif
+On Thu, Oct 04, 2012 at 06:24:11PM +0200, Arend van Spriel wrote:
+> On 10/03/2012 08:06 AM, Dan Carpenter wrote:
+> >The problem here is that we loop until "remained_buf_len" is less than
+> >zero, but since it is unsigned, it never is.
 > >
-> > Hm should probably be a WARN(), but ...
+> >"remained_buf_len" has to be large enough to hold the value from
+> >"mgmt_ie_buf_len".  That variable is type u32, but it only holds small
+> >values so I have changed to both variables to int.
 > >
-> >>From the backtrace it looks like maybe you were tearing down the
-> > interface? So maybe it's possible that you were remove it or something,
-> > and the driver had just accepted the session? Hmm.
+> >Also I removed the bogus initialization from "mgmt_ie_buf_len" so that
+> >GCC can detect if it is used unitialized.  I moved the declaration of
+> >"remained_buf_len" closer to where it is used so it's easier to read.
+> >
 > 
-> I've got 400 interfaces churning, some being reset due to lack of
-> fast enough DHCP response, etc.  Could easily be related to that
-> drv-remove-interface bug as well..
+> Hi Dan,
+> 
+> Good catch. I applied the patch internally on our HEAD and had it
+> reviewed. We did not take moving the declaration as we prefer to
+> have all variables at the top of the function. It makes it easier to
+> find what is declared in a function and whether exceeding the local
+> variable limit mentioned in Chapter 6. Functions of the CodingStyle
+> (we are exceeding it already ;-) ).
+> 
+> Are you ok with us submitting it? It would be sent out for 3.8 or do
+> you prefer to have it fixed in 3.7?
 
-I didn't even think of that, but yeah, that seems possible.
+Uh, I don't know how hard it is to trigger this bug.  If it's
+impossible to trigger then we could wait until 3.8 otherwise I
+would tend to merge it into 3.7 given that we haven't hit -rc1 yet.
 
-> it is much more easily reproduced
-> in this scenario.  Will re-run some tests with your suggested patch
-> applied...
-
-Ok cool.
-
-johannes
+regards,
+dan carpenter
 
