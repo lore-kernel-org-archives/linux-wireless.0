@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39529 "EHLO
+Received: from mail.candelatech.com ([208.74.158.172]:53241 "EHLO
 	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756505Ab2JXRir (ORCPT
+	with ESMTP id S1752651Ab2JDWGV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 13:38:47 -0400
-Message-ID: <5088279E.70404@candelatech.com> (sfid-20121024_193857_980776_295B27BC)
-Date: Wed, 24 Oct 2012 10:38:38 -0700
+	Thu, 4 Oct 2012 18:06:21 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q94M6IxJ019709
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 4 Oct 2012 15:06:19 -0700
+Message-ID: <506E0859.906@candelatech.com> (sfid-20121005_000629_667091_6E36A839)
+Date: Thu, 04 Oct 2012 15:06:17 -0700
 From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4] cfg80211: make TX power setting per interface
-References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>  <1351073603-11616-3-git-send-email-johannes@sipsolutions.net>  <50881709.4050405@candelatech.com> <1351099903.10709.8.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1351099903.10709.8.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
+References: <506DDA1D.1090106@candelatech.com>
+In-Reply-To: <506DDA1D.1090106@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/24/2012 10:31 AM, Johannes Berg wrote:
-> On Wed, 2012-10-24 at 09:27 -0700, Ben Greear wrote:
+On 10/04/2012 11:49 AM, Ben Greear wrote:
+> I finally got my 3-attenuator system up and running,
+> and I'm starting to do some tests.
 >
->>> -static int ieee80211_get_tx_power(struct wiphy *wiphy, int *dbm)
->>> +static int ieee80211_get_tx_power(struct wiphy *wiphy,
->>> +				  struct wireless_dev *wdev,
->>> +				  int *dbm)
->>>    {
->>>    	struct ieee80211_local *local = wiphy_priv(wiphy);
->>
->> Do we really set mbm and read back dbm?
+> AP and Station are running 3.5.5+, ath9k ar9380 NICs.
+> Channel 157, HT40, no encryption.
 >
-> Yeah, we did nl80211 APIs in mBm and reading back is only for wext
-> compatibility so was dBm ... hindsight being 20/20 we should probably
-> never have used mBm, nothing supports it anyway.
+> One question right away:  Should I expect decent performance
+> if I directly cable 2 wifi NICs, where one is acting as AP and
+> the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
 
-ath9k *could* support 1/2 dBm settings from what I remember, but
-I am not sure there is any way to currently configure it for that.
+Well, to try to answer my own question:
 
->>> @@ -1588,6 +1588,11 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
->>>    		enum nl80211_tx_power_setting type;
->>>    		int idx, mbm = 0;
->>>
->>> +		if (!wdev) {
->>> +			result = -EOPNOTSUPP;
->>> +			goto bad_res;
->>> +		}
->>
->> I guess this is the part that breaks backwards compat when trying to set wiphy?
->> If it does stay like this, maybe add a WARN_ON_ONCE that tells users to fix their
->> user-space?
->
-> Right. Add a user triggerable warning in code like that seems like a
-> really bad idea to me though. Maybe a message, that seems to have some
-> precedent, but I suppose nobody will really see it anyway?
+I mainly needed to tune socket tx/rx-buffer sizes, and some similar
+things to get the performance up to expected rates, so it was
+mostly user error.
 
-WARN_ON_ONCE would be once per boot, and it shows stack (and calling user-space application).
-It will show up in distribution bug reports automatically in some cases so calling
-code might actually get fixed fairly quickly.
+Now, I'm still seeing lots of strange issues when running through
+the attenuator with lots of attenuation, but at least when things
+are configured for low amounts of attenuation, I get good performance
+(330+Mbps UDP throughput).
+
+Off to look at excessive crc errors...
 
 Thanks,
 Ben
