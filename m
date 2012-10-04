@@ -1,77 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28675 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752627Ab2JEIiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 04:38:17 -0400
-Date: Fri, 5 Oct 2012 10:37:00 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: David Rientjes <rientjes@google.com>
-Cc: Mel Gorman <mgorman@suse.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Pavel Machek <pavel@ucw.cz>, linux-wireless@vger.kernel.org,
-	johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-Message-ID: <20121005083659.GA2819@redhat.com> (sfid-20121005_103842_652746_E5427E95)
-References: <20120909213228.GA5538@elf.ucw.cz>
- <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
- <20120910111113.GA25159@elf.ucw.cz>
- <20120911162536.bd5171a1.akpm@linux-foundation.org>
- <20120912101826.GL11266@suse.de>
- <20121003113659.GD2259@redhat.com>
- <alpine.DEB.2.00.1210031104120.29765@chino.kir.corp.google.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43481 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640Ab2JDUeH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Oct 2012 16:34:07 -0400
+Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Thu, 4 Oct 2012 13:35:43 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Sven Eckelmann <sven@narfation.org>
+Subject: Re: [PATCHv2] ath_hw: Use common REG_WRITE parameter order
+Message-ID: <20121004203543.GR3354@lenteja.do-not-panic.com> (sfid-20121004_223413_537589_59112BD3)
+References: <1349366701-23154-1-git-send-email-sven@narfation.org>
+ <1349372595-19966-1-git-send-email-sven@narfation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.1210031104120.29765@chino.kir.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1349372595-19966-1-git-send-email-sven@narfation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 03, 2012 at 11:07:13AM -0700, David Rientjes wrote:
-> On Wed, 3 Oct 2012, Stanislaw Gruszka wrote:
+On Thu, Oct 04, 2012 at 07:43:15PM +0200, Sven Eckelmann wrote:
+> All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
+> "register" and "value". hw.c is the only file using the order "ah", "value" and
+> "register".
 > 
-> > So, can this problem be solved like on below patch, or I should rather
-> > split firmware loading into chunks similar like was already iwlwifi did?
-
-Hmm, I looked at iwl3945 code and looks loading firmware in chunks is
-nothing that can be easily done. 3945 bootstrap code expect that runtime
-ucode will be placed in physically continue memory, and there are no
-separate instructions for copy and for execute, just one to perform both
-those actions. Maybe loading firmware in chunks can be done using
-undocumented features of the device, but I'm eager to do this.
-
-> > diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-> > index 5f50177..1b58222 100644
-> > --- a/drivers/net/wireless/iwlegacy/common.h
-> > +++ b/drivers/net/wireless/iwlegacy/common.h
-> > @@ -2247,7 +2247,7 @@ il_alloc_fw_desc(struct pci_dev *pci_dev, struct fw_desc *desc)
-> >  
-> >  	desc->v_addr =
-> >  	    dma_alloc_coherent(&pci_dev->dev, desc->len, &desc->p_addr,
-> > -			       GFP_KERNEL);
-> > +			       GFP_KERNEL | __GFP_REPEAT);
-> >  	return (desc->v_addr != NULL) ? 0 : -ENOMEM;
-> >  }
-> >  
+> drivers/net/wireless/ath/ath9k/hw.h:#define REG_WRITE(_ah, _reg, _val) \
+> drivers/net/wireless/ath/key.c:#define REG_WRITE(_ah, _reg, _val) (common->ops->write)(_ah, _val, _reg)
 > 
-> I think this will certainly make memory compaction more aggressive by 
-> avoiding the logic to defer calling compaction in the page allocator, but 
-> because we lack lumpy reclaim this still has a higher probability of 
-> failing than it had in the past because it will fail if 128KB of memory is 
-> reclaimed that may not happen to be contiguous for an order-5 allocation 
-> to succeed.
+> This inconsistent definition can easily lead to implementation errors. The
+> modification doesn't change the behavior of the driver or the generated code.
+> 
+> Signed-off-by: Sven Eckelmann <sven@narfation.org>
+> Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 
-I understand that complex systems like virtual memory manager require
-various design compromises. In this case decision was to make memory
-allocator to perform faster in cost of possible allocation failures.
-I'm not quite sure if that was good decision, but I think VM developers
-know best what is good for VM.
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-However, maybe this allocation issue initially reported here, was
-caused by some bug, which is possibly now fixed i.e. memory leak on
-some driver or subsystem. 
-
-Pavel, do you still can reproduce this problem on released 3.6 ? 
-
-Thanks
-Stanislaw
+  Luis
