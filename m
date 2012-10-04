@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.64.175.212] ([217.64.175.212]:34587 "EHLO
-	mx-relay12-muc.antispameurope.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S932866Ab2JaKsV (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:38517 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755662Ab2JDS6U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 06:48:21 -0400
-Message-ID: <509101D9.2040209@fokus.fraunhofer.de> (sfid-20121031_114832_052702_79A5360C)
-Date: Wed, 31 Oct 2012 11:47:53 +0100
-From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+	Thu, 4 Oct 2012 14:58:20 -0400
+Received: by mail-pa0-f46.google.com with SMTP id hz1so801335pad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 11:58:20 -0700 (PDT)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
-	<linville@tuxdriver.com>, <mcgrof@qca.qualcomm.com>,
-	<sven@narfation.org>, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCH] ath9k: apply coverage class on slottime too
-References: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de> <508FCB77.9000303@openwrt.org> <508FCF5A.2080204@fokus.fraunhofer.de> <508FD505.4080404@openwrt.org>
-In-Reply-To: <508FD505.4080404@openwrt.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <20121003232034.GA19388@localhost.arig>
+References: <20121003232034.GA19388@localhost.arig>
+Date: Thu, 4 Oct 2012 20:58:19 +0200
+Message-ID: <CAOZOX0UWmtCddTB+UNQ+tDRE2jGzcZ0TE7tgQD4LBGxBOKCyBQ@mail.gmail.com> (sfid-20121004_205825_861122_93DE1C08)
+Subject: Re: [PATCH] rt2x00/rt3352: Fix lnagain assignment to use register 66.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Daniel Golle <dgolle@allnet.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2012 02:24 PM, Felix Fietkau wrote:
-> On 2012-10-30 2:00 PM, Mathias Kretschmer wrote:
->> On 10/30/2012 01:43 PM, Felix Fietkau wrote:
->>> On 2012-10-30 1:07 PM, Simon Wunderlich wrote:
->>>> From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
->>>>
->>>> According to 802.11-2007 17.3.8.6 (slot time), the slot time should
->>>> be increased by 3 us * coverage class. The code only increased the
->>>> ack timeout, which is fixed by this patch.
->>>>
->>>> We have noticed in our long shot scenario that we see less collisions
->>>> with this patch.
->>> At some point I had the slot time increase in the driver, but noticed a
->>> massive throughput degradation on 10-20 km links. Leaving the slot time
->>> alone and changing only the ACK timeout fixed this. What distances did
->>> you test?
->>
->> about 11km. did you test UDP (unidirectional) or TCP (bidirectional) throughput ?
-> I always use TCP, because UDP tests are too unrealistic to estimate real
-> performance.
-
-bidirectional UDP traffic (iperf or preferably mgen) is a good indicator for 
-problems, because there's no flow control that backs off.  depends on the use case, 
-of course.
-
->> The larger slot time will increase the channel access overhead which should impact
->> unidirectional throughput.
->>
->> With bidirectional traffic, the larger slottime should help to minimize collisions
->> on loaded links. Overall this seems to increase the net throughput for us,
->> especially in higher access categories (smaller backoff windows).
-> When I ran the test, the throughput degradation was so big that the
-> links became almost useless. It was a long time ago, so maybe this was
-> caused by another bug that has been fixed since. I will run another test
-> with this patch in a current version...
-
-we will also test this again. Currently, I can't access those links.
-
-Cheers,
-
-Mathias
-
-> - Felix
+On Thu, Oct 4, 2012 at 1:20 AM, Daniel Golle <dgolle@allnet.de> wrote:
+> This should be register 66 instead of 62.
+> (probably happened by copy&past'ing from the lines below)
 >
+> Signed-off-by: Daniel Golle <dgolle@allnet.de>
 
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 540c94f..01dc889 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2252,9 +2252,9 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+>          */
+>         if (rt2x00_rt(rt2x00dev, RT3352)) {
+>                 rt2800_bbp_write(rt2x00dev, 27, 0x0);
+> -               rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
+> +               rt2800_bbp_write(rt2x00dev, 66, 0x26 + rt2x00dev->lna_gain);
+>                 rt2800_bbp_write(rt2x00dev, 27, 0x20);
+> -               rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
+> +               rt2800_bbp_write(rt2x00dev, 66, 0x26 + rt2x00dev->lna_gain);
+>         } else {
+>                 rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
+>                 rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
+> --
+> 1.7.12.2
+>
