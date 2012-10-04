@@ -1,35 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4929 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab2JOJwf (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:65424 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753329Ab2JDXtD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 05:52:35 -0400
-Date: Mon, 15 Oct 2012 15:20:13 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Sujith Manoharan <c_manoha@qti.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 09/12] ath9k_hw: Configure new switch table for AR9565
- BTCOEX
-Message-ID: <20121015095012.GA21952@hemis.qca.qualcomm.com> (sfid-20121015_115239_496695_DD9AD9B0)
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1350287738-18687-10-git-send-email-rmanohar@qca.qualcomm.com>
- <20603.54988.583810.352301@gargle.gargle.HOWL>
- <20121015094022.GC21551@hemis.qca.qualcomm.com>
- <20603.55967.154275.896969@gargle.gargle.HOWL>
+	Thu, 4 Oct 2012 19:49:03 -0400
+Received: by mail-ee0-f46.google.com with SMTP id b15so858789eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 16:49:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20603.55967.154275.896969@gargle.gargle.HOWL>
+In-Reply-To: <506E155E.3030405@candelatech.com>
+References: <506DDA1D.1090106@candelatech.com> <CAGRGNgVAehhN8CdwYrG8H4kuad=Kt5tPOHSKCSH8xm-OC=z6aw@mail.gmail.com>
+ <506E10B7.4060406@candelatech.com> <CAGRGNgWhx57oB-wf7DE+V_A1h1K0uHWs0F2jJNyFR58eJ_X5Hg@mail.gmail.com>
+ <506E155E.3030405@candelatech.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 5 Oct 2012 09:48:41 +1000
+Message-ID: <CAGRGNgU9XdCaes__8MRzkAYjTF7h-zxDY02pW-Bd6nbZpXQMpg@mail.gmail.com> (sfid-20121005_014909_082567_96E42F61)
+Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 15, 2012 at 03:12:55PM +0530, Sujith Manoharan wrote:
-> Rajkumar Manoharan wrote:
-> > I hate *_LATER macros. Its always confusing. Since SPDT is applicable only for
-> > 9462 & 9565, I remove the _LATER in v2.
-> 
-> The macros in ath9k are clean enough - they just check the macVersion.
->
-I mean AR9462_20_OR_LATER that checks macRev which is different from other *_LATER macros.
-So I'll remove AR9462_20_OR_LATER to avoid confusion.
+Hi Ben,
 
--Rajkumar
+On Fri, Oct 5, 2012 at 9:01 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/04/2012 03:53 PM, Julian Calaby wrote:
+>>
+>> Hi Ben,
+>>
+>> On Fri, Oct 5, 2012 at 8:41 AM, Ben Greear <greearb@candelatech.com>
+>> wrote:
+>>>
+>>> On 10/04/2012 03:36 PM, Julian Calaby wrote:
+>>>>
+>>>>
+>>>> Hi Ben,
+>>>>
+>>>> On Fri, Oct 5, 2012 at 4:49 AM, Ben Greear <greearb@candelatech.com>
+>>>> wrote:
+>>>>>
+>>>>>
+>>>>> I finally got my 3-attenuator system up and running,
+>>>>> and I'm starting to do some tests.
+>>>>>
+>>>>> AP and Station are running 3.5.5+, ath9k ar9380 NICs.
+>>>>> Channel 157, HT40, no encryption.
+>>>>>
+>>>>> One question right away:  Should I expect decent performance
+>>>>> if I directly cable 2 wifi NICs, where one is acting as AP and
+>>>>> the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
+>>>>
+>>>>
+>>>>
+>>>> Going off on a tangent: arguably it shouldn't matter which channel on
+>>>> the AP card is connected to which channel on the STA card. I wonder
+>>>> what results you'd get if you cabled them in each combination and
+>>>> tested the throughput keeping the other variables the same. I also
+>>>> wonder what impact it would have on the throughput if you started
+>>>> disconnecting the cables.
+>>>
+>>>
+>>>
+>>> I doubt it matters either....just seemed sane to start with something
+>>> I could easily keep track of in my head :)
+>>
+>>
+>> Fair enough.
+>>
+>>> I had really shitty performance when I had only one cable connected
+>>> to the station, but I think it is probably related to rate-control,
+>>> which seems too aggressive.  When I force things to slower speeds
+>>> it works fine.  I'm starting to look into that now.
+>>>
+>>> I hope to eventually produce big pretty graphs reporting signal, rx-rate,
+>>> etc over various attenuations...but still got a ways to go first!
+>>
+>>
+>> Pretty graphs are always useful. It'd be nice to compare other brands
+>> / models of card too, but I'm guessing that's outside the scope of
+>> what you're planning to achieve.
+>>
+>> Are you planning to open-source any of the software / hardware you're
+>> making to do this?
+>
+>
+> I'm going to publish the code for the attenuator (including
+> eagle layout & gerber files for the Arduino shield).  Will market them
+> for sale as completed units too.  Will publish a simple command-line
+> tool to adjust the attenuation, and unit will have knobs to turn
+> so you don't really need a computer to control it anyway.
+
+Nice! I wish I had a good reason to build one =)
+
+> We'll be able to test various APs..but on the client side,
+> I doubt we'll test other than ath9k anytime soon, although
+> I think our software would support other WiFi NICs if you didn't
+> try to do any of the virtual interface stuff.
+
+Makes sense.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
