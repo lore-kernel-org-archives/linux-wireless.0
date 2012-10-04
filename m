@@ -1,80 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:32853 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753010Ab2JLLBx (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:57222 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754741Ab2JDWgn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 07:01:53 -0400
-Date: Fri, 12 Oct 2012 19:01:42 +0800
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2012-10-12
-Message-ID: <20121012110142.GF10739@joana> (sfid-20121012_130215_477649_7C12413C)
+	Thu, 4 Oct 2012 18:36:43 -0400
+Received: by mail-ee0-f46.google.com with SMTP id b15so832424eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 15:36:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="y0ulUmNC+osPPQO6"
+In-Reply-To: <506DDA1D.1090106@candelatech.com>
+References: <506DDA1D.1090106@candelatech.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 5 Oct 2012 08:36:21 +1000
+Message-ID: <CAGRGNgVAehhN8CdwYrG8H4kuad=Kt5tPOHSKCSH8xm-OC=z6aw@mail.gmail.com> (sfid-20121005_003646_654876_DFF9B204)
+Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Ben,
 
---y0ulUmNC+osPPQO6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Fri, Oct 5, 2012 at 4:49 AM, Ben Greear <greearb@candelatech.com> wrote:
+> I finally got my 3-attenuator system up and running,
+> and I'm starting to do some tests.
+>
+> AP and Station are running 3.5.5+, ath9k ar9380 NICs.
+> Channel 157, HT40, no encryption.
+>
+> One question right away:  Should I expect decent performance
+> if I directly cable 2 wifi NICs, where one is acting as AP and
+> the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
 
-Hi John,
+Going off on a tangent: arguably it shouldn't matter which channel on
+the AP card is connected to which channel on the STA card. I wonder
+what results you'd get if you cabled them in each combination and
+tested the throughput keeping the other variables the same. I also
+wonder what impact it would have on the throughput if you started
+disconnecting the cables.
 
-Johan found a critical issue while at Bluetooth UnPlug Fest this week.=20
-The patch fixes a failure to pair with devices that support the LE Secure
-Connections feature. This is also marked for stable.
+Thanks,
 
-Please pull! Thanks!
+-- 
+Julian Calaby
 
-	Gustavo
----
-
-The following changes since commit a7be50b7e30f9d77cb059a7ffdb781bb0fb92eba:
-
-  iwlwifi: don't double free the interrupt in failure path (2012-09-18 20:4=
-3:23 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-
-for you to fetch changes up to 065a13e2cc665f6547dc7e8a9d6b6565badf940a:
-
-  Bluetooth: SMP: Fix setting unknown auth_req bits (2012-10-12 17:55:20 +0=
-800)
-
-----------------------------------------------------------------
-Johan Hedberg (1):
-      Bluetooth: SMP: Fix setting unknown auth_req bits
-
- net/bluetooth/smp.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-
---y0ulUmNC+osPPQO6
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQd/iWAAoJEPs3PUX4s20owMYP/3cZK2BGs6XvcBLHWnjpUv9L
-Cml/CPjDXv+EtZic4H1Hv0TPk8naV9Dbr6IweJyKWmUpEZRGUSTthFsDkNpm8qMG
-HO8QTAQ0aZcZU/tQ282mxIXsirKSwCN5MkaMW0O9rD+E+lBxqrjiYGAO/qZ8zfdf
-OkWtpIeMzob7blJFyzi3DdODbThyQO75AKWbxaj8rGIl8qytiwh+s+PBb1zrk2K8
-FyvXqah9mYQg9ePJC8ygA1ICx/btFmdpntAOzcdIitD7jBk97jlzCe3YVduV3hVT
-AgdQ0hjNRa5uc1rSg3nu7XxqFtTk2dU4Oo/NewMlp7jm5qsMvMciPx2yY6h9metu
-BWSrSTCt9TEGYIHg1uO2+6qpTBJBpxAgZa2JbUhoMDw50X/CwO1ABV97z8wmGuVf
-e026j8osFKAuVyMkkxM30RqwG/Q5wRKvy0T7PfBK71opVao0O16qn4b7OWnKq0YT
-d1mic96DhhShN9dH59zPkxSK/NMWN/NiKcPnTCPbMLT33ssun04II3GIe/DiTC8q
-TpQSyXjLBDkYpCB46jn0XZKt+UKPFNaif8JyY/eDqlIOFw0f55G73kphmwc2xJc/
-qxThYnSGN+xTfdLCNkSG3IbnrsDPoq1CqmIFNp+sTH5hyskhNZvV+GxIlKiwBf2U
-FzsO1rPebsTAD7neFuRB
-=wOZZ
------END PGP SIGNATURE-----
-
---y0ulUmNC+osPPQO6--
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
