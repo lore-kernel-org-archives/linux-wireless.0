@@ -1,92 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24944 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325Ab2JONYA (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:50818 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752031Ab2JDEr6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 09:24:00 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <rodrigue@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <backports@vger.kernel.org>
-Subject: [PATCH 0/3] Patches for compat-drivers/linux-3.6.y
-Date: Mon, 15 Oct 2012 18:53:17 +0530
-Message-ID: <1350307400-8215-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20121015_152404_020601_E9BB4647)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 4 Oct 2012 00:47:58 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v3 0/5] add scan flags support
+Date: Wed,  3 Oct 2012 21:47:41 -0700
+Message-Id: <1349326066-28501-1-git-send-email-bzhao@marvell.com> (sfid-20121004_064801_696290_EF181BB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is the v3 series prepared by Amitkumar Karwar.
 
-These patches are for linux-3.6.y branch and has BT coex
-fixes for AR9565.
+1/5: Remove unnecessary "enum cfg80211_scan_flags" (Johannes Berg)
+     Add missing check for "nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS"
+     (Johannes Berg)
 
-Bala Shanmugam (3):
-  compat-drivers: Update pending stable patches.
-  compat-drivers: Move next-pending patches to cherry-picks.
-  compat-drivers: Add new cherry-pick and next-pending  patches
+2/5: Add WIPHY_FLAG_LOW_PRIORITY_SCAN flag so that device can advertise
+     low priority scan capability. An error will be returned to the
+     application if device doesn't support this feature.
+     Flush scan table feature is by default enabled.
+     (Johannes Berg)
 
- ...dle-errors-properly-in-MCI-initialization.patch | 128 ++++++++++++
- ...-debugfs-file-to-adjust-antenna-diversity.patch |  99 ++++++++++
- ...-ath9k-Fix-chainmask-selection-for-AR9462.patch |  43 +++++
- .../0080-ath9k-Enable-MCI-for-AR9565.patch         |  63 ++++++
- ...81-ath9k-Fix-BTCOEX-weight-initialization.patch | 176 +++++++++++++++++
- ...dle-errors-properly-in-MCI-initialization.patch | 128 ------------
- ...01-ath9k_hw-Enable-OSLA-hw-fix-for-AR9565.patch |  34 ++++
- ...-debugfs-file-to-adjust-antenna-diversity.patch |  99 ----------
- ...2-ath9k_hw-Fix-selfgen-chainmask-for-9565.patch |  28 +++
- ...-ath9k-Fix-chainmask-selection-for-AR9462.patch |  43 -----
- ...ppropriate-bit-for-AR9565-in-btc-control-.patch |  33 ++++
- .../0004-ath9k-Enable-MCI-for-AR9565.patch         |  63 ------
- ...off-RXIQ-calibration-while-re-calibrating.patch |  46 +++++
- ...sable-MCI-stat-counter-by-default-for-AR9.patch |  34 ++++
- ...0006-ath9k_hw-Fix-frequent-BT-rx-recovery.patch |  66 +++++++
- ...-ath9k_hw-Fix-max-rx-rate-drop-for-AR9565.patch |  28 +++
- ...nfigure-new-switch-table-for-AR9565-BTCOE.patch |  47 +++++
- ...th9k_hw-Set-default-MCI-config-for-AR9565.patch |  21 ++
- ...ust-duty-cycle-for-FTP-profile-for-AR9565.patch |  21 ++
- ...-ath9k-Add-new-BT-profile-info-A2DP_Voice.patch |  44 +++++
- ...012-cfg80211-Disallow-HT-WEP-in-IBSS-mode.patch |  63 ++++++
- ...h-mgmt-Fix-enabling-SSP-while-powered-off.patch |  43 -----
- ...th-mgmt-Fix-enabling-LE-while-powered-off.patch |  46 -----
- ...h-Fix-not-removing-power_off-delayed-work.patch |  76 --------
- ...x-possible-circular-lock-on-reg_regdb_sea.patch | 129 -------------
- ...-t-double-free-the-interrupt-in-failure-p.patch |  33 ----
- ...gmt-Implement-support-for-passkey-notific.patch | 214 ---------------------
- ...ooth-Update-management-interface-revision.patch |  36 ----
- ...dd-USB_VENDOR_AND_INTERFACE_INFO-for-Broa.patch |  31 ---
- .../0009-ath9k-Disable-ASPM-only-for-AR9285.patch  |  38 ----
- 30 files changed, 974 insertions(+), 979 deletions(-)
- create mode 100644 linux-next-cherry-picks/0077-ath9k-Handle-errors-properly-in-MCI-initialization.patch
- create mode 100644 linux-next-cherry-picks/0078-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch
- create mode 100644 linux-next-cherry-picks/0079-ath9k-Fix-chainmask-selection-for-AR9462.patch
- create mode 100644 linux-next-cherry-picks/0080-ath9k-Enable-MCI-for-AR9565.patch
- create mode 100644 linux-next-cherry-picks/0081-ath9k-Fix-BTCOEX-weight-initialization.patch
- delete mode 100644 linux-next-pending/0001-ath9k-Handle-errors-properly-in-MCI-initialization.patch
- create mode 100644 linux-next-pending/0001-ath9k_hw-Enable-OSLA-hw-fix-for-AR9565.patch
- delete mode 100644 linux-next-pending/0002-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch
- create mode 100644 linux-next-pending/0002-ath9k_hw-Fix-selfgen-chainmask-for-9565.patch
- delete mode 100644 linux-next-pending/0003-ath9k-Fix-chainmask-selection-for-AR9462.patch
- create mode 100644 linux-next-pending/0003-ath9k-Set-appropriate-bit-for-AR9565-in-btc-control-.patch
- delete mode 100644 linux-next-pending/0004-ath9k-Enable-MCI-for-AR9565.patch
- create mode 100644 linux-next-pending/0004-ath9k-turn-off-RXIQ-calibration-while-re-calibrating.patch
- create mode 100644 linux-next-pending/0005-ath9k_hw-Disable-MCI-stat-counter-by-default-for-AR9.patch
- create mode 100644 linux-next-pending/0006-ath9k_hw-Fix-frequent-BT-rx-recovery.patch
- create mode 100644 linux-next-pending/0007-ath9k_hw-Fix-max-rx-rate-drop-for-AR9565.patch
- create mode 100644 linux-next-pending/0008-ath9k_hw-Configure-new-switch-table-for-AR9565-BTCOE.patch
- create mode 100644 linux-next-pending/0009-ath9k_hw-Set-default-MCI-config-for-AR9565.patch
- create mode 100644 linux-next-pending/0010-ath9k-adjust-duty-cycle-for-FTP-profile-for-AR9565.patch
- create mode 100644 linux-next-pending/0011-ath9k-Add-new-BT-profile-info-A2DP_Voice.patch
- create mode 100644 linux-next-pending/0012-cfg80211-Disallow-HT-WEP-in-IBSS-mode.patch
- delete mode 100644 pending-stable/0001-Bluetooth-mgmt-Fix-enabling-SSP-while-powered-off.patch
- delete mode 100644 pending-stable/0002-Bluetooth-mgmt-Fix-enabling-LE-while-powered-off.patch
- delete mode 100644 pending-stable/0003-Bluetooth-Fix-not-removing-power_off-delayed-work.patch
- delete mode 100644 pending-stable/0004-cfg80211-fix-possible-circular-lock-on-reg_regdb_sea.patch
- delete mode 100644 pending-stable/0005-iwlwifi-don-t-double-free-the-interrupt-in-failure-p.patch
- delete mode 100644 pending-stable/0006-Bluetooth-mgmt-Implement-support-for-passkey-notific.patch
- delete mode 100644 pending-stable/0007-Bluetooth-Update-management-interface-revision.patch
- delete mode 100644 pending-stable/0008-Bluetooth-Add-USB_VENDOR_AND_INTERFACE_INFO-for-Broa.patch
- delete mode 100644 pending-stable/0009-ath9k-Disable-ASPM-only-for-AR9285.patch
+3/5, 4/5: Rearrange the code to avoid static forward declarations.
+     (Johannes Berg)
 
--- 
-1.7.11.4
+5/5: Removed use of unlikely() macro (Johannes Berg)
+     Advertise low priority scan capability (Johannes Berg)
+
+---
+Amitkumar Karwar (1):
+  cfg80211: code rearrangement to avoid forward declarations
+
+Sam Leffler (4):
+  {nl,cfg}80211: add a flags word to scan requests
+  cfg80211: add scan flag to indicate its priority
+  cfg80211: add support for flushing old scan results
+  mac80211: add support for tx to abort low priority scan requests
+
+ include/linux/nl80211.h    |   19 +++++++
+ include/net/cfg80211.h     |    9 +++
+ net/mac80211/ieee80211_i.h |    2 +
+ net/mac80211/main.c        |    3 +-
+ net/mac80211/scan.c        |   21 ++++++--
+ net/wireless/nl80211.c     |   22 ++++++++
+ net/wireless/scan.c        |  119 ++++++++++++++++++++++++++-----------------
+ net/wireless/sme.c         |    1 +
+ 8 files changed, 144 insertions(+), 52 deletions(-)
 
