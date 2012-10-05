@@ -1,111 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63292 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753576Ab2JVF0t (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:23072 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754355Ab2JEPm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 01:26:49 -0400
+	Fri, 5 Oct 2012 11:42:59 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <ath6kl-devel@qualcomm.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 1/3] ath6kl: Add support to send DELBA
+Date: Fri, 5 Oct 2012 21:12:43 +0530
+Message-ID: <1349451765-8459-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121005_174303_346321_7A8FF625)
 MIME-Version: 1.0
-In-Reply-To: <1350882145.55725.YahooMailNeo@web125403.mail.ne1.yahoo.com>
-References: <1350882145.55725.YahooMailNeo@web125403.mail.ne1.yahoo.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 22 Oct 2012 16:26:27 +1100
-Message-ID: <CAGRGNgUkDAQaHXuBxR+uu=uoB0j=qfdHpXOtOTP2ZnU89mN1oA@mail.gmail.com> (sfid-20121022_072655_038725_54F2350D)
-Subject: Re: [PATCH] Bluetooth: Add support for Atheros [04ca:3004]
-To: Dwaine Garden VE3GIF <dwainegarden@rogers.com>
-Cc: "linville@redhat.com" <linville@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@qca.qualcomm.com" <mcgrof@qca.qualcomm.com>,
-	linux-bluetooth@vger.kernel.org, gustavo@padovan.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dwaine,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Firstly, you should really send this to the linux-bluetooth list and
-Gustavo not to linux-wireless and John.
+Add support to send DELBA to the client by making
+use of the DELBA_REQ wmi command with the following
+parameters: tid, initiator/recipient, aid.
 
-While linux-wireless is the catch-all place for everything relating to
-wireless technology in Linux, bluetooth has it's own mailing list, and
-bluetooth patches should be sent there first.
+example: echo "0 0 1" > delba_req, echo "0 1 1" > delba_req
 
-On Mon, Oct 22, 2012 at 4:02 PM, Dwaine Garden VE3GIF
-<dwainegarden@rogers.com> wrote:
->
->
-> Add another vendor specific ID for Atheros AR3012 device.
-> This chip is wrapped by Lite-On Technology Corp.
->
-> output of usb-devices:
-> Bus 001 Device 008: ID 04ca:3004 Lite-On Technology Corp.
-> Device Descriptor:
->   bLength                18
->
->  bDescriptorType         1
->   bcdUSB               1.10
->   bDeviceClass          224 Wireless
->   bDeviceSubClass         1 Radio Frequency
->   bDeviceProtocol         1 Bluetooth
->   bMaxPacketSize0        64
->   idVendor           0x04ca Lite-On Technology Corp.
->   idProduct          0x3004
->   bcdDevice            0.02
->   iManufacturer           1 Atheros Communications
->
->  iProduct                2 Bluetooth USB Host Controller
->   iSerial                 3 Alaska Day 2006
->   bNumConfigurations      1
->
->
-> Signed-off-by: Dwaine Garden <DwaineGarden@rogers.com>  ---
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |   57 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.c   |   18 ++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h   |    7 ++++
+ 3 files changed, 82 insertions(+), 0 deletions(-)
 
-Secondly, while your patch looks correct to me (I'm no expert on the
-hardware or drivers involved) it seems to be severely whitespace
-damaged. You should read the Email Clients document under the
-Documentation directory in your kernel tree (or read it online here:
-http://stuff.mit.edu/afs/sipb/contrib/linux/Documentation/email-clients.txt
-) and ensure that your email client is set up correctly to send
-patches without damaging them.
-
-> diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
-> index fc2de55..1486f15 100644
-> --- a/drivers/bluetooth/ath3k.c
-> +++ b/drivers/bluetooth/ath3k.c
-> @@ -75,6 +75,7 @@ static struct usb_device_id ath3k_table[] = {
-> { USB_DEVICE(0x0CF3, 0x3004) },
-> { USB_DEVICE(0x0CF3, 0x311D) },
-> { USB_DEVICE(0x13d3, 0x3375) },
-> +       { USB_DEVICE(0x04CA, 0x3004) },
-> { USB_DEVICE(0x04CA, 0x3005) },
-> { USB_DEVICE(0x13d3, 0x3362) },
-> { USB_DEVICE(0x0CF3, 0xE004) },
-> @@ -102,6 +103,7 @@ static struct usb_device_id ath3k_blist_tbl[] = {
-> { USB_DEVICE(0x0cf3, 0x3004), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x0cf3, 0x311D), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
-> +       { USB_DEVICE(0x04ca, 0x3004), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x04ca, 0x3005), .driver_info = BTUSB_ATH3012 },
-> {
->  USB_DEVICE(0x13d3, 0x3362), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x0cf3, 0xe004), .driver_info = BTUSB_ATH3012 },
-> diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-> index debda27..0529cee 100644
-> --- a/drivers/bluetooth/btusb.c
-> +++ b/drivers/bluetooth/btusb.c
-> @@ -132,6 +132,7 @@ static struct usb_device_id blacklist_table[] = {
-> { USB_DEVICE(0x0cf3, 0x3004), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x0cf3, 0x311d), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
-> +       { USB_DEVICE(0x04ca, 0x3004), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x04ca, 0x3005), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x13d3, 0x3362), .driver_info = BTUSB_ATH3012 },
-> { USB_DEVICE(0x0cf3, 0xe004), .driver_info = BTUSB_ATH3012 },
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 15cfe30..933028f 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1725,6 +1725,59 @@ static const struct file_operations fops_power_params = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath6kl_send_delba_req_write(struct file *file,
++				       const char __user *user_buf,
++				       size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	struct ath6kl_vif *vif;
++	char buf[100];
++	ssize_t len = 0;
++	char *sptr, *token;
++	u8 tid = 0, direction = 0, aid = 0;
++
++	vif = ath6kl_vif_first(ar);
++	if (!vif)
++		return -EIO;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
++
++	buf[len] = '\0';
++	sptr = buf;
++
++	token = strsep(&sptr, " ");
++	if (!token)
++		return -EINVAL;
++	if (kstrtou8(token, 0, &tid))
++		return -EINVAL;
++
++	token = strsep(&sptr, " ");
++	if (!token)
++		return -EINVAL;
++	if (kstrtou8(token, 0, &direction))
++		return -EINVAL;
++
++	token = strsep(&sptr, " ");
++	if (!token)
++		return -EINVAL;
++	if (kstrtou8(token, 0, &aid))
++		return -EINVAL;
++
++	ath6kl_wmi_send_delba_req_cmd(ar->wmi, vif->fw_vif_idx,
++				      tid, direction, aid);
++
++	return count;
++}
++
++static const struct file_operations fops_delba_req = {
++	.write = ath6kl_send_delba_req_write,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ void ath6kl_debug_init(struct ath6kl *ar)
+ {
+ 	skb_queue_head_init(&ar->debug.fwlog_queue);
+@@ -1812,6 +1865,10 @@ int ath6kl_debug_init_fs(struct ath6kl *ar)
+ 	debugfs_create_file("power_params", S_IWUSR, ar->debugfs_phy, ar,
+ 			    &fops_power_params);
+ 
++	debugfs_create_file("delba_req", S_IWUSR, ar->debugfs_phy, ar,
++			    &fops_delba_req);
++
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index f3aeebb..4914831 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -3774,6 +3774,24 @@ int ath6kl_wmi_set_inact_period(struct wmi *wmi, u8 if_idx, int inact_timeout)
+ 				   NO_SYNC_WMIFLAG);
+ }
+ 
++int ath6kl_wmi_send_delba_req_cmd(struct wmi *wmi, u8 if_idx,
++				  u8 tid, u8 direction, u8 aid)
++{
++	struct sk_buff *skb;
++	struct wmi_delba_req_cmd *cmd;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_delba_req_cmd *) skb->data;
++	cmd->is_sender_initiator = direction;
++	cmd->tid = (tid & 0xf) | (aid << 4);
++
++	return ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_DELBA_REQ_CMDID,
++				   NO_SYNC_WMIFLAG);
++}
++
+ static void ath6kl_wmi_hb_challenge_resp_event(struct wmi *wmi, u8 *datap,
+ 					       int len)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 98b1755..7ec7bec 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -2382,6 +2382,11 @@ struct wmi_disable_11b_rates_cmd {
+ 	u8 disable;
+ } __packed;
+ 
++struct wmi_delba_req_cmd {
++	u8 tid;
++	u8 is_sender_initiator;
++} __packed;
++
+ struct wmi_set_appie_extended_cmd {
+ 	u8 role_id;
+ 	u8 mgmt_frm_type;
+@@ -2717,6 +2722,8 @@ int ath6kl_wmi_set_inact_period(struct wmi *wmi, u8 if_idx, int inact_timeout);
+ void ath6kl_wmi_sscan_timer(unsigned long ptr);
+ 
+ int ath6kl_wmi_get_challenge_resp_cmd(struct wmi *wmi, u32 cookie, u32 source);
++int ath6kl_wmi_send_delba_req_cmd(struct wmi *wmi, u8 if_idx, u8 tid,
++				  u8 is_sender_initiator, u8 aid);
+ 
+ struct ath6kl_vif *ath6kl_get_vif_by_index(struct ath6kl *ar, u8 if_idx);
+ void *ath6kl_wmi_init(struct ath6kl *devt);
 -- 
-Julian Calaby
+1.7.0.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
