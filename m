@@ -1,293 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:49573 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992486Ab2JYSrO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 14:47:14 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Anisse Astier <anisse@astier.eu>,
-	Li Chaoming <chaoming_li@realsil.com.cn>
-Subject: [PATCH NEXT 01/17] rtlwifi: rtl8192c: rtl8192ce: Add support for B-CUT version of RTL8188CE
-Date: Thu, 25 Oct 2012 13:46:30 -0500
-Message-Id: <1351190806-4258-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121025_204727_543419_FFE95CAD)
-In-Reply-To: <1351190806-4258-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1351190806-4258-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:10435 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755391Ab2JELqK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 07:46:10 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 6/7] rt2800: allow to reduce tx power on devices not exporting power limit
+Date: Fri,  5 Oct 2012 13:44:14 +0200
+Message-Id: <1349437455-18754-6-git-send-email-sgruszka@redhat.com> (sfid-20121005_134613_870783_ECD045FE)
+In-Reply-To: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
+References: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Realtek devices with designation RTL8188CE-VL have the so-called B-cut
-of the wireless chip. This patch adds the special programming needed by
-these devices. In addition, a variable that was static has been moved into
-the private data area as it is now needed in two different routines. This
-change also fixes a minor bug that would be present if a system had more
-than one RTL81{88,92}CE devices. Other drivers in the rtlwifi family had
-already made this change, thus the variable already exists in the private
-data structure.
+Some rt2800 devices don't have their calibrated max eirp tx power in
+their calibration data. For those devices reduce tx power according to
+difference between regulatory max channel power and requested tx power.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Anisse Astier <anisse@astier.eu>
-Cc: Li Chaoming <chaoming_li@realsil.com.cn>
+This patch is based on Helmut Schaa work.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   21 +++++++
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |    3 +
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   60 ++++++++++++++++++--
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |    2 +
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    6 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |    4 +-
- 6 files changed, 85 insertions(+), 11 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-index cdcad7d..6ae2268 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-@@ -724,6 +724,26 @@ u8 rtl92c_phy_sw_chnl(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 9c2c647..3f62204 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2520,6 +2520,27 @@ static int rt2800_get_txpower_bw_comp(struct rt2x00_dev *rt2x00dev,
+ 	return comp_value;
  }
- EXPORT_SYMBOL(rtl92c_phy_sw_chnl);
  
-+static void _rtl92c_phy_sw_rf_setting(struct ieee80211_hw *hw, u8 channel)
++static int rt2800_get_txpower_reg_delta(struct rt2x00_dev *rt2x00dev,
++					int power_level, int max_power)
 +{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	int delta;
 +
-+	if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
-+		if (channel == 6 && rtlphy->current_chan_bw ==
-+		    HT_CHANNEL_WIDTH_20)
-+			rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD,
-+				      0x00255);
-+		else{
-+			u32 backupRF0x1A = (u32)rtl_get_rfreg(hw, RF90_PATH_A,
-+					    RF_RX_G1, RFREG_OFFSET_MASK);
-+			rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD,
-+				      backupRF0x1A);
-+		}
-+	}
++	if (test_bit(CAPABILITY_POWER_LIMIT, &rt2x00dev->cap_flags))
++		return 0;
++
++	/*
++	 * XXX: We don't know the maximum transmit power of our hardware since
++	 * the EEPROM doesn't expose it. We only know that we are calibrated
++	 * to 100% tx power.
++	 *
++	 * Hence, we assume the regulatory limit that cfg80211 calulated for
++	 * the current channel is our maximum and if we are requested to lower
++	 * the value we just reduce our tx power accordingly.
++	 */
++	delta = power_level - max_power;
++	return min(delta, 0);
 +}
 +
- static bool _rtl92c_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 					     u32 cmdtableidx, u32 cmdtablesz,
- 					     enum swchnlcmd_id cmdid,
-@@ -837,6 +857,7 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 					      currentcmd->para1,
- 					      RFREG_OFFSET_MASK,
- 					      rtlphy->rfreg_chnlval[rfpath]);
-+			_rtl92c_phy_sw_rf_setting(hw, channel);
- 			}
- 			break;
- 		default:
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-index 2925094..3cfa1bb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-@@ -116,6 +116,9 @@
- 	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 20, 12)
+ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
+ 				   enum ieee80211_band band, int power_level,
+ 				   u8 txpower, int delta)
+@@ -2586,6 +2607,12 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
+ 	delta += rt2800_get_gain_calibration_delta(rt2x00dev);
  
- #define CHIP_VER_B			BIT(4)
-+#define CHIP_BONDING_IDENTIFIER(_value) (((_value) >> 22) & 0x3)
-+#define CHIP_BONDING_92C_1T2R		0x1
-+#define RF_TYPE_1T2R			BIT(1)
- #define CHIP_92C_BITMASK		BIT(0)
- #define CHIP_UNKNOWN			BIT(7)
- #define CHIP_92C_1T2R			0x03
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 038c02c..7dc7ac8 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -896,7 +896,6 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	static bool iqk_initialized; /* initialized to false */
- 	bool rtstatus = true;
- 	bool is92c;
- 	int err;
-@@ -921,9 +920,28 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
- 
- 	rtlhal->last_hmeboxnum = 0;
- 	rtl92c_phy_mac_config(hw);
-+	/* because last function modify RCR, so we update
-+	 * rcr var here, or TP will unstable for receive_config
-+	 * is wrong, RX RCR_ACRC32 will cause TP unstabel & Rx
-+	 * RCR_APP_ICV will cause mac80211 unassoc for cisco 1252*/
-+	rtlpci->receive_config = rtl_read_dword(rtlpriv, REG_RCR);
-+	rtlpci->receive_config &= ~(RCR_ACRC32 | RCR_AICV);
-+	rtl_write_dword(rtlpriv, REG_RCR, rtlpci->receive_config);
- 	rtl92c_phy_bb_config(hw);
- 	rtlphy->rf_mode = RF_OP_BY_SW_3WIRE;
- 	rtl92c_phy_rf_config(hw);
-+	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
-+	    !IS_92C_SERIAL(rtlhal->version)) {
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD, 0x30255);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G2, MASKDWORD, 0x50a00);
-+	} else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
-+		rtl_set_rfreg(hw, RF90_PATH_A, 0x0C, MASKDWORD, 0x894AE);
-+		rtl_set_rfreg(hw, RF90_PATH_A, 0x0A, MASKDWORD, 0x1AF31);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_IPA, MASKDWORD, 0x8F425);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_SYN_G2, MASKDWORD, 0x4F200);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_RCK1, MASKDWORD, 0x44053);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_RCK2, MASKDWORD, 0x80201);
-+	}
- 	rtlphy->rfreg_chnlval[0] = rtl_get_rfreg(hw, (enum radio_path)0,
- 						 RF_CHNLBW, RFREG_OFFSET_MASK);
- 	rtlphy->rfreg_chnlval[1] = rtl_get_rfreg(hw, (enum radio_path)1,
-@@ -945,11 +963,11 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
- 
- 	if (ppsc->rfpwr_state == ERFON) {
- 		rtl92c_phy_set_rfpath_switch(hw, 1);
--		if (iqk_initialized) {
-+		if (rtlphy->iqk_initialized) {
- 			rtl92c_phy_iq_calibrate(hw, true);
- 		} else {
- 			rtl92c_phy_iq_calibrate(hw, false);
--			iqk_initialized = true;
-+			rtlphy->iqk_initialized = true;
- 		}
- 
- 		rtl92c_dm_check_txpower_tracking(hw);
-@@ -1004,6 +1022,13 @@ static enum version_8192c _rtl92ce_read_chip_version(struct ieee80211_hw *hw)
- 				   ? CHIP_VENDOR_UMC_B_CUT : CHIP_UNKNOWN) |
- 				   CHIP_VENDOR_UMC));
- 		}
-+		if (IS_92C_SERIAL(version)) {
-+			value32 = rtl_read_dword(rtlpriv, REG_HPON_FSM);
-+			version = (enum version_8192c)(version |
-+				   ((CHIP_BONDING_IDENTIFIER(value32)
-+				   == CHIP_BONDING_92C_1T2R) ?
-+				   RF_TYPE_1T2R : 0));
-+		}
- 	}
- 
- 	switch (version) {
-@@ -1019,12 +1044,30 @@ static enum version_8192c _rtl92ce_read_chip_version(struct ieee80211_hw *hw)
- 	case VERSION_A_CHIP_88C:
- 		versionid = "A_CHIP_88C";
- 		break;
-+	case VERSION_NORMAL_UMC_CHIP_92C_1T2R_A_CUT:
-+		versionid = "A_CUT_92C_1T2R";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_92C_A_CUT:
-+		versionid = "A_CUT_92C";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_88C_A_CUT:
-+		versionid = "A_CUT_88C";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_92C_1T2R_B_CUT:
-+		versionid = "B_CUT_92C_1T2R";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_92C_B_CUT:
-+		versionid = "B_CUT_92C";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_88C_B_CUT:
-+		versionid = "B_CUT_88C";
-+		break;
- 	default:
- 		versionid = "Unknown. Bug?";
- 		break;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
- 		 "Chip Version ID: %s\n", versionid);
- 
- 	switch (version & 0x3) {
-@@ -1197,6 +1240,7 @@ static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci_priv *rtlpcipriv = rtl_pcipriv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
- 	u8 u1b_tmp;
- 	u32 u4b_tmp;
- 
-@@ -1225,7 +1269,8 @@ static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
- 	rtl_write_word(rtlpriv, REG_GPIO_IO_SEL, 0x0790);
- 	rtl_write_word(rtlpriv, REG_LEDCFG0, 0x8080);
- 	rtl_write_byte(rtlpriv, REG_AFE_PLL_CTRL, 0x80);
--	rtl_write_byte(rtlpriv, REG_SPS0_CTRL, 0x23);
-+	if (!IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
-+		rtl_write_byte(rtlpriv, REG_SPS0_CTRL, 0x23);
- 	if (rtlpcipriv->bt_coexist.bt_coexistence) {
- 		u4b_tmp = rtl_read_dword(rtlpriv, REG_AFE_XTAL_CTRL);
- 		u4b_tmp |= 0x03824800;
-@@ -1254,6 +1299,9 @@ void rtl92ce_card_disable(struct ieee80211_hw *hw)
- 		rtlpriv->cfg->ops->led_control(hw, LED_CTL_POWER_OFF);
- 	RT_SET_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
- 	_rtl92ce_poweroff_adapter(hw);
+ 	/*
++	 * Apply regulatory delta.
++	 */
++	delta += rt2800_get_txpower_reg_delta(rt2x00dev, power_level,
++					      chan->max_power);
 +
-+	/* after power off we should do iqk again */
-+	rtlpriv->phy.iqk_initialized = false;
- }
- 
- void rtl92ce_interrupt_recognized(struct ieee80211_hw *hw,
-@@ -1912,6 +1960,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
- 			ratr_bitmap &= 0x0f0ff0ff;
- 		break;
- 	}
-+	sta_entry->ratr_index = ratr_index;
-+
- 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
- 		 "ratr_bitmap :%x\n", ratr_bitmap);
- 	*(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-index 88deae6..73262ca 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-@@ -82,6 +82,8 @@ bool rtl92c_phy_mac_config(struct ieee80211_hw *hw)
- 
- 	if (is92c)
- 		rtl_write_byte(rtlpriv, 0x14, 0x71);
-+	else
-+		rtl_write_byte(rtlpriv, 0x04CA, 0x0A);
- 	return rtstatus;
- }
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-index ea2e1bd..60451ee 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-@@ -162,12 +162,10 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 
- 	/* request fw */
- 	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
--	    !IS_92C_SERIAL(rtlhal->version)) {
-+	    !IS_92C_SERIAL(rtlhal->version))
- 		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU.bin";
--	} else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
-+	else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
- 		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU_B.bin";
--		pr_info("****** This B_CUT device may not work with kernels 3.6 and earlier\n");
--	}
- 
- 	rtlpriv->max_fw_size = 0x4000;
- 	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index 390d6d4..b8a3c03 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -127,11 +127,11 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct phy_sts_cck_8192s_t *cck_buf;
-+	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
- 	s8 rx_pwr_all = 0, rx_pwr[4];
- 	u8 evm, pwdb_all, rf_rx_num = 0;
- 	u8 i, max_spatial_stream;
- 	u32 rssi, total_rssi = 0;
--	bool in_powersavemode = false;
- 	bool is_cck_rate;
- 
- 	is_cck_rate = RX_HAL_IS_CCK_RATE(pdesc);
-@@ -147,7 +147,7 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
- 		u8 report, cck_highpwr;
- 		cck_buf = (struct phy_sts_cck_8192s_t *)p_drvinfo;
- 
--		if (!in_powersavemode)
-+		if (ppsc->rfpwr_state == ERFON)
- 			cck_highpwr = (u8) rtl_get_bbreg(hw,
- 						 RFPGA0_XA_HSSIPARAMETER2,
- 						 BIT(9));
++	/*
+ 	 * BBP_R1 controls TX power for all rates, it allow to set the following
+ 	 * gains -12, -6, 0, +6 dBm by setting values 2, 1, 0, 3 respectively.
+ 	 *
 -- 
-1.7.10.4
+1.7.1
 
