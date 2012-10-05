@@ -1,47 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46408 "EHLO nbd.name"
+Received: from mga01.intel.com ([192.55.52.88]:35138 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756064Ab2JFMlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2012 08:41:15 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	johannes@sipsolutions.net, arend@broadcom.com
-Subject: [PATCH v2 3.7 1/2] cfg80211: fix antenna gain handling
-Date: Sat,  6 Oct 2012 14:40:53 +0200
-Message-Id: <1349527254-41080-1-git-send-email-nbd@openwrt.org> (sfid-20121006_144119_373902_3E5F032E)
+	id S1751981Ab2JEHAf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 03:00:35 -0400
+Message-ID: <1349420428.10584.8.camel@smile> (sfid-20121005_090038_777249_D92B3223)
+Subject: Re: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
+	linux-wireless@vger.kernel.org, bzhao@marvell.com
+Date: Fri, 05 Oct 2012 10:00:28 +0300
+In-Reply-To: <1349419996.10584.5.camel@smile>
+References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1349368379.2008.16.camel@joe-AO722> <1349419996.10584.5.camel@smile>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No driver initializes chan->max_antenna_gain to something sensible, and
-the only place where it is being used right now is inside ath9k. This
-leads to ath9k potentially using less tx power than it can use.
+On Fri, 2012-10-05 at 09:53 +0300, Andy Shevchenko wrote: 
+> On Thu, 2012-10-04 at 09:32 -0700, Joe Perches wrote: 
+> > On Thu, 2012-10-04 at 12:16 +0300, Andrei Emeltchenko wrote:
+> > > From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+> > > 
+> > > Make output more readable and remove unneeded function call.
+> > > 
+> > > ...
+> > > mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+> > > last_cmd_id: 00000000: 28 00 28 00 28                            (.(.(
+> > > ...
+> > > 
+> > > would be changed to:
+> > > 
+> > > ...
+> > > mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+> > > mwifiex_sdio mmc0:0001:1: last_cmd_id: 28 00 28 00 28
+> > > ...
+> > 
+> > (added Andy Shevchenko)
+> > 
+> > Hi Andrei.  That's probably a better output style too
+> > as the ascii isn't likely useful.
+> > 
+> > One non-nit as a style issue for Andy Shevchenko:
+> > 
+> > > diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+> > []
+> > > @@ -917,21 +917,20 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+> > []
+> > > +		dev_err(adapter->dev, "last_cmd_id: %*ph\n", DBG_CMD_NUM,
+> > > +			adapter->dbg.last_cmd_id);
+> > > +		dev_err(adapter->dev, "last_cmd_act: %*ph\n", DBG_CMD_NUM,
+> > > +			adapter->dbg.last_cmd_act);
+> > 
+> > When the number of bytes is fixed, it might be nicer
+> > to use a format like "%<num>ph" so that the function
+> > argument stack doesn't have the width pushed but it's
+> > fixed in the format.
+> > 
+> > This case would definitely not work well though as it's
+> > a #define rather than a simple number and I think
+> > using "%" stringize(some_define) "ph" is not nice.
+> > 
+> > Maybe this case argues more for always using "%*ph".
+> > At least that's easily greppable.
+> > 
+> > Andy?
+> First of all, the current linux-next has at least two definitions of
+> that constant:
+> drivers/net/wireless/mwifiex/ioctl.h:175:#define DBG_CMD_NUM    5
+> drivers/net/wireless/mwifiex/main.h:118:#define DBG_CMD_NUM 5
+> 
+> I checked briefly the code and found that the constant is heavily used
+> as a definition for the length of static byte arrays. So, in that case
+> probably better to use %*ph, but apply sizeof(cool_var) instead of
+(int)sizeof(cool_var) of course
 
-Rather than going through every single driver, this patch initializes
-chan->orig_mag in wiphy_register(), ignoring whatever value the driver
-left in there. If a driver for some reason wishes to limit it independent
-from regulatory rulesets, it can do so internally.
+> putting constant there.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
----
- net/wireless/core.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+And one finding more: buffers are defined as u16. I'm afraid the both
+previous and proposed versions are printing something interesting, like
+only half of the defined data.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 443d4d7..3f72530 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -526,8 +526,7 @@ int wiphy_register(struct wiphy *wiphy)
- 		for (i = 0; i < sband->n_channels; i++) {
- 			sband->channels[i].orig_flags =
- 				sband->channels[i].flags;
--			sband->channels[i].orig_mag =
--				sband->channels[i].max_antenna_gain;
-+			sband->channels[i].orig_mag = INT_MAX;
- 			sband->channels[i].orig_mpwr =
- 				sband->channels[i].max_power;
- 			sband->channels[i].band = band;
+
 -- 
-1.7.9.6 (Apple Git-31.1)
-
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
