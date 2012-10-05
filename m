@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54479 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756804Ab2J2QyH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 12:54:07 -0400
-Message-ID: <508EB4A9.2040203@openwrt.org> (sfid-20121029_175412_589233_583153D4)
-Date: Mon, 29 Oct 2012 17:54:01 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:33245 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964814Ab2JETnr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 15:43:47 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Joe Perches <joe@perches.com>
+CC: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 5 Oct 2012 12:43:40 -0700
+Subject: RE: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
+Message-ID: <477F20668A386D41ADCC57781B1F7043083B6576A0@SC-VEXCH1.marvell.com> (sfid-20121005_214431_076485_4EE1BFBE)
+References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1349368379.2008.16.camel@joe-AO722> <1349419996.10584.5.camel@smile>
+ <1349420428.10584.8.camel@smile>
+In-Reply-To: <1349420428.10584.8.camel@smile>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wireless: Allow registering more than one beacon listener.
-References: <1351288165-24219-1-git-send-email-greearb@candelatech.com>   (sfid-20121026_234937_894351_D69F960C) <1351501451.10925.6.camel@jlt4.sipsolutions.net>  <508EAC30.8020600@candelatech.com> <1351527990.10925.35.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1351527990.10925.35.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-29 5:26 PM, Johannes Berg wrote:
-> On Mon, 2012-10-29 at 09:17 -0700, Ben Greear wrote:
-> 
->> >> +	spin_lock_bh(&rdev->beacon_registrations_lock);
->> > ...
->> >> +	spin_unlock_bh(&rdev->beacon_registrations_lock);
->> >
->> > I have a feeling this is incorrect, this is called with BHs disabled, so
->> > if we disable/enable BHs here we end up with BHs enabled even if the
->> > caller wanted them disabled, no?
->> >
->> > So I suppose unless we need to be able to call this from hard interrupt
->> > in some driver (unlikely) we should add a change like this:
->> 
->> I get confused with the various types of spin-locks,
->> and I just copied this code from the mgt frames logic.
-> 
-> Uh, that looks like a bug there as well then?
-As far as I know, local_bh_enable/local_bh_disable (which are used by
-spin_lock_bh) are re-entrant. Using them from a BH-disabled context is
-safe. All I can find with a few simple google searches confirms this.
-
-- Felix
+SGkgQW5keSwNCg0KPiA+IEkgY2hlY2tlZCBicmllZmx5IHRoZSBjb2RlIGFuZCBmb3VuZCB0aGF0
+IHRoZSBjb25zdGFudCBpcyBoZWF2aWx5IHVzZWQNCj4gPiBhcyBhIGRlZmluaXRpb24gZm9yIHRo
+ZSBsZW5ndGggb2Ygc3RhdGljIGJ5dGUgYXJyYXlzLiBTbywgaW4gdGhhdCBjYXNlDQo+ID4gcHJv
+YmFibHkgYmV0dGVyIHRvIHVzZSAlKnBoLCBidXQgYXBwbHkgc2l6ZW9mKGNvb2xfdmFyKSBpbnN0
+ZWFkIG9mDQo+IChpbnQpc2l6ZW9mKGNvb2xfdmFyKSBvZiBjb3Vyc2UNCj4gDQo+ID4gcHV0dGlu
+ZyBjb25zdGFudCB0aGVyZS4NCj4gDQo+IEFuZCBvbmUgZmluZGluZyBtb3JlOiBidWZmZXJzIGFy
+ZSBkZWZpbmVkIGFzIHUxNi4gSSdtIGFmcmFpZCB0aGUgYm90aA0KPiBwcmV2aW91cyBhbmQgcHJv
+cG9zZWQgdmVyc2lvbnMgYXJlIHByaW50aW5nIHNvbWV0aGluZyBpbnRlcmVzdGluZywgbGlrZQ0K
+PiBvbmx5IGhhbGYgb2YgdGhlIGRlZmluZWQgZGF0YS4NCg0KWW91IGFyZSByaWdodC4gVGhlIG9y
+aWdpbmFsIGNvZGUgc2hvdWxkIGJlIGxpa2UgdGhpczoNCg0KICAgICAgICAgICAgICAgIHByaW50
+X2hleF9kdW1wX2J5dGVzKCJsYXN0X2NtZF9pZDogIiwgRFVNUF9QUkVGSVhfT0ZGU0VULA0KLSAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGFkYXB0ZXItPmRiZy5sYXN0X2NtZF9p
+ZCwgREJHX0NNRF9OVU0pOw0KKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGFk
+YXB0ZXItPmRiZy5sYXN0X2NtZF9pZCwNCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICBzaXplb2YoYWRhcHRlci0+ZGJnLmxhc3RfY21kX2lkKSk7DQoNCmFuZCB0aGVuIGluIEFu
+ZHJlaSdzIHBhdGNoOg0KDQoJCWRldl9lcnIoYWRhcHRlci0+ZGV2LCAibGFzdF9jbWRfaWQ6ICUq
+cGhcbiIsDQoJCQkoaW50KXNpemVvZihhZGFwdGVyLT5kYmcubGFzdF9jbWRfaWQpKSwNCgkJCWFk
+YXB0ZXItPmRiZy5sYXN0X2NtZF9pZCk7DQoNCkkgd2lsbCBzZW5kIGEgcGF0Y2ggdG8gZml4IHRo
+ZSBvcmlnaW5hbCBjb2RlLg0KDQpUaGFua3MsDQpCaW5nDQoNCg==
