@@ -1,96 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4249 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755555Ab2JVUz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 16:55:58 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 09/12] brcmfmac: use memset when setting a broadcast mac
- address
-Date: Mon, 22 Oct 2012 13:55:38 -0700
-Message-ID: <1350939341-17687-10-git-send-email-frankyl@broadcom.com> (sfid-20121022_225855_456216_061FE348)
-In-Reply-To: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-References: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lennier.cc.vt.edu ([198.82.162.213]:54070 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756151Ab2JEQHd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 12:07:33 -0400
+To: Nico Schottelius <nico-kernel20120920@schottelius.org>
+Cc: David Rientjes <rientjes@google.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dave Kleikamp <shaggy@kernel.org>,
+	jfs-discussion@lists.sourceforge.net
+Subject: Re: Out of memory on 3.5 kernels
+In-Reply-To: Your message of "Wed, 03 Oct 2012 23:23:11 +0200."
+             <20121003212311.GA14018@schottelius.org>
+From: Valdis.Kletnieks@vt.edu
+References: <505B1FA0.6030100@broadcom.com> <20120921194931.GA732@schottelius.org> <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com> <20120926060653.GD16575@schottelius.org> <20120926085708.GA7839@schottelius.org> <20120927055208.GA25252@schottelius.org>
+            <20121003212311.GA14018@schottelius.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1349452084_2935P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Fri, 05 Oct 2012 11:48:04 -0400
+Message-ID: <22962.1349452084@turing-police.cc.vt.edu> (sfid-20121005_180736_155548_0CC6B08B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+--==_Exmh_1349452084_2935P
+Content-Type: text/plain; charset="us-ascii"
+Content-Id: <22610.1349452075.1@turing-police.cc.vt.edu>
 
-The driver had a global constant ether_bcast, which was copied
-whenever a broadcast mac address was needed. This patch does a
-memset(dest, 0xFF, ETH_ALEN) instead and consequently removes
-the global ether_bcast.
+On Wed, 03 Oct 2012 23:23:11 +0200, Nico Schottelius said:
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+> does anyone of you have a clue so far what may be causing the huge
+> slab usage?
+>
+> I've just found an interesting detail: umounting and cryptsetup
+> luksClosing frees up the used memory (not sure which one was freeing
+> up)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 5ce0068..94c619a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -94,8 +94,6 @@
- #define BRCMF_ASSOC_PARAMS_FIXED_SIZE \
- 	(sizeof(struct brcmf_assoc_params_le) - sizeof(u16))
- 
--static const u8 ether_bcast[ETH_ALEN] = {255, 255, 255, 255, 255, 255};
--
- static u32 brcmf_dbg_level = WL_DBG_ERR;
- 
- static bool check_vif_up(struct brcmf_cfg80211_vif *vif)
-@@ -534,7 +532,7 @@ static void brcmf_set_mpc(struct net_device *ndev, int mpc)
- static void brcmf_iscan_prep(struct brcmf_scan_params_le *params_le,
- 			     struct brcmf_ssid *ssid)
- {
--	memcpy(params_le->bssid, ether_bcast, ETH_ALEN);
-+	memset(params_le->bssid, 0xFF, ETH_ALEN);
- 	params_le->bss_type = DOT11_BSSTYPE_ANY;
- 	params_le->scan_type = 0;
- 	params_le->channel_num = 0;
-@@ -721,7 +719,7 @@ static void brcmf_escan_prep(struct brcmf_scan_params_le *params_le,
- 	char *ptr;
- 	struct brcmf_ssid_le ssid_le;
- 
--	memcpy(params_le->bssid, ether_bcast, ETH_ALEN);
-+	memset(params_le->bssid, 0xFF, ETH_ALEN);
- 	params_le->bss_type = DOT11_BSSTYPE_ANY;
- 	params_le->scan_type = 0;
- 	params_le->channel_num = 0;
-@@ -810,7 +808,7 @@ brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 		/* Do a scan abort to stop the driver's scan engine */
- 		WL_SCAN("ABORT scan in firmware\n");
- 		memset(&params_le, 0, sizeof(params_le));
--		memcpy(params_le.bssid, ether_bcast, ETH_ALEN);
-+		memset(params_le.bssid, 0xFF, ETH_ALEN);
- 		params_le.bss_type = DOT11_BSSTYPE_ANY;
- 		params_le.scan_type = 0;
- 		params_le.channel_num = cpu_to_le32(1);
-@@ -1283,7 +1281,7 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
- 				   BRCMF_ASSOC_PARAMS_FIXED_SIZE;
- 		memcpy(profile->bssid, params->bssid, ETH_ALEN);
- 	} else {
--		memcpy(join_params.params_le.bssid, ether_bcast, ETH_ALEN);
-+		memset(join_params.params_le.bssid, 0xFF, ETH_ALEN);
- 		memset(profile->bssid, 0, ETH_ALEN);
- 	}
- 
-@@ -1673,7 +1671,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 	memcpy(&profile->ssid.SSID, sme->ssid, profile->ssid.SSID_len);
- 	join_params.ssid_le.SSID_len = cpu_to_le32(profile->ssid.SSID_len);
- 
--	memcpy(join_params.params_le.bssid, ether_bcast, ETH_ALEN);
-+	memset(join_params.params_le.bssid, 0xFF, ETH_ALEN);
- 
- 	if (ssid.SSID_len < IEEE80211_MAX_SSID_LEN)
- 		WL_CONN("ssid \"%s\", len (%d)\n",
--- 
-1.7.9.5
+For what it's worth, I'm seeing a similar problem in linux-next on my laptop -
+trying to run a backup to an external hard drive that has a LUKS partition on
+it will OOM. (For some reason having the external LUKS partition is much more
+problematic than the LVM-on-LUKS on the internal drive)
 
+I've started bisecting, and gotten this far:
+
+% git bisect log
+git bisect start
+# bad: [1aa44772a621e8547dc4db41b47c747469fe0ea3] Add linux-next specific files for 20121001
+git bisect bad 1aa44772a621e8547dc4db41b47c747469fe0ea3
+# good: [fea7a08acb13524b47711625eebea40a0ede69a0] Linux 3.6-rc3
+git bisect good fea7a08acb13524b47711625eebea40a0ede69a0
+# good: [526c4d73327f56f83da8b8088fd0b3c7be38c7ae] Merge remote-tracking branch 'regulator/for-next'
+git bisect good 526c4d73327f56f83da8b8088fd0b3c7be38c7ae
+# good: [961d70d88557405c5b7302c7d87752566468f035] Merge remote-tracking branch 'tty/tty-next'
+git bisect good 961d70d88557405c5b7302c7d87752566468f035
+
+(That's as far as I've gotten that I trust, the next bisect hits a different problem where
+connecting the hard drive and *starting* cryptLuks hangs the machine hard, so I'll
+have to finish bisecting that problem first, then return to bisecting this one)
+
+I admit not being sure why you see it on a 3.5 kernel, but I only see it on stuff
+that's after 3.6-rc3.
+
+--==_Exmh_1349452084_2935P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iQIVAwUBUG8BMwdmEQWDXROgAQK/nQ//XMlZSEoXM4kjMizzv2EMI9HzxCJKzxbC
+pfmVWOIkxh/eCNs/3W0oUzKmahslZjwvxTs09HT8tJzsRwBgmCVvOEFkDFW9qzg1
++daFGrBWGsWEgA306irjnmh+AHEzARE4QkVeQhaphoKv1CqmldWHPjPnzKJsbrg6
+RNmyvF4c3zFpgfE7PKxAWJNWcJnSMv2DVjFg/umy71s5ikILm8n7cRKpmQ5p6SN5
+FPkNlUX/aG6RJ2OpQzmD0yDLPJKu7RTY6qyz2Y0l9IIA7yxYtpyTalNZ+xXRopMK
+LWFKZcz/zOnr0maum3ITPslLLQ4cPRGnzEqnuezWvW1ZeP74Uj18kkk73v2GnVye
+eqX4xQTltD3YrxECaIG9+HKYWZ1buaXB7TPs5Fw02NlIe1pq8qV5W6Rs4oTJm1Dg
+nRpJwuuBl3/i2vaIS6Jw/+yZ8vTcRYBPcVcEnUsKAmGVr6RFAuAJ/SWgVnw2Lj9W
+BVPbrqWgtcVhT6B1D6tRT5FZKfrsal4l+ciBxtYzQH+2drdQTc7hGzwqzWpnEtek
+0E7N84/0S6jh71JaPnOrEC1WufQBgDfLoKguRcW9IPXHWKq7ZNOhdGiKEavVQtHd
+YOu3AuCVsB+xfS8NqmNDAdXrHw1GrMO1JkydsKA59BeXQtIvN+T2NrW/B4vJIUv0
+oVYlfN9GnVw=
+=dT/C
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1349452084_2935P--
 
