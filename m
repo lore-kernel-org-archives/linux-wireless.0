@@ -1,53 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:38397 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755981Ab2JQMpQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2012 08:45:16 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so7338393oag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2012 05:45:16 -0700 (PDT)
+Received: from narfation.org ([79.140.41.39]:53440 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756721Ab2JEQv7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 12:51:59 -0400
+Date: Fri, 5 Oct 2012 18:51:53 +0200
+From: Sven Eckelmann <sven@narfation.org>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	lindner_marek@yahoo.de
+Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle
+ AR_INTR_SYNC_HOST1_FATAL on AR9003
+Message-ID: <20121005165152.GA4473@sven-atom.home.narfation.org> (sfid-20121005_185203_078405_80D52B74)
+References: <1348756862-8788-1-git-send-email-sven@narfation.org>
+ <506B0628.6070201@openwrt.org>
+ <CAJ-Vmo=bu=j+=z_TAeE3--Sn5oAEbkEG-HDqK=6okR8xmmWpSQ@mail.gmail.com>
+ <2629427.e28b8DS3gI@bentobox>
+ <506ED3D4.7050107@openwrt.org>
+ <CAJ-VmonKjxmquSUg99kAtPWVwHH-4zTooF1Xvj9mGUyjWL5pCA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <507EA183.10409@openwrt.org>
-References: <1350474643-59518-1-git-send-email-nbd@openwrt.org>
-	<CAD2nsn3ceRowmsxsssXT1TQYeWDxH9dby8=mFDJvV++dESJQYA@mail.gmail.com>
-	<507EA183.10409@openwrt.org>
-Date: Wed, 17 Oct 2012 18:15:16 +0530
-Message-ID: <CAD2nsn3fP276R-Kix5HQYF-FMNxpmNUmWo3nSO0uc7UxyFv=EA@mail.gmail.com> (sfid-20121017_144522_224635_5FED1E23)
-Subject: Re: [PATCH 3.7] Revert "ath9k_hw: Updated AR9003 tx gain table for 5GHz"
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
+In-Reply-To: <CAJ-VmonKjxmquSUg99kAtPWVwHH-4zTooF1Xvj9mGUyjWL5pCA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 17, 2012 at 5:46 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2012-10-17 1:59 PM, Mohammed Shafi wrote:
->> Hi Felix,
->>
->> On Wed, Oct 17, 2012 at 5:20 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->>> This reverts commit a240dc7b3c7463bd60cf0a9b2a90f52f78aae0fd.
->>>
->>> This commit is reducing tx power by at least 10 db on some devices,
->>> e.g. the Buffalo WZR-HP-G450H.
->>
->> a minor concern, seems to be a reasonable amount of changes in the initvals.
->> should be fine with the stable kernel releases, just worried about
->> merge conflicts ?
-> This particular gain table hasn't changed in a while, I don't expect any
-> merge conflicts.
 
-oh, ok. thanks for the clarification.
+--x+6KMIRAuhnl3hBn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I've had this patch for a while, as I was waiting for a response from
-> the team that made the change in the first place. I never got a proper
-> response from that team, so I'm sending the revert now.
->
-> - Felix
+On Fri, Oct 05, 2012 at 09:21:40AM -0700, Adrian Chadd wrote:
+> On 5 October 2012 05:34, Felix Fietkau <nbd@openwrt.org> wrote:
+>=20
+> > ---
+> > --- a/drivers/net/wireless/ath/ath9k/ani.c
+> > +++ b/drivers/net/wireless/ath/ath9k/ani.c
+> > @@ -307,7 +307,8 @@ void ath9k_ani_reset(struct ath_hw *ah,
+> >                 if (IS_CHAN_2GHZ(chan)) {
+> >                         ah->ani_function =3D (ATH9K_ANI_SPUR_IMMUNITY_L=
+EVEL |
+> >                                             ATH9K_ANI_FIRSTEP_LEVEL);
+> > -                       if (AR_SREV_9300_20_OR_LATER(ah))
+> > +                       if (AR_SREV_9300_20_OR_LATER(ah) &&
+> > +                           ah->caps.rx_chainmask !=3D 1)
+> >                                 ah->ani_function |=3D ATH9K_ANI_MRC_CCK;
+> >                 } else
+> >                         ah->ani_function =3D 0;
+>=20
+> Well, is it a RX chainmask thing, or is it a chip thing?
+>=20
+> It's totally possible to have an RX chainmask of say 0x2 or 0x4..
 
+What are you trying to tell us?
 
+> Also to figure out which registers triggered the interrupt is likely
+> going to be a bit .. special. Maybe keep a circular buffer of the last
+> N register accesses and dump them in time order whenever you get an
+> interrupt.
 
--- 
-thanks,
-shafi
+Maybe you missed that part of the conversation, but this was exactly what I
+did. You can even find one of my debug patches which implements it (but many
+fancy hacks are missing).
+
+Kind regards,
+	Sven
+
+--x+6KMIRAuhnl3hBn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBCgAGBQJQbxAoAAoJEF2HCgfBJntG9X0QAM9Ga7tclldN1cmeYMo718mg
+LlPECpR+Is9UL8gHp+GIo/ToT/q8ruTVoLAbO9c93lIrWWT6zFzv2hqGscy4JcUO
+VoSyx/fdlGBeLfV5eHEpLPUOvmlwieK8qeySHHOwRkz8EFnDav1xy2/sH+kNxFV1
+dRO0tIHzYNwMDGVAOlg4SWwUWHLnJmbT8Xusyw6BDJut+HJd39i4tb+6m7qNG4Sw
+9YktraFTjjn+HhRvb4UJLU6y7RtJhEf8K6Mho+o07XY977zWzFlkEjjes2FdE+L7
+F+SQIA5/E+vT2vm3LRMrTGBd58lHbdUWN3GINS3JWLOA5Tl/Dg2tXoH+n5KPSi7+
+w4vfPysIvJPEqEOKOsiMEUL1BCGa8RuFijDEo3kxcVhsTxznwpDQWNvXH1ADcv7+
+U5KvCWPX+Lh9duVkSQey8JB47NHQ4SQR9nfrntnGCmBdaTuRofKRb7ccWB47tjmH
+Xh1wZEeldpA3i2yZ1qlx8Uido49zPR7haV50pNDO3SC3wN7dX/cHr3qggq6PoFEZ
+j4jYBz7ITt5i4TCCJ4EdiGZD4pcuak/I+B7jjoAmmd2lYH1xhuDb9tfFFKNvD+BG
+7x3jANIyQ+c+q5iNe0gvJ+VQhSnFD1VuA2uiLgfFfn23jjjAYv1Il9at4JETpPxC
+mQSvY4QtS2HWUcdVyX8n
+=WBwq
+-----END PGP SIGNATURE-----
+
+--x+6KMIRAuhnl3hBn--
