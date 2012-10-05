@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:59677 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754048Ab2JCJd0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 05:33:26 -0400
-Received: by vbbff1 with SMTP id ff1so7581609vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 02:33:25 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]:47909 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754836Ab2JEK0q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 06:26:46 -0400
+Date: Fri, 5 Oct 2012 13:27:52 +0300
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	bzhao@marvell.com
+Subject: Re: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
+Message-ID: <20121005102750.GG12229@aemeltch-MOBL1> (sfid-20121005_122649_751128_2F9FA991)
+References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <1349368379.2008.16.camel@joe-AO722>
+ <1349419996.10584.5.camel@smile>
+ <20121005101058.GE12229@aemeltch-MOBL1>
+ <1349432305.10584.29.camel@smile>
 MIME-Version: 1.0
-In-Reply-To: <1349202079-14115-1-git-send-email-linville@tuxdriver.com>
-References: <1349202079-14115-1-git-send-email-linville@tuxdriver.com>
-Date: Wed, 3 Oct 2012 11:33:25 +0200
-Message-ID: <CAOZOX0URb51i=6wko1MJVsi7du2kyYo9W=LLZSpH7Svh9BgAMw@mail.gmail.com> (sfid-20121003_113332_195497_FE0C4680)
-Subject: Re: [RFC] rt2x00: check return from dma_map_single
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1349432305.10584.29.camel@smile>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Andy,
 
-On Tue, Oct 2, 2012 at 8:21 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
->
-> dma_map_single can fail, so it's return value needs to be checked and
-> handled accordingly.  Failure to do so is akin to failing to check the
-> return from a kmalloc.
->
-> http://linuxdriverproject.org/mediawiki/index.php/DMA_Mapping_Error_Analysis
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
-> Compile tested only...can the experts take a look at how the failures
-> are handled?
+On Fri, Oct 05, 2012 at 01:18:25PM +0300, Andy Shevchenko wrote:
+> On Fri, 2012-10-05 at 13:11 +0300, Andrei Emeltchenko wrote: 
+> > On Fri, Oct 05, 2012 at 09:53:16AM +0300, Andy Shevchenko wrote:
+> > > On Thu, 2012-10-04 at 09:32 -0700, Joe Perches wrote: 
+> 
+> > > > When the number of bytes is fixed, it might be nicer
+> > > > to use a format like "%<num>ph" so that the function
+> > > > argument stack doesn't have the width pushed but it's
+> > > > fixed in the format.
+> > > > 
+> > > > This case would definitely not work well though as it's
+> > > > a #define rather than a simple number and I think
+> > > > using "%" stringize(some_define) "ph" is not nice.
+> > > > 
+> > > > Maybe this case argues more for always using "%*ph".
+> > > > At least that's easily greppable.
+> 
+> 
+> > > I checked briefly the code and found that the constant is heavily used
+> > > as a definition for the length of static byte arrays. So, in that case
+> > > probably better to use %*ph, but apply sizeof(cool_var) instead of
+> > > putting constant there.
+> > 
+> > I did not touch logic that print buffer, the buffer might have lots of
+> > data (even significantly more then you may want to print to logs) so
+> > using sizeof is not the best idea in these cases.
+> Then you probably need to decide how much you would like to print
+> exactly and put that constant directly to the %*ph (instead of
+> asterisk), like %5ph. Otherwise it's unclear what DBG_CMD_NUM stands
 
-<snip>
+I do not like much magic numbers. Defines are the same as those magic
+numbers. You always see them with one jump and usually you do reuse them
+anyway.
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 0751b35..50ff18d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -605,8 +605,8 @@ struct rt2x00lib_ops {
->                                struct txentry_desc *txdesc);
->         void (*write_tx_data) (struct queue_entry *entry,
->                                struct txentry_desc *txdesc);
-> -       void (*write_beacon) (struct queue_entry *entry,
-> -                             struct txentry_desc *txdesc);
-> +       int (*write_beacon) (struct queue_entry *entry,
-> +                            struct txentry_desc *txdesc);
->         void (*clear_beacon) (struct queue_entry *entry);
->         int (*get_tx_data_len) (struct queue_entry *entry);
-
-The only thing I am missing in the commit, is the check for
-the return value when write_beacon is being called.
-
-Ivo
+Best regards 
+Andrei Emeltchenko 
