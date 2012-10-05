@@ -1,92 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11049 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154Ab2JIBY5 (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:42435 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719Ab2JEHJi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2012 21:24:57 -0400
-From: "Huang, Xiong" <xiong@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "mcgrof@kernel.org" <mcgrof@kernel.org>,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>,
-	nic-devel <nic-devel@qualcomm.com>,
-	"Ren, Cloud" <cjren@qca.qualcomm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>
-Subject: RE: [PATCH] compat-drivers: update ethernet driver alx in crap dir
-Date: Tue, 9 Oct 2012 01:24:55 +0000
-Message-ID: <157393863283F442885425D2C45428562A50158C@nasanexd02f.na.qualcomm.com> (sfid-20121009_032515_977836_A040C9AD)
-References: <1349400892-25315-1-git-send-email-xiong@qca.qualcomm.com>
- <CAB=NE6VotAu-cugsn4==3TPX0OGPEFtdn1J+5+Rd_YfLcg9YDQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6VotAu-cugsn4==3TPX0OGPEFtdn1J+5+Rd_YfLcg9YDQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 5 Oct 2012 03:09:38 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h16so1411343oag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Oct 2012 00:09:37 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1349366701-23154-1-git-send-email-sven@narfation.org>
+References: <1349366701-23154-1-git-send-email-sven@narfation.org>
+Date: Fri, 5 Oct 2012 10:45:40 +0530
+Message-ID: <CAD2nsn1BfAEQ+Y2nZ0nEdSfar7=R+2PmS2qWA3_r=WoAn7ybUQ@mail.gmail.com> (sfid-20121005_090941_930880_4BFF6C20)
+Subject: Re: [PATCH] ath_hw: Use common REG_WRITE parameter order
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Sven Eckelmann <sven@narfation.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVpcw0KDQogICAgSSdtIHJlZmluaW5nIHRoZSBjb2RlLCBJIHRyeSBteSBiZXN0IHRvIG1h
-a2UgaXQgdXBzdHJlYW0gQVNBUC4gVGhhbmtzICENCg0KLVhpb25nDQoNCj4gLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbWNncm9mQGdtYWlsLmNvbSBbbWFpbHRvOm1jZ3JvZkBn
-bWFpbC5jb21dIE9uIEJlaGFsZiBPZiBMdWlzIFIuDQo+IFJvZHJpZ3Vleg0KPiBTZW50OiBUdWVz
-ZGF5LCBPY3RvYmVyIDA5LCAyMDEyIDY6MjUNCj4gVG86IEh1YW5nLCBYaW9uZw0KPiBDYzogbWNn
-cm9mQGtlcm5lbC5vcmc7IGJhY2twb3J0c0B2Z2VyLmtlcm5lbC5vcmc7IG5pYy1kZXZlbDsgUmVu
-LCBDbG91ZDsNCj4gR3JlZyBLcm9haC1IYXJ0bWFuOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
-b3JnOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51eC13aXJlbGVzczsgcWNhX3Zrb25k
-cmF0DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIGNvbXBhdC1kcml2ZXJzOiB1cGRhdGUgZXRoZXJu
-ZXQgZHJpdmVyIGFseCBpbiBjcmFwIGRpcg0KPiANCj4gT24gVGh1LCBPY3QgNCwgMjAxMiBhdCA2
-OjM0IFBNLCAgPHhpb25nQHFjYS5xdWFsY29tbS5jb20+IHdyb3RlOg0KPiA+IEZyb206IHhpb25n
-IDx4aW9uZ0BxY2EucXVhbGNvbW0uY29tPg0KPiA+DQo+ID4gMS4gc3VwcG9ydCBuZXcgZGV2aWNl
-IGlkICgweDEwQTAvMHgxMEExKS4NCj4gPiAyLiBhZGQgREVCVUdfRlMgaW50ZXJmYWNlIGZvciBk
-aWFnL3N3b2kgZnVuY3Rpb25zLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogUmVuIENsb3VkIDxj
-anJlbkBxY2EucXVhbGNvbW0uY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IHhpb25nIDx4aW9uZ0Bx
-Y2EucXVhbGNvbW0uY29tPg0KPiANCj4gWGlvbmcsDQo+IA0KPiAgLS0gVmxhZGltaXIsIGp1c3Qg
-YSBoZWFkcyB1cCAtLSB0aGlzIGFwcGxpZXMgdG8geW91IGFzIHdlbGwgZm9yIHRoZSA4MDIuMTFh
-ZA0KPiB3aWw2MjEwIGRyaXZlcg0KPiAgLS0gR3JlZywgc29tZSByZXZpZXcgb24geW91ciBwcmVm
-ZXJlbmNlIG9uIHRoaXMgd291bGQgYmUgYXBwcmVjaWF0ZWQNCj4gDQo+IFRoZSBvcmlnaW5hbCBh
-bHggY3JhcCBwYXRjaCB3YXMgYWRkZWQgaW50byBjb21wYXQtd2lyZWxlc3Mgb24gdGhlIGxpbnV4
-LTMuNS55DQo+IGJyYW5jaC4gSXRzIGJlZW4gdHdvIGtlcm5lbCByZWxlYXNlcyBhbmQgYWx4IGlz
-IG5vdCB5ZXQgdXBzdHJlYW0gYW5kIHVzZXJzIGNhbg0KPiBvbmx5IGdldCBhbHggdmlhIGNvbXBh
-dC1kcml2ZXJzICh0ZWNobmljYWxseSBjb21wYXQtd2lyZWxlc3MgYXMgdGhhdCB3YXMgcHJlDQo+
-IHYzLjcpLiB2My43IHdvdWxkIGJlIHRoZSAqdGhpcmQqIHJlbGVhc2UgaW4gd2hpY2ggdGhpcyB3
-b3VsZCBoYXBwZW4uLi4gVGhpcyBpcw0KPiB1bmZhaXIgdG8gdXNlcnMgYW5kIGNvbnN1bWVycyBv
-ZiB0aGUgTGludXgga2VybmVsIGFuZCBkZXJhaWxzIGV4cGVjdGF0aW9ucyBhbmQNCj4gb3VyIGFy
-cmFuZ2VtZW50cyBmb3IgTGludXgga2VybmVsIGRldmVsb3BtZW50LiBJIHJlYWxpemUgdGhhdCB0
-aGUgZ29hbCB3YXMgdG8NCj4gZ2V0IGFseCB1cHN0cmVhbSBBU0FQIGJ1dCByZWdhcmRsZXNzIG9m
-IHdoYXQgdGhlIHJlYXNvbiBpcywgaXRzIG5vdCB5ZXQNCj4gdXBzdHJlYW0uIElmIHlvdSBjYW5u
-b3Qgd29yayBvbiBhbHggb24gYSB0aW1lbHkgbWFubmVyIHRvIGdldCB1cHN0cmVhbSB0aGVuDQo+
-IHBsZWFzZSBzdWJtaXQgdGhlIGRyaXZlciB0byB0aGUgc3RhZ2luZyBhcmVhIG9mIHRoZSBMaW51
-eCBrZXJuZWwgdGhhdCBHcmVnDQo+IG1haW50YWlucyBzbyB0aGF0IG90aGVyIGRldmVsb3BlcnMg
-d2hvIG1heSBiZSBhYmxlIHRvIGhlbHAgY2FuIHN1Ym1pdA0KPiBwYXRjaGVzIHRvIGhlbHAgeW91
-LiBVbmRlciBzdGFnaW5nIHlvdXIgZHJpdmVyIHNob3VsZCBiZSBhY2NlcHRlZCBzbyBsb25nIGFz
-IGl0DQo+IGNvbXBpbGVzLg0KPiANCj4gSSB3aWxsIHVwZGF0ZSB0aGUgZG9jdW1lbnRhdGlvbiBm
-b3IgY3JhcC8gcGF0Y2hlcyBmb3IgY29tcGF0LWRyaXZlcnMgdG8gbWFrZQ0KPiBpdCBjbGVhciBu
-b3cgdGhhdCBjcmFwLyBwYXRjaGVzIGNhbiBiZSB1c2VkIGZvciBhZGRpbmcgY29tcG9uZW50cyAv
-IHBpZWNlcyBvZg0KPiBjb2RlIG5vdCB5ZXQgcmVhZHkgZm9yIHVwc3RyZWFtIGJ1dCBhcyBmYXIg
-YXMgZnVsbCBuZXcgZHJpdmVycyBhcmUgY29uY2VybmVkDQo+IHlvdSBvbmx5IGdldCBvbmUga2Vy
-bmVsIHJlbGVhc2UgY3ljbGUgZm9yIGl0IHRvIGxpbmdlciBvbiBjcmFwLyB1bmRlciBjb21wYXQt
-DQo+IGRyaXZlcnMsIGlmIHlvdSBoYXZlbid0IGFkZHJlc3NlZCB1cHN0cmVhbWluZyB5ZXQgdGhl
-biBpdCBzaG91bGQgZ28gdG8NCj4gZHJpdmVycy9zdGFnaW5nLy4gVGhhdCBpcyBjcmFwLyBzaG91
-bGQgb25seSBiZSB1c2VkIGFzIGEgc2hvcnRjdXQgYmVjYXVzZSB1c2Vycw0KPiBleGlzdCB0aGF0
-IGNhbiB1c2UgdGhlIGRyaXZlciBidXQgeW91ICpkbyogaGF2ZSBhIHRlYW0gcHJvcGVybHkgcmVz
-b3VyY2VkIHRvDQo+IGFkZHJlc3MgdXBzdHJlYW1pbmcgcHJvcGVybHkgaW4gYSB0aW1lbHkgbWFu
-bmVyLg0KPiANCj4gTGludXMgc2hvdWxkIHNvb24gcmVsZWFzZSB2My43LXJjMSBhbmQgbmV3IGRy
-aXZlcnMgYXJlIGFsbG93ZWQgdG8gYmUgbWVyZ2VkDQo+IGR1cmluZyB0aGUgUkMgY3ljbGVzLCBh
-cyBzdWNoIG15IHJlY29tbWVuZGF0aW9uIGlzIGluc3RlYWQgb2YgZ2V0dGluZyB1c2VycyB0bw0K
-PiBjb25zdW1lIGFseCBvbmx5IHRocm91Z2ggY29tcGF0LWRyaXZlcnMgeW91IG5vdyBzdWJtaXQg
-YWx4IGludG8gc3RhZ2luZyB0bw0KPiBHcmVnIGluIGhvcGVzIHRoYXQgd2UgY2FuIGdldCBpdCBp
-bnRvIHYzLjctcmNYIHNvbWUgdGltZSwgYW5kIGF0IHRoYXQgdGltZSB3ZQ0KPiBjYW4gcmVtb3Zl
-IHRoZSBjcmFwLyBwYXRjaCBmcm9tIGNvbXBhdC1kcml2ZXJzLg0KPiANCj4gVXNlcnMgc2hvdWxk
-IGJlIGFibGUgdG8gY29uc3VtZSBuZXcgZHJpdmVycyB0aHJvdWdoIGtlcm5lbC5vcmcgYW5kIGNv
-bXBhdC0NCj4gZHJpdmVycyBzaG91bGQgb25seSBwcm92aWRlIHRoZSBmcmFtZXdvcmsgZm9yIGJh
-Y2twb3J0aW5nIGFuZCBhbHNvDQo+IGNhdGVnb3JpemluZyBxdWljayBmaXhlcy4gSXQgc2hvdWxk
-IG5vdCBiZSB1c2VkIGZvciBvbmdvaW5nIHVwZGF0ZXMgZm9yIG5ldw0KPiBkcml2ZXJzIHRoYXQg
-dXNlcnMgbmVlZC4NCj4gDQo+IFdlIG11c3QgZHJhdyB0aGUgbGluZSB3aXRoIGNyYXAvIHBhdGNo
-ZXMgc29tZXdoZXJlLg0KPiANCj4gSSdsbCB0aGVuIHRha2UgdGhpcyBwYXRjaCBmb3Igbm93IGJ1
-dCBkbyBleHBlY3QgeW91IHRvIGdldCBhbHggaW50byBlaXRoZXIgc3RhZ2luZw0KPiBvciBwcm9w
-ZXIgdXBzdHJlYW0gZm9yIHRoZSB2My43LXJjWC4gSSB3ZWxjb21lIGZlZWRiYWNrIGZyb20gb3Ro
-ZXIgZm9sa3Mgb24NCj4gdGhlIHByb3Bvc2VkIGFycmFuZ2VtZW50IGZvciBjcmFwLyBwYXRjaGVz
-IGZvciBjb21wYXQtZHJpdmVycy4NCj4gDQo+IGh0dHBzOi8vYmFja3BvcnRzLndpa2kua2VybmVs
-Lm9yZy9pbmRleC5waHAvRG9jdW1lbnRhdGlvbi9jb21wYXQtDQo+IGRyaXZlcnMvYWRkaXRpb25h
-bC1wYXRjaGVzI2NyYXBfcGF0Y2hlcw0KPiANCj4gICBMdWlzDQo=
+On Thu, Oct 4, 2012 at 9:35 PM, Sven Eckelmann <sven@narfation.org> wrote:
+> All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
+> "register" and "value". hw.c is the only file using the order "ah", "value" and
+> "register". This inconsistent definition can easily lead to implementation
+> errors.
+
+oh yes, once Raj and myself were reviewing cycle counters stuff and
+was intially confused
+with the slight variance in the REG_WRITE definition in ath9k/hw.h,
+and ath/hw.c.
+thanks to you now, as  it was gone and make our life easier.
+
+>
+> Signed-off-by: Sven Eckelmann <sven@narfation.org>
+> ---
+>  drivers/net/wireless/ath/hw.c |   20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
+> index 19befb3..39e8a59 100644
+> --- a/drivers/net/wireless/ath/hw.c
+> +++ b/drivers/net/wireless/ath/hw.c
+> @@ -20,8 +20,8 @@
+>  #include "ath.h"
+>  #include "reg.h"
+>
+> -#define REG_READ       (common->ops->read)
+> -#define REG_WRITE      (common->ops->write)
+> +#define REG_READ                       (common->ops->read)
+> +#define REG_WRITE(_ah, _reg, _val)     (common->ops->write)(_ah, _val, _reg)
+>
+>  /**
+>   * ath_hw_set_bssid_mask - filter out bssids we listen
+> @@ -119,8 +119,8 @@ void ath_hw_setbssidmask(struct ath_common *common)
+>  {
+>         void *ah = common->ah;
+>
+> -       REG_WRITE(ah, get_unaligned_le32(common->bssidmask), AR_BSSMSKL);
+> -       REG_WRITE(ah, get_unaligned_le16(common->bssidmask + 4), AR_BSSMSKU);
+> +       REG_WRITE(ah, AR_BSSMSKL, get_unaligned_le32(common->bssidmask));
+> +       REG_WRITE(ah, AR_BSSMSKU, get_unaligned_le16(common->bssidmask + 4));
+>  }
+>  EXPORT_SYMBOL(ath_hw_setbssidmask);
+>
+> @@ -139,7 +139,7 @@ void ath_hw_cycle_counters_update(struct ath_common *common)
+>         void *ah = common->ah;
+>
+>         /* freeze */
+> -       REG_WRITE(ah, AR_MIBC_FMC, AR_MIBC);
+> +       REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
+>
+>         /* read */
+>         cycles = REG_READ(ah, AR_CCCNT);
+> @@ -148,13 +148,13 @@ void ath_hw_cycle_counters_update(struct ath_common *common)
+>         tx = REG_READ(ah, AR_TFCNT);
+>
+>         /* clear */
+> -       REG_WRITE(ah, 0, AR_CCCNT);
+> -       REG_WRITE(ah, 0, AR_RFCNT);
+> -       REG_WRITE(ah, 0, AR_RCCNT);
+> -       REG_WRITE(ah, 0, AR_TFCNT);
+> +       REG_WRITE(ah, AR_CCCNT, 0);
+> +       REG_WRITE(ah, AR_RFCNT, 0);
+> +       REG_WRITE(ah, AR_RCCNT, 0);
+> +       REG_WRITE(ah, AR_TFCNT, 0);
+>
+>         /* unfreeze */
+> -       REG_WRITE(ah, 0, AR_MIBC);
+> +       REG_WRITE(ah, AR_MIBC, 0);
+>
+>         /* update all cycle counters here */
+>         common->cc_ani.cycles += cycles;
+> --
+> 1.7.10.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+thanks,
+shafi
