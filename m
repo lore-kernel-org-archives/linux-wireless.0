@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:57393 "EHLO mout2.freenet.de"
+Received: from mga14.intel.com ([143.182.124.37]:20567 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752255Ab2JEQpV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 12:45:21 -0400
-Message-ID: <506F0A56.70900@01019freenet.de> (sfid-20121005_184524_575070_B687DE3C)
-Date: Fri, 05 Oct 2012 18:27:02 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 1/7] rt2800: use BBP_R1 for setting tx
- power
-References: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1753291Ab2JEKUU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 06:20:20 -0400
+Message-ID: <1349432398.10584.31.camel@smile> (sfid-20121005_122023_290051_523A7CBB)
+Subject: Re: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	bzhao@marvell.com
+Date: Fri, 05 Oct 2012 13:19:58 +0300
+In-Reply-To: <20121005100719.GD12229@aemeltch-MOBL1>
+References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1349368379.2008.16.camel@joe-AO722> <1349419996.10584.5.camel@smile>
+	 <1349420428.10584.8.camel@smile> <20121005100719.GD12229@aemeltch-MOBL1>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Stanislaw!
+On Fri, 2012-10-05 at 13:07 +0300, Andrei Emeltchenko wrote: 
+> On Fri, Oct 05, 2012 at 10:00:28AM +0300, Andy Shevchenko wrote:
 
-I would like to test this patchset. Whereon should I pay (most)
-attention? What do you expect to be changed (or not) behaviour with 2.4
-GHz / 40 MHz?
+> > And one finding more: buffers are defined as u16. I'm afraid the both
+> > previous and proposed versions are printing something interesting, like
+> > only half of the defined data.
+> 
+> The patch only changes printing format. The other logical change would
+> come better in other patch, maybe Bing could comment here.
+What about to fix logic first and then to substitute the
+print_hex_dump_bytes() calls?
 
-
-Thanks,
-kind regards,
-Andreas
-
-Stanislaw Gruszka wrote:
-> TX power delta can be negative. TX_PWR_CFG_ registers allow to set delta
-> only in range between 0 dBm and 15 dBm (4 bits for each rate). Se we
-> need to use BBP_R1 to configure negative deltas.
-[...]
-
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
