@@ -1,50 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37788 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821Ab2JVM4H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 08:56:07 -0400
-Message-ID: <1350910599.10166.4.camel@jlt4.sipsolutions.net> (sfid-20121022_145613_149942_64BBD495)
-Subject: Re: [PATCH v4 6/6] mac80211: add ap channel switch command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	igalc@ti.com, adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Date: Mon, 22 Oct 2012 14:56:39 +0200
-In-Reply-To: <50842563.4010201@ti.com>
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
-	  <1350226137-13704-7-git-send-email-victorg@ti.com>
-	 <1350414472.10177.17.camel@jlt4.sipsolutions.net> <50842563.4010201@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:60495 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753208Ab2JEKJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 06:09:54 -0400
+Date: Fri, 5 Oct 2012 13:11:00 +0300
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	bzhao@marvell.com
+Subject: Re: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
+Message-ID: <20121005101058.GE12229@aemeltch-MOBL1> (sfid-20121005_120957_444459_FBF74F19)
+References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <1349368379.2008.16.camel@joe-AO722>
+ <1349419996.10584.5.camel@smile>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1349419996.10584.5.camel@smile>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-10-21 at 18:40 +0200, Victor Goldenshtein wrote:
-> On 16/10/2012 21:07, Johannes Berg wrote:
-> > On Sun, 2012-10-14 at 16:48 +0200, Victor Goldenshtein wrote:
-> >> Add ieee80211_ap_process_chanswitch(), to handle a channel switch
-> >> request for AP.
-> >>
-> >> Add ieee80211_ap_ch_switch_done() which updates oper_channel
-> >> and notifies upper layers about channel switch complete event.
-> >
-> > Given channel contexts, how does this patch need to change?
-> >
-> 
-> I guess most of the changes would be in the channel switch complete 
-> area, we will need to update the correct vif channel 
-> (ieee80211_assign_vif_chanctx) instead of the local->oper_channel.
+Hi Andy,
 
-Yes, maybe, not sure.
+On Fri, Oct 05, 2012 at 09:53:16AM +0300, Andy Shevchenko wrote:
+> On Thu, 2012-10-04 at 09:32 -0700, Joe Perches wrote: 
+> > On Thu, 2012-10-04 at 12:16 +0300, Andrei Emeltchenko wrote:
+> > > From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+> > > 
+> > > Make output more readable and remove unneeded function call.
+> > > 
+> > > ...
+> > > mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+> > > last_cmd_id: 00000000: 28 00 28 00 28                            (.(.(
+> > > ...
+> > > 
+> > > would be changed to:
+> > > 
+> > > ...
+> > > mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+> > > mwifiex_sdio mmc0:0001:1: last_cmd_id: 28 00 28 00 28
+> > > ...
+> > 
+> > (added Andy Shevchenko)
+> > 
+> > Hi Andrei.  That's probably a better output style too
+> > as the ascii isn't likely useful.
+> > 
+> > One non-nit as a style issue for Andy Shevchenko:
+> > 
+> > > diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+> > []
+> > > @@ -917,21 +917,20 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+> > []
+> > > +		dev_err(adapter->dev, "last_cmd_id: %*ph\n", DBG_CMD_NUM,
+> > > +			adapter->dbg.last_cmd_id);
+> > > +		dev_err(adapter->dev, "last_cmd_act: %*ph\n", DBG_CMD_NUM,
+> > > +			adapter->dbg.last_cmd_act);
+> > 
+> > When the number of bytes is fixed, it might be nicer
+> > to use a format like "%<num>ph" so that the function
+> > argument stack doesn't have the width pushed but it's
+> > fixed in the format.
+> > 
+> > This case would definitely not work well though as it's
+> > a #define rather than a simple number and I think
+> > using "%" stringize(some_define) "ph" is not nice.
+> > 
+> > Maybe this case argues more for always using "%*ph".
+> > At least that's easily greppable.
+> > 
+> > Andy?
+> First of all, the current linux-next has at least two definitions of
+> that constant:
+> drivers/net/wireless/mwifiex/ioctl.h:175:#define DBG_CMD_NUM    5
+> drivers/net/wireless/mwifiex/main.h:118:#define DBG_CMD_NUM 5
 
-Also wrt. channel contexts, how will CAC/radar check work? The AP isn't
-bound to a channel until start_ap(), so somehow you'll have to bind it
-(and keep it on that channel!) while the DFS check is running? And also
-prohibit using multiple channels at this time...?
+Please send patch fixing this. This is unrelated to the patch in
+question.
 
-johannes
+> I checked briefly the code and found that the constant is heavily used
+> as a definition for the length of static byte arrays. So, in that case
+> probably better to use %*ph, but apply sizeof(cool_var) instead of
+> putting constant there.
+
+I did not touch logic that print buffer, the buffer might have lots of
+data (even significantly more then you may want to print to logs) so
+using sizeof is not the best idea in these cases.
+
+Best regards 
+Andrei Emeltchenko 
 
