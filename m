@@ -1,71 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:2900 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754233Ab2JPO7E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 10:59:04 -0400
-From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: Yuanhan Liu <yuanhan.liu@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Fengguang Wu <fengguang.wu@intel.com>
-Subject: =?UTF-8?q?=5BPATCH=202/5=5D=20bcma=3A=20suspend/resume=20callbacks=20should=20be=20conditionally=20compiled=20on=20CONFIG=5FPM=5FSLEEP?=
-Date: Tue, 16 Oct 2012 22:59:02 +0800
-Message-Id: <1350399545-11179-2-git-send-email-yuanhan.liu@linux.intel.com> (sfid-20121016_165940_521923_01F36D99)
-In-Reply-To: <1350399545-11179-1-git-send-email-yuanhan.liu@linux.intel.com>
-References: <1350399545-11179-1-git-send-email-yuanhan.liu@linux.intel.com>
+Received: from tee.schottelius.org ([77.109.138.222]:46247 "EHLO
+	mx3.schottelius.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751223Ab2JERtw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 13:49:52 -0400
+Date: Fri, 5 Oct 2012 19:51:39 +0200
+From: Nico Schottelius <nico-kernel20120920@schottelius.org>
+To: Valdis.Kletnieks@vt.edu
+Cc: Nico Schottelius <nico-kernel20120920@schottelius.org>,
+	David Rientjes <rientjes@google.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dave Kleikamp <shaggy@kernel.org>,
+	jfs-discussion@lists.sourceforge.net
+Subject: Re: Out of memory on 3.5 kernels
+Message-ID: <20121005175139.GC831@schottelius.org> (sfid-20121005_194957_518149_46F5C218)
+References: <505B1FA0.6030100@broadcom.com>
+ <20120921194931.GA732@schottelius.org>
+ <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com>
+ <20120926060653.GD16575@schottelius.org>
+ <20120926085708.GA7839@schottelius.org>
+ <20120927055208.GA25252@schottelius.org>
+ <20121003212311.GA14018@schottelius.org>
+ <22962.1349452084@turing-police.cc.vt.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Kj7319i9nmIyA2yE"
+In-Reply-To: <22962.1349452084@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will fix warnings like following when CONFIG_PM_SLEEP is not set:
 
-        warning: 'xxx_suspend' defined but not used [-Wunused-function]
-        warning: 'xxx_resume' defined but not used [-Wunused-function]
+--Kj7319i9nmIyA2yE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Because
-	SET_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn)
+Hey Valdis,
 
-Only references the callbacks on CONFIG_PM_SLEEP (instead of CONFIG_PM).
+Valdis.Kletnieks@vt.edu [Fri, Oct 05, 2012 at 11:48:04AM -0400]:
+> On Wed, 03 Oct 2012 23:23:11 +0200, Nico Schottelius said:
+>=20
+> > does anyone of you have a clue so far what may be causing the huge
+> > slab usage?
+> >
+> > I've just found an interesting detail: umounting and cryptsetup
+> > luksClosing frees up the used memory (not sure which one was freeing
+> > up)
+>=20
+> For what it's worth, I'm seeing a similar problem in linux-next on my lap=
+top -
+> trying to run a backup to an external hard drive that has a LUKS partitio=
+n on
+> it will OOM. (For some reason having the external LUKS partition is much =
+more
+> problematic than the LVM-on-LUKS on the internal drive)
 
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: "Rafał Miłecki" <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- drivers/bcma/host_pci.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Indeed, I also have the internal drive encrypted with LUKS, also jfs
+on it, but the problem only occurs on the external drive.
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index b6b4b5e..98fdc3e 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -238,7 +238,7 @@ static void __devexit bcma_host_pci_remove(struct pci_dev *dev)
- 	pci_set_drvdata(dev, NULL);
- }
- 
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- static int bcma_host_pci_suspend(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -261,11 +261,11 @@ static SIMPLE_DEV_PM_OPS(bcma_pm_ops, bcma_host_pci_suspend,
- 			 bcma_host_pci_resume);
- #define BCMA_PM_OPS	(&bcma_pm_ops)
- 
--#else /* CONFIG_PM */
-+#else /* CONFIG_PM_SLEEP */
- 
- #define BCMA_PM_OPS     NULL
- 
--#endif /* CONFIG_PM */
-+#endif /* CONFIG_PM_SLEEP */
- 
- static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x0576) },
--- 
-1.7.7.6
+Is there the possibility that the JFS on the external drive got into a
+state that may caus JFS to behave unexpected? If this is true, it would
+explain why it happens only with the external drive and also accross
+kernel versions.
 
+But "good" to hear I am not the only one affected anymore.
+
+Cheers,
+
+Nico
+
+
+--=20
+PGP key: 7ED9 F7D3 6B10 81D7 0EC5  5C09 D7DC C8E4 3187 7DF0
+
+--Kj7319i9nmIyA2yE
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlBvHisACgkQ19zI5DGHffB0MwCgrfpBRbsEgPDDg9Lw0133tha3
+tL8AoOmJhDbskp7PUTGtHoWOd1C8fR2q
+=o/zS
+-----END PGP SIGNATURE-----
+
+--Kj7319i9nmIyA2yE--
