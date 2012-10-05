@@ -1,65 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp29.msg.oleane.net ([62.161.4.29]:37888 "EHLO
-	smtp29.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757584Ab2JZJKh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 05:10:37 -0400
-From: =?utf-8?Q?C=C3=A9dric_Debarge_-_ACKSYS?= <cedric.debarge@acksys.fr>
-To: "'Jouni Malinen'" <j@w1.fi>
-Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A31901411778@sbs2003.acksys.local> <1350996238.10322.7.camel@jlt4.sipsolutions.net> <01e901cdb2b6$a41df0b0$ec59d210$@acksys.fr> <20121025145106.GA11453@w1.fi>
-In-Reply-To: <20121025145106.GA11453@w1.fi>
-Subject: RE: TR: Clear data transit during WPA negociation in case of reassociation
-Date: Fri, 26 Oct 2012 11:12:41 +0200
-Message-ID: <021301cdb35a$0d992020$28cb6060$@acksys.fr> (sfid-20121026_111042_541268_8CB08081)
+Received: from nbd.name ([46.4.11.11]:39988 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932479Ab2JEMeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Oct 2012 08:34:36 -0400
+Message-ID: <506ED3D4.7050107@openwrt.org> (sfid-20121005_143439_947130_8039925D)
+Date: Fri, 05 Oct 2012 14:34:28 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
+To: Sven Eckelmann <sven@narfation.org>
+CC: Adrian Chadd <adrian@freebsd.org>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	lindner_marek@yahoo.de
+Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL
+ on AR9003
+References: <1348756862-8788-1-git-send-email-sven@narfation.org> <506B0628.6070201@openwrt.org> <CAJ-Vmo=bu=j+=z_TAeE3--Sn5oAEbkEG-HDqK=6okR8xmmWpSQ@mail.gmail.com> <2629427.e28b8DS3gI@bentobox>
+In-Reply-To: <2629427.e28b8DS3gI@bentobox>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2012-10-05 1:08 PM, Sven Eckelmann wrote:
+> On Wednesday 03 October 2012 07:51:28 Adrian Chadd wrote:
+>> On 2 October 2012 08:20, Felix Fietkau <nbd@openwrt.org> wrote:
+>> >> This sync cause 0x20 isn't handled anywhere and may be the cause of the
+>> >> hang/crash. At least this is the symptom which can be fixed without
+>> >> crashing the system.
+>> > 
+>> > I checked the AR933x datasheet, and it says that cause 0x20 is tx
+>> > descriptor corruption.
+>> 
+>> Ah hey, for Hornet they redefined those bits:
+>> 
+>> 5: MAC_TXC_CORRUPTION_FLAG_SYNC (TX descriptor integrity flag)
+>> 6: INVALID_ADDRESS_ACCESS (invalid register access)
+>> 
+>> Good catch. That's definitely something in the right direction.
+> 
+> Ok, I've just created a dirty hack to trace some of the register reads/writes. 
+> 
+> I used following test setup: Two Hornets, one is the "internet gateway" (just 
+> attached using ethernet to a test server) and is running one AP vif with 
+> standard OpenWRT settings. The other Hornet is placed next to it (only some 
+> centimeter far away) and is connected to the AP using WiFi.
+> 
+> The client device is just trying to download a large file using HTTP. The 
+> serial consoles on both devices will now print the "same" log. I already 
+> searched for the interesting section. It is started in ath_ani_calibrate and 
+> contains ~42 register access operations.
+> 
+> My best guess is the REG_RMW_FIELD for ATH9K_ANI_MRC_CCK in 
+> ar9003_hw_ani_control (just checked sync_cause before and after the access).
+> 
+> So, now I need some input again from the guis with the spec. :)
+Actually, this makes a lot of sense. Maximal Ratio Combining can only
+be done if you have multiple inputs, and Hornet is a single-chain
+device ;)
 
-	Your patch corrects the problem !!
-	No unencrypted frame observed anymore.
-
-	Thank you very much (and Johannes too). 
-
-Regards,
-
-Cédric DEBARGE
-
------Message d'origine-----
-De : Jouni Malinen [mailto:j@w1.fi] 
-Envoyé : jeudi 25 octobre 2012 16:51
-À : Cédric Debarge - ACKSYS
-Cc : 'Johannes Berg'; linux-wireless@vger.kernel.org
-Objet : Re: TR: Clear data transit during WPA negociation in case of reassociation
-
-On Thu, Oct 25, 2012 at 03:42:56PM +0200, Cédric Debarge - ACKSYS wrote:
-> 	Please find attached the wpa_supplicant log file (it is quite big because of the EAP-TLS) you asked for.
-
-Could you please test this with the following change in wpa_supplicant?
-
-
-diff --git a/src/eapol_supp/eapol_supp_sm.c b/src/eapol_supp/eapol_supp_sm.c index 851cf49..f90fb62 100644
---- a/src/eapol_supp/eapol_supp_sm.c
-+++ b/src/eapol_supp/eapol_supp_sm.c
-@@ -1469,10 +1469,7 @@ void eapol_sm_notify_cached(struct eapol_sm *sm)
- 	if (sm == NULL)
- 		return;
- 	wpa_printf(MSG_DEBUG, "EAPOL: PMKSA caching was used - skip EAPOL");
--	sm->SUPP_PAE_state = SUPP_PAE_AUTHENTICATED;
--	sm->suppPortStatus = Authorized;
--	eapol_sm_set_port_authorized(sm);
--	sm->portValid = TRUE;
-+	sm->eapSuccess = TRUE;
- 	eap_notify_success(sm->eap);
- 	eapol_sm_step(sm);
- }
-
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Please try this patch to see if it gets rid of these interrupts:
+---
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -307,7 +307,8 @@ void ath9k_ani_reset(struct ath_hw *ah, 
+ 		if (IS_CHAN_2GHZ(chan)) {
+ 			ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
+ 					    ATH9K_ANI_FIRSTEP_LEVEL);
+-			if (AR_SREV_9300_20_OR_LATER(ah))
++			if (AR_SREV_9300_20_OR_LATER(ah) &&
++			    ah->caps.rx_chainmask != 1)
+ 				ah->ani_function |= ATH9K_ANI_MRC_CCK;
+ 		} else
+ 			ah->ani_function = 0;
 
