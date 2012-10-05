@@ -1,70 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:34691 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756844Ab2JISoH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35150 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756142Ab2JEUa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2012 14:44:07 -0400
-Received: by mail-la0-f46.google.com with SMTP id h6so3280626lag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2012 11:44:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5073F336.4000900@openwrt.org>
-References: <1349527254-41080-1-git-send-email-nbd@openwrt.org>
- <20121008183758.GJ3354@lenteja.do-not-panic.com> <50733D22.80407@openwrt.org>
- <20121009010003.GN3354@lenteja.do-not-panic.com> <5073F336.4000900@openwrt.org>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Tue, 9 Oct 2012 11:43:45 -0700
-Message-ID: <CAB=NE6XAJuxof97ESBLGsF62WsYskHJN2onfbQsS0cS5Soz8tQ@mail.gmail.com> (sfid-20121009_204416_349072_CD37EF9A)
-Subject: Re: [PATCH v2 3.7 1/2] cfg80211: fix antenna gain handling
+	Fri, 5 Oct 2012 16:30:56 -0400
+Date: Fri, 5 Oct 2012 16:22:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, arend@broadcom.com, mjg59@srcf.ucam.org
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 3.7 2/2] cfg80211: fix initialization of
+ chan->max_reg_power
+Message-ID: <20121005202241.GB1929@tuxdriver.com> (sfid-20121005_223059_303398_C784470E)
+References: <1349286707-64433-1-git-send-email-nbd@openwrt.org>
+ <1349286707-64433-2-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1349286707-64433-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 9, 2012 at 2:49 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2012-10-09 3:00 AM, Luis R. Rodriguez wrote:
->> I never followed up but we should see if we can get this but I'll
->> use this as a prelude to work on this.
->
-> Well, the regulatory related variable seem like a pretty bad place to
-> store the embedded antenna gain. Some drivers even share the
-> ieee80211_channel array between multiple instances...
+Same here -- anyone object?  I suspect that Johannes may be a little
+more busy/distracted than usual for the next few days/weeks...
 
-True, specially no need to have it for each channel.
+John
 
->> The antenna gain nomenclature came from the HAL but that's just baggage.  The
->> antenna gain stuff remained a puzzle for a central regulatory code base due to
->> the fact that as far as I am concerned only ath9k was exposing the antenna gain
->> value from EEPROM and using it.
->
-> No, ath9k was (and still is) not filling anything EEPROM related into
-> chan->max_antenna_gain. And that's a good thing, because putting the
-> EEPROM value in there would have made the whole thing even more wrong
-> and confused than it already is.
+On Wed, Oct 03, 2012 at 07:51:47PM +0200, Felix Fietkau wrote:
+> A few places touch chan->max_power based on updated tx power rules, but
+> forget to do the same to chan->max_reg_power.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Cc: stable@vger.kernel.org
+> ---
+>  net/wireless/reg.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 1a16f19..7062475 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -908,7 +908,7 @@ static void handle_channel(struct wiphy *wiphy,
+>  			map_regdom_flags(reg_rule->flags) | bw_flags;
+>  		chan->max_antenna_gain = chan->orig_mag =
+>  			(int) MBI_TO_DBI(power_rule->max_antenna_gain);
+> -		chan->max_power = chan->orig_mpwr =
+> +		chan->max_reg_power = chan->max_power = chan->orig_mpwr =
+>  			(int) MBM_TO_DBM(power_rule->max_eirp);
+>  		return;
+>  	}
+> @@ -1330,7 +1330,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
+>  
+>  	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
+>  	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+> -	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
+> +	chan->max_reg_power = chan->max_power =
+> +		(int) MBM_TO_DBM(power_rule->max_eirp);
+>  }
+>  
+>  static void handle_band_custom(struct wiphy *wiphy, enum ieee80211_band band,
+> -- 
+> 1.7.9.6 (Apple Git-31.1)
+> 
+> 
 
-Heh, OK. Then forget my ramblings as its eroded brain cache.
-
->> How about just adding a check for now:
->>
->> -       chan->max_antenna_gain = min(chan->orig_mag,
->> -               (int) MBI_TO_DBI(power_rule->max_antenna_gain));
->> +     if (chan->orig_mag)
->> +             chan->max_antenna_gain =
->> +                     min(chan->orig_mag, (int) MBI_TO_DBI(power_rule->max_antenna_gain));
->> +     else
->> +             chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
->> +
->>
->> Then we can go ahead and clarify usage of these values.
->
-> No, because 0 is a valid value too, it does not indicate 'not present'.
-> I don't want to add fragile checks that will not do anything useful for
-> *any* current driver and are not useful for future changes either.
-
-Alright, its obvious I'm rusty with antenna gain review here and
-you've already thought out some kinks, this change is fine by me then
-provided we also then proceed to clarify its usage more than what we
-have.
-
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
