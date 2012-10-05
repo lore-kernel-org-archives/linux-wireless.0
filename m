@@ -1,58 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:46185 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992530Ab2JYTpQ (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:39368 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964786Ab2JEU6V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 15:45:16 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1589660wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 12:45:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1351194222.10421.18.camel@jlt4.sipsolutions.net>
-References: <1351188618-11155-1-git-send-email-javier@cozybit.com> <1351194222.10421.18.camel@jlt4.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 25 Oct 2012 12:44:54 -0700
-Message-ID: <CAPjQAd-L4jJqaw7aXw6_Yi17c5-p67edQgR+=Zu2F+W=_V+T4A@mail.gmail.com> (sfid-20121025_214520_561411_4790B806)
-Subject: Re: [PATCH] mac80211: Don't inspect Sequence Control field on control frames
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, Javier Lopez <jlopex@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 5 Oct 2012 16:58:21 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Joe Perches <joe@perches.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 2/2] mwifiex: Using %*phD instead of print_hex_dump_bytes
+Date: Fri,  5 Oct 2012 13:57:49 -0700
+Message-Id: <1349470669-363-2-git-send-email-bzhao@marvell.com> (sfid-20121005_225824_362657_588A0351)
+In-Reply-To: <1349470669-363-1-git-send-email-bzhao@marvell.com>
+References: <1349470669-363-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 25, 2012 at 12:43 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-10-25 at 11:10 -0700, Javier Cardona wrote:
->> Per IEEE Std. 802.11-2012, Sec 8.2.4.4.1, the sequence Control field is
->> not present in control frames.  We noticed this problem when processing
->> Block Ack Requests.
->>
->> Signed-off-by: Javier Cardona <javier@cozybit.com>
->> Signed-off-by: Javier Lopez <jlopex@cozybit.com>
->> ---
->>  net/mac80211/rx.c |    4 ++++
->>  1 files changed, 4 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
->> index f975f64..bf54336 100644
->> --- a/net/mac80211/rx.c
->> +++ b/net/mac80211/rx.c
->> @@ -1467,6 +1467,10 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
->>
->>       hdr = (struct ieee80211_hdr *)rx->skb->data;
->>       fc = hdr->frame_control;
->> +
->> +     if (ieee80211_is_ctl(fc))
->
-> Different question -- why check _is_ctl rather than !_is_data?
+From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 
-Per the Std, management frames can also be fragmented (not that I've
-ever seen one).  The standard only excludes control frames.
+Make output more readable and remove unneeded function call.
 
-Javier
+...
+mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+last_cmd_id: 00000000: 16 00 cd 00 83 00 df 00 28 00 ........(.
+...
 
+would be changed to:
 
+...
+mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
+mwifiex_sdio mmc1:0001:1: last_cmd_id: 16 00 cd 00 83 00 df 00 28 00
+...
+
+Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+v2: use (int)sizeof(cool_var) as the buffer length
+    (Andy Shevchenko)
+
+ drivers/net/wireless/mwifiex/cmdevt.c |   24 ++++++++++++------------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 6627f9c..da6c491 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -917,24 +917,24 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+ 
+ 		dev_err(adapter->dev, "last_cmd_index = %d\n",
+ 			adapter->dbg.last_cmd_index);
+-		print_hex_dump_bytes("last_cmd_id: ", DUMP_PREFIX_OFFSET,
+-				     adapter->dbg.last_cmd_id,
+-				     sizeof(adapter->dbg.last_cmd_id));
+-		print_hex_dump_bytes("last_cmd_act: ", DUMP_PREFIX_OFFSET,
+-				     adapter->dbg.last_cmd_act,
+-				     sizeof(adapter->dbg.last_cmd_act));
++		dev_err(adapter->dev, "last_cmd_id: %*ph\n",
++			(int)sizeof(adapter->dbg.last_cmd_id),
++			adapter->dbg.last_cmd_id);
++		dev_err(adapter->dev, "last_cmd_act: %*ph\n",
++			(int)sizeof(adapter->dbg.last_cmd_act),
++			adapter->dbg.last_cmd_act);
+ 
+ 		dev_err(adapter->dev, "last_cmd_resp_index = %d\n",
+ 			adapter->dbg.last_cmd_resp_index);
+-		print_hex_dump_bytes("last_cmd_resp_id: ", DUMP_PREFIX_OFFSET,
+-				     adapter->dbg.last_cmd_resp_id,
+-				     sizeof(adapter->dbg.last_cmd_resp_id));
++		dev_err(adapter->dev, "last_cmd_resp_id: %*ph\n",
++			(int)sizeof(adapter->dbg.last_cmd_resp_id),
++			adapter->dbg.last_cmd_resp_id);
+ 
+ 		dev_err(adapter->dev, "last_event_index = %d\n",
+ 			adapter->dbg.last_event_index);
+-		print_hex_dump_bytes("last_event: ", DUMP_PREFIX_OFFSET,
+-				     adapter->dbg.last_event,
+-				     sizeof(adapter->dbg.last_event));
++		dev_err(adapter->dev, "last_event: %*ph\n",
++			(int)sizeof(adapter->dbg.last_event),
++			adapter->dbg.last_event);
+ 
+ 		dev_err(adapter->dev, "data_sent=%d cmd_sent=%d\n",
+ 			adapter->data_sent, adapter->cmd_sent);
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.7.0.2
+
