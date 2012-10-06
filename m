@@ -1,112 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:23232
-	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753602Ab2JKFoi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 01:44:38 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>
-Subject: [PATCH v2] {nl,cfg}80211: Peer STA VHT caps
-Date: Thu, 11 Oct 2012 05:44:37 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB4B0@mbx022-e1-nj-10.exch022.domain.local> (sfid-20121011_074442_256097_BA83DF29)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:46408 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756064Ab2JFMlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Oct 2012 08:41:15 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	johannes@sipsolutions.net, arend@broadcom.com
+Subject: [PATCH v2 3.7 1/2] cfg80211: fix antenna gain handling
+Date: Sat,  6 Oct 2012 14:40:53 +0200
+Message-Id: <1349527254-41080-1-git-send-email-nbd@openwrt.org> (sfid-20121006_144119_373902_3E5F032E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mahesh Palivela <maheshp@posedge.com>
+No driver initializes chan->max_antenna_gain to something sensible, and
+the only place where it is being used right now is inside ath9k. This
+leads to ath9k potentially using less tx power than it can use.
 
-To save STAs VHT caps in AP mode
+Rather than going through every single driver, this patch initializes
+chan->orig_mag in wiphy_register(), ignoring whatever value the driver
+left in there. If a driver for some reason wishes to limit it independent
+from regulatory rulesets, it can do so internally.
 
-Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@vger.kernel.org
 ---
-Patch version 2 to take care of Jouni Malinen's comment
+ net/wireless/core.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
- include/linux/nl80211.h |    3 +++
- include/net/cfg80211.h  |    2 ++
- net/mac80211/cfg.c      |    5 +++++
- net/wireless/nl80211.c  |    5 +++++
- 4 files changed, 15 insertions(+), 0 deletions(-)
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 443d4d7..3f72530 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -526,8 +526,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 		for (i = 0; i < sband->n_channels; i++) {
+ 			sband->channels[i].orig_flags =
+ 				sband->channels[i].flags;
+-			sband->channels[i].orig_mag =
+-				sband->channels[i].max_antenna_gain;
++			sband->channels[i].orig_mag = INT_MAX;
+ 			sband->channels[i].orig_mpwr =
+ 				sband->channels[i].max_power;
+ 			sband->channels[i].band = band;
+-- 
+1.7.9.6 (Apple Git-31.1)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 179a0c2..b82ab80 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1535,6 +1535,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SAE_DATA,
- 
-+	NL80211_ATTR_VHT_CAPABILITY,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1578,6 +1580,7 @@ enum nl80211_attrs {
- #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
- #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
- #define NL80211_HT_CAPABILITY_LEN		26
-+#define NL80211_VHT_CAPABILITY_LEN		12
- 
- #define NL80211_MAX_NR_CIPHER_SUITES		5
- #define NL80211_MAX_NR_AKM_SUITES		2
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 04df773..1f9ca03 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -498,6 +498,7 @@ enum station_parameters_apply_mask {
-  * @plink_action: plink action to take
-  * @plink_state: set the peer link state for a station
-  * @ht_capa: HT capabilities of station
-+ * @vht_capa: VHT capabilities of station
-  * @uapsd_queues: bitmap of queues configured for uapsd. same format
-  *	as the AC bitmap in the QoS info field
-  * @max_sp: max Service Period. same format as the MAX_SP in the
-@@ -517,6 +518,7 @@ struct station_parameters {
- 	u8 plink_action;
- 	u8 plink_state;
- 	struct ieee80211_ht_cap *ht_capa;
-+	struct ieee80211_vht_cap *vht_capa;
- 	u8 uapsd_queues;
- 	u8 max_sp;
- };
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 03216b0..ed27988 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1157,6 +1157,11 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 						  params->ht_capa,
- 						  &sta->sta.ht_cap);
- 
-+	if (params->vht_capa)
-+		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+						    params->vht_capa,
-+						    &sta->sta.vht_cap);
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
- 		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 746f649..8303a2a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -355,6 +355,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_WDEV] = { .type = NLA_U64 },
- 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_SAE_DATA] = { .type = NLA_BINARY, },
-+	[NL80211_ATTR_VHT_CAPABILITY] = { .len = NL80211_VHT_CAPABILITY_LEN },
- };
- 
- /* policy for the key attributes */
-@@ -3223,6 +3224,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.ht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
- 
-+	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY])
-+		params.vht_capa =
-+			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
-+
- 	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
- 		params.plink_action =
- 		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
