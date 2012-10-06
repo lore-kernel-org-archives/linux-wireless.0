@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33947 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751824Ab2JERpD (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:63107 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459Ab2JFVoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 13:45:03 -0400
-Message-ID: <506F1C99.6060404@candelatech.com> (sfid-20121005_194509_114035_968A9DA0)
-Date: Fri, 05 Oct 2012 10:44:57 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 6 Oct 2012 17:44:19 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hr7so2135751wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2012 14:44:18 -0700 (PDT)
+Message-ID: <5070A61B.6070903@googlemail.com> (sfid-20121006_234449_639593_5BBD64C8)
+Date: Sat, 06 Oct 2012 23:43:55 +0200
+From: Sven Barth <pascaldragon@googlemail.com>
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
-References: <506DDA1D.1090106@candelatech.com> <CAGRGNgVAehhN8CdwYrG8H4kuad=Kt5tPOHSKCSH8xm-OC=z6aw@mail.gmail.com> <506E10B7.4060406@candelatech.com> <CAGRGNgWhx57oB-wf7DE+V_A1h1K0uHWs0F2jJNyFR58eJ_X5Hg@mail.gmail.com> <506E155E.3030405@candelatech.com> <CAGRGNgU9XdCaes__8MRzkAYjTF7h-zxDY02pW-Bd6nbZpXQMpg@mail.gmail.com>
-In-Reply-To: <CAGRGNgU9XdCaes__8MRzkAYjTF7h-zxDY02pW-Bd6nbZpXQMpg@mail.gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: RT2500 and hard block
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2012 04:48 PM, Julian Calaby wrote:
-> Hi Ben,
->
+Hello together!
 
->>> Pretty graphs are always useful. It'd be nice to compare other brands
->>> / models of card too, but I'm guessing that's outside the scope of
->>> what you're planning to achieve.
->>>
->>> Are you planning to open-source any of the software / hardware you're
->>> making to do this?
->>
->>
->> I'm going to publish the code for the attenuator (including
->> eagle layout & gerber files for the Arduino shield).  Will market them
->> for sale as completed units too.  Will publish a simple command-line
->> tool to adjust the attenuation, and unit will have knobs to turn
->> so you don't really need a computer to control it anyway.
->
-> Nice! I wish I had a good reason to build one =)
->
->> We'll be able to test various APs..but on the client side,
->> I doubt we'll test other than ath9k anytime soon, although
->> I think our software would support other WiFi NICs if you didn't
->> try to do any of the virtual interface stuff.
->
-> Makes sense.
+I'm the owner of a 7 year old notebook with a RT2500 chipset. As I use 
+the computer mostly stationary as a "desktop replacement" I'm normally 
+using a wired network connection, but sometimes the connection to the 
+router (using powerline) chokes up and I resort to a wireless 
+connection. Now since some time I have the problem that I can't use my 
+wireless connection anymore, because the wireless device is reported as 
+hard blocked by the rfkill subsystem. Toggling the wireless button on 
+the laptop does not change anything. So I googled around and hit this 
+forum post https://bbs.archlinux.org/viewtopic.php?id=147906 . As I'm 
+using ArchLinux with currently a 3.5 kernel as well I had the idea to 
+check the changes that happened in the RT2500 drivers since the 
+branching of 3.0.
 
-Ok, here's a link that has some pics of the attenuator and a graph
-showing link speed, throughput rate, and rx-signal quality.  I have
-lots more testing of various combinations, but plan to spend more time
-on automating it before I do much more manual testing.
+I discovered the following two commits related to rfkill:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=a396e10019eaf3809b0219c966865aaafec12630
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=e2bc7c5f3cb8756865aa0ab140d2288f61599dda
 
-I'll not spam the list further with such links, but feel free to check
-back on my blog...I plan to post more results there as I get the time.
+I then downloaded the source of my current kernel version and checked 
+what state my drivers are currently in. I already have the second 
+change, so I decided to patch the first one in as well, but that didn't 
+change anything. After that I simply reverted the second one (but kept 
+the first one in) and after updating the modules my device was indeed no 
+longer hard blocked! I was also able to initiate a wireless connection 
+(though it isn't that stable, but that isn't something new sadly... :( 
+). Using the hardware button now also correctly toggles the hard blocked 
+state.
 
-http://bens-workshop.blogspot.com/2012/10/programmable-attenuator-arduino-shields.html
+So now my question is: what could be the reason that I need to revert 
+that second commit to get my device unblocked and what could be done to 
+fix this without breaking some other devices in the progress?
 
-If anyone else has any similar data, I'd love to see it posted somewhere.
+If you answer, please CC me as I'm not subscribed to the list.
 
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+Sven
