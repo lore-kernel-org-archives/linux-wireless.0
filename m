@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1771 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750801Ab2JKMFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 08:05:23 -0400
-Message-ID: <5076B5FB.10608@broadcom.com> (sfid-20121011_140526_881927_CB0B1B41)
-Date: Thu, 11 Oct 2012 14:05:15 +0200
-From: "Piotr Haber" <phaber@broadcom.com>
-MIME-Version: 1.0
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:64747 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751394Ab2JFUYH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Oct 2012 16:24:07 -0400
+Received: by mail-wi0-f170.google.com with SMTP id hm2so1888664wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2012 13:24:06 -0700 (PDT)
+Message-Id: <c2d07cb672d8aa930feb1d1a37252574e8563baa.1349554197.git.chunkeey@googlemail.com> (sfid-20121006_222413_034814_655B5A1B)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 6 Oct 2012 20:42:54 +0200
+Subject: [PATCH] carl9170: handle traps from firmware loader
 To: linux-wireless@vger.kernel.org
-cc: "Stanislaw Gruszka" <sgruszka@redhat.com>,
-	"=?UTF-8?B?UmFmYcWCIE1pxYJlY2s=?= =?UTF-8?B?aQ==?="
-	<zajec5@gmail.com>
-Subject: [PATCH] bcma: fix unregistration of cores
-Content-Type: text/plain;
- charset=utf-8
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cores are unregistered, entries
-need to be removed from cores list in a safe manner.
+This patch changes the way the driver deals with
+command responses and traps which are sent through
+the special interrupt input endpoint 3.
 
-Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Piotr Haber <phaber@broadcom.com>
-Cc: stable@vger.kernel.org
+While the carl9170 firmware does not use this
+endpoint for command responses or traps, the
+firmware loader on the device does. It uses it
+to notify the host about 'watchdog triggered'
+in case the firmware/hardware has crashed.
+
+Note:
+Even without this patch, the driver is still
+able to detect the mishap and reset the device.
+But previously it did that because the trap
+event caused an out-of-order message sequence
+number error, which also triggered a reset.
+
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/bcma/main.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/carl9170/rx.c  |    6 +++---
+ drivers/net/wireless/ath/carl9170/usb.c |    7 +++++++
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 758af9c..0059e26 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -141,9 +141,10 @@ static int bcma_register_cores(struct bcma_bus *bus)
-
- static void bcma_unregister_cores(struct bcma_bus *bus)
- {
--	struct bcma_device *core;
-+	struct bcma_device *core, *tmp;
-
--	list_for_each_entry(core, &bus->cores, list) {
-+	list_for_each_entry_safe(core, tmp, &bus->cores, list) {
-+		list_del(&core->list);
- 		if (core->dev_registered)
- 			device_unregister(&core->dev);
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+index a0b7230..9cd93f1 100644
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -164,9 +164,6 @@ void carl9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len)
+ 	struct carl9170_rsp *cmd = buf;
+ 	struct ieee80211_vif *vif;
+ 
+-	if (carl9170_check_sequence(ar, cmd->hdr.seq))
+-		return;
+-
+ 	if ((cmd->hdr.cmd & CARL9170_RSP_FLAG) != CARL9170_RSP_FLAG) {
+ 		if (!(cmd->hdr.cmd & CARL9170_CMD_ASYNC_FLAG))
+ 			carl9170_cmd_callback(ar, len, buf);
+@@ -820,6 +817,9 @@ static void carl9170_rx_untie_cmds(struct ar9170 *ar, const u8 *respbuf,
+ 		if (unlikely(i > resplen))
+ 			break;
+ 
++		if (carl9170_check_sequence(ar, cmd->hdr.seq))
++			break;
++
+ 		carl9170_handle_command_response(ar, cmd, cmd->hdr.len + 4);
  	}
+ 
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index 888152c..307bc0d 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -295,6 +295,13 @@ static void carl9170_usb_rx_irq_complete(struct urb *urb)
+ 		goto resubmit;
+ 	}
+ 
++	/*
++	 * While the carl9170 firmware does not use this EP, the
++	 * firmware loader in the EEPROM unfortunately does.
++	 * Therefore we need to be ready to handle out-of-band
++	 * responses and traps in case the firmware crashed and
++	 * the loader took over again.
++	 */
+ 	carl9170_handle_command_response(ar, urb->transfer_buffer,
+ 					 urb->actual_length);
+ 
 -- 
 1.7.10.4
 
