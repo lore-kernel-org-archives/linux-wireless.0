@@ -1,24 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55010 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980Ab2JZNSu (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:53401 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244Ab2JFA5q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 09:18:50 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TRjoG-0000wE-M7
-	for linux-wireless@vger.kernel.org; Fri, 26 Oct 2012 15:18:48 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/4] multi-channel/interface TX power handling
-Date: Fri, 26 Oct 2012 15:19:18 +0200
-Message-Id: <1351257562-30729-1-git-send-email-johannes@sipsolutions.net> (sfid-20121026_151853_919727_1AA2D71B)
+	Fri, 5 Oct 2012 20:57:46 -0400
+Received: by mail-pa0-f46.google.com with SMTP id hz1so2373301pad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Oct 2012 17:57:45 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH] mac80211: call drv_get_tsf() in sleepable context
+Date: Fri,  5 Oct 2012 17:57:39 -0700
+Message-Id: <1349485060-8643-1-git-send-email-thomas@cozybit.com> (sfid-20121006_025754_942083_46CE8C42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's v2, keeping handling of phy TX power setting by
-telling the driver about it with a NULL wdev.
+The call to drv_get/set_tsf() was put on the workqueue to perform tsf
+adjustments since that function might sleep. However it ended up inside
+a spinlock, whose critical section must be atomic. Do tsf adjustment
+outside the spinlock instead, and get rid of a warning.
 
-johannes
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_sync.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
+index accfa00..a16b7b4 100644
+--- a/net/mac80211/mesh_sync.c
++++ b/net/mac80211/mesh_sync.c
+@@ -56,7 +56,6 @@ void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
+ 	u64 tsfdelta;
+ 
+ 	spin_lock_bh(&ifmsh->sync_offset_lock);
+-
+ 	if (ifmsh->sync_offset_clockdrift_max < beacon_int_fraction) {
+ 		msync_dbg(sdata, "TBTT : max clockdrift=%lld; adjusting\n",
+ 			  (long long) ifmsh->sync_offset_clockdrift_max);
+@@ -69,11 +68,11 @@ void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
+ 		tsfdelta = -beacon_int_fraction;
+ 		ifmsh->sync_offset_clockdrift_max -= beacon_int_fraction;
+ 	}
++	spin_unlock_bh(&ifmsh->sync_offset_lock);
+ 
+ 	tsf = drv_get_tsf(local, sdata);
+ 	if (tsf != -1ULL)
+ 		drv_set_tsf(local, sdata, tsf + tsfdelta);
+-	spin_unlock_bh(&ifmsh->sync_offset_lock);
+ }
+ 
+ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+-- 
+1.7.5.4
 
