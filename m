@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44149 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754017Ab2JXX4U (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57731 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260Ab2JFOrV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 19:56:20 -0400
-Message-ID: <50888021.4050300@candelatech.com> (sfid-20121025_015624_247548_ED1CC9A2)
-Date: Wed, 24 Oct 2012 16:56:17 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kelly Hogan <kshogan@bluemesh.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Is Multi-Vif (vaps)  Different Channel Operation Supported?
-References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net> <50880BD0.6080603@candelatech.com> <1351093332.10709.5.camel@jlt4.sipsolutions.net> <5DA0F03B-BA8C-4D9F-A9F1-0841D6774255@bluemesh.net>
-In-Reply-To: <5DA0F03B-BA8C-4D9F-A9F1-0841D6774255@bluemesh.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 6 Oct 2012 10:47:21 -0400
+Message-ID: <1349534867.10251.0.camel@jlt4.sipsolutions.net> (sfid-20121006_164725_009082_589D26B4)
+Subject: Re: [PATCH 3.7 1/2] cfg80211: fix antenna gain handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
+Date: Sat, 06 Oct 2012 16:47:47 +0200
+In-Reply-To: <50702371.40508@openwrt.org>
+References: <1349286707-64433-1-git-send-email-nbd@openwrt.org>
+	 <20121005202220.GA1929@tuxdriver.com> <506F4AFE.2090301@broadcom.com>
+	 <506F69FF.5090701@openwrt.org> <506FE541.3090706@broadcom.com>
+	 <50702371.40508@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/24/2012 04:05 PM, Kelly Hogan wrote:
-> Hi All,
->
-> We are utilizing current ath9k and mac80211 and are trying to discern if multi-channel support is possible on different Vifs, on the same phy.
->
-> Example:
->
-> Two Vifs running as masters, controlled via hostapd
-> One Vif running as a Station, controlled by wpa_supplicant
-> One Vif running as a mesh vap
->
-> We can run all the Vifs fine, but it appears that with shared hostapd/wpa_supplicant control files, that the master Vifs always have to follow the channel that the station is connected to.  The mesh vap also seems to require being on the same channel of the station.
->
-> Any info on if this is supported, or what order to process creation, channel setting, etc to get them to simultaneously allow different channel support would be helpful, or save us the time of assuming that it can be done if it in fact can't.
+On Sat, 2012-10-06 at 14:26 +0200, Felix Fietkau wrote:
 
-It cannot work as far as I know.
+> > I was not understanding the usage scenario here. Your patch will ignore 
+> > any driver initialized max antenna gain, which does not sound right to 
+> > me. What if chan->orig_mag is a sensible (non-zero) value, which is 
+> > lower than the value in regulatory power rule? Just seems that the patch 
+> > changes more than the commit message it saying.
+> I did take another close look at the code and it seems you're right. I
+> will change the code so that it initializes chan->orig_mag to INT_MAX in
+> wiphy_register, and I will make the patch description a bit more verbose
+> as well.
+> That way the chan->max_antenna_gain value supplied by the driver gets
+> ignored, which is a good thing, considering that only one driver
+> actually uses max_antenna_gain, and no driver initializes it to
+> something useful.
 
-Thanks,
-Ben
+I know we need the "limit to driver value" behaviour for TX power for
+sure (otherwise the firmware would assert if it goes over)
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
