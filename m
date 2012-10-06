@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:40143 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752840Ab2JIM0K convert rfc822-to-8bit (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:43038 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450Ab2JFA5q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2012 08:26:10 -0400
-From: "Elias, Ilan" <ilane@ti.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Szymon Janc <szymon.janc@tieto.com>
-Subject: RE: NFC: Set local general bytes in nci_start_poll
-Date: Tue, 9 Oct 2012 12:26:02 +0000
-Message-ID: <B30D1FD582D6484ABF57420512E5803516AE0184@DNCE04.ent.ti.com> (sfid-20121009_142614_618804_40FD9B44)
-References: <20120926140553.GA31568@elgon.mountain>
-In-Reply-To: <20120926140553.GA31568@elgon.mountain>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 5 Oct 2012 20:57:46 -0400
+Received: by mail-da0-f46.google.com with SMTP id n41so543933dak.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Oct 2012 17:57:46 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH] mac80211: call drv_get_tsf() in sleepable context
+Date: Fri,  5 Oct 2012 17:57:40 -0700
+Message-Id: <1349485060-8643-2-git-send-email-thomas@cozybit.com> (sfid-20121006_025755_665406_203B6C67)
+In-Reply-To: <1349485060-8643-1-git-send-email-thomas@cozybit.com>
+References: <1349485060-8643-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+The call to drv_get/set_tsf() was put on the workqueue to perform tsf
+adjustments since that function might sleep. However it ended up inside
+a spinlock, whose critical section must be atomic. Do tsf adjustment
+outside the spinlock instead, and get rid of a warning.
 
-Sorry for the late response, I was on vacation. 
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_sync.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-> Hello Ilan Elias,
-> 
-> The patch 7e0352306f68: "NFC: Set local general bytes in 
-> nci_start_poll" from Aug 15, 2012, leads to the following warning:
-> net/nfc/nci/core.c:427 nci_set_local_general_bytes()
-> 	 error: buffer overflow 'local_gb' 48 <= 250
-> 
->    416          __u8 local_gb[NFC_MAX_GT_LEN];
->                               ^^^^^^^^^^^^^^
-> 48 elements.
-> 
->    417          int i, rc = 0;
->    418  
->    419          param.val = 
-> nfc_get_local_general_bytes(nfc_dev, &param.len);
->    420          if ((param.val == NULL) || (param.len == 0))
->    421                  return rc;
->    422  
->    423          if (param.len > NCI_MAX_PARAM_LEN)
->                                 ^^^^^^^^^^^^^^^^^
-> Capped at 250.  Probably NFC_MAX_GT_LEN was intended?
-> 
->    424                  return -EINVAL;
->    425  
->    426          for (i = 0; i < param.len; i++)
->    427                  local_gb[param.len-1-i] = param.val[i];
->                                  ^^^^^^^^^^^^^
-> Writing to the 250th element.
-> 
-> This is just a sanity check and nfc_get_local_general_bytes() 
-> will only
-> return NFC_MAX_GT_LEN max because of the check in nfc_llcp_build_gb().
-
-You're right.
-I see now that Szymon Janc already sent a patch for this a few days ago.
-
-Thanks & BR,
-Ilan
+diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
+index accfa00..a16b7b4 100644
+--- a/net/mac80211/mesh_sync.c
++++ b/net/mac80211/mesh_sync.c
+@@ -56,7 +56,6 @@ void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
+ 	u64 tsfdelta;
+ 
+ 	spin_lock_bh(&ifmsh->sync_offset_lock);
+-
+ 	if (ifmsh->sync_offset_clockdrift_max < beacon_int_fraction) {
+ 		msync_dbg(sdata, "TBTT : max clockdrift=%lld; adjusting\n",
+ 			  (long long) ifmsh->sync_offset_clockdrift_max);
+@@ -69,11 +68,11 @@ void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
+ 		tsfdelta = -beacon_int_fraction;
+ 		ifmsh->sync_offset_clockdrift_max -= beacon_int_fraction;
+ 	}
++	spin_unlock_bh(&ifmsh->sync_offset_lock);
+ 
+ 	tsf = drv_get_tsf(local, sdata);
+ 	if (tsf != -1ULL)
+ 		drv_set_tsf(local, sdata, tsf + tsfdelta);
+-	spin_unlock_bh(&ifmsh->sync_offset_lock);
+ }
+ 
+ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+-- 
+1.7.5.4
 
