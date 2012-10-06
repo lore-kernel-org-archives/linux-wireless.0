@@ -1,159 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4496 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27518 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757437Ab2JLL0K (ORCPT
+	with ESMTP id S1750745Ab2JFKqu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 07:26:10 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/4] ath9k: Send WLAN channel info to BT
-Date: Fri, 12 Oct 2012 14:07:22 +0530
-Message-ID: <1350031045-11860-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121012_132620_434133_4BA62609)
+	Sat, 6 Oct 2012 06:46:50 -0400
+From: "Manoharan, Sujith" <c_manoha@qti.qualcomm.com>
+To: "nbd@openwrt.org" <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
+Subject: RE: [PATCH 3.7 2/3] ath9k: improve suspend/resume reliability
+Date: Sat, 6 Oct 2012 10:46:29 +0000
+Message-ID: <506697F5827BD842B7CB80D046EBE618A47245@aphydexd01b> (sfid-20121006_124704_598805_31A7AFAD)
+References: <1349291272-93080-1-git-send-email-nbd@openwrt.org>
+ <1349291272-93080-2-git-send-email-nbd@openwrt.org>
+ <20588.62828.845432.706022@gargle.gargle.HOWL>,<506D5804.4090806@openwrt.org>
+In-Reply-To: <506D5804.4090806@openwrt.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WLAN updates channel bitmap when associated and disassociated. Channel
-bitmap will reflect whare are the channels used or affected by WLAN and
-BT should avoid using those. Not doing so, could affect BT traffic
-as both WLAN and BT is operating on same channel.
+On 2012-10-04 4:33 AM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> Ensure that drv_start() always returns true, as a failing hw start usually
+>> eventually leads to crashes when there's still a station entry present.
+>> Call a power-on reset after a resume and after a hw reset failure to bring
+>> the hardware back to life again.
+>
+> In what situations did HW reset (via start() or resume()) fail ?
+I don't know what situations caused it, but this happened on a few
+ChromeOS devices in the wild, and my patch fixed it.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |  5 ++++
- drivers/net/wireless/ath/ath9k/mci.c  | 50 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/mci.h  | 23 ++++++++++++++++
- 3 files changed, 78 insertions(+)
+Well, the cause for the real issue, the HW reset failure is still unknown.
+I think we might be papering over some other bug here.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 2da62be..515e184 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1450,6 +1450,9 @@ static void ath9k_set_assoc_state(struct ath_softc *sc,
- 	sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
- 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
-+	if (ath9k_hw_mci_is_enabled(sc->sc_ah))
-+		ath9k_mci_update_wlan_channels(sc, false);
-+
- 	ath_dbg(common, CONFIG,
- 		"Primary Station interface: %pM, BSSID: %pM\n",
- 		vif->addr, common->curbssid);
-@@ -1506,6 +1509,8 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 			memset(common->curbssid, 0, ETH_ALEN);
- 			common->curaid = 0;
- 			ath9k_hw_write_associd(sc->sc_ah);
-+			if (ath9k_hw_mci_is_enabled(sc->sc_ah))
-+				ath9k_mci_update_wlan_channels(sc, true);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index ec2d7c8..1733a5a 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -600,3 +600,53 @@ void ath_mci_enable(struct ath_softc *sc)
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
- 		sc->sc_ah->imask |= ATH9K_INT_MCI;
- }
-+
-+void ath9k_mci_update_wlan_channels(struct ath_softc *sc, bool allow_all)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+	struct ath9k_channel *chan = ah->curchan;
-+	u32 channelmap[] = {0x00000000, 0xffff0000, 0xffffffff, 0x7fffffff};
-+	int i;
-+	s16 chan_start, chan_end;
-+	u16 wlan_chan;
-+
-+	if (!chan || !IS_CHAN_2GHZ(chan))
-+		return;
-+
-+	if (allow_all)
-+		goto send_wlan_chan;
-+
-+	wlan_chan = chan->channel - 2402;
-+
-+	chan_start = wlan_chan - 10;
-+	chan_end = wlan_chan + 10;
-+
-+	if (chan->chanmode == CHANNEL_G_HT40PLUS)
-+		chan_end += 20;
-+	else if (chan->chanmode == CHANNEL_G_HT40MINUS)
-+		chan_start -= 20;
-+
-+	/* adjust side band */
-+	chan_start -= 7;
-+	chan_end += 7;
-+
-+	if (chan_start <= 0)
-+		chan_start = 0;
-+	if (chan_end >= ATH_MCI_NUM_BT_CHANNELS)
-+		chan_end = ATH_MCI_NUM_BT_CHANNELS - 1;
-+
-+	ath_dbg(ath9k_hw_common(ah), MCI,
-+		"WLAN current channel %d mask BT channel %d - %d\n",
-+		wlan_chan, chan_start, chan_end);
-+
-+	for (i = chan_start; i < chan_end; i++)
-+		MCI_GPM_CLR_CHANNEL_BIT(&channelmap, i);
-+
-+send_wlan_chan:
-+	/* update and send wlan channels info to BT */
-+	for (i = 0; i < 4; i++)
-+		mci->wlan_channels[i] = channelmap[i];
-+	ar9003_mci_send_wlan_channels(ah);
-+	ar9003_mci_state(ah, MCI_STATE_SEND_VERSION_QUERY);
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index fc14eea..a3df314 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -32,6 +32,24 @@
- #define ATH_MCI_MAX_PROFILE		(ATH_MCI_MAX_ACL_PROFILE +\
- 					 ATH_MCI_MAX_SCO_PROFILE)
- 
-+#define ATH_MCI_NUM_BT_CHANNELS      79
-+
-+#define MCI_GPM_SET_CHANNEL_BIT(_p_gpm, _bt_chan)			  \
-+	do {								  \
-+		if (_bt_chan < ATH_MCI_NUM_BT_CHANNELS) {		  \
-+			*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_CHANNEL_MAP + \
-+				(_bt_chan / 8)) |= (1 << (_bt_chan & 7)); \
-+		}							  \
-+	} while (0)
-+
-+#define MCI_GPM_CLR_CHANNEL_BIT(_p_gpm, _bt_chan)			  \
-+	do {								  \
-+		if (_bt_chan < ATH_MCI_NUM_BT_CHANNELS) {		  \
-+			*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_CHANNEL_MAP + \
-+				(_bt_chan / 8)) &= ~(1 << (_bt_chan & 7));\
-+		}							  \
-+	} while (0)
-+
- #define INC_PROF(_mci, _info) do {		 \
- 		switch (_info->type) {		 \
- 		case MCI_GPM_COEX_PROFILE_RFCOMM:\
-@@ -133,10 +151,15 @@ void ath_mci_intr(struct ath_softc *sc);
- 
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- void ath_mci_enable(struct ath_softc *sc);
-+void ath9k_mci_update_wlan_channels(struct ath_softc *sc, bool allow_all);
- #else
- static inline void ath_mci_enable(struct ath_softc *sc)
- {
- }
-+static inline void ath9k_mci_update_wlan_channels(struct ath_softc *sc,
-+						  bool allow_all)
-+{
-+}
- #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
- 
- #endif /* MCI_H*/
--- 
-1.7.12.2
-
+Sujith
