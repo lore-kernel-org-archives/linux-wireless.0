@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:42760 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752962Ab2JMLuS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2012 07:50:18 -0400
-Received: by mail-vc0-f174.google.com with SMTP id fk26so315767vcb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2012 04:50:17 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:52057 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754385Ab2JFJDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Oct 2012 05:03:51 -0400
+Message-ID: <506FF3ED.6010906@openwrt.org> (sfid-20121006_110405_779903_448CBFAB)
+Date: Sat, 06 Oct 2012 11:03:41 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1350037696-23747-2-git-send-email-arend@broadcom.com>
-References: <1350037696-23747-1-git-send-email-arend@broadcom.com>
-	<1350037696-23747-2-git-send-email-arend@broadcom.com>
-Date: Sat, 13 Oct 2012 15:50:17 +0400
-Message-ID: <CA++WF2P-oYou49o9Ujb5JkXyN4aYCZA8nG3-BR_76nVrCTpopA@mail.gmail.com> (sfid-20121013_135027_723561_DAA80E8D)
-Subject: Re: [PATCH 1/3] wireless: drivers: make use of WLAN_EID_VENDOR_SPECIFIC
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>, Jouni Malinen <j@w1.fi>,
-	Dan Williams <dcbw@redhat.com>, Bing Zhao <bzhao@marvell.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Sven Eckelmann <sven@narfation.org>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	lindner_marek@yahoo.de
+Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL
+ on AR9003
+References: <1348756862-8788-1-git-send-email-sven@narfation.org> <506B0628.6070201@openwrt.org> <CAJ-Vmo=bu=j+=z_TAeE3--Sn5oAEbkEG-HDqK=6okR8xmmWpSQ@mail.gmail.com> <2629427.e28b8DS3gI@bentobox> <506ED3D4.7050107@openwrt.org> <CAJ-VmonKjxmquSUg99kAtPWVwHH-4zTooF1Xvj9mGUyjWL5pCA@mail.gmail.com> <20121005165152.GA4473@sven-atom.home.narfation.org> <CAJ-VmomfDr-JAMtgQmbEsSeF62W-dmsK7LRTJxNUUddOTqDayA@mail.gmail.com>
+In-Reply-To: <CAJ-VmomfDr-JAMtgQmbEsSeF62W-dmsK7LRTJxNUUddOTqDayA@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+On 2012-10-06 1:48 AM, Adrian Chadd wrote:
+> On 5 October 2012 09:51, Sven Eckelmann <sven@narfation.org> wrote:
+> 
+>>> Well, is it a RX chainmask thing, or is it a chip thing?
+>>>
+>>> It's totally possible to have an RX chainmask of say 0x2 or 0x4..
+>>
+>> What are you trying to tell us?
+> 
+> That the check for "rx chainmask == 1? Definitely can't do MRC CCK"
+> implying "rx chainmask != 1? Definitely can do MRC CCK."
+> I think that's the wrong logic. It may be a general chipset problem
+> across some/all AR9300 and later chips that doing MRC CCK with only
+> one RX chain enabled is a problem, or it may be a single-chain NIC
+> problem.
+> 
+> I'm pretty sure we can configure any of the RX antennas; it doesn't
+> have to be "one chain == chain 0."
+> 
+> Anywy. I'll double check that.
+I'm pretty sure it's an issue specific to single-stream chipsets, where
+all MRC functionality was left out (and thus the register access leads
+nowhere).
+I don't think this needs to consider multi-stream chipsets with only one
+enabled chain.
 
-On 12 October 2012 14:28, Arend van Spriel <arend@broadcom.com> wrote:
-> The include file linux/ieee80211.h contains three definitions for
-> the same thing in enum ieee80211_eid due to historic changes:
->
-> /* Information Element IDs */
-> enum ieee80211_eid {
->     :
->     WLAN_EID_WPA = 221,
->     WLAN_EID_GENERIC = 221,
->     WLAN_EID_VENDOR_SPECIFIC = 221,
->     :
-> };
->
-> The standard refers to this as "vendor specific" element so the
-> other two definitions are better not used. This patch changes the
-> wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
->
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: Jouni Malinen <j@w1.fi>
-> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+- Felix
 
-For the ipw2x00 part:
-
-Acked-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-
-Thanks!
-Stanislav.
