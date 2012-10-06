@@ -1,92 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-4.exch022.serverdata.net ([206.225.164.187]:12190
-	"EHLO HUB022-nj-4.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754096Ab2JJRzn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 13:55:43 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] {nl,cfg}80211: peer STA VHT caps
-Date: Wed, 10 Oct 2012 17:55:42 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB3C5@mbx022-e1-nj-10.exch022.domain.local> (sfid-20121010_195547_658046_33492C67)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:63144 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753952Ab2JFQFq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Oct 2012 12:05:46 -0400
+Received: by mail-ie0-f174.google.com with SMTP id k13so6265621iea.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2012 09:05:45 -0700 (PDT)
+Message-ID: <507056D6.1010205@lwfinger.net> (sfid-20121006_180550_203099_4BF90CDB)
+Date: Sat, 06 Oct 2012 11:05:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: =?ISO-8859-1?Q?=22Mikko_V=2E_Viinam=E4ki=22?=
+	<Mikko.Viinamaki@students.turkuamk.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: OpenFWWF for b43
+References: <0C7D424D957547489E16A29D0D15433494C29E7FE8@AMKMS11.ad.turkuamk.fi>
+In-Reply-To: <0C7D424D957547489E16A29D0D15433494C29E7FE8@AMKMS11.ad.turkuamk.fi>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mahesh Palivela <maheshp@posedge.com>
+On 10/06/2012 10:36 AM, Mikko V. Viinamäki wrote:
+> Hi!
+>
+> You might want to include a mention of OpenFWWF (GNU GPL v2 drivers for certain Broadcom 43XX wifis) on this b43 page http://linuxwireless.org/en/users/Drivers/b43
+>
+> http://www.ing.unibs.it/~openfwwf/
+>
+> Mikko--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-To save STAs VHT caps in AP mode
+It is a wiki. You can change it yourself. Whern you do, be explicit about the 
+models that are supported.
 
-Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
----
- include/linux/nl80211.h |    1 +
- include/net/cfg80211.h  |    2 ++
- net/mac80211/cfg.c      |    5 +++++
- net/wireless/nl80211.c  |    4 ++++
- 4 files changed, 12 insertions(+), 0 deletions(-)
+Larry
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 179a0c2..d5ec2e2 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1324,6 +1324,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_BSS_SHORT_SLOT_TIME,
- 
- 	NL80211_ATTR_HT_CAPABILITY,
-+	NL80211_ATTR_VHT_CAPABILITY,
- 
- 	NL80211_ATTR_SUPPORTED_IFTYPES,
- 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 04df773..1f9ca03 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -498,6 +498,7 @@ enum station_parameters_apply_mask {
-  * @plink_action: plink action to take
-  * @plink_state: set the peer link state for a station
-  * @ht_capa: HT capabilities of station
-+ * @vht_capa: VHT capabilities of station
-  * @uapsd_queues: bitmap of queues configured for uapsd. same format
-  *	as the AC bitmap in the QoS info field
-  * @max_sp: max Service Period. same format as the MAX_SP in the
-@@ -517,6 +518,7 @@ struct station_parameters {
- 	u8 plink_action;
- 	u8 plink_state;
- 	struct ieee80211_ht_cap *ht_capa;
-+	struct ieee80211_vht_cap *vht_capa;
- 	u8 uapsd_queues;
- 	u8 max_sp;
- };
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 03216b0..ed27988 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1157,6 +1157,11 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 						  params->ht_capa,
- 						  &sta->sta.ht_cap);
- 
-+	if (params->vht_capa)
-+		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+						    params->vht_capa,
-+						    &sta->sta.vht_cap);
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
- 		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 746f649..2759e96 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3223,6 +3223,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.ht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
- 
-+	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY])
-+		params.vht_capa =
-+			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
-+
- 	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
- 		params.plink_action =
- 		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
+
