@@ -1,99 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:16977
-	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752481Ab2JUKwP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2012 06:52:15 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/5] ath6kl/wmi.c: eliminate possible double free
-Date: Sun, 21 Oct 2012 12:52:06 +0200
-Message-Id: <1350816727-1381-5-git-send-email-Julia.Lawall@lip6.fr> (sfid-20121021_125328_119073_2F25C510)
-In-Reply-To: <1350816727-1381-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1350816727-1381-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from nbd.name ([46.4.11.11]:46405 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755805Ab2JFMlE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Oct 2012 08:41:04 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	johannes@sipsolutions.net, arend@broadcom.com
+Subject: [PATCH v2 3.7 2/2] cfg80211: fix initialization of chan->max_reg_power
+Date: Sat,  6 Oct 2012 14:40:54 +0200
+Message-Id: <1349527254-41080-2-git-send-email-nbd@openwrt.org> (sfid-20121006_144110_985192_FFF48A78)
+In-Reply-To: <1349527254-41080-1-git-send-email-nbd@openwrt.org>
+References: <1349527254-41080-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+A few places touch chan->max_power based on updated tx power rules, but
+forget to do the same to chan->max_reg_power.
 
-This makes two changes.  In ath6kl_wmi_cmd_send, a call to dev_kfree_skb on
-the skb argument is added to the initial sanity check to more completely
-establish the invariant that ath6kl_wmi_cmd_send owns its skb argument.
-Then, in ath6kl_wmi_sync_point, on failure of the call to
-ath6kl_wmi_cmd_send, the clearing of the local skb variable is moved up, so
-that the error-handling code at the end of the function does not free it
-again.
-
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@r@
-identifier f,free,a;
-parameter list[n] ps;
-type T;
-expression e;
-@@
-
-f(ps,T a,...) {
-  ... when any
-      when != a = e
-  if(...) { ... free(a); ... return ...; }
-  ... when any
-}
-
-@@
-identifier r.f,r.free;
-expression x,a;
-expression list[r.n] xs;
-@@
-
-* x = f(xs,a,...);
-  if (...) { ... free(a); ... return ...; }
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@vger.kernel.org
 ---
-Not tested.
+ net/wireless/reg.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/ath/ath6kl/wmi.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index c30ab4b..50f50e4 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1677,8 +1677,10 @@ int ath6kl_wmi_cmd_send(struct wmi *wmi, u8 if_idx, struct sk_buff *skb,
- 	int ret;
- 	u16 info1;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3b8cbbc..bcc7d7e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -908,7 +908,7 @@ static void handle_channel(struct wiphy *wiphy,
+ 			map_regdom_flags(reg_rule->flags) | bw_flags;
+ 		chan->max_antenna_gain = chan->orig_mag =
+ 			(int) MBI_TO_DBI(power_rule->max_antenna_gain);
+-		chan->max_power = chan->orig_mpwr =
++		chan->max_reg_power = chan->max_power = chan->orig_mpwr =
+ 			(int) MBM_TO_DBM(power_rule->max_eirp);
+ 		return;
+ 	}
+@@ -1331,7 +1331,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
  
--	if (WARN_ON(skb == NULL || (if_idx > (wmi->parent_dev->vif_max - 1))))
-+	if (WARN_ON(skb == NULL || if_idx > (wmi->parent_dev->vif_max - 1))) {
-+		dev_kfree_skb(skb);
- 		return -EINVAL;
-+	}
+ 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
+ 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+-	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
++	chan->max_reg_power = chan->max_power =
++		(int) MBM_TO_DBM(power_rule->max_eirp);
+ }
  
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "wmi tx id %d len %d flag %d\n",
- 		   cmd_id, skb->len, sync_flag);
-@@ -2348,12 +2350,12 @@ static int ath6kl_wmi_sync_point(struct wmi *wmi, u8 if_idx)
- 	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SYNCHRONIZE_CMDID,
- 				  NO_SYNC_WMIFLAG);
- 
--	if (ret)
--		goto free_skb;
--
- 	/* cmd buffer sent, we no longer own it */
- 	skb = NULL;
- 
-+	if (ret)
-+		goto free_skb;
-+
- 	for (index = 0; index < num_pri_streams; index++) {
- 
- 		if (WARN_ON(!data_sync_bufs[index].skb))
+ static void handle_band_custom(struct wiphy *wiphy, enum ieee80211_band band,
+-- 
+1.7.9.6 (Apple Git-31.1)
 
