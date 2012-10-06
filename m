@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51314 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759205Ab2JKTdr (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:37224 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751022Ab2JFDVx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 15:33:47 -0400
-Message-ID: <1349984058.13097.17.camel@jlt4.sipsolutions.net> (sfid-20121011_213352_028287_37C4D2FB)
-Subject: Re: [RFC] wireless: cfg80211: add peer-to-peer related definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 11 Oct 2012 21:34:18 +0200
-In-Reply-To: <50770A50.3010305@broadcom.com>
-References: <1349965104-14475-1-git-send-email-arend@broadcom.com>
-	 <1349973674.13097.11.camel@jlt4.sipsolutions.net>
-	 <5077008D.7030203@broadcom.com>
-	 <1349976385.13097.13.camel@jlt4.sipsolutions.net>
-	 <50770A50.3010305@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 5 Oct 2012 23:21:53 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.7 0/4] mwifiex: fix scan and reason code issues
+Date: Fri,  5 Oct 2012 20:21:39 -0700
+Message-Id: <1349493703-1169-1-git-send-email-bzhao@marvell.com> (sfid-20121006_052202_699652_92AA7512)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-10-11 at 20:05 +0200, Arend van Spriel wrote:
+This series fixes a scan problem where driver is not returning
+error code to cfg80211 in scan handler.
 
-> > Ah, fmac, that will be somewhat interesting. What userspace APIs are you
-> > proposing for that case?
+It also makes sure that the correct reason code is reported to
+cfg80211 upon de-authentication or association failure.
 
-> Not sure if I understand the question. I am using wpa_supplicant with 
-> wpa_cli for testing and given its p2p support I assumed there is already 
-> a nl80211 api in place. I am still trying to get a good sense on it. The 
-> P2P code to port does more parsing of P2P stuff and if you mean adding 
-> userspace APIs to avoid just that I would definitely prefer that.
+Amitkumar Karwar (3):
+  mwifiex: reset scan_processing flag in failure cases
+  mwifiex: update cfg80211 with correct reason code when association
+    fails
+  mwifiex: update cfg80211 with correct reason code when connection is
+    lost
 
-Well the APIs that we have in place right now are really basically just
-a conduit and wpa_s does all the operations. I would expect fmac to have
-more offloads (and thus need the parsing), I'd actually be surprised if
-you could work with the existing APIs.
+Bing Zhao (1):
+  mwifiex: return -EBUSY if scan request cannot be honored
 
-johannes
+ drivers/net/wireless/mwifiex/cfg80211.c    |   27 +++++++++++++++----
+ drivers/net/wireless/mwifiex/join.c        |    6 +++-
+ drivers/net/wireless/mwifiex/main.h        |    2 +-
+ drivers/net/wireless/mwifiex/scan.c        |   38 +++++++++++++++------------
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |    4 +-
+ drivers/net/wireless/mwifiex/sta_event.c   |   31 ++++++++++++++--------
+ 6 files changed, 69 insertions(+), 39 deletions(-)
 
