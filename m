@@ -1,116 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:34054 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751457Ab2JRGfv (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:50346 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160Ab2JGH1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2012 02:35:51 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v6 2/6] cfg80211: code rearrangement to avoid forward declarations
-Date: Wed, 17 Oct 2012 23:34:27 -0700
-Message-Id: <1350542071-26498-3-git-send-email-bzhao@marvell.com> (sfid-20121018_083553_649763_09A15B72)
-In-Reply-To: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
-References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
+	Sun, 7 Oct 2012 03:27:07 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hr7so2385503wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 00:27:05 -0700 (PDT)
+Message-ID: <1349594820.3970.6.camel@Route3278> (sfid-20121007_093158_322434_A37D6E11)
+Subject: [PATCH] staging: vt6656: [BUG] out of bound array reference in
+ RFbSetPower.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 07 Oct 2012 08:27:00 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
 
-bss_release() and __cfg80211_unlink_bss() function definitions
-are moved at the begining of the file. They are used in next
-patch in this series.
+Calling RFbSetPower with uCH zero value will cause out of bound array reference.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This causes 64 bit kernels to oops on boot.
+
+Note: Driver does not function on 64 bit kernels and should be
+blacklisted on them.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/wireless/scan.c |   54 +++++++++++++++++++++++++-------------------------
- 1 files changed, 27 insertions(+), 27 deletions(-)
+ drivers/staging/vt6656/rf.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 9730c98..2005096 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -20,6 +20,33 @@
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index 3fd0478..8cf0881 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -769,6 +769,9 @@ BYTE    byPwr = pDevice->byCCKPwr;
+         return TRUE;
+     }
  
- #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
- 
-+static void bss_release(struct kref *ref)
-+{
-+	struct cfg80211_internal_bss *bss;
++	if (uCH == 0)
++		return -EINVAL;
 +
-+	bss = container_of(ref, struct cfg80211_internal_bss, ref);
-+	if (bss->pub.free_priv)
-+		bss->pub.free_priv(&bss->pub);
-+
-+	if (bss->beacon_ies_allocated)
-+		kfree(bss->pub.beacon_ies);
-+	if (bss->proberesp_ies_allocated)
-+		kfree(bss->pub.proberesp_ies);
-+
-+	BUG_ON(atomic_read(&bss->hold));
-+
-+	kfree(bss);
-+}
-+
-+/* must hold dev->bss_lock! */
-+static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
-+				  struct cfg80211_internal_bss *bss)
-+{
-+	list_del_init(&bss->list);
-+	rb_erase(&bss->rbn, &dev->bss_tree);
-+	kref_put(&bss->ref, bss_release);
-+}
-+
- void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
- {
- 	struct cfg80211_scan_request *request;
-@@ -158,24 +185,6 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 	return 0;
- }
- 
--static void bss_release(struct kref *ref)
--{
--	struct cfg80211_internal_bss *bss;
--
--	bss = container_of(ref, struct cfg80211_internal_bss, ref);
--	if (bss->pub.free_priv)
--		bss->pub.free_priv(&bss->pub);
--
--	if (bss->beacon_ies_allocated)
--		kfree(bss->pub.beacon_ies);
--	if (bss->proberesp_ies_allocated)
--		kfree(bss->pub.proberesp_ies);
--
--	BUG_ON(atomic_read(&bss->hold));
--
--	kfree(bss);
--}
--
- /* must hold dev->bss_lock! */
- void cfg80211_bss_age(struct cfg80211_registered_device *dev,
-                       unsigned long age_secs)
-@@ -189,15 +198,6 @@ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
- }
- 
- /* must hold dev->bss_lock! */
--static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
--				  struct cfg80211_internal_bss *bss)
--{
--	list_del_init(&bss->list);
--	rb_erase(&bss->rbn, &dev->bss_tree);
--	kref_put(&bss->ref, bss_release);
--}
--
--/* must hold dev->bss_lock! */
- void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
- {
- 	struct cfg80211_internal_bss *bss, *tmp;
+     switch (uRATE) {
+     case RATE_1M:
+     case RATE_2M:
 -- 
-1.7.0.4
+1.7.10.4
+
 
