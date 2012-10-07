@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41168 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462Ab2J3IdC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 04:33:02 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TT7Ft-00078D-DB
-	for linux-wireless@vger.kernel.org; Tue, 30 Oct 2012 09:33:01 +0100
-Message-ID: <1351586015.10097.7.camel@jlt4.sipsolutions.net> (sfid-20121030_093307_847670_DA7B8C57)
-Subject: Re: [PATCH] mac80211: use a counter for remain-on-channel cookie
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from plane.gmane.org ([80.91.229.3]:59744 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750841Ab2JGJe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Oct 2012 05:34:59 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TKnGJ-0005xi-MM
+	for linux-wireless@vger.kernel.org; Sun, 07 Oct 2012 11:35:03 +0200
+Received: from adsl-ull-140-3.48-151.net24.it ([151.48.3.140])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 11:35:03 +0200
+Received: from arikuu by adsl-ull-140-3.48-151.net24.it with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 11:35:03 +0200
 To: linux-wireless@vger.kernel.org
-Date: Tue, 30 Oct 2012 09:33:35 +0100
-In-Reply-To: <1351261056-8284-1-git-send-email-johannes@sipsolutions.net> (sfid-20121026_161712_193279_E9BF90FC)
-References: <1351261056-8284-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121026_161712_193279_E9BF90FC)
-Content-Type: text/plain; charset="UTF-8"
+From: Ari Kuusava <arikuu@gmail.com>
+Subject: Re: [Kernel Bug] 3.6, wpasupplicant 1.0, broadcom-sta 6.20.55.19
+Date: Sun, 7 Oct 2012 09:26:53 +0000 (UTC)
+Message-ID: <loom.20121007T111537-642@post.gmane.org> (sfid-20121007_113502_039183_D0922195)
+References: <CAHbMyCb7S1faT_GH8KBag0SVX+7uhC-4qLJOR-DhStpzSMNDqQ@mail.gmail.com> <20121001113456.GA31313@tuxdriver.com> <CAHbMyCafN+08VCvgzY9coA+AO0aJzvxT3xRzUyQi75_5ij04xw@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-10-26 at 16:17 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Instead of using the pointer which can be re-used
-> fairly quickly due to allocator patterns and then
-> makes debugging difficult, maintain a counter and
-> use its value. Since it's a 64-bit value it can't
-> really wrap, but catch that case anyway since it
-> most likely points to a bug somewhere.
-> 
+I am on Gentoo and using wpasupplicant with Broadcom BCM4727 802.11 Hybrid 
+Wireless Controller 5.100.82.112.
+Everything works perfect in 3,5,4 
+Upgrading to 3,6,0 stable gives same bug as to you.
+Only thing chanced is kernel.
+So I believe that's kernel busines
 
-Applied.
+Have a nice dayservicemen
 
-johannes
+
+
 
