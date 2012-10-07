@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40632 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188Ab2JBLTs (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:55784 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752012Ab2JGHsi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2012 07:19:48 -0400
-Message-ID: <1349176819.10698.16.camel@jlt4.sipsolutions.net> (sfid-20121002_131954_449864_B559F932)
-Subject: Re: How do I get mac80211 debugfs?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kevin Cruz <skate_ops@yahoo.com>
-Cc: Intel Wireless <ilw@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 02 Oct 2012 13:20:19 +0200
-In-Reply-To: <1349159890.10698.2.camel@jlt4.sipsolutions.net> (sfid-20121002_083802_746542_57596E7B)
-References: <1348086305.81224.YahooMailNeo@web164004.mail.gq1.yahoo.com>
-	 <20120928121917.GF5368@mwanda>
-	 <1348870515.1973.YahooMailNeo@web164005.mail.gq1.yahoo.com>
-	 <20120929072527.GA13767@mwanda>
-	 <1349102641.41622.YahooMailNeo@web164005.mail.gq1.yahoo.com>
-	 <20121001150913.GC13767@mwanda>
-	 <1349109750.55372.YahooMailNeo@web164005.mail.gq1.yahoo.com>
-	 (sfid-20121001_184314_573998_F50474BE) <1349119899.10330.53.camel@jlt4.sipsolutions.net>
-	 <1349132818.58475.YahooMailNeo@web164006.mail.gq1.yahoo.com>
-	 <1349159890.10698.2.camel@jlt4.sipsolutions.net>
-	 (sfid-20121002_083802_746542_57596E7B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 7 Oct 2012 03:48:38 -0400
+Received: by mail-we0-f174.google.com with SMTP id t9so1933721wey.19
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 00:48:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1349043174-5371-1-git-send-email-hauke@hauke-m.de>
+References: <1349043174-5371-1-git-send-email-hauke@hauke-m.de>
+Date: Sun, 7 Oct 2012 09:48:36 +0200
+Message-ID: <CACna6rw73feYKY7=5MyNjBeYjaC=Q+JmTeR7nfkmh9XxfKeJjw@mail.gmail.com> (sfid-20121007_094841_434295_5B7B5697)
+Subject: Re: [PATCH] bcma: do not initialize deactivated PCIe cores
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-10-02 at 08:38 +0200, Johannes Berg wrote:
-> Hi Kevin,
-> 
-> > So I tried that but all I got back was:
-> > 
-> >     cat: /sys/kernel/debug/ieee80211/phy*/queues: No such file or directory
-> > 
-> > so I'm assuming it's because I must not have mac80211 debugfs.  So how
-> > do I get it?
-> 
-> First, make sure it's mounted, check "mount" and if not mount it:
-> 
-> sudo mount -t debugfs debugfs /sys/kernel/debug
-> 
-> If that doesn't work you don't have it enabled in the kernel config,
-> check for CONFIG_DEBUG_FS. If you do have it, but not mac80211's files,
-> check for CONFIG_MAC80211_DEBUGFS.
+2012/10/1 Hauke Mehrtens <hauke@hauke-m.de>:
+> @@ -396,6 +391,11 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
+>
+>         bcma_info(bus, "PCIEcore in host mode found\n");
+>
+> +       if (bus->sprom.boardflags_lo & BCMA_CORE_PCI_BFL_NOPCI) {
+> +               bcma_info(bus, "This PCIE core is disabled and not working\n");
+> +               return;
+> +       }
+> +
 
-Oh also, if tracing already works, that'd be sufficient. No need to
-enable debugfs just to confirm the issue, tracing would let me confirm
-it as well. I just thought debugfs would let me confirm the issue first
-before going to the trouble of enabling tracing.
+I wonder if this bit is also valid for client mode PCIe core. Maybe
+this check should be put directly in bcma_core_pci_init?
 
-johannes
-
+-- 
+Rafał
