@@ -1,69 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1768 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757542Ab2JDVKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 17:10:31 -0400
-Message-ID: <506DFB31.8080208@broadcom.com> (sfid-20121004_231036_771925_31D3CC54)
-Date: Thu, 4 Oct 2012 23:10:09 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57327 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752842Ab2JHTAg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2012 15:00:36 -0400
+Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>, <johannes@sipsolutions.net>,
+	<arend@broadcom.com>
+Date: Mon, 8 Oct 2012 12:01:56 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v2 3.7 2/2] cfg80211: fix initialization of
+ chan->max_reg_power
+Message-ID: <20121008190156.GK3354@lenteja.do-not-panic.com> (sfid-20121008_210040_723181_334FDFFB)
+References: <1349527254-41080-1-git-send-email-nbd@openwrt.org>
+ <1349527254-41080-2-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [patch 2/3] brcmfmac: fix end of loop check (signedness
- bug)
-References: <20121003060631.GB3802@elgon.mountain>
- <506DB82B.9010106@broadcom.com> <20121004184212.GO13767@mwanda>
-In-Reply-To: <20121004184212.GO13767@mwanda>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1349527254-41080-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2012 08:42 PM, Dan Carpenter wrote:
-> On Thu, Oct 04, 2012 at 06:24:11PM +0200, Arend van Spriel wrote:
->> On 10/03/2012 08:06 AM, Dan Carpenter wrote:
->>> The problem here is that we loop until "remained_buf_len" is less than
->>> zero, but since it is unsigned, it never is.
->>>
->>> "remained_buf_len" has to be large enough to hold the value from
->>> "mgmt_ie_buf_len".  That variable is type u32, but it only holds small
->>> values so I have changed to both variables to int.
->>>
->>> Also I removed the bogus initialization from "mgmt_ie_buf_len" so that
->>> GCC can detect if it is used unitialized.  I moved the declaration of
->>> "remained_buf_len" closer to where it is used so it's easier to read.
->>>
->>
->> Hi Dan,
->>
->> Good catch. I applied the patch internally on our HEAD and had it
->> reviewed. We did not take moving the declaration as we prefer to
->> have all variables at the top of the function. It makes it easier to
->> find what is declared in a function and whether exceeding the local
->> variable limit mentioned in Chapter 6. Functions of the CodingStyle
->> (we are exceeding it already ;-) ).
->>
->> Are you ok with us submitting it? It would be sent out for 3.8 or do
->> you prefer to have it fixed in 3.7?
->
-> Uh, I don't know how hard it is to trigger this bug.  If it's
-> impossible to trigger then we could wait until 3.8 otherwise I
-> would tend to merge it into 3.7 given that we haven't hit -rc1 yet.
+On Sat, Oct 06, 2012 at 02:40:54PM +0200, Felix Fietkau wrote:
+> A few places touch chan->max_power based on updated tx power rules, but
+> forget to do the same to chan->max_reg_power.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Cc: stable@vger.kernel.org
+> ---
+>  net/wireless/reg.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 3b8cbbc..bcc7d7e 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -908,7 +908,7 @@ static void handle_channel(struct wiphy *wiphy,
+>  			map_regdom_flags(reg_rule->flags) | bw_flags;
+>  		chan->max_antenna_gain = chan->orig_mag =
+>  			(int) MBI_TO_DBI(power_rule->max_antenna_gain);
+> -		chan->max_power = chan->orig_mpwr =
+> +		chan->max_reg_power = chan->max_power = chan->orig_mpwr =
+>  			(int) MBM_TO_DBM(power_rule->max_eirp);
+>  		return;
+>  	}
+> @@ -1331,7 +1331,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
+>  
+>  	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
+>  	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+> -	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
+> +	chan->max_reg_power = chan->max_power =
+> +		(int) MBM_TO_DBM(power_rule->max_eirp);
 
-Hi Dan,
+This looks good to me, good catch! The commit log could use some love,
+given that this is a stable patch it is worthy to describe the
+consequences of not applying this patch. Can you describe what you
+observed that makes this a critical patch? The only piece of code
+that uses max_reg_power in cfg80211, mac80211 or drivers is on
+net/wireless/reg.c and drivers/net/wireless/mwifiex/cfg80211.c.
+In either case the issue the code you are patching is for code
+that deals with drivers that have a custom regulatory domain
+in which orig_mpwr would have been initialized to a non-zero value
+upon registration. In such cases we could only potenially run into
+an issue on this piece of code on handle_channel():
 
-I don't know either, but to safe myself the trouble I will post it to 
-John for 3.7. Thanks.
+        chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
+        if (chan->orig_mpwr) {
+                /*
+                 * Devices that have their own custom regulatory domain
+                 * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
+                 * passed country IE power settings.
+                 */
+                if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+                    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
+                    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
+                        chan->max_power = chan->max_reg_power;
+                else
+                        chan->max_power = min(chan->orig_mpwr,
+                                              chan->max_reg_power);
+        } else
+                chan->max_power = chan->max_reg_power;
 
-Gr. AvS
+The issue would happen if orig_mpwr is non zero (custom) and
+then max_reg_power would not have been initialized. This runs
+when you change a regulatory domain on a card with a custom
+regulatory domain and this would be an issue if max_reg_power
+would not be initialized. This however does not happen due to
+the first line above.
 
+So I agree with this patch but do not see the requirement for
+it to go in as a stable fix to older stable kernels.
 
+  Luis
