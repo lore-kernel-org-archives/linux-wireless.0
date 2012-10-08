@@ -1,57 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:39873 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048Ab2JNXiQ (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:57011 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751875Ab2JHWZa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Oct 2012 19:38:16 -0400
-Received: by mail-ia0-f174.google.com with SMTP id y32so3274580iag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Oct 2012 16:38:16 -0700 (PDT)
-Message-ID: <507B4CE5.2020104@lwfinger.net> (sfid-20121015_013822_235386_8DB1CAA6)
-Date: Sun, 14 Oct 2012 18:38:13 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 8 Oct 2012 18:25:30 -0400
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org, Joshua.Roys@gtri.gatech.edu
-Subject: Re: [RFC] rtlwifi: fix in_ep = in_ep_num mishap in _rtl_usb_init_rx
-References: <201210142213.56197.chunkeey@googlemail.com>
-In-Reply-To: <201210142213.56197.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1349400892-25315-1-git-send-email-xiong@qca.qualcomm.com>
+References: <1349400892-25315-1-git-send-email-xiong@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 8 Oct 2012 15:25:08 -0700
+Message-ID: <CAB=NE6VotAu-cugsn4==3TPX0OGPEFtdn1J+5+Rd_YfLcg9YDQ@mail.gmail.com> (sfid-20121009_002547_421889_B6A459FE)
+Subject: Re: [PATCH] compat-drivers: update ethernet driver alx in crap dir
+To: xiong@qca.qualcomm.com
+Cc: mcgrof@kernel.org, backports@vger.kernel.org,
+	nic-devel@qualcomm.com, Ren Cloud <cjren@qca.qualcomm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	qca_vkondrat@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/14/2012 03:13 PM, Christian Lamparter wrote:
-> in_ep and in_ep_num should not be the same as
-> a device can have a different in_ep than "1".
+On Thu, Oct 4, 2012 at 6:34 PM,  <xiong@qca.qualcomm.com> wrote:
+> From: xiong <xiong@qca.qualcomm.com>
 >
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
-> Note:
-> This patch is related to:
-> "[PATCH 3/9] rtlwifi: fix the selection of the bulk in endpoint"
+> 1. support new device id (0x10A0/0x10A1).
+> 2. add DEBUG_FS interface for diag/swoi functions.
 >
-> However, it would be much better if we can get rid of
-> in_ep_num and define an in_ep array so the rtlwifi
-> frameworks knows which EPs to scan. But this could be
-> "too much" of an overkill, so another solution would
-> be to just have a single in_ep.
->
-> Larry, do you know of any hardware which has two in endpoints?
+> Signed-off-by: Ren Cloud <cjren@qca.qualcomm.com>
+> Signed-off-by: xiong <xiong@qca.qualcomm.com>
 
-The RTL8188CU has the following:
+Xiong,
 
-Bus 004 Device 002: ID 0bda:8723 Realtek Semiconductor Corp.
-         bEndpointAddress     0x81  EP 1 IN
-         bEndpointAddress     0x02  EP 2 OUT
-         bEndpointAddress     0x82  EP 2 IN
-         bEndpointAddress     0x03  EP 3 OUT
-         bEndpointAddress     0x83  EP 3 IN
-         bEndpointAddress     0x03  EP 3 OUT
-         bEndpointAddress     0x83  EP 3 IN
-         bEndpointAddress     0x03  EP 3 OUT
-         bEndpointAddress     0x83  EP 3 IN
+ -- Vladimir, just a heads up -- this applies to you as well for the
+802.11ad wil6210 driver
+ -- Greg, some review on your preference on this would be appreciated
 
-My SU device has the same layout. It seems that only EP 1 is used exclusively 
-for input operations.
+The original alx crap patch was added into compat-wireless on the
+linux-3.5.y branch. Its been two kernel releases and alx is not yet
+upstream and users can only get alx via compat-drivers (technically
+compat-wireless as that was pre v3.7). v3.7 would be the *third*
+release in which this would happen... This is unfair to users and
+consumers of the Linux kernel and derails expectations and our
+arrangements for Linux kernel development. I realize that the goal was
+to get alx upstream ASAP but regardless of what the reason is, its not
+yet upstream. If you cannot work on alx on a timely manner to get
+upstream then please submit the driver to the staging area of the
+Linux kernel that Greg maintains so that other developers who may be
+able to help can submit patches to help you. Under staging your driver
+should be accepted so long as it compiles.
 
-Larry
+I will update the documentation for crap/ patches for compat-drivers
+to make it clear now that crap/ patches can be used for adding
+components / pieces of code not yet ready for upstream but as far as
+full new drivers are concerned you only get one kernel release cycle
+for it to linger on crap/ under compat-drivers, if you haven't
+addressed upstreaming yet then it should go to drivers/staging/. That
+is crap/ should only be used as a shortcut because users exist that
+can use the driver but you *do* have a team properly resourced to
+address upstreaming properly in a timely manner.
 
+Linus should soon release v3.7-rc1 and new drivers are allowed to be
+merged during the RC cycles, as such my recommendation is instead of
+getting users to consume alx only through compat-drivers you now
+submit alx into staging to Greg in hopes that we can get it into
+v3.7-rcX some time, and at that time we can remove the crap/ patch
+from compat-drivers.
+
+Users should be able to consume new drivers through kernel.org and
+compat-drivers should only provide
+the framework for backporting and also categorizing quick fixes. It
+should not be used for ongoing
+updates for new drivers that users need.
+
+We must draw the line with crap/ patches somewhere.
+
+I'll then take this patch for now but do expect you to get alx into
+either staging or proper upstream for the v3.7-rcX. I welcome feedback
+from other folks on the proposed arrangement for crap/ patches for
+compat-drivers.
+
+https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/additional-patches#crap_patches
+
+  Luis
