@@ -1,89 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:39368 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964786Ab2JEU6V (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:42094 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202Ab2JHJ2K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 16:58:21 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Joe Perches <joe@perches.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 2/2] mwifiex: Using %*phD instead of print_hex_dump_bytes
-Date: Fri,  5 Oct 2012 13:57:49 -0700
-Message-Id: <1349470669-363-2-git-send-email-bzhao@marvell.com> (sfid-20121005_225824_362657_588A0351)
-In-Reply-To: <1349470669-363-1-git-send-email-bzhao@marvell.com>
-References: <1349470669-363-1-git-send-email-bzhao@marvell.com>
+	Mon, 8 Oct 2012 05:28:10 -0400
+Received: by mail-ie0-f174.google.com with SMTP id k13so8587895iea.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2012 02:28:09 -0700 (PDT)
+MIME-Version: 1.0
+Date: Mon, 8 Oct 2012 11:28:06 +0200
+Message-ID: <CAHc5FiXv=aeKKwpz2RP3ho+d-eggxfGuECk1deyNWNdkT8r8gg@mail.gmail.com> (sfid-20121008_112815_354772_77BD8D68)
+Subject: [PATCH] wireless-regdb: Update regulations for Ukraine
+From: Mykyta Iziumtsev <mykyta.iziumtsev@gmail.com>
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Andrew Bordunov <andrew.bordunov@gmail.com>,
+	Pavel Chernyshev <pchernyshev@gmail.com>
+Content-Type: text/plain; charset=KOI8-U
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+Add 5GHz band and mark 2.4GHz and 5GHz as NO-OUTDOOR according to
+"Р╕шення про затвердження Перел╕ку рад╕оелектронних засоб╕в
+та випром╕нювальних пристро╖в, для експлуатац╕╖ яких не потр╕бн╕
+дозволи на експлуатац╕ю" from 27 May 2010.
 
-Make output more readable and remove unneeded function call.
+Ref: http://www.ucrf.gov.ua/uk/doc/nkrz/1196068874
 
-...
-mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
-last_cmd_id: 00000000: 16 00 cd 00 83 00 df 00 28 00 ........(.
-...
+Update rules as follows as lowest common denominator:
+        (2400 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
+        (5150 - 5350 @ 40), (N/A, 20), NO-OUTDOOR
 
-would be changed to:
+All WiFi equipment can be classified as either Client, Master,
+or Access Terminal. Client maps to STA or P2P-Client,
+Master -- to AP, IBSS/Mesh node or P2P-GO, and Access Terminal
+can be either Client or Master, but there is additional requirement
+that it should be deactivated on request from authorities.
+But at the same time Access Terminal can be used outdoor.
+For Master device there is requirement for indoor-only usage.
+Further, WiFi equipment is divided by 802.11n capability criteria.
 
-...
-mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
-mwifiex_sdio mmc1:0001:1: last_cmd_id: 16 00 cd 00 83 00 df 00 28 00
-...
+802.11bg/802.11a Client and Master
+2400-2483,5 100 mW for DSSS/OFDM and 500 mW for FHSS
+5150-5350 200 mW
 
-Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+802.11bg/80211a Access Terminal
+2400-2483,5 100 mW
+5150-5350 200 mW
+5470-5670 1 W
+5725-5850 2 W
+
+802.11bgn/802.11an Client, Master or Access Terminal
+2400-2483,5 100 mW
+5150-5350 100 mW
+5470-5670 100 mW
+5725-5850 100 mW
+
+Signed-off-by: Mykyta Iziumtsev <mykyta.iziumtsev@gmail.com>
+Signed-off-by: Pavel Chernyshev <pchernyshev@gmail.com>
+Signed-off-by: Andrew Bordunov <andrew.bordunov@gmail.com>
 ---
-v2: use (int)sizeof(cool_var) as the buffer length
-    (Andy Shevchenko)
+ db.txt |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/mwifiex/cmdevt.c |   24 ++++++++++++------------
- 1 files changed, 12 insertions(+), 12 deletions(-)
+diff --git a/db.txt b/db.txt
+index 4c54543..08c6c89 100644
+--- a/db.txt
++++ b/db.txt
+@@ -653,7 +653,8 @@ country TR: DFS-ETSI
+ 	(5250 - 5330 @ 20), (N/A, 20), DFS
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 6627f9c..da6c491 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -917,24 +917,24 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
- 
- 		dev_err(adapter->dev, "last_cmd_index = %d\n",
- 			adapter->dbg.last_cmd_index);
--		print_hex_dump_bytes("last_cmd_id: ", DUMP_PREFIX_OFFSET,
--				     adapter->dbg.last_cmd_id,
--				     sizeof(adapter->dbg.last_cmd_id));
--		print_hex_dump_bytes("last_cmd_act: ", DUMP_PREFIX_OFFSET,
--				     adapter->dbg.last_cmd_act,
--				     sizeof(adapter->dbg.last_cmd_act));
-+		dev_err(adapter->dev, "last_cmd_id: %*ph\n",
-+			(int)sizeof(adapter->dbg.last_cmd_id),
-+			adapter->dbg.last_cmd_id);
-+		dev_err(adapter->dev, "last_cmd_act: %*ph\n",
-+			(int)sizeof(adapter->dbg.last_cmd_act),
-+			adapter->dbg.last_cmd_act);
- 
- 		dev_err(adapter->dev, "last_cmd_resp_index = %d\n",
- 			adapter->dbg.last_cmd_resp_index);
--		print_hex_dump_bytes("last_cmd_resp_id: ", DUMP_PREFIX_OFFSET,
--				     adapter->dbg.last_cmd_resp_id,
--				     sizeof(adapter->dbg.last_cmd_resp_id));
-+		dev_err(adapter->dev, "last_cmd_resp_id: %*ph\n",
-+			(int)sizeof(adapter->dbg.last_cmd_resp_id),
-+			adapter->dbg.last_cmd_resp_id);
- 
- 		dev_err(adapter->dev, "last_event_index = %d\n",
- 			adapter->dbg.last_event_index);
--		print_hex_dump_bytes("last_event: ", DUMP_PREFIX_OFFSET,
--				     adapter->dbg.last_event,
--				     sizeof(adapter->dbg.last_event));
-+		dev_err(adapter->dev, "last_event: %*ph\n",
-+			(int)sizeof(adapter->dbg.last_event),
-+			adapter->dbg.last_event);
- 
- 		dev_err(adapter->dev, "data_sent=%d cmd_sent=%d\n",
- 			adapter->data_sent, adapter->cmd_sent);
+ country UA:
+-	(2402 - 2482 @ 40), (N/A, 20)
++	(2400 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
++	(5150 - 5350 @ 40), (N/A, 20), NO-OUTDOOR
+
+ country US: DFS-FCC
+ 	(2402 - 2472 @ 40), (3, 27)
 -- 
-1.7.0.2
-
+1.7.10
