@@ -1,122 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-1.exch022.serverdata.net ([206.225.164.184]:63201
-	"EHLO HUB022-nj-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752449Ab2JKIEx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 04:04:53 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] {nl,cfg}80211: Peer STA VHT caps
-Date: Thu, 11 Oct 2012 08:04:52 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB506@mbx022-e1-nj-10.exch022.domain.local> (sfid-20121011_100500_056512_14EB415F)
-Content-Type: text/plain; charset="us-ascii"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1336 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200Ab2JHQBe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2012 12:01:34 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 4/4] ath9k: Advertize beacon_int_infra_match
+Date: Mon, 8 Oct 2012 21:30:54 +0530
+Message-ID: <1349712054-3963-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121008_180137_008028_860F085D)
+In-Reply-To: <1349712054-3963-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1349712054-3963-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mahesh Palivela <maheshp@posedge.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-To save STAs VHT caps in AP mode
+Currently ath9k need to have beacon interval matched
+between STA mode and beaconing mode. Advertize this
+through interface combinations.
 
-Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-Patch version 2 to take care of Jouni Malinen's comment (NL attrib at wrong place)
-Patch version 3 to take care of Johannes comment (NL attrib kernel documentation)
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
- include/linux/nl80211.h |    6 ++++++
- include/net/cfg80211.h  |    2 ++
- net/mac80211/cfg.c      |    5 +++++
- net/wireless/nl80211.c  |    5 +++++
- 4 files changed, 18 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 179a0c2..71ab23b 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1276,6 +1276,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SAE_DATA: SAE elements in Authentication frames. This starts
-  *	with the Authentication transaction sequence number field.
-  *
-+ * @NL80211_ATTR_VHT_CAPABILITY: VHT Capability information element (from
-+ *	association request when used with NL80211_CMD_NEW_STATION)
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1535,6 +1538,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SAE_DATA,
- 
-+	NL80211_ATTR_VHT_CAPABILITY,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1578,6 +1583,7 @@ enum nl80211_attrs {
- #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
- #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
- #define NL80211_HT_CAPABILITY_LEN		26
-+#define NL80211_VHT_CAPABILITY_LEN		12
- 
- #define NL80211_MAX_NR_CIPHER_SUITES		5
- #define NL80211_MAX_NR_AKM_SUITES		2
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 04df773..1f9ca03 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -498,6 +498,7 @@ enum station_parameters_apply_mask {
-  * @plink_action: plink action to take
-  * @plink_state: set the peer link state for a station
-  * @ht_capa: HT capabilities of station
-+ * @vht_capa: VHT capabilities of station
-  * @uapsd_queues: bitmap of queues configured for uapsd. same format
-  *	as the AC bitmap in the QoS info field
-  * @max_sp: max Service Period. same format as the MAX_SP in the
-@@ -517,6 +518,7 @@ struct station_parameters {
- 	u8 plink_action;
- 	u8 plink_state;
- 	struct ieee80211_ht_cap *ht_capa;
-+	struct ieee80211_vht_cap *vht_capa;
- 	u8 uapsd_queues;
- 	u8 max_sp;
- };
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 03216b0..ed27988 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1157,6 +1157,11 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 						  params->ht_capa,
- 						  &sta->sta.ht_cap);
- 
-+	if (params->vht_capa)
-+		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+						    params->vht_capa,
-+						    &sta->sta.vht_cap);
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
- 		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 746f649..8303a2a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -355,6 +355,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_WDEV] = { .type = NLA_U64 },
- 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_SAE_DATA] = { .type = NLA_BINARY, },
-+	[NL80211_ATTR_VHT_CAPABILITY] = { .len = NL80211_VHT_CAPABILITY_LEN },
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index fad3ccd..546bae9 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -687,6 +687,7 @@ static const struct ieee80211_iface_combination if_comb = {
+ 	.n_limits = ARRAY_SIZE(if_limits),
+ 	.max_interfaces = 2048,
+ 	.num_different_channels = 1,
++	.beacon_int_infra_match = true,
  };
  
- /* policy for the key attributes */
-@@ -3223,6 +3224,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.ht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
- 
-+	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY])
-+		params.vht_capa =
-+			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
-+
- 	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
- 		params.plink_action =
- 		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+-- 
+1.7.0.4
+
