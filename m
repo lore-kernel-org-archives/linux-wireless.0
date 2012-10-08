@@ -1,59 +1,559 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62581 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752803Ab2JYNEI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 09:04:08 -0400
-Date: Thu, 25 Oct 2012 15:03:32 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	David Herrmann <dh.herrmann@googlemail.com>,
-	Stephen Boyd <bebarino@gmail.com>
-Subject: Re: [PATCH] rt2x00: usb: fix reset resume
-Message-ID: <20121025130332.GA5202@redhat.com> (sfid-20121025_150411_938122_37331224)
-References: <20121016123409.GA2274@redhat.com>
- <20121024183525.GA4204@redhat.com>
- <20121024214455.GA12728@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121024214455.GA12728@tuxdriver.com>
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:58366 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754493Ab2JHSMS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2012 14:12:18 -0400
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [RFC] mac80211: make powersave independent of interface type
+Date: Mon,  8 Oct 2012 11:07:49 -0700
+Message-Id: <1349719669-11503-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121008_201223_647845_64B06C94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 24, 2012 at 05:44:55PM -0400, John W. Linville wrote:
-> On Wed, Oct 24, 2012 at 08:35:26PM +0200, Stanislaw Gruszka wrote:
-> > On Tue, Oct 16, 2012 at 02:34:12PM +0200, Stanislaw Gruszka wrote:
-> > > Patch fixes warnings like below happened on resume:
-> > > 
-> > > WARNING: at net/mac80211/driver-ops.h:12 check_sdata_in_driver+0x32/0x34()
-> > > 
-> > > Problem is that in __ieee80211_susped() we remove sdata (i.e wlan0
-> > > interface) and then during resume we call usb_unbind_interface() ->
-> > > ieee80211_unregister_hw() with sdata removed.
-> > > 
-> > > Patch fixes problem by adding .reset_resume calback, hence we do not
-> > > unbind usb device on resume. This callback can be the same as normal
-> > > .resume callback, sice we do all needed initalization during interface
-> > > start, which is performed on resume [ ieee80211_resume() ->
-> > > ieee80211_reconfig() -> rt2x00mac_start() -> rt2x00lib_start ].
-> > > 
-> > > Resolves:
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=48041
-> > > 
-> > > Reported-by: David Herrmann <dh.herrmann@googlemail.com>
-> > > Reported-and-tested-by: Stephen Boyd <bebarino@gmail.com>
-> > > Cc: stable@vger.kernel.org
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > 
-> > NACK for this patch, Randomly I'm able to reproduce strange crashes
-> > when suspending and transiting data, which seem to not happen without
-> > this patch. Until I'll figure this out, let's not apply the patch.
-> 
-> Of course, I just applied this today...any chance for a fixup?
+This patch prepares mac80211 for a later implementation of mesh or ad-hoc
+powersave.
+The structures related to powersave (buffer, TIM map, counters) are moved
+from the AP-specific interface structure to a generic structure that can
+be embedded into any interface type.
+The functions related to powersave are prepared to allow easy extension
+with different interface types. For example with:
 
-This problem is tricky, I'm not expecting fix soon. However I can not
-reproduce it on 3.7 and can on 3.6. So I think patch can go to 3.7 .
-Could you remove cc stable from it? If not, I'll NACK backported patch,
-when GregKH will send information about the backport.
++ } else if (sta->sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
++			ps = &sdata->u.mesh.ps;
 
-Stanislaw 
+
+Some references to the AP's beacon structure are removed where they were
+obviously not used. Other occurrences are in ieee80211_get_buffered_bc
+where I am not sure if they make any sense or not. Should they be removed
+too?
+
+Does it make any sense to test for NL80211_IFTYPE_AP and
+NL80211_IFTYPE_AP_VLAN everytime?
+
+The patch compiles without warning and has been briefly tested as AP
+interface with one client in PS mode.
+
+
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ net/mac80211/debugfs_netdev.c |    6 +--
+ net/mac80211/ieee80211_i.h    |   20 +++++----
+ net/mac80211/iface.c          |    6 +--
+ net/mac80211/rx.c             |   21 ++++++---
+ net/mac80211/sta_info.c       |   45 ++++++++++++++-----
+ net/mac80211/tx.c             |  100 ++++++++++++++++++++++++-----------------
+ 6 files changed, 124 insertions(+), 74 deletions(-)
+
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 6d5aec9..c83b8ca 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -395,14 +395,14 @@ __IEEE80211_IF_FILE_W(uapsd_max_sp_len);
+ 
+ /* AP attributes */
+ IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+-IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+-IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
++IEEE80211_IF_FILE(num_sta_ps, u.ap.ps.num_sta_ps, ATOMIC);
++IEEE80211_IF_FILE(dtim_count, u.ap.ps.dtim_count, DEC);
+ 
+ static ssize_t ieee80211_if_fmt_num_buffered_multicast(
+ 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+ {
+ 	return scnprintf(buf, buflen, "%u\n",
+-			 skb_queue_len(&sdata->u.ap.ps_bc_buf));
++			 skb_queue_len(&sdata->u.ap.ps.bc_buf));
+ }
+ __IEEE80211_IF_FILE(num_buffered_multicast, NULL);
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8c80455..c430302 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -280,23 +280,27 @@ struct probe_resp {
+ 	u8 data[0];
+ };
+ 
+-struct ieee80211_if_ap {
+-	struct beacon_data __rcu *beacon;
+-	struct probe_resp __rcu *probe_resp;
+-
+-	struct list_head vlans;
+-
++struct ps_data {
+ 	/* yes, this looks ugly, but guarantees that we can later use
+ 	 * bitmap_empty :)
+ 	 * NB: don't touch this bitmap, use sta_info_{set,clear}_tim_bit */
+ 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+-	struct sk_buff_head ps_bc_buf;
++	struct sk_buff_head bc_buf;
+ 	atomic_t num_sta_ps; /* number of stations in PS mode */
+-	atomic_t num_mcast_sta; /* number of stations receiving multicast */
+ 	int dtim_count;
+ 	bool dtim_bc_mc;
+ };
+ 
++struct ieee80211_if_ap {
++	struct beacon_data __rcu *beacon;
++	struct probe_resp __rcu *probe_resp;
++
++	struct list_head vlans;
++
++	struct ps_data ps;
++	atomic_t num_mcast_sta; /* number of stations receiving multicast */
++};
++
+ struct ieee80211_if_wds {
+ 	struct sta_info *sta;
+ 	u8 remote_addr[ETH_ALEN];
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6f8a73c..f41b5cf 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -755,8 +755,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		WARN_ON(!list_empty(&sdata->u.ap.vlans));
+ 
+ 		/* free all potentially still buffered bcast frames */
+-		local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps_bc_buf);
+-		skb_queue_purge(&sdata->u.ap.ps_bc_buf);
++		local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
++		skb_queue_purge(&sdata->u.ap.ps.bc_buf);
+ 	} else if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		ieee80211_mgd_stop(sdata);
+ 	}
+@@ -1157,7 +1157,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 		sdata->vif.p2p = true;
+ 		/* fall through */
+ 	case NL80211_IFTYPE_AP:
+-		skb_queue_head_init(&sdata->u.ap.ps_bc_buf);
++		skb_queue_head_init(&sdata->u.ap.ps.bc_buf);
+ 		INIT_LIST_HEAD(&sdata->u.ap.vlans);
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 61c621e..0573b1b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1141,12 +1141,19 @@ ieee80211_rx_h_check_more_data(struct ieee80211_rx_data *rx)
+ 	return RX_CONTINUE;
+ }
+ 
+-static void ap_sta_ps_start(struct sta_info *sta)
++static void sta_ps_start(struct sta_info *sta)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
++	struct ps_data *ps;
+ 
+-	atomic_inc(&sdata->bss->num_sta_ps);
++	if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		ps = &sdata->bss->ps;
++	else
++		return;
++
++	atomic_inc(&ps->num_sta_ps);
+ 	set_sta_flag(sta, WLAN_STA_PS_STA);
+ 	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_SLEEP, &sta->sta);
+@@ -1154,7 +1161,7 @@ static void ap_sta_ps_start(struct sta_info *sta)
+ 	       sta->sta.addr, sta->sta.aid);
+ }
+ 
+-static void ap_sta_ps_end(struct sta_info *sta)
++static void sta_ps_end(struct sta_info *sta)
+ {
+ 	ps_dbg(sta->sdata, "STA %pM aid %d exits power save mode\n",
+ 	       sta->sta.addr, sta->sta.aid);
+@@ -1181,9 +1188,9 @@ int ieee80211_sta_ps_transition(struct ieee80211_sta *sta, bool start)
+ 		return -EINVAL;
+ 
+ 	if (start)
+-		ap_sta_ps_start(sta_inf);
++		sta_ps_start(sta_inf);
+ 	else
+-		ap_sta_ps_end(sta_inf);
++		sta_ps_end(sta_inf);
+ 
+ 	return 0;
+ }
+@@ -1335,10 +1342,10 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 			 */
+ 			if (ieee80211_is_data(hdr->frame_control) &&
+ 			    !ieee80211_has_pm(hdr->frame_control))
+-				ap_sta_ps_end(sta);
++				sta_ps_end(sta);
+ 		} else {
+ 			if (ieee80211_has_pm(hdr->frame_control))
+-				ap_sta_ps_start(sta);
++				sta_ps_start(sta);
+ 		}
+ 	}
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 797dd36..9e609f1 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -98,6 +98,7 @@ static void free_sta_work(struct work_struct *wk)
+ 	struct tid_ampdu_tx *tid_tx;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
++	struct ps_data *ps;
+ 
+ 	/*
+ 	 * At this point, when being called as call_rcu callback,
+@@ -107,11 +108,17 @@ static void free_sta_work(struct work_struct *wk)
+ 	 */
+ 
+ 	if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
+-		BUG_ON(!sdata->bss);
++		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++			BUG_ON(!sdata->bss);
++			ps = &sdata->bss->ps;
++		} else {
++			return;
++		}
+ 
+ 		clear_sta_flag(sta, WLAN_STA_PS_STA);
+ 
+-		atomic_dec(&sdata->bss->num_sta_ps);
++		atomic_dec(&ps->num_sta_ps);
+ 		sta_info_recalc_tim(sta);
+ 	}
+ 
+@@ -502,22 +509,22 @@ int sta_info_insert(struct sta_info *sta)
+ 	return err;
+ }
+ 
+-static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
++static inline void __bss_tim_set(u8 *tim, u16 id)
+ {
+ 	/*
+ 	 * This format has been mandated by the IEEE specifications,
+ 	 * so this line may not be changed to use the __set_bit() format.
+ 	 */
+-	bss->tim[aid / 8] |= (1 << (aid % 8));
++	tim[id / 8] |= (1 << (id % 8));
+ }
+ 
+-static inline void __bss_tim_clear(struct ieee80211_if_ap *bss, u16 aid)
++static inline void __bss_tim_clear(u8 *tim, u16 id)
+ {
+ 	/*
+ 	 * This format has been mandated by the IEEE specifications,
+ 	 * so this line may not be changed to use the __clear_bit() format.
+ 	 */
+-	bss->tim[aid / 8] &= ~(1 << (aid % 8));
++	tim[id / 8] &= ~(1 << (id % 8));
+ }
+ 
+ static unsigned long ieee80211_tids_for_ac(int ac)
+@@ -541,14 +548,23 @@ static unsigned long ieee80211_tids_for_ac(int ac)
+ void sta_info_recalc_tim(struct sta_info *sta)
+ {
+ 	struct ieee80211_local *local = sta->local;
+-	struct ieee80211_if_ap *bss = sta->sdata->bss;
++	struct ps_data *ps;
+ 	unsigned long flags;
+ 	bool indicate_tim = false;
+ 	u8 ignore_for_tim = sta->sta.uapsd_queues;
+ 	int ac;
++	u16 id;
++
++	if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		if (WARN_ON_ONCE(!sta->sdata->bss))
++			return;
+ 
+-	if (WARN_ON_ONCE(!sta->sdata->bss))
++		ps = &sta->sdata->bss->ps;
++		id = sta->sta.aid;
++	} else {
+ 		return;
++	}
+ 
+ 	/* No need to do anything if the driver does all */
+ 	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
+@@ -587,9 +603,9 @@ void sta_info_recalc_tim(struct sta_info *sta)
+ 	spin_lock_irqsave(&local->tim_lock, flags);
+ 
+ 	if (indicate_tim)
+-		__bss_tim_set(bss, sta->sta.aid);
++		__bss_tim_set(ps->tim, id);
+ 	else
+-		__bss_tim_clear(bss, sta->sta.aid);
++		__bss_tim_clear(ps->tim, id);
+ 
+ 	if (local->ops->set_tim) {
+ 		local->tim_in_locked_section = true;
+@@ -948,10 +964,17 @@ static void clear_sta_ps_flags(void *_sta)
+ {
+ 	struct sta_info *sta = _sta;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ps_data *ps;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		ps = &sdata->bss->ps;
++	else
++		return;
+ 
+ 	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
+ 	if (test_and_clear_sta_flag(sta, WLAN_STA_PS_STA))
+-		atomic_dec(&sdata->bss->num_sta_ps);
++		atomic_dec(&ps->num_sta_ps);
+ }
+ 
+ /* powersave support code */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e0e0d1d..ac9f771 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -330,16 +330,19 @@ static void purge_old_ps_buffers(struct ieee80211_local *local)
+ 	rcu_read_lock();
+ 
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		struct ieee80211_if_ap *ap;
+-		if (sdata->vif.type != NL80211_IFTYPE_AP)
++		struct ps_data *ps;
++
++		if (sdata->vif.type == NL80211_IFTYPE_AP)
++			ps = &sdata->u.ap.ps;
++		else
+ 			continue;
+-		ap = &sdata->u.ap;
+-		skb = skb_dequeue(&ap->ps_bc_buf);
++
++		skb = skb_dequeue(&ps->bc_buf);
+ 		if (skb) {
+ 			purged++;
+ 			dev_kfree_skb(skb);
+ 		}
+-		total += skb_queue_len(&ap->ps_bc_buf);
++		total += skb_queue_len(&ps->bc_buf);
+ 	}
+ 
+ 	/*
+@@ -371,25 +374,34 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
++	struct ps_data *ps;
+ 
+ 	/*
+ 	 * broadcast/multicast frame
+ 	 *
+-	 * If any of the associated stations is in power save mode,
++	 * If any of the neighbor stations is in power save mode,
+ 	 * the frame is buffered to be sent after DTIM beacon frame.
+ 	 * This is done either by the hardware or us.
+ 	 */
+ 
+-	/* powersaving STAs only in AP/VLAN mode */
+-	if (!tx->sdata->bss)
++	/* powersaving STAs currently only in AP/VLAN mode */
++	if (tx->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    tx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		if (!tx->sdata->bss)
++			return TX_CONTINUE;
++
++		ps = &tx->sdata->bss->ps;
++	} else {
+ 		return TX_CONTINUE;
++	}
++
+ 
+ 	/* no buffering for ordered frames */
+ 	if (ieee80211_has_order(hdr->frame_control))
+ 		return TX_CONTINUE;
+ 
+ 	/* no stations in PS mode */
+-	if (!atomic_read(&tx->sdata->bss->num_sta_ps))
++	if (!atomic_read(&ps->num_sta_ps))
+ 		return TX_CONTINUE;
+ 
+ 	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
+@@ -404,14 +416,14 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ 	if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+ 		purge_old_ps_buffers(tx->local);
+ 
+-	if (skb_queue_len(&tx->sdata->bss->ps_bc_buf) >= AP_MAX_BC_BUFFER) {
++	if (skb_queue_len(&ps->bc_buf) >= AP_MAX_BC_BUFFER) {
+ 		ps_dbg(tx->sdata,
+ 		       "BC TX buffer full - dropping the oldest frame\n");
+-		dev_kfree_skb(skb_dequeue(&tx->sdata->bss->ps_bc_buf));
++		dev_kfree_skb(skb_dequeue(&ps->bc_buf));
+ 	} else
+ 		tx->local->total_ps_buffered++;
+ 
+-	skb_queue_tail(&tx->sdata->bss->ps_bc_buf, tx->skb);
++	skb_queue_tail(&ps->bc_buf, tx->skb);
+ 
+ 	return TX_QUEUED;
+ }
+@@ -2209,9 +2221,8 @@ void ieee80211_tx_pending(unsigned long data)
+ /* functions for drivers to get certain frames */
+ 
+ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+-				     struct ieee80211_if_ap *bss,
+-				     struct sk_buff *skb,
+-				     struct beacon_data *beacon)
++				     struct ps_data *ps,
++				     struct sk_buff *skb)
+ {
+ 	u8 *pos, *tim;
+ 	int aid0 = 0;
+@@ -2219,27 +2230,27 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* Generate bitmap for TIM only if there are any STAs in power save
+ 	 * mode. */
+-	if (atomic_read(&bss->num_sta_ps) > 0)
++	if (atomic_read(&ps->num_sta_ps) > 0)
+ 		/* in the hope that this is faster than
+ 		 * checking byte-for-byte */
+-		have_bits = !bitmap_empty((unsigned long*)bss->tim,
++		have_bits = !bitmap_empty((unsigned long*)ps->tim,
+ 					  IEEE80211_MAX_AID+1);
+ 
+-	if (bss->dtim_count == 0)
+-		bss->dtim_count = sdata->vif.bss_conf.dtim_period - 1;
++	if (ps->dtim_count == 0)
++		ps->dtim_count = sdata->vif.bss_conf.dtim_period - 1;
+ 	else
+-		bss->dtim_count--;
++		ps->dtim_count--;
+ 
+ 	tim = pos = (u8 *) skb_put(skb, 6);
+ 	*pos++ = WLAN_EID_TIM;
+ 	*pos++ = 4;
+-	*pos++ = bss->dtim_count;
++	*pos++ = ps->dtim_count;
+ 	*pos++ = sdata->vif.bss_conf.dtim_period;
+ 
+-	if (bss->dtim_count == 0 && !skb_queue_empty(&bss->ps_bc_buf))
++	if (ps->dtim_count == 0 && !skb_queue_empty(&ps->bc_buf))
+ 		aid0 = 1;
+ 
+-	bss->dtim_bc_mc = aid0 == 1;
++	ps->dtim_bc_mc = aid0 == 1;
+ 
+ 	if (have_bits) {
+ 		/* Find largest even number N1 so that bits numbered 1 through
+@@ -2247,14 +2258,14 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 		 * (N2 + 1) x 8 through 2007 are 0. */
+ 		n1 = 0;
+ 		for (i = 0; i < IEEE80211_MAX_TIM_LEN; i++) {
+-			if (bss->tim[i]) {
++			if (ps->tim[i]) {
+ 				n1 = i & 0xfe;
+ 				break;
+ 			}
+ 		}
+ 		n2 = n1;
+ 		for (i = IEEE80211_MAX_TIM_LEN - 1; i >= n1; i--) {
+-			if (bss->tim[i]) {
++			if (ps->tim[i]) {
+ 				n2 = i;
+ 				break;
+ 			}
+@@ -2264,7 +2275,7 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 		*pos++ = n1 | aid0;
+ 		/* Part Virt Bitmap */
+ 		skb_put(skb, n2 - n1);
+-		memcpy(pos, bss->tim + n1, n2 - n1 + 1);
++		memcpy(pos, ps->tim + n1, n2 - n1 + 1);
+ 
+ 		tim[1] = n2 - n1 + 4;
+ 	} else {
+@@ -2281,8 +2292,6 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+-	struct ieee80211_if_ap *ap = NULL;
+-	struct beacon_data *beacon;
+ 	enum ieee80211_band band = local->oper_channel->band;
+ 	struct ieee80211_tx_rate_control txrc;
+ 
+@@ -2299,8 +2308,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		*tim_length = 0;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+-		ap = &sdata->u.ap;
+-		beacon = rcu_dereference(ap->beacon);
++		struct ieee80211_if_ap *ap = &sdata->u.ap;
++		struct beacon_data *beacon = rcu_dereference(ap->beacon);
++
+ 		if (beacon) {
+ 			/*
+ 			 * headroom, head length,
+@@ -2324,14 +2334,12 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 			 * of the tim bitmap in mac80211 and the driver.
+ 			 */
+ 			if (local->tim_in_locked_section) {
+-				ieee80211_beacon_add_tim(sdata, ap, skb,
+-							 beacon);
++				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
+ 			} else {
+ 				unsigned long flags;
+ 
+ 				spin_lock_irqsave(&local->tim_lock, flags);
+-				ieee80211_beacon_add_tim(sdata, ap, skb,
+-							 beacon);
++				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
+ 				spin_unlock_irqrestore(&local->tim_lock, flags);
+ 			}
+ 
+@@ -2651,29 +2659,37 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	struct ieee80211_tx_data tx;
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct ieee80211_if_ap *bss = NULL;
+-	struct beacon_data *beacon;
++	struct ps_data *ps;
+ 	struct ieee80211_tx_info *info;
+ 
+ 	sdata = vif_to_sdata(vif);
+-	bss = &sdata->u.ap;
+ 
+ 	rcu_read_lock();
+-	beacon = rcu_dereference(bss->beacon);
+ 
+-	if (sdata->vif.type != NL80211_IFTYPE_AP || !beacon || !beacon->head)
++	if (sdata->vif.type == NL80211_IFTYPE_AP) {
++		struct beacon_data *beacon =
++				rcu_dereference(sdata->u.ap.beacon);
++
++		/* XXX is there any use for beacon here? */
++
++		if (!beacon || !beacon->head)
++			goto out;
++
++		ps = &sdata->u.ap.ps;
++	} else {
+ 		goto out;
++	}
+ 
+-	if (bss->dtim_count != 0 || !bss->dtim_bc_mc)
++	if (ps->dtim_count != 0 || !ps->dtim_bc_mc)
+ 		goto out; /* send buffered bc/mc only after DTIM beacon */
+ 
+ 	while (1) {
+-		skb = skb_dequeue(&bss->ps_bc_buf);
++		skb = skb_dequeue(&ps->bc_buf);
+ 		if (!skb)
+ 			goto out;
+ 		local->total_ps_buffered--;
+ 
+-		if (!skb_queue_empty(&bss->ps_bc_buf) && skb->len >= 2) {
++		if (!skb_queue_empty(&ps->bc_buf) && skb->len >= 2) {
+ 			struct ieee80211_hdr *hdr =
+ 				(struct ieee80211_hdr *) skb->data;
+ 			/* more buffered multicast/broadcast frames ==> set
+-- 
+1.7.9.5
+
