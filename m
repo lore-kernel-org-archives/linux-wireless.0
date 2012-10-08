@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:36833 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755978Ab2JXV0H (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:40219 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751702Ab2JHPuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 17:26:07 -0400
-Received: by mail-pa0-f46.google.com with SMTP id hz1so646475pad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 14:26:06 -0700 (PDT)
+	Mon, 8 Oct 2012 11:50:39 -0400
+Received: by mail-ob0-f174.google.com with SMTP id uo13so3665957obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2012 08:50:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
-	<CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
-	<20121024194547.GA19060@shredder>
-	<CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
-Date: Wed, 24 Oct 2012 14:26:05 -0700
-Message-ID: <CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com> (sfid-20121024_232611_135526_AE0A92FA)
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
+In-Reply-To: <20120929093118.GA3022@ritirata.org>
+References: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com>
+	<20581.2614.43943.601901@gargle.gargle.HOWL>
+	<50652E56.10303@qca.qualcomm.com>
+	<20581.32544.134606.56158@gargle.gargle.HOWL>
+	<20120929093118.GA3022@ritirata.org>
+Date: Mon, 8 Oct 2012 21:20:38 +0530
+Message-ID: <CAD2nsn20s3L8b8DT53JYAN-t4q5GpxUVzSCncTt1LQO3w=wsYw@mail.gmail.com> (sfid-20121008_175042_823367_EE16C8B7)
+Subject: Re: [RFC 1/2] ath9k_htc: Advertize allowed vif combinations
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: Sujith Manoharan <c_manoha@qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 October 2012 14:22, Adrian Chadd <adrian@freebsd.org> wrote:
-> Hi,
+On Sat, Sep 29, 2012 at 3:01 PM, Antonio Quartulli <ordex@autistici.org> wrote:
+> On Fri, Sep 28, 2012 at 04:12:40 +0530, Sujith Manoharan wrote:
+>> Mohammed Shafi Shajakhan wrote:
+>> > oh yeah, you are saying that we will have some issues with IBSS
+>> > coexistence with other modes because of TSF sync.
+>>
+>> Yes, this is a problem.
 >
-> can you please repeat this experiment but dump the TSF32/TSF64 fields
-> there as hexadecimal, rather than decimal?
+> Is there anyway to overcome this problem? Can we bind the single TSF to multiple
+> virtualTSF? or must the device somehow support us?
+
+Antonio, agained i checked with the ath9k_htc maintainer, he said the
+IBSS coexistence is not
+possible. So i would go with my current patch. Please do feel free to
+enhance. Currently
+i am working in some other project, not sure i would be able to take this up.
+
 >
-> I'd like to see if this is an example of "bad TSF32->TSF64 promotion".
+> Cheers,
+>
+>
+> --
+> Antonio Quartulli
+>
+> ..each of us alone is worth nothing..
+> Ernesto "Che" Guevara
 
-Also, we should check to see whether the MAC is paying attention to
-any beacon frames and updating _its_ timestamp using that beacon frame
-timer.
-That's one of the mesh-and-sta-and-ap-at-the-same-time problems - in
-STA mode, the TSF gets fudged based on the AP TSF. In other modes this
-doesn't necessarily hold.
 
 
-
-Adrian
+-- 
+thanks,
+shafi
