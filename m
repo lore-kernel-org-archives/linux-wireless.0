@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33286 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727Ab2JOKB6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 06:01:58 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 11/11] ath9k: Add new BT profile info A2DP_Voice
-Date: Mon, 15 Oct 2012 15:29:55 +0530
-Message-ID: <1350295195-23410-12-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120201_906823_13E9830B)
-In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42083 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750820Ab2JHPkm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2012 11:40:42 -0400
+Date: Mon, 8 Oct 2012 17:38:56 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: David Rientjes <rientjes@google.com>, Mel Gorman <mgorman@suse.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
+Message-ID: <20121008153855.GA9737@redhat.com> (sfid-20121008_174048_061313_31C81436)
+References: <20120909213228.GA5538@elf.ucw.cz>
+ <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
+ <20120910111113.GA25159@elf.ucw.cz>
+ <20120911162536.bd5171a1.akpm@linux-foundation.org>
+ <20120912101826.GL11266@suse.de>
+ <20121003113659.GD2259@redhat.com>
+ <alpine.DEB.2.00.1210031104120.29765@chino.kir.corp.google.com>
+ <20121005083659.GA2819@redhat.com>
+ <20121006120850.GB18025@elf.ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121006120850.GB18025@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the BT connection is initiated by headset, it's possible that headset
-requests to make one A2DP and one Voice connection over the same link.
-BT firmware will send a new profile A2DP_Voice in this case. So WLAN
-has to take care of this new profile for tuning BTCOEX parameters.
+On Sat, Oct 06, 2012 at 02:08:50PM +0200, Pavel Machek wrote:
+> On Fri 2012-10-05 10:37:00, Stanislaw Gruszka wrote:
+> > On Wed, Oct 03, 2012 at 11:07:13AM -0700, David Rientjes wrote:
+> > > On Wed, 3 Oct 2012, Stanislaw Gruszka wrote:
+> > > 
+> > > > So, can this problem be solved like on below patch, or I should rather
+> > > > split firmware loading into chunks similar like was already iwlwifi did?
+> > 
+> > Hmm, I looked at iwl3945 code and looks loading firmware in chunks is
+> > nothing that can be easily done. 3945 bootstrap code expect that runtime
+> > ucode will be placed in physically continue memory, and there are no
+> > separate instructions for copy and for execute, just one to perform both
+> > those actions. Maybe loading firmware in chunks can be done using
+> > undocumented features of the device, but I'm eager to do this.
+> 
+> Just allocate memory during boot?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.h | 1 +
- drivers/net/wireless/ath/ath9k/mci.h        | 2 ++
- 2 files changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 3e51f54..66d7ab9 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -126,6 +126,7 @@ enum ath_mci_gpm_coex_profile_type {
- 	MCI_GPM_COEX_PROFILE_HID,
- 	MCI_GPM_COEX_PROFILE_BNEP,
- 	MCI_GPM_COEX_PROFILE_VOICE,
-+	MCI_GPM_COEX_PROFILE_A2DPVO,
- 	MCI_GPM_COEX_PROFILE_MAX
- };
+On driver I can reserve memory during module load, but also this isn't
+something I prefer to do.
  
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index e5f170a..0695883 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -70,6 +70,7 @@
- 			_mci->num_pan++;	 \
- 			break;			 \
- 		case MCI_GPM_COEX_PROFILE_VOICE: \
-+		case MCI_GPM_COEX_PROFILE_A2DPVO:\
- 			_mci->num_sco++;	 \
- 			break;			 \
- 		default:			 \
-@@ -94,6 +95,7 @@
- 			_mci->num_pan--;	 \
- 			break;			 \
- 		case MCI_GPM_COEX_PROFILE_VOICE: \
-+		case MCI_GPM_COEX_PROFILE_A2DPVO:\
- 			_mci->num_sco--;	 \
- 			break;			 \
- 		default:			 \
--- 
-1.7.12.2
+> > Pavel, do you still can reproduce this problem on released 3.6 ? 
+> 
+> It happened again yesterday on 3.6.0-rc6+. I don't think mm changed
+> between -rc6 and final...
 
+Could you check  __GFP_REPEAT oneline patch posted previously ?
+And if that fail again, provide full dmesg (on your previous messages
+there is vmap() failure, which I do not understand, where it come
+from) ?
+
+Thanks
+Stanislaw
