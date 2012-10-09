@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3419 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756916Ab2JJSNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 14:13:25 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Hante Meuleman" <meuleman@broadcom.com>
-Subject: [PATCH 1/7] brcmfmac: handle all exceptions as an error.
-Date: Wed, 10 Oct 2012 11:13:06 -0700
-Message-ID: <1349892792-4792-2-git-send-email-frankyl@broadcom.com> (sfid-20121010_201330_972958_4D2CAFEB)
-In-Reply-To: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
-References: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:42402 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754652Ab2JISmV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Oct 2012 14:42:21 -0400
+Message-ID: <1349808165.4683.15.camel@jlt4.sipsolutions.net> (sfid-20121009_204225_434460_F893E8C2)
+Subject: Re: [PATCH v3 7/7] mac80211: add DFS support to monitor interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Date: Tue, 09 Oct 2012 20:42:45 +0200
+In-Reply-To: <CAK80WHY=YiKBcLgZFJjEEVFk6ncHniPXzWWvKywEGVNLm4C8Kw@mail.gmail.com>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	 <1344426823-1795-8-git-send-email-victorg@ti.com>
+	 <1347276361.4272.20.camel@jlt4.sipsolutions.net>
+	 <CAK80WHY=YiKBcLgZFJjEEVFk6ncHniPXzWWvKywEGVNLm4C8Kw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Wed, 2012-10-03 at 15:54 +0200, Goldenshtein, Victor wrote:
+> On Mon, Sep 10, 2012 at 2:26 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
+> >> AP mode uses monitor interfaces to transmit
+> >> management frames which were blocked for "radar
+> >> channels" until now.
+> >>
+> >> Stop dropping packets if we are on 'radar channel'
+> >> and the DFS is enabled.
+> >
+> > Umm, no? Check for dfs_en_tx().
+> >
+> 
+> no need, the AP is started only after the dfs_en_tx().
 
-in brcmf_usb_probe_cb only return code ENOLINK was seen as an
-error. This is wrong, all error codes should be returned to usb
-subsystem.
+but this is on monitor mode, no? and monitor mode isn't used just for
+AP. In fact, AP no longer even uses monitor mode, so you don't need this
+at all since you should be working with a new hostapd version that will
+get the DFS feature ... and then you're working on a current version
+that already no longer uses monitor mode for DFS. Both kernel & hostapd
+have to be new enough, so monitor mode won't be used...
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index a2b4b1e..7a6dfdc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1339,7 +1339,7 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo,
- 	}
- 
- 	ret = brcmf_bus_start(dev);
--	if (ret == -ENOLINK) {
-+	if (ret) {
- 		brcmf_dbg(ERROR, "dongle is not responding\n");
- 		brcmf_detach(dev);
- 		goto fail;
--- 
-1.7.9.5
-
+johannes
 
