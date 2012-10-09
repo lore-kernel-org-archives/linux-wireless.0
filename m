@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:55112 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422740Ab2JXWIS (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:1888 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753427Ab2JIHxH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 18:08:18 -0400
-Received: by mail-pa0-f46.google.com with SMTP id hz1so668098pad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 15:08:18 -0700 (PDT)
-Date: Wed, 24 Oct 2012 15:08:13 -0700
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-Message-ID: <20121024220813.GB6723@shredder> (sfid-20121025_000837_765851_BC1B205F)
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
- <CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
- <20121024194547.GA19060@shredder>
- <CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
- <CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
+	Tue, 9 Oct 2012 03:53:07 -0400
+Message-ID: <5073D7DC.8080609@broadcom.com> (sfid-20121009_095315_733522_41BFDF92)
+Date: Tue, 9 Oct 2012 09:53:00 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
+To: wireless-regdb@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [wireless-regdb] [PATCH] wireless-regdb: Update regulations
+ for Ukraine
+References: <CAHc5FiXv=aeKKwpz2RP3ho+d-eggxfGuECk1deyNWNdkT8r8gg@mail.gmail.com>
+In-Reply-To: <CAHc5FiXv=aeKKwpz2RP3ho+d-eggxfGuECk1deyNWNdkT8r8gg@mail.gmail.com>
+Content-Type: text/plain;
+ charset=koi8-u;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 24, 2012 at 02:26:05PM -0700, Adrian Chadd wrote:
-> On 24 October 2012 14:22, Adrian Chadd <adrian@freebsd.org> wrote:
-> > Hi,
-> >
-> > can you please repeat this experiment but dump the TSF32/TSF64 fields
-> > there as hexadecimal, rather than decimal?
-> >
-> > I'd like to see if this is an example of "bad TSF32->TSF64 promotion".
-> 
-> Also, we should check to see whether the MAC is paying attention to
-> any beacon frames
+On 10/08/2012 11:28 AM, Mykyta Iziumtsev wrote:
+> Add 5GHz band and mark 2.4GHz and 5GHz as NO-OUTDOOR according to
+> "Р╕шення про затвердження Перел╕ку рад╕оелектронних засоб╕в
+> та випром╕нювальних пристро╖в, для експлуатац╕╖ яких не потр╕бн╕
+> дозволи на експлуатац╕ю" from 27 May 2010.
+>
+> Ref: http://www.ucrf.gov.ua/uk/doc/nkrz/1196068874
+>
+> Update rules as follows as lowest common denominator:
+>          (2400 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
+>          (5150 - 5350 @ 40), (N/A, 20), NO-OUTDOOR
+>
+> Signed-off-by: Mykyta Iziumtsev <mykyta.iziumtsev@gmail.com>
+> Signed-off-by: Pavel Chernyshev <pchernyshev@gmail.com>
+> Signed-off-by: Andrew Bordunov <andrew.bordunov@gmail.com>
+> ---
+>   db.txt |    3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/db.txt b/db.txt
+> index 4c54543..08c6c89 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -653,7 +653,8 @@ country TR: DFS-ETSI
+>   	(5250 - 5330 @ 20), (N/A, 20), DFS
+>
 
-How? For mesh mode support we currently just reuse the WDS AP firmware vif
-opmode.
+Some time ago I suggested to add the source ref in the db.txt. Could we 
+add that here now:
 
-> and updating _its_ timestamp using that beacon frame timer.  That's
-> one of the mesh-and-sta-and-ap-at-the-same-time problems - in
-> STA mode, the TSF gets fudged based on the AP TSF. In other modes this
-> doesn't necessarily hold.
++ /*
++  * source: http://www.ucrf.gov.ua/uk/doc/nkrz/1196068874
++  */
+>   country UA:
+> -	(2402 - 2482 @ 40), (N/A, 20)
+> +	(2400 - 2483.5 @ 40), (N/A, 20), NO-OUTDOOR
+> +	(5150 - 5350 @ 40), (N/A, 20), NO-OUTDOOR
+>
+>   country US: DFS-FCC
+>   	(2402 - 2472 @ 40), (3, 27)
+>
 
-OK, but the TSF for AP shouldn't be automatically updated on other
-beacons, right?
+Regards,
+AvS
 
-Thanks again,
-Thomas
