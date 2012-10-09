@@ -1,46 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm2.bullet.mail.sp2.yahoo.com ([98.139.91.72]:46246 "EHLO
-	nm2.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933359Ab2JAXG7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2012 19:06:59 -0400
-References: <1348086305.81224.YahooMailNeo@web164004.mail.gq1.yahoo.com>  <20120928121917.GF5368@mwanda>  <1348870515.1973.YahooMailNeo@web164005.mail.gq1.yahoo.com>  <20120929072527.GA13767@mwanda>  <1349102641.41622.YahooMailNeo@web164005.mail.gq1.yahoo.com>  <20121001150913.GC13767@mwanda>  <1349109750.55372.YahooMailNeo@web164005.mail.gq1.yahoo.com>  (sfid-20121001_184314_573998_F50474BE) <1349119899.10330.53.camel@jlt4.sipsolutions.net>
-Message-ID: <1349132818.58475.YahooMailNeo@web164006.mail.gq1.yahoo.com> (sfid-20121002_021728_896426_DE5BB8FF)
-Date: Mon, 1 Oct 2012 16:06:58 -0700 (PDT)
-From: Kevin Cruz <skate_ops@yahoo.com>
-Reply-To: Kevin Cruz <skate_ops@yahoo.com>
-Subject: How do I get mac80211 debugfs?
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Intel Wireless <ilw@linux.intel.com>,
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11049 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154Ab2JIBY5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Oct 2012 21:24:57 -0400
+From: "Huang, Xiong" <xiong@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "mcgrof@kernel.org" <mcgrof@kernel.org>,
+	"backports@vger.kernel.org" <backports@vger.kernel.org>,
+	nic-devel <nic-devel@qualcomm.com>,
+	"Ren, Cloud" <cjren@qca.qualcomm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1349119899.10330.53.camel@jlt4.sipsolutions.net>
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>
+Subject: RE: [PATCH] compat-drivers: update ethernet driver alx in crap dir
+Date: Tue, 9 Oct 2012 01:24:55 +0000
+Message-ID: <157393863283F442885425D2C45428562A50158C@nasanexd02f.na.qualcomm.com> (sfid-20121009_032515_977836_A040C9AD)
+References: <1349400892-25315-1-git-send-email-xiong@qca.qualcomm.com>
+ <CAB=NE6VotAu-cugsn4==3TPX0OGPEFtdn1J+5+Rd_YfLcg9YDQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6VotAu-cugsn4==3TPX0OGPEFtdn1J+5+Rd_YfLcg9YDQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Johannes,
-    None of this should be too much of an effort for me. Thankfully I
-don't find terminals to be daunting.
-
-> Yeah ... we saw this in the lab at some point, but somehow we couldn't
-> reproduce it again later. The issue is that we stop the queues, and
-> never restart them, and if it's the same issue then it's definitely the
-> driver's fault.
-
-> To confirm, when you get this, can you please do
-
-> sudo cat /sys/kernel/debug/ieee80211/phy*/queues
-
-> (assuming you have mac80211 debugfs compiled)
-
-So I tried that but all I got back was:
-
-    cat: /sys/kernel/debug/ieee80211/phy*/queues: No such file or directory
-
-so I'm assuming it's because I must not have mac80211 debugfs.  So how
-do I get it?
-
-Thanks, Kevin
-
+SGkgTHVpcw0KDQogICAgSSdtIHJlZmluaW5nIHRoZSBjb2RlLCBJIHRyeSBteSBiZXN0IHRvIG1h
+a2UgaXQgdXBzdHJlYW0gQVNBUC4gVGhhbmtzICENCg0KLVhpb25nDQoNCj4gLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbWNncm9mQGdtYWlsLmNvbSBbbWFpbHRvOm1jZ3JvZkBn
+bWFpbC5jb21dIE9uIEJlaGFsZiBPZiBMdWlzIFIuDQo+IFJvZHJpZ3Vleg0KPiBTZW50OiBUdWVz
+ZGF5LCBPY3RvYmVyIDA5LCAyMDEyIDY6MjUNCj4gVG86IEh1YW5nLCBYaW9uZw0KPiBDYzogbWNn
+cm9mQGtlcm5lbC5vcmc7IGJhY2twb3J0c0B2Z2VyLmtlcm5lbC5vcmc7IG5pYy1kZXZlbDsgUmVu
+LCBDbG91ZDsNCj4gR3JlZyBLcm9haC1IYXJ0bWFuOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
+b3JnOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51eC13aXJlbGVzczsgcWNhX3Zrb25k
+cmF0DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIGNvbXBhdC1kcml2ZXJzOiB1cGRhdGUgZXRoZXJu
+ZXQgZHJpdmVyIGFseCBpbiBjcmFwIGRpcg0KPiANCj4gT24gVGh1LCBPY3QgNCwgMjAxMiBhdCA2
+OjM0IFBNLCAgPHhpb25nQHFjYS5xdWFsY29tbS5jb20+IHdyb3RlOg0KPiA+IEZyb206IHhpb25n
+IDx4aW9uZ0BxY2EucXVhbGNvbW0uY29tPg0KPiA+DQo+ID4gMS4gc3VwcG9ydCBuZXcgZGV2aWNl
+IGlkICgweDEwQTAvMHgxMEExKS4NCj4gPiAyLiBhZGQgREVCVUdfRlMgaW50ZXJmYWNlIGZvciBk
+aWFnL3N3b2kgZnVuY3Rpb25zLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogUmVuIENsb3VkIDxj
+anJlbkBxY2EucXVhbGNvbW0uY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IHhpb25nIDx4aW9uZ0Bx
+Y2EucXVhbGNvbW0uY29tPg0KPiANCj4gWGlvbmcsDQo+IA0KPiAgLS0gVmxhZGltaXIsIGp1c3Qg
+YSBoZWFkcyB1cCAtLSB0aGlzIGFwcGxpZXMgdG8geW91IGFzIHdlbGwgZm9yIHRoZSA4MDIuMTFh
+ZA0KPiB3aWw2MjEwIGRyaXZlcg0KPiAgLS0gR3JlZywgc29tZSByZXZpZXcgb24geW91ciBwcmVm
+ZXJlbmNlIG9uIHRoaXMgd291bGQgYmUgYXBwcmVjaWF0ZWQNCj4gDQo+IFRoZSBvcmlnaW5hbCBh
+bHggY3JhcCBwYXRjaCB3YXMgYWRkZWQgaW50byBjb21wYXQtd2lyZWxlc3Mgb24gdGhlIGxpbnV4
+LTMuNS55DQo+IGJyYW5jaC4gSXRzIGJlZW4gdHdvIGtlcm5lbCByZWxlYXNlcyBhbmQgYWx4IGlz
+IG5vdCB5ZXQgdXBzdHJlYW0gYW5kIHVzZXJzIGNhbg0KPiBvbmx5IGdldCBhbHggdmlhIGNvbXBh
+dC1kcml2ZXJzICh0ZWNobmljYWxseSBjb21wYXQtd2lyZWxlc3MgYXMgdGhhdCB3YXMgcHJlDQo+
+IHYzLjcpLiB2My43IHdvdWxkIGJlIHRoZSAqdGhpcmQqIHJlbGVhc2UgaW4gd2hpY2ggdGhpcyB3
+b3VsZCBoYXBwZW4uLi4gVGhpcyBpcw0KPiB1bmZhaXIgdG8gdXNlcnMgYW5kIGNvbnN1bWVycyBv
+ZiB0aGUgTGludXgga2VybmVsIGFuZCBkZXJhaWxzIGV4cGVjdGF0aW9ucyBhbmQNCj4gb3VyIGFy
+cmFuZ2VtZW50cyBmb3IgTGludXgga2VybmVsIGRldmVsb3BtZW50LiBJIHJlYWxpemUgdGhhdCB0
+aGUgZ29hbCB3YXMgdG8NCj4gZ2V0IGFseCB1cHN0cmVhbSBBU0FQIGJ1dCByZWdhcmRsZXNzIG9m
+IHdoYXQgdGhlIHJlYXNvbiBpcywgaXRzIG5vdCB5ZXQNCj4gdXBzdHJlYW0uIElmIHlvdSBjYW5u
+b3Qgd29yayBvbiBhbHggb24gYSB0aW1lbHkgbWFubmVyIHRvIGdldCB1cHN0cmVhbSB0aGVuDQo+
+IHBsZWFzZSBzdWJtaXQgdGhlIGRyaXZlciB0byB0aGUgc3RhZ2luZyBhcmVhIG9mIHRoZSBMaW51
+eCBrZXJuZWwgdGhhdCBHcmVnDQo+IG1haW50YWlucyBzbyB0aGF0IG90aGVyIGRldmVsb3BlcnMg
+d2hvIG1heSBiZSBhYmxlIHRvIGhlbHAgY2FuIHN1Ym1pdA0KPiBwYXRjaGVzIHRvIGhlbHAgeW91
+LiBVbmRlciBzdGFnaW5nIHlvdXIgZHJpdmVyIHNob3VsZCBiZSBhY2NlcHRlZCBzbyBsb25nIGFz
+IGl0DQo+IGNvbXBpbGVzLg0KPiANCj4gSSB3aWxsIHVwZGF0ZSB0aGUgZG9jdW1lbnRhdGlvbiBm
+b3IgY3JhcC8gcGF0Y2hlcyBmb3IgY29tcGF0LWRyaXZlcnMgdG8gbWFrZQ0KPiBpdCBjbGVhciBu
+b3cgdGhhdCBjcmFwLyBwYXRjaGVzIGNhbiBiZSB1c2VkIGZvciBhZGRpbmcgY29tcG9uZW50cyAv
+IHBpZWNlcyBvZg0KPiBjb2RlIG5vdCB5ZXQgcmVhZHkgZm9yIHVwc3RyZWFtIGJ1dCBhcyBmYXIg
+YXMgZnVsbCBuZXcgZHJpdmVycyBhcmUgY29uY2VybmVkDQo+IHlvdSBvbmx5IGdldCBvbmUga2Vy
+bmVsIHJlbGVhc2UgY3ljbGUgZm9yIGl0IHRvIGxpbmdlciBvbiBjcmFwLyB1bmRlciBjb21wYXQt
+DQo+IGRyaXZlcnMsIGlmIHlvdSBoYXZlbid0IGFkZHJlc3NlZCB1cHN0cmVhbWluZyB5ZXQgdGhl
+biBpdCBzaG91bGQgZ28gdG8NCj4gZHJpdmVycy9zdGFnaW5nLy4gVGhhdCBpcyBjcmFwLyBzaG91
+bGQgb25seSBiZSB1c2VkIGFzIGEgc2hvcnRjdXQgYmVjYXVzZSB1c2Vycw0KPiBleGlzdCB0aGF0
+IGNhbiB1c2UgdGhlIGRyaXZlciBidXQgeW91ICpkbyogaGF2ZSBhIHRlYW0gcHJvcGVybHkgcmVz
+b3VyY2VkIHRvDQo+IGFkZHJlc3MgdXBzdHJlYW1pbmcgcHJvcGVybHkgaW4gYSB0aW1lbHkgbWFu
+bmVyLg0KPiANCj4gTGludXMgc2hvdWxkIHNvb24gcmVsZWFzZSB2My43LXJjMSBhbmQgbmV3IGRy
+aXZlcnMgYXJlIGFsbG93ZWQgdG8gYmUgbWVyZ2VkDQo+IGR1cmluZyB0aGUgUkMgY3ljbGVzLCBh
+cyBzdWNoIG15IHJlY29tbWVuZGF0aW9uIGlzIGluc3RlYWQgb2YgZ2V0dGluZyB1c2VycyB0bw0K
+PiBjb25zdW1lIGFseCBvbmx5IHRocm91Z2ggY29tcGF0LWRyaXZlcnMgeW91IG5vdyBzdWJtaXQg
+YWx4IGludG8gc3RhZ2luZyB0bw0KPiBHcmVnIGluIGhvcGVzIHRoYXQgd2UgY2FuIGdldCBpdCBp
+bnRvIHYzLjctcmNYIHNvbWUgdGltZSwgYW5kIGF0IHRoYXQgdGltZSB3ZQ0KPiBjYW4gcmVtb3Zl
+IHRoZSBjcmFwLyBwYXRjaCBmcm9tIGNvbXBhdC1kcml2ZXJzLg0KPiANCj4gVXNlcnMgc2hvdWxk
+IGJlIGFibGUgdG8gY29uc3VtZSBuZXcgZHJpdmVycyB0aHJvdWdoIGtlcm5lbC5vcmcgYW5kIGNv
+bXBhdC0NCj4gZHJpdmVycyBzaG91bGQgb25seSBwcm92aWRlIHRoZSBmcmFtZXdvcmsgZm9yIGJh
+Y2twb3J0aW5nIGFuZCBhbHNvDQo+IGNhdGVnb3JpemluZyBxdWljayBmaXhlcy4gSXQgc2hvdWxk
+IG5vdCBiZSB1c2VkIGZvciBvbmdvaW5nIHVwZGF0ZXMgZm9yIG5ldw0KPiBkcml2ZXJzIHRoYXQg
+dXNlcnMgbmVlZC4NCj4gDQo+IFdlIG11c3QgZHJhdyB0aGUgbGluZSB3aXRoIGNyYXAvIHBhdGNo
+ZXMgc29tZXdoZXJlLg0KPiANCj4gSSdsbCB0aGVuIHRha2UgdGhpcyBwYXRjaCBmb3Igbm93IGJ1
+dCBkbyBleHBlY3QgeW91IHRvIGdldCBhbHggaW50byBlaXRoZXIgc3RhZ2luZw0KPiBvciBwcm9w
+ZXIgdXBzdHJlYW0gZm9yIHRoZSB2My43LXJjWC4gSSB3ZWxjb21lIGZlZWRiYWNrIGZyb20gb3Ro
+ZXIgZm9sa3Mgb24NCj4gdGhlIHByb3Bvc2VkIGFycmFuZ2VtZW50IGZvciBjcmFwLyBwYXRjaGVz
+IGZvciBjb21wYXQtZHJpdmVycy4NCj4gDQo+IGh0dHBzOi8vYmFja3BvcnRzLndpa2kua2VybmVs
+Lm9yZy9pbmRleC5waHAvRG9jdW1lbnRhdGlvbi9jb21wYXQtDQo+IGRyaXZlcnMvYWRkaXRpb25h
+bC1wYXRjaGVzI2NyYXBfcGF0Y2hlcw0KPiANCj4gICBMdWlzDQo=
