@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55638 "EHLO mga02.intel.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:40143 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751940Ab2JOSxe convert rfc822-to-8bit (ORCPT
+	id S1752840Ab2JIM0K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 14:53:34 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
+	Tue, 9 Oct 2012 08:26:10 -0400
+From: "Elias, Ilan" <ilane@ti.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: RE: Lots of trans->state != IWL_TRANS_FW_ALIVE warnings
-Date: Mon, 15 Oct 2012 18:53:05 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3B7D5A6@HASMSX106.ger.corp.intel.com> (sfid-20121015_205337_499018_4AF01BCD)
-References: <20121015144722.GA12560@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3B7D4BB@HASMSX106.ger.corp.intel.com>
- <20121015152336.GC12560@redhat.com> <20121015153752.GE12560@redhat.com>
-In-Reply-To: <20121015153752.GE12560@redhat.com>
+	Szymon Janc <szymon.janc@tieto.com>
+Subject: RE: NFC: Set local general bytes in nci_start_poll
+Date: Tue, 9 Oct 2012 12:26:02 +0000
+Message-ID: <B30D1FD582D6484ABF57420512E5803516AE0184@DNCE04.ent.ti.com> (sfid-20121009_142614_618804_40FD9B44)
+References: <20120926140553.GA31568@elgon.mountain>
+In-Reply-To: <20120926140553.GA31568@elgon.mountain>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On Mon, Oct 15, 2012 at 05:23:36PM +0200, Stanislaw Gruszka wrote:
-> > On Mon, Oct 15, 2012 at 03:14:51PM +0000, Grumbach, Emmanuel wrote:
-> > > > I glanced at the bugs and I can only see the trace dump. I am
-> > > > pretty sure there is an issue before the dump - fw assert of
-> > > > something like that. Can it be possible to get the full log?
-> > > >
-> > >
-> > > Can you ask people to try the attached patch?
-> > > This will let us know where the fw is brought down.
-> >
-> > Yes, I'll build kernel with that patch and request for test and dmesg.
-> 
-> debug=0x400 is enough or do you want also some other flags?
-> 
-0x400 should be enough, but 0x403 would be better :-)
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Hi Dan,
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Sorry for the late response, I was on vacation. 
+
+> Hello Ilan Elias,
+> 
+> The patch 7e0352306f68: "NFC: Set local general bytes in 
+> nci_start_poll" from Aug 15, 2012, leads to the following warning:
+> net/nfc/nci/core.c:427 nci_set_local_general_bytes()
+> 	 error: buffer overflow 'local_gb' 48 <= 250
+> 
+>    416          __u8 local_gb[NFC_MAX_GT_LEN];
+>                               ^^^^^^^^^^^^^^
+> 48 elements.
+> 
+>    417          int i, rc = 0;
+>    418  
+>    419          param.val = 
+> nfc_get_local_general_bytes(nfc_dev, &param.len);
+>    420          if ((param.val == NULL) || (param.len == 0))
+>    421                  return rc;
+>    422  
+>    423          if (param.len > NCI_MAX_PARAM_LEN)
+>                                 ^^^^^^^^^^^^^^^^^
+> Capped at 250.  Probably NFC_MAX_GT_LEN was intended?
+> 
+>    424                  return -EINVAL;
+>    425  
+>    426          for (i = 0; i < param.len; i++)
+>    427                  local_gb[param.len-1-i] = param.val[i];
+>                                  ^^^^^^^^^^^^^
+> Writing to the 250th element.
+> 
+> This is just a sanity check and nfc_get_local_general_bytes() 
+> will only
+> return NFC_MAX_GT_LEN max because of the check in nfc_llcp_build_gb().
+
+You're right.
+I see now that Szymon Janc already sent a patch for this a few days ago.
+
+Thanks & BR,
+Ilan
 
