@@ -1,163 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:41514 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752037Ab2JDEsF (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60190 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480Ab2JIU3j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 00:48:05 -0400
-From: Bing Zhao <bzhao@marvell.com>
+	Tue, 9 Oct 2012 16:29:39 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so5630701pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2012 13:29:39 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v3 1/5] {nl,cfg}80211: add a flags word to scan requests
-Date: Wed,  3 Oct 2012 21:47:42 -0700
-Message-Id: <1349326066-28501-2-git-send-email-bzhao@marvell.com> (sfid-20121004_064810_282423_9E8DBA24)
-In-Reply-To: <1349326066-28501-1-git-send-email-bzhao@marvell.com>
-References: <1349326066-28501-1-git-send-email-bzhao@marvell.com>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	javier@cozybit.com, devel@lists.open80211s.org,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH 2/2] iw: Add new command to get statistical information of the mesh network
+Date: Tue,  9 Oct 2012 13:29:27 -0700
+Message-Id: <1349814567-29556-2-git-send-email-ashok@cozybit.com> (sfid-20121009_222942_029665_893BD0A0)
+In-Reply-To: <1349814567-29556-1-git-send-email-ashok@cozybit.com>
+References: <1349814567-29556-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sam Leffler <sleffler@chromium.org>
+iw dev <devname> get mesh_stats [<stats>] gets statistics of the mesh network.
+It will use the new %NL80211_CMD_GET_MESH_STATS command.
 
-Add a flags word to direct and scheduled scan requests; it will
-be used for control of optional behaviours such as flushing the
-bss cache prior to doing a scan.
-
-Signed-off-by: Sam Leffler <sleffler@chromium.org>
-Tested-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
 ---
-v3: Remove unnecessary "enum cfg80211_scan_flags" and add missing
-    check for "nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS...".
-    (Johannes Berg)
+ mesh.c |  117 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ util.c |    2 +
+ 2 files changed, 119 insertions(+), 0 deletions(-)
 
- include/linux/nl80211.h |   14 ++++++++++++++
- include/net/cfg80211.h  |    4 ++++
- net/wireless/nl80211.c  |   12 ++++++++++++
- 3 files changed, 30 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 179a0c2..bac473a 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1276,6 +1276,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SAE_DATA: SAE elements in Authentication frames. This starts
-  *	with the Authentication transaction sequence number field.
-  *
-+ * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1535,6 +1537,8 @@ enum nl80211_attrs {
+diff --git a/mesh.c b/mesh.c
+index 4fdad6a..32135ae 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -23,6 +23,14 @@ typedef struct _any_t {
+ 	} u;
+ } _any;
  
- 	NL80211_ATTR_SAE_DATA,
- 
-+	NL80211_ATTR_SCAN_FLAGS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3080,4 +3084,14 @@ enum nl80211_connect_failed_reason {
- 	NL80211_CONN_FAIL_BLOCKED_CLIENT,
- };
- 
-+/**
-+ * enum nl80211_scan_flags -  scan request control flags
-+ *
-+ * Scan request control flags are used to control the handling
-+ * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
-+ * requests.
-+ */
-+enum nl80211_scan_flags {
++/* describes a mesh stats */
++struct mesh_stats_descr {
++	const char *name;
++	enum nl80211_mesh_stats mesh_stats_num;
++	int (*nla_put_fn)(struct nl_msg*, int, _any*);
++	void (*nla_print_fn)(struct nlattr *);
 +};
 +
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 04df773..7c70e99 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1000,6 +1000,7 @@ struct cfg80211_ssid {
-  * @n_channels: total number of channels to scan
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @flags: bit field of flags controlling operation
-  * @rates: bitmap of rates to advertise for each band
-  * @wiphy: the wiphy this was for
-  * @wdev: the wireless device to scan for
-@@ -1012,6 +1013,7 @@ struct cfg80211_scan_request {
- 	u32 n_channels;
- 	const u8 *ie;
- 	size_t ie_len;
-+	u32 flags;
+ /* describes a mesh parameter */
+ struct mesh_param_descr {
+ 	const char *name;
+@@ -150,6 +158,38 @@ static void _print_s32_in_dBm(struct nlattr *a)
+ 	printf("%d dBm", (int32_t) nla_get_u32(a));
+ }
  
- 	u32 rates[IEEE80211_NUM_BANDS];
++/* The current mesh stats */
++const static struct mesh_stats_descr _mesh_stats_descrs[] =
++{
++	{"mesh_fwded_mcast",
++	NL80211_MESH_STATS_FWDED_MCAST,
++	_my_nla_put_u32, _print_u32},
++	{"mesh_fwded_unicast",
++	NL80211_MESH_STATS_FWDED_UNICAST,
++	_my_nla_put_u32, _print_u32},
++	{"mesh_fwded_frames",
++	NL80211_MESH_STATS_FWDED_FRAMES,
++	_my_nla_put_u32, _print_u32},
++	{"mesh_dropped_frames_ttl",
++	NL80211_MESH_STATS_DROPPED_FRAMES_TTL,
++	_my_nla_put_u32, _print_u32},
++	{"mesh_dropped_frames_no_route",
++	NL80211_MESH_STATS_DROPPED_FRAMES_NO_ROUTE,
++	_my_nla_put_u32, _print_u32},
++	{"mesh_dropped_frames_congestion",
++	NL80211_MESH_STATS_DROPPED_FRAMES_CONGESTION,
++	_my_nla_put_u32, _print_u32},
++};
++
++static void print_all_mesh_stats_descr(void)
++{
++	int i;
++
++	printf("Possible mesh stats are:\n");
++
++	for (i = 0; i < ARRAY_SIZE(_mesh_stats_descrs); i++)
++		printf(" - %s\n", _mesh_stats_descrs[i].name);
++}
  
-@@ -1044,6 +1046,7 @@ struct cfg80211_match_set {
-  * @interval: interval between each scheduled scan cycle
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @flags: bit field of flags controlling operation
-  * @match_sets: sets of parameters to be matched for a scan result
-  * 	entry to be considered valid and to be passed to the host
-  * 	(others are filtered out).
-@@ -1061,6 +1064,7 @@ struct cfg80211_sched_scan_request {
- 	u32 interval;
- 	const u8 *ie;
- 	size_t ie_len;
-+	u32 flags;
- 	struct cfg80211_match_set *match_sets;
- 	int n_match_sets;
- 	s32 rssi_thold;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 746f649..714e46d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -355,6 +355,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_WDEV] = { .type = NLA_U64 },
- 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_SAE_DATA] = { .type = NLA_BINARY, },
-+	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
+ /* The current mesh parameters */
+ const static struct mesh_param_descr _mesh_param_descrs[] =
+@@ -229,6 +269,19 @@ static void print_all_mesh_param_descr(void)
+ 		printf(" - %s\n", _mesh_param_descrs[i].name);
+ }
+ 
++static const struct mesh_stats_descr *find_mesh_stats(const char *name)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(_mesh_stats_descrs); i++) {
++		if (strcmp(_mesh_stats_descrs[i].name, name) == 0)
++			return _mesh_stats_descrs + i;
++	}
++
++	print_all_mesh_stats_descr();
++	return NULL;
++}
++
+ static const struct mesh_param_descr *find_mesh_param(const char *name)
+ {
+ 	int i;
+@@ -351,6 +404,70 @@ static int print_mesh_param_handler(struct nl_msg *msg, void *arg)
+ 	return NL_SKIP;
+ }
+ 
++static int print_mesh_stats_handler(struct nl_msg *msg, void *arg)
++{
++	const struct mesh_stats_descr *mdescr = arg;
++	struct nlattr *attrs[NL80211_ATTR_MAX + 1];
++	struct nlattr *parent_attr;
++	struct nlattr *mesh_stats[NL80211_MESH_STATS_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++
++	/* locate NL80211_ATTR_MESH_STATS */
++	nla_parse(attrs, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++	parent_attr = attrs[NL80211_ATTR_MESH_STATS];
++	if (!parent_attr)
++		return -EINVAL;
++
++	if (nla_parse_nested(mesh_stats, NL80211_MESH_STATS_ATTR_MAX,
++			     parent_attr, NULL))
++		return -EINVAL;
++
++	/* Print all mesh stats if no parameter is passed */
++	if (!mdescr) {
++		int i;
++
++		for (i = 0; i < ARRAY_SIZE(_mesh_stats_descrs); i++) {
++			mdescr = &_mesh_stats_descrs[i];
++			printf("%s = ", mdescr->name);
++			mdescr->nla_print_fn(mesh_stats[mdescr->mesh_stats_num]);
++			printf("\n");
++		}
++		return NL_SKIP;
++	}
++
++	/* Print the mesh stat requested */
++	mdescr->nla_print_fn(mesh_stats[mdescr->mesh_stats_num]);
++	printf("\n");
++	return NL_SKIP;
++}
++
++static int get_interface_meshstats(struct nl80211_state *state,
++				   struct nl_cb *cb,
++				   struct nl_msg *msg,
++				   int argc, char **argv,
++				   enum id_input id)
++{
++	const struct mesh_stats_descr *mdescr = NULL;
++
++	if (argc > 1)
++		return 1;
++
++	if (argc == 1) {
++		mdescr = find_mesh_stats(argv[0]);
++		if (!mdescr)
++			return 2;
++	}
++
++	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM,
++		  print_mesh_stats_handler, (void *)mdescr);
++	return 0;
++}
++
++COMMAND(get, mesh_stats, "[<stats>]",
++	NL80211_CMD_GET_MESH_STATS, 0, CIB_NETDEV, get_interface_meshstats,
++	"Retrieve mesh statistics (run command without any to see available ones).");
++
+ static int get_interface_meshparam(struct nl80211_state *state,
+ 				   struct nl_cb *cb,
+ 				   struct nl_msg *msg,
+diff --git a/util.c b/util.c
+index e40a2d5..6ceb9d4 100644
+--- a/util.c
++++ b/util.c
+@@ -236,6 +236,8 @@ static const char *commands[NL80211_CMD_MAX + 1] = {
+ 	[NL80211_CMD_UNEXPECTED_4ADDR_FRAME] = "unexpected_4addr_frame",
+ 	[NL80211_CMD_SET_NOACK_MAP] = "set_noack_map",
+ 	[NL80211_CMD_CH_SWITCH_NOTIFY] = "ch_switch_notify",
++	[NL80211_CMD_GET_MESH_STATS] = "get_mesh_stats",
++
  };
  
- /* policy for the key attributes */
-@@ -4362,6 +4363,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
-+		request->flags = nla_get_u32(
-+			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
- 	request->no_cck =
- 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
-@@ -4593,6 +4598,10 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 		       request->ie_len);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
-+		request->flags = nla_get_u32(
-+			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
- 	request->dev = dev;
- 	request->wiphy = &rdev->wiphy;
- 	request->interval = interval;
-@@ -7658,6 +7667,9 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
- 	    nla_put(msg, NL80211_ATTR_IE, req->ie_len, req->ie))
- 		goto nla_put_failure;
- 
-+	if (req->flags)
-+		nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
-+
- 	return 0;
-  nla_put_failure:
- 	return -ENOBUFS;
+ static char cmdbuf[100];
 -- 
-1.7.0.4
+1.7.5.4
 
