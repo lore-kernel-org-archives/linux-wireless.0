@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:48209 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932087Ab2JPTpb (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:41748 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757335Ab2JJWvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 15:45:31 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 16 Oct 2012 12:43:07 -0700
-Subject: RE: [PATCH] iw: add lowpri and flush scan operands
-Message-ID: <477F20668A386D41ADCC57781B1F7043083B80DEE2@SC-VEXCH1.marvell.com> (sfid-20121016_214534_996909_D71B7C0A)
-References: <1350346947-21280-1-git-send-email-bzhao@marvell.com>
- <1350412864.10177.9.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1350412864.10177.9.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 10 Oct 2012 18:51:49 -0400
+Received: by mail-ee0-f46.google.com with SMTP id b15so738555eek.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2012 15:51:48 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1349893385-23102-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1349893385-23102-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 11 Oct 2012 09:51:28 +1100
+Message-ID: <CAGRGNgUidXkunAuXXoM54-d48HcnAvYBiHrmZL5_7jt=ytF5AQ@mail.gmail.com> (sfid-20121011_005153_334729_C98430FE)
+Subject: Re: [PATCH v0 0/2] driver for 60g Wilocity chip wil6210
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gPiAtLS0gYS9ubDgwMjExLmgNCj4gPiArKysgYi9ubDgwMjExLmgN
-Cj4gDQo+IE5vIG5lZWQgdG8gc2VuZCBubDgwMjExLmggdXBkYXRlcywgSSBkbyB0aG9zZSBkaXJl
-Y3RseSBieSBjb3B5aW5nIHRoZQ0KPiBuZXcgZmlsZSB0byBhdm9pZCBtaXNtYXRjaCBpc3N1ZXMu
-DQoNCk9LLCB3aWxsIHJlbW92ZSBubDgwMjExIGNoYW5nZS4NCg0KPiANCj4gDQo+ID4gLVRPUExF
-VkVMKHNjYW4sICJbLXVdIFtmcmVxIDxmcmVxPipdIFtpZXMgPGhleCBhcyAwMDoxMTouLj5dIFtz
-c2lkIDxzc2lkPip8cGFzc2l2ZV0iLCAwLCAwLA0KPiA+ICtUT1BMRVZFTChzY2FuLCAiWy11XSBb
-ZnJlcSA8ZnJlcT4qXSBbaWVzIDxoZXggYXMgMDA6MTE6Li4+XSBbc3NpZCA8c3NpZD4qfHBhc3Np
-dmV8bG93cHJpfGZsdXNoXSIsDQo+IDAsIDAsDQo+IA0KPiBUaGlzIHNlZW1zIGEgbGl0dGxlIHdy
-b25nLCB5b3UgY2FuJ3QgZ2l2ZSBsb3dwcmkvZmx1c2ggYWZ0ZXIgZ2l2aW5nDQo+IFNTSURzLCBz
-byBpdCBzaG91bGQgcHJvYmFibHkgYmUgd3JpdHRlbiBhcw0KDQpJIHRoaW5rIHdlIGFyZSBhZGRp
-bmcgbG93cHJpL2ZsdXNoIHN1cHBvcnQgYXMgc2ltaWxhciB0byAncGFzc2l2ZScgZmxhZy4NCg0K
-PiANCj4gLi4uIFtpZXMgPC4uLj5dIFtsb3dwcml8Zmx1c2hdIFtzc2lkIC4uLl0NCj4gDQo+IFRo
-ZSBTU0lEIGxpc3QgaGFzIHRvIGJlIGxhc3Qgc2luY2Ugbm8ga2V5d29yZCBjYW4gdGVybWluYXRl
-IGl0DQo+IChldmVyeXRoaW5nIGNvdWxkIGJlIGEgdmFsaWQgU1NJRCkNCg0KTGV0IG1lIGtub3cg
-aWYgeW91IHN0aWxsIHdhbnQgdG8gaW1wbGVtZW50IGxvd3ByaS9mbHVzaCB0aGlzIHdheS4NCg0K
-PiANCj4gPiAgCU5MODAyMTFfQ01EX1RSSUdHRVJfU0NBTiwgMCwgQ0lCX05FVERFViwgaGFuZGxl
-X3NjYW4sDQo+ID4gIAkgIlRyaWdnZXIgYSBzY2FuIG9uIHRoZSBnaXZlbiBmcmVxdWVuY2llcyB3
-aXRoIHByb2JpbmcgZm9yIHRoZSBnaXZlblxuIg0KPiA+ICsNCj4gDQo+IHNwdXJpb3VzIG5ld2xp
-bmU/DQoNCkl0IHdpbGwgYmUgcmVtb3ZlZCBpbiB2Mi4NCg0KVGhhbmtzLA0KQmluZw0K
+Hi Vladimir,
+
+On Thu, Oct 11, 2012 at 5:23 AM, Vladimir Kondratiev
+<qca_vkondrat@qca.qualcomm.com> wrote:
+> Hi,
+>
+> Here goes driver for the "wil6210" chip by Wilocity.
+>
+> This is development snapshot, only basic functionality is working.
+> Chip firmware is also in active development, it is likely that
+> firmware API will change.
+>
+> Code have style warnings like #ifdef's - some code is not integrated,
+> there are places where one can play with different options;
+> these #ifdef's will go away later.
+>
+> But, there is enough content to start with. In the lab I have stable
+> link with 1.2 Gbps throughput, as measured by iperf.
+
+Whilst I'm sure that this driver will end up being kernel quality
+code, as this is an initial development snapshot, have you considered
+putting it in "staging" until it's mostly feature complete?
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
