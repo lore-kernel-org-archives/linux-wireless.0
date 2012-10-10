@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2869 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756250Ab2JEQ31 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 12:29:27 -0400
-Message-ID: <506F0AD9.70200@broadcom.com> (sfid-20121005_182936_791385_704FBAE7)
-Date: Fri, 5 Oct 2012 18:29:13 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Sven Eckelmann" <sven@narfation.org>
-cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com,
-	"Simon Wunderlich" <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv2] ath_hw: Use common REG_WRITE parameter order
-References: <1349366701-23154-1-git-send-email-sven@narfation.org>
- <1349372595-19966-1-git-send-email-sven@narfation.org>
-In-Reply-To: <1349372595-19966-1-git-send-email-sven@narfation.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from shards.monkeyblade.net ([149.20.54.216]:50431 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753543Ab2JJQGs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 12:06:48 -0400
+Date: Wed, 10 Oct 2012 12:06:45 -0400 (EDT)
+Message-Id: <20121010.120645.144599458222040514.davem@davemloft.net> (sfid-20121010_180711_655158_F885FF19)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-10-09
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20121009183844.GB1993@tuxdriver.com>
+References: <20121009183844.GB1993@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2012 07:43 PM, Sven Eckelmann wrote:
-> All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
-> "register" and "value". hw.c is the only file using the order "ah", "value" and
-> "register".
->
-> drivers/net/wireless/ath/ath9k/hw.h:#define REG_WRITE(_ah, _reg, _val) \
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 9 Oct 2012 14:38:44 -0400
 
-Just to bad you did not catch the next line in hw.h.
+> Here is a batch of fixes intended for 3.7...
+> 
+> Amitkumar Karwar provides a couple of mwifiex fixes to correctly
+> report some reason codes for certain connection failures.  He also
+> provides a fix to cleanup after a scanning failure.  Bing Zhao rounds
+> that out with another mwifiex scanning fix.
+> 
+> Daniel Golle gives us a fix for a copy/paste error in rt2x00.
+> 
+> Felix Fietkau brings a couple of ath9k fixes related to suspend/resume,
+> and a couple of fixes to prevent memory leaks in ath9k and mac80211.
+> 
+> Ronald Wahl sends a carl9170 fix for a sleep in softirq context.
+> 
+> Thomas Pedersen reorders some code to prevent drv_get_tsf from being
+> called while holding a spinlock, now that it can sleep.
+> 
+> Finally, Wei Yongjun prevents a NULL pointer dereference in the
+> ath5k driver.
+ ...
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git tags/master-2012-10-08
 
-Gr. AvS
-
-> drivers/net/wireless/ath/key.c:#define REG_WRITE(_ah, _reg, _val) (common->ops->write)(_ah, _val, _reg)
->
-> This inconsistent definition can easily lead to implementation errors. The
-> modification doesn't change the behavior of the driver or the generated code.
->
-> Signed-off-by: Sven Eckelmann <sven@narfation.org>
-> Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-> ---
-> Changed commit message
->
->   drivers/net/wireless/ath/hw.c |   20 ++++++++++----------
->   1 file changed, 10 insertions(+), 10 deletions(-)
-
-
+Pulled, thanks John.
