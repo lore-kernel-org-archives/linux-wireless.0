@@ -1,378 +1,546 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4481 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755015Ab2JVUzx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 16:55:53 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/12] brcmfmac: introduce brcmf_cfg80211_vif structure
-Date: Mon, 22 Oct 2012 13:55:30 -0700
-Message-ID: <1350939341-17687-2-git-send-email-frankyl@broadcom.com> (sfid-20121022_225558_190334_4F622111)
-In-Reply-To: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-References: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:43290 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753977Ab2JJTkI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 15:40:08 -0400
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, bob@cozybit.com,
+	devel@lists.open80211s.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [PATCH] mac80211: make powersave independent of interface type
+Date: Wed, 10 Oct 2012 12:39:50 -0700
+Message-Id: <1349897990-9589-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121010_214014_152718_C09E4CF3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+This patch prepares mac80211 for a later implementation of mesh or ad-hoc
+powersave clients.
+The structures related to powersave (buffer, TIM map, counters) are moved
+from the AP-specific interface structure to a generic structure that can
+be embedded into any interface type.
+The functions related to powersave are prepared to allow easy extension
+with different interface types. For example with:
 
-This patch introduces the brcmf_cfg80211_vif structure which is
-used to keep track of multiple virtual interfaces in the driver.
++ } else if (sta->sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
++			ps = &sdata->u.mesh.ps;
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Some references to the AP's beacon structure are removed where they were
+obviously not used.
+
+The patch compiles without warning and has been briefly tested as AP
+interface with one client in PS mode.
+
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    5 +
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  147 ++++++++++++--------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   39 +++++-
- 3 files changed, 129 insertions(+), 62 deletions(-)
+ net/mac80211/debugfs_netdev.c |    6 +--
+ net/mac80211/ieee80211_i.h    |   20 +++++----
+ net/mac80211/iface.c          |    6 +--
+ net/mac80211/rx.c             |   21 ++++++---
+ net/mac80211/sta_info.c       |   43 +++++++++++++-----
+ net/mac80211/tx.c             |   96 +++++++++++++++++++++++------------------
+ 6 files changed, 119 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index bde5e25..8704daa 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -682,10 +682,14 @@ struct brcmf_if_event {
- 	u8 bssidx;
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 6d5aec9..c83b8ca 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -395,14 +395,14 @@ __IEEE80211_IF_FILE_W(uapsd_max_sp_len);
+ 
+ /* AP attributes */
+ IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+-IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+-IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
++IEEE80211_IF_FILE(num_sta_ps, u.ap.ps.num_sta_ps, ATOMIC);
++IEEE80211_IF_FILE(dtim_count, u.ap.ps.dtim_count, DEC);
+ 
+ static ssize_t ieee80211_if_fmt_num_buffered_multicast(
+ 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+ {
+ 	return scnprintf(buf, buflen, "%u\n",
+-			 skb_queue_len(&sdata->u.ap.ps_bc_buf));
++			 skb_queue_len(&sdata->u.ap.ps.bc_buf));
+ }
+ __IEEE80211_IF_FILE(num_buffered_multicast, NULL);
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8c80455..c430302 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -280,23 +280,27 @@ struct probe_resp {
+ 	u8 data[0];
  };
  
-+/* forward declaration */
-+struct brcmf_cfg80211_vif;
-+
- /**
-  * struct brcmf_if - interface control information.
-  *
-  * @drvr: points to device related information.
-+ * @vif: points to cfg80211 specific interface information.
-  * @ndev: associated network device.
-  * @stats: interface specific network statistics.
-  * @idx: interface index in device firmware.
-@@ -694,6 +698,7 @@ struct brcmf_if_event {
-  */
- struct brcmf_if {
- 	struct brcmf_pub *drvr;
-+	struct brcmf_cfg80211_vif *vif;
- 	struct net_device *ndev;
- 	struct net_device_stats stats;
- 	int idx;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 069a4e4..21d6ab3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -49,6 +49,8 @@
- #define BRCMF_PNO_SCAN_COMPLETE		1
- #define BRCMF_PNO_SCAN_INCOMPLETE	0
- 
-+#define BRCMF_IFACE_MAX_CNT		2
-+
- #define TLV_LEN_OFF			1	/* length offset */
- #define TLV_HDR_LEN			2	/* header length */
- #define TLV_BODY_OFF			2	/* body offset */
-@@ -3441,7 +3443,7 @@ static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
- static int brcmf_cfg80211_testmode(struct wiphy *wiphy, void *data, int len)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
--	struct net_device *ndev = cfg->wdev->netdev;
-+	struct net_device *ndev = cfg_to_ndev(cfg);
- 	struct brcmf_dcmd *dcmd = data;
- 	struct sk_buff *reply;
- 	int ret;
-@@ -4194,72 +4196,95 @@ static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
- #endif
- }
- 
--static struct wireless_dev *brcmf_alloc_wdev(struct device *ndev)
-+static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
- {
--	struct wireless_dev *wdev;
-+	struct wiphy *wiphy;
- 	s32 err = 0;
- 
--	wdev = kzalloc(sizeof(*wdev), GFP_KERNEL);
--	if (!wdev)
--		return ERR_PTR(-ENOMEM);
+-struct ieee80211_if_ap {
+-	struct beacon_data __rcu *beacon;
+-	struct probe_resp __rcu *probe_resp;
 -
--	wdev->wiphy = wiphy_new(&wl_cfg80211_ops,
--				sizeof(struct brcmf_cfg80211_info));
--	if (!wdev->wiphy) {
-+	wiphy = wiphy_new(&wl_cfg80211_ops, sizeof(struct brcmf_cfg80211_info));
-+	if (!wiphy) {
- 		WL_ERR("Could not allocate wiphy device\n");
--		err = -ENOMEM;
--		goto wiphy_new_out;
--	}
--	set_wiphy_dev(wdev->wiphy, ndev);
--	wdev->wiphy->max_scan_ssids = WL_NUM_SCAN_MAX;
--	wdev->wiphy->max_num_pmkids = WL_NUM_PMKIDS_MAX;
--	wdev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--				       BIT(NL80211_IFTYPE_ADHOC) |
--				       BIT(NL80211_IFTYPE_AP);
--	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &__wl_band_2ghz;
--	wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = &__wl_band_5ghz_a;	/* Set
-+		return ERR_PTR(-ENOMEM);
-+	}
-+	set_wiphy_dev(wiphy, phydev);
-+	wiphy->max_scan_ssids = WL_NUM_SCAN_MAX;
-+	wiphy->max_num_pmkids = WL_NUM_PMKIDS_MAX;
-+	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_ADHOC) |
-+				 BIT(NL80211_IFTYPE_AP);
-+	wiphy->bands[IEEE80211_BAND_2GHZ] = &__wl_band_2ghz;
-+	wiphy->bands[IEEE80211_BAND_5GHZ] = &__wl_band_5ghz_a;	/* Set
- 						* it as 11a by default.
- 						* This will be updated with
- 						* 11n phy tables in
- 						* "ifconfig up"
- 						* if phy has 11n capability
- 						*/
--	wdev->wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
--	wdev->wiphy->cipher_suites = __wl_cipher_suites;
--	wdev->wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
--	wdev->wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;	/* enable power
-+	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
-+	wiphy->cipher_suites = __wl_cipher_suites;
-+	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
-+	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;	/* enable power
- 								 * save mode
- 								 * by default
- 								 */
--	brcmf_wiphy_pno_params(wdev->wiphy);
--	err = wiphy_register(wdev->wiphy);
-+	brcmf_wiphy_pno_params(wiphy);
-+	err = wiphy_register(wiphy);
- 	if (err < 0) {
- 		WL_ERR("Could not register wiphy device (%d)\n", err);
--		goto wiphy_register_out;
-+		wiphy_free(wiphy);
-+		return ERR_PTR(err);
- 	}
--	return wdev;
-+	return wiphy;
-+}
-+
-+static
-+struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
-+					   struct net_device *netdev,
-+					   s32 mode, bool pm_block)
-+{
-+	struct brcmf_cfg80211_vif *vif;
-+
-+	if (cfg->vif_cnt == BRCMF_IFACE_MAX_CNT)
-+		return ERR_PTR(-ENOSPC);
-+
-+	vif = kzalloc(sizeof(*vif), GFP_KERNEL);
-+	if (!vif)
-+		return ERR_PTR(-ENOMEM);
- 
--wiphy_register_out:
--	wiphy_free(wdev->wiphy);
-+	vif->wdev.wiphy = cfg->wiphy;
-+	vif->wdev.netdev = netdev;
-+	vif->wdev.iftype = brcmf_mode_to_nl80211_iftype(mode);
- 
--wiphy_new_out:
--	kfree(wdev);
-+	if (netdev) {
-+		vif->ifp = netdev_priv(netdev);
-+		netdev->ieee80211_ptr = &vif->wdev;
-+		SET_NETDEV_DEV(netdev, wiphy_dev(cfg->wiphy));
-+	}
-+
-+	vif->mode = mode;
-+	vif->pm_block = pm_block;
-+	vif->roam_off = -1;
- 
--	return ERR_PTR(err);
-+	list_add_tail(&vif->list, &cfg->vif_list);
-+	cfg->vif_cnt++;
-+	return vif;
- }
- 
--static void brcmf_free_wdev(struct brcmf_cfg80211_info *cfg)
-+static void brcmf_free_vif(struct brcmf_cfg80211_vif *vif)
- {
--	struct wireless_dev *wdev = cfg->wdev;
-+	struct brcmf_cfg80211_info *cfg;
-+	struct wiphy *wiphy;
- 
--	if (!wdev) {
--		WL_ERR("wdev is invalid\n");
--		return;
-+	wiphy = vif->wdev.wiphy;
-+	cfg = wiphy_priv(wiphy);
-+	list_del(&vif->list);
-+	cfg->vif_cnt--;
-+
-+	kfree(vif);
-+	if (!cfg->vif_cnt) {
-+		wiphy_unregister(wiphy);
-+		wiphy_free(wiphy);
- 	}
--	wiphy_unregister(wdev->wiphy);
--	wiphy_free(wdev->wiphy);
--	kfree(wdev);
--	cfg->wdev = NULL;
- }
- 
- static bool brcmf_is_linkup(struct brcmf_cfg80211_info *cfg,
-@@ -4935,8 +4960,10 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr)
- {
- 	struct net_device *ndev = drvr->iflist[0]->ndev;
- 	struct device *busdev = drvr->dev;
--	struct wireless_dev *wdev;
- 	struct brcmf_cfg80211_info *cfg;
-+	struct wiphy *wiphy;
-+	struct brcmf_cfg80211_vif *vif;
-+	struct brcmf_if *ifp;
- 	s32 err = 0;
- 
- 	if (!ndev) {
-@@ -4944,35 +4971,45 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr)
- 		return NULL;
- 	}
- 
--	wdev = brcmf_alloc_wdev(busdev);
--	if (IS_ERR(wdev)) {
-+	ifp = netdev_priv(ndev);
-+	wiphy = brcmf_setup_wiphy(busdev);
-+	if (IS_ERR(wiphy))
- 		return NULL;
--	}
- 
--	wdev->iftype = brcmf_mode_to_nl80211_iftype(WL_MODE_BSS);
--	cfg = wdev_to_cfg(wdev);
--	cfg->wdev = wdev;
-+	cfg = wiphy_priv(wiphy);
-+	cfg->wiphy = wiphy;
- 	cfg->pub = drvr;
--	ndev->ieee80211_ptr = wdev;
--	SET_NETDEV_DEV(ndev, wiphy_dev(wdev->wiphy));
--	wdev->netdev = ndev;
-+	INIT_LIST_HEAD(&cfg->vif_list);
-+
-+	vif = brcmf_alloc_vif(cfg, ndev, WL_MODE_BSS, false);
-+	if (IS_ERR(vif)) {
-+		wiphy_free(wiphy);
-+		return NULL;
-+	}
-+
- 	err = wl_init_priv(cfg);
- 	if (err) {
- 		WL_ERR("Failed to init iwm_priv (%d)\n", err);
- 		goto cfg80211_attach_out;
- 	}
- 
-+	ifp->vif = vif;
- 	return cfg;
- 
- cfg80211_attach_out:
--	brcmf_free_wdev(cfg);
-+	brcmf_free_vif(vif);
- 	return NULL;
- }
- 
- void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
- {
-+	struct brcmf_cfg80211_vif *vif;
-+	struct brcmf_cfg80211_vif *tmp;
-+
- 	wl_deinit_priv(cfg);
--	brcmf_free_wdev(cfg);
-+	list_for_each_entry_safe(vif, tmp, &cfg->vif_list, list) {
-+		brcmf_free_vif(vif);
-+	}
- }
- 
- void
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index 1912625..6644ea8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -235,6 +235,25 @@ struct brcmf_cfg80211_profile {
- 	s32 band;
+-	struct list_head vlans;
+-
++struct ps_data {
+ 	/* yes, this looks ugly, but guarantees that we can later use
+ 	 * bitmap_empty :)
+ 	 * NB: don't touch this bitmap, use sta_info_{set,clear}_tim_bit */
+ 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+-	struct sk_buff_head ps_bc_buf;
++	struct sk_buff_head bc_buf;
+ 	atomic_t num_sta_ps; /* number of stations in PS mode */
+-	atomic_t num_mcast_sta; /* number of stations receiving multicast */
+ 	int dtim_count;
+ 	bool dtim_bc_mc;
  };
  
-+/**
-+ * struct brcmf_cfg80211_vif - virtual interface specific information.
-+ *
-+ * @ifp: lower layer interface pointer
-+ * @wdev: wireless device.
-+ * @mode: operating mode.
-+ * @roam_off: roaming state.
-+ * @pm_block: power-management blocked.
-+ * @list: linked list.
-+ */
-+struct brcmf_cfg80211_vif {
-+	struct brcmf_if *ifp;
-+	struct wireless_dev wdev;
-+	s32 mode;
-+	s32 roam_off;
-+	bool pm_block;
-+	struct list_head list;
++struct ieee80211_if_ap {
++	struct beacon_data __rcu *beacon;
++	struct probe_resp __rcu *probe_resp;
++
++	struct list_head vlans;
++
++	struct ps_data ps;
++	atomic_t num_mcast_sta; /* number of stations receiving multicast */
 +};
 +
- /* dongle iscan event loop */
- struct brcmf_cfg80211_iscan_eloop {
- 	s32 (*handler[WL_SCAN_ERSULTS_LAST])
-@@ -383,7 +402,7 @@ struct brcmf_pno_scanresults_le {
- /**
-  * struct brcmf_cfg80211_info - dongle private data of cfg80211 interface
-  *
-- * @wdev: representing wl cfg80211 device.
-+ * @wiphy: wiphy object for cfg80211 interface.
-  * @conf: dongle configuration.
-  * @scan_request: cfg80211 scan request object.
-  * @el: main event loop.
-@@ -422,10 +441,11 @@ struct brcmf_pno_scanresults_le {
-  * @escan_timeout_work: scan timeout worker.
-  * @escan_ioctl_buf: dongle command buffer for escan commands.
-  * @ap_info: host ap information.
-- * @ci: used to link this structure to netdev private data.
-+ * @vif_list: linked list of vif instances.
-+ * @vif_cnt: number of vif instances.
-  */
- struct brcmf_cfg80211_info {
--	struct wireless_dev *wdev;
-+	struct wiphy *wiphy;
- 	struct brcmf_cfg80211_conf *conf;
- 	struct cfg80211_scan_request *scan_request;
- 	struct brcmf_cfg80211_event_loop el;
-@@ -464,11 +484,13 @@ struct brcmf_cfg80211_info {
- 	struct work_struct escan_timeout_work;
- 	u8 *escan_ioctl_buf;
- 	struct ap_info *ap_info;
-+	struct list_head vif_list;
-+	u8 vif_cnt;
- };
+ struct ieee80211_if_wds {
+ 	struct sta_info *sta;
+ 	u8 remote_addr[ETH_ALEN];
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6f8a73c..f41b5cf 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -755,8 +755,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		WARN_ON(!list_empty(&sdata->u.ap.vlans));
  
--static inline struct wiphy *cfg_to_wiphy(struct brcmf_cfg80211_info *w)
-+static inline struct wiphy *cfg_to_wiphy(struct brcmf_cfg80211_info *cfg)
+ 		/* free all potentially still buffered bcast frames */
+-		local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps_bc_buf);
+-		skb_queue_purge(&sdata->u.ap.ps_bc_buf);
++		local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
++		skb_queue_purge(&sdata->u.ap.ps.bc_buf);
+ 	} else if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		ieee80211_mgd_stop(sdata);
+ 	}
+@@ -1157,7 +1157,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 		sdata->vif.p2p = true;
+ 		/* fall through */
+ 	case NL80211_IFTYPE_AP:
+-		skb_queue_head_init(&sdata->u.ap.ps_bc_buf);
++		skb_queue_head_init(&sdata->u.ap.ps.bc_buf);
+ 		INIT_LIST_HEAD(&sdata->u.ap.vlans);
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 61c621e..0573b1b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1141,12 +1141,19 @@ ieee80211_rx_h_check_more_data(struct ieee80211_rx_data *rx)
+ 	return RX_CONTINUE;
+ }
+ 
+-static void ap_sta_ps_start(struct sta_info *sta)
++static void sta_ps_start(struct sta_info *sta)
  {
--	return w->wdev->wiphy;
-+	return cfg->wiphy;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
++	struct ps_data *ps;
+ 
+-	atomic_inc(&sdata->bss->num_sta_ps);
++	if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		ps = &sdata->bss->ps;
++	else
++		return;
++
++	atomic_inc(&ps->num_sta_ps);
+ 	set_sta_flag(sta, WLAN_STA_PS_STA);
+ 	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_SLEEP, &sta->sta);
+@@ -1154,7 +1161,7 @@ static void ap_sta_ps_start(struct sta_info *sta)
+ 	       sta->sta.addr, sta->sta.aid);
  }
  
- static inline struct brcmf_cfg80211_info *wiphy_to_cfg(struct wiphy *w)
-@@ -481,9 +503,12 @@ static inline struct brcmf_cfg80211_info *wdev_to_cfg(struct wireless_dev *wd)
- 	return (struct brcmf_cfg80211_info *)(wdev_priv(wd));
- }
- 
--static inline struct net_device *cfg_to_ndev(struct brcmf_cfg80211_info *cfg)
-+static inline
-+struct net_device *cfg_to_ndev(struct brcmf_cfg80211_info *cfg)
+-static void ap_sta_ps_end(struct sta_info *sta)
++static void sta_ps_end(struct sta_info *sta)
  {
--	return cfg->wdev->netdev;
-+	struct brcmf_cfg80211_vif *vif;
-+	vif = list_first_entry(&cfg->vif_list, struct brcmf_cfg80211_vif, list);
-+	return vif->wdev.netdev;
+ 	ps_dbg(sta->sdata, "STA %pM aid %d exits power save mode\n",
+ 	       sta->sta.addr, sta->sta.aid);
+@@ -1181,9 +1188,9 @@ int ieee80211_sta_ps_transition(struct ieee80211_sta *sta, bool start)
+ 		return -EINVAL;
+ 
+ 	if (start)
+-		ap_sta_ps_start(sta_inf);
++		sta_ps_start(sta_inf);
+ 	else
+-		ap_sta_ps_end(sta_inf);
++		sta_ps_end(sta_inf);
+ 
+ 	return 0;
+ }
+@@ -1335,10 +1342,10 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 			 */
+ 			if (ieee80211_is_data(hdr->frame_control) &&
+ 			    !ieee80211_has_pm(hdr->frame_control))
+-				ap_sta_ps_end(sta);
++				sta_ps_end(sta);
+ 		} else {
+ 			if (ieee80211_has_pm(hdr->frame_control))
+-				ap_sta_ps_start(sta);
++				sta_ps_start(sta);
+ 		}
+ 	}
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 797dd36..8b4fadf 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -98,6 +98,7 @@ static void free_sta_work(struct work_struct *wk)
+ 	struct tid_ampdu_tx *tid_tx;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
++	struct ps_data *ps;
+ 
+ 	/*
+ 	 * At this point, when being called as call_rcu callback,
+@@ -107,11 +108,15 @@ static void free_sta_work(struct work_struct *wk)
+ 	 */
+ 
+ 	if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
+-		BUG_ON(!sdata->bss);
++		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++			ps = &sdata->bss->ps;
++		else
++			return;
+ 
+ 		clear_sta_flag(sta, WLAN_STA_PS_STA);
+ 
+-		atomic_dec(&sdata->bss->num_sta_ps);
++		atomic_dec(&ps->num_sta_ps);
+ 		sta_info_recalc_tim(sta);
+ 	}
+ 
+@@ -502,22 +507,22 @@ int sta_info_insert(struct sta_info *sta)
+ 	return err;
  }
  
- static inline struct brcmf_cfg80211_info *ndev_to_cfg(struct net_device *ndev)
+-static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
++static inline void __bss_tim_set(u8 *tim, u16 id)
+ {
+ 	/*
+ 	 * This format has been mandated by the IEEE specifications,
+ 	 * so this line may not be changed to use the __set_bit() format.
+ 	 */
+-	bss->tim[aid / 8] |= (1 << (aid % 8));
++	tim[id / 8] |= (1 << (id % 8));
+ }
+ 
+-static inline void __bss_tim_clear(struct ieee80211_if_ap *bss, u16 aid)
++static inline void __bss_tim_clear(u8 *tim, u16 id)
+ {
+ 	/*
+ 	 * This format has been mandated by the IEEE specifications,
+ 	 * so this line may not be changed to use the __clear_bit() format.
+ 	 */
+-	bss->tim[aid / 8] &= ~(1 << (aid % 8));
++	tim[id / 8] &= ~(1 << (id % 8));
+ }
+ 
+ static unsigned long ieee80211_tids_for_ac(int ac)
+@@ -541,14 +546,23 @@ static unsigned long ieee80211_tids_for_ac(int ac)
+ void sta_info_recalc_tim(struct sta_info *sta)
+ {
+ 	struct ieee80211_local *local = sta->local;
+-	struct ieee80211_if_ap *bss = sta->sdata->bss;
++	struct ps_data *ps;
+ 	unsigned long flags;
+ 	bool indicate_tim = false;
+ 	u8 ignore_for_tim = sta->sta.uapsd_queues;
+ 	int ac;
++	u16 id;
++
++	if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		if (WARN_ON_ONCE(!sta->sdata->bss))
++			return;
+ 
+-	if (WARN_ON_ONCE(!sta->sdata->bss))
++		ps = &sta->sdata->bss->ps;
++		id = sta->sta.aid;
++	} else {
+ 		return;
++	}
+ 
+ 	/* No need to do anything if the driver does all */
+ 	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
+@@ -587,9 +601,9 @@ void sta_info_recalc_tim(struct sta_info *sta)
+ 	spin_lock_irqsave(&local->tim_lock, flags);
+ 
+ 	if (indicate_tim)
+-		__bss_tim_set(bss, sta->sta.aid);
++		__bss_tim_set(ps->tim, id);
+ 	else
+-		__bss_tim_clear(bss, sta->sta.aid);
++		__bss_tim_clear(ps->tim, id);
+ 
+ 	if (local->ops->set_tim) {
+ 		local->tim_in_locked_section = true;
+@@ -948,10 +962,17 @@ static void clear_sta_ps_flags(void *_sta)
+ {
+ 	struct sta_info *sta = _sta;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ps_data *ps;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		ps = &sdata->bss->ps;
++	else
++		return;
+ 
+ 	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
+ 	if (test_and_clear_sta_flag(sta, WLAN_STA_PS_STA))
+-		atomic_dec(&sdata->bss->num_sta_ps);
++		atomic_dec(&ps->num_sta_ps);
+ }
+ 
+ /* powersave support code */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e0e0d1d..70c1a43 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -330,16 +330,19 @@ static void purge_old_ps_buffers(struct ieee80211_local *local)
+ 	rcu_read_lock();
+ 
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		struct ieee80211_if_ap *ap;
+-		if (sdata->vif.type != NL80211_IFTYPE_AP)
++		struct ps_data *ps;
++
++		if (sdata->vif.type == NL80211_IFTYPE_AP)
++			ps = &sdata->u.ap.ps;
++		else
+ 			continue;
+-		ap = &sdata->u.ap;
+-		skb = skb_dequeue(&ap->ps_bc_buf);
++
++		skb = skb_dequeue(&ps->bc_buf);
+ 		if (skb) {
+ 			purged++;
+ 			dev_kfree_skb(skb);
+ 		}
+-		total += skb_queue_len(&ap->ps_bc_buf);
++		total += skb_queue_len(&ps->bc_buf);
+ 	}
+ 
+ 	/*
+@@ -371,6 +374,7 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
++	struct ps_data *ps;
+ 
+ 	/*
+ 	 * broadcast/multicast frame
+@@ -380,16 +384,24 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ 	 * This is done either by the hardware or us.
+ 	 */
+ 
+-	/* powersaving STAs only in AP/VLAN mode */
+-	if (!tx->sdata->bss)
++	/* powersaving STAs currently only in AP/VLAN mode */
++	if (tx->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    tx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		if (!tx->sdata->bss)
++			return TX_CONTINUE;
++
++		ps = &tx->sdata->bss->ps;
++	} else {
+ 		return TX_CONTINUE;
++	}
++
+ 
+ 	/* no buffering for ordered frames */
+ 	if (ieee80211_has_order(hdr->frame_control))
+ 		return TX_CONTINUE;
+ 
+ 	/* no stations in PS mode */
+-	if (!atomic_read(&tx->sdata->bss->num_sta_ps))
++	if (!atomic_read(&ps->num_sta_ps))
+ 		return TX_CONTINUE;
+ 
+ 	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
+@@ -404,14 +416,14 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ 	if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+ 		purge_old_ps_buffers(tx->local);
+ 
+-	if (skb_queue_len(&tx->sdata->bss->ps_bc_buf) >= AP_MAX_BC_BUFFER) {
++	if (skb_queue_len(&ps->bc_buf) >= AP_MAX_BC_BUFFER) {
+ 		ps_dbg(tx->sdata,
+ 		       "BC TX buffer full - dropping the oldest frame\n");
+-		dev_kfree_skb(skb_dequeue(&tx->sdata->bss->ps_bc_buf));
++		dev_kfree_skb(skb_dequeue(&ps->bc_buf));
+ 	} else
+ 		tx->local->total_ps_buffered++;
+ 
+-	skb_queue_tail(&tx->sdata->bss->ps_bc_buf, tx->skb);
++	skb_queue_tail(&ps->bc_buf, tx->skb);
+ 
+ 	return TX_QUEUED;
+ }
+@@ -2209,9 +2221,8 @@ void ieee80211_tx_pending(unsigned long data)
+ /* functions for drivers to get certain frames */
+ 
+ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+-				     struct ieee80211_if_ap *bss,
+-				     struct sk_buff *skb,
+-				     struct beacon_data *beacon)
++				     struct ps_data *ps,
++				     struct sk_buff *skb)
+ {
+ 	u8 *pos, *tim;
+ 	int aid0 = 0;
+@@ -2219,27 +2230,27 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* Generate bitmap for TIM only if there are any STAs in power save
+ 	 * mode. */
+-	if (atomic_read(&bss->num_sta_ps) > 0)
++	if (atomic_read(&ps->num_sta_ps) > 0)
+ 		/* in the hope that this is faster than
+ 		 * checking byte-for-byte */
+-		have_bits = !bitmap_empty((unsigned long*)bss->tim,
++		have_bits = !bitmap_empty((unsigned long*)ps->tim,
+ 					  IEEE80211_MAX_AID+1);
+ 
+-	if (bss->dtim_count == 0)
+-		bss->dtim_count = sdata->vif.bss_conf.dtim_period - 1;
++	if (ps->dtim_count == 0)
++		ps->dtim_count = sdata->vif.bss_conf.dtim_period - 1;
+ 	else
+-		bss->dtim_count--;
++		ps->dtim_count--;
+ 
+ 	tim = pos = (u8 *) skb_put(skb, 6);
+ 	*pos++ = WLAN_EID_TIM;
+ 	*pos++ = 4;
+-	*pos++ = bss->dtim_count;
++	*pos++ = ps->dtim_count;
+ 	*pos++ = sdata->vif.bss_conf.dtim_period;
+ 
+-	if (bss->dtim_count == 0 && !skb_queue_empty(&bss->ps_bc_buf))
++	if (ps->dtim_count == 0 && !skb_queue_empty(&ps->bc_buf))
+ 		aid0 = 1;
+ 
+-	bss->dtim_bc_mc = aid0 == 1;
++	ps->dtim_bc_mc = aid0 == 1;
+ 
+ 	if (have_bits) {
+ 		/* Find largest even number N1 so that bits numbered 1 through
+@@ -2247,14 +2258,14 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 		 * (N2 + 1) x 8 through 2007 are 0. */
+ 		n1 = 0;
+ 		for (i = 0; i < IEEE80211_MAX_TIM_LEN; i++) {
+-			if (bss->tim[i]) {
++			if (ps->tim[i]) {
+ 				n1 = i & 0xfe;
+ 				break;
+ 			}
+ 		}
+ 		n2 = n1;
+ 		for (i = IEEE80211_MAX_TIM_LEN - 1; i >= n1; i--) {
+-			if (bss->tim[i]) {
++			if (ps->tim[i]) {
+ 				n2 = i;
+ 				break;
+ 			}
+@@ -2264,7 +2275,7 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 		*pos++ = n1 | aid0;
+ 		/* Part Virt Bitmap */
+ 		skb_put(skb, n2 - n1);
+-		memcpy(pos, bss->tim + n1, n2 - n1 + 1);
++		memcpy(pos, ps->tim + n1, n2 - n1 + 1);
+ 
+ 		tim[1] = n2 - n1 + 4;
+ 	} else {
+@@ -2281,8 +2292,6 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+-	struct ieee80211_if_ap *ap = NULL;
+-	struct beacon_data *beacon;
+ 	enum ieee80211_band band = local->oper_channel->band;
+ 	struct ieee80211_tx_rate_control txrc;
+ 
+@@ -2299,8 +2308,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		*tim_length = 0;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+-		ap = &sdata->u.ap;
+-		beacon = rcu_dereference(ap->beacon);
++		struct ieee80211_if_ap *ap = &sdata->u.ap;
++		struct beacon_data *beacon = rcu_dereference(ap->beacon);
++
+ 		if (beacon) {
+ 			/*
+ 			 * headroom, head length,
+@@ -2324,14 +2334,12 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 			 * of the tim bitmap in mac80211 and the driver.
+ 			 */
+ 			if (local->tim_in_locked_section) {
+-				ieee80211_beacon_add_tim(sdata, ap, skb,
+-							 beacon);
++				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
+ 			} else {
+ 				unsigned long flags;
+ 
+ 				spin_lock_irqsave(&local->tim_lock, flags);
+-				ieee80211_beacon_add_tim(sdata, ap, skb,
+-							 beacon);
++				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
+ 				spin_unlock_irqrestore(&local->tim_lock, flags);
+ 			}
+ 
+@@ -2651,29 +2659,35 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	struct ieee80211_tx_data tx;
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct ieee80211_if_ap *bss = NULL;
+-	struct beacon_data *beacon;
++	struct ps_data *ps;
+ 	struct ieee80211_tx_info *info;
+ 
+ 	sdata = vif_to_sdata(vif);
+-	bss = &sdata->u.ap;
+ 
+ 	rcu_read_lock();
+-	beacon = rcu_dereference(bss->beacon);
+ 
+-	if (sdata->vif.type != NL80211_IFTYPE_AP || !beacon || !beacon->head)
++	if (sdata->vif.type == NL80211_IFTYPE_AP) {
++		struct beacon_data *beacon =
++				rcu_dereference(sdata->u.ap.beacon);
++
++		if (!beacon || !beacon->head)
++			goto out;
++
++		ps = &sdata->u.ap.ps;
++	} else {
+ 		goto out;
++	}
+ 
+-	if (bss->dtim_count != 0 || !bss->dtim_bc_mc)
++	if (ps->dtim_count != 0 || !ps->dtim_bc_mc)
+ 		goto out; /* send buffered bc/mc only after DTIM beacon */
+ 
+ 	while (1) {
+-		skb = skb_dequeue(&bss->ps_bc_buf);
++		skb = skb_dequeue(&ps->bc_buf);
+ 		if (!skb)
+ 			goto out;
+ 		local->total_ps_buffered--;
+ 
+-		if (!skb_queue_empty(&bss->ps_bc_buf) && skb->len >= 2) {
++		if (!skb_queue_empty(&ps->bc_buf) && skb->len >= 2) {
+ 			struct ieee80211_hdr *hdr =
+ 				(struct ieee80211_hdr *) skb->data;
+ 			/* more buffered multicast/broadcast frames ==> set
 -- 
 1.7.9.5
-
 
