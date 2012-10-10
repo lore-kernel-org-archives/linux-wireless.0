@@ -1,102 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36983 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848Ab2JAOB3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2012 10:01:29 -0400
-Message-ID: <1349100121.10330.36.camel@jlt4.sipsolutions.net> (sfid-20121001_160132_854322_0F7EDEE5)
-Subject: [RFC] mac80211: connect with HT20 if HT40 is not permitted
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Paul Stewart <pstew@chromium.org>
-Date: Mon, 01 Oct 2012 16:02:01 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3968 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756944Ab2JJSNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 14:13:25 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Dan Carpenter" <dan.carpenter@oracle.com>
+Subject: [PATCH 7/7] brcmfmac: fix end of loop check (signedness bug)
+Date: Wed, 10 Oct 2012 11:13:12 -0700
+Message-ID: <1349892792-4792-8-git-send-email-frankyl@broadcom.com> (sfid-20121010_201330_182779_8F42DD0F)
+In-Reply-To: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
+References: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Some changes to fix issues with HT40 APs in Korea
-and follow-up changes to allow using HT40 even if
-the local regulatory database disallows it caused
-issues with iwlwifi (and could cause issues with
-other devices); iwlwifi firmware would assert if
-you tried to connect to an AP that has an invalid
-configuration (e.g. using HT40- on channel 140.)
+The problem here is that we loop until "remained_buf_len" is less than
+zero, but since it is unsigned, it never is.
 
-Fix this, while avoiding the "Korean AP" issue by
-disabling HT40 and advertising HT20 to the AP
-when connecting.
+"remained_buf_len" has to be large enough to hold the value from
+"mgmt_ie_buf_len".  That variable is type u32, but it only holds small
+values so I have changed to both variables to int.
 
-Cc: stable@vger.kernel.org [3.6]
-Reported-by: Florian Reitmeir <florian@reitmeir.org>
-Tested-by: Florian Reitmeir <florian@reitmeir.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Also I removed the bogus initialization from "mgmt_ie_buf_len" so that
+GCC can detect if it is used unitialized.  I moved the declaration of
+"remained_buf_len" closer to where it is used so it's easier to read.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- net/mac80211/mlme.c |   40 ++++++++++++++++++++++++++--------------
- 1 file changed, 26 insertions(+), 14 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fe4b744..3b05952 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3199,27 +3199,39 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 				   ht_cfreq, ht_oper->primary_chan,
- 				   cbss->channel->band);
- 			ht_oper = NULL;
-+		} else {
-+			channel_type = NL80211_CHAN_HT20;
- 		}
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 5e51f15..1c83612 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3972,7 +3972,7 @@ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
+ 	u8  *iovar_ie_buf;
+ 	u8  *curr_ie_buf;
+ 	u8  *mgmt_ie_buf = NULL;
+-	u32 mgmt_ie_buf_len;
++	int mgmt_ie_buf_len;
+ 	u32 *mgmt_ie_len;
+ 	u32 del_add_ie_buf_len = 0;
+ 	u32 total_ie_buf_len = 0;
+@@ -3982,7 +3982,7 @@ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
+ 	struct parsed_vndr_ie_info *vndrie_info;
+ 	s32 i;
+ 	u8 *ptr;
+-	u32 remained_buf_len;
++	int remained_buf_len;
  
--	if (ht_oper) {
--		const u8 *ht_cap_ie;
--		const struct ieee80211_ht_cap *ht_cap;
--		u8 chains = 1;
--
--		channel_type = NL80211_CHAN_HT20;
-+	if (ht_oper && sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
-+		/*
-+		 * cfg80211 already verified that the channel itself can
-+		 * be used, but it didn't check that we can do the right
-+		 * HT type, so do that here as well. If HT40 isn't allowed
-+		 * on this channel, disable 40 MHz operation.
-+		 */
- 
--		if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
--			switch (ht_oper->ht_param &
--					IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
--			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+		switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+			if (cbss->channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
-+				ifmgd->flags |= IEEE80211_STA_DISABLE_40MHZ;
-+			else
- 				channel_type = NL80211_CHAN_HT40PLUS;
--				break;
--			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+			break;
-+		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+			if (cbss->channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
-+				ifmgd->flags |= IEEE80211_STA_DISABLE_40MHZ;
-+			else
- 				channel_type = NL80211_CHAN_HT40MINUS;
--				break;
--			}
-+			break;
- 		}
-+	}
-+
-+	if (ht_oper) {
-+		const u8 *ht_cap_ie;
-+		const struct ieee80211_ht_cap *ht_cap;
-+		u8 chains = 1;
- 
- 		ht_cap_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY,
- 					     cbss->information_elements,
+ 	WL_TRACE("bssidx %d, pktflag : 0x%02X\n", bssidx, pktflag);
+ 	iovar_ie_buf = kzalloc(WL_EXTRA_BUF_MAX, GFP_KERNEL);
 -- 
-1.7.10.4
-
+1.7.9.5
 
 
