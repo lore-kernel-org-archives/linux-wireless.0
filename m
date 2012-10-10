@@ -1,264 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:52306 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753694Ab2JSTAu (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:64700 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932386Ab2JJPTt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 15:00:50 -0400
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] NFC: Move pn544.h header file close to the driver
-Date: Fri, 19 Oct 2012 11:56:11 -0700
-Message-Id: <1350672971-29716-1-git-send-email-marcel@holtmann.org> (sfid-20121019_210054_468273_1406EC91)
+	Wed, 10 Oct 2012 11:19:49 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h16so600751oag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2012 08:19:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20121010001024.GE22517@ritirata.org>
+References: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com>
+	<20581.2614.43943.601901@gargle.gargle.HOWL>
+	<50652E56.10303@qca.qualcomm.com>
+	<20581.32544.134606.56158@gargle.gargle.HOWL>
+	<20120929093118.GA3022@ritirata.org>
+	<CAD2nsn20s3L8b8DT53JYAN-t4q5GpxUVzSCncTt1LQO3w=wsYw@mail.gmail.com>
+	<20121010001024.GE22517@ritirata.org>
+Date: Wed, 10 Oct 2012 20:49:48 +0530
+Message-ID: <CAD2nsn11fihMnzryTJzRBqbR86FcT6cA8WWtFBvQxgzeWMUmEA@mail.gmail.com> (sfid-20121010_172007_763001_221DBFDC)
+Subject: Re: [RFC 1/2] ath9k_htc: Advertize allowed vif combinations
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: Sujith Manoharan <c_manoha@qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the removal of the deprecated pn544.c driver, the header
-file pn544.h is now used only by the new pn544_hci.c driver. So
-move the header file close to the driver.
+Hi Antonio,
 
-Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
----
- drivers/nfc/pn544.h       | 104 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/nfc/pn544_hci.c   |   2 +-
- include/linux/nfc/pn544.h | 104 ----------------------------------------------
- 3 files changed, 105 insertions(+), 105 deletions(-)
- create mode 100644 drivers/nfc/pn544.h
- delete mode 100644 include/linux/nfc/pn544.h
+>
+> Hi Mohammed,
+>
+> thank you for having taken care of this. Is it possible to have more details
+> about this "impossibility"? I still have to understand, because on one side we
+> all agreed on the fact that IBSS+AP coexistence will create problems on the STA
+> (connected to the AP) because of the TSF jumps, but this would still "work". On
+> the other side the maintainer is claiming this would not work at all :-) At this
+> point, I'd like to clearly understand "why" he is claiming so: is it for the
+> same reason explained above (TSF jumps) or is there something else?
 
-diff --git a/drivers/nfc/pn544.h b/drivers/nfc/pn544.h
-new file mode 100644
-index 0000000..9890bba
---- /dev/null
-+++ b/drivers/nfc/pn544.h
-@@ -0,0 +1,104 @@
-+/*
-+ * Driver include for the PN544 NFC chip.
-+ *
-+ * Copyright (C) Nokia Corporation
-+ *
-+ * Author: Jari Vanhala <ext-jari.vanhala@nokia.com>
-+ * Contact: Matti Aaltoenn <matti.j.aaltonen@nokia.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ */
-+
-+#ifndef _PN544_H_
-+#define _PN544_H_
-+
-+#include <linux/i2c.h>
-+
-+#define PN544_DRIVER_NAME	"pn544"
-+#define PN544_MAXWINDOW_SIZE	7
-+#define PN544_WINDOW_SIZE	4
-+#define PN544_RETRIES		10
-+#define PN544_MAX_I2C_TRANSFER	0x0400
-+#define PN544_MSG_MAX_SIZE	0x21 /* at normal HCI mode */
-+
-+/* ioctl */
-+#define PN544_CHAR_BASE		'P'
-+#define PN544_IOR(num, dtype)	_IOR(PN544_CHAR_BASE, num, dtype)
-+#define PN544_IOW(num, dtype)	_IOW(PN544_CHAR_BASE, num, dtype)
-+#define PN544_GET_FW_MODE	PN544_IOW(1, unsigned int)
-+#define PN544_SET_FW_MODE	PN544_IOW(2, unsigned int)
-+#define PN544_GET_DEBUG		PN544_IOW(3, unsigned int)
-+#define PN544_SET_DEBUG		PN544_IOW(4, unsigned int)
-+
-+/* Timing restrictions (ms) */
-+#define PN544_RESETVEN_TIME	30 /* 7 */
-+#define PN544_PVDDVEN_TIME	0
-+#define PN544_VBATVEN_TIME	0
-+#define PN544_GPIO4VEN_TIME	0
-+#define PN544_WAKEUP_ACK	5
-+#define PN544_WAKEUP_GUARD	(PN544_WAKEUP_ACK + 1)
-+#define PN544_INACTIVITY_TIME	1000
-+#define PN544_INTERFRAME_DELAY	200 /* us */
-+#define PN544_BAUDRATE_CHANGE	150 /* us */
-+
-+/* Debug bits */
-+#define PN544_DEBUG_BUF		0x01
-+#define PN544_DEBUG_READ	0x02
-+#define PN544_DEBUG_WRITE	0x04
-+#define PN544_DEBUG_IRQ		0x08
-+#define PN544_DEBUG_CALLS	0x10
-+#define PN544_DEBUG_MODE	0x20
-+
-+/* Normal (HCI) mode */
-+#define PN544_LLC_HCI_OVERHEAD	3 /* header + crc (to length) */
-+#define PN544_LLC_MIN_SIZE	(1 + PN544_LLC_HCI_OVERHEAD) /* length + */
-+#define PN544_LLC_MAX_DATA	(PN544_MSG_MAX_SIZE - 2)
-+#define PN544_LLC_MAX_HCI_SIZE	(PN544_LLC_MAX_DATA - 2)
-+
-+struct pn544_llc_packet {
-+	unsigned char length; /* of rest of packet */
-+	unsigned char header;
-+	unsigned char data[PN544_LLC_MAX_DATA]; /* includes crc-ccitt */
-+};
-+
-+/* Firmware upgrade mode */
-+#define PN544_FW_HEADER_SIZE	3
-+/* max fw transfer is 1024bytes, but I2C limits it to 0xC0 */
-+#define PN544_MAX_FW_DATA	(PN544_MAX_I2C_TRANSFER - PN544_FW_HEADER_SIZE)
-+
-+struct pn544_fw_packet {
-+	unsigned char command; /* status in answer */
-+	unsigned char length[2]; /* big-endian order (msf) */
-+	unsigned char data[PN544_MAX_FW_DATA];
-+};
-+
-+#ifdef __KERNEL__
-+enum {
-+	NFC_GPIO_ENABLE,
-+	NFC_GPIO_FW_RESET,
-+	NFC_GPIO_IRQ
-+};
-+
-+/* board config */
-+struct pn544_nfc_platform_data {
-+	int (*request_resources) (struct i2c_client *client);
-+	void (*free_resources) (void);
-+	void (*enable) (int fw);
-+	int (*test) (void);
-+	void (*disable) (void);
-+	int (*get_gpio)(int type);
-+};
-+#endif /* __KERNEL__ */
-+
-+#endif /* _PN544_H_ */
-diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
-index c9c8570..176c37a 100644
---- a/drivers/nfc/pn544_hci.c
-+++ b/drivers/nfc/pn544_hci.c
-@@ -31,7 +31,7 @@
- #include <net/nfc/hci.h>
- #include <net/nfc/llc.h>
- 
--#include <linux/nfc/pn544.h>
-+#include "pn544.h"
- 
- #define DRIVER_DESC "HCI NFC driver for PN544"
- 
-diff --git a/include/linux/nfc/pn544.h b/include/linux/nfc/pn544.h
-deleted file mode 100644
-index 9890bba..0000000
---- a/include/linux/nfc/pn544.h
-+++ /dev/null
-@@ -1,104 +0,0 @@
--/*
-- * Driver include for the PN544 NFC chip.
-- *
-- * Copyright (C) Nokia Corporation
-- *
-- * Author: Jari Vanhala <ext-jari.vanhala@nokia.com>
-- * Contact: Matti Aaltoenn <matti.j.aaltonen@nokia.com>
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * version 2 as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-- */
--
--#ifndef _PN544_H_
--#define _PN544_H_
--
--#include <linux/i2c.h>
--
--#define PN544_DRIVER_NAME	"pn544"
--#define PN544_MAXWINDOW_SIZE	7
--#define PN544_WINDOW_SIZE	4
--#define PN544_RETRIES		10
--#define PN544_MAX_I2C_TRANSFER	0x0400
--#define PN544_MSG_MAX_SIZE	0x21 /* at normal HCI mode */
--
--/* ioctl */
--#define PN544_CHAR_BASE		'P'
--#define PN544_IOR(num, dtype)	_IOR(PN544_CHAR_BASE, num, dtype)
--#define PN544_IOW(num, dtype)	_IOW(PN544_CHAR_BASE, num, dtype)
--#define PN544_GET_FW_MODE	PN544_IOW(1, unsigned int)
--#define PN544_SET_FW_MODE	PN544_IOW(2, unsigned int)
--#define PN544_GET_DEBUG		PN544_IOW(3, unsigned int)
--#define PN544_SET_DEBUG		PN544_IOW(4, unsigned int)
--
--/* Timing restrictions (ms) */
--#define PN544_RESETVEN_TIME	30 /* 7 */
--#define PN544_PVDDVEN_TIME	0
--#define PN544_VBATVEN_TIME	0
--#define PN544_GPIO4VEN_TIME	0
--#define PN544_WAKEUP_ACK	5
--#define PN544_WAKEUP_GUARD	(PN544_WAKEUP_ACK + 1)
--#define PN544_INACTIVITY_TIME	1000
--#define PN544_INTERFRAME_DELAY	200 /* us */
--#define PN544_BAUDRATE_CHANGE	150 /* us */
--
--/* Debug bits */
--#define PN544_DEBUG_BUF		0x01
--#define PN544_DEBUG_READ	0x02
--#define PN544_DEBUG_WRITE	0x04
--#define PN544_DEBUG_IRQ		0x08
--#define PN544_DEBUG_CALLS	0x10
--#define PN544_DEBUG_MODE	0x20
--
--/* Normal (HCI) mode */
--#define PN544_LLC_HCI_OVERHEAD	3 /* header + crc (to length) */
--#define PN544_LLC_MIN_SIZE	(1 + PN544_LLC_HCI_OVERHEAD) /* length + */
--#define PN544_LLC_MAX_DATA	(PN544_MSG_MAX_SIZE - 2)
--#define PN544_LLC_MAX_HCI_SIZE	(PN544_LLC_MAX_DATA - 2)
--
--struct pn544_llc_packet {
--	unsigned char length; /* of rest of packet */
--	unsigned char header;
--	unsigned char data[PN544_LLC_MAX_DATA]; /* includes crc-ccitt */
--};
--
--/* Firmware upgrade mode */
--#define PN544_FW_HEADER_SIZE	3
--/* max fw transfer is 1024bytes, but I2C limits it to 0xC0 */
--#define PN544_MAX_FW_DATA	(PN544_MAX_I2C_TRANSFER - PN544_FW_HEADER_SIZE)
--
--struct pn544_fw_packet {
--	unsigned char command; /* status in answer */
--	unsigned char length[2]; /* big-endian order (msf) */
--	unsigned char data[PN544_MAX_FW_DATA];
--};
--
--#ifdef __KERNEL__
--enum {
--	NFC_GPIO_ENABLE,
--	NFC_GPIO_FW_RESET,
--	NFC_GPIO_IRQ
--};
--
--/* board config */
--struct pn544_nfc_platform_data {
--	int (*request_resources) (struct i2c_client *client);
--	void (*free_resources) (void);
--	void (*enable) (int fw);
--	int (*test) (void);
--	void (*disable) (void);
--	int (*get_gpio)(int type);
--};
--#endif /* __KERNEL__ */
--
--#endif /* _PN544_H_ */
+completely agree with your point, but one thing I am not sure about is
+there something
+specific with ath9k_htc firmware/ h/w code limitations(beacon.c). I
+need to take a close
+look at this. I will just check again with the ath9k_htc maintainer(if
+I can reach him !).
+But if you had tested this better please go ahead and send the patch,
+as it wouldn't be
+breaking. Since the maintainer himself has better understanding about
+ath9k_htc(also its firmware)
+he certainly might have a better reason to say so. Certainly ath9k_htc
+has some limitations
+in firmware and some know issues too!.
+
+I have limited time as i am working in some other project!
+
+>
+> Cheers,
+>
+>
+> --
+> Antonio Quartulli
+>
+> ..each of us alone is worth nothing..
+> Ernesto "Che" Guevara
+
+
+
 -- 
-1.7.11.7
-
+thanks,
+shafi
