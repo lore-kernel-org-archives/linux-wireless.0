@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:34680 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934675Ab2JXN7h (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:63692 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755722Ab2JJThi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 09:59:37 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so658706iea.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 06:59:37 -0700 (PDT)
-Message-ID: <5087F444.5020403@lwfinger.net> (sfid-20121024_155942_270514_15657897)
-Date: Wed, 24 Oct 2012 08:59:32 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 10 Oct 2012 15:37:38 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n3so728912lbo.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2012 12:37:36 -0700 (PDT)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Franky Lin <frankyl@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Driver for USB device with ID 050d:615a
-References: <5087035E.9010609@lwfinger.net> <5087CA82.5070902@broadcom.com>
-In-Reply-To: <5087CA82.5070902@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1349859938.4683.45.camel@jlt4.sipsolutions.net>
+References: <1349814468-6512-1-git-send-email-ashok@cozybit.com>
+ <1349814468-6512-2-git-send-email-ashok@cozybit.com> <1349859938.4683.45.camel@jlt4.sipsolutions.net>
+From: Ashok Nagarajan <ashok@cozybit.com>
+Date: Wed, 10 Oct 2012 12:37:15 -0700
+Message-ID: <CACcxo+o4PxF_M--SHUN1nV4MVfaRFeDmpy9TNZtJ=aQ2osxzEg@mail.gmail.com> (sfid-20121010_213743_296275_D95B43D7)
+Subject: Re: [PATCH 2/2] [nl,cfg,mac]80211: Add nl80211 command to get mesh
+ network statistics
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	javier@cozybit.com, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/24/2012 06:01 AM, Arend van Spriel wrote:
-> On 10/23/2012 10:51 PM, Larry Finger wrote:
->> Arend and Franky,
+Hello Johannes,
+
+Thanks for your comments.
+
+On Wed, Oct 10, 2012 at 2:05 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2012-10-09 at 13:27 -0700, Ashok Nagarajan wrote:
+>> The command NL80211_CMD_GET_MESH_STATS gets the statistical information about
+>> the mesh network. Currently, the following statistics are provided:
 >>
->> I recently purchased a Belkin N600 DB USB dongle on Ebay. I wanted to
->> get the model with a Realtek RTL8192DU chip. Instead I got a version
->> with a Broadcom chip, which lsusb identifies as
+>> 1. Mesh forwarded multicast frames
+>> 2. Mesh forwarded unicast frames
+>> 3. Mesh total forwarded frames
+>> 4. Dropped frames due to mesh_ttl == 0
+>> 5. Dropped frames due to no route found
+>> 6. Dropped frames due to congestion
 >>
->> Bus 001 Device 005: ID 050d:615a Belkin Components F7D4101 / F9L1101
->> 802.11abgn Wireless Adapter [Broadcom BCM4323]
->>
->> I have since acquired a different device with the Realtek chip, thus I
->> could return the Belkin device; however, the cost was minimal and I will
->> keep it if there is a driver for it. Is it a brcmfmac device that is not
->> yet in the device tables, or is it some other sort of unit that may
->> never be supported under Linux?
+>> The attibute NL80211_ATTR_MESH_PARAMS enumerates the various mesh statistical
+>> parameters. A new call back get_mesh_stats() is added. mesh_stats struct is
+>> moved from mac80211/ieee80211_i.h to net/cfg80211.h.
 >
-> Hi Larry,
+> I'll need to think about this a bit. What I'm thinking:
 >
-> I went digging and this chip requires a different driver model (basically a
-> split stack between host and dongle). This model is being abandoned for newer
-> chips so we decided not to support it in mainline linux.
+>  * is a new nl80211 command really the same API?
+>  * should ethtools stats be provided maybe (in addition?)
+>
+We didn't consider ethtools when implementing this. It seems to be a
+good approach. I will send a patch to address the same.
 
-Thanks for the info. I will try to return the device.
+Thanks,
+Ashok
 
-Larry
-
-
+> I think this is probably fine though.
+>
+>
+> Some additional comments on the patch itself:
+>
+>> +struct mesh_stats {
+>
+> That should probably get a cfg80211_ prefix?
+>
+>> +     u32 fwded_mcast;
+>
+> Should we change those to u64 while at it, since it's now part of the
+> userspace API in nl80211?
+>
+>> +static int ieee80211_get_mesh_stats(struct wiphy *wiphy,
+>> +                                 struct net_device *dev,
+>> +                                 struct mesh_stats *stats)
+>> +{
+>> +     struct ieee80211_sub_if_data *sdata;
+>> +     sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>> +
+>> +     memcpy(stats, &sdata->u.mesh.mshstats, sizeof(*stats));
+>
+> should this provide a way to say "I only have these stats" in case other
+> people later implement it? OTOH, they can do that when they implement it
+> and don't have all the stats.
+>
+> johannes
+>
