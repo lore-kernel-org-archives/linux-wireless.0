@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47373 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755828Ab2JJVad (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 17:30:33 -0400
-Message-ID: <1349904667.19068.0.camel@jlt4.sipsolutions.net> (sfid-20121010_233036_396942_B59C52D2)
-Subject: Re: p2p question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Oct 2012 23:31:07 +0200
-In-Reply-To: <5075E771.2090101@broadcom.com>
-References: <5075E771.2090101@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3968 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756930Ab2JJSNW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 14:13:22 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/7] miscellaneous fixes intended for 3.7
+Date: Wed, 10 Oct 2012 11:13:05 -0700
+Message-ID: <1349892792-4792-1-git-send-email-frankyl@broadcom.com> (sfid-20121010_201328_694938_DE817865)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-10 at 23:24 +0200, Arend van Spriel wrote:
-> Hi Johannes,
-> 
-> Reading the comment on .add_virtual_intf() callback I am a bit confused.
-> 
-> =====
->   * @add_virtual_intf: create a new virtual interface with the given name,
->   *	must set the struct wireless_dev's iftype. Beware: You must create
->   *	the new netdev in the wiphy's network namespace! Returns the struct
->   *	wireless_dev, or an ERR_PTR. For P2P device wdevs, the driver must
->   *	also set the address member in the wdev.
-> =====
-> 
-> The last sentence refers to the "address member in wdev", but at least 
-> in my tree struct wireless_dev does not have an address member. Missing 
-> something here?
+Here are some miscellaneous brcmfmac bug fix patches aiming for 3.7
 
-It does in my tree?
+Arend van Spriel (1):
+  brcmfmac: remove 'always false' condition from brcmf_c_mkiovar_bsscfg
 
-struct wireless_dev {
-...
-        u8 address[ETH_ALEN] __aligned(sizeof(u16));
+Dan Carpenter (2):
+  brcmfmac: Using zero instead of NULL
+  brcmfmac: fix end of loop check (signedness bug)
 
-maybe you missed it?
+Franky Lin (3):
+  brcmfmac: fix sparse warnings
+  brcmfmac: use control channel in roamed status reporting
+  brcmfmac: set dongle mode accordingly when interface up
 
-johannes
+Hante Meuleman (1):
+  brcmfmac: handle all exceptions as an error.
+
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   77 +++++++-------------
+ 3 files changed, 30 insertions(+), 51 deletions(-)
+
+-- 
+1.7.9.5
+
 
