@@ -1,66 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52662 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737Ab2JYWqJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 18:46:09 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] mac80211: check management frame header length
-Date: Fri, 26 Oct 2012 00:46:38 +0200
-Message-Id: <1351205200-18094-2-git-send-email-johannes@sipsolutions.net> (sfid-20121026_004616_020726_0FABE0D4)
-In-Reply-To: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
-References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
+Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:28651
+	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751144Ab2JJLdG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 07:33:06 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: VHT peer STA caps
+Date: Wed, 10 Oct 2012 11:33:04 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB359@mbx022-e1-nj-10.exch022.domain.local> (sfid-20121010_133311_747377_EAAE65C6)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mahesh Palivela <maheshp@posedge.com>
 
-Due to pskb_may_pull() checking the skb length, all
-non-management frames are checked on input whether
-their 802.11 header is fully present. Also add that
-check for management frames and remove a check that
-is now duplicate. This prevents accessing skb data
-beyond the frame end.
+To save AP's VHT capabilities in STA mode
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
 ---
- net/mac80211/rx.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ include/net/mac80211.h     |    3 +++
+ net/mac80211/Makefile      |    1 +
+ net/mac80211/ieee80211_i.h |    7 +++++++
+ net/mac80211/mlme.c        |    5 +++++
+ net/mac80211/util.c        |   12 ++++++++++++
+ net/mac80211/vht.c         |   36 ++++++++++++++++++++++++++++++++++++
+ 6 files changed, 64 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c6865f2..99cdee1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1470,7 +1470,6 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 	frag = sc & IEEE80211_SCTL_FRAG;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f12df5b..89d5bba 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1122,6 +1122,8 @@ enum ieee80211_sta_state {
+  * @aid: AID we assigned to the station if we're an AP
+  * @supp_rates: Bitmap of supported rates (per band)
+  * @ht_cap: HT capabilities of this STA; restricted to our own TX capabilities
++ * @vht_cap: VHT capabilities of this STA; Not restricting any capabilities
++ * 	of remote STA. Taking as is.
+  * @wme: indicates whether the STA supports WME. Only valid during AP-mode.
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void *), size is determined in hw information.
+@@ -1134,6 +1136,7 @@ struct ieee80211_sta {
+ 	u8 addr[ETH_ALEN];
+ 	u16 aid;
+ 	struct ieee80211_sta_ht_cap ht_cap;
++	struct ieee80211_sta_vht_cap vht_cap;
+ 	bool wme;
+ 	u8 uapsd_queues;
+ 	u8 max_sp;
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index a7dd110..4911202 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -8,6 +8,7 @@ mac80211-y := \
+ 	wpa.o \
+ 	scan.o offchannel.o \
+ 	ht.o agg-tx.o agg-rx.o \
++	vht.o \
+ 	ibss.o \
+ 	iface.o \
+ 	rate.o \
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1fd7dfc..546da35 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1188,6 +1188,8 @@ struct ieee802_11_elems {
+ 	u8 *wmm_param;
+ 	struct ieee80211_ht_cap *ht_cap_elem;
+ 	struct ieee80211_ht_operation *ht_operation;
++	struct ieee80211_vht_cap *vht_cap_elem;
++	struct ieee80211_vht_operation *vht_operation;
+ 	struct ieee80211_meshconf_ie *mesh_config;
+ 	u8 *mesh_id;
+ 	u8 *peering;
+@@ -1416,6 +1418,11 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid);
  
- 	if (likely((!ieee80211_has_morefrags(fc) && frag == 0) ||
--		   (rx->skb)->len < 24 ||
- 		   is_multicast_ether_addr(hdr->addr1))) {
- 		/* not fragmented */
- 		goto out;
-@@ -2915,10 +2914,15 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	if (ieee80211_is_data(fc) || ieee80211_is_mgmt(fc))
- 		local->dot11ReceivedFragmentCount++;
+ u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
  
--	if (ieee80211_is_mgmt(fc))
--		err = skb_linearize(skb);
--	else
-+	if (ieee80211_is_mgmt(fc)) {
-+		/* drop frame if too short for header */
-+		if (skb->len < ieee80211_hdrlen(fc))
-+			err = -ENOBUFS;
-+		else
-+			err = skb_linearize(skb);
-+	} else {
- 		err = !pskb_may_pull(skb, ieee80211_hdrlen(fc));
-+	}
++/* VHT */
++void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
++					 struct ieee80211_supported_band *sband,
++					 struct ieee80211_vht_cap *vht_cap_ie,
++					 struct ieee80211_sta_vht_cap *vht_cap);
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8cefc18..02f4ed5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2156,6 +2156,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	sta->supports_40mhz =
+ 		sta->sta.ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40;
  
- 	if (err) {
- 		dev_kfree_skb(skb);
--- 
-1.7.10.4
-
++	if (elems.vht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
++		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
++						    elems.vht_cap_elem,
++						    &sta->sta.vht_cap);
++
+ 	rate_control_rate_init(sta);
+ 
+ 	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3b35356..af6c54d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -741,6 +741,18 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			else
+ 				elem_parse_failed = true;
+ 			break;
++		case WLAN_EID_VHT_CAPABILITY:
++			if (elen >= sizeof(struct ieee80211_vht_cap))
++				elems->vht_cap_elem = (void *)pos;
++			else
++				elem_parse_failed = true;
++			break;
++		case WLAN_EID_VHT_OPERATION:
++			if (elen >= sizeof(struct ieee80211_vht_operation))
++				elems->vht_operation = (void *)pos;
++			else
++				elem_parse_failed = true;
++			break;
+ 		case WLAN_EID_MESH_ID:
+ 			elems->mesh_id = pos;
+ 			elems->mesh_id_len = elen;
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+new file mode 100644
+index 0000000..18f584e
+--- /dev/null
++++ b/net/mac80211/vht.c
+@@ -0,0 +1,36 @@
++/*
++ * VHT handling
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/ieee80211.h>
++#include <linux/export.h>
++#include <net/mac80211.h>
++#include "ieee80211_i.h"
++
++
++void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
++					 struct ieee80211_supported_band *sband,
++					 struct ieee80211_vht_cap *vht_cap_ie,
++					 struct ieee80211_sta_vht_cap *vht_cap)
++{
++	if (WARN_ON_ONCE(!vht_cap))
++		return;
++
++	memset(vht_cap, 0, sizeof(*vht_cap));
++
++	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
++		return;
++
++	vht_cap->vht_supported = true;
++
++	vht_cap->cap = le16_to_cpu(vht_cap_ie->vht_cap_info);
++
++	/* Copy peer MCS info, the driver might need them. */
++	memcpy((u8 *)&vht_cap->vht_mcs,
++	       (u8 *)&vht_cap_ie->supp_mcs,
++	       sizeof(struct ieee80211_vht_mcs_info));
++}
