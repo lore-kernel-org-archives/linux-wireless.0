@@ -1,84 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:39487 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751100Ab2JIAmN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2012 20:42:13 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so1827751dak.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2012 17:42:13 -0700 (PDT)
-Date: Mon, 8 Oct 2012 17:42:09 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: xiong@qca.qualcomm.com, mcgrof@kernel.org,
-	backports@vger.kernel.org, nic-devel@qualcomm.com,
-	Ren Cloud <cjren@qca.qualcomm.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	qca_vkondrat@qca.qualcomm.com
-Subject: Re: [PATCH] compat-drivers: update ethernet driver alx in crap dir
-Message-ID: <20121009004209.GC9068@kroah.com> (sfid-20121009_024217_567747_34C75413)
-References: <1349400892-25315-1-git-send-email-xiong@qca.qualcomm.com>
- <CAB=NE6VotAu-cugsn4==3TPX0OGPEFtdn1J+5+Rd_YfLcg9YDQ@mail.gmail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3967 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756946Ab2JJSNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 14:13:25 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/7] brcmfmac: fix sparse warnings
+Date: Wed, 10 Oct 2012 11:13:08 -0700
+Message-ID: <1349892792-4792-4-git-send-email-frankyl@broadcom.com> (sfid-20121010_201333_353869_C30B69AB)
+In-Reply-To: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
+References: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6VotAu-cugsn4==3TPX0OGPEFtdn1J+5+Rd_YfLcg9YDQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 08, 2012 at 03:25:08PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Oct 4, 2012 at 6:34 PM,  <xiong@qca.qualcomm.com> wrote:
-> > From: xiong <xiong@qca.qualcomm.com>
-> >
-> > 1. support new device id (0x10A0/0x10A1).
-> > 2. add DEBUG_FS interface for diag/swoi functions.
-> >
-> > Signed-off-by: Ren Cloud <cjren@qca.qualcomm.com>
-> > Signed-off-by: xiong <xiong@qca.qualcomm.com>
-> 
-> Xiong,
-> 
->  -- Vladimir, just a heads up -- this applies to you as well for the
-> 802.11ad wil6210 driver
->  -- Greg, some review on your preference on this would be appreciated
+Following sparse warning is fixed:
+drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:2518:21: warning: symbol 'brcmf_find_wpaie' was not declared. Should it be static?
+drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:3768:1: warning: symbol 'brcmf_set_management_ie' was not declared. Should it be static?
 
-Preference on what?  I've never seen this driver before, why wasn't it
-submitted to be in the staging tree in the first place?
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> The original alx crap patch was added into compat-wireless on the
-> linux-3.5.y branch.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index b1c9be7..9c3fe1a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -2674,7 +2674,7 @@ brcmf_tlv_has_ie(u8 *ie, u8 **tlvs, u32 *tlvs_len,
+ 	return false;
+ }
+ 
+-struct brcmf_vs_tlv *
++static struct brcmf_vs_tlv *
+ brcmf_find_wpaie(u8 *parse, u32 len)
+ {
+ 	struct brcmf_tlv *ie;
+@@ -3963,7 +3963,7 @@ brcmf_vndr_ie(u8 *iebuf, s32 pktflag, u8 *ie_ptr, u32 ie_len, s8 *add_del_cmd)
+ 	return ie_len + VNDR_IE_HDR_SIZE;
+ }
+ 
+-s32
++static s32
+ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
+ 			struct net_device *ndev, s32 bssidx, s32 pktflag,
+ 			u8 *vndr_ie_buf, u32 vndr_ie_len)
+-- 
+1.7.9.5
 
-What is "crap patch"?  And is this the old driver with the dubios
-history keeping it from ever being merged anywhere, or is this something
-new?
 
-> Its been two kernel releases and alx is not yet
-> upstream and users can only get alx via compat-drivers (technically
-> compat-wireless as that was pre v3.7). v3.7 would be the *third*
-> release in which this would happen... This is unfair to users and
-> consumers of the Linux kernel and derails expectations and our
-> arrangements for Linux kernel development. I realize that the goal was
-> to get alx upstream ASAP but regardless of what the reason is, its not
-> yet upstream. If you cannot work on alx on a timely manner to get
-> upstream then please submit the driver to the staging area of the
-> Linux kernel that Greg maintains so that other developers who may be
-> able to help can submit patches to help you. Under staging your driver
-> should be accepted so long as it compiles.
-> 
-> I will update the documentation for crap/ patches for compat-drivers
-> to make it clear now that crap/ patches can be used for adding
-> components / pieces of code not yet ready for upstream but as far as
-> full new drivers are concerned you only get one kernel release cycle
-> for it to linger on crap/ under compat-drivers, if you haven't
-> addressed upstreaming yet then it should go to drivers/staging/. That
-> is crap/ should only be used as a shortcut because users exist that
-> can use the driver but you *do* have a team properly resourced to
-> address upstreaming properly in a timely manner.
-
-Why do you even need crap/ at all?  What is keeping drivers like this
-(if it isn't the legally dubious driver) from being merged into staging
-today?  And if it is the legally dubious driver, well, you had better
-not be taking it in your tree either...
-
-confused,
-
-greg k-h
