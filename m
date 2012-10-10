@@ -1,327 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4496 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757485Ab2JLL0L (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38331 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752597Ab2JJPam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 07:26:11 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 4/4] ath9k: adjust WLAN and BT concurrent transmission
-Date: Fri, 12 Oct 2012 14:07:25 +0530
-Message-ID: <1350031045-11860-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121012_132621_457800_DC78FB8C)
-In-Reply-To: <1350031045-11860-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350031045-11860-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Wed, 10 Oct 2012 11:30:42 -0400
+Date: Wed, 10 Oct 2012 11:18:55 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	"alexander.smirnov@siemens.com" <alexander.smirnov@siemens.com>
+Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
+ 2012 (Barcelona!)
+Message-ID: <20121010151854.GA6247@tuxdriver.com> (sfid-20121010_173047_655560_C2E1D4A4)
+References: <20120822201930.GC14913@tuxdriver.com>
+ <1345667975.8786.0.camel@jlt3.sipsolutions.net>
+ <20120822204122.GA2196@tuxdriver.com>
+ <507561C8.7080601@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <507561C8.7080601@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The simulataneous transmission of both WLAN and BT might cause
-increase in power levels. To avoid regulatory violation, WLAN tx
-power will be adjusted according to BT power index based on avaliability
-of BT scheduling messages. WLAN tx power reduction might affect its
-performance. So WLAN tx power is only be lowered when the signal strength
-is good enough. Otherwise concurrent tx will be disabled and WLAN uses
-it default power levels. Also concurrent tx is disabled whenever WLAN is
-moving to off-channel which might be used by BT.
+On Wed, Oct 10, 2012 at 01:53:44PM +0200, Michal Kazior wrote:
+> On 22/08/12 22:41, John W. Linville wrote:
+> >On Wed, Aug 22, 2012 at 10:39:35PM +0200, Johannes Berg wrote:
+> >>On Wed, 2012-08-22 at 16:19 -0400, John W. Linville wrote:
+> >>
+> >>>With that said, there are still a number of slots available for
+> >>>presentations or discussion topics.  This is especially true for the
+> >>>802.11 group...  Please step-up with some suggested topics!
+> >>
+> >>Anyone want to carefully review & present Michal's and my work on
+> >>multi-channel in mac80211? :-)
+> >
+> >I would _really_ like to see this.  Anyone (smarter than me) that is
+> >willing to do this for the group?
+> >
+> >John
+> >
+> 
+> Hi,
+> 
+> I'd like to do it. I'll update the wiki and put myself in a free
+> timeslot if that's okay.
+> 
+> 
+> -- Pozdrawiam / Best regards, Michal Kazior.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 18 ++++++--
- drivers/net/wireless/ath/ath9k/ar9003_mci.c    | 28 +++++++++++-
- drivers/net/wireless/ath/ath9k/ar9003_mci.h    |  5 +++
- drivers/net/wireless/ath/ath9k/ath9k.h         |  1 +
- drivers/net/wireless/ath/ath9k/btcoex.h        |  3 ++
- drivers/net/wireless/ath/ath9k/gpio.c          |  2 +
- drivers/net/wireless/ath/ath9k/main.c          |  4 ++
- drivers/net/wireless/ath/ath9k/mci.c           | 59 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/mci.h           |  8 ++++
- 9 files changed, 124 insertions(+), 4 deletions(-)
+That sounds great to me!
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 5bbe505..f3784eb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -18,6 +18,7 @@
- #include "hw.h"
- #include "ar9003_phy.h"
- #include "ar9003_eeprom.h"
-+#include "ar9003_mci.h"
- 
- #define COMP_HDR_LEN 4
- #define COMP_CKSUM_LEN 2
-@@ -41,7 +42,6 @@
- static int ar9003_hw_power_interpolate(int32_t x,
- 				       int32_t *px, int32_t *py, u_int16_t np);
- 
--
- static const struct ar9300_eeprom ar9300_default = {
- 	.eepromVersion = 2,
- 	.templateVersion = 2,
-@@ -5037,16 +5037,28 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
- 		case CTL_5GHT20:
- 		case CTL_2GHT20:
- 			for (i = ALL_TARGET_HT20_0_8_16;
--			     i <= ALL_TARGET_HT20_23; i++)
-+			     i <= ALL_TARGET_HT20_23; i++) {
- 				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
- 						       minCtlPower);
-+				if (ath9k_hw_mci_is_enabled(ah))
-+					pPwrArray[i] =
-+						(u8)min((u16)pPwrArray[i],
-+						ar9003_mci_get_max_txpower(ah,
-+							pCtlMode[ctlMode]));
-+			}
- 			break;
- 		case CTL_5GHT40:
- 		case CTL_2GHT40:
- 			for (i = ALL_TARGET_HT40_0_8_16;
--			     i <= ALL_TARGET_HT40_23; i++)
-+			     i <= ALL_TARGET_HT40_23; i++) {
- 				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
- 						       minCtlPower);
-+				if (ath9k_hw_mci_is_enabled(ah))
-+					pPwrArray[i] =
-+						(u8)min((u16)pPwrArray[i],
-+						ar9003_mci_get_max_txpower(ah,
-+							pCtlMode[ctlMode]));
-+			}
- 			break;
- 		default:
- 			break;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 44c202c..9aa8704 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -818,7 +818,7 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
--	u32 regval;
-+	u32 regval, i;
- 
- 	ath_dbg(common, MCI, "MCI Reset (full_sleep = %d, is_2g = %d)\n",
- 		is_full_sleep, is_2g);
-@@ -868,6 +868,18 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 	REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2, AR_BTCOEX_CTRL2_RX_DEWEIGHT, 1);
- 	REG_RMW_FIELD(ah, AR_PCU_MISC, AR_PCU_BT_ANT_PREVENT_RX, 0);
- 
-+	/* concurrent tx priority */
-+	if (mci->config & ATH_MCI_CONFIG_CONCUR_TX) {
-+		REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2,
-+			      AR_BTCOEX_CTRL2_DESC_BASED_TXPWR_ENABLE, 0);
-+		REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2,
-+			      AR_BTCOEX_CTRL2_TXPWR_THRESH, 0x7f);
-+		REG_RMW_FIELD(ah, AR_BTCOEX_CTRL,
-+			      AR_BTCOEX_CTRL_REDUCE_TXPWR, 0);
-+		for (i = 0; i < 8; i++)
-+			REG_WRITE(ah, AR_BTCOEX_MAX_TXPWR(i), 0x7f7f7f7f);
-+	}
-+
- 	regval = MS(mci->config, ATH_MCI_CONFIG_CLK_DIV);
- 	REG_RMW_FIELD(ah, AR_MCI_TX_CTRL, AR_MCI_TX_CTRL_CLK_DIV, regval);
- 	REG_SET_BIT(ah, AR_BTCOEX_CTRL, AR_BTCOEX_CTRL_MCI_MODE_EN);
-@@ -1426,3 +1438,17 @@ void ar9003_mci_send_wlan_channels(struct ath_hw *ah)
- 	ar9003_mci_send_coex_wlan_channels(ah, true);
- }
- EXPORT_SYMBOL(ar9003_mci_send_wlan_channels);
-+
-+u16 ar9003_mci_get_max_txpower(struct ath_hw *ah, u8 ctlmode)
-+{
-+	if (!ah->btcoex_hw.mci.concur_tx)
-+		goto out;
-+
-+	if (ctlmode == CTL_2GHT20)
-+		return ATH_BTCOEX_HT20_MAX_TXPOWER;
-+	else if (ctlmode == CTL_2GHT40)
-+		return ATH_BTCOEX_HT40_MAX_TXPOWER;
-+
-+out:
-+	return -1;
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 2928234..0910310 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -277,6 +277,7 @@ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
- void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
- void ar9003_mci_set_power_awake(struct ath_hw *ah);
- void ar9003_mci_check_gpm_offset(struct ath_hw *ah);
-+u16 ar9003_mci_get_max_txpower(struct ath_hw *ah, u8 ctlmode);
- 
- #else
- 
-@@ -323,6 +324,10 @@ static inline void ar9003_mci_set_power_awake(struct ath_hw *ah)
- static inline void ar9003_mci_check_gpm_offset(struct ath_hw *ah)
- {
- }
-+static inline u16 ar9003_mci_get_max_txpower(struct ath_hw *ah, u8 ctlmode)
-+{
-+	return -1;
-+}
- #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
- 
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 77c2c16..18dfb76 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -479,6 +479,7 @@ struct ath_btcoex {
- 	u32 btscan_no_stomp; /* in usec */
- 	u32 duty_cycle;
- 	u32 bt_wait_time;
-+	int rssi_count;
- 	struct ath_gen_timer *no_stomp_timer; /* Timer for no BT stomping */
- 	struct ath_mci_profile mci;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index a260fcb..94e9211 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -39,6 +39,9 @@
- #define ATH_BTCOEX_RX_WAIT_TIME       100
- #define ATH_BTCOEX_STOMP_FTP_THRESH   5
- 
-+#define ATH_BTCOEX_HT20_MAX_TXPOWER   0x14
-+#define ATH_BTCOEX_HT40_MAX_TXPOWER   0x10
-+
- #define AR9300_NUM_BT_WEIGHTS   4
- #define AR9300_NUM_WLAN_WEIGHTS 4
- /* Defines the BT AR_BT_COEX_WGHT used */
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index d9ed141..9663897 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -209,6 +209,8 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	}
- 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
-+	ath9k_mci_update_rssi(sc);
-+
- 	ath9k_ps_wakeup(sc);
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
- 		ath_detect_bt_priority(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 515e184..578a723 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -293,6 +293,10 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
- 		goto out;
- 	}
- 
-+	if (ath9k_hw_mci_is_enabled(sc->sc_ah) &&
-+	    (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL))
-+		ath9k_mci_set_txpower(sc, true, false);
-+
- 	if (!ath_complete_reset(sc, true))
- 		r = -EIO;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index b37c8af..19dbac4 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -710,3 +710,62 @@ send_wlan_chan:
- 	ar9003_mci_send_wlan_channels(ah);
- 	ar9003_mci_state(ah, MCI_STATE_SEND_VERSION_QUERY);
- }
-+
-+void ath9k_mci_set_txpower(struct ath_softc *sc, bool setchannel,
-+			   bool concur_tx)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
-+	bool old_concur_tx = mci_hw->concur_tx;
-+
-+	if (!(mci_hw->config & ATH_MCI_CONFIG_CONCUR_TX)) {
-+		mci_hw->concur_tx = false;
-+		return;
-+	}
-+
-+	if (!IS_CHAN_2GHZ(ah->curchan))
-+		return;
-+
-+	if (setchannel) {
-+		struct ath9k_hw_cal_data *caldata = &sc->caldata;
-+		if ((caldata->chanmode == CHANNEL_G_HT40PLUS) &&
-+		    (ah->curchan->channel > caldata->channel) &&
-+		    (ah->curchan->channel <= caldata->channel + 20))
-+			return;
-+		if ((caldata->chanmode == CHANNEL_G_HT40MINUS) &&
-+		    (ah->curchan->channel < caldata->channel) &&
-+		    (ah->curchan->channel >= caldata->channel - 20))
-+			return;
-+		mci_hw->concur_tx = false;
-+	} else
-+		mci_hw->concur_tx = concur_tx;
-+
-+	if (old_concur_tx != mci_hw->concur_tx)
-+		ath9k_hw_set_txpowerlimit(ah, sc->config.txpowlimit, false);
-+}
-+
-+void ath9k_mci_update_rssi(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_btcoex *btcoex = &sc->btcoex;
-+	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
-+
-+	if (!(mci_hw->config & ATH_MCI_CONFIG_CONCUR_TX))
-+		return;
-+
-+	if (ah->stats.avgbrssi >= 40) {
-+		if (btcoex->rssi_count < 0)
-+			btcoex->rssi_count = 0;
-+		if (++btcoex->rssi_count >= ATH_MCI_CONCUR_TX_SWITCH) {
-+			btcoex->rssi_count = 0;
-+			ath9k_mci_set_txpower(sc, false, true);
-+		}
-+	} else {
-+		if (btcoex->rssi_count > 0)
-+			btcoex->rssi_count = 0;
-+		if (--btcoex->rssi_count <= -ATH_MCI_CONCUR_TX_SWITCH) {
-+			btcoex->rssi_count = 0;
-+			ath9k_mci_set_txpower(sc, false, false);
-+		}
-+	}
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index e85a0e9..e5f170a 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -35,6 +35,7 @@
- #define ATH_MCI_INQUIRY_PRIO         62
- #define ATH_MCI_HI_PRIO              60
- #define ATH_MCI_NUM_BT_CHANNELS      79
-+#define ATH_MCI_CONCUR_TX_SWITCH      5
- 
- #define MCI_GPM_SET_CHANNEL_BIT(_p_gpm, _bt_chan)			  \
- 	do {								  \
-@@ -151,10 +152,13 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci);
- int ath_mci_setup(struct ath_softc *sc);
- void ath_mci_cleanup(struct ath_softc *sc);
- void ath_mci_intr(struct ath_softc *sc);
-+void ath9k_mci_update_rssi(struct ath_softc *sc);
- 
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- void ath_mci_enable(struct ath_softc *sc);
- void ath9k_mci_update_wlan_channels(struct ath_softc *sc, bool allow_all);
-+void ath9k_mci_set_txpower(struct ath_softc *sc, bool setchannel,
-+			   bool concur_tx);
- #else
- static inline void ath_mci_enable(struct ath_softc *sc)
- {
-@@ -163,6 +167,10 @@ static inline void ath9k_mci_update_wlan_channels(struct ath_softc *sc,
- 						  bool allow_all)
- {
- }
-+static inline void ath9k_mci_set_txpower(struct ath_softc *sc, bool setchannel,
-+					 bool concur_tx)
-+{
-+}
- #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
- 
- #endif /* MCI_H*/
+Thanks,
+
+John
+
 -- 
-1.7.12.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
