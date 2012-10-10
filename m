@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:48841 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753492Ab2JUT6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2012 15:58:55 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	hch@lst.de, s.L-H@gmx.de
-Subject: Re: [PATCH 2/4] ar5523: Add driver header file
-References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
-	<1349985702-21322-3-git-send-email-pontus.fuchs@gmail.com>
-	<87626f0vzw.fsf@purkki.adurom.net> <50793F05.7030604@gmail.com>
-Date: Sun, 21 Oct 2012 22:58:53 +0300
-In-Reply-To: <50793F05.7030604@gmail.com> (Pontus Fuchs's message of "Sat, 13
-	Oct 2012 12:14:29 +0200")
-Message-ID: <87hapnzjeq.fsf@purkki.adurom.net> (sfid-20121021_215857_881631_FF634861)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:44288 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407Ab2JJF3s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 01:29:48 -0400
+Message-ID: <1349847023.4683.25.camel@jlt4.sipsolutions.net> (sfid-20121010_072959_704079_7B4C2832)
+Subject: Re: [RFC] mac80211: make powersave independent of interface type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 10 Oct 2012 07:30:23 +0200
+In-Reply-To: <5074886E.1040400@etit.tu-chemnitz.de>
+References: <1349719669-11503-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1349807952.4683.12.camel@jlt4.sipsolutions.net>
+	 <5074886E.1040400@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pontus Fuchs <pontus.fuchs@gmail.com> writes:
+On Tue, 2012-10-09 at 13:26 -0700, Marco Porsch wrote:
+> On 10/09/2012 11:39 AM, Johannes Berg wrote:
+> >> Does it make any sense to test for NL80211_IFTYPE_AP and
+> >> NL80211_IFTYPE_AP_VLAN everytime?
+> >
+> > Not sure how you mean that?
+> >
+> 
+> See, I use the disjunction
+> + if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
+> +     sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
+> at least 5 times. I thought in some situations it may be only necessary 
+> to check for one of them, because of the function context.
 
-> On 2012-10-13 07:41, Kalle Valo wrote:
->> Pontus Fuchs <pontus.fuchs@gmail.com> writes:
->>
->>> +#define ar5523_err(ar, format, arg...) \
->>> +do { \
->>> +	if (!test_bit(AR5523_USB_DISCONNECTED, &ar->flags)) { \
->>> +		dev_err(&(ar)->dev->dev, format, ## arg); \
->>> +	} \
->>> +} while (0)
->> This looks suspicious and might hide something important. It's better to
->> fix the real cause than to workaround it in the error log printer. Do
->> you know why this was added?
->
-> Yes. The purpose is to hide all the USB errors that happens when you
-> hot-unplug the dongle. There can be quite a few URBs in flight and
-> all of them will fail with -ENODEV or -ESHUTDOWN. Instead of checking
-> for these errors in all the usb submissions and callbacks I added this
-> flag. Do you still a problem with this approach?
+I don't think so, but honestly, I haven't looked very closely :)
 
-IMHO it's bad style to hide that inside a logging macro and might hide
-some other bugs. It's better to check the state explicitly in the
-callback.
+johannes
 
-But again this isn't anything important, just something I noticed while
-reviewing the code. Do what you think is best.
-
--- 
-Kalle Valo
