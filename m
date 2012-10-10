@@ -1,25 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm20.bullet.mail.sp2.yahoo.com ([98.139.91.90]:39139 "HELO
-	nm20.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758198Ab2JAXPo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2012 19:15:44 -0400
-References: <1348086305.81224.YahooMailNeo@web164004.mail.gq1.yahoo.com>  <20120928121917.GF5368@mwanda>  <1348870515.1973.YahooMailNeo@web164005.mail.gq1.yahoo.com>  <20120929072527.GA13767@mwanda>  <1349102641.41622.YahooMailNeo@web164005.mail.gq1.yahoo.com>  <20121001150913.GC13767@mwanda>  <1349109750.55372.YahooMailNeo@web164005.mail.gq1.yahoo.com>  (sfid-20121001_184314_573998_F50474BE) <1349119899.10330.53.camel@jlt4.sipsolutions.net> <1349132818.58475.YahooMailNeo@web164006.mail.gq1.yahoo.com>
-Message-ID: <1349133342.57103.YahooMailNeo@web164001.mail.gq1.yahoo.com> (sfid-20121002_021729_661520_BADB35D4)
-Date: Mon, 1 Oct 2012 16:15:42 -0700 (PDT)
-From: Kevin Cruz <skate_ops@yahoo.com>
-Reply-To: Kevin Cruz <skate_ops@yahoo.com>
-Subject: Re: How do I get mac80211 debugfs?
-To: Intel Wireless <ilw@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1349132818.58475.YahooMailNeo@web164006.mail.gq1.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from perches-mx.perches.com ([206.117.179.246]:49141 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756867Ab2JJSWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 14:22:09 -0400
+Message-ID: <1349893320.2035.4.camel@joe-AO722> (sfid-20121010_202234_250507_0DB25F9C)
+Subject: Re: [PATCH V3] ath/ath9k/ar9003_eeprom.c: Remove semicolon after if
+From: Joe Perches <joe@perches.com>
+To: Peter Senna Tschudin <peter.senna@gmail.com>
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date: Wed, 10 Oct 2012 11:22:00 -0700
+In-Reply-To: <1349887097-24980-1-git-send-email-peter.senna@gmail.com>
+References: <1349038599-22026-1-git-send-email-peter.senna@gmail.com>
+	 <1349887097-24980-1-git-send-email-peter.senna@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I accidentally changed the subject name. This should be part of
-"iwlwifi can't connect to router after suspend resuming from suspend."
+On Wed, 2012-10-10 at 18:38 +0200, Peter Senna Tschudin wrote:
+> This patch remove a semicolon after if(...) that is preventing the
+> error check to work correctly. Removing this semicolon will change the
+> code behavior, but this is intended.
+> 
+> The semantic patch that finds this problem is as follows:
+> (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @r1@
+> position p;
+> @@
+> if (...);@p
+
+this semantic patch would be a lot less tedious to
+inspect the results if it excluded else after the
+semicolon.
+
+I've used perl for more or less the same output.
 
