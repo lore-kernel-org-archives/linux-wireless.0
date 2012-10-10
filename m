@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33982 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750749Ab2JFK7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2012 06:59:45 -0400
-Message-ID: <50700F1B.1050405@openwrt.org> (sfid-20121006_125948_387077_43B9308A)
-Date: Sat, 06 Oct 2012 12:59:39 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Manoharan, Sujith" <c_manoha@qti.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH 3.7 2/3] ath9k: improve suspend/resume reliability
-References: <1349291272-93080-1-git-send-email-nbd@openwrt.org> <1349291272-93080-2-git-send-email-nbd@openwrt.org> <20588.62828.845432.706022@gargle.gargle.HOWL>,<506D5804.4090806@openwrt.org> <506697F5827BD842B7CB80D046EBE618A47245@aphydexd01b>
-In-Reply-To: <506697F5827BD842B7CB80D046EBE618A47245@aphydexd01b>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:44778 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760Ab2JJIP3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 04:15:29 -0400
+Message-ID: <1349856962.4683.30.camel@jlt4.sipsolutions.net> (sfid-20121010_101535_032030_21F6FD0C)
+Subject: Re: [PATCH v3 2/5] cfg80211: add scan flag to indicate its priority
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Wed, 10 Oct 2012 10:16:02 +0200
+In-Reply-To: <1349326066-28501-3-git-send-email-bzhao@marvell.com>
+References: <1349326066-28501-1-git-send-email-bzhao@marvell.com>
+	 <1349326066-28501-3-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-06 12:46 PM, Manoharan, Sujith wrote:
-> On 2012-10-04 4:33 AM, Sujith Manoharan wrote:
->> Felix Fietkau wrote:
->>> Ensure that drv_start() always returns true, as a failing hw start usually
->>> eventually leads to crashes when there's still a station entry present.
->>> Call a power-on reset after a resume and after a hw reset failure to bring
->>> the hardware back to life again.
->>
->> In what situations did HW reset (via start() or resume()) fail ?
->> I don't know what situations caused it, but this happened on a few
->> ChromeOS devices in the wild, and my patch fixed it.
-> 
-> Well, the cause for the real issue, the HW reset failure is still unknown.
-> I think we might be papering over some other bug here.
-After a suspend/resume cycle, the card definitely needs at least one
-power-on reset (since we can assume that the card was power cycled), as
-is done on driver initialization as well. My patch ensures that this
-happens by setting a flag on resume.
+On Wed, 2012-10-03 at 21:47 -0700, Bing Zhao wrote:
+> v3: Add WIPHY_FLAG_LOW_PRIORITY_SCAN flag so that device can advertise
+>     low priority scan capability. An error will be returned to the
+>     application if device doesn't support this feature.
+>     Flush scan table feature is by default enabled.
+>     (Johannes Berg)
 
-If for some reason the drv_start() reset still fails (and I'm not aware
-of any such instances), it's still much better to return 0. The reset
-failure will still appear in log messages.
+Great, but you're not advertising it to userspace? I think that should
+be there so it can know whether it can request flush etc?
 
-If we return an error code in drv_start, this tends to create a mess of
-either WARN_ON/BUG_ON calls triggered at a later point in time (if a
-station was connected), or just a complete loss of wifi functionality.
+Also, how should flush really work with scheduled scan? Or should it be
+documented to not work there?
 
-- Felix
+johannes
+
