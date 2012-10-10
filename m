@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5525 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123Ab2JOIMt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44813 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752292Ab2JJIg7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 04:12:49 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 01/12] ath9k_hw: Enable OSLA hw fix for AR9565
-Date: Mon, 15 Oct 2012 13:25:27 +0530
-Message-ID: <1350287738-18687-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101253_738554_78B51953)
-In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 10 Oct 2012 04:36:59 -0400
+Message-ID: <1349858253.4683.36.camel@jlt4.sipsolutions.net> (sfid-20121010_103706_287251_43AA434F)
+Subject: Re: [PATCH v4 2/2] mac80211: VHT peer STA caps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 10 Oct 2012 10:37:33 +0200
+In-Reply-To: <506BBF72.5070009@posedge.com>
+References: <506BBF72.5070009@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 3 +++
- drivers/net/wireless/ath/ath9k/reg.h        | 4 ++++
- 2 files changed, 7 insertions(+)
+On Wed, 2012-10-03 at 10:00 +0530, Mahesh Palivela wrote:
+> From: Mahesh Palivela <maheshp@posedge.com>
+> 
+> To save AP's VHT capabilities in mac80211 under STA mode
+> 
+> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 9aa8704..9fa6d22 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -799,6 +799,9 @@ static void ar9003_mci_osla_setup(struct ath_hw *ah, bool enable)
- 	REG_RMW_FIELD(ah, AR_MCI_SCHD_TABLE_2,
- 		      AR_MCI_SCHD_TABLE_2_MEM_BASED, 1);
- 
-+	if (AR_SREV_9565(ah))
-+		REG_RMW_FIELD(ah, AR_MCI_MISC, AR_MCI_MISC_HW_FIX_EN, 1);
-+
- 	if (!(mci->config & ATH_MCI_CONFIG_DISABLE_AGGR_THRESH)) {
- 		thresh = MS(mci->config, ATH_MCI_CONFIG_AGGR_THRESH);
- 		REG_RMW_FIELD(ah, AR_BTCOEX_CTRL,
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 4e6760f..c7a9ea7 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -2360,4 +2360,8 @@ enum {
- #define AR_GLB_SWREG_DISCONT_MODE         0x2002c
- #define AR_GLB_SWREG_DISCONT_EN_BT_WLAN   0x3
- 
-+#define AR_MCI_MISC                    0x1a74
-+#define AR_MCI_MISC_HW_FIX_EN          0x00000001
-+#define AR_MCI_MISC_HW_FIX_EN_S        0
-+
- #endif
--- 
-1.7.12.2
+This looks fine as well, but I can't get it to apply, can you please
+resend? I did apply the other one, so no need to resend the other one :)
+
+johannes
 
