@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44596 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754377Ab2JOSat (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 14:30:49 -0400
-Date: Mon, 15 Oct 2012 14:27:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/7] miscellaneous fixes intended for 3.7
-Message-ID: <20121015182756.GE16817@tuxdriver.com> (sfid-20121015_203052_854710_CE6F6140)
+Received: from mms1.broadcom.com ([216.31.210.17]:3430 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756948Ab2JJSNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 14:13:25 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 6/7] brcmfmac: remove 'always false' condition from
+ brcmf_c_mkiovar_bsscfg
+Date: Wed, 10 Oct 2012 11:13:11 -0700
+Message-ID: <1349892792-4792-7-git-send-email-frankyl@broadcom.com> (sfid-20121010_201335_714454_58362929)
+In-Reply-To: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
 References: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 10, 2012 at 11:13:05AM -0700, Franky Lin wrote:
-> Here are some miscellaneous brcmfmac bug fix patches aiming for 3.7
-> 
-> Arend van Spriel (1):
->   brcmfmac: remove 'always false' condition from brcmf_c_mkiovar_bsscfg
-> 
-> Dan Carpenter (2):
->   brcmfmac: Using zero instead of NULL
-> 
-> Franky Lin (3):
->   brcmfmac: fix sparse warnings
+From: Arend van Spriel <arend@broadcom.com>
 
-These don't strike me as meaningful bug fixes.  I'll hold them for 3.8.
+The parameter buflen is unsigned so the condition buflen < 0 is
+always false. The patch fixes the if statement checking the buffer
+length.
 
-John
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 15c5db5..a081e68 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -106,7 +106,7 @@ brcmf_c_mkiovar_bsscfg(char *name, char *data, uint datalen,
+ 	namelen = (u32) strlen(name) + 1; /* lengh of iovar  name + null */
+ 	iolen = prefixlen + namelen + sizeof(bssidx_le) + datalen;
+ 
+-	if (buflen < 0 || iolen > (u32)buflen) {
++	if ((u32)buflen < iolen) {
+ 		brcmf_dbg(ERROR, "buffer is too short\n");
+ 		return 0;
+ 	}
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.5
+
+
