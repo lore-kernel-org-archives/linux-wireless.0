@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx-relay12-muc.antispameurope.com ([217.64.175.212]:54720 "EHLO
-	mx-relay12-muc.antispameurope.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751158Ab2J3NOE (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:45083 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755199Ab2JJVwo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 09:14:04 -0400
-Message-ID: <508FCF5A.2080204@fokus.fraunhofer.de> (sfid-20121030_141408_561331_2A693278)
-Date: Tue, 30 Oct 2012 14:00:10 +0100
-From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+	Wed, 10 Oct 2012 17:52:44 -0400
+Date: Thu, 11 Oct 2012 00:52:35 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] {nl,cfg}80211: peer STA VHT caps
+Message-ID: <20121010215235.GB18956@w1.fi> (sfid-20121010_235247_478992_777F1987)
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB3C5@mbx022-e1-nj-10.exch022.domain.local>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
-	<linville@tuxdriver.com>, <mcgrof@qca.qualcomm.com>,
-	<sven@narfation.org>, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCH] ath9k: apply coverage class on slottime too
-References: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de> <508FCB77.9000303@openwrt.org>
-In-Reply-To: <508FCB77.9000303@openwrt.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB3C5@mbx022-e1-nj-10.exch022.domain.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2012 01:43 PM, Felix Fietkau wrote:
-> On 2012-10-30 1:07 PM, Simon Wunderlich wrote:
->> From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
->>
->> According to 802.11-2007 17.3.8.6 (slot time), the slot time should
->> be increased by 3 us * coverage class. The code only increased the
->> ack timeout, which is fixed by this patch.
->>
->> We have noticed in our long shot scenario that we see less collisions
->> with this patch.
-> At some point I had the slot time increase in the driver, but noticed a
-> massive throughput degradation on 10-20 km links. Leaving the slot time
-> alone and changing only the ACK timeout fixed this. What distances did
-> you test?
+On Wed, Oct 10, 2012 at 05:55:42PM +0000, Mahesh Palivela wrote:
+> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> @@ -1324,6 +1324,7 @@ enum nl80211_attrs {
+>  	NL80211_ATTR_BSS_SHORT_SLOT_TIME,
+>  
+>  	NL80211_ATTR_HT_CAPABILITY,
+> +	NL80211_ATTR_VHT_CAPABILITY,
+>  
+>  	NL80211_ATTR_SUPPORTED_IFTYPES,
 
-about 11km. did you test UDP (unidirectional) or TCP (bidirectional) throughput ?
+NACK - please see the comment at the end of the enum about the place
+where to add new attributes in a way that does not break compatibility
+with existing user space..
 
-The larger slot time will increase the channel access overhead which should impact 
-unidirectional throughput.
-
-With bidirectional traffic, the larger slottime should help to minimize collisions 
-on loaded links. Overall this seems to increase the net throughput for us, 
-especially in higher access categories (smaller backoff windows).
-
-Cheers,
-
-Mathias
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
