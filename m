@@ -1,39 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-6.exch022.serverdata.net ([206.225.164.189]:8754 "EHLO
-	HUB022-nj-6.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753356Ab2JKJJg (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:59673 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755662Ab2JJQjO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 05:09:36 -0400
-Message-ID: <50768CC4.9030504@posedge.com> (sfid-20121011_110940_560575_E3359028)
-Date: Thu, 11 Oct 2012 14:39:24 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] {nl,cfg}80211: Peer STA VHT caps
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB506@mbx022-e1-nj-10.exch022.domain.local> <1349945487.13097.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1349945487.13097.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Wed, 10 Oct 2012 12:39:14 -0400
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+To: mcgrof@qca.qualcomm.com
+Cc: jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Peter Senna Tschudin <peter.senna@gmail.com>
+Subject: [PATCH V3] ath/ath9k/ar9003_eeprom.c: Remove semicolon after if
+Date: Wed, 10 Oct 2012 18:38:17 +0200
+Message-Id: <1349887097-24980-1-git-send-email-peter.senna@gmail.com> (sfid-20121010_183940_599435_F8121FF3)
+In-Reply-To: <1349038599-22026-1-git-send-email-peter.senna@gmail.com>
+References: <1349038599-22026-1-git-send-email-peter.senna@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2012 02:21 PM, Johannes Berg wrote:
-> On Thu, 2012-10-11 at 08:04 +0000, Mahesh Palivela wrote:
->> From: Mahesh Palivela <maheshp@posedge.com>
->>
->> To save STAs VHT caps in AP mode
->
-> Applied, thanks.
->
-> Looks like we're getting close with VHT, what (besides a driver) are we
-> missing?
->
-> johannes
->
+This patch remove a semicolon after if(...) that is preventing the
+error check to work correctly. Removing this semicolon will change the
+code behavior, but this is intended.
 
-VHT regulatory and channel config are next items.
-Extended CSA
-Transmit power envelope
-VHT rate handling
-Beam forming
-Quiet chan etc
+The semantic patch that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@r1@
+position p;
+@@
+if (...);@p
+
+@script:python@
+p0 << r1.p;
+@@
+// Emacs org-mode output
+cocci.print_main("", p0)
+cocci.print_secs("", p0)
+// </smpl>
+
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+---
+NOTE: This patch changes the semantics.
+
+Changes from V1:
+Commit message
+Added a note about semantics change
+
+Changes from V2:
+Commit message
+
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 5bbe505..189aeb2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2989,7 +2989,7 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 	case EEP_PAPRD:
+ 		if (AR_SREV_9462(ah))
+ 			return false;
+-		if (!ah->config.enable_paprd);
++		if (!ah->config.enable_paprd)
+ 			return false;
+ 		return !!(pBase->featureEnable & BIT(5));
+ 	case EEP_CHAIN_MASK_REDUCE:
+-- 
+1.7.11.4
+
