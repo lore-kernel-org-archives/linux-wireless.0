@@ -1,37 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:41389 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758415Ab2J3TYf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 15:24:35 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1TTHQW-00009c-FX
-	for linux-wireless@vger.kernel.org; Tue, 30 Oct 2012 20:24:41 +0100
-Received: from 85-211-212-185.dynamic.dsl.as9105.com ([85-211-212-185.dynamic.dsl.as9105.com])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 20:24:40 +0100
-Received: from cliffhanger by 85-211-212-185.dynamic.dsl.as9105.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 20:24:40 +0100
-To: linux-wireless@vger.kernel.org
-From: Cliff McDiarmid <cliffhanger@gardener.com>
-Subject: Re: RTL8188SU
-Date: Tue, 30 Oct 2012 19:24:20 +0000 (UTC)
-Message-ID: <loom.20121030T202116-449@post.gmane.org> (sfid-20121030_202441_976744_134FF0BB)
-References: <loom.20121028T233054-8@post.gmane.org> <201210291257.02249.chunkeey@googlemail.com> <loom.20121029T182405-382@post.gmane.org> <201210292117.45399.chunkeey@googlemail.com> <loom.20121029T214630-424@post.gmane.org> <508EFA5D.8090706@lwfinger.net> <loom.20121029T234700-352@post.gmane.org> <508F423A.4010407@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11815 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129Ab2JJISU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 04:18:20 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: perform ani cycle in idle state
+Date: Wed, 10 Oct 2012 13:48:02 +0530
+Message-ID: <1349857082-19255-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121010_101826_850145_7678A375)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+As of now the ANI cycle is only be executed when chip is awake.
+On idle state case, the station wakes up from network sleep for
+beacon reception. Since most of the time, ANI cycle is not syncing
+with beacon reception, it was ignored. Approx 5 mins once, the
+calibration was performed. This coule affect the connection stability
+if the station is idle for long. Even though the OFDM and CCK phy
+error rates are too high, ANI is unable to tune its immunity level
+as quick enough due to rare execution.
 
-Many thanks for all advice
+Here the experiment shows that OFDM and CCK were stick with default level
+on higher phy error rate.
 
-regards
+listenTime=44 OFDM:3 errs=121977/s CCK:2 errs=440818/s ofdm_turn=1
 
-Cliff McDiarmid
+After this change, ANI calibration was exectued for every 10 seconds
+if it was ignored. The below result shows improvements and immunity
+levels were adopted quick enough.
 
+listenTime=557 OFDM:4 errs=752/s CCK:4 errs=125/s ofdm_turn=0
 
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  2 ++
+ drivers/net/wireless/ath/ath9k/hw.h    |  1 +
+ drivers/net/wireless/ath/ath9k/link.c  | 12 +++++++++++-
+ drivers/net/wireless/ath/ath9k/main.c  |  3 ++-
+ 4 files changed, 16 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index dfe6a47..77c2c16 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -437,6 +437,7 @@ void ath9k_set_beacon(struct ath_softc *sc);
+ #define ATH_LONG_CALINTERVAL_INT  1000    /* 1000 ms */
+ #define ATH_LONG_CALINTERVAL      30000   /* 30 seconds */
+ #define ATH_RESTART_CALINTERVAL   1200000 /* 20 minutes */
++#define ATH_ANI_MAX_SKIP_COUNT  10
+ 
+ #define ATH_PAPRD_TIMEOUT	100 /* msecs */
+ #define ATH_PLL_WORK_INTERVAL   100
+@@ -642,6 +643,7 @@ enum sc_op_flags {
+ #define PS_WAIT_FOR_PSPOLL_DATA   BIT(2)
+ #define PS_WAIT_FOR_TX_ACK        BIT(3)
+ #define PS_BEACON_SYNC            BIT(4)
++#define PS_WAIT_FOR_ANI           BIT(5)
+ 
+ struct ath_rate_table;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index dbc1b7a..1d4f5f1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -834,6 +834,7 @@ struct ath_hw {
+ 	int coarse_low[5];
+ 	int firpwr[5];
+ 	enum ath9k_ani_cmd ani_function;
++	u32 ani_skip_count;
+ 
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	struct ath_btcoex_hw btcoex_hw;
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 7b88b9c..223b969 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -350,8 +350,18 @@ void ath_ani_calibrate(unsigned long data)
+ 		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
+ 
+ 	/* Only calibrate if awake */
+-	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
++	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE) {
++		if (++ah->ani_skip_count >= ATH_ANI_MAX_SKIP_COUNT) {
++			spin_lock_irqsave(&sc->sc_pm_lock, flags);
++			sc->ps_flags |= PS_WAIT_FOR_ANI;
++			spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++		}
+ 		goto set_timer;
++	}
++	ah->ani_skip_count = 0;
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	sc->ps_flags &= ~PS_WAIT_FOR_ANI;
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index dd45edf..2da62be 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -131,7 +131,8 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 		   !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
+ 				     PS_WAIT_FOR_CAB |
+ 				     PS_WAIT_FOR_PSPOLL_DATA |
+-				     PS_WAIT_FOR_TX_ACK))) {
++				     PS_WAIT_FOR_TX_ACK |
++				     PS_WAIT_FOR_ANI))) {
+ 		mode = ATH9K_PM_NETWORK_SLEEP;
+ 		if (ath9k_hw_btcoex_is_enabled(sc->sc_ah))
+ 			ath9k_btcoex_stop_gen_timer(sc);
+-- 
+1.7.12.2
 
