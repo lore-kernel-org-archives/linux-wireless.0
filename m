@@ -1,149 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4490 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755710Ab2JVRgi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 13:36:38 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Hante Meuleman" <meuleman@broadcom.com>
-Subject: [PATCH 05/14] brcmfmac: clean usb download code.
-Date: Mon, 22 Oct 2012 10:36:18 -0700
-Message-ID: <1350927387-25608-6-git-send-email-frankyl@broadcom.com> (sfid-20121022_193707_596630_56D55BBF)
-In-Reply-To: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
-References: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2673 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751328Ab2JJRdj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Oct 2012 13:33:39 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2] ath9k: perform ANI cycle in idle state
+Date: Wed, 10 Oct 2012 23:03:02 +0530
+Message-ID: <1349890382-1094-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121010_193342_787250_90469998)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+As of now the ANI cycle is executed only when the chip is awake.
+On idle state case, the station wakes up from network sleep for
+beacon reception. Since most of the time, ANI cycle is not syncing
+with beacon wakeup, ANI cycle is ignored. Approx 5 mins once, the
+calibration is performed. This could affect the connection stability
+when the station is idle for long. Even though the OFDM and CCK phy
+error rates are too high, ANI is unable to tune its immunity level
+as quick enough due to rare execution.
 
-reuse ioctl waiting method.
+Here the experiment shows that OFDM and CCK levels are at default
+even on higher phy error rate.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+listenTime=44 OFDM:3 errs=121977/s CCK:2 errs=440818/s ofdm_turn=1
+
+This change ensures that ANI calibration will be exectued atleast
+once for every 10 seconds. The below result shows improvements and
+immunity levels are adopted quick enough.
+
+listenTime=557 OFDM:4 errs=752/s CCK:4 errs=125/s ofdm_turn=0
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |   41 +++++--------------------
- 1 files changed, 8 insertions(+), 33 deletions(-)
+v2: updated commit log
+ drivers/net/wireless/ath/ath9k/ath9k.h |  2 ++
+ drivers/net/wireless/ath/ath9k/hw.h    |  1 +
+ drivers/net/wireless/ath/ath9k/link.c  | 12 +++++++++++-
+ drivers/net/wireless/ath/ath9k/main.c  |  3 ++-
+ 4 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 7a6dfdc..484a6e4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -42,7 +42,6 @@
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index dfe6a47..77c2c16 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -437,6 +437,7 @@ void ath9k_set_beacon(struct ath_softc *sc);
+ #define ATH_LONG_CALINTERVAL_INT  1000    /* 1000 ms */
+ #define ATH_LONG_CALINTERVAL      30000   /* 30 seconds */
+ #define ATH_RESTART_CALINTERVAL   1200000 /* 20 minutes */
++#define ATH_ANI_MAX_SKIP_COUNT  10
  
- #define IOCTL_RESP_TIMEOUT  2000
+ #define ATH_PAPRD_TIMEOUT	100 /* msecs */
+ #define ATH_PLL_WORK_INTERVAL   100
+@@ -642,6 +643,7 @@ enum sc_op_flags {
+ #define PS_WAIT_FOR_PSPOLL_DATA   BIT(2)
+ #define PS_WAIT_FOR_TX_ACK        BIT(3)
+ #define PS_BEACON_SYNC            BIT(4)
++#define PS_WAIT_FOR_ANI           BIT(5)
  
--#define BRCMF_USB_SYNC_TIMEOUT		300	/* ms */
- #define BRCMF_USB_DLIMAGE_SPINWAIT	100	/* in unit of ms */
- #define BRCMF_USB_DLIMAGE_LIMIT		500	/* spinwait limit (ms) */
+ struct ath_rate_table;
  
-@@ -116,10 +115,6 @@ struct brcmf_usbdev_info {
- 	u8 *image;	/* buffer for combine fw and nvram */
- 	int image_len;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index dbc1b7a..1d4f5f1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -834,6 +834,7 @@ struct ath_hw {
+ 	int coarse_low[5];
+ 	int firpwr[5];
+ 	enum ath9k_ani_cmd ani_function;
++	u32 ani_skip_count;
  
--	wait_queue_head_t wait;
--	bool waitdone;
--	int sync_urb_status;
--
- 	struct usb_device *usbdev;
- 	struct device *dev;
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	struct ath_btcoex_hw btcoex_hw;
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 7b88b9c..223b969 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -350,8 +350,18 @@ void ath_ani_calibrate(unsigned long data)
+ 		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
  
-@@ -131,7 +126,6 @@ struct brcmf_usbdev_info {
- 	int ctl_urb_status;
- 	int ctl_completed;
- 	wait_queue_head_t ioctl_resp_wait;
--	wait_queue_head_t ctrl_wait;
- 	ulong ctl_op;
+ 	/* Only calibrate if awake */
+-	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
++	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE) {
++		if (++ah->ani_skip_count >= ATH_ANI_MAX_SKIP_COUNT) {
++			spin_lock_irqsave(&sc->sc_pm_lock, flags);
++			sc->ps_flags |= PS_WAIT_FOR_ANI;
++			spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++		}
+ 		goto set_timer;
++	}
++	ah->ani_skip_count = 0;
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	sc->ps_flags &= ~PS_WAIT_FOR_ANI;
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
  
- 	struct urb *bulk_urb; /* used for FW download */
-@@ -754,34 +748,14 @@ static void brcmf_usb_down(struct device *dev)
- 	brcmf_usb_free_q(&devinfo->rx_postq, true);
- }
+ 	ath9k_ps_wakeup(sc);
  
--static int
--brcmf_usb_sync_wait(struct brcmf_usbdev_info *devinfo, u16 time)
--{
--	int ret;
--	int err = 0;
--	int ms = time;
--
--	ret = wait_event_interruptible_timeout(devinfo->wait,
--		devinfo->waitdone == true, (ms * HZ / 1000));
--
--	if ((devinfo->waitdone == false) || (devinfo->sync_urb_status)) {
--		brcmf_dbg(ERROR, "timeout(%d) or urb err=%d\n",
--			  ret, devinfo->sync_urb_status);
--		err = -EINVAL;
--	}
--	devinfo->waitdone = false;
--	return err;
--}
--
- static void
- brcmf_usb_sync_complete(struct urb *urb)
- {
- 	struct brcmf_usbdev_info *devinfo =
- 			(struct brcmf_usbdev_info *)urb->context;
- 
--	devinfo->waitdone = true;
--	wake_up_interruptible(&devinfo->wait);
--	devinfo->sync_urb_status = urb->status;
-+	devinfo->ctl_completed = true;
-+	brcmf_usb_ioctl_resp_wake(devinfo);
- }
- 
- static bool brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
-@@ -813,6 +787,7 @@ static bool brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
- 		(void *) tmpbuf, size,
- 		(usb_complete_t)brcmf_usb_sync_complete, devinfo);
- 
-+	devinfo->ctl_completed = false;
- 	ret = usb_submit_urb(devinfo->ctl_urb, GFP_ATOMIC);
- 	if (ret < 0) {
- 		brcmf_dbg(ERROR, "usb_submit_urb failed %d\n", ret);
-@@ -820,11 +795,11 @@ static bool brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
- 		return false;
- 	}
- 
--	ret = brcmf_usb_sync_wait(devinfo, BRCMF_USB_SYNC_TIMEOUT);
-+	ret = brcmf_usb_ioctl_resp_wait(devinfo);
- 	memcpy(buffer, tmpbuf, buflen);
- 	kfree(tmpbuf);
- 
--	return (ret == 0);
-+	return ret;
- }
- 
- static bool
-@@ -918,13 +893,14 @@ brcmf_usb_dl_send_bulk(struct brcmf_usbdev_info *devinfo, void *buffer, int len)
- 
- 	devinfo->bulk_urb->transfer_flags |= URB_ZERO_PACKET;
- 
-+	devinfo->ctl_completed = false;
- 	ret = usb_submit_urb(devinfo->bulk_urb, GFP_ATOMIC);
- 	if (ret) {
- 		brcmf_dbg(ERROR, "usb_submit_urb failed %d\n", ret);
- 		return ret;
- 	}
--	ret = brcmf_usb_sync_wait(devinfo, BRCMF_USB_SYNC_TIMEOUT);
--	return ret;
-+	ret = brcmf_usb_ioctl_resp_wait(devinfo);
-+	return (ret == 0);
- }
- 
- static int
-@@ -1284,7 +1260,6 @@ struct brcmf_usbdev *brcmf_usb_attach(struct brcmf_usbdev_info *devinfo,
- 		goto error;
- 	}
- 
--	init_waitqueue_head(&devinfo->wait);
- 	if (!brcmf_usb_dlneeded(devinfo))
- 		return &devinfo->bus_pub;
- 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index dd45edf..2da62be 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -131,7 +131,8 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 		   !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
+ 				     PS_WAIT_FOR_CAB |
+ 				     PS_WAIT_FOR_PSPOLL_DATA |
+-				     PS_WAIT_FOR_TX_ACK))) {
++				     PS_WAIT_FOR_TX_ACK |
++				     PS_WAIT_FOR_ANI))) {
+ 		mode = ATH9K_PM_NETWORK_SLEEP;
+ 		if (ath9k_hw_btcoex_is_enabled(sc->sc_ah))
+ 			ath9k_btcoex_stop_gen_timer(sc);
 -- 
-1.7.6
-
+1.7.12.2
 
