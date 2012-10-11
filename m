@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:64634 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551Ab2JLE7y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 00:59:54 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so2537726oag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2012 21:59:54 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:1771 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750801Ab2JKMFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2012 08:05:23 -0400
+Message-ID: <5076B5FB.10608@broadcom.com> (sfid-20121011_140526_881927_CB0B1B41)
+Date: Thu, 11 Oct 2012 14:05:15 +0200
+From: "Piotr Haber" <phaber@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20121011162525.2643.85972.stgit@bob.linux.org.uk>
-References: <20121011162505.2643.87138.stgit@bob.linux.org.uk>
-	<20121011162525.2643.85972.stgit@bob.linux.org.uk>
-Date: Fri, 12 Oct 2012 10:29:53 +0530
-Message-ID: <CAD2nsn1TL5_EPtiUifKY831359huTiot-iJa-tQVzFoKwkgTQA@mail.gmail.com> (sfid-20121012_065959_425649_FE03083E)
-Subject: Re: [PATCH 2/2] ath9k: Fix broken conditional
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+cc: "Stanislaw Gruszka" <sgruszka@redhat.com>,
+	"=?UTF-8?B?UmFmYcWCIE1pxYJlY2s=?= =?UTF-8?B?aQ==?="
+	<zajec5@gmail.com>
+Subject: [PATCH] bcma: fix unregistration of cores
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alan Cox,
+When cores are unregistered, entries
+need to be removed from cores list in a safe manner.
 
-On Thu, Oct 11, 2012 at 9:55 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> From: Alan Cox <alan@linux.intel.com>
->
-> One stray semicolon...
+Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/bcma/main.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-seems to be fixed by
-https://patchwork.kernel.org/patch/1529211/
-but I don't think it was there in wireless-testing.
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 758af9c..0059e26 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -141,9 +141,10 @@ static int bcma_register_cores(struct bcma_bus *bus)
 
->
-> Signed-off-by: Alan Cox <alan@linux.intel.com>
-> ---
->
->  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> index 5bbe505..189aeb2 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> @@ -2989,7 +2989,7 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
->         case EEP_PAPRD:
->                 if (AR_SREV_9462(ah))
->                         return false;
-> -               if (!ah->config.enable_paprd);
-> +               if (!ah->config.enable_paprd)
->                         return false;
->                 return !!(pBase->featureEnable & BIT(5));
->         case EEP_CHAIN_MASK_REDUCE:
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ static void bcma_unregister_cores(struct bcma_bus *bus)
+ {
+-	struct bcma_device *core;
++	struct bcma_device *core, *tmp;
 
-
-
+-	list_for_each_entry(core, &bus->cores, list) {
++	list_for_each_entry_safe(core, tmp, &bus->cores, list) {
++		list_del(&core->list);
+ 		if (core->dev_registered)
+ 			device_unregister(&core->dev);
+ 	}
 -- 
-thanks,
-shafi
+1.7.10.4
+
