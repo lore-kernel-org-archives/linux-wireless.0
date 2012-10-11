@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:54180 "EHLO comal.ext.ti.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2930 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752397Ab2JUQlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2012 12:41:07 -0400
-Message-ID: <5084256F.2030502@ti.com> (sfid-20121021_184111_107957_553365B4)
-Date: Sun, 21 Oct 2012 18:40:15 +0200
-From: Victor Goldenshtein <victorg@ti.com>
+	id S1754920Ab2JKSHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2012 14:07:12 -0400
+Message-ID: <50770A50.3010305@broadcom.com> (sfid-20121011_200718_738224_B241AD8E)
+Date: Thu, 11 Oct 2012 20:05:04 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
-	<assaf@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>  <1350226137-13704-6-git-send-email-victorg@ti.com> <1350414390.10177.16.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1350414390.10177.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] wireless: cfg80211: add peer-to-peer related
+ definitions
+References: <1349965104-14475-1-git-send-email-arend@broadcom.com>
+ <1349973674.13097.11.camel@jlt4.sipsolutions.net>
+ <5077008D.7030203@broadcom.com>
+ <1349976385.13097.13.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1349976385.13097.13.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16/10/2012 21:06, Johannes Berg wrote:
-> Hmm, does that really work? I mean, it can do the update when the event
-> comes in, but is that fast enough, or should it give us the new beacon
-> already when programming the switching?
+On 10/11/2012 07:26 PM, Johannes Berg wrote:
+> On Thu, 2012-10-11 at 19:23 +0200, Arend van Spriel wrote:
+>>> Looks ok ... but why would a driver need to parse P2P stuff? For NoA for
+>>> example maybe?
+>>
+>> I did not yet go through a lot of the P2P code that is on my plate to
+>> port upstream, but one item that is extracted in the part I already did
+>> is the P2P listen channel. I just wanted to do this RFC before sending
+>> out the brcmfmac code patches that actually is using it. This change
+>> will be part of that patch series.
 >
+> Ah, fmac, that will be somewhat interesting. What userspace APIs are you
+> proposing for that case?
 
-Yes it works with our 12xx, in the 12xx the FW (upon channel switch 
-command) is responsible to decrement the channel switch count in the 
-beacon CSA IE and to remove the CSA IE from the beacon once device moves 
-to the new channel (+ to updates the DS).
+Hi Johannes,
 
--- 
-Thanks,
-Victor.
+Not sure if I understand the question. I am using wpa_supplicant with 
+wpa_cli for testing and given its p2p support I assumed there is already 
+a nl80211 api in place. I am still trying to get a good sense on it. The 
+P2P code to port does more parsing of P2P stuff and if you mean adding 
+userspace APIs to avoid just that I would definitely prefer that.
+
+Gr. AvS
+
