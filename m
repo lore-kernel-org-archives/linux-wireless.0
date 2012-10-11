@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:36700 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752006Ab2JOLfV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 07:35:21 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so4815715oag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2012 04:35:21 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:3041 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933242Ab2JKR31 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2012 13:29:27 -0400
+Message-ID: <507701E3.8060001@broadcom.com> (sfid-20121011_192938_365218_DE48D7C0)
+Date: Thu, 11 Oct 2012 19:29:07 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+i8gKL6jAEz5A0cVuGOX_bSOxPA-2KJSuCnLLrxryiAt+t=EA@mail.gmail.com>
-References: <CA+i8gKL6jAEz5A0cVuGOX_bSOxPA-2KJSuCnLLrxryiAt+t=EA@mail.gmail.com>
-Date: Mon, 15 Oct 2012 17:05:21 +0530
-Message-ID: <CAD2nsn0yPGk=pFa5DqdHqHG1=0q4v9GsR8Fj9RCbpeckZDdd2Q@mail.gmail.com> (sfid-20121015_133525_364177_3B871462)
-Subject: Re: ath9k kernel git repo
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Emmanuel Benisty <benisty.e@gmail.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] wireless: cfg80211: add peer-to-peer related
+ definitions
+References: <1349965104-14475-1-git-send-email-arend@broadcom.com>
+ <1349973736.13097.12.camel@jlt4.sipsolutions.net>
+ <507700DF.80401@broadcom.com>
+In-Reply-To: <507700DF.80401@broadcom.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Sat, Oct 13, 2012 at 4:37 PM, Emmanuel Benisty <benisty.e@gmail.com> wrote:
+On 10/11/2012 07:24 PM, Arend van Spriel wrote:
+> On 10/11/2012 06:42 PM, Johannes Berg wrote:
+>> On Thu, 2012-10-11 at 16:18 +0200, Arend van Spriel wrote:
+>>
+>>> +++ b/include/linux/ieee80211.h
+>>> @@ -168,6 +168,9 @@
+>>>   #define IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK    0x03
+>>>   #define IEEE80211_WMM_IE_STA_QOSINFO_SP_SHIFT    5
+>>>
+>>> +/* Vendor-specific IE */
+>>> +#define IEEE80211_VENDOR_SPEC_IE        0xDD
+>>
+>> actually this already exists, as ..._EID_VENDOR or so?
+>>
+>> johannes
+>>
+>>
 >
-> I'm currently using wireless-testing kernel git tree but just curious,
-> is there any ath9k kernel development tree available somewhere?
-
-no,  you would all the latest ath9k fixes from Johns tree itself.
-http://wireless.kernel.org/en/developers/process
-
+> Thanks, Johannes
 >
-> Thanks in advance.
+> I probably overlooked it. Let me re-check.
 >
-> Cheers,
-> -- Emmanuel
 
+Found it. I can even choose:
 
+/* Information Element IDs */
+enum ieee80211_eid {
+	:
+	WLAN_EID_WPA = 221,
+	WLAN_EID_GENERIC = 221,
+	WLAN_EID_VENDOR_SPECIFIC = 221,
+	:
+};
 
--- 
-thanks,
-shafi
+Gr. AvS
+
