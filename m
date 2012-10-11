@@ -1,90 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3969 "EHLO mms2.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3267 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756906Ab2JJSNW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 14:13:22 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/7] brcmfmac: use control channel in roamed status
- reporting
-Date: Wed, 10 Oct 2012 11:13:09 -0700
-Message-ID: <1349892792-4792-5-git-send-email-frankyl@broadcom.com> (sfid-20121010_201326_251109_9CDA15BF)
-In-Reply-To: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
-References: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
+	id S1755901Ab2JKJJi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2012 05:09:38 -0400
+Message-ID: <50768CC6.5050007@broadcom.com> (sfid-20121011_110944_110026_5A15D517)
+Date: Thu, 11 Oct 2012 11:09:26 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>
+cc: "Julian Calaby" <julian.calaby@gmail.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v0 0/2] driver for 60g Wilocity chip wil6210
+References: <1349893385-23102-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <CAGRGNgUidXkunAuXXoM54-d48HcnAvYBiHrmZL5_7jt=ytF5AQ@mail.gmail.com>
+ <3023056.XLicri5zy7@lx-vladimir>
+In-Reply-To: <3023056.XLicri5zy7@lx-vladimir>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channel reported in scan results passed to cfg80211 is control
-channel. But chanspec is reported while notifying cfg80211 about
-roamed update. Cfg80211 complains because it could not find the
-bss in the list. Report control channel while calling
-cfg80211_roamed.
+On 10/11/2012 08:35 AM, Vladimir Kondratiev wrote:
+> On Thursday, October 11, 2012 09:51:28 AM Julian Calaby wrote:
+>> Hi Vladimir,
+>>
+>> On Thu, Oct 11, 2012 at 5:23 AM, Vladimir Kondratiev
+>>
+>> <qca_vkondrat@qca.qualcomm.com> wrote:
+>>> Hi,
+>>>
+>>> Here goes driver for the "wil6210" chip by Wilocity.
+>>>
+>>
+>> Whilst I'm sure that this driver will end up being kernel quality
+>> code, as this is an initial development snapshot, have you considered
+>> putting it in "staging" until it's mostly feature complete?
+>>
+>
+> Hi,
+>
+> Sure I asked this very question before submitting. Luis advised to go for
+> the regular location, not "staging". I am pretty neutral about what location
+> is better, so I just follow recommendations on this matter.
+>
+> Thanks, Vladimir.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   26 +++++++++++++++-----
- 1 file changed, 20 insertions(+), 6 deletions(-)
+ From my own experiences I got the impression that the staging directory 
+was more about learning the development process and converting a 
+proprietary driver with all kind of abstractions for multi-OS support to 
+a native linux driver. So I would agree with Luis, but you could have 
+used RFC instead of PATCH to draw more attention to this although the 
+'60g' term will trigger that as well.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 9c3fe1a..a39925a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4605,12 +4605,13 @@ brcmf_bss_roaming_done(struct brcmf_cfg80211_info *cfg,
- 	struct brcmf_cfg80211_profile *profile = cfg->profile;
- 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg);
- 	struct wiphy *wiphy = cfg_to_wiphy(cfg);
--	struct brcmf_channel_info_le channel_le;
--	struct ieee80211_channel *notify_channel;
-+	struct ieee80211_channel *notify_channel = NULL;
- 	struct ieee80211_supported_band *band;
-+	struct brcmf_bss_info_le *bi;
- 	u32 freq;
- 	s32 err = 0;
- 	u32 target_channel;
-+	u8 *buf;
- 
- 	WL_TRACE("Enter\n");
- 
-@@ -4618,11 +4619,22 @@ brcmf_bss_roaming_done(struct brcmf_cfg80211_info *cfg,
- 	memcpy(profile->bssid, e->addr, ETH_ALEN);
- 	brcmf_update_bss_info(cfg);
- 
--	brcmf_exec_dcmd(ndev, BRCMF_C_GET_CHANNEL, &channel_le,
--			sizeof(channel_le));
-+	buf = kzalloc(WL_BSS_INFO_MAX, GFP_KERNEL);
-+	if (buf == NULL) {
-+		err = -ENOMEM;
-+		goto done;
-+	}
-+
-+	/* data sent to dongle has to be little endian */
-+	*(__le32 *)buf = cpu_to_le32(WL_BSS_INFO_MAX);
-+	err = brcmf_exec_dcmd(ndev, BRCMF_C_GET_BSS_INFO, buf, WL_BSS_INFO_MAX);
-+
-+	if (err)
-+		goto done;
- 
--	target_channel = le32_to_cpu(channel_le.target_channel);
--	WL_CONN("Roamed to channel %d\n", target_channel);
-+	bi = (struct brcmf_bss_info_le *)(buf + 4);
-+	target_channel = bi->ctl_ch ? bi->ctl_ch :
-+				      CHSPEC_CHANNEL(le16_to_cpu(bi->chanspec));
- 
- 	if (target_channel <= CH_MAX_2G_CHANNEL)
- 		band = wiphy->bands[IEEE80211_BAND_2GHZ];
-@@ -4632,6 +4644,8 @@ brcmf_bss_roaming_done(struct brcmf_cfg80211_info *cfg,
- 	freq = ieee80211_channel_to_frequency(target_channel, band->band);
- 	notify_channel = ieee80211_get_channel(wiphy, freq);
- 
-+done:
-+	kfree(buf);
- 	cfg80211_roamed(ndev, notify_channel, (u8 *)profile->bssid,
- 			conn_info->req_ie, conn_info->req_ie_len,
- 			conn_info->resp_ie, conn_info->resp_ie_len, GFP_KERNEL);
--- 
-1.7.9.5
+Regards,
+AvS
 
 
