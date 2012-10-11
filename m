@@ -1,77 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44030 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088Ab2JOIN3 (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:45942 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757678Ab2JKQU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 04:13:29 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 05/12] ath9k_hw: Disable MCI stat counter by default for AR9565
-Date: Mon, 15 Oct 2012 13:25:31 +0530
-Message-ID: <1350287738-18687-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101332_809051_81FB2261)
-In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 11 Oct 2012 12:20:29 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH] nl/cfg80211: force scan using an AP vif if requested
+Date: Thu, 11 Oct 2012 18:19:50 +0200
+Message-Id: <1349972390-14133-1-git-send-email-ordex@autistici.org> (sfid-20121011_182035_435411_A0E3DE8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 11 ++++++++++-
- drivers/net/wireless/ath/ath9k/reg.h        |  3 +++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+If the user wants to scan using a vif configured as AP, cfg80211 must give him a
+chance to do it, even if this will disrupt the stations performance due to
+off-channel scanning. To do so, this patch adds a 'force' flag to the
+SCAN_TRIGGER command which tells cfg80211 to perform the scanning operation even
+if the vif is an AP and the beaconing has already started.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index c46d8f1..466ac8da 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -938,6 +938,9 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 	mci->ready = true;
- 	ar9003_mci_prep_interface(ah);
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+
+* in several scenarios the user would like to perform a scan while an AP vif is
+  running. This can happen when the user wants to check if there is a less
+  polluted channel on which he wants to move the AP. In the current
+  implementation this is not allowed at all. The only way to perform this
+  operation consists in creating another vif configured as managed and scan
+  channels using it. With the approach proposed by this patch, instead, the
+  user can simply "force" the scan on the AP interface (e.g. using iw).
+
+
+
+ include/linux/nl80211.h | 8 ++++++++
+ include/net/cfg80211.h  | 2 ++
+ net/mac80211/cfg.c      | 9 ++++++++-
+ net/wireless/nl80211.c  | 2 ++
+ 4 files changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 179a0c2..7e347c1 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1276,6 +1276,12 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SAE_DATA: SAE elements in Authentication frames. This starts
+  *	with the Authentication transaction sequence number field.
+  *
++ * @NL80211_ATTR_SCAN_FORCE: force a scan even if the interface is configured as
++ *	AP and the beaconing has already been configured. This attribute is
++ *	dangerous because will destroy stations performance as a lot of frames
++ *	will be lost while scanning off-channel, therefore it must be used only
++ *	when really needed.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1535,6 +1541,8 @@ enum nl80211_attrs {
  
-+	if (AR_SREV_9565(ah))
-+		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
-+			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
- 	if (en_int)
- 		ar9003_mci_enable_interrupt(ah);
+ 	NL80211_ATTR_SAE_DATA,
  
-@@ -1179,13 +1182,19 @@ int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
- 		     u16 len, u32 sched_addr)
- {
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+	int ret;
- 
- 	mci->gpm_addr = gpm_addr;
- 	mci->gpm_buf = gpm_buf;
- 	mci->gpm_len = len;
- 	mci->sched_addr = sched_addr;
- 
--	return ar9003_mci_reset(ah, true, true, true);
-+	ret = ar9003_mci_reset(ah, true, true, true);
++	NL80211_ATTR_SCAN_FORCE,
 +
-+	if (AR_SREV_9565(ah))
-+		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
-+			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
-+	return ret;
- }
- EXPORT_SYMBOL(ar9003_mci_setup);
+ 	/* add attributes here, update the policy in nl80211.c */
  
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index c7a9ea7..8f40dba 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -2363,5 +2363,8 @@ enum {
- #define AR_MCI_MISC                    0x1a74
- #define AR_MCI_MISC_HW_FIX_EN          0x00000001
- #define AR_MCI_MISC_HW_FIX_EN_S        0
-+#define AR_MCI_DBG_CNT_CTRL            0x1a78
-+#define AR_MCI_DBG_CNT_CTRL_ENABLE     0x00000001
-+#define AR_MCI_DBG_CNT_CTRL_ENABLE_S   0
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 04df773..600e2c7 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1005,6 +1005,7 @@ struct cfg80211_ssid {
+  * @wdev: the wireless device to scan for
+  * @aborted: (internal) scan request was notified as aborted
+  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
++ * @force: scan even if the vif is in AP mode and beacon has been set already
+  */
+ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -1021,6 +1022,7 @@ struct cfg80211_scan_request {
+ 	struct wiphy *wiphy;
+ 	bool aborted;
+ 	bool no_cck;
++	bool force;
  
- #endif
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 03216b0..4f932c5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1850,7 +1850,14 @@ static int ieee80211_scan(struct wiphy *wiphy,
+ 		 * beaconing hasn't been configured yet
+ 		 */
+ 	case NL80211_IFTYPE_AP:
+-		if (sdata->u.ap.beacon)
++		/*
++		 * If the scan has been forced, don't care about being beaconing
++		 * already.
++		 * This will create problems to the attached stations (e.g. all
++		 * the  frames sent while scanning on other channel will be
++		 * lost)
++		 */
++		if (sdata->u.ap.beacon && !req->force)
+ 			return -EOPNOTSUPP;
+ 		break;
+ 	default:
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 746f649..94758df 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4362,6 +4362,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
++	request->force = nla_get_flag(info->attrs[NL80211_ATTR_SCAN_FORCE]);
++
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
 -- 
-1.7.12.2
+1.7.12
 
