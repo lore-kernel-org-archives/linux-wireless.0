@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52667 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49077 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936Ab2JYWqJ (ORCPT
+	with ESMTP id S1755563Ab2JKHsu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 18:46:09 -0400
+	Thu, 11 Oct 2012 03:48:50 -0400
+Message-ID: <1349941762.13097.0.camel@jlt4.sipsolutions.net> (sfid-20121011_094853_113035_75B36E7E)
+Subject: Re: [PATCH v2] {nl,cfg}80211: Peer STA VHT caps
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] mac80211: make sure data is accessible in EAPOL check
-Date: Fri, 26 Oct 2012 00:46:40 +0200
-Message-Id: <1351205200-18094-4-git-send-email-johannes@sipsolutions.net> (sfid-20121026_004615_351690_13DCD940)
-In-Reply-To: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
-References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>
+Date: Thu, 11 Oct 2012 09:49:22 +0200
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB4B0@mbx022-e1-nj-10.exch022.domain.local>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB4B0@mbx022-e1-nj-10.exch022.domain.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2012-10-11 at 05:44 +0000, Mahesh Palivela wrote:
+> From: Mahesh Palivela <maheshp@posedge.com>
+> 
+> To save STAs VHT caps in AP mode
+> 
+> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+> ---
+> Patch version 2 to take care of Jouni Malinen's comment
+> 
+>  include/linux/nl80211.h |    3 +++
+>  include/net/cfg80211.h  |    2 ++
+>  net/mac80211/cfg.c      |    5 +++++
+>  net/wireless/nl80211.c  |    5 +++++
+>  4 files changed, 15 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> index 179a0c2..b82ab80 100644
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -1535,6 +1535,8 @@ enum nl80211_attrs {
+>  
+>  	NL80211_ATTR_SAE_DATA,
+>  
+> +	NL80211_ATTR_VHT_CAPABILITY,
 
-The code to allow EAPOL frames even when the station
-isn't yet marked associated needs to check that the
-incoming frame is long enough and due to paged RX it
-also can't assume skb->data contains the right data,
-it must use skb_copy_bits(). Fix this to avoid using
-data that doesn't really exist.
+Looks fine, but please add documentation for this new attribute.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |   18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6d1fd39..a5a3db8 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -888,14 +888,16 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- 		 */
- 		if (rx->sta && rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
- 		    ieee80211_is_data_present(hdr->frame_control)) {
--			u16 ethertype;
--			u8 *payload;
--
--			payload = rx->skb->data +
--				ieee80211_hdrlen(hdr->frame_control);
--			ethertype = (payload[6] << 8) | payload[7];
--			if (cpu_to_be16(ethertype) ==
--			    rx->sdata->control_port_protocol)
-+			unsigned int hdrlen;
-+			__be16 ethertype;
-+
-+			hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+
-+			if (rx->skb->len < hdrlen + 8)
-+				return RX_DROP_MONITOR;
-+
-+			skb_copy_bits(rx->skb, hdrlen + 6, &ethertype, 2);
-+			if (ethertype == rx->sdata->control_port_protocol)
- 				return RX_CONTINUE;
- 		}
- 
--- 
-1.7.10.4
+johannes
 
