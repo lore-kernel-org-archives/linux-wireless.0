@@ -1,62 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:47751 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207Ab2JaGVZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 02:21:25 -0400
-Received: by mail-ee0-f46.google.com with SMTP id b15so540881eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 23:21:24 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:2889 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751530Ab2JKQSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2012 12:18:47 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [RFC] wireless: cfg80211: add peer-to-peer related definitions
+Date: Thu, 11 Oct 2012 16:18:24 +0200
+Message-ID: <1349965104-14475-1-git-send-email-arend@broadcom.com> (sfid-20121011_181908_360457_F08CE2D4)
 MIME-Version: 1.0
-In-Reply-To: <5090B711.70808@candelatech.com>
-References: <508EB783.9080000@candelatech.com> <CAGRGNgWGfL+_u4fHEfqZAcFHb1H4Z4jFkiE4qKLU6i9XEWzZ6w@mail.gmail.com>
- <5090560D.1090708@candelatech.com> <CAGRGNgUQ40YW-dwy34nPD65XPWt1VWetyXDdd=L_NxKJ9-_Fiw@mail.gmail.com>
- <CAJ-Vmoky+46E71wQbF1-J-xEnHdWeMMXf=Yo+SGkqALjvjrJrg@mail.gmail.com> <5090B711.70808@candelatech.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 31 Oct 2012 17:21:03 +1100
-Message-ID: <CAGRGNgV9wH0vSP2Q395wBGiowaY-LHVJ5JNuJYzQNvacTDdG_w@mail.gmail.com> (sfid-20121031_072132_157388_7CE96322)
-Subject: Re: Any thoughts on how to best shield u.fl connectors on NICs?
-To: Ben Greear <greearb@candelatech.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+The Peer-to-Peer IE is vendor-specific IE identified by WiFi Alliance
+OUI and specific P2P OUI type. The payload of this IE consists of
+so-called P2P attributes. This patch adds definitions for processing
+these attributes.
 
-On Wed, Oct 31, 2012 at 4:28 PM, Ben Greear <greearb@candelatech.com> wrote:
-> Two things come to mind:
->
-> First, I'd like to put 2+ NICs close together in the same chassis.
-> Would be nice if they were as isolated from each other as possible
-> so that each NIC could work independently of the other (once I can
-> get to SMA connectors, there are > 90db shielded cable options,
-> but of course it could just go to antenna where it all mixes again
-> anyway).
->
-> Second:  If one wants to use an attenuator and coax cables to connect
-> AP and Station systems together, the AP and Station need to NOT also
-> be transmitting through the air.  Anything I can do to keep that
-> over-the-air communication minimal should help.
->
-> Truth is, I'm not sure how much it really matters, but after a few weeks
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Hi Johannes,
 
-To be quite honest, if I were doing this, I'd be making a custom
-chassis that had shielded partitions to house the NICs and probably
-use something like this to get signal to the NICs:
+This patch is for 3.8. It applies to mac80211-next repository.
 
-https://encrypted.google.com/search?q=pcie+extension+cable
+Gr. AvS
+---
+ include/linux/ieee80211.h |   78 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 78 insertions(+)
 
-But this would be getting towards the construction of some serious
-test equipment.
-
-What are you trying to achieve here?
-
-Thanks,
-
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 8c803f0..7c4c075 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -168,6 +168,9 @@
+ #define IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK	0x03
+ #define IEEE80211_WMM_IE_STA_QOSINFO_SP_SHIFT	5
+ 
++/* Vendor-specific IE */
++#define IEEE80211_VENDOR_SPEC_IE		0xDD
++
+ #define IEEE80211_HT_CTL_LEN		4
+ 
+ struct ieee80211_hdr {
+@@ -905,6 +908,81 @@ struct ieee80211_tdls_data {
+ 	} u;
+ } __packed;
+ 
++/*
++ * Peer-to-Peer IE attribute related definitions.
++ */
++/**
++ * enum ieee80211_p2p_attr_id - identifies type of peer-to-peer attribute.
++ */
++enum ieee80211_p2p_attr_id {
++	IEEE80211_P2P_ATTR_STATUS = 0,
++	IEEE80211_P2P_ATTR_MINOR_REASON,
++	IEEE80211_P2P_ATTR_CAPABILITY,
++	IEEE80211_P2P_ATTR_DEVICE_ID,
++	IEEE80211_P2P_ATTR_GO_INTENT,
++	IEEE80211_P2P_ATTR_GO_CONFIG_TIMEOUT,
++	IEEE80211_P2P_ATTR_LISTEN_CHANNEL,
++	IEEE80211_P2P_ATTR_GROUP_BSSID,
++	IEEE80211_P2P_ATTR_EXT_LISTEN_TIMING,
++	IEEE80211_P2P_ATTR_INTENDED_IFACE_ADDR,
++	IEEE80211_P2P_ATTR_MANAGABILITY,
++	IEEE80211_P2P_ATTR_CHANNEL_LIST,
++	IEEE80211_P2P_ATTR_ABSENCE_NOTICE,
++	IEEE80211_P2P_ATTR_DEVICE_INFO,
++	IEEE80211_P2P_ATTR_GROUP_INFO,
++	IEEE80211_P2P_ATTR_GROUP_ID,
++	IEEE80211_P2P_ATTR_INTERFACE,
++	IEEE80211_P2P_ATTR_OPER_CHANNEL,
++	IEEE80211_P2P_ATTR_INVITE_FLAGS,
++	/* 19 - 220: Reserved */
++	IEEE80211_P2P_ATTR_VENDOR_SPECIFIC = 221,
++
++	IEEE80211_P2P_ATTR_MAX
++};
++
++struct ieee80211_p2p_chan_attr {
++	u8 country[3];
++	u8 class;
++	u8 channel;
++} __packed;
++
++/**
++ * struct ieee80211_p2p_attribute - attributes in WFA P2P vendor specific IE.
++ *
++ * @id: identifier according enum ieee80211_p2p_attr_id.
++ * @length: length of data buffer mapped by @u.
++ * @u: union holding information for this peer-to-peer attribute.
++ */
++struct ieee80211_p2p_attribute {
++	u8 id;
++	__le16 length;
++	union {
++		u8 status;
++		u8 minor_reason;
++		struct {
++			u8 device;
++			u8 group;
++		} __packed cap;
++		u8 devid[6];
++		u8 go_intent;
++		struct {
++			u8 group;
++			u8 client;
++		} __packed cfg_timeout;
++		struct ieee80211_p2p_chan_attr listen;
++		u8 bssid[6];
++		struct {
++			__le16 period;
++			__le16 interval;
++		} __packed listen_availability;
++		u8 ifc_addr[6];
++		u8 managability;
++		struct ieee80211_p2p_chan_attr operating;
++		u8 invitation;
++		u8 var_attr[0];
++	} u;
++} __packed;
++
+ /**
+  * struct ieee80211_bar - HT Block Ack Request
+  *
 -- 
-Julian Calaby
+1.7.9.5
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+
