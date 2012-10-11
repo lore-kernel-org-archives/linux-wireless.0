@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34957 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744Ab2JOIOx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 04:14:53 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 12/12] ath9k: Add new BT profile info A2DP_Voice
-Date: Mon, 15 Oct 2012 13:25:38 +0530
-Message-ID: <1350287738-18687-13-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_103930_438753_25D819E6)
-In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2889 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750739Ab2JKJPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Oct 2012 05:15:32 -0400
+Message-ID: <50768E2A.70400@broadcom.com> (sfid-20121011_111546_667462_5AD8D367)
+Date: Thu, 11 Oct 2012 11:15:22 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: p2p question
+References: <5075E771.2090101@broadcom.com>
+ <1349904667.19068.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1349904667.19068.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the BT connection is initiated by headset, it's possible that headset
-requests to make one A2DP and one Voice connection over the same link.
-BT firmware will send a new profile A2DP_Voice in this case. So WLAN
-has to take care of this new profile for tuning BTCOEX parameters.
+On 10/10/2012 11:31 PM, Johannes Berg wrote:
+> On Wed, 2012-10-10 at 23:24 +0200, Arend van Spriel wrote:
+>> Hi Johannes,
+>>
+>> Reading the comment on .add_virtual_intf() callback I am a bit confused.
+>>
+>> =====
+>>    * @add_virtual_intf: create a new virtual interface with the given name,
+>>    *	must set the struct wireless_dev's iftype. Beware: You must create
+>>    *	the new netdev in the wiphy's network namespace! Returns the struct
+>>    *	wireless_dev, or an ERR_PTR. For P2P device wdevs, the driver must
+>>    *	also set the address member in the wdev.
+>> =====
+>>
+>> The last sentence refers to the "address member in wdev", but at least
+>> in my tree struct wireless_dev does not have an address member. Missing
+>> something here?
+>
+> It does in my tree?
+>
+> struct wireless_dev {
+> ...
+>          u8 address[ETH_ALEN] __aligned(sizeof(u16));
+>
+> maybe you missed it?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.h | 1 +
- drivers/net/wireless/ath/ath9k/mci.h        | 2 ++
- 2 files changed, 3 insertions(+)
+Likely. Still working on 3.6-rc5 so missing "cfg80211: add P2P Device 
+abstraction". It is probably time to merge, which I was avoiding until 
+3.7-rc1 was available. Sorry for the noise.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 3e51f54..66d7ab9 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -126,6 +126,7 @@ enum ath_mci_gpm_coex_profile_type {
- 	MCI_GPM_COEX_PROFILE_HID,
- 	MCI_GPM_COEX_PROFILE_BNEP,
- 	MCI_GPM_COEX_PROFILE_VOICE,
-+	MCI_GPM_COEX_PROFILE_A2DPVO,
- 	MCI_GPM_COEX_PROFILE_MAX
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index e5f170a..0695883 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -70,6 +70,7 @@
- 			_mci->num_pan++;	 \
- 			break;			 \
- 		case MCI_GPM_COEX_PROFILE_VOICE: \
-+		case MCI_GPM_COEX_PROFILE_A2DPVO:\
- 			_mci->num_sco++;	 \
- 			break;			 \
- 		default:			 \
-@@ -94,6 +95,7 @@
- 			_mci->num_pan--;	 \
- 			break;			 \
- 		case MCI_GPM_COEX_PROFILE_VOICE: \
-+		case MCI_GPM_COEX_PROFILE_A2DPVO:\
- 			_mci->num_sco--;	 \
- 			break;			 \
- 		default:			 \
--- 
-1.7.12.2
+Gr. AvS
 
