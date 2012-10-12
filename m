@@ -1,77 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37918 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753708Ab2JVN3S (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46715 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422676Ab2JLKcN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 09:29:18 -0400
-Message-ID: <1350912590.10166.9.camel@jlt4.sipsolutions.net> (sfid-20121022_152921_305203_E86F2FF1)
-Subject: Re: [RFC] mac80211: add explicit AP/GO driver operations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org, ilan.peer@intel.com
-Date: Mon, 22 Oct 2012 15:29:50 +0200
-In-Reply-To: <CAB3XZEc0PbzcCFfkabEg9UfwnCizKGvKEhZ_iYfMA6QC=xcxFw@mail.gmail.com> (sfid-20121021_105351_428681_543405D7)
-References: <1350654441-6761-1-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEc0PbzcCFfkabEg9UfwnCizKGvKEhZ_iYfMA6QC=xcxFw@mail.gmail.com>
-	 (sfid-20121021_105351_428681_543405D7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 12 Oct 2012 06:32:13 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/4] ath9k: Add concurrent WLAN and BT tx support for MCI based chips
+Date: Fri, 12 Oct 2012 14:07:23 +0530
+Message-ID: <1350031045-11860-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121012_123542_598529_C7C72423)
+In-Reply-To: <1350031045-11860-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350031045-11860-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-10-21 at 10:53 +0200, Eliad Peller wrote:
+This feature enables both WLAN and BT can transmit simultaneously
+by setting WLAN and BT to equal priorities. Whenever both are
+transmitting, it might violate regulatory power limits. To avoid
+regulatory violation, WLAN tx power will be adjusted according to BT
+power index based on avaliability of BT scheduling message. If the
+combined power exceeds threshold, BT transmission will be held off.
 
-> > This would make the code in iwlwifi a lot simpler
-> > as having bss_info_change do everything depending
-> > on whether the beacon was enabled/disabled etc.
-> > is tricky to get right, the explicit operations
-> > make it easier.
-> >
-> is it really different from acting upon BSS_CHANGED_BEACON_ENABLED
-> (when vif == ap)?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |  1 -
+ drivers/net/wireless/ath/ath9k/btcoex.c     | 60 +++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath9k/btcoex.h     |  3 ++
+ drivers/net/wireless/ath/ath9k/mci.c        | 60 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/mci.h        |  3 ++
+ 5 files changed, 110 insertions(+), 17 deletions(-)
 
-We did implement it this way but the error handling is a bit of a deal
-breaker, it's just not good to have to ignore errors...
-
-> >         ieee80211_bss_info_change_notify(sdata, changed);
-> >
-> > +       err = drv_start_ap(sdata->local, sdata);
-> > +       if (err) {
-> > +               old = rtnl_dereference(sdata->u.ap.beacon);
-> > +               if (old)
-> > +                       kfree_rcu(old, rcu_head);
-> > +               RCU_INIT_POINTER(sdata->u.ap.beacon, NULL);
-> > +               return err;
-> 
-> they'll probably be mutually exclusive, but i think you should still
-> notify BSS_CHANGED_BEACON_ENABLED after removing the beacon (or more
-> easily, call ieee80211_bss_info_change_notify only after this block).
-
-Good point.
-
-> > +DEFINE_EVENT(local_sdata_evt, drv_start_ap,
-> > +       TP_PROTO(struct ieee80211_local *local,
-> > +                struct ieee80211_sub_if_data *sdata),
-> > +       TP_ARGS(local, sdata)
-> > +);
-> 
-> adding traces for ssid and beacon_int might be nice :)
-
-Yeah, quick & dirty for now.
-
-> what about other direct notification of BSS_CHANGED_BEACON_ENABLED
-> (like in offchannel and ieee80211_do_stop)? should we call
-> start_ap/stop_ap there as well?
-
-The one in do_stop() should probably just be cleaned up, cfg80211 will
-now stop the AP operation while the interface goes down ... so that
-won't actually do anything, but could be a concern for the old API
-because it might cause an off/off transition.
-
-For offchannel, I'm not sure. Does it really make sense to call it
-there? I can do it, I suppose, but ... hmm. The software-offchannel
-hopefully won't actually be needed much longer given channel
-contexts ;-)
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 2a2d018..2928234 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -196,7 +196,6 @@ enum mci_state_type {
+ 	MCI_STATE_SEND_WLAN_COEX_VERSION,
+ 	MCI_STATE_SEND_VERSION_QUERY,
+ 	MCI_STATE_SEND_STATUS_QUERY,
+-	MCI_STATE_SET_CONCUR_TX_PRI,
+ 	MCI_STATE_RECOVER_RX,
+ 	MCI_STATE_NEED_FTP_STOMP,
+ 	MCI_STATE_DEBUG,
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 419e9a3..05d9be5 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -218,27 +218,45 @@ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+ 				enum ath_stomp_type stomp_type)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
++	u8 txprio_shift[] = { 24, 16, 16, 0 }; /* tx priority weight */
++	bool concur_tx = (mci_hw->concur_tx && btcoex_hw->tx_prio[stomp_type]);
++	const u32 *weight = ar9003_wlan_weights[stomp_type];
++	int i;
+ 
+-	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		const u32 *weight = ar9003_wlan_weights[stomp_type];
+-		int i;
+-
+-		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+-			if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
+-			    btcoex_hw->mci.stomp_ftp)
+-				stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
+-			weight = mci_wlan_weights[stomp_type];
+-		}
+-
+-		for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
+-			btcoex_hw->bt_weight[i] = AR9300_BT_WGHT;
+-			btcoex_hw->wlan_weight[i] = weight[i];
+-		}
+-	} else {
++	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+ 		btcoex_hw->bt_coex_weights =
+ 			SM(bt_weight, AR_BTCOEX_BT_WGHT) |
+ 			SM(wlan_weight, AR_BTCOEX_WL_WGHT);
++		return;
++	}
++
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
++		enum ath_stomp_type stype =
++			((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
++			 btcoex_hw->mci.stomp_ftp) ?
++			ATH_BTCOEX_STOMP_LOW_FTP : stomp_type;
++		weight = mci_wlan_weights[stype];
+ 	}
++
++	for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
++		btcoex_hw->bt_weight[i] = AR9300_BT_WGHT;
++		btcoex_hw->wlan_weight[i] = weight[i];
++		if (concur_tx && i) {
++			btcoex_hw->wlan_weight[i] &=
++				~(0xff << txprio_shift[i-1]);
++			btcoex_hw->wlan_weight[i] |=
++				(btcoex_hw->tx_prio[stomp_type] <<
++				 txprio_shift[i-1]);
++		}
++	}
++	/* Last WLAN weight has to be adjusted wrt tx priority */
++	if (concur_tx) {
++		btcoex_hw->wlan_weight[i-1] &= ~(0xff << txprio_shift[i-1]);
++		btcoex_hw->wlan_weight[i-1] |= (btcoex_hw->tx_prio[stomp_type]
++						      << txprio_shift[i-1]);
++	}
++
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_set_weight);
+ 
+@@ -385,3 +403,13 @@ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
+ 	}
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_bt_stomp);
++
++void ath9k_hw_btcoex_set_concur_txprio(struct ath_hw *ah, u8 *stomp_txprio)
++{
++	struct ath_btcoex_hw *btcoex = &ah->btcoex_hw;
++	int i;
++
++	for (i = 0; i < ATH_BTCOEX_STOMP_MAX; i++)
++		btcoex->tx_prio[i] = stomp_txprio[i];
++}
++EXPORT_SYMBOL(ath9k_hw_btcoex_set_concur_txprio);
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 385197a..a260fcb 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -84,6 +84,7 @@ struct ath9k_hw_mci {
+ 	u8 bt_ver_minor;
+ 	u8 bt_state;
+ 	u8 stomp_ftp;
++	bool concur_tx;
+ };
+ 
+ struct ath_btcoex_hw {
+@@ -98,6 +99,7 @@ struct ath_btcoex_hw {
+ 	u32 bt_coex_mode2; 	/* Register setting for AR_BT_COEX_MODE2 */
+ 	u32 bt_weight[AR9300_NUM_BT_WEIGHTS];
+ 	u32 wlan_weight[AR9300_NUM_WLAN_WEIGHTS];
++	u8 tx_prio[ATH_BTCOEX_STOMP_MAX];
+ };
+ 
+ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
+@@ -112,5 +114,6 @@ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+ void ath9k_hw_btcoex_disable(struct ath_hw *ah);
+ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
+ 			      enum ath_stomp_type stomp_type);
++void ath9k_hw_btcoex_set_concur_txprio(struct ath_hw *ah, u8 *stomp_txprio);
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 1733a5a..b37c8af 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -43,6 +43,7 @@ static bool ath_mci_add_profile(struct ath_common *common,
+ 				struct ath_mci_profile_info *info)
+ {
+ 	struct ath_mci_profile_info *entry;
++	u8 voice_priority[] = { 110, 110, 110, 112, 110, 110, 114, 116, 118 };
+ 
+ 	if ((mci->num_sco == ATH_MCI_MAX_SCO_PROFILE) &&
+ 	    (info->type == MCI_GPM_COEX_PROFILE_VOICE))
+@@ -59,6 +60,12 @@ static bool ath_mci_add_profile(struct ath_common *common,
+ 	memcpy(entry, info, 10);
+ 	INC_PROF(mci, info);
+ 	list_add_tail(&entry->list, &mci->info);
++	if (info->type == MCI_GPM_COEX_PROFILE_VOICE) {
++		if (info->voice_type < sizeof(voice_priority))
++			mci->voice_priority = voice_priority[info->voice_type];
++		else
++			mci->voice_priority = 110;
++	}
+ 
+ 	return true;
+ }
+@@ -250,6 +257,57 @@ static void ath9k_mci_work(struct work_struct *work)
+ 	ath_mci_update_scheme(sc);
+ }
+ 
++static void ath_mci_update_stomp_txprio(u8 cur_txprio, u8 *stomp_prio)
++{
++	if (cur_txprio < stomp_prio[ATH_BTCOEX_STOMP_NONE])
++		stomp_prio[ATH_BTCOEX_STOMP_NONE] = cur_txprio;
++
++	if (cur_txprio > stomp_prio[ATH_BTCOEX_STOMP_ALL])
++		stomp_prio[ATH_BTCOEX_STOMP_ALL] = cur_txprio;
++
++	if ((cur_txprio > ATH_MCI_HI_PRIO) &&
++	    (cur_txprio < stomp_prio[ATH_BTCOEX_STOMP_LOW]))
++		stomp_prio[ATH_BTCOEX_STOMP_LOW] = cur_txprio;
++}
++
++static void ath_mci_set_concur_txprio(struct ath_softc *sc)
++{
++	struct ath_btcoex *btcoex = &sc->btcoex;
++	struct ath_mci_profile *mci = &btcoex->mci;
++	u8 stomp_txprio[] = { 0, 0, 0, 0 }; /* all, low, none, low_ftp */
++
++	if (mci->num_mgmt) {
++		stomp_txprio[ATH_BTCOEX_STOMP_ALL] = ATH_MCI_INQUIRY_PRIO;
++		if (!mci->num_pan && !mci->num_other_acl)
++			stomp_txprio[ATH_BTCOEX_STOMP_NONE] =
++				ATH_MCI_INQUIRY_PRIO;
++	} else {
++		u8 prof_prio[] = { 50, 90, 94, 52 };/* RFCOMM, A2DP, HID, PAN */
++
++		stomp_txprio[ATH_BTCOEX_STOMP_LOW] =
++		stomp_txprio[ATH_BTCOEX_STOMP_NONE] = 0xff;
++
++		if (mci->num_sco)
++			ath_mci_update_stomp_txprio(mci->voice_priority,
++						    stomp_txprio);
++		if (mci->num_other_acl)
++			ath_mci_update_stomp_txprio(prof_prio[0], stomp_txprio);
++		if (mci->num_a2dp)
++			ath_mci_update_stomp_txprio(prof_prio[1], stomp_txprio);
++		if (mci->num_hid)
++			ath_mci_update_stomp_txprio(prof_prio[2], stomp_txprio);
++		if (mci->num_pan)
++			ath_mci_update_stomp_txprio(prof_prio[3], stomp_txprio);
++
++		if (stomp_txprio[ATH_BTCOEX_STOMP_NONE] == 0xff)
++			stomp_txprio[ATH_BTCOEX_STOMP_NONE] = 0;
++
++		if (stomp_txprio[ATH_BTCOEX_STOMP_LOW] == 0xff)
++			stomp_txprio[ATH_BTCOEX_STOMP_LOW] = 0;
++	}
++	ath9k_hw_btcoex_set_concur_txprio(sc->sc_ah, stomp_txprio);
++}
++
+ static u8 ath_mci_process_profile(struct ath_softc *sc,
+ 				  struct ath_mci_profile_info *info)
+ {
+@@ -281,6 +339,7 @@ static u8 ath_mci_process_profile(struct ath_softc *sc,
+ 	} else
+ 		ath_mci_del_profile(common, mci, entry);
+ 
++	ath_mci_set_concur_txprio(sc);
+ 	return 1;
+ }
+ 
+@@ -314,6 +373,7 @@ static u8 ath_mci_process_status(struct ath_softc *sc,
+ 			mci->num_mgmt++;
+ 	} while (++i < ATH_MCI_MAX_PROFILE);
+ 
++	ath_mci_set_concur_txprio(sc);
+ 	if (old_num_mgmt != mci->num_mgmt)
+ 		return 1;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index a3df314..e85a0e9 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -32,6 +32,8 @@
+ #define ATH_MCI_MAX_PROFILE		(ATH_MCI_MAX_ACL_PROFILE +\
+ 					 ATH_MCI_MAX_SCO_PROFILE)
+ 
++#define ATH_MCI_INQUIRY_PRIO         62
++#define ATH_MCI_HI_PRIO              60
+ #define ATH_MCI_NUM_BT_CHANNELS      79
+ 
+ #define MCI_GPM_SET_CHANNEL_BIT(_p_gpm, _bt_chan)			  \
+@@ -131,6 +133,7 @@ struct ath_mci_profile {
+ 	u8 num_pan;
+ 	u8 num_other_acl;
+ 	u8 num_bdr;
++	u8 voice_priority;
+ };
+ 
+ struct ath_mci_buf {
+-- 
+1.7.12.2
 
