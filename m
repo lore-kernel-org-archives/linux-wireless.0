@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3968 "EHLO mms2.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1238 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756930Ab2JJSNW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 14:13:22 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/7] miscellaneous fixes intended for 3.7
-Date: Wed, 10 Oct 2012 11:13:05 -0700
-Message-ID: <1349892792-4792-1-git-send-email-frankyl@broadcom.com> (sfid-20121010_201328_694938_DE817865)
+	id S933185Ab2JLNHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2012 09:07:08 -0400
+Message-ID: <507815EE.5010508@broadcom.com> (sfid-20121012_150713_695740_6DD983D3)
+Date: Fri, 12 Oct 2012 15:06:54 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Kalle Valo" <kvalo@qca.qualcomm.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Jouni Malinen" <j@w1.fi>,
+	"Stanislav Yakovlev" <stas.yakovlev@gmail.com>,
+	"Dan Williams" <dcbw@redhat.com>, "Bing Zhao" <bzhao@marvell.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 1/3] wireless: drivers: make use of
+ WLAN_EID_VENDOR_SPECIFIC
+References: <1350037696-23747-1-git-send-email-arend@broadcom.com>
+ <1350037696-23747-2-git-send-email-arend@broadcom.com>
+ <5077F4F3.8030409@qca.qualcomm.com>
+In-Reply-To: <5077F4F3.8030409@qca.qualcomm.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are some miscellaneous brcmfmac bug fix patches aiming for 3.7
+On 10/12/2012 12:46 PM, Kalle Valo wrote:
+> On 10/12/2012 01:28 PM, Arend van Spriel wrote:
+>> The include file linux/ieee80211.h contains three definitions for
+>> the same thing in enum ieee80211_eid due to historic changes:
+>>
+>> /* Information Element IDs */
+>> enum ieee80211_eid {
+>>      :
+>>      WLAN_EID_WPA = 221,
+>>      WLAN_EID_GENERIC = 221,
+>>      WLAN_EID_VENDOR_SPECIFIC = 221,
+>>      :
+>> };
+>>
+>> The standard refers to this as "vendor specific" element so the
+>> other two definitions are better not used. This patch changes the
+>> wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
+>
+> Why not remove _WPA and _GENERIC from ieee80211.h at the same time so
+> that nobody else won't use them in the future?
 
-Arend van Spriel (1):
-  brcmfmac: remove 'always false' condition from brcmf_c_mkiovar_bsscfg
+Actually doing that in patch #3/3.
 
-Dan Carpenter (2):
-  brcmfmac: Using zero instead of NULL
-  brcmfmac: fix end of loop check (signedness bug)
-
-Franky Lin (3):
-  brcmfmac: fix sparse warnings
-  brcmfmac: use control channel in roamed status reporting
-  brcmfmac: set dongle mode accordingly when interface up
-
-Hante Meuleman (1):
-  brcmfmac: handle all exceptions as an error.
-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    2 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   77 +++++++-------------
- 3 files changed, 30 insertions(+), 51 deletions(-)
-
--- 
-1.7.9.5
+Regards,
+Arend
 
 
