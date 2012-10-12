@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753219Ab2JBSlD (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44251 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933255Ab2JLItX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2012 14:41:03 -0400
-Message-ID: <1349203294.10698.25.camel@jlt4.sipsolutions.net> (sfid-20121002_204119_585344_A62D5C00)
-Subject: Re: Bug#684352: phy0/hp-wifi problems after kernel update from 2.6
- to 3.2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Smith <sidicas2@gmail.com>
+	Fri, 12 Oct 2012 04:49:23 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so1407946bkc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2012 01:49:22 -0700 (PDT)
+Message-ID: <1350031755.15399.3.camel@Route3278> (sfid-20121012_104928_534285_6E5DBE3E)
+Subject: [PATCH] staging: vt6656: [BUG] PIPEnsSendBulkOut free bBoolInUse
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 02 Oct 2012 20:41:34 +0200
-In-Reply-To: <CA+7qwUksJykOMW1gOq4g+9kyv6R0Tb_fx9Lkuikss37V1-EPTg@mail.gmail.com> (sfid-20121002_203720_153266_D0AF5DDE)
-References: <CA+7qwUkZiysOF-ocV+wyTGfnFyiGH6G=TiEB+ts89Pb=NvgpxA@mail.gmail.com>
-	 <CA+7qwUksJykOMW1gOq4g+9kyv6R0Tb_fx9Lkuikss37V1-EPTg@mail.gmail.com>
-	 (sfid-20121002_203720_153266_D0AF5DDE)
+Date: Fri, 12 Oct 2012 09:49:15 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-03 at 02:37 +0800, David Smith wrote:
-> Trying again to send this to  linux-wireless@vger.kernel.org.
-> Previously blocked because gmail put some html in there.
-> 
-> Please CC:  Anssi Hannula <anssi.hannula@iki.fi>,
-> 684352@bugs.debian.org, sidicas2@gmail.com  on replies.
 
-> Hello, I'm having a problem with my Intel 2200 wireless on my Compaq
-> Presario V4000T (made by HP) that has started happening after I
-> upgraded my kernel from 2.6 to 3.2.
-> 
-> Problem: phy0 wireless state is incorrect.
+Eventually, when there is enough errors we run out of free TX urbs and
+connection stalls.
 
-> After many many hours of searching, I discovered that running "rfkill
-> unblock all" is able to remove the "Hard Block" from phy0 and put the
-> wireless into this state:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/usbpipe.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Since you can fix it that way, it must be a bug with the HP platform
-driver, so there's nothing we can do about it on the linux-wireless
-list, sorry. You might want to bisect the platform drivers to see which
-change caused this.
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 609e8fa..b5259db 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -660,6 +660,7 @@ PIPEnsSendBulkOut(
+     	if (status != 0)
+     	{
+     		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Submit Tx URB failed %d\n", status);
++		pContext->bBoolInUse = FALSE;
+     		return STATUS_FAILURE;
+     	}
+         return STATUS_PENDING;
+-- 
+1.7.10.4
 
-johannes
 
