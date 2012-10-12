@@ -1,110 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:34835 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781Ab2JOOth (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:48068 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759663Ab2JLPNU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 10:49:37 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH 2/2] cfg80211: add the NL80211_CMD_SET_MCAST_RATE command
-Date: Mon, 15 Oct 2012 16:49:01 +0200
-Message-Id: <1350312541-17657-2-git-send-email-ordex@autistici.org> (sfid-20121015_164940_470476_90151EC4)
-In-Reply-To: <1350312541-17657-1-git-send-email-ordex@autistici.org>
-References: <1350312541-17657-1-git-send-email-ordex@autistici.org>
+	Fri, 12 Oct 2012 11:13:20 -0400
+Received: by mail-ee0-f46.google.com with SMTP id b15so1917382eek.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2012 08:13:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAPwP7cSMsdU0LtuMBbnFLoZRWkoPfyT1ahaEfKohf5zJ-Xr6uA@mail.gmail.com>
+References: <CAPwP7cSMsdU0LtuMBbnFLoZRWkoPfyT1ahaEfKohf5zJ-Xr6uA@mail.gmail.com>
+From: Danilo Tardioli <dannnilo@hotmail.com>
+Date: Fri, 12 Oct 2012 17:12:58 +0200
+Message-ID: <CAPwP7cQJuJwzQjeYqtjrz-TPfyE+Dd8XFsb_PvsMCmCg=a-8Fw@mail.gmail.com> (sfid-20121012_171326_084198_B286C3AC)
+Subject: Broadcast Rate
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this command triggers the set_mcast_rate() callback, so enabling the user to
-change the rate used to send multicast frames for vif configured as IBSS or
-MESH_POINT
+Hello everybody,
+this is my first post here.
+I've been looking for a solution to my problem through the mailing
+list but I couldn't find it.
+I'm  developing a protocol that pretends to use 802.11 wireless card
+as simply transmitter and receiver devices.
+I mean my idea is to simply that to send  and receive frames. Up to
+the moment I'm able to transmit and receive frames talking directly to
+the mac80211 module using a simple patch that I've written.
+My problem is that such a protocol uses broadcast frames that are, by
+default, sent at the lowest rate (1/2 Mbit/s for 802.11b/g and 6Mbit/s
+for 802.11a).
+I've been looking in the code how to force the mac80211 or even the
+specific driver (e.g. b43 or iwlagn) to send broadcast frames at
+higher rates but I feel a little lost since I don't have the global
+vision on how all the wireless stuffs work together.
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
- include/linux/nl80211.h |  5 +++++
- net/wireless/nl80211.c  | 37 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 42 insertions(+)
+I've read in
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0e6277a..9440a2d 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -578,6 +578,9 @@
-  *	station, due to particular reason. %NL80211_ATTR_CONN_FAILED_REASON
-  *	is used for this.
-  *
-+ * @NL80211_CMD_SET_MCAST_RATE: Change the rate used to send multicast frames
-+ *	for IBSS or MESH vif.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -726,6 +729,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_CONN_FAILED,
- 
-+	NL80211_CMD_SET_MCAST_RATE,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 38a1a57..f537393 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5435,6 +5435,35 @@ static int nl80211_leave_ibss(struct sk_buff *skb, struct genl_info *info)
- 	return cfg80211_leave_ibss(rdev, dev, false);
- }
- 
-+static int nl80211_set_mcast_rate(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	int mcast_rate[IEEE80211_NUM_BANDS];
-+	u32 nla_rate;
-+	int err;
-+
-+	memset(mcast_rate, 0, sizeof(mcast_rate));
-+
-+	if (!info->attrs[NL80211_ATTR_MCAST_RATE])
-+		return -EINVAL;
-+
-+	nla_rate = nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE]);
-+	if (!nl80211_parse_mcast_rate(rdev, mcast_rate, nla_rate))
-+		return -EINVAL;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	wdev_lock(dev->ieee80211_ptr);
-+
-+	err = rdev->ops->set_mcast_rate(&rdev->wiphy, dev, mcast_rate);
-+
-+	wdev_unlock(dev->ieee80211_ptr);
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	return err;
-+}
-+
-+
- #ifdef CONFIG_NL80211_TESTMODE
- static struct genl_multicast_group nl80211_testmode_mcgrp = {
- 	.name = "testmode",
-@@ -7620,6 +7649,14 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_MCAST_RATE,
-+		.doit = nl80211_set_mcast_rate,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
--- 
-1.7.12.3
+http://article.gmane.org/gmane.linux.kernel.wireless.general/46121/match=broadcast+rate
 
+that maybe the solution could be to specify 'only a single rate in the
+basic rate set' but, where's is specified the basic rate set.
+
+If someone could give me an hint on how to get documentation about
+mac80211 and its interaction with lower level drivers of directly on
+my problem, it would be highly appreciated.
+
+Thanks in advance.
+Regards,
+ Danilo
