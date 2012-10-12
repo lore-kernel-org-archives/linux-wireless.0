@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:54840 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932544Ab2JZOma (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 10:42:30 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH 2/2] iw: add support for the forced AP scan
-Date: Fri, 26 Oct 2012 16:41:48 +0200
-Message-Id: <1351262508-23386-2-git-send-email-ordex@autistici.org> (sfid-20121026_164249_646055_D73D2FE3)
-In-Reply-To: <1351262508-23386-1-git-send-email-ordex@autistici.org>
-References: <1351262508-23386-1-git-send-email-ordex@autistici.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:3773 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933840Ab2JLK23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2012 06:28:29 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH 2/3] wireless: gelic: make use of
+ WLAN_EID_VENDOR_SPECIFIC
+Date: Fri, 12 Oct 2012 12:28:15 +0200
+Message-ID: <1350037696-23747-3-git-send-email-arend@broadcom.com> (sfid-20121012_123401_617334_C00100F1)
+In-Reply-To: <1350037696-23747-1-git-send-email-arend@broadcom.com>
+References: <1350037696-23747-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces the "ap-force" argument to the scan command.
-This argument instructs mac80211 to trigger the scan even if the
-interface is configured as AP and has already started beaconing (the
-driver may not support such operation)
+The include file linux/ieee80211.h contains three definitions for
+the same thing in enum ieee80211_eid due to historic changes:
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+    /* Information Element IDs */
+    enum ieee80211_eid {
+        :
+        WLAN_EID_WPA = 221,
+        WLAN_EID_GENERIC = 221,
+        WLAN_EID_VENDOR_SPECIFIC = 221,
+        :
+    };
+
+The standard refers to this as "vendor specific" element so the
+other two definitions are better not used. This patch changes the
+wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
+
+Cc: David S. Miller <davem@davemloft.net>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- scan.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+For some reason this driver resides in the net/ethernet driver
+directory. Still decided to tag the patch as a wireless patch.
 
-diff --git a/scan.c b/scan.c
-index 91984e5..73fb3fe 100644
---- a/scan.c
-+++ b/scan.c
-@@ -103,6 +103,10 @@ static int handle_scan(struct nl80211_state *state,
- 				parse = NONE;
- 				flags |= NL80211_SCAN_FLAG_FLUSH;
- 				break;
-+			} else if (strcmp(argv[i], "ap-force") == 0) {
-+				parse = NONE;
-+				flags |= NL80211_SCAN_FLAG_AP;
-+				break;
- 			} else if (strcmp(argv[i], "ssid") == 0) {
- 				parse = SSID;
- 				have_ssids = true;
-@@ -1355,7 +1359,7 @@ static int handle_scan_combined(struct nl80211_state *state,
- 	dump_argv[0] = argv[0];
- 	return handle_cmd(state, id, dump_argc, dump_argv);
- }
--TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush] [ssid <ssid>*|passive]", 0, 0,
-+TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]", 0, 0,
- 	 CIB_NETDEV, handle_scan_combined,
- 	 "Scan on the given frequencies and probe for the given SSIDs\n"
- 	 "(or wildcard if not given) unless passive scanning is requested.\n"
-@@ -1365,7 +1369,7 @@ COMMAND(scan, dump, "[-u]",
- 	NL80211_CMD_GET_SCAN, NLM_F_DUMP, CIB_NETDEV, handle_scan_dump,
- 	"Dump the current scan results. If -u is specified, print unknown\n"
- 	"data in scan results.");
--COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush] [ssid <ssid>*|passive]",
-+COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]",
- 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
- 	 "Trigger a scan on the given frequencies with probing for the given\n"
- 	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
+The other strange thing is that I could not find how to select
+this driver. Using ps3_defconfig for ARCH=powerpc and following
+the clues from Kconfig search function I can not get
+"Toshiba devices" showing up. So this one is not compile tested.
+
+Gr. AvS
+---
+ drivers/net/ethernet/toshiba/ps3_gelic_wireless.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/toshiba/ps3_gelic_wireless.c b/drivers/net/ethernet/toshiba/ps3_gelic_wireless.c
+index 961c832..72b775f 100644
+--- a/drivers/net/ethernet/toshiba/ps3_gelic_wireless.c
++++ b/drivers/net/ethernet/toshiba/ps3_gelic_wireless.c
+@@ -452,7 +452,7 @@ static size_t gelic_wl_synthesize_ie(u8 *buf,
+ 	if (rsn)
+ 		*buf++ = WLAN_EID_RSN;
+ 	else
+-		*buf++ = WLAN_EID_GENERIC;
++		*buf++ = WLAN_EID_VENDOR_SPECIFIC;
+ 
+ 	/* length filed; set later */
+ 	buf++;
+@@ -540,7 +540,7 @@ static void gelic_wl_parse_ie(u8 *data, size_t len,
+ 			break;
+ 
+ 		switch (item_id) {
+-		case WLAN_EID_GENERIC:
++		case WLAN_EID_VENDOR_SPECIFIC:
+ 			if ((OUI_LEN + 1 <= item_len) &&
+ 			    !memcmp(pos, wpa_oui, OUI_LEN) &&
+ 			    pos[OUI_LEN] == 0x01) {
 -- 
-1.7.12.4
+1.7.9.5
+
 
