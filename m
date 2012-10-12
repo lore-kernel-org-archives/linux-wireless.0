@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3267 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755901Ab2JKJJi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 05:09:38 -0400
-Message-ID: <50768CC6.5050007@broadcom.com> (sfid-20121011_110944_110026_5A15D517)
-Date: Thu, 11 Oct 2012 11:09:26 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:56145 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933255Ab2JLIXx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2012 04:23:53 -0400
+Received: by mail-ea0-f174.google.com with SMTP id c13so520760eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2012 01:23:52 -0700 (PDT)
 MIME-Version: 1.0
-To: "Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>
-cc: "Julian Calaby" <julian.calaby@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v0 0/2] driver for 60g Wilocity chip wil6210
-References: <1349893385-23102-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <CAGRGNgUidXkunAuXXoM54-d48HcnAvYBiHrmZL5_7jt=ytF5AQ@mail.gmail.com>
- <3023056.XLicri5zy7@lx-vladimir>
-In-Reply-To: <3023056.XLicri5zy7@lx-vladimir>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <5077BE43.7050200@gmail.com>
+References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
+ <20121011203112.GB3317@kroah.com> <5077BE43.7050200@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 12 Oct 2012 19:23:32 +1100
+Message-ID: <CAGRGNgVAuV7bYaU0rMZit81PFdpSprfdJkaqHqnm1WGx_FBtVA@mail.gmail.com> (sfid-20121012_102404_959074_6E46D3D8)
+Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
+	linville@tuxdriver.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2012 08:35 AM, Vladimir Kondratiev wrote:
-> On Thursday, October 11, 2012 09:51:28 AM Julian Calaby wrote:
->> Hi Vladimir,
->>
->> On Thu, Oct 11, 2012 at 5:23 AM, Vladimir Kondratiev
->>
->> <qca_vkondrat@qca.qualcomm.com> wrote:
->>> Hi,
->>>
->>> Here goes driver for the "wil6210" chip by Wilocity.
->>>
->>
->> Whilst I'm sure that this driver will end up being kernel quality
->> code, as this is an initial development snapshot, have you considered
->> putting it in "staging" until it's mostly feature complete?
->>
->
-> Hi,
->
-> Sure I asked this very question before submitting. Luis advised to go for
-> the regular location, not "staging". I am pretty neutral about what location
-> is better, so I just follow recommendations on this matter.
->
-> Thanks, Vladimir.
+Hi Pontus,
 
- From my own experiences I got the impression that the staging directory 
-was more about learning the development process and converting a 
-proprietary driver with all kind of abstractions for multi-OS support to 
-a native linux driver. So I would agree with Luis, but you could have 
-used RFC instead of PATCH to draw more attention to this although the 
-'60g' term will trigger that as well.
+On Fri, Oct 12, 2012 at 5:52 PM, Pontus Fuchs <pontus.fuchs@gmail.com> wrote:
+> * The FW API is reverse engineered and no real documentation is available.
 
-Regards,
-AvS
+Have you asked the Atheros guys (mostly CC'd) if there's any
+possibility of the documentation / firmware being released?
 
+Thanks,
 
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
