@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54657 "EHLO nbd.name"
+Received: from purkki.adurom.net ([80.68.90.206]:35199 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750938Ab2JCTIF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 15:08:05 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.7 1/3] ath9k: fix ASPM initialization on resume
-Date: Wed,  3 Oct 2012 21:07:50 +0200
-Message-Id: <1349291272-93080-1-git-send-email-nbd@openwrt.org> (sfid-20121003_210811_996155_1BA7E200)
+	id S1753395Ab2JLHMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2012 03:12:01 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
+References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
+	<20121011203112.GB3317@kroah.com>
+Date: Fri, 12 Oct 2012 10:11:57 +0300
+In-Reply-To: <20121011203112.GB3317@kroah.com> (Greg KH's message of "Fri, 12
+	Oct 2012 05:31:12 +0900")
+Message-ID: <87haq017wi.fsf@purkki.adurom.net> (sfid-20121012_091207_286353_17A6085E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_pci_aspm_init is only called on card init, so PCI registers get reset
-after a suspend/resume cycle.
+Greg KH <gregkh@linuxfoundation.org> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/pci.c |    5 +++++
- 1 file changed, 5 insertions(+)
+> Very nice.
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index c0c5996..ea1d59e 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -333,6 +333,9 @@ static int ath_pci_suspend(struct device *device)
- static int ath_pci_resume(struct device *device)
- {
- 	struct pci_dev *pdev = to_pci_dev(device);
-+	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	u32 val;
- 
- 	/*
-@@ -344,6 +347,8 @@ static int ath_pci_resume(struct device *device)
- 	if ((val & 0x0000ff00) != 0)
- 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
- 
-+	ath_pci_aspm_init(common);
-+
- 	return 0;
- }
- 
+Indeed.
+
+> But what is keeping this driver from going to the "proper" place in the
+> kernel tree (i.e. drivers/net/...)?  I don't have a problem adding it to
+> the staging tree, but it would need a TODO file to list what is needed
+> to get it out of the staging tree.
+
+I did a really quick 5 min review of this driver and IMHO this should go
+directly to drivers/net/wireless/ (or maybe to drivers/net/wireless/ath,
+Luis?), I don't see any reason why this should go to staging. The code
+looks clean and is only 2 kLOC. But I'll review this better during the
+weekend and also run some build tests.
+
 -- 
-1.7.9.6 (Apple Git-31.1)
-
+Kalle Valo
