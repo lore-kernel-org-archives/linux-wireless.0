@@ -1,94 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756630Ab2JQLy4 (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:24288 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759921Ab2JLR7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2012 07:54:56 -0400
-Message-ID: <1350474926.10728.17.camel@jlt4.sipsolutions.net> (sfid-20121017_135459_509718_716C8DEC)
-Subject: pull-request: mac80211 2012-10-17
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Oct 2012 13:55:26 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-uSd+X2NTkiktlhjP5l72"
-Mime-Version: 1.0
+	Fri, 12 Oct 2012 13:59:00 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv2] nl/cfg80211: force scan using an AP vif if requested
+Date: Fri, 12 Oct 2012 19:58:17 +0200
+Message-Id: <1350064697-21838-1-git-send-email-ordex@autistici.org> (sfid-20121012_195905_137505_5D34E75B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If the user wants to scan using a vif configured as AP, cfg80211 must give him a
+chance to do it, even if this will disrupt the stations performance due to
+off-channel scanning. To do so, this patch adds a 'force' flag to the
+SCAN_TRIGGER command which tells cfg80211 to perform the scanning operation even
+if the vif is an AP and the beaconing has already started.
 
---=-uSd+X2NTkiktlhjP5l72
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
 
-Hi John,
-
-Please pull my mac80211.git tree (as below) to get three fixes for 3.7,
-one from Stanislaw for a state mismatch between cfg80211 and mac80211
-that causes crashes, one from Jouni to fix a bitmask in CCMP and one
-from myself to disable HT40 if not permitted which ultimately fixes a
-sysassert in iwlwifi.
-
-Thanks,
-johannes
+v2: rebased on top of latest mac80211-next/master, in particular this introduced
+Bing's patchset on scan_flags
 
 
+Cheers,
 
+ include/linux/nl80211.h |  6 ++++++
+ net/mac80211/cfg.c      | 10 +++++++++-
+ 2 files changed, 15 insertions(+), 1 deletion(-)
 
-The following changes since commit c3e7724b6bc2f25e46c38dbe68f09d71fafeafb8=
-:
-
-  mac80211: use ieee80211_free_txskb to fix possible skb leaks (2012-10-08 =
-15:06:05 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 3a40414f826a8f1096d9b94c4a53ef91b25ba28d:
-
-  mac80211: connect with HT20 if HT40 is not permitted (2012-10-17 13:46:38=
- +0200)
-
-----------------------------------------------------------------
-Johannes Berg (2):
-      Merge remote-tracking branch 'wireless/master' into mac80211
-      mac80211: connect with HT20 if HT40 is not permitted
-
-Jouni Malinen (1):
-      mac80211: Fix FC masking in BIP AAD generation
-
-Stanislaw Gruszka (1):
-      cfg80211/mac80211: avoid state mishmash on deauth
-
- include/net/cfg80211.h |    1 +
- net/mac80211/mlme.c    |   35 +++++++++++++++++++++++------------
- net/mac80211/wpa.c     |   11 ++++++++---
- net/wireless/mlme.c    |   12 +++---------
- 4 files changed, 35 insertions(+), 24 deletions(-)
-
-
---=-uSd+X2NTkiktlhjP5l72
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJQfpyuAAoJEDBSmw7B7bqrta8P/An9BfnrqIdia54R0RZuexMa
-T9QFse8W4tZqoHP+FQpLjnxunqlSvbvY2hjc22npno+jY5bpbiMan96d2c4VhGnK
-5yFaUewHjxTfAm6wU5mJgg45oOEDdDjHU9ze6xGUMst8paWOzyY7/wourHV7bBui
-9MawtJGzkUblZSZVxPZQOv0pecStU4Jw0KPVKpb/h7Vls/FikdrqMG6hxE2agvOD
-QnQ+XUSQWORNhsolwjMwdXYx3Ioc4iGcJyknOHfG0xiO/XMXpWK3RDECB2hJCrVQ
-rYL8dFvHbEksrY7l45KyyNN2yZSxfotgeY5ajZmzXes86Xn5KFwwZBWTzNhX9+wM
-1zZrS4nSygD1qErsvIEA9A8pPzJuVUoWPVhwz63tX/n9dDTo2XTuhFTXQcBesCwJ
-b+ZEJy5lIhingPIMbhy3qr/soMbhlVMEqQl5n5IOsnQmWTWgafB3XmvD2ahNaLY1
-wXguTP5yo3NAmegSsv+22jhGex6Vx65Cciro7jilWn1ycsDpPbOexCEM9P7pkrqg
-IxKkLZ/VY1JgjjmeqCtW3cvO41F6GXmpE9VIZ6na3VnwKSB4IhCMVZTDP9jXptSi
-3rdXdg8qcpEpr8z+2nUHE6++l1tCuydI447LP2Af20Oy9kauDhWA0D6OVArguMYr
-bcs4iUXLtYqIO8bfqK5n
-=Mft4
------END PGP SIGNATURE-----
-
---=-uSd+X2NTkiktlhjP5l72--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 0e6277a..b3c4a63 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -3103,10 +3103,16 @@ enum nl80211_connect_failed_reason {
+  *
+  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+  * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
++ * @NL80211_SCAN_FLAG_FORCE: force a scan even if the interface is configured
++ *	as AP and the beaconing has already been configured. This attribute is
++ *	dangerous because will destroy stations performance as a lot of frames
++ *	will be lost while scanning off-channel, therefore it must be used only
++ *	when really needed
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
+ 	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
++	NL80211_SCAN_FLAG_FORCE				= 1<<2,
+ };
+ 
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ed27988..a801270 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1855,7 +1855,15 @@ static int ieee80211_scan(struct wiphy *wiphy,
+ 		 * beaconing hasn't been configured yet
+ 		 */
+ 	case NL80211_IFTYPE_AP:
+-		if (sdata->u.ap.beacon)
++		/*
++		 * If the scan has been forced, don't care about being beaconing
++		 * already.
++		 * This will create problems to the attached stations (e.g. all
++		 * the  frames sent while scanning on other channel will be
++		 * lost)
++		 */
++		if (sdata->u.ap.beacon &&
++		    !(req->flags & NL80211_SCAN_FLAG_FORCE))
+ 			return -EOPNOTSUPP;
+ 		break;
+ 	default:
+-- 
+1.7.12
 
