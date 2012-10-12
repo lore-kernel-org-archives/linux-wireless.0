@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35837 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751692Ab2JBNdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2012 09:33:40 -0400
-Message-ID: <506AED28.4050903@openwrt.org> (sfid-20121002_153457_652313_4344CEA4)
-Date: Tue, 02 Oct 2012 15:33:28 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:41883 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933374Ab2JLIge (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2012 04:36:34 -0400
+Received: by mail-la0-f46.google.com with SMTP id h6so1838272lag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2012 01:36:33 -0700 (PDT)
+Message-ID: <5077D68E.6010109@gmail.com> (sfid-20121012_103640_332317_958561A4)
+Date: Fri, 12 Oct 2012 10:36:30 +0200
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Sven Eckelmann <sven@narfation.org>, lindner_marek@yahoo.de,
-	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL
- on AR9003
-References: <1348756862-8788-1-git-send-email-sven@narfation.org> <1349174009-16496-1-git-send-email-sven@narfation.org> <CAJ-VmontNVV4TyRO5kEM30T=OmfEN8YUciJSW=j_0HnbadF4JA@mail.gmail.com>
-In-Reply-To: <CAJ-VmontNVV4TyRO5kEM30T=OmfEN8YUciJSW=j_0HnbadF4JA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
+	linville@tuxdriver.com
+Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
+References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com> <20121011203112.GB3317@kroah.com> <5077BE43.7050200@gmail.com> <CAD2nsn0UgUdKk3mRHZUcwFstNS3PhwDKSN8R8Sr05VzPYzv=qg@mail.gmail.com>
+In-Reply-To: <CAD2nsn0UgUdKk3mRHZUcwFstNS3PhwDKSN8R8Sr05VzPYzv=qg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-02 3:13 PM, Adrian Chadd wrote:
-> .. well, the rule here is "You shouldn't get PERR/FATAL interrupts."
-> 
-> Haven't I posted a summary of what those errors are?
-> 
-> Ok. So they're signals from the PCIe core (named host1_fatal and
-> host1_perr. Helpfully.) Those errors occured during a DMA transfer.
-> 
-> So the question is why you're seeing PERR interrupts when creating an
-> adhoc interface. That hints to me that something odd is going on..
-> 
-> I've seen these issues creep up when the NIC is in some way behaving
-> very, very badly (lots of timeouts and sync errors with little to no
-> traffic at all), which resulted in all kinds of odd and weird,
-> unstable behaviour. After replacing the NIC with another NIC (in my
-> case, an AR9280 -> AR9280 NIC :-) the errors went away and things
-> continued swimmingly.
-> 
-> I'd have to go digging through the PCIe core source to figure out
-> exactly what host1_peer and host1_fatal mean. I can if you'd like,
-> it'll just take some time as I'm not familiar at all with the PCIe
-> host interface.
-According to the datasheet, AR_INTR_SYNC_HOST1_PERR is triggered by an
-invalid register access, and AR_INTR_SYNC_HOST1_FATAL is triggered by
-corrupt descriptors or other DMA issues.
-Maybe you can get some information on the source of this PERR error if
-you record the last register accesses outside of the irq context and
-print them once this IRQ comes in.
+On 2012-10-12 09:28, Mohammed Shafi wrote:
 
-- Felix
+> was just checking out..
+> http://wireless.kernel.org/en/users/Drivers/ar5523
+> may be you can update everything there :)
 
+Thanks. I'll make sure to update it.
+
+Cheers,
+
+Pontus
