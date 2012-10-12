@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45309 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755629Ab2JJKxR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12843 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758936Ab2JLMKx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 06:53:17 -0400
-Message-ID: <1349866434.4683.49.camel@jlt4.sipsolutions.net> (sfid-20121010_125322_042562_36CD9548)
-Subject: Re: [PATCH v4 1/2] mac80211: VHT peer STA caps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Oct 2012 12:53:54 +0200
-In-Reply-To: <506BBF62.4080906@posedge.com>
-References: <506BBF62.4080906@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 12 Oct 2012 08:10:53 -0400
+To: <ath6kl-devel@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Fix a mismatch in power management debug message
+Date: Fri, 12 Oct 2012 17:40:41 +0530
+Message-ID: <1350043841-2080-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121012_141056_518743_C4E6C28E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-03 at 10:00 +0530, Mahesh Palivela wrote:
-> From: Mahesh Palivela <maheshp@posedge.com>
-> 
-> Rename vht_capabilities to vht_cap
-> 
-> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
-> ---
-> 
->   include/linux/ieee80211.h |    2 +-
->   net/mac80211/main.c       |    2 +-
->   net/mac80211/mlme.c       |    4 ++--
->   net/mac80211/util.c       |    4 ++--
->   4 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> index 2385119..afd12d9 100644
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -1109,7 +1109,7 @@ struct ieee80211_ht_operation {
-> 
->   #define VHT_MCS_SUPPORTED_SET_SIZE      8
-> 
-> -struct ieee80211_vht_capabilities {
-> +struct ieee80211_vht_cap {
->   	__le32 vht_capabilities_info;
->   	u8 vht_supported_mcs_set[VHT_MCS_SUPPORTED_SET_SIZE];
->   } __packed;
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-This patch doesn't rename any fields
+Power Save Enabled : REC_POWER - conserve power
+without sacrificing performance.
+Power Save Disabled : MAX_PERF_POWER - maximum
+performance at the expense of power.
+Hence fix the debug message.
 
-johannes
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index d6e6c2d..1e62776 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1452,10 +1452,10 @@ static int ath6kl_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 		return -EIO;
+ 
+ 	if (pmgmt) {
+-		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: max perf\n", __func__);
++		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: rec power\n", __func__);
+ 		mode.pwr_mode = REC_POWER;
+ 	} else {
+-		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: rec power\n", __func__);
++		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: max perf\n", __func__);
+ 		mode.pwr_mode = MAX_PERF_POWER;
+ 	}
+ 
+-- 
+1.7.0.4
 
