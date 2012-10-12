@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.bufferbloat.net ([149.20.54.82]:44886 "EHLO
-	huchra.bufferbloat.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752668Ab2JCUBm (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25319 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758980Ab2JLLmD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 16:01:42 -0400
-From: =?UTF-8?q?Dave=20T=C3=A4ht?= <dave.taht@bufferbloat.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH] Adding more comprehensive diffserv support to wireless
-Date: Wed,  3 Oct 2012 12:51:35 -0700
-Message-Id: <1349293896-18268-1-git-send-email-dave.taht@bufferbloat.net> (sfid-20121003_220145_704139_85450744)
+	Fri, 12 Oct 2012 07:42:03 -0400
+Message-ID: <5077F4F3.8030409@qca.qualcomm.com> (sfid-20121012_134218_776980_A2C1D8D3)
+Date: Fri, 12 Oct 2012 13:46:11 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, Bing Zhao <bzhao@marvell.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 1/3] wireless: drivers: make use of WLAN_EID_VENDOR_SPECIFIC
+References: <1350037696-23747-1-git-send-email-arend@broadcom.com> <1350037696-23747-2-git-send-email-arend@broadcom.com>
+In-Reply-To: <1350037696-23747-2-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The subsequent patch has been in cerowrt for a while. 
+On 10/12/2012 01:28 PM, Arend van Spriel wrote:
+> The include file linux/ieee80211.h contains three definitions for
+> the same thing in enum ieee80211_eid due to historic changes:
+> 
+> /* Information Element IDs */
+> enum ieee80211_eid {
+>     :
+>     WLAN_EID_WPA = 221,
+>     WLAN_EID_GENERIC = 221,
+>     WLAN_EID_VENDOR_SPECIFIC = 221,
+>     :
+> };
+>
+> The standard refers to this as "vendor specific" element so the
+> other two definitions are better not used. This patch changes the
+> wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
 
-The previous dscp scheme in linux wireless only respected the topmost
-3 diffserv priority bits (e.g. CS0 through CS7). This patch respects
-all the diffserv bits and all the old-style tos bits that make sense.
+Why not remove _WPA and _GENERIC from ieee80211.h at the same time so
+that nobody else won't use them in the future?
 
-It moves all but EF marked traffic out of the VO queue, where CS6 and
-CS7 have been going.
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: Jouni Malinen <j@w1.fi>
+> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+> Cc: Dan Williams <dcbw@redhat.com>
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-The imm bit (set by ssh) now moves to VI. Background goes to BK
-Most other (obsolete) options move into VI, notably CS6 and CS7 traffic.
+For the ath6kl part:
 
-Notes:
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-1) a few of my definitions for diffserv to hardware queue mappings 
-   might be debateable
-2) it would be good to have similar handling in vlans
-3) 802.11q has very different behavior than 802.11e
-4) it buries diffserv mappings in the mac layer when they should probably 
-   be up at tc-ish layer, or netlink/iw layer
-5) there is no way to change the diffserv map
-
-Lastly... 
-In using the new netperf -Y codepoint,codepoint stream classification feature,
-to fully exercise these hw queues, 
-it exposed some problems (long since fixed) with VI hw queue handling 
-on ath9k. Some of my tests that fully exercise the wifi HW queues in this 
-way seem to point to problems in other chips/drivers such as the iwl.
-
-
-
---
-Dave Täht
-
-Fixing bufferbloat with cerowrt...
-http://www.teklibre.com/cerowrt/subscribe.html
+Kalle
