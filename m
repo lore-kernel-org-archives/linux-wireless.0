@@ -1,316 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46230 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478Ab2JIU2B (ORCPT
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:38578 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750744Ab2JLEEi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2012 16:28:01 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so5629278pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2012 13:28:01 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
+	Fri, 12 Oct 2012 00:04:38 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 2/2] [nl,cfg,mac]80211: Add nl80211 command to get mesh network statistics
-Date: Tue,  9 Oct 2012 13:27:48 -0700
-Message-Id: <1349814468-6512-2-git-send-email-ashok@cozybit.com> (sfid-20121009_222806_243760_8B245035)
-In-Reply-To: <1349814468-6512-1-git-send-email-ashok@cozybit.com>
-References: <1349814468-6512-1-git-send-email-ashok@cozybit.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v4 3/5] cfg80211: code rearrangement to avoid forward declarations
+Date: Thu, 11 Oct 2012 21:03:33 -0700
+Message-Id: <1350014615-14762-4-git-send-email-bzhao@marvell.com> (sfid-20121012_060441_989629_8D7EC199)
+In-Reply-To: <1350014615-14762-1-git-send-email-bzhao@marvell.com>
+References: <1350014615-14762-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The command NL80211_CMD_GET_MESH_STATS gets the statistical information about
-the mesh network. Currently, the following statistics are provided:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-1. Mesh forwarded multicast frames
-2. Mesh forwarded unicast frames
-3. Mesh total forwarded frames
-4. Dropped frames due to mesh_ttl == 0
-5. Dropped frames due to no route found
-6. Dropped frames due to congestion
+bss_release() and __cfg80211_unlink_bss() function definitions
+are moved at the begining of the file. They are used in next
+patch in this series.
 
-The attibute NL80211_ATTR_MESH_PARAMS enumerates the various mesh statistical
-parameters. A new call back get_mesh_stats() is added. mesh_stats struct is
-moved from mac80211/ieee80211_i.h to net/cfg80211.h.
-
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- include/linux/nl80211.h    |   40 ++++++++++++++++++++++++
- include/net/cfg80211.h     |   26 ++++++++++++++++
- net/mac80211/cfg.c         |   12 +++++++
- net/mac80211/ieee80211_i.h |    9 -----
- net/wireless/nl80211.c     |   71 ++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 149 insertions(+), 9 deletions(-)
+v4: rebase to latest mac80211-next tree
+v3: avoid static forward declaration (Johannes Berg)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 7df9b50..1a30195 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -578,6 +578,9 @@
-  *	station, due to particular reason. %NL80211_ATTR_CONN_FAILED_REASON
-  *	is used for this.
-  *
-+ * @NL80211_CMD_GET_MESH_STATS: Get mesh networking statistics for the
-+ *	interface identified by %NL80211_ATTR_IFINDEX
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -726,6 +729,8 @@ enum nl80211_commands {
+ net/wireless/scan.c |   54 +++++++++++++++++++++++++-------------------------
+ 1 files changed, 27 insertions(+), 27 deletions(-)
+
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 9730c98..2005096 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -20,6 +20,33 @@
  
- 	NL80211_CMD_CONN_FAILED,
+ #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
  
-+	NL80211_CMD_GET_MESH_STATS,
++static void bss_release(struct kref *ref)
++{
++	struct cfg80211_internal_bss *bss;
 +
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1530,6 +1535,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_CONN_FAILED_REASON,
- 
-+	NL80211_ATTR_MESH_STATS,
++	bss = container_of(ref, struct cfg80211_internal_bss, ref);
++	if (bss->pub.free_priv)
++		bss->pub.free_priv(&bss->pub);
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -2188,6 +2195,39 @@ enum nl80211_mntr_flags {
- };
- 
- /**
-+ * enum nl80211_mesh_stats - mesh statisitics
-+ *
-+ * Provide statistical information about mesh.
-+ *
-+ * @__NL80211_MESH_STATS_INVALID: internal use
-+ * @NL80211_MESH_STATS_FWDED_MCAST: specifies the number of mesh forwarded
-+ *	multicast frames
-+ * @NL80211_MESH_STATS_FWDED_UNICAST: specifies the number of mesh forwarded
-+ *	unicast frames
-+ * @NL80211_MESH_STATS_FWDED_FRAMES: specifies the total number of mesh
-+ *	forwarded frames
-+ * @NL80211_MESH_STATS_DROPPED_FRAMES_TTL: specifies the number of mesh frames
-+ *	dropped since mesh_ttl == 0
-+ * @NL80211_MESH_STATS_DROPPED_FRAMES_NO_ROUTE: specifies the number of mesh
-+ *	frames dropped due to no route found
-+ * @NL80211_MESH_STATS_DROPPED_FRAMES_CONGESTION: specifies the number of mesh
-+ *	frames dropped due to congestion
-+ */
-+enum nl80211_mesh_stats {
-+	__NL80211_MESH_STATS_INVALID,
-+	NL80211_MESH_STATS_FWDED_MCAST,
-+	NL80211_MESH_STATS_FWDED_UNICAST,
-+	NL80211_MESH_STATS_FWDED_FRAMES,
-+	NL80211_MESH_STATS_DROPPED_FRAMES_TTL,
-+	NL80211_MESH_STATS_DROPPED_FRAMES_NO_ROUTE,
-+	NL80211_MESH_STATS_DROPPED_FRAMES_CONGESTION,
++	if (bss->beacon_ies_allocated)
++		kfree(bss->pub.beacon_ies);
++	if (bss->proberesp_ies_allocated)
++		kfree(bss->pub.proberesp_ies);
 +
-+	/* keep last */
-+	__NL80211_MESH_STATS_ATTR_AFTER_LAST,
-+	NL80211_MESH_STATS_ATTR_MAX = __NL80211_MESH_STATS_ATTR_AFTER_LAST - 1
-+};
++	BUG_ON(atomic_read(&bss->hold));
 +
-+/**
-  * enum nl80211_meshconf_params - mesh configuration parameters
-  *
-  * Mesh configuration parameters. These can be changed while the mesh is
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ab78b53..1926502 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -815,6 +815,27 @@ struct bss_parameters {
- };
- 
- /**
-+ * struct mesh_stats - 802.11s mesh statistics
-+ *
-+ * Used to provide statistical information about mesh
-+ *
-+ * @fwded_mcast: Mesh forwarded multicast frames
-+ * @fwded_unicast: Mesh forwarded unicast frames
-+ * @fwded_frames: Mesh total forwarded frames
-+ * @dropped_frames_ttl: Not transmitted since mesh_ttl == 0
-+ * @dropped_frames_no_route: Not transmitted, no route found
-+ * @dropped_frames_congestion: Not forwarded due to congestion
-+ */
-+struct mesh_stats {
-+	u32 fwded_mcast;
-+	u32 fwded_unicast;
-+	u32 fwded_frames;
-+	u32 dropped_frames_ttl;
-+	u32 dropped_frames_no_route;
-+	u32 dropped_frames_congestion;
-+};
++	kfree(bss);
++}
 +
-+/**
-  * struct mesh_config - 802.11s mesh configuration
-  *
-  * These parameters can be changed while the mesh is active.
-@@ -1492,6 +1513,8 @@ struct cfg80211_gtk_rekey_data {
-  *
-  * @get_mesh_config: Get the current mesh configuration
-  *
-+ * @get_mesh_stats: Get the current mesh statistics
-+ *
-  * @update_mesh_config: Update mesh parameters on a running mesh.
-  *	The mask is a bitfield which tells us which parameters to
-  *	set, and which to leave alone.
-@@ -1688,6 +1711,9 @@ struct cfg80211_ops {
- 	int	(*get_mesh_config)(struct wiphy *wiphy,
- 				struct net_device *dev,
- 				struct mesh_config *conf);
-+	int	(*get_mesh_stats)(struct wiphy *wiphy,
-+				  struct net_device *dev,
-+				  struct mesh_stats *stats);
- 	int	(*update_mesh_config)(struct wiphy *wiphy,
- 				      struct net_device *dev, u32 mask,
- 				      const struct mesh_config *nconf);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 05f3a31..5af9260 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1496,6 +1496,17 @@ static int ieee80211_dump_mpath(struct wiphy *wiphy, struct net_device *dev,
++/* must hold dev->bss_lock! */
++static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
++				  struct cfg80211_internal_bss *bss)
++{
++	list_del_init(&bss->list);
++	rb_erase(&bss->rbn, &dev->bss_tree);
++	kref_put(&bss->ref, bss_release);
++}
++
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ {
+ 	struct cfg80211_scan_request *request;
+@@ -158,24 +185,6 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
  	return 0;
  }
  
-+static int ieee80211_get_mesh_stats(struct wiphy *wiphy,
-+				    struct net_device *dev,
-+				    struct mesh_stats *stats)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	memcpy(stats, &sdata->u.mesh.mshstats, sizeof(*stats));
-+	return 0;
-+}
-+
- static int ieee80211_get_mesh_config(struct wiphy *wiphy,
- 				struct net_device *dev,
- 				struct mesh_config *conf)
-@@ -3082,6 +3093,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.get_mpath = ieee80211_get_mpath,
- 	.dump_mpath = ieee80211_dump_mpath,
- 	.update_mesh_config = ieee80211_update_mesh_config,
-+	.get_mesh_stats = ieee80211_get_mesh_stats,
- 	.get_mesh_config = ieee80211_get_mesh_config,
- 	.join_mesh = ieee80211_join_mesh,
- 	.leave_mesh = ieee80211_leave_mesh,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 34f3cda..c30be38 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -309,15 +309,6 @@ struct ieee80211_if_vlan {
- 	struct sta_info __rcu *sta;
- };
- 
--struct mesh_stats {
--	__u32 fwded_mcast;		/* Mesh forwarded multicast frames */
--	__u32 fwded_unicast;		/* Mesh forwarded unicast frames */
--	__u32 fwded_frames;		/* Mesh total forwarded frames */
--	__u32 dropped_frames_ttl;	/* Not transmitted since mesh_ttl == 0*/
--	__u32 dropped_frames_no_route;	/* Not transmitted, no route found */
--	__u32 dropped_frames_congestion;/* Not forwarded due to congestion */
--};
+-static void bss_release(struct kref *ref)
+-{
+-	struct cfg80211_internal_bss *bss;
 -
- #define PREQ_Q_F_START		0x1
- #define PREQ_Q_F_REFRESH	0x2
- struct mesh_preq_queue {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f1047ae..279a106 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -275,6 +275,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 					   .len = NL80211_MAX_SUPP_RATES },
- 	[NL80211_ATTR_BSS_HT_OPMODE] = { .type = NLA_U16 },
- 
-+	[NL80211_ATTR_MESH_STATS] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_MESH_CONFIG] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_SUPPORT_MESH_AUTH] = { .type = NLA_FLAG },
- 
-@@ -3645,6 +3646,68 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	return r;
+-	bss = container_of(ref, struct cfg80211_internal_bss, ref);
+-	if (bss->pub.free_priv)
+-		bss->pub.free_priv(&bss->pub);
+-
+-	if (bss->beacon_ies_allocated)
+-		kfree(bss->pub.beacon_ies);
+-	if (bss->proberesp_ies_allocated)
+-		kfree(bss->pub.proberesp_ies);
+-
+-	BUG_ON(atomic_read(&bss->hold));
+-
+-	kfree(bss);
+-}
+-
+ /* must hold dev->bss_lock! */
+ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
+                       unsigned long age_secs)
+@@ -189,15 +198,6 @@ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
  }
  
-+static int nl80211_get_mesh_stats(struct sk_buff *skb,
-+				  struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct mesh_stats cur_stats;
-+	int err = 0;
-+	void *hdr;
-+	struct nlattr *pinfoattr;
-+	struct sk_buff *msg;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_MESH_POINT)
-+		return -EOPNOTSUPP;
-+
-+	if (!rdev->ops->get_mesh_stats)
-+		return -EOPNOTSUPP;
-+
-+	wdev_lock(wdev);
-+
-+	err = rdev->ops->get_mesh_stats(&rdev->wiphy, dev, &cur_stats);
-+	wdev_unlock(wdev);
-+
-+	if (err)
-+		return err;
-+
-+	/* Draw up a netlink message to send back */
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
-+			     NL80211_CMD_GET_MESH_STATS);
-+	if (!hdr)
-+		goto out;
-+	pinfoattr = nla_nest_start(msg, NL80211_ATTR_MESH_STATS);
-+	if (!pinfoattr)
-+		goto nla_put_failure;
-+	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put_u32(msg, NL80211_MESH_STATS_FWDED_MCAST,
-+			cur_stats.fwded_mcast) ||
-+	    nla_put_u32(msg, NL80211_MESH_STATS_FWDED_UNICAST,
-+			cur_stats.fwded_unicast) ||
-+	    nla_put_u32(msg, NL80211_MESH_STATS_FWDED_FRAMES,
-+			cur_stats.fwded_frames) ||
-+	    nla_put_u32(msg, NL80211_MESH_STATS_DROPPED_FRAMES_TTL,
-+			cur_stats.dropped_frames_ttl) ||
-+	    nla_put_u32(msg, NL80211_MESH_STATS_DROPPED_FRAMES_NO_ROUTE,
-+			cur_stats.dropped_frames_no_route) ||
-+	    nla_put_u32(msg, NL80211_MESH_STATS_DROPPED_FRAMES_CONGESTION,
-+			cur_stats.dropped_frames_congestion))
-+		goto nla_put_failure;
-+	nla_nest_end(msg, pinfoattr);
-+	genlmsg_end(msg, hdr);
-+	return genlmsg_reply(msg, info);
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+ out:
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
- static int nl80211_get_mesh_config(struct sk_buff *skb,
- 				   struct genl_info *info)
+ /* must hold dev->bss_lock! */
+-static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
+-				  struct cfg80211_internal_bss *bss)
+-{
+-	list_del_init(&bss->list);
+-	rb_erase(&bss->rbn, &dev->bss_tree);
+-	kref_put(&bss->ref, bss_release);
+-}
+-
+-/* must hold dev->bss_lock! */
+ void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
  {
-@@ -7202,6 +7265,14 @@ static struct genl_ops nl80211_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 	},
- 	{
-+		.cmd = NL80211_CMD_GET_MESH_STATS,
-+		.doit = nl80211_get_mesh_stats,
-+		.policy = nl80211_policy,
-+		/* can be retrieved by unprivileged users */
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
- 		.cmd = NL80211_CMD_GET_MESH_CONFIG,
- 		.doit = nl80211_get_mesh_config,
- 		.policy = nl80211_policy,
+ 	struct cfg80211_internal_bss *bss, *tmp;
 -- 
-1.7.5.4
+1.7.0.4
 
