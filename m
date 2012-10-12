@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54506 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755381Ab2JZKU6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2521 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109Ab2JLL2Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 06:20:58 -0400
-Message-ID: <1351246894.10813.10.camel@jlt4.sipsolutions.net> (sfid-20121026_122101_906334_4299C848)
-Subject: Re: [PATCH 2/3] mac80211: verify that skb data is present
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 26 Oct 2012 12:21:34 +0200
-In-Reply-To: <1351246782.10813.9.camel@jlt4.sipsolutions.net> (sfid-20121026_121912_401528_AD9E4EDC)
-References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
-	 <1351205200-18094-3-git-send-email-johannes@sipsolutions.net>
-	 <20121025230505.GD20609@shredder> <20121025235816.GE20609@shredder>
-	 <20121026005748.GA30982@shredder>
-	 (sfid-20121026_025756_120637_43AD3510) <1351246782.10813.9.camel@jlt4.sipsolutions.net>
-	 (sfid-20121026_121912_401528_AD9E4EDC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 12 Oct 2012 07:28:24 -0400
+Message-ID: <5077FCC4.5010909@qca.qualcomm.com> (sfid-20121012_132828_317442_3D11077F)
+Date: Fri, 12 Oct 2012 14:19:32 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, Bing Zhao <bzhao@marvell.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 1/3] wireless: drivers: make use of WLAN_EID_VENDOR_SPECIFIC
+References: <1350037696-23747-1-git-send-email-arend@broadcom.com> <1350037696-23747-2-git-send-email-arend@broadcom.com> <5077F4F3.8030409@qca.qualcomm.com>
+In-Reply-To: <5077F4F3.8030409@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-10-26 at 12:19 +0200, Johannes Berg wrote:
 
-> Ohh, ok, no I see, I'm not doing that. What we really need to do is
-> something entirely different:
+
+On 10/12/2012 01:46 PM, Kalle Valo wrote:
+> On 10/12/2012 01:28 PM, Arend van Spriel wrote:
+>> The include file linux/ieee80211.h contains three definitions for
+>> the same thing in enum ieee80211_eid due to historic changes:
+>>
+>> /* Information Element IDs */
+>> enum ieee80211_eid {
+>>     :
+>>     WLAN_EID_WPA = 221,
+>>     WLAN_EID_GENERIC = 221,
+>>     WLAN_EID_VENDOR_SPECIFIC = 221,
+>>     :
+>> };
+>>
+>> The standard refers to this as "vendor specific" element so the
+>> other two definitions are better not used. This patch changes the
+>> wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
 > 
->                 if (is_multicast_ether_addr(hdr->addr1)) {
->                         mpp_addr = hdr->addr3;
->                         proxied_addr = mesh_hdr->eaddr1;
+> Why not remove _WPA and _GENERIC from ieee80211.h at the same time so
+> that nobody else won't use them in the future?
 
-where this part is fine because the entire code is inside the AE check
-already, so the eaddr1 must exist.
+Ah, you did that in patch 3. Forget what I said :)
 
-johannes
-
+Kalle
