@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60190 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927Ab2JIU3h (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:64620 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933028Ab2JLPwZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2012 16:29:37 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so5630701pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2012 13:29:36 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 1/2] iw: remove unnecessary variable in find_mesh_param
-Date: Tue,  9 Oct 2012 13:29:26 -0700
-Message-Id: <1349814567-29556-1-git-send-email-ashok@cozybit.com> (sfid-20121009_222940_098773_BE4D97F7)
+	Fri, 12 Oct 2012 11:52:25 -0400
+Received: by mail-ie0-f174.google.com with SMTP id k13so4973181iea.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2012 08:52:24 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH NEXT 0/2] rtlwifi: Add support for B-CUT RTL8188CE and shorten some variable names
+Date: Fri, 12 Oct 2012 10:52:06 -0500
+Message-Id: <1350057128-16969-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121012_175230_492283_B1E9DAF8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also stick to coding style. use "strcmp ( , ) == 0" instead of (!strcmp( , ))
+The first of these two patches is a new version of the patch to add the
+B-CUT version of the RTL8188CE. The second shortens some variable names.
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+These patches are for wireless-next.
+
+Larry
 ---
- mesh.c |   10 +++-------
- 1 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/mesh.c b/mesh.c
-index 3077abf..4fdad6a 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -232,19 +232,15 @@ static void print_all_mesh_param_descr(void)
- static const struct mesh_param_descr *find_mesh_param(const char *name)
- {
- 	int i;
--	const struct mesh_param_descr *mdescr = NULL;
- 
- 	/* Find out what mesh parameter we want to change. */
- 	for (i = 0; i < ARRAY_SIZE(_mesh_param_descrs); i++) {
--		if (!strcmp(_mesh_param_descrs[i].name, name))
-+		if (strcmp(_mesh_param_descrs[i].name, name) == 0)
- 			return _mesh_param_descrs + i;
- 	}
- 
--	if (!mdescr) {
--		print_all_mesh_param_descr();
--		return NULL;
--	}
--	return mdescr;
-+	print_all_mesh_param_descr();
-+	return NULL;
- }
- 
- /* Setter */
+Larry Finger (2):
+  rtlwifi: rtl8192c: rtl8192ce: Add support for B-CUT version of
+    RTL8188CE
+  rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192se: rtl8192de:
+    Shorten some variable names
+
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  171 +++++++++-----------
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   88 +++++-----
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |    3 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.c        |   30 ++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   80 ++++++---
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |    2 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/rf.c        |   23 +--
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |   46 +++---
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.c        |   30 ++--
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   10 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       |   25 ++-
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |   22 +--
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   44 ++---
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |   65 +++-----
+ drivers/net/wireless/rtlwifi/rtl8192de/rf.c        |   18 +--
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |   39 ++---
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |   43 +++--
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |   64 +++-----
+ drivers/net/wireless/rtlwifi/rtl8192se/rf.c        |   11 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   21 ++-
+ drivers/net/wireless/rtlwifi/wifi.h                |   33 ++--
+ 22 files changed, 408 insertions(+), 466 deletions(-)
+
 -- 
-1.7.5.4
+1.7.10.4
 
