@@ -1,50 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46126 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754548Ab2JXJKY (ORCPT
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:34870 "EHLO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750744Ab2JLEE2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 05:10:24 -0400
-Message-ID: <1351069857.10709.3.camel@jlt4.sipsolutions.net> (sfid-20121024_111030_112612_C162737A)
-Subject: Re: [PATCH v6 4/6] wireless: use OR operation to set wiphy features
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
+	Fri, 12 Oct 2012 00:04:28 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
 	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Wed, 24 Oct 2012 11:10:57 +0200
-In-Reply-To: <878vawz1fq.fsf@purkki.adurom.net>
-References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
-	 <1350542071-26498-5-git-send-email-bzhao@marvell.com>
-	 <87d308z1no.fsf@purkki.adurom.net>
-	 <1351069288.10709.2.camel@jlt4.sipsolutions.net>
-	 <878vawz1fq.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v4 1/5] {nl,cfg}80211: add a flags word to scan requests
+Date: Thu, 11 Oct 2012 21:03:31 -0700
+Message-Id: <1350014615-14762-2-git-send-email-bzhao@marvell.com> (sfid-20121012_060430_711638_DC78CC3C)
+In-Reply-To: <1350014615-14762-1-git-send-email-bzhao@marvell.com>
+References: <1350014615-14762-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-24 at 12:03 +0300, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Wed, 2012-10-24 at 11:59 +0300, Kalle Valo wrote:
-> >
-> >> Is there a way to check that drivers don't accidentally clear the flags
-> >> (ie. use '=' instead '|=')? For example by adding a dummy flag and
-> >> checking afterwards that it's not cleared?
-> >> 
-> >> I'm just worried that this detail might be too easy to miss, for example
-> >> somehow I had missed this patch and noticed only when rebasing ath6kl
-> >> patches.
-> >
-> > Yes, that should be possible, set some dummy flag in wiphy_new() and
-> > test & clear it in wiphy_register()?
-> 
-> The tricky part is to make sure that the dummy flag won't conflict with
-> a real feature flag value in the future :) 
+From: Sam Leffler <sleffler@chromium.org>
 
-Seems like a non-issue? If you say use 1<<31 to test, and somebody adds
-1<<31, they'll find that their flag never works and will figure it out?
+Add a flags word to direct and scheduled scan requests; it will
+be used for control of optional behaviours such as flushing the
+bss cache prior to doing a scan.
 
-johannes
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+v4: rebase to latest mac80211-next tree
+v3: Remove unnecessary "enum cfg80211_scan_flags" and add missing
+    check for "nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS...".
+    (Johannes Berg)
+
+ include/linux/nl80211.h |   14 ++++++++++++++
+ include/net/cfg80211.h  |    4 ++++
+ net/wireless/nl80211.c  |   12 ++++++++++++
+ 3 files changed, 30 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 71ab23b..e47eccd 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1279,6 +1279,8 @@ enum nl80211_commands {
+  * @NL80211_ATTR_VHT_CAPABILITY: VHT Capability information element (from
+  *	association request when used with NL80211_CMD_NEW_STATION)
+  *
++ * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1540,6 +1542,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_VHT_CAPABILITY,
+ 
++	NL80211_ATTR_SCAN_FLAGS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3086,4 +3090,14 @@ enum nl80211_connect_failed_reason {
+ 	NL80211_CONN_FAIL_BLOCKED_CLIENT,
+ };
+ 
++/**
++ * enum nl80211_scan_flags -  scan request control flags
++ *
++ * Scan request control flags are used to control the handling
++ * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
++ * requests.
++ */
++enum nl80211_scan_flags {
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1f9ca03..4724372 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1002,6 +1002,7 @@ struct cfg80211_ssid {
+  * @n_channels: total number of channels to scan
+  * @ie: optional information element(s) to add into Probe Request or %NULL
+  * @ie_len: length of ie in octets
++ * @flags: bit field of flags controlling operation
+  * @rates: bitmap of rates to advertise for each band
+  * @wiphy: the wiphy this was for
+  * @wdev: the wireless device to scan for
+@@ -1014,6 +1015,7 @@ struct cfg80211_scan_request {
+ 	u32 n_channels;
+ 	const u8 *ie;
+ 	size_t ie_len;
++	u32 flags;
+ 
+ 	u32 rates[IEEE80211_NUM_BANDS];
+ 
+@@ -1046,6 +1048,7 @@ struct cfg80211_match_set {
+  * @interval: interval between each scheduled scan cycle
+  * @ie: optional information element(s) to add into Probe Request or %NULL
+  * @ie_len: length of ie in octets
++ * @flags: bit field of flags controlling operation
+  * @match_sets: sets of parameters to be matched for a scan result
+  * 	entry to be considered valid and to be passed to the host
+  * 	(others are filtered out).
+@@ -1063,6 +1066,7 @@ struct cfg80211_sched_scan_request {
+ 	u32 interval;
+ 	const u8 *ie;
+ 	size_t ie_len;
++	u32 flags;
+ 	struct cfg80211_match_set *match_sets;
+ 	int n_match_sets;
+ 	s32 rssi_thold;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8303a2a..9a5acab 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -356,6 +356,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_SAE_DATA] = { .type = NLA_BINARY, },
+ 	[NL80211_ATTR_VHT_CAPABILITY] = { .len = NL80211_VHT_CAPABILITY_LEN },
++	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4367,6 +4368,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
++		request->flags = nla_get_u32(
++			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
++
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+@@ -4598,6 +4603,10 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 		       request->ie_len);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
++		request->flags = nla_get_u32(
++			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
++
+ 	request->dev = dev;
+ 	request->wiphy = &rdev->wiphy;
+ 	request->interval = interval;
+@@ -7663,6 +7672,9 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
+ 	    nla_put(msg, NL80211_ATTR_IE, req->ie_len, req->ie))
+ 		goto nla_put_failure;
+ 
++	if (req->flags)
++		nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
++
+ 	return 0;
+  nla_put_failure:
+ 	return -ENOBUFS;
+-- 
+1.7.0.4
 
