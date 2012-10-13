@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59048 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753042Ab2JEXPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 19:15:21 -0400
-Message-ID: <506F69FF.5090701@openwrt.org> (sfid-20121006_011526_327939_25B88549)
-Date: Sat, 06 Oct 2012 01:15:11 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:38075 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750947Ab2JMCDc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Oct 2012 22:03:32 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>, Jouni Malinen <j@w1.fi>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Date: Fri, 12 Oct 2012 18:55:16 -0700
+Subject: RE: [PATCH 1/3] wireless: drivers: make use of
+ WLAN_EID_VENDOR_SPECIFIC
+Message-ID: <477F20668A386D41ADCC57781B1F7043083B80D8BB@SC-VEXCH1.marvell.com> (sfid-20121013_040336_201704_6D05F0CE)
+References: <1350037696-23747-1-git-send-email-arend@broadcom.com>
+ <1350037696-23747-2-git-send-email-arend@broadcom.com>
+In-Reply-To: <1350037696-23747-2-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.7 1/2] cfg80211: fix antenna gain handling
-References: <1349286707-64433-1-git-send-email-nbd@openwrt.org> <20121005202220.GA1929@tuxdriver.com> <506F4AFE.2090301@broadcom.com>
-In-Reply-To: <506F4AFE.2090301@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-05 11:02 PM, Arend van Spriel wrote:
-> On 10/05/2012 10:22 PM, John W. Linville wrote:
->> Anyone object?  I suspect that Johannes may be a little more
->> busy/distracted than usual for the next few days/weeks...
->>
->> John
->>
->> On Wed, Oct 03, 2012 at 07:51:46PM +0200, Felix Fietkau wrote:
->>> When not intersecting, orig->chan_mag is initialized to zero. Because of
->>> that, the regulatory antenna gain limit never gets set.
->>>
->>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->>> Cc: stable@vger.kernel.org
->>> ---
->>>   net/wireless/reg.c |    3 +--
->>>   1 file changed, 1 insertion(+), 2 deletions(-)
->>>
->>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->>> index 3b8cbbc..1a16f19 100644
->>> --- a/net/wireless/reg.c
->>> +++ b/net/wireless/reg.c
->>> @@ -915,8 +915,7 @@ static void handle_channel(struct wiphy *wiphy,
->>>
->>>   	chan->beacon_found = false;
->>>   	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
->>> -	chan->max_antenna_gain = min(chan->orig_mag,
->>> -		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
-> 
-> Just reading the commit message, I would think it better to initialize 
-> chan->orig_mag to INT_MAX. Just my 0.02$
-I'm not sure it's useful for the driver to be able to add initial max
-antenna gain restrictions that way (which IMHO is the only point to
-using chan->orig_mag).
-I think it's better (and more predictable) to just stick to the power
-rules from the regulatory information.
+Hi Arend,
 
-- Felix
+> The include file linux/ieee80211.h contains three definitions for
+> the same thing in enum ieee80211_eid due to historic changes:
+> 
+> /* Information Element IDs */
+> enum ieee80211_eid {
+>     :
+>     WLAN_EID_WPA = 221,
+>     WLAN_EID_GENERIC = 221,
+>     WLAN_EID_VENDOR_SPECIFIC = 221,
+>     :
+> };
+> 
+> The standard refers to this as "vendor specific" element so the
+> other two definitions are better not used. This patch changes the
+> wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
+> 
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: Jouni Malinen <j@w1.fi>
+> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+> Cc: Dan Williams <dcbw@redhat.com>
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+
+For mwifiex part,
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
