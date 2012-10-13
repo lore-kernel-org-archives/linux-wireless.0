@@ -1,278 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46715 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422676Ab2JLKcN (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:56092 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752990Ab2JMBvd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 06:32:13 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/4] ath9k: Add concurrent WLAN and BT tx support for MCI based chips
-Date: Fri, 12 Oct 2012 14:07:23 +0530
-Message-ID: <1350031045-11860-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121012_123542_598529_C7C72423)
-In-Reply-To: <1350031045-11860-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350031045-11860-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Fri, 12 Oct 2012 21:51:33 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Fri, 12 Oct 2012 18:51:24 -0700
+Subject: RE: [PATCH v4 0/5] add scan flags support
+Message-ID: <477F20668A386D41ADCC57781B1F7043083B80D8BA@SC-VEXCH1.marvell.com> (sfid-20121013_035137_787181_97F1AABB)
+References: <1350014615-14762-1-git-send-email-bzhao@marvell.com>
+ <1350032395.10420.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1350032395.10420.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This feature enables both WLAN and BT can transmit simultaneously
-by setting WLAN and BT to equal priorities. Whenever both are
-transmitting, it might violate regulatory power limits. To avoid
-regulatory violation, WLAN tx power will be adjusted according to BT
-power index based on avaliability of BT scheduling message. If the
-combined power exceeds threshold, BT transmission will be held off.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |  1 -
- drivers/net/wireless/ath/ath9k/btcoex.c     | 60 +++++++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/btcoex.h     |  3 ++
- drivers/net/wireless/ath/ath9k/mci.c        | 60 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/mci.h        |  3 ++
- 5 files changed, 110 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 2a2d018..2928234 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -196,7 +196,6 @@ enum mci_state_type {
- 	MCI_STATE_SEND_WLAN_COEX_VERSION,
- 	MCI_STATE_SEND_VERSION_QUERY,
- 	MCI_STATE_SEND_STATUS_QUERY,
--	MCI_STATE_SET_CONCUR_TX_PRI,
- 	MCI_STATE_RECOVER_RX,
- 	MCI_STATE_NEED_FTP_STOMP,
- 	MCI_STATE_DEBUG,
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 419e9a3..05d9be5 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -218,27 +218,45 @@ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
- 				enum ath_stomp_type stomp_type)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-+	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
-+	u8 txprio_shift[] = { 24, 16, 16, 0 }; /* tx priority weight */
-+	bool concur_tx = (mci_hw->concur_tx && btcoex_hw->tx_prio[stomp_type]);
-+	const u32 *weight = ar9003_wlan_weights[stomp_type];
-+	int i;
- 
--	if (AR_SREV_9300_20_OR_LATER(ah)) {
--		const u32 *weight = ar9003_wlan_weights[stomp_type];
--		int i;
--
--		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
--			if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
--			    btcoex_hw->mci.stomp_ftp)
--				stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
--			weight = mci_wlan_weights[stomp_type];
--		}
--
--		for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
--			btcoex_hw->bt_weight[i] = AR9300_BT_WGHT;
--			btcoex_hw->wlan_weight[i] = weight[i];
--		}
--	} else {
-+	if (!AR_SREV_9300_20_OR_LATER(ah)) {
- 		btcoex_hw->bt_coex_weights =
- 			SM(bt_weight, AR_BTCOEX_BT_WGHT) |
- 			SM(wlan_weight, AR_BTCOEX_WL_WGHT);
-+		return;
-+	}
-+
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-+		enum ath_stomp_type stype =
-+			((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
-+			 btcoex_hw->mci.stomp_ftp) ?
-+			ATH_BTCOEX_STOMP_LOW_FTP : stomp_type;
-+		weight = mci_wlan_weights[stype];
- 	}
-+
-+	for (i = 0; i < AR9300_NUM_WLAN_WEIGHTS; i++) {
-+		btcoex_hw->bt_weight[i] = AR9300_BT_WGHT;
-+		btcoex_hw->wlan_weight[i] = weight[i];
-+		if (concur_tx && i) {
-+			btcoex_hw->wlan_weight[i] &=
-+				~(0xff << txprio_shift[i-1]);
-+			btcoex_hw->wlan_weight[i] |=
-+				(btcoex_hw->tx_prio[stomp_type] <<
-+				 txprio_shift[i-1]);
-+		}
-+	}
-+	/* Last WLAN weight has to be adjusted wrt tx priority */
-+	if (concur_tx) {
-+		btcoex_hw->wlan_weight[i-1] &= ~(0xff << txprio_shift[i-1]);
-+		btcoex_hw->wlan_weight[i-1] |= (btcoex_hw->tx_prio[stomp_type]
-+						      << txprio_shift[i-1]);
-+	}
-+
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_set_weight);
- 
-@@ -385,3 +403,13 @@ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
- 	}
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_bt_stomp);
-+
-+void ath9k_hw_btcoex_set_concur_txprio(struct ath_hw *ah, u8 *stomp_txprio)
-+{
-+	struct ath_btcoex_hw *btcoex = &ah->btcoex_hw;
-+	int i;
-+
-+	for (i = 0; i < ATH_BTCOEX_STOMP_MAX; i++)
-+		btcoex->tx_prio[i] = stomp_txprio[i];
-+}
-+EXPORT_SYMBOL(ath9k_hw_btcoex_set_concur_txprio);
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 385197a..a260fcb 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -84,6 +84,7 @@ struct ath9k_hw_mci {
- 	u8 bt_ver_minor;
- 	u8 bt_state;
- 	u8 stomp_ftp;
-+	bool concur_tx;
- };
- 
- struct ath_btcoex_hw {
-@@ -98,6 +99,7 @@ struct ath_btcoex_hw {
- 	u32 bt_coex_mode2; 	/* Register setting for AR_BT_COEX_MODE2 */
- 	u32 bt_weight[AR9300_NUM_BT_WEIGHTS];
- 	u32 wlan_weight[AR9300_NUM_WLAN_WEIGHTS];
-+	u8 tx_prio[ATH_BTCOEX_STOMP_MAX];
- };
- 
- void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
-@@ -112,5 +114,6 @@ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
- void ath9k_hw_btcoex_disable(struct ath_hw *ah);
- void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
- 			      enum ath_stomp_type stomp_type);
-+void ath9k_hw_btcoex_set_concur_txprio(struct ath_hw *ah, u8 *stomp_txprio);
- 
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 1733a5a..b37c8af 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -43,6 +43,7 @@ static bool ath_mci_add_profile(struct ath_common *common,
- 				struct ath_mci_profile_info *info)
- {
- 	struct ath_mci_profile_info *entry;
-+	u8 voice_priority[] = { 110, 110, 110, 112, 110, 110, 114, 116, 118 };
- 
- 	if ((mci->num_sco == ATH_MCI_MAX_SCO_PROFILE) &&
- 	    (info->type == MCI_GPM_COEX_PROFILE_VOICE))
-@@ -59,6 +60,12 @@ static bool ath_mci_add_profile(struct ath_common *common,
- 	memcpy(entry, info, 10);
- 	INC_PROF(mci, info);
- 	list_add_tail(&entry->list, &mci->info);
-+	if (info->type == MCI_GPM_COEX_PROFILE_VOICE) {
-+		if (info->voice_type < sizeof(voice_priority))
-+			mci->voice_priority = voice_priority[info->voice_type];
-+		else
-+			mci->voice_priority = 110;
-+	}
- 
- 	return true;
- }
-@@ -250,6 +257,57 @@ static void ath9k_mci_work(struct work_struct *work)
- 	ath_mci_update_scheme(sc);
- }
- 
-+static void ath_mci_update_stomp_txprio(u8 cur_txprio, u8 *stomp_prio)
-+{
-+	if (cur_txprio < stomp_prio[ATH_BTCOEX_STOMP_NONE])
-+		stomp_prio[ATH_BTCOEX_STOMP_NONE] = cur_txprio;
-+
-+	if (cur_txprio > stomp_prio[ATH_BTCOEX_STOMP_ALL])
-+		stomp_prio[ATH_BTCOEX_STOMP_ALL] = cur_txprio;
-+
-+	if ((cur_txprio > ATH_MCI_HI_PRIO) &&
-+	    (cur_txprio < stomp_prio[ATH_BTCOEX_STOMP_LOW]))
-+		stomp_prio[ATH_BTCOEX_STOMP_LOW] = cur_txprio;
-+}
-+
-+static void ath_mci_set_concur_txprio(struct ath_softc *sc)
-+{
-+	struct ath_btcoex *btcoex = &sc->btcoex;
-+	struct ath_mci_profile *mci = &btcoex->mci;
-+	u8 stomp_txprio[] = { 0, 0, 0, 0 }; /* all, low, none, low_ftp */
-+
-+	if (mci->num_mgmt) {
-+		stomp_txprio[ATH_BTCOEX_STOMP_ALL] = ATH_MCI_INQUIRY_PRIO;
-+		if (!mci->num_pan && !mci->num_other_acl)
-+			stomp_txprio[ATH_BTCOEX_STOMP_NONE] =
-+				ATH_MCI_INQUIRY_PRIO;
-+	} else {
-+		u8 prof_prio[] = { 50, 90, 94, 52 };/* RFCOMM, A2DP, HID, PAN */
-+
-+		stomp_txprio[ATH_BTCOEX_STOMP_LOW] =
-+		stomp_txprio[ATH_BTCOEX_STOMP_NONE] = 0xff;
-+
-+		if (mci->num_sco)
-+			ath_mci_update_stomp_txprio(mci->voice_priority,
-+						    stomp_txprio);
-+		if (mci->num_other_acl)
-+			ath_mci_update_stomp_txprio(prof_prio[0], stomp_txprio);
-+		if (mci->num_a2dp)
-+			ath_mci_update_stomp_txprio(prof_prio[1], stomp_txprio);
-+		if (mci->num_hid)
-+			ath_mci_update_stomp_txprio(prof_prio[2], stomp_txprio);
-+		if (mci->num_pan)
-+			ath_mci_update_stomp_txprio(prof_prio[3], stomp_txprio);
-+
-+		if (stomp_txprio[ATH_BTCOEX_STOMP_NONE] == 0xff)
-+			stomp_txprio[ATH_BTCOEX_STOMP_NONE] = 0;
-+
-+		if (stomp_txprio[ATH_BTCOEX_STOMP_LOW] == 0xff)
-+			stomp_txprio[ATH_BTCOEX_STOMP_LOW] = 0;
-+	}
-+	ath9k_hw_btcoex_set_concur_txprio(sc->sc_ah, stomp_txprio);
-+}
-+
- static u8 ath_mci_process_profile(struct ath_softc *sc,
- 				  struct ath_mci_profile_info *info)
- {
-@@ -281,6 +339,7 @@ static u8 ath_mci_process_profile(struct ath_softc *sc,
- 	} else
- 		ath_mci_del_profile(common, mci, entry);
- 
-+	ath_mci_set_concur_txprio(sc);
- 	return 1;
- }
- 
-@@ -314,6 +373,7 @@ static u8 ath_mci_process_status(struct ath_softc *sc,
- 			mci->num_mgmt++;
- 	} while (++i < ATH_MCI_MAX_PROFILE);
- 
-+	ath_mci_set_concur_txprio(sc);
- 	if (old_num_mgmt != mci->num_mgmt)
- 		return 1;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index a3df314..e85a0e9 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -32,6 +32,8 @@
- #define ATH_MCI_MAX_PROFILE		(ATH_MCI_MAX_ACL_PROFILE +\
- 					 ATH_MCI_MAX_SCO_PROFILE)
- 
-+#define ATH_MCI_INQUIRY_PRIO         62
-+#define ATH_MCI_HI_PRIO              60
- #define ATH_MCI_NUM_BT_CHANNELS      79
- 
- #define MCI_GPM_SET_CHANNEL_BIT(_p_gpm, _bt_chan)			  \
-@@ -131,6 +133,7 @@ struct ath_mci_profile {
- 	u8 num_pan;
- 	u8 num_other_acl;
- 	u8 num_bdr;
-+	u8 voice_priority;
- };
- 
- struct ath_mci_buf {
--- 
-1.7.12.2
-
+SGkgSm9oYW5uZXMsDQoNCj4gPiBUaGlzIGlzIHRoZSB2NCBzZXJpZXMgcHJlcGFyZWQgYnkgQW1p
+dGt1bWFyIEthcndhci4NCj4gPg0KPiA+IDEpICJ3aXBoeS0+ZmVhdHVyZXMiIGlzIHVzZWQgaW5z
+dGVhZCBvZiAid2lwaHktPmZsYWdzIiB0byBhZHZlcnRpc2UNCj4gPiAgICBzY2FuIGZlYXR1cmVz
+LiAoSm9oYW5uZXMgQmVyZykNCj4gPiAyKSBBZGRlZCBzdXBwb3J0IHRvIGRpc2FibGUgc2NhbiBm
+bHVzaCBpZiBkcml2ZXIgcmVxdWVzdHMgZm9yIGl0DQo+ID4gICAgZXhwbGljaXRseS4gKEpvaGFu
+bmVzIEJlcmcpDQo+ID4gMykgVXNlZCBtc2Vjc190b19qaWZmaWVzKCkgdG8gY29udmVydCB0aW1l
+IGludGVydmFsIGludG8gamlmZmllcw0KPiA+ICAgIGZvciBjb21wYXJpc29uIChKb2hhbm5lcyBC
+ZXJnKQ0KPiANCj4gT2ssIGFwcGxpZWQuDQo+IA0KPiBJIG1hZGUgdHdvIHNtYWxsIGNoYW5nZXMg
+KGFuZCBpbnNlcnRlZCBhIHBhdGNoIGluIHRoZSBtaWRkbGUgdG8gYWxsb3cNCj4gZm9yIHRob3Nl
+IGNoYW5nZXMpLg0KDQpUaGFua3MuDQoNCj4gDQo+IE9uZSBjaGFuZ2UgaXMgdGhhdCBJIGludmVy
+dGVkIHRoZSBwb2xhcml0eSBvZiB0aGUgImZsdXNoIiBmZWF0dXJlIGZsYWcNCj4gc28gdGhhdCB1
+c2Vyc3BhY2UgY2FuIGNoZWNrIGlmIGl0J3Mgc3VwcG9ydGVkIHdpdGhvdXQgaGF2aW5nIHRvIHdv
+cnJ5DQo+IGFib3V0IHRoZSBrZXJuZWwgdmVyc2lvbi4NCj4gDQo+IFRoZSBvdGhlciBjaGFuZ2Ug
+aXMgYSBmaXggaW4gbWFjODAyMTEgdG8gb25seSBzZXQgdGhlICJsb3cgcHJpbyIgc3VwcG9ydA0K
+PiBmbGFnIGlmICpzb2Z0d2FyZSogc2NhbiBpcyB1c2VkLCBub3QgdW5jb25kaXRpb25hbGx5Lg0K
+DQpNYWtlIHNlbnNlLg0KDQo+IA0KPiBQbGVhc2UgbWFrZSBzdXJlIHRob3NlIHN0aWxsIHdvcmsg
+Zm9yIHlvdSwgSSBoYXZlbid0IHRlc3RlZCBpdC4NCg0KV2lsbCB0ZXN0IGFuZCBsZXQgeW91IGtu
+b3cgaWYgYW55IHByb2JsZW0uDQoNCj4gDQo+IEl0IG1pZ2h0IGJlIG5pY2UgdG8gYWxzbyBoYXZl
+IGEgbG93LXByaW8vZmx1c2ggZmxhZ3MgcGF0Y2ggZm9yIGl3IGFzDQo+IHdlbGwgaWYgeW91IGZp
+bmQgdGhlIHRpbWUuDQoNClNhbSB3aWxsIHRha2UgY2FyZSBvZiB0aGUgaXcgcGF0Y2guDQoNClRo
+YW5rcywNCkJpbmcNCg0KPiANCj4gam9oYW5uZXMNCj4gDQo=
