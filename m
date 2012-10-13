@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:33789 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754171Ab2JOV2b (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:52119 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263Ab2JMKOd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 17:28:31 -0400
+	Sat, 13 Oct 2012 06:14:33 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n3so2545591lbo.19
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Oct 2012 03:14:31 -0700 (PDT)
+Message-ID: <50793F05.7030604@gmail.com> (sfid-20121013_121437_451445_95C3EEBB)
+Date: Sat, 13 Oct 2012 12:14:29 +0200
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1350307338-8133-1-git-send-email-bkamatch@qca.qualcomm.com>
-References: <1350307338-8133-1-git-send-email-bkamatch@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 15 Oct 2012 14:28:09 -0700
-Message-ID: <CAB=NE6UpXjb9mp0ttJs08bKXmAJdS=Ndf=m9NNO75xEcFfTnMQ@mail.gmail.com> (sfid-20121015_232835_071034_BDE7AA66)
-Subject: Re: [PATCH 0/3] Patches for compat-drivers/linux-3.6.y
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kvalo@adurom.com>
+CC: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	hch@lst.de, s.L-H@gmx.de
+Subject: Re: [PATCH 2/4] ar5523: Add driver header file
+References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com> <1349985702-21322-3-git-send-email-pontus.fuchs@gmail.com> <87626f0vzw.fsf@purkki.adurom.net>
+In-Reply-To: <87626f0vzw.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 15, 2012 at 6:22 AM, Bala Shanmugam
-<bkamatch@qca.qualcomm.com> wrote:
-> Hi,
+On 2012-10-13 07:41, Kalle Valo wrote:
+> Pontus Fuchs <pontus.fuchs@gmail.com> writes:
 >
-> These patches are for linux-3.6.y branch and has BT coex
-> fixes for AR9565.
->
-> Bala Shanmugam (3):
->   compat-drivers: Update pending stable patches.
->   compat-drivers: Move next-pending patches to cherry-picks.
->   compat-drivers: Add new cherry-pick and next-pending  patches
+>> +#define ar5523_err(ar, format, arg...) \
+>> +do { \
+>> +	if (!test_bit(AR5523_USB_DISCONNECTED, &ar->flags)) { \
+>> +		dev_err(&(ar)->dev->dev, format, ## arg); \
+>> +	} \
+>> +} while (0)
+> This looks suspicious and might hide something important. It's better to
+> fix the real cause than to workaround it in the error log printer. Do
+> you know why this was added?
+Yes. The purpose is to hide all the USB errors that happens when you
+hot-unplug the dongle. There can be quite a few URBs in flight and
+all of them will fail with -ENODEV or -ESHUTDOWN. Instead of checking
+for these errors in all the usb submissions and callbacks I added this
+flag. Do you still a problem with this approach?
 
-Thanks, I've applied this, made a few changes to adapt to v3.6.2 and
-have made 5 tarballs for this release:
+Cheers,
 
-http://wireless.kernel.org/en/users/Download/stable#compat-wireless_3.6_stable_releases
+Pontus
 
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1-snpc.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1-snp.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1-sn.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1-s.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1.tar.bz2
-
-  Luis
