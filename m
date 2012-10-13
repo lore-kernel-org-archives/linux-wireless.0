@@ -1,49 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63209 "EHLO mx1.redhat.com"
+Received: from mout3.freenet.de ([195.4.92.93]:41665 "EHLO mout3.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751131Ab2JOPSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 11:18:05 -0400
-Date: Mon, 15 Oct 2012 17:17:14 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Bernhard Schmidt <bschmidt@freebsd.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [iwl4965] Microcode SW error detected
-Message-ID: <20121015151712.GB12560@redhat.com> (sfid-20121015_171809_964411_55CB6FE1)
-References: <1306151106.2066.60.camel@x61.thuisdomein>
- <201106070832.49048.bschmidt@freebsd.org>
- <20110607145435.GA5179@redhat.com>
- <1315124915.5239.21.camel@x61.thuisdomein>
- <20110905093349.GE2221@redhat.com>
- <1347625024.14216.28.camel@x61.thuisdomein>
- <1350312660.1516.34.camel@x61.thuisdomein>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1350312660.1516.34.camel@x61.thuisdomein>
+	id S1751232Ab2JMGtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Oct 2012 02:49:43 -0400
+Date: Sat, 13 Oct 2012 08:47:20 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 1/7] rt2800: use BBP_R1 for setting tx
+ power
+Message-ID: <20121013084720.45682744@dualc.maya.org> (sfid-20121013_084947_277461_1991EBD4)
+In-Reply-To: <20121008091523.GB2478@redhat.com>
+References: <1349437455-18754-1-git-send-email-sgruszka@redhat.com> <506F0A56.70900@01019freenet.de> <20121008091523.GB2478@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 15, 2012 at 04:51:00PM +0200, Paul Bolle wrote:
-> On Fri, 2012-09-14 at 14:17 +0200, Paul Bolle wrote:
-> > 0) It's one year later now and this Microcode SW error again showed up
-> > in the logs. I recently upgraded and I haven't kept any logs, but my
-> > guess would be that I have run into that error once every week. (This
-> > laptop is now running a v3.5.3 based kernel as shipped for Fedora 17.)
-> > 
-> > 1) Would you have any suggestions how to pinpoint the cause of this
-> > error? It is mainly annoying, and I managed to ignore it since my
-> > previous message, but I still would like to free the logs from the noise
-> > it makes.
-> 
-> 0) I ported the "iwlegacy_tracing" patch from
-> https://bugzilla.kernel.org/show_bug.cgi?id=42766 to v3.6-rc7 and to
-> iwl4965. I've been running iwl4965 with tracing enabled ever since (that
-> is on: v3.6-rc7, v3.6, v3.6.1, and v3.6.2). Finally, after only three
-> weeks I hit our Microcode SW error again.
-> 
-> 1) So now I've got a 600+k line (or 65 MB) trace dump. What should I do
-> with it?
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-Just post me privately let say last 10MB of it...
+> Hi
+> 
+> On Fri, Oct 05, 2012 at 06:27:02PM +0200, Andreas Hartmann wrote:
+> > I would like to test this patchset. Whereon should I pay (most)
+> > attention? What do you expect to be changed (or not) behaviour with
+> > 2.4 GHz / 40 MHz?
+> 
+> Yes, all band 2.4GHz/5GHz and bandwitch 20MHz/40MHz combinations are 
+> touched by those patches. 
+> 
+> You can check if patches make anything better on long distance
+> performance if you want to.
 
-Stanislaw
+Just saw that I've been using this patchset since Aug 27, 2012 with my
+AP (http://www.wikidevi.com/wiki/Linksys_WMP600N) and
+compat-wireless-3.5-rc5-1 and linux 3.1.10
+
+iw list and iwconfig are showing always 0 dBm for each channel (2.4 and
+5 GHz).
+
+
+
+2.4 GHz / 40 MHz
+
+Well, I couldn't find any problems (means: it isn't worse, but I'm not
+sure if it is better as before). 
+
+One thing I can see frequently, is the fact, that I'm getting
+surprisingly high throughput rates using netperf and 2.4 GHz/40 MHz at
+16 MB/s. 
+Why can I see them just sometimes and not always (at the same
+position)? This behaviour is not patch related!
+
+
+
+5.22 GHz / 40 MHz
+
+The behaviour didn't change. It's unusable as before. See this thread:
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2012-March/004738.html
+
+
+Some values with WAP610N (external AP)
+======================================
+
+Sa 13. Okt 07:03:05 CEST 2012
+TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to AP (x.x.x.x) port 0 AF_INET : demo
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.11      27.18   
+TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to AP (x.x.x.x) port 0 AF_INET : demo
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.34      47.21   
+TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to AP (x.x.x.x) port 0 AF_INET : demo
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.22      26.47
+
+ra0       Ralink STA  ESSID:"5091eb221bcdc9326"  Nickname:"RT3572STA"
+          Mode:Managed  Frequency=5.2 GHz  Access Point: 00:25:9C:8E:FA:3F   
+          Bit Rate=162 Mb/s   
+          RTS thr:off   Fragment thr:off
+          Encryption key:BACB-8E8A-E647-88E9-7D92-C27E-CA1C-579D [3]   Security mode:restricted   Security mode:open
+          Link Quality=95/100  Signal level:-71 dBm  Noise level:-96 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
+
+
+Some actual values (with own AP):
+=================================
+
+Sa 13. Okt 07:12:20 CEST 2012
+TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to AP (x.x.x.x) port 0 AF_INET : demo
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    12.31       0.53   
+TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to AP (x.x.x.x) port 0 AF_INET : demo
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    11.89       0.83   
+TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to AP (x.x.x.x) port 0 AF_INET : demo
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+ 87380  16384  16384    10.97       1.02
+
+
+ra0       Ralink STA  ESSID:"5091eb221bcdc9326"  Nickname:"RT3572STA"
+          Mode:Managed  Frequency=5.22 GHz  Access Point: 84:50:61:D8:38:67   
+          Bit Rate=13.5 Mb/s   
+          RTS thr:off   Fragment thr:off
+          Encryption key:45A0-77D8-58A4-3CF7-600F-6CF5-A923-CF85 [2]   Security mode:restricted   Security mode:open
+          Link Quality=78/100  Signal level:-82 dBm  Noise level:-88 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
+
+
+
+STREAM, SENDFILE: 	Direction from supplicant -> AP
+MAERTS:			Direction from AP -> supplicant
+
+
+
+
+
+Kind regards,
+Andreas
