@@ -1,114 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46230 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab2JIU16 (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:48800 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752867Ab2JMBYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2012 16:27:58 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so5629278pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2012 13:27:58 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 1/2] mac80211: move out the non-statistics variable estab_plinks from mesh_stat
-Date: Tue,  9 Oct 2012 13:27:47 -0700
-Message-Id: <1349814468-6512-1-git-send-email-ashok@cozybit.com> (sfid-20121009_222802_595792_88EF8B4E)
+	Fri, 12 Oct 2012 21:24:21 -0400
+Message-ID: <5078BFA0.7010409@gtri.gatech.edu> (sfid-20121013_032431_440168_D0985A1A)
+Date: Fri, 12 Oct 2012 21:10:56 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Reply-To: wireless <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+To: Mike Schliep <mike.schliep@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8191su nl80211
+References: <CAMP=HhVfF863bwN1s0H+qtKEpKh9qBp5F-+9cvXBDCEABsE8gQ@mail.gmail.com>
+In-Reply-To: <CAMP=HhVfF863bwN1s0H+qtKEpKh9qBp5F-+9cvXBDCEABsE8gQ@mail.gmail.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+	micalg=sha1; boundary="------------ms000902000108020801060702"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-estab_plinks is not a statistics member. Hence move estab_plinks from
-struct mesh_stat to struct ieee80211_if_mesh
+--------------ms000902000108020801060702
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
----
- net/mac80211/debugfs_netdev.c |    2 +-
- net/mac80211/ieee80211_i.h    |    2 +-
- net/mac80211/mesh.c           |    2 +-
- net/mac80211/mesh.h           |    2 +-
- net/mac80211/mesh_plink.c     |    4 ++--
- 5 files changed, 6 insertions(+), 6 deletions(-)
+On 10/12/2012 04:35 PM, Mike Schliep wrote:
+> I have Realtek Semiconductor Corp. RTL8191SU 802.11n WLAN Adapter I
+> want to work with nl80211. I have taken Joshua Roys work from May.
+>
+> http://marc.info/?l=3Dlinux-wireless&m=3D133644367402433&w=3D2
+>
+> With this patch set the driver is loaded when I plug the device in but
+> no wlan0 interface is created.
+> Can someone point me in the right direction on how to create a wlan0
+> interface with rtlwifi drivers so I can make this work?
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 6d5aec9..34f0ca4 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -471,7 +471,7 @@ IEEE80211_IF_FILE(dropped_frames_congestion,
- 		  u.mesh.mshstats.dropped_frames_congestion, DEC);
- IEEE80211_IF_FILE(dropped_frames_no_route,
- 		  u.mesh.mshstats.dropped_frames_no_route, DEC);
--IEEE80211_IF_FILE(estab_plinks, u.mesh.mshstats.estab_plinks, ATOMIC);
-+IEEE80211_IF_FILE(estab_plinks, u.mesh.estab_plinks, ATOMIC);
- 
- /* Mesh parameters */
- IEEE80211_IF_FILE(dot11MeshMaxRetries,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8c80455..34f3cda 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -316,7 +316,6 @@ struct mesh_stats {
- 	__u32 dropped_frames_ttl;	/* Not transmitted since mesh_ttl == 0*/
- 	__u32 dropped_frames_no_route;	/* Not transmitted, no route found */
- 	__u32 dropped_frames_congestion;/* Not forwarded due to congestion */
--	atomic_t estab_plinks;
- };
- 
- #define PREQ_Q_F_START		0x1
-@@ -599,6 +598,7 @@ struct ieee80211_if_mesh {
- 	int preq_queue_len;
- 	struct mesh_stats mshstats;
- 	struct mesh_config mshcfg;
-+	atomic_t estab_plinks;
- 	u32 mesh_seqnum;
- 	bool accepting_plinks;
- 	int num_gates;
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index ff0296c..5cc7a91 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -264,7 +264,7 @@ mesh_add_meshconf_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	/* Authentication Protocol identifier */
- 	*pos++ = ifmsh->mesh_auth_id;
- 	/* Mesh Formation Info - number of neighbors */
--	neighbors = atomic_read(&ifmsh->mshstats.estab_plinks);
-+	neighbors = atomic_read(&ifmsh->estab_plinks);
- 	/* Number of neighbor mesh STAs or 15 whichever is smaller */
- 	neighbors = (neighbors > 15) ? 15 : neighbors;
- 	*pos++ = neighbors << 1;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 25d0f17..8334e94 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -324,7 +324,7 @@ extern int mesh_allocated;
- static inline int mesh_plink_free_count(struct ieee80211_sub_if_data *sdata)
- {
- 	return sdata->u.mesh.mshcfg.dot11MeshMaxPeerLinks -
--	       atomic_read(&sdata->u.mesh.mshstats.estab_plinks);
-+	       atomic_read(&sdata->u.mesh.estab_plinks);
- }
- 
- static inline bool mesh_plink_availables(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 3ab34d8..0f45ac9 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -50,14 +50,14 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- static inline
- u32 mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
- {
--	atomic_inc(&sdata->u.mesh.mshstats.estab_plinks);
-+	atomic_inc(&sdata->u.mesh.estab_plinks);
- 	return mesh_accept_plinks_update(sdata);
- }
- 
- static inline
- u32 mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
- {
--	atomic_dec(&sdata->u.mesh.mshstats.estab_plinks);
-+	atomic_dec(&sdata->u.mesh.estab_plinks);
- 	return mesh_accept_plinks_update(sdata);
- }
- 
--- 
-1.7.5.4
+Hello,
 
+That code is not complete and will not work.  I'm not sure if I will be=20
+able to work on it before the end of the year.
+
+Thanks,
+
+Josh
+
+
+
+
+--------------ms000902000108020801060702
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+--------------ms000902000108020801060702--
