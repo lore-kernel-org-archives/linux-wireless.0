@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54075 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756121Ab2J3Wez (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 18:34:55 -0400
-Message-ID: <5090560D.1090708@candelatech.com> (sfid-20121030_233459_447081_699482BF)
-Date: Tue, 30 Oct 2012 15:34:53 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mout2.freenet.de ([195.4.92.92]:57499 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751655Ab2JMJoU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Oct 2012 05:44:20 -0400
+Message-ID: <50793769.6070400@01019freenet.de> (sfid-20121013_114424_334133_957302F1)
+Date: Sat, 13 Oct 2012 11:42:01 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Any thoughts on how to best shield u.fl connectors on NICs?
-References: <508EB783.9080000@candelatech.com> <CAGRGNgWGfL+_u4fHEfqZAcFHb1H4Z4jFkiE4qKLU6i9XEWzZ6w@mail.gmail.com>
-In-Reply-To: <CAGRGNgWGfL+_u4fHEfqZAcFHb1H4Z4jFkiE4qKLU6i9XEWzZ6w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Andreas Hartmann <andihartmann@01019freenet.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 1/7] rt2800: use BBP_R1 for setting tx
+ power
+References: <1349437455-18754-1-git-send-email-sgruszka@redhat.com> <506F0A56.70900@01019freenet.de> <20121008091523.GB2478@redhat.com> <20121013084720.45682744@dualc.maya.org> <20121013075728.GA2334@redhat.com>
+In-Reply-To: <20121013075728.GA2334@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2012 03:22 PM, Julian Calaby wrote:
-> Hi Ben,
->
-> On Tue, Oct 30, 2012 at 4:06 AM, Ben Greear <greearb@candelatech.com> wrote:
->> It appears hard to get well-shielded u.fl (IPEX) to SMA pigtails, and all of
->> the
->> modern ath9k NICs I've seen use u.fl connectors on the NIC.
+Stanislaw Gruszka wrote:
+>> Just saw that I've been using this patchset since Aug 27, 2012 with my
+>> AP (http://www.wikidevi.com/wiki/Linksys_WMP600N) and
+>> compat-wireless-3.5-rc5-1 and linux 3.1.10
 >>
->> I have found a vendor that will do double-shielded 1.32mm cable, and I have
->> some of those
->> on order, but the way u.fl connectors are made it seems there is always a
->> bit of un-shielded
->> cable where the connector is crimped onto the cable.
->>
->> I am curious if anyone has any suggestions or experience with connecting
->> u.fl NICs to
->> SMA cables in a highly shielded manner...
->
-> I have an awful feeling that it's simply not going to happen - I would
-> guess from what you've described that the u.fl connector is designed
-> to be cheap, small and easy and not really designed for "real" work
-> like what you're doing with it. I'm guessing that the signal leakage
-> through the connector is probably not a problem for the manufacturers
-> as they're always shielded inside a computer case - i.e. it complies
-> with the FCC rules.
+>> iw list and iwconfig are showing always 0 dBm for each channel (2.4 and
+>> 5 GHz).
+> 
+> For this you need another patch (which should be backported to 3.5 stable too):
+> 
+> commit 5e31fc0815a4e2c72b1b495fe7a0d8f9bfb9e4b4
+> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date:   Tue Jul 24 08:35:39 2012 +0200
+> 
+>     wireless: reg: restore previous behaviour of chan->max_power calculations
 
-I think it must be able to leak quite a bit before the FCC cares...  Standard
-single-shielded pigtails are quite noisy, nevermind the connectors...
+Thanks Stanislaw. This fixed the output but nothing else :-(. 5 GHz is
+broken anyway.
 
-But anyway...I was thinking something like this (but with different
-gender u.fl side) and some sort of physical attachment option to keep
-it on the NIC might be interesting:
-
-http://www.pimfg.com/Product-Detail/000-SMA-UFL
-
-For all I know, the NIC itself may leak worse than the u.fl pigtail connector,
-however...
 
 Thanks,
-Ben
-
->
-> Thanks,
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+kind regards,
+Andreas
 
