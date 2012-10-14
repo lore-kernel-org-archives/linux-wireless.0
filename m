@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42521 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756701Ab2JQL4c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2012 07:56:32 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 3.7 1/2] cfg80211: fix antenna gain handling
-Date: Wed, 17 Oct 2012 13:56:19 +0200
-Message-Id: <1350474980-59623-1-git-send-email-nbd@openwrt.org> (sfid-20121017_135640_599562_9A719EDD)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:50103 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753499Ab2JNUQC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Oct 2012 16:16:02 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so2145251bkc.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Oct 2012 13:16:00 -0700 (PDT)
+Subject: [PATCH] rtlwifi: pass rx setup error code to caller
+To: Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org, Joshua.Roys@gtri.gatech.edu,
+	linville@tuxdriver.com
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 14 Oct 2012 22:15:48 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201210142215.48645.chunkeey@googlemail.com> (sfid-20121014_221606_171797_9F4B162E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No driver initializes chan->max_antenna_gain to something sensible, and
-the only place where it is being used right now is inside ath9k. This
-leads to ath9k potentially using less tx power than it can use, which can
-decrease performance/range in some rare cases.
+If _rtl_usb_receive fails, the device is
+probably not ready. Hence the error code
+should be passed to the caller, so it can
+react accordingly and notify the user.
 
-Rather than going through every single driver, this patch initializes
-chan->orig_mag in wiphy_register(), ignoring whatever value the driver
-left in there. If a driver for some reason wishes to limit it independent
-from regulatory rulesets, it can do so internally.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- net/wireless/core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ rtlwifi/usb.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 443d4d7..3f72530 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -526,8 +526,7 @@ int wiphy_register(struct wiphy *wiphy)
- 		for (i = 0; i < sband->n_channels; i++) {
- 			sband->channels[i].orig_flags =
- 				sband->channels[i].flags;
--			sband->channels[i].orig_mag =
--				sband->channels[i].max_antenna_gain;
-+			sband->channels[i].orig_mag = INT_MAX;
- 			sband->channels[i].orig_mpwr =
- 				sband->channels[i].max_power;
- 			sband->channels[i].band = band;
+diff --git a/rtlwifi/usb.c b/rtlwifi/usb.c
+index d7744e1..696d29f 100644
+--- a/rtlwifi/usb.c
++++ b/rtlwifi/usb.c
+@@ -682,7 +682,7 @@ static int rtl_usb_start(struct ieee80211_hw *hw)
+ 		set_hal_start(rtlhal);
+ 
+ 		/* Start bulk IN */
+-		_rtl_usb_receive(hw);
++		err = _rtl_usb_receive(hw);
+ 	}
+ 
+ 	return err;
 -- 
-1.7.12.2
+1.7.10.4
 
