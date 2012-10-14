@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2395 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754441Ab2JEVDI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 17:03:08 -0400
-Message-ID: <506F4AFE.2090301@broadcom.com> (sfid-20121005_230313_260604_BBB76C81)
-Date: Fri, 5 Oct 2012 23:02:54 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:45215 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352Ab2JNNfW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Oct 2012 09:35:22 -0400
+Message-ID: <507ABE3D.20006@ti.com> (sfid-20121014_153525_909118_BD296572)
+Date: Sun, 14 Oct 2012 15:29:33 +0200
+From: Victor Goldenshtein <victorg@ti.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Felix Fietkau" <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.7 1/2] cfg80211: fix antenna gain handling
-References: <1349286707-64433-1-git-send-email-nbd@openwrt.org>
- <20121005202220.GA1929@tuxdriver.com>
-In-Reply-To: <20121005202220.GA1929@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
+	<assaf@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: Re: [PATCH v3 1/7] nl80211/cfg80211: add radar detection command/event
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>  <1344426823-1795-2-git-send-email-victorg@ti.com>  <1347274394.4272.8.camel@jlt4.sipsolutions.net>  <CAK80WHYAH3FdoTDGQh54NdLkYMpv7heGsNjn7venC9fHj65RFw@mail.gmail.com> <1349808418.4683.19.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1349808418.4683.19.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/05/2012 10:22 PM, John W. Linville wrote:
-> Anyone object?  I suspect that Johannes may be a little more
-> busy/distracted than usual for the next few days/weeks...
+On 10/09/2012 08:46 PM, Johannes Berg wrote:
+> yeah but if you need to set radar_detect_timeout=0 here, then it looks
+> like you're also using the 0 value as a special value to indicate
+> "nothing in progress"?
 >
-> John
->
-> On Wed, Oct 03, 2012 at 07:51:46PM +0200, Felix Fietkau wrote:
->> When not intersecting, orig->chan_mag is initialized to zero. Because of
->> that, the regulatory antenna gain limit never gets set.
->>
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> Cc: stable@vger.kernel.org
->> ---
->>   net/wireless/reg.c |    3 +--
->>   1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index 3b8cbbc..1a16f19 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -915,8 +915,7 @@ static void handle_channel(struct wiphy *wiphy,
->>
->>   	chan->beacon_found = false;
->>   	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
->> -	chan->max_antenna_gain = min(chan->orig_mag,
->> -		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
-
-Just reading the commit message, I would think it better to initialize 
-chan->orig_mag to INT_MAX. Just my 0.02$
-
-Gr. AvS
-
->> +	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
->>   	chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
->>   	if (chan->orig_mpwr) {
->>   		/*
->> --
->> 1.7.9.6 (Apple Git-31.1)
->>
->>
->
+We agreed to use "chan->cac_started" flag for that purpose, so there is 
+no need to reset "radar_detect_timeout" I will remove it.
 
 
+-- 
+Thanks,
+Victor.
