@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34966 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933195Ab2JYCUC (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:45209 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753258Ab2JNNfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 22:20:02 -0400
-From: Sujith Manoharan <c_manoha@qti.qualcomm.com>
-Message-ID: <20616.41414.398817.807498@gargle.gargle.HOWL> (sfid-20121025_042007_538606_90FDD19F)
-Date: Thu, 25 Oct 2012 07:49:50 +0530
+	Sun, 14 Oct 2012 09:35:11 -0400
+Message-ID: <507ABE44.4080904@ti.com> (sfid-20121014_153517_714653_56F97282)
+Date: Sun, 14 Oct 2012 15:29:40 +0200
+From: Victor Goldenshtein <victorg@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Regression in 3.7-rc2 for b43 and b43legacy
-In-Reply-To: <50889F60.5090406@lwfinger.net>
-References: <50889F60.5090406@lwfinger.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
+	<assaf@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: Re: [PATCH v3 7/7] mac80211: add DFS support to monitor interface
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>  <1344426823-1795-8-git-send-email-victorg@ti.com>  <1347276361.4272.20.camel@jlt4.sipsolutions.net>  <CAK80WHY=YiKBcLgZFJjEEVFk6ncHniPXzWWvKywEGVNLm4C8Kw@mail.gmail.com> <1349808165.4683.15.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1349808165.4683.15.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> I have discovered that both b43 and b43legacy broke somewhere between 3.7-rc1 
-> and 3.7-rc2. The problem was bisected to commit fe57d9f. The commit message is
-> 
-> commit fe57d9f5c0a2c1ef97ba8cdc42cfda5743f287b8
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Thu Jul 26 14:55:08 2012 +0200
-> 
->      mac80211: track whether to use channel contexts
-> 
->      Depending on the driver, channel contexts may be used or
->      not. If they are used, the driver must have support for
->      hardware scan and remain-on-channel; otherwise the driver
->      must not advertise support for multiple channels.
-> 
->      Also prohibit WDS type interfaces when channel contexts
->      are to be used as there's no clear definition of which
->      channel they use.
-> 
->      Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> It seems likely that the drivers are inadvertently advertising support for 
-> multiple channels, What must be done to turn off this "feature"?
+On 10/09/2012 08:42 PM, Johannes Berg wrote:
+> On Wed, 2012-10-03 at 15:54 +0200, Goldenshtein, Victor wrote:
+>> On Mon, Sep 10, 2012 at 2:26 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
+>>>> AP mode uses monitor interfaces to transmit
+>>>> management frames which were blocked for "radar
+>>>> channels" until now.
+>>>>
+>>>> Stop dropping packets if we are on 'radar channel'
+>>>> and the DFS is enabled.
+>>>
+>>> Umm, no? Check for dfs_en_tx().
+>>>
+>>
+>> no need, the AP is started only after the dfs_en_tx().
+>
+> but this is on monitor mode, no? and monitor mode isn't used just for
+> AP. In fact, AP no longer even uses monitor mode, so you don't need this
+> at all since you should be working with a new hostapd version that will
+> get the DFS feature ... and then you're working on a current version
+> that already no longer uses monitor mode for DFS. Both kernel & hostapd
+> have to be new enough, so monitor mode won't be used...
+>
 
-This has been fixed:
-https://patchwork.kernel.org/patch/1625871/
+right, this patch here from the days AP used monitor mode.
+I"ll remove it.
 
-Sujith
+
+-- 
+Thanks,
+Victor.
