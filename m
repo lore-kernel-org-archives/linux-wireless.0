@@ -1,105 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:52308 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753363Ab2JSTBB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11713 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002Ab2JOIMj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 15:01:01 -0400
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] NFC: Removed unused details from pn544.h header file
-Date: Fri, 19 Oct 2012 11:56:21 -0700
-Message-Id: <1350672981-29772-1-git-send-email-marcel@holtmann.org> (sfid-20121019_210104_727021_4864FB42)
+	Mon, 15 Oct 2012 04:12:39 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH 04/12] ath9k: turn off RXIQ calibration while re-calibrating radio
+Date: Mon, 15 Oct 2012 13:25:30 +0530
+Message-ID: <1350287738-18687-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101243_993060_1829BC8D)
+In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The majority of the defines and structures from pn544.h are no
-longer in use. So just remove them.
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 
-Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+TXIQ and RXIQ share the same data path to upload the measurement
+result, we should turn off RXIQ calibration while re-calibrating radio
+
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 ---
- drivers/nfc/pn544.h | 62 -----------------------------------------------------
- 1 file changed, 62 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 6 ++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h | 1 +
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/nfc/pn544.h b/drivers/nfc/pn544.h
-index 9890bba..299575c 100644
---- a/drivers/nfc/pn544.h
-+++ b/drivers/nfc/pn544.h
-@@ -23,67 +23,6 @@
- #ifndef _PN544_H_
- #define _PN544_H_
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index b2b9941..c46d8f1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -750,6 +750,9 @@ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
  
--#include <linux/i2c.h>
--
--#define PN544_DRIVER_NAME	"pn544"
--#define PN544_MAXWINDOW_SIZE	7
--#define PN544_WINDOW_SIZE	4
--#define PN544_RETRIES		10
--#define PN544_MAX_I2C_TRANSFER	0x0400
--#define PN544_MSG_MAX_SIZE	0x21 /* at normal HCI mode */
--
--/* ioctl */
--#define PN544_CHAR_BASE		'P'
--#define PN544_IOR(num, dtype)	_IOR(PN544_CHAR_BASE, num, dtype)
--#define PN544_IOW(num, dtype)	_IOW(PN544_CHAR_BASE, num, dtype)
--#define PN544_GET_FW_MODE	PN544_IOW(1, unsigned int)
--#define PN544_SET_FW_MODE	PN544_IOW(2, unsigned int)
--#define PN544_GET_DEBUG		PN544_IOW(3, unsigned int)
--#define PN544_SET_DEBUG		PN544_IOW(4, unsigned int)
--
--/* Timing restrictions (ms) */
--#define PN544_RESETVEN_TIME	30 /* 7 */
--#define PN544_PVDDVEN_TIME	0
--#define PN544_VBATVEN_TIME	0
--#define PN544_GPIO4VEN_TIME	0
--#define PN544_WAKEUP_ACK	5
--#define PN544_WAKEUP_GUARD	(PN544_WAKEUP_ACK + 1)
--#define PN544_INACTIVITY_TIME	1000
--#define PN544_INTERFRAME_DELAY	200 /* us */
--#define PN544_BAUDRATE_CHANGE	150 /* us */
--
--/* Debug bits */
--#define PN544_DEBUG_BUF		0x01
--#define PN544_DEBUG_READ	0x02
--#define PN544_DEBUG_WRITE	0x04
--#define PN544_DEBUG_IRQ		0x08
--#define PN544_DEBUG_CALLS	0x10
--#define PN544_DEBUG_MODE	0x20
--
--/* Normal (HCI) mode */
--#define PN544_LLC_HCI_OVERHEAD	3 /* header + crc (to length) */
--#define PN544_LLC_MIN_SIZE	(1 + PN544_LLC_HCI_OVERHEAD) /* length + */
--#define PN544_LLC_MAX_DATA	(PN544_MSG_MAX_SIZE - 2)
--#define PN544_LLC_MAX_HCI_SIZE	(PN544_LLC_MAX_DATA - 2)
--
--struct pn544_llc_packet {
--	unsigned char length; /* of rest of packet */
--	unsigned char header;
--	unsigned char data[PN544_LLC_MAX_DATA]; /* includes crc-ccitt */
--};
--
--/* Firmware upgrade mode */
--#define PN544_FW_HEADER_SIZE	3
--/* max fw transfer is 1024bytes, but I2C limits it to 0xC0 */
--#define PN544_MAX_FW_DATA	(PN544_MAX_I2C_TRANSFER - PN544_FW_HEADER_SIZE)
--
--struct pn544_fw_packet {
--	unsigned char command; /* status in answer */
--	unsigned char length[2]; /* big-endian order (msf) */
--	unsigned char data[PN544_MAX_FW_DATA];
--};
--
--#ifdef __KERNEL__
- enum {
- 	NFC_GPIO_ENABLE,
- 	NFC_GPIO_FW_RESET,
-@@ -99,6 +38,5 @@ struct pn544_nfc_platform_data {
- 	void (*disable) (void);
- 	int (*get_gpio)(int type);
- };
--#endif /* __KERNEL__ */
+ 	mci_hw->bt_state = MCI_BT_AWAKE;
  
- #endif /* _PN544_H_ */
++	REG_CLR_BIT(ah, AR_PHY_TIMING4,
++		    1 << AR_PHY_TIMING_CONTROL4_DO_GAIN_DC_IQ_CAL_SHIFT);
++
+ 	if (caldata) {
+ 		caldata->done_txiqcal_once = false;
+ 		caldata->done_txclcal_once = false;
+@@ -759,6 +762,9 @@ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (!ath9k_hw_init_cal(ah, chan))
+ 		return -EIO;
+ 
++	REG_SET_BIT(ah, AR_PHY_TIMING4,
++		    1 << AR_PHY_TIMING_CONTROL4_DO_GAIN_DC_IQ_CAL_SHIFT);
++
+ exit:
+ 	ar9003_mci_enable_interrupt(ah);
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 9a48e3d..8f58523 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -32,6 +32,7 @@
+ #define AR_PHY_SPUR_REG     (AR_CHAN_BASE + 0x1c)
+ #define AR_PHY_RX_IQCAL_CORR_B0    (AR_CHAN_BASE + 0xdc)
+ #define AR_PHY_TX_IQCAL_CONTROL_3  (AR_CHAN_BASE + 0xb0)
++#define AR_PHY_TIMING_CONTROL4_DO_GAIN_DC_IQ_CAL_SHIFT 16
+ 
+ #define AR_PHY_TIMING11_SPUR_FREQ_SD    0x3FF00000
+ #define AR_PHY_TIMING11_SPUR_FREQ_SD_S  20
 -- 
-1.7.11.7
+1.7.12.2
 
