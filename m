@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:54545 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332Ab2JANxU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2012 09:53:20 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 trees during the merge window
-References: <1349076058.10330.3.camel@jlt4.sipsolutions.net>
-Date: Mon, 01 Oct 2012 16:53:19 +0300
-In-Reply-To: <1349076058.10330.3.camel@jlt4.sipsolutions.net> (Johannes Berg's
-	message of "Mon, 01 Oct 2012 09:20:58 +0200")
-Message-ID: <87y5jq1epc.fsf@purkki.adurom.net> (sfid-20121001_155324_547385_98C0F229)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44849 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002Ab2JOINJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 04:13:09 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 07/12] ath9k_hw: program radio_post_sys2ant initval for AR9565
+Date: Mon, 15 Oct 2012 13:25:33 +0530
+Message-ID: <1350287738-18687-8-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101313_455956_D4F2B74D)
+In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> In order to not lose patches or have too many to catch up to, I'm going
-> to keep applying patches to the mac80211{,-next} trees. That does mean,
-> however, that I'm going to have to _rebase_ once the merge window closes
-> and John respins his trees.
-
-Good idea. But why do you need to rebase?
-
-I think it's ok just send a merge request even if the base commit is not
-Linville's HEAD, but few weeks older. And once John has merged your pull
-request you just merge back John's tree (which apparently looks like a
-rebase, at least it did for me) and both trees have same HEAD again. I
-recall doing this with ath6kl.git and it didn't have any problems, and
-it's so much nicer for the users of your tree.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 759f5f5..1d6d6ce 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -749,7 +749,8 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 		ar9003_hw_prog_ini(ah, &ah->iniMac[i], modesIndex);
+ 		ar9003_hw_prog_ini(ah, &ah->iniBB[i], modesIndex);
+ 		ar9003_hw_prog_ini(ah, &ah->iniRadio[i], modesIndex);
+-		if (i == ATH_INI_POST && AR_SREV_9462_20(ah))
++		if (i == ATH_INI_POST &&
++		    (AR_SREV_9462_20(ah) || AR_SREV_9565(ah)))
+ 			ar9003_hw_prog_ini(ah,
+ 					   &ah->ini_radio_post_sys2ant,
+ 					   modesIndex);
+@@ -1424,7 +1425,7 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
+ 	ar9003_hw_prog_ini(ah, &ah->iniBB[ATH_INI_POST], modesIndex);
+ 	ar9003_hw_prog_ini(ah, &ah->iniRadio[ATH_INI_POST], modesIndex);
+ 
+-	if (AR_SREV_9462_20(ah))
++	if (AR_SREV_9462_20(ah) || AR_SREV_9565(ah))
+ 		ar9003_hw_prog_ini(ah, &ah->ini_radio_post_sys2ant,
+ 				   modesIndex);
+ 
 -- 
-Kalle Valo
+1.7.12.2
+
