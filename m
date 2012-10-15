@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43687 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757192Ab2JWRvI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47072 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788Ab2JOJdT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2012 13:51:08 -0400
-Message-ID: <1351014695.10322.8.camel@jlt4.sipsolutions.net> (sfid-20121023_195112_865726_316479E2)
-Subject: Re: [PATCH] mac80211: mesh STAs only process mesh beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Date: Tue, 23 Oct 2012 19:51:35 +0200
-In-Reply-To: <CAG6hwVNN1wSAbX8yvjU3ooA_WifG5-x+iS5R5WBeLgFDb3E3bg@mail.gmail.com> (sfid-20121023_194929_986035_9E74B0A3)
-References: <1350784990-14242-1-git-send-email-thomas@cozybit.com>
-	 <1350912743.10166.10.camel@jlt4.sipsolutions.net>
-	 <CAG6hwVNN1wSAbX8yvjU3ooA_WifG5-x+iS5R5WBeLgFDb3E3bg@mail.gmail.com>
-	 (sfid-20121023_194929_986035_9E74B0A3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 15 Oct 2012 05:33:19 -0400
+From: Sujith Manoharan <c_manoha@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20603.54602.430150.78107@gargle.gargle.HOWL> (sfid-20121015_113321_755408_BC363081)
+Date: Mon, 15 Oct 2012 14:50:10 +0530
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/12] ath9k_hw: Disable MCI stat counter by default for AR9565
+In-Reply-To: <1350287738-18687-6-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<1350287738-18687-6-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-10-23 at 10:49 -0700, Thomas Pedersen wrote:
-> On Mon, Oct 22, 2012 at 6:32 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Sat, 2012-10-20 at 19:03 -0700, Thomas Pedersen wrote:
-> >> Before, a mesh STA would execute some code on behalf of AP or IBSS
-> >> beacons. Since the mesh stack currently does not consider anything but
-> >> other mesh STAs interesting, limit processing to just these and save a
-> >> little overhead.
-> >
-> > I can apply this, but I think while you're at it the function deserves a
-> > bit more thought:
-> >
-> >> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> >
-> >> -     if (elems.mesh_id && elems.mesh_config &&
-> >> -         mesh_matches_local(sdata, &elems))
-> >> +     if (mesh_matches_local(sdata, &elems))
-> >>               mesh_neighbour_update(sdata, mgmt->sa, &elems);
-> >>
-> >>       if (ifmsh->sync_ops)
-> >
-> > Why would you want to invoke sync_ops when the mesh is somebody else's
-> > mesh, i.e. doesn't match local?
+Rajkumar Manoharan wrote:
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_mci.c | 11 ++++++++++-
+>  drivers/net/wireless/ath/ath9k/reg.h        |  3 +++
+>  2 files changed, 13 insertions(+), 1 deletion(-)
 > 
-> Right now we only allocate a sta_info if mesh_matches_local, so
-> sync_ops should simply fail its sta_info lookup and return.
-> 
-> In the future we might want to allocate station entries for non-peers
-> as well since it is useful to track the Toffset of non-peer neighbors
-> for beacon collision avoidance and scheduling MCCAOP interference
-> periods. This is also required by the standard FWIW.
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> index c46d8f1..466ac8da 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> @@ -938,6 +938,9 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+>  	mci->ready = true;
+>  	ar9003_mci_prep_interface(ah);
+>  
+> +	if (AR_SREV_9565(ah))
+> +		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
+> +			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
+>  	if (en_int)
+>  		ar9003_mci_enable_interrupt(ah);
+>  
+> @@ -1179,13 +1182,19 @@ int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+>  		     u16 len, u32 sched_addr)
+>  {
+>  	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+> +	int ret;
+>  
+>  	mci->gpm_addr = gpm_addr;
+>  	mci->gpm_buf = gpm_buf;
+>  	mci->gpm_len = len;
+>  	mci->sched_addr = sched_addr;
+>  
+> -	return ar9003_mci_reset(ah, true, true, true);
+> +	ret = ar9003_mci_reset(ah, true, true, true);
+> +
+> +	if (AR_SREV_9565(ah))
+> +		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
+> +			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
+> +	return ret;
 
-Ok, fair enough. FWIW, Antonio is also working on tracking non-peer
-stations (not as station entries, but separately) so maybe you should
-collaborate.
+Why do this is two different places, when reset() is actually called from
+setup() ?
 
-Applied your patch.
-
-johannes
-
+Sujith
