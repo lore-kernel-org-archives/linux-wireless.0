@@ -1,36 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:45083 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755199Ab2JJVwo (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33286 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab2JOKB6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 17:52:44 -0400
-Date: Thu, 11 Oct 2012 00:52:35 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] {nl,cfg}80211: peer STA VHT caps
-Message-ID: <20121010215235.GB18956@w1.fi> (sfid-20121010_235247_478992_777F1987)
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB3C5@mbx022-e1-nj-10.exch022.domain.local>
+	Mon, 15 Oct 2012 06:01:58 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 11/11] ath9k: Add new BT profile info A2DP_Voice
+Date: Mon, 15 Oct 2012 15:29:55 +0530
+Message-ID: <1350295195-23410-12-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120201_906823_13E9830B)
+In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB3C5@mbx022-e1-nj-10.exch022.domain.local>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 10, 2012 at 05:55:42PM +0000, Mahesh Palivela wrote:
-> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> @@ -1324,6 +1324,7 @@ enum nl80211_attrs {
->  	NL80211_ATTR_BSS_SHORT_SLOT_TIME,
->  
->  	NL80211_ATTR_HT_CAPABILITY,
-> +	NL80211_ATTR_VHT_CAPABILITY,
->  
->  	NL80211_ATTR_SUPPORTED_IFTYPES,
+When the BT connection is initiated by headset, it's possible that headset
+requests to make one A2DP and one Voice connection over the same link.
+BT firmware will send a new profile A2DP_Voice in this case. So WLAN
+has to take care of this new profile for tuning BTCOEX parameters.
 
-NACK - please see the comment at the end of the enum about the place
-where to add new attributes in a way that does not break compatibility
-with existing user space..
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h | 1 +
+ drivers/net/wireless/ath/ath9k/mci.h        | 2 ++
+ 2 files changed, 3 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 3e51f54..66d7ab9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -126,6 +126,7 @@ enum ath_mci_gpm_coex_profile_type {
+ 	MCI_GPM_COEX_PROFILE_HID,
+ 	MCI_GPM_COEX_PROFILE_BNEP,
+ 	MCI_GPM_COEX_PROFILE_VOICE,
++	MCI_GPM_COEX_PROFILE_A2DPVO,
+ 	MCI_GPM_COEX_PROFILE_MAX
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index e5f170a..0695883 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -70,6 +70,7 @@
+ 			_mci->num_pan++;	 \
+ 			break;			 \
+ 		case MCI_GPM_COEX_PROFILE_VOICE: \
++		case MCI_GPM_COEX_PROFILE_A2DPVO:\
+ 			_mci->num_sco++;	 \
+ 			break;			 \
+ 		default:			 \
+@@ -94,6 +95,7 @@
+ 			_mci->num_pan--;	 \
+ 			break;			 \
+ 		case MCI_GPM_COEX_PROFILE_VOICE: \
++		case MCI_GPM_COEX_PROFILE_A2DPVO:\
+ 			_mci->num_sco--;	 \
+ 			break;			 \
+ 		default:			 \
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.12.2
+
