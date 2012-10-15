@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:48098 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752185Ab2JWGUS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2012 02:20:18 -0400
-Message-ID: <5086371D.2080108@tieto.com> (sfid-20121023_082022_834528_AE0F1A66)
-Date: Tue, 23 Oct 2012 08:20:13 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27477 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026Ab2JOHjP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 03:39:15 -0400
+Date: Mon, 15 Oct 2012 12:52:20 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath9k: Set appropriate bit for AR9565 in btc control
+ register
+Message-ID: <20121015072219.GA15591@hemis.qca.qualcomm.com> (sfid-20121015_093918_543363_50C55080)
+References: <1350282513-3869-1-git-send-email-bkamatch@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Victor Goldenshtein <victorg@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
-	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
-	"j@w1.fi" <j@w1.fi>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"coelho@ti.com" <coelho@ti.com>, "assaf@ti.com" <assaf@ti.com>,
-	"igalc@ti.com" <igalc@ti.com>,
-	"adrian@freebsd.org" <adrian@freebsd.org>,
-	"nbd@nbd.name" <nbd@nbd.name>,
-	"simon.wunderlich@s2003.tu-chemnitz.de"
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
-References: <1350226137-13704-1-git-send-email-victorg@ti.com> <1350226137-13704-6-git-send-email-victorg@ti.com>
-In-Reply-To: <1350226137-13704-6-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1350282513-3869-1-git-send-email-bkamatch@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14/10/12 16:48, Victor Goldenshtein wrote:
-> +static int nl80211_ap_channel_switch(struct sk_buff *skb,
-> +				     struct genl_info *info)
-> +{
+On Mon, Oct 15, 2012 at 11:58:33AM +0530, Bala Shanmugam wrote:
+> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_mci.c |   30 ++++++++++++++++++--------
+>  1 files changed, 21 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> index 44c202c..841f2b9 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> @@ -843,15 +843,27 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+>  	* MCI mode will be enabled later, right before reset the MCI TX and RX.
+>  	*/
+>  
+> -	regval = SM(1, AR_BTCOEX_CTRL_AR9462_MODE) |
+> -		 SM(1, AR_BTCOEX_CTRL_WBTIMER_EN) |
+> -		 SM(1, AR_BTCOEX_CTRL_PA_SHARED) |
+> -		 SM(1, AR_BTCOEX_CTRL_LNA_SHARED) |
+> -		 SM(2, AR_BTCOEX_CTRL_NUM_ANTENNAS) |
+> -		 SM(3, AR_BTCOEX_CTRL_RX_CHAIN_MASK) |
+> -		 SM(0, AR_BTCOEX_CTRL_1_CHAIN_ACK) |
+> -		 SM(0, AR_BTCOEX_CTRL_1_CHAIN_BCN) |
+> -		 SM(0, AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
+> +	if (AR_SREV_9565(ah)) {
+> +		regval = SM(1, AR_BTCOEX_CTRL_AR9462_MODE) |
+> +			 SM(1, AR_BTCOEX_CTRL_WBTIMER_EN) |
+> +			 SM(0, AR_BTCOEX_CTRL_PA_SHARED) |
+> +			 SM(0, AR_BTCOEX_CTRL_LNA_SHARED) |
+> +			 SM(2, AR_BTCOEX_CTRL_NUM_ANTENNAS) |
+> +			 SM(1, AR_BTCOEX_CTRL_RX_CHAIN_MASK) |
+> +			 SM(0, AR_BTCOEX_CTRL_1_CHAIN_ACK) |
+> +			 SM(0, AR_BTCOEX_CTRL_1_CHAIN_BCN) |
+> +			 SM(0, AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
+NACK. AR9565 uses ANT-1 sharing architecture. These settings are applicable to ANT-2
+arch which we don't support. I'll send updated change along with btcoex patch series.
 
-This function should probably enforce interface combinations with 
-`cfg80211_can_use_chan()`. Otherwise we might end up in a state which 
-doesn't correspond to any interface combination - and won't be able to 
-bring up new interfaces.
-
-This however introduces a new problem. Let's suppose we have 2 APs on 
-channel 1. The device doesn't support multi-channel. We won't be able to 
-switch channel on these APs at all.
-
-We might want to change the channel switch to resolve around the channel 
-itself (not the interface) - so we'd be saying "move all interfaces with 
-channel X to channel Y" instead of "move interface X to channel Y".
-
-Or we could let the driver decide what it'll do - e.g. silently switch 
-more than one interface to a different channel (which makes sense with 
-AP/DFS I guess) and just notify cfg/userspace about it. That would 
-require us to provide a way to switch interfaces (atomically possibly) 
-between channels while keeping in sync with interface combinations though.
-
-We might try addressing station CSA issue at the same time maybe?
-
-
--- Pozdrawiam / Best regards, Michal Kazior.
+-Rajkumar
