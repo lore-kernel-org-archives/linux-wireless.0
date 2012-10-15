@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:40050 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764Ab2J3V3u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 17:29:50 -0400
-Message-ID: <509046CB.6020204@lwfinger.net> (sfid-20121030_222954_471040_93BA3FE4)
-Date: Tue, 30 Oct 2012 16:29:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:28537 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752377Ab2JOPiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 11:38:52 -0400
+Date: Mon, 15 Oct 2012 17:37:53 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: Re: Lots of trans->state != IWL_TRANS_FW_ALIVE warnings
+Message-ID: <20121015153752.GE12560@redhat.com> (sfid-20121015_173855_787425_AFE0250F)
+References: <20121015144722.GA12560@redhat.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3B7D4BB@HASMSX106.ger.corp.intel.com>
+ <20121015152336.GC12560@redhat.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Ben Hutchings <ben@decadent.org.uk>,
-	Albert Pool <albertpool@solcon.nl>, stable@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtlwifi: rtl8192cu: Add new USB ID
-References: <5090314E.7070703@solcon.nl> <1351629925.13356.21.camel@deadeye.wl.decadent.org.uk> <201210302210.01258.chunkeey@googlemail.com>
-In-Reply-To: <201210302210.01258.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121015152336.GC12560@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2012 04:10 PM, Christian Lamparter wrote:
-> On Tuesday, October 30, 2012 09:45:25 PM Ben Hutchings wrote:
->> On Tue, 2012-10-30 at 20:58 +0100, Albert Pool wrote:
->>> This is an ISY IWL 2000. Probably a clone of Belkin F7D1102 050d:1102.
->>> Its FCC ID is the same.
->>>
->>> Signed-off-by: Albert Pool <albertpool@solcon.nl>
->> [...]
->>
->> This is not the correct way to submit a change to stable.  See
->> Documentation/stable_kernel_rules.txt
->>
-> Well, here's a quote from the author in the original post:
-> "I can't get the device to connect to my wifi, but it at least detects
-> networks with this patch. Probably a clone of Belkin F7D1102 050d:1102.
-> Its FCC ID is the same."
->
-> <http://www.spinics.net/lists/linux-wireless/msg98340.html>
->
-> Unless this device is working now, I wouldn't recommend a Cc: stable.
+On Mon, Oct 15, 2012 at 05:23:36PM +0200, Stanislaw Gruszka wrote:
+> On Mon, Oct 15, 2012 at 03:14:51PM +0000, Grumbach, Emmanuel wrote:
+> > > I glanced at the bugs and I can only see the trace dump. I am pretty sure
+> > > there is an issue before the dump - fw assert of something like that. Can it be
+> > > possible to get the full log?
+> > > 
+> > 
+> > Can you ask people to try the attached patch?
+> > This will let us know where the fw is brought down.
+> 
+> Yes, I'll build kernel with that patch and request for test and dmesg.
 
-I got a private message from the OP that his AP was having a problem. He was 
-able to connect using the vendor driver, thus I have confidence that rtl8192cu 
-is the correct driver for the device.
+debug=0x400 is enough or do you want also some other flags?
 
-Larry
-
-
+Stanislaw
