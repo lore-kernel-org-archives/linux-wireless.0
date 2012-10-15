@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:57222 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754741Ab2JDWgn (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4929 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300Ab2JOJwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 18:36:43 -0400
-Received: by mail-ee0-f46.google.com with SMTP id b15so832424eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 15:36:41 -0700 (PDT)
+	Mon, 15 Oct 2012 05:52:35 -0400
+Date: Mon, 15 Oct 2012 15:20:13 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Sujith Manoharan <c_manoha@qti.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 09/12] ath9k_hw: Configure new switch table for AR9565
+ BTCOEX
+Message-ID: <20121015095012.GA21952@hemis.qca.qualcomm.com> (sfid-20121015_115239_496695_DD9AD9B0)
+References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1350287738-18687-10-git-send-email-rmanohar@qca.qualcomm.com>
+ <20603.54988.583810.352301@gargle.gargle.HOWL>
+ <20121015094022.GC21551@hemis.qca.qualcomm.com>
+ <20603.55967.154275.896969@gargle.gargle.HOWL>
 MIME-Version: 1.0
-In-Reply-To: <506DDA1D.1090106@candelatech.com>
-References: <506DDA1D.1090106@candelatech.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 5 Oct 2012 08:36:21 +1000
-Message-ID: <CAGRGNgVAehhN8CdwYrG8H4kuad=Kt5tPOHSKCSH8xm-OC=z6aw@mail.gmail.com> (sfid-20121005_003646_654876_DFF9B204)
-Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20603.55967.154275.896969@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
-
-On Fri, Oct 5, 2012 at 4:49 AM, Ben Greear <greearb@candelatech.com> wrote:
-> I finally got my 3-attenuator system up and running,
-> and I'm starting to do some tests.
+On Mon, Oct 15, 2012 at 03:12:55PM +0530, Sujith Manoharan wrote:
+> Rajkumar Manoharan wrote:
+> > I hate *_LATER macros. Its always confusing. Since SPDT is applicable only for
+> > 9462 & 9565, I remove the _LATER in v2.
+> 
+> The macros in ath9k are clean enough - they just check the macVersion.
 >
-> AP and Station are running 3.5.5+, ath9k ar9380 NICs.
-> Channel 157, HT40, no encryption.
->
-> One question right away:  Should I expect decent performance
-> if I directly cable 2 wifi NICs, where one is acting as AP and
-> the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
+I mean AR9462_20_OR_LATER that checks macRev which is different from other *_LATER macros.
+So I'll remove AR9462_20_OR_LATER to avoid confusion.
 
-Going off on a tangent: arguably it shouldn't matter which channel on
-the AP card is connected to which channel on the STA card. I wonder
-what results you'd get if you cabled them in each combination and
-tested the throughput keeping the other variables the same. I also
-wonder what impact it would have on the throughput if you started
-disconnecting the cables.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+-Rajkumar
