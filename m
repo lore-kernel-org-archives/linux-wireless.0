@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:48545 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759172Ab2JYByN (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:33789 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754171Ab2JOV2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 21:54:13 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so1123583oag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 18:54:12 -0700 (PDT)
+	Mon, 15 Oct 2012 17:28:31 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
-	<CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
-	<20121024194547.GA19060@shredder>
-	<CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
-	<CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
-	<20121024220813.GB6723@shredder>
-	<CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
-Date: Wed, 24 Oct 2012 18:54:12 -0700
-Message-ID: <CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com> (sfid-20121025_035426_654975_7E4D893A)
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1350307338-8133-1-git-send-email-bkamatch@qca.qualcomm.com>
+References: <1350307338-8133-1-git-send-email-bkamatch@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 15 Oct 2012 14:28:09 -0700
+Message-ID: <CAB=NE6UpXjb9mp0ttJs08bKXmAJdS=Ndf=m9NNO75xEcFfTnMQ@mail.gmail.com> (sfid-20121015_232835_071034_BDE7AA66)
+Subject: Re: [PATCH 0/3] Patches for compat-drivers/linux-3.6.y
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 October 2012 16:33, Adrian Chadd <adrian@freebsd.org> wrote:
-
-> So hm, now you've made me open the ath9k_htc firmware source. I hate you.
+On Mon, Oct 15, 2012 at 6:22 AM, Bala Shanmugam
+<bkamatch@qca.qualcomm.com> wrote:
+> Hi,
 >
-> Let me look.
+> These patches are for linux-3.6.y branch and has BT coex
+> fixes for AR9565.
+>
+> Bala Shanmugam (3):
+>   compat-drivers: Update pending stable patches.
+>   compat-drivers: Move next-pending patches to cherry-picks.
+>   compat-drivers: Add new cherry-pick and next-pending  patches
 
-Yup, found it. The firmware TSF code was treating the TSF like it was
-an older pre-11n NIC and only dealing with the low handful of bits.
-Thomas has verified my test image works.
+Thanks, I've applied this, made a few changes to adapt to v3.6.2 and
+have made 5 tarballs for this release:
 
-I'll go and see about pushing this into the tree so Sujith's next
-ath9k_htc drop will include this fix.
+http://wireless.kernel.org/en/users/Download/stable#compat-wireless_3.6_stable_releases
 
-Thanks for the debugging info Thomas!
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1-snpc.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1-snp.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1-sn.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1-s.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.6/compat-wireless-3.6.2-1.tar.bz2
 
-
-
-Adrian
+  Luis
