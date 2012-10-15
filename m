@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43894 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755889Ab2JPTF5 (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:36700 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752006Ab2JOLfV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 15:05:57 -0400
-Message-ID: <1350414390.10177.16.camel@jlt4.sipsolutions.net> (sfid-20121016_210600_737539_66CF0429)
-Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	igalc@ti.com, adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Date: Tue, 16 Oct 2012 21:06:30 +0200
-In-Reply-To: <1350226137-13704-6-git-send-email-victorg@ti.com>
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
-	 <1350226137-13704-6-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 15 Oct 2012 07:35:21 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h16so4815715oag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2012 04:35:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+i8gKL6jAEz5A0cVuGOX_bSOxPA-2KJSuCnLLrxryiAt+t=EA@mail.gmail.com>
+References: <CA+i8gKL6jAEz5A0cVuGOX_bSOxPA-2KJSuCnLLrxryiAt+t=EA@mail.gmail.com>
+Date: Mon, 15 Oct 2012 17:05:21 +0530
+Message-ID: <CAD2nsn0yPGk=pFa5DqdHqHG1=0q4v9GsR8Fj9RCbpeckZDdd2Q@mail.gmail.com> (sfid-20121015_133525_364177_3B871462)
+Subject: Re: ath9k kernel git repo
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Emmanuel Benisty <benisty.e@gmail.com>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-10-14 at 16:48 +0200, Victor Goldenshtein wrote:
-> Add NL80211_CMD_AP_CH_SWITCH command which
-> triggers an AP channel switch process.
-> 
-> Usermode notified about channel switch complete
-> event with NL80211_CMD_CH_SWITCH_NOTIFY.
-> 
-> Usermode (hostapd) is responsible to update the
-> channel switch announcement IE in the beacon
-> prior and after the channel switch operation.
+Hi,
 
-Hmm, does that really work? I mean, it can do the update when the event
-comes in, but is that fast enough, or should it give us the new beacon
-already when programming the switching?
+On Sat, Oct 13, 2012 at 4:37 PM, Emmanuel Benisty <benisty.e@gmail.com> wrote:
+>
+> I'm currently using wireless-testing kernel git tree but just curious,
+> is there any ath9k kernel development tree available somewhere?
 
-johannes
+no,  you would all the latest ath9k fixes from Johns tree itself.
+http://wireless.kernel.org/en/developers/process
 
+>
+> Thanks in advance.
+>
+> Cheers,
+> -- Emmanuel
+
+
+
+-- 
+thanks,
+shafi
