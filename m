@@ -1,108 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:37401 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750734Ab2JFDWH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47212 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab2JOKBO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 23:22:07 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.7 1/4] mwifiex: return -EBUSY if scan request cannot be honored
-Date: Fri,  5 Oct 2012 20:21:40 -0700
-Message-Id: <1349493703-1169-2-git-send-email-bzhao@marvell.com> (sfid-20121006_052216_762549_977A147D)
-In-Reply-To: <1349493703-1169-1-git-send-email-bzhao@marvell.com>
-References: <1349493703-1169-1-git-send-email-bzhao@marvell.com>
+	Mon, 15 Oct 2012 06:01:14 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH v2 03/11] ath9k: Set appropriate bit for AR9565 in btc control register
+Date: Mon, 15 Oct 2012 15:29:47 +0530
+Message-ID: <1350295195-23410-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120116_660670_C651F28F)
+In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are cases we cannot scan when request is received.
-For example, during WPA group key negociation the scan request
-will be blocked. We should return an error code to cfg80211
-because cfg80211_scan_done will never be called.
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Paul Stewart <pstew@chromium.org>
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |   10 +++++++---
- drivers/net/wireless/mwifiex/scan.c     |   18 +++++++++---------
- 2 files changed, 16 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 2691620..675247b 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1802,7 +1802,7 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- {
- 	struct net_device *dev = request->wdev->netdev;
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
--	int i, offset;
-+	int i, offset, ret;
- 	struct ieee80211_channel *chan;
- 	struct ieee_types_header *ie;
- 
-@@ -1855,8 +1855,12 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 
- 		priv->user_scan_cfg->chan_list[i].scan_time = 0;
- 	}
--	if (mwifiex_scan_networks(priv, priv->user_scan_cfg))
--		return -EFAULT;
-+
-+	ret = mwifiex_scan_networks(priv, priv->user_scan_cfg);
-+	if (ret) {
-+		dev_err(priv->adapter->dev, "scan failed: %d\n", ret);
-+		return ret;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 6fbd376..b2b9941 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -850,11 +850,18 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		 SM(1, AR_BTCOEX_CTRL_WBTIMER_EN) |
+ 		 SM(1, AR_BTCOEX_CTRL_PA_SHARED) |
+ 		 SM(1, AR_BTCOEX_CTRL_LNA_SHARED) |
+-		 SM(2, AR_BTCOEX_CTRL_NUM_ANTENNAS) |
+-		 SM(3, AR_BTCOEX_CTRL_RX_CHAIN_MASK) |
+ 		 SM(0, AR_BTCOEX_CTRL_1_CHAIN_ACK) |
+ 		 SM(0, AR_BTCOEX_CTRL_1_CHAIN_BCN) |
+ 		 SM(0, AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
++	if (AR_SREV_9565(ah)) {
++		regval |= SM(1, AR_BTCOEX_CTRL_NUM_ANTENNAS) |
++			  SM(1, AR_BTCOEX_CTRL_RX_CHAIN_MASK);
++		REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2,
++			      AR_BTCOEX_CTRL2_TX_CHAIN_MASK, 0x1);
++	} else {
++		regval |= SM(2, AR_BTCOEX_CTRL_NUM_ANTENNAS) |
++			  SM(3, AR_BTCOEX_CTRL_RX_CHAIN_MASK);
 +	}
  
- 	if (request->ie && request->ie_len) {
- 		for (i = 0; i < MWIFIEX_MAX_VSIE_NUM; i++) {
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index e36a759..bfb90a5 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1296,7 +1296,7 @@ mwifiex_radio_type_to_band(u8 radio_type)
- int mwifiex_scan_networks(struct mwifiex_private *priv,
- 			  const struct mwifiex_user_scan_cfg *user_scan_in)
- {
--	int ret = 0;
-+	int ret;
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct cmd_ctrl_node *cmd_node;
- 	union mwifiex_scan_cmd_config_tlv *scan_cfg_out;
-@@ -1309,20 +1309,20 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
- 	unsigned long flags;
+ 	REG_WRITE(ah, AR_BTCOEX_CTRL, regval);
  
- 	if (adapter->scan_processing) {
--		dev_dbg(adapter->dev, "cmd: Scan already in process...\n");
--		return ret;
-+		dev_err(adapter->dev, "cmd: Scan already in process...\n");
-+		return -EBUSY;
- 	}
- 
--	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
--	adapter->scan_processing = true;
--	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
--
- 	if (priv->scan_block) {
--		dev_dbg(adapter->dev,
-+		dev_err(adapter->dev,
- 			"cmd: Scan is blocked during association...\n");
--		return ret;
-+		return -EBUSY;
- 	}
- 
-+	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
-+	adapter->scan_processing = true;
-+	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
-+
- 	scan_cfg_out = kzalloc(sizeof(union mwifiex_scan_cmd_config_tlv),
- 								GFP_KERNEL);
- 	if (!scan_cfg_out) {
 -- 
-1.7.0.2
+1.7.12.2
 
