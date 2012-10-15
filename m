@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:56057 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933142Ab2J2Vom (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44090 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744Ab2JOINs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 17:44:42 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so7312454iea.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 14:44:41 -0700 (PDT)
-Message-ID: <508EF8C6.20305@lwfinger.net> (sfid-20121029_224451_850943_2220699C)
-Date: Mon, 29 Oct 2012 16:44:38 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 15 Oct 2012 04:13:48 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 08/12] ath9k_hw: Fix max rx rate drop for AR9565
+Date: Mon, 15 Oct 2012 13:25:34 +0530
+Message-ID: <1350287738-18687-9-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101352_128878_87A4E1DF)
+In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Albert Pool <albertpool@solcon.nl>, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
-Subject: Re: Unknown Realtek USB device
-References: <508EB140.5010102@solcon.nl> <201210291820.03101.chunkeey@googlemail.com>
-In-Reply-To: <201210291820.03101.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/29/2012 12:20 PM, Christian Lamparter wrote:
-> On Monday, October 29, 2012 05:39:28 PM Albert Pool wrote:
->> Can any of you help me identify the Realtek chip in this device so that the USB ID can be added to the right driver?
->> It's a 802.11n USB nano dongle from ISY. I only have the dongle for short time, so I may not be able to test it
->> myself if it takes some time. usb-devices and lsusb -v output is attached.
->
-> Is it a ISY IWL 2000 device? Then it could be supported by rtl8192cu:
->
-> <http://forum.ubuntuusers.de/topic/isy-iwl-2000-n150-standard-wird-nicht-erkannt/#post-4641162>
->
-> Note:
-> you'll have to have to correct firmware in place as well. Either
-> you have to install a realtek firmware package (rtlwifi) for your
-> distro... Or download it manually (filename: rtlwifi/rtl8192cufw.bin
-> <http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git>)
-> and put it into the correct place (/lib/firmware/(rtlwifi))
->
-> Regards,
-> 	Chr
-> ---
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> index 9970c2b..d4338fd 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -297,6 +297,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
->   	/*=== Customer ID ===*/
->   	/****** 8188CU ********/
->   	{RTL_USB_DEVICE(0x050d, 0x1102, rtl92cu_hal_cfg)}, /*Belkin - Edimax*/
-> +	{RTL_USB_DEVICE(0x050d, 0x11f2, rtl92cu_hal_cfg)}, /*Belkin - Edimax*/
->   	{RTL_USB_DEVICE(0x06f8, 0xe033, rtl92cu_hal_cfg)}, /*Hercules - Edimax*/
->   	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
->   	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
+Whenever i_coff of IQ calibration is too high, AR9565 drops max
+rx rate to MCS4. Skipping IQ update at this time can avoid this
+problem for AR9565.
 
-You also need a kernel 2.6.39 or newer. If you have one older that 3.4, I would 
-suggest using compat-wireless.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 84b558d..162401f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -276,6 +276,11 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+ 				offset_array[i],
+ 				REG_READ(ah, offset_array[i]));
+ 
++			if (AR_SREV_9565(ah) &&
++			    (iCoff == 63 || qCoff == 63 ||
++			     iCoff == -63 || qCoff == -63))
++				return;
++
+ 			REG_RMW_FIELD(ah, offset_array[i],
+ 				      AR_PHY_RX_IQCAL_CORR_IQCORR_Q_I_COFF,
+ 				      iCoff);
+-- 
+1.7.12.2
 
