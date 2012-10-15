@@ -1,94 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2959 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752262Ab2JOMxc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 08:53:32 -0400
-Date: Mon, 15 Oct 2012 14:52:41 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Pedro Francisco <pedrogfrancisco@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211/mac80211: avoid state mishmash on deauth
-Message-ID: <20121015125231.GA9941@redhat.com> (sfid-20121015_145334_507070_B25A4FF1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:39803 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754083Ab2JOSQ5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 14:16:57 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TNpDj-000633-J2
+	for linux-wireless@vger.kernel.org; Mon, 15 Oct 2012 20:16:56 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] cfg80211 tracing
+Date: Mon, 15 Oct 2012 20:17:27 +0200
+Message-Id: <1350325050-6994-1-git-send-email-johannes@sipsolutions.net> (sfid-20121015_201700_557568_E6F77C87)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid situation when we are on associate state in mac80211 and
-on disassociate state in cfg80211. This can results on crash
-during modules unload (like showed on this thread:
-http://marc.info/?t=134373976300001&r=1&w=2) and possibly other
-problems.
+Hi,
 
-Reported-by: Pedro Francisco <pedrogfrancisco@gmail.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ab78b53..9b99b60 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1218,6 +1218,7 @@ struct cfg80211_deauth_request {
- 	const u8 *ie;
- 	size_t ie_len;
- 	u16 reason_code;
-+	bool local_state_change;
- };
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e714ed8..e510a33 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3549,6 +3549,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
-+	bool tx = !req->local_state_change;
- 
- 	mutex_lock(&ifmgd->mtx);
- 
-@@ -3565,12 +3566,12 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	if (ifmgd->associated &&
- 	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
--				       req->reason_code, true, frame_buf);
-+				       req->reason_code, tx, frame_buf);
- 	} else {
- 		drv_mgd_prepare_tx(sdata->local, sdata);
- 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
- 					       IEEE80211_STYPE_DEAUTH,
--					       req->reason_code, true,
-+					       req->reason_code, tx,
- 					       frame_buf);
- 	}
- 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 3df195a..f4d6226 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -457,20 +457,14 @@ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
- 		.reason_code = reason,
- 		.ie = ie,
- 		.ie_len = ie_len,
-+		.local_state_change = local_state_change,
- 	};
- 
- 	ASSERT_WDEV_LOCK(wdev);
- 
--	if (local_state_change) {
--		if (wdev->current_bss &&
--		    ether_addr_equal(wdev->current_bss->pub.bssid, bssid)) {
--			cfg80211_unhold_bss(wdev->current_bss);
--			cfg80211_put_bss(&wdev->current_bss->pub);
--			wdev->current_bss = NULL;
--		}
--
-+	if (local_state_change && (!wdev->current_bss ||
-+	    !ether_addr_equal(wdev->current_bss->pub.bssid, bssid)))
- 		return 0;
--	}
- 
- 	return rdev->ops->deauth(&rdev->wiphy, dev, &req);
- }
+Since mac80211 and iwlwifi tracing was so succesful
+(by being very helpful) we added tracing to cfg80211
+as well. This might help debug issues with the APIs
+or how they are used.
+
+This isn't fully complete right now, I'll gladly
+take patches for that or will do it myself later,
+but it was just too hard to coordinate that since
+I kept merging new things while Hila and Beni were
+writing the tracing code.
+
+The first patch just adds static inline wrappers to
+the APIs just like in mac80211, the second fills in
+the driver operation tracing and the third also adds
+tracing to the APIs provided by cfg80211.
+
+After I merge these patches, I'd like to see tracing
+added to new patches, but everything that's posted
+until then we can deal with later. I'll remind you
+anyway ;)
+
+johannes
+
