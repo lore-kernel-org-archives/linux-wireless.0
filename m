@@ -1,66 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3968 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756944Ab2JJSNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 14:13:25 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Dan Carpenter" <dan.carpenter@oracle.com>
-Subject: [PATCH 7/7] brcmfmac: fix end of loop check (signedness bug)
-Date: Wed, 10 Oct 2012 11:13:12 -0700
-Message-ID: <1349892792-4792-8-git-send-email-frankyl@broadcom.com> (sfid-20121010_201330_182779_8F42DD0F)
-In-Reply-To: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
-References: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from latitanza.investici.org ([82.94.249.234]:34834 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840Ab2JOOth (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 10:49:37 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH 1/2] cfg/mac80211: add set_mcast_rate callback
+Date: Mon, 15 Oct 2012 16:49:00 +0200
+Message-Id: <1350312541-17657-1-git-send-email-ordex@autistici.org> (sfid-20121015_164942_359042_9EF6FBCE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+This new callback can be used to tune the rate to be used to send multicast
+frames. The callback can be used with vif configured as ADHOC or MESH_POINT
+only.
 
-The problem here is that we loop until "remained_buf_len" is less than
-zero, but since it is unsigned, it never is.
+In the current state the multicast rate can be specified on IBSS/MESH joining
+only. This makes it impossible to select a custom multicast rate when then join
+command is sent by an external program (e.g. wpa_supplicant)
 
-"remained_buf_len" has to be large enough to hold the value from
-"mgmt_ie_buf_len".  That variable is type u32, but it only holds small
-values so I have changed to both variables to int.
-
-Also I removed the bogus initialization from "mgmt_ie_buf_len" so that
-GCC can detect if it is used unitialized.  I moved the declaration of
-"remained_buf_len" closer to where it is used so it's easier to read.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h     |  6 ++++++
+ net/mac80211/cfg.c         |  7 +++++++
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/util.c        | 12 ++++++++++++
+ 4 files changed, 28 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 5e51f15..1c83612 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3972,7 +3972,7 @@ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
- 	u8  *iovar_ie_buf;
- 	u8  *curr_ie_buf;
- 	u8  *mgmt_ie_buf = NULL;
--	u32 mgmt_ie_buf_len;
-+	int mgmt_ie_buf_len;
- 	u32 *mgmt_ie_len;
- 	u32 del_add_ie_buf_len = 0;
- 	u32 total_ie_buf_len = 0;
-@@ -3982,7 +3982,7 @@ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
- 	struct parsed_vndr_ie_info *vndrie_info;
- 	s32 i;
- 	u8 *ptr;
--	u32 remained_buf_len;
-+	int remained_buf_len;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2837994..facbadd 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1544,6 +1544,9 @@ struct cfg80211_gtk_rekey_data {
+  *	to a merge.
+  * @leave_ibss: Leave the IBSS.
+  *
++ * @set_mcast_rate: Set the specified multicast rate (only if vif is in ADHOC or
++ *	MESH mode)
++ *
+  * @set_wiphy_params: Notify that wiphy parameters have changed;
+  *	@changed bitfield (see &enum wiphy_params_flags) describes which values
+  *	have changed. The actual parameter values are available in
+@@ -1745,6 +1748,9 @@ struct cfg80211_ops {
+ 			     struct cfg80211_ibss_params *params);
+ 	int	(*leave_ibss)(struct wiphy *wiphy, struct net_device *dev);
  
- 	WL_TRACE("bssidx %d, pktflag : 0x%02X\n", bssidx, pktflag);
- 	iovar_ie_buf = kzalloc(WL_EXTRA_BUF_MAX, GFP_KERNEL);
++	int	(*set_mcast_rate)(struct wiphy *wiphy, struct net_device *dev,
++				  int rate[IEEE80211_NUM_BANDS]);
++
+ 	int	(*set_wiphy_params)(struct wiphy *wiphy, u32 changed);
+ 
+ 	int	(*set_tx_power)(struct wiphy *wiphy,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ed27988..21461dc 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1924,6 +1924,12 @@ static int ieee80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+ 	return ieee80211_ibss_leave(IEEE80211_DEV_TO_SUB_IF(dev));
+ }
+ 
++static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
++				    int rate[IEEE80211_NUM_BANDS])
++{
++	return ieee80211_mcast_rate(IEEE80211_DEV_TO_SUB_IF(dev), rate);
++}
++
+ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+@@ -3123,6 +3129,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.disassoc = ieee80211_disassoc,
+ 	.join_ibss = ieee80211_join_ibss,
+ 	.leave_ibss = ieee80211_leave_ibss,
++	.set_mcast_rate = ieee80211_set_mcast_rate,
+ 	.set_wiphy_params = ieee80211_set_wiphy_params,
+ 	.set_tx_power = ieee80211_set_tx_power,
+ 	.get_tx_power = ieee80211_get_tx_power,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 78c4bbb..e3b9eff 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1575,6 +1575,9 @@ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 				   struct ieee80211_chanctx *chanctx);
+ 
++int ieee80211_mcast_rate(struct ieee80211_sub_if_data *sdata,
++			 int rate[IEEE80211_NUM_BANDS]);
++
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+ #else
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 350b7a7..c9f6813 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1959,3 +1959,15 @@ u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs)
+ 		return 2;
+ 	return 1;
+ }
++
++int ieee80211_mcast_rate(struct ieee80211_sub_if_data *sdata,
++			 int rate[IEEE80211_NUM_BANDS])
++{
++	if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
++	memcpy(sdata->vif.bss_conf.mcast_rate, &rate, sizeof(rate));
++
++	return 0;
++}
 -- 
-1.7.9.5
-
+1.7.12.3
 
