@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:38075 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750947Ab2JMCDc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 22:03:32 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>, Jouni Malinen <j@w1.fi>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Date: Fri, 12 Oct 2012 18:55:16 -0700
-Subject: RE: [PATCH 1/3] wireless: drivers: make use of
- WLAN_EID_VENDOR_SPECIFIC
-Message-ID: <477F20668A386D41ADCC57781B1F7043083B80D8BB@SC-VEXCH1.marvell.com> (sfid-20121013_040336_201704_6D05F0CE)
-References: <1350037696-23747-1-git-send-email-arend@broadcom.com>
- <1350037696-23747-2-git-send-email-arend@broadcom.com>
-In-Reply-To: <1350037696-23747-2-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:38731 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752262Ab2JOMxa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 08:53:30 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TNkAj-0001LV-BC
+	for linux-wireless@vger.kernel.org; Mon, 15 Oct 2012 14:53:29 +0200
+Message-ID: <1350305645.27801.8.camel@jlt4.sipsolutions.net> (sfid-20121015_145332_484292_BB81A2EE)
+Subject: Re: [PATCH] mac80211: use __printf attribute in debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 15 Oct 2012 14:54:05 +0200
+In-Reply-To: <1349018174-22867-1-git-send-email-johannes@sipsolutions.net> (sfid-20120930_171543_198899_696E1E06)
+References: <1349018174-22867-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120930_171543_198899_696E1E06)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
-
-> The include file linux/ieee80211.h contains three definitions for
-> the same thing in enum ieee80211_eid due to historic changes:
+On Sun, 2012-09-30 at 17:16 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> /* Information Element IDs */
-> enum ieee80211_eid {
->     :
->     WLAN_EID_WPA = 221,
->     WLAN_EID_GENERIC = 221,
->     WLAN_EID_VENDOR_SPECIFIC = 221,
->     :
-> };
-> 
-> The standard refers to this as "vendor specific" element so the
-> other two definitions are better not used. This patch changes the
-> wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
-> 
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: Jouni Malinen <j@w1.fi>
-> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> The internal function mac80211_format_buffer() has a
+> printf-style argument list, so add the attribute to
+> have gcc verify that list.
 
-For mwifiex part,
+Applied the fixed version.
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+johannes
 
-Thanks,
-Bing
