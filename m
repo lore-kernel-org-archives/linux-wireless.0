@@ -1,88 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3967 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2067 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756916Ab2JJSNW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 14:13:22 -0400
+	id S1751940Ab2JOTG7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 15:06:59 -0400
+Message-ID: <507C5EC6.6000306@broadcom.com> (sfid-20121015_210702_057412_94B29909)
+Date: Mon, 15 Oct 2012 12:06:46 -0700
 From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/7] brcmfmac: set dongle mode accordingly when
- interface up
-Date: Wed, 10 Oct 2012 11:13:10 -0700
-Message-ID: <1349892792-4792-6-git-send-email-frankyl@broadcom.com> (sfid-20121010_201327_997787_4465B241)
-In-Reply-To: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
-References: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/7] miscellaneous fixes intended for 3.7
+References: <1349892792-4792-1-git-send-email-frankyl@broadcom.com>
+ <20121015182756.GE16817@tuxdriver.com>
+In-Reply-To: <20121015182756.GE16817@tuxdriver.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mode of WiFi dongle should be initialized in brcmf_cfg80211_up
-which get called when network interface is brought up. Otherwise
-brcmf_cfg80211_get_station would return error.
+On 10/15/2012 11:27 AM, John W. Linville wrote:
+> On Wed, Oct 10, 2012 at 11:13:05AM -0700, Franky Lin wrote:
+>> Here are some miscellaneous brcmfmac bug fix patches aiming for 3.7
+>>
+>> Arend van Spriel (1):
+>>    brcmfmac: remove 'always false' condition from brcmf_c_mkiovar_bsscfg
+>>
+>> Dan Carpenter (2):
+>>    brcmfmac: Using zero instead of NULL
+>>
+>> Franky Lin (3):
+>>    brcmfmac: fix sparse warnings
+>
+> These don't strike me as meaningful bug fixes.  I'll hold them for 3.8.
+>
+> John
+>
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   38 ++------------------
- 1 file changed, 2 insertions(+), 36 deletions(-)
+OK, thanks John.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index a39925a..5e51f15 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -5199,41 +5199,6 @@ brcmf_cfg80211_event(struct net_device *ndev,
- 		schedule_work(&cfg->event_work);
- }
- 
--static s32 brcmf_dongle_mode(struct net_device *ndev, s32 iftype)
--{
--	s32 infra = 0;
--	s32 err = 0;
--
--	switch (iftype) {
--	case NL80211_IFTYPE_MONITOR:
--	case NL80211_IFTYPE_WDS:
--		WL_ERR("type (%d) : currently we do not support this mode\n",
--		       iftype);
--		err = -EINVAL;
--		return err;
--	case NL80211_IFTYPE_ADHOC:
--		infra = 0;
--		break;
--	case NL80211_IFTYPE_STATION:
--		infra = 1;
--		break;
--	case NL80211_IFTYPE_AP:
--		infra = 1;
--		break;
--	default:
--		err = -EINVAL;
--		WL_ERR("invalid type (%d)\n", iftype);
--		return err;
--	}
--	err = brcmf_exec_dcmd_u32(ndev, BRCMF_C_SET_INFRA, &infra);
--	if (err) {
--		WL_ERR("WLC_SET_INFRA error (%d)\n", err);
--		return err;
--	}
--
--	return 0;
--}
--
- static s32 brcmf_dongle_eventmsg(struct net_device *ndev)
- {
- 	/* Room for "event_msgs" + '\0' + bitvec */
-@@ -5452,7 +5417,8 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
- 				WL_BEACON_TIMEOUT);
- 	if (err)
- 		goto default_conf_out;
--	err = brcmf_dongle_mode(ndev, wdev->iftype);
-+	err = brcmf_cfg80211_change_iface(wdev->wiphy, ndev, wdev->iftype,
-+					  NULL, NULL);
- 	if (err && err != -EINPROGRESS)
- 		goto default_conf_out;
- 	err = brcmf_dongle_probecap(cfg);
--- 
-1.7.9.5
-
+Franky
 
