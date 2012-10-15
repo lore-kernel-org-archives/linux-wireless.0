@@ -1,27 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51658 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935883Ab2JYRG2 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47413 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab2JOKCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 13:06:28 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TRQt0-00088m-SO
-	for linux-wireless@vger.kernel.org; Thu, 25 Oct 2012 19:06:27 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v3 0/2] mac80211 AP cleanup & explicit operations
-Date: Thu, 25 Oct 2012 19:06:59 +0200
-Message-Id: <1351184821-23315-1-git-send-email-johannes@sipsolutions.net> (sfid-20121025_190633_942281_FC425E1D)
+	Mon, 15 Oct 2012 06:02:05 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 09/11] ath9k_hw: Set default MCI config for AR9565
+Date: Mon, 15 Oct 2012 15:29:53 +0530
+Message-ID: <1350295195-23410-10-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120209_646829_9D84B26A)
+In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok so I inserted the cleanup I promised Eliad in the other
-thread before my explicit operations patch, hence resending
-that one as well.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Haven't really tested this yet though.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 05d9be5..c90e9bc 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -195,7 +195,7 @@ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
+ 	ah->btcoex_hw.mci.need_flush_btinfo = false;
+ 	ah->btcoex_hw.mci.wlan_cal_seq = 0;
+ 	ah->btcoex_hw.mci.wlan_cal_done = 0;
+-	ah->btcoex_hw.mci.config = 0x2201;
++	ah->btcoex_hw.mci.config = (AR_SREV_9462(ah)) ? 0x2201 : 0xa4c1;
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_mci);
+ 
+-- 
+1.7.12.2
 
