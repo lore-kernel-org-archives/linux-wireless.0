@@ -1,155 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:62305 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752767Ab2JaM6B (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48780 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922Ab2JOIMW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 08:58:01 -0400
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v2 1/2] wireless: Driver for 60GHz card wil6210
-Date: Wed, 31 Oct 2012 14:57:54 +0200
-Message-ID: <1578864.KppKrIJQWb@lx-vladimir> (sfid-20121031_135806_970040_2C02E8A6)
-In-Reply-To: <20121031012225.GY3354@lenteja.do-not-panic.com>
-References: <1351511906-19989-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1351511906-19989-2-git-send-email-qca_vkondrat@qca.qualcomm.com> <20121031012225.GY3354@lenteja.do-not-panic.com>
+	Mon, 15 Oct 2012 04:12:22 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 02/12] ath9k_hw: Fix selfgen chainmask for 9565
+Date: Mon, 15 Oct 2012 13:25:28 +0530
+Message-ID: <1350287738-18687-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101226_571761_D7B03761)
+In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, October 30, 2012 06:23:37 PM Luis R. Rodriguez wrote:
-> On Mon, Oct 29, 2012 at 01:58:25PM +0200, Vladimir Kondratiev wrote:
-> > Card wil6210 by Wilocity supports operation on the 60GHz band
-> > 
-> > See
-> > http://wireless.kernel.org/en/users/Drivers/wil6210
-> 
-> Can you update that page to reflect the latest information?
-> Its out of date now.
+Self generated MCI messages is configured to use chain 1. As
+ar9565 is 1x1 solution, It can not use Chain 1. Hence fix
+Chain 1 for ar9462 alone. Not doing so, could affect WLAN
+connectivity in ar9565 as LNA sharing is not informed by BT.
 
-Sure I will. Wanted to do it after driver merge, to reflect driver status as 
-well.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> 
-> > diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> > b/drivers/net/wireless/ath/wil6210/pcie_bus.c new file mode 100644
-> > index 0000000..d2b14fb
-> > --- /dev/null
-> > +++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> > +static int wil_pcie_probe(struct pci_dev *pdev, const struct
-> > pci_device_id *id) +{
-> > +	{ /* print various info */
-> > +		struct net_device *ndev = wil_to_ndev(wil);
-> > +		const char *pdev_name = pci_name(pdev);
-> > +		const char *wiphydev_name = dev_name(wil_to_dev(wil));
-> > +		const char *ndev_name = netdev_name(ndev);
-> > +		const char *ifc_name = ndev->name;
-> > +		struct pci_driver *drv = pci_dev_driver(pdev);
-> > +		const char *drv_name = drv ? drv->name : "(no drv)";
-> > +		pr_info("Driver  : <%s>\n", drv_name ?: "(null)");
-> > +		pr_info("PCI dev : <%s>\n", pdev_name ?: "(null)");
-> > +		pr_info("Net dev : <%s>\n", ndev_name ?: "(null)");
-> > +		pr_info("Net ifc : <%s>\n", ifc_name ?: "(null)");
-> > +		pr_info("Wiphy   : <%s>\n", wiphydev_name ?: "(null)");
-> > +
-> > +	}
-> 
-> Die nasty code, die! Bleed!
-
-Well, agree. Removed.
-
-> 
-> > diff --git a/drivers/net/wireless/ath/wil6210/txrx.c
-> > b/drivers/net/wireless/ath/wil6210/txrx.c new file mode 100644
-> > index 0000000..463c68e
-> > --- /dev/null
-> > +++ b/drivers/net/wireless/ath/wil6210/txrx.c
-> > +void tx_complete(struct wil6210_priv *wil, int ringid)
-> > +{
-> 
-> ...
-> 
-> > +	{
-> > +		u32 swhead = vring->swhead;
-> > +		u32 swtail = vring->swtail;
-> > +		int used = (vring->size + swhead - swtail) % vring->size;
-> > +		int avail = vring->size - used - 1;
-> > +		if (avail > vring->size/4)
-> > +			netif_tx_wake_all_queues(wil_to_ndev(wil));
-> > +	}
-> > +}
-> 
-> Die!
-
-Done
-
-> 
-> > diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h
-> > b/drivers/net/wireless/ath/wil6210/wil6210.h new file mode 100644
-> > index 0000000..529b790
-> > --- /dev/null
-> > +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-> > @@ -0,0 +1,299 @@
-> 
-> ...
-> 
-> > +#define WIL6210_DRV_VERSION "0.4" /* Driver version */
-> 
-> Again, death to this. I don't care what other drivers do, this
-> is silly practice.
-
-Well, if you insist... done.
-By the way, Atheros driver carl9170 uses MODULE_VERSION, should we consider 
-killing it?
-
-> 
-> You also still use generic routine names, please clean those
-> up. Few examples: tx_complete() rx_handle(), iftype_nl2wmi(),
-> and I'm sure there are plenty others, please prefix
-> these for the driver.
-
-Prefix is cheap, done for all driver's functions.
-
-> 
-> > diff --git a/drivers/net/wireless/ath/wil6210/wil6210_rgf.h
-> > b/drivers/net/wireless/ath/wil6210/wil6210_rgf.h
-> Any reason why this small file is required? Why not just stuff it into
-> one of the other header files?
-
-Initially, it was auto-generated by the hardware compiler; but now I can merge 
-it into other include. Done.
-
-> 
-> You didn't also address my comments regarding WIL6210_ISR_COR #ifdef code.
-
-I added string with short explanation in Kconfig.
-Longer explanation: while clear-on-read is good for production mode, it makes 
-debugging much harder - reading ISR registers clears interrupt, and one can no 
-more monitor ISR with debugfs. So, when debugging ISR flows - and they still 
-need some debugging - one have to use W1C mode. That's why it is still 
-present.
-
-There are exactly 2 #ifdefs: one in ISR acknowledge routine, and other one in 
-ISR configuration routine.
-
-Converting this #ifdef to run-time switch (say, module parameter) is possible, 
-but I am not sure it would be better - changing ISR mode will cause reset; ans 
-code will not more readable.
-
-> 
-> The second patch no longer applies as a new driver was merged.
-
-Fixed this too
-
-> 
-> Apart from all this, looks good.
-> 
->   Luis
-
-Sending updated version in a minute.
-
-Thanks, Vladimir.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 9fa6d22..6fbd376 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1043,7 +1043,9 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ 
+ 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
+ 			ar9003_mci_osla_setup(ah, true);
+-		REG_WRITE(ah, AR_SELFGEN_MASK, 0x02);
++
++		if (AR_SREV_9462(ah))
++			REG_WRITE(ah, AR_SELFGEN_MASK, 0x02);
+ 	} else {
+ 		ar9003_mci_send_lna_take(ah, true);
+ 		udelay(5);
+-- 
+1.7.12.2
 
