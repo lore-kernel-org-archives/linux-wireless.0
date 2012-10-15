@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:44391 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932097Ab2JUQlZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Oct 2012 12:41:25 -0400
-Message-ID: <50842576.1000808@ti.com> (sfid-20121021_184127_272579_A921751A)
-Date: Sun, 21 Oct 2012 18:40:22 +0200
-From: Victor Goldenshtein <victorg@ti.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5525 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751123Ab2JOIMt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 04:12:49 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 01/12] ath9k_hw: Enable OSLA hw fix for AR9565
+Date: Mon, 15 Oct 2012 13:25:27 +0530
+Message-ID: <1350287738-18687-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101253_738554_78B51953)
+In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
-	<assaf@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [PATCH v4 4/6] mac80211: add ability to enable TX on op-channel
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>  <1350226137-13704-5-git-send-email-victorg@ti.com> <1350414234.10177.14.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1350414234.10177.14.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16/10/2012 21:03, Johannes Berg wrote:
-> On Sun, 2012-10-14 at 16:48 +0200, Victor Goldenshtein wrote:
->
->> +static int ieee80211_dfs_en_tx(struct wiphy *wiphy, struct net_device *dev,
->> +			       struct ieee80211_channel *chan)
->> +{
->> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->> +	struct ieee80211_local *local = sdata->local;
->> +	int ret = -ENOENT;
->> +
->> +	if (!local->ops->dfs_en_tx)
->> +		return -EOPNOTSUPP;
->> +
->> +	ret = drv_dfs_en_tx(local, sdata, chan);
->> +	return ret;
->
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 3 +++
+ drivers/net/wireless/ath/ath9k/reg.h        | 4 ++++
+ 2 files changed, 7 insertions(+)
 
-sorry, missed that one - I can resend v5 ?
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 9aa8704..9fa6d22 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -799,6 +799,9 @@ static void ar9003_mci_osla_setup(struct ath_hw *ah, bool enable)
+ 	REG_RMW_FIELD(ah, AR_MCI_SCHD_TABLE_2,
+ 		      AR_MCI_SCHD_TABLE_2_MEM_BASED, 1);
+ 
++	if (AR_SREV_9565(ah))
++		REG_RMW_FIELD(ah, AR_MCI_MISC, AR_MCI_MISC_HW_FIX_EN, 1);
++
+ 	if (!(mci->config & ATH_MCI_CONFIG_DISABLE_AGGR_THRESH)) {
+ 		thresh = MS(mci->config, ATH_MCI_CONFIG_AGGR_THRESH);
+ 		REG_RMW_FIELD(ah, AR_BTCOEX_CTRL,
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 4e6760f..c7a9ea7 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -2360,4 +2360,8 @@ enum {
+ #define AR_GLB_SWREG_DISCONT_MODE         0x2002c
+ #define AR_GLB_SWREG_DISCONT_EN_BT_WLAN   0x3
+ 
++#define AR_MCI_MISC                    0x1a74
++#define AR_MCI_MISC_HW_FIX_EN          0x00000001
++#define AR_MCI_MISC_HW_FIX_EN_S        0
++
+ #endif
 -- 
-Thanks,
-Victor.
+1.7.12.2
+
