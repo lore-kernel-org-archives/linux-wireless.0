@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:41650 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964822Ab2JWUvq (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33131 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751964Ab2JOKB2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2012 16:51:46 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so5984224iea.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2012 13:51:45 -0700 (PDT)
-Message-ID: <5087035E.9010609@lwfinger.net> (sfid-20121023_225200_072781_774318BE)
-Date: Tue, 23 Oct 2012 15:51:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 15 Oct 2012 06:01:28 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 05/11] ath9k_hw: Disable MCI stat counter by default for AR9565
+Date: Mon, 15 Oct 2012 15:29:49 +0530
+Message-ID: <1350295195-23410-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120143_720728_04FB7AFE)
+In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Arend Van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Driver for USB device with ID 050d:615a
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend and Franky,
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 3 +++
+ drivers/net/wireless/ath/ath9k/reg.h        | 3 +++
+ 2 files changed, 6 insertions(+)
 
-I recently purchased a Belkin N600 DB USB dongle on Ebay. I wanted to get the 
-model with a Realtek RTL8192DU chip. Instead I got a version with a Broadcom 
-chip, which lsusb identifies as
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index c46d8f1..87d9c34 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -938,6 +938,9 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 	mci->ready = true;
+ 	ar9003_mci_prep_interface(ah);
+ 
++	if (AR_SREV_9565(ah))
++		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
++			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
+ 	if (en_int)
+ 		ar9003_mci_enable_interrupt(ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index c7a9ea7..8f40dba 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -2363,5 +2363,8 @@ enum {
+ #define AR_MCI_MISC                    0x1a74
+ #define AR_MCI_MISC_HW_FIX_EN          0x00000001
+ #define AR_MCI_MISC_HW_FIX_EN_S        0
++#define AR_MCI_DBG_CNT_CTRL            0x1a78
++#define AR_MCI_DBG_CNT_CTRL_ENABLE     0x00000001
++#define AR_MCI_DBG_CNT_CTRL_ENABLE_S   0
+ 
+ #endif
+-- 
+1.7.12.2
 
-Bus 001 Device 005: ID 050d:615a Belkin Components F7D4101 / F9L1101 802.11abgn 
-Wireless Adapter [Broadcom BCM4323]
-
-I have since acquired a different device with the Realtek chip, thus I could 
-return the Belkin device; however, the cost was minimal and I will keep it if 
-there is a driver for it. Is it a brcmfmac device that is not yet in the device 
-tables, or is it some other sort of unit that may never be supported under Linux?
-
-Thanks,
-
-Larry
