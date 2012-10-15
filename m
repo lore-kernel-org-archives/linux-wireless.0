@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755286Ab2JPSYr (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44940 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925Ab2JOINg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 14:24:47 -0400
-Message-ID: <1350411921.10177.7.camel@jlt4.sipsolutions.net> (sfid-20121016_202450_552248_52723726)
-Subject: Re: [PATCH] mac80211: unbind the vif from the channel context in
- suspend
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Tue, 16 Oct 2012 20:25:21 +0200
-In-Reply-To: <1350371890-11488-1-git-send-email-johannes@sipsolutions.net> (sfid-20121016_091741_257784_F88E1821)
-References: <1350371890-11488-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121016_091741_257784_F88E1821)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 15 Oct 2012 04:13:36 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 10/12] ath9k_hw: Set default MCI config for AR9565
+Date: Mon, 15 Oct 2012 13:25:36 +0530
+Message-ID: <1350287738-18687-11-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101340_921227_2326321E)
+In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-10-16 at 09:18 +0200, Johannes Berg wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> 
-> The channel was still bound to the channel context when it
-> was removed. Fix that.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Since I haven't sent a pull request for the broken code yet, I'm going
-to roll this into the mac80211 channel context commit. This means
-rebasing mac80211-next.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 05d9be5..c90e9bc 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -195,7 +195,7 @@ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
+ 	ah->btcoex_hw.mci.need_flush_btinfo = false;
+ 	ah->btcoex_hw.mci.wlan_cal_seq = 0;
+ 	ah->btcoex_hw.mci.wlan_cal_done = 0;
+-	ah->btcoex_hw.mci.config = 0x2201;
++	ah->btcoex_hw.mci.config = (AR_SREV_9462(ah)) ? 0x2201 : 0xa4c1;
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_mci);
+ 
+-- 
+1.7.12.2
 
