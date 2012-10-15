@@ -1,109 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:65424 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753329Ab2JDXtD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47142 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab2JOKA7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 19:49:03 -0400
-Received: by mail-ee0-f46.google.com with SMTP id b15so858789eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 16:49:01 -0700 (PDT)
+	Mon, 15 Oct 2012 06:00:59 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 02/11] ath9k_hw: Fix selfgen chainmask for 9565
+Date: Mon, 15 Oct 2012 15:29:46 +0530
+Message-ID: <1350295195-23410-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120102_783961_89D30EB3)
+In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <506E155E.3030405@candelatech.com>
-References: <506DDA1D.1090106@candelatech.com> <CAGRGNgVAehhN8CdwYrG8H4kuad=Kt5tPOHSKCSH8xm-OC=z6aw@mail.gmail.com>
- <506E10B7.4060406@candelatech.com> <CAGRGNgWhx57oB-wf7DE+V_A1h1K0uHWs0F2jJNyFR58eJ_X5Hg@mail.gmail.com>
- <506E155E.3030405@candelatech.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 5 Oct 2012 09:48:41 +1000
-Message-ID: <CAGRGNgU9XdCaes__8MRzkAYjTF7h-zxDY02pW-Bd6nbZpXQMpg@mail.gmail.com> (sfid-20121005_014909_082567_96E42F61)
-Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+Self generated MCI messages is configured to use chain 1. As
+ar9565 is 1x1 solution, It can not use Chain 1. Hence fix
+Chain 1 for ar9462 alone. Not doing so, could affect WLAN
+connectivity in ar9565 as LNA sharing is not informed by BT.
 
-On Fri, Oct 5, 2012 at 9:01 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/04/2012 03:53 PM, Julian Calaby wrote:
->>
->> Hi Ben,
->>
->> On Fri, Oct 5, 2012 at 8:41 AM, Ben Greear <greearb@candelatech.com>
->> wrote:
->>>
->>> On 10/04/2012 03:36 PM, Julian Calaby wrote:
->>>>
->>>>
->>>> Hi Ben,
->>>>
->>>> On Fri, Oct 5, 2012 at 4:49 AM, Ben Greear <greearb@candelatech.com>
->>>> wrote:
->>>>>
->>>>>
->>>>> I finally got my 3-attenuator system up and running,
->>>>> and I'm starting to do some tests.
->>>>>
->>>>> AP and Station are running 3.5.5+, ath9k ar9380 NICs.
->>>>> Channel 157, HT40, no encryption.
->>>>>
->>>>> One question right away:  Should I expect decent performance
->>>>> if I directly cable 2 wifi NICs, where one is acting as AP and
->>>>> the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
->>>>
->>>>
->>>>
->>>> Going off on a tangent: arguably it shouldn't matter which channel on
->>>> the AP card is connected to which channel on the STA card. I wonder
->>>> what results you'd get if you cabled them in each combination and
->>>> tested the throughput keeping the other variables the same. I also
->>>> wonder what impact it would have on the throughput if you started
->>>> disconnecting the cables.
->>>
->>>
->>>
->>> I doubt it matters either....just seemed sane to start with something
->>> I could easily keep track of in my head :)
->>
->>
->> Fair enough.
->>
->>> I had really shitty performance when I had only one cable connected
->>> to the station, but I think it is probably related to rate-control,
->>> which seems too aggressive.  When I force things to slower speeds
->>> it works fine.  I'm starting to look into that now.
->>>
->>> I hope to eventually produce big pretty graphs reporting signal, rx-rate,
->>> etc over various attenuations...but still got a ways to go first!
->>
->>
->> Pretty graphs are always useful. It'd be nice to compare other brands
->> / models of card too, but I'm guessing that's outside the scope of
->> what you're planning to achieve.
->>
->> Are you planning to open-source any of the software / hardware you're
->> making to do this?
->
->
-> I'm going to publish the code for the attenuator (including
-> eagle layout & gerber files for the Arduino shield).  Will market them
-> for sale as completed units too.  Will publish a simple command-line
-> tool to adjust the attenuation, and unit will have knobs to turn
-> so you don't really need a computer to control it anyway.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Nice! I wish I had a good reason to build one =)
-
-> We'll be able to test various APs..but on the client side,
-> I doubt we'll test other than ath9k anytime soon, although
-> I think our software would support other WiFi NICs if you didn't
-> try to do any of the virtual interface stuff.
-
-Makes sense.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 9fa6d22..6fbd376 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1043,7 +1043,9 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ 
+ 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
+ 			ar9003_mci_osla_setup(ah, true);
+-		REG_WRITE(ah, AR_SELFGEN_MASK, 0x02);
++
++		if (AR_SREV_9462(ah))
++			REG_WRITE(ah, AR_SELFGEN_MASK, 0x02);
+ 	} else {
+ 		ar9003_mci_send_lna_take(ah, true);
+ 		udelay(5);
 -- 
-Julian Calaby
+1.7.12.2
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
