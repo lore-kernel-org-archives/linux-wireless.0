@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:44737 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758569Ab2JYSK1 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5494 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002Ab2JOIMl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 14:10:27 -0400
-Received: by mail-pa0-f46.google.com with SMTP id hz1so1347962pad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 11:10:27 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linville@tuxdriver.com
-Cc: Javier Cardona <javier@cozybit.com>,
-	Javier Lopez <jlopex@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	johannes@sipsolutions.net
-Subject: [PATCH] mac80211: Don't inspect Sequence Control field on control frames
-Date: Thu, 25 Oct 2012 11:10:18 -0700
-Message-Id: <1351188618-11155-1-git-send-email-javier@cozybit.com> (sfid-20121025_201031_454299_3598369C)
+	Mon, 15 Oct 2012 04:12:41 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 00/12] BT COEX fixes for AR9565
+Date: Mon, 15 Oct 2012 13:25:26 +0530
+Message-ID: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101245_714399_B3FC2D41)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Per IEEE Std. 802.11-2012, Sec 8.2.4.4.1, the sequence Control field is
-not present in control frames.  We noticed this problem when processing
-Block Ack Requests.
+Hi, 
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Javier Lopez <jlopex@cozybit.com>
----
- net/mac80211/rx.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Here is the set of fixes for AR9565 BTCoex issues
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index f975f64..bf54336 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1467,6 +1467,10 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 
- 	hdr = (struct ieee80211_hdr *)rx->skb->data;
- 	fc = hdr->frame_control;
-+
-+	if (ieee80211_is_ctl(fc))
-+		return RX_CONTINUE;
-+
- 	sc = le16_to_cpu(hdr->seq_ctrl);
- 	frag = sc & IEEE80211_SCTL_FRAG;
- 
+-Rajkumar
+
+Bala Shanmugam (2):
+  ath9k: Set appropriate bit for AR9565 in btc control register
+  ath9k: turn off RXIQ calibration while re-calibrating radio
+
+Rajkumar Manoharan (10):
+  ath9k_hw: Enable OSLA hw fix for AR9565
+  ath9k_hw: Fix selfgen chainmask for 9565
+  ath9k_hw: Disable MCI stat counter by default for AR9565
+  ath9k_hw: Fix frequent BT rx recovery
+  ath9k_hw: program radio_post_sys2ant initval for AR9565
+  ath9k_hw: Fix max rx rate drop for AR9565
+  ath9k_hw: Configure new switch table for AR9565 BTCOEX
+  ath9k_hw: Set default MCI config for AR9565
+  ath9k: adjust duty cycle for FTP profile for AR9565
+  ath9k: Add new BT profile info A2DP_Voice
+
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c  |  5 +++
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c    | 45 +++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h    |  2 ++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    |  5 +--
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    |  1 +
+ drivers/net/wireless/ath/ath9k/btcoex.c        |  2 +-
+ drivers/net/wireless/ath/ath9k/btcoex.h        |  1 +
+ drivers/net/wireless/ath/ath9k/mci.c           |  2 +-
+ drivers/net/wireless/ath/ath9k/mci.h           |  2 ++
+ drivers/net/wireless/ath/ath9k/reg.h           |  7 ++++
+ 11 files changed, 64 insertions(+), 10 deletions(-)
+
 -- 
-1.7.5.4
+1.7.12.2
 
