@@ -1,44 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47002 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759798Ab2JaTK5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47334 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab2JOKBs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 15:10:57 -0400
-Message-ID: <1351710647.6281.10.camel@jlt4.sipsolutions.net> (sfid-20121031_201100_923196_D771AF08)
-Subject: Re: WARNING in agg-tx.c (3.5.7+, not tainted)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <509173D0.9010701@candelatech.com> (sfid-20121031_195414_905498_198D44C4)
-References: <509173D0.9010701@candelatech.com>
-	 (sfid-20121031_195414_905498_198D44C4)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Oct 2012 20:10:47 +0100
-Mime-Version: 1.0
+	Mon, 15 Oct 2012 06:01:48 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 06/11] ath9k_hw: Fix frequent BT rx recovery
+Date: Mon, 15 Oct 2012 15:29:50 +0530
+Message-ID: <1350295195-23410-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120151_293745_BD672C02)
+In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-31 at 11:54 -0700, Ben Greear wrote:
-> While trying to debug another kernel splat, I saw this one.  System was
-> in process of creating and getting DHCP for 400 virtual stations.
-> 
-> Code in question:
-> 
-> 
-> 
-> 	mutex_lock(&sta->ampdu_mlme.mtx);
-> 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-> 
-> 	if (WARN_ON(!tid_tx)) {
-> #ifdef CONFIG_MAC80211_HT_DEBUG
-> 		printk(KERN_DEBUG "addBA was not requested!\n");
-> #endif
+While resuming from S3, BT host issues HCI reset command and it
+causes BT firmware to busy with security key calculation. At this
+movement, WLAN detects MCI hardware error of MCI_CONT_INFO_TIMEOUT
+and then it starts the recovery sequence repeatedly. Too many
+recovery sequences would exhaust the BT kernel message pool. This
+patch imposes a duration between consecutive BT recovery procedure.
+Thus it solves BT firmware panic issue reported in AR9565.
 
-Hm should probably be a WARN(), but ...
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 10 +++++++++-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |  1 +
+ drivers/net/wireless/ath/ath9k/btcoex.h     |  1 +
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
->From the backtrace it looks like maybe you were tearing down the
-interface? So maybe it's possible that you were remove it or something,
-and the driver had just accepted the session? Hmm.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 87d9c34..b04fa46 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1203,7 +1203,7 @@ EXPORT_SYMBOL(ar9003_mci_cleanup);
+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+-	u32 value = 0;
++	u32 value = 0, tsf;
+ 	u8 query_type;
+ 
+ 	switch (state_type) {
+@@ -1261,6 +1261,14 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 		ar9003_mci_send_coex_bt_status_query(ah, true, query_type);
+ 		break;
+ 	case MCI_STATE_RECOVER_RX:
++		tsf = ath9k_hw_gettsf32(ah);
++		if ((tsf - mci->last_recovery) <= MCI_RECOVERY_DUR_TSF) {
++			ath_dbg(ath9k_hw_common(ah), MCI,
++				"(MCI) ignore Rx recovery\n");
++			break;
++		}
++		ath_dbg(ath9k_hw_common(ah), MCI, "(MCI) RECOVER RX\n");
++		mci->last_recovery = tsf;
+ 		ar9003_mci_prep_interface(ah);
+ 		mci->query_bt = true;
+ 		mci->need_flush_btinfo = true;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 0910310..3e51f54 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -18,6 +18,7 @@
+ #define AR9003_MCI_H
+ 
+ #define MCI_FLAG_DISABLE_TIMESTAMP      0x00000001      /* Disable time stamp */
++#define MCI_RECOVERY_DUR_TSF		(100 * 1000)    /* 100 ms */
+ 
+ /* Default remote BT device MCI COEX version */
+ #define MCI_GPM_COEX_MAJOR_VERSION_DEFAULT  3
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 94e9211..2f84ab2 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -88,6 +88,7 @@ struct ath9k_hw_mci {
+ 	u8 bt_state;
+ 	u8 stomp_ftp;
+ 	bool concur_tx;
++	u32 last_recovery;
+ };
+ 
+ struct ath_btcoex_hw {
+-- 
+1.7.12.2
 
