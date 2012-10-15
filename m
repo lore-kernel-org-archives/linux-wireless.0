@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6770 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755228Ab2JEM5p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 08:57:45 -0400
-Date: Fri, 5 Oct 2012 15:58:52 +0300
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	bzhao@marvell.com
-Subject: Re: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
-Message-ID: <20121005125849.GI12229@aemeltch-MOBL1> (sfid-20121005_145748_812746_0428E094)
-References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
- <1349368379.2008.16.camel@joe-AO722>
- <1349419996.10584.5.camel@smile>
- <1349420428.10584.8.camel@smile>
- <20121005100719.GD12229@aemeltch-MOBL1>
- <1349432398.10584.31.camel@smile>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47056 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab2JOKAp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 06:00:45 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 00/11] BTCOEX fixes for AR9565
+Date: Mon, 15 Oct 2012 15:29:44 +0530
+Message-ID: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120048_358866_4E13C77B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1349432398.10584.31.camel@smile>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 05, 2012 at 01:19:58PM +0300, Andy Shevchenko wrote:
-> On Fri, 2012-10-05 at 13:07 +0300, Andrei Emeltchenko wrote: 
-> > On Fri, Oct 05, 2012 at 10:00:28AM +0300, Andy Shevchenko wrote:
-> 
-> > > And one finding more: buffers are defined as u16. I'm afraid the both
+Hi,
 
-Looking at the output:
+Here is the set of fixes for AR9565 BTCoex issues
 
-mwifiex_sdio mmc0:0001:1: last_cmd_id: 28 00 28 00 28
+-Rajkumar
 
-I suspect that they meant u8.
+Bala Shanmugam (2):
+  ath9k: Set appropriate bit for AR9565 in btc control register
+  ath9k: turn off RXIQ calibration while re-calibrating radio
 
-Best regards 
-Andrei Emeltchenko 
+Rajkumar Manoharan (9):
+  ath9k_hw: Enable OSLA hw fix for AR9565
+  ath9k_hw: Fix selfgen chainmask for 9565
+  ath9k_hw: Disable MCI stat counter by default for AR9565
+  ath9k_hw: Fix frequent BT rx recovery
+  ath9k_hw: Fix max rx rate drop for AR9565
+  ath9k_hw: Configure new switch table for AR9565 BTCOEX
+  ath9k_hw: Set default MCI config for AR9565
+  ath9k: adjust duty cycle for FTP profile for AR9565
+  ath9k: Add new BT profile info A2DP_Voice
+
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c  |  5 ++++
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c    | 37 +++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h    |  2 ++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    |  1 +
+ drivers/net/wireless/ath/ath9k/btcoex.c        |  2 +-
+ drivers/net/wireless/ath/ath9k/btcoex.h        |  1 +
+ drivers/net/wireless/ath/ath9k/mci.c           |  2 +-
+ drivers/net/wireless/ath/ath9k/mci.h           |  2 ++
+ drivers/net/wireless/ath/ath9k/reg.h           | 11 +++++---
+ drivers/net/wireless/ath/ath9k/wow.c           |  2 +-
+ 11 files changed, 55 insertions(+), 12 deletions(-)
+
+-- 
+1.7.12.2
 
