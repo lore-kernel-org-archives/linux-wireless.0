@@ -1,136 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2889 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751530Ab2JKQSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 12:18:47 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [RFC] wireless: cfg80211: add peer-to-peer related definitions
-Date: Thu, 11 Oct 2012 16:18:24 +0200
-Message-ID: <1349965104-14475-1-git-send-email-arend@broadcom.com> (sfid-20121011_181908_360457_F08CE2D4)
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:38265 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755153Ab2JOUyj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 16:54:39 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so4796116wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2012 13:54:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1349985702-21322-2-git-send-email-pontus.fuchs@gmail.com>
+References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com> <1349985702-21322-2-git-send-email-pontus.fuchs@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 15 Oct 2012 13:54:17 -0700
+Message-ID: <CAB=NE6VDFb8Cw8Pc7xdjfdVaPV9mcz9WHKHMtg5=WgYD-Cf5KQ@mail.gmail.com> (sfid-20121015_225442_976568_9CEAC5E4)
+Subject: Re: [PATCH 1/4] ar5523: Add main driver file
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	hch@lst.de, s.L-H@gmx.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Peer-to-Peer IE is vendor-specific IE identified by WiFi Alliance
-OUI and specific P2P OUI type. The payload of this IE consists of
-so-called P2P attributes. This patch adds definitions for processing
-these attributes.
+On Thu, Oct 11, 2012 at 1:01 PM, Pontus Fuchs <pontus.fuchs@gmail.com> wrote:
+> This driver is for the AR5523 chipset from Atheros. It was created
+> in 2007 by Christoph Hellwig but it was never finished. I found it a
+> couple if months ago and after some polishing it's working pretty
+> fine.
+>
+> The driver was written with the FreeBSD driver (uath) as reference,
+> which was written with the reverse-engineered windows driver as
+> reference, hence the feature set is very limited. Station mode
+> only, no HW crypto offload.
+>
+> Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi Johannes,
+If you guys want to help share code with the BSD family then my
+recommendation would be to use a permissive license as we have on
+ath9k for example. If that is not an objective then the existing
+license is fine. I'm fine with this going into
+drivers/net/wireless/ath/ but I unfortunately don't have time right
+now to review the code.
 
-This patch is for 3.8. It applies to mac80211-next repository.
-
-Gr. AvS
----
- include/linux/ieee80211.h |   78 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 78 insertions(+)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 8c803f0..7c4c075 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -168,6 +168,9 @@
- #define IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK	0x03
- #define IEEE80211_WMM_IE_STA_QOSINFO_SP_SHIFT	5
- 
-+/* Vendor-specific IE */
-+#define IEEE80211_VENDOR_SPEC_IE		0xDD
-+
- #define IEEE80211_HT_CTL_LEN		4
- 
- struct ieee80211_hdr {
-@@ -905,6 +908,81 @@ struct ieee80211_tdls_data {
- 	} u;
- } __packed;
- 
-+/*
-+ * Peer-to-Peer IE attribute related definitions.
-+ */
-+/**
-+ * enum ieee80211_p2p_attr_id - identifies type of peer-to-peer attribute.
-+ */
-+enum ieee80211_p2p_attr_id {
-+	IEEE80211_P2P_ATTR_STATUS = 0,
-+	IEEE80211_P2P_ATTR_MINOR_REASON,
-+	IEEE80211_P2P_ATTR_CAPABILITY,
-+	IEEE80211_P2P_ATTR_DEVICE_ID,
-+	IEEE80211_P2P_ATTR_GO_INTENT,
-+	IEEE80211_P2P_ATTR_GO_CONFIG_TIMEOUT,
-+	IEEE80211_P2P_ATTR_LISTEN_CHANNEL,
-+	IEEE80211_P2P_ATTR_GROUP_BSSID,
-+	IEEE80211_P2P_ATTR_EXT_LISTEN_TIMING,
-+	IEEE80211_P2P_ATTR_INTENDED_IFACE_ADDR,
-+	IEEE80211_P2P_ATTR_MANAGABILITY,
-+	IEEE80211_P2P_ATTR_CHANNEL_LIST,
-+	IEEE80211_P2P_ATTR_ABSENCE_NOTICE,
-+	IEEE80211_P2P_ATTR_DEVICE_INFO,
-+	IEEE80211_P2P_ATTR_GROUP_INFO,
-+	IEEE80211_P2P_ATTR_GROUP_ID,
-+	IEEE80211_P2P_ATTR_INTERFACE,
-+	IEEE80211_P2P_ATTR_OPER_CHANNEL,
-+	IEEE80211_P2P_ATTR_INVITE_FLAGS,
-+	/* 19 - 220: Reserved */
-+	IEEE80211_P2P_ATTR_VENDOR_SPECIFIC = 221,
-+
-+	IEEE80211_P2P_ATTR_MAX
-+};
-+
-+struct ieee80211_p2p_chan_attr {
-+	u8 country[3];
-+	u8 class;
-+	u8 channel;
-+} __packed;
-+
-+/**
-+ * struct ieee80211_p2p_attribute - attributes in WFA P2P vendor specific IE.
-+ *
-+ * @id: identifier according enum ieee80211_p2p_attr_id.
-+ * @length: length of data buffer mapped by @u.
-+ * @u: union holding information for this peer-to-peer attribute.
-+ */
-+struct ieee80211_p2p_attribute {
-+	u8 id;
-+	__le16 length;
-+	union {
-+		u8 status;
-+		u8 minor_reason;
-+		struct {
-+			u8 device;
-+			u8 group;
-+		} __packed cap;
-+		u8 devid[6];
-+		u8 go_intent;
-+		struct {
-+			u8 group;
-+			u8 client;
-+		} __packed cfg_timeout;
-+		struct ieee80211_p2p_chan_attr listen;
-+		u8 bssid[6];
-+		struct {
-+			__le16 period;
-+			__le16 interval;
-+		} __packed listen_availability;
-+		u8 ifc_addr[6];
-+		u8 managability;
-+		struct ieee80211_p2p_chan_attr operating;
-+		u8 invitation;
-+		u8 var_attr[0];
-+	} u;
-+} __packed;
-+
- /**
-  * struct ieee80211_bar - HT Block Ack Request
-  *
--- 
-1.7.9.5
-
-
+  Luis
