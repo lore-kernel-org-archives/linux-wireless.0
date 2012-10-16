@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34079 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964787Ab2JaNdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 09:33:08 -0400
-Message-ID: <5091287C.9030408@hauke-m.de> (sfid-20121031_143316_005844_E0B1984B)
-Date: Wed, 31 Oct 2012 14:32:44 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:36561 "EHLO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755218Ab2JPUB6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2012 16:01:58 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 16 Oct 2012 13:01:24 -0700
+Subject: RE: [PATCH] iw: add lowpri and flush scan operands
+Message-ID: <477F20668A386D41ADCC57781B1F7043083B80DEED@SC-VEXCH1.marvell.com> (sfid-20121016_220201_037688_4F74D9D8)
+References: <1350346947-21280-1-git-send-email-bzhao@marvell.com>
+	 <1350412864.10177.9.camel@jlt4.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F7043083B80DEE2@SC-VEXCH1.marvell.com>
+ <1350416943.10177.18.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1350416943.10177.18.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-CC: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k: [DFS] add pulse width tolerance for ETSI
-References: <1351682581-30683-1-git-send-email-zefir.kurtisi@neratec.com>
-In-Reply-To: <1351682581-30683-1-git-send-email-zefir.kurtisi@neratec.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/2012 12:23 PM, Zefir Kurtisi wrote:
-> Add 5% width tolerance for radar patterns defined by ETSI.
-> 
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-> ---
->  .../net/wireless/ath/ath9k/dfs_pattern_detector.c  |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
-> index 3b12914..24877b0 100644
-> --- a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
-> +++ b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
-> @@ -42,10 +42,15 @@ struct radar_types {
->  #define MIN_PPB_THRESH	50
->  #define PPB_THRESH(PPB) ((PPB * MIN_PPB_THRESH + 50) / 100)
->  #define PRF2PRI(PRF) ((1000000 + PRF / 2) / PRF)
-> +/* percentage of pulse width tolerance */
-> +#define WIDTH_TOLERANCE 5
-> +#define WIDTH_LOWER(X) ((X*(100-WIDTH_TOLERANCE)+50)/100)
-> +#define WIDTH_UPPER(X) ((X*(100+WIDTH_TOLERANCE)+50)/100)
-                                                   ^^^
-Why are you adding 50 there? If you want to just add 5% tolerance, then
-the +50 is wrong there, but I do not know anything about radar patterns
-defined by ETSI.
-
-Hauke
+SGkgSm9oYW5uZXMsDQoNCj4gPiA+ID4gLVRPUExFVkVMKHNjYW4sICJbLXVdIFtmcmVxIDxmcmVx
+PipdIFtpZXMgPGhleCBhcyAwMDoxMTouLj5dIFtzc2lkIDxzc2lkPip8cGFzc2l2ZV0iLCAwLCAw
+LA0KPiA+ID4gPiArVE9QTEVWRUwoc2NhbiwgIlstdV0gW2ZyZXEgPGZyZXE+Kl0gW2llcyA8aGV4
+IGFzIDAwOjExOi4uPl0gW3NzaWQNCj4gPHNzaWQ+KnxwYXNzaXZlfGxvd3ByaXxmbHVzaF0iLA0K
+PiA+ID4gMCwgMCwNCj4gPiA+DQo+ID4gPiBUaGlzIHNlZW1zIGEgbGl0dGxlIHdyb25nLCB5b3Ug
+Y2FuJ3QgZ2l2ZSBsb3dwcmkvZmx1c2ggYWZ0ZXIgZ2l2aW5nDQo+ID4gPiBTU0lEcywgc28gaXQg
+c2hvdWxkIHByb2JhYmx5IGJlIHdyaXR0ZW4gYXMNCj4gPg0KPiA+IEkgdGhpbmsgd2UgYXJlIGFk
+ZGluZyBsb3dwcmkvZmx1c2ggc3VwcG9ydCBhcyBzaW1pbGFyIHRvICdwYXNzaXZlJyBmbGFnLg0K
+PiANCj4gYnV0ICJwYXNzaXZlIiBpcyBtdXR1YWxseSBleGNsdXNpdmUgd2l0aCAic3NpZCIsIHdo
+aWxlIHRoZSBmbGFncyBhcmVuJ3QuDQoNCk9LLCB0aGFua3MgZm9yIHRoZSBjbGFyaWZpY2F0aW9u
+LiBXZSB3aWxsIHVwZGF0ZSB0aGUgcGF0Y2ggYXMgeW91IGNvbW1lbnRlZC4NCg0KVGhhbmtzLA0K
+QmluZw0KDQo=
