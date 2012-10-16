@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52348 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966288Ab2JZUDa (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:37087 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754934Ab2JPPhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 16:03:30 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q9QK3T5b015475
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2012 13:03:29 -0700
-Message-ID: <508AEC91.5090901@candelatech.com> (sfid-20121026_220334_505306_386A2A42)
-Date: Fri, 26 Oct 2012 13:03:29 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 16 Oct 2012 11:37:48 -0400
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wireless testing working with ath9k?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <157393863283F442885425D2C45428562A50158C@nasanexd02f.na.qualcomm.com>
+References: <1349400892-25315-1-git-send-email-xiong@qca.qualcomm.com>
+ <CAB=NE6VotAu-cugsn4==3TPX0OGPEFtdn1J+5+Rd_YfLcg9YDQ@mail.gmail.com> <157393863283F442885425D2C45428562A50158C@nasanexd02f.na.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 16 Oct 2012 08:37:26 -0700
+Message-ID: <CAB=NE6UoJBuLboW0=CVc5o3yj_SZOKehCc8QWP5e+zfEJBF2ug@mail.gmail.com> (sfid-20121016_173810_608200_B0BC66EF)
+Subject: Re: [PATCH] compat-drivers: update ethernet driver alx in crap dir
+To: "Huang, Xiong" <xiong@qca.qualcomm.com>
+Cc: "mcgrof@kernel.org" <mcgrof@kernel.org>,
+	"backports@vger.kernel.org" <backports@vger.kernel.org>,
+	nic-devel <nic-devel@qualcomm.com>,
+	"Ren, Cloud" <cjren@qca.qualcomm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a few small patches...and wireless-testing is failing to
-register it's hardware:
+On Mon, Oct 8, 2012 at 6:24 PM, Huang, Xiong <xiong@qca.qualcomm.com> wrote:
+> Hi Luis
+>
+>     I'm refining the code, I try my best to make it upstream ASAP. Thanks !
 
-	/* Register with mac80211 */
-	error = ieee80211_register_hw(hw);
-	if (error) {
-		ath_err(common, "Unable to register hw: %i\n", error);
-		goto error_register;
-	}
+Ok great thanks, in that case I'm going to make it policy moving
+forward to simply not take in full drivers at all into compat-drivers
+regardless of the situation. If  a driver is desired to be made
+available, whatever the situation may be, it must now go upstream
+directly onto drivers/staging or drivers/ proper somewhere.
 
-[  764.193028] ath: country maps to regdmn code: 0x3a
-[  764.193042] ath: Country alpha2 being used: US
-[  764.193052] ath: Regpair used: 0x3a
-[  764.195415] ath: phy0: Unable to register hw: -22
-[  764.200949] ath9k 0000:03:00.0: Failed to initialize device
-[  764.206811] ath9k: probe of 0000:03:00.0 failed with error -22
+Xiong, Vlad, I'm going to then nuke the current drivers there from the
+v3.7-rc1 release, if you want those drivers to be part of the
+compat-drivers-3.7 releases you will have to submit your driver
+upstream into proper or staging.
 
-Just wondering if this is a known problem before start digging into it...
+The additional patches then will be for components already upstream.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+  Luis
