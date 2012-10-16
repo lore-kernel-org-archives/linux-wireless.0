@@ -1,143 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:9794 "EHLO
-	HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751926Ab2JJLZl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 07:25:41 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Rename VHT cap struct
-Date: Wed, 10 Oct 2012 11:25:40 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB334@mbx022-e1-nj-10.exch022.domain.local> (sfid-20121010_132544_904074_C3D4C699)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:40178 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755918Ab2JPT3n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2012 15:29:43 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n3so4517271lbo.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2012 12:29:41 -0700 (PDT)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH v2 2/4] ar5523: Add driver header file
+Date: Tue, 16 Oct 2012 21:29:27 +0200
+Message-Id: <1350415769-8271-3-git-send-email-pontus.fuchs@gmail.com> (sfid-20121016_212948_726254_43653556)
+In-Reply-To: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com>
+References: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mahesh Palivela <maheshp@posedge.com>
+Header file containing structures and defines used by the ar5523
+driver.
 
-Renamed struct ieee80211_vht_capabilities to ieee80211_vht_cap
-And renamed member vht_capabilities_info to vht_cap_info
-
-Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
 ---
- include/linux/ieee80211.h |   45 +++++++++++++++++++++++++++++++--------------
- net/mac80211/main.c       |    2 +-
- net/mac80211/mlme.c       |    4 ++--
- net/mac80211/util.c       |    4 ++--
- 4 files changed, 36 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/ar5523/ar5523.h |  155 ++++++++++++++++++++++++++++++
+ 1 file changed, 155 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ar5523/ar5523.h
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 2385119..8c803f0 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1107,20 +1107,6 @@ struct ieee80211_ht_operation {
- #define WLAN_HT_SMPS_CONTROL_STATIC	1
- #define WLAN_HT_SMPS_CONTROL_DYNAMIC	3
- 
--#define VHT_MCS_SUPPORTED_SET_SIZE      8
--
--struct ieee80211_vht_capabilities {
--	__le32 vht_capabilities_info;
--	u8 vht_supported_mcs_set[VHT_MCS_SUPPORTED_SET_SIZE];
--} __packed;
--
--struct ieee80211_vht_operation {
--	u8 vht_op_info_chwidth;
--	u8 vht_op_info_chan_center_freq_seg1_idx;
--	u8 vht_op_info_chan_center_freq_seg2_idx;
--	__le16 vht_basic_mcs_set;
--} __packed;
--
- /**
-  * struct ieee80211_vht_mcs_info - VHT MCS information
-  * @rx_mcs_map: RX MCS map 2 bits for each stream, total 8 streams
-@@ -1141,6 +1127,37 @@ struct ieee80211_vht_mcs_info {
- 	__le16 tx_highest;
- } __packed;
- 
-+/**
-+ * struct ieee80211_vht_cap - VHT capabilities
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.h b/drivers/net/wireless/ath/ar5523/ar5523.h
+new file mode 100644
+index 0000000..46efbf3
+--- /dev/null
++++ b/drivers/net/wireless/ath/ar5523/ar5523.h
+@@ -0,0 +1,155 @@
++/*
++ * Copyright (c) 2006
++ *	Damien Bergamini <damien.bergamini@free.fr>
++ * Copyright (c) 2007
++ *	Christoph Hellwig <hch@lst.de>
 + *
-+ * This structure is the "VHT capabilities element" as
-+ * described in 802.11ac D3.0 8.4.2.160
-+ * @vht_cap_info: VHT capability info
-+ * @supp_mcs: VHT MCS supported rates
-+ */
-+struct ieee80211_vht_cap {
-+	__le32 vht_cap_info;
-+	struct ieee80211_vht_mcs_info supp_mcs;
-+} __packed;
-+
-+/**
-+ * struct ieee80211_vht_operation - VHT operation IE
++ * Copyright (c) 2006 Sam Leffler, Errno Consulting
++ * Copyright (c) 2008-2009 Weongyo Jeong <weongyo@freebsd.org>
++ * Copyright (c) 2012 Pontus Fuchs <pontus.fuchs@gmail.com>
 + *
-+ * This structure is the "VHT operation element" as
-+ * described in 802.11ac D3.0 8.4.2.161
-+ * @chan_width: Operating channel width
-+ * @center_freq_seg1_idx: center freq segment 1 index
-+ * @center_freq_seg2_idx: center freq segment 2 index
-+ * @basic_mcs_set: VHT Basic MCS rate set
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 + */
-+struct ieee80211_vht_operation {
-+	u8 chan_width;
-+	u8 center_freq_seg1_idx;
-+	u8 center_freq_seg2_idx;
-+	__le16 basic_mcs_set;
-+} __packed;
 +
++#define AR5523_FLAG_PRE_FIRMWARE	(1 << 0)
++#define AR5523_FLAG_ABG			(1 << 1)
 +
- #define IEEE80211_VHT_MCS_ZERO_TO_SEVEN_SUPPORT 0
- #define IEEE80211_VHT_MCS_ZERO_TO_EIGHT_SUPPORT 1
- #define IEEE80211_VHT_MCS_ZERO_TO_NINE_SUPPORT  2
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 473b755..620f427 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -876,7 +876,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	if (supp_vht)
- 		local->scan_ies_len +=
--			2 + sizeof(struct ieee80211_vht_capabilities);
-+			2 + sizeof(struct ieee80211_vht_cap);
- 
- 	if (!local->ops->hw_scan) {
- 		/* For hw_scan, driver needs to set these up. */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8cefc18..80615c6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -353,7 +353,7 @@ static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
- 	cap = vht_cap.cap;
- 
- 	/* reserve and fill IE */
--	pos = skb_put(skb, sizeof(struct ieee80211_vht_capabilities) + 2);
-+	pos = skb_put(skb, sizeof(struct ieee80211_vht_cap) + 2);
- 	ieee80211_ie_build_vht_cap(pos, &vht_cap, cap);
- }
- 
-@@ -412,7 +412,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 			4 + /* power capability */
- 			2 + 2 * sband->n_channels + /* supported channels */
- 			2 + sizeof(struct ieee80211_ht_cap) + /* HT */
--			2 + sizeof(struct ieee80211_vht_capabilities) + /* VHT */
-+			2 + sizeof(struct ieee80211_vht_cap) + /* VHT */
- 			assoc_data->ie_len + /* extra IEs */
- 			9, /* WMM */
- 			GFP_KERNEL);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3b35356..ea94f6a 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1772,8 +1772,8 @@ u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
- 	__le32 tmp;
- 
- 	*pos++ = WLAN_EID_VHT_CAPABILITY;
--	*pos++ = sizeof(struct ieee80211_vht_capabilities);
--	memset(pos, 0, sizeof(struct ieee80211_vht_capabilities));
-+	*pos++ = sizeof(struct ieee80211_vht_cap);
-+	memset(pos, 0, sizeof(struct ieee80211_vht_cap));
- 
- 	/* capability flags */
- 	tmp = cpu_to_le32(cap);
++#define AR5523_FIRMWARE_FILE	"ar5523.bin"
++
++#define AR5523_CMD_TX_PIPE	0x01
++#define	AR5523_DATA_TX_PIPE	0x02
++#define	AR5523_CMD_RX_PIPE	0x81
++#define	AR5523_DATA_RX_PIPE	0x82
++
++#define ar5523_cmd_tx_pipe(dev) \
++	usb_sndbulkpipe((dev), AR5523_CMD_TX_PIPE)
++#define ar5523_data_tx_pipe(dev) \
++	usb_sndbulkpipe((dev), AR5523_DATA_TX_PIPE)
++#define ar5523_cmd_rx_pipe(dev) \
++	usb_rcvbulkpipe((dev), AR5523_CMD_RX_PIPE)
++#define ar5523_data_rx_pipe(dev) \
++	usb_rcvbulkpipe((dev), AR5523_DATA_RX_PIPE)
++
++#define	AR5523_DATA_TIMEOUT	10000
++#define	AR5523_CMD_TIMEOUT	1000
++
++#define AR5523_TX_DATA_COUNT		8
++#define AR5523_TX_DATA_RESTART_COUNT	2
++#define AR5523_RX_DATA_COUNT		16
++#define AR5523_RX_DATA_REFILL_COUNT	8
++
++#define AR5523_CMD_ID	1
++#define AR5523_DATA_ID	2
++
++#define AR5523_TX_WD_TIMEOUT	(HZ * 2)
++#define AR5523_FLUSH_TIMEOUT	(HZ * 3)
++
++enum AR5523_flags {
++	AR5523_HW_UP,
++	AR5523_USB_DISCONNECTED,
++	AR5523_CONNECTED
++};
++
++struct ar5523_tx_cmd {
++	struct ar5523		*ar;
++	struct urb		*urb_tx;
++	void			*buf_tx;
++	void			*odata;
++	int			olen;
++	int			flags;
++	int			res;
++	struct completion	done;
++};
++
++/* This struct is placed in tx_info->driver_data. It must not be larger
++ *  than IEEE80211_TX_INFO_DRIVER_DATA_SIZE.
++ */
++struct ar5523_tx_data {
++	struct list_head	list;
++	struct ar5523		*ar;
++	struct sk_buff		*skb;
++	struct urb		*urb;
++};
++
++struct ar5523_rx_data {
++	struct	list_head	list;
++	struct ar5523		*ar;
++	struct urb		*urb;
++	struct sk_buff		*skb;
++};
++
++struct ar5523 {
++	struct usb_device	*dev;
++	struct ieee80211_hw	*hw;
++
++	unsigned long		flags;
++	struct mutex		mutex;
++	struct workqueue_struct *wq;
++
++	struct ar5523_tx_cmd	tx_cmd;
++
++	struct delayed_work	stat_work;
++
++	struct timer_list	tx_wd_timer;
++	struct work_struct	tx_wd_work;
++	struct work_struct	tx_work;
++	struct list_head	tx_queue_pending;
++	struct list_head	tx_queue_submitted;
++	spinlock_t		tx_data_list_lock;
++	wait_queue_head_t	tx_flush_waitq;
++
++	/* Queued + Submitted TX frames */
++	atomic_t		tx_nr_total;
++
++	/* Submitted TX frames */
++	atomic_t		tx_nr_pending;
++
++	void			*rx_cmd_buf;
++	struct urb		*rx_cmd_urb;
++
++	struct ar5523_rx_data	rx_data[AR5523_RX_DATA_COUNT];
++	spinlock_t		rx_data_list_lock;
++	struct list_head	rx_data_free;
++	struct list_head	rx_data_used;
++	atomic_t		rx_data_free_cnt;
++
++	struct work_struct	rx_refill_work;
++
++	int			rxbufsz;
++	u8			serial[16];
++
++	struct ieee80211_channel channels[14];
++	struct ieee80211_rate	rates[12];
++	struct ieee80211_supported_band band;
++	struct ieee80211_vif	*vif;
++};
++
++/* flags for sending firmware commands */
++#define AR5523_CMD_FLAG_READ	(1 << 1)
++#define AR5523_CMD_FLAG_MAGIC	(1 << 2)
++
++#define ar5523_dbg(ar, format, arg...) \
++	dev_dbg(&(ar)->dev->dev, format, ## arg)
++
++/* On USB hot-unplug there can be a lot of URBs in flight and they'll all
++ * fail. Instead of dealing with them in every possible place just surpress
++ * any messages on USB disconnect.
++ */
++#define ar5523_err(ar, format, arg...) \
++do { \
++	if (!test_bit(AR5523_USB_DISCONNECTED, &ar->flags)) { \
++		dev_err(&(ar)->dev->dev, format, ## arg); \
++	} \
++} while (0)
++#define ar5523_info(ar, format, arg...)	\
++	dev_info(&(ar)->dev->dev, format, ## arg)
+-- 
+1.7.9.5
+
