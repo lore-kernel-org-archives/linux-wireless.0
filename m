@@ -1,140 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34596 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933332Ab2JZOYb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43726 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755577Ab2JPSPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 10:24:31 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
+	Tue, 16 Oct 2012 14:15:47 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 18/18] brcmsmac: Remove some noisy but uninformative debug messages
-Date: Fri, 26 Oct 2012 09:23:33 -0500
-Message-Id: <1351261413-20821-19-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162437_078552_1566E6AD)
-In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/8] iwlwifi: improve oversized command warning
+Date: Tue, 16 Oct 2012 20:16:13 +0200
+Message-Id: <1350411380-2391-2-git-send-email-johannes@sipsolutions.net> (sfid-20121016_201556_168528_E39536AD)
+In-Reply-To: <1350411380-2391-1-git-send-email-johannes@sipsolutions.net>
+References: <1350411380-2391-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These messages clutter up the trace buffer without adding any useful
-information.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+When warning about a command that is too large,
+print out the command name/ID to help figure
+out which place is attempting to send a command
+that is too large.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/dma.c  |    2 --
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   25 ------------------------
- 2 files changed, 27 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/tx.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index f860324..987fb56 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -1377,8 +1377,6 @@ int dma_txfast(struct brcms_c_info *wlc, struct dma_pub *pub,
- 	struct ieee80211_tx_info *tx_info;
- 	bool is_ampdu;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 105e3af..b50d1b4 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -549,7 +549,10 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	 * allocated into separate TFDs, then we will need to
+ 	 * increase the size of the buffers.
+ 	 */
+-	if (WARN_ON(copy_size > TFD_MAX_PAYLOAD_SIZE))
++	if (WARN(copy_size > TFD_MAX_PAYLOAD_SIZE,
++		 "Command %s (%#x) is too large (%d bytes)\n",
++		 trans_pcie_get_cmd_string(trans_pcie, cmd->id),
++		 cmd->id, copy_size))
+ 		return -EINVAL;
  
--	BRCMS_DBG_DMA(di->core, "%s:\n", di->name);
--
- 	/* no use to transmit a zero length packet */
- 	if (p->len == 0)
- 		return 0;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 075ca46..9262c00 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -653,10 +653,6 @@ static uint brcms_c_calc_frame_time(struct brcms_c_info *wlc, u32 ratespec,
- 		rate = BRCM_RATE_1M;
- 	}
- 
--	BRCMS_DBG_MAC80211(wlc->hw->d11core,
--			   "wl%d: rspec 0x%x, preamble_type %d, len%d\n",
--			   wlc->pub->unit, ratespec, preamble_type, mac_len);
--
- 	if (is_mcs_rate(ratespec)) {
- 		uint mcs = ratespec & RSPEC_RATE_MASK;
- 		int tot_streams = mcs_2_txstreams(mcs) + rspec_stc(ratespec);
-@@ -4950,8 +4946,6 @@ uint brcms_c_detach(struct brcms_c_info *wlc)
- 	if (wlc == NULL)
- 		return 0;
- 
--	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
--
- 	callbacks += brcms_b_detach(wlc);
- 
- 	/* delete software timers */
-@@ -5785,9 +5779,6 @@ brcms_c_calc_ack_time(struct brcms_c_info *wlc, u32 rspec,
- {
- 	uint dur = 0;
- 
--	BRCMS_DBG_MAC80211(wlc->hw->d11core,
--			   "wl%d: rspec 0x%x, preamble_type %d\n",
--			   wlc->pub->unit, rspec, preamble_type);
- 	/*
- 	 * Spec 9.6: ack rate is the highest rate in BSSBasicRateSet that
- 	 * is less than or equal to the rate of the immediately previous
-@@ -5805,9 +5796,6 @@ static uint
- brcms_c_calc_cts_time(struct brcms_c_info *wlc, u32 rspec,
- 		      u8 preamble_type)
- {
--	BRCMS_DBG_MAC80211(wlc->hw->d11core,
--			   "wl%d: ratespec 0x%x, preamble_type %d\n",
--			   wlc->pub->unit, rspec, preamble_type);
- 	return brcms_c_calc_ack_time(wlc, rspec, preamble_type);
- }
- 
-@@ -5815,9 +5803,6 @@ static uint
- brcms_c_calc_ba_time(struct brcms_c_info *wlc, u32 rspec,
- 		     u8 preamble_type)
- {
--	BRCMS_DBG_MAC80211(wlc->hw->d11core,
--			   "wl%d: rspec 0x%x, preamble_type %d\n",
--			   wlc->pub->unit, rspec, preamble_type);
- 	/*
- 	 * Spec 9.6: ack rate is the highest rate in BSSBasicRateSet that
- 	 * is less than or equal to the rate of the immediately previous
-@@ -5871,10 +5856,6 @@ brcms_c_calc_frame_len(struct brcms_c_info *wlc, u32 ratespec,
- 	uint nsyms, mac_len, Ndps, kNdps;
- 	uint rate = rspec2rate(ratespec);
- 
--	BRCMS_DBG_MAC80211(wlc->hw->d11core,
--			   "wl%d: rspec 0x%x, preamble_type %d, dur %d\n",
--			   wlc->pub->unit, ratespec, preamble_type, dur);
--
- 	if (is_mcs_rate(ratespec)) {
- 		uint mcs = ratespec & RSPEC_RATE_MASK;
- 		int tot_streams = mcs_2_txstreams(mcs) + rspec_stc(ratespec);
-@@ -7279,9 +7260,6 @@ brcms_c_calc_lsig_len(struct brcms_c_info *wlc, u32 ratespec,
- {
- 	uint nsyms, len = 0, kNdps;
- 
--	BRCMS_DBG_MAC80211(wlc->hw->d11core, "wl%d: rate %d, len%d\n",
--			   wlc->pub->unit, rspec2rate(ratespec), mac_len);
--
- 	if (is_mcs_rate(ratespec)) {
- 		uint mcs = ratespec & RSPEC_RATE_MASK;
- 		int tot_streams = (mcs_2_txstreams(mcs) + 1) +
-@@ -7635,8 +7613,6 @@ static void brcms_c_recv(struct brcms_c_info *wlc, struct sk_buff *p)
- 	uint len;
- 	bool is_amsdu;
- 
--	BRCMS_DBG_RX(wlc->hw->d11core, "wl%d\n", wlc->pub->unit);
--
- 	/* frame starts with rxhdr */
- 	rxh = (struct d11rxhdr *) (p->data);
- 
-@@ -7693,7 +7669,6 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
- 	uint n = 0;
- 	uint bound_limit = bound ? RXBND : -1;
- 
--	BRCMS_DBG_RX(wlc_hw->d11core, "wl%d\n", wlc_hw->unit);
- 	skb_queue_head_init(&recv_frames);
- 
- 	/* gather received frames */
+ 	spin_lock_bh(&txq->lock);
 -- 
-1.7.9.5
+1.7.10.4
 
