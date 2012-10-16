@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615Ab2JJIIP (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44876 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754329Ab2JPPw1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 04:08:15 -0400
-Message-ID: <1349856525.4683.28.camel@jlt4.sipsolutions.net> (sfid-20121010_100820_273297_A6AC9234)
-Subject: Re: [PATCH] mac80211: call drv_get_tsf() in sleepable context
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
-Date: Wed, 10 Oct 2012 10:08:45 +0200
-In-Reply-To: <1349485060-8643-2-git-send-email-thomas@cozybit.com> (sfid-20121006_025748_824596_57F12720)
-References: <1349485060-8643-1-git-send-email-thomas@cozybit.com>
-	 <1349485060-8643-2-git-send-email-thomas@cozybit.com>
-	 (sfid-20121006_025748_824596_57F12720)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 16 Oct 2012 11:52:27 -0400
+To: <ath6kl-devel@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Set HT caps when an interface is added
+Date: Tue, 16 Oct 2012 21:22:18 +0530
+Message-ID: <1350402738-6422-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121016_175231_155644_350225FB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-10-05 at 17:57 -0700, Thomas Pedersen wrote:
-> The call to drv_get/set_tsf() was put on the workqueue to perform tsf
-> adjustments since that function might sleep. However it ended up inside
-> a spinlock, whose critical section must be atomic. Do tsf adjustment
-> outside the spinlock instead, and get rid of a warning.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Applied, thanks.
+Set HT capabilites when a vif is added (based on ht_supported
+advertized is 'true'). ath6kl_set_htcap
+seems to be called when an AP vif is added but not so in
+other vifs. Fix this.
 
-johannes
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index d6e6c2d..5c3aaf6 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3630,6 +3630,8 @@ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, char *name,
+ 	list_add_tail(&vif->list, &ar->vif_list);
+ 	spin_unlock_bh(&ar->list_lock);
+ 
++	ath6kl_restore_htcap(vif);
++
+ 	return &vif->wdev;
+ 
+ err:
+-- 
+1.7.0.4
 
