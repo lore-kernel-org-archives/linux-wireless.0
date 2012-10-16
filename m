@@ -1,79 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:60601 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755203Ab2JDWyS (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:33404 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755599Ab2JPT3p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 18:54:18 -0400
-Received: by mail-ee0-f46.google.com with SMTP id b15so839632eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 15:54:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <506E10B7.4060406@candelatech.com>
-References: <506DDA1D.1090106@candelatech.com> <CAGRGNgVAehhN8CdwYrG8H4kuad=Kt5tPOHSKCSH8xm-OC=z6aw@mail.gmail.com>
- <506E10B7.4060406@candelatech.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 5 Oct 2012 08:53:55 +1000
-Message-ID: <CAGRGNgWhx57oB-wf7DE+V_A1h1K0uHWs0F2jJNyFR58eJ_X5Hg@mail.gmail.com> (sfid-20121005_005423_290168_775FCF16)
-Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Oct 2012 15:29:45 -0400
+Received: by mail-la0-f46.google.com with SMTP id h6so4443643lag.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2012 12:29:44 -0700 (PDT)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH v2 4/4] Add Kconfig and Makefile. Add MAINTAINERS entry
+Date: Tue, 16 Oct 2012 21:29:29 +0200
+Message-Id: <1350415769-8271-5-git-send-email-pontus.fuchs@gmail.com> (sfid-20121016_212950_464822_A46D2EEA)
+In-Reply-To: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com>
+References: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+Hook into the build system so driver can be built.
 
-On Fri, Oct 5, 2012 at 8:41 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/04/2012 03:36 PM, Julian Calaby wrote:
->>
->> Hi Ben,
->>
->> On Fri, Oct 5, 2012 at 4:49 AM, Ben Greear <greearb@candelatech.com>
->> wrote:
->>>
->>> I finally got my 3-attenuator system up and running,
->>> and I'm starting to do some tests.
->>>
->>> AP and Station are running 3.5.5+, ath9k ar9380 NICs.
->>> Channel 157, HT40, no encryption.
->>>
->>> One question right away:  Should I expect decent performance
->>> if I directly cable 2 wifi NICs, where one is acting as AP and
->>> the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
->>
->>
->> Going off on a tangent: arguably it shouldn't matter which channel on
->> the AP card is connected to which channel on the STA card. I wonder
->> what results you'd get if you cabled them in each combination and
->> tested the throughput keeping the other variables the same. I also
->> wonder what impact it would have on the throughput if you started
->> disconnecting the cables.
->
->
-> I doubt it matters either....just seemed sane to start with something
-> I could easily keep track of in my head :)
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+---
+ MAINTAINERS                              |    6 ++++++
+ drivers/net/wireless/ath/Kconfig         |    1 +
+ drivers/net/wireless/ath/Makefile        |    1 +
+ drivers/net/wireless/ath/ar5523/Kconfig  |    7 +++++++
+ drivers/net/wireless/ath/ar5523/Makefile |    1 +
+ 5 files changed, 16 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ar5523/Kconfig
+ create mode 100644 drivers/net/wireless/ath/ar5523/Makefile
 
-Fair enough.
-
-> I had really shitty performance when I had only one cable connected
-> to the station, but I think it is probably related to rate-control,
-> which seems too aggressive.  When I force things to slower speeds
-> it works fine.  I'm starting to look into that now.
->
-> I hope to eventually produce big pretty graphs reporting signal, rx-rate,
-> etc over various attenuations...but still got a ways to go first!
-
-Pretty graphs are always useful. It'd be nice to compare other brands
-/ models of card too, but I'm guessing that's outside the scope of
-what you're planning to achieve.
-
-Are you planning to open-source any of the software / hardware you're
-making to do this?
-
-Thanks,
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e73060f..43fb811 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7477,6 +7477,12 @@ S:	Maintained
+ F:	Documentation/usb/acm.txt
+ F:	drivers/usb/class/cdc-acm.*
+ 
++USB AR5523 WIRELESS DRIVER
++M:	Pontus Fuchs <pontus.fuchs@gmail.com>
++L:	linux-wireless@vger.kernel.org
++S:	Maintained
++F:	drivers/net/wireless/ar5523/
++
+ USB ATTACHED SCSI
+ M:	Matthew Wilcox <willy@linux.intel.com>
+ M:	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index 0960224..c25dcf1 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -26,5 +26,6 @@ source "drivers/net/wireless/ath/ath5k/Kconfig"
+ source "drivers/net/wireless/ath/ath9k/Kconfig"
+ source "drivers/net/wireless/ath/carl9170/Kconfig"
+ source "drivers/net/wireless/ath/ath6kl/Kconfig"
++source "drivers/net/wireless/ath/ar5523/Kconfig"
+ 
+ endif
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index d716b74..1e18621 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -2,6 +2,7 @@ obj-$(CONFIG_ATH5K)		+= ath5k/
+ obj-$(CONFIG_ATH9K_HW)		+= ath9k/
+ obj-$(CONFIG_CARL9170)		+= carl9170/
+ obj-$(CONFIG_ATH6KL)		+= ath6kl/
++obj-$(CONFIG_AR5523)		+= ar5523/
+ 
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
+ 
+diff --git a/drivers/net/wireless/ath/ar5523/Kconfig b/drivers/net/wireless/ath/ar5523/Kconfig
+new file mode 100644
+index 0000000..11d99ee
+--- /dev/null
++++ b/drivers/net/wireless/ath/ar5523/Kconfig
+@@ -0,0 +1,7 @@
++config AR5523
++       tristate "Atheros AR5523 wireless driver support"
++       depends on MAC80211 && USB
++       select FW_LOADER
++       ---help---
++         This module add support for AR5523 based USB dongles such as D-Link
++         DWL-G132, Netgear WPN111 and many more.
+diff --git a/drivers/net/wireless/ath/ar5523/Makefile b/drivers/net/wireless/ath/ar5523/Makefile
+new file mode 100644
+index 0000000..ebf7f3b
+--- /dev/null
++++ b/drivers/net/wireless/ath/ar5523/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_AR5523)   := ar5523.o
 -- 
-Julian Calaby
+1.7.9.5
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
