@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38535 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43879 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759511Ab2J2QZ6 (ORCPT
+	with ESMTP id S1755883Ab2JPTDV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 12:25:58 -0400
-Message-ID: <1351527990.10925.35.camel@jlt4.sipsolutions.net> (sfid-20121029_172601_413845_8D9FFEF0)
-Subject: Re: [PATCH v2] wireless: Allow registering more than one beacon
- listener.
+	Tue, 16 Oct 2012 15:03:21 -0400
+Message-ID: <1350414234.10177.14.camel@jlt4.sipsolutions.net> (sfid-20121016_210325_443997_E4EDFBA3)
+Subject: Re: [PATCH v4 4/6] mac80211: add ability to enable TX on op-channel
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 29 Oct 2012 17:26:30 +0100
-In-Reply-To: <508EAC30.8020600@candelatech.com>
-References: <1351288165-24219-1-git-send-email-greearb@candelatech.com>
-	  (sfid-20121026_234937_894351_D69F960C) <1351501451.10925.6.camel@jlt4.sipsolutions.net>
-	 <508EAC30.8020600@candelatech.com>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	igalc@ti.com, adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Date: Tue, 16 Oct 2012 21:03:54 +0200
+In-Reply-To: <1350226137-13704-5-git-send-email-victorg@ti.com>
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>
+	 <1350226137-13704-5-git-send-email-victorg@ti.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-10-29 at 09:17 -0700, Ben Greear wrote:
+On Sun, 2012-10-14 at 16:48 +0200, Victor Goldenshtein wrote:
 
-> >> +	spin_lock_bh(&rdev->beacon_registrations_lock);
-> > ...
-> >> +	spin_unlock_bh(&rdev->beacon_registrations_lock);
-> >
-> > I have a feeling this is incorrect, this is called with BHs disabled, so
-> > if we disable/enable BHs here we end up with BHs enabled even if the
-> > caller wanted them disabled, no?
-> >
-> > So I suppose unless we need to be able to call this from hard interrupt
-> > in some driver (unlikely) we should add a change like this:
-> 
-> I get confused with the various types of spin-locks,
-> and I just copied this code from the mgt frames logic.
+> +static int ieee80211_dfs_en_tx(struct wiphy *wiphy, struct net_device *dev,
+> +			       struct ieee80211_channel *chan)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	struct ieee80211_local *local = sdata->local;
+> +	int ret = -ENOENT;
+> +
+> +	if (!local->ops->dfs_en_tx)
+> +		return -EOPNOTSUPP;
+> +
+> +	ret = drv_dfs_en_tx(local, sdata, chan);
+> +	return ret;
 
-Uh, that looks like a bug there as well then?
-
-> I did run some tests and my code seems stable, but I could
-> just be getting lucky.
-
-Hmm I guess it depends on the driver, I suppose enabling BHs inside one
-doesn't actually do anything, and it would only really matter for
-drivers using ieee80211_rx_ni()?
-
-> Do you want me to roll in your changes below and re-submit, or
-> do you want to just make the updates?
-
-I can do the update, I guess I'll sort out the mgmt frame part as well.
+What's with the "ret" variable here?
 
 johannes
 
