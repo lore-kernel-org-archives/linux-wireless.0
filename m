@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:50709
-	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751763Ab2JCEaV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43756 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755286Ab2JPSYr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 00:30:21 -0400
-Message-ID: <506BBF57.8060608@posedge.com> (sfid-20121003_063122_364291_CDD41FB9)
-Date: Wed, 3 Oct 2012 10:00:15 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v4 0/2] mac80211: VHT peer STA caps
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Tue, 16 Oct 2012 14:24:47 -0400
+Message-ID: <1350411921.10177.7.camel@jlt4.sipsolutions.net> (sfid-20121016_202450_552248_52723726)
+Subject: Re: [PATCH] mac80211: unbind the vif from the channel context in
+ suspend
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Tue, 16 Oct 2012 20:25:21 +0200
+In-Reply-To: <1350371890-11488-1-git-send-email-johannes@sipsolutions.net> (sfid-20121016_091741_257784_F88E1821)
+References: <1350371890-11488-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121016_091741_257784_F88E1821)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As per Johannes review comments on PATCH v3, split into 2 patches and 
-removed incomplete code of AP mode saving STA vht caps.
+On Tue, 2012-10-16 at 09:18 +0200, Johannes Berg wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> The channel was still bound to the channel context when it
+> was removed. Fix that.
 
-[PATCH v4 1/2]
-Rename vht_capabilities to vht_cap
+Since I haven't sent a pull request for the broken code yet, I'm going
+to roll this into the mac80211 channel context commit. This means
+rebasing mac80211-next.
 
-  include/linux/ieee80211.h |    2 +-
-  net/mac80211/main.c       |    2 +-
-  net/mac80211/mlme.c       |    4 ++--
-  net/mac80211/util.c       |    4 ++--
-  4 files changed, 6 insertions(+), 6 deletions(-)
+johannes
 
-[PATCH v4 2/2]
-To save APs VHT capabilities in mac80211 under STA mode
-
-  include/net/mac80211.h     |    3 +++
-  net/mac80211/Makefile      |    1 +
-  net/mac80211/ieee80211_i.h |    7 +++++++
-  net/mac80211/mlme.c        |    5 +++++
-  net/mac80211/util.c        |   12 ++++++++++++
-  net/mac80211/vht.c         |   36 ++++++++++++++++++++++++++++++++++++
-  6 files changed, 64 insertions(+), 0 deletions(-)
