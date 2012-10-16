@@ -1,170 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:28651
-	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751144Ab2JJLdG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 07:33:06 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: VHT peer STA caps
-Date: Wed, 10 Oct 2012 11:33:04 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB359@mbx022-e1-nj-10.exch022.domain.local> (sfid-20121010_133311_747377_EAAE65C6)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:50168 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751558Ab2JPAXP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Oct 2012 20:23:15 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] iw: add lowpri and flush scan operands
+Date: Mon, 15 Oct 2012 17:22:27 -0700
+Message-Id: <1350346947-21280-1-git-send-email-bzhao@marvell.com> (sfid-20121016_022320_172537_B8491A4D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mahesh Palivela <maheshp@posedge.com>
+From: Sam Leffler <sleffler@chromium.org>
 
-To save AP's VHT capabilities in STA mode
+Add lowpri (low priority) and flush operands to the scan cmd to
+request the equivalent flags be set in the scan request. Note
+these are applied regardless of the feature flags to support
+testing drivers that do not implement them.
 
-Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+
 ---
- include/net/mac80211.h     |    3 +++
- net/mac80211/Makefile      |    1 +
- net/mac80211/ieee80211_i.h |    7 +++++++
- net/mac80211/mlme.c        |    5 +++++
- net/mac80211/util.c        |   12 ++++++++++++
- net/mac80211/vht.c         |   36 ++++++++++++++++++++++++++++++++++++
- 6 files changed, 64 insertions(+), 0 deletions(-)
+ info.c    |    6 ++++++
+ nl80211.h |   27 +++++++++++++++++++++++++++
+ scan.c    |   16 ++++++++++++++--
+ 3 files changed, 47 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f12df5b..89d5bba 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1122,6 +1122,8 @@ enum ieee80211_sta_state {
-  * @aid: AID we assigned to the station if we're an AP
-  * @supp_rates: Bitmap of supported rates (per band)
-  * @ht_cap: HT capabilities of this STA; restricted to our own TX capabilities
-+ * @vht_cap: VHT capabilities of this STA; Not restricting any capabilities
-+ * 	of remote STA. Taking as is.
-  * @wme: indicates whether the STA supports WME. Only valid during AP-mode.
-  * @drv_priv: data area for driver use, will always be aligned to
-  *	sizeof(void *), size is determined in hw information.
-@@ -1134,6 +1136,7 @@ struct ieee80211_sta {
- 	u8 addr[ETH_ALEN];
- 	u16 aid;
- 	struct ieee80211_sta_ht_cap ht_cap;
-+	struct ieee80211_sta_vht_cap vht_cap;
- 	bool wme;
- 	u8 uapsd_queues;
- 	u8 max_sp;
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index a7dd110..4911202 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -8,6 +8,7 @@ mac80211-y := \
- 	wpa.o \
- 	scan.o offchannel.o \
- 	ht.o agg-tx.o agg-rx.o \
-+	vht.o \
- 	ibss.o \
- 	iface.o \
- 	rate.o \
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1fd7dfc..546da35 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1188,6 +1188,8 @@ struct ieee802_11_elems {
- 	u8 *wmm_param;
- 	struct ieee80211_ht_cap *ht_cap_elem;
- 	struct ieee80211_ht_operation *ht_operation;
-+	struct ieee80211_vht_cap *vht_cap_elem;
-+	struct ieee80211_vht_operation *vht_operation;
- 	struct ieee80211_meshconf_ie *mesh_config;
- 	u8 *mesh_id;
- 	u8 *peering;
-@@ -1416,6 +1418,11 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid);
+diff --git a/info.c b/info.c
+index f039bba..87b85c2 100644
+--- a/info.c
++++ b/info.c
+@@ -438,6 +438,12 @@ broken_combination:
+ 		if (nla_get_u32(tb_msg[NL80211_ATTR_FEATURE_FLAGS]) &
+ 				NL80211_FEATURE_HT_IBSS)
+ 			printf("\tDevice supports HT-IBSS.\n");
++		if (nla_get_u32(tb_msg[NL80211_ATTR_FEATURE_FLAGS]) &
++				NL80211_FEATURE_LOW_PRIORITY_SCAN)
++			printf("\tDevice supports low priority scan.\n");
++		if (nla_get_u32(tb_msg[NL80211_ATTR_FEATURE_FLAGS]) &
++				NL80211_FEATURE_SCAN_FLUSH)
++			printf("\tDevice supports scan flush.\n");
+ 	}
  
- u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
+ 	return NL_SKIP;
+diff --git a/nl80211.h b/nl80211.h
+index 2f38788..0a39e05 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -1506,6 +1506,14 @@ enum nl80211_attrs {
  
-+/* VHT */
-+void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
-+					 struct ieee80211_supported_band *sband,
-+					 struct ieee80211_vht_cap *vht_cap_ie,
-+					 struct ieee80211_sta_vht_cap *vht_cap);
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8cefc18..02f4ed5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2156,6 +2156,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	sta->supports_40mhz =
- 		sta->sta.ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 	NL80211_ATTR_USER_REG_HINT_TYPE,
  
-+	if (elems.vht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
-+		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+						    elems.vht_cap_elem,
-+						    &sta->sta.vht_cap);
++	NL80211_ATTR_CONN_FAILED_REASON,
 +
- 	rate_control_rate_init(sta);
++	NL80211_ATTR_SAE_DATA,
++
++	NL80211_ATTR_VHT_CAPABILITY,
++
++	NL80211_ATTR_SCAN_FLAGS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3b35356..af6c54d 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -741,6 +741,18 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			else
- 				elem_parse_failed = true;
- 			break;
-+		case WLAN_EID_VHT_CAPABILITY:
-+			if (elen >= sizeof(struct ieee80211_vht_cap))
-+				elems->vht_cap_elem = (void *)pos;
-+			else
-+				elem_parse_failed = true;
-+			break;
-+		case WLAN_EID_VHT_OPERATION:
-+			if (elen >= sizeof(struct ieee80211_vht_operation))
-+				elems->vht_operation = (void *)pos;
-+			else
-+				elem_parse_failed = true;
-+			break;
- 		case WLAN_EID_MESH_ID:
- 			elems->mesh_id = pos;
- 			elems->mesh_id_len = elen;
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-new file mode 100644
-index 0000000..18f584e
---- /dev/null
-+++ b/net/mac80211/vht.c
-@@ -0,0 +1,36 @@
-+/*
-+ * VHT handling
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2994,12 +3002,16 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_CELL_BASE_REG_HINTS: This driver has been tested
+  *	to work properly to suppport receiving regulatory hints from
+  *	cellular base stations.
++ * @NL80211_FEATURE_LOW_PRIORITY_SCAN: This driver supports low priority scan
++ * @NL80211_FEATURE_SCAN_FLUSH: Scan flush is supported
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
+ 	NL80211_FEATURE_HT_IBSS		= 1 << 1,
+ 	NL80211_FEATURE_INACTIVITY_TIMER = 1 << 2,
+ 	NL80211_FEATURE_CELL_BASE_REG_HINTS = 1 << 3,
++	NL80211_FEATURE_LOW_PRIORITY_SCAN		= 1 << 6,
++	NL80211_FEATURE_SCAN_FLUSH			= 1 << 7,
+ };
+ 
+ /**
+@@ -3023,4 +3035,19 @@ enum nl80211_probe_resp_offload_support_attr {
+ 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U =	1<<3,
+ };
+ 
++/**
++ * enum nl80211_scan_flags -  scan request control flags
 + *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
++ * Scan request control flags are used to control the handling
++ * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
++ * requests.
++ *
++ * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
++ * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
 + */
++enum nl80211_scan_flags {
++	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
++	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
++};
 +
-+#include <linux/ieee80211.h>
-+#include <linux/export.h>
-+#include <net/mac80211.h>
-+#include "ieee80211_i.h"
+ #endif /* __LINUX_NL80211_H */
+diff --git a/scan.c b/scan.c
+index bb84a67..85fb5a9 100644
+--- a/scan.c
++++ b/scan.c
+@@ -73,6 +73,7 @@ static int handle_scan(struct nl80211_state *state,
+ 	bool passive = false, have_ssids = false, have_freqs = false;
+ 	size_t tmp;
+ 	unsigned char *ies;
++	int flags = 0;
+ 
+ 	ssids = nlmsg_alloc();
+ 	if (!ssids)
+@@ -102,6 +103,14 @@ static int handle_scan(struct nl80211_state *state,
+ 				parse = DONE;
+ 				passive = true;
+ 				break;
++			} else if (strcmp(argv[i], "lowpri") == 0) {
++				parse = DONE;
++				flags |= NL80211_SCAN_FLAG_LOW_PRIORITY;
++				break;
++			} else if (strcmp(argv[i], "flush") == 0) {
++				parse = DONE;
++				flags |= NL80211_SCAN_FLAG_FLUSH;
++				break;
+ 			}
+ 		case DONE:
+ 			return 1;
+@@ -136,6 +145,8 @@ static int handle_scan(struct nl80211_state *state,
+ 
+ 	if (have_freqs)
+ 		nla_put_nested(msg, NL80211_ATTR_SCAN_FREQUENCIES, freqs);
++	if (flags)
++		NLA_PUT_U32(msg, NL80211_ATTR_SCAN_FLAGS, flags);
+ 
+ 	err = 0;
+  nla_put_failure:
+@@ -1344,7 +1355,7 @@ static int handle_scan_combined(struct nl80211_state *state,
+ 	dump_argv[0] = argv[0];
+ 	return handle_cmd(state, id, dump_argc, dump_argv);
+ }
+-TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [ssid <ssid>*|passive]", 0, 0,
++TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [ssid <ssid>*|passive|lowpri|flush]", 0, 0,
+ 	 CIB_NETDEV, handle_scan_combined,
+ 	 "Scan on the given frequencies and probe for the given SSIDs\n"
+ 	 "(or wildcard if not given) unless passive scanning is requested.\n"
+@@ -1354,7 +1365,8 @@ COMMAND(scan, dump, "[-u]",
+ 	NL80211_CMD_GET_SCAN, NLM_F_DUMP, CIB_NETDEV, handle_scan_dump,
+ 	"Dump the current scan results. If -u is specified, print unknown\n"
+ 	"data in scan results.");
+-COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [ssid <ssid>*|passive]",
++COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [ssid <ssid>*|passive|lowpri|flush]",
+ 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
+ 	 "Trigger a scan on the given frequencies with probing for the given\n"
 +
-+
-+void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
-+					 struct ieee80211_supported_band *sband,
-+					 struct ieee80211_vht_cap *vht_cap_ie,
-+					 struct ieee80211_sta_vht_cap *vht_cap)
-+{
-+	if (WARN_ON_ONCE(!vht_cap))
-+		return;
-+
-+	memset(vht_cap, 0, sizeof(*vht_cap));
-+
-+	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
-+		return;
-+
-+	vht_cap->vht_supported = true;
-+
-+	vht_cap->cap = le16_to_cpu(vht_cap_ie->vht_cap_info);
-+
-+	/* Copy peer MCS info, the driver might need them. */
-+	memcpy((u8 *)&vht_cap->vht_mcs,
-+	       (u8 *)&vht_cap_ie->supp_mcs,
-+	       sizeof(struct ieee80211_vht_mcs_info));
-+}
+ 	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
+-- 
+1.7.7.3
+
