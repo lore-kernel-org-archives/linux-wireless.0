@@ -1,135 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:35982 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752532Ab2JTCUK (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:63715 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753995Ab2JPGkA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 22:20:10 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
+	Tue, 16 Oct 2012 02:40:00 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/7] mwifiex: minor cleanup and a fix in scan semaphore usage
-Date: Fri, 19 Oct 2012 19:19:17 -0700
-Message-Id: <1350699561-852-4-git-send-email-bzhao@marvell.com> (sfid-20121020_042024_557753_86207961)
-In-Reply-To: <1350699561-852-1-git-send-email-bzhao@marvell.com>
-References: <1350699561-852-1-git-send-email-bzhao@marvell.com>
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv3] nl/cfg80211: force scan using an AP vif if requested
+Date: Tue, 16 Oct 2012 08:39:22 +0200
+Message-Id: <1350369562-24733-1-git-send-email-ordex@autistici.org> (sfid-20121016_084006_252788_97662999)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+If the user wants to scan using a vif configured as AP, cfg80211 must give him a
+chance to do it, even if this will disrupt the stations performance due to
+off-channel scanning. To do so, this patch adds a 'force' flag to the
+SCAN_TRIGGER command which tells cfg80211 to perform the scanning operation even
+if the vif is an AP and the beaconing has already started.
 
-mwifiex_request_scan() takes care of synchronous internal scan
-performed by driver during association.
-Currently the semaphore acquired for the scan is unnecessarily
-released at the end of different paths. Also, failure paths
-returning error code other than "-1" are not considered.
-
-We will release it at the end of routine to fix above issues.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c    |    1 -
- drivers/net/wireless/mwifiex/init.c        |    5 -----
- drivers/net/wireless/mwifiex/main.h        |    1 -
- drivers/net/wireless/mwifiex/scan.c        |   10 +---------
- drivers/net/wireless/mwifiex/sta_cmdresp.c |    4 ----
- 5 files changed, 1 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 9c8d0b7..4faef1c 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2122,7 +2122,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	}
+v2:
+ - Rebased on latest mac80211-next/master
+v3:
+ - Introduced nl80211_feature flag to advertise this feature to the userspace
+   and to allow drivers to do not support it
+
+
+ include/linux/nl80211.h |  8 ++++++++
+ net/mac80211/cfg.c      | 11 ++++++++++-
+ net/mac80211/main.c     |  4 +++-
+ 3 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 0e6277a..617d0fb 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -3050,6 +3050,7 @@ enum nl80211_ap_sme_features {
+  *	mode
+  * @NL80211_FEATURE_LOW_PRIORITY_SCAN: This driver supports low priority scan
+  * @NL80211_FEATURE_SCAN_FLUSH: Scan flush is supported
++ * @NL80211_FEATURE_AP_SCAN: Support scanning using an AP vif
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3060,6 +3061,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SAE				= 1 << 5,
+ 	NL80211_FEATURE_LOW_PRIORITY_SCAN		= 1 << 6,
+ 	NL80211_FEATURE_SCAN_FLUSH			= 1 << 7,
++	NL80211_FEATURE_AP_SCAN				= 1 << 8,
+ };
  
- 	sema_init(&priv->async_sem, 1);
--	priv->scan_pending_on_block = false;
+ /**
+@@ -3103,10 +3105,16 @@ enum nl80211_connect_failed_reason {
+  *
+  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+  * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
++ * @NL80211_SCAN_FLAG_AP: force a scan even if the interface is configured
++ *	as AP and the beaconing has already been configured. This attribute is
++ *	dangerous because will destroy stations performance as a lot of frames
++ *	will be lost while scanning off-channel, therefore it must be used only
++ *	when really needed
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
+ 	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
++	NL80211_SCAN_FLAG_AP				= 1<<2,
+ };
  
- 	dev_dbg(adapter->dev, "info: %s: Marvell 802.11 Adapter\n", dev->name);
- 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 37f2d95..482faac 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -97,11 +97,6 @@ static void scan_delay_timer_fn(unsigned long data)
- 			kfree(priv->user_scan_cfg);
- 			priv->user_scan_cfg = NULL;
- 		}
--
--		if (priv->scan_pending_on_block) {
--			priv->scan_pending_on_block = false;
--			up(&priv->async_sem);
--		}
- 		goto done;
- 	}
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 0b747ec..4ed46b6 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -482,7 +482,6 @@ struct mwifiex_private {
- 	u8 nick_name[16];
- 	u16 current_key_index;
- 	struct semaphore async_sem;
--	u8 scan_pending_on_block;
- 	u8 report_scan_result;
- 	struct cfg80211_scan_request *scan_request;
- 	struct mwifiex_user_scan_cfg *user_scan_cfg;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 8137dfc..b9d41db 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1762,10 +1762,6 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 		}
- 		if (priv->report_scan_result)
- 			priv->report_scan_result = false;
--		if (priv->scan_pending_on_block) {
--			priv->scan_pending_on_block = false;
--			up(&priv->async_sem);
--		}
- 
- 		if (priv->user_scan_cfg) {
- 			if (priv->scan_request) {
-@@ -1911,7 +1907,6 @@ int mwifiex_request_scan(struct mwifiex_private *priv,
- 			__func__);
- 		return -1;
- 	}
--	priv->scan_pending_on_block = true;
- 
- 	priv->adapter->scan_wait_q_woken = false;
- 
-@@ -1925,10 +1920,7 @@ int mwifiex_request_scan(struct mwifiex_private *priv,
- 	if (!ret)
- 		ret = mwifiex_wait_queue_complete(priv->adapter);
- 
--	if (ret == -1) {
--		priv->scan_pending_on_block = false;
--		up(&priv->async_sem);
--	}
-+	up(&priv->async_sem);
- 
- 	return ret;
- }
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 09e6a26..65c12eb 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -85,10 +85,6 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
- 		if (priv->report_scan_result)
- 			priv->report_scan_result = false;
--		if (priv->scan_pending_on_block) {
--			priv->scan_pending_on_block = false;
--			up(&priv->async_sem);
--		}
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ed27988..c45c62e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1855,7 +1855,16 @@ static int ieee80211_scan(struct wiphy *wiphy,
+ 		 * beaconing hasn't been configured yet
+ 		 */
+ 	case NL80211_IFTYPE_AP:
+-		if (sdata->u.ap.beacon)
++		/*
++		 * If the scan has been forced (and the driver supports
++		 * forcing), don't care about being beaconing already.
++		 * This will create problems to the attached stations (e.g. all
++		 * the  frames sent while scanning on other channel will be
++		 * lost)
++		 */
++		if (sdata->u.ap.beacon &&
++		    (!(wiphy->features & NL80211_FEATURE_AP_SCAN) ||
++		     !(req->flags & NL80211_SCAN_FLAG_AP)))
+ 			return -EOPNOTSUPP;
  		break;
+ 	default:
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index ba5a232..c42094b 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -603,7 +603,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 			   NL80211_FEATURE_HT_IBSS;
  
- 	case HostCmd_CMD_MAC_CONTROL:
+ 	if (!ops->hw_scan)
+-		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN;
++		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
++				   NL80211_FEATURE_AP_SCAN;
++
+ 
+ 	if (!ops->set_key)
+ 		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
 -- 
-1.7.0.2
+1.7.12.3
 
