@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53241 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752651Ab2JDWGV (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:47067 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752918Ab2JPVW2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 18:06:21 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q94M6IxJ019709
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 4 Oct 2012 15:06:19 -0700
-Message-ID: <506E0859.906@candelatech.com> (sfid-20121005_000629_667091_6E36A839)
-Date: Thu, 04 Oct 2012 15:06:17 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 16 Oct 2012 17:22:28 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so3242611bkc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2012 14:22:26 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: Re: [PATCH v2 0/4] Driver for the ar5523 chipset
+Date: Tue, 16 Oct 2012 23:22:20 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org, hch@lst.de,
+	s.L-H@gmx.de
+References: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com>
+In-Reply-To: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Questions on direct-cabling 3x3 MIMO systems (ath9k)
-References: <506DDA1D.1090106@candelatech.com>
-In-Reply-To: <506DDA1D.1090106@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201210162322.20703.chunkeey@googlemail.com> (sfid-20121016_232232_026487_4CAC4492)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2012 11:49 AM, Ben Greear wrote:
-> I finally got my 3-attenuator system up and running,
-> and I'm starting to do some tests.
->
-> AP and Station are running 3.5.5+, ath9k ar9380 NICs.
-> Channel 157, HT40, no encryption.
->
-> One question right away:  Should I expect decent performance
-> if I directly cable 2 wifi NICs, where one is acting as AP and
-> the other as station?  I'm cabling ch0 to ch0, ch1 to ch1, ch2 to ch2.
+On Tuesday, October 16, 2012 09:29:25 PM Pontus Fuchs wrote:
+> Some time ago I found an old USB wireless dongle in my drawer. I was
+> surprised it wasn't supported in Linux. Google gave me an old
+> unfinished driver created by Christoph Hellwig. Armed with some
+> spare time and naivity I picked up where Christoph left in 2007 and
+> now it's actually working pretty fine. It does not crash for me and
+> throughput is decent.
+> 
+> It's based on the FreeBSD driver, which in turn is based on the
+> reverse engineered Windows driver, hence a very limited feature set.
+> Not even HW crypto offload is supported. But at least there is a
+> firmware which has a suitable license:
+> 
+> http://www.freebsd.org/cgi/cvsweb.cgi/src/sys/contrib/dev/uath/ar5523.bin.uu
+> 
+> Changes v1 to v2:
+> 
+> * Bugfix: Avoid % 512 transfer sizes on TX as the FW will hang.
+Have you tried setting "urb->transfer_flags |= URB_ZERO_PACKET;"
+to your outgoing urbs? This might fix the hang as well and you
+don't need any ugly skb_put.
 
-Well, to try to answer my own question:
-
-I mainly needed to tune socket tx/rx-buffer sizes, and some similar
-things to get the performance up to expected rates, so it was
-mostly user error.
-
-Now, I'm still seeing lots of strange issues when running through
-the attenuator with lots of attenuation, but at least when things
-are configured for low amounts of attenuation, I get good performance
-(330+Mbps UDP throughput).
-
-Off to look at excessive crc errors...
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+	Chr
