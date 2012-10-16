@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2280 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933406Ab2JDQ2C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 12:28:02 -0400
-Message-ID: <506DB904.9000002@broadcom.com> (sfid-20121004_182808_711686_346043AC)
-Date: Thu, 4 Oct 2012 18:27:48 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [patch 3/3] brcmfmac: Using zero instead of NULL
-References: <20121003060713.GC3802@elgon.mountain>
-In-Reply-To: <20121003060713.GC3802@elgon.mountain>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:43745 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755288Ab2JPSTE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2012 14:19:04 -0400
+Message-ID: <1350411578.10177.6.camel@jlt4.sipsolutions.net> (sfid-20121016_201909_806201_FE4FD4BB)
+Subject: Re: [RFC] mac80211: connect with HT20 if HT40 is not permitted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Paul Stewart <pstew@chromium.org>
+Date: Tue, 16 Oct 2012 20:19:38 +0200
+In-Reply-To: <1349100121.10330.36.camel@jlt4.sipsolutions.net> (sfid-20121001_160132_854322_0F7EDEE5)
+References: <1349100121.10330.36.camel@jlt4.sipsolutions.net>
+	 (sfid-20121001_160132_854322_0F7EDEE5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/03/2012 08:07 AM, Dan Carpenter wrote:
-> Sparse complains that we use zero instead of NULL here.  In fact, the
-> initialization is wrong and should be removed.  Doing these kinds of
-> bogus initializations means that GCC can't detect unitialized variables
-> and leads to bugs.
+On Mon, 2012-10-01 at 16:02 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Some changes to fix issues with HT40 APs in Korea
+> and follow-up changes to allow using HT40 even if
+> the local regulatory database disallows it caused
+> issues with iwlwifi (and could cause issues with
+> other devices); iwlwifi firmware would assert if
+> you tried to connect to an AP that has an invalid
+> configuration (e.g. using HT40- on channel 140.)
+> 
+> Fix this, while avoiding the "Korean AP" issue by
+> disabling HT40 and advertising HT20 to the AP
+> when connecting.
 
-We already had it fixed internally, but your change is more sensible. I 
-had it reviewed internally and plan to send it to John for 3.8 (ie. 
-wireless-next after merge window). Let me know if that is ok with you.
+No comments, so I'm applying this :)
 
-Gr. AvS
+johannes
 
