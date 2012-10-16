@@ -1,49 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44505 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755391Ab2JELpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 07:45:43 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/7] rt2800: limit TX_PWR_CFG_ values to 0xc
-Date: Fri,  5 Oct 2012 13:44:10 +0200
-Message-Id: <1349437455-18754-2-git-send-email-sgruszka@redhat.com> (sfid-20121005_134547_415730_1332DE1B)
-In-Reply-To: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
-References: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:43730 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755599Ab2JPSPs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Oct 2012 14:15:48 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 4/8] iwlwifi: wipe out the status of the SCD when we disable a queue
+Date: Tue, 16 Oct 2012 20:16:16 +0200
+Message-Id: <1350411380-2391-5-git-send-email-johannes@sipsolutions.net> (sfid-20121016_201554_362902_BF40059C)
+In-Reply-To: <1350411380-2391-1-git-send-email-johannes@sipsolutions.net>
+References: <1350411380-2391-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on AsicAdjustTxPower function from vendor driver
-(2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO)
-limit per rate TX power values we program into TX_PWR_CFG_ registers.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Note that on some configurations (devices/rates) is allowed to use
-bigger values than 0xc, but we use safe maximum value for now. Further
-work need to be done to allow use bigger values than 0xc.
+When we disable a queue, we don't want the SCD to remember anything
+about this queue (what packet was transmitted but not acked, what
+packed was acked etc...).
+Wipe out all this data in its SRAM.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Constify the arguments to iwl_write_targ_mem_dwords on the way.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-io.c   |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-io.h   |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-prph.h |    3 +++
+ drivers/net/wireless/iwlwifi/pcie/tx.c  |    6 ++++++
+ 4 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index a849a39..f3060d3 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2563,7 +2563,8 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
- 	} else
- 		reg_limit = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index 3dfebfb..54c41b4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -327,11 +327,11 @@ u32 iwl_read_targ_mem(struct iwl_trans *trans, u32 addr)
+ EXPORT_SYMBOL_GPL(iwl_read_targ_mem);
  
--	return txpower + delta - reg_limit;
-+	txpower = max(0, txpower + delta - reg_limit);
-+	return min_t(u8, txpower, 0xc);
+ int _iwl_write_targ_mem_dwords(struct iwl_trans *trans, u32 addr,
+-			       void *buf, int dwords)
++			       const void *buf, int dwords)
+ {
+ 	unsigned long flags;
+ 	int offs, result = 0;
+-	u32 *vals = buf;
++	const u32 *vals = buf;
+ 
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+ 	if (likely(iwl_grab_nic_access(trans))) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 50d3819..e1aa69f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -87,7 +87,7 @@ void _iwl_read_targ_mem_dwords(struct iwl_trans *trans, u32 addr,
+ 	} while (0)
+ 
+ int _iwl_write_targ_mem_dwords(struct iwl_trans *trans, u32 addr,
+-			       void *buf, int dwords);
++			       const void *buf, int dwords);
+ 
+ u32 iwl_read_targ_mem(struct iwl_trans *trans, u32 addr);
+ int iwl_write_targ_mem(struct iwl_trans *trans, u32 addr, u32 val);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 9253ef1..c3a4bb4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -213,6 +213,9 @@
+ #define SCD_CONTEXT_QUEUE_OFFSET(x)\
+ 	(SCD_CONTEXT_MEM_LOWER_BOUND + ((x) * 8))
+ 
++#define SCD_TX_STTS_QUEUE_OFFSET(x)\
++	(SCD_TX_STTS_MEM_LOWER_BOUND + ((x) * 16))
++
+ #define SCD_TRANS_TBL_OFFSET_QUEUE(x) \
+ 	((SCD_TRANS_TBL_MEM_LOWER_BOUND + ((x) * 2)) & 0xfffc)
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index b50d1b4..f3c23af 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -481,6 +481,9 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u16 rd_ptr, wr_ptr;
++	u32 stts_addr = trans_pcie->scd_base_addr +
++			SCD_TX_STTS_QUEUE_OFFSET(txq_id);
++	static const u32 zero_val[4] = {};
+ 	int n_bd = trans_pcie->txq[txq_id].q.n_bd;
+ 
+ 	if (!test_and_clear_bit(txq_id, trans_pcie->queue_used)) {
+@@ -494,6 +497,9 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
+ 	WARN_ONCE(rd_ptr != wr_ptr, "queue %d isn't empty: [%d,%d]",
+ 		  txq_id, rd_ptr, wr_ptr);
+ 
++	_iwl_write_targ_mem_dwords(trans, stts_addr,
++				   zero_val, ARRAY_SIZE(zero_val));
++
+ 	iwl_txq_set_inactive(trans, txq_id);
+ 	IWL_DEBUG_TX_QUEUES(trans, "Deactivate queue %d\n", txq_id);
  }
- 
- static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
 -- 
-1.7.1
+1.7.10.4
 
