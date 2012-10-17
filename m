@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46309 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758109Ab2JXKMv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 06:12:51 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/4] nl80211: move "can set channel" check
-Date: Wed, 24 Oct 2012 12:13:20 +0200
-Message-Id: <1351073603-11616-2-git-send-email-johannes@sipsolutions.net> (sfid-20121024_121259_523145_21986C72)
-In-Reply-To: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>
-References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail.neratec.com ([80.75.119.105]:57876 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932325Ab2JQQ17 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2012 12:27:59 -0400
+Message-ID: <507EDAD7.2030807@neratec.com> (sfid-20121017_182803_086761_5541BF8A)
+Date: Wed, 17 Oct 2012 18:20:39 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Victor Goldenshtein <victorg@ti.com>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection command/event
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>  <1350226137-13704-2-git-send-email-victorg@ti.com> <1350414099.10177.13.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1350414099.10177.13.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 10/16/2012 09:01 PM, Johannes Berg wrote:
+> [...]
+> 
+> It also raises a question: can you do radar detection properly while
+> doing channel TDM (multi-channel)? I guess not?
+> 
+> johannes
+> 
+At least ETSI differentiates between CAC and Off-Channel CAC, with
+dedicated requirements for times and detection probability for
+continuously monitoring the operating channel vs. accumulated periods
+listening for radars on a different one.
 
-Setting the wdev to NULL when the channel can't be
-set for that interface type (to treat the channel
-setting for the wiphy/monitor) currently works, but
-is confusing in the code if netdev/wdev aren't both
-set/unset in the same way. Move the check whether
-the channel can be set to where it's needed so that
-wdev and netdev are always both assigned or NULL.
+OC-CAC is considered as an optional optimization to enable switching to
+a new channel without the need to perform a CAC there. Weighting the
+potential gain vs. the required effort to support that feature, I'd
+assume OC-CAC is not a hot topic (maybe even not feasible in the long run).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8c08578..879ca62 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1516,10 +1516,8 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		result = 0;
- 
- 		mutex_lock(&rdev->mtx);
--	} else if (nl80211_can_set_dev_channel(netdev->ieee80211_ptr))
-+	} else
- 		wdev = netdev->ieee80211_ptr;
--	else
--		wdev = NULL;
- 
- 	/*
- 	 * end workaround code, by now the rdev is available
-@@ -1579,7 +1577,9 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
--		result = __nl80211_set_channel(rdev, wdev, info);
-+		result = __nl80211_set_channel(rdev,
-+				nl80211_can_set_dev_channel(wdev) ? wdev : NULL,
-+				info);
- 		if (result)
- 			goto bad_res;
- 	}
--- 
-1.7.10.4
 
