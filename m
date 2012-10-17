@@ -1,25 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43723 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755367Ab2JPSPq (ORCPT
+Received: from hotel311.server4you.de ([85.25.146.15]:43225 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756034Ab2JQNYY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 14:15:46 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TOBg9-0004y0-Ao
-	for linux-wireless@vger.kernel.org; Tue, 16 Oct 2012 20:15:45 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/8] iwlwifi 3.8 updates
-Date: Tue, 16 Oct 2012 20:16:12 +0200
-Message-Id: <1350411380-2391-1-git-send-email-johannes@sipsolutions.net> (sfid-20121016_201550_342792_0F6630FF)
+	Wed, 17 Oct 2012 09:24:24 -0400
+Message-ID: <507EB186.40506@monom.org> (sfid-20121017_152430_002227_C1B1CCE5)
+Date: Wed, 17 Oct 2012 15:24:22 +0200
+From: Daniel Wagner <wagi@monom.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: REMINDER: Linux wireless networking summit, Barcelona 8-9 November
+References: <20121015193648.GF16817@tuxdriver.com>
+In-Reply-To: <20121015193648.GF16817@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'll send a pull request once the wireless-next/net-next
-situation is sorted out, but until then here are a few
-patches I'm planning to include in that pull request.
+Hi John,
 
-johannes
+On 10/15/2012 09:36 PM, John W. Linville wrote:
+> Just a reminder...there will be a Linux wireless networking mini-summit
+> event coming soon.  It will be on 8-9 November in Barcelona, just
+> after LinuxCon Europe.  If you haven't already made plans, you had
+> better get moving!
+>
+> Attendees of the wireless mini-summit must also register for LinuxCon
+> Europe.  More information is available here:
+>
+> 	http://wireless.kernel.org/en/developers/Summits/Barcelona-2012
+>
+> Please notice that there is a wiki there with schedules for discussion
+> topics.  If you have suggestions or want other changes, please make
+> them and/or let us know here.
+
+I changed the "a short overview what we do in ConnMan" to "ConnMan and 
+wpa_supplicant" which is probably a more attractive title. 
+Unfortunately, Patrik Flykt wont be there.
+
+cheers,
+daniel
 
