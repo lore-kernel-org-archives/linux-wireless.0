@@ -1,69 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:53354 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932279Ab2JDRnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 13:43:03 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] ath_hw: Use common REG_WRITE parameter order
-Date: Thu, 04 Oct 2012 19:42:59 +0200
-Message-ID: <6280245.pW1SF1FHQv@bentobox> (sfid-20121004_194318_368614_ABC13789)
-In-Reply-To: <CAB=NE6XrTVQuAqGqD2wjyjN6ynyfB+yHXqBcAhRgOn=njBpAuA@mail.gmail.com>
-References: <1349366701-23154-1-git-send-email-sven@narfation.org> <CAB=NE6XrTVQuAqGqD2wjyjN6ynyfB+yHXqBcAhRgOn=njBpAuA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart3327671.PMkRRnuHg5"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Received: from he.sipsolutions.net ([78.46.109.217]:46580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756630Ab2JQLy4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2012 07:54:56 -0400
+Message-ID: <1350474926.10728.17.camel@jlt4.sipsolutions.net> (sfid-20121017_135459_509718_716C8DEC)
+Subject: pull-request: mac80211 2012-10-17
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 17 Oct 2012 13:55:26 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-uSd+X2NTkiktlhjP5l72"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---nextPart3327671.PMkRRnuHg5
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+--=-uSd+X2NTkiktlhjP5l72
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thursday 04 October 2012 10:29:59 Luis R. Rodriguez wrote:
-> On Thu, Oct 4, 2012 at 9:05 AM, Sven Eckelmann <sven@narfation.org> wrote:
-> > All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
-> > "register" and "value". hw.c is the only file using the order "ah",
-> > "value" and "register". This inconsistent definition can easily lead to
-> > implementation errors.
-> > 
-> > Signed-off-by: Sven Eckelmann <sven@narfation.org>
-> 
-> Good catch! But can you resend specifying in your commit log that this
-> change is a no-op?
+Hi John,
 
-I really don't know what you want from me here.
+Please pull my mac80211.git tree (as below) to get three fixes for 3.7,
+one from Stanislaw for a state mismatch between cfg80211 and mac80211
+that causes crashes, one from Jouni to fix a bitmask in CCMP and one
+from myself to disable HT40 if not permitted which ultimately fixes a
+sysassert in iwlwifi.
 
-> Also it may help the reader for you to git grep and
-> show the other REG_WRITE() definitions on the other c files within the
-> commit log.
+Thanks,
+johannes
 
-Ehrm, ok.
 
-Kind regards,
-	Sven
---nextPart3327671.PMkRRnuHg5
+
+
+The following changes since commit c3e7724b6bc2f25e46c38dbe68f09d71fafeafb8=
+:
+
+  mac80211: use ieee80211_free_txskb to fix possible skb leaks (2012-10-08 =
+15:06:05 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 3a40414f826a8f1096d9b94c4a53ef91b25ba28d:
+
+  mac80211: connect with HT20 if HT40 is not permitted (2012-10-17 13:46:38=
+ +0200)
+
+----------------------------------------------------------------
+Johannes Berg (2):
+      Merge remote-tracking branch 'wireless/master' into mac80211
+      mac80211: connect with HT20 if HT40 is not permitted
+
+Jouni Malinen (1):
+      mac80211: Fix FC masking in BIP AAD generation
+
+Stanislaw Gruszka (1):
+      cfg80211/mac80211: avoid state mishmash on deauth
+
+ include/net/cfg80211.h |    1 +
+ net/mac80211/mlme.c    |   35 +++++++++++++++++++++++------------
+ net/mac80211/wpa.c     |   11 ++++++++---
+ net/wireless/mlme.c    |   12 +++---------
+ 4 files changed, 35 insertions(+), 24 deletions(-)
+
+
+--=-uSd+X2NTkiktlhjP5l72
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIcBAABCgAGBQJQbcqjAAoJEF2HCgfBJntGgRUQAJILcboPdNndZCVueFEDbvMa
-6iKzKaTaFjqrlGEkvn55BXpXQSh1rHD9kZufJXEvzgkjDJrKmD2R+stL9Oljx2Ob
-ZE/AVB5xXIXhscgl21dgD427D9w+1INnYb1f7/+bJPNNtGE9dV41TkFI8DyBdi5E
-mz8n/cHB3zngw4qc3u5u8qkz+NR48+kkbein+RuRGVOPleFFiQVCq8glSUa8q0YQ
-uCAleNpip6YRGFinGoS4nal6jjJAsCkoQERknJP7UXj/6+kv7+ymBkPbNW5qfRBJ
-FrPm4WC3TpWaeSJuje/hl+TClmr9ZpZ8HoE42pRzrUL3WlhxLfLe4Sadm1O98O05
-P47PpADTm8FrIZhL/o8xak38X2OUXr+brJopjcJjefqUBpg7MxH1D1tp1aHzHeiy
-/enDbvD7kUWGKqDMx2gLY5tmQBEJJP+RGoaLtJpWDYa6RUukk5XgaGAyRf7H9/br
-Uvcg/aIC8MeQwCkYInmiIrkRviv2Vov5SYCzkl3xznlkeRm8Ze5M5H9eL3QoINfw
-lPtfkHrsYfERZIl0zIgGjukxbZn3wTnWaUKHRCVdvxC4VLrCQvyvM3PYZdb3EVtu
-7/N1j+dVjiTk3+oEeT6nHGWdFFOrkaq97y4ssKFiTnKk5zLdjK9gH+OC+omHGFts
-HtIKHbXIaYRMdR/BMBei
-=Qmq8
+iQIcBAABCAAGBQJQfpyuAAoJEDBSmw7B7bqrta8P/An9BfnrqIdia54R0RZuexMa
+T9QFse8W4tZqoHP+FQpLjnxunqlSvbvY2hjc22npno+jY5bpbiMan96d2c4VhGnK
+5yFaUewHjxTfAm6wU5mJgg45oOEDdDjHU9ze6xGUMst8paWOzyY7/wourHV7bBui
+9MawtJGzkUblZSZVxPZQOv0pecStU4Jw0KPVKpb/h7Vls/FikdrqMG6hxE2agvOD
+QnQ+XUSQWORNhsolwjMwdXYx3Ioc4iGcJyknOHfG0xiO/XMXpWK3RDECB2hJCrVQ
+rYL8dFvHbEksrY7l45KyyNN2yZSxfotgeY5ajZmzXes86Xn5KFwwZBWTzNhX9+wM
+1zZrS4nSygD1qErsvIEA9A8pPzJuVUoWPVhwz63tX/n9dDTo2XTuhFTXQcBesCwJ
+b+ZEJy5lIhingPIMbhy3qr/soMbhlVMEqQl5n5IOsnQmWTWgafB3XmvD2ahNaLY1
+wXguTP5yo3NAmegSsv+22jhGex6Vx65Cciro7jilWn1ycsDpPbOexCEM9P7pkrqg
+IxKkLZ/VY1JgjjmeqCtW3cvO41F6GXmpE9VIZ6na3VnwKSB4IhCMVZTDP9jXptSi
+3rdXdg8qcpEpr8z+2nUHE6++l1tCuydI447LP2Af20Oy9kauDhWA0D6OVArguMYr
+bcs4iUXLtYqIO8bfqK5n
+=Mft4
 -----END PGP SIGNATURE-----
 
---nextPart3327671.PMkRRnuHg5--
+--=-uSd+X2NTkiktlhjP5l72--
 
