@@ -1,90 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:37963 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753202Ab2JNUOK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46573 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754374Ab2JQLvw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Oct 2012 16:14:10 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so2144957bkc.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Oct 2012 13:14:09 -0700 (PDT)
-Subject: [RFC] rtlwifi: fix in_ep = in_ep_num mishap in _rtl_usb_init_rx
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org, Joshua.Roys@gtri.gatech.edu
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 14 Oct 2012 22:13:56 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201210142213.56197.chunkeey@googlemail.com> (sfid-20121014_221414_915145_DB95E433)
+	Wed, 17 Oct 2012 07:51:52 -0400
+Message-ID: <1350474742.10728.14.camel@jlt4.sipsolutions.net> (sfid-20121017_135157_227600_D8E71CA9)
+Subject: pull-request: iwlwifi 2012-10-17
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 17 Oct 2012 13:52:22 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-Y8OZb/S4Fi+UrSSdItRd"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-in_ep and in_ep_num should not be the same as
-a device can have a different in_ep than "1".
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-Note:
-This patch is related to:
-"[PATCH 3/9] rtlwifi: fix the selection of the bulk in endpoint"
+--=-Y8OZb/S4Fi+UrSSdItRd
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-However, it would be much better if we can get rid of
-in_ep_num and define an in_ep array so the rtlwifi
-frameworks knows which EPs to scan. But this could be
-"too much" of an overkill, so another solution would
-be to just have a single in_ep. 
+Hi John,
 
-Larry, do you know of any hardware which has two in endpoints?
+Please pull my iwlwifi.git tree to get a single fix (for RH bugzilla
+770484).
 
-Joshua, I get as far as "blinking LEDs". But the PHY/RF and RX
-seem to need more work, or did you have some success with it
-and it's just the HW combination/refactoring that broke it?!
+johannes
 
-Regards,
-	Chr
----
- rtlwifi/rtl8192cu/sw.c |    1 +
- rtlwifi/usb.c          |    3 ++-
- rtlwifi/wifi.h         |    1 +
- 3 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/rtlwifi/rtl8192cu/sw.c b/rtlwifi/rtl8192cu/sw.c
-index 9970c2b..24b6f69 100644
---- a/rtlwifi/rtl8192cu/sw.c
-+++ b/rtlwifi/rtl8192cu/sw.c
-@@ -151,6 +151,7 @@ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
- 
- static struct rtl_hal_usbint_cfg rtl92cu_interface_cfg = {
- 	/* rx */
-+	.in_ep = RTL92C_USB_BULK_IN_NUM,
- 	.in_ep_num = RTL92C_USB_BULK_IN_NUM,
- 	.rx_urb_num = RTL92C_NUM_RX_URBS,
- 	.rx_max_size = RTL92C_SIZE_MAX_RX_BUFFER,
-diff --git a/rtlwifi/usb.c b/rtlwifi/usb.c
-index 31db282..d7744e1 100644
---- a/rtlwifi/usb.c
-+++ b/rtlwifi/usb.c
-@@ -306,7 +306,8 @@ static int _rtl_usb_init_rx(struct ieee80211_hw *hw)
- 
- 	rtlusb->rx_max_size = rtlpriv->cfg->usb_interface_cfg->rx_max_size;
- 	rtlusb->rx_urb_num = rtlpriv->cfg->usb_interface_cfg->rx_urb_num;
--	rtlusb->in_ep = rtlpriv->cfg->usb_interface_cfg->in_ep_num;
-+	rtlusb->in_ep = rtlpriv->cfg->usb_interface_cfg->in_ep;
-+	rtlusb->in_ep_nums = rtlpriv->cfg->usb_interface_cfg->in_ep_num;
- 	rtlusb->usb_rx_hdl = rtlpriv->cfg->usb_interface_cfg->usb_rx_hdl;
- 	rtlusb->usb_rx_segregate_hdl =
- 		rtlpriv->cfg->usb_interface_cfg->usb_rx_segregate_hdl;
-diff --git a/rtlwifi/wifi.h b/rtlwifi/wifi.h
-index ad02203..882b870 100644
---- a/rtlwifi/wifi.h
-+++ b/rtlwifi/wifi.h
-@@ -1550,6 +1550,7 @@ struct rtl_mod_params {
- 
- struct rtl_hal_usbint_cfg {
- 	/* data - rx */
-+	u32 in_ep;
- 	u32 in_ep_num;
- 	u32 rx_urb_num;
- 	u32 rx_max_size;
--- 
-1.7.10.4
+The following changes since commit bf11315eeda510ea4fc1a2bf972d8155d31d89b4=
+:
+
+  net/wireless: ipw2200: Fix panic occurring in ipw_handle_promiscuous_tx()=
+ (2012-10-15 14:45:52 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
+or-john
+
+for you to fetch changes up to 8f7b8db6e0557c8437adf9371e020cd89a7e85dc:
+
+  iwlwifi: fix 6000 series channel switch command (2012-10-16 16:28:36 +020=
+0)
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      iwlwifi: fix 6000 series channel switch command
+
+ drivers/net/wireless/iwlwifi/dvm/devices.c |   39 +++++++++++++++++-------=
+----
+ 1 file changed, 24 insertions(+), 15 deletions(-)
+
+
+--=-Y8OZb/S4Fi+UrSSdItRd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQfpv2AAoJEDBSmw7B7bqrKZQQAKHKPXORg31x+6+GTei/BWQH
+5KwjoE+RtTmwDe1/znDfnXfwybUp4RnWEibUk3S7Qja0gmTrp5sKSrN4Gtr4UhjQ
+M3Yu+bXHnIH1T/gXGfPPtmJgOAq4W1PTSrI6nGViaM/vnn+f0HGBFtf5J11oD2lo
+rtbT+tO0L/LPdK8mhC5mixf5seJGWDu/sQHuhdfiYZfvJCwqt7zSRwYPGBBW2QYt
+PNde+T4DsNd6RtJfNCPclgpCT0Ob/C5rq4HVMJ10tCe+5SSULNO1dd81f5wVRfN+
+UeAmeUtwWnNRxkEdNIgo902ZZQmpFASnRrMpkSmgEgKgycOmM/QDxNK1E1QU+L2a
+84Ue8F5sIq4+IBQ2IzTy1xrvY1CcNP+4FB4MkVMvASEDPKNZvGkungaPytX5GJYi
+1mL5qpn7Mt3tbjY+XoDQ98ZGOa0E7btb+hQ9FUNveMr2zpumH9lTEXSnBhACy+NU
+qV9SLeUnUYPbxqjlYvLxa9zSBTKlB+iPtrzOTTuzgq9xdjvOOZ+3793Il5ETF5Ct
+m2I46iXqQFKBGwrBN97d11oUSgj+0a5vrawayyHpkvQEbh6slOFg+ySmaJpEGR1x
+SyMI3jTdYRrXiwePzc0HN22TJr6cd+nxcUqYQAPOUJe5ZaNrjYONlOkcTMpi0AhQ
+p8cHhLwVHjjF0pXPPZ1w
+=wA9J
+-----END PGP SIGNATURE-----
+
+--=-Y8OZb/S4Fi+UrSSdItRd--
 
