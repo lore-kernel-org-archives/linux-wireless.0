@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59952 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755391Ab2JELqB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 07:46:01 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 5/7] rt2800: pass channel pointer to rt2800_config_txpower
-Date: Fri,  5 Oct 2012 13:44:13 +0200
-Message-Id: <1349437455-18754-5-git-send-email-sgruszka@redhat.com> (sfid-20121005_134605_870322_CF51B77B)
-In-Reply-To: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
-References: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:55386 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752708Ab2JQXuk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2012 19:50:40 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so3856049bkc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2012 16:50:38 -0700 (PDT)
+Message-ID: <507F4448.2040707@gmail.com> (sfid-20121018_015053_792161_D46CFF48)
+Date: Thu, 18 Oct 2012 01:50:32 +0200
+From: Daniel Mack <zonque@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: mwifiex_sdio problem: firmware fails to be active in time
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparation for use regulatory max channel power in TX power delta
-calculations.
+Hi,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+we're trying to get a SD8787 to play which is connected via SDIO to an
+OMAP hsmmc (AM33xx hardware). This fails with the following message:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e0e641d..9c2c647 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2566,13 +2566,14 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
- }
- 
- static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
--				  enum ieee80211_band band,
-+				  struct ieee80211_channel *chan,
- 				  int power_level)
- {
- 	u8 txpower, r1;
- 	u16 eeprom;
- 	u32 reg, offset;
- 	int i, is_rate_b, delta, power_ctrl;
-+	enum ieee80211_band band = chan->band;
- 
- 	/*
- 	 * Calculate HT40 compensation delta
-@@ -2720,7 +2721,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 
- void rt2800_gain_calibration(struct rt2x00_dev *rt2x00dev)
- {
--	rt2800_config_txpower(rt2x00dev, rt2x00dev->curr_band,
-+	rt2800_config_txpower(rt2x00dev, rt2x00dev->hw->conf.channel,
- 			      rt2x00dev->tx_power);
- }
- EXPORT_SYMBOL_GPL(rt2800_gain_calibration);
-@@ -2855,11 +2856,11 @@ void rt2800_config(struct rt2x00_dev *rt2x00dev,
- 	if (flags & IEEE80211_CONF_CHANGE_CHANNEL) {
- 		rt2800_config_channel(rt2x00dev, libconf->conf,
- 				      &libconf->rf, &libconf->channel);
--		rt2800_config_txpower(rt2x00dev, libconf->conf->channel->band,
-+		rt2800_config_txpower(rt2x00dev, libconf->conf->channel,
- 				      libconf->conf->power_level);
- 	}
- 	if (flags & IEEE80211_CONF_CHANGE_POWER)
--		rt2800_config_txpower(rt2x00dev, libconf->conf->channel->band,
-+		rt2800_config_txpower(rt2x00dev, libconf->conf->channel,
- 				      libconf->conf->power_level);
- 	if (flags & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
- 		rt2800_config_retry_limit(rt2x00dev, libconf);
--- 
-1.7.1
+# modprobe mwifiex_sdio
+[   13.984779] [sched_delayed] sched: RT throttling activated
+[   22.401700] mwifiex_sdio mmc0:0001:1: FW failed to be active in time
 
+The firmware sd8787_uapsta.bin was taken from the linux-firmware.git and
+apparently is transferred successfully, but then consequently fails to
+do start up. When compiled with CONFIG_MMC_CONFIG=y, tons of successful
+messages are logged like this:
+
+[ 2607.867660] mmc0: starting CMD52 arg 00000a00 flags 00000195
+[ 2607.867713] mmc0: req done (CMD52): 0: 00001000 00000000 00000000
+00000000
+[ 2607.883273] mmc0: starting CMD52 arg 00000a00 flags 00000195
+[ 2607.883327] mmc0: req done (CMD52): 0: 00001000 00000000 00000000
+00000000
+[ 2607.898905] mmc0: starting CMD52 arg 00000a00 flags 00000195
+
+
+The kernel we're based on is Linus' current merge tree (3.7-rc1), but
+earlier version (3.6) have shown the same issue.
+
+Before we start digging into this, I want to ask whether there are any
+common pitfalls we should be aware of and that could cause this?
+
+Please let me know whether you need any further information.
+
+
+Many thanks,
+Daniel
