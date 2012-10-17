@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39243 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45167 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131Ab2JOPXx (ORCPT
+	with ESMTP id S1755963Ab2JQDKF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 11:23:53 -0400
-Message-ID: <1350314666.27801.9.camel@jlt4.sipsolutions.net> (sfid-20121015_172356_021395_E0E9E051)
-Subject: Re: [PATCH] cfg80211/mac80211: avoid state mishmash on deauth
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Pedro Francisco <pedrogfrancisco@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 15 Oct 2012 17:24:26 +0200
-In-Reply-To: <20121015125231.GA9941@redhat.com>
-References: <20121015125231.GA9941@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 16 Oct 2012 23:10:05 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.80)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1TOK1C-0003cR-UN
+	for linux-wireless@vger.kernel.org; Wed, 17 Oct 2012 05:10:03 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] iw: v3.7
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1TOK1C-0003cR-UN@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Wed, 17 Oct 2012 05:10:02 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-10-15 at 14:52 +0200, Stanislaw Gruszka wrote:
-> Avoid situation when we are on associate state in mac80211 and
-> on disassociate state in cfg80211. This can results on crash
-> during modules unload (like showed on this thread:
-> http://marc.info/?t=134373976300001&r=1&w=2) and possibly other
-> problems.
-> 
-> Reported-by: Pedro Francisco <pedrogfrancisco@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Applied, thanks for debugging this!
+A new release of iw (v3.7) is available at:
 
-johannes
+http://wireless.kernel.org/download/iw/iw-3.7.tar.bz2
+
+SHA1 sum: a5c7187ad6b9628a3eb73e7d846f9dc3ef40a120
+
+Here is the short log of the changes (since v3.6)
+included in this release:
+
+Johannes Berg (4):
+      update nl80211.h
+      add P2P Device
+      print more feature flags
+      update version to 3.7
 
