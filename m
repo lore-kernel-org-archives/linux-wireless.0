@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:50928 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933757Ab2JXJDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 05:03:54 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:48330 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752875Ab2JRAWh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2012 20:22:37 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Mack <zonque@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
 	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: [PATCH v6 4/6] wireless: use OR operation to set wiphy features
-References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
-	<1350542071-26498-5-git-send-email-bzhao@marvell.com>
-	<87d308z1no.fsf@purkki.adurom.net>
-	<1351069288.10709.2.camel@jlt4.sipsolutions.net>
-Date: Wed, 24 Oct 2012 12:03:53 +0300
-In-Reply-To: <1351069288.10709.2.camel@jlt4.sipsolutions.net> (Johannes Berg's
-	message of "Wed, 24 Oct 2012 11:01:28 +0200")
-Message-ID: <878vawz1fq.fsf@purkki.adurom.net> (sfid-20121024_110359_211528_FB00F139)
+Date: Wed, 17 Oct 2012 17:20:19 -0700
+Subject: RE: mwifiex_sdio problem: firmware fails to be active in time
+Message-ID: <477F20668A386D41ADCC57781B1F7043083B80E44A@SC-VEXCH1.marvell.com> (sfid-20121018_022241_192149_88F6FBF7)
+References: <507F4448.2040707@gmail.com>
+In-Reply-To: <507F4448.2040707@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Wed, 2012-10-24 at 11:59 +0300, Kalle Valo wrote:
->
->> Is there a way to check that drivers don't accidentally clear the flags
->> (ie. use '=' instead '|=')? For example by adding a dummy flag and
->> checking afterwards that it's not cleared?
->> 
->> I'm just worried that this detail might be too easy to miss, for example
->> somehow I had missed this patch and noticed only when rebasing ath6kl
->> patches.
->
-> Yes, that should be possible, set some dummy flag in wiphy_new() and
-> test & clear it in wiphy_register()?
-
-The tricky part is to make sure that the dummy flag won't conflict with
-a real feature flag value in the future :) 
-
-But I'll try to come up with a patch.
-
--- 
-Kalle Valo
+SGkgRGFuaWVsLA0KDQo+IEhpLA0KPiANCj4gd2UncmUgdHJ5aW5nIHRvIGdldCBhIFNEODc4NyB0
+byBwbGF5IHdoaWNoIGlzIGNvbm5lY3RlZCB2aWEgU0RJTyB0byBhbg0KPiBPTUFQIGhzbW1jIChB
+TTMzeHggaGFyZHdhcmUpLiBUaGlzIGZhaWxzIHdpdGggdGhlIGZvbGxvd2luZyBtZXNzYWdlOg0K
+PiANCj4gIyBtb2Rwcm9iZSBtd2lmaWV4X3NkaW8NCj4gWyAgIDEzLjk4NDc3OV0gW3NjaGVkX2Rl
+bGF5ZWRdIHNjaGVkOiBSVCB0aHJvdHRsaW5nIGFjdGl2YXRlZA0KPiBbICAgMjIuNDAxNzAwXSBt
+d2lmaWV4X3NkaW8gbW1jMDowMDAxOjE6IEZXIGZhaWxlZCB0byBiZSBhY3RpdmUgaW4gdGltZQ0K
+PiANCj4gVGhlIGZpcm13YXJlIHNkODc4N191YXBzdGEuYmluIHdhcyB0YWtlbiBmcm9tIHRoZSBs
+aW51eC1maXJtd2FyZS5naXQgYW5kDQo+IGFwcGFyZW50bHkgaXMgdHJhbnNmZXJyZWQgc3VjY2Vz
+c2Z1bGx5LCBidXQgdGhlbiBjb25zZXF1ZW50bHkgZmFpbHMgdG8NCj4gZG8gc3RhcnQgdXAuIFdo
+ZW4gY29tcGlsZWQgd2l0aCBDT05GSUdfTU1DX0NPTkZJRz15LCB0b25zIG9mIHN1Y2Nlc3NmdWwN
+Cj4gbWVzc2FnZXMgYXJlIGxvZ2dlZCBsaWtlIHRoaXM6DQo+IA0KPiBbIDI2MDcuODY3NjYwXSBt
+bWMwOiBzdGFydGluZyBDTUQ1MiBhcmcgMDAwMDBhMDAgZmxhZ3MgMDAwMDAxOTUNCj4gWyAyNjA3
+Ljg2NzcxM10gbW1jMDogcmVxIGRvbmUgKENNRDUyKTogMDogMDAwMDEwMDAgMDAwMDAwMDAgMDAw
+MDAwMDANCj4gMDAwMDAwMDANCj4gWyAyNjA3Ljg4MzI3M10gbW1jMDogc3RhcnRpbmcgQ01ENTIg
+YXJnIDAwMDAwYTAwIGZsYWdzIDAwMDAwMTk1DQo+IFsgMjYwNy44ODMzMjddIG1tYzA6IHJlcSBk
+b25lIChDTUQ1Mik6IDA6IDAwMDAxMDAwIDAwMDAwMDAwIDAwMDAwMDAwDQo+IDAwMDAwMDAwDQo+
+IFsgMjYwNy44OTg5MDVdIG1tYzA6IHN0YXJ0aW5nIENNRDUyIGFyZyAwMDAwMGEwMCBmbGFncyAw
+MDAwMDE5NQ0KDQpJdCBrZWVwcyByZWFkaW5nIEludF9QZW5kaW5nIChDQ0NSIHJlZ2lzdGVyIDB4
+MDUpLiBQZXJoYXBzIHlvdSBoYXZlIGludGVycnVwdCBzdG9ybSBoZXJlPw0KQ291bGQgeW91IHBs
+ZWFzZSBjaGVjayBpZiB5b3VyIGNvbnRyb2xsZXIgY2xlYXJzIGludGVycnVwdCBwcm9wZXJseT8N
+Cg0KPiANCj4gDQo+IFRoZSBrZXJuZWwgd2UncmUgYmFzZWQgb24gaXMgTGludXMnIGN1cnJlbnQg
+bWVyZ2UgdHJlZSAoMy43LXJjMSksIGJ1dA0KPiBlYXJsaWVyIHZlcnNpb24gKDMuNikgaGF2ZSBz
+aG93biB0aGUgc2FtZSBpc3N1ZS4NCj4gDQo+IEJlZm9yZSB3ZSBzdGFydCBkaWdnaW5nIGludG8g
+dGhpcywgSSB3YW50IHRvIGFzayB3aGV0aGVyIHRoZXJlIGFyZSBhbnkNCj4gY29tbW9uIHBpdGZh
+bGxzIHdlIHNob3VsZCBiZSBhd2FyZSBvZiBhbmQgdGhhdCBjb3VsZCBjYXVzZSB0aGlzPw0KDQpZ
+b3UgbWF5IHdhbnQgdG8gZ2V0IGEgbmV3ZXIgZmlybXdhcmUgcmVsZWFzZSBmcm9tIGhlcmU6DQoN
+Cmh0dHA6Ly9naXQubWFydmVsbC5jb20vP3A9bXdpZmlleC1maXJtd2FyZS5naXQ7YT1zdW1tYXJ5
+DQpnaXQ6Ly9naXQubWFydmVsbC5jb20vbXdpZmlleC1maXJtd2FyZS5naXQNCg0KPiANCj4gUGxl
+YXNlIGxldCBtZSBrbm93IHdoZXRoZXIgeW91IG5lZWQgYW55IGZ1cnRoZXIgaW5mb3JtYXRpb24u
+DQoNCkl0IG1pZ2h0IGJlIGhlbHBmdWwgaWYgeW91IHBvc3QgbWVzc2FnZXMgYmVmb3JlIHRoaXMg
+bGluZToNCg0KWyAyNjA3Ljg2NzY2MF0gbW1jMDogc3RhcnRpbmcgQ01ENTIgYXJnIDAwMDAwYTAw
+IGZsYWdzIDAwMDAwMTk1DQoNClRoYW5rcywNCkJpbmcNCg0KPiANCj4gDQo+IE1hbnkgdGhhbmtz
+LA0KPiBEYW5pZWwNCg==
