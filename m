@@ -1,73 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:53432 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753779Ab2JEQFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 12:05:16 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	lindner_marek@yahoo.de
-Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL on AR9003
-Date: Fri, 05 Oct 2012 18:05:13 +0200
-Message-ID: <1705773.eSZj456rS3@bentobox> (sfid-20121005_180522_108442_FE6FCD12)
-In-Reply-To: <506EF975.7040909@openwrt.org>
-References: <1348756862-8788-1-git-send-email-sven@narfation.org> <1661867.OB0LbMnEW9@bentobox> <506EF975.7040909@openwrt.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:61637 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805Ab2JRCaT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Oct 2012 22:30:19 -0400
+Received: by mail-ob0-f174.google.com with SMTP id uo13so8087240obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2012 19:30:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2009197.yyubZJTeAi"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Date: Thu, 18 Oct 2012 10:30:18 +0800
+Message-ID: <CAEFj985aEc+fe=0spye=mNCaK4oET4WZ7ZyMD6Cqcj1tOjWAEA@mail.gmail.com> (sfid-20121018_043030_840753_F3EB51AE)
+Subject: Re: [PATCH] mac80211: close peer link after consecutive beacon misses
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi, Marco
 
---nextPart2009197.yyubZJTeAi
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+I have tried to use this patch in open mesh, no problem.
 
-On Friday 05 October 2012 17:15:01 Felix Fietkau wrote:
-> Thanks for testing, but for submitting I'd prefer something simple,
-> how about this:
-> ---
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -1035,6 +1035,10 @@ static bool ar9003_hw_ani_control(struct
->  		 * is_on == 0 means MRC CCK is OFF (more noise imm)
->  		 */
->  		bool is_on = param ? 1 : 0;
-> +
-> +		if (ah->caps.rx_chainmask == 1)
-> +			break;
-> +
->  		REG_RMW_FIELD(ah, AR_PHY_MRC_CCK_CTRL,
->  			      AR_PHY_MRC_CCK_ENABLE, is_on);
->  		REG_RMW_FIELD(ah, AR_PHY_MRC_CCK_CTRL,
+But if testing with secured mesh (authsae), it causes the following
+kernel panic.
 
-Yes, looks good.
+Appreciate if you can take a look on this. Thanks
 
-Kind regards,
-	Sven
---nextPart2009197.yyubZJTeAi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
+Regards,
+Chun-Yeow
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAABCgAGBQJQbwU5AAoJEF2HCgfBJntGZFIP/29xDoO0kqUECk9TGGridf1J
-tCqFEc+BA6VNLZROOBaBojtqPGsaBpQGdtq9AufvAjTwzXmfhdqBjBL72CIxhyvJ
-6nZ5NSFqcd+gDnDrtrgVstyC/JM+BA1+EdrHydIo8Se/KC50G9iI1sRRdEfSkKWt
-eJgSigK1UQzO9XgJsJw1nJtPUMHAx+XY78einE+gJLOSAW+hum0+yyMxPHKiy+ql
-TFD4dFn1POQFTNh+fc8Ad90KBd1i7138IOZj81lshXRlt892AgK0iPeycEbbVIty
-/0h9SAHaB2G/FAD4/28/Zib2o+2zY9N7rn4qZ6b3q0OO6MihQJkoAi+KJ+iHL6FE
-BypjZlCY3ko92MznD1zQKp0y1PpgYBrjsg6Cj7C2w25PNIp3VisHyaiBG5ok8zqz
-n6csepRkiET667Syk6BFum0JPDJvZA+GkHV2BnF3W5O9mVQcEt0uYp++BwaXu9RY
-mG2IRkp9gHOhh9gaS+JAKZbstewSiOpSyMUyY8lzFkAyMdsALkNw5kOMrXrJ0zYg
-nVUgz6zVwg3dj9yQyzD4ItqAvSdWfsVlXp7pLACQcTO9w3Ugvu7ky6GxVA7j3utP
-8JNPNRyfy3wKkZ7lBBpxV1N507U//pqoYS9hFrGVIKKTyZTsg+oMI6Q8rGgx5q6B
-d2bjVyW+cJVHMtwhPREF
-=Vi6R
------END PGP SIGNATURE-----
-
---nextPart2009197.yyubZJTeAi--
-
+[  153.790000] Cpu 0
+[  153.790000] $ 0   : 00000000 80330000 00000001 000003e8
+[  153.790000] $ 4   : 8142a2e8 ffffc6e3 00000000 00005b79
+[  153.790000] $ 8   : 00000000 00000800 00000001 0000007f
+[  153.790000] $12   : 00000005 0000000c 81574748 0000021c
+[  153.790000] $16   : 8142a2e8 ffffc6e3 00000000 81c43d38
+[  153.790000] $20   : 000000cc 00000000 00000fff 81fa2a58
+[  153.790000] $24   : 00000000 80095350
+[  153.790000] $28   : 81c42000 81c43c88 815cd664 814af9fc
+[  153.790000] Hi    : 00000000
+[  153.790000] Lo    : 00000000
+[  153.790000] epc   : 8007c300 mod_timer+0x94/0x180
+[  153.790000]     Tainted: G           O
+[  153.790000] ra    : 814af9fc mesh_pathtbl_unregister+0x740/0xa9c [mac80211]
+[  153.790000] Status: 1000d403    KERNEL EXL IE
+[  153.790000] Cause : 10800034
+[  153.790000] PrId  : 00019374 (MIPS 24Kc)
+[  153.790000] Modules linked in: ath79_wdt ohci_hcd ledtrig_netdev
+nf_nat_irc nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp ipt_MASQUERADE
+iptable_nat nf_nat pppoe xt_conntrack xt_CT xt_NOTRACK iptable_raw
+xt_state nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack ehci_hcd pppox
+ipt_REJECT xt_TCPMSS ipt_LOG xt_comment xt_multiport xt_mac xt_limit
+iptable_mangle iptable_filter ip_tables xt_tcpudp x_tables ppp_async
+ppp_generic slhc ath9k(O) ath9k_common(O) ath9k_hw(O) ath(O)
+mac80211(O) usbcore usb_common nls_base crc_ccitt cfg80211(O)
+compat(O) arc4 aes_generic crypto_algapi ledtrig_timer
+ledtrig_default_on leds_gpio gpio_button_hotplug(O)
+[  153.790000] Process kworker/u:1 (pid: 7, threadinfo=81c42000,
+task=81c198f0, tls=00000000)
+[  153.790000] Stack : ffffffff ffffffff 81c43d38 00000000 815cd664
+81563720 8142a000 ffffc6e3
+[  153.790000]         814e904a 814af9fc 00000000 00000000 00000000
+00000000 00000000 00000000
+[  153.790000]         00000001 81c43cc8 815cd380 815cd380 815cd380
+814e9040 81c43d38 00000080
+[  153.790000]         81fa0a80 814bc620 00000000 814afef0 00000000
+00000000 00000001 814e8040
+[  153.790000]         815cd380 815cd380 814e9040 00000000 81ffc0d8
+814ac4fc 81c82900 00000000
+[  153.790000]         ...
+[  153.790000] Call Trace:
+[  153.790000] [<8007c300>] mod_timer+0x94/0x180
+[  153.790000] [<814af9fc>] mesh_pathtbl_unregister+0x740/0xa9c [mac80211]
+[  153.790000]
+[  153.790000]
+[  153.790000] Code: 24120001  8e020010  2c420001
+[  153.790000]  02002021  0c01ef3d  27a50010  8e030000  10600011
