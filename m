@@ -1,78 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy11-pub.bluehost.com ([173.254.64.10]:43646 "HELO
-	oproxy11-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751906Ab2J1Pht (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:42614 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754624Ab2JRIsj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2012 11:37:49 -0400
-Received: from [70.15.155.205] (port=41724 helo=[206.223.20.150])
-	by host200.hostmonster.com with esmtpa (Exim 4.76)
-	(envelope-from <dhlii@dlasys.net>)
-	id 1TSUvs-0007Qh-7l
-	for linux-wireless@vger.kernel.org; Sun, 28 Oct 2012 09:37:48 -0600
-Message-ID: <1351438667.3551.29.camel@hp-dhlii> (sfid-20121028_163753_641466_6543E79C)
-Subject: Re: Bandwidth monitoring
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
-Reply-To: dhlii@dlasys.net
-To: linux-wireless@vger.kernel.org
-Date: Sun, 28 Oct 2012 11:37:47 -0400
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 18 Oct 2012 04:48:39 -0400
+Received: by mail-la0-f46.google.com with SMTP id h6so5634341lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2012 01:48:38 -0700 (PDT)
+Message-ID: <507FC25F.9030702@gmail.com> (sfid-20121018_104843_642448_F9D52ADB)
+Date: Thu, 18 Oct 2012 10:48:31 +0200
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org, hch@lst.de,
+	s.L-H@gmx.de
+Subject: Re: [PATCH v2 0/4] Driver for the ar5523 chipset
+References: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com> <201210162322.20703.chunkeey@googlemail.com>
+In-Reply-To: <201210162322.20703.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From: Christian Lamparter
->>># iw dev wlanX set channel 1 HT40+ (or HT40-/HT20)
->> 
->> This is setting up to send on channel 1 HT40+ correct ?
->yes, I hope so.
+On 2012-10-16 23:22, Christian Lamparter wrote:
+>> Changes v1 to v2:
+>>
+>> * Bugfix: Avoid % 512 transfer sizes on TX as the FW will hang.
+> Have you tried setting "urb->transfer_flags |= URB_ZERO_PACKET;"
+> to your outgoing urbs? This might fix the hang as well and you
+> don't need any ugly skb_put.
 
-Thanks
+Thanks! Didn't know about this flag. Solved the problem!
 
->> Wireshark appears to handle RadioTap - I am seeing lots of other
->flags
->> etc. but not BW40.
->It depends on the version. Here's a screenshot
->from wireshark 1.8.2: <http://imageshack.us/f/703/mcsinfo.png/>
-Thanks
+Cheers,
 
->> Googling Radiotap produces lots of comments that suggest that
->>Radiotap
->> headers - send and receive are not necescarily complete or accurate
->>from
->> device to device - is that a reasonable conclusion ?
->Most mac80211 driver should report rx'ed MCS information.
->At least ath9k, ath9k_htc, brcmsmac, carl9170, iwlagn, iwllegacy,
->mwl8k,
->rt2800*, rtl8192* do
-Using carl9170 so that should be OK.
-
->What might not work is: injecting frames with MCS rates [no code
->in ieee80211_parse_tx_radiotap for that?]... So maybe the issue
->is indeed at the other end?
-
-Assuming Carl9170/AR9170's at both ends 
-But if I am am using iw to set monitor mode mode, channel, and
-bandwidth, 
-And using Raw sockets injection with a radiotap header that has no
-frequency/channel/bandwidth information, 
-I should then be able to receive that packet on another system with an
-AR9170 and 1.8.2 Wireshark and the BW40 flag should be true ?
-
-I need to do something that involves sending HT40 packets in a
-completely different context. But I do not have a spectrum analyzer to
-confirm that i am actually sending what I want.
-So I have been using airmon, wireshark, ....
-But i need to be able to send and verify an HT40 packet by some somewhat
-normal means, to assure myself that my receiving end wireshark
-hardware/driver/software combination can tell me what i need to know. 
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe
-linux-wireless" in
-the body of a message to majordomo@...
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Pontus
