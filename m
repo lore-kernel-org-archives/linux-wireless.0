@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37048 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51212 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750935Ab2JAOQs (ORCPT
+	with ESMTP id S1753324Ab2JRPVX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2012 10:16:48 -0400
-Message-ID: <1349101039.10330.41.camel@jlt4.sipsolutions.net> (sfid-20121001_161652_009790_333DA8CE)
-Subject: Re: [RFC] mac80211: connect with HT20 if HT40 is not permitted
+	Thu, 18 Oct 2012 11:21:23 -0400
+Message-ID: <1350573714.10638.19.camel@jlt4.sipsolutions.net> (sfid-20121018_172127_250729_05BE4ED1)
+Subject: Re: [PATCHv3] nl/cfg80211: force scan using an AP vif if requested
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Paul Stewart <pstew@chromium.org>
-Date: Mon, 01 Oct 2012 16:17:19 +0200
-In-Reply-To: <1349100121.10330.36.camel@jlt4.sipsolutions.net> (sfid-20121001_160132_854322_0F7EDEE5)
-References: <1349100121.10330.36.camel@jlt4.sipsolutions.net>
-	 (sfid-20121001_160132_854322_0F7EDEE5)
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 18 Oct 2012 17:21:54 +0200
+In-Reply-To: <1350369562-24733-1-git-send-email-ordex@autistici.org>
+References: <1350369562-24733-1-git-send-email-ordex@autistici.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-10-01 at 16:02 +0200, Johannes Berg wrote:
+On Tue, 2012-10-16 at 08:39 +0200, Antonio Quartulli wrote:
+> If the user wants to scan using a vif configured as AP, cfg80211 must give him a
+> chance to do it, even if this will disrupt the stations performance due to
+> off-channel scanning. To do so, this patch adds a 'force' flag to the
+> SCAN_TRIGGER command which tells cfg80211 to perform the scanning operation even
+> if the vif is an AP and the beaconing has already started.
 
-> Fix this, while avoiding the "Korean AP" issue by
-> disabling HT40 and advertising HT20 to the AP
-> when connecting.
-
-> +		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-> +			if (cbss->channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
-
-What we *could* do instead is use "channel->orig_flags" here instead to
-fix the iwlwifi issue, and allow HT40 RX for when the driver/device has
-no limitations (and the HT40 restriction would be regulatory only), but
-I'm not sure I see much value in that? That might enable HT40 RX (not
-TX) for some devices on those Korean HT40 APs though, but it'd also be
-somewhat tricky in the code and more or less relying on cfg80211
-internals ... I'd prefer not to introduce these kinds of subtle
-differences between devices but if somebody has strong objections to the
-patch as is I'd be willing to change it.
+Applied, but please break commit logs to < 72 characters in the future
+yourself.
 
 johannes
 
