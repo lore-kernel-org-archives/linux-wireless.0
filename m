@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34525 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933268Ab2JZOXx (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:45973 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752654Ab2JRKbO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 10:23:53 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 02/18] brcmsmac: Use correct descriptor count when calculating next rx descriptor
-Date: Fri, 26 Oct 2012 09:23:17 -0500
-Message-Id: <1351261413-20821-3-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162359_141259_430E1942)
-In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+	Thu, 18 Oct 2012 06:31:14 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n3so5765310lbo.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2012 03:31:13 -0700 (PDT)
+Message-ID: <507FDA6B.9000607@gmail.com> (sfid-20121018_123118_684556_2093EAED)
+Date: Thu, 18 Oct 2012 12:31:07 +0200
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>, hch@lst.de
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	s.L-H@gmx.de
+Subject: Re: [PATCH v2 0/4] Driver for the ar5523 chipset
+References: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com> <507FC4F2.8030102@hauke-m.de>
+In-Reply-To: <507FC4F2.8030102@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nextrxd() is calling txd(), which means that the tx descriptor count is
-used to determine when to wrap for determining the next ring buffer
-entry. This has worked so far since the driver has been using the same
-number of rx and tx descriptors, but it's obviously going to be a
-problem if different numbers of descriptors are used.
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/dma.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> Changes v1 to v2:
+>>
+>> * Change to same license as ath9k as suggested by Luis.
+>
+> Is changing the license so easy? Have you ask all contributers to the
+> GPL version of this driver, if they are fine with changing the license
+> especially Christoph Hellwig?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 426b9a9..d7ce1ac 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -361,7 +361,7 @@ static uint prevtxd(struct dma_info *di, uint i)
- 
- static uint nextrxd(struct dma_info *di, uint i)
- {
--	return txd(di, i + 1);
-+	return rxd(di, i + 1);
- }
- 
- static uint ntxdactive(struct dma_info *di, uint h, uint t)
--- 
-1.7.9.5
+Yes. I hope so. A while ago I asked Christoph if he wanted to be 
+copyright holder under BSD or GPL and he said he was fine either way.
 
+Christoph: Can you confirm still is still the case?
+
+Cheers,
+
+Pontus
