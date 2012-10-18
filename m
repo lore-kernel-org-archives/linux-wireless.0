@@ -1,155 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:37944 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755871Ab2JQBaR (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:43501 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754134Ab2JRGfy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 21:30:17 -0400
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net
-Cc: devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [PATCH] mac80211: close peer link after consecutive beacon misses
-Date: Tue, 16 Oct 2012 18:30:06 -0700
-Message-Id: <1350437406-3158-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121017_033026_005079_429D3DBC)
+	Thu, 18 Oct 2012 02:35:54 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v6 3/6] cfg80211: add scan flag to indicate its priority
+Date: Wed, 17 Oct 2012 23:34:28 -0700
+Message-Id: <1350542071-26498-4-git-send-email-bzhao@marvell.com> (sfid-20121018_083556_799044_A0C8DBCB)
+In-Reply-To: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
+References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the mesh code relies on on a graceful peer link close with a
-Mesh Peering Close frame. That causes peer links to stay in established
-state after a node just silently disappeared.
+From: Sam Leffler <sleffler@chromium.org>
 
-This commit adds a timeout that is triggered when a defined number of beacons
-from a peer have been missed. In this case the link is closed, just as it
-would be in case of a received Mesh Peering Close frame.
-To calculate the timeout the peer's beacon interval is used.
+Add NL80211_SCAN_FLAG_LOW_PRIORITY flag support. It tells drivers
+that this is a low priority scan request, so that they can take
+necessary action.
+Drivers need to advertise low priority scan capability during
+registration.
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh.c       |    2 +-
- net/mac80211/mesh.h       |    5 ++++-
- net/mac80211/mesh_plink.c |   19 +++++++++++++++++--
- net/mac80211/sta_info.h   |    2 ++
- 4 files changed, 24 insertions(+), 4 deletions(-)
+ include/uapi/linux/nl80211.h |   15 +++++++++++++++
+ net/wireless/nl80211.c       |   16 ++++++++++++++--
+ 2 files changed, 29 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index ff0296c..6d41e5d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -696,7 +696,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 751a292..c68e15e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3048,6 +3048,7 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_SAE: This driver supports simultaneous authentication of
+  *	equals (SAE) with user space SME (NL80211_CMD_AUTHENTICATE) in station
+  *	mode
++ * @NL80211_FEATURE_LOW_PRIORITY_SCAN: This driver supports low priority scan
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3056,6 +3057,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_CELL_BASE_REG_HINTS		= 1 << 3,
+ 	NL80211_FEATURE_P2P_DEVICE_NEEDS_CHANNEL	= 1 << 4,
+ 	NL80211_FEATURE_SAE				= 1 << 5,
++	NL80211_FEATURE_LOW_PRIORITY_SCAN		= 1 << 6,
+ };
  
- 	if (elems.mesh_id && elems.mesh_config &&
- 	    mesh_matches_local(sdata, &elems))
--		mesh_neighbour_update(sdata, mgmt->sa, &elems);
-+		mesh_neighbour_update(sdata, mgmt, &elems);
+ /**
+@@ -3090,4 +3092,17 @@ enum nl80211_connect_failed_reason {
+ 	NL80211_CONN_FAIL_BLOCKED_CLIENT,
+ };
  
- 	if (ifmsh->sync_ops)
- 		ifmsh->sync_ops->rx_bcn_presp(sdata,
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 25d0f17..7ce9203 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -209,6 +209,9 @@ struct mesh_rmc {
- 
- #define MESH_PATH_EXPIRE (600 * HZ)
- 
-+/* maximum number of missed beacons before peer link is closed */
-+#define MESH_MAX_BEACON_MISS	14
++/**
++ * enum nl80211_scan_flags -  scan request control flags
++ *
++ * Scan request control flags are used to control the handling
++ * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
++ * requests.
++ *
++ * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
++ */
++enum nl80211_scan_flags {
++	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
++};
 +
- /* Default maximum number of plinks per interface */
- #define MESH_MAX_PLINKS		256
- 
-@@ -282,7 +285,7 @@ int mesh_path_send_to_gates(struct mesh_path *mpath);
- int mesh_gate_num(struct ieee80211_sub_if_data *sdata);
- /* Mesh plinks */
- void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
--			   u8 *hw_addr,
-+			   struct ieee80211_mgmt *mgmt,
- 			   struct ieee802_11_elems *ie);
- bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
- u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 3ab34d8..3a12707 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -372,6 +372,8 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
- 	spin_lock_bh(&sta->lock);
- 	sta->last_rx = jiffies;
- 	if (sta->plink_state == NL80211_PLINK_ESTAB) {
-+		mod_plink_timer(sta, TU_TO_JIFFIES(sta->beacon_interval *
-+						   MESH_MAX_BEACON_MISS));
- 		spin_unlock_bh(&sta->lock);
- 		return sta;
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index dc08211..aee252d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4368,9 +4368,15 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		}
  	}
-@@ -404,13 +406,13 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
- }
  
- void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
--			   u8 *hw_addr,
-+			   struct ieee80211_mgmt *mgmt,
- 			   struct ieee802_11_elems *elems)
- {
- 	struct sta_info *sta;
+-	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
++	if (info->attrs[NL80211_ATTR_SCAN_FLAGS]) {
+ 		request->flags = nla_get_u32(
+ 			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
++		if ((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
++		    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) {
++			err = -EOPNOTSUPP;
++			goto out_free;
++		}
++	}
  
- 	rcu_read_lock();
--	sta = mesh_peer_init(sdata, hw_addr, elems);
-+	sta = mesh_peer_init(sdata, mgmt->sa, elems);
- 	if (!sta)
- 		goto out;
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+@@ -4603,9 +4609,15 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 		       request->ie_len);
+ 	}
  
-@@ -421,6 +423,7 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- 	    rssi_threshold_check(sta, sdata))
- 		mesh_plink_open(sta);
+-	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
++	if (info->attrs[NL80211_ATTR_SCAN_FLAGS]) {
+ 		request->flags = nla_get_u32(
+ 			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
++		if ((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
++		    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) {
++			err = -EOPNOTSUPP;
++			goto out_free;
++		}
++	}
  
-+	sta->beacon_interval = le16_to_cpu(mgmt->u.beacon.beacon_int);
- out:
- 	rcu_read_unlock();
- }
-@@ -430,6 +433,7 @@ static void mesh_plink_timer(unsigned long data)
- 	struct sta_info *sta;
- 	__le16 llid, plid, reason;
- 	struct ieee80211_sub_if_data *sdata;
-+	u32 changed = 0;
- 
- 	/*
- 	 * This STA is valid because sta_info_destroy() will
-@@ -495,6 +499,17 @@ static void mesh_plink_timer(unsigned long data)
- 		mesh_plink_fsm_restart(sta);
- 		spin_unlock_bh(&sta->lock);
- 		break;
-+	case NL80211_PLINK_ESTAB:
-+		/* beacon loss timer */
-+		mpl_dbg(sta->sdata, "Mesh plink for %pM beacon loss\n",
-+			sta->sta.addr);
-+		changed |= __mesh_plink_deactivate(sta);
-+		sta->plink_state = NL80211_PLINK_HOLDING;
-+		mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
-+		spin_unlock_bh(&sta->lock);
-+		changed |= mesh_set_ht_prot_mode(sdata);
-+		ieee80211_bss_info_change_notify(sdata, changed);
-+		break;
- 	default:
- 		spin_unlock_bh(&sta->lock);
- 		break;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index c88f161f..45eae7e 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -274,6 +274,7 @@ struct sta_ampdu_mlme {
-  * @t_offset_setpoint: reference timing offset of this sta to be used when
-  * 	calculating clockdrift
-  * @ch_type: peer's channel type
-+ * @beacon_interval: beacon interval of this station
-  * @debugfs: debug filesystem info
-  * @dead: set to true when sta is unlinked
-  * @uploaded: set to true when sta is uploaded to the driver
-@@ -370,6 +371,7 @@ struct sta_info {
- 	s64 t_offset;
- 	s64 t_offset_setpoint;
- 	enum nl80211_channel_type ch_type;
-+	u16 beacon_interval;
- #endif
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
+ 	request->dev = dev;
+ 	request->wiphy = &rdev->wiphy;
 -- 
-1.7.9.5
+1.7.0.4
 
