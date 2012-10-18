@@ -1,51 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54463 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751551Ab2JYWbX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 18:31:23 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:54010 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754254Ab2JRGgL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Oct 2012 02:36:11 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.7] ath9k: fix stale pointers potentially causing access to free'd skbs
-Date: Fri, 26 Oct 2012 00:31:11 +0200
-Message-Id: <1351204271-94815-1-git-send-email-nbd@openwrt.org> (sfid-20121026_003126_992324_2FBF1CA7)
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v6 6/6] mac80211: add support for tx to abort low priority scan requests
+Date: Wed, 17 Oct 2012 23:34:31 -0700
+Message-Id: <1350542071-26498-7-git-send-email-bzhao@marvell.com> (sfid-20121018_083615_190584_15A984CE)
+In-Reply-To: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
+References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bf->bf_next is only while buffers are chained as part of an A-MPDU
-in the tx queue. When a tid queue is flushed (e.g. on tearing down
-an aggregation session), frames can be enqueued again as normal
-transmission, without bf_next being cleared. This can lead to the
-old pointer being dereferenced again later.
+From: Sam Leffler <sleffler@chromium.org>
 
-This patch might fix crashes and "Failed to stop TX DMA!" messages.
+Use NL80211_SCAN_FLAG_LOW_PRIORITY flag in mac80211's scan state
+machine to prematurely terminate scan operations if outbound
+traffic collides. This is useful for marking background scans so
+they don't affect throughput.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+[set feature flag only if software scan is used]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/main.c        |    3 +++
+ net/mac80211/scan.c        |   21 +++++++++++++++++----
+ 3 files changed, 22 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 378bd70..1ffca75 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -312,6 +312,7 @@ static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
- 	}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 64ae757..ebc1b5d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -866,6 +866,7 @@ enum {
+  * @SCAN_SUSPEND: Suspend the scan and go back to operating channel to
+  *	send out data
+  * @SCAN_RESUME: Resume the scan and scan the next channel
++ * @SCAN_ABORT: Abort the scan and go back to operating channel
+  */
+ enum mac80211_scan_state {
+ 	SCAN_DECISION,
+@@ -873,6 +874,7 @@ enum mac80211_scan_state {
+ 	SCAN_SEND_PROBE,
+ 	SCAN_SUSPEND,
+ 	SCAN_RESUME,
++	SCAN_ABORT,
+ };
  
- 	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
-+	bf->bf_next = NULL;
- 	list_del(&bf->list);
+ struct ieee80211_local {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 931f14f..ba5a232 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -602,6 +602,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 			   NL80211_FEATURE_SAE |
+ 			   NL80211_FEATURE_HT_IBSS;
  
- 	spin_unlock_bh(&sc->tx.txbuflock);
-@@ -1774,6 +1775,7 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
- 	list_add_tail(&bf->list, &bf_head);
- 	bf->bf_state.bf_type = 0;
++	if (!ops->hw_scan)
++		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN;
++
+ 	if (!ops->set_key)
+ 		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
  
-+	bf->bf_next = NULL;
- 	bf->bf_lastbf = bf;
- 	ath_tx_fill_desc(sc, bf, txq, fi->framelen);
- 	ath_tx_txqaddbuf(sc, txq, &bf_head, false);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 987c75d..13d2329 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -466,6 +466,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 			sizeof(*local->hw_scan_req) +
+ 			req->n_channels * sizeof(req->channels[0]);
+ 		local->hw_scan_req->ie = ies;
++		local->hw_scan_req->flags = req->flags;
+ 
+ 		local->hw_scan_band = 0;
+ 
+@@ -566,6 +567,7 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	unsigned long min_beacon_int = 0;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_channel *next_chan;
++	enum mac80211_scan_state next_scan_state;
+ 
+ 	/*
+ 	 * check if at least one STA interface is associated,
+@@ -624,10 +626,18 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 			usecs_to_jiffies(min_beacon_int * 1024) *
+ 			local->hw.conf.listen_interval);
+ 
+-	if (associated && (!tx_empty || bad_latency || listen_int_exceeded))
+-		local->next_scan_state = SCAN_SUSPEND;
+-	else
+-		local->next_scan_state = SCAN_SET_CHANNEL;
++	if (associated && !tx_empty) {
++		if (local->scan_req->flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
++			next_scan_state = SCAN_ABORT;
++		else
++			next_scan_state = SCAN_SUSPEND;
++	} else if (associated && (bad_latency || listen_int_exceeded)) {
++		next_scan_state = SCAN_SUSPEND;
++	} else {
++		next_scan_state = SCAN_SET_CHANNEL;
++	}
++
++	local->next_scan_state = next_scan_state;
+ 
+ 	*next_delay = 0;
+ }
+@@ -798,6 +808,9 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		case SCAN_RESUME:
+ 			ieee80211_scan_state_resume(local, &next_delay);
+ 			break;
++		case SCAN_ABORT:
++			aborted = true;
++			goto out_complete;
+ 		}
+ 	} while (next_delay == 0);
+ 
 -- 
-1.7.12.2
+1.7.0.4
 
