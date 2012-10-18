@@ -1,261 +1,300 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:64620 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933028Ab2JLPwb (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:47135 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754201Ab2JRGgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 11:52:31 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so4973181iea.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2012 08:52:31 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Anisse Astier <anisse@astier.eu>,
-	Li Chaoming <chaoming_li@realsil.com.cn>
-Subject: [PATCH NEXT 1/2] rtlwifi: rtl8192c: rtl8192ce: Add support for B-CUT version of RTL8188CE
-Date: Fri, 12 Oct 2012 10:52:07 -0500
-Message-Id: <1350057128-16969-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121012_175235_849486_BA921B9E)
-In-Reply-To: <1350057128-16969-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1350057128-16969-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 18 Oct 2012 02:36:04 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v6 5/6] cfg80211: add support for flushing old scan results
+Date: Wed, 17 Oct 2012 23:34:30 -0700
+Message-Id: <1350542071-26498-6-git-send-email-bzhao@marvell.com> (sfid-20121018_083608_506215_734BA232)
+In-Reply-To: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
+References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Realtek devices with designation RTL8188CE-VL have the so-called B-cut
-of the wireless chip. This patch adds the special programming needed by
-these devices. In addition, a variable that was static has been moved into
-the private data area as it is now needed in two different routines. This
-change also fixes a minor bug that would be present if a system had more
-than one RTL81{88,92}CE devices. Other drivers in the rtlwifi family had
-already made this change, thus the variable already exists in the private
-data structure.
+From: Sam Leffler <sleffler@chromium.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Anisse Astier <anisse@astier.eu>
-Cc: Li Chaoming <chaoming_li@realsil.com.cn>
+Add an NL80211_SCAN_FLAG_FLUSH flag that causes old bss cache
+entries to be flushed on scan completion. This is useful for
+collecting guaranteed fresh scan/survey result (e.g. on resume).
+
+For normal scan, flushing only happens on successful completion
+of a scan; i.e. it does not happen if the scan is aborted.
+For scheduled scan, previous scan results are flushed everytime
+when we get new scan results.
+
+This feature is enabled by default. Drivers can disable it by
+unsetting the NL80211_FEATURE_SCAN_FLUSH flag.
+
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+[invert polarity of feature flag to account for old kernels]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   21 ++++++++
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |    3 ++
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   53 ++++++++++++++++++--
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |    2 +
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |    4 +-
- 5 files changed, 76 insertions(+), 7 deletions(-)
+ include/net/cfg80211.h       |    3 ++
+ include/uapi/linux/nl80211.h |    4 ++
+ net/wireless/core.c          |    2 +
+ net/wireless/nl80211.c       |   14 ++++++--
+ net/wireless/scan.c          |   66 +++++++++++++++++++++++++++++------------
+ net/wireless/sme.c           |    1 +
+ 6 files changed, 66 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-index cdcad7d..6ae2268 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-@@ -724,6 +724,26 @@ u8 rtl92c_phy_sw_chnl(struct ieee80211_hw *hw)
- }
- EXPORT_SYMBOL(rtl92c_phy_sw_chnl);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d95da8f..aa0e4a1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1005,6 +1005,7 @@ struct cfg80211_ssid {
+  * @flags: bit field of flags controlling operation
+  * @rates: bitmap of rates to advertise for each band
+  * @wiphy: the wiphy this was for
++ * @scan_start: time (in jiffies) when the scan started
+  * @wdev: the wireless device to scan for
+  * @aborted: (internal) scan request was notified as aborted
+  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
+@@ -1023,6 +1024,7 @@ struct cfg80211_scan_request {
  
-+static void _rtl92c_phy_sw_rf_setting(struct ieee80211_hw *hw, u8 channel)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	/* internal */
+ 	struct wiphy *wiphy;
++	unsigned long scan_start;
+ 	bool aborted;
+ 	bool no_cck;
+ 
+@@ -1074,6 +1076,7 @@ struct cfg80211_sched_scan_request {
+ 	/* internal */
+ 	struct wiphy *wiphy;
+ 	struct net_device *dev;
++	unsigned long scan_start;
+ 
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c68e15e..0e6277a 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3049,6 +3049,7 @@ enum nl80211_ap_sme_features {
+  *	equals (SAE) with user space SME (NL80211_CMD_AUTHENTICATE) in station
+  *	mode
+  * @NL80211_FEATURE_LOW_PRIORITY_SCAN: This driver supports low priority scan
++ * @NL80211_FEATURE_SCAN_FLUSH: Scan flush is supported
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3058,6 +3059,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_P2P_DEVICE_NEEDS_CHANNEL	= 1 << 4,
+ 	NL80211_FEATURE_SAE				= 1 << 5,
+ 	NL80211_FEATURE_LOW_PRIORITY_SCAN		= 1 << 6,
++	NL80211_FEATURE_SCAN_FLUSH			= 1 << 7,
+ };
+ 
+ /**
+@@ -3100,9 +3102,11 @@ enum nl80211_connect_failed_reason {
+  * requests.
+  *
+  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
++ * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
++	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
+ };
+ 
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 443d4d7..48c2ea4 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -370,6 +370,8 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ 	rdev->wiphy.rts_threshold = (u32) -1;
+ 	rdev->wiphy.coverage_class = 0;
+ 
++	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH;
 +
-+	if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
-+		if (channel == 6 && rtlphy->current_chan_bw ==
-+		    HT_CHANNEL_WIDTH_20)
-+			rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD,
-+				      0x00255);
-+		else{
-+			u32 backupRF0x1A = (u32)rtl_get_rfreg(hw, RF90_PATH_A,
-+					    RF_RX_G1, RFREG_OFFSET_MASK);
-+			rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD,
-+				      backupRF0x1A);
-+		}
+ 	return &rdev->wiphy;
+ }
+ EXPORT_SYMBOL(wiphy_new);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index aee252d..9e5a720 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4371,8 +4371,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_SCAN_FLAGS]) {
+ 		request->flags = nla_get_u32(
+ 			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
+-		if ((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
+-		    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) {
++		if (((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
++		     !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) ||
++		    ((request->flags & NL80211_SCAN_FLAG_FLUSH) &&
++		     !(wiphy->features & NL80211_FEATURE_SCAN_FLUSH))) {
+ 			err = -EOPNOTSUPP;
+ 			goto out_free;
+ 		}
+@@ -4383,6 +4385,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
++	request->scan_start = jiffies;
+ 
+ 	rdev->scan_req = request;
+ 	err = rdev->ops->scan(&rdev->wiphy, request);
+@@ -4612,8 +4615,10 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	if (info->attrs[NL80211_ATTR_SCAN_FLAGS]) {
+ 		request->flags = nla_get_u32(
+ 			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
+-		if ((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
+-		    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) {
++		if (((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
++		     !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) ||
++		    ((request->flags & NL80211_SCAN_FLAG_FLUSH) &&
++		     !(wiphy->features & NL80211_FEATURE_SCAN_FLUSH))) {
+ 			err = -EOPNOTSUPP;
+ 			goto out_free;
+ 		}
+@@ -4622,6 +4627,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	request->dev = dev;
+ 	request->wiphy = &rdev->wiphy;
+ 	request->interval = interval;
++	request->scan_start = jiffies;
+ 
+ 	err = rdev->ops->sched_scan_start(&rdev->wiphy, dev, request);
+ 	if (!err) {
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 2005096..a8d5a9a 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -47,6 +47,27 @@ static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
+ 	kref_put(&bss->ref, bss_release);
+ }
+ 
++/* must hold dev->bss_lock! */
++static void __cfg80211_bss_expire(struct cfg80211_registered_device *dev,
++				  unsigned long expire_time)
++{
++	struct cfg80211_internal_bss *bss, *tmp;
++	bool expired = false;
++
++	list_for_each_entry_safe(bss, tmp, &dev->bss_list, list) {
++		if (atomic_read(&bss->hold))
++			continue;
++		if (!time_after(expire_time, bss->ts))
++			continue;
++
++		__cfg80211_unlink_bss(dev, bss);
++		expired = true;
 +	}
++
++	if (expired)
++		dev->bss_generation++;
 +}
 +
- static bool _rtl92c_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 					     u32 cmdtableidx, u32 cmdtablesz,
- 					     enum swchnlcmd_id cmdid,
-@@ -837,6 +857,7 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 					      currentcmd->para1,
- 					      RFREG_OFFSET_MASK,
- 					      rtlphy->rfreg_chnlval[rfpath]);
-+			_rtl92c_phy_sw_rf_setting(hw, channel);
- 			}
- 			break;
- 		default:
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-index 04c3aef..7853412 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-@@ -116,6 +116,9 @@
- 	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 20, 12)
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ {
+ 	struct cfg80211_scan_request *request;
+@@ -72,10 +93,17 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ 	if (wdev->netdev)
+ 		cfg80211_sme_scan_done(wdev->netdev);
  
- #define CHIP_VER_B			BIT(4)
-+#define CHIP_BONDING_IDENTIFIER(_value) (((_value) >> 22) & 0x3)
-+#define CHIP_BONDING_92C_1T2R		0x1
-+#define RF_TYPE_1T2R			BIT(1)
- #define CHIP_92C_BITMASK		BIT(0)
- #define CHIP_92C_1T2R			0x03
- #define CHIP_92C			0x01
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index cc89582..c2e2812 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -896,7 +896,6 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	static bool iqk_initialized; /* initialized to false */
- 	bool rtstatus = true;
- 	bool is92c;
- 	int err;
-@@ -921,9 +920,28 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
- 
- 	rtlhal->last_hmeboxnum = 0;
- 	rtl92c_phy_mac_config(hw);
-+	/* because last function modify RCR, so we update
-+	 * rcr var here, or TP will unstable for receive_config
-+	 * is wrong, RX RCR_ACRC32 will cause TP unstabel & Rx
-+	 * RCR_APP_ICV will cause mac80211 unassoc for cisco 1252*/
-+	rtlpci->receive_config = rtl_read_dword(rtlpriv, REG_RCR);
-+	rtlpci->receive_config &= ~(RCR_ACRC32 | RCR_AICV);
-+	rtl_write_dword(rtlpriv, REG_RCR, rtlpci->receive_config);
- 	rtl92c_phy_bb_config(hw);
- 	rtlphy->rf_mode = RF_OP_BY_SW_3WIRE;
- 	rtl92c_phy_rf_config(hw);
-+	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
-+	    !IS_92C_SERIAL(rtlhal->version)) {
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G1, MASKDWORD, 0x30255);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_RX_G2, MASKDWORD, 0x50a00);
-+	} else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version)) {
-+		rtl_set_rfreg(hw, RF90_PATH_A, 0x0C, MASKDWORD, 0x894AE);
-+		rtl_set_rfreg(hw, RF90_PATH_A, 0x0A, MASKDWORD, 0x1AF31);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_IPA, MASKDWORD, 0x8F425);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_SYN_G2, MASKDWORD, 0x4F200);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_RCK1, MASKDWORD, 0x44053);
-+		rtl_set_rfreg(hw, RF90_PATH_A, RF_RCK2, MASKDWORD, 0x80201);
+-	if (request->aborted)
++	if (request->aborted) {
+ 		nl80211_send_scan_aborted(rdev, wdev);
+-	else
++	} else {
++		if (request->flags & NL80211_SCAN_FLAG_FLUSH) {
++			/* flush entries from previous scans */
++			spin_lock_bh(&rdev->bss_lock);
++			__cfg80211_bss_expire(rdev, request->scan_start);
++			spin_unlock_bh(&rdev->bss_lock);
++		}
+ 		nl80211_send_scan_done(rdev, wdev);
 +	}
- 	rtlphy->rfreg_chnlval[0] = rtl_get_rfreg(hw, (enum radio_path)0,
- 						 RF_CHNLBW, RFREG_OFFSET_MASK);
- 	rtlphy->rfreg_chnlval[1] = rtl_get_rfreg(hw, (enum radio_path)1,
-@@ -945,11 +963,11 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
  
- 	if (ppsc->rfpwr_state == ERFON) {
- 		rtl92c_phy_set_rfpath_switch(hw, 1);
--		if (iqk_initialized) {
-+		if (rtlphy->iqk_initialized) {
- 			rtl92c_phy_iq_calibrate(hw, true);
- 		} else {
- 			rtl92c_phy_iq_calibrate(hw, false);
--			iqk_initialized = true;
-+			rtlphy->iqk_initialized = true;
- 		}
- 
- 		rtl92c_dm_check_txpower_tracking(hw);
-@@ -1011,12 +1029,30 @@ static enum version_8192c _rtl92ce_read_chip_version(struct ieee80211_hw *hw)
- 	case VERSION_A_CHIP_88C:
- 		versionid = "A_CHIP_88C";
- 		break;
-+	case VERSION_NORMAL_UMC_CHIP_92C_1T2R_A_CUT:
-+		versionid = "A_CUT_92C_1T2R";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_92C_A_CUT:
-+		versionid = "A_CUT_92C";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_88C_A_CUT:
-+		versionid = "A_CUT_88C";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_92C_1T2R_B_CUT:
-+		versionid = "B_CUT_92C_1T2R";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_92C_B_CUT:
-+		versionid = "B_CUT_92C";
-+		break;
-+	case VERSION_NORMAL_UMC_CHIP_88C_B_CUT:
-+		versionid = "B_CUT_88C";
-+		break;
- 	default:
- 		versionid = "Unknown. Bug?";
- 		break;
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
- 		 "Chip Version ID: %s\n", versionid);
- 
- 	switch (version & 0x3) {
-@@ -1189,6 +1225,7 @@ static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
+ #ifdef CONFIG_CFG80211_WEXT
+ 	if (wdev->netdev && !request->aborted) {
+@@ -126,16 +154,27 @@ EXPORT_SYMBOL(cfg80211_scan_done);
+ void __cfg80211_sched_scan_results(struct work_struct *wk)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci_priv *rtlpcipriv = rtl_pcipriv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
- 	u8 u1b_tmp;
- 	u32 u4b_tmp;
+ 	struct cfg80211_registered_device *rdev;
++	struct cfg80211_sched_scan_request *request;
  
-@@ -1217,7 +1254,8 @@ static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
- 	rtl_write_word(rtlpriv, REG_GPIO_IO_SEL, 0x0790);
- 	rtl_write_word(rtlpriv, REG_LEDCFG0, 0x8080);
- 	rtl_write_byte(rtlpriv, REG_AFE_PLL_CTRL, 0x80);
--	rtl_write_byte(rtlpriv, REG_SPS0_CTRL, 0x23);
-+	if (!IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
-+		rtl_write_byte(rtlpriv, REG_SPS0_CTRL, 0x23);
- 	if (rtlpcipriv->bt_coexist.bt_coexistence) {
- 		u4b_tmp = rtl_read_dword(rtlpriv, REG_AFE_XTAL_CTRL);
- 		u4b_tmp |= 0x03824800;
-@@ -1246,6 +1284,9 @@ void rtl92ce_card_disable(struct ieee80211_hw *hw)
- 		rtlpriv->cfg->ops->led_control(hw, LED_CTL_POWER_OFF);
- 	RT_SET_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
- 	_rtl92ce_poweroff_adapter(hw);
+ 	rdev = container_of(wk, struct cfg80211_registered_device,
+ 			    sched_scan_results_wk);
+ 
++	request = rdev->sched_scan_req;
 +
-+	/* after power off we should do iqk again */
-+	rtlpriv->phy.iqk_initialized = false;
+ 	mutex_lock(&rdev->sched_scan_mtx);
+ 
+ 	/* we don't have sched_scan_req anymore if the scan is stopping */
+-	if (rdev->sched_scan_req)
+-		nl80211_send_sched_scan_results(rdev,
+-						rdev->sched_scan_req->dev);
++	if (request) {
++		if (request->flags & NL80211_SCAN_FLAG_FLUSH) {
++			/* flush entries from previous scans */
++			spin_lock_bh(&rdev->bss_lock);
++			__cfg80211_bss_expire(rdev, request->scan_start);
++			spin_unlock_bh(&rdev->bss_lock);
++			request->scan_start =
++				jiffies + msecs_to_jiffies(request->interval);
++		}
++		nl80211_send_sched_scan_results(rdev, request->dev);
++	}
+ 
+ 	mutex_unlock(&rdev->sched_scan_mtx);
+ }
+@@ -197,23 +236,9 @@ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
+ 	}
  }
  
- void rtl92ce_interrupt_recognized(struct ieee80211_hw *hw,
-@@ -1904,6 +1945,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
- 			ratr_bitmap &= 0x0f0ff0ff;
- 		break;
- 	}
-+	sta_entry->ratr_index = ratr_index;
-+
- 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
- 		 "ratr_bitmap :%x\n", ratr_bitmap);
- 	*(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-index 88deae6..73262ca 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-@@ -82,6 +82,8 @@ bool rtl92c_phy_mac_config(struct ieee80211_hw *hw)
- 
- 	if (is92c)
- 		rtl_write_byte(rtlpriv, 0x14, 0x71);
-+	else
-+		rtl_write_byte(rtlpriv, 0x04CA, 0x0A);
- 	return rtstatus;
+-/* must hold dev->bss_lock! */
+ void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
+ {
+-	struct cfg80211_internal_bss *bss, *tmp;
+-	bool expired = false;
+-
+-	list_for_each_entry_safe(bss, tmp, &dev->bss_list, list) {
+-		if (atomic_read(&bss->hold))
+-			continue;
+-		if (!time_after(jiffies, bss->ts + IEEE80211_SCAN_RESULT_EXPIRE))
+-			continue;
+-		__cfg80211_unlink_bss(dev, bss);
+-		expired = true;
+-	}
+-
+-	if (expired)
+-		dev->bss_generation++;
++	__cfg80211_bss_expire(dev, jiffies - IEEE80211_SCAN_RESULT_EXPIRE);
  }
  
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index 390d6d4..b8a3c03 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -127,11 +127,11 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct phy_sts_cck_8192s_t *cck_buf;
-+	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
- 	s8 rx_pwr_all = 0, rx_pwr[4];
- 	u8 evm, pwdb_all, rf_rx_num = 0;
- 	u8 i, max_spatial_stream;
- 	u32 rssi, total_rssi = 0;
--	bool in_powersavemode = false;
- 	bool is_cck_rate;
+ const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
+@@ -962,6 +987,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 	creq->ssids = (void *)&creq->channels[n_channels];
+ 	creq->n_channels = n_channels;
+ 	creq->n_ssids = 1;
++	creq->scan_start = jiffies;
  
- 	is_cck_rate = RX_HAL_IS_CCK_RATE(pdesc);
-@@ -147,7 +147,7 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
- 		u8 report, cck_highpwr;
- 		cck_buf = (struct phy_sts_cck_8192s_t *)p_drvinfo;
+ 	/* translate "Scan on frequencies" request */
+ 	i = 0;
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 055d596..07d717e 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -138,6 +138,7 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
  
--		if (!in_powersavemode)
-+		if (ppsc->rfpwr_state == ERFON)
- 			cck_highpwr = (u8) rtl_get_bbreg(hw,
- 						 RFPGA0_XA_HSSIPARAMETER2,
- 						 BIT(9));
+ 	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
++	request->scan_start = jiffies;
+ 
+ 	rdev->scan_req = request;
+ 
 -- 
-1.7.10.4
+1.7.0.4
 
