@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:35199 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753395Ab2JLHMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 03:12:01 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
-References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
-	<20121011203112.GB3317@kroah.com>
-Date: Fri, 12 Oct 2012 10:11:57 +0300
-In-Reply-To: <20121011203112.GB3317@kroah.com> (Greg KH's message of "Fri, 12
-	Oct 2012 05:31:12 +0900")
-Message-ID: <87haq017wi.fsf@purkki.adurom.net> (sfid-20121012_091207_286353_17A6085E)
+Received: from latitanza.investici.org ([82.94.249.234]:31686 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758580Ab2JSL2z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Oct 2012 07:28:55 -0400
+Date: Fri, 19 Oct 2012 13:28:21 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 2/2] mac80211: implement set_mcast_rate() callback
+Message-ID: <20121019112821.GD7023@ritirata.org> (sfid-20121019_132911_753724_96D4FECC)
+References: <CAEFj987U5sjk-ze3Tn8bh3OFD8j=p8=ffDS8zwtWO=R3UMi6iw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="95nVhCDQCgPWiQqT"
+In-Reply-To: <CAEFj987U5sjk-ze3Tn8bh3OFD8j=p8=ffDS8zwtWO=R3UMi6iw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg KH <gregkh@linuxfoundation.org> writes:
 
-> Very nice.
+--95nVhCDQCgPWiQqT
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Indeed.
+On Fri, Oct 19, 2012 at 07:24:34PM +0800, Yeoh Chun-Yeow wrote:
+> Hi, Antonio
+>=20
+> > +	memcpy(sdata->vif.bss_conf.mcast_rate, &rate, sizeof(rate));
+>=20
+> I think that the second argument should be "rate" instead of "&rate".
 
-> But what is keeping this driver from going to the "proper" place in the
-> kernel tree (i.e. drivers/net/...)?  I don't have a problem adding it to
-> the staging tree, but it would need a TODO file to list what is needed
-> to get it out of the staging tree.
+Hi Yeoh,
 
-I did a really quick 5 min review of this driver and IMHO this should go
-directly to drivers/net/wireless/ (or maybe to drivers/net/wireless/ath,
-Luis?), I don't see any reason why this should go to staging. The code
-looks clean and is only 2 kLOC. But I'll review this better during the
-weekend and also run some build tests.
+correct. Thanks a lot!
 
--- 
-Kalle Valo
+>=20
+> ---
+> Chun-Yeow
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--95nVhCDQCgPWiQqT
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlCBOVUACgkQpGgxIkP9cwf1dACbBOY2+4VVRjWm/YNCzNpuKFlI
+MvoAni/b/rMO2HixB7nGwyrP1q2ZPOvC
+=emC7
+-----END PGP SIGNATURE-----
+
+--95nVhCDQCgPWiQqT--
