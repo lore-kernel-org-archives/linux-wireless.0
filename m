@@ -1,123 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38379 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739Ab2JOLCt (ORCPT
+Received: from mail.ultra-3eti.com ([173.13.207.162]:44700 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759169Ab2JSRnH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 07:02:49 -0400
-Message-ID: <1350299004.27801.4.camel@jlt4.sipsolutions.net> (sfid-20121015_130253_529671_84021D2F)
-Subject: Re: unloading WiFi modules is usually triggering kernel crash
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Pedro Francisco <pedrogfrancisco@gmail.com>,
-	ML linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 15 Oct 2012 13:03:24 +0200
-In-Reply-To: <20121012121333.GA30816@redhat.com>
-References: <CAJZjf_wv=+HKLwnH-=rvx9h=0jEGzoCrd-a8GOW-QnXfOVgc_g@mail.gmail.com>
-	 <20120807102208.GA12589@redhat.com>
-	 <CAJZjf_xVOKjVYYXxsWf6Z+KaTDi_3ZDqvBMyzMETfbkpWUgWFQ@mail.gmail.com>
-	 <CAJZjf_xVzQmpLHd=KQ0qc77QxdpE0a7xjGTNo2Sw6BM8miwe7A@mail.gmail.com>
-	 <20121003143029.GF2259@redhat.com>
-	 <CAJZjf_xZC2473B2SQAKFfc7m6SSeEK7z7N-GaUsZUNV-K9c=Ww@mail.gmail.com>
-	 <20121012121333.GA30816@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 19 Oct 2012 13:43:07 -0400
+Received: from webmail.3eti.com (rockmx01.rock.corp [192.168.200.4]) by mail.ultra-3eti.com with ESMTP id bsxBPtgM0GpQcBiw (version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2012 13:43:05 -0400 (EDT)
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: bug in mesh_sync_adjust_tbtt()
+Date: Fri, 19 Oct 2012 17:43:03 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D075EBFDE@RockMX01.rock.corp> (sfid-20121019_194319_850823_0C6D9E48)
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-10-12 at 14:13 +0200, Stanislaw Gruszka wrote:
-> On Tue, Oct 09, 2012 at 10:14:40AM +0100, Pedro Francisco wrote:
-> > So, I'm guessing this means it is related to what you found on iwlwifi
-> > (even if I'm on iwlegacy)?
-> 
-> Yes, this seems to be cfg80211 problem. I think crash happen because
-> cfg80211 is in disassociate state (i.e. has wdev->current_bss NULL) and
-> erroneously mac80211 stays in associate state. So while we unload
-> module cfg80211_mlme_down() we do not call ieee80211_deauth().
-> 
-> I think this state mishmash happens because wrong behaviour on
->  __cfg80211_mlme_deauth(). Below patch try to correct that.
-> Can you check if it prevent a crash? On my environment I can 
-> not reproduce this problem reliably.
-
-Ugh, yeah, what was I thinking with the code below ... ??
+I have checked a few kernel versions between 3.5 and 3.6.2, even the latest version 3.6.2 has the same problem.
 
 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index ab78b53..9b99b60 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -1218,6 +1218,7 @@ struct cfg80211_deauth_request {
->  	const u8 *ie;
->  	size_t ie_len;
->  	u16 reason_code;
-> +	bool local_state_change;
->  };
->  
->  /**
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index e714ed8..e510a33 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -3549,6 +3549,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
->  {
->  	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
->  	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
-> +	bool tx = !req->local_state_change;
->  
->  	mutex_lock(&ifmgd->mtx);
->  
-> @@ -3565,12 +3566,12 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
->  	if (ifmgd->associated &&
->  	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
->  		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
-> -				       req->reason_code, true, frame_buf);
-> +				       req->reason_code, tx, frame_buf);
->  	} else {
->  		drv_mgd_prepare_tx(sdata->local, sdata);
->  		ieee80211_send_deauth_disassoc(sdata, req->bssid,
->  					       IEEE80211_STYPE_DEAUTH,
-> -					       req->reason_code, true,
-> +					       req->reason_code, tx,
->  					       frame_buf);
->  	}
->  
-> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-> index 3df195a..4954010 100644
-> --- a/net/wireless/mlme.c
-> +++ b/net/wireless/mlme.c
-> @@ -457,21 +457,11 @@ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
->  		.reason_code = reason,
->  		.ie = ie,
->  		.ie_len = ie_len,
-> +		.local_state_change = local_state_change,
->  	};
->  
->  	ASSERT_WDEV_LOCK(wdev);
->  
-> -	if (local_state_change) {
-> -		if (wdev->current_bss &&
-> -		    ether_addr_equal(wdev->current_bss->pub.bssid, bssid)) {
-> -			cfg80211_unhold_bss(wdev->current_bss);
-> -			cfg80211_put_bss(&wdev->current_bss->pub);
-> -			wdev->current_bss = NULL;
-> -		}
-> -
-> -		return 0;
-> -	}
-> -
+In file net/mac80211/mesh_sync.c
+
+Function: coid  mesh_sync_adjust_tbtt()
+{
+    spin_lock_bh(&ifmsh->sync_offset_lock);
+..
+    tsf = drv_get_tsf(local, sdata);
+    if (tsf != -1ULL)
+        drv_set_tsf(local, sdata, tsf + tsfdelta);
+
+    spin_unlock_bh(&ifmsh->sync_offset_lock);
+}
 
 
-This looks fine to me. Probably needs Cc: stable?
+In file net/mac80211/driver-ops.h
 
-Then again, maybe if the deauth request is for a BSS that *isn't* the
-current BSS we should "swallow" it in cfg80211? IOW, something like
+static inline u64 drv_get_tsf(struct ieee80211_local *local,
+                  struct ieee80211_sub_if_data *sdata)
+{   
+.
+    might_sleep(); 
+.
+}
 
-if (local_state_change && (!wdev->current_bss ||
-			   !ether_addr_equal(...))
-	return 0;
+The problem is drv_get_tsf() can sleep, but it's called in sleep-prohibit context (enclosed by spin_lock_bh() and    spin_unlock_bh())
 
-since neither mac80211 nor cfg80211 track authentication... Doesn't
-matter much though.
+As a result, when running mesh traffic for a while, kernel keeps complaining like below.
 
-johannes
+One question is, can I get rid of might_sleep() in drv_get/set_tsf()? What would be the impact?
+
+
+Jan 10 01:46:36 2005 default user.err kernel: BUG: scheduling while atomic: kworker/u:1/37/0x10000200
+Jan 10 01:46:36 2005 default user.warn kernel: Modules linked in: ip6table_filter ip6_tables iptable_filter ip_tables x_tables staNat(PO) arc4 ath9k(O
+Jan 10 01:46:36 2005 default user.warn kernel: Call Trace:
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbd20] [c00072b0] show_stack+0x58/0x148 (unreliable)
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbd60] [c00413dc] __schedule_bug+0x48/0x60
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbd70] [c035273c] __schedule+0x68/0x46c
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbe60] [c0041418] __cond_resched+0x24/0x38
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbe80] [c0352bd4] _cond_resched+0x2c/0x48
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbe90] [d53af420] mesh_sync_adjust_tbtt+0x8c/0x160 [mac80211]
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbec0] [d53aa53c] ieee80211_mesh_work+0x17c/0x184 [mac80211]
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbee0] [d538e384] ieee80211_iface_work+0x2a8/0x2b0 [mac80211]
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbf20] [c00321d8] process_one_work+0x1e0/0x2dc
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbf50] [c0033b84] worker_thread+0x24c/0x348
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbfa0] [c003804c] kthread+0xa4/0xa8
+Jan 10 01:46:36 2005 default user.warn kernel: [ce9bbff0] [c000ccac] kernel_thread+0x4c/0x68
+
 
