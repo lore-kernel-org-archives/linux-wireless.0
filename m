@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38015 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104Ab2JATUU (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:41051 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916Ab2JSIAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2012 15:20:20 -0400
-Message-ID: <1349119253.10330.44.camel@jlt4.sipsolutions.net> (sfid-20121001_212024_576656_FEDEE2BA)
-Subject: Re: 802.11w   bip_aad() bug ?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 01 Oct 2012 21:20:53 +0200
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D075EB5FF@RockMX01.rock.corp> (sfid-20121001_172613_798023_EF8A5536)
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D075EB5FF@RockMX01.rock.corp>
-	 (sfid-20121001_172613_798023_EF8A5536)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 19 Oct 2012 04:00:54 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so65065bkc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2012 01:00:53 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Javier Lopez <jlopex@cozybit.com>
+Subject: Re: Receive BlockAckReq and BlockAck on carl9170 driver
+Date: Fri, 19 Oct 2012 10:00:41 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <CAMr9ZPkS3TXg7XDNzeor7zXED7cUUqcGdrb53OFGtr0N8Hh5Ng@mail.gmail.com>
+In-Reply-To: <CAMr9ZPkS3TXg7XDNzeor7zXED7cUUqcGdrb53OFGtr0N8Hh5Ng@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201210191000.41350.chunkeey@googlemail.com> (sfid-20121019_100057_926684_3B0EA743)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-10-01 at 15:13 +0000, Chaoxing Lin wrote:
-> Gentlemen,
-> 
-> In kernel/net/mac80211/wpa.c function bip_add is as below (in the end).
-> 
-> I think the aad[1] should be 
-> aad[1] = skb->data[1] & ~(BIT(3) | BIT(4) | BIT(5));
-> 
-> 
-> Reference 1: ieee802.11-2012 page 1212
-> "FC-MPDU Frame Control field, with:
-> 1) Retry bit (bit 11) masked to 0
-> 2) Power Management bit (bit 12) masked to 0
-> 3) More Data bit (bit 13) masked to 0"
-> 
-> Reference 2: ieee80211-2012, page 404, Figure 8-12
-> 
-> The bit 11 should be bit 3 of second byte.
-> The bit 12 should be bit 4 of second byte.
-> The bit 13 should be bit 5 of second byte.
-> 
-> 
-> What did I miss??
+Hello,
 
-Nothing, we just fixed that:
-http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211.git;a=commitdiff;h=33766368f6532313571534f9112b1796d6651bbe
+On Friday, October 19, 2012 05:57:57 AM Javier Lopez wrote:
+> We are trying to receive BlockAckReq and BlockAck on carl9170 driver.
+> We've been playing with CARL9170_RX_FILTER_CTL_OTHER and
+> CARL9170_RX_FILTER_CTL_BACKR rx filters but we cannot see
+> those frames on the traps we have on carl9170_handle_mpdu
+> function.
+Do you have an example of such a frame trap? And what operation
+mode do you use? Normal station, adhoc, AP or mesh? Are the
+BA/BARs for directed to the carl9170-device, or are they for
+someone else? ---
 
-(note that the URL might not be accessible yet, I pieced it together and
-had evidently forgotten to push out this change before, so you may have
-to wait for git.kernel.org to sync with the master)
+> Is it not possible to receive those frames on driver?
+Do you get these frames on a secondary monitor interface?
 
-johannes
-
+Regards,
+	Chr
