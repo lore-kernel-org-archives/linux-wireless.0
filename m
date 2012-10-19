@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46404 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759108Ab2JYCNR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54676 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753871Ab2JSNLO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 22:13:17 -0400
-Received: by mail-ob0-f174.google.com with SMTP id uo13so1121309obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 19:13:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com>
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
-	<CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
-	<20121024194547.GA19060@shredder>
-	<CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
-	<CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
-	<20121024220813.GB6723@shredder>
-	<CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
-	<CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com>
-Date: Wed, 24 Oct 2012 19:13:16 -0700
-Message-ID: <CAJ-Vmom5+zt6SdQj-ccvnUnxjYjUZ4edDWsAFDnUCvTR8H5WwQ@mail.gmail.com> (sfid-20121025_041320_775116_0C22F704)
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 19 Oct 2012 09:11:14 -0400
+Message-ID: <1350652305.10678.0.camel@jlt4.sipsolutions.net> (sfid-20121019_151118_523761_20627A12)
+Subject: Re: [RFC v2] cfg80211: VHT regulatory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 19 Oct 2012 15:11:45 +0200
+In-Reply-To: <507B8766.9010501@posedge.com>
+References: <5046FB3D.6090803@posedge.com>
+	   <1346852356.4364.9.camel@jlt4.sipsolutions.net>
+	   <50481C2E.5040303@posedge.com>
+	   <1346925298.5469.4.camel@jlt4.sipsolutions.net>
+	   <50489165.1080902@posedge.com>
+	   <1347019809.4256.21.camel@jlt4.sipsolutions.net>
+	   <50655B36.5060500@posedge.com>
+	   <1348828789.13298.5.camel@jlt4.sipsolutions.net>
+	   (sfid-20120928_123917_337659_1AA6C9C6) <1348828963.13298.8.camel@jlt4.sipsolutions.net>
+	  <5065DFAD.2070305@posedge.com>
+	 <1349860308.4683.47.camel@jlt4.sipsolutions.net>
+	 <507B8766.9010501@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 October 2012 18:54, Adrian Chadd <adrian@freebsd.org> wrote:
+On Mon, 2012-10-15 at 09:17 +0530, Mahesh Palivela wrote:
+> On 10/10/2012 02:41 PM, Johannes Berg wrote:
+> >>
+> >> we need "channel starting frequency" anyways for calculating center
+> >> freq. so we can use same constant for computing primary chan freq as
+> >> well. why switch to prim_chan_offset?
+> >
+> > I think it'd be easier for drivers, since they typically seem to use
+> > that to specify the control channel. If we give the frequency, they'll
+> > have to calculate back to offset. The offset is also used in IEs etc.,
+> > so I think overall that would simplify things.
+> 
+> Offset means we specify one of -70, -50, -30, -10, +10, +30, +50, +70 
+> for 80/160 MHz BW from center freq.
+> For ex. 80 MHz BW of channel 36, 40, 44 and 48 center freq is 42. If 
+> control chan 36, then we specify offset -30. Is that what we want?
+> 
+> VHT IEs doesn't use offset anywhere. I am not sure why/where drivers use 
+> offset values.
 
-> I'll go and see about pushing this into the tree so Sujith's next
-> ath9k_htc drop will include this fix.
->
-> Thanks for the debugging info Thomas!
+Ok, d'oh, our device uses an offset but I just reviewed the spec and
+that just says the control channel is specified in the *HT* IE...
 
-I've just pushed the fix into the tree. I'll privately email you
-another image to test with just to make sure my committed fix is
-correct.
+SO let's do what you suggested before and have all the three different
+frequencies.
 
-The next release will have this fixed.
+johannes
 
-
-
-Adrian
