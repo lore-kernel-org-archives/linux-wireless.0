@@ -1,48 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:37358 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755502Ab2JaWgb (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:52308 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363Ab2JSTBB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 18:36:31 -0400
-Received: by mail-ee0-f46.google.com with SMTP id b15so1004482eek.19
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2012 15:36:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1351709571-23301-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1351709571-23301-1-git-send-email-mcgrof@do-not-panic.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 1 Nov 2012 09:36:09 +1100
-Message-ID: <CAGRGNgXyyvpSfFqd+L6J166Lfu7yfWc8-zMwpTMxLzFY+Qs0nA@mail.gmail.com> (sfid-20121031_233643_194552_18E24E68)
-Subject: Re: [PATCH] carl9170: kill MODULE_VERSION
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 19 Oct 2012 15:01:01 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] NFC: Removed unused details from pn544.h header file
+Date: Fri, 19 Oct 2012 11:56:21 -0700
+Message-Id: <1350672981-29772-1-git-send-email-marcel@holtmann.org> (sfid-20121019_210104_727021_4864FB42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+The majority of the defines and structures from pn544.h are no
+longer in use. So just remove them.
 
-On Thu, Nov 1, 2012 at 5:52 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
->
-> This is pretty pointless. Lets kill this to stop people from
-> thinking that its actually used. Maybe we should go on
-> a crusade and kill this completely from the kernel.
+Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+---
+ drivers/nfc/pn544.h | 62 -----------------------------------------------------
+ 1 file changed, 62 deletions(-)
 
-I'm sure that there are a multitude of places where MODULE_VERSION is
-unnecessary, but killing it from the entire kernel simply won't
-happen. I know that in the SCSI subsystem some of the
-vendor-maintained drivers use this to keep track of exactly which
-version is running on a given kernel. (Why not use kernel releases?
-not sure, probably a combination of user-interface, distro backporting
-and internal systems.)
-
-Thanks,
-
+diff --git a/drivers/nfc/pn544.h b/drivers/nfc/pn544.h
+index 9890bba..299575c 100644
+--- a/drivers/nfc/pn544.h
++++ b/drivers/nfc/pn544.h
+@@ -23,67 +23,6 @@
+ #ifndef _PN544_H_
+ #define _PN544_H_
+ 
+-#include <linux/i2c.h>
+-
+-#define PN544_DRIVER_NAME	"pn544"
+-#define PN544_MAXWINDOW_SIZE	7
+-#define PN544_WINDOW_SIZE	4
+-#define PN544_RETRIES		10
+-#define PN544_MAX_I2C_TRANSFER	0x0400
+-#define PN544_MSG_MAX_SIZE	0x21 /* at normal HCI mode */
+-
+-/* ioctl */
+-#define PN544_CHAR_BASE		'P'
+-#define PN544_IOR(num, dtype)	_IOR(PN544_CHAR_BASE, num, dtype)
+-#define PN544_IOW(num, dtype)	_IOW(PN544_CHAR_BASE, num, dtype)
+-#define PN544_GET_FW_MODE	PN544_IOW(1, unsigned int)
+-#define PN544_SET_FW_MODE	PN544_IOW(2, unsigned int)
+-#define PN544_GET_DEBUG		PN544_IOW(3, unsigned int)
+-#define PN544_SET_DEBUG		PN544_IOW(4, unsigned int)
+-
+-/* Timing restrictions (ms) */
+-#define PN544_RESETVEN_TIME	30 /* 7 */
+-#define PN544_PVDDVEN_TIME	0
+-#define PN544_VBATVEN_TIME	0
+-#define PN544_GPIO4VEN_TIME	0
+-#define PN544_WAKEUP_ACK	5
+-#define PN544_WAKEUP_GUARD	(PN544_WAKEUP_ACK + 1)
+-#define PN544_INACTIVITY_TIME	1000
+-#define PN544_INTERFRAME_DELAY	200 /* us */
+-#define PN544_BAUDRATE_CHANGE	150 /* us */
+-
+-/* Debug bits */
+-#define PN544_DEBUG_BUF		0x01
+-#define PN544_DEBUG_READ	0x02
+-#define PN544_DEBUG_WRITE	0x04
+-#define PN544_DEBUG_IRQ		0x08
+-#define PN544_DEBUG_CALLS	0x10
+-#define PN544_DEBUG_MODE	0x20
+-
+-/* Normal (HCI) mode */
+-#define PN544_LLC_HCI_OVERHEAD	3 /* header + crc (to length) */
+-#define PN544_LLC_MIN_SIZE	(1 + PN544_LLC_HCI_OVERHEAD) /* length + */
+-#define PN544_LLC_MAX_DATA	(PN544_MSG_MAX_SIZE - 2)
+-#define PN544_LLC_MAX_HCI_SIZE	(PN544_LLC_MAX_DATA - 2)
+-
+-struct pn544_llc_packet {
+-	unsigned char length; /* of rest of packet */
+-	unsigned char header;
+-	unsigned char data[PN544_LLC_MAX_DATA]; /* includes crc-ccitt */
+-};
+-
+-/* Firmware upgrade mode */
+-#define PN544_FW_HEADER_SIZE	3
+-/* max fw transfer is 1024bytes, but I2C limits it to 0xC0 */
+-#define PN544_MAX_FW_DATA	(PN544_MAX_I2C_TRANSFER - PN544_FW_HEADER_SIZE)
+-
+-struct pn544_fw_packet {
+-	unsigned char command; /* status in answer */
+-	unsigned char length[2]; /* big-endian order (msf) */
+-	unsigned char data[PN544_MAX_FW_DATA];
+-};
+-
+-#ifdef __KERNEL__
+ enum {
+ 	NFC_GPIO_ENABLE,
+ 	NFC_GPIO_FW_RESET,
+@@ -99,6 +38,5 @@ struct pn544_nfc_platform_data {
+ 	void (*disable) (void);
+ 	int (*get_gpio)(int type);
+ };
+-#endif /* __KERNEL__ */
+ 
+ #endif /* _PN544_H_ */
 -- 
-Julian Calaby
+1.7.11.7
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
