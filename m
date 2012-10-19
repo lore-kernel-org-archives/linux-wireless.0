@@ -1,172 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:4584 "EHLO
-	HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751220Ab2JJItY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 04:49:24 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v4 2/2] mac80211: VHT peer STA caps
-Date: Wed, 10 Oct 2012 08:49:23 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCFB278@mbx022-e1-nj-10.exch022.domain.local> (sfid-20121010_104934_121673_B21E8F9F)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:54828 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756414Ab2JSN5k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Oct 2012 09:57:40 -0400
+Message-ID: <1350655090.10678.6.camel@jlt4.sipsolutions.net> (sfid-20121019_155744_558962_0082606F)
+Subject: pull-request: mac80211-next 2012-10-19
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 19 Oct 2012 15:58:10 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-Zj7IF4gMbq3vC9EDCScq"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mahesh Palivela <maheshp@posedge.com>
 
-To save AP's VHT capabilities in STA mode
+--=-Zj7IF4gMbq3vC9EDCScq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
----
-Resending the same patch per Johannes request.
+Hi John,
 
- include/net/mac80211.h     |    3 +++
- net/mac80211/Makefile      |    1 +
- net/mac80211/ieee80211_i.h |    7 +++++++
- net/mac80211/mlme.c        |    5 +++++
- net/mac80211/util.c        |   12 ++++++++++++
- net/mac80211/vht.c         |   36 ++++++++++++++++++++++++++++++++++++
- 6 files changed, 64 insertions(+), 0 deletions(-)
+Please pull my mac80211-next tree to get the first round of new features
+for 3.8. We have:
+ * finally, the mac80211 multi-channel work
+ * scan improvements:
+   - bg scan
+   - scan flush
+   - forced AP scan
+ * cfg80211 tracing
+ * a bit of new code to allow implementing SAE (secure authentication of
+   equals) in managed mode
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f12df5b..89d5bba 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1122,6 +1122,8 @@ enum ieee80211_sta_state {
-  * @aid: AID we assigned to the station if we're an AP
-  * @supp_rates: Bitmap of supported rates (per band)
-  * @ht_cap: HT capabilities of this STA; restricted to our own TX capabilities
-+ * @vht_cap: VHT capabilities of this STA; Not restricting any capabilities
-+ * 	of remote STA. Taking as is.
-  * @wme: indicates whether the STA supports WME. Only valid during AP-mode.
-  * @drv_priv: data area for driver use, will always be aligned to
-  *	sizeof(void *), size is determined in hw information.
-@@ -1134,6 +1136,7 @@ struct ieee80211_sta {
- 	u8 addr[ETH_ALEN];
- 	u16 aid;
- 	struct ieee80211_sta_ht_cap ht_cap;
-+	struct ieee80211_sta_vht_cap vht_cap;
- 	bool wme;
- 	u8 uapsd_queues;
- 	u8 max_sp;
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index a7dd110..4911202 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -8,6 +8,7 @@ mac80211-y := \
- 	wpa.o \
- 	scan.o offchannel.o \
- 	ht.o agg-tx.o agg-rx.o \
-+	vht.o \
- 	ibss.o \
- 	iface.o \
- 	rate.o \
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1fd7dfc..546da35 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1188,6 +1188,8 @@ struct ieee802_11_elems {
- 	u8 *wmm_param;
- 	struct ieee80211_ht_cap *ht_cap_elem;
- 	struct ieee80211_ht_operation *ht_operation;
-+	struct ieee80211_vht_cap *vht_cap_elem;
-+	struct ieee80211_vht_operation *vht_operation;
- 	struct ieee80211_meshconf_ie *mesh_config;
- 	u8 *mesh_id;
- 	u8 *peering;
-@@ -1416,6 +1418,11 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid);
- 
- u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
- 
-+/* VHT */
-+void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
-+					 struct ieee80211_supported_band *sband,
-+					 struct ieee80211_vht_cap *vht_cap_ie,
-+					 struct ieee80211_sta_vht_cap *vht_cap);
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8cefc18..02f4ed5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2156,6 +2156,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	sta->supports_40mhz =
- 		sta->sta.ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 
-+	if (elems.vht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
-+		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+						    elems.vht_cap_elem,
-+						    &sta->sta.vht_cap);
-+
- 	rate_control_rate_init(sta);
- 
- 	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3b35356..af6c54d 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -741,6 +741,18 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			else
- 				elem_parse_failed = true;
- 			break;
-+		case WLAN_EID_VHT_CAPABILITY:
-+			if (elen >= sizeof(struct ieee80211_vht_cap))
-+				elems->vht_cap_elem = (void *)pos;
-+			else
-+				elem_parse_failed = true;
-+			break;
-+		case WLAN_EID_VHT_OPERATION:
-+			if (elen >= sizeof(struct ieee80211_vht_operation))
-+				elems->vht_operation = (void *)pos;
-+			else
-+				elem_parse_failed = true;
-+			break;
- 		case WLAN_EID_MESH_ID:
- 			elems->mesh_id = pos;
- 			elems->mesh_id_len = elen;
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-new file mode 100644
-index 0000000..18f584e
---- /dev/null
-+++ b/net/mac80211/vht.c
-@@ -0,0 +1,36 @@
-+/*
-+ * VHT handling
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/ieee80211.h>
-+#include <linux/export.h>
-+#include <net/mac80211.h>
-+#include "ieee80211_i.h"
-+
-+
-+void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
-+					 struct ieee80211_supported_band *sband,
-+					 struct ieee80211_vht_cap *vht_cap_ie,
-+					 struct ieee80211_sta_vht_cap *vht_cap)
-+{
-+	if (WARN_ON_ONCE(!vht_cap))
-+		return;
-+
-+	memset(vht_cap, 0, sizeof(*vht_cap));
-+
-+	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
-+		return;
-+
-+	vht_cap->vht_supported = true;
-+
-+	vht_cap->cap = le16_to_cpu(vht_cap_ie->vht_cap_info);
-+
-+	/* Copy peer MCS info, the driver might need them. */
-+	memcpy((u8 *)&vht_cap->vht_mcs,
-+	       (u8 *)&vht_cap_ie->supp_mcs,
-+	       sizeof(struct ieee80211_vht_mcs_info));
-+}
+Along with a few random improvements, features and fixes.
+
+Thanks to everyone who contributed :)
+
+johannes
+
+----
+
+The following changes since commit ddffeb8c4d0331609ef2581d84de4d763607bd37=
+:
+
+  Linux 3.7-rc1 (2012-10-14 14:41:04 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
+-john
+
+for you to fetch changes up to d012a605108a482392be80710ea35f1db27c4aa9:
+
+  mac80211: make client powersave independent of interface type (2012-10-19=
+ 15:43:51 +0200)
+
+----------------------------------------------------------------
+Amitkumar Karwar (1):
+      cfg80211: code rearrangement to avoid forward declarations
+
+Antonio Quartulli (1):
+      nl/cfg80211: force scan using an AP vif if requested
+
+Arend van Spriel (3):
+      wireless: drivers: make use of WLAN_EID_VENDOR_SPECIFIC
+      wireless: gelic: make use of WLAN_EID_VENDOR_SPECIFIC
+      wireless: remove duplicate enum ieee80211_eid definitions
+
+Ashok Nagarajan (1):
+      mac80211: move out the non-statistics variable estab_plinks from mesh=
+_stat
+
+Beni Lev (2):
+      cfg80211: add tracing to rdev-ops
+      cfg80211: add cfg80211 exported function tracing
+
+Hila Gonen (1):
+      cfg80211: add wrappers for registered_device_ops
+
+Johannes Berg (9):
+      mac80211: check channel context methods
+      mac80211: track whether to use channel contexts
+      mac80211: use channel contexts
+      mac80211: track needed RX chains for channel contexts
+      mac80211: add channel context iterator
+      wireless: use OR operation to set wiphy features
+      mac80211: remove unimplemented mesh vendor sync
+      mac80211: remove some unused code
+      mac80211: use __printf attribute in debugfs
+
+Jouni Malinen (4):
+      mac80211: Take status code as parameter to ieee80211_send_auth
+      mac80211: Add debug print on unexpect authentication state
+      cfg80211: Allow user space to specify non-IEs to SAE Authentication
+      mac80211: Allow station mode SAE to be implemented in user space
+
+Mahesh Palivela (3):
+      ieee80211: Rename VHT cap struct
+      mac80211: VHT peer STA caps
+      {nl,cfg}80211: Peer STA VHT caps
+
+Marco Porsch (2):
+      mac80211: fix copy-paste typo in Kconfig
+      mac80211: make client powersave independent of interface type
+
+Michal Kazior (4):
+      mac80211: introduce channel context skeleton code
+      mac80211: introduce new ieee80211_ops
+      mac80211: use channel context notifications
+      mac80211: reuse channels for channel contexts
+
+Mohammed Shafi Shajakhan (1):
+      mac80211: Use appropriate debug wrapper
+
+Sam Leffler (4):
+      {nl,cfg}80211: add a flags word to scan requests
+      cfg80211: add scan flag to indicate its priority
+      cfg80211: add support for flushing old scan results
+      mac80211: add support for tx to abort low priority scan requests
+
+Sujith Manoharan (2):
+      mac80211: Notify new IBSS network creation
+      cfg80211: Disallow HT/WEP in IBSS mode
+
+ drivers/net/ethernet/toshiba/ps3_gelic_wireless.c  |    4 +-
+ drivers/net/wireless/airo.c                        |    2 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |    4 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 +-
+ drivers/net/wireless/hostap/hostap_80211_rx.c      |    2 +-
+ drivers/net/wireless/ipw2x00/libipw_rx.c           |    6 +-
+ drivers/net/wireless/libertas/mesh.c               |    2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c            |    4 +-
+ drivers/net/wireless/mwifiex/scan.c                |   13 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c           |    4 +-
+ drivers/net/wireless/orinoco/main.h                |    2 +-
+ include/linux/ieee80211.h                          |   47 +-
+ include/net/cfg80211.h                             |   14 +
+ include/net/mac80211.h                             |  101 +-
+ include/uapi/linux/nl80211.h                       |   48 +
+ net/mac80211/Kconfig                               |    2 +-
+ net/mac80211/Makefile                              |    1 +
+ net/mac80211/cfg.c                                 |  284 +--
+ net/mac80211/chan.c                                |  455 +++-
+ net/mac80211/debugfs.h                             |    6 +-
+ net/mac80211/debugfs_netdev.c                      |   10 +-
+ net/mac80211/driver-ops.h                          |   65 +
+ net/mac80211/ibss.c                                |   88 +-
+ net/mac80211/ieee80211_i.h                         |  171 +-
+ net/mac80211/iface.c                               |   44 +-
+ net/mac80211/main.c                                |  105 +-
+ net/mac80211/mesh.c                                |   43 +-
+ net/mac80211/mesh.h                                |    4 +-
+ net/mac80211/mesh_plink.c                          |   14 +-
+ net/mac80211/mesh_sync.c                           |   55 +-
+ net/mac80211/mlme.c                                |  218 +-
+ net/mac80211/offchannel.c                          |    9 +-
+ net/mac80211/pm.c                                  |    2 +
+ net/mac80211/rate.h                                |   12 +-
+ net/mac80211/rx.c                                  |   32 +-
+ net/mac80211/scan.c                                |   29 +-
+ net/mac80211/sta_info.c                            |   59 +-
+ net/mac80211/status.c                              |   15 +-
+ net/mac80211/trace.h                               |  112 +
+ net/mac80211/tx.c                                  |  281 ++-
+ net/mac80211/util.c                                |  143 +-
+ net/mac80211/vht.c                                 |   35 +
+ net/wireless/Makefile                              |    4 +-
+ net/wireless/ap.c                                  |    3 +-
+ net/wireless/chan.c                                |   16 +-
+ net/wireless/core.c                                |   12 +-
+ net/wireless/core.h                                |    6 +-
+ net/wireless/ethtool.c                             |   15 +-
+ net/wireless/ibss.c                                |    9 +-
+ net/wireless/mesh.c                                |   11 +-
+ net/wireless/mlme.c                                |   92 +-
+ net/wireless/nl80211.c                             |  255 ++-
+ net/wireless/rdev-ops.h                            |  861 ++++++++
+ net/wireless/scan.c                                |  138 +-
+ net/wireless/sme.c                                 |   12 +-
+ net/wireless/sysfs.c                               |    5 +-
+ net/wireless/trace.c                               |    7 +
+ net/wireless/trace.h                               | 2286 ++++++++++++++++=
+++++
+ net/wireless/util.c                                |   14 +-
+ net/wireless/wext-compat.c                         |   48 +-
+ 60 files changed, 5357 insertions(+), 986 deletions(-)
+ create mode 100644 net/mac80211/vht.c
+ create mode 100644 net/wireless/rdev-ops.h
+ create mode 100644 net/wireless/trace.c
+ create mode 100644 net/wireless/trace.h
+
+
+--=-Zj7IF4gMbq3vC9EDCScq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQgVxyAAoJEDBSmw7B7bqrY0UQAIITeIBCqxT3MAn8OHeWRhcK
+pdbt4BHmrmlN3kmyjQ1UhcyLWcBSG5G82yApG6xf7K6cayCa348ufZ1x6x/0xxNC
+ZflYtG7tW5qVqaXY4qq7YllJXdVJvKQHWm0NZabkDxlV5sx2kXZwcj8a0vBgICgE
+iuMLpOTMFpbAGOzGXpislOvxrzfkt6QEHIP9YN4MMVUV1srPVE/1mmQatxnGTK95
+02X9GvjTFHlNVoy4K9S1pzMiwUmD24m5ZVTyy+5b+LZWUgSiMm8WkLHx4ssKsydz
+bHcLkQZGXpZFke5a3u55mp/8DeWXDXLq+YHqvjplxLk5rTo/OK4N5UbIXiRBZedR
+iww7K7wxbAKF/CtEe+AUiSH8M+/xppiCy82iKRoV4hqc+bMDHSMAlVRAnfZb5xxn
+eCGUd4UFV0NpM25aRspfvbK6vwgDBmnYJdrd79HeGmju2s8nYcyokOgZ+3WIRokk
+uiAWL3EXf1q5mj/jY4L1kJFeP0Ye5A4zcF4KxvlqmH0qD0Fdd3ICzu6e/Z4F4bSt
+luJEqDi+XIWJuMFemkmcRHbjPEMcmKdjBCZD1BdtA6hqXzR5Q/+G57AJu+NoA+MD
+jXoEKGFiSF0w30VWNXWy9+8so2veSc/kwYGJFQg94TNxADvqy/h8D6b5og1VBXp/
+8HS7inemohd6IZKLop7x
+=4ntj
+-----END PGP SIGNATURE-----
+
+--=-Zj7IF4gMbq3vC9EDCScq--
+
