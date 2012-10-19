@@ -1,76 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:24817 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753268Ab2J2Jea (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:61075 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752177Ab2JSFVM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 05:34:30 -0400
-Date: Mon, 29 Oct 2012 10:33:54 +0100
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv3 2/2] mac80211: implement set_mcast_rate() callback
-Message-ID: <20121029093354.GC5944@ritirata.org> (sfid-20121029_103433_935319_09D914C1)
-References: <1351267055-21927-1-git-send-email-ordex@autistici.org>
- <1351267055-21927-2-git-send-email-ordex@autistici.org>
- <1351502110.10925.10.camel@jlt4.sipsolutions.net>
+	Fri, 19 Oct 2012 01:21:12 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h16so84178oag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2012 22:21:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DSayHWYpDlRfCAAQ"
-In-Reply-To: <1351502110.10925.10.camel@jlt4.sipsolutions.net>
+In-Reply-To: <loom.20121018T003841-742@post.gmane.org>
+References: <1311771665-59853-1-git-send-email-nbd@openwrt.org>
+	<1311771665-59853-2-git-send-email-nbd@openwrt.org>
+	<1311771665-59853-3-git-send-email-nbd@openwrt.org>
+	<1311771665-59853-4-git-send-email-nbd@openwrt.org>
+	<loom.20121018T003841-742@post.gmane.org>
+Date: Fri, 19 Oct 2012 10:51:10 +0530
+Message-ID: <CAD2nsn2T-GhRwJAAEgpyQTSJLNV1m-ZYC+A3L78GfEpt=ATw_g@mail.gmail.com> (sfid-20121019_072116_061794_05034CB7)
+Subject: Re: [PATCH 4/4] ath9k_hw: do not limit initial tx power to 20 dbm
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: =?ISO-8859-1?Q?Ambrus_Ol=E1h?= <aolah76@freemail.hu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 18, 2012 at 4:14 AM, Ambrus Oláh <aolah76@freemail.hu> wrote:
+> Felix Fietkau <nbd@...> writes:
+>
+>>
+>> When testing for tx power, bypass the default limits.
+>>
+>> Signed-off-by: Felix Fietkau <nbd@...>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/hw.c |    9 ++++++---
+>>  1 files changed, 6 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c
+> b/drivers/net/wireless/ath/ath9k/hw.c
+>> index 8006ce0..a2e5763 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>> @@ -2432,15 +2432,18 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32
+> limit, bool test)
+>>       struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+>>       struct ath9k_channel *chan = ah->curchan;
+>>       struct ieee80211_channel *channel = chan->chan;
+>> +     int reg_pwr = min_t(int, MAX_RATE_POWER, regulatory->power_limit);
+>> +     int chan_pwr = channel->max_power * 2;
+>> +
+>> +     if (test)
+>> +             reg_pwr = chan_pwr = MAX_RATE_POWER;
+>>
+>>       regulatory->power_limit = min(limit, (u32) MAX_RATE_POWER);
+>>
+>>       ah->eep_ops->set_txpower(ah, chan,
+>>                                ath9k_regd_get_ctl(regulatory, chan),
+>>                                channel->max_antenna_gain * 2,
+>> -                              channel->max_power * 2,
+>> -                              min((u32) MAX_RATE_POWER,
+>> -                              (u32) regulatory->power_limit), test);
+>> +                              chan_pwr, reg_pwr, test);
+>>  }
+>>  EXPORT_SYMBOL(ath9k_hw_set_txpowerlimit);
+>>
+>
+>
+> Dear Mr. Fietkau,
+>
+> I have tried to apply your patch on
+> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.3/compat-wireless-3.3-2-n.tar.bz2
+>
+> I get the following error:
+>
+> patch -p1 < ath9k_txpower.patch
+> patching file drivers/net/wireless/ath/ath9k/hw.c
+> Hunk #1 FAILED at 2432.
+> patch unexpectedly ends in middle of line
+> 1 out of 1 hunk FAILED -- saving rejects to file
+> drivers/net/wireless/ath/ath9k/hw.c.rej
+> patch unexpectedly ends in middle of line
+>
+> Could you support me with a patch tuned to the above compat-wireless?
 
---DSayHWYpDlRfCAAQ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+try applying over the latest
+http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2012-10-03.tar.bz2
 
-On Mon, Oct 29, 2012 at 10:15:10AM +0100, Johannes Berg wrote:
-> On Fri, 2012-10-26 at 17:57 +0200, Antonio Quartulli wrote:
-> > The callback can be used with vif configured as
-> > ADHOC or MESH_POINT only.
->=20
-> You said the same in the cfg80211 patch, so
->=20
-> > +int ieee80211_mcast_rate(struct ieee80211_sub_if_data *sdata,
-> > +			 int rate[IEEE80211_NUM_BANDS])
-> > +{
-> > +	if (sdata->vif.type !=3D NL80211_IFTYPE_ADHOC &&
-> > +	    sdata->vif.type !=3D NL80211_IFTYPE_MESH_POINT)
-> > +		return -EOPNOTSUPP;
->=20
-> should that check be in cfg80211?
+ideally these patches are based on wireless-testing tree and you goto apply
+into it, and do kerenel/module compilation.
 
-Ok, will change that.
-
->=20
-> OTOH, it seems it might be valid in AP mode as well?
-
-as we discussed on IRC, the AP has no real mcast_rate parameter since it se=
-ems
-to be chosen from the basic rates every time. How ever this would be an
-interesting feature. Maybe we can add this later after this API change.
-
-Cheers,
+http://wireless.kernel.org/en/developers/Documentation/git-guide#Cloning_latest_wireless-testing
 
 
---=20
-Antonio Quartulli
+>
+> Yours sincerelly,
+>
+> Ambrus Oláh
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
 
---DSayHWYpDlRfCAAQ
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlCOTYIACgkQpGgxIkP9cwft3ACgiyPBUmy700pUpYemDVdHjPSC
-DyYAoJv4URbDWoiuDA/bUKk7r8Bdq7Zu
-=PYLn
------END PGP SIGNATURE-----
-
---DSayHWYpDlRfCAAQ--
+-- 
+thanks,
+shafi
