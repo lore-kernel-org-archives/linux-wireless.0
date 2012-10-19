@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44849 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002Ab2JOINJ (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:64813 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757051Ab2JSQNJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 04:13:09 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 07/12] ath9k_hw: program radio_post_sys2ant initval for AR9565
-Date: Mon, 15 Oct 2012 13:25:33 +0530
-Message-ID: <1350287738-18687-8-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101313_455956_D4F2B74D)
-In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Fri, 19 Oct 2012 12:13:09 -0400
+Received: by mail-ie0-f174.google.com with SMTP id k13so885552iea.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2012 09:13:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1350654649.10678.3.camel@jlt4.sipsolutions.net>
+References: <1349814468-6512-1-git-send-email-ashok@cozybit.com>
+ <1349814468-6512-2-git-send-email-ashok@cozybit.com> <1350654649.10678.3.camel@jlt4.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 19 Oct 2012 09:12:48 -0700
+Message-ID: <CAPjQAd9rcPavj67=7RO62XuxkeTm0bQMEkzekELsJ9dbDsubAw@mail.gmail.com> (sfid-20121019_181314_584764_01E651D8)
+Subject: Re: [PATCH 2/2] [nl,cfg,mac]80211: Add nl80211 command to get mesh
+ network statistics
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ashok Nagarajan <ashok@cozybit.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+On Fri, Oct 19, 2012 at 6:50 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2012-10-09 at 13:27 -0700, Ashok Nagarajan wrote:
+>
+>>  /**
+>> + * struct mesh_stats - 802.11s mesh statistics
+>> + *
+>> + * Used to provide statistical information about mesh
+>> + *
+>> + * @fwded_mcast: Mesh forwarded multicast frames
+>> + * @fwded_unicast: Mesh forwarded unicast frames
+>> + * @fwded_frames: Mesh total forwarded frames
+>> + * @dropped_frames_ttl: Not transmitted since mesh_ttl == 0
+>> + * @dropped_frames_no_route: Not transmitted, no route found
+>> + * @dropped_frames_congestion: Not forwarded due to congestion
+>> + */
+>> +struct mesh_stats {
+>> +     u32 fwded_mcast;
+>
+> Would it make sense to use u64 right away? A lot of netdev stats were at
+> some point extended from u32 to u64 and that caused problems, maybe
+> using u64 right away here would be good?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 759f5f5..1d6d6ce 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -749,7 +749,8 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 		ar9003_hw_prog_ini(ah, &ah->iniMac[i], modesIndex);
- 		ar9003_hw_prog_ini(ah, &ah->iniBB[i], modesIndex);
- 		ar9003_hw_prog_ini(ah, &ah->iniRadio[i], modesIndex);
--		if (i == ATH_INI_POST && AR_SREV_9462_20(ah))
-+		if (i == ATH_INI_POST &&
-+		    (AR_SREV_9462_20(ah) || AR_SREV_9565(ah)))
- 			ar9003_hw_prog_ini(ah,
- 					   &ah->ini_radio_post_sys2ant,
- 					   modesIndex);
-@@ -1424,7 +1425,7 @@ static int ar9003_hw_fast_chan_change(struct ath_hw *ah,
- 	ar9003_hw_prog_ini(ah, &ah->iniBB[ATH_INI_POST], modesIndex);
- 	ar9003_hw_prog_ini(ah, &ah->iniRadio[ATH_INI_POST], modesIndex);
- 
--	if (AR_SREV_9462_20(ah))
-+	if (AR_SREV_9462_20(ah) || AR_SREV_9565(ah))
- 		ar9003_hw_prog_ini(ah, &ah->ini_radio_post_sys2ant,
- 				   modesIndex);
- 
+Definitely.
+
+Javier
+
+
 -- 
-1.7.12.2
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
