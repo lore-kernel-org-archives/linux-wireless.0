@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60182 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755742Ab2JVVpJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 17:45:09 -0400
-Message-ID: <5085BE64.6030802@openwrt.org> (sfid-20121022_234514_110066_905A251F)
-Date: Mon, 22 Oct 2012 23:45:08 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Cannot bring up second VAP on recent kernels?
-References: <5085AA78.1080809@candelatech.com> <5085B866.8060306@openwrt.org> <5085BA0E.6080903@candelatech.com>
-In-Reply-To: <5085BA0E.6080903@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:54812 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758726Ab2JSNuP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Oct 2012 09:50:15 -0400
+Message-ID: <1350654649.10678.3.camel@jlt4.sipsolutions.net> (sfid-20121019_155020_444396_C389EE3E)
+Subject: Re: [PATCH 2/2] [nl,cfg,mac]80211: Add nl80211 command to get mesh
+ network statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	javier@cozybit.com, devel@lists.open80211s.org
+Date: Fri, 19 Oct 2012 15:50:49 +0200
+In-Reply-To: <1349814468-6512-2-git-send-email-ashok@cozybit.com> (sfid-20121009_222803_617605_1E8764DF)
+References: <1349814468-6512-1-git-send-email-ashok@cozybit.com>
+	 <1349814468-6512-2-git-send-email-ashok@cozybit.com>
+	 (sfid-20121009_222803_617605_1E8764DF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-22 11:26 PM, Ben Greear wrote:
-> On 10/22/2012 02:19 PM, Felix Fietkau wrote:
->> On 2012-10-22 10:20 PM, Ben Greear wrote:
->>> Anyone successfully using more than one virtual AP on
->>> 3.3 or higher kernels?  It works fine for me on 3.0.32,
->>> but my 3.3.8 and 3.5.7 kernels (and a few similar ones)
->>> all fail with errors like this below:
->>>
->>> Hardware is ath9k 3x3 9380 NIC.
->> Are you using one hostapd instance per vap, or one hostapd instance for
->> all of them?
-> 
-> One hostapd per VAP.
-I had issues with that a long time ago. Use one hostapd instance for all
-vaps on the same wiphy, that'll work better.
+On Tue, 2012-10-09 at 13:27 -0700, Ashok Nagarajan wrote:
 
-- Felix
+>  /**
+> + * struct mesh_stats - 802.11s mesh statistics
+> + *
+> + * Used to provide statistical information about mesh
+> + *
+> + * @fwded_mcast: Mesh forwarded multicast frames
+> + * @fwded_unicast: Mesh forwarded unicast frames
+> + * @fwded_frames: Mesh total forwarded frames
+> + * @dropped_frames_ttl: Not transmitted since mesh_ttl == 0
+> + * @dropped_frames_no_route: Not transmitted, no route found
+> + * @dropped_frames_congestion: Not forwarded due to congestion
+> + */
+> +struct mesh_stats {
+> +	u32 fwded_mcast;
+
+Would it make sense to use u64 right away? A lot of netdev stats were at
+some point extended from u32 to u64 and that caused problems, maybe
+using u64 right away here would be good?
+
+johannes
 
