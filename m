@@ -1,90 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44030 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925Ab2JOINe (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:53145 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756065Ab2JTRRW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 04:13:34 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 06/12] ath9k_hw: Fix frequent BT rx recovery
-Date: Mon, 15 Oct 2012 13:25:32 +0530
-Message-ID: <1350287738-18687-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101337_962566_E745BA7F)
-In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Sat, 20 Oct 2012 13:17:22 -0400
+Received: by mail-we0-f174.google.com with SMTP id t9so754055wey.19
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Oct 2012 10:17:20 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Javier Lopez <jlopex@cozybit.com>
+Subject: Re: Receive BlockAckReq and BlockAck on carl9170 driver
+Date: Sat, 20 Oct 2012 19:17:15 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <CAMr9ZPkS3TXg7XDNzeor7zXED7cUUqcGdrb53OFGtr0N8Hh5Ng@mail.gmail.com> <201210191000.41350.chunkeey@googlemail.com> <CAMr9ZPnqjyqhoRuafBu=uxrQSxGNSe3oQYMX+--2aoLv4OW=BQ@mail.gmail.com>
+In-Reply-To: <CAMr9ZPnqjyqhoRuafBu=uxrQSxGNSe3oQYMX+--2aoLv4OW=BQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201210201917.16213.chunkeey@googlemail.com> (sfid-20121020_191725_972176_359BFFA7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While resuming from S3, BT host issues HCI reset command and it
-causes BT firmware to busy with security key calculation. At this
-movement, WLAN detects MCI hardware error of MCI_CONT_INFO_TIMEOUT
-and then it starts the recovery sequence repeatedly. Too many
-recovery sequences would exhaust the BT kernel message pool. This
-patch imposes a duration between consecutive BT recovery procedure.
-Thus it solves BT firmware panic issue reported in AR9565.
+Hello Javier,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 10 +++++++++-
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |  1 +
- drivers/net/wireless/ath/ath9k/btcoex.h     |  1 +
- 3 files changed, 11 insertions(+), 1 deletion(-)
+On Saturday 20 October 2012 18:51:37 Javier Lopez wrote:
+> Thanks for your comments, they helped a lot.
+Really? But how, all I did was "ask questions"?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 466ac8da..f537f0d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1209,7 +1209,7 @@ EXPORT_SYMBOL(ar9003_mci_cleanup);
- u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
- {
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
--	u32 value = 0;
-+	u32 value = 0, tsf;
- 	u8 query_type;
+> Now we are able to receive the frames on
+> carl9170_handle_mpdu on mesh mode.
+ok, I never got around and tested mesh mode
+operation with carl9170 properly.
  
- 	switch (state_type) {
-@@ -1267,6 +1267,14 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
- 		ar9003_mci_send_coex_bt_status_query(ah, true, query_type);
- 		break;
- 	case MCI_STATE_RECOVER_RX:
-+		tsf = ath9k_hw_gettsf32(ah);
-+		if ((tsf - mci->last_recovery) <= MCI_RECOVERY_DUR_TSF) {
-+			ath_dbg(ath9k_hw_common(ah), MCI,
-+				"(MCI) ignore Rx recovery\n");
-+			break;
-+		}
-+		ath_dbg(ath9k_hw_common(ah), MCI, "(MCI) RECOVER RX\n");
-+		mci->last_recovery = tsf;
- 		ar9003_mci_prep_interface(ah);
- 		mci->query_bt = true;
- 		mci->need_flush_btinfo = true;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 0910310..3e51f54 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -18,6 +18,7 @@
- #define AR9003_MCI_H
+> After setting the monitor interface we noticed that
+> the traps were not called but the frames were received.
+> So we checked the traps and we saw that they were
+> placed before the frame was correctly aligned.
+Well, ok. So the code is confusing :-/. I guess
+the _mpdu should be split into to parts so it's
+more obvious when a trap handler can be inserted.
  
- #define MCI_FLAG_DISABLE_TIMESTAMP      0x00000001      /* Disable time stamp */
-+#define MCI_RECOVERY_DUR_TSF		(100 * 1000)    /* 100 ms */
- 
- /* Default remote BT device MCI COEX version */
- #define MCI_GPM_COEX_MAJOR_VERSION_DEFAULT  3
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 94e9211..2f84ab2 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -88,6 +88,7 @@ struct ath9k_hw_mci {
- 	u8 bt_state;
- 	u8 stomp_ftp;
- 	bool concur_tx;
-+	u32 last_recovery;
- };
- 
- struct ath_btcoex_hw {
--- 
-1.7.12.2
+> Then removing the CARL9170_RX_FILTER_CTL_OTHER did the rest.
+Ok, maybe the terminology is a bit odd in this case. Normally
+when I think of the word filter, then I think of something which
+prevent things from going trough. However mac80211's 
+"configure_filter" is sort of the opposite, e.g.: if FIF_CONTROL
+is set, then control frames like BA/ACKS/BARS/RTS/CTS/... should
+"pass-through". But I've already updated the fwcmd.h include,
+so when the next fw release comes along it should hit the driver
+as well.
 
+Regards,
+	Chr
