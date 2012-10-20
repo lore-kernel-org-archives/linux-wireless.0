@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web125403.mail.ne1.yahoo.com ([98.138.226.76]:46443 "EHLO
-	web125403.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753037Ab2JVFC0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 01:02:26 -0400
-Message-ID: <1350882145.55725.YahooMailNeo@web125403.mail.ne1.yahoo.com> (sfid-20121022_070233_857032_74B477C4)
-Date: Sun, 21 Oct 2012 22:02:25 -0700 (PDT)
-From: Dwaine Garden VE3GIF <dwainegarden@rogers.com>
-Reply-To: Dwaine Garden VE3GIF <dwainegarden@rogers.com>
-Subject: [PATCH] Bluetooth: Add support for Atheros [04ca:3004]
-To: "linville@redhat.com" <linville@redhat.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@qca.qualcomm.com" <mcgrof@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:43382 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759449Ab2JTCDO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Oct 2012 22:03:14 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.7 2/2] mwifiex: clean up scan state on error
+Date: Fri, 19 Oct 2012 19:02:00 -0700
+Message-Id: <1350698520-522-2-git-send-email-bzhao@marvell.com> (sfid-20121020_040322_803052_3E684F52)
+In-Reply-To: <1350698520-522-1-git-send-email-bzhao@marvell.com>
+References: <1350698520-522-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+De-reference and deallocate scan state on failure.
 
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Paul Stewart <pstew@chromium.org>
+Tested-by: Paul Stewart <pstew@chromium.org>
+Reviewed-by: Ryan Cairns <rtc@chromium.org>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-Add another vendor specific ID for Atheros AR3012 device.
-This chip is wrapped by Lite-On Technology Corp.
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 38a5871..9aead8a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1825,8 +1825,6 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 		return -EBUSY;
+ 	}
+ 
+-	priv->scan_request = request;
+-
+ 	priv->user_scan_cfg = kzalloc(sizeof(struct mwifiex_user_scan_cfg),
+ 				      GFP_KERNEL);
+ 	if (!priv->user_scan_cfg) {
+@@ -1834,6 +1832,8 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 		return -ENOMEM;
+ 	}
+ 
++	priv->scan_request = request;
++
+ 	priv->user_scan_cfg->num_ssids = request->n_ssids;
+ 	priv->user_scan_cfg->ssid_list = request->ssids;
+ 
+@@ -1870,6 +1870,9 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 	ret = mwifiex_scan_networks(priv, priv->user_scan_cfg);
+ 	if (ret) {
+ 		dev_err(priv->adapter->dev, "scan failed: %d\n", ret);
++		priv->scan_request = NULL;
++		kfree(priv->user_scan_cfg);
++		priv->user_scan_cfg = NULL;
+ 		return ret;
+ 	}
+ 
+-- 
+1.7.0.2
 
-output of usb-devices:
-Bus 001 Device 008: ID 04ca:3004 Lite-On Technology Corp. 
-Device Descriptor:
-  bLength                18
- 
- bDescriptorType         1
-  bcdUSB               1.10
-  bDeviceClass          224 Wireless
-  bDeviceSubClass         1 Radio Frequency
-  bDeviceProtocol         1 Bluetooth
-  bMaxPacketSize0        64
-  idVendor           0x04ca Lite-On Technology Corp.
-  idProduct          0x3004 
-  bcdDevice            0.02
-  iManufacturer           1 Atheros Communications
- 
- iProduct                2 Bluetooth USB Host Controller
-  iSerial                 3 Alaska Day 2006
-  bNumConfigurations      1
-
-
-Signed-off-by: Dwaine Garden <DwaineGarden@rogers.com>  ---
-
-diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
-index fc2de55..1486f15 100644
---- a/drivers/bluetooth/ath3k.c
-+++ b/drivers/bluetooth/ath3k.c
-@@ -75,6 +75,7 @@ static struct usb_device_id ath3k_table[] = {
-{ USB_DEVICE(0x0CF3, 0x3004) },
-{ USB_DEVICE(0x0CF3, 0x311D) },
-{ USB_DEVICE(0x13d3, 0x3375) },
-+	{ USB_DEVICE(0x04CA, 0x3004) },
-{ USB_DEVICE(0x04CA, 0x3005) },
-{ USB_DEVICE(0x13d3, 0x3362) },
-{ USB_DEVICE(0x0CF3, 0xE004) },
-@@ -102,6 +103,7 @@ static struct usb_device_id ath3k_blist_tbl[] = {
-{ USB_DEVICE(0x0cf3, 0x3004), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x0cf3, 0x311D), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x04ca, 0x3004), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x04ca, 0x3005), .driver_info = BTUSB_ATH3012 },
-{
- USB_DEVICE(0x13d3, 0x3362), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x0cf3, 0xe004), .driver_info = BTUSB_ATH3012 },
-diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-index debda27..0529cee 100644
---- a/drivers/bluetooth/btusb.c
-+++ b/drivers/bluetooth/btusb.c
-@@ -132,6 +132,7 @@ static struct usb_device_id blacklist_table[] = {
-{ USB_DEVICE(0x0cf3, 0x3004), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x0cf3, 0x311d), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x04ca, 0x3004), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x04ca, 0x3005), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x13d3, 0x3362), .driver_info = BTUSB_ATH3012 },
-{ USB_DEVICE(0x0cf3, 0xe004), .driver_info = BTUSB_ATH3012 },
