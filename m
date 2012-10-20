@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60610 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751283Ab2JYW1j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 18:27:39 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so2330571pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 15:27:39 -0700 (PDT)
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:34464 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753713Ab2JTCbg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Oct 2012 22:31:36 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Joe Perches <joe@perches.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>
+CC: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Luciano Coelho <coelho@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Date: Fri, 19 Oct 2012 19:30:06 -0700
+Subject: RE: [PATCH net-next 04/21] wireless: Convert is_<foo>_ether_addr
+ uses to eth_addr_<foo>
+Message-ID: <477F20668A386D41ADCC57781B1F7043083B8EC57E@SC-VEXCH1.marvell.com> (sfid-20121020_043159_443347_501B9719)
+References: <cover.1350618006.git.joe@perches.com>
+ <bb2235c257e347354d94478bd1be35b89bf90186.1350618009.git.joe@perches.com>
+In-Reply-To: <bb2235c257e347354d94478bd1be35b89bf90186.1350618009.git.joe@perches.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <CAG6hwVM_9TkKmMs0MyyiuO8TAUSLkBJTWiQ8+4AAa19YG+guCw@mail.gmail.com>
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
-	<CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
-	<20121024194547.GA19060@shredder>
-	<CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
-	<CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
-	<20121024220813.GB6723@shredder>
-	<CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
-	<CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com>
-	<CAJ-Vmom0cg09C1D2Eh79K2zoOxL0Ry7g3+DC2iNGBFTa4+Zhzg@mail.gmail.com>
-	<CAG6hwVM_9TkKmMs0MyyiuO8TAUSLkBJTWiQ8+4AAa19YG+guCw@mail.gmail.com>
-Date: Thu, 25 Oct 2012 15:27:39 -0700
-Message-ID: <CAJ-Vmok3+ts43ow_Btj7sG3DfWNeD7O=gNWagJrSGkBWFvyQMQ@mail.gmail.com> (sfid-20121026_002742_587813_EF9760FF)
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 October 2012 15:25, Thomas Pedersen <thomas@cozybit.com> wrote:
+Hi Joe,
 
->> Thomas, is the TSF in the RX status descriptor actually 32 bits, or is
->> this a printing error?
->
-> Looking at the printk again, I'm pretty sure I'm just an idiot and the
-> printed value is being truncated to 32 bits. Will test and verify the
-> TSF wraps correctly again.
+> Subject: [PATCH net-next 04/21] wireless: Convert is_<foo>_ether_addr uses to eth_addr_<foo>
+> 
+> Convert the old ether_addr tests to eth_addr_<foo>.
+> Adds api consistency.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Thanks.
+Acked-by: Bing Zhao <bzhao@marvell.com> [mwifiex]
 
-There's a few other TSF tweaks that could go in after this - to make
-things more correct around the wrap boundary.
-
-
-
-Adrian
+Thanks,
+Bing
