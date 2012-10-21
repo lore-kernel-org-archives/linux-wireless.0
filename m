@@ -1,97 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34590 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933332Ab2JZOY3 (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:60978 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754733Ab2JUClS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 10:24:29 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 17/18] brcmsmac: Add tracepoint for AMPDU session information
-Date: Fri, 26 Oct 2012 09:23:32 -0500
-Message-Id: <1351261413-20821-18-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162435_448312_31E8DEDE)
-In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+	Sat, 20 Oct 2012 22:41:18 -0400
+Received: by mail-da0-f46.google.com with SMTP id n41so822601dak.19
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Oct 2012 19:41:18 -0700 (PDT)
+Date: Sat, 20 Oct 2012 19:41:14 -0700
+From: Thomas Pedersen <thomas@cozybit.com>
+To: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Bob Copeland <me@bobcopeland.com>
+Subject: Re: ath9k_htc and reported mactime
+Message-ID: <20121021024114.GA9558@shredder> (sfid-20121021_044121_866069_84D89759)
+References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- .../brcm80211/brcmsmac/brcms_trace_events.h        |   28 ++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |    8 ++++++
- 2 files changed, 36 insertions(+)
+re-sending non-HTML to l-w.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-index 2ef7580..871781e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-@@ -156,6 +156,34 @@ TRACE_EVENT(brcms_txstatus,
- 		  __entry->ackphyrxsh)
- );
+Hi list,
  
-+TRACE_EVENT(brcms_ampdu_session,
-+	TP_PROTO(const struct device *dev, unsigned max_ampdu_len,
-+		 u16 max_ampdu_frames, u16 ampdu_len, u16 ampdu_frames,
-+		 u16 dma_len),
-+	TP_ARGS(dev, max_ampdu_len, max_ampdu_frames, ampdu_len, ampdu_frames,
-+		dma_len),
-+	TP_STRUCT__entry(
-+		__string(dev, dev_name(dev))
-+		__field(unsigned, max_ampdu_len)
-+		__field(u16, max_ampdu_frames)
-+		__field(u16, ampdu_len)
-+		__field(u16, ampdu_frames)
-+		__field(u16, dma_len)
-+	),
-+	TP_fast_assign(
-+		__assign_str(dev, dev_name(dev));
-+		__entry->max_ampdu_len = max_ampdu_len;
-+		__entry->max_ampdu_frames = max_ampdu_frames;
-+		__entry->ampdu_len = ampdu_len;
-+		__entry->ampdu_frames = ampdu_frames;
-+		__entry->dma_len = dma_len;
-+	),
-+	TP_printk("[%s] ampdu session max_len=%u max_frames=%u len=%u frames=%u dma_len=%u",
-+		  __get_str(dev), __entry->max_ampdu_len,
-+		  __entry->max_ampdu_frames, __entry->ampdu_len,
-+		  __entry->ampdu_frames, __entry->dma_len)
-+);
-+
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM brcmsmac_msg
+We're seeing some issue with reported mactime by the ath9k_htc (AR9271)
+card. Here is a mesh node sampling peer beacons:
  
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 5b5dd3c..f860324 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -29,6 +29,7 @@
- #include "scb.h"
- #include "ampdu.h"
- #include "brcms_debug.h"
-+#include "brcms_trace_events.h"
- 
- /*
-  * dma register field offset calculation
-@@ -1311,6 +1312,13 @@ static void ampdu_finalize(struct dma_info *di)
- 	struct brcms_ampdu_session *session = &di->ampdu_session;
- 	struct sk_buff *p;
- 
-+	trace_brcms_ampdu_session(&session->wlc->hw->d11core->dev,
-+				  session->max_ampdu_len,
-+				  session->max_ampdu_frames,
-+				  session->ampdu_len,
-+				  skb_queue_len(&session->skb_list),
-+				  session->dma_len);
-+
- 	if (WARN_ON(skb_queue_empty(&session->skb_list)))
- 		return;
- 
--- 
-1.7.9.5
+[  327.928774] got beacon from 00:03:7f:10:4e:1a at 80969926, now is: 80940131. offset == 29795
+[  329.716530] got beacon from 64:70:02:0a:4e:a8 at 82824946, now is: 82727604. offset == 97342
+[  329.974276] got beacon from 00:03:7f:10:4d:f7 at 83082820, now is: 82985314. offset == 97506
+[  329.977528] got beacon from 00:03:7f:10:4e:1a at 83084622, now is: 82988562. offset == 96060
+[  331.764782] got beacon from 64:70:02:0a:4e:a8 at 84774638, now is: 84775531. offset == -893
+[  332.022278] got beacon from 00:03:7f:10:4e:1a at 85064980, now is: 85033000. offset == 31980
+[  332.025529] got beacon from 00:03:7f:10:4d:f7 at 85033451, now is: 85036249. offset == -2798
+[  333.814536] got beacon from 64:70:02:0a:4e:a8 at 86824159, now is: 86824975. offset == -816
+[  334.260908] got beacon from 00:03:7f:10:4e:11 at 87270487, now is: 87271277. offset == -790
+[  335.861412] got beacon from 64:70:02:0a:4e:a8 at 89100008, now is: 88871534. offset == 228474
+[  336.119176] got beacon from 00:03:7f:10:4d:f7 at 89128456, now is: 89129238. offset == -782
+[  336.308535] got beacon from 00:03:7f:10:4e:11 at 89317801, now is: 89318590. offset == -789
+[  337.909662] got beacon from 64:70:02:0a:4e:a8 at 90951396, now is: 90919468. offset == 31928
+[  338.168034] got beacon from 00:03:7f:10:4e:1a at 91209720, now is: 91177797. offset == 31923
+[  338.171285] got beacon from 00:03:7f:10:4d:f7 at 91211047, now is: 91181053. offset == 29994
+[  338.356286] got beacon from 00:03:7f:10:4e:11 at 91463481, now is: 91366022. offset == 97459
+[  338.734784] got beacon from f8:d1:11:65:92:e4 at 91743653, now is: 91744461. offset == -808
+[  339.958041] got beacon from 64:70:02:0a:4e:a8 at 92966623, now is: 92967531. offset == -908
+[  340.217914] got beacon from 00:03:7f:10:4d:f7 at 93226490, now is: 93227356. offset == -866
+[  340.408290] got beacon from 00:03:7f:10:4e:11 at 93449578, now is: 93417704. offset == 31874
+[  342.006291] got beacon from 64:70:02:0a:4e:a8 at 95014620, now is: 95015461. offset == -841
+[  342.264413] got beacon from 00:03:7f:10:4e:1a at 95272637, now is: 95273538. offset == -901
+[  342.453286] got beacon from 00:03:7f:10:4e:11 at 95461607, now is: 95462386. offset == -779
+[  342.833168] got beacon from f8:d1:11:65:92:e4 at 95939657, now is: 95842204. offset == 97453
 
+The number after "at" is rx_status->mactime, "now" is drv_get_tsf(), and
+offset (ie. stack delay) is mactime - tsf. RX_FLAG_MACTIME_MPDU is on for
+all frames, and mesh sync is not adjusting the TSF.
+
+How can we possibly receive frames from the future!?
+
+Thanks in advance,
+Thomas
