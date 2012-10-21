@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:62165 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756093Ab2JXUAB (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38229 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753437Ab2JUNJS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 16:00:01 -0400
-Received: by mail-pa0-f46.google.com with SMTP id hz1so600642pad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 13:00:00 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linville@tuxdriver.com
-Cc: Javier Cardona <javier@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	johannes@sipsolutions.net
-Subject: [PATCH 2/2] ath9k_htc: Honor FIF_OTHER_BSS
-Date: Wed, 24 Oct 2012 12:59:34 -0700
-Message-Id: <1351108774-7450-3-git-send-email-javier@cozybit.com> (sfid-20121024_220007_624690_322AE919)
-In-Reply-To: <1351108774-7450-1-git-send-email-javier@cozybit.com>
-References: <1351108774-7450-1-git-send-email-javier@cozybit.com>
+	Sun, 21 Oct 2012 09:09:18 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v1 2/2] wireless: integrate wil6210 driver into build structure
+Date: Sun, 21 Oct 2012 15:02:51 +0200
+Message-ID: <1350824571-22554-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121021_150922_722089_28FD7A7E)
+In-Reply-To: <1350824571-22554-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1350824571-22554-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/Kconfig  |    1 +
+ drivers/net/wireless/ath/Makefile |    1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 06cdcb7..fc87fb9 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -887,7 +887,7 @@ u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv)
- 	if (priv->rxfilter & FIF_PSPOLL)
- 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index 0960224..282999f 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -28,3 +28,4 @@ source "drivers/net/wireless/ath/carl9170/Kconfig"
+ source "drivers/net/wireless/ath/ath6kl/Kconfig"
  
--	if (priv->nvifs > 1)
-+	if (priv->nvifs > 1 || priv->rxfilter & FIF_OTHER_BSS)
- 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+ endif
++source "drivers/net/wireless/ath/wil6210/Kconfig"
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index d716b74..b1af57b 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -2,6 +2,7 @@ obj-$(CONFIG_ATH5K)		+= ath5k/
+ obj-$(CONFIG_ATH9K_HW)		+= ath9k/
+ obj-$(CONFIG_CARL9170)		+= carl9170/
+ obj-$(CONFIG_ATH6KL)		+= ath6kl/
++obj-$(CONFIG_WIL6210)		+= wil6210/
  
- 	return rfilt;
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
+ 
 -- 
-1.7.5.4
+1.7.10.4
 
