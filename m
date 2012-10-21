@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50928 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753701Ab2JMPph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Oct 2012 11:45:37 -0400
-Date: Sat, 13 Oct 2012 17:45:37 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: Kalle Valo <kvalo@adurom.com>, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de
-Subject: Re: [PATCH 2/4] ar5523: Add driver header file
-Message-ID: <20121013154537.GC25810@lst.de> (sfid-20121013_174541_155728_21D6A905)
-References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com> <1349985702-21322-3-git-send-email-pontus.fuchs@gmail.com> <87626f0vzw.fsf@purkki.adurom.net> <50793F05.7030604@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50793F05.7030604@gmail.com>
+Received: from oproxy11-pub.bluehost.com ([173.254.64.10]:49375 "HELO
+	oproxy11-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753634Ab2JUT6U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Oct 2012 15:58:20 -0400
+Received: from [70.15.155.205] (port=42320 helo=[206.223.20.150])
+	by host200.hostmonster.com with esmtpa (Exim 4.76)
+	(envelope-from <ml@dlasys.net>)
+	id 1TQ1f9-00063A-IZ
+	for linux-wireless@vger.kernel.org; Sun, 21 Oct 2012 13:58:19 -0600
+Message-ID: <1350849498.4859.27.camel@hp-dhlii> (sfid-20121021_215823_979128_E3CA5300)
+Subject: Bandwidth monitoring
+From: "David H. Lynch Jr." <ml@dlasys.net>
+To: linux-wireless@vger.kernel.org
+Date: Sun, 21 Oct 2012 15:58:18 -0400
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 13, 2012 at 12:14:29PM +0200, Pontus Fuchs wrote:
-> On 2012-10-13 07:41, Kalle Valo wrote:
->> Pontus Fuchs <pontus.fuchs@gmail.com> writes:
->>
->>> +#define ar5523_err(ar, format, arg...) \
->>> +do { \
->>> +	if (!test_bit(AR5523_USB_DISCONNECTED, &ar->flags)) { \
->>> +		dev_err(&(ar)->dev->dev, format, ## arg); \
->>> +	} \
->>> +} while (0)
->> This looks suspicious and might hide something important. It's better to
->> fix the real cause than to workaround it in the error log printer. Do
->> you know why this was added?
-> Yes. The purpose is to hide all the USB errors that happens when you
-> hot-unplug the dongle. There can be quite a few URBs in flight and
-> all of them will fail with -ENODEV or -ESHUTDOWN. Instead of checking
-> for these errors in all the usb submissions and callbacks I added this
-> flag. Do you still a problem with this approach?
+I am looking for an easy means to determine the characteristics of a
+transmitted packet. 
+Particularly whether it is HT20/HT40-/HT40+
+I have used a variety of sniffers, airodump, wireshark, ...
+and I can not seem to find anything that will tell me what I am after -
+or I do not know how to use them.
+I am transmitting packets in monitor mode with specified frequencies and
+parameters and i am trying to verify that I have sent what I intended
+without getting a spectrum analyser.  
 
-I think it's fine, but it needs a comment explaining it with basically
-the same information you just wrote above.
+thanks
 
