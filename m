@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:45179 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411Ab2JCGHd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 02:07:33 -0400
-Date: Wed, 3 Oct 2012 09:07:13 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kernel-janitors@vger.kernel.org
-Subject: [patch 3/3] brcmfmac: Using zero instead of NULL
-Message-ID: <20121003060713.GC3802@elgon.mountain> (sfid-20121003_080737_617346_0CF6D343)
+Received: from comal.ext.ti.com ([198.47.26.152]:54180 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752397Ab2JUQlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Oct 2012 12:41:07 -0400
+Message-ID: <5084256F.2030502@ti.com> (sfid-20121021_184111_107957_553365B4)
+Date: Sun, 21 Oct 2012 18:40:15 +0200
+From: Victor Goldenshtein <victorg@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
+	<assaf@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>  <1350226137-13704-6-git-send-email-victorg@ti.com> <1350414390.10177.16.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1350414390.10177.16.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sparse complains that we use zero instead of NULL here.  In fact, the
-initialization is wrong and should be removed.  Doing these kinds of
-bogus initializations means that GCC can't detect unitialized variables
-and leads to bugs.
+On 16/10/2012 21:06, Johannes Berg wrote:
+> Hmm, does that really work? I mean, it can do the update when the event
+> comes in, but is that fast enough, or should it give us the new beacon
+> already when programming the switching?
+>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Yes it works with our 12xx, in the 12xx the FW (upon channel switch 
+command) is responsible to decrement the channel switch count in the 
+beacon CSA IE and to remove the CSA IE from the beacon once device moves 
+to the new channel (+ to updates the DS).
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index ed83b54..9ddafc2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3973,7 +3973,7 @@ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
- 	u8  *curr_ie_buf;
- 	u8  *mgmt_ie_buf = NULL;
- 	int mgmt_ie_buf_len;
--	u32 *mgmt_ie_len = 0;
-+	u32 *mgmt_ie_len;
- 	u32 del_add_ie_buf_len = 0;
- 	u32 total_ie_buf_len = 0;
- 	u32 parsed_ie_buf_len = 0;
+-- 
+Thanks,
+Victor.
