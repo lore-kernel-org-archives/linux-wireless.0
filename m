@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:35535 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079Ab2J1WG0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2012 18:06:26 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so2110239dak.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2012 15:06:26 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:48841 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753492Ab2JUT6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Oct 2012 15:58:55 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	hch@lst.de, s.L-H@gmx.de
+Subject: Re: [PATCH 2/4] ar5523: Add driver header file
+References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
+	<1349985702-21322-3-git-send-email-pontus.fuchs@gmail.com>
+	<87626f0vzw.fsf@purkki.adurom.net> <50793F05.7030604@gmail.com>
+Date: Sun, 21 Oct 2012 22:58:53 +0300
+In-Reply-To: <50793F05.7030604@gmail.com> (Pontus Fuchs's message of "Sat, 13
+	Oct 2012 12:14:29 +0200")
+Message-ID: <87hapnzjeq.fsf@purkki.adurom.net> (sfid-20121021_215857_881631_FF634861)
 MIME-Version: 1.0
-In-Reply-To: <508C259F.8010909@broadcom.com>
-References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>
-	<50880BD0.6080603@candelatech.com>
-	<1351093332.10709.5.camel@jlt4.sipsolutions.net>
-	<5DA0F03B-BA8C-4D9F-A9F1-0841D6774255@bluemesh.net>
-	<50888021.4050300@candelatech.com>
-	<CAJ-Vmo=eP8EC2760A_0Ydy3bvG93bhVXfHS9TS3VpAf2vejJ=g@mail.gmail.com>
-	<508C259F.8010909@broadcom.com>
-Date: Sun, 28 Oct 2012 15:06:26 -0700
-Message-ID: <CAJ-Vmo=4ex-m8PXTMu_-XdH76+ny2d+dPgRGd_JJZvB+jwTZag@mail.gmail.com> (sfid-20121028_230630_087801_5F2BFBD8)
-Subject: Re: Is Multi-Vif (vaps) Different Channel Operation Supported?
-From: Adrian Chadd <adrian@freebsd.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Kelly Hogan <kshogan@bluemesh.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 October 2012 11:19, Arend van Spriel <arend@broadcom.com> wrote:
+Pontus Fuchs <pontus.fuchs@gmail.com> writes:
 
-> In my Intersil/Conexant days there was a marketing dude coming up with
-> 'time-slicing AP' and there was a way to signal STAs the AP was not able to
-> receive. Just needed to be back in time to send its beacon. I chose to
-> forget all about the bad idea.
+> On 2012-10-13 07:41, Kalle Valo wrote:
+>> Pontus Fuchs <pontus.fuchs@gmail.com> writes:
+>>
+>>> +#define ar5523_err(ar, format, arg...) \
+>>> +do { \
+>>> +	if (!test_bit(AR5523_USB_DISCONNECTED, &ar->flags)) { \
+>>> +		dev_err(&(ar)->dev->dev, format, ## arg); \
+>>> +	} \
+>>> +} while (0)
+>> This looks suspicious and might hide something important. It's better to
+>> fix the real cause than to workaround it in the error log printer. Do
+>> you know why this was added?
+>
+> Yes. The purpose is to hide all the USB errors that happens when you
+> hot-unplug the dongle. There can be quite a few URBs in flight and
+> all of them will fail with -ENODEV or -ESHUTDOWN. Instead of checking
+> for these errors in all the usb submissions and callbacks I added this
+> flag. Do you still a problem with this approach?
 
-Yup that's what you'd have to do.. with all the timing / settling
-issues inherent in that.
+IMHO it's bad style to hide that inside a logging macro and might hide
+some other bugs. It's better to check the state explicitly in the
+callback.
 
+But again this isn't anything important, just something I noticed while
+reviewing the code. Do what you think is best.
 
-
-adrian
+-- 
+Kalle Valo
