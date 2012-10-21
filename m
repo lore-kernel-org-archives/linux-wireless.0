@@ -1,180 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:54517 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751361Ab2JFDWd (ORCPT
+Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:16977
+	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752481Ab2JUKwP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 23:22:33 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.7 4/4] mwifiex: update cfg80211 with correct reason code when connection is lost
-Date: Fri,  5 Oct 2012 20:21:43 -0700
-Message-Id: <1349493703-1169-5-git-send-email-bzhao@marvell.com> (sfid-20121006_052236_773176_A3E7CD13)
-In-Reply-To: <1349493703-1169-1-git-send-email-bzhao@marvell.com>
-References: <1349493703-1169-1-git-send-email-bzhao@marvell.com>
+	Sun, 21 Oct 2012 06:52:15 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 4/5] ath6kl/wmi.c: eliminate possible double free
+Date: Sun, 21 Oct 2012 12:52:06 +0200
+Message-Id: <1350816727-1381-5-git-send-email-Julia.Lawall@lip6.fr> (sfid-20121021_125328_119073_2F25C510)
+In-Reply-To: <1350816727-1381-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1350816727-1381-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Driver gets LINK_LOST, DEAUTHENTICATED and DISASSOCIATED events
-from firmware when connection is lost in different scenarios.
-Currently we are using common code WLAN_REASON_DEAUTH_LEAVING
-for these cases.
+This makes two changes.  In ath6kl_wmi_cmd_send, a call to dev_kfree_skb on
+the skb argument is added to the initial sanity check to more completely
+establish the invariant that ath6kl_wmi_cmd_send owns its skb argument.
+Then, in ath6kl_wmi_sync_point, on failure of the call to
+ath6kl_wmi_cmd_send, the clearing of the local skb variable is moved up, so
+that the error-handling code at the end of the function does not free it
+again.
 
-This patch adds support to parse an actual reason code from
-firmware event body and send it to cfg80211.
-WLAN_REASON_DEAUTH_LEAVING code is used if deauth is initiated
-by our device.
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+// <smpl>
+@r@
+identifier f,free,a;
+parameter list[n] ps;
+type T;
+expression e;
+@@
+
+f(ps,T a,...) {
+  ... when any
+      when != a = e
+  if(...) { ... free(a); ... return ...; }
+  ... when any
+}
+
+@@
+identifier r.f,r.free;
+expression x,a;
+expression list[r.n] xs;
+@@
+
+* x = f(xs,a,...);
+  if (...) { ... free(a); ... return ...; }
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
- drivers/net/wireless/mwifiex/join.c        |    6 +++-
- drivers/net/wireless/mwifiex/main.h        |    2 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c |    4 +-
- drivers/net/wireless/mwifiex/sta_event.c   |   31 ++++++++++++++++++----------
- 4 files changed, 27 insertions(+), 16 deletions(-)
+Not tested.
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 82e63ce..7b0858a 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -1180,16 +1180,18 @@ int mwifiex_ret_802_11_ad_hoc(struct mwifiex_private *priv,
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct host_cmd_ds_802_11_ad_hoc_result *adhoc_result;
- 	struct mwifiex_bssdescriptor *bss_desc;
-+	u16 reason_code;
+ drivers/net/wireless/ath/ath6kl/wmi.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index c30ab4b..50f50e4 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1677,8 +1677,10 @@ int ath6kl_wmi_cmd_send(struct wmi *wmi, u8 if_idx, struct sk_buff *skb,
+ 	int ret;
+ 	u16 info1;
  
- 	adhoc_result = &resp->params.adhoc_result;
+-	if (WARN_ON(skb == NULL || (if_idx > (wmi->parent_dev->vif_max - 1))))
++	if (WARN_ON(skb == NULL || if_idx > (wmi->parent_dev->vif_max - 1))) {
++		dev_kfree_skb(skb);
+ 		return -EINVAL;
++	}
  
- 	bss_desc = priv->attempted_bss_desc;
+ 	ath6kl_dbg(ATH6KL_DBG_WMI, "wmi tx id %d len %d flag %d\n",
+ 		   cmd_id, skb->len, sync_flag);
+@@ -2348,12 +2350,12 @@ static int ath6kl_wmi_sync_point(struct wmi *wmi, u8 if_idx)
+ 	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SYNCHRONIZE_CMDID,
+ 				  NO_SYNC_WMIFLAG);
  
- 	/* Join result code 0 --> SUCCESS */
--	if (le16_to_cpu(resp->result)) {
-+	reason_code = le16_to_cpu(resp->result);
-+	if (reason_code) {
- 		dev_err(priv->adapter->dev, "ADHOC_RESP: failed\n");
- 		if (priv->media_connected)
--			mwifiex_reset_connect_state(priv);
-+			mwifiex_reset_connect_state(priv, reason_code);
+-	if (ret)
+-		goto free_skb;
+-
+ 	/* cmd buffer sent, we no longer own it */
+ 	skb = NULL;
  
- 		memset(&priv->curr_bss_params.bss_descriptor,
- 		       0x00, sizeof(struct mwifiex_bssdescriptor));
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index bfb3fa6..c2d0ab1 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -847,7 +847,7 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
- 				 struct mwifiex_bssdescriptor *bss_desc);
- int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 				 struct host_cmd_ds_command *resp);
--void mwifiex_reset_connect_state(struct mwifiex_private *priv);
-+void mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason);
- u8 mwifiex_band_to_radio_type(u8 band);
- int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac);
- int mwifiex_adhoc_start(struct mwifiex_private *priv,
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index e380171..09e6a26 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -545,7 +545,7 @@ static int mwifiex_ret_802_11_deauthenticate(struct mwifiex_private *priv,
- 	if (!memcmp(resp->params.deauth.mac_addr,
- 		    &priv->curr_bss_params.bss_descriptor.mac_address,
- 		    sizeof(resp->params.deauth.mac_addr)))
--		mwifiex_reset_connect_state(priv);
-+		mwifiex_reset_connect_state(priv, WLAN_REASON_DEAUTH_LEAVING);
++	if (ret)
++		goto free_skb;
++
+ 	for (index = 0; index < num_pri_streams; index++) {
  
- 	return 0;
- }
-@@ -558,7 +558,7 @@ static int mwifiex_ret_802_11_deauthenticate(struct mwifiex_private *priv,
- static int mwifiex_ret_802_11_ad_hoc_stop(struct mwifiex_private *priv,
- 					  struct host_cmd_ds_command *resp)
- {
--	mwifiex_reset_connect_state(priv);
-+	mwifiex_reset_connect_state(priv, WLAN_REASON_DEAUTH_LEAVING);
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index aafde30..8132119 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -41,7 +41,7 @@
-  *      - Sends a disconnect event to upper layers/applications.
-  */
- void
--mwifiex_reset_connect_state(struct mwifiex_private *priv)
-+mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
- {
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 
-@@ -117,10 +117,10 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv)
- 	priv->media_connected = false;
- 	dev_dbg(adapter->dev,
- 		"info: successfully disconnected from %pM: reason code %d\n",
--		priv->cfg_bssid, WLAN_REASON_DEAUTH_LEAVING);
-+		priv->cfg_bssid, reason_code);
- 	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
--		cfg80211_disconnected(priv->netdev, WLAN_REASON_DEAUTH_LEAVING,
--				      NULL, 0, GFP_KERNEL);
-+		cfg80211_disconnected(priv->netdev, reason_code, NULL, 0,
-+				      GFP_KERNEL);
- 	}
- 	memset(priv->cfg_bssid, 0, ETH_ALEN);
- 
-@@ -186,7 +186,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	int ret = 0;
- 	u32 eventcause = adapter->event_cause;
--	u16 ctrl;
-+	u16 ctrl, reason_code;
- 
- 	switch (eventcause) {
- 	case EVENT_DUMMY_HOST_WAKEUP_SIGNAL:
-@@ -204,22 +204,31 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 	case EVENT_DEAUTHENTICATED:
- 		dev_dbg(adapter->dev, "event: Deauthenticated\n");
- 		adapter->dbg.num_event_deauth++;
--		if (priv->media_connected)
--			mwifiex_reset_connect_state(priv);
-+		if (priv->media_connected) {
-+			reason_code =
-+				le16_to_cpu(*(__le16 *)adapter->event_body);
-+			mwifiex_reset_connect_state(priv, reason_code);
-+		}
- 		break;
- 
- 	case EVENT_DISASSOCIATED:
- 		dev_dbg(adapter->dev, "event: Disassociated\n");
- 		adapter->dbg.num_event_disassoc++;
--		if (priv->media_connected)
--			mwifiex_reset_connect_state(priv);
-+		if (priv->media_connected) {
-+			reason_code =
-+				le16_to_cpu(*(__le16 *)adapter->event_body);
-+			mwifiex_reset_connect_state(priv, reason_code);
-+		}
- 		break;
- 
- 	case EVENT_LINK_LOST:
- 		dev_dbg(adapter->dev, "event: Link lost\n");
- 		adapter->dbg.num_event_link_lost++;
--		if (priv->media_connected)
--			mwifiex_reset_connect_state(priv);
-+		if (priv->media_connected) {
-+			reason_code =
-+				le16_to_cpu(*(__le16 *)adapter->event_body);
-+			mwifiex_reset_connect_state(priv, reason_code);
-+		}
- 		break;
- 
- 	case EVENT_PS_SLEEP:
--- 
-1.7.0.2
+ 		if (WARN_ON(!data_sync_bufs[index].skb))
 
