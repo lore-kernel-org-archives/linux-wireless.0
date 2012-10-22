@@ -1,48 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44090 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744Ab2JOINs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 04:13:48 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 08/12] ath9k_hw: Fix max rx rate drop for AR9565
-Date: Mon, 15 Oct 2012 13:25:34 +0530
-Message-ID: <1350287738-18687-9-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101352_128878_87A4E1DF)
-In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:40968 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756191Ab2JVVTh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 17:19:37 -0400
+Message-ID: <5085B866.8060306@openwrt.org> (sfid-20121022_231941_412532_D4A81114)
+Date: Mon, 22 Oct 2012 23:19:34 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Cannot bring up second VAP on recent kernels?
+References: <5085AA78.1080809@candelatech.com>
+In-Reply-To: <5085AA78.1080809@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever i_coff of IQ calibration is too high, AR9565 drops max
-rx rate to MCS4. Skipping IQ update at this time can avoid this
-problem for AR9565.
+On 2012-10-22 10:20 PM, Ben Greear wrote:
+> Anyone successfully using more than one virtual AP on
+> 3.3 or higher kernels?  It works fine for me on 3.0.32,
+> but my 3.3.8 and 3.5.7 kernels (and a few similar ones)
+> all fail with errors like this below:
+> 
+> Hardware is ath9k 3x3 9380 NIC.
+Are you using one hostapd instance per vap, or one hostapd instance for
+all of them?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 84b558d..162401f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -276,6 +276,11 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
- 				offset_array[i],
- 				REG_READ(ah, offset_array[i]));
- 
-+			if (AR_SREV_9565(ah) &&
-+			    (iCoff == 63 || qCoff == 63 ||
-+			     iCoff == -63 || qCoff == -63))
-+				return;
-+
- 			REG_RMW_FIELD(ah, offset_array[i],
- 				      AR_PHY_RX_IQCAL_CORR_IQCORR_Q_I_COFF,
- 				      iCoff);
--- 
-1.7.12.2
+- Felix
 
