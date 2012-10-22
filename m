@@ -1,38 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47237 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757089Ab2J2RGM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 13:06:12 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q9TH6BJL021910
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 10:06:11 -0700
-Message-ID: <508EB783.9080000@candelatech.com> (sfid-20121029_180616_165655_39B11451)
-Date: Mon, 29 Oct 2012 10:06:11 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from web125403.mail.ne1.yahoo.com ([98.138.226.76]:46443 "EHLO
+	web125403.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753037Ab2JVFC0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 01:02:26 -0400
+Message-ID: <1350882145.55725.YahooMailNeo@web125403.mail.ne1.yahoo.com> (sfid-20121022_070233_857032_74B477C4)
+Date: Sun, 21 Oct 2012 22:02:25 -0700 (PDT)
+From: Dwaine Garden VE3GIF <dwainegarden@rogers.com>
+Reply-To: Dwaine Garden VE3GIF <dwainegarden@rogers.com>
+Subject: [PATCH] Bluetooth: Add support for Atheros [04ca:3004]
+To: "linville@redhat.com" <linville@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mcgrof@qca.qualcomm.com" <mcgrof@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Any thoughts on how to best shield u.fl connectors on NICs?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It appears hard to get well-shielded u.fl (IPEX) to SMA pigtails, and all of the
-modern ath9k NICs I've seen use u.fl connectors on the NIC.
 
-I have found a vendor that will do double-shielded 1.32mm cable, and I have some of those
-on order, but the way u.fl connectors are made it seems there is always a bit of un-shielded
-cable where the connector is crimped onto the cable.
 
-I am curious if anyone has any suggestions or experience with connecting u.fl NICs to
-SMA cables in a highly shielded manner...
+Add another vendor specific ID for Atheros AR3012 device.
+This chip is wrapped by Lite-On Technology Corp.
 
-Thanks,
-Ben
+output of usb-devices:
+Bus 001 Device 008: ID 04ca:3004 Lite-On Technology Corp. 
+Device Descriptor:
+  bLength                18
+ 
+ bDescriptorType         1
+  bcdUSB               1.10
+  bDeviceClass          224 Wireless
+  bDeviceSubClass         1 Radio Frequency
+  bDeviceProtocol         1 Bluetooth
+  bMaxPacketSize0        64
+  idVendor           0x04ca Lite-On Technology Corp.
+  idProduct          0x3004 
+  bcdDevice            0.02
+  iManufacturer           1 Atheros Communications
+ 
+ iProduct                2 Bluetooth USB Host Controller
+  iSerial                 3 Alaska Day 2006
+  bNumConfigurations      1
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
+Signed-off-by: Dwaine Garden <DwaineGarden@rogers.com>  ---
+
+diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
+index fc2de55..1486f15 100644
+--- a/drivers/bluetooth/ath3k.c
++++ b/drivers/bluetooth/ath3k.c
+@@ -75,6 +75,7 @@ static struct usb_device_id ath3k_table[] = {
+{ USB_DEVICE(0x0CF3, 0x3004) },
+{ USB_DEVICE(0x0CF3, 0x311D) },
+{ USB_DEVICE(0x13d3, 0x3375) },
++	{ USB_DEVICE(0x04CA, 0x3004) },
+{ USB_DEVICE(0x04CA, 0x3005) },
+{ USB_DEVICE(0x13d3, 0x3362) },
+{ USB_DEVICE(0x0CF3, 0xE004) },
+@@ -102,6 +103,7 @@ static struct usb_device_id ath3k_blist_tbl[] = {
+{ USB_DEVICE(0x0cf3, 0x3004), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x0cf3, 0x311D), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
++	{ USB_DEVICE(0x04ca, 0x3004), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x04ca, 0x3005), .driver_info = BTUSB_ATH3012 },
+{
+ USB_DEVICE(0x13d3, 0x3362), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x0cf3, 0xe004), .driver_info = BTUSB_ATH3012 },
+diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+index debda27..0529cee 100644
+--- a/drivers/bluetooth/btusb.c
++++ b/drivers/bluetooth/btusb.c
+@@ -132,6 +132,7 @@ static struct usb_device_id blacklist_table[] = {
+{ USB_DEVICE(0x0cf3, 0x3004), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x0cf3, 0x311d), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
++	{ USB_DEVICE(0x04ca, 0x3004), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x04ca, 0x3005), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x13d3, 0x3362), .driver_info = BTUSB_ATH3012 },
+{ USB_DEVICE(0x0cf3, 0xe004), .driver_info = BTUSB_ATH3012 },
