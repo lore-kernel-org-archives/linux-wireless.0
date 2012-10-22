@@ -1,82 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43839 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4249 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755391Ab2JELpq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 07:45:46 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/7] rt2800: use BBP_R1 for setting tx power
-Date: Fri,  5 Oct 2012 13:44:09 +0200
-Message-Id: <1349437455-18754-1-git-send-email-sgruszka@redhat.com> (sfid-20121005_134549_148248_02621DAD)
+	id S1755555Ab2JVUz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 16:55:58 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/12] brcmfmac: use memset when setting a broadcast mac
+ address
+Date: Mon, 22 Oct 2012 13:55:38 -0700
+Message-ID: <1350939341-17687-10-git-send-email-frankyl@broadcom.com> (sfid-20121022_225855_456216_061FE348)
+In-Reply-To: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
+References: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TX power delta can be negative. TX_PWR_CFG_ registers allow to set delta
-only in range between 0 dBm and 15 dBm (4 bits for each rate). Se we
-need to use BBP_R1 to configure negative deltas.
+From: Arend van Spriel <arend@broadcom.com>
 
-Not utilize +6 dBm increasing BBP_R1 option for safety reason. For now,
-this can be used for devices, which export maximum allowed TX power
-value.
+The driver had a global constant ether_bcast, which was copied
+whenever a broadcast mac address was needed. This patch does a
+memset(dest, 0xFF, ETH_ALEN) instead and consequently removes
+the global ether_bcast.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   27 +++++++++++++++++++--------
- 1 files changed, 19 insertions(+), 8 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 540c94f..a849a39 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2570,13 +2570,10 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 				  enum ieee80211_band band,
- 				  int power_level)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 5ce0068..94c619a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -94,8 +94,6 @@
+ #define BRCMF_ASSOC_PARAMS_FIXED_SIZE \
+ 	(sizeof(struct brcmf_assoc_params_le) - sizeof(u16))
+ 
+-static const u8 ether_bcast[ETH_ALEN] = {255, 255, 255, 255, 255, 255};
+-
+ static u32 brcmf_dbg_level = WL_DBG_ERR;
+ 
+ static bool check_vif_up(struct brcmf_cfg80211_vif *vif)
+@@ -534,7 +532,7 @@ static void brcmf_set_mpc(struct net_device *ndev, int mpc)
+ static void brcmf_iscan_prep(struct brcmf_scan_params_le *params_le,
+ 			     struct brcmf_ssid *ssid)
  {
--	u8 txpower;
-+	u8 txpower, r1;
- 	u16 eeprom;
--	int i, is_rate_b;
--	u32 reg;
--	u8 r1;
--	u32 offset;
--	int delta;
-+	u32 reg, offset;
-+	int i, is_rate_b, delta, power_ctrl;
+-	memcpy(params_le->bssid, ether_bcast, ETH_ALEN);
++	memset(params_le->bssid, 0xFF, ETH_ALEN);
+ 	params_le->bss_type = DOT11_BSSTYPE_ANY;
+ 	params_le->scan_type = 0;
+ 	params_le->channel_num = 0;
+@@ -721,7 +719,7 @@ static void brcmf_escan_prep(struct brcmf_scan_params_le *params_le,
+ 	char *ptr;
+ 	struct brcmf_ssid_le ssid_le;
  
- 	/*
- 	 * Calculate HT40 compensation delta
-@@ -2589,10 +2586,24 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 	delta += rt2800_get_gain_calibration_delta(rt2x00dev);
+-	memcpy(params_le->bssid, ether_bcast, ETH_ALEN);
++	memset(params_le->bssid, 0xFF, ETH_ALEN);
+ 	params_le->bss_type = DOT11_BSSTYPE_ANY;
+ 	params_le->scan_type = 0;
+ 	params_le->channel_num = 0;
+@@ -810,7 +808,7 @@ brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
+ 		/* Do a scan abort to stop the driver's scan engine */
+ 		WL_SCAN("ABORT scan in firmware\n");
+ 		memset(&params_le, 0, sizeof(params_le));
+-		memcpy(params_le.bssid, ether_bcast, ETH_ALEN);
++		memset(params_le.bssid, 0xFF, ETH_ALEN);
+ 		params_le.bss_type = DOT11_BSSTYPE_ANY;
+ 		params_le.scan_type = 0;
+ 		params_le.channel_num = cpu_to_le32(1);
+@@ -1283,7 +1281,7 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
+ 				   BRCMF_ASSOC_PARAMS_FIXED_SIZE;
+ 		memcpy(profile->bssid, params->bssid, ETH_ALEN);
+ 	} else {
+-		memcpy(join_params.params_le.bssid, ether_bcast, ETH_ALEN);
++		memset(join_params.params_le.bssid, 0xFF, ETH_ALEN);
+ 		memset(profile->bssid, 0, ETH_ALEN);
+ 	}
  
- 	/*
--	 * set to normal bbp tx power control mode: +/- 0dBm
-+	 * BBP_R1 controls TX power for all rates, it allow to set the following
-+	 * gains -12, -6, 0, +6 dBm by setting values 2, 1, 0, 3 respectively.
-+	 *
-+	 * TODO: we do not use +6 dBm option to do not increase power beyond
-+	 * regulatory limit, however this could be utilized for devices with
-+	 * CAPABILITY_POWER_LIMIT.
- 	 */
- 	rt2800_bbp_read(rt2x00dev, 1, &r1);
--	rt2x00_set_field8(&r1, BBP1_TX_POWER_CTRL, 0);
-+	if (delta <= -12) {
-+		power_ctrl = 2;
-+		delta += 12;
-+	} else if (delta <= -6) {
-+		power_ctrl = 1;
-+		delta += 6;
-+	} else {
-+		power_ctrl = 0;
-+	}
-+	rt2x00_set_field8(&r1, BBP1_TX_POWER_CTRL, power_ctrl);
- 	rt2800_bbp_write(rt2x00dev, 1, r1);
- 	offset = TX_PWR_CFG_0;
+@@ -1673,7 +1671,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 	memcpy(&profile->ssid.SSID, sme->ssid, profile->ssid.SSID_len);
+ 	join_params.ssid_le.SSID_len = cpu_to_le32(profile->ssid.SSID_len);
  
+-	memcpy(join_params.params_le.bssid, ether_bcast, ETH_ALEN);
++	memset(join_params.params_le.bssid, 0xFF, ETH_ALEN);
+ 
+ 	if (ssid.SSID_len < IEEE80211_MAX_SSID_LEN)
+ 		WL_CONN("ssid \"%s\", len (%d)\n",
 -- 
-1.7.1
+1.7.9.5
+
 
