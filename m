@@ -1,45 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:42695 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760973Ab2J2VL5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 17:11:57 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1TSwcs-0005Qp-Hh
-	for linux-wireless@vger.kernel.org; Mon, 29 Oct 2012 22:12:02 +0100
-Received: from 85-211-212-185.dynamic.dsl.as9105.com ([85-211-212-185.dynamic.dsl.as9105.com])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 22:12:02 +0100
-Received: from cliffhanger by 85-211-212-185.dynamic.dsl.as9105.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 22:12:02 +0100
-To: linux-wireless@vger.kernel.org
-From: Cliff McDiarmid <cliffhanger@gardener.com>
-Subject: Re: RTL8188SU
-Date: Mon, 29 Oct 2012 21:11:39 +0000 (UTC)
-Message-ID: <loom.20121029T214630-424@post.gmane.org> (sfid-20121029_221203_228831_CEB7F597)
-References: <loom.20121028T233054-8@post.gmane.org> <201210291257.02249.chunkeey@googlemail.com> <loom.20121029T182405-382@post.gmane.org> <201210292117.45399.chunkeey@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.candelatech.com ([208.74.158.172]:39160 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754355Ab2JVX1n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 19:27:43 -0400
+Message-ID: <5085D66C.3060307@candelatech.com> (sfid-20121023_012747_100309_DEBCD1EF)
+Date: Mon, 22 Oct 2012 16:27:40 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Cannot bring up second VAP on recent kernels?
+References: <5085AA78.1080809@candelatech.com> <5085B866.8060306@openwrt.org> <5085BA0E.6080903@candelatech.com> <5085BE64.6030802@openwrt.org> <5085CE19.2000505@candelatech.com>
+In-Reply-To: <5085CE19.2000505@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@...> writes:
+On 10/22/2012 03:52 PM, Ben Greear wrote:
+> On 10/22/2012 02:45 PM, Felix Fietkau wrote:
+>> On 2012-10-22 11:26 PM, Ben Greear wrote:
+>>> On 10/22/2012 02:19 PM, Felix Fietkau wrote:
+>>>> On 2012-10-22 10:20 PM, Ben Greear wrote:
+>>>>> Anyone successfully using more than one virtual AP on
+>>>>> 3.3 or higher kernels?  It works fine for me on 3.0.32,
+>>>>> but my 3.3.8 and 3.5.7 kernels (and a few similar ones)
+>>>>> all fail with errors like this below:
+>>>>>
+>>>>> Hardware is ath9k 3x3 9380 NIC.
+>>>> Are you using one hostapd instance per vap, or one hostapd instance for
+>>>> all of them?
+>>>
+>>> One hostapd per VAP.
+>> I had issues with that a long time ago. Use one hostapd instance for all
+>> vaps on the same wiphy, that'll work better.
+>
+> Well, that would be a lot of user-space churn for me, so I think
+> I'll try to figure out why it's failing and see if I can fix it.
+>
+> Thanks,
+> Ben
+>
 
 
-> > but could I revert?
-> Well, this is getting confusing ;)
-> Can you explain what you want reverted?
-> 
-> Regards,
+Well, crap, it looks like it is this commit.  No one considered wanting
+to run two hostapd processes on one wiphy :(
 
-Sorry probably bad english.   I was wondering if I revert to using the 'old'
-driver, 8192u, with the rtl8188su and you seem to suggest yes?   However, I have
-the 8192u module built in the kernel at present and it will not load when the
-rtl8188su is plugged in.   
+commit 5e760230e42cf759bd923457ca2753aacf2e656e
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Fri Nov 4 11:18:17 2011 +0100
 
-regards
+     cfg80211: allow registering to beacons
 
-Cliff
+     Add the ability to register to received beacon frames
+     to allow implementing OLBC logic in userspace. The
+     registration is per wiphy since there's no point in
+     receiving the same frame multiple times.
+
+     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
