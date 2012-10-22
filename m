@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:50431 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753543Ab2JJQGs (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:53502 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932319Ab2JVWn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 12:06:48 -0400
-Date: Wed, 10 Oct 2012 12:06:45 -0400 (EDT)
-Message-Id: <20121010.120645.144599458222040514.davem@davemloft.net> (sfid-20121010_180711_655158_F885FF19)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-10-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20121009183844.GB1993@tuxdriver.com>
-References: <20121009183844.GB1993@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 22 Oct 2012 18:43:28 -0400
+Received: by mail-da0-f46.google.com with SMTP id n41so1601596dak.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2012 15:43:28 -0700 (PDT)
+Date: Mon, 22 Oct 2012 15:43:24 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org, s.L-H@gmx.de
+Cc: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
+Message-ID: <20121022224324.GC24489@kroah.com> (sfid-20121023_004331_576427_539C479C)
+References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
+ <20121013153923.GA25810@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121013153923.GA25810@lst.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 9 Oct 2012 14:38:44 -0400
+On Sat, Oct 13, 2012 at 05:39:23PM +0200, Christoph Hellwig wrote:
+> Thanks a lot for picking up the work and finshing the driver.
+> 
+> I agree with the other voices here that the driver should go straight in
+> and not to staging.
 
-> Here is a batch of fixes intended for 3.7...
-> 
-> Amitkumar Karwar provides a couple of mwifiex fixes to correctly
-> report some reason codes for certain connection failures.  He also
-> provides a fix to cleanup after a scanning failure.  Bing Zhao rounds
-> that out with another mwifiex scanning fix.
-> 
-> Daniel Golle gives us a fix for a copy/paste error in rt2x00.
-> 
-> Felix Fietkau brings a couple of ath9k fixes related to suspend/resume,
-> and a couple of fixes to prevent memory leaks in ath9k and mac80211.
-> 
-> Ronald Wahl sends a carl9170 fix for a sleep in softirq context.
-> 
-> Thomas Pedersen reorders some code to prevent drv_get_tsf from being
-> called while holding a spinlock, now that it can sleep.
-> 
-> Finally, Wei Yongjun prevents a NULL pointer dereference in the
-> ath5k driver.
- ...
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git tags/master-2012-10-08
+Ok, I've dropped this from my patch queue, it should go to the wireless
+driver maintainers instead.
 
-Pulled, thanks John.
+thanks,
+
+greg k-h
