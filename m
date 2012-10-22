@@ -1,55 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:45209 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753258Ab2JNNfL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Oct 2012 09:35:11 -0400
-Message-ID: <507ABE44.4080904@ti.com> (sfid-20121014_153517_714653_56F97282)
-Date: Sun, 14 Oct 2012 15:29:40 +0200
-From: Victor Goldenshtein <victorg@ti.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2017 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755905Ab2JVRgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 13:36:41 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 13/14] brcmfmac: change parameter list for
+ send_key_to_dongle()
+Date: Mon, 22 Oct 2012 10:36:26 -0700
+Message-ID: <1350927387-25608-14-git-send-email-frankyl@broadcom.com> (sfid-20121022_193656_803536_202B0742)
+In-Reply-To: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
+References: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
-	<assaf@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [PATCH v3 7/7] mac80211: add DFS support to monitor interface
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>  <1344426823-1795-8-git-send-email-victorg@ti.com>  <1347276361.4272.20.camel@jlt4.sipsolutions.net>  <CAK80WHY=YiKBcLgZFJjEEVFk6ncHniPXzWWvKywEGVNLm4C8Kw@mail.gmail.com> <1349808165.4683.15.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1349808165.4683.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/2012 08:42 PM, Johannes Berg wrote:
-> On Wed, 2012-10-03 at 15:54 +0200, Goldenshtein, Victor wrote:
->> On Mon, Sep 10, 2012 at 2:26 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
->>>> AP mode uses monitor interfaces to transmit
->>>> management frames which were blocked for "radar
->>>> channels" until now.
->>>>
->>>> Stop dropping packets if we are on 'radar channel'
->>>> and the DFS is enabled.
->>>
->>> Umm, no? Check for dfs_en_tx().
->>>
->>
->> no need, the AP is started only after the dfs_en_tx().
->
-> but this is on monitor mode, no? and monitor mode isn't used just for
-> AP. In fact, AP no longer even uses monitor mode, so you don't need this
-> at all since you should be working with a new hostapd version that will
-> get the DFS feature ... and then you're working on a current version
-> that already no longer uses monitor mode for DFS. Both kernel & hostapd
-> have to be new enough, so monitor mode won't be used...
->
+From: Arend van Spriel <arend@broadcom.com>
 
-right, this patch here from the days AP used monitor mode.
-I"ll remove it.
+The first two parameters given to send_key_to_dongle() are redundant
+so they have been removed.
 
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   25 ++++---------------
+ 1 files changed, 6 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 61d9489..71bc310 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -432,8 +432,7 @@ static void convert_key_from_CPU(struct brcmf_wsec_key *key,
+ }
+ 
+ static int
+-send_key_to_dongle(struct brcmf_cfg80211_info *cfg, s32 bssidx,
+-		   struct net_device *ndev, struct brcmf_wsec_key *key)
++send_key_to_dongle(struct net_device *ndev, struct brcmf_wsec_key *key)
+ {
+ 	int err;
+ 	struct brcmf_wsec_key_le key_le;
+@@ -1556,7 +1555,6 @@ brcmf_set_sharedkey(struct net_device *ndev,
+ 	struct brcmf_wsec_key key;
+ 	s32 val;
+ 	s32 err = 0;
+-	s32 bssidx;
+ 
+ 	WL_CONN("key len (%d)\n", sme->key_len);
+ 
+@@ -1599,8 +1597,7 @@ brcmf_set_sharedkey(struct net_device *ndev,
+ 	WL_CONN("key length (%d) key index (%d) algo (%d)\n",
+ 		key.len, key.index, key.algo);
+ 	WL_CONN("key \"%s\"\n", key.data);
+-	bssidx = brcmf_find_bssidx(cfg, ndev);
+-	err = send_key_to_dongle(cfg, bssidx, ndev, &key);
++	err = send_key_to_dongle(ndev, &key);
+ 	if (err)
+ 		return err;
+ 
+@@ -1846,10 +1843,8 @@ static s32
+ brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
+ 	      u8 key_idx, const u8 *mac_addr, struct key_params *params)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_wsec_key key;
+ 	s32 err = 0;
+-	s32 bssidx;
+ 
+ 	memset(&key, 0, sizeof(key));
+ 	key.index = (u32) key_idx;
+@@ -1858,11 +1853,10 @@ brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!is_multicast_ether_addr(mac_addr))
+ 		memcpy((char *)&key.ea, (void *)mac_addr, ETH_ALEN);
+ 	key.len = (u32) params->key_len;
+-	bssidx = brcmf_find_bssidx(cfg, ndev);
+ 	/* check for key index change */
+ 	if (key.len == 0) {
+ 		/* key delete */
+-		err = send_key_to_dongle(cfg, bssidx, ndev, &key);
++		err = send_key_to_dongle(ndev, &key);
+ 		if (err)
+ 			WL_ERR("key delete error (%d)\n", err);
+ 	} else {
+@@ -1917,7 +1911,7 @@ brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
+ 			WL_ERR("Invalid cipher (0x%x)\n", params->cipher);
+ 			return -EINVAL;
+ 		}
+-		err = send_key_to_dongle(cfg, bssidx, ndev, &key);
++		err = send_key_to_dongle(ndev, &key);
+ 		if (err)
+ 			WL_ERR("wsec_key error (%d)\n", err);
+ 	}
+@@ -1935,7 +1929,6 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	s32 wsec;
+ 	s32 err = 0;
+ 	u8 keybuf[8];
+-	s32 bssidx;
+ 
+ 	WL_TRACE("Enter\n");
+ 	WL_CONN("key index (%d)\n", key_idx);
+@@ -1997,8 +1990,7 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		goto done;
+ 	}
+ 
+-	bssidx = brcmf_find_bssidx(cfg, ndev);
+-	err = send_key_to_dongle(cfg, bssidx, ndev, &key);
++	err = send_key_to_dongle(ndev, &key);
+ 	if (err)
+ 		goto done;
+ 
+@@ -2023,10 +2015,8 @@ static s32
+ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		    u8 key_idx, bool pairwise, const u8 *mac_addr)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_wsec_key key;
+ 	s32 err = 0;
+-	s32 bssidx;
+ 
+ 	WL_TRACE("Enter\n");
+ 	if (!check_sys_up(wiphy))
+@@ -2041,8 +2031,7 @@ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	WL_CONN("key index (%d)\n", key_idx);
+ 
+ 	/* Set the new key/index */
+-	bssidx = brcmf_find_bssidx(cfg, ndev);
+-	err = send_key_to_dongle(cfg, bssidx, ndev, &key);
++	err = send_key_to_dongle(ndev, &key);
+ 	if (err) {
+ 		if (err == -EINVAL) {
+ 			if (key.index >= DOT11_MAX_DEFAULT_KEYS)
+@@ -2068,7 +2057,6 @@ brcmf_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	struct brcmf_cfg80211_security *sec;
+ 	s32 wsec;
+ 	s32 err = 0;
+-	s32 bssidx;
+ 
+ 	WL_TRACE("Enter\n");
+ 	WL_CONN("key index (%d)\n", key_idx);
+@@ -2077,7 +2065,6 @@ brcmf_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
+-	bssidx = brcmf_find_bssidx(cfg, ndev);
+ 	err = brcmf_fil_bsscfg_int_get(netdev_priv(ndev), "wsec", &wsec);
+ 	if (err) {
+ 		WL_ERR("WLC_GET_WSEC error (%d)\n", err);
 -- 
-Thanks,
-Victor.
+1.7.6
+
+
