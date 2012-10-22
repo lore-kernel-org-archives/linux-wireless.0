@@ -1,51 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52057 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754385Ab2JFJDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2012 05:03:51 -0400
-Message-ID: <506FF3ED.6010906@openwrt.org> (sfid-20121006_110405_779903_448CBFAB)
-Date: Sat, 06 Oct 2012 11:03:41 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:47337 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753974Ab2JVNBf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 09:01:35 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so1023738bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2012 06:01:34 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Subject: [PATCH v2] carl9170: split up carl9170_handle_mpdu
+Date: Mon, 22 Oct 2012 15:01:29 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jlopex@cozybit.com
+References: <201210202000.42173.chunkeey@googlemail.com> <CAGRGNgW2pBq54zbcX85ALTxFeXsv5fFcqhPo-Uzz43_zsZ=9eg@mail.gmail.com>
+In-Reply-To: <CAGRGNgW2pBq54zbcX85ALTxFeXsv5fFcqhPo-Uzz43_zsZ=9eg@mail.gmail.com>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Sven Eckelmann <sven@narfation.org>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	lindner_marek@yahoo.de
-Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL
- on AR9003
-References: <1348756862-8788-1-git-send-email-sven@narfation.org> <506B0628.6070201@openwrt.org> <CAJ-Vmo=bu=j+=z_TAeE3--Sn5oAEbkEG-HDqK=6okR8xmmWpSQ@mail.gmail.com> <2629427.e28b8DS3gI@bentobox> <506ED3D4.7050107@openwrt.org> <CAJ-VmonKjxmquSUg99kAtPWVwHH-4zTooF1Xvj9mGUyjWL5pCA@mail.gmail.com> <20121005165152.GA4473@sven-atom.home.narfation.org> <CAJ-VmomfDr-JAMtgQmbEsSeF62W-dmsK7LRTJxNUUddOTqDayA@mail.gmail.com>
-In-Reply-To: <CAJ-VmomfDr-JAMtgQmbEsSeF62W-dmsK7LRTJxNUUddOTqDayA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201210221501.29704.chunkeey@googlemail.com> (sfid-20121022_150153_092112_A36D3B7E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-06 1:48 AM, Adrian Chadd wrote:
-> On 5 October 2012 09:51, Sven Eckelmann <sven@narfation.org> wrote:
-> 
->>> Well, is it a RX chainmask thing, or is it a chip thing?
->>>
->>> It's totally possible to have an RX chainmask of say 0x2 or 0x4..
->>
->> What are you trying to tell us?
-> 
-> That the check for "rx chainmask == 1? Definitely can't do MRC CCK"
-> implying "rx chainmask != 1? Definitely can do MRC CCK."
-> I think that's the wrong logic. It may be a general chipset problem
-> across some/all AR9300 and later chips that doing MRC CCK with only
-> one RX chain enabled is a problem, or it may be a single-chain NIC
-> problem.
-> 
-> I'm pretty sure we can configure any of the RX antennas; it doesn't
-> have to be "one chain == chain 0."
-> 
-> Anywy. I'll double check that.
-I'm pretty sure it's an issue specific to single-stream chipsets, where
-all MRC functionality was left out (and thus the register access leads
-nowhere).
-I don't think this needs to consider multi-stream chipsets with only one
-enabled chain.
+carl9170_handle_mpdu is the final part of the
+rx path of the driver. It splits the raw data
+streams from the device into skb packets and
+passes them on to mac80211. As a result of
+continuous updates, it grew over the years when
+new code was added by the following commits:
+	- report A-MPDU status
+	- fix HT peer BA session corruption
+	- A-MPDU frame type filter
+	- ...
 
-- Felix
+This patch splits the routine into two stages.
+The first stage only deals with the details
+about extracting and verifying the data from
+the incoming stream. Whereas the second stage
+packs it into skbs and passes it on to mac80211.
 
+Reported-by: Javier Lopez <jlopex@cozybit.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+Hello Julian,
+On Monday, October 22, 2012 12:20:30 AM Julian Calaby wrote:
+> On Sun, Oct 21, 2012 at 5:00 AM, Christian Lamparter
+> <chunkeey@googlemail.com> wrote:
+> > --- a/drivers/net/wireless/ath/carl9170/rx.c
+> > +++ b/drivers/net/wireless/ath/carl9170/rx.c
+> > +static int carl9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len,
+> > +                               struct ieee80211_rx_status *status)
+> > +{
+> > +       struct sk_buff *skb;
+> > +       int err = 0;
+> > [...]
+> > +
+> > +       /* (driver) frame trap handler
+> Personally, I hate the style of error handling where you have an
+> explicit variable for a return value
+Well the thinking behind "err" was that a trap handler 
+might want to use it. But ATM noone handler which needs
+it has been implemented, so yeah why not remove it!
+
+Regards,
+	Chr
+---
+ drivers/net/wireless/ath/carl9170/rx.c |   45 +++++++++++++++++++++++---------
+ 1 file changed, 32 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+index 9cd93f1..6d22382 100644
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -660,6 +660,35 @@ static bool carl9170_ampdu_check(struct ar9170 *ar, u8 *buf, u8 ms,
+ 	return false;
+ }
+ 
++static int carl9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len,
++				struct ieee80211_rx_status *status)
++{
++	struct sk_buff *skb;
++
++	/* (driver) frame trap handler
++	 *
++	 * Because power-saving mode handing has to be implemented by
++	 * the driver/firmware. We have to check each incoming beacon
++	 * from the associated AP, if there's new data for us (either
++	 * broadcast/multicast or unicast) we have to react quickly.
++	 *
++	 * So, if you have you want to add additional frame trap
++	 * handlers, this would be the perfect place!
++	 */
++
++	carl9170_ps_beacon(ar, buf, len);
++
++	carl9170_ba_check(ar, buf, len);
++
++	skb = carl9170_rx_copy_data(buf, len);
++	if (!skb)
++		return -ENOMEM;
++
++	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
++	ieee80211_rx(ar->hw, skb);
++	return 0;
++}
++
+ /*
+  * If the frame alignment is right (or the kernel has
+  * CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS), and there
+@@ -669,14 +698,12 @@ static bool carl9170_ampdu_check(struct ar9170 *ar, u8 *buf, u8 ms,
+  * mode, and we need to observe the proper ordering,
+  * this is non-trivial.
+  */
+-
+-static void carl9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
++static void carl9170_rx_untie_data(struct ar9170 *ar, u8 *buf, int len)
+ {
+ 	struct ar9170_rx_head *head;
+ 	struct ar9170_rx_macstatus *mac;
+ 	struct ar9170_rx_phystatus *phy = NULL;
+ 	struct ieee80211_rx_status status;
+-	struct sk_buff *skb;
+ 	int mpdu_len;
+ 	u8 mac_status;
+ 
+@@ -788,18 +815,10 @@ static void carl9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
+ 	if (phy)
+ 		carl9170_rx_phy_status(ar, phy, &status);
+ 
+-	carl9170_ps_beacon(ar, buf, mpdu_len);
+-
+-	carl9170_ba_check(ar, buf, mpdu_len);
+-
+-	skb = carl9170_rx_copy_data(buf, mpdu_len);
+-	if (!skb)
++	if (carl9170_handle_mpdu(ar, buf, mpdu_len, &status))
+ 		goto drop;
+ 
+-	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
+-	ieee80211_rx(ar->hw, skb);
+ 	return;
+-
+ drop:
+ 	ar->rx_dropped++;
+ }
+@@ -851,7 +870,7 @@ static void __carl9170_rx(struct ar9170 *ar, u8 *buf, unsigned int len)
+ 	if (i == 12)
+ 		carl9170_rx_untie_cmds(ar, buf, len);
+ 	else
+-		carl9170_handle_mpdu(ar, buf, len);
++		carl9170_rx_untie_data(ar, buf, len);
+ }
+ 
+ static void carl9170_rx_stream(struct ar9170 *ar, void *buf, unsigned int len)
+-- 
+1.7.10.4
