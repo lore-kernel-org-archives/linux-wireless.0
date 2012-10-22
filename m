@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:65093 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117Ab2JYWZv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 18:25:51 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1676654wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 15:25:49 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:2970 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755679Ab2JVRgh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 13:36:37 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/14] brcmfmac: implementation of firmware interface
+ layer
+Date: Mon, 22 Oct 2012 10:36:13 -0700
+Message-ID: <1350927387-25608-1-git-send-email-frankyl@broadcom.com> (sfid-20121022_193644_039784_15DBBE03)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmom0cg09C1D2Eh79K2zoOxL0Ry7g3+DC2iNGBFTa4+Zhzg@mail.gmail.com>
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
- <CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
- <20121024194547.GA19060@shredder> <CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
- <CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
- <20121024220813.GB6723@shredder> <CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
- <CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com> <CAJ-Vmom0cg09C1D2Eh79K2zoOxL0Ry7g3+DC2iNGBFTa4+Zhzg@mail.gmail.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 25 Oct 2012 15:25:28 -0700
-Message-ID: <CAG6hwVM_9TkKmMs0MyyiuO8TAUSLkBJTWiQ8+4AAa19YG+guCw@mail.gmail.com> (sfid-20121026_002554_731924_F1A690E4)
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 25, 2012 at 1:42 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> On 24 October 2012 18:54, Adrian Chadd <adrian@freebsd.org> wrote:
->
->> Yup, found it. The firmware TSF code was treating the TSF like it was
->> an older pre-11n NIC and only dealing with the low handful of bits.
->> Thomas has verified my test image works.
->>
->> I'll go and see about pushing this into the tree so Sujith's next
->> ath9k_htc drop will include this fix.
->>
->> Thanks for the debugging info Thomas!
->
-> Thomas, is the TSF in the RX status descriptor actually 32 bits, or is
-> this a printing error?
+This series contains patches for abstracting a firmware interface layer for
+dcmd and iovar handling. Also there are some code clean up works. It intends
+for 3.8. 
 
-Looking at the printk again, I'm pretty sure I'm just an idiot and the
-printed value is being truncated to 32 bits. Will test and verify the
-TSF wraps correctly again.
+Arend van Spriel (7):
+  brcmfmac: extend struct brcmf_if with bssidx field
+  brcmfmac: rework driver initialization in brcmf_bus_start()
+  brcmfmac: use bssidx from struct brcmf_if for bsscfg specific
+    commands
+  brcmfmac: add function converting ieee80211_channel to chanspec
+  brcmfmac: use struct brcmf_if as interface object for fwil functions
+  brcmfmac: change parameter list for send_key_to_dongle()
+  brcmfmac: remove brcmf_find_bssidx() function
 
-Thomas
+Franky Lin (1):
+  brcmfmac: streamline header parse code of sdio glom read
+
+Hante Meuleman (6):
+  brcmfmac: refactor firmware interface layer.
+  brcmfmac: remove unused iswl variable.
+  brcmfmac: change testmode command to use new firmware interface layer
+  brcmfmac: remove redundant function brcmf_c_mkiovar_bsscfg
+  brcmfmac: clean usb download code.
+  brcmfmac: use fwil for default configuration setup.
+
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    1 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   64 ++-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    3 -
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |   29 -
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |  454 +++++--------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c  |    2 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |    3 +
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  162 +----
+ .../net/wireless/brcm80211/brcmfmac/dhd_proto.h    |    8 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  174 ++----
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c     |  337 ++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.h     |   39 ++
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   41 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  675 +++++++-------------
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    4 +-
+ 15 files changed, 918 insertions(+), 1078 deletions(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/fwil.h
+
+-- 
+1.7.6
+
+
