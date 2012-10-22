@@ -1,62 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:60978 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754733Ab2JUClS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Oct 2012 22:41:18 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so822601dak.19
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Oct 2012 19:41:18 -0700 (PDT)
-Date: Sat, 20 Oct 2012 19:41:14 -0700
-From: Thomas Pedersen <thomas@cozybit.com>
-To: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Bob Copeland <me@bobcopeland.com>
-Subject: Re: ath9k_htc and reported mactime
-Message-ID: <20121021024114.GA9558@shredder> (sfid-20121021_044121_866069_84D89759)
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1985 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755894Ab2JVRgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 13:36:41 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/14] brcmfmac: add function converting
+ ieee80211_channel to chanspec
+Date: Mon, 22 Oct 2012 10:36:22 -0700
+Message-ID: <1350927387-25608-10-git-send-email-frankyl@broadcom.com> (sfid-20121022_193654_413370_22F182FE)
+In-Reply-To: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
+References: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-re-sending non-HTML to l-w.
+From: Arend van Spriel <arend@broadcom.com>
 
-Hi list,
+The firmware carries channel information in a different format
+as the provided ieee80211_channel structure. Conversion is needed
+when receiving requests from cfg80211 carrying ieee80211_channel
+structures. This patch adds a utility function to do that.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   52 ++++++++++---------
+ 1 files changed, 27 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index cb491d9..5a3093d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -392,6 +392,31 @@ static u8 brcmf_mw_to_qdbm(u16 mw)
+ 	return qdbm;
+ }
  
-We're seeing some issue with reported mactime by the ath9k_htc (AR9271)
-card. Here is a mesh node sampling peer beacons:
++static u16 channel_to_chanspec(struct ieee80211_channel *ch)
++{
++	u16 chanspec;
++
++	chanspec = ieee80211_frequency_to_channel(ch->center_freq);
++	chanspec &= WL_CHANSPEC_CHAN_MASK;
++
++	if (ch->band == IEEE80211_BAND_2GHZ)
++		chanspec |= WL_CHANSPEC_BAND_2G;
++	else
++		chanspec |= WL_CHANSPEC_BAND_5G;
++
++	if (ch->flags & IEEE80211_CHAN_NO_HT40) {
++		chanspec |= WL_CHANSPEC_BW_20;
++		chanspec |= WL_CHANSPEC_CTL_SB_NONE;
++	} else {
++		chanspec |= WL_CHANSPEC_BW_40;
++		if (ch->flags & IEEE80211_CHAN_NO_HT40PLUS)
++			chanspec |= WL_CHANSPEC_CTL_SB_LOWER;
++		else
++			chanspec |= WL_CHANSPEC_CTL_SB_UPPER;
++	}
++	return chanspec;
++}
++
+ static void convert_key_from_CPU(struct brcmf_wsec_key *key,
+ 				 struct brcmf_wsec_key_le *key_le)
+ {
+@@ -701,8 +726,6 @@ static void brcmf_escan_prep(struct brcmf_scan_params_le *params_le,
+ 	s32 i;
+ 	s32 offset;
+ 	u16 chanspec;
+-	u16 channel;
+-	struct ieee80211_channel *req_channel;
+ 	char *ptr;
+ 	struct brcmf_ssid_le ssid_le;
  
-[  327.928774] got beacon from 00:03:7f:10:4e:1a at 80969926, now is: 80940131. offset == 29795
-[  329.716530] got beacon from 64:70:02:0a:4e:a8 at 82824946, now is: 82727604. offset == 97342
-[  329.974276] got beacon from 00:03:7f:10:4d:f7 at 83082820, now is: 82985314. offset == 97506
-[  329.977528] got beacon from 00:03:7f:10:4e:1a at 83084622, now is: 82988562. offset == 96060
-[  331.764782] got beacon from 64:70:02:0a:4e:a8 at 84774638, now is: 84775531. offset == -893
-[  332.022278] got beacon from 00:03:7f:10:4e:1a at 85064980, now is: 85033000. offset == 31980
-[  332.025529] got beacon from 00:03:7f:10:4d:f7 at 85033451, now is: 85036249. offset == -2798
-[  333.814536] got beacon from 64:70:02:0a:4e:a8 at 86824159, now is: 86824975. offset == -816
-[  334.260908] got beacon from 00:03:7f:10:4e:11 at 87270487, now is: 87271277. offset == -790
-[  335.861412] got beacon from 64:70:02:0a:4e:a8 at 89100008, now is: 88871534. offset == 228474
-[  336.119176] got beacon from 00:03:7f:10:4d:f7 at 89128456, now is: 89129238. offset == -782
-[  336.308535] got beacon from 00:03:7f:10:4e:11 at 89317801, now is: 89318590. offset == -789
-[  337.909662] got beacon from 64:70:02:0a:4e:a8 at 90951396, now is: 90919468. offset == 31928
-[  338.168034] got beacon from 00:03:7f:10:4e:1a at 91209720, now is: 91177797. offset == 31923
-[  338.171285] got beacon from 00:03:7f:10:4d:f7 at 91211047, now is: 91181053. offset == 29994
-[  338.356286] got beacon from 00:03:7f:10:4e:11 at 91463481, now is: 91366022. offset == 97459
-[  338.734784] got beacon from f8:d1:11:65:92:e4 at 91743653, now is: 91744461. offset == -808
-[  339.958041] got beacon from 64:70:02:0a:4e:a8 at 92966623, now is: 92967531. offset == -908
-[  340.217914] got beacon from 00:03:7f:10:4d:f7 at 93226490, now is: 93227356. offset == -866
-[  340.408290] got beacon from 00:03:7f:10:4e:11 at 93449578, now is: 93417704. offset == 31874
-[  342.006291] got beacon from 64:70:02:0a:4e:a8 at 95014620, now is: 95015461. offset == -841
-[  342.264413] got beacon from 00:03:7f:10:4e:1a at 95272637, now is: 95273538. offset == -901
-[  342.453286] got beacon from 00:03:7f:10:4e:11 at 95461607, now is: 95462386. offset == -779
-[  342.833168] got beacon from f8:d1:11:65:92:e4 at 95939657, now is: 95842204. offset == 97453
+@@ -726,30 +749,9 @@ static void brcmf_escan_prep(struct brcmf_scan_params_le *params_le,
+ 	WL_SCAN("### List of channelspecs to scan ### %d\n", n_channels);
+ 	if (n_channels > 0) {
+ 		for (i = 0; i < n_channels; i++) {
+-			chanspec = 0;
+-			req_channel = request->channels[i];
+-			channel = ieee80211_frequency_to_channel(
+-					req_channel->center_freq);
+-			if (req_channel->band == IEEE80211_BAND_2GHZ)
+-				chanspec |= WL_CHANSPEC_BAND_2G;
+-			else
+-				chanspec |= WL_CHANSPEC_BAND_5G;
+-
+-			if (req_channel->flags & IEEE80211_CHAN_NO_HT40) {
+-				chanspec |= WL_CHANSPEC_BW_20;
+-				chanspec |= WL_CHANSPEC_CTL_SB_NONE;
+-			} else {
+-				chanspec |= WL_CHANSPEC_BW_40;
+-				if (req_channel->flags &
+-						IEEE80211_CHAN_NO_HT40PLUS)
+-					chanspec |= WL_CHANSPEC_CTL_SB_LOWER;
+-				else
+-					chanspec |= WL_CHANSPEC_CTL_SB_UPPER;
+-			}
+-
+-			chanspec |= (channel & WL_CHANSPEC_CHAN_MASK);
++			chanspec = channel_to_chanspec(request->channels[i]);
+ 			WL_SCAN("Chan : %d, Channel spec: %x\n",
+-				channel, chanspec);
++				request->channels[i]->hw_value, chanspec);
+ 			params_le->channel_list[i] = cpu_to_le16(chanspec);
+ 		}
+ 	} else {
+-- 
+1.7.6
 
-The number after "at" is rx_status->mactime, "now" is drv_get_tsf(), and
-offset (ie. stack delay) is mactime - tsf. RX_FLAG_MACTIME_MPDU is on for
-all frames, and mesh sync is not adjusting the TSF.
 
-How can we possibly receive frames from the future!?
-
-Thanks in advance,
-Thomas
