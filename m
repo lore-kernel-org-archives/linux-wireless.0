@@ -1,34 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33896 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790Ab2I3TeW (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:54941 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754740Ab2JVBCC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Sep 2012 15:34:22 -0400
-Message-ID: <1349033683.23838.6.camel@jlt4.sipsolutions.net> (sfid-20120930_213433_524331_68655D27)
-Subject: Re: [PATCH] ath/ath9k/ar9003_eeprom.c: Remove unnecessary semicolon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Senna Tschudin <peter.senna@gmail.com>
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Date: Sun, 30 Sep 2012 21:34:43 +0200
-In-Reply-To: <1349032870-4780-1-git-send-email-peter.senna@gmail.com> (sfid-20120930_212132_608267_30BA39AB)
-References: <1349032870-4780-1-git-send-email-peter.senna@gmail.com>
-	 (sfid-20120930_212132_608267_30BA39AB)
-Content-Type: text/plain; charset="UTF-8"
+	Sun, 21 Oct 2012 21:02:02 -0400
+Date: Sun, 21 Oct 2012 21:01:45 -0400 (EDT)
+Message-Id: <20121021.210145.1796393166025559206.davem@davemloft.net> (sfid-20121022_030240_689799_42E06759)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-10-19
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20121019211410.GC2208@tuxdriver.com>
+References: <20121019211410.GC2208@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-09-30 at 21:21 +0200, Peter Senna Tschudin wrote:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 19 Oct 2012 17:14:10 -0400
 
-> -		if (!ah->config.enable_paprd);
-> +		if (!ah->config.enable_paprd)
->  			return false;
+> This is a batch of fixes intended for the 3.7 stream.
+ ...
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
 
-That's not an "unnecessary semicolon", it's a pretty strange bug :)
-
-johannes
-
+Pulled, thanks a lot John.
