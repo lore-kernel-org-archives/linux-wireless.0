@@ -1,93 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664Ab2J2JDi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 05:03:38 -0400
-Message-ID: <1351501451.10925.6.camel@jlt4.sipsolutions.net> (sfid-20121029_100342_179656_DFD90806)
-Subject: Re: [PATCH v2] wireless: Allow registering more than one beacon
- listener.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 29 Oct 2012 10:04:11 +0100
-In-Reply-To: <1351288165-24219-1-git-send-email-greearb@candelatech.com> (sfid-20121026_234937_894351_D69F960C)
-References: <1351288165-24219-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20121026_234937_894351_D69F960C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4490 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755710Ab2JVRgi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 13:36:38 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 05/14] brcmfmac: clean usb download code.
+Date: Mon, 22 Oct 2012 10:36:18 -0700
+Message-ID: <1350927387-25608-6-git-send-email-frankyl@broadcom.com> (sfid-20121022_193707_596630_56D55BBF)
+In-Reply-To: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
+References: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Ben,
+From: Hante Meuleman <meuleman@broadcom.com>
 
-I was going to apply this but it looks like I missed something on the
-previous review:
+reuse ioctl waiting method.
 
->  void cfg80211_report_obss_beacon(struct wiphy *wiphy,
->  				 const u8 *frame, size_t len,
-> -				 int freq, int sig_dbm, gfp_t gfp)
-> +				 int freq, int sig_dbm)
->  {
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |   41 +++++--------------------
+ 1 files changed, 8 insertions(+), 33 deletions(-)
 
-...
-
-> +	spin_lock_bh(&rdev->beacon_registrations_lock);
-...
-> +	spin_unlock_bh(&rdev->beacon_registrations_lock);
-
-I have a feeling this is incorrect, this is called with BHs disabled, so
-if we disable/enable BHs here we end up with BHs enabled even if the
-caller wanted them disabled, no?
-
-So I suppose unless we need to be able to call this from hard interrupt
-in some driver (unlikely) we should add a change like this:
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 10a7f45..3b6a11a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3544,6 +3544,7 @@ void cfg80211_probe_status(struct net_device *dev, const u8 *addr,
-  * Use this function to report to userspace when a beacon was
-  * received. It is not useful to call this when there is no
-  * netdev that is in AP/GO mode.
-+ * The function must be called with BHs disabled.
-  */
- void cfg80211_report_obss_beacon(struct wiphy *wiphy,
- 				 const u8 *frame, size_t len,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 15ddbb8..5ff24ef 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8942,11 +8942,11 @@ void cfg80211_report_obss_beacon(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 7a6dfdc..484a6e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -42,7 +42,6 @@
  
- 	trace_cfg80211_report_obss_beacon(wiphy, frame, len, freq, sig_dbm);
+ #define IOCTL_RESP_TIMEOUT  2000
  
--	spin_lock_bh(&rdev->beacon_registrations_lock);
-+	spin_lock(&rdev->beacon_registrations_lock);
- 	list_for_each_entry(reg, &rdev->beacon_registrations, list) {
- 		msg = nlmsg_new(len + 100, GFP_ATOMIC);
- 		if (!msg) {
--			spin_unlock_bh(&rdev->beacon_registrations_lock);
-+			spin_unlock(&rdev->beacon_registrations_lock);
- 			return;
- 		}
+-#define BRCMF_USB_SYNC_TIMEOUT		300	/* ms */
+ #define BRCMF_USB_DLIMAGE_SPINWAIT	100	/* in unit of ms */
+ #define BRCMF_USB_DLIMAGE_LIMIT		500	/* spinwait limit (ms) */
  
-@@ -8966,11 +8966,11 @@ void cfg80211_report_obss_beacon(struct wiphy *wiphy,
+@@ -116,10 +115,6 @@ struct brcmf_usbdev_info {
+ 	u8 *image;	/* buffer for combine fw and nvram */
+ 	int image_len;
  
- 		genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, reg->nlportid);
+-	wait_queue_head_t wait;
+-	bool waitdone;
+-	int sync_urb_status;
+-
+ 	struct usb_device *usbdev;
+ 	struct device *dev;
+ 
+@@ -131,7 +126,6 @@ struct brcmf_usbdev_info {
+ 	int ctl_urb_status;
+ 	int ctl_completed;
+ 	wait_queue_head_t ioctl_resp_wait;
+-	wait_queue_head_t ctrl_wait;
+ 	ulong ctl_op;
+ 
+ 	struct urb *bulk_urb; /* used for FW download */
+@@ -754,34 +748,14 @@ static void brcmf_usb_down(struct device *dev)
+ 	brcmf_usb_free_q(&devinfo->rx_postq, true);
+ }
+ 
+-static int
+-brcmf_usb_sync_wait(struct brcmf_usbdev_info *devinfo, u16 time)
+-{
+-	int ret;
+-	int err = 0;
+-	int ms = time;
+-
+-	ret = wait_event_interruptible_timeout(devinfo->wait,
+-		devinfo->waitdone == true, (ms * HZ / 1000));
+-
+-	if ((devinfo->waitdone == false) || (devinfo->sync_urb_status)) {
+-		brcmf_dbg(ERROR, "timeout(%d) or urb err=%d\n",
+-			  ret, devinfo->sync_urb_status);
+-		err = -EINVAL;
+-	}
+-	devinfo->waitdone = false;
+-	return err;
+-}
+-
+ static void
+ brcmf_usb_sync_complete(struct urb *urb)
+ {
+ 	struct brcmf_usbdev_info *devinfo =
+ 			(struct brcmf_usbdev_info *)urb->context;
+ 
+-	devinfo->waitdone = true;
+-	wake_up_interruptible(&devinfo->wait);
+-	devinfo->sync_urb_status = urb->status;
++	devinfo->ctl_completed = true;
++	brcmf_usb_ioctl_resp_wake(devinfo);
+ }
+ 
+ static bool brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
+@@ -813,6 +787,7 @@ static bool brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
+ 		(void *) tmpbuf, size,
+ 		(usb_complete_t)brcmf_usb_sync_complete, devinfo);
+ 
++	devinfo->ctl_completed = false;
+ 	ret = usb_submit_urb(devinfo->ctl_urb, GFP_ATOMIC);
+ 	if (ret < 0) {
+ 		brcmf_dbg(ERROR, "usb_submit_urb failed %d\n", ret);
+@@ -820,11 +795,11 @@ static bool brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
+ 		return false;
  	}
--	spin_unlock_bh(&rdev->beacon_registrations_lock);
-+	spin_unlock(&rdev->beacon_registrations_lock);
- 	return;
  
-  nla_put_failure:
--	spin_unlock_bh(&rdev->beacon_registrations_lock);
-+	spin_unlock(&rdev->beacon_registrations_lock);
- 	if (hdr)
- 		genlmsg_cancel(msg, hdr);
- 	nlmsg_free(msg);
+-	ret = brcmf_usb_sync_wait(devinfo, BRCMF_USB_SYNC_TIMEOUT);
++	ret = brcmf_usb_ioctl_resp_wait(devinfo);
+ 	memcpy(buffer, tmpbuf, buflen);
+ 	kfree(tmpbuf);
+ 
+-	return (ret == 0);
++	return ret;
+ }
+ 
+ static bool
+@@ -918,13 +893,14 @@ brcmf_usb_dl_send_bulk(struct brcmf_usbdev_info *devinfo, void *buffer, int len)
+ 
+ 	devinfo->bulk_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
++	devinfo->ctl_completed = false;
+ 	ret = usb_submit_urb(devinfo->bulk_urb, GFP_ATOMIC);
+ 	if (ret) {
+ 		brcmf_dbg(ERROR, "usb_submit_urb failed %d\n", ret);
+ 		return ret;
+ 	}
+-	ret = brcmf_usb_sync_wait(devinfo, BRCMF_USB_SYNC_TIMEOUT);
+-	return ret;
++	ret = brcmf_usb_ioctl_resp_wait(devinfo);
++	return (ret == 0);
+ }
+ 
+ static int
+@@ -1284,7 +1260,6 @@ struct brcmf_usbdev *brcmf_usb_attach(struct brcmf_usbdev_info *devinfo,
+ 		goto error;
+ 	}
+ 
+-	init_waitqueue_head(&devinfo->wait);
+ 	if (!brcmf_usb_dlneeded(devinfo))
+ 		return &devinfo->bus_pub;
+ 
+-- 
+1.7.6
 
-
-johannes
 
