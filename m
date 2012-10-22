@@ -1,95 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21476 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755227Ab2JEKGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 06:06:15 -0400
-Date: Fri, 5 Oct 2012 13:07:21 +0300
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	bzhao@marvell.com
-Subject: Re: [PATCH] mwifiex: Using %*phD instead of print_hex_dump_bytes
-Message-ID: <20121005100719.GD12229@aemeltch-MOBL1> (sfid-20121005_120619_200424_422C03AE)
-References: <1349342161-27008-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
- <1349368379.2008.16.camel@joe-AO722>
- <1349419996.10584.5.camel@smile>
- <1349420428.10584.8.camel@smile>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1349420428.10584.8.camel@smile>
+Received: from senator.holtmann.net ([87.106.208.187]:46740 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755527Ab2JVQDX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Oct 2012 12:03:23 -0400
+Message-ID: <1350921800.1785.23.camel@aeonflux> (sfid-20121022_180329_784216_8F7D02EE)
+Subject: Re: [PATCH 1/2] NFC: Move pn544.h header file close to the driver
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 22 Oct 2012 09:03:20 -0700
+In-Reply-To: <20121022143009.GB5800@sortiz-mobl>
+References: <1350672971-29716-1-git-send-email-marcel@holtmann.org>
+	 <20121022143009.GB5800@sortiz-mobl>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andy,
+Hi Samuel,
 
-On Fri, Oct 05, 2012 at 10:00:28AM +0300, Andy Shevchenko wrote:
-> On Fri, 2012-10-05 at 09:53 +0300, Andy Shevchenko wrote: 
-> > On Thu, 2012-10-04 at 09:32 -0700, Joe Perches wrote: 
-> > > On Thu, 2012-10-04 at 12:16 +0300, Andrei Emeltchenko wrote:
-> > > > From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
-> > > > 
-> > > > Make output more readable and remove unneeded function call.
-> > > > 
-> > > > ...
-> > > > mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
-> > > > last_cmd_id: 00000000: 28 00 28 00 28                            (.(.(
-> > > > ...
-> > > > 
-> > > > would be changed to:
-> > > > 
-> > > > ...
-> > > > mwifiex_sdio mmc0:0001:1: last_cmd_index = 3
-> > > > mwifiex_sdio mmc0:0001:1: last_cmd_id: 28 00 28 00 28
-> > > > ...
-> > > 
-> > > (added Andy Shevchenko)
-> > > 
-> > > Hi Andrei.  That's probably a better output style too
-> > > as the ascii isn't likely useful.
-> > > 
-> > > One non-nit as a style issue for Andy Shevchenko:
-> > > 
-> > > > diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-> > > []
-> > > > @@ -917,21 +917,20 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
-> > > []
-> > > > +		dev_err(adapter->dev, "last_cmd_id: %*ph\n", DBG_CMD_NUM,
-> > > > +			adapter->dbg.last_cmd_id);
-> > > > +		dev_err(adapter->dev, "last_cmd_act: %*ph\n", DBG_CMD_NUM,
-> > > > +			adapter->dbg.last_cmd_act);
-> > > 
-> > > When the number of bytes is fixed, it might be nicer
-> > > to use a format like "%<num>ph" so that the function
-> > > argument stack doesn't have the width pushed but it's
-> > > fixed in the format.
-> > > 
-> > > This case would definitely not work well though as it's
-> > > a #define rather than a simple number and I think
-> > > using "%" stringize(some_define) "ph" is not nice.
-> > > 
-> > > Maybe this case argues more for always using "%*ph".
-> > > At least that's easily greppable.
-> > > 
-> > > Andy?
-> > First of all, the current linux-next has at least two definitions of
-> > that constant:
-> > drivers/net/wireless/mwifiex/ioctl.h:175:#define DBG_CMD_NUM    5
-> > drivers/net/wireless/mwifiex/main.h:118:#define DBG_CMD_NUM 5
-> > 
-> > I checked briefly the code and found that the constant is heavily used
-> > as a definition for the length of static byte arrays. So, in that case
-> > probably better to use %*ph, but apply sizeof(cool_var) instead of
-> (int)sizeof(cool_var) of course
+> > With the removal of the deprecated pn544.c driver, the header
+> > file pn544.h is now used only by the new pn544_hci.c driver. So
+> > move the header file close to the driver.
 > 
-> > putting constant there.
+> There are quite a bit of junk in this header file, as outlined from your
+> second patch. But there is a platform data structure definition (struct
+> pn544_nfc_platform_data) that should be available from the arch code.
 > 
-> And one finding more: buffers are defined as u16. I'm afraid the both
-> previous and proposed versions are printing something interesting, like
-> only half of the defined data.
+> By passing function pointers (That don't do anything else than toggling
+> GPIOs) from arch code to the driver, this function is not very nice. Nor
+> flexible as it won't work with e.g. DT platforms. The driver should just get
+> the IRQ and the 3 potentially needed GPIOs and implement the functions itself.
+> Even when that happens, we'll still need a header file that !DT platform could
+> use to pass the GPIO numbers around. So the bottom line is: We need to keep
+> this one under include/linux/nfc/.
 
-The patch only changes printing format. The other logical change would
-come better in other patch, maybe Bing could comment here.
+all good intentions, but it does not seem to work this way anyway. I was
+tempted to actually just merge the one struct and one enum into the
+driver itself.
 
-Best regards 
-Andrei Emeltchenko 
+Regards
+
+Marcel
+
 
