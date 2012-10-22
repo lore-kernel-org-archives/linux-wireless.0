@@ -1,83 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:46075 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757196Ab2JRQIq (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33935 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849Ab2JVUUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2012 12:08:46 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so4262259bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2012 09:08:45 -0700 (PDT)
-Message-ID: <50802984.6070203@gmail.com> (sfid-20121018_180852_697182_2E48BF58)
-Date: Thu, 18 Oct 2012 18:08:36 +0200
-From: Daniel Mack <zonque@gmail.com>
+	Mon, 22 Oct 2012 16:20:09 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q9MKK85N018285
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2012 13:20:08 -0700
+Message-ID: <5085AA78.1080809@candelatech.com> (sfid-20121022_222014_307124_26665BD5)
+Date: Mon, 22 Oct 2012 13:20:08 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: mwifiex_sdio problem: firmware fails to be active in time
-References: <507F4448.2040707@gmail.com> <477F20668A386D41ADCC57781B1F7043083B80E44A@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F7043083B80E44A@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset=UTF-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Cannot bring up second VAP on recent kernels?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+Anyone successfully using more than one virtual AP on
+3.3 or higher kernels?  It works fine for me on 3.0.32,
+but my 3.3.8 and 3.5.7 kernels (and a few similar ones)
+all fail with errors like this below:
 
-thanks for your time.
+Hardware is ath9k 3x3 9380 NIC.
 
-On 18.10.2012 02:20, Bing Zhao wrote:
->> we're trying to get a SD8787 to play which is connected via SDIO to an
->> OMAP hsmmc (AM33xx hardware). This fails with the following message:
->>
->> # modprobe mwifiex_sdio
->> [   13.984779] [sched_delayed] sched: RT throttling activated
->> [   22.401700] mwifiex_sdio mmc0:0001:1: FW failed to be active in time
->>
->> The firmware sd8787_uapsta.bin was taken from the linux-firmware.git and
->> apparently is transferred successfully, but then consequently fails to
->> do start up. When compiled with CONFIG_MMC_CONFIG=y, tons of successful
->> messages are logged like this:
->>
->> [ 2607.867660] mmc0: starting CMD52 arg 00000a00 flags 00000195
->> [ 2607.867713] mmc0: req done (CMD52): 0: 00001000 00000000 00000000
->> 00000000
->> [ 2607.883273] mmc0: starting CMD52 arg 00000a00 flags 00000195
->> [ 2607.883327] mmc0: req done (CMD52): 0: 00001000 00000000 00000000
->> 00000000
->> [ 2607.898905] mmc0: starting CMD52 arg 00000a00 flags 00000195
-> 
-> It keeps reading Int_Pending (CCCR register 0x05). Perhaps you have interrupt storm here?
-> Could you please check if your controller clears interrupt properly?
-
-The reason for this issue was a different one: the 32KHz clock was not
-running. I just learned that the firmware download will succeed
-nevertheless, but the firmware won't start. Note to myself: make sure to
-rule out any hardware issue before bordering developers :-/ But that
-posting may be a help to someone with similar issues one day ...
-
->> The kernel we're based on is Linus' current merge tree (3.7-rc1), but
->> earlier version (3.6) have shown the same issue.
->>
->> Before we start digging into this, I want to ask whether there are any
->> common pitfalls we should be aware of and that could cause this?
-> 
-> You may want to get a newer firmware release from here:
-> 
-> http://git.marvell.com/?p=mwifiex-firmware.git;a=summary
-> git://git.marvell.com/mwifiex-firmware.git
-
-Note that contains the same firmware binary than the linux-firmware
-repository.
-
->> Please let me know whether you need any further information.
-> 
-> It might be helpful if you post messages before this line:
-> 
-> [ 2607.867660] mmc0: starting CMD52 arg 00000a00 flags 00000195
+[root@lec2010-ath9k-1 wifi]# cat hostapd_log_vap1.txt
+1350936424.890962: random: Trying to read entropy from /dev/random
+1350936424.891172: Configuration file: wifi/hostapd_vap1.conf
+1350936424.892827: ctrl_interface_group=0
+1350936424.895084: nl80211: interface vap1 in phy wiphy0
+1350936424.895175: rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
+1350936424.895456: nl80211: Using driver-based off-channel TX
+1350936424.895483: nl80211: TDLS supported
+1350936424.895500: nl80211: TDLS external setup
+1350936424.895612: nl80211: Add own interface ifindex 26
+1350936424.896560: nl80211: Set mode ifindex 26 iftype 3 (AP)
+1350936424.896919: nl80211: Setup AP - device_ap_sme=0 use_monitor=0
+1350936424.896992: nl80211: Subscribe to mgmt frames with AP handle 0x81e8910
+1350936424.897018: nl80211: Register frame type=0xb0 nl_handle=0x81e8910
+1350936424.897036: nl80211: Register frame match - hexdump(len=0): [NULL]
+1350936424.897107: nl80211: Register frame type=0x0 nl_handle=0x81e8910
+1350936424.897127: nl80211: Register frame match - hexdump(len=0): [NULL]
+1350936424.897174: nl80211: Register frame type=0x20 nl_handle=0x81e8910
+1350936424.897195: nl80211: Register frame match - hexdump(len=0): [NULL]
+1350936424.897240: nl80211: Register frame type=0xa0 nl_handle=0x81e8910
+1350936424.897261: nl80211: Register frame match - hexdump(len=0): [NULL]
+1350936424.897306: nl80211: Register frame type=0xc0 nl_handle=0x81e8910
+1350936424.897326: nl80211: Register frame match - hexdump(len=0): [NULL]
+1350936424.897372: nl80211: Register frame type=0xd0 nl_handle=0x81e8910
+1350936424.897392: nl80211: Register frame match - hexdump(len=0): [NULL]
+1350936424.897438: nl80211: Register frame type=0x40 nl_handle=0x81e8910
+1350936424.897458: nl80211: Register frame match - hexdump(len=0): [NULL]
+1350936424.897681: nl80211: Register beacons command failed: ret=-16 (Device or resource busy)
+1350936424.897830: nl80211: Failed to set interface vap1 into AP mode
+1350936424.901888: netlink: Operstate: linkmode=0, operstate=6
+1350936424.901996: nl80211: Set mode ifindex 26 iftype 2 (STATION)
+1350936424.902197: nl80211 driver initialization failed.
 
 
-Thanks again!
+Thanks,
+Ben
 
-Daniel
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
