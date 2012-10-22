@@ -1,120 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2673 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab2JJRdj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37760 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753386Ab2JVMvp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 13:33:39 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2] ath9k: perform ANI cycle in idle state
-Date: Wed, 10 Oct 2012 23:03:02 +0530
-Message-ID: <1349890382-1094-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121010_193342_787250_90469998)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 22 Oct 2012 08:51:45 -0400
+Message-ID: <1350910332.10166.0.camel@jlt4.sipsolutions.net> (sfid-20121022_145148_515091_5AE73D4F)
+Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	igalc@ti.com, adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Date: Mon, 22 Oct 2012 14:52:12 +0200
+In-Reply-To: <5084256F.2030502@ti.com>
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>
+	  <1350226137-13704-6-git-send-email-victorg@ti.com>
+	 <1350414390.10177.16.camel@jlt4.sipsolutions.net> <5084256F.2030502@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As of now the ANI cycle is executed only when the chip is awake.
-On idle state case, the station wakes up from network sleep for
-beacon reception. Since most of the time, ANI cycle is not syncing
-with beacon wakeup, ANI cycle is ignored. Approx 5 mins once, the
-calibration is performed. This could affect the connection stability
-when the station is idle for long. Even though the OFDM and CCK phy
-error rates are too high, ANI is unable to tune its immunity level
-as quick enough due to rare execution.
+On Sun, 2012-10-21 at 18:40 +0200, Victor Goldenshtein wrote:
+> On 16/10/2012 21:06, Johannes Berg wrote:
+> > Hmm, does that really work? I mean, it can do the update when the event
+> > comes in, but is that fast enough, or should it give us the new beacon
+> > already when programming the switching?
+> >
+> 
+> Yes it works with our 12xx, in the 12xx the FW (upon channel switch 
+> command) is responsible to decrement the channel switch count in the 
+> beacon CSA IE and to remove the CSA IE from the beacon once device moves 
+> to the new channel (+ to updates the DS).
 
-Here the experiment shows that OFDM and CCK levels are at default
-even on higher phy error rate.
+So ... you've made this kind of behaviour a mandatory part of the
+userspace API. Where is it documented then? How will it work with other
+devices?
 
-listenTime=44 OFDM:3 errs=121977/s CCK:2 errs=440818/s ofdm_turn=1
-
-This change ensures that ANI calibration will be exectued atleast
-once for every 10 seconds. The below result shows improvements and
-immunity levels are adopted quick enough.
-
-listenTime=557 OFDM:4 errs=752/s CCK:4 errs=125/s ofdm_turn=0
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
-v2: updated commit log
- drivers/net/wireless/ath/ath9k/ath9k.h |  2 ++
- drivers/net/wireless/ath/ath9k/hw.h    |  1 +
- drivers/net/wireless/ath/ath9k/link.c  | 12 +++++++++++-
- drivers/net/wireless/ath/ath9k/main.c  |  3 ++-
- 4 files changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index dfe6a47..77c2c16 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -437,6 +437,7 @@ void ath9k_set_beacon(struct ath_softc *sc);
- #define ATH_LONG_CALINTERVAL_INT  1000    /* 1000 ms */
- #define ATH_LONG_CALINTERVAL      30000   /* 30 seconds */
- #define ATH_RESTART_CALINTERVAL   1200000 /* 20 minutes */
-+#define ATH_ANI_MAX_SKIP_COUNT  10
- 
- #define ATH_PAPRD_TIMEOUT	100 /* msecs */
- #define ATH_PLL_WORK_INTERVAL   100
-@@ -642,6 +643,7 @@ enum sc_op_flags {
- #define PS_WAIT_FOR_PSPOLL_DATA   BIT(2)
- #define PS_WAIT_FOR_TX_ACK        BIT(3)
- #define PS_BEACON_SYNC            BIT(4)
-+#define PS_WAIT_FOR_ANI           BIT(5)
- 
- struct ath_rate_table;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index dbc1b7a..1d4f5f1 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -834,6 +834,7 @@ struct ath_hw {
- 	int coarse_low[5];
- 	int firpwr[5];
- 	enum ath9k_ani_cmd ani_function;
-+	u32 ani_skip_count;
- 
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	struct ath_btcoex_hw btcoex_hw;
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index 7b88b9c..223b969 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -350,8 +350,18 @@ void ath_ani_calibrate(unsigned long data)
- 		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
- 
- 	/* Only calibrate if awake */
--	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
-+	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE) {
-+		if (++ah->ani_skip_count >= ATH_ANI_MAX_SKIP_COUNT) {
-+			spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+			sc->ps_flags |= PS_WAIT_FOR_ANI;
-+			spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-+		}
- 		goto set_timer;
-+	}
-+	ah->ani_skip_count = 0;
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	sc->ps_flags &= ~PS_WAIT_FOR_ANI;
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
- 	ath9k_ps_wakeup(sc);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dd45edf..2da62be 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -131,7 +131,8 @@ void ath9k_ps_restore(struct ath_softc *sc)
- 		   !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
- 				     PS_WAIT_FOR_CAB |
- 				     PS_WAIT_FOR_PSPOLL_DATA |
--				     PS_WAIT_FOR_TX_ACK))) {
-+				     PS_WAIT_FOR_TX_ACK |
-+				     PS_WAIT_FOR_ANI))) {
- 		mode = ATH9K_PM_NETWORK_SLEEP;
- 		if (ath9k_hw_btcoex_is_enabled(sc->sc_ah))
- 			ath9k_btcoex_stop_gen_timer(sc);
--- 
-1.7.12.2
+johannes
 
