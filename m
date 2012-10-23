@@ -1,95 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34568 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933316Ab2JZOYR (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:34578 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949Ab2JWFWs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 10:24:17 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 12/18] brcmsmac: Add INT debug macro
-Date: Fri, 26 Oct 2012 09:23:27 -0500
-Message-Id: <1351261413-20821-13-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162423_212547_EAAA922E)
-In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+	Tue, 23 Oct 2012 01:22:48 -0400
+Received: by mail-qc0-f174.google.com with SMTP id o22so1961428qcr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2012 22:22:48 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 23 Oct 2012 13:22:48 +0800
+Message-ID: <CAPgLHd_nBOfMzHuL3GtwOjsV3+jKMdCxL+cJr9xT0-0fBGabrQ@mail.gmail.com> (sfid-20121023_072255_031357_CE137544)
+Subject: [PATCH] wlcore: spi: use platform_device_unregister in wl1271_remove()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: coelho@ti.com, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also convert relevant message to use this macro.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+platform_device_unregister() only calls platform_device_del() and
+platform_device_put(), thus use platform_device_unregister() to
+simplify the code.
+
+Also the documents in platform.c shows that platform_device_del
+and platform_device_put must _only_ be externally called in error
+cases.  All other usage is a bug.
+
+dpatch engine is used to auto generate this patch.
+(https://github.com/weiyj/dpatch)
+
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- .../net/wireless/brcm80211/brcmsmac/brcms_debug.h  |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   12 ++++++------
- drivers/net/wireless/brcm80211/include/defs.h      |    1 +
- 3 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ti/wlcore/spi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
-index 2b3ca0d..16f7304 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
-@@ -39,5 +39,6 @@ static inline void __brcms_dbg(struct device *dev, u32 level,
- #define BRCMS_DBG_MAC80211(core, f, a...)	BRCMS_DBG(core, BRCM_DL_MAC80211, f, ##a)
- #define BRCMS_DBG_RX(core, f, a...)		BRCMS_DBG(core, BRCM_DL_RX, f, ##a)
- #define BRCMS_DBG_TX(core, f, a...)		BRCMS_DBG(core, BRCM_DL_TX, f, ##a)
-+#define BRCMS_DBG_INT(core, f, a...)		BRCMS_DBG(core, BRCM_DL_INT, f, ##a)
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index a519bc3..76838a4 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -407,8 +407,7 @@ static int __devexit wl1271_remove(struct spi_device *spi)
+ {
+ 	struct wl12xx_spi_glue *glue = spi_get_drvdata(spi);
  
- #endif /* _BRCMS_DEBUG_H_ */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index d6a7076..ba64b38 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -2349,8 +2349,8 @@ static void brcms_b_fifoerrors(struct brcms_hardware *wlc_hw)
- 		if (!intstatus)
- 			continue;
+-	platform_device_del(glue->core);
+-	platform_device_put(glue->core);
++	platform_device_unregister(glue->core);
+ 	kfree(glue);
  
--		BCMMSG(wlc_hw->wlc->wiphy, "wl%d: intstatus%d 0x%x\n",
--			unit, idx, intstatus);
-+		BRCMS_DBG_INT(core, "wl%d: intstatus%d 0x%x\n",
-+			      unit, idx, intstatus);
- 
- 		if (intstatus & I_RO) {
- 			BRCMS_ERR(core, "wl%d: fifo %d: receive fifo "
-@@ -2547,8 +2547,8 @@ static inline u32 wlc_intstatus(struct brcms_c_info *wlc, bool in_isr)
- 	/* macintstatus includes a DMA interrupt summary bit */
- 	macintstatus = bcma_read32(core, D11REGOFFS(macintstatus));
- 
--	BCMMSG(wlc->wiphy, "wl%d: macintstatus: 0x%x\n", wlc_hw->unit,
--		 macintstatus);
-+	BRCMS_DBG_INT(core, "wl%d: macintstatus: 0x%x\n", wlc_hw->unit,
-+		      macintstatus);
- 
- 	/* detect cardbus removed, in power down(suspend) and in reset */
- 	if (brcms_deviceremoved(wlc))
-@@ -7956,8 +7956,8 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
- 	macintstatus = wlc->macintstatus;
- 	wlc->macintstatus = 0;
- 
--	BCMMSG(wlc->wiphy, "wl%d: macintstatus 0x%x\n",
--	       wlc_hw->unit, macintstatus);
-+	BRCMS_DBG_INT(core, "wl%d: macintstatus 0x%x\n",
-+		      wlc_hw->unit, macintstatus);
- 
- 	WARN_ON(macintstatus & MI_PRQ); /* PRQ Interrupt in non-MBSS */
- 
-diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
-index 9206d2c..12dd33f 100644
---- a/drivers/net/wireless/brcm80211/include/defs.h
-+++ b/drivers/net/wireless/brcm80211/include/defs.h
-@@ -83,6 +83,7 @@
- #define BRCM_DL_MAC80211	0x00000002
- #define BRCM_DL_RX		0x00000004
- #define BRCM_DL_TX		0x00000008
-+#define BRCM_DL_INT		0x00000010
- 
- #define PM_OFF	0
- #define PM_MAX	1
--- 
-1.7.9.5
+ 	return 0;
+
 
