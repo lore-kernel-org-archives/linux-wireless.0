@@ -1,30 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50618 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:42914 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934929Ab2JYL2V (ORCPT
+	with ESMTP id S1754639Ab2JWN2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 07:28:21 -0400
-Message-ID: <1351164533.10421.3.camel@jlt4.sipsolutions.net> (sfid-20121025_132824_856590_EDFBE38A)
-Subject: Re: [PATCH] mac80211: remove duplicate check in
- ieee80211_rx_mgmt_beacon().
+	Tue, 23 Oct 2012 09:28:11 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Thu, 25 Oct 2012 13:28:53 +0200
-In-Reply-To: <1351152983-13871-1-git-send-email-ramirose@gmail.com> (sfid-20121025_081705_470514_2E00E8AC)
-References: <1351152983-13871-1-git-send-email-ramirose@gmail.com>
-	 (sfid-20121025_081705_470514_2E00E8AC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Assaf Krauss <assaf.krauss@intel.com>
+Subject: [PATCH 2/2] iwlwifi: remove MFP Kconfig option
+Date: Tue, 23 Oct 2012 15:28:39 +0200
+Message-Id: <1350998919-18645-2-git-send-email-johannes@sipsolutions.net> (sfid-20121023_152815_794048_D84BCA7D)
+In-Reply-To: <1350998919-18645-1-git-send-email-johannes@sipsolutions.net>
+References: <1350998919-18645-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-10-25 at 10:16 +0200, Rami Rosen wrote:
-> This patch removes a duplicate identical check in ieee80211_rx_mgmt_beacon(), mlme.c.
-> There is no need to make again the same check for IEEE80211_HW_PS_NULLFUNC_STACK
-> flag. It should be done in the same block.
+From: Assaf Krauss <assaf.krauss@intel.com>
 
-Applied.
+Remove the Kconfig option CONFIG_IWLWIFI_EXPERIMENTAL_MFP,
+if the firmware doesn't support MFP then the user shouldn't
+have the option to enable it as it won't work correctly.
 
-johannes
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig        |    9 ---------
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |    2 --
+ 2 files changed, 11 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 727fbb5..5cf4323 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -133,12 +133,3 @@ config IWLWIFI_P2P
+ 	  support when it is loaded.
+ 
+ 	  Say Y only if you want to experiment with P2P.
+-
+-config IWLWIFI_EXPERIMENTAL_MFP
+-	bool "support MFP (802.11w) even if uCode doesn't advertise"
+-	depends on IWLWIFI
+-	help
+-	  This option enables experimental MFP (802.11W) support
+-	  even if the microcode doesn't advertise it.
+-
+-	  Say Y only if you want to experiment with MFP.
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index ff8162d..46b0d1c 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -168,10 +168,8 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+ 			     IEEE80211_HW_SUPPORTS_STATIC_SMPS;
+ 
+-#ifndef CONFIG_IWLWIFI_EXPERIMENTAL_MFP
+ 	/* enable 11w if the uCode advertise */
+ 	if (capa->flags & IWL_UCODE_TLV_FLAGS_MFP)
+-#endif /* !CONFIG_IWLWIFI_EXPERIMENTAL_MFP */
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+ 
+ 	hw->sta_data_size = sizeof(struct iwl_station_priv);
+-- 
+1.7.10.4
 
