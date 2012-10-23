@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:55855 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755665Ab2JXXFZ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44011 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757288Ab2JWTxg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 19:05:25 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so469391dak.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 16:05:24 -0700 (PDT)
-Subject: Is Multi-Vif (vaps)  Different Channel Operation Supported?
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-From: Kelly Hogan <kshogan@bluemesh.net>
-In-Reply-To: <1351093332.10709.5.camel@jlt4.sipsolutions.net>
-Date: Wed, 24 Oct 2012 17:05:21 -0600
-Message-Id: <5DA0F03B-BA8C-4D9F-A9F1-0841D6774255@bluemesh.net> (sfid-20121025_010529_985869_96B4EE48)
-References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net> <50880BD0.6080603@candelatech.com> <1351093332.10709.5.camel@jlt4.sipsolutions.net>
-To: linux-wireless@vger.kernel.org
+	Tue, 23 Oct 2012 15:53:36 -0400
+Message-ID: <1351022046.10322.15.camel@jlt4.sipsolutions.net> (sfid-20121023_215341_469965_1C5CECB7)
+Subject: Re: [PATCH] mac80211: don't allocate mesh peer under RCU
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+Date: Tue, 23 Oct 2012 21:54:06 +0200
+In-Reply-To: <1351018508-6390-1-git-send-email-thomas@cozybit.com> (sfid-20121023_205521_279759_4D8ECEBB)
+References: <1351018508-6390-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20121023_205521_279759_4D8ECEBB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On Tue, 2012-10-23 at 11:55 -0700, Thomas Pedersen wrote:
+> mesh_plink_alloc() was being called with the RCU read lock held, which
+> triggered warnings because various things inside this function must
+> sleep. It doesn't make much sense to hold an RCU lock on a pointer we
+> don't yet have anyway, so do rcu_read_unlock() if allocating and relock
+> on insertion.
 
-We are utilizing current ath9k and mac80211 and are trying to discern if multi-channel support is possible on different Vifs, on the same phy.
+I'm not going to apply this, the locking in mesh_plink.c is *already* a
+mess with the spinlock being unlocked in so many places. Adding a random
+rcu being possibly dropped in the middle won't help it at all. That may
+be safe today, but it's in no way obvious. Dropping a lock in the middle
+of a function when it was acquired by the caller is always a *really*
+bad idea.
 
-Example:  
+To fix the issue right now, you can simply change GFP_KERNEL to
+GFP_ATOMIC in mesh_plink_alloc(). If that's not good enough in the long
+term, I'd really like to see code cleanups to make all the locking
+easier to follow.
 
-Two Vifs running as masters, controlled via hostapd
-One Vif running as a Station, controlled by wpa_supplicant
-One Vif running as a mesh vap
+johannes
 
-We can run all the Vifs fine, but it appears that with shared hostapd/wpa_supplicant control files, that the master Vifs always have to follow the channel that the station is connected to.  The mesh vap also seems to require being on the same channel of the station.
-
-Any info on if this is supported, or what order to process creation, channel setting, etc to get them to simultaneously allow different channel support would be helpful, or save us the time of assuming that it can be done if it in fact can't.
-
-TIA!
