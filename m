@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:59744 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750841Ab2JGJe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2012 05:34:59 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1TKnGJ-0005xi-MM
-	for linux-wireless@vger.kernel.org; Sun, 07 Oct 2012 11:35:03 +0200
-Received: from adsl-ull-140-3.48-151.net24.it ([151.48.3.140])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 11:35:03 +0200
-Received: from arikuu by adsl-ull-140-3.48-151.net24.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 11:35:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Ari Kuusava <arikuu@gmail.com>
-Subject: Re: [Kernel Bug] 3.6, wpasupplicant 1.0, broadcom-sta 6.20.55.19
-Date: Sun, 7 Oct 2012 09:26:53 +0000 (UTC)
-Message-ID: <loom.20121007T111537-642@post.gmane.org> (sfid-20121007_113502_039183_D0922195)
-References: <CAHbMyCb7S1faT_GH8KBag0SVX+7uhC-4qLJOR-DhStpzSMNDqQ@mail.gmail.com> <20121001113456.GA31313@tuxdriver.com> <CAHbMyCafN+08VCvgzY9coA+AO0aJzvxT3xRzUyQi75_5ij04xw@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:42762 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369Ab2JWMnZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Oct 2012 08:43:25 -0400
+Message-ID: <1350996238.10322.7.camel@jlt4.sipsolutions.net> (sfid-20121023_144329_495484_F540426A)
+Subject: Re: TR: Clear data transit during WPA negociation in case of
+ reassociation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Cedric Debarge <cedric.debarge@acksys.fr>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 23 Oct 2012 14:43:58 +0200
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901411778@sbs2003.acksys.local> (sfid-20121018_094934_139014_F8666167)
+References: <773DB8A82AB6A046AE0195C68612A31901411778@sbs2003.acksys.local>
+	 (sfid-20121018_094934_139014_F8666167)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am on Gentoo and using wpasupplicant with Broadcom BCM4727 802.11 Hybrid 
-Wireless Controller 5.100.82.112.
-Everything works perfect in 3,5,4 
-Upgrading to 3,6,0 stable gives same bug as to you.
-Only thing chanced is kernel.
-So I believe that's kernel busines
+On Thu, 2012-10-18 at 09:30 +0200, Cedric Debarge wrote:
+> Hi all,
+> 
+> 	I am not sure if this is the right place to post my question. Please forgive me if not.
+> 
+> 	I am experimenting roaming between two APs with wpa_supplicant (WPA2 + EAP-TLS).
+> 	When WPA_Supplicant come back from an AP for which it has already cached the key, I saw that during WPA2 4 Handshake (in case of reassociation), data are sent through wpa_supplicant unencrypted.
+> 
+> 	As soon as the WPA2 successfully ends its negotiation, the data are sent encrypted back.
+> 
+> 	I attached to this email a Wireshark capture of the wireless transaction. Before this capture the frames were correctly encrypted. 
+> 	You can see the start of the WPA2 4 Handshake protocol at packet number 10.
+> 	During this 4 Handshake protocol you could see unencrypted iperf (UDP 5001) packets N°12/17/18/22/24.. until packet 55. 
+> 	4 Handshake protocol ends at packet 49.
+> 
+> 	Can you give me some clue how to work it out ?
 
-Have a nice dayservicemen
+Can you show the wpa_supplicant debug log for this?
 
-
-
+johannes
 
