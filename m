@@ -1,37 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43744 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:42912 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755193Ab2JPSR3 (ORCPT
+	with ESMTP id S1753904Ab2JWN2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 14:17:29 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TOBho-00052v-GS
-	for linux-wireless@vger.kernel.org; Tue, 16 Oct 2012 20:17:28 +0200
-Message-ID: <1350411484.10177.5.camel@jlt4.sipsolutions.net> (sfid-20121016_201731_946494_D9817D23)
-Subject: Re: [PATCH 3.7] iwlwifi: fix 6000 series channel switch command
+	Tue, 23 Oct 2012 09:28:11 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Date: Tue, 16 Oct 2012 20:18:04 +0200
-In-Reply-To: <1350411437-2534-1-git-send-email-johannes@sipsolutions.net> (sfid-20121016_201645_346186_A812A5A5)
-References: <1350411437-2534-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121016_201645_346186_A812A5A5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/2] iwlwifi: don't leak Tx skb when a queue is disabled
+Date: Tue, 23 Oct 2012 15:28:38 +0200
+Message-Id: <1350998919-18645-1-git-send-email-johannes@sipsolutions.net> (sfid-20121023_152815_002257_1A86E6DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-10-16 at 20:17 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The channel switch command for 6000 series devices
-> is larger than the maximum inline command size of
-> 320 bytes. The command is therefore refused with a
-> warning. Fix this by allocating the command and
-> using the NOCOPY mechanism.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I'll also have a pull request for this (tomorrow maybe).
+Since the queue might not be empty, we need to free the
+pending Tx packets.
 
-johannes
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    1 +
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |    4 ++--
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |    2 ++
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 401178f..6ce58f0 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -346,6 +346,7 @@ void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+ 		      enum dma_data_direction dma_dir);
+ int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
+ 			 struct sk_buff_head *skbs);
++void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id);
+ int iwl_queue_space(const struct iwl_queue *q);
+ 
+ /*****************************************************
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index f95d88d..a6a5181 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -442,10 +442,10 @@ static int iwl_trans_txq_init(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * iwl_tx_queue_unmap -  Unmap any remaining DMA mappings and free skb's
+  */
+-static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
++void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_tx_queue *txq = &trans_pcie->txq[txq_id];
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index db3efbb..5db0314 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -494,6 +494,8 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
+ 	_iwl_write_targ_mem_dwords(trans, stts_addr,
+ 				   zero_val, ARRAY_SIZE(zero_val));
+ 
++	iwl_tx_queue_unmap(trans, txq_id);
++
+ 	IWL_DEBUG_TX_QUEUES(trans, "Deactivate queue %d\n", txq_id);
+ }
+ 
+-- 
+1.7.10.4
 
