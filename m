@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:65437 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096Ab2JHAm7 (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:44994 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932223Ab2JWSeJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2012 20:42:59 -0400
-MIME-Version: 1.0
-Date: Mon, 8 Oct 2012 08:42:58 +0800
-Message-ID: <CAPgLHd8JOwHeMPu1MfUvse1npL7QMXxgMk4xkjft-JEP_mbv4w@mail.gmail.com> (sfid-20121008_024306_887514_8CC1BE20)
-Subject: [PATCH] ath5k: fix potential NULL pointer dereference in ath5k_beacon_update()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 23 Oct 2012 14:34:09 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n3so558125lbo.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2012 11:34:07 -0700 (PDT)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH v3 0/4]  Driver for the ar5523 chipset
+Date: Tue, 23 Oct 2012 20:33:56 +0200
+Message-Id: <1351017240-2797-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20121023_203414_836689_C4EED534)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Some time ago I found an old USB wireless dongle in my drawer. I was
+surprised it wasn't supported in Linux. Google gave me an old
+unfinished driver created by Christoph Hellwig. Armed with some
+spare time and naivity I picked up where Christoph left in 2007 and
+now it's actually working pretty fine. It does not crash for me and
+throughput is decent.
 
-The dereference should be moved below the NULL test.
+It's based on the FreeBSD driver, which in turn is based on the
+reverse engineered Windows driver, hence a very limited feature set.
+Not even HW crypto offload is supported. But at least there is a
+firmware which has a suitable license:
 
-dpatch engine is used to auto generate this patch.
-(https://github.com/weiyj/dpatch)
+http://www.freebsd.org/cgi/cvsweb.cgi/src/sys/contrib/dev/uath/ar5523.bin.uu
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/ath/ath5k/base.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Changes v2 to v3:
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 9fd6d9a..9f31cfa 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1804,7 +1804,7 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
- 	int ret;
- 	struct ath5k_hw *ah = hw->priv;
--	struct ath5k_vif *avf = (void *)vif->drv_priv;
-+	struct ath5k_vif *avf;
- 	struct sk_buff *skb;
- 
- 	if (WARN_ON(!vif)) {
-@@ -1819,6 +1819,7 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 		goto out;
- 	}
- 
-+	avf = (void *)vif->drv_priv;
- 	ath5k_txbuf_free_skb(ah, avf->bbuf);
- 	avf->bbuf->skb = skb;
- 	ret = ath5k_beacon_setup(ah, avf->bbuf);
+* Replace homebrew workaround with USB_ZERO_PACKET.
+* Sort and clean up copyright holders.
+
+Pontus Fuchs (4):
+  ar5523: Add main driver file
+  ar5523: Add driver header file
+  Add Firmware API header file
+  Add Kconfig and Makefile. Add MAINTAINERS entry
+
+ MAINTAINERS                                 |    6 +
+ drivers/net/wireless/ath/Kconfig            |    1 +
+ drivers/net/wireless/ath/Makefile           |    1 +
+ drivers/net/wireless/ath/ar5523/Kconfig     |    7 +
+ drivers/net/wireless/ath/ar5523/Makefile    |    1 +
+ drivers/net/wireless/ath/ar5523/ar5523.c    | 1806 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ar5523/ar5523.h    |  152 +++
+ drivers/net/wireless/ath/ar5523/ar5523_hw.h |  431 +++++++
+ 8 files changed, 2405 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ar5523/Kconfig
+ create mode 100644 drivers/net/wireless/ath/ar5523/Makefile
+ create mode 100644 drivers/net/wireless/ath/ar5523/ar5523.c
+ create mode 100644 drivers/net/wireless/ath/ar5523/ar5523.h
+ create mode 100644 drivers/net/wireless/ath/ar5523/ar5523_hw.h
+
+-- 
+1.7.9.5
 
