@@ -1,85 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27047 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753858Ab2JBOTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2012 10:19:52 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"David S . Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCHv4] rtlwifi: rtl8192ce: rtl8192cu: use %*phC to dump small buffers
-Date: Tue,  2 Oct 2012 17:19:44 +0300
-Message-Id: <1349187584-13401-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20121002_162116_488789_F88B0B77)
+Received: from mail-we0-f174.google.com ([74.125.82.174]:62497 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933098Ab2JXRZR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Oct 2012 13:25:17 -0400
+Received: by mail-we0-f174.google.com with SMTP id t9so383574wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 10:25:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D075EC214@RockMX01.rock.corp>
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D075EC214@RockMX01.rock.corp>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Wed, 24 Oct 2012 10:24:55 -0700
+Message-ID: <CAG6hwVNuijKqzNnyQMS9dxvRy3YdxuY_WkJ+k5L18yXc7jHe_Q@mail.gmail.com> (sfid-20121024_192527_211547_BF2924DC)
+Subject: Re: 802.11s bug in ieee80211_rx_h_mesh_fwding() result in bogus MAC
+ in mpp table
+To: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch changes a bit trace output format in the rtl_cam_program_entry() to
-print prefix and the actual data on the same line. Moreover the %*phC outputs
-each byte as 2 hex digits, which is slightly different to the original %x.
+Hi Chaoxing,
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
- 3 files changed, 6 insertions(+), 13 deletions(-)
+On Wed, Oct 24, 2012 at 9:36 AM, Chaoxing Lin
+<Chaoxing.Lin@ultra-3eti.com> wrote:
+> And mpp table grows fast, which can affect mpp lookup efficiency severely.
+>
+> Here is the problem (code line number is based on 3.6.3 kernel)
+>
+> It happens when user turns on encryption.
+>
+>
+> 1835 #ifdef CONFIG_MAC80211_MESH
+> 1836 static ieee80211_rx_result
+> 1837 ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+> 1838 {
+> ...
+> 1849
+> 1850     hdr = (struct ieee80211_hdr *) skb->data;
+> 1851     hdrlen = ieee80211_hdrlen(hdr->frame_control);
+> 1852     mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
+> ...
+> 1865
+> 1866     if (mesh_hdr->flags & MESH_FLAGS_AE) {             //CLIN: mesh_hdr is pointed at ENCRYPTED part
+>                                                             // if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
+> 1867         struct mesh_path *mppath;
+> 1868         char *proxied_addr;
+> 1869         char *mpp_addr;
+> 1870
+> 1871         if (is_multicast_ether_addr(hdr->addr1)) {
+> 1872             mpp_addr = hdr->addr3;
+> 1873             proxied_addr = mesh_hdr->eaddr1;           //CLIN: deference random data result in random MAC for proxied_addr
+> 1874         } else {
+> 1875             mpp_addr = hdr->addr4;
+> 1876             proxied_addr = mesh_hdr->eaddr2;           //CLIN: deference random data result in random MAC for proxied_addr
+> 1877         }
+> 1878
+> 1879         rcu_read_lock();
+> 1880         mppath = mpp_path_lookup(proxied_addr, sdata);
+> 1881         if (!mppath) {
+> 1882             mpp_path_add(proxied_addr, mpp_addr, sdata);  //CLIN: mpp table grows fast, almost as fast as packet in air
+> 1883         } else {
+> 1884             spin_lock_bh(&mppath->state_lock);
+> 1885             if (!ether_addr_equal(mppath->mpp, mpp_addr))
+> 1886                 memcpy(mppath->mpp, mpp_addr, ETH_ALEN);
+> 1887             spin_unlock_bh(&mppath->state_lock);
+> 1888         }
+> 1889         rcu_read_unlock();
+> 1890     }
 
-diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-index 5b4b4d4..ca69e35 100644
---- a/drivers/net/wireless/rtlwifi/cam.c
-+++ b/drivers/net/wireless/rtlwifi/cam.c
-@@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
- 	u32 target_content = 0;
- 	u8 entry_i;
- 
--	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
--		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
--		 key_cont_128[0], key_cont_128[1],
--		 key_cont_128[2], key_cont_128[3],
--		 key_cont_128[4], key_cont_128[5]);
-+	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %6phC\n",
-+		 key_cont_128);
- 
- 	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
- 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 86d73b3..038c02c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
- 				     (ratr_index << 28);
- 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
- 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
--		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
--		 ratr_index, ratr_bitmap,
--		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
--		 rate_mask[4]);
-+		 "Rate_index:%x, ratr_val:%x, %5phC\n",
-+		 ratr_index, ratr_bitmap, rate_mask);
- 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
- 
- 	if (macid != 0)
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 4bbb711..7d36a94 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
- 				      ratr_index << 28);
- 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
- 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
--		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
--		 ratr_index, ratr_bitmap,
--		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
--		 rate_mask[4]);
-+		 "Rate_index:%x, ratr_val:%x, %5phC\n",
-+		 ratr_index, ratr_bitmap, rate_mask);
- 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
- }
- 
--- 
-1.7.10.4
+<snip>
 
+> The cure is to move below early in this function when packet is encrypted.
+>
+> 1904     if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
+> 1905         goto out;
+
+Yes, I think it makes sense to put that check early in the function.
+All forwarded frames need to pass that condition anyway.
+
+Will you submit a proper patch for this?
+
+Thomas
