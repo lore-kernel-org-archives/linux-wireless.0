@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32121 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751504Ab2JQHtM convert rfc822-to-8bit (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:36315 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161190Ab2JXVzZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Oct 2012 03:49:12 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: RE: Lots of trans->state != IWL_TRANS_FW_ALIVE warnings
-Date: Wed, 17 Oct 2012 07:48:24 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3B86041@HASMSX106.ger.corp.intel.com> (sfid-20121017_094915_602904_4E184CB4)
-References: <20121015144722.GA12560@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3B7D4BB@HASMSX106.ger.corp.intel.com>
- <20121015152336.GC12560@redhat.com> <20121015153752.GE12560@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3B7D5A6@HASMSX106.ger.corp.intel.com>
- <20121017065851.GB14306@redhat.com>
-In-Reply-To: <20121017065851.GB14306@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 24 Oct 2012 17:55:25 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h16so968090oag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 14:55:25 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1350912590.10166.9.camel@jlt4.sipsolutions.net>
+References: <1350654441-6761-1-git-send-email-johannes@sipsolutions.net>
+	<CAB3XZEc0PbzcCFfkabEg9UfwnCizKGvKEhZ_iYfMA6QC=xcxFw@mail.gmail.com>
+	<1350912590.10166.9.camel@jlt4.sipsolutions.net>
+Date: Wed, 24 Oct 2012 23:55:25 +0200
+Message-ID: <CAB3XZEfh9+S_PfYfVTYToJ-G46s6r8ZtnKDbgtJOnvbGDFue9g@mail.gmail.com> (sfid-20121025_000044_922933_02F4E393)
+Subject: Re: [RFC] mac80211: add explicit AP/GO driver operations
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ilan.peer@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > > > > I glanced at the bugs and I can only see the trace dump. I am
-> > > > > > pretty sure there is an issue before the dump - fw assert of
-> > > > > > something like that. Can it be possible to get the full log?
-> > > > > >
-> > > > >
-> > > > > Can you ask people to try the attached patch?
-> > > > > This will let us know where the fw is brought down.
-> > > >
-> > > > Yes, I'll build kernel with that patch and request for test and dmesg.
-> > >
-> > > debug=0x400 is enough or do you want also some other flags?
-> > >
-> > 0x400 should be enough, but 0x403 would be better :-)
-> 
-> 
-> There is some feedback from user with micocode errors here
-> https://bugzilla.redhat.com/show_bug.cgi?id=866013
-> 
+On Mon, Oct 22, 2012 at 3:29 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> what about other direct notification of BSS_CHANGED_BEACON_ENABLED
+>> (like in offchannel and ieee80211_do_stop)? should we call
+>> start_ap/stop_ap there as well?
+>
+> The one in do_stop() should probably just be cleaned up, cfg80211 will
+> now stop the AP operation while the interface goes down ... so that
+> won't actually do anything, but could be a concern for the old API
+> because it might cause an off/off transition.
+>
+cool.
 
-Ok, this is what I suspected. SYSASSERT before the WARNING....
-So we have 2 issues here - the SYSASSERT  and the reset.
-BTW - do we have any insight on the NIC used - although I am pretty sure it doesn't matter much.
+> For offchannel, I'm not sure. Does it really make sense to call it
+> there? I can do it, I suppose, but ... hmm. The software-offchannel
+> hopefully won't actually be needed much longer given channel
+> contexts ;-)
+:)
+i guess skipping these calls on software-offchannel transitions is
+reasonable, but it's worth documenting it (as it's different from
+BSS_CHANGED_BEACON_ENABLED notifications).
 
-> Emmanuel, perhaps you could CC to those bug report I provided links earlier,
-> so I'll not need to mail you, when someone will add additional info to those
-> reports ?
-> 
-
-I will check :-)
-
-
-> Thanks
-> Stanislaw
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Eliad.
