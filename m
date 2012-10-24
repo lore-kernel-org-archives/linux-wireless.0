@@ -1,93 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34586 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933332Ab2JZOY1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46261 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933778Ab2JXJsW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 10:24:27 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
+	Wed, 24 Oct 2012 05:48:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 16/18] brcmsmac: Add tracepoint for macintstatus
-Date: Fri, 26 Oct 2012 09:23:31 -0500
-Message-Id: <1351261413-20821-17-git-send-email-seth.forshee@canonical.com> (sfid-20121026_163930_829114_A54DEAA9)
-In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: complete bss_info tracing
+Date: Wed, 24 Oct 2012 11:48:53 +0200
+Message-Id: <1351072133-8511-1-git-send-email-johannes@sipsolutions.net> (sfid-20121024_114833_033667_634C092F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- .../brcm80211/brcmsmac/brcms_trace_events.h        |   20 ++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |    8 ++++----
- 2 files changed, 24 insertions(+), 4 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-index 96a962a..2ef7580 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-@@ -85,6 +85,26 @@ TRACE_EVENT(brcms_dpc,
- 	)
- );
+Some fields have been added but were missed in
+tracing, add them now.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/trace.h |   34 +++++++++++++++++++++++++++++++---
+ 1 file changed, 31 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 6293647..0638541 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -315,20 +315,33 @@ TRACE_EVENT(drv_bss_info_changed,
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+ 		VIF_ENTRY
++		__field(u32, changed)
+ 		__field(bool, assoc)
++		__field(bool, ibss_joined)
++		__field(bool, ibss_creator)
+ 		__field(u16, aid)
+ 		__field(bool, cts)
+ 		__field(bool, shortpre)
+ 		__field(bool, shortslot)
++		__field(bool, enable_beacon)
+ 		__field(u8, dtimper)
+ 		__field(u16, bcnint)
+ 		__field(u16, assoc_cap)
+ 		__field(u64, sync_tsf)
+ 		__field(u32, sync_device_ts)
+ 		__field(u32, basic_rates)
+-		__field(u32, changed)
+-		__field(bool, enable_beacon)
++		__array(int, mcast_rate, IEEE80211_NUM_BANDS)
+ 		__field(u16, ht_operation_mode)
++		__field(s32, cqm_rssi_thold);
++		__field(s32, cqm_rssi_hyst);
++		__field(u32, channel_type);
++		__dynamic_array(u32, arp_addr_list, info->arp_addr_cnt);
++		__field(bool, arp_filter_enabled);
++		__field(bool, qos);
++		__field(bool, idle);
++		__field(bool, ps);
++		__dynamic_array(u8, ssid, info->ssid_len);
++		__field(bool, hidden_ssid);
+ 	),
  
-+TRACE_EVENT(brcms_macintstatus,
-+	TP_PROTO(const struct device *dev, int in_isr, u32 macintstatus,
-+		 u32 mask),
-+	TP_ARGS(dev, in_isr, macintstatus, mask),
-+	TP_STRUCT__entry(
-+		__string(dev, dev_name(dev))
-+		__field(int, in_isr)
-+		__field(u32, macintstatus)
-+		__field(u32, mask)
-+	),
-+	TP_fast_assign(
-+		__assign_str(dev, dev_name(dev));
-+		__entry->in_isr = in_isr;
-+		__entry->macintstatus = macintstatus;
-+		__entry->mask = mask;
-+	),
-+	TP_printk("[%s] in_isr=%d macintstatus=%#x mask=%#x", __get_str(dev),
-+		  __entry->in_isr, __entry->macintstatus, __entry->mask)
-+);
-+
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM brcmsmac_tx
+ 	TP_fast_assign(
+@@ -337,17 +350,32 @@ TRACE_EVENT(drv_bss_info_changed,
+ 		__entry->changed = changed;
+ 		__entry->aid = info->aid;
+ 		__entry->assoc = info->assoc;
++		__entry->ibss_joined = info->ibss_joined;
++		__entry->ibss_creator = info->ibss_creator;
+ 		__entry->shortpre = info->use_short_preamble;
+ 		__entry->cts = info->use_cts_prot;
+ 		__entry->shortslot = info->use_short_slot;
++		__entry->enable_beacon = info->enable_beacon;
+ 		__entry->dtimper = info->dtim_period;
+ 		__entry->bcnint = info->beacon_int;
+ 		__entry->assoc_cap = info->assoc_capability;
+ 		__entry->sync_tsf = info->sync_tsf;
+ 		__entry->sync_device_ts = info->sync_device_ts;
+ 		__entry->basic_rates = info->basic_rates;
+-		__entry->enable_beacon = info->enable_beacon;
++		memcpy(__entry->mcast_rate, info->mcast_rate,
++		       sizeof(__entry->mcast_rate));
+ 		__entry->ht_operation_mode = info->ht_operation_mode;
++		__entry->cqm_rssi_thold = info->cqm_rssi_thold;
++		__entry->cqm_rssi_hyst = info->cqm_rssi_hyst;
++		__entry->channel_type = info->channel_type;
++		memcpy(__get_dynamic_array(arp_addr_list), info->arp_addr_list,
++		       sizeof(u32) * info->arp_addr_cnt);
++		__entry->arp_filter_enabled = info->arp_filter_enabled;
++		__entry->qos = info->qos;
++		__entry->idle = info->idle;
++		__entry->ps = info->ps;
++		memcpy(__get_dynamic_array(ssid), info->ssid, info->ssid_len);
++		__entry->hidden_ssid = info->hidden_ssid;
+ 	),
  
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 28c08f6..075ca46 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -2559,13 +2559,13 @@ static inline u32 wlc_intstatus(struct brcms_c_info *wlc, bool in_isr)
- {
- 	struct brcms_hardware *wlc_hw = wlc->hw;
- 	struct bcma_device *core = wlc_hw->d11core;
--	u32 macintstatus;
-+	u32 macintstatus, mask;
- 
- 	/* macintstatus includes a DMA interrupt summary bit */
- 	macintstatus = bcma_read32(core, D11REGOFFS(macintstatus));
-+	mask = in_isr ? wlc->macintmask : wlc->defmacintmask;
- 
--	BRCMS_DBG_INT(core, "wl%d: macintstatus: 0x%x\n", wlc_hw->unit,
--		      macintstatus);
-+	trace_brcms_macintstatus(&core->dev, in_isr, macintstatus, mask);
- 
- 	/* detect cardbus removed, in power down(suspend) and in reset */
- 	if (brcms_deviceremoved(wlc))
-@@ -2578,7 +2578,7 @@ static inline u32 wlc_intstatus(struct brcms_c_info *wlc, bool in_isr)
- 		return 0;
- 
- 	/* defer unsolicited interrupts */
--	macintstatus &= (in_isr ? wlc->macintmask : wlc->defmacintmask);
-+	macintstatus &= mask;
- 
- 	/* if not for us */
- 	if (macintstatus == 0)
+ 	TP_printk(
 -- 
-1.7.9.5
+1.7.10.4
 
