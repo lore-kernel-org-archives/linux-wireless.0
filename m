@@ -1,111 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:2778 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271Ab2JaBVW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46126 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754548Ab2JXJKY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 21:21:22 -0400
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Tue, 30 Oct 2012 18:23:37 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Subject: Re: [PATCH v2 1/2] wireless: Driver for 60GHz card wil6210
-Message-ID: <20121031012225.GY3354@lenteja.do-not-panic.com> (sfid-20121031_022149_289845_0F35031E)
-References: <1351511906-19989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1351511906-19989-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1351511906-19989-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 24 Oct 2012 05:10:24 -0400
+Message-ID: <1351069857.10709.3.camel@jlt4.sipsolutions.net> (sfid-20121024_111030_112612_C162737A)
+Subject: Re: [PATCH v6 4/6] wireless: use OR operation to set wiphy features
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Wed, 24 Oct 2012 11:10:57 +0200
+In-Reply-To: <878vawz1fq.fsf@purkki.adurom.net>
+References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
+	 <1350542071-26498-5-git-send-email-bzhao@marvell.com>
+	 <87d308z1no.fsf@purkki.adurom.net>
+	 <1351069288.10709.2.camel@jlt4.sipsolutions.net>
+	 <878vawz1fq.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 29, 2012 at 01:58:25PM +0200, Vladimir Kondratiev wrote:
-> Card wil6210 by Wilocity supports operation on the 60GHz band
+On Wed, 2012-10-24 at 12:03 +0300, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
 > 
-> See
-> http://wireless.kernel.org/en/users/Drivers/wil6210
+> > On Wed, 2012-10-24 at 11:59 +0300, Kalle Valo wrote:
+> >
+> >> Is there a way to check that drivers don't accidentally clear the flags
+> >> (ie. use '=' instead '|=')? For example by adding a dummy flag and
+> >> checking afterwards that it's not cleared?
+> >> 
+> >> I'm just worried that this detail might be too easy to miss, for example
+> >> somehow I had missed this patch and noticed only when rebasing ath6kl
+> >> patches.
+> >
+> > Yes, that should be possible, set some dummy flag in wiphy_new() and
+> > test & clear it in wiphy_register()?
+> 
+> The tricky part is to make sure that the dummy flag won't conflict with
+> a real feature flag value in the future :) 
 
-Can you update that page to reflect the latest information?
-Its out of date now.
+Seems like a non-issue? If you say use 1<<31 to test, and somebody adds
+1<<31, they'll find that their flag never works and will figure it out?
 
-> diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> new file mode 100644
-> index 0000000..d2b14fb
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> +static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> +{
-> +	{ /* print various info */
-> +		struct net_device *ndev = wil_to_ndev(wil);
-> +		const char *pdev_name = pci_name(pdev);
-> +		const char *wiphydev_name = dev_name(wil_to_dev(wil));
-> +		const char *ndev_name = netdev_name(ndev);
-> +		const char *ifc_name = ndev->name;
-> +		struct pci_driver *drv = pci_dev_driver(pdev);
-> +		const char *drv_name = drv ? drv->name : "(no drv)";
-> +		pr_info("Driver  : <%s>\n", drv_name ?: "(null)");
-> +		pr_info("PCI dev : <%s>\n", pdev_name ?: "(null)");
-> +		pr_info("Net dev : <%s>\n", ndev_name ?: "(null)");
-> +		pr_info("Net ifc : <%s>\n", ifc_name ?: "(null)");
-> +		pr_info("Wiphy   : <%s>\n", wiphydev_name ?: "(null)");
-> +
-> +	}
+johannes
 
-Die nasty code, die! Bleed!
-
-> diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-> new file mode 100644
-> index 0000000..463c68e
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/wil6210/txrx.c
-> +void tx_complete(struct wil6210_priv *wil, int ringid)
-> +{
-
-...
-
-> +	{
-> +		u32 swhead = vring->swhead;
-> +		u32 swtail = vring->swtail;
-> +		int used = (vring->size + swhead - swtail) % vring->size;
-> +		int avail = vring->size - used - 1;
-> +		if (avail > vring->size/4)
-> +			netif_tx_wake_all_queues(wil_to_ndev(wil));
-> +	}
-> +}
-
-Die!
-
-> diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-> new file mode 100644
-> index 0000000..529b790
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-> @@ -0,0 +1,299 @@
-
-...
-
-> +#define WIL6210_DRV_VERSION "0.4" /* Driver version */
-
-Again, death to this. I don't care what other drivers do, this
-is silly practice.
-
-You also still use generic routine names, please clean those
-up. Few examples: tx_complete() rx_handle(), iftype_nl2wmi(),
-and I'm sure there are plenty others, please prefix
-these for the driver.
-
-
-> diff --git a/drivers/net/wireless/ath/wil6210/wil6210_rgf.h b/drivers/net/wireless/ath/wil6210/wil6210_rgf.h
-
-Any reason why this small file is required? Why not just stuff it into
-one of the other header files?
-
-You didn't also address my comments regarding WIL6210_ISR_COR #ifdef code.
-
-The second patch no longer applies as a new driver was merged.
-
-Apart from all this, looks good.
-
-  Luis
