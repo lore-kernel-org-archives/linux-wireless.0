@@ -1,151 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:49573 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760135Ab2JYSrE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46309 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758109Ab2JXKMv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 14:47:04 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH NEXT 00/17] rtlwifi: Add new driver for RTL8723AE
-Date: Thu, 25 Oct 2012 13:46:29 -0500
-Message-Id: <1351190806-4258-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121025_204717_268155_D4D34370)
+	Wed, 24 Oct 2012 06:12:51 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/4] nl80211: move "can set channel" check
+Date: Wed, 24 Oct 2012 12:13:20 +0200
+Message-Id: <1351073603-11616-2-git-send-email-johannes@sipsolutions.net> (sfid-20121024_121259_523145_21986C72)
+In-Reply-To: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>
+References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches is based on the wireless-next tree.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The first patch modifies driver rtl8192ce to work with the newest set of
-RTL8188CE-VL devices, which have built-in Bluetooth capability. This
-patch was previously submitted but was discarded because it had a merge
-problem.
+Setting the wdev to NULL when the channel can't be
+set for that interface type (to treat the channel
+setting for the wiphy/monitor) currently works, but
+is confusing in the code if netdev/wdev aren't both
+set/unset in the same way. Move the check whether
+the channel can be set to where it's needed so that
+wdev and netdev are always both assigned or NULL.
 
-The rest of the patches in this set introduce a new driver for the rtlwifi
-family that handles the RTL8723AE device.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry Finger (17):
-  rtlwifi: rtl8192c: rtl8192ce: Add support for B-CUT version of
-    RTL8188CE
-  rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192se: rtl8192de:
-    Shorten some variable names
-  rtlwifi: rtl8723ae: Add new driver - Part 1
-  rtlwifi: rtl8723ae: Add new driver - Part 2
-  rtlwifi: rtl8723ae: Add new driver - Part 3
-  rtlwifi: rtl8723ae: Add new driver - Part 4
-  rtlwifi: rtl8723ae: Add new driver - Part 5
-  rtlwifi: rtl8723ae: Add new driver - Part 6
-  rtlwifi: rtl8723ae: Add new driver - Part 7
-  rtlwifi: rtl8723ae: Add new driver - Part 8
-  rtlwifi: rtl8723ae: Add new driver - Part 9
-  rtlwifi: rtl8723ae: Add new driver - Part 10
-  rtlwifi: rtl8723ae: Add new driver - Part 11
-  rtlwifi: rtl8723ae: Add new driver - Part 12
-  rtlwifi: rtl8723ae: Add new driver - Part 13
-  rtlwifi: Modify files for addition of rtl8723ae
-  rtlwifi: rtl8192ce: rtl8192cu: rtl8192se: rtl81723ae: Turn on
-    building of the new driver
-
- drivers/net/wireless/rtlwifi/Kconfig               |   11 +
- drivers/net/wireless/rtlwifi/Makefile              |    4 +-
- drivers/net/wireless/rtlwifi/base.c                |   24 +
- drivers/net/wireless/rtlwifi/base.h                |    2 +
- drivers/net/wireless/rtlwifi/debug.h               |    2 +
- drivers/net/wireless/rtlwifi/pci.c                 |   20 +-
- drivers/net/wireless/rtlwifi/pci.h                 |    2 +
- drivers/net/wireless/rtlwifi/rc.c                  |    3 +-
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  227 +-
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   88 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |    3 +
- drivers/net/wireless/rtlwifi/rtl8192ce/dm.c        |   30 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   87 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |    2 +
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.c        |   23 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    6 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |   46 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/dm.c        |   30 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   10 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       |   25 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |   22 +-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   95 +-
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |   65 +-
- drivers/net/wireless/rtlwifi/rtl8192de/rf.c        |   18 +-
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |   39 +-
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |   89 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |    6 +-
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |   64 +-
- drivers/net/wireless/rtlwifi/rtl8192se/rf.c        |   11 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   21 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/Makefile    |   22 +
- drivers/net/wireless/rtlwifi/rtl8723ae/btc.h       |   41 +
- drivers/net/wireless/rtlwifi/rtl8723ae/def.h       |  163 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |  920 ++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |  149 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |  745 ++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |  101 +
- .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c    |  542 +++++
- .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h    |  160 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   | 1786 +++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |  151 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        | 2380 ++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.h        |   73 +
- drivers/net/wireless/rtlwifi/rtl8723ae/led.c       |  151 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/led.h       |   39 +
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       | 2044 +++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |  224 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c    |  109 +
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h    |  322 +++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c |  129 ++
- drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h |   98 +
- drivers/net/wireless/rtlwifi/rtl8723ae/reg.h       | 2097 +++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.c        |  505 +++++
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.h        |   43 +
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |  387 ++++
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.h        |   37 +
- drivers/net/wireless/rtlwifi/rtl8723ae/table.c     |  738 ++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/table.h     |   50 +
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |  670 ++++++
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |  725 ++++++
- drivers/net/wireless/rtlwifi/stats.c               |  268 +++
- drivers/net/wireless/rtlwifi/stats.h               |   46 +
- drivers/net/wireless/rtlwifi/wifi.h                |  161 +-
- 63 files changed, 16579 insertions(+), 572 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/Makefile
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/btc.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/def.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/reg.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.h
- create mode 100644 drivers/net/wireless/rtlwifi/stats.c
- create mode 100644 drivers/net/wireless/rtlwifi/stats.h
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8c08578..879ca62 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1516,10 +1516,8 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 		result = 0;
+ 
+ 		mutex_lock(&rdev->mtx);
+-	} else if (nl80211_can_set_dev_channel(netdev->ieee80211_ptr))
++	} else
+ 		wdev = netdev->ieee80211_ptr;
+-	else
+-		wdev = NULL;
+ 
+ 	/*
+ 	 * end workaround code, by now the rdev is available
+@@ -1579,7 +1577,9 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
+-		result = __nl80211_set_channel(rdev, wdev, info);
++		result = __nl80211_set_channel(rdev,
++				nl80211_can_set_dev_channel(wdev) ? wdev : NULL,
++				info);
+ 		if (result)
+ 			goto bad_res;
+ 	}
 -- 
 1.7.10.4
 
