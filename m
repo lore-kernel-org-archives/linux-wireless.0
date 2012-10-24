@@ -1,74 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52247 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934218Ab2JYUS2 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:57052 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752417Ab2JXVWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 16:18:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] wireless: drop invalid mesh address extension frames
-Date: Thu, 25 Oct 2012 22:19:00 +0200
-Message-Id: <1351196340-30551-1-git-send-email-johannes@sipsolutions.net> (sfid-20121025_221831_429142_F49374F1)
+	Wed, 24 Oct 2012 17:22:52 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so1496678pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 14:22:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20121024194547.GA19060@shredder>
+References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
+	<CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
+	<20121024194547.GA19060@shredder>
+Date: Wed, 24 Oct 2012 14:22:51 -0700
+Message-ID: <CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com> (sfid-20121024_232256_554200_55DD4CBD)
+Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
+From: Adrian Chadd <adrian@freebsd.org>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-The mesh header can have address extension by a 4th
-or a 5th and 6th address, but never both. Drop such
-frames in 802.11 -> 802.3 conversion along with any
-frames that have the wrong extension.
+can you please repeat this experiment but dump the TSF32/TSF64 fields
+there as hexadecimal, rather than decimal?
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/util.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+I'd like to see if this is an example of "bad TSF32->TSF64 promotion".
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index ef35f4e..387d6dc 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -312,18 +312,15 @@ EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
- static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
- {
- 	int ae = meshhdr->flags & MESH_FLAGS_AE;
--	/* 7.1.3.5a.2 */
-+	/* IEEE 802.11 - 8.2.4.7.3 */
- 	switch (ae) {
-+	default:
- 	case 0:
- 		return 6;
- 	case MESH_FLAGS_AE_A4:
- 		return 12;
- 	case MESH_FLAGS_AE_A5_A6:
- 		return 18;
--	case (MESH_FLAGS_AE_A4 | MESH_FLAGS_AE_A5_A6):
--		return 24;
--	default:
--		return 6;
- 	}
- }
- 
-@@ -373,6 +370,8 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 			/* make sure meshdr->flags is on the linear part */
- 			if (!pskb_may_pull(skb, hdrlen + 1))
- 				return -1;
-+			if (meshdr->flags & MESH_FLAGS_AE_A4)
-+				return -1;
- 			if (meshdr->flags & MESH_FLAGS_AE_A5_A6) {
- 				skb_copy_bits(skb, hdrlen +
- 					offsetof(struct ieee80211s_hdr, eaddr1),
-@@ -397,6 +396,8 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 			/* make sure meshdr->flags is on the linear part */
- 			if (!pskb_may_pull(skb, hdrlen + 1))
- 				return -1;
-+			if (meshdr->flags & MESH_FLAGS_AE_A5_A6)
-+				return -1;
- 			if (meshdr->flags & MESH_FLAGS_AE_A4)
- 				skb_copy_bits(skb, hdrlen +
- 					offsetof(struct ieee80211s_hdr, eaddr1),
--- 
-1.7.10.4
 
+
+adrian
