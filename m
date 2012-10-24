@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:37224 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751022Ab2JFDVx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47171 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935005Ab2JXPKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 23:21:53 -0400
-From: Bing Zhao <bzhao@marvell.com>
+	Wed, 24 Oct 2012 11:10:55 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.7 0/4] mwifiex: fix scan and reason code issues
-Date: Fri,  5 Oct 2012 20:21:39 -0700
-Message-Id: <1349493703-1169-1-git-send-email-bzhao@marvell.com> (sfid-20121006_052202_699652_92AA7512)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: use non-atomic bitmap operation for local variable
+Date: Wed, 24 Oct 2012 17:11:27 +0200
+Message-Id: <1351091487-17115-1-git-send-email-johannes@sipsolutions.net> (sfid-20121024_171059_502573_93C73B2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series fixes a scan problem where driver is not returning
-error code to cfg80211 in scan handler.
+From: Johannes Berg <johannes.berg@intel.com>
 
-It also makes sure that the correct reason code is reported to
-cfg80211 upon de-authentication or association failure.
+For a local variable there's no need to use the atomic
+set_bit() operation, use __set_bit() instead.
 
-Amitkumar Karwar (3):
-  mwifiex: reset scan_processing flag in failure cases
-  mwifiex: update cfg80211 with correct reason code when association
-    fails
-  mwifiex: update cfg80211 with correct reason code when connection is
-    lost
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/util.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bing Zhao (1):
-  mwifiex: return -EBUSY if scan request cannot be honored
-
- drivers/net/wireless/mwifiex/cfg80211.c    |   27 +++++++++++++++----
- drivers/net/wireless/mwifiex/join.c        |    6 +++-
- drivers/net/wireless/mwifiex/main.h        |    2 +-
- drivers/net/wireless/mwifiex/scan.c        |   38 +++++++++++++++------------
- drivers/net/wireless/mwifiex/sta_cmdresp.c |    4 +-
- drivers/net/wireless/mwifiex/sta_event.c   |   31 ++++++++++++++--------
- 6 files changed, 69 insertions(+), 39 deletions(-)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 51a4a25..ea8a674 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -821,7 +821,7 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 		if (elem_parse_failed)
+ 			elems->parse_error = true;
+ 		else
+-			set_bit(id, seen_elems);
++			__set_bit(id, seen_elems);
+ 
+ 		left -= elen;
+ 		pos += elen;
+-- 
+1.7.10.4
 
