@@ -1,63 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53249 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752494Ab2J3NML (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 09:12:11 -0400
-Message-ID: <508FD21C.6080707@openwrt.org> (sfid-20121030_141216_356581_55D003BE)
-Date: Tue, 30 Oct 2012 14:11:56 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k: Do not enable ANT diversity if ANT control
- bit is not set
-References: <1351595612-3566-1-git-send-email-bkamatch@qca.qualcomm.com>
-In-Reply-To: <1351595612-3566-1-git-send-email-bkamatch@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from senator.holtmann.net ([87.106.208.187]:50915 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757623Ab2JXSpX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Oct 2012 14:45:23 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] NFC: Remove unused details from pn544.h header file
+Date: Wed, 24 Oct 2012 11:45:12 -0700
+Message-Id: <1351104312-5144-1-git-send-email-marcel@holtmann.org> (sfid-20121024_204528_146310_920902A0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-30 12:13 PM, Bala Shanmugam wrote:
-> RvR test is not good when ANT control bit is not set so
-> enable ANT diversity only when ANT control bit is set.
-> 
-> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-I don't really like this patch; not only is the description very vague,
-but it seems to me that the checks are done at the wrong place.
+The majority of the defines and structures from pn544.h are no
+longer in use. So just remove them.
 
-Further comments below...
+Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+---
+ include/linux/nfc/pn544.h | 60 -----------------------------------------------
+ 1 file changed, 60 deletions(-)
 
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -1340,10 +1340,9 @@ static void ar9003_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
->  	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
->  	regval &= (~AR_ANT_DIV_CTRL_ALL);
->  	regval |= (ant_div_ctl1 & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
-> -	regval &= ~AR_PHY_ANT_DIV_LNADIV;
-> -	regval |= ((ant_div_ctl1 >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
->  
-> -	if (enable)
-> +	if (enable &&
-> +	    (ant_div_ctl1 & AR_EEP_ANT_DIV_ENABLE))
->  		regval |= AR_ANT_DIV_ENABLE;
->  
->  	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
-The code should check much earlier (preferably somewhere in the eeprom
-code) if diversity is available at all, and set a capability
-accordingly, so that it doesn't even call this function with
-enable==true if no diversity is available.
+diff --git a/include/linux/nfc/pn544.h b/include/linux/nfc/pn544.h
+index 9890bba..713bfd7 100644
+--- a/include/linux/nfc/pn544.h
++++ b/include/linux/nfc/pn544.h
+@@ -25,65 +25,6 @@
+ 
+ #include <linux/i2c.h>
+ 
+-#define PN544_DRIVER_NAME	"pn544"
+-#define PN544_MAXWINDOW_SIZE	7
+-#define PN544_WINDOW_SIZE	4
+-#define PN544_RETRIES		10
+-#define PN544_MAX_I2C_TRANSFER	0x0400
+-#define PN544_MSG_MAX_SIZE	0x21 /* at normal HCI mode */
+-
+-/* ioctl */
+-#define PN544_CHAR_BASE		'P'
+-#define PN544_IOR(num, dtype)	_IOR(PN544_CHAR_BASE, num, dtype)
+-#define PN544_IOW(num, dtype)	_IOW(PN544_CHAR_BASE, num, dtype)
+-#define PN544_GET_FW_MODE	PN544_IOW(1, unsigned int)
+-#define PN544_SET_FW_MODE	PN544_IOW(2, unsigned int)
+-#define PN544_GET_DEBUG		PN544_IOW(3, unsigned int)
+-#define PN544_SET_DEBUG		PN544_IOW(4, unsigned int)
+-
+-/* Timing restrictions (ms) */
+-#define PN544_RESETVEN_TIME	30 /* 7 */
+-#define PN544_PVDDVEN_TIME	0
+-#define PN544_VBATVEN_TIME	0
+-#define PN544_GPIO4VEN_TIME	0
+-#define PN544_WAKEUP_ACK	5
+-#define PN544_WAKEUP_GUARD	(PN544_WAKEUP_ACK + 1)
+-#define PN544_INACTIVITY_TIME	1000
+-#define PN544_INTERFRAME_DELAY	200 /* us */
+-#define PN544_BAUDRATE_CHANGE	150 /* us */
+-
+-/* Debug bits */
+-#define PN544_DEBUG_BUF		0x01
+-#define PN544_DEBUG_READ	0x02
+-#define PN544_DEBUG_WRITE	0x04
+-#define PN544_DEBUG_IRQ		0x08
+-#define PN544_DEBUG_CALLS	0x10
+-#define PN544_DEBUG_MODE	0x20
+-
+-/* Normal (HCI) mode */
+-#define PN544_LLC_HCI_OVERHEAD	3 /* header + crc (to length) */
+-#define PN544_LLC_MIN_SIZE	(1 + PN544_LLC_HCI_OVERHEAD) /* length + */
+-#define PN544_LLC_MAX_DATA	(PN544_MSG_MAX_SIZE - 2)
+-#define PN544_LLC_MAX_HCI_SIZE	(PN544_LLC_MAX_DATA - 2)
+-
+-struct pn544_llc_packet {
+-	unsigned char length; /* of rest of packet */
+-	unsigned char header;
+-	unsigned char data[PN544_LLC_MAX_DATA]; /* includes crc-ccitt */
+-};
+-
+-/* Firmware upgrade mode */
+-#define PN544_FW_HEADER_SIZE	3
+-/* max fw transfer is 1024bytes, but I2C limits it to 0xC0 */
+-#define PN544_MAX_FW_DATA	(PN544_MAX_I2C_TRANSFER - PN544_FW_HEADER_SIZE)
+-
+-struct pn544_fw_packet {
+-	unsigned char command; /* status in answer */
+-	unsigned char length[2]; /* big-endian order (msf) */
+-	unsigned char data[PN544_MAX_FW_DATA];
+-};
+-
+-#ifdef __KERNEL__
+ enum {
+ 	NFC_GPIO_ENABLE,
+ 	NFC_GPIO_FW_RESET,
+@@ -99,6 +40,5 @@ struct pn544_nfc_platform_data {
+ 	void (*disable) (void);
+ 	int (*get_gpio)(int type);
+ };
+-#endif /* __KERNEL__ */
+ 
+ #endif /* _PN544_H_ */
+-- 
+1.7.11.7
 
-> @@ -1352,12 +1351,15 @@ static void ar9003_hw_antctrl_shared_chain_lnadiv(struct ath_hw *ah,
->  	regval &= ~AR_FAST_DIV_ENABLE;
->  	regval |= ((ant_div_ctl1 >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
->  
-> -	if (enable)
-> +	if (enable &&
-> +	    (ant_div_ctl1 & AR_EEP_FAST_DIV_ENABLE))
->  		regval |= AR_FAST_DIV_ENABLE;
->  
-It would be much simpler to just remove the if statement and the line
-below it. This would be equivalent to what you're doing because of this:
-  	regval |= ((ant_div_ctl1 >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
-
-- Felix
