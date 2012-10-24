@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38369 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742Ab2JOKzO (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:55855 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755665Ab2JXXFZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 06:55:14 -0400
-Message-ID: <1350298546.27801.1.camel@jlt4.sipsolutions.net> (sfid-20121015_125524_510587_D11D9FC8)
-Subject: Re: [PATCH 0/3] wireless: only use WLAN_EID_VENDOR_SPECIFIC
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Mon, 15 Oct 2012 12:55:46 +0200
-In-Reply-To: <1350037696-23747-1-git-send-email-arend@broadcom.com> (sfid-20121012_122844_139948_31776ADC)
-References: <1350037696-23747-1-git-send-email-arend@broadcom.com>
-	 (sfid-20121012_122844_139948_31776ADC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 24 Oct 2012 19:05:25 -0400
+Received: by mail-da0-f46.google.com with SMTP id n41so469391dak.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 16:05:24 -0700 (PDT)
+Subject: Is Multi-Vif (vaps)  Different Channel Operation Supported?
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+From: Kelly Hogan <kshogan@bluemesh.net>
+In-Reply-To: <1351093332.10709.5.camel@jlt4.sipsolutions.net>
+Date: Wed, 24 Oct 2012 17:05:21 -0600
+Message-Id: <5DA0F03B-BA8C-4D9F-A9F1-0841D6774255@bluemesh.net> (sfid-20121025_010529_985869_96B4EE48)
+References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net> <50880BD0.6080603@candelatech.com> <1351093332.10709.5.camel@jlt4.sipsolutions.net>
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-10-12 at 12:28 +0200, Arend van Spriel wrote:
-> Getting rid of duplicate definitions in linux/ieee80211.h.
-> 
-> Patches are intended for 3.8 and apply to the wireless-next
-> repository.
+Hi All,
 
-I applied them all and fixed up libipw for you :)
+We are utilizing current ath9k and mac80211 and are trying to discern if multi-channel support is possible on different Vifs, on the same phy.
 
-johannes
+Example:  
 
+Two Vifs running as masters, controlled via hostapd
+One Vif running as a Station, controlled by wpa_supplicant
+One Vif running as a mesh vap
+
+We can run all the Vifs fine, but it appears that with shared hostapd/wpa_supplicant control files, that the master Vifs always have to follow the channel that the station is connected to.  The mesh vap also seems to require being on the same channel of the station.
+
+Any info on if this is supported, or what order to process creation, channel setting, etc to get them to simultaneously allow different channel support would be helpful, or save us the time of assuming that it can be done if it in fact can't.
+
+TIA!
