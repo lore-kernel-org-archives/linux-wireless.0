@@ -1,73 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:59673 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755662Ab2JJQjO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46693 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758556Ab2JXMVI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 12:39:14 -0400
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-To: mcgrof@qca.qualcomm.com
-Cc: jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Peter Senna Tschudin <peter.senna@gmail.com>
-Subject: [PATCH V3] ath/ath9k/ar9003_eeprom.c: Remove semicolon after if
-Date: Wed, 10 Oct 2012 18:38:17 +0200
-Message-Id: <1349887097-24980-1-git-send-email-peter.senna@gmail.com> (sfid-20121010_183940_599435_F8121FF3)
-In-Reply-To: <1349038599-22026-1-git-send-email-peter.senna@gmail.com>
-References: <1349038599-22026-1-git-send-email-peter.senna@gmail.com>
+	Wed, 24 Oct 2012 08:21:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Paul Stewart <pstew@chromium.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: use blacklist for duplicate IE check
+Date: Wed, 24 Oct 2012 14:21:37 +0200
+Message-Id: <1351081297-14623-1-git-send-email-johannes@sipsolutions.net> (sfid-20121024_142120_065304_6D305ED3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch remove a semicolon after if(...) that is preventing the
-error check to work correctly. Removing this semicolon will change the
-code behavior, but this is intended.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The semantic patch that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+Instead of the current whitelist which accepts duplicates
+only for the quiet and vendor IEs, use a blacklist of all
+IEs (that we currently parse) that can't be duplicated.
 
-// <smpl>
-@r1@
-position p;
-@@
-if (...);@p
+This avoids detecting a beacon as corrupt in the future
+when new IEs are added that can be duplicated.
 
-@script:python@
-p0 << r1.p;
-@@
-// Emacs org-mode output
-cocci.print_main("", p0)
-cocci.print_secs("", p0)
-// </smpl>
-
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+Cc: Paul Stewart <pstew@chromium.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-NOTE: This patch changes the semantics.
+ net/mac80211/util.c |   42 +++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 35 insertions(+), 7 deletions(-)
 
-Changes from V1:
-Commit message
-Added a note about semantics change
-
-Changes from V2:
-Commit message
-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 5bbe505..189aeb2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -2989,7 +2989,7 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 	case EEP_PAPRD:
- 		if (AR_SREV_9462(ah))
- 			return false;
--		if (!ah->config.enable_paprd);
-+		if (!ah->config.enable_paprd)
- 			return false;
- 		return !!(pBase->featureEnable & BIT(5));
- 	case EEP_CHAIN_MASK_REDUCE:
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 22ca350..e6e4bda 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -643,13 +643,41 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			break;
+ 		}
+ 
+-		if (id != WLAN_EID_VENDOR_SPECIFIC &&
+-		    id != WLAN_EID_QUIET &&
+-		    test_bit(id, seen_elems)) {
+-			elems->parse_error = true;
+-			left -= elen;
+-			pos += elen;
+-			continue;
++		switch (id) {
++		case WLAN_EID_SSID:
++		case WLAN_EID_SUPP_RATES:
++		case WLAN_EID_FH_PARAMS:
++		case WLAN_EID_DS_PARAMS:
++		case WLAN_EID_CF_PARAMS:
++		case WLAN_EID_TIM:
++		case WLAN_EID_IBSS_PARAMS:
++		case WLAN_EID_CHALLENGE:
++		case WLAN_EID_RSN:
++		case WLAN_EID_ERP_INFO:
++		case WLAN_EID_EXT_SUPP_RATES:
++		case WLAN_EID_HT_CAPABILITY:
++		case WLAN_EID_HT_OPERATION:
++		case WLAN_EID_VHT_CAPABILITY:
++		case WLAN_EID_VHT_OPERATION:
++		case WLAN_EID_MESH_ID:
++		case WLAN_EID_MESH_CONFIG:
++		case WLAN_EID_PEER_MGMT:
++		case WLAN_EID_PREQ:
++		case WLAN_EID_PREP:
++		case WLAN_EID_PERR:
++		case WLAN_EID_RANN:
++		case WLAN_EID_CHANNEL_SWITCH:
++		case WLAN_EID_EXT_CHANSWITCH_ANN:
++		case WLAN_EID_COUNTRY:
++		case WLAN_EID_PWR_CONSTRAINT:
++		case WLAN_EID_TIMEOUT_INTERVAL:
++			if (test_bit(id, seen_elems)) {
++				elems->parse_error = true;
++				left -= elen;
++				pos += elen;
++				continue;
++			}
++			break;
+ 		}
+ 
+ 		if (calc_crc && id < 64 && (filter & (1ULL << id)))
 -- 
-1.7.11.4
+1.7.10.4
 
