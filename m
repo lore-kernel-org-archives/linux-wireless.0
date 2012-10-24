@@ -1,33 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50737 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758852Ab2JKQln (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56316 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161217Ab2JXVqM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 12:41:43 -0400
-Message-ID: <1349973736.13097.12.camel@jlt4.sipsolutions.net> (sfid-20121011_184145_889228_5CAFFD48)
-Subject: Re: [RFC] wireless: cfg80211: add peer-to-peer related definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 11 Oct 2012 18:42:16 +0200
-In-Reply-To: <1349965104-14475-1-git-send-email-arend@broadcom.com>
-References: <1349965104-14475-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 24 Oct 2012 17:46:12 -0400
+Date: Wed, 24 Oct 2012 17:44:55 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	David Herrmann <dh.herrmann@googlemail.com>,
+	Stephen Boyd <bebarino@gmail.com>
+Subject: Re: [PATCH] rt2x00: usb: fix reset resume
+Message-ID: <20121024214455.GA12728@tuxdriver.com> (sfid-20121024_234616_647886_EA39C6ED)
+References: <20121016123409.GA2274@redhat.com>
+ <20121024183525.GA4204@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121024183525.GA4204@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-10-11 at 16:18 +0200, Arend van Spriel wrote:
+On Wed, Oct 24, 2012 at 08:35:26PM +0200, Stanislaw Gruszka wrote:
+> On Tue, Oct 16, 2012 at 02:34:12PM +0200, Stanislaw Gruszka wrote:
+> > Patch fixes warnings like below happened on resume:
+> > 
+> > WARNING: at net/mac80211/driver-ops.h:12 check_sdata_in_driver+0x32/0x34()
+> > 
+> > Problem is that in __ieee80211_susped() we remove sdata (i.e wlan0
+> > interface) and then during resume we call usb_unbind_interface() ->
+> > ieee80211_unregister_hw() with sdata removed.
+> > 
+> > Patch fixes problem by adding .reset_resume calback, hence we do not
+> > unbind usb device on resume. This callback can be the same as normal
+> > .resume callback, sice we do all needed initalization during interface
+> > start, which is performed on resume [ ieee80211_resume() ->
+> > ieee80211_reconfig() -> rt2x00mac_start() -> rt2x00lib_start ].
+> > 
+> > Resolves:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=48041
+> > 
+> > Reported-by: David Herrmann <dh.herrmann@googlemail.com>
+> > Reported-and-tested-by: Stephen Boyd <bebarino@gmail.com>
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> 
+> NACK for this patch, Randomly I'm able to reproduce strange crashes
+> when suspending and transiting data, which seem to not happen without
+> this patch. Until I'll figure this out, let's not apply the patch.
 
-> +++ b/include/linux/ieee80211.h
-> @@ -168,6 +168,9 @@
->  #define IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK	0x03
->  #define IEEE80211_WMM_IE_STA_QOSINFO_SP_SHIFT	5
->  
-> +/* Vendor-specific IE */
-> +#define IEEE80211_VENDOR_SPEC_IE		0xDD
+Of course, I just applied this today...any chance for a fixup?
 
-actually this already exists, as ..._EID_VENDOR or so?
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
