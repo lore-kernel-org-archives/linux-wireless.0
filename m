@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33075 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756250Ab2JCOv3 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39542 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756505Ab2JXRkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 10:51:29 -0400
-Received: by padhz1 with SMTP id hz1so6410624pad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 07:51:28 -0700 (PDT)
+	Wed, 24 Oct 2012 13:40:06 -0400
+Message-ID: <508827E6.3000703@candelatech.com> (sfid-20121024_194012_262771_E58B649F)
+Date: Wed, 24 Oct 2012 10:39:50 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <506B0628.6070201@openwrt.org>
-References: <1348756862-8788-1-git-send-email-sven@narfation.org>
-	<20121002133533.GA19403@pandem0nium>
-	<CAJ-VmomddCMRxx6Vh_i8AJsqYMUCyguUwFt_PQHpDY7-+Gs88A@mail.gmail.com>
-	<7670031.sYFb4t8Iqn@bentobox>
-	<506B0628.6070201@openwrt.org>
-Date: Wed, 3 Oct 2012 07:51:28 -0700
-Message-ID: <CAJ-Vmo=bu=j+=z_TAeE3--Sn5oAEbkEG-HDqK=6okR8xmmWpSQ@mail.gmail.com> (sfid-20121003_165140_374414_D0CBB9B4)
-Subject: Re: [ath9k-devel] [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL
- on AR9003
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Sven Eckelmann <sven@narfation.org>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	lindner_marek@yahoo.de
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/4] multi-channel/interface TX power handling
+References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>   <50880BD0.6080603@candelatech.com>  <1351093332.10709.5.camel@jlt4.sipsolutions.net>  <508817E0.5050504@candelatech.com> <1351099817.10709.6.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1351099817.10709.6.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 October 2012 08:20, Felix Fietkau <nbd@openwrt.org> wrote:
+On 10/24/2012 10:30 AM, Johannes Berg wrote:
+> On Wed, 2012-10-24 at 09:31 -0700, Ben Greear wrote:
+>
+>>> Yeah that'd be the only way, most scripts I've seen always just use the
+>>> interface anyway though? I'm not totally happy about this, maybe we
+>>> should iterate all interfaces? Not really sure ...
+>>
+>> Well, I think we should make setting the wiphy work...just iterate
+>> all interfaces.  Breaking backwards compatibility just causes too
+>> much problems for user-space, and many users may either not notice,
+>> or not be able to change whatever software is screwing up.
+>
+> Yeah I guess.
+>
+>> But, I think we also need some way to know if we can set individual
+>> vifs to different tx-power successfully.
+>>
+>> Maybe a /sys/class/netdev/wlan0/tx-power file to read current power could
+>> be added in this patch series?  Then user-space could key off of it's
+>> existence, and it would give a simple way to read the current tx-power
+>> settings (and possibly set it as well)...
+>
+> sysfs file sounds like about the worst possible way (except maybe for
+> procfs), an nl80211 feature flag could be worthwhile though :)
 
->> This sync cause 0x20 isn't handled anywhere and may be the cause of the
->> hang/crash. At least this is the symptom which can be fixed without crashing
->> the system.
-> I checked the AR933x datasheet, and it says that cause 0x20 is tx
-> descriptor corruption.
+Ok, a feature flag sounds fine to me.
 
-Ah hey, for Hornet they redefined those bits:
+Thanks,
+Ben
 
-5: MAC_TXC_CORRUPTION_FLAG_SYNC (TX descriptor integrity flag)
-6: INVALID_ADDRESS_ACCESS (invalid register access)
-
-Good catch. That's definitely something in the right direction.
+>
+> johannes
+>
 
 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Adrian
