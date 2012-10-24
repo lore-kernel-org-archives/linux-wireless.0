@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43467 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423155Ab2JaQYR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47230 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965182Ab2JXPVp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 12:24:17 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v4 0/2] driver for 60g Wilocity chip wil6210
-Date: Wed, 31 Oct 2012 18:23:53 +0200
-Message-ID: <1351700635-1462-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121031_172431_023370_2D18AC7C)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 24 Oct 2012 11:21:45 -0400
+Message-ID: <1351092137.10709.4.camel@jlt4.sipsolutions.net> (sfid-20121024_172211_161081_EB300A52)
+Subject: Re: [PATCH] mac80211: use blacklist for duplicate IE check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@chromium.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 24 Oct 2012 17:22:17 +0200
+In-Reply-To: <CAMcMvshEVhQspmd19WAtPWqD846d2zkBf3AX4ChU1b-AV5JbSQ@mail.gmail.com> (sfid-20121024_171954_890512_74605C77)
+References: <1351081297-14623-1-git-send-email-johannes@sipsolutions.net>
+	 <CAMcMvshEVhQspmd19WAtPWqD846d2zkBf3AX4ChU1b-AV5JbSQ@mail.gmail.com>
+	 (sfid-20121024_171954_890512_74605C77)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rework code around CONFIG_WIL6210_ISR_COR to use small helpers. Only patch 1/2 changed
+On Wed, 2012-10-24 at 08:19 -0700, Paul Stewart wrote:
 
-Vladimir Kondratiev (2):
-  wireless: Driver for 60GHz card wil6210
-  wireless: integrate wil6210 driver into build structure
+> On Wed, Oct 24, 2012 at 5:21 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>         From: Johannes Berg <johannes.berg@intel.com>
+>         
+>         Instead of the current whitelist which accepts duplicates
+>         only for the quiet and vendor IEs, use a blacklist of all
+>         IEs (that we currently parse) that can't be duplicated.
+>         
+>         This avoids detecting a beacon as corrupt in the future
+>         when new IEs are added that can be duplicated.
+>         
+>         Cc: Paul Stewart <pstew@chromium.org>
+>         Cc: stable@vger.kernel.org
+>         Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Paul Stewart <pstew@chromium.org>
 
- drivers/net/wireless/ath/Kconfig             |    8 +-
- drivers/net/wireless/ath/Makefile            |    1 +
- drivers/net/wireless/ath/ar5523/Kconfig      |    1 +
- drivers/net/wireless/ath/ath5k/Kconfig       |    1 +
- drivers/net/wireless/ath/ath6kl/Kconfig      |    1 +
- drivers/net/wireless/ath/ath9k/Kconfig       |    1 +
- drivers/net/wireless/ath/carl9170/Kconfig    |    1 +
- drivers/net/wireless/ath/wil6210/Kconfig     |   30 +
- drivers/net/wireless/ath/wil6210/Makefile    |   15 +
- drivers/net/wireless/ath/wil6210/cfg80211.c  |  821 ++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/debugfs.c   |  506 ++++++++++++++
- drivers/net/wireless/ath/wil6210/interrupt.c |  342 +++++++++
- drivers/net/wireless/ath/wil6210/main.c      |  400 +++++++++++
- drivers/net/wireless/ath/wil6210/netdev.c    |  159 +++++
- drivers/net/wireless/ath/wil6210/pcie_bus.c  |  239 +++++++
- drivers/net/wireless/ath/wil6210/sysfs.c     |  134 ++++
- drivers/net/wireless/ath/wil6210/txrx.c      |  821 ++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/txrx.h      |  352 ++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h   |  370 ++++++++++
- drivers/net/wireless/ath/wil6210/wmi.c       |  964 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/wmi.h       |  928 +++++++++++++++++++++++++
- 21 files changed, 6093 insertions(+), 2 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/Kconfig
- create mode 100644 drivers/net/wireless/ath/wil6210/Makefile
- create mode 100644 drivers/net/wireless/ath/wil6210/cfg80211.c
- create mode 100644 drivers/net/wireless/ath/wil6210/debugfs.c
- create mode 100644 drivers/net/wireless/ath/wil6210/interrupt.c
- create mode 100644 drivers/net/wireless/ath/wil6210/main.c
- create mode 100644 drivers/net/wireless/ath/wil6210/netdev.c
- create mode 100644 drivers/net/wireless/ath/wil6210/pcie_bus.c
- create mode 100644 drivers/net/wireless/ath/wil6210/sysfs.c
- create mode 100644 drivers/net/wireless/ath/wil6210/txrx.c
- create mode 100644 drivers/net/wireless/ath/wil6210/txrx.h
- create mode 100644 drivers/net/wireless/ath/wil6210/wil6210.h
- create mode 100644 drivers/net/wireless/ath/wil6210/wmi.c
- create mode 100644 drivers/net/wireless/ath/wil6210/wmi.h
+Your mail was HTML so it probably didn't make it to the list, but I'll
+take it as an endorsement, thanks for reviewing :)
 
--- 
-1.7.10.4
+johannes
+
 
