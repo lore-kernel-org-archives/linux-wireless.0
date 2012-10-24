@@ -1,75 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:65503 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200Ab2JHQBG (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:62688 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758785Ab2JXWEs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2012 12:01:06 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 1/4] ath9k: Ensure we set FTP_STOMP_LOW weight when WLAN is idle
-Date: Mon, 8 Oct 2012 21:30:51 +0530
-Message-ID: <1349712054-3963-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121008_180111_576614_60C629D6)
+	Wed, 24 Oct 2012 18:04:48 -0400
+Received: by mail-pa0-f46.google.com with SMTP id hz1so666076pad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 15:04:48 -0700 (PDT)
+Date: Wed, 24 Oct 2012 15:04:43 -0700
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
+Message-ID: <20121024220443.GA6723@shredder> (sfid-20121025_000452_890024_5E63B3DD)
+References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
+ <CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
+ <20121024194547.GA19060@shredder>
+ <CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, Oct 24, 2012 at 02:22:51PM -0700, Adrian Chadd wrote:
+> Hi,
+> 
+> can you please repeat this experiment but dump the TSF32/TSF64 fields
+> there as hexadecimal, rather than decimal?
 
-When WLAN is idle ensure we downgrade to FTP_STOMP_LOW weight
-(from STOMP_LOW) to provide more bandwidth for BT FTP profile.
-WLAN's idleness can be estimated by taking into account of the
-rx data packets and just ignore beacons, qos nullfunc etc.
+Sure.
 
-Also update bt_wait_time even if the chip is in NETWORK SLEEP
-mode. This should help BT throughput when WLAN is idle.
+> I'd like to see if this is an example of "bad TSF32->TSF64 promotion".
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/gpio.c |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c |    5 ++++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+Doesn't look like it:
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index d9ed141..c722ded 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -204,6 +204,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 
- 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 	if (sc->sc_ah->power_mode == ATH9K_PM_NETWORK_SLEEP) {
-+		btcoex->bt_wait_time += btcoex->btcoex_period;
- 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 		goto skip_hw_wakeup;
- 	}
-@@ -214,7 +215,6 @@ static void ath_btcoex_period_timer(unsigned long data)
- 		ath_detect_bt_priority(sc);
- 	is_btscan = test_bit(BT_OP_SCAN, &btcoex->op_flags);
- 
--	btcoex->bt_wait_time += btcoex->btcoex_period;
- 	if (btcoex->bt_wait_time > ATH_BTCOEX_RX_WAIT_TIME) {
- 		if (ar9003_mci_state(ah, MCI_STATE_NEED_FTP_STOMP) &&
- 		    (mci->num_pan || mci->num_other_acl))
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 83d16e7..a04028b 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1105,7 +1105,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		else
- 			rs.is_mybeacon = false;
- 
--		sc->rx.num_pkts++;
-+		if (ieee80211_is_data_present(hdr->frame_control) &&
-+		    !ieee80211_is_qos_nullfunc(hdr->frame_control))
-+			sc->rx.num_pkts++;
-+
- 		ath_debug_stat_rx(sc, &rs);
- 
- 		/*
--- 
-1.7.0.4
+[  147.074120] got beacon with ts         8CA003E9 from 00:03:7f:10:4e:1a at          477E063, now:          4746393. offset == 228560
+[  147.086876] got beacon with ts          4A381D8 from 00:03:7f:10:4e:24 at          477E5D6, now:          474956B. offset == 217195
+[  147.124375] got beacon with ts          4A38B4C from 00:03:7f:10:4d:d7 at          475A460, now:          47527D4. offset == 31884
+[  148.122624] got beacon with ts          4B32FAB from 00:03:7f:10:4e:0c at          487DF1F, now:          48462A1. offset == 228478
+[  148.152501] got beacon with ts          4B321F4 from 00:03:7f:10:4e:19 at          484D3A3, now:          484D750. offset == -941
+[  149.003626] got beacon with ts          4556180 from 64:70:02:0a:4e:a8 at          491CF79, now:          491D38B. offset == -1042
+[  150.159007] got beacon with ts          4D26D99 from 00:03:7f:10:4e:09 at          4A3EE9A, now:          4A37231. offset == 31849
+[  150.480503] got beacon with ts         8D1D045B from 00:03:7f:10:4e:11 at          4AFD5EC, now:          4A859D7. offset == 490517
+[  151.053502] got beacon with ts          474A653 from 64:70:02:0a:4e:a8 at          4B19427, now:          4B117C9. offset == 31838
+[  151.171133] got beacon with ts         8CDE845F from 00:03:7f:10:4e:1a at          4B2DFC6, now:          4B2E32B. offset == -869
+[  151.183751] got beacon with ts          4E20D1E from 00:03:7f:10:4e:24 at          4B2EF59, now:          4B3147D. offset == -9508
+[  151.224256] got beacon with ts          4E217D8 from 00:03:7f:10:4d:d7 at          4B3AF3C, now:          4B3B2A9. offset == -877
+[  151.248882] got beacon with ts          4E22473 from 00:03:7f:10:4e:2a at          4B78FA7, now:          4B412D9. offset == 228558
+[  152.216627] got beacon with ts          4F1A579 from 00:03:7f:10:4e:0c at          4C2D336, now:          4C2D685. offset == -847
+[  152.250129] got beacon with ts          4F1A5DE from 00:03:7f:10:4e:19 at          4C3D5DB, now:          4C3595D. offset == 31870
+[  152.528127] got beacon with ts         8D3C41C7 from 00:03:7f:10:4e:11 at          4C793B6, now:          4C7971C. offset == -870
+[  153.134004] got beacon with ts          6978669 from 00:03:7f:10:4d:f7 at          4D0D1EF, now:          4D0D575. offset == -902
+[  153.220143] got beacon with ts         8CFDC6F1 from 00:03:7f:10:4e:1a at          4D3A2B7, now:          4D225DB. offset == 97500
+[  154.256008] got beacon with ts          510EF18 from 00:03:7f:10:4e:09 at          4E1EE8D, now:          4E1F1E2. offset == -853
+[  154.582264] got beacon with ts         8D5B9700 from 00:03:7f:10:4e:11 at          4E6E883, now:          4E6EC38. offset == -949
+[  155.149631] got beacon with ts          4B32180 from 64:70:02:0a:4e:a8 at          4EF909C, now:          4EF9410. offset == -884
+[  155.253254] got beacon with ts          5208441 from 00:03:7f:10:4d:e7 at          4F1A58F, now:          4F128C8. offset == 31943
+[  155.267500] got beacon with ts         8D1D01C4 from 00:03:7f:10:4e:1a at          4F1D980, now:          4F15DC5. offset == 31675
+[  155.280261] got beacon with ts          52082F1 from 00:03:7f:10:4e:24 at          4F1E0E7, now:          4F18FA5. offset == 20802
 
+The TSF counter hasn't even wrapped 32 bits yet.
+
+Thomas
