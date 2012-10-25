@@ -1,175 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38958 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760343Ab2J2SuT (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:65093 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117Ab2JYWZv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 14:50:19 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC] wireless: add utility function to get P2P attribute
-Date: Mon, 29 Oct 2012 19:50:51 +0100
-Message-Id: <1351536651-3176-1-git-send-email-johannes@sipsolutions.net> (sfid-20121029_195023_823133_BFB0B605)
+	Thu, 25 Oct 2012 18:25:51 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1676654wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 15:25:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJ-Vmom0cg09C1D2Eh79K2zoOxL0Ry7g3+DC2iNGBFTa4+Zhzg@mail.gmail.com>
+References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
+ <CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
+ <20121024194547.GA19060@shredder> <CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
+ <CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
+ <20121024220813.GB6723@shredder> <CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
+ <CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com> <CAJ-Vmom0cg09C1D2Eh79K2zoOxL0Ry7g3+DC2iNGBFTa4+Zhzg@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 25 Oct 2012 15:25:28 -0700
+Message-ID: <CAG6hwVM_9TkKmMs0MyyiuO8TAUSLkBJTWiQ8+4AAa19YG+guCw@mail.gmail.com> (sfid-20121026_002554_731924_F1A690E4)
+Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Oct 25, 2012 at 1:42 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 24 October 2012 18:54, Adrian Chadd <adrian@freebsd.org> wrote:
+>
+>> Yup, found it. The firmware TSF code was treating the TSF like it was
+>> an older pre-11n NIC and only dealing with the low handful of bits.
+>> Thomas has verified my test image works.
+>>
+>> I'll go and see about pushing this into the tree so Sujith's next
+>> ath9k_htc drop will include this fix.
+>>
+>> Thanks for the debugging info Thomas!
+>
+> Thomas, is the TSF in the RX status descriptor actually 32 bits, or is
+> this a printing error?
 
-Parsing the P2P attributes can be tricky as their
-contents can be split across multiple (vendor) IEs.
-Thus, it's not possible to parse them like IEs (by
-returning a pointer to the data.) Instead, provide
-a function that copies the attribute data into a
-caller-provided buffer and returns the size needed
-(useful in case the buffer was too small.)
+Looking at the printk again, I'm pretty sure I'm just an idiot and the
+printed value is being truncated to 32 bits. Will test and verify the
+TSF wraps correctly again.
 
-Change-Id: I550267849bba2242320fdc0e68ce4a66bef6ca89
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |   19 ++++++++++
- net/wireless/util.c    |   99 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 118 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e417fca..b6ea621 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3602,6 +3602,25 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate);
-  */
- void cfg80211_unregister_wdev(struct wireless_dev *wdev);
- 
-+/**
-+ * cfg80211_get_p2p_attr - find and copy a P2P attribute from IE buffer
-+ * @ies: the input IE buffer
-+ * @len: the input length
-+ * @attr: the attribute ID to find
-+ * @buf: output buffer, can be %NULL if the data isn't needed, e.g.
-+ *	if the function is only called to get the needed buffer size
-+ * @bufsize: size of the output buffer
-+ *
-+ * The function finds a given P2P attribute in the (vendor) IEs and
-+ * copies its contents to the given buffer.
-+ *
-+ * The return value is a negative error code (-%EILSEQ or -%ENOENT) if
-+ * the data is malformed or the attribute can't be found (respectively),
-+ * or the length of the found attribute (which can be zero).
-+ */
-+unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
-+				   u8 attr, u8 *buf, unsigned int bufsize)
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 40eeb30..a2520e3 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -978,6 +978,105 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- }
- EXPORT_SYMBOL(cfg80211_calculate_bitrate);
- 
-+unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
-+				   u8 attr, u8 *buf, unsigned int bufsize)
-+{
-+	u8 *out = buf;
-+	u16 attr_remaining = 0;
-+	bool desired_attr = false;
-+	u16 desired_len = 0;
-+
-+	while (len > 0) {
-+		unsigned int iedatalen;
-+		unsigned int copy;
-+		const u8 *iedata;
-+
-+		if (len < 2)
-+			return -EILSEQ;
-+		iedatalen = ies[1];
-+		if (iedatalen + 2 > len)
-+			return -EILSEQ;
-+
-+		if (ies[0] != WLAN_EID_VENDOR_SPECIFIC)
-+			goto cont;
-+
-+		if (iedatalen < 4)
-+			goto cont;
-+
-+		iedata = ies + 2;
-+
-+		/* check WFA OUI, P2P subtype */
-+		if (iedata[0] != 0x50 || iedata[1] != 0x6f ||
-+		    iedata[2] != 0x9a || iedata[3] != 0x09)
-+			goto cont;
-+
-+		iedatalen -= 4;
-+		iedata += 4;
-+
-+		/* check attribute continuation into this IE */
-+		copy = min_t(unsigned int, attr_remaining, iedatalen);
-+		if (copy && desired_attr) {
-+			desired_len += copy;
-+			if (out) {
-+				memcpy(out, iedata, min(bufsize, copy));
-+				out += min(bufsize, copy);
-+				bufsize -= min(bufsize, copy);
-+			}
-+
-+
-+			if (copy == attr_remaining)
-+				return desired_len;
-+		}
-+
-+		attr_remaining -= copy;
-+		if (attr_remaining)
-+			goto cont;
-+
-+		iedatalen -= copy;
-+		iedata += copy;
-+
-+		while (iedatalen > 0) {
-+			u16 attr_len;
-+
-+			/* P2P attribute ID & size must fit */
-+			if (iedatalen < 3)
-+				return -EILSEQ;
-+			desired_attr = iedata[0] == attr;
-+			attr_len = get_unaligned_le16(iedata + 1);
-+			iedatalen -= 3;
-+			iedata += 3;
-+
-+			copy = min_t(unsigned int, attr_len, iedatalen);
-+
-+			if (desired_attr) {
-+				desired_len += copy;
-+				if (out) {
-+					memcpy(out, iedata, min(bufsize, copy));
-+					out += min(bufsize, copy);
-+					bufsize -= min(bufsize, copy);
-+				}
-+
-+				if (copy == attr_len)
-+					return desired_len;
-+			}
-+
-+			iedata += copy;
-+			iedatalen -= copy;
-+			attr_remaining = attr_len - copy;
-+		}
-+
-+ cont:
-+		len -= ies[1] + 2;
-+		ies += ies[1] + 2;
-+	}
-+
-+	if (attr_remaining && desired_attr)
-+		return -EILSEQ;
-+
-+	return -ENOENT;
-+}
-+EXPORT_SYMBOL(cfg80211_get_p2p_attr);
-+
- int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 				 u32 beacon_int)
- {
--- 
-1.7.10.4
-
+Thomas
