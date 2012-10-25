@@ -1,193 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:40178 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755918Ab2JPT3n (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:37405 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933678Ab2JYSrc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 15:29:43 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n3so4517271lbo.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2012 12:29:41 -0700 (PDT)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+	Thu, 25 Oct 2012 14:47:32 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH v2 2/4] ar5523: Add driver header file
-Date: Tue, 16 Oct 2012 21:29:27 +0200
-Message-Id: <1350415769-8271-3-git-send-email-pontus.fuchs@gmail.com> (sfid-20121016_212948_726254_43653556)
-In-Reply-To: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com>
-References: <1350415769-8271-1-git-send-email-pontus.fuchs@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, <chaoming_li@realsil.com.cn>
+Subject: [PATCH NEXT 08/17] rtlwifi: rtl8723ae: Add new driver - Part 6
+Date: Thu, 25 Oct 2012 13:46:37 -0500
+Message-Id: <1351190806-4258-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121025_204809_469343_209C2B76)
+In-Reply-To: <1351190806-4258-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1351190806-4258-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Header file containing structures and defines used by the ar5523
-driver.
+This patch is part 6 of the addition of files for a new driver to handle
+the Realtek RTL8723AE wireless device.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: <chaoming_li@realsil.com.cn>
 ---
- drivers/net/wireless/ath/ar5523/ar5523.h |  155 ++++++++++++++++++++++++++++++
- 1 file changed, 155 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ar5523/ar5523.h
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.c |  151 ++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.h |   39 +++++++
+ 2 files changed, 190 insertions(+)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.h
 
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.h b/drivers/net/wireless/ath/ar5523/ar5523.h
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/led.c b/drivers/net/wireless/rtlwifi/rtl8723ae/led.c
 new file mode 100644
-index 0000000..46efbf3
+index 0000000..9c4e1d8
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.h
-@@ -0,0 +1,155 @@
-+/*
-+ * Copyright (c) 2006
-+ *	Damien Bergamini <damien.bergamini@free.fr>
-+ * Copyright (c) 2007
-+ *	Christoph Hellwig <hch@lst.de>
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/led.c
+@@ -0,0 +1,151 @@
++/******************************************************************************
 + *
-+ * Copyright (c) 2006 Sam Leffler, Errno Consulting
-+ * Copyright (c) 2008-2009 Weongyo Jeong <weongyo@freebsd.org>
-+ * Copyright (c) 2012 Pontus Fuchs <pontus.fuchs@gmail.com>
++ * Copyright(c) 2009-2012  Realtek Corporation.
 + *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
 + *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
 +
-+#define AR5523_FLAG_PRE_FIRMWARE	(1 << 0)
-+#define AR5523_FLAG_ABG			(1 << 1)
++#include "../wifi.h"
++#include "../pci.h"
++#include "reg.h"
++#include "led.h"
 +
-+#define AR5523_FIRMWARE_FILE	"ar5523.bin"
++static void _rtl8723ae_init_led(struct ieee80211_hw *hw,
++				struct rtl_led *pled, enum rtl_led_pin ledpin)
++{
++	pled->hw = hw;
++	pled->ledpin = ledpin;
++	pled->ledon = false;
++}
 +
-+#define AR5523_CMD_TX_PIPE	0x01
-+#define	AR5523_DATA_TX_PIPE	0x02
-+#define	AR5523_CMD_RX_PIPE	0x81
-+#define	AR5523_DATA_RX_PIPE	0x82
++void rtl8723ae_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 ledcfg;
 +
-+#define ar5523_cmd_tx_pipe(dev) \
-+	usb_sndbulkpipe((dev), AR5523_CMD_TX_PIPE)
-+#define ar5523_data_tx_pipe(dev) \
-+	usb_sndbulkpipe((dev), AR5523_DATA_TX_PIPE)
-+#define ar5523_cmd_rx_pipe(dev) \
-+	usb_rcvbulkpipe((dev), AR5523_CMD_RX_PIPE)
-+#define ar5523_data_rx_pipe(dev) \
-+	usb_rcvbulkpipe((dev), AR5523_DATA_RX_PIPE)
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 "LedAddr:%X ledpin=%d\n", REG_LEDCFG2, pled->ledpin);
 +
-+#define	AR5523_DATA_TIMEOUT	10000
-+#define	AR5523_CMD_TIMEOUT	1000
++	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
 +
-+#define AR5523_TX_DATA_COUNT		8
-+#define AR5523_TX_DATA_RESTART_COUNT	2
-+#define AR5523_RX_DATA_COUNT		16
-+#define AR5523_RX_DATA_REFILL_COUNT	8
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		rtl_write_byte(rtlpriv,
++			       REG_LEDCFG2, (ledcfg & 0xf0) | BIT(5) | BIT(6));
++		break;
++	case LED_PIN_LED1:
++		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 "switch case not processed\n");
++		break;
++	}
++	pled->ledon = true;
++}
 +
-+#define AR5523_CMD_ID	1
-+#define AR5523_DATA_ID	2
++void rtl8723ae_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	u8 ledcfg;
 +
-+#define AR5523_TX_WD_TIMEOUT	(HZ * 2)
-+#define AR5523_FLUSH_TIMEOUT	(HZ * 3)
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 "LedAddr:%X ledpin=%d\n", REG_LEDCFG2, pled->ledpin);
 +
-+enum AR5523_flags {
-+	AR5523_HW_UP,
-+	AR5523_USB_DISCONNECTED,
-+	AR5523_CONNECTED
-+};
++	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
 +
-+struct ar5523_tx_cmd {
-+	struct ar5523		*ar;
-+	struct urb		*urb_tx;
-+	void			*buf_tx;
-+	void			*odata;
-+	int			olen;
-+	int			flags;
-+	int			res;
-+	struct completion	done;
-+};
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		ledcfg &= 0xf0;
++		if (pcipriv->ledctl.led_opendrain)
++			rtl_write_byte(rtlpriv, REG_LEDCFG2,
++				       (ledcfg | BIT(1) | BIT(5) | BIT(6)));
++		else
++			rtl_write_byte(rtlpriv, REG_LEDCFG2,
++				       (ledcfg | BIT(3) | BIT(5) | BIT(6)));
++		break;
++	case LED_PIN_LED1:
++		ledcfg &= 0x0f;
++		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 "switch case not processed\n");
++		break;
++	}
++	pled->ledon = false;
++}
 +
-+/* This struct is placed in tx_info->driver_data. It must not be larger
-+ *  than IEEE80211_TX_INFO_DRIVER_DATA_SIZE.
-+ */
-+struct ar5523_tx_data {
-+	struct list_head	list;
-+	struct ar5523		*ar;
-+	struct sk_buff		*skb;
-+	struct urb		*urb;
-+};
++void rtl8723ae_init_sw_leds(struct ieee80211_hw *hw)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
 +
-+struct ar5523_rx_data {
-+	struct	list_head	list;
-+	struct ar5523		*ar;
-+	struct urb		*urb;
-+	struct sk_buff		*skb;
-+};
++	_rtl8723ae_init_led(hw, &(pcipriv->ledctl.sw_led0), LED_PIN_LED0);
++	_rtl8723ae_init_led(hw, &(pcipriv->ledctl.sw_led1), LED_PIN_LED1);
++}
 +
-+struct ar5523 {
-+	struct usb_device	*dev;
-+	struct ieee80211_hw	*hw;
++static void _rtl8723ae_sw_led_control(struct ieee80211_hw *hw,
++				    enum led_ctl_mode ledaction)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_led *pLed0 = &(pcipriv->ledctl.sw_led0);
 +
-+	unsigned long		flags;
-+	struct mutex		mutex;
-+	struct workqueue_struct *wq;
++	switch (ledaction) {
++	case LED_CTL_POWER_ON:
++	case LED_CTL_LINK:
++	case LED_CTL_NO_LINK:
++		rtl8723ae_sw_led_on(hw, pLed0);
++		break;
++	case LED_CTL_POWER_OFF:
++		rtl8723ae_sw_led_off(hw, pLed0);
++		break;
++	default:
++		break;
++	}
++}
 +
-+	struct ar5523_tx_cmd	tx_cmd;
++void rtl8723ae_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
 +
-+	struct delayed_work	stat_work;
++	if ((ppsc->rfoff_reason > RF_CHANGE_BY_PS) &&
++	    (ledaction == LED_CTL_TX ||
++	     ledaction == LED_CTL_RX ||
++	     ledaction == LED_CTL_SITE_SURVEY ||
++	     ledaction == LED_CTL_LINK ||
++	     ledaction == LED_CTL_NO_LINK ||
++	     ledaction == LED_CTL_START_TO_LINK ||
++	     ledaction == LED_CTL_POWER_ON)) {
++		return;
++	}
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD, "ledaction %d,\n", ledaction);
++	_rtl8723ae_sw_led_control(hw, ledaction);
++}
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/led.h b/drivers/net/wireless/rtlwifi/rtl8723ae/led.h
+new file mode 100644
+index 0000000..2cb88e7
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/led.h
+@@ -0,0 +1,39 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2012  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
 +
-+	struct timer_list	tx_wd_timer;
-+	struct work_struct	tx_wd_work;
-+	struct work_struct	tx_work;
-+	struct list_head	tx_queue_pending;
-+	struct list_head	tx_queue_submitted;
-+	spinlock_t		tx_data_list_lock;
-+	wait_queue_head_t	tx_flush_waitq;
++#ifndef __RTL92CE_LED_H__
++#define __RTL92CE_LED_H__
 +
-+	/* Queued + Submitted TX frames */
-+	atomic_t		tx_nr_total;
++void rtl8723ae_init_sw_leds(struct ieee80211_hw *hw);
++void rtl8723ae_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl8723ae_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl8723ae_led_control(struct ieee80211_hw *hw,
++			   enum led_ctl_mode ledaction);
 +
-+	/* Submitted TX frames */
-+	atomic_t		tx_nr_pending;
-+
-+	void			*rx_cmd_buf;
-+	struct urb		*rx_cmd_urb;
-+
-+	struct ar5523_rx_data	rx_data[AR5523_RX_DATA_COUNT];
-+	spinlock_t		rx_data_list_lock;
-+	struct list_head	rx_data_free;
-+	struct list_head	rx_data_used;
-+	atomic_t		rx_data_free_cnt;
-+
-+	struct work_struct	rx_refill_work;
-+
-+	int			rxbufsz;
-+	u8			serial[16];
-+
-+	struct ieee80211_channel channels[14];
-+	struct ieee80211_rate	rates[12];
-+	struct ieee80211_supported_band band;
-+	struct ieee80211_vif	*vif;
-+};
-+
-+/* flags for sending firmware commands */
-+#define AR5523_CMD_FLAG_READ	(1 << 1)
-+#define AR5523_CMD_FLAG_MAGIC	(1 << 2)
-+
-+#define ar5523_dbg(ar, format, arg...) \
-+	dev_dbg(&(ar)->dev->dev, format, ## arg)
-+
-+/* On USB hot-unplug there can be a lot of URBs in flight and they'll all
-+ * fail. Instead of dealing with them in every possible place just surpress
-+ * any messages on USB disconnect.
-+ */
-+#define ar5523_err(ar, format, arg...) \
-+do { \
-+	if (!test_bit(AR5523_USB_DISCONNECTED, &ar->flags)) { \
-+		dev_err(&(ar)->dev->dev, format, ## arg); \
-+	} \
-+} while (0)
-+#define ar5523_info(ar, format, arg...)	\
-+	dev_info(&(ar)->dev->dev, format, ## arg)
++#endif
 -- 
-1.7.9.5
+1.7.10.4
 
