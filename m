@@ -1,80 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14506 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751492Ab2JAKzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Oct 2012 06:55:07 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"David S . Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCHv2] rtlwifi: rtl8192ce: rtl8192cu: use %*ph[C] to dump small buffers
-Date: Mon,  1 Oct 2012 13:54:59 +0300
-Message-Id: <1349088899-15863-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20121001_125512_339978_E9D2E655)
+Received: from he.sipsolutions.net ([78.46.109.217]:50751 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135Ab2JYLyM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2012 07:54:12 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TRM0p-00035t-Ns
+	for linux-wireless@vger.kernel.org; Thu, 25 Oct 2012 13:54:11 +0200
+Message-ID: <1351166088.10421.5.camel@jlt4.sipsolutions.net> (sfid-20121025_135420_205722_80A5E002)
+Subject: Re: [PATCH] mac80211: use non-atomic bitmap operation for local
+ variable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 25 Oct 2012 13:54:48 +0200
+In-Reply-To: <1351091487-17115-1-git-send-email-johannes@sipsolutions.net> (sfid-20121024_171059_502573_93C73B2D)
+References: <1351091487-17115-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121024_171059_502573_93C73B2D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/cam.c          |    7 ++-----
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    6 ++----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |    6 ++----
- 3 files changed, 6 insertions(+), 13 deletions(-)
+On Wed, 2012-10-24 at 17:11 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> For a local variable there's no need to use the atomic
+> set_bit() operation, use __set_bit() instead.
 
-diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-index 5b4b4d4..6ba9f80 100644
---- a/drivers/net/wireless/rtlwifi/cam.c
-+++ b/drivers/net/wireless/rtlwifi/cam.c
-@@ -52,11 +52,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
- 	u32 target_content = 0;
- 	u8 entry_i;
- 
--	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
--		 "key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
--		 key_cont_128[0], key_cont_128[1],
--		 key_cont_128[2], key_cont_128[3],
--		 key_cont_128[4], key_cont_128[5]);
-+	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %*ph\n",
-+			6, key_cont_128);
- 
- 	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
- 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 86d73b3..932780d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1918,10 +1918,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
- 				     (ratr_index << 28);
- 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
- 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
--		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
--		 ratr_index, ratr_bitmap,
--		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
--		 rate_mask[4]);
-+		 "Rate_index:%x, ratr_val:%x, %*phC\n",
-+		 ratr_index, ratr_bitmap, 5, rate_mask);
- 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
- 
- 	if (macid != 0)
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 4bbb711..7554501 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -2169,10 +2169,8 @@ void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
- 				      ratr_index << 28);
- 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
- 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
--		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
--		 ratr_index, ratr_bitmap,
--		 rate_mask[0], rate_mask[1], rate_mask[2], rate_mask[3],
--		 rate_mask[4]);
-+		 "Rate_index:%x, ratr_val:%x, %*phC\n",
-+		 ratr_index, ratr_bitmap, 5, rate_mask);
- 	rtl92c_fill_h2c_cmd(hw, H2C_RA_MASK, 5, rate_mask);
- }
- 
--- 
-1.7.10.4
+Applied
+
+johannes
 
