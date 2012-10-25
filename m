@@ -1,195 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60190 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753480Ab2JIU3j (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:40166 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750751Ab2JYXFK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Oct 2012 16:29:39 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so5630701pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2012 13:29:39 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 2/2] iw: Add new command to get statistical information of the mesh network
-Date: Tue,  9 Oct 2012 13:29:27 -0700
-Message-Id: <1349814567-29556-2-git-send-email-ashok@cozybit.com> (sfid-20121009_222942_029665_893BD0A0)
-In-Reply-To: <1349814567-29556-1-git-send-email-ashok@cozybit.com>
-References: <1349814567-29556-1-git-send-email-ashok@cozybit.com>
+	Thu, 25 Oct 2012 19:05:10 -0400
+Received: by mail-pa0-f46.google.com with SMTP id hz1so1503711pad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 16:05:10 -0700 (PDT)
+Date: Thu, 25 Oct 2012 16:05:05 -0700
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 2/3] mac80211: verify that skb data is present
+Message-ID: <20121025230505.GD20609@shredder> (sfid-20121026_010516_236820_8E5B960A)
+References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
+ <1351205200-18094-3-git-send-email-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1351205200-18094-3-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iw dev <devname> get mesh_stats [<stats>] gets statistics of the mesh network.
-It will use the new %NL80211_CMD_GET_MESH_STATS command.
+On Fri, Oct 26, 2012 at 12:46:39AM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> A number of places in the mesh code don't check that
+> the frame data is present and in the skb header when
+> trying to access. Add those checks and the necessary
+> pskb_may_pull() calls. This prevents accessing data
+> that doesn't actually exist.
+> 
+> To do this, export ieee80211_get_mesh_hdrlen() to be
+> able to use it in mac80211.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  include/net/cfg80211.h |    9 +++++++++
+>  net/mac80211/rx.c      |   43 +++++++++++++++++++++++++++++++++++++++----
+>  net/wireless/util.c    |    3 ++-
+>  3 files changed, 50 insertions(+), 5 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index f8cd4cf..7d5b600 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -2652,6 +2652,15 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
+>  unsigned int __attribute_const__ ieee80211_hdrlen(__le16 fc);
+>  
+>  /**
+> + * ieee80211_get_mesh_hdrlen - get mesh extension header length
+> + * @meshhdr: the mesh extension header, only the flags field
+> + *	(first byte) will be accessed
+> + * Returns the length of the extension header, which is always at
+> + * least 6 bytes and at most 18 if address 5 and 6 are present.
+> + */
+> +unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr);
+> +
+> +/**
+>   * DOC: Data path helpers
+>   *
+>   * In addition to generic utilities, cfg80211 also offers
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 99cdee1..6d1fd39 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -531,6 +531,11 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+>  
+>  		if (ieee80211_is_action(hdr->frame_control)) {
+>  			u8 category;
+> +
+> +			/* make sure category field is present */
+> +			if (rx->skb->len < IEEE80211_MIN_ACTION_SIZE)
+> +				return RX_DROP_MONITOR;
+> +
+>  			mgmt = (struct ieee80211_mgmt *)hdr;
+>  			category = mgmt->u.action.category;
+>  			if (category != WLAN_CATEGORY_MESH_ACTION &&
+> @@ -1892,6 +1897,20 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+>  
+>  	hdr = (struct ieee80211_hdr *) skb->data;
+>  	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+> +
+> +	/* make sure fixed part of mesh header is there, also checks skb len */
+> +	if (!pskb_may_pull(rx->skb, hdrlen + 6))
+> +		return RX_DROP_MONITOR;
+> +
+> +	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
+> +
+> +	/* make sure full mesh header is there, also checks skb len */
+> +	if (!pskb_may_pull(rx->skb,
+> +			   hdrlen + ieee80211_get_mesh_hdrlen(mesh_hdr)))
+> +		return RX_DROP_MONITOR;
+> +
+> +	/* reload pointers */
+> +	hdr = (struct ieee80211_hdr *) skb->data;
+>  	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
+>  
+>  	/* frame is in RMC, don't forward */
+> @@ -1913,11 +1932,19 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+>  		char *mpp_addr;
+>  
+>  		if (is_multicast_ether_addr(hdr->addr1)) {
+> -			mpp_addr = hdr->addr3;
+> -			proxied_addr = mesh_hdr->eaddr1;
+> +			if (mesh_hdr->flags & MESH_FLAGS_AE_A4) {
+> +				mpp_addr = hdr->addr3;
+> +				proxied_addr = mesh_hdr->eaddr1;
+> +			} else {
+> +				return RX_DROP_MONITOR;
+> +			}
+>  		} else {
+> -			mpp_addr = hdr->addr4;
+> -			proxied_addr = mesh_hdr->eaddr2;
+> +			if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
+> +				mpp_addr = hdr->addr4;
+> +				proxied_addr = mesh_hdr->eaddr2;
+> +			} else {
+> +				return RX_DROP_MONITOR;
+> +			}
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
----
- mesh.c |  117 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- util.c |    2 +
- 2 files changed, 119 insertions(+), 0 deletions(-)
+This will drop all non-proxied mcast or unicast data frames :)
 
-diff --git a/mesh.c b/mesh.c
-index 4fdad6a..32135ae 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -23,6 +23,14 @@ typedef struct _any_t {
- 	} u;
- } _any;
- 
-+/* describes a mesh stats */
-+struct mesh_stats_descr {
-+	const char *name;
-+	enum nl80211_mesh_stats mesh_stats_num;
-+	int (*nla_put_fn)(struct nl_msg*, int, _any*);
-+	void (*nla_print_fn)(struct nlattr *);
-+};
-+
- /* describes a mesh parameter */
- struct mesh_param_descr {
- 	const char *name;
-@@ -150,6 +158,38 @@ static void _print_s32_in_dBm(struct nlattr *a)
- 	printf("%d dBm", (int32_t) nla_get_u32(a));
- }
- 
-+/* The current mesh stats */
-+const static struct mesh_stats_descr _mesh_stats_descrs[] =
-+{
-+	{"mesh_fwded_mcast",
-+	NL80211_MESH_STATS_FWDED_MCAST,
-+	_my_nla_put_u32, _print_u32},
-+	{"mesh_fwded_unicast",
-+	NL80211_MESH_STATS_FWDED_UNICAST,
-+	_my_nla_put_u32, _print_u32},
-+	{"mesh_fwded_frames",
-+	NL80211_MESH_STATS_FWDED_FRAMES,
-+	_my_nla_put_u32, _print_u32},
-+	{"mesh_dropped_frames_ttl",
-+	NL80211_MESH_STATS_DROPPED_FRAMES_TTL,
-+	_my_nla_put_u32, _print_u32},
-+	{"mesh_dropped_frames_no_route",
-+	NL80211_MESH_STATS_DROPPED_FRAMES_NO_ROUTE,
-+	_my_nla_put_u32, _print_u32},
-+	{"mesh_dropped_frames_congestion",
-+	NL80211_MESH_STATS_DROPPED_FRAMES_CONGESTION,
-+	_my_nla_put_u32, _print_u32},
-+};
-+
-+static void print_all_mesh_stats_descr(void)
-+{
-+	int i;
-+
-+	printf("Possible mesh stats are:\n");
-+
-+	for (i = 0; i < ARRAY_SIZE(_mesh_stats_descrs); i++)
-+		printf(" - %s\n", _mesh_stats_descrs[i].name);
-+}
- 
- /* The current mesh parameters */
- const static struct mesh_param_descr _mesh_param_descrs[] =
-@@ -229,6 +269,19 @@ static void print_all_mesh_param_descr(void)
- 		printf(" - %s\n", _mesh_param_descrs[i].name);
- }
- 
-+static const struct mesh_stats_descr *find_mesh_stats(const char *name)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(_mesh_stats_descrs); i++) {
-+		if (strcmp(_mesh_stats_descrs[i].name, name) == 0)
-+			return _mesh_stats_descrs + i;
-+	}
-+
-+	print_all_mesh_stats_descr();
-+	return NULL;
-+}
-+
- static const struct mesh_param_descr *find_mesh_param(const char *name)
- {
- 	int i;
-@@ -351,6 +404,70 @@ static int print_mesh_param_handler(struct nl_msg *msg, void *arg)
- 	return NL_SKIP;
- }
- 
-+static int print_mesh_stats_handler(struct nl_msg *msg, void *arg)
-+{
-+	const struct mesh_stats_descr *mdescr = arg;
-+	struct nlattr *attrs[NL80211_ATTR_MAX + 1];
-+	struct nlattr *parent_attr;
-+	struct nlattr *mesh_stats[NL80211_MESH_STATS_ATTR_MAX + 1];
-+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-+
-+	/* locate NL80211_ATTR_MESH_STATS */
-+	nla_parse(attrs, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-+		  genlmsg_attrlen(gnlh, 0), NULL);
-+	parent_attr = attrs[NL80211_ATTR_MESH_STATS];
-+	if (!parent_attr)
-+		return -EINVAL;
-+
-+	if (nla_parse_nested(mesh_stats, NL80211_MESH_STATS_ATTR_MAX,
-+			     parent_attr, NULL))
-+		return -EINVAL;
-+
-+	/* Print all mesh stats if no parameter is passed */
-+	if (!mdescr) {
-+		int i;
-+
-+		for (i = 0; i < ARRAY_SIZE(_mesh_stats_descrs); i++) {
-+			mdescr = &_mesh_stats_descrs[i];
-+			printf("%s = ", mdescr->name);
-+			mdescr->nla_print_fn(mesh_stats[mdescr->mesh_stats_num]);
-+			printf("\n");
-+		}
-+		return NL_SKIP;
-+	}
-+
-+	/* Print the mesh stat requested */
-+	mdescr->nla_print_fn(mesh_stats[mdescr->mesh_stats_num]);
-+	printf("\n");
-+	return NL_SKIP;
-+}
-+
-+static int get_interface_meshstats(struct nl80211_state *state,
-+				   struct nl_cb *cb,
-+				   struct nl_msg *msg,
-+				   int argc, char **argv,
-+				   enum id_input id)
-+{
-+	const struct mesh_stats_descr *mdescr = NULL;
-+
-+	if (argc > 1)
-+		return 1;
-+
-+	if (argc == 1) {
-+		mdescr = find_mesh_stats(argv[0]);
-+		if (!mdescr)
-+			return 2;
-+	}
-+
-+	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM,
-+		  print_mesh_stats_handler, (void *)mdescr);
-+	return 0;
-+}
-+
-+COMMAND(get, mesh_stats, "[<stats>]",
-+	NL80211_CMD_GET_MESH_STATS, 0, CIB_NETDEV, get_interface_meshstats,
-+	"Retrieve mesh statistics (run command without any to see available ones).");
-+
- static int get_interface_meshparam(struct nl80211_state *state,
- 				   struct nl_cb *cb,
- 				   struct nl_msg *msg,
-diff --git a/util.c b/util.c
-index e40a2d5..6ceb9d4 100644
---- a/util.c
-+++ b/util.c
-@@ -236,6 +236,8 @@ static const char *commands[NL80211_CMD_MAX + 1] = {
- 	[NL80211_CMD_UNEXPECTED_4ADDR_FRAME] = "unexpected_4addr_frame",
- 	[NL80211_CMD_SET_NOACK_MAP] = "set_noack_map",
- 	[NL80211_CMD_CH_SWITCH_NOTIFY] = "ch_switch_notify",
-+	[NL80211_CMD_GET_MESH_STATS] = "get_mesh_stats",
-+
- };
- 
- static char cmdbuf[100];
--- 
-1.7.5.4
+It looks like this was already incorrect, but what if you only read the
+eaddrs if the right flag is set? Like:
 
+ 		if (is_multicast_ether_addr(hdr->addr1) &&
+		    mesh_hdr->flags & MESH_FLAGS_AE_A4) {
+			mpp_addr = hdr->addr3;
+			proxied_addr = mesh_hdr->eaddr1;
+ 		} else if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
+			mpp_addr = hdr->addr4;
+			proxied_addr = mesh_hdr->eaddr2;
+		}
+
+^ any data frames that get there should only be data anyway, not sure if
+you have Javier's patch adding that yet.
+
+>  		}
+>  
+>  		rcu_read_lock();
+> @@ -2354,6 +2381,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+>  		}
+>  		break;
+>  	case WLAN_CATEGORY_SELF_PROTECTED:
+> +		if (len < (IEEE80211_MIN_ACTION_SIZE +
+> +			   sizeof(mgmt->u.action.u.self_prot.action_code)))
+> +			break;
+> +
+>  		switch (mgmt->u.action.u.self_prot.action_code) {
+>  		case WLAN_SP_MESH_PEERING_OPEN:
+>  		case WLAN_SP_MESH_PEERING_CLOSE:
+> @@ -2372,6 +2403,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+>  		}
+>  		break;
+>  	case WLAN_CATEGORY_MESH_ACTION:
+> +		if (len < (IEEE80211_MIN_ACTION_SIZE +
+> +			   sizeof(mgmt->u.action.u.mesh_action.action_code)))
+> +			break;
+> +
+>  		if (!ieee80211_vif_is_mesh(&sdata->vif))
+>  			break;
+>  		if (mesh_action_is_path_sel(mgmt) &&
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index 45a09de..2762e83 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -309,7 +309,7 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
+>  }
+>  EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
+>  
+> -static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+> +unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+>  {
+>  	int ae = meshhdr->flags & MESH_FLAGS_AE;
+>  	/* 802.11-2012, 8.2.4.7.3 */
+> @@ -323,6 +323,7 @@ static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+>  		return 18;
+>  	}
+>  }
+> +EXPORT_SYMBOL(ieee80211_get_mesh_hdrlen);
+>  
+>  int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+>  			   enum nl80211_iftype iftype)
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
