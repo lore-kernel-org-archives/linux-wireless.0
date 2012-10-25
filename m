@@ -1,38 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:61201 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149Ab2J3Pba (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29489 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755323Ab2JYPbQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 11:31:30 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so556620iea.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 08:31:29 -0700 (PDT)
-Message-ID: <508FF2C2.4000900@lwfinger.net> (sfid-20121030_163134_042389_191F0D73)
-Date: Tue, 30 Oct 2012 10:31:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 25 Oct 2012 11:31:16 -0400
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/3] ath9k: Do not enable ANT diversity if ANT control bit is 0
+Date: Thu, 25 Oct 2012 20:54:50 +0530
+Message-ID: <1351178692-2054-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20121025_173120_844054_F98716A7)
 MIME-Version: 1.0
-To: Albert Pool <albertpool@solcon.nl>
-CC: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: rtl8192cu: ISY IWL 2000 USB ID added
-References: <508FCEA9.6000504@solcon.nl>
-In-Reply-To: <508FCEA9.6000504@solcon.nl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2012 07:57 AM, Albert Pool wrote:
-> I can't get the device to connect to my wifi, but it at least detects networks
-> with this patch.
-> Probably a clone of Belkin F7D1102 050d:1102. Its FCC ID is the same.
+RvR test is not good when ANT control bit is not set so
+enable ANT diversity only when ANT control bit is set.
 
-I prefer to see full operation before we add a new ID. I agree that having the 
-same FCC ID makes it seem that it is the same as the 050d:1102, I am bothered 
-that none of the Realtek drivers include this ID.
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   22 +++++++++++++++++-----
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    2 ++
+ 2 files changed, 19 insertions(+), 5 deletions(-)
 
-Before I ACK your patch, please download http://tinyurl.com/8by4obz, which is a 
-non-mac80211 driver for the RTL8192CU for 9/22/2011, and try it. I have patched 
-the Realtek version to build with kernels through 3.7 and to work with 64-bit 
-systems. Your USB ID is included in the table.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 189aeb2..d2e44c3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3630,15 +3630,21 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
+ 		regval &= (~AR_ANT_DIV_CTRL_ALL);
+ 		regval |= (value & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
+-		/* enable_lnadiv */
+-		regval &= (~AR_PHY_ANT_DIV_LNADIV);
+-		regval |= ((value >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
++
++		if (AR_SREV_9485(ah)) {
++			/* enable_lnadiv */
++			regval &= (~AR_PHY_ANT_DIV_LNADIV);
++			regval |= ((value >> 6) & 0x1) <<
++				   AR_PHY_ANT_DIV_LNADIV_S;
++		}
+ 
+ 		if (AR_SREV_9565(ah)) {
+-			if (ah->shared_chain_lnadiv) {
++			if (ah->shared_chain_lnadiv &&
++			    (value & AR_EEP_ANT_DIV_ENABLE)) {
++				regval |= AR_ANT_DIV_ENABLE;
+ 				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
+ 			} else {
+-				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
++				regval &= ~AR_ANT_DIV_ENABLE;
+ 				regval &= ~(1 << AR_PHY_ANT_SW_RX_PROT_S);
+ 			}
+ 		}
+@@ -3649,6 +3655,12 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		regval = REG_READ(ah, AR_PHY_CCK_DETECT);
+ 		regval &= (~AR_FAST_DIV_ENABLE);
+ 		regval |= ((value >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
++		if (ah->shared_chain_lnadiv &&
++		    (AR_SREV_9485(ah) || (AR_SREV_9565(ah) &&
++		    (value & AR_EEP_FAST_DIV_ENABLE))))
++			regval |= AR_FAST_DIV_ENABLE;
++		else
++			regval &= ~AR_FAST_DIV_ENABLE;
+ 		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
+ 
+ 		if (pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 9a48e3d..ecf5cc7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -299,6 +299,8 @@
+ #define AR_PHY_ANT_DIV_LNA2                     0x1
+ #define AR_PHY_ANT_DIV_LNA1                     0x2
+ #define AR_PHY_ANT_DIV_LNA1_PLUS_LNA2           0x3
++#define AR_EEP_ANT_DIV_ENABLE                   0x80
++#define AR_EEP_FAST_DIV_ENABLE                  0x40
+ 
+ #define AR_PHY_EXTCHN_PWRTHR1   (AR_AGC_BASE + 0x2c)
+ #define AR_PHY_EXT_CHN_WIN      (AR_AGC_BASE + 0x30)
+-- 
+1.7.4.1
 
