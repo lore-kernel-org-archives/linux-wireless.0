@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1957 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759094Ab2JKRXf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 13:23:35 -0400
-Message-ID: <5077008D.7030203@broadcom.com> (sfid-20121011_192339_707529_01A98BE3)
-Date: Thu, 11 Oct 2012 19:23:25 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] wireless: cfg80211: add peer-to-peer related
- definitions
-References: <1349965104-14475-1-git-send-email-arend@broadcom.com>
- <1349973674.13097.11.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1349973674.13097.11.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:52050 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760100Ab2JYTUC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2012 15:20:02 -0400
+Message-ID: <1351192833.10421.16.camel@jlt4.sipsolutions.net> (sfid-20121025_212007_102317_EB46E047)
+Subject: Re: [PATCH] mac80211: Don't inspect Sequence Control field on
+ control frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linville@tuxdriver.com, Javier Lopez <jlopex@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Thu, 25 Oct 2012 21:20:33 +0200
+In-Reply-To: <CAPjQAd9T5Ju3aEE1HeWT_5zLjW+rPQWkGQbh5Km9E1XunyFB9A@mail.gmail.com> (sfid-20121025_211316_966656_B5DA9711)
+References: <1351188618-11155-1-git-send-email-javier@cozybit.com>
+	 <1351191838.10421.15.camel@jlt4.sipsolutions.net>
+	 <CAPjQAd9T5Ju3aEE1HeWT_5zLjW+rPQWkGQbh5Km9E1XunyFB9A@mail.gmail.com>
+	 (sfid-20121025_211316_966656_B5DA9711)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2012 06:41 PM, Johannes Berg wrote:
-> On Thu, 2012-10-11 at 16:18 +0200, Arend van Spriel wrote:
->> The Peer-to-Peer IE is vendor-specific IE identified by WiFi Alliance
->> OUI and specific P2P OUI type. The payload of this IE consists of
->> so-called P2P attributes. This patch adds definitions for processing
->> these attributes.
->
-> Looks ok ... but why would a driver need to parse P2P stuff? For NoA for
-> example maybe?
+On Thu, 2012-10-25 at 12:12 -0700, Javier Cardona wrote:
 
-I did not yet go through a lot of the P2P code that is on my plate to 
-port upstream, but one item that is extracted in the part I already did 
-is the P2P listen channel. I just wanted to do this RFC before sending 
-out the brcmfmac code patches that actually is using it. This change 
-will be part of that patch series.
+> >>       hdr = (struct ieee80211_hdr *)rx->skb->data;
+> >>       fc = hdr->frame_control;
+> >> +
+> >> +     if (ieee80211_is_ctl(fc))
+> >> +             return RX_CONTINUE;
+> >
+> > Shouldn't that be "goto out"?
+> 
+> If we goto out, we'll increment the rx_packets counter, which
+> according to sta_info.h should only count MSDUs.
 
-Gr. AvS
+Ok.
+
+> > And it seems it should also incorporate the skb->len check here, rather than accessing the field before checking
+> > that it's present?
+> 
+> ieee80211_rx_h_check() zaps all skbs with len < 16, so I don't think
+> it's needed, no?
+
+But the sequence control field is at offset 22, I think?
+
+johannes
 
