@@ -1,107 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2966 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755710Ab2JVRgh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 13:36:37 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Hante Meuleman" <meuleman@broadcom.com>
-Subject: [PATCH 04/14] brcmfmac: remove redundant function
- brcmf_c_mkiovar_bsscfg
-Date: Mon, 22 Oct 2012 10:36:17 -0700
-Message-ID: <1350927387-25608-5-git-send-email-frankyl@broadcom.com> (sfid-20121022_193642_214619_54825147)
-In-Reply-To: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
-References: <1350927387-25608-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60610 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283Ab2JYW1j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2012 18:27:39 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so2330571pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 15:27:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAG6hwVM_9TkKmMs0MyyiuO8TAUSLkBJTWiQ8+4AAa19YG+guCw@mail.gmail.com>
+References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
+	<CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
+	<20121024194547.GA19060@shredder>
+	<CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
+	<CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
+	<20121024220813.GB6723@shredder>
+	<CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
+	<CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com>
+	<CAJ-Vmom0cg09C1D2Eh79K2zoOxL0Ry7g3+DC2iNGBFTa4+Zhzg@mail.gmail.com>
+	<CAG6hwVM_9TkKmMs0MyyiuO8TAUSLkBJTWiQ8+4AAa19YG+guCw@mail.gmail.com>
+Date: Thu, 25 Oct 2012 15:27:39 -0700
+Message-ID: <CAJ-Vmok3+ts43ow_Btj7sG3DfWNeD7O=gNWagJrSGkBWFvyQMQ@mail.gmail.com> (sfid-20121026_002742_587813_EF9760FF)
+Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
+From: Adrian Chadd <adrian@freebsd.org>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On 25 October 2012 15:25, Thomas Pedersen <thomas@cozybit.com> wrote:
 
-function brcmf_c_mkiovar_bsscfg became redundant with refactoring
-of firmware interface layer.
+>> Thomas, is the TSF in the RX status descriptor actually 32 bits, or is
+>> this a printing error?
+>
+> Looking at the printk again, I'm pretty sure I'm just an idiot and the
+> printed value is being truncated to 32 bits. Will test and verify the
+> TSF wraps correctly again.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 -
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   46 --------------------
- 2 files changed, 0 insertions(+), 48 deletions(-)
+Thanks.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 1589c1b..faa81ef 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -709,8 +709,6 @@ extern const struct bcmevent_name bcmevent_names[];
- 
- extern uint brcmf_c_mkiovar(char *name, char *data, uint datalen,
- 			  char *buf, uint len);
--extern uint brcmf_c_mkiovar_bsscfg(char *name, char *data, uint datalen,
--				   char *buf, uint buflen, s32 bssidx);
- 
- extern int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index a081e68..aa4f719 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -88,52 +88,6 @@ brcmf_c_mkiovar(char *name, char *data, uint datalen, char *buf, uint buflen)
- 	return len;
- }
- 
--uint
--brcmf_c_mkiovar_bsscfg(char *name, char *data, uint datalen,
--		       char *buf, uint buflen, s32 bssidx)
--{
--	const s8 *prefix = "bsscfg:";
--	s8 *p;
--	u32 prefixlen;
--	u32 namelen;
--	u32 iolen;
--	__le32 bssidx_le;
--
--	if (bssidx == 0)
--		return brcmf_c_mkiovar(name, data, datalen, buf, buflen);
--
--	prefixlen = (u32) strlen(prefix); /* lengh of bsscfg prefix */
--	namelen = (u32) strlen(name) + 1; /* lengh of iovar  name + null */
--	iolen = prefixlen + namelen + sizeof(bssidx_le) + datalen;
--
--	if ((u32)buflen < iolen) {
--		brcmf_dbg(ERROR, "buffer is too short\n");
--		return 0;
--	}
--
--	p = buf;
--
--	/* copy prefix, no null */
--	memcpy(p, prefix, prefixlen);
--	p += prefixlen;
--
--	/* copy iovar name including null */
--	memcpy(p, name, namelen);
--	p += namelen;
--
--	/* bss config index as first data */
--	bssidx_le = cpu_to_le32(bssidx);
--	memcpy(p, &bssidx_le, sizeof(bssidx_le));
--	p += sizeof(bssidx_le);
--
--	/* parameter buffer follows */
--	if (datalen)
--		memcpy(p, data, datalen);
--
--	return iolen;
--
--}
--
- bool brcmf_c_prec_enq(struct device *dev, struct pktq *q,
- 		      struct sk_buff *pkt, int prec)
- {
--- 
-1.7.6
+There's a few other TSF tweaks that could go in after this - to make
+things more correct around the wrap boundary.
 
 
+
+Adrian
