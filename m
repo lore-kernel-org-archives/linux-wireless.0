@@ -1,72 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52031 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110Ab2JBTAf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50618 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934929Ab2JYL2V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2012 15:00:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [RFC] brcmsmac: check return from dma_map_single
-Date: Tue,  2 Oct 2012 14:46:25 -0400
-Message-Id: <1349203585-16095-1-git-send-email-linville@tuxdriver.com> (sfid-20121002_210113_777189_02CCEFB2)
-In-Reply-To: <y>
-References: <y>
+	Thu, 25 Oct 2012 07:28:21 -0400
+Message-ID: <1351164533.10421.3.camel@jlt4.sipsolutions.net> (sfid-20121025_132824_856590_EDFBE38A)
+Subject: Re: [PATCH] mac80211: remove duplicate check in
+ ieee80211_rx_mgmt_beacon().
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Thu, 25 Oct 2012 13:28:53 +0200
+In-Reply-To: <1351152983-13871-1-git-send-email-ramirose@gmail.com> (sfid-20121025_081705_470514_2E00E8AC)
+References: <1351152983-13871-1-git-send-email-ramirose@gmail.com>
+	 (sfid-20121025_081705_470514_2E00E8AC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
+On Thu, 2012-10-25 at 10:16 +0200, Rami Rosen wrote:
+> This patch removes a duplicate identical check in ieee80211_rx_mgmt_beacon(), mlme.c.
+> There is no need to make again the same check for IEEE80211_HW_PS_NULLFUNC_STACK
+> flag. It should be done in the same block.
 
-dma_map_single can fail, so it's return value needs to be checked and
-handled accordingly.  Failure to do so is akin to failing to check the
-return from a kmalloc.
+Applied.
 
-http://linuxdriverproject.org/mediawiki/index.php/DMA_Mapping_Error_Analysis
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>
----
-I'm not too sure about the bail-out in dma_rxfill.  Perhaps the experts
-can suggest something better?
-
- drivers/net/wireless/brcm80211/brcmsmac/dma.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 5e53305..fa24c58 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -1079,6 +1079,10 @@ bool dma_rxfill(struct dma_pub *pub)
- 
- 		pa = dma_map_single(di->dmadev, p->data, di->rxbufsize,
- 				    DMA_FROM_DEVICE);
-+		if (dma_mapping_error(di->dmadev, pa)) {
-+			brcmu_pkt_buf_free_skb(p);
-+			break;
-+		}
- 
- 		/* save the free packet pointer */
- 		di->rxp[rxout] = p;
-@@ -1293,13 +1297,15 @@ int dma_txfast(struct dma_pub *pub, struct sk_buff *p, bool commit)
- 	if (len == 0)
- 		return 0;
- 
-+	/* get physical address of buffer start */
-+	pa = dma_map_single(di->dmadev, data, len, DMA_TO_DEVICE);
-+	if (dma_mapping_error(di->dmadev, pa))
-+		return -1;
-+
- 	/* return nonzero if out of tx descriptors */
- 	if (nexttxd(di, txout) == di->txin)
- 		goto outoftxd;
- 
--	/* get physical address of buffer start */
--	pa = dma_map_single(di->dmadev, data, len, DMA_TO_DEVICE);
--
- 	/* With a DMA segment list, Descriptor table is filled
- 	 * using the segment list instead of looping over
- 	 * buffers in multi-chain DMA. Therefore, EOF for SGLIST
--- 
-1.7.11.4
+johannes
 
