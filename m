@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47056 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727Ab2JOKAp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936Ab2JYWqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 06:00:45 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 00/11] BTCOEX fixes for AR9565
-Date: Mon, 15 Oct 2012 15:29:44 +0530
-Message-ID: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120048_358866_4E13C77B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 25 Oct 2012 18:46:09 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/3] mac80211: make sure data is accessible in EAPOL check
+Date: Fri, 26 Oct 2012 00:46:40 +0200
+Message-Id: <1351205200-18094-4-git-send-email-johannes@sipsolutions.net> (sfid-20121026_004615_351690_13DCD940)
+In-Reply-To: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
+References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Here is the set of fixes for AR9565 BTCoex issues
+The code to allow EAPOL frames even when the station
+isn't yet marked associated needs to check that the
+incoming frame is long enough and due to paged RX it
+also can't assume skb->data contains the right data,
+it must use skb_copy_bits(). Fix this to avoid using
+data that doesn't really exist.
 
--Rajkumar
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-Bala Shanmugam (2):
-  ath9k: Set appropriate bit for AR9565 in btc control register
-  ath9k: turn off RXIQ calibration while re-calibrating radio
-
-Rajkumar Manoharan (9):
-  ath9k_hw: Enable OSLA hw fix for AR9565
-  ath9k_hw: Fix selfgen chainmask for 9565
-  ath9k_hw: Disable MCI stat counter by default for AR9565
-  ath9k_hw: Fix frequent BT rx recovery
-  ath9k_hw: Fix max rx rate drop for AR9565
-  ath9k_hw: Configure new switch table for AR9565 BTCOEX
-  ath9k_hw: Set default MCI config for AR9565
-  ath9k: adjust duty cycle for FTP profile for AR9565
-  ath9k: Add new BT profile info A2DP_Voice
-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c  |  5 ++++
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  2 +-
- drivers/net/wireless/ath/ath9k/ar9003_mci.c    | 37 +++++++++++++++++++++++---
- drivers/net/wireless/ath/ath9k/ar9003_mci.h    |  2 ++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |  1 +
- drivers/net/wireless/ath/ath9k/btcoex.c        |  2 +-
- drivers/net/wireless/ath/ath9k/btcoex.h        |  1 +
- drivers/net/wireless/ath/ath9k/mci.c           |  2 +-
- drivers/net/wireless/ath/ath9k/mci.h           |  2 ++
- drivers/net/wireless/ath/ath9k/reg.h           | 11 +++++---
- drivers/net/wireless/ath/ath9k/wow.c           |  2 +-
- 11 files changed, 55 insertions(+), 12 deletions(-)
-
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6d1fd39..a5a3db8 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -888,14 +888,16 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+ 		 */
+ 		if (rx->sta && rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 		    ieee80211_is_data_present(hdr->frame_control)) {
+-			u16 ethertype;
+-			u8 *payload;
+-
+-			payload = rx->skb->data +
+-				ieee80211_hdrlen(hdr->frame_control);
+-			ethertype = (payload[6] << 8) | payload[7];
+-			if (cpu_to_be16(ethertype) ==
+-			    rx->sdata->control_port_protocol)
++			unsigned int hdrlen;
++			__be16 ethertype;
++
++			hdrlen = ieee80211_hdrlen(hdr->frame_control);
++
++			if (rx->skb->len < hdrlen + 8)
++				return RX_DROP_MONITOR;
++
++			skb_copy_bits(rx->skb, hdrlen + 6, &ethertype, 2);
++			if (ethertype == rx->sdata->control_port_protocol)
+ 				return RX_CONTINUE;
+ 		}
+ 
 -- 
-1.7.12.2
+1.7.10.4
 
