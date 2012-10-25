@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:47934 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932372Ab2JDRaV (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:34991 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932882Ab2JYGA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 13:30:21 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n3so595318lbo.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2012 10:30:20 -0700 (PDT)
+	Thu, 25 Oct 2012 02:00:29 -0400
+Received: by mail-ie0-f174.google.com with SMTP id k13so1780838iea.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 23:00:29 -0700 (PDT)
+Message-ID: <5088D579.9000703@lwfinger.net> (sfid-20121025_080042_789249_AF728C2E)
+Date: Thu, 25 Oct 2012 01:00:25 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1349366701-23154-1-git-send-email-sven@narfation.org>
-References: <1349366701-23154-1-git-send-email-sven@narfation.org>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Thu, 4 Oct 2012 10:29:59 -0700
-Message-ID: <CAB=NE6XrTVQuAqGqD2wjyjN6ynyfB+yHXqBcAhRgOn=njBpAuA@mail.gmail.com> (sfid-20121004_193033_191443_8C5317CB)
-Subject: Re: [PATCH] ath_hw: Use common REG_WRITE parameter order
-To: Sven Eckelmann <sven@narfation.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: Sujith Manoharan <c_manoha@qti.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Regression in 3.7-rc2 for b43 and b43legacy
+References: <50889F60.5090406@lwfinger.net> <20616.41414.398817.807498@gargle.gargle.HOWL>
+In-Reply-To: <20616.41414.398817.807498@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 4, 2012 at 9:05 AM, Sven Eckelmann <sven@narfation.org> wrote:
-> All defines for REG_WRITE in Atheros wireless drivers use the order "ah",
-> "register" and "value". hw.c is the only file using the order "ah", "value" and
-> "register". This inconsistent definition can easily lead to implementation
-> errors.
+On 10/24/2012 09:19 PM, Sujith Manoharan wrote:
+> Larry Finger wrote:
 >
-> Signed-off-by: Sven Eckelmann <sven@narfation.org>
+> This has been fixed:
+> https://patchwork.kernel.org/patch/1625871/
 
-Good catch! But can you resend specifying in your commit log that this
-change is a no-op? Also it may help the reader for you to git grep and
-show the other REG_WRITE() definitions on the other c files within the
-commit log.
+That patch did the trick.
 
-  Luis
+Thanks,
+
+Larry
+
+
