@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43738 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755583Ab2JPSPt (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:51620 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757204Ab2JYRLp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 14:15:49 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 8/8] iwlwifi: don't WARN when a non empty queue is disabled
-Date: Tue, 16 Oct 2012 20:16:20 +0200
-Message-Id: <1350411380-2391-9-git-send-email-johannes@sipsolutions.net> (sfid-20121016_201604_772925_7DEC2783)
-In-Reply-To: <1350411380-2391-1-git-send-email-johannes@sipsolutions.net>
-References: <1350411380-2391-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 25 Oct 2012 13:11:45 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h16so1814461oag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 10:11:45 -0700 (PDT)
+Message-ID: <508972CD.3020004@gmail.com> (sfid-20121025_191154_172074_354C8FBD)
+Date: Thu, 25 Oct 2012 11:11:41 -0600
+From: Henry Ptasinski <hptasins@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Sujith Manoharan <c_manoha@qti.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Henry Ptasinski <hptasins@gmail.com>
+Subject: Re: Regression in 3.7-rc2 for b43 and b43legacy [and ath9k]
+References: <50889F60.5090406@lwfinger.net> <20616.41414.398817.807498@gargle.gargle.HOWL> <5088D579.9000703@lwfinger.net>
+In-Reply-To: <5088D579.9000703@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 10/25/2012 12:00 AM, Larry Finger wrote:
+> On 10/24/2012 09:19 PM, Sujith Manoharan wrote:
+>> Larry Finger wrote:
+>>
+>> This has been fixed:
+>> https://patchwork.kernel.org/patch/1625871/
+>
+> That patch did the trick.
 
-This can happen when we shut down suddenly an interface.
+I hit the same bug with ath9k, and just finished bisecting it when I saw 
+this thread.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This patch works for me also.
+
 ---
- drivers/net/wireless/iwlwifi/pcie/tx.c |    8 --------
- 1 file changed, 8 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 39ead8c..db3efbb 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -480,11 +480,9 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, int fifo,
- void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	u16 rd_ptr, wr_ptr;
- 	u32 stts_addr = trans_pcie->scd_base_addr +
- 			SCD_TX_STTS_QUEUE_OFFSET(txq_id);
- 	static const u32 zero_val[4] = {};
--	int n_bd = trans_pcie->txq[txq_id].q.n_bd;
- 
- 	if (!test_and_clear_bit(txq_id, trans_pcie->queue_used)) {
- 		WARN_ONCE(1, "queue %d not used", txq_id);
-@@ -493,12 +491,6 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
- 
- 	iwl_txq_set_inactive(trans, txq_id);
- 
--	rd_ptr = iwl_read_prph(trans, SCD_QUEUE_RDPTR(txq_id)) & (n_bd - 1);
--	wr_ptr = iwl_read_prph(trans, SCD_QUEUE_WRPTR(txq_id));
--
--	WARN_ONCE(rd_ptr != wr_ptr, "queue %d isn't empty: [%d,%d]",
--		  txq_id, rd_ptr, wr_ptr);
--
- 	_iwl_write_targ_mem_dwords(trans, stts_addr,
- 				   zero_val, ARRAY_SIZE(zero_val));
- 
--- 
-1.7.10.4
-
+Henry Ptasinski
+henry@logout.com
