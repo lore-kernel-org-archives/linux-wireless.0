@@ -1,124 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay02.solcon.nl ([212.45.32.108]:44642 "EHLO
-	mailrelay02.solcon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821Ab2J2Q5x (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51989 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934816Ab2JYTD2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 12:57:53 -0400
-Message-ID: <508EB140.5010102@solcon.nl> (sfid-20121029_175757_351644_21A28FF9)
-Date: Mon, 29 Oct 2012 17:39:28 +0100
-From: Albert Pool <albertpool@solcon.nl>
-MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
-Subject: Unknown Realtek USB device
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 25 Oct 2012 15:03:28 -0400
+Message-ID: <1351191838.10421.15.camel@jlt4.sipsolutions.net> (sfid-20121025_210332_103208_142D1636)
+Subject: Re: [PATCH] mac80211: Don't inspect Sequence Control field on
+ control frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linville@tuxdriver.com, Javier Lopez <jlopex@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Thu, 25 Oct 2012 21:03:58 +0200
+In-Reply-To: <1351188618-11155-1-git-send-email-javier@cozybit.com> (sfid-20121025_201029_989398_BC8461E0)
+References: <1351188618-11155-1-git-send-email-javier@cozybit.com>
+	 (sfid-20121025_201029_989398_BC8461E0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2012-10-25 at 11:10 -0700, Javier Cardona wrote:
+> Per IEEE Std. 802.11-2012, Sec 8.2.4.4.1, the sequence Control field is
+> not present in control frames.  We noticed this problem when processing
+> Block Ack Requests.
+> 
 
-Can any of you help me identify the Realtek chip in this device so that the USB ID can be added to the right driver?
-It's a 802.11n USB nano dongle from ISY. I only have the dongle for short time, so I may not be able to test it myself if it takes some time.
-usb-devices and lsusb -v output is attached.
+Cc stable?
 
-Kind regards,
+>  	hdr = (struct ieee80211_hdr *)rx->skb->data;
+>  	fc = hdr->frame_control;
+> +
+> +	if (ieee80211_is_ctl(fc))
+> +		return RX_CONTINUE;
 
-Albert Pool
+Shouldn't that be "goto out"? And it seems it should also incorporate
+the skb->len check here, rather than accessing the field before checking
+that it's present?
 
-T:  Bus=01 Lev=01 Prnt=01 Port=03 Cnt=01 Dev#=  2 Spd=480 MxCh= 0
-D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
-P:  Vendor=050d ProdID=11f2 Rev=02.00
-S:  Manufacturer=Realtek
-S:  Product=802.11n WLAN Adapter
-S:  SerialNumber=00e04c000001
-C:  #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
-I:  If#= 0 Alt= 0 #EPs= 4 Cls=ff(vend.) Sub=ff Prot=ff Driver=(none)
-
-Bus 001 Device 003: ID 050d:11f2 Belkin Components
-Device Descriptor:
-   bLength                18
-   bDescriptorType         1
-   bcdUSB               2.00
-   bDeviceClass            0 (Defined at Interface level)
-   bDeviceSubClass         0
-   bDeviceProtocol         0
-   bMaxPacketSize0        64
-   idVendor           0x050d Belkin Components
-   idProduct          0x11f2
-   bcdDevice            2.00
-   iManufacturer           1 Realtek
-   iProduct                2 802.11n WLAN Adapter
-   iSerial                 3 00e04c000001
-   bNumConfigurations      1
-   Configuration Descriptor:
-     bLength                 9
-     bDescriptorType         2
-     wTotalLength           46
-     bNumInterfaces          1
-     bConfigurationValue     1
-     iConfiguration          0
-     bmAttributes         0x80
-       (Bus Powered)
-     MaxPower              500mA
-     Interface Descriptor:
-       bLength                 9
-       bDescriptorType         4
-       bInterfaceNumber        0
-       bAlternateSetting       0
-       bNumEndpoints           4
-       bInterfaceClass       255 Vendor Specific Class
-       bInterfaceSubClass    255 Vendor Specific Subclass
-       bInterfaceProtocol    255 Vendor Specific Protocol
-       iInterface              0
-       Endpoint Descriptor:
-         bLength                 7
-         bDescriptorType         5
-         bEndpointAddress     0x81  EP 1 IN
-         bmAttributes            2
-           Transfer Type            Bulk
-           Synch Type               None
-           Usage Type               Data
-         wMaxPacketSize     0x0200  1x 512 bytes
-         bInterval               0
-       Endpoint Descriptor:
-         bLength                 7
-         bDescriptorType         5
-         bEndpointAddress     0x02  EP 2 OUT
-         bmAttributes            2
-           Transfer Type            Bulk
-           Synch Type               None
-           Usage Type               Data
-         wMaxPacketSize     0x0200  1x 512 bytes
-         bInterval               0
-       Endpoint Descriptor:
-         bLength                 7
-         bDescriptorType         5
-         bEndpointAddress     0x03  EP 3 OUT
-         bmAttributes            2
-           Transfer Type            Bulk
-           Synch Type               None
-           Usage Type               Data
-         wMaxPacketSize     0x0200  1x 512 bytes
-         bInterval               0
-       Endpoint Descriptor:
-         bLength                 7
-         bDescriptorType         5
-         bEndpointAddress     0x84  EP 4 IN
-         bmAttributes            3
-           Transfer Type            Interrupt
-           Synch Type               None
-           Usage Type               Data
-         wMaxPacketSize     0x0040  1x 64 bytes
-         bInterval               1
-Device Qualifier (for other device speed):
-   bLength                10
-   bDescriptorType         6
-   bcdUSB               2.00
-   bDeviceClass            0 (Defined at Interface level)
-   bDeviceSubClass         0
-   bDeviceProtocol         0
-   bMaxPacketSize0        64
-   bNumConfigurations      1
-Device Status:     0x0000
-   (Bus Powered)
+johannes
 
