@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46127 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359Ab2JBOGD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52091 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760106Ab2JYTnM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2012 10:06:03 -0400
-Received: by pbbrr4 with SMTP id rr4so8799100pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Oct 2012 07:06:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20121002133533.GA19403@pandem0nium>
-References: <1348756862-8788-1-git-send-email-sven@narfation.org>
-	<1349174009-16496-1-git-send-email-sven@narfation.org>
-	<CAJ-VmontNVV4TyRO5kEM30T=OmfEN8YUciJSW=j_0HnbadF4JA@mail.gmail.com>
-	<20121002133533.GA19403@pandem0nium>
-Date: Tue, 2 Oct 2012 07:06:03 -0700
-Message-ID: <CAJ-VmomddCMRxx6Vh_i8AJsqYMUCyguUwFt_PQHpDY7-+Gs88A@mail.gmail.com> (sfid-20121002_160622_140170_CCC13DC5)
-Subject: Re: [PATCHv2] ath9k_hw: Handle AR_INTR_SYNC_HOST1_FATAL on AR9003
-From: Adrian Chadd <adrian@freebsd.org>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: Sven Eckelmann <sven@narfation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	lindner_marek@yahoo.de
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 25 Oct 2012 15:43:12 -0400
+Message-ID: <1351194222.10421.18.camel@jlt4.sipsolutions.net> (sfid-20121025_214315_401116_579F3B4B)
+Subject: Re: [PATCH] mac80211: Don't inspect Sequence Control field on
+ control frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linville@tuxdriver.com, Javier Lopez <jlopex@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Thu, 25 Oct 2012 21:43:42 +0200
+In-Reply-To: <1351188618-11155-1-git-send-email-javier@cozybit.com> (sfid-20121025_201029_989398_BC8461E0)
+References: <1351188618-11155-1-git-send-email-javier@cozybit.com>
+	 (sfid-20121025_201029_989398_BC8461E0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hm, there are still issues on Hornet?
+On Thu, 2012-10-25 at 11:10 -0700, Javier Cardona wrote:
+> Per IEEE Std. 802.11-2012, Sec 8.2.4.4.1, the sequence Control field is
+> not present in control frames.  We noticed this problem when processing
+> Block Ack Requests.
+> 
+> Signed-off-by: Javier Cardona <javier@cozybit.com>
+> Signed-off-by: Javier Lopez <jlopex@cozybit.com>
+> ---
+>  net/mac80211/rx.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index f975f64..bf54336 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1467,6 +1467,10 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+>  
+>  	hdr = (struct ieee80211_hdr *)rx->skb->data;
+>  	fc = hdr->frame_control;
+> +
+> +	if (ieee80211_is_ctl(fc))
 
-And no, you're not supposed to handle the interrupt per se.. it's a
-sign that things got upset and you can't trust anything from that
-point forward.
+Different question -- why check _is_ctl rather than !_is_data?
 
-Felix is right, it'd be good to log the register accesses that lead up to this.
+johannes
 
-
-
-Adrian
