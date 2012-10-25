@@ -1,52 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:59236 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750743Ab2JGKN5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51242 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752803Ab2JYOsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2012 06:13:57 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n3so2345042lbo.19
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 03:13:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20121007113348.42ba05fa@milhouse>
-References: <0C7D424D957547489E16A29D0D15433494C29E7FE8@AMKMS11.ad.turkuamk.fi>
-	<CAKoUArnsntysudq3CRric4gb3eUOLq2f9ppkUGxbqWhSZp7yhg@mail.gmail.com>
-	<5070944B.4010205@lwfinger.net>
-	<20121007113348.42ba05fa@milhouse>
-Date: Sun, 7 Oct 2012 12:13:55 +0200
-Message-ID: <CAKoUArkmH+tSj8HCTH_Y6FiFbSHbdWofFrxfs0gQ5o6h2k-YEA@mail.gmail.com> (sfid-20121007_121451_318483_B3ECA99E)
-Subject: Re: OpenFWWF for b43
-From: Rami Rosen <roszenrami@gmail.com>
-To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?ISO-8859-1?Q?Mikko_V=2E_Viinam=E4ki?=
-	<Mikko.Viinamaki@students.turkuamk.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 25 Oct 2012 10:48:13 -0400
+Message-ID: <1351176524.10421.8.camel@jlt4.sipsolutions.net> (sfid-20121025_164817_584309_F6B77824)
+Subject: Re: TR: Clear data transit during WPA negociation in case of
+ reassociation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?C=E9dric?= Debarge - ACKSYS
+	<cedric.debarge@acksys.fr>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Date: Thu, 25 Oct 2012 16:48:44 +0200
+In-Reply-To: <01e901cdb2b6$a41df0b0$ec59d210$@acksys.fr>
+References: <773DB8A82AB6A046AE0195C68612A31901411778@sbs2003.acksys.local>
+		 (sfid-20121018_094934_139014_F8666167) <1350996238.10322.7.camel@jlt4.sipsolutions.net>
+	 <01e901cdb2b6$a41df0b0$ec59d210$@acksys.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Cédric,
 
-Thanks a lot!
 
-> The bu3sch.de domain is no longer registered (by me). All services are available
-> under bues.ch now.
->
-> git clone git://git.bues.ch/git/b43-tools.git
->
+> 	PS : the attached file is not taken from the previous test but I get it in the same way.
 
-It seems that the "/git/" inside this URL in wrong.
+Thanks. It looks like a supplicant problem, since we see this in the
+log:
 
-I tried as suggested:
-And get:
-fatal: destination path 'b43-tools' already exists and is not an empty
-directory.
+nl80211: Associate (ifindex=5)
+  * bssid=90:a4:de:aa:42:94
+  * freq=5660
+  * SSID - hexdump_ascii(len=6):
+     63 64 74 65 73 74                                 cdtest          
+...
+  * pairwise=0xfac04
+  * group=0xfac04
+  * prev_bssid=00:1b:b1:58:f6:dd
 
-However:
-git clone git://git.bues.ch/b43-tools.git
-worked fine.
+...
 
-Regards,
-Rami Rosen
+FT: Stored MDIE and FTIE from (Re)Association Response - hexdump(len=0):
+Operating frequency changed from 5680 to 5660 MHz
+nl80211: Associated on 5660 MHz
+nl80211: Associated with 90:a4:de:aa:42:94
 
-http://ramirose.wix.com/ramirosen#!home/mainPage
+...
+
+wlan0: Associated to a new BSS: BSSID=90:a4:de:aa:42:94
+
+...
+
+wlan0: WPA: Association event - clear replay counter
+wlan0: WPA: Clear old PTK
+...
+wlan0: RX EAPOL from 90:a4:de:aa:42:94 to 90:a4:de:21:4f:53 (bridge)
+wlan0: RX EAPOL from 90:a4:de:aa:42:94
+...
+wlan0: Setting authentication timeout: 70 sec 0 usec
+EAPOL: Ignoring WPA EAPOL-Key frame in EAPOL state machines
+wlan0: IEEE 802.1X RX: version=2 type=3 length=117
+wlan0:   EAPOL-Key type=2
+wlan0:   key_info 0x8a (ver=2 keyidx=0 rsvd=0 Pairwise Ack)
+wlan0:   key_length=16 key_data_length=22
+  replay_counter - hexdump(len=8): 00 00 00 00 00 00 00 01
+  key_nonce - hexdump(len=32): dd 19 32 48 51 93 fb 35 a5 24 94 dc 28 0c ab 09 c9 a1 4d fd 3d f9 4c 95 13 8b 0a 76 fb 1a 07 d6
+  key_iv - hexdump(len=16): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  key_rsc - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_id (reserved) - hexdump(len=8): 00 00 00 00 00 00 00 00
+  key_mic - hexdump(len=16): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+WPA: RX EAPOL-Key - hexdump(len=121): 02 03 00 75 02 00 8a 00 10 00 00 00 00 00 00 00 01 dd 19 32 48 51 93 fb 35 a5 24 94 dc 28 0c ab 09 c9 a1 4d fd 3d f9 4c 95 13 8b 0a 76 fb 1a 07 d6 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 16 dd 14 00 0f ac 04 11 1c 5b ea 4c 1f 0d 2d da d6 00 51 a8 fe 6b 3f
+wlan0: State: ASSOCIATED -> 4WAY_HANDSHAKE
+wlan0: WPA: RX message 1 of 4-Way Handshake from 90:a4:de:aa:42:94 (ver=2)
+RSN: msg 1/4 key data - hexdump(len=22): dd 14 00 0f ac 04 11 1c 5b ea 4c 1f 0d 2d da d6 00 51 a8 fe 6b 3f
+WPA: PMKID in EAPOL-Key - hexdump(len=22): dd 14 00 0f ac 04 11 1c 5b ea 4c 1f 0d 2d da d6 00 51 a8 fe 6b 3f
+RSN: PMKID from Authenticator - hexdump(len=16): 11 1c 5b ea 4c 1f 0d 2d da d6 00 51 a8 fe 6b 3f
+RSN: matched PMKID - hexdump(len=16): 11 1c 5b ea 4c 1f 0d 2d da d6 00 51 a8 fe 6b 3f
+RSN: PMK from PMKSA cache - hexdump(len=32): [REMOVED]
+EAPOL: PMKSA caching was used - skip EAPOL
+EAPOL: Supplicant port status: Authorized
+
+Here it's already setting authorized, which seems wrong.
+
+Jouni and I just talked about it and he'll have a patch for you to test,
+I think.
+
+johannes
+
