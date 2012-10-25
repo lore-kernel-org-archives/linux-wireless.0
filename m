@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:40953 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750746Ab2J2TpF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 15:45:05 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1TSvGo-0002Db-Lv
-	for linux-wireless@vger.kernel.org; Mon, 29 Oct 2012 20:45:10 +0100
-Received: from 85-211-212-185.dynamic.dsl.as9105.com ([85-211-212-185.dynamic.dsl.as9105.com])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 20:45:10 +0100
-Received: from cliffhanger by 85-211-212-185.dynamic.dsl.as9105.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 20:45:10 +0100
-To: linux-wireless@vger.kernel.org
-From: Cliff McDiarmid <cliffhanger@gardener.com>
-Subject: Re: RTL8188SU
-Date: Mon, 29 Oct 2012 19:44:44 +0000 (UTC)
-Message-ID: <loom.20121029T182405-382@post.gmane.org> (sfid-20121029_204509_915346_DAAB9FF9)
-References: <loom.20121028T233054-8@post.gmane.org> <201210291257.02249.chunkeey@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:60174 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992606Ab2JYSsm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2012 14:48:42 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so969168bkc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 11:48:40 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Javier Cardona <javier@cozybit.com>
+Subject: Re: [PATCH] mac80211: Don't inspect Sequence Control field on control frames
+Date: Thu, 25 Oct 2012 20:48:33 +0200
+Cc: linville@tuxdriver.com, Javier Lopez <jlopex@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	johannes@sipsolutions.net
+References: <1351188618-11155-1-git-send-email-javier@cozybit.com>
+In-Reply-To: <1351188618-11155-1-git-send-email-javier@cozybit.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201210252048.34083.chunkeey@googlemail.com> (sfid-20121025_204900_960782_5B7AE27D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@...> writes:
-
-> I put Josh' rtl8192su patches into a git repository
-> <https://github.com/chunkeey/rtl8192su> and started
-> adding things. This driver already does support monitor
-> mode and can connect to an legacy accesspoint. However 
-> as you can see the TODO list that comes with the driver
-> is quite long and a lot of important stuff is on it too.
+On Thursday, October 25, 2012 08:10:18 PM Javier Cardona wrote:
+> Per IEEE Std. 802.11-2012, Sec 8.2.4.4.1, the sequence Control field is
+> not present in control frames.  We noticed this problem when processing
+> Block Ack Requests.
 > 
-> Regards,
+> Signed-off-by: Javier Cardona <javier@cozybit.com>
+> Signed-off-by: Javier Lopez <jlopex@cozybit.com>
+> ---
+>  net/mac80211/rx.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index f975f64..bf54336 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1467,6 +1467,10 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+>  
+>  	hdr = (struct ieee80211_hdr *)rx->skb->data;
+>  	fc = hdr->frame_control;
+> +
+> +	if (ieee80211_is_ctl(fc))
+> +		return RX_CONTINUE;
+> +
+>  	sc = le16_to_cpu(hdr->seq_ctrl);
+>  	frag = sc & IEEE80211_SCTL_FRAG;
+>  
+hmm, I see this function also calls skb_linearize() on said
+skb... Does anybody know of any possible side effects? Not
+that control frames (In fact, just BlockACK Requests come
+to my mind) usually so large...
 
-Thanks Christian
-
-Is it possible to use that driver with the rtl8188su?  I know the 8192su was
-replaced with the 8712u, but could I revert?
-
-regards
-
-Cliff
-
-
-
-
+Regards,
+	Chr 
