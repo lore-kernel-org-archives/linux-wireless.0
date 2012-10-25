@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44426 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752961Ab2JGWB0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2012 18:01:26 -0400
-Message-ID: <5071FBAB.3020909@hauke-m.de> (sfid-20121008_000131_036611_DD98B627)
-Date: Mon, 08 Oct 2012 00:01:15 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcma: do not initialize deactivated PCIe cores
-References: <1349043174-5371-1-git-send-email-hauke@hauke-m.de> <CACna6rw73feYKY7=5MyNjBeYjaC=Q+JmTeR7nfkmh9XxfKeJjw@mail.gmail.com>
-In-Reply-To: <CACna6rw73feYKY7=5MyNjBeYjaC=Q+JmTeR7nfkmh9XxfKeJjw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-we0-f174.google.com ([74.125.82.174]:60827 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743Ab2JYGRF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2012 02:17:05 -0400
+Received: by mail-we0-f174.google.com with SMTP id t9so669687wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 23:17:04 -0700 (PDT)
+From: Rami Rosen <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	Rami Rosen <ramirose@gmail.com>
+Subject: [PATCH] mac80211: remove duplicate check in ieee80211_rx_mgmt_beacon().
+Date: Thu, 25 Oct 2012 10:16:23 +0200
+Message-Id: <1351152983-13871-1-git-send-email-ramirose@gmail.com> (sfid-20121025_081711_207632_E7B9BE18)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2012 09:48 AM, Rafał Miłecki wrote:
-> 2012/10/1 Hauke Mehrtens <hauke@hauke-m.de>:
->> @@ -396,6 +391,11 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
->>
->>         bcma_info(bus, "PCIEcore in host mode found\n");
->>
->> +       if (bus->sprom.boardflags_lo & BCMA_CORE_PCI_BFL_NOPCI) {
->> +               bcma_info(bus, "This PCIE core is disabled and not working\n");
->> +               return;
->> +       }
->> +
-> 
-> I wonder if this bit is also valid for client mode PCIe core. Maybe
-> this check should be put directly in bcma_core_pci_init?
+This patch removes a duplicate identical check in ieee80211_rx_mgmt_beacon(), mlme.c.
+There is no need to make again the same check for IEEE80211_HW_PS_NULLFUNC_STACK
+flag. It should be done in the same block.
 
-I put it into the host mode code, because I do not want to interfere
-with some wrongly programed client mode pcie devices. I have just seen a
-SoC with a PCIe device in hostmode where this option was set. I would
-have no problem with moving this into bcma_core_pci_init if someone with
-some cards could test it before.
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
+---
+ net/mac80211/mlme.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Hauke
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 861e1c4..8898708 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2564,11 +2564,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 					  len - baselen, &elems,
+ 					  care_about_ies, ncrc);
+ 
+-	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
++	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
+ 		directed_tim = ieee80211_check_tim(elems.tim, elems.tim_len,
+ 						   ifmgd->aid);
+-
+-	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
+ 		if (directed_tim) {
+ 			if (local->hw.conf.dynamic_ps_timeout > 0) {
+ 				if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+-- 
+1.7.11.4
+
