@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755115Ab2JYHUr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 03:20:47 -0400
-Message-ID: <1351149676.10421.2.camel@jlt4.sipsolutions.net> (sfid-20121025_092050_757713_2FB0EEC7)
-Subject: Re: Regression in 3.7-rc2 for b43 and b43legacy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Sujith Manoharan <c_manoha@qti.qualcomm.com>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 25 Oct 2012 09:21:16 +0200
-In-Reply-To: <5088D579.9000703@lwfinger.net> (sfid-20121025_080031_863706_DB8CA858)
-References: <50889F60.5090406@lwfinger.net>
-	 <20616.41414.398817.807498@gargle.gargle.HOWL>
-	 <5088D579.9000703@lwfinger.net> (sfid-20121025_080031_863706_DB8CA858)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49921 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933024Ab2JYQyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2012 12:54:12 -0400
+Message-ID: <50896EA9.2090607@hauke-m.de> (sfid-20121025_185415_886824_F9C3B119)
+Date: Thu, 25 Oct 2012 18:54:01 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, m@bues.ch,
+	Aitor Cuartango <aitor.cuartango@gmail.com>
+Subject: Re: [PATCH 1/2] ssb: add PCI ID 0x4350
+References: <1351183169-13392-1-git-send-email-hauke@hauke-m.de> <CACna6rwYraTcddRHUh-5a_cQ4QkLiUKrLO5FYvnMneTtWpYEwg@mail.gmail.com>
+In-Reply-To: <CACna6rwYraTcddRHUh-5a_cQ4QkLiUKrLO5FYvnMneTtWpYEwg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-10-25 at 01:00 -0500, Larry Finger wrote:
-> On 10/24/2012 09:19 PM, Sujith Manoharan wrote:
-> > Larry Finger wrote:
-> >
-> > This has been fixed:
-> > https://patchwork.kernel.org/patch/1625871/
+On 10/25/2012 06:47 PM, Rafał Miłecki wrote:
+> 2012/10/25 Hauke Mehrtens <hauke@hauke-m.de>:
+>> 14e4:4350 is found on a Broadcom BCM43222.
 > 
-> That patch did the trick.
+> Huh, I expected BCM43222 to be BCMA based, interesting. Could you
+> provide ssb log for scanning (cores listing) and PHY&RADIO info?
+> 
 
-Sorry about that, I'll send a pull request including this patch soon.
+It is not my device, but Aitor found it, here are the details:
+http://comments.gmane.org/gmane.comp.embedded.openwrt.user/2031
 
-johannes
+Here is the log you requested, without the patches:
+...
+b43-pci-bridge 0000:00:02.0: setting latency timer to 64
+ssb: Found chip with id 0xA8D6, rev 0x00 and package 0x08
+ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x1E, vendor 0x4243)
+ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x10, vendor 0x4243)
+ssb: Core 2 found: PCI (cc 0x804, rev 0x0E, vendor 0x4243)
+ssb: chipcommon status is 0x40040
+ssb: Found rev 2 PMU (capabilities 0x044C3002)
+ssb: ERROR: PLL init unknown for device A8D6
+ssb: ERROR: PMU resource config unknown for device A8D6
+ssb: SPROM offset is 0x1000
+ssb: SPROM revision 8 detected.
+b43-phy0: Broadcom 43222 WLAN found (core revision 16)
+ssb: Sonics Silicon Backplane found on PCI device 0000:00:02.0
+ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+...
 
+Hauke
