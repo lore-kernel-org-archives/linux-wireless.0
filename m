@@ -1,28 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46438 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757963Ab2JaPyJ (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:43642 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992573Ab2JYUPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 11:54:09 -0400
-Message-ID: <1351698883.10946.3.camel@jlt4.sipsolutions.net> (sfid-20121031_165414_124168_284A5825)
-Subject: Re: [PATCH 3.7] mac80211: do not call ieee80211_configure_filter if
- no interfaces are up
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 31 Oct 2012 16:54:43 +0100
-In-Reply-To: <1351695034-74874-1-git-send-email-nbd@openwrt.org>
-References: <1351695034-74874-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 25 Oct 2012 16:15:13 -0400
+Received: by mail-wg0-f42.google.com with SMTP id fm10so50402wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 13:15:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1351195011-30148-1-git-send-email-johannes@sipsolutions.net>
+References: <1351195011-30148-1-git-send-email-johannes@sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 25 Oct 2012 13:14:52 -0700
+Message-ID: <CAPjQAd_J3WEwr=2Fs5us4BvJWKx6HhwnDFSey6S9NP8w6RXsvA@mail.gmail.com> (sfid-20121025_221518_310237_204FCF78)
+Subject: Re: [PATCH] wireless: drop invalid mesh address extension frames
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-31 at 15:50 +0100, Felix Fietkau wrote:
-> Drivers are not expected to handle it before drv_start has been called. It
-> will be called again after an interface has been brought up.
+Johannes,
 
-Applied, thanks.
+Thanks for removing those legacy formats.  See inline:
 
-johannes
+On Thu, Oct 25, 2012 at 12:56 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> The mesh header can have address extension by a 4th
+> or a 5th and 6th address, but never both. Drop such
+> frames in 802.11 -> 802.3 conversion.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/wireless/util.c |   17 ++++++++++++-----
+>  1 file changed, 12 insertions(+), 5 deletions(-)
+>
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index ef35f4e..7296ec0 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -312,18 +312,15 @@ EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
+>  static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+>  {
+>         int ae = meshhdr->flags & MESH_FLAGS_AE;
+> -       /* 7.1.3.5a.2 */
+> +       /* IEEE 802.11 - 8.2.4.7.3 */
+>         switch (ae) {
+> +       default:
+>         case 0:
+>                 return 6;
+>         case MESH_FLAGS_AE_A4:
+>                 return 12;
+>         case MESH_FLAGS_AE_A5_A6:
+>                 return 18;
+> -       case (MESH_FLAGS_AE_A4 | MESH_FLAGS_AE_A5_A6):
+> -               return 24;
+> -       default:
+> -               return 6;
+>         }
+>  }
+>
+> @@ -373,6 +370,11 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+>                         /* make sure meshdr->flags is on the linear part */
+>                         if (!pskb_may_pull(skb, hdrlen + 1))
+>                                 return -1;
+> +                       /* reserved */
+> +                       if ((meshdr->flags & MESH_FLAGS_AE) ==
+> +                                               (MESH_FLAGS_AE_A4 |
+> +                                                MESH_FLAGS_AE_A5_A6))
+> +                               return -1;
 
+You can filter more aggressively:  If we are here we know that it is a
+unicast data frame  (because FromDS == ToDS == 1).  In that case, the
+only valid address extension modes are 0 or MESH_FLAGS_AE_A5_A6 (see
+Table 8-14). IOW, you could do:
+
+> +                       if ((meshdr->flags & MESH_FLAGS_AE_A4)))
+> +                                   return -1
+
+>                         if (meshdr->flags & MESH_FLAGS_AE_A5_A6) {
+>                                 skb_copy_bits(skb, hdrlen +
+>                                         offsetof(struct ieee80211s_hdr, eaddr1),
+> @@ -397,6 +399,11 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+>                         /* make sure meshdr->flags is on the linear part */
+>                         if (!pskb_may_pull(skb, hdrlen + 1))
+>                                 return -1;
+> +                       /* reserved */
+> +                       if ((meshdr->flags & MESH_FLAGS_AE) ==
+> +                                               (MESH_FLAGS_AE_A4 |
+> +                                                MESH_FLAGS_AE_A5_A6))
+> +                               return -1;
+
+And a similar comment here: only valid address extension modes are 0
+or MESH_FLAGS_AE_A4, i.e.
+
+> +                       if ((meshdr->flags & MESH_FLAGS_AE_A5_A6)))
+> +                                   return -1
+
+>                         if (meshdr->flags & MESH_FLAGS_AE_A4)
+>                                 skb_copy_bits(skb, hdrlen +
+>                                         offsetof(struct ieee80211s_hdr, eaddr1),
+> --
+> 1.7.10.4
+>
+
+
+Cheers,
+
+Javier
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
