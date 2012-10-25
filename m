@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42762 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369Ab2JWMnZ (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:52789 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750821Ab2JYOvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Oct 2012 08:43:25 -0400
-Message-ID: <1350996238.10322.7.camel@jlt4.sipsolutions.net> (sfid-20121023_144329_495484_F540426A)
+	Thu, 25 Oct 2012 10:51:19 -0400
+Date: Thu, 25 Oct 2012 17:51:06 +0300
+From: Jouni Malinen <j@w1.fi>
+To: =?utf-8?Q?C=C3=A9dric?= Debarge - ACKSYS
+	<cedric.debarge@acksys.fr>
+Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
 Subject: Re: TR: Clear data transit during WPA negociation in case of
  reassociation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cedric Debarge <cedric.debarge@acksys.fr>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 23 Oct 2012 14:43:58 +0200
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901411778@sbs2003.acksys.local> (sfid-20121018_094934_139014_F8666167)
+Message-ID: <20121025145106.GA11453@w1.fi> (sfid-20121025_165122_565326_86DD19E6)
 References: <773DB8A82AB6A046AE0195C68612A31901411778@sbs2003.acksys.local>
-	 (sfid-20121018_094934_139014_F8666167)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+ <1350996238.10322.7.camel@jlt4.sipsolutions.net>
+ <01e901cdb2b6$a41df0b0$ec59d210$@acksys.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <01e901cdb2b6$a41df0b0$ec59d210$@acksys.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-10-18 at 09:30 +0200, Cedric Debarge wrote:
-> Hi all,
-> 
-> 	I am not sure if this is the right place to post my question. Please forgive me if not.
-> 
-> 	I am experimenting roaming between two APs with wpa_supplicant (WPA2 + EAP-TLS).
-> 	When WPA_Supplicant come back from an AP for which it has already cached the key, I saw that during WPA2 4 Handshake (in case of reassociation), data are sent through wpa_supplicant unencrypted.
-> 
-> 	As soon as the WPA2 successfully ends its negotiation, the data are sent encrypted back.
-> 
-> 	I attached to this email a Wireshark capture of the wireless transaction. Before this capture the frames were correctly encrypted. 
-> 	You can see the start of the WPA2 4 Handshake protocol at packet number 10.
-> 	During this 4 Handshake protocol you could see unencrypted iperf (UDP 5001) packets N°12/17/18/22/24.. until packet 55. 
-> 	4 Handshake protocol ends at packet 49.
-> 
-> 	Can you give me some clue how to work it out ?
+On Thu, Oct 25, 2012 at 03:42:56PM +0200, Cédric Debarge - ACKSYS wrote:
+> 	Please find attached the wpa_supplicant log file (it is quite big because of the EAP-TLS) you asked for.
 
-Can you show the wpa_supplicant debug log for this?
+Could you please test this with the following change in wpa_supplicant?
 
-johannes
 
+diff --git a/src/eapol_supp/eapol_supp_sm.c b/src/eapol_supp/eapol_supp_sm.c
+index 851cf49..f90fb62 100644
+--- a/src/eapol_supp/eapol_supp_sm.c
++++ b/src/eapol_supp/eapol_supp_sm.c
+@@ -1469,10 +1469,7 @@ void eapol_sm_notify_cached(struct eapol_sm *sm)
+ 	if (sm == NULL)
+ 		return;
+ 	wpa_printf(MSG_DEBUG, "EAPOL: PMKSA caching was used - skip EAPOL");
+-	sm->SUPP_PAE_state = SUPP_PAE_AUTHENTICATED;
+-	sm->suppPortStatus = Authorized;
+-	eapol_sm_set_port_authorized(sm);
+-	sm->portValid = TRUE;
++	sm->eapSuccess = TRUE;
+ 	eap_notify_success(sm->eap);
+ 	eapol_sm_step(sm);
+ }
+
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
