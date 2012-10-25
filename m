@@ -1,63 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:51284 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703Ab2JOKnO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52247 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934218Ab2JYUS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 06:43:14 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so2357640bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2012 03:43:12 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC] rtlwifi: fix in_ep = in_ep_num mishap in _rtl_usb_init_rx
-Date: Mon, 15 Oct 2012 12:42:58 +0200
-Cc: linux-wireless@vger.kernel.org, Joshua.Roys@gtri.gatech.edu
-References: <201210142213.56197.chunkeey@googlemail.com> <507B4CE5.2020104@lwfinger.net>
-In-Reply-To: <507B4CE5.2020104@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201210151242.58431.chunkeey@googlemail.com> (sfid-20121015_124317_737491_7F8277AF)
+	Thu, 25 Oct 2012 16:18:28 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] wireless: drop invalid mesh address extension frames
+Date: Thu, 25 Oct 2012 22:19:00 +0200
+Message-Id: <1351196340-30551-1-git-send-email-johannes@sipsolutions.net> (sfid-20121025_221831_429142_F49374F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, October 15, 2012 01:38:13 AM Larry Finger wrote:
-> On 10/14/2012 03:13 PM, Christian Lamparter wrote:
-> > in_ep and in_ep_num should not be the same as
-> > a device can have a different in_ep than "1".
-> >
-> > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> > Larry, do you know of any hardware which has two in endpoints?
-> 
-> The RTL8188CU has the following:
-> 
-> Bus 004 Device 002: ID 0bda:8723 Realtek Semiconductor Corp.
->          bEndpointAddress     0x81  EP 1 IN
->          bEndpointAddress     0x02  EP 2 OUT
->          bEndpointAddress     0x82  EP 2 IN
->          bEndpointAddress     0x03  EP 3 OUT
->          bEndpointAddress     0x83  EP 3 IN
->          bEndpointAddress     0x03  EP 3 OUT
->          bEndpointAddress     0x83  EP 3 IN
->          bEndpointAddress     0x03  EP 3 OUT
->          bEndpointAddress     0x83  EP 3 IN
-> 
-> My SU device has the same layout. It seems that only EP 
-> 1 is used exclusively for input operations.
+From: Johannes Berg <johannes.berg@intel.com>
 
-It's a bit weird that you have three IN and OUT 0x3 eps. Is this
-really true or is this a c&p error and your devices have more
-than one interface configuration?
+The mesh header can have address extension by a 4th
+or a 5th and 6th address, but never both. Drop such
+frames in 802.11 -> 802.3 conversion along with any
+frames that have the wrong extension.
 
-The endpoint configuration for my SU devices (both are the same)
-look like this:
-   Interface Descriptor:
-        bEndpointAddress     0x83  EP 3  IN  Bulk Data 512 bytes
-        bEndpointAddress     0x04  EP 4  OUT Bulk Data 512 bytes
-        bEndpointAddress     0x06  EP 6  OUT Bulk Data 512 bytes
-        bEndpointAddress     0x0d  EP 13 OUT Bulk Data 512 bytes
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/util.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-It looks like that we should parse the endpoint descriptor and
-get the first endpoint from there.
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index ef35f4e..387d6dc 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -312,18 +312,15 @@ EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
+ static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+ {
+ 	int ae = meshhdr->flags & MESH_FLAGS_AE;
+-	/* 7.1.3.5a.2 */
++	/* IEEE 802.11 - 8.2.4.7.3 */
+ 	switch (ae) {
++	default:
+ 	case 0:
+ 		return 6;
+ 	case MESH_FLAGS_AE_A4:
+ 		return 12;
+ 	case MESH_FLAGS_AE_A5_A6:
+ 		return 18;
+-	case (MESH_FLAGS_AE_A4 | MESH_FLAGS_AE_A5_A6):
+-		return 24;
+-	default:
+-		return 6;
+ 	}
+ }
+ 
+@@ -373,6 +370,8 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 			/* make sure meshdr->flags is on the linear part */
+ 			if (!pskb_may_pull(skb, hdrlen + 1))
+ 				return -1;
++			if (meshdr->flags & MESH_FLAGS_AE_A4)
++				return -1;
+ 			if (meshdr->flags & MESH_FLAGS_AE_A5_A6) {
+ 				skb_copy_bits(skb, hdrlen +
+ 					offsetof(struct ieee80211s_hdr, eaddr1),
+@@ -397,6 +396,8 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 			/* make sure meshdr->flags is on the linear part */
+ 			if (!pskb_may_pull(skb, hdrlen + 1))
+ 				return -1;
++			if (meshdr->flags & MESH_FLAGS_AE_A5_A6)
++				return -1;
+ 			if (meshdr->flags & MESH_FLAGS_AE_A4)
+ 				skb_copy_bits(skb, hdrlen +
+ 					offsetof(struct ieee80211s_hdr, eaddr1),
+-- 
+1.7.10.4
 
-Regards,
-	Chr
