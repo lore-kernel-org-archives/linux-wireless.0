@@ -1,60 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2149 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750916Ab2JSIAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 04:00:52 -0400
-Message-ID: <508108AB.2010801@broadcom.com> (sfid-20121019_100056_543372_F0519641)
-Date: Fri, 19 Oct 2012 10:00:43 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Bing Zhao" <bzhao@marvell.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Sam Leffler" <sleffler@chromium.org>,
-	"Amitkumar Karwar" <akarwar@marvell.com>
-Subject: Re: [PATCH v6 3/6] cfg80211: add scan flag to indicate its
- priority
-References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
- <1350542071-26498-4-git-send-email-bzhao@marvell.com>
- <507FAF19.6030500@broadcom.com>
- <477F20668A386D41ADCC57781B1F7043083B80E682@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F7043083B80E682@SC-VEXCH1.marvell.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:49573 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760135Ab2JYSrE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2012 14:47:04 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH NEXT 00/17] rtlwifi: Add new driver for RTL8723AE
+Date: Thu, 25 Oct 2012 13:46:29 -0500
+Message-Id: <1351190806-4258-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121025_204717_268155_D4D34370)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2012 08:44 PM, Bing Zhao wrote:
-> Hi Arend,
->
->>> From: Sam Leffler <sleffler@chromium.org>
->>>
->>> Add NL80211_SCAN_FLAG_LOW_PRIORITY flag support. It tells drivers
->>> that this is a low priority scan request, so that they can take
->>> necessary action.
->>> Drivers need to advertise low priority scan capability during
->>> registration.
->>
->> I missed the previous versions of this patch series, but what 'necessary
->> action' is needed for a low priority scan request. Patch #6 gives a clue
->> so my assumption is that a low prio scan will be *aborted* when
->> associated and data traffic is available. Is that correct? Could it also
->
-> It's up to the driver to decide and implement the 'low priority scan' feature.
-> The driver can defer or abort the low priority scan request depending on various conditions.
-> For example, when heavy data traffic is on going you may want to abort the scan.
+This set of patches is based on the wireless-next tree.
 
-Thanks, Bing
+The first patch modifies driver rtl8192ce to work with the newest set of
+RTL8188CE-VL devices, which have built-in Bluetooth capability. This
+patch was previously submitted but was discarded because it had a merge
+problem.
 
-I always find such answer tricky. Seeing where this is coming from I 
-suspect there is some high-level expectation from user-space 
-perspective. I suspect it is something like: A low-prio scan should not 
-affect a data transfer (iperf, nfs i/o, etc.) noticably.
+The rest of the patches in this set introduce a new driver for the rtlwifi
+family that handles the RTL8723AE device.
 
-Thanks for collecting the reading material ;-)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Gr. AvS
+Larry Finger (17):
+  rtlwifi: rtl8192c: rtl8192ce: Add support for B-CUT version of
+    RTL8188CE
+  rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192se: rtl8192de:
+    Shorten some variable names
+  rtlwifi: rtl8723ae: Add new driver - Part 1
+  rtlwifi: rtl8723ae: Add new driver - Part 2
+  rtlwifi: rtl8723ae: Add new driver - Part 3
+  rtlwifi: rtl8723ae: Add new driver - Part 4
+  rtlwifi: rtl8723ae: Add new driver - Part 5
+  rtlwifi: rtl8723ae: Add new driver - Part 6
+  rtlwifi: rtl8723ae: Add new driver - Part 7
+  rtlwifi: rtl8723ae: Add new driver - Part 8
+  rtlwifi: rtl8723ae: Add new driver - Part 9
+  rtlwifi: rtl8723ae: Add new driver - Part 10
+  rtlwifi: rtl8723ae: Add new driver - Part 11
+  rtlwifi: rtl8723ae: Add new driver - Part 12
+  rtlwifi: rtl8723ae: Add new driver - Part 13
+  rtlwifi: Modify files for addition of rtl8723ae
+  rtlwifi: rtl8192ce: rtl8192cu: rtl8192se: rtl81723ae: Turn on
+    building of the new driver
 
+ drivers/net/wireless/rtlwifi/Kconfig               |   11 +
+ drivers/net/wireless/rtlwifi/Makefile              |    4 +-
+ drivers/net/wireless/rtlwifi/base.c                |   24 +
+ drivers/net/wireless/rtlwifi/base.h                |    2 +
+ drivers/net/wireless/rtlwifi/debug.h               |    2 +
+ drivers/net/wireless/rtlwifi/pci.c                 |   20 +-
+ drivers/net/wireless/rtlwifi/pci.h                 |    2 +
+ drivers/net/wireless/rtlwifi/rc.c                  |    3 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  227 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   88 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |    3 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.c        |   30 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   87 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |    2 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/rf.c        |   23 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |   46 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.c        |   30 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   10 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       |   25 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |   22 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   95 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |   65 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/rf.c        |   18 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |   39 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |   89 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |   64 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/rf.c        |   11 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   21 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/Makefile    |   22 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/btc.h       |   41 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/def.h       |  163 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |  920 ++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |  149 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |  745 ++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |  101 +
+ .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c    |  542 +++++
+ .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h    |  160 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   | 1786 +++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |  151 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        | 2380 ++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.h        |   73 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.c       |  151 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.h       |   39 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       | 2044 +++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |  224 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c    |  109 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h    |  322 +++
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c |  129 ++
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h |   98 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/reg.h       | 2097 +++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.c        |  505 +++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.h        |   43 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |  387 ++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.h        |   37 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/table.c     |  738 ++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/table.h     |   50 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |  670 ++++++
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |  725 ++++++
+ drivers/net/wireless/rtlwifi/stats.c               |  268 +++
+ drivers/net/wireless/rtlwifi/stats.h               |   46 +
+ drivers/net/wireless/rtlwifi/wifi.h                |  161 +-
+ 63 files changed, 16579 insertions(+), 572 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/btc.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/def.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/hw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/led.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/pwrseqcmd.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/reg.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/sw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/table.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8723ae/trx.h
+ create mode 100644 drivers/net/wireless/rtlwifi/stats.c
+ create mode 100644 drivers/net/wireless/rtlwifi/stats.h
+
+-- 
+1.7.10.4
 
