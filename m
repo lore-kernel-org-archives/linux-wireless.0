@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:55784 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752012Ab2JGHsi convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21894 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752803Ab2JYLxC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2012 03:48:38 -0400
-Received: by mail-we0-f174.google.com with SMTP id t9so1933721wey.19
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 00:48:36 -0700 (PDT)
+	Thu, 25 Oct 2012 07:53:02 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 1/4] ath9k_hw: Enable hw PLL power save for AR9565
+Date: Thu, 25 Oct 2012 17:16:51 +0530
+Message-ID: <1351165614-12691-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121025_135308_173533_149A08A5)
 MIME-Version: 1.0
-In-Reply-To: <1349043174-5371-1-git-send-email-hauke@hauke-m.de>
-References: <1349043174-5371-1-git-send-email-hauke@hauke-m.de>
-Date: Sun, 7 Oct 2012 09:48:36 +0200
-Message-ID: <CACna6rw73feYKY7=5MyNjBeYjaC=Q+JmTeR7nfkmh9XxfKeJjw@mail.gmail.com> (sfid-20121007_094841_434295_5B7B5697)
-Subject: Re: [PATCH] bcma: do not initialize deactivated PCIe cores
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/10/1 Hauke Mehrtens <hauke@hauke-m.de>:
-> @@ -396,6 +391,11 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
->
->         bcma_info(bus, "PCIEcore in host mode found\n");
->
-> +       if (bus->sprom.boardflags_lo & BCMA_CORE_PCI_BFL_NOPCI) {
-> +               bcma_info(bus, "This PCIE core is disabled and not working\n");
-> +               return;
-> +       }
-> +
+This reduced the power consumption to half in full and network sleep.
 
-I wonder if this bit is also valid for client mode PCIe core. Maybe
-this check should be put directly in bcma_core_pci_init?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c           | 4 ++--
+ drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 0a6b7a3..0693cd9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -328,9 +328,9 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       ar9565_1p0_Modes_lowest_ob_db_tx_gain_table);
+ 
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdes,
+-			       ar9565_1p0_pciephy_pll_on_clkreq_disable_L1);
++			       ar9565_1p0_pciephy_clkreq_disable_L1);
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
+-			       ar9565_1p0_pciephy_pll_on_clkreq_disable_L1);
++			       ar9565_1p0_pciephy_clkreq_disable_L1);
+ 
+ 		INIT_INI_ARRAY(&ah->iniModesFastClock,
+ 				ar9565_1p0_modes_fast_clock);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+index 843e79f..0c2ac0c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+@@ -768,9 +768,9 @@ static const u32 ar9565_1p0_Modes_lowest_ob_db_tx_gain_table[][5] = {
+ 	{0x00016054, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ };
+ 
+-static const u32 ar9565_1p0_pciephy_pll_on_clkreq_disable_L1[][2] = {
++static const u32 ar9565_1p0_pciephy_clkreq_disable_L1[][2] = {
+ 	/* Addr      allmodes  */
+-	{0x00018c00, 0x18212ede},
++	{0x00018c00, 0x18213ede},
+ 	{0x00018c04, 0x000801d8},
+ 	{0x00018c08, 0x0003780c},
+ };
 -- 
-Rafał
+1.8.0
+
