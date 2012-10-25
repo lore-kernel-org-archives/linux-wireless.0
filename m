@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ultra-3eti.com ([173.13.207.162]:53752 "EHLO
-	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935257Ab2JXRdX convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:51596 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757842Ab2JYDxd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 13:33:23 -0400
-From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-To: Thomas Pedersen <thomas@cozybit.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Javier Cardona" <javier@cozybit.com>
-Subject: RE: 802.11s bug in ieee80211_rx_h_mesh_fwding() result in bogus MAC
- in mpp table
-Date: Wed, 24 Oct 2012 17:33:19 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D075EC234@RockMX01.rock.corp> (sfid-20121024_193328_201351_3F329793)
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D075EC214@RockMX01.rock.corp>
- <CAG6hwVNuijKqzNnyQMS9dxvRy3YdxuY_WkJ+k5L18yXc7jHe_Q@mail.gmail.com>
-In-Reply-To: <CAG6hwVNuijKqzNnyQMS9dxvRy3YdxuY_WkJ+k5L18yXc7jHe_Q@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 24 Oct 2012 23:53:33 -0400
+Received: by mail-ob0-f174.google.com with SMTP id uo13so1177150obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 20:53:32 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAHbMyCa_yUO1XMFRrxAhDCkO+0T1Z5HaQgjhAK6cK2J729O7Cw@mail.gmail.com>
+References: <CAHbMyCb7S1faT_GH8KBag0SVX+7uhC-4qLJOR-DhStpzSMNDqQ@mail.gmail.com>
+	<1349099476.4315.12.camel@dcbw.foobar.com>
+	<CAHbMyCa_yUO1XMFRrxAhDCkO+0T1Z5HaQgjhAK6cK2J729O7Cw@mail.gmail.com>
+Date: Thu, 25 Oct 2012 05:53:32 +0200
+Message-ID: <CAHbMyCYbhennrBXFzrJCp356D5T2FMkHg9zQgOza8_JSq+u=Eg@mail.gmail.com> (sfid-20121025_055336_825673_2F922D60)
+Subject: Re: [Kernel Bug] 3.6, wpasupplicant 1.0, broadcom-sta 6.20.55.19
+From: Jasmine Hassan <jasmine.aura@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't know how to patch and submit.
-Since the fix is simple, would you please patch it?
+On Sun, Oct 21, 2012 at 11:19 AM, Jasmine Hassan <jasmine.aura@gmail.com> wrote:
+> However, scan results seem quite limited. That is, discovered BSSID's are
+> noticeably fewer compared to results on 3.2.x-3.5.x, either via
+> `/sbin/iwlist wlan1 scanning`, or networkmanager. Only 3-5 are show by
+> iwlist, sometimes none, and network manager lists 6 at most.
+> Same driver on 3.5 (or prior) quickly picks up at least 15 BSSIDs.
 
-Chaoxing
+I take that back. Limited scanning was due to having laptop's lid
+closed (and working on an external LED) while testing. Obviously, the
+wifi card's antennae are in the bezel of the screen (doh).
 
-> The cure is to move below early in this function when packet is encrypted.
->
-> 1904     if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
-> 1905         goto out;
+Scanning actually seems even better now, in 3.6.x :)
 
-Yes, I think it makes sense to put that check early in the function.
-All forwarded frames need to pass that condition anyway.
-
-Will you submit a proper patch for this?
-
-Thomas
+Best,
+Jasmine
