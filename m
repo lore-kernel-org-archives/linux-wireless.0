@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48780 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922Ab2JOIMW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49960 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755115Ab2JYHUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 04:12:22 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 02/12] ath9k_hw: Fix selfgen chainmask for 9565
-Date: Mon, 15 Oct 2012 13:25:28 +0530
-Message-ID: <1350287738-18687-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101226_571761_D7B03761)
-In-Reply-To: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 25 Oct 2012 03:20:47 -0400
+Message-ID: <1351149676.10421.2.camel@jlt4.sipsolutions.net> (sfid-20121025_092050_757713_2FB0EEC7)
+Subject: Re: Regression in 3.7-rc2 for b43 and b43legacy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Sujith Manoharan <c_manoha@qti.qualcomm.com>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 25 Oct 2012 09:21:16 +0200
+In-Reply-To: <5088D579.9000703@lwfinger.net> (sfid-20121025_080031_863706_DB8CA858)
+References: <50889F60.5090406@lwfinger.net>
+	 <20616.41414.398817.807498@gargle.gargle.HOWL>
+	 <5088D579.9000703@lwfinger.net> (sfid-20121025_080031_863706_DB8CA858)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Self generated MCI messages is configured to use chain 1. As
-ar9565 is 1x1 solution, It can not use Chain 1. Hence fix
-Chain 1 for ar9462 alone. Not doing so, could affect WLAN
-connectivity in ar9565 as LNA sharing is not informed by BT.
+On Thu, 2012-10-25 at 01:00 -0500, Larry Finger wrote:
+> On 10/24/2012 09:19 PM, Sujith Manoharan wrote:
+> > Larry Finger wrote:
+> >
+> > This has been fixed:
+> > https://patchwork.kernel.org/patch/1625871/
+> 
+> That patch did the trick.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Sorry about that, I'll send a pull request including this patch soon.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 9fa6d22..6fbd376 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1043,7 +1043,9 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
- 
- 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
- 			ar9003_mci_osla_setup(ah, true);
--		REG_WRITE(ah, AR_SELFGEN_MASK, 0x02);
-+
-+		if (AR_SREV_9462(ah))
-+			REG_WRITE(ah, AR_SELFGEN_MASK, 0x02);
- 	} else {
- 		ar9003_mci_send_lna_take(ah, true);
- 		udelay(5);
--- 
-1.7.12.2
+johannes
 
