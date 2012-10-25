@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34400 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751335Ab2JFPMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Oct 2012 11:12:38 -0400
-Message-ID: <50704A5E.7040002@openwrt.org> (sfid-20121006_171243_394461_711FA973)
-Date: Sat, 06 Oct 2012 17:12:30 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:46185 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992530Ab2JYTpQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Oct 2012 15:45:16 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1589660wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 12:45:15 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1351194222.10421.18.camel@jlt4.sipsolutions.net>
+References: <1351188618-11155-1-git-send-email-javier@cozybit.com> <1351194222.10421.18.camel@jlt4.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 25 Oct 2012 12:44:54 -0700
+Message-ID: <CAPjQAd-L4jJqaw7aXw6_Yi17c5-p67edQgR+=Zu2F+W=_V+T4A@mail.gmail.com> (sfid-20121025_214520_561411_4790B806)
+Subject: Re: [PATCH] mac80211: Don't inspect Sequence Control field on control frames
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.7 1/2] cfg80211: fix antenna gain handling
-References: <1349286707-64433-1-git-send-email-nbd@openwrt.org>  <20121005202220.GA1929@tuxdriver.com> <506F4AFE.2090301@broadcom.com>  <506F69FF.5090701@openwrt.org> <506FE541.3090706@broadcom.com>  <50702371.40508@openwrt.org> <1349534867.10251.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1349534867.10251.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Cc: linville@tuxdriver.com, Javier Lopez <jlopex@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-10-06 4:47 PM, Johannes Berg wrote:
-> On Sat, 2012-10-06 at 14:26 +0200, Felix Fietkau wrote:
-> 
->> > I was not understanding the usage scenario here. Your patch will ignore 
->> > any driver initialized max antenna gain, which does not sound right to 
->> > me. What if chan->orig_mag is a sensible (non-zero) value, which is 
->> > lower than the value in regulatory power rule? Just seems that the patch 
->> > changes more than the commit message it saying.
->> I did take another close look at the code and it seems you're right. I
->> will change the code so that it initializes chan->orig_mag to INT_MAX in
->> wiphy_register, and I will make the patch description a bit more verbose
->> as well.
->> That way the chan->max_antenna_gain value supplied by the driver gets
->> ignored, which is a good thing, considering that only one driver
->> actually uses max_antenna_gain, and no driver initializes it to
->> something useful.
-> 
-> I know we need the "limit to driver value" behaviour for TX power for
-> sure (otherwise the firmware would assert if it goes over)
-Sure. This isn't really necessary for max_antenna_gain though, it's up
-to the driver if it even wants to make use of this (mac80211 doesn't).
-ath9k uses it to check if tx power needs to be reduced, when an
-eeprom-specified antenna gain exceeds the regulatory max antenna gain.
+On Thu, Oct 25, 2012 at 12:43 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-10-25 at 11:10 -0700, Javier Cardona wrote:
+>> Per IEEE Std. 802.11-2012, Sec 8.2.4.4.1, the sequence Control field is
+>> not present in control frames.  We noticed this problem when processing
+>> Block Ack Requests.
+>>
+>> Signed-off-by: Javier Cardona <javier@cozybit.com>
+>> Signed-off-by: Javier Lopez <jlopex@cozybit.com>
+>> ---
+>>  net/mac80211/rx.c |    4 ++++
+>>  1 files changed, 4 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+>> index f975f64..bf54336 100644
+>> --- a/net/mac80211/rx.c
+>> +++ b/net/mac80211/rx.c
+>> @@ -1467,6 +1467,10 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+>>
+>>       hdr = (struct ieee80211_hdr *)rx->skb->data;
+>>       fc = hdr->frame_control;
+>> +
+>> +     if (ieee80211_is_ctl(fc))
+>
+> Different question -- why check _is_ctl rather than !_is_data?
 
-I only noticed this, because I'm going to submit a patch soon to add a
-configurable antenna gain to nl80211/mac80211. It is useful for setups
-where you have a highly directional antenna with a big antenna gain and
-want to make sure that the txpower stays within legal limits.
+Per the Std, management frames can also be fragmented (not that I've
+ever seen one).  The standard only excludes control frames.
 
-- Felix
+Javier
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
