@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28537 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752377Ab2JOPiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 11:38:52 -0400
-Date: Mon, 15 Oct 2012 17:37:53 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: Re: Lots of trans->state != IWL_TRANS_FW_ALIVE warnings
-Message-ID: <20121015153752.GE12560@redhat.com> (sfid-20121015_173855_787425_AFE0250F)
-References: <20121015144722.GA12560@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3B7D4BB@HASMSX106.ger.corp.intel.com>
- <20121015152336.GC12560@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121015152336.GC12560@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:54500 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755381Ab2JZKTH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2012 06:19:07 -0400
+Message-ID: <1351246782.10813.9.camel@jlt4.sipsolutions.net> (sfid-20121026_121912_401528_AD9E4EDC)
+Subject: Re: [PATCH 2/3] mac80211: verify that skb data is present
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 26 Oct 2012 12:19:42 +0200
+In-Reply-To: <20121026005748.GA30982@shredder> (sfid-20121026_025756_120637_43AD3510)
+References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
+	 <1351205200-18094-3-git-send-email-johannes@sipsolutions.net>
+	 <20121025230505.GD20609@shredder> <20121025235816.GE20609@shredder>
+	 <20121026005748.GA30982@shredder> (sfid-20121026_025756_120637_43AD3510)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 15, 2012 at 05:23:36PM +0200, Stanislaw Gruszka wrote:
-> On Mon, Oct 15, 2012 at 03:14:51PM +0000, Grumbach, Emmanuel wrote:
-> > > I glanced at the bugs and I can only see the trace dump. I am pretty sure
-> > > there is an issue before the dump - fw assert of something like that. Can it be
-> > > possible to get the full log?
-> > > 
-> > 
-> > Can you ask people to try the attached patch?
-> > This will let us know where the fw is brought down.
+On Thu, 2012-10-25 at 17:57 -0700, Thomas Pedersen wrote:
+
+> Oh, that hunk is already inside the MESH_FLAGS_AE check... so:
 > 
-> Yes, I'll build kernel with that patch and request for test and dmesg.
+> 
+>    		if (mesh_hdr->flags & MESH_FLAGS_AE_A4) {
+>   			mpp_addr = hdr->addr3;
+>   			proxied_addr = mesh_hdr->eaddr1;
+>    		} else if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
+>   			mpp_addr = hdr->addr4;
+>   			proxied_addr = mesh_hdr->eaddr2;
+>   		} else
+> 			return RX_DROP_MONITOR;
+> 
+> Should be ok since we already made sure to have enough data for each
+> address extension size.
 
-debug=0x400 is enough or do you want also some other flags?
+But that loses the is_multicast_ether_addr() check now, no? I mean, we
+wouldn't want to accept an AE_A4 frame unless A1 was multicast, at least
+not according to the original code?
 
-Stanislaw
+All I was trying to make sure is that eaddr1/2 exist when they're used,
+and that's the length check, but is equivalent (due to earlier checks)
+to testing AE_A4/AE_A5_A6, I think?
+
+None of your versions seem to be equivalent of the original code, which
+says that
+ * multicast -> use addr3/eaddr1
+ * unicast -> use addr4/eaddr2
+
+and I'm just adding checks that eaddr1/eaddr2 actually exist.
+
+
+Ohh, ok, no I see, I'm not doing that. What we really need to do is
+something entirely different:
+
+                if (is_multicast_ether_addr(hdr->addr1)) {
+                        mpp_addr = hdr->addr3;
+                        proxied_addr = mesh_hdr->eaddr1;
+                } else if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
+                        /* has_a4 already checked in ieee80211_rx_mesh_check */
+                        mpp_addr = hdr->addr4;
+                        proxied_addr = mesh_hdr->eaddr2;
+                } else {
+                        return RX_DROP_MONITOR;
+                }
+
+johannes
+
