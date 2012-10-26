@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47035 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754629Ab2JKGfR (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:34531 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933290Ab2JZOXz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 02:35:17 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v0 0/2] driver for 60g Wilocity chip wil6210
-Date: Thu, 11 Oct 2012 08:35:12 +0200
-Message-ID: <3023056.XLicri5zy7@lx-vladimir> (sfid-20121011_083525_382068_989E2655)
-In-Reply-To: <CAGRGNgUidXkunAuXXoM54-d48HcnAvYBiHrmZL5_7jt=ytF5AQ@mail.gmail.com>
-References: <1349893385-23102-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <CAGRGNgUidXkunAuXXoM54-d48HcnAvYBiHrmZL5_7jt=ytF5AQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 26 Oct 2012 10:23:55 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 03/18] brcmsmac: Reduce number of entries in tx DMA rings
+Date: Fri, 26 Oct 2012 09:23:18 -0500
+Message-Id: <1351261413-20821-4-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162400_714407_BA0D1FB8)
+In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, October 11, 2012 09:51:28 AM Julian Calaby wrote:
-> Hi Vladimir,
-> 
-> On Thu, Oct 11, 2012 at 5:23 AM, Vladimir Kondratiev
-> 
-> <qca_vkondrat@qca.qualcomm.com> wrote:
-> > Hi,
-> > 
-> > Here goes driver for the "wil6210" chip by Wilocity.
-> > 
-> 
-> Whilst I'm sure that this driver will end up being kernel quality
-> code, as this is an initial development snapshot, have you considered
-> putting it in "staging" until it's mostly feature complete?
-> 
+Currently up to 256 frames can be queued for each DMA ring. This is
+excessive, and now that we have better flow control we can get by with
+less. Experimentation has shown 64 to work well.
 
-Hi,
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Sure I asked this very question before submitting. Luis advised to go for
-the regular location, not "staging". I am pretty neutral about what location 
-is better, so I just follow recommendations on this matter.
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 2dd0e4f..9b6b1e7 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -238,8 +238,8 @@
+ 
+ #define MAX_DMA_SEGS			4
+ 
+-/* Max # of entries in Tx FIFO based on 4kb page size */
+-#define NTXD				256
++/* # of entries in Tx FIFO */
++#define NTXD				64
+ /* Max # of entries in Rx FIFO based on 4kb page size */
+ #define NRXD				256
+ 
+-- 
+1.7.9.5
 
-Thanks, Vladimir.
