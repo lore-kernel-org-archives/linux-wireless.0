@@ -1,53 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39898 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55103 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753853Ab2JBGph (ORCPT
+	with ESMTP id S1750860Ab2JZN4v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Oct 2012 02:45:37 -0400
-Message-ID: <1349160371.10698.7.camel@jlt4.sipsolutions.net> (sfid-20121002_084541_014049_8C405056)
-Subject: Re: broadcast buffer / TIM map in mesh mode
+	Fri, 26 Oct 2012 09:56:51 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 02 Oct 2012 08:46:11 +0200
-In-Reply-To: <5069ED50.4050307@etit.tu-chemnitz.de> (sfid-20121001_214401_534723_29DE8446)
-References: <5069ED50.4050307@etit.tu-chemnitz.de>
-	 (sfid-20121001_214401_534723_29DE8446)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: combine status/drop reporting
+Date: Fri, 26 Oct 2012 15:57:23 +0200
+Message-Id: <1351259843-5593-1-git-send-email-johannes@sipsolutions.net> (sfid-20121026_155727_787383_CAA6AE33)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marco,
+From: Johannes Berg <johannes.berg@intel.com>
 
-> I am working on a mesh powersave implementation. One requirement for 
-> that is to buffer broadcasts, set the TIM map and count powersave 
-> neighbors. All of these routines are currently bound to the AP-specific 
-> ieee80211_if_ap structure.
-> Do you have any recommendations how to properly implement this for mesh 
-> interfaces?
-> 
-> a) allocate/free ieee80211_if_ap in 
-> iface.c:ieee80211_do_open/ieee80211_do_stop and bind to sdata->bss pointer?
-> b) include ieee80211_if_ap into ieee80211_if_mesh structure and use 
-> sdata->bss?
-> c) completely different?
+The TX status reporting is done for both the
+nl80211 report as well as the socket option.
+The socket option is also reported when an
+skb is dropped to guarantee that the copy in
+the IDR tree is freed and status is reported
+to userspace.
 
-I don't think a) or b) are appropriate since the if_ap structure
-contains a number of fields that you won't use or need. I would
-therefore suggest to split out the PS related fields of that structure
-into a substructure that you embed in both if_ap and if_mesh, and in the
-code you could then pass a pointer to that structure to the powersave
-handling functions.
+However, when a frame is dropped, no nl80211
+status is reported. This can cause userspace
+to stop making progress while waiting for a
+status notification.
 
-Please do a separate patch to separate it out though, not just one huge
-patch to do both mesh & the splitting up :)
+Combine the nl80211 and socket option status
+reporting into a new function and call it in
+both places -- when the status comes in from
+the driver and when the skb is dropped.
 
+While at it, also simplify the code in the
+nl80211 portion a bit.
 
-> Also, what is the purpose of the sdata->bss pointer? It seems to be used 
-> at times and not at others.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/status.c |  145 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 71 insertions(+), 74 deletions(-)
 
-The sdata->bss pointer should be used in *most* cases, it's a link to
-the "AP data" for the AP interface (where it just points to itself) and
-any AP_VLAN interface (where it points to the master AP interface)
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 21fa5c7..2d931ad 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -325,6 +325,75 @@ static void ieee80211_add_tx_radiotap_header(struct ieee80211_supported_band
+ 
+ }
+ 
++static void ieee80211_report_used_skb(struct ieee80211_local *local,
++				      struct sk_buff *skb, bool dropped)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr = (void *)skb->data;
++	bool acked = info->flags & IEEE80211_TX_STAT_ACK;
++
++	if (dropped)
++		acked = false;
++
++	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
++		struct ieee80211_sub_if_data *sdata = NULL;
++		struct ieee80211_sub_if_data *iter_sdata;
++		u64 cookie = (unsigned long)skb;
++
++		rcu_read_lock();
++
++		if (skb->dev) {
++			list_for_each_entry_rcu(iter_sdata, &local->interfaces,
++						list) {
++				if (!iter_sdata->dev)
++					continue;
++
++				if (skb->dev == iter_sdata->dev) {
++					sdata = iter_sdata;
++					break;
++				}
++			}
++		} else {
++			sdata = rcu_dereference(local->p2p_sdata);
++		}
++
++		if (!sdata)
++			skb->dev = NULL;
++		else if (ieee80211_is_nullfunc(hdr->frame_control) ||
++			 ieee80211_is_qos_nullfunc(hdr->frame_control)) {
++			cfg80211_probe_status(sdata->dev, hdr->addr1,
++					      cookie, acked, GFP_ATOMIC);
++		} else {
++			cfg80211_mgmt_tx_status(&sdata->wdev, cookie, skb->data,
++						skb->len, acked, GFP_ATOMIC);
++		}
++
++		rcu_read_unlock();
++	}
++
++	if (unlikely(info->ack_frame_id)) {
++		struct sk_buff *ack_skb;
++		unsigned long flags;
++
++		spin_lock_irqsave(&local->ack_status_lock, flags);
++		ack_skb = idr_find(&local->ack_status_frames,
++				   info->ack_frame_id);
++		if (ack_skb)
++			idr_remove(&local->ack_status_frames,
++				   info->ack_frame_id);
++		spin_unlock_irqrestore(&local->ack_status_lock, flags);
++
++		if (ack_skb) {
++			if (!dropped) {
++				/* consumes ack_skb */
++				skb_complete_wifi_ack(ack_skb, acked);
++			} else {
++				dev_kfree_skb_any(ack_skb);
++			}
++		}
++	}
++}
++
+ /*
+  * Use a static threshold for now, best value to be determined
+  * by testing ...
+@@ -516,62 +585,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 					msecs_to_jiffies(10));
+ 	}
+ 
+-	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
+-		u64 cookie = (unsigned long)skb;
+-		bool found = false;
+-
+-		acked = info->flags & IEEE80211_TX_STAT_ACK;
+-
+-		rcu_read_lock();
+-
+-		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-			if (!sdata->dev)
+-				continue;
+-
+-			if (skb->dev != sdata->dev)
+-				continue;
+-
+-			found = true;
+-			break;
+-		}
+-
+-		if (!skb->dev) {
+-			sdata = rcu_dereference(local->p2p_sdata);
+-			if (sdata)
+-				found = true;
+-		}
+-
+-		if (!found)
+-			skb->dev = NULL;
+-		else if (ieee80211_is_nullfunc(hdr->frame_control) ||
+-			 ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+-			cfg80211_probe_status(sdata->dev, hdr->addr1,
+-					      cookie, acked, GFP_ATOMIC);
+-		} else {
+-			cfg80211_mgmt_tx_status(&sdata->wdev, cookie, skb->data,
+-						skb->len, acked, GFP_ATOMIC);
+-		}
+-
+-		rcu_read_unlock();
+-	}
+-
+-	if (unlikely(info->ack_frame_id)) {
+-		struct sk_buff *ack_skb;
+-		unsigned long flags;
+-
+-		spin_lock_irqsave(&local->ack_status_lock, flags);
+-		ack_skb = idr_find(&local->ack_status_frames,
+-				   info->ack_frame_id);
+-		if (ack_skb)
+-			idr_remove(&local->ack_status_frames,
+-				   info->ack_frame_id);
+-		spin_unlock_irqrestore(&local->ack_status_lock, flags);
+-
+-		/* consumes ack_skb */
+-		if (ack_skb)
+-			skb_complete_wifi_ack(ack_skb,
+-				info->flags & IEEE80211_TX_STAT_ACK);
+-	}
++	ieee80211_report_used_skb(local, skb, false);
+ 
+ 	/* this was a transmitted frame, but now we want to reuse it */
+ 	skb_orphan(skb);
+@@ -647,25 +661,8 @@ EXPORT_SYMBOL(ieee80211_report_low_ack);
+ void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-
+-	if (unlikely(info->ack_frame_id)) {
+-		struct sk_buff *ack_skb;
+-		unsigned long flags;
+-
+-		spin_lock_irqsave(&local->ack_status_lock, flags);
+-		ack_skb = idr_find(&local->ack_status_frames,
+-				   info->ack_frame_id);
+-		if (ack_skb)
+-			idr_remove(&local->ack_status_frames,
+-				   info->ack_frame_id);
+-		spin_unlock_irqrestore(&local->ack_status_lock, flags);
+-
+-		/* consumes ack_skb */
+-		if (ack_skb)
+-			dev_kfree_skb_any(ack_skb);
+-	}
+ 
++	ieee80211_report_used_skb(local, skb, true);
+ 	dev_kfree_skb_any(skb);
+ }
+ EXPORT_SYMBOL(ieee80211_free_txskb);
+-- 
+1.7.10.4
 
