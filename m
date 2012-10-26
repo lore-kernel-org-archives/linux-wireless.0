@@ -1,57 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25319 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758980Ab2JLLmD (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:43817 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932185Ab2JZU7E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 07:42:03 -0400
-Message-ID: <5077F4F3.8030409@qca.qualcomm.com> (sfid-20121012_134218_776980_A2C1D8D3)
-Date: Fri, 12 Oct 2012 13:46:11 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 26 Oct 2012 16:59:04 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so1404388bkc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2012 13:59:02 -0700 (PDT)
+Message-ID: <508AF992.8070606@gmail.com> (sfid-20121026_225909_178374_322898A3)
+Date: Fri, 26 Oct 2012 22:58:58 +0200
+From: Daniel Mack <zonque@gmail.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Dan Williams <dcbw@redhat.com>, Bing Zhao <bzhao@marvell.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 1/3] wireless: drivers: make use of WLAN_EID_VENDOR_SPECIFIC
-References: <1350037696-23747-1-git-send-email-arend@broadcom.com> <1350037696-23747-2-git-send-email-arend@broadcom.com>
-In-Reply-To: <1350037696-23747-2-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>,
+	Bing Zhao <bzhao@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	"Porter, Matt" <mporter@ti.com>
+Subject: Re: mwifiex_sdio problem: firmware fails to be active in time
+References: <507F4448.2040707@gmail.com> <477F20668A386D41ADCC57781B1F7043083B80E44A@SC-VEXCH1.marvell.com> <50802984.6070203@gmail.com> <CAMXE1-qWOKphtOjUYWUz1CLDUtAynODvHmLm60rJMC=jBtRsNw@mail.gmail.com>
+In-Reply-To: <CAMXE1-qWOKphtOjUYWUz1CLDUtAynODvHmLm60rJMC=jBtRsNw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2012 01:28 PM, Arend van Spriel wrote:
-> The include file linux/ieee80211.h contains three definitions for
-> the same thing in enum ieee80211_eid due to historic changes:
+[have to re-open this issue again]
+
+On 21.10.2012 16:16, Andrei Emeltchenko wrote:
+> I have the same board and see this problem sometimes. Reloading modules
+> might help, if not reboot always works :).
+
+I thought I solved this issue, but I can't reproduce the running version
+anymore unfortunately. It constantly fails with the error I described,
+even though the clock and all voltages etc are definitely stable. I can
+also rule out hardware issues as the BSP kernel (3.2.18) works just fine
+with the same setup including the firmware image.
+
+Andrei, may I ask which board you have exactly? What kernel version are
+you based on? I wonder if the firmware is actually transferred
+correctly, or which reason there could be for it not to start up. Could
+that be related to the recent AM33xx/omap_hsmmc DMA reworks? [copied Matt]
+
+Bing, FWIW here are some more complete logs with CONFIG_MMC_DEBUG=y.
+
+This is the detection of the SDIO card:
+
+http://pastebin.com/h9VDaExh
+
+And this is what happens after "modprobe mwifiex_sdio":
+
+http://pastebin.com/w5bcz6Aa (part 1/2)
+http://pastebin.com/G5wfnPrg (part 2/2)
+
+Can anyone see what's wrong here?
+
+
+Thanks again,
+Daniel
+
+
+> 18.10.2012 18:09 пользователь "Daniel Mack" <zonque@gmail.com
+> <mailto:zonque@gmail.com>> написал:
+>>
+>> Hi Bing,
+>>
+>> thanks for your time.
+>>
+>> On 18.10.2012 02:20, Bing Zhao wrote:
+>> >> we're trying to get a SD8787 to play which is connected via SDIO to an
+>> >> OMAP hsmmc (AM33xx hardware). This fails with the following message:
+>> >>
+>> >> # modprobe mwifiex_sdio
+>> >> [   13.984779] [sched_delayed] sched: RT throttling activated
+>> >> [   22.401700] mwifiex_sdio mmc0:0001:1: FW failed to be active in time
+>> >>
+>> >> The firmware sd8787_uapsta.bin was taken from the
+> linux-firmware.git and
+>> >> apparently is transferred successfully, but then consequently fails to
+>> >> do start up. When compiled with CONFIG_MMC_CONFIG=y, tons of successful
+>> >> messages are logged like this:
+>> >>
+>> >> [ 2607.867660] mmc0: starting CMD52 arg 00000a00 flags 00000195
+>> >> [ 2607.867713] mmc0: req done (CMD52): 0: 00001000 00000000 00000000
+>> >> 00000000
+>> >> [ 2607.883273] mmc0: starting CMD52 arg 00000a00 flags 00000195
+>> >> [ 2607.883327] mmc0: req done (CMD52): 0: 00001000 00000000 00000000
+>> >> 00000000
+>> >> [ 2607.898905] mmc0: starting CMD52 arg 00000a00 flags 00000195
+>> >
+>> > It keeps reading Int_Pending (CCCR register 0x05). Perhaps you have
+> interrupt storm here?
+>> > Could you please check if your controller clears interrupt properly?
+>>
+>> The reason for this issue was a different one: the 32KHz clock was not
+>> running. I just learned that the firmware download will succeed
+>> nevertheless, but the firmware won't start. Note to myself: make sure to
+>> rule out any hardware issue before bordering developers :-/ But that
+>> posting may be a help to someone with similar issues one day ...
+>>
+>> >> The kernel we're based on is Linus' current merge tree (3.7-rc1), but
+>> >> earlier version (3.6) have shown the same issue.
+>> >>
+>> >> Before we start digging into this, I want to ask whether there are any
+>> >> common pitfalls we should be aware of and that could cause this?
+>> >
+>> > You may want to get a newer firmware release from here:
+>> >
+>> > http://git.marvell.com/?p=mwifiex-firmware.git;a=summary
+>> > git://git.marvell.com/mwifiex-firmware.git
+> <http://git.marvell.com/mwifiex-firmware.git>
+>>
+>> Note that contains the same firmware binary than the linux-firmware
+>> repository.
+>>
+>> >> Please let me know whether you need any further information.
+>> >
+>> > It might be helpful if you post messages before this line:
+>> >
+>> > [ 2607.867660] mmc0: starting CMD52 arg 00000a00 flags 00000195
+>>
+>>
+>> Thanks again!
+>>
+>> Daniel
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+> <mailto:majordomo@vger.kernel.org>
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> /* Information Element IDs */
-> enum ieee80211_eid {
->     :
->     WLAN_EID_WPA = 221,
->     WLAN_EID_GENERIC = 221,
->     WLAN_EID_VENDOR_SPECIFIC = 221,
->     :
-> };
->
-> The standard refers to this as "vendor specific" element so the
-> other two definitions are better not used. This patch changes the
-> wireless drivers to use one definition, ie. WLAN_EID_VENDOR_SPECIFIC.
 
-Why not remove _WPA and _GENERIC from ieee80211.h at the same time so
-that nobody else won't use them in the future?
-
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: Jouni Malinen <j@w1.fi>
-> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-
-For the ath6kl part:
-
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-Kalle
