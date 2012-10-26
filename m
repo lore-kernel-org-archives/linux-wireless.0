@@ -1,85 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46846 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116Ab2J3DjH (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:39448 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752158Ab2JZAm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 23:39:07 -0400
-Received: from [50.54.136.152] (50-54-136-152.evrt.wa.frontiernet.net [50.54.136.152])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q9U3d5Dh007465
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 20:39:05 -0700
-Message-ID: <508F4BD9.3080206@candelatech.com> (sfid-20121030_043912_658376_38056A98)
-Date: Mon, 29 Oct 2012 20:39:05 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 25 Oct 2012 20:42:59 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so2392329pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 17:42:58 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wireless splat in 3.5.7+
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20121026004116.GF20609@shredder>
+References: <CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
+	<20121024194547.GA19060@shredder>
+	<CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
+	<CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
+	<20121024220813.GB6723@shredder>
+	<CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
+	<CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com>
+	<CAJ-Vmom0cg09C1D2Eh79K2zoOxL0Ry7g3+DC2iNGBFTa4+Zhzg@mail.gmail.com>
+	<CAG6hwVM_9TkKmMs0MyyiuO8TAUSLkBJTWiQ8+4AAa19YG+guCw@mail.gmail.com>
+	<CAJ-Vmok3+ts43ow_Btj7sG3DfWNeD7O=gNWagJrSGkBWFvyQMQ@mail.gmail.com>
+	<20121026004116.GF20609@shredder>
+Date: Thu, 25 Oct 2012 17:42:58 -0700
+Message-ID: <CAJ-Vmon7tQcOO0oAgYMzav2jzSqm12i3dwS87EM6M7EVJasopg@mail.gmail.com> (sfid-20121026_024324_681462_7BD33BFB)
+Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
+From: Adrian Chadd <adrian@freebsd.org>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We saw this (and many similar) when trying to bring up ~200 stations on a radio.
+On 25 October 2012 17:41, Thomas Pedersen <thomas@cozybit.com> wrote:
 
-Shortly after, the machine locked hard.
+> Yep, the TSF actually wraps to 64 bits correctly :|
+>
+> [ 4394.156056] got beacon with ts         ABA184D3 from 00:03:7f:10:4e:0a at         FEF0D969, now:         FEF0DC84. offset == -795
+> [ 4395.723180] got beacon with ts        1020E8597 from 00:03:7f:10:4e:1a at         FF08C20E, now:         FF08C526. offset == -792
+> [ 4397.771811] got beacon with ts        1022DC649 from 00:03:7f:10:4e:1a at         FF2802BC, now:         FF280671. offset == -949
+> [ 4406.446193] got beacon with ts         AC5D0568 from 00:03:7f:10:4e:0a at         FFAC5A30, now:         FFAC5D68. offset == -824
+> [ 4412.109937] got beacon with ts        103088637 from 00:03:7f:10:4e:1a at        10002C292, now:        10002C5F0. offset == -862
+> [ 4416.205946] got beacon with ts        10347041B from 00:03:7f:10:4e:1a at        100414070, now:        100414376. offset == -774
+> [ 4418.253827] got beacon with ts        103664224 from 00:03:7f:10:4e:1a at        100607E74, now:        1006081C7. offset == -851
+> [ 4418.735826] got beacon with ts         AD188414 from 00:03:7f:10:4e:0a at        10067D90F, now:        10067DC4B. offset == -828
 
-Tainting comes from a network emulation module that was not in use (but was loaded).
+Sweet, thanks for verifying that.
 
 
-WARNING: at /home/greearb/git/linux-3.5.dev.y/net/mac80211/driver-ops.h:12 ieee80211_bss_info_change_notify+0x167/0x192 [mac80211]()
-Hardware name: To be filled by O.E.M.
-sta39:  Failed check-sdata-in-driver check, flags: 0x0
-Modules linked in: fuse 8021q garp stp llc lockd macvlan sunrpc wanlink(PO) pktgen f71882fg ath9k ath9k_common snd_hda_codec_realtek ath9k_hw snd_hda_intel 
-coretemp ath hwmon snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device kvm snd_pcm cfg80211 ppdev snd_page_alloc gpio_ich microcode e1000e snd_timer 
-parport_pc serio_raw snd i2c_i801 lpc_ich pcspkr parport mfd_core uinput soundcore ipv6 i915 video i2c_algo_bit drm_kms_helper drm i2c_core [last unloaded: nf_nat]
-Pid: 29641, comm: iw Tainted: P           O 3.5.7+ #26
-Call Trace:
-  [<ffffffff8105c5cc>] warn_slowpath_common+0x80/0x98
-  [<ffffffff8105c678>] warn_slowpath_fmt+0x41/0x43
-  [<ffffffffa03b4a89>] ieee80211_bss_info_change_notify+0x167/0x192 [mac80211]
-  [<ffffffffa03b4b83>] ieee80211_ifa_changed+0xcf/0xe1 [mac80211]
-  [<ffffffff814e635c>] notifier_call_chain+0x32/0x5e
-  [<ffffffff8107a38b>] __blocking_notifier_call_chain+0x4b/0x62
-  [<ffffffff8107a3b1>] blocking_notifier_call_chain+0xf/0x11
-  [<ffffffff8148670f>] __inet_del_ifa+0x190/0x22a
-  [<ffffffff81487d9b>] inetdev_event+0x28f/0x403
-  [<ffffffff8143fc4b>] ? fib_rules_event+0x23/0x13d
-  [<ffffffff814e635c>] notifier_call_chain+0x32/0x5e
-  [<ffffffff8107a158>] raw_notifier_call_chain+0xf/0x11
-  [<ffffffff8142d4ef>] call_netdevice_notifiers+0x45/0x4a
-  [<ffffffff8142d8a1>] rollback_registered_many+0x167/0x23c
-  [<ffffffff8142da6d>] unregister_netdevice_queue+0x94/0xd6
-  [<ffffffffa03bf63e>] ieee80211_if_remove+0x98/0x9c [mac80211]
-  [<ffffffffa03c5f03>] ieee80211_del_iface+0x10/0x14 [mac80211]
-  [<ffffffffa02093cf>] nl80211_del_interface+0x26/0x28 [cfg80211]
-  [<ffffffff8144cecb>] genl_rcv_msg+0x22b/0x273
-  [<ffffffff8144cca0>] ? genl_rcv+0x28/0x28
-  [<ffffffff8144b798>] netlink_rcv_skb+0x3e/0x8f
-  [<ffffffff8144cc99>] genl_rcv+0x21/0x28
-  [<ffffffff8144b556>] netlink_unicast+0xe4/0x16a
-  [<ffffffff8144bd11>] netlink_sendmsg+0x23d/0x25b
-  [<ffffffff8141995c>] __sock_sendmsg_nosec+0x5f/0x6a
-  [<ffffffff814199a4>] __sock_sendmsg+0x3d/0x48
-  [<ffffffff81419f86>] sock_sendmsg+0xa3/0xbc
-  [<ffffffff810faaa0>] ? mem_cgroup_end_update_page_stat+0x1c/0x27
-  [<ffffffff810d7354>] ? unlock_page+0x22/0x27
-  [<ffffffff810f36e7>] ? __do_fault+0x364/0x3a7
-  [<ffffffff814193a2>] ? copy_from_user+0x9/0xb
-  [<ffffffff81419c2e>] ? move_addr_to_kernel+0x2b/0x65
-  [<ffffffff81424add>] ? copy_from_user+0x9/0xb
-  [<ffffffff81424e2a>] ? verify_iovec+0x4f/0xa3
-  [<ffffffff8141b1a8>] __sys_sendmsg+0x1fe/0x280
-  [<ffffffff810f4b0d>] ? handle_mm_fault+0x1c7/0x1e1
-  [<ffffffff814e62b8>] ? do_page_fault+0x2de/0x350
-  [<ffffffff8107bcd2>] ? lg_local_unlock+0x28/0x45
-  [<ffffffff81138836>] ? mntput_no_expire+0x3f/0x138
-  [<ffffffff81138954>] ? mntput+0x25/0x27
-  [<ffffffff8141b387>] sys_sendmsg+0x3d/0x5b
-  [<ffffffff814e8179>] system_call_fastpath+0x16/0x1b
----[ end trace cf48c0a49a51fabd ]---
-IPv6: ADDRCONF(NETDEV_CHANGE): sta155: link becomes ready
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Adrian
