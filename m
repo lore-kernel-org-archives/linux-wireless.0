@@ -1,53 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:35367 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755770Ab2JPIEl (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:34590 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933332Ab2JZOY3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 04:04:41 -0400
-Received: by mail-qc0-f174.google.com with SMTP id o22so798530qcr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2012 01:04:40 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 16 Oct 2012 10:04:39 +0200
-Message-ID: <CAJJAcodOQY6PDp6d=jG30u_7B30G3j8xOrtLQVmEJ4TDYjh_xQ@mail.gmail.com> (sfid-20121016_100449_784478_52CE3ED8)
-Subject: Question about ieee802_1d_to_ac
-From: David Shwatrz <dshwatrz@gmail.com>
+	Fri, 26 Oct 2012 10:24:29 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 17/18] brcmsmac: Add tracepoint for AMPDU session information
+Date: Fri, 26 Oct 2012 09:23:32 -0500
+Message-Id: <1351261413-20821-18-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162435_448312_31E8DEDE)
+In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ .../brcm80211/brcmsmac/brcms_trace_events.h        |   28 ++++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c      |    8 ++++++
+ 2 files changed, 36 insertions(+)
 
-I see in net/mac80211/wme.c:
-...
-const int ieee802_1d_to_ac[8] = {
-	IEEE80211_AC_BE,
-	IEEE80211_AC_BK,
-	IEEE80211_AC_BK,
-	IEEE80211_AC_BE,
-	IEEE80211_AC_VI,
-	IEEE80211_AC_VI,
-	IEEE80211_AC_VO,
-	IEEE80211_AC_VO
-};
-...
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
+index 2ef7580..871781e 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
+@@ -156,6 +156,34 @@ TRACE_EVENT(brcms_txstatus,
+ 		  __entry->ackphyrxsh)
+ );
+ 
++TRACE_EVENT(brcms_ampdu_session,
++	TP_PROTO(const struct device *dev, unsigned max_ampdu_len,
++		 u16 max_ampdu_frames, u16 ampdu_len, u16 ampdu_frames,
++		 u16 dma_len),
++	TP_ARGS(dev, max_ampdu_len, max_ampdu_frames, ampdu_len, ampdu_frames,
++		dma_len),
++	TP_STRUCT__entry(
++		__string(dev, dev_name(dev))
++		__field(unsigned, max_ampdu_len)
++		__field(u16, max_ampdu_frames)
++		__field(u16, ampdu_len)
++		__field(u16, ampdu_frames)
++		__field(u16, dma_len)
++	),
++	TP_fast_assign(
++		__assign_str(dev, dev_name(dev));
++		__entry->max_ampdu_len = max_ampdu_len;
++		__entry->max_ampdu_frames = max_ampdu_frames;
++		__entry->ampdu_len = ampdu_len;
++		__entry->ampdu_frames = ampdu_frames;
++		__entry->dma_len = dma_len;
++	),
++	TP_printk("[%s] ampdu session max_len=%u max_frames=%u len=%u frames=%u dma_len=%u",
++		  __get_str(dev), __entry->max_ampdu_len,
++		  __entry->max_ampdu_frames, __entry->ampdu_len,
++		  __entry->ampdu_frames, __entry->dma_len)
++);
++
+ #undef TRACE_SYSTEM
+ #define TRACE_SYSTEM brcmsmac_msg
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index 5b5dd3c..f860324 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -29,6 +29,7 @@
+ #include "scb.h"
+ #include "ampdu.h"
+ #include "brcms_debug.h"
++#include "brcms_trace_events.h"
+ 
+ /*
+  * dma register field offset calculation
+@@ -1311,6 +1312,13 @@ static void ampdu_finalize(struct dma_info *di)
+ 	struct brcms_ampdu_session *session = &di->ampdu_session;
+ 	struct sk_buff *p;
+ 
++	trace_brcms_ampdu_session(&session->wlc->hw->d11core->dev,
++				  session->max_ampdu_len,
++				  session->max_ampdu_frames,
++				  session->ampdu_len,
++				  skb_queue_len(&session->skb_list),
++				  session->dma_len);
++
+ 	if (WARN_ON(skb_queue_empty(&session->skb_list)))
+ 		return;
+ 
+-- 
+1.7.9.5
 
-As I understand, this values stand for queues for different types of traffic:
-IEEE80211_AC_BE is  best-effort traffic ,
-IEEE80211_AC_BK is background traffic ,
-IEEE80211_AC_VI is video traffic,
-IEEE80211_AC_VO is voice traffic.
-
-We see that entries 6,7 are  voice and entries 4,5 are video.
-Is it not an error that entries 2,3 differ ? and also 0,1 ?
-
-shouldn't it be:
-const int ieee802_1d_to_ac[8] = {
-	IEEE80211_AC_BE,
-	IEEE80211_AC_BE,
-	IEEE80211_AC_BK,
-	IEEE80211_AC_BK,
-
-
-Regards,
-D Shwartz
