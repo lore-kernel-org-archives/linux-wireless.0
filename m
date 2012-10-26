@@ -1,54 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:50056 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754719Ab2JVOb3 (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:33164 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964826Ab2JZP6S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 10:31:29 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so2457412oag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2012 07:31:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
-Date: Mon, 22 Oct 2012 07:31:28 -0700
-Message-ID: <CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com> (sfid-20121022_163132_701698_90153F7B)
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 26 Oct 2012 11:58:18 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv3 2/2] mac80211: implement set_mcast_rate() callback
+Date: Fri, 26 Oct 2012 17:57:35 +0200
+Message-Id: <1351267055-21927-2-git-send-email-ordex@autistici.org> (sfid-20121026_175822_095492_3A8F3F51)
+In-Reply-To: <1351267055-21927-1-git-send-email-ordex@autistici.org>
+References: <1351267055-21927-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This new callback can be used to tune the rate to be used to send
+multicast frames. The callback can be used with vif configured as
+ADHOC or MESH_POINT only.
 
+In the current state the multicast rate can be specified on IBSS/MESH
+joining only. This makes it impossible to select a custom multicast
+rate when then join command is sent by an external program (e.g.
+wpa_supplicant)
 
-On 20 October 2012 19:32, Thomas Pedersen <thomas@cozybit.com> wrote:
-> Hi list,
->
-> We're seeing some issue with reported mactime by the ath9k_htc (AR9271)
-> card. Here is a mesh node sampling peer beacons:
->
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ net/mac80211/cfg.c         |  7 +++++++
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/util.c        | 12 ++++++++++++
+ 3 files changed, 22 insertions(+)
 
-[snip]
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 34fd3eb..9518e96 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1954,6 +1954,12 @@ static int ieee80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+ 	return ieee80211_ibss_leave(IEEE80211_DEV_TO_SUB_IF(dev));
+ }
+ 
++static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
++				    int rate[IEEE80211_NUM_BANDS])
++{
++	return ieee80211_mcast_rate(IEEE80211_DEV_TO_SUB_IF(dev), rate);
++}
++
+ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+@@ -3151,6 +3157,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.disassoc = ieee80211_disassoc,
+ 	.join_ibss = ieee80211_join_ibss,
+ 	.leave_ibss = ieee80211_leave_ibss,
++	.set_mcast_rate = ieee80211_set_mcast_rate,
+ 	.set_wiphy_params = ieee80211_set_wiphy_params,
+ 	.set_tx_power = ieee80211_set_tx_power,
+ 	.get_tx_power = ieee80211_get_tx_power,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3026519..375f230 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1609,6 +1609,9 @@ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 				   struct ieee80211_chanctx *chanctx);
+ 
++int ieee80211_mcast_rate(struct ieee80211_sub_if_data *sdata,
++			 int rate[IEEE80211_NUM_BANDS]);
++
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+ #else
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index dd0e6f2..ac935c3 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1966,3 +1966,15 @@ u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs)
+ 		return 2;
+ 	return 1;
+ }
++
++int ieee80211_mcast_rate(struct ieee80211_sub_if_data *sdata,
++			 int rate[IEEE80211_NUM_BANDS])
++{
++	if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
++	memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
++
++	return 0;
++}
+-- 
+1.7.12.4
 
-> The number after "at" is rx_status->mactime, "now" is drv_get_tsf(), and
-> offset (ie. stack delay) is mactime - tsf. RX_FLAG_MACTIME_MPDU is on for
-> all frames, and mesh sync is not adjusting the TSF.
->
-> How can we possibly receive frames from the future!?
->
-
-1) Are you correctly merging the TSF32 values? Are you comparing TSF32
-to TSF64, are you converting 32->64, etc? TSF32 wraps pretty quickly
-and there's some kooky logic needed to make sure your TSF64 calculated
-value is correct.
-
-2) Are all your mesh nodes synchronised? Why don't you print out the
-timestamp inside the beacon frame as well, and compare whether they're
-all in reasonable sync?
-
-
-
-Adrian
