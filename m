@@ -1,119 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:34834 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840Ab2JOOth (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56208 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966344Ab2JZUQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 10:49:37 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH 1/2] cfg/mac80211: add set_mcast_rate callback
-Date: Mon, 15 Oct 2012 16:49:00 +0200
-Message-Id: <1350312541-17657-1-git-send-email-ordex@autistici.org> (sfid-20121015_164942_359042_9EF6FBCE)
+	Fri, 26 Oct 2012 16:16:53 -0400
+Message-ID: <1351282646.10813.21.camel@jlt4.sipsolutions.net> (sfid-20121026_221657_617100_B03B7E9B)
+Subject: Re: wireless testing working with ath9k?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 26 Oct 2012 22:17:26 +0200
+In-Reply-To: <508AEC91.5090901@candelatech.com> (sfid-20121026_220334_505306_386A2A42)
+References: <508AEC91.5090901@candelatech.com>
+	 (sfid-20121026_220334_505306_386A2A42)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This new callback can be used to tune the rate to be used to send multicast
-frames. The callback can be used with vif configured as ADHOC or MESH_POINT
-only.
+On Fri, 2012-10-26 at 13:03 -0700, Ben Greear wrote:
+> I have a few small patches...and wireless-testing is failing to
+> register it's hardware:
+> 
+> 	/* Register with mac80211 */
+> 	error = ieee80211_register_hw(hw);
+> 	if (error) {
+> 		ath_err(common, "Unable to register hw: %i\n", error);
+> 		goto error_register;
+> 	}
+> 
+> [  764.193028] ath: country maps to regdmn code: 0x3a
+> [  764.193042] ath: Country alpha2 being used: US
+> [  764.193052] ath: Regpair used: 0x3a
+> [  764.195415] ath: phy0: Unable to register hw: -22
+> [  764.200949] ath9k 0000:03:00.0: Failed to initialize device
+> [  764.206811] ath9k: probe of 0000:03:00.0 failed with error -22
+> 
+> Just wondering if this is a known problem before start digging into it...
 
-In the current state the multicast rate can be specified on IBSS/MESH joining
-only. This makes it impossible to select a custom multicast rate when then join
-command is sent by an external program (e.g. wpa_supplicant)
+yes, patch in my last mac80211-next pull request.
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
- include/net/cfg80211.h     |  6 ++++++
- net/mac80211/cfg.c         |  7 +++++++
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/util.c        | 12 ++++++++++++
- 4 files changed, 28 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2837994..facbadd 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1544,6 +1544,9 @@ struct cfg80211_gtk_rekey_data {
-  *	to a merge.
-  * @leave_ibss: Leave the IBSS.
-  *
-+ * @set_mcast_rate: Set the specified multicast rate (only if vif is in ADHOC or
-+ *	MESH mode)
-+ *
-  * @set_wiphy_params: Notify that wiphy parameters have changed;
-  *	@changed bitfield (see &enum wiphy_params_flags) describes which values
-  *	have changed. The actual parameter values are available in
-@@ -1745,6 +1748,9 @@ struct cfg80211_ops {
- 			     struct cfg80211_ibss_params *params);
- 	int	(*leave_ibss)(struct wiphy *wiphy, struct net_device *dev);
- 
-+	int	(*set_mcast_rate)(struct wiphy *wiphy, struct net_device *dev,
-+				  int rate[IEEE80211_NUM_BANDS]);
-+
- 	int	(*set_wiphy_params)(struct wiphy *wiphy, u32 changed);
- 
- 	int	(*set_tx_power)(struct wiphy *wiphy,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ed27988..21461dc 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1924,6 +1924,12 @@ static int ieee80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
- 	return ieee80211_ibss_leave(IEEE80211_DEV_TO_SUB_IF(dev));
- }
- 
-+static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
-+				    int rate[IEEE80211_NUM_BANDS])
-+{
-+	return ieee80211_mcast_rate(IEEE80211_DEV_TO_SUB_IF(dev), rate);
-+}
-+
- static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-@@ -3123,6 +3129,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.disassoc = ieee80211_disassoc,
- 	.join_ibss = ieee80211_join_ibss,
- 	.leave_ibss = ieee80211_leave_ibss,
-+	.set_mcast_rate = ieee80211_set_mcast_rate,
- 	.set_wiphy_params = ieee80211_set_wiphy_params,
- 	.set_tx_power = ieee80211_set_tx_power,
- 	.get_tx_power = ieee80211_get_tx_power,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 78c4bbb..e3b9eff 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1575,6 +1575,9 @@ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
- void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 				   struct ieee80211_chanctx *chanctx);
- 
-+int ieee80211_mcast_rate(struct ieee80211_sub_if_data *sdata,
-+			 int rate[IEEE80211_NUM_BANDS]);
-+
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
- #else
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 350b7a7..c9f6813 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1959,3 +1959,15 @@ u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs)
- 		return 2;
- 	return 1;
- }
-+
-+int ieee80211_mcast_rate(struct ieee80211_sub_if_data *sdata,
-+			 int rate[IEEE80211_NUM_BANDS])
-+{
-+	if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
-+	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
-+		return -EOPNOTSUPP;
-+
-+	memcpy(sdata->vif.bss_conf.mcast_rate, &rate, sizeof(rate));
-+
-+	return 0;
-+}
--- 
-1.7.12.3
+johannes
 
