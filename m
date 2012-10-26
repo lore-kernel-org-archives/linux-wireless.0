@@ -1,36 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45996 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756411Ab2JJOZU (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:34596 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933332Ab2JZOYb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 10:25:20 -0400
-Message-ID: <1349879153.4683.51.camel@jlt4.sipsolutions.net> (sfid-20121010_162523_314342_C66D87EF)
-Subject: Re: [PATCH 3.7] mac80211: use ieee80211_free_txskb to fix possible
- skb leaks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 10 Oct 2012 16:25:53 +0200
-In-Reply-To: <507570E3.9000107@openwrt.org>
-References: <1349699973-90027-1-git-send-email-nbd@openwrt.org>
-	 <507570E3.9000107@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 26 Oct 2012 10:24:31 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 18/18] brcmsmac: Remove some noisy but uninformative debug messages
+Date: Fri, 26 Oct 2012 09:23:33 -0500
+Message-Id: <1351261413-20821-19-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162437_078552_1566E6AD)
+In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-10 at 14:58 +0200, Felix Fietkau wrote:
-> On 2012-10-08 2:39 PM, Felix Fietkau wrote:
-> > A few places free skbs using dev_kfree_skb even though they're called
-> > after ieee80211_subif_start_xmit might have cloned it for tracking tx
-> > status. Use ieee80211_free_txskb here to prevent skb leaks.
-> > 
-> > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> > Cc: stable@vger.kernel.org
-> Found a few more places that should use ieee80211_free_txskb, will send
-> a v2.
+These messages clutter up the trace buffer without adding any useful
+information.
 
-John already applied this, no?
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c  |    2 --
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   25 ------------------------
+ 2 files changed, 27 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index f860324..987fb56 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -1377,8 +1377,6 @@ int dma_txfast(struct brcms_c_info *wlc, struct dma_pub *pub,
+ 	struct ieee80211_tx_info *tx_info;
+ 	bool is_ampdu;
+ 
+-	BRCMS_DBG_DMA(di->core, "%s:\n", di->name);
+-
+ 	/* no use to transmit a zero length packet */
+ 	if (p->len == 0)
+ 		return 0;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 075ca46..9262c00 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -653,10 +653,6 @@ static uint brcms_c_calc_frame_time(struct brcms_c_info *wlc, u32 ratespec,
+ 		rate = BRCM_RATE_1M;
+ 	}
+ 
+-	BRCMS_DBG_MAC80211(wlc->hw->d11core,
+-			   "wl%d: rspec 0x%x, preamble_type %d, len%d\n",
+-			   wlc->pub->unit, ratespec, preamble_type, mac_len);
+-
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+ 		int tot_streams = mcs_2_txstreams(mcs) + rspec_stc(ratespec);
+@@ -4950,8 +4946,6 @@ uint brcms_c_detach(struct brcms_c_info *wlc)
+ 	if (wlc == NULL)
+ 		return 0;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+-
+ 	callbacks += brcms_b_detach(wlc);
+ 
+ 	/* delete software timers */
+@@ -5785,9 +5779,6 @@ brcms_c_calc_ack_time(struct brcms_c_info *wlc, u32 rspec,
+ {
+ 	uint dur = 0;
+ 
+-	BRCMS_DBG_MAC80211(wlc->hw->d11core,
+-			   "wl%d: rspec 0x%x, preamble_type %d\n",
+-			   wlc->pub->unit, rspec, preamble_type);
+ 	/*
+ 	 * Spec 9.6: ack rate is the highest rate in BSSBasicRateSet that
+ 	 * is less than or equal to the rate of the immediately previous
+@@ -5805,9 +5796,6 @@ static uint
+ brcms_c_calc_cts_time(struct brcms_c_info *wlc, u32 rspec,
+ 		      u8 preamble_type)
+ {
+-	BRCMS_DBG_MAC80211(wlc->hw->d11core,
+-			   "wl%d: ratespec 0x%x, preamble_type %d\n",
+-			   wlc->pub->unit, rspec, preamble_type);
+ 	return brcms_c_calc_ack_time(wlc, rspec, preamble_type);
+ }
+ 
+@@ -5815,9 +5803,6 @@ static uint
+ brcms_c_calc_ba_time(struct brcms_c_info *wlc, u32 rspec,
+ 		     u8 preamble_type)
+ {
+-	BRCMS_DBG_MAC80211(wlc->hw->d11core,
+-			   "wl%d: rspec 0x%x, preamble_type %d\n",
+-			   wlc->pub->unit, rspec, preamble_type);
+ 	/*
+ 	 * Spec 9.6: ack rate is the highest rate in BSSBasicRateSet that
+ 	 * is less than or equal to the rate of the immediately previous
+@@ -5871,10 +5856,6 @@ brcms_c_calc_frame_len(struct brcms_c_info *wlc, u32 ratespec,
+ 	uint nsyms, mac_len, Ndps, kNdps;
+ 	uint rate = rspec2rate(ratespec);
+ 
+-	BRCMS_DBG_MAC80211(wlc->hw->d11core,
+-			   "wl%d: rspec 0x%x, preamble_type %d, dur %d\n",
+-			   wlc->pub->unit, ratespec, preamble_type, dur);
+-
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+ 		int tot_streams = mcs_2_txstreams(mcs) + rspec_stc(ratespec);
+@@ -7279,9 +7260,6 @@ brcms_c_calc_lsig_len(struct brcms_c_info *wlc, u32 ratespec,
+ {
+ 	uint nsyms, len = 0, kNdps;
+ 
+-	BRCMS_DBG_MAC80211(wlc->hw->d11core, "wl%d: rate %d, len%d\n",
+-			   wlc->pub->unit, rspec2rate(ratespec), mac_len);
+-
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+ 		int tot_streams = (mcs_2_txstreams(mcs) + 1) +
+@@ -7635,8 +7613,6 @@ static void brcms_c_recv(struct brcms_c_info *wlc, struct sk_buff *p)
+ 	uint len;
+ 	bool is_amsdu;
+ 
+-	BRCMS_DBG_RX(wlc->hw->d11core, "wl%d\n", wlc->pub->unit);
+-
+ 	/* frame starts with rxhdr */
+ 	rxh = (struct d11rxhdr *) (p->data);
+ 
+@@ -7693,7 +7669,6 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 	uint n = 0;
+ 	uint bound_limit = bound ? RXBND : -1;
+ 
+-	BRCMS_DBG_RX(wlc_hw->d11core, "wl%d\n", wlc_hw->unit);
+ 	skb_queue_head_init(&recv_frames);
+ 
+ 	/* gather received frames */
+-- 
+1.7.9.5
 
