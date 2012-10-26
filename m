@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51989 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934816Ab2JYTD2 (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:39379 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757374Ab2JZIql (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 15:03:28 -0400
-Message-ID: <1351191838.10421.15.camel@jlt4.sipsolutions.net> (sfid-20121025_210332_103208_142D1636)
-Subject: Re: [PATCH] mac80211: Don't inspect Sequence Control field on
- control frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: linville@tuxdriver.com, Javier Lopez <jlopex@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Thu, 25 Oct 2012 21:03:58 +0200
-In-Reply-To: <1351188618-11155-1-git-send-email-javier@cozybit.com> (sfid-20121025_201029_989398_BC8461E0)
-References: <1351188618-11155-1-git-send-email-javier@cozybit.com>
-	 (sfid-20121025_201029_989398_BC8461E0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 26 Oct 2012 04:46:41 -0400
+Received: by mail-vb0-f46.google.com with SMTP id ff1so2850219vbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2012 01:46:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20121025075138.GA2330@redhat.com>
+References: <20121025075138.GA2330@redhat.com>
+Date: Fri, 26 Oct 2012 10:46:40 +0200
+Message-ID: <CAOZOX0W0E4YdD6C88muxpnYdYwLw1vLgtWiZsMoWT70c5=ZXVA@mail.gmail.com> (sfid-20121026_104648_072775_4937D0D1)
+Subject: Re: [PATCH] rt2800: validate step value for temperature compensation
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Pavel Lucik <pavel.lucik@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-10-25 at 11:10 -0700, Javier Cardona wrote:
-> Per IEEE Std. 802.11-2012, Sec 8.2.4.4.1, the sequence Control field is
-> not present in control frames.  We noticed this problem when processing
-> Block Ack Requests.
-> 
+On Thu, Oct 25, 2012 at 9:51 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Some hardware has correct (!= 0xff) value of tssi_bounds[4] in the
+> EEPROM, but step is equal to 0xff. This results on ridiculous delta
+> calculations and completely broke TX power settings.
+>
+> Reported-and-tested-by: Pavel Lucik <pavel.lucik@gmail.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Cc stable?
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
->  	hdr = (struct ieee80211_hdr *)rx->skb->data;
->  	fc = hdr->frame_control;
-> +
-> +	if (ieee80211_is_ctl(fc))
-> +		return RX_CONTINUE;
-
-Shouldn't that be "goto out"? And it seems it should also incorporate
-the skb->len check here, rather than accessing the field before checking
-that it's present?
-
-johannes
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 3bc206d..c0441a7 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2449,7 +2449,7 @@ static int rt2800_get_gain_calibration_delta(struct rt2x00_dev *rt2x00dev)
+>         /*
+>          * Check if temperature compensation is supported.
+>          */
+> -       if (tssi_bounds[4] == 0xff)
+> +       if (tssi_bounds[4] == 0xff || step == 0xff)
+>                 return 0;
+>
+>         /*
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
