@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:50425 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751409Ab2JNXOz (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:50195 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933966Ab2JZTJQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Oct 2012 19:14:55 -0400
-Received: by mail-ia0-f174.google.com with SMTP id y32so3266234iag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Oct 2012 16:14:55 -0700 (PDT)
-Message-ID: <507B476C.7070001@lwfinger.net> (sfid-20121015_011459_786312_74A32912)
-Date: Sun, 14 Oct 2012 18:14:52 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org, Joshua.Roys@gtri.gatech.edu,
-	linville@tuxdriver.com
-Subject: Re: [PATCH] rtlwifi: pass rx setup error code to caller
-References: <201210142215.48645.chunkeey@googlemail.com>
-In-Reply-To: <201210142215.48645.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 26 Oct 2012 15:09:16 -0400
+Date: Fri, 26 Oct 2012 15:09:14 -0400 (EDT)
+Message-Id: <20121026.150914.698922406187249983.davem@davemloft.net> (sfid-20121026_210935_708741_CE6FE0DB)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-10-26
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20121026152112.GB16104@tuxdriver.com>
+References: <20121026152112.GB16104@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/14/2012 03:15 PM, Christian Lamparter wrote:
-> If _rtl_usb_receive fails, the device is
-> probably not ready. Hence the error code
-> should be passed to the caller, so it can
-> react accordingly and notify the user.
->
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
->   rtlwifi/usb.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 26 Oct 2012 11:21:13 -0400
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+> This is a batch of fixes intended for the 3.7 stream.
+> 
+> Bing Zhao brings two mwifiex fixes, both continuing to fix some scanning
+> failure cases.
+> 
+> Christian Lamparter provides an rtlwifi fix to properly propogate an
+> error code.
+> 
+> Felix Fietkau reverts a previous fix that was improperly reducing Tx
+> power for some devices.  This one looks big, but it is mostly just
+> changes to a table of initialization values.
+> 
+> Larry Finger provides a b43 version of an earlier b43legacy fix to
+> avoid and oops when removing the modules after failing to load firmware.
+> 
+> Mohammed Shafi Shajakhan provides a new device ID for ath9k_htc.
+> 
+> Stanislaw Gruszka gives us an rt2x00 fix to avoide a WARNING during
+> resume, as described in kernel.org bug 48041.
+> 
+> Yuanhan Liu fixes a potential NULL dereference in brcmfmac.
 
-
->
-> diff --git a/rtlwifi/usb.c b/rtlwifi/usb.c
-> index d7744e1..696d29f 100644
-> --- a/rtlwifi/usb.c
-> +++ b/rtlwifi/usb.c
-> @@ -682,7 +682,7 @@ static int rtl_usb_start(struct ieee80211_hw *hw)
->   		set_hal_start(rtlhal);
->
->   		/* Start bulk IN */
-> -		_rtl_usb_receive(hw);
-> +		err = _rtl_usb_receive(hw);
->   	}
->
->   	return err;
->
-
+Pulled, thanks John.
