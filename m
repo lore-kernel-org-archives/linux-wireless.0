@@ -1,759 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24944 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753415Ab2JONYA (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:34560 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933290Ab2JZOYN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 09:24:00 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <rodrigue@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <backports@vger.kernel.org>
-Subject: [PATCH 2/3] compat-drivers: Move next-pending patches to cherry-picks.
-Date: Mon, 15 Oct 2012 18:53:19 +0530
-Message-ID: <1350307400-8215-3-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20121015_152413_539941_91ECC75A)
-In-Reply-To: <1350307400-8215-1-git-send-email-bkamatch@qca.qualcomm.com>
-References: <1350307400-8215-1-git-send-email-bkamatch@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 26 Oct 2012 10:24:13 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 10/18] brcmsmac: Add BRCMS_DBG_MAC80211 debug macro
+Date: Fri, 26 Oct 2012 09:23:25 -0500
+Message-Id: <1351261413-20821-11-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162418_756851_28A24DAC)
+In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patches in linux-next-pending have been merged to linux-next.
-Move those to linux-next-cherry-picks.
+This macro is used for messages related to the 802.11 MAC layer.
+Relevant messages are also converted to use this macro.
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- ...dle-errors-properly-in-MCI-initialization.patch | 128 +++++++++++++++++++++
- ...-debugfs-file-to-adjust-antenna-diversity.patch |  99 ++++++++++++++++
- ...-ath9k-Fix-chainmask-selection-for-AR9462.patch |  43 +++++++
- .../0080-ath9k-Enable-MCI-for-AR9565.patch         |  63 ++++++++++
- ...dle-errors-properly-in-MCI-initialization.patch | 128 ---------------------
- ...-debugfs-file-to-adjust-antenna-diversity.patch |  99 ----------------
- ...-ath9k-Fix-chainmask-selection-for-AR9462.patch |  43 -------
- .../0004-ath9k-Enable-MCI-for-AR9565.patch         |  63 ----------
- 8 files changed, 333 insertions(+), 333 deletions(-)
- create mode 100644 linux-next-cherry-picks/0077-ath9k-Handle-errors-properly-in-MCI-initialization.patch
- create mode 100644 linux-next-cherry-picks/0078-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch
- create mode 100644 linux-next-cherry-picks/0079-ath9k-Fix-chainmask-selection-for-AR9462.patch
- create mode 100644 linux-next-cherry-picks/0080-ath9k-Enable-MCI-for-AR9565.patch
- delete mode 100644 linux-next-pending/0001-ath9k-Handle-errors-properly-in-MCI-initialization.patch
- delete mode 100644 linux-next-pending/0002-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch
- delete mode 100644 linux-next-pending/0003-ath9k-Fix-chainmask-selection-for-AR9462.patch
- delete mode 100644 linux-next-pending/0004-ath9k-Enable-MCI-for-AR9565.patch
+ .../net/wireless/brcm80211/brcmsmac/brcms_debug.h  |    3 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   59 +++++++++++---------
+ drivers/net/wireless/brcm80211/include/defs.h      |    1 +
+ 3 files changed, 36 insertions(+), 27 deletions(-)
 
-diff --git a/linux-next-cherry-picks/0077-ath9k-Handle-errors-properly-in-MCI-initialization.patch b/linux-next-cherry-picks/0077-ath9k-Handle-errors-properly-in-MCI-initialization.patch
-new file mode 100644
-index 0000000..33b9b25
---- /dev/null
-+++ b/linux-next-cherry-picks/0077-ath9k-Handle-errors-properly-in-MCI-initialization.patch
-@@ -0,0 +1,128 @@
-+From 7eb8fcf8b7da8183ca2e0e851b2d22852eed8ef6 Mon Sep 17 00:00:00 2001
-+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-+Date: Fri, 21 Sep 2012 10:37:19 +0530
-+Subject: [PATCH 1/4] ath9k: Handle errors properly in MCI initialization
-+
-+The MCI initialization path has various points of failures,
-+handle these to ensure that we bail out correctly in such
-+cases.
-+
-+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-+---
-+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 21 +++++++++++----------
-+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |  8 ++++----
-+ drivers/net/wireless/ath/ath9k/mci.c        | 11 ++++++++---
-+ 3 files changed, 23 insertions(+), 17 deletions(-)
-+
-+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+@@ -813,8 +813,8 @@ static void ar9003_mci_osla_setup(struct
-+ 		      AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN, 1);
-+ }
-+ 
-+-void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
-+-		      bool is_full_sleep)
-++int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
-++		     bool is_full_sleep)
-+ {
-+ 	struct ath_common *common = ath9k_hw_common(ah);
-+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+@@ -824,14 +824,13 @@ void ar9003_mci_reset(struct ath_hw *ah,
-+ 		is_full_sleep, is_2g);
-+ 
-+ 	if (!mci->gpm_addr && !mci->sched_addr) {
-+-		ath_dbg(common, MCI,
-+-			"MCI GPM and schedule buffers are not allocated\n");
-+-		return;
-++		ath_err(common, "MCI GPM and schedule buffers are not allocated\n");
-++		return -ENOMEM;
-+ 	}
-+ 
-+ 	if (REG_READ(ah, AR_BTCOEX_CTRL) == 0xdeadbeef) {
-+-		ath_dbg(common, MCI, "BTCOEX control register is dead\n");
-+-		return;
-++		ath_err(common, "BTCOEX control register is dead\n");
-++		return -EINVAL;
-+ 	}
-+ 
-+ 	/* Program MCI DMA related registers */
-+@@ -913,6 +912,8 @@ void ar9003_mci_reset(struct ath_hw *ah,
-+ 
-+ 	if (en_int)
-+ 		ar9003_mci_enable_interrupt(ah);
-++
-++	return 0;
-+ }
-+ 
-+ void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
-+@@ -1144,8 +1145,8 @@ void ar9003_mci_init_cal_done(struct ath
-+ 	ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
-+ }
-+ 
-+-void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
-+-		      u16 len, u32 sched_addr)
-++int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
-++		     u16 len, u32 sched_addr)
-+ {
-+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+ 
-+@@ -1154,7 +1155,7 @@ void ar9003_mci_setup(struct ath_hw *ah,
-+ 	mci->gpm_len = len;
-+ 	mci->sched_addr = sched_addr;
-+ 
-+-	ar9003_mci_reset(ah, true, true, true);
-++	return ar9003_mci_reset(ah, true, true, true);
-+ }
-+ EXPORT_SYMBOL(ar9003_mci_setup);
-+ 
-+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+@@ -249,8 +249,8 @@ bool ar9003_mci_send_message(struct ath_
-+ 			     u32 *payload, u8 len, bool wait_done,
-+ 			     bool check_bt);
-+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type);
-+-void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
-+-		      u16 len, u32 sched_addr);
-++int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
-++		     u16 len, u32 sched_addr);
-+ void ar9003_mci_cleanup(struct ath_hw *ah);
-+ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
-+ 			      u32 *rx_msg_intr);
-+@@ -272,8 +272,8 @@ void ar9003_mci_check_bt(struct ath_hw *
-+ bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
-+ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
-+ 			 struct ath9k_hw_cal_data *caldata);
-+-void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
-+-		      bool is_full_sleep);
-++int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
-++		     bool is_full_sleep);
-+ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
-+ void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
-+ void ar9003_mci_set_power_awake(struct ath_hw *ah);
-+--- a/drivers/net/wireless/ath/ath9k/mci.c
-++++ b/drivers/net/wireless/ath/ath9k/mci.c
-+@@ -392,6 +392,7 @@ int ath_mci_setup(struct ath_softc *sc)
-+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+ 	struct ath_mci_coex *mci = &sc->mci_coex;
-+ 	struct ath_mci_buf *buf = &mci->sched_buf;
-++	int ret;
-+ 
-+ 	buf->bf_addr = dma_alloc_coherent(sc->dev,
-+ 				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
-+@@ -411,9 +412,13 @@ int ath_mci_setup(struct ath_softc *sc)
-+ 	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr + mci->sched_buf.bf_len;
-+ 	mci->gpm_buf.bf_paddr = mci->sched_buf.bf_paddr + mci->sched_buf.bf_len;
-+ 
-+-	ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
-+-			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
-+-			 mci->sched_buf.bf_paddr);
-++	ret = ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
-++			       mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
-++			       mci->sched_buf.bf_paddr);
-++	if (ret) {
-++		ath_err(common, "Failed to initialize MCI\n");
-++		return ret;
-++	}
-+ 
-+ 	INIT_WORK(&sc->mci_work, ath9k_mci_work);
-+ 	ath_dbg(common, MCI, "MCI Initialized\n");
-diff --git a/linux-next-cherry-picks/0078-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch b/linux-next-cherry-picks/0078-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch
-new file mode 100644
-index 0000000..bd0ee37
---- /dev/null
-+++ b/linux-next-cherry-picks/0078-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch
-@@ -0,0 +1,99 @@
-+From ee97c9a750b560a889a2ee1716c92e8da19168e6 Mon Sep 17 00:00:00 2001
-+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-+Date: Fri, 21 Sep 2012 12:27:20 +0530
-+Subject: [PATCH 2/4] ath9k: Add a debugfs file to adjust antenna diversity
-+
-+Location: /<debugfs>/ieee80211/phy#/ath9k/diversity
-+
-+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-+---
-+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |  2 +-
-+ drivers/net/wireless/ath/ath9k/debug.c      | 55 +++++++++++++++++++++++++++--
-+ 2 files changed, 54 insertions(+), 3 deletions(-)
-+
-+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+@@ -1360,7 +1360,7 @@ static void ar9003_hw_antctrl_shared_cha
-+ 	if (enable) {
-+ 		REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-+ 			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
-+-		if (IS_CHAN_2GHZ(ah->curchan))
-++		if (ah->curchan && IS_CHAN_2GHZ(ah->curchan))
-+ 			REG_SET_BIT(ah, AR_PHY_RESTART,
-+ 				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
-+ 		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
-+--- a/drivers/net/wireless/ath/ath9k/debug.c
-++++ b/drivers/net/wireless/ath/ath9k/debug.c
-+@@ -222,6 +222,57 @@ static const struct file_operations fops
-+ 	.llseek = default_llseek,
-+ };
-+ 
-++static ssize_t read_file_ant_diversity(struct file *file, char __user *user_buf,
-++				       size_t count, loff_t *ppos)
-++{
-++	struct ath_softc *sc = file->private_data;
-++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-++	char buf[32];
-++	unsigned int len;
-++
-++	len = sprintf(buf, "%d\n", common->antenna_diversity);
-++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-++}
-++
-++static ssize_t write_file_ant_diversity(struct file *file,
-++					const char __user *user_buf,
-++					size_t count, loff_t *ppos)
-++{
-++	struct ath_softc *sc = file->private_data;
-++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-++	unsigned long antenna_diversity;
-++	char buf[32];
-++	ssize_t len;
-++
-++	len = min(count, sizeof(buf) - 1);
-++	if (copy_from_user(buf, user_buf, len))
-++		return -EFAULT;
-++
-++	if (!AR_SREV_9565(sc->sc_ah))
-++		goto exit;
-++
-++	buf[len] = '\0';
-++	if (strict_strtoul(buf, 0, &antenna_diversity))
-++		return -EINVAL;
-++
-++	common->antenna_diversity = !!antenna_diversity;
-++	ath9k_ps_wakeup(sc);
-++	ath_ant_comb_update(sc);
-++	ath_dbg(common, CONFIG, "Antenna diversity: %d\n",
-++		common->antenna_diversity);
-++	ath9k_ps_restore(sc);
-++exit:
-++	return count;
-++}
-++
-++static const struct file_operations fops_ant_diversity = {
-++	.read = read_file_ant_diversity,
-++	.write = write_file_ant_diversity,
-++	.open = simple_open,
-++	.owner = THIS_MODULE,
-++	.llseek = default_llseek,
-++};
-++
-+ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
-+ 			     size_t count, loff_t *ppos)
-+ {
-+@@ -1601,12 +1652,12 @@ int ath9k_init_debug(struct ath_hw *ah)
-+ 	debugfs_create_file("samples", S_IRUSR, sc->debug.debugfs_phy, sc,
-+ 			    &fops_samps);
-+ #endif
-+-
-+ 	debugfs_create_u32("gpio_mask", S_IRUSR | S_IWUSR,
-+ 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_mask);
-+-
-+ 	debugfs_create_u32("gpio_val", S_IRUSR | S_IWUSR,
-+ 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_val);
-++	debugfs_create_file("diversity", S_IRUSR | S_IWUSR,
-++			    sc->debug.debugfs_phy, sc, &fops_ant_diversity);
-+ 
-+ 	return 0;
-+ }
-diff --git a/linux-next-cherry-picks/0079-ath9k-Fix-chainmask-selection-for-AR9462.patch b/linux-next-cherry-picks/0079-ath9k-Fix-chainmask-selection-for-AR9462.patch
-new file mode 100644
-index 0000000..b349f9b
---- /dev/null
-+++ b/linux-next-cherry-picks/0079-ath9k-Fix-chainmask-selection-for-AR9462.patch
-@@ -0,0 +1,43 @@
-+From c18c8444655d7c32d11fb7715b81ae02e976ac1d Mon Sep 17 00:00:00 2001
-+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-+Date: Wed, 26 Sep 2012 12:09:40 +0530
-+Subject: [PATCH 3/4] ath9k: Fix chainmask selection for AR9462
-+
-+Force chain 1 to be used for CCK rates since the target power
-+table stored in EEPROM is too high to transmit with both chains.
-+This is needed to avoid regulatory violation.
-+
-+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-+---
-+ drivers/net/wireless/ath/ath9k/ath9k.h | 2 ++
-+ drivers/net/wireless/ath/ath9k/xmit.c  | 4 ++++
-+ 2 files changed, 6 insertions(+)
-+
-+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
-++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-+@@ -173,6 +173,8 @@ void ath_descdma_cleanup(struct ath_soft
-+ 
-+ #define ATH_AN_2_TID(_an, _tidno)  (&(_an)->tid[(_tidno)])
-+ 
-++#define IS_CCK_RATE(rate) ((rate >= 0x18) && (rate <= 0x1e))
-++
-+ #define ATH_TX_COMPLETE_POLL_INT	1000
-+ 
-+ enum ATH_AGGR_STATUS {
-+--- a/drivers/net/wireless/ath/ath9k/xmit.c
-++++ b/drivers/net/wireless/ath/ath9k/xmit.c
-+@@ -1819,10 +1819,14 @@ u8 ath_txchainmask_reduction(struct ath_
-+ {
-+ 	struct ath_hw *ah = sc->sc_ah;
-+ 	struct ath9k_channel *curchan = ah->curchan;
-++
-+ 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_APM) &&
-+ 	    (curchan->channelFlags & CHANNEL_5GHZ) &&
-+ 	    (chainmask == 0x7) && (rate < 0x90))
-+ 		return 0x3;
-++	else if (AR_SREV_9462(ah) && ath9k_hw_btcoex_is_enabled(ah) &&
-++		 IS_CCK_RATE(rate))
-++		return 0x2;
-+ 	else
-+ 		return chainmask;
-+ }
-diff --git a/linux-next-cherry-picks/0080-ath9k-Enable-MCI-for-AR9565.patch b/linux-next-cherry-picks/0080-ath9k-Enable-MCI-for-AR9565.patch
-new file mode 100644
-index 0000000..340f42f
---- /dev/null
-+++ b/linux-next-cherry-picks/0080-ath9k-Enable-MCI-for-AR9565.patch
-@@ -0,0 +1,63 @@
-+From 1748b1ebc5e8f7ba9a014766fefab969c45d3142 Mon Sep 17 00:00:00 2001
-+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-+Date: Wed, 26 Sep 2012 11:34:26 +0000
-+Subject: [PATCH 4/4] ath9k: Enable MCI for AR9565
-+
-+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-+---
-+ drivers/net/wireless/ath/ath9k/btcoex.c | 6 +++---
-+ drivers/net/wireless/ath/ath9k/gpio.c   | 2 +-
-+ drivers/net/wireless/ath/ath9k/wow.c    | 2 +-
-+ 3 files changed, 5 insertions(+), 5 deletions(-)
-+
-+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
-++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-+@@ -282,7 +282,7 @@ void ath9k_hw_btcoex_enable(struct ath_h
-+ 		ath9k_hw_btcoex_enable_2wire(ah);
-+ 		break;
-+ 	case ATH_BTCOEX_CFG_3WIRE:
-+-		if (AR_SREV_9462(ah)) {
-++		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-+ 			ath9k_hw_btcoex_enable_mci(ah);
-+ 			return;
-+ 		}
-+@@ -304,7 +304,7 @@ void ath9k_hw_btcoex_disable(struct ath_
-+ 	int i;
-+ 
-+ 	btcoex_hw->enabled = false;
-+-	if (AR_SREV_9462(ah)) {
-++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-+ 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
-+ 		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
-+ 			REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
-+@@ -339,7 +339,7 @@ static void ar9003_btcoex_bt_stomp(struc
-+ 	const u32 *weight = ar9003_wlan_weights[stomp_type];
-+ 	int i;
-+ 
-+-	if (AR_SREV_9462(ah)) {
-++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-+ 		if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
-+ 		    btcoex->mci.stomp_ftp)
-+ 			stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
-+--- a/drivers/net/wireless/ath/ath9k/gpio.c
-++++ b/drivers/net/wireless/ath/ath9k/gpio.c
-+@@ -412,7 +412,7 @@ void ath9k_stop_btcoex(struct ath_softc
-+ 		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
-+ 			ath9k_btcoex_timer_pause(sc);
-+ 		ath9k_hw_btcoex_disable(ah);
-+-		if (AR_SREV_9462(ah))
-++		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
-+ 			ath_mci_flush_profile(&sc->btcoex.mci);
-+ 	}
-+ }
-+--- a/drivers/net/wireless/ath/ath9k/wow.c
-++++ b/drivers/net/wireless/ath/ath9k/wow.c
-+@@ -497,7 +497,7 @@ void ath9k_hw_wow_enable(struct ath_hw *
-+ 
-+ 	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
-+ 
-+-	if (AR_SREV_9462(ah)) {
-++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-+ 		/*
-+ 		 * this is needed to prevent the chip waking up
-+ 		 * the host within 3-4 seconds with certain
-diff --git a/linux-next-pending/0001-ath9k-Handle-errors-properly-in-MCI-initialization.patch b/linux-next-pending/0001-ath9k-Handle-errors-properly-in-MCI-initialization.patch
-deleted file mode 100644
-index 33b9b25..0000000
---- a/linux-next-pending/0001-ath9k-Handle-errors-properly-in-MCI-initialization.patch
-+++ /dev/null
-@@ -1,128 +0,0 @@
--From 7eb8fcf8b7da8183ca2e0e851b2d22852eed8ef6 Mon Sep 17 00:00:00 2001
--From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
--Date: Fri, 21 Sep 2012 10:37:19 +0530
--Subject: [PATCH 1/4] ath9k: Handle errors properly in MCI initialization
--
--The MCI initialization path has various points of failures,
--handle these to ensure that we bail out correctly in such
--cases.
--
--Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-----
-- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 21 +++++++++++----------
-- drivers/net/wireless/ath/ath9k/ar9003_mci.h |  8 ++++----
-- drivers/net/wireless/ath/ath9k/mci.c        | 11 ++++++++---
-- 3 files changed, 23 insertions(+), 17 deletions(-)
--
----- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
--+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
--@@ -813,8 +813,8 @@ static void ar9003_mci_osla_setup(struct
-- 		      AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN, 1);
-- }
-- 
---void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
---		      bool is_full_sleep)
--+int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
--+		     bool is_full_sleep)
-- {
-- 	struct ath_common *common = ath9k_hw_common(ah);
-- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
--@@ -824,14 +824,13 @@ void ar9003_mci_reset(struct ath_hw *ah,
-- 		is_full_sleep, is_2g);
-- 
-- 	if (!mci->gpm_addr && !mci->sched_addr) {
---		ath_dbg(common, MCI,
---			"MCI GPM and schedule buffers are not allocated\n");
---		return;
--+		ath_err(common, "MCI GPM and schedule buffers are not allocated\n");
--+		return -ENOMEM;
-- 	}
-- 
-- 	if (REG_READ(ah, AR_BTCOEX_CTRL) == 0xdeadbeef) {
---		ath_dbg(common, MCI, "BTCOEX control register is dead\n");
---		return;
--+		ath_err(common, "BTCOEX control register is dead\n");
--+		return -EINVAL;
-- 	}
-- 
-- 	/* Program MCI DMA related registers */
--@@ -913,6 +912,8 @@ void ar9003_mci_reset(struct ath_hw *ah,
-- 
-- 	if (en_int)
-- 		ar9003_mci_enable_interrupt(ah);
--+
--+	return 0;
-- }
-- 
-- void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
--@@ -1144,8 +1145,8 @@ void ar9003_mci_init_cal_done(struct ath
-- 	ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
-- }
-- 
---void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
---		      u16 len, u32 sched_addr)
--+int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
--+		     u16 len, u32 sched_addr)
-- {
-- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-- 
--@@ -1154,7 +1155,7 @@ void ar9003_mci_setup(struct ath_hw *ah,
-- 	mci->gpm_len = len;
-- 	mci->sched_addr = sched_addr;
-- 
---	ar9003_mci_reset(ah, true, true, true);
--+	return ar9003_mci_reset(ah, true, true, true);
-- }
-- EXPORT_SYMBOL(ar9003_mci_setup);
-- 
----- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
--+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
--@@ -249,8 +249,8 @@ bool ar9003_mci_send_message(struct ath_
-- 			     u32 *payload, u8 len, bool wait_done,
-- 			     bool check_bt);
-- u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type);
---void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
---		      u16 len, u32 sched_addr);
--+int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
--+		     u16 len, u32 sched_addr);
-- void ar9003_mci_cleanup(struct ath_hw *ah);
-- void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
-- 			      u32 *rx_msg_intr);
--@@ -272,8 +272,8 @@ void ar9003_mci_check_bt(struct ath_hw *
-- bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
-- int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
-- 			 struct ath9k_hw_cal_data *caldata);
---void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
---		      bool is_full_sleep);
--+int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
--+		     bool is_full_sleep);
-- void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
-- void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
-- void ar9003_mci_set_power_awake(struct ath_hw *ah);
----- a/drivers/net/wireless/ath/ath9k/mci.c
--+++ b/drivers/net/wireless/ath/ath9k/mci.c
--@@ -392,6 +392,7 @@ int ath_mci_setup(struct ath_softc *sc)
-- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-- 	struct ath_mci_coex *mci = &sc->mci_coex;
-- 	struct ath_mci_buf *buf = &mci->sched_buf;
--+	int ret;
-- 
-- 	buf->bf_addr = dma_alloc_coherent(sc->dev,
-- 				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
--@@ -411,9 +412,13 @@ int ath_mci_setup(struct ath_softc *sc)
-- 	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr + mci->sched_buf.bf_len;
-- 	mci->gpm_buf.bf_paddr = mci->sched_buf.bf_paddr + mci->sched_buf.bf_len;
-- 
---	ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
---			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
---			 mci->sched_buf.bf_paddr);
--+	ret = ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
--+			       mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
--+			       mci->sched_buf.bf_paddr);
--+	if (ret) {
--+		ath_err(common, "Failed to initialize MCI\n");
--+		return ret;
--+	}
-- 
-- 	INIT_WORK(&sc->mci_work, ath9k_mci_work);
-- 	ath_dbg(common, MCI, "MCI Initialized\n");
-diff --git a/linux-next-pending/0002-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch b/linux-next-pending/0002-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch
-deleted file mode 100644
-index bd0ee37..0000000
---- a/linux-next-pending/0002-ath9k-Add-a-debugfs-file-to-adjust-antenna-diversity.patch
-+++ /dev/null
-@@ -1,99 +0,0 @@
--From ee97c9a750b560a889a2ee1716c92e8da19168e6 Mon Sep 17 00:00:00 2001
--From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
--Date: Fri, 21 Sep 2012 12:27:20 +0530
--Subject: [PATCH 2/4] ath9k: Add a debugfs file to adjust antenna diversity
--
--Location: /<debugfs>/ieee80211/phy#/ath9k/diversity
--
--Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-----
-- drivers/net/wireless/ath/ath9k/ar9003_phy.c |  2 +-
-- drivers/net/wireless/ath/ath9k/debug.c      | 55 +++++++++++++++++++++++++++--
-- 2 files changed, 54 insertions(+), 3 deletions(-)
--
----- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
--+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
--@@ -1360,7 +1360,7 @@ static void ar9003_hw_antctrl_shared_cha
-- 	if (enable) {
-- 		REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-- 			    (1 << AR_PHY_ANT_SW_RX_PROT_S));
---		if (IS_CHAN_2GHZ(ah->curchan))
--+		if (ah->curchan && IS_CHAN_2GHZ(ah->curchan))
-- 			REG_SET_BIT(ah, AR_PHY_RESTART,
-- 				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
-- 		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
----- a/drivers/net/wireless/ath/ath9k/debug.c
--+++ b/drivers/net/wireless/ath/ath9k/debug.c
--@@ -222,6 +222,57 @@ static const struct file_operations fops
-- 	.llseek = default_llseek,
-- };
-- 
--+static ssize_t read_file_ant_diversity(struct file *file, char __user *user_buf,
--+				       size_t count, loff_t *ppos)
--+{
--+	struct ath_softc *sc = file->private_data;
--+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--+	char buf[32];
--+	unsigned int len;
--+
--+	len = sprintf(buf, "%d\n", common->antenna_diversity);
--+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--+}
--+
--+static ssize_t write_file_ant_diversity(struct file *file,
--+					const char __user *user_buf,
--+					size_t count, loff_t *ppos)
--+{
--+	struct ath_softc *sc = file->private_data;
--+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--+	unsigned long antenna_diversity;
--+	char buf[32];
--+	ssize_t len;
--+
--+	len = min(count, sizeof(buf) - 1);
--+	if (copy_from_user(buf, user_buf, len))
--+		return -EFAULT;
--+
--+	if (!AR_SREV_9565(sc->sc_ah))
--+		goto exit;
--+
--+	buf[len] = '\0';
--+	if (strict_strtoul(buf, 0, &antenna_diversity))
--+		return -EINVAL;
--+
--+	common->antenna_diversity = !!antenna_diversity;
--+	ath9k_ps_wakeup(sc);
--+	ath_ant_comb_update(sc);
--+	ath_dbg(common, CONFIG, "Antenna diversity: %d\n",
--+		common->antenna_diversity);
--+	ath9k_ps_restore(sc);
--+exit:
--+	return count;
--+}
--+
--+static const struct file_operations fops_ant_diversity = {
--+	.read = read_file_ant_diversity,
--+	.write = write_file_ant_diversity,
--+	.open = simple_open,
--+	.owner = THIS_MODULE,
--+	.llseek = default_llseek,
--+};
--+
-- static ssize_t read_file_dma(struct file *file, char __user *user_buf,
-- 			     size_t count, loff_t *ppos)
-- {
--@@ -1601,12 +1652,12 @@ int ath9k_init_debug(struct ath_hw *ah)
-- 	debugfs_create_file("samples", S_IRUSR, sc->debug.debugfs_phy, sc,
-- 			    &fops_samps);
-- #endif
---
-- 	debugfs_create_u32("gpio_mask", S_IRUSR | S_IWUSR,
-- 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_mask);
---
-- 	debugfs_create_u32("gpio_val", S_IRUSR | S_IWUSR,
-- 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_val);
--+	debugfs_create_file("diversity", S_IRUSR | S_IWUSR,
--+			    sc->debug.debugfs_phy, sc, &fops_ant_diversity);
-- 
-- 	return 0;
-- }
-diff --git a/linux-next-pending/0003-ath9k-Fix-chainmask-selection-for-AR9462.patch b/linux-next-pending/0003-ath9k-Fix-chainmask-selection-for-AR9462.patch
-deleted file mode 100644
-index b349f9b..0000000
---- a/linux-next-pending/0003-ath9k-Fix-chainmask-selection-for-AR9462.patch
-+++ /dev/null
-@@ -1,43 +0,0 @@
--From c18c8444655d7c32d11fb7715b81ae02e976ac1d Mon Sep 17 00:00:00 2001
--From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
--Date: Wed, 26 Sep 2012 12:09:40 +0530
--Subject: [PATCH 3/4] ath9k: Fix chainmask selection for AR9462
--
--Force chain 1 to be used for CCK rates since the target power
--table stored in EEPROM is too high to transmit with both chains.
--This is needed to avoid regulatory violation.
--
--Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-----
-- drivers/net/wireless/ath/ath9k/ath9k.h | 2 ++
-- drivers/net/wireless/ath/ath9k/xmit.c  | 4 ++++
-- 2 files changed, 6 insertions(+)
--
----- a/drivers/net/wireless/ath/ath9k/ath9k.h
--+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
--@@ -173,6 +173,8 @@ void ath_descdma_cleanup(struct ath_soft
-- 
-- #define ATH_AN_2_TID(_an, _tidno)  (&(_an)->tid[(_tidno)])
-- 
--+#define IS_CCK_RATE(rate) ((rate >= 0x18) && (rate <= 0x1e))
--+
-- #define ATH_TX_COMPLETE_POLL_INT	1000
-- 
-- enum ATH_AGGR_STATUS {
----- a/drivers/net/wireless/ath/ath9k/xmit.c
--+++ b/drivers/net/wireless/ath/ath9k/xmit.c
--@@ -1819,10 +1819,14 @@ u8 ath_txchainmask_reduction(struct ath_
-- {
-- 	struct ath_hw *ah = sc->sc_ah;
-- 	struct ath9k_channel *curchan = ah->curchan;
--+
-- 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_APM) &&
-- 	    (curchan->channelFlags & CHANNEL_5GHZ) &&
-- 	    (chainmask == 0x7) && (rate < 0x90))
-- 		return 0x3;
--+	else if (AR_SREV_9462(ah) && ath9k_hw_btcoex_is_enabled(ah) &&
--+		 IS_CCK_RATE(rate))
--+		return 0x2;
-- 	else
-- 		return chainmask;
-- }
-diff --git a/linux-next-pending/0004-ath9k-Enable-MCI-for-AR9565.patch b/linux-next-pending/0004-ath9k-Enable-MCI-for-AR9565.patch
-deleted file mode 100644
-index 340f42f..0000000
---- a/linux-next-pending/0004-ath9k-Enable-MCI-for-AR9565.patch
-+++ /dev/null
-@@ -1,63 +0,0 @@
--From 1748b1ebc5e8f7ba9a014766fefab969c45d3142 Mon Sep 17 00:00:00 2001
--From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
--Date: Wed, 26 Sep 2012 11:34:26 +0000
--Subject: [PATCH 4/4] ath9k: Enable MCI for AR9565
--
--Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-----
-- drivers/net/wireless/ath/ath9k/btcoex.c | 6 +++---
-- drivers/net/wireless/ath/ath9k/gpio.c   | 2 +-
-- drivers/net/wireless/ath/ath9k/wow.c    | 2 +-
-- 3 files changed, 5 insertions(+), 5 deletions(-)
--
----- a/drivers/net/wireless/ath/ath9k/btcoex.c
--+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
--@@ -282,7 +282,7 @@ void ath9k_hw_btcoex_enable(struct ath_h
-- 		ath9k_hw_btcoex_enable_2wire(ah);
-- 		break;
-- 	case ATH_BTCOEX_CFG_3WIRE:
---		if (AR_SREV_9462(ah)) {
--+		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-- 			ath9k_hw_btcoex_enable_mci(ah);
-- 			return;
-- 		}
--@@ -304,7 +304,7 @@ void ath9k_hw_btcoex_disable(struct ath_
-- 	int i;
-- 
-- 	btcoex_hw->enabled = false;
---	if (AR_SREV_9462(ah)) {
--+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
-- 		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
-- 			REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
--@@ -339,7 +339,7 @@ static void ar9003_btcoex_bt_stomp(struc
-- 	const u32 *weight = ar9003_wlan_weights[stomp_type];
-- 	int i;
-- 
---	if (AR_SREV_9462(ah)) {
--+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-- 		if ((stomp_type == ATH_BTCOEX_STOMP_LOW) &&
-- 		    btcoex->mci.stomp_ftp)
-- 			stomp_type = ATH_BTCOEX_STOMP_LOW_FTP;
----- a/drivers/net/wireless/ath/ath9k/gpio.c
--+++ b/drivers/net/wireless/ath/ath9k/gpio.c
--@@ -412,7 +412,7 @@ void ath9k_stop_btcoex(struct ath_softc
-- 		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
-- 			ath9k_btcoex_timer_pause(sc);
-- 		ath9k_hw_btcoex_disable(ah);
---		if (AR_SREV_9462(ah))
--+		if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
-- 			ath_mci_flush_profile(&sc->btcoex.mci);
-- 	}
-- }
----- a/drivers/net/wireless/ath/ath9k/wow.c
--+++ b/drivers/net/wireless/ath/ath9k/wow.c
--@@ -497,7 +497,7 @@ void ath9k_hw_wow_enable(struct ath_hw *
-- 
-- 	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
-- 
---	if (AR_SREV_9462(ah)) {
--+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-- 		/*
-- 		 * this is needed to prevent the chip waking up
-- 		 * the host within 3-4 seconds with certain
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
+index ab7f516..12f513b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
+@@ -35,6 +35,7 @@ static inline void __brcms_dbg(struct device *dev, u32 level,
+ #define BRCMS_ERR(core, f, a...)	__brcms_err(&(core)->dev, f, ##a)
+ #define BRCMS_CRIT(core, f, a...)	__brcms_crit(&(core)->dev, f, ##a)
+ 
+-#define BRCMS_DBG_INFO(core, f, a...)	BRCMS_DBG(core, BRCM_DL_INFO, f, ##a)
++#define BRCMS_DBG_INFO(core, f, a...)		BRCMS_DBG(core, BRCM_DL_INFO, f, ##a)
++#define BRCMS_DBG_MAC80211(core, f, a...)	BRCMS_DBG(core, BRCM_DL_MAC80211, f, ##a)
+ 
+ #endif /* _BRCMS_DEBUG_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index a5fafb0..09cca57 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -652,8 +652,9 @@ static uint brcms_c_calc_frame_time(struct brcms_c_info *wlc, u32 ratespec,
+ 		rate = BRCM_RATE_1M;
+ 	}
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: rspec 0x%x, preamble_type %d, len%d\n",
+-		 wlc->pub->unit, ratespec, preamble_type, mac_len);
++	BRCMS_DBG_MAC80211(wlc->hw->d11core,
++			   "wl%d: rspec 0x%x, preamble_type %d, len%d\n",
++			   wlc->pub->unit, ratespec, preamble_type, mac_len);
+ 
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+@@ -813,8 +814,8 @@ static void brcms_b_core_phy_clk(struct brcms_hardware *wlc_hw, bool clk)
+ /* low-level band switch utility routine */
+ static void brcms_c_setxband(struct brcms_hardware *wlc_hw, uint bandunit)
+ {
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d: bandunit %d\n", wlc_hw->unit,
+-		bandunit);
++	BRCMS_DBG_MAC80211(wlc_hw->d11core, "wl%d: bandunit %d\n", wlc_hw->unit,
++			   bandunit);
+ 
+ 	wlc_hw->band = wlc_hw->bandstate[bandunit];
+ 
+@@ -842,7 +843,7 @@ static u32 brcms_c_setband_inact(struct brcms_c_info *wlc, uint bandunit)
+ 	u32 macintmask;
+ 	u32 macctrl;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
++	BRCMS_DBG_MAC80211(wlc_hw->d11core, "wl%d\n", wlc_hw->unit);
+ 	macctrl = bcma_read32(wlc_hw->d11core,
+ 			      D11REGOFFS(maccontrol));
+ 	WARN_ON((macctrl & MCTL_EN_MAC) != 0);
+@@ -1730,8 +1731,8 @@ static void brcms_b_bsinit(struct brcms_c_info *wlc, u16 chanspec)
+ {
+ 	struct brcms_hardware *wlc_hw = wlc->hw;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: bandunit %d\n", wlc_hw->unit,
+-		wlc_hw->band->bandunit);
++	BRCMS_DBG_MAC80211(wlc_hw->d11core, "wl%d: bandunit %d\n", wlc_hw->unit,
++			   wlc_hw->band->bandunit);
+ 
+ 	brcms_c_ucode_bsinit(wlc_hw);
+ 
+@@ -2654,8 +2655,8 @@ void brcms_c_suspend_mac_and_wait(struct brcms_c_info *wlc)
+ 	struct bcma_device *core = wlc_hw->d11core;
+ 	u32 mc, mi;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: bandunit %d\n", wlc_hw->unit,
+-		wlc_hw->band->bandunit);
++	BRCMS_DBG_MAC80211(core, "wl%d: bandunit %d\n", wlc_hw->unit,
++			   wlc_hw->band->bandunit);
+ 
+ 	/*
+ 	 * Track overlapping suspend requests
+@@ -2722,8 +2723,8 @@ void brcms_c_enable_mac(struct brcms_c_info *wlc)
+ 	struct bcma_device *core = wlc_hw->d11core;
+ 	u32 mc, mi;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: bandunit %d\n", wlc_hw->unit,
+-		wlc->band->bandunit);
++	BRCMS_DBG_MAC80211(core, "wl%d: bandunit %d\n", wlc_hw->unit,
++			   wlc->band->bandunit);
+ 
+ 	/*
+ 	 * Track overlapping suspend requests
+@@ -3783,7 +3784,8 @@ static void brcms_c_set_ps_ctrl(struct brcms_c_info *wlc)
+ 
+ 	hps = brcms_c_ps_allowed(wlc);
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: hps %d\n", wlc->pub->unit, hps);
++	BRCMS_DBG_MAC80211(wlc->hw->d11core, "wl%d: hps %d\n", wlc->pub->unit,
++			   hps);
+ 
+ 	v1 = bcma_read32(wlc->hw->d11core, D11REGOFFS(maccontrol));
+ 	v2 = MCTL_WAKE;
+@@ -3869,7 +3871,8 @@ brcms_b_set_chanspec(struct brcms_hardware *wlc_hw, u16 chanspec,
+ {
+ 	uint bandunit;
+ 
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d: 0x%x\n", wlc_hw->unit, chanspec);
++	BRCMS_DBG_MAC80211(wlc_hw->d11core, "wl%d: 0x%x\n", wlc_hw->unit,
++			   chanspec);
+ 
+ 	wlc_hw->chanspec = chanspec;
+ 
+@@ -5984,8 +5987,9 @@ brcms_c_calc_ack_time(struct brcms_c_info *wlc, u32 rspec,
+ {
+ 	uint dur = 0;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: rspec 0x%x, preamble_type %d\n",
+-		wlc->pub->unit, rspec, preamble_type);
++	BRCMS_DBG_MAC80211(wlc->hw->d11core,
++			   "wl%d: rspec 0x%x, preamble_type %d\n",
++			   wlc->pub->unit, rspec, preamble_type);
+ 	/*
+ 	 * Spec 9.6: ack rate is the highest rate in BSSBasicRateSet that
+ 	 * is less than or equal to the rate of the immediately previous
+@@ -6003,8 +6007,9 @@ static uint
+ brcms_c_calc_cts_time(struct brcms_c_info *wlc, u32 rspec,
+ 		      u8 preamble_type)
+ {
+-	BCMMSG(wlc->wiphy, "wl%d: ratespec 0x%x, preamble_type %d\n",
+-		wlc->pub->unit, rspec, preamble_type);
++	BRCMS_DBG_MAC80211(wlc->hw->d11core,
++			   "wl%d: ratespec 0x%x, preamble_type %d\n",
++			   wlc->pub->unit, rspec, preamble_type);
+ 	return brcms_c_calc_ack_time(wlc, rspec, preamble_type);
+ }
+ 
+@@ -6012,8 +6017,9 @@ static uint
+ brcms_c_calc_ba_time(struct brcms_c_info *wlc, u32 rspec,
+ 		     u8 preamble_type)
+ {
+-	BCMMSG(wlc->wiphy, "wl%d: rspec 0x%x, "
+-                "preamble_type %d\n", wlc->pub->unit, rspec, preamble_type);
++	BRCMS_DBG_MAC80211(wlc->hw->d11core,
++			   "wl%d: rspec 0x%x, preamble_type %d\n",
++			   wlc->pub->unit, rspec, preamble_type);
+ 	/*
+ 	 * Spec 9.6: ack rate is the highest rate in BSSBasicRateSet that
+ 	 * is less than or equal to the rate of the immediately previous
+@@ -6067,8 +6073,9 @@ brcms_c_calc_frame_len(struct brcms_c_info *wlc, u32 ratespec,
+ 	uint nsyms, mac_len, Ndps, kNdps;
+ 	uint rate = rspec2rate(ratespec);
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: rspec 0x%x, preamble_type %d, dur %d\n",
+-		 wlc->pub->unit, ratespec, preamble_type, dur);
++	BRCMS_DBG_MAC80211(wlc->hw->d11core,
++			   "wl%d: rspec 0x%x, preamble_type %d, dur %d\n",
++			   wlc->pub->unit, ratespec, preamble_type, dur);
+ 
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+@@ -6183,9 +6190,9 @@ mac80211_wlc_set_nrate(struct brcms_c_info *wlc, struct brcms_band *cur_band,
+ 		} else if (rate > HIGHEST_SINGLE_STREAM_MCS) {
+ 			/* mcs > 7 must use stf SDM */
+ 			if (stf != PHY_TXC1_MODE_SDM) {
+-				BCMMSG(wlc->wiphy, "wl%d: enabling "
+-				       "SDM mode for mcs %d\n",
+-				       wlc->pub->unit, rate);
++				BRCMS_DBG_MAC80211(core, "wl%d: enabling "
++						   "SDM mode for mcs %d\n",
++						   wlc->pub->unit, rate);
+ 				stf = PHY_TXC1_MODE_SDM;
+ 			}
+ 		} else {
+@@ -7474,8 +7481,8 @@ brcms_c_calc_lsig_len(struct brcms_c_info *wlc, u32 ratespec,
+ {
+ 	uint nsyms, len = 0, kNdps;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: rate %d, len%d\n",
+-		 wlc->pub->unit, rspec2rate(ratespec), mac_len);
++	BRCMS_DBG_MAC80211(wlc->hw->d11core, "wl%d: rate %d, len%d\n",
++			   wlc->pub->unit, rspec2rate(ratespec), mac_len);
+ 
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
+index 223eb2b..4d6906f 100644
+--- a/drivers/net/wireless/brcm80211/include/defs.h
++++ b/drivers/net/wireless/brcm80211/include/defs.h
+@@ -80,6 +80,7 @@
+ 
+ /* Debug levels */
+ #define BRCM_DL_INFO		0x00000001
++#define BRCM_DL_MAC80211	0x00000002
+ 
+ #define PM_OFF	0
+ #define PM_MAX	1
 -- 
-1.7.11.4
+1.7.9.5
 
