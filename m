@@ -1,54 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59734 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759701Ab2J2RUJ (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:33740 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965257Ab2JZQaH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 13:20:09 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so2103360bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 10:20:07 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Albert Pool <albertpool@solcon.nl>
-Subject: Re: Unknown Realtek USB device
-Date: Mon, 29 Oct 2012 18:20:02 +0100
-Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
-References: <508EB140.5010102@solcon.nl>
-In-Reply-To: <508EB140.5010102@solcon.nl>
+	Fri, 26 Oct 2012 12:30:07 -0400
+Received: by mail-we0-f174.google.com with SMTP id t9so1483082wey.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2012 09:30:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201210291820.03101.chunkeey@googlemail.com> (sfid-20121029_182036_603039_E9FB5B18)
+In-Reply-To: <1351249254.10813.13.camel@jlt4.sipsolutions.net>
+References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
+ <1351205200-18094-3-git-send-email-johannes@sipsolutions.net> <1351249254.10813.13.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Fri, 26 Oct 2012 09:29:45 -0700
+Message-ID: <CAG6hwVOzf0uwkQUxjL0Gw0iLwdCNNQdBMB3_rfhp5AyTtJvQ6Q@mail.gmail.com> (sfid-20121026_183012_793232_43DA9710)
+Subject: Re: [PATCH v2 2/3] mac80211: verify that skb data is present
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, October 29, 2012 05:39:28 PM Albert Pool wrote:
-> Can any of you help me identify the Realtek chip in this device so that the USB ID can be added to the right driver?
-> It's a 802.11n USB nano dongle from ISY. I only have the dongle for short time, so I may not be able to test it
-> myself if it takes some time. usb-devices and lsusb -v output is attached.
+On Fri, Oct 26, 2012 at 4:00 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> A number of places in the mesh code don't check that
+> the frame data is present and in the skb header when
+> trying to access. Add those checks and the necessary
+> pskb_may_pull() calls. This prevents accessing data
+> that doesn't actually exist.
+>
+> To do this, export ieee80211_get_mesh_hdrlen() to be
+> able to use it in mac80211.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  include/net/cfg80211.h |    9 +++++++++
+>  net/mac80211/rx.c      |   32 +++++++++++++++++++++++++++++++-
+>  net/wireless/util.c    |    3 ++-
+>  3 files changed, 42 insertions(+), 2 deletions(-)
+>
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index f8cd4cf..7d5b600 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -2652,6 +2652,15 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
+>  unsigned int __attribute_const__ ieee80211_hdrlen(__le16 fc);
+>
+>  /**
+> + * ieee80211_get_mesh_hdrlen - get mesh extension header length
+> + * @meshhdr: the mesh extension header, only the flags field
+> + *     (first byte) will be accessed
+> + * Returns the length of the extension header, which is always at
+> + * least 6 bytes and at most 18 if address 5 and 6 are present.
+> + */
+> +unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr);
+> +
+> +/**
+>   * DOC: Data path helpers
+>   *
+>   * In addition to generic utilities, cfg80211 also offers
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 99cdee1..265a032d 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -531,6 +531,11 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+>
+>                 if (ieee80211_is_action(hdr->frame_control)) {
+>                         u8 category;
+> +
+> +                       /* make sure category field is present */
+> +                       if (rx->skb->len < IEEE80211_MIN_ACTION_SIZE)
+> +                               return RX_DROP_MONITOR;
+> +
+>                         mgmt = (struct ieee80211_mgmt *)hdr;
+>                         category = mgmt->u.action.category;
+>                         if (category != WLAN_CATEGORY_MESH_ACTION &&
+> @@ -1892,6 +1897,20 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+>
+>         hdr = (struct ieee80211_hdr *) skb->data;
+>         hdrlen = ieee80211_hdrlen(hdr->frame_control);
+> +
+> +       /* make sure fixed part of mesh header is there, also checks skb len */
+> +       if (!pskb_may_pull(rx->skb, hdrlen + 6))
+> +               return RX_DROP_MONITOR;
+> +
+> +       mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
+> +
+> +       /* make sure full mesh header is there, also checks skb len */
+> +       if (!pskb_may_pull(rx->skb,
+> +                          hdrlen + ieee80211_get_mesh_hdrlen(mesh_hdr)))
+> +               return RX_DROP_MONITOR;
+> +
+> +       /* reload pointers */
+> +       hdr = (struct ieee80211_hdr *) skb->data;
+>         mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
+>
+>         /* frame is in RMC, don't forward */
+> @@ -1915,9 +1934,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+>                 if (is_multicast_ether_addr(hdr->addr1)) {
+>                         mpp_addr = hdr->addr3;
+>                         proxied_addr = mesh_hdr->eaddr1;
+> -               } else {
+> +               } else if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
 
-Is it a ISY IWL 2000 device? Then it could be supported by rtl8192cu:
+OK, but now the first check (is_multicast_ether_addr()) implies AE_A4
+flag. It seems cleaner to just be explicit about what you're asking
+for both cases.
 
-<http://forum.ubuntuusers.de/topic/isy-iwl-2000-n150-standard-wird-nicht-erkannt/#post-4641162>
-
-Note:
-you'll have to have to correct firmware in place as well. Either
-you have to install a realtek firmware package (rtlwifi) for your
-distro... Or download it manually (filename: rtlwifi/rtl8192cufw.bin
-<http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git>)
-and put it into the correct place (/lib/firmware/(rtlwifi))
-
-Regards,
-	Chr
----
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index 9970c2b..d4338fd 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -297,6 +297,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
- 	/*=== Customer ID ===*/
- 	/****** 8188CU ********/
- 	{RTL_USB_DEVICE(0x050d, 0x1102, rtl92cu_hal_cfg)}, /*Belkin - Edimax*/
-+	{RTL_USB_DEVICE(0x050d, 0x11f2, rtl92cu_hal_cfg)}, /*Belkin - Edimax*/
- 	{RTL_USB_DEVICE(0x06f8, 0xe033, rtl92cu_hal_cfg)}, /*Hercules - Edimax*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
+> +                       /* has_a4 already checked in ieee80211_rx_mesh_check */
+>                         mpp_addr = hdr->addr4;
+>                         proxied_addr = mesh_hdr->eaddr2;
+> +               } else {
+> +                       return RX_DROP_MONITOR;
+>                 }
+>
+>                 rcu_read_lock();
+> @@ -2354,6 +2376,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+>                 }
+>                 break;
+>         case WLAN_CATEGORY_SELF_PROTECTED:
+> +               if (len < (IEEE80211_MIN_ACTION_SIZE +
+> +                          sizeof(mgmt->u.action.u.self_prot.action_code)))
+> +                       break;
+> +
+>                 switch (mgmt->u.action.u.self_prot.action_code) {
+>                 case WLAN_SP_MESH_PEERING_OPEN:
+>                 case WLAN_SP_MESH_PEERING_CLOSE:
+> @@ -2372,6 +2398,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+>                 }
+>                 break;
+>         case WLAN_CATEGORY_MESH_ACTION:
+> +               if (len < (IEEE80211_MIN_ACTION_SIZE +
+> +                          sizeof(mgmt->u.action.u.mesh_action.action_code)))
+> +                       break;
+> +
+>                 if (!ieee80211_vif_is_mesh(&sdata->vif))
+>                         break;
+>                 if (mesh_action_is_path_sel(mgmt) &&
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index 45a09de..2762e83 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -309,7 +309,7 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
+>  }
+>  EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
+>
+> -static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+> +unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+>  {
+>         int ae = meshhdr->flags & MESH_FLAGS_AE;
+>         /* 802.11-2012, 8.2.4.7.3 */
+> @@ -323,6 +323,7 @@ static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+>                 return 18;
+>         }
+>  }
+> +EXPORT_SYMBOL(ieee80211_get_mesh_hdrlen);
+>
+>  int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+>                            enum nl80211_iftype iftype)
+> --
+> 1.7.10.4
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
