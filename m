@@ -1,175 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:56836 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932817Ab2JaNBG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 09:01:06 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v3 2/2] wireless: integrate wil6210 driver into build structure
-Date: Wed, 31 Oct 2012 15:00:43 +0200
-Message-ID: <1351688443-23254-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121031_140111_330454_D5434429)
-In-Reply-To: <1351688443-23254-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1351688443-23254-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1495 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933782Ab2JZPh1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2012 11:37:27 -0400
+Message-ID: <508AAE2A.8070400@broadcom.com> (sfid-20121026_173731_667362_006BE19C)
+Date: Fri, 26 Oct 2012 17:37:14 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
+ support
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/Kconfig          |    8 ++++++--
- drivers/net/wireless/ath/Makefile         |    1 +
- drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
- drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
- drivers/net/wireless/ath/ath6kl/Kconfig   |    1 +
- drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
- drivers/net/wireless/ath/carl9170/Kconfig |    1 +
- drivers/net/wireless/ath/wil6210/Kconfig  |   23 +++--------------------
- 8 files changed, 15 insertions(+), 22 deletions(-)
+On 10/26/2012 04:23 PM, Seth Forshee wrote:
+> I've been looking into the issues with brcmsmac performance reported at
+> [0] and [1]. I started out looking into the tx queueing based on the "No
+> where to go" messages in the logs. This code has a number of
+> shortcomings:
+>
+>   - The amount of bufferring is excessive. The tx queue will buffer up to
+>     228 packets, and each of the tx DMA rings will queue up to 256 more.
+>
+>   - There's no flow control. If the queue fills up packets begin to get
+>     dropped, as evidenced by the "No where to go" messages.
+>
+>   - Without flow control the tx queue probably helps avoid dropping
+>     packets for short bursts due to the sheer number of packets that will
+>     be buffered, but if flow control is added the only remaining benefit
+>     that I can see is that it accumulates packets for aggregation. The tx
+>     queue is far more complex than needed for supporting aggergation,
+>     however.
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index c25dcf1..2c02b4e 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -1,4 +1,7 @@
--menuconfig ATH_COMMON
-+config ATH_COMMON
-+	tristate
-+
-+menuconfig ATH_CARDS
- 	tristate "Atheros Wireless Cards"
- 	depends on CFG80211 && (!UML || BROKEN)
- 	---help---
-@@ -14,7 +17,7 @@ menuconfig ATH_COMMON
- 
- 	  http://wireless.kernel.org/en/users/Drivers/Atheros
- 
--if ATH_COMMON
-+if ATH_CARDS
- 
- config ATH_DEBUG
- 	bool "Atheros wireless debugging"
-@@ -27,5 +30,6 @@ source "drivers/net/wireless/ath/ath9k/Kconfig"
- source "drivers/net/wireless/ath/carl9170/Kconfig"
- source "drivers/net/wireless/ath/ath6kl/Kconfig"
- source "drivers/net/wireless/ath/ar5523/Kconfig"
-+source "drivers/net/wireless/ath/wil6210/Kconfig"
- 
- endif
-diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-index 1e18621..97b964d 100644
---- a/drivers/net/wireless/ath/Makefile
-+++ b/drivers/net/wireless/ath/Makefile
-@@ -3,6 +3,7 @@ obj-$(CONFIG_ATH9K_HW)		+= ath9k/
- obj-$(CONFIG_CARL9170)		+= carl9170/
- obj-$(CONFIG_ATH6KL)		+= ath6kl/
- obj-$(CONFIG_AR5523)		+= ar5523/
-+obj-$(CONFIG_WIL6210)		+= wil6210/
- 
- obj-$(CONFIG_ATH_COMMON)	+= ath.o
- 
-diff --git a/drivers/net/wireless/ath/ar5523/Kconfig b/drivers/net/wireless/ath/ar5523/Kconfig
-index 11d99ee..0d320cc 100644
---- a/drivers/net/wireless/ath/ar5523/Kconfig
-+++ b/drivers/net/wireless/ath/ar5523/Kconfig
-@@ -1,6 +1,7 @@
- config AR5523
-        tristate "Atheros AR5523 wireless driver support"
-        depends on MAC80211 && USB
-+       select ATH_COMMON
-        select FW_LOADER
-        ---help---
-          This module add support for AR5523 based USB dongles such as D-Link
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index 338c5c4..c9f81a3 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,6 +1,7 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
-diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-index d755a5e..2a61989 100644
---- a/drivers/net/wireless/ath/ath6kl/Kconfig
-+++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-@@ -1,5 +1,6 @@
- config ATH6KL
- 	tristate "Atheros mobile chipsets support"
-+	select ATH_COMMON
- 
- config ATH6KL_SDIO
- 	tristate "Atheros ath6kl SDIO support"
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index c7aa664..5fc15bf 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on MAC80211
-+	select ATH_COMMON
- 	select ATH9K_HW
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
-diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
-index 267d5dc..13a2045 100644
---- a/drivers/net/wireless/ath/carl9170/Kconfig
-+++ b/drivers/net/wireless/ath/carl9170/Kconfig
-@@ -1,6 +1,7 @@
- config CARL9170
- 	tristate "Linux Community AR9170 802.11n USB support"
- 	depends on USB && MAC80211 && EXPERIMENTAL
-+	select ATH_COMMON
- 	select FW_LOADER
- 	select CRC32
- 	help
-diff --git a/drivers/net/wireless/ath/wil6210/Kconfig b/drivers/net/wireless/ath/wil6210/Kconfig
-index b927adc..cfe2346 100644
---- a/drivers/net/wireless/ath/wil6210/Kconfig
-+++ b/drivers/net/wireless/ath/wil6210/Kconfig
-@@ -7,7 +7,9 @@ config WIL6210
- 	---help---
- 	  This module adds support for wireless adapter based on
- 	  wil6210 chip by Wilocity. It supports operation on the
--	  60g band, covered by the IEEE802.11ad standard.
-+	  60g band, covered by the IEEE802.11ad standard. See
-+	  http://wireless.kernel.org/en/users/Drivers/wil6210
-+	  for more information.
- 	  If you choose to build it as a module, it will be called
- 	  wil6210
- 
-@@ -26,22 +28,3 @@ config WIL6210_ISR_COR
- 	  such monitoring impossible.
- 	  Say y unless you debug interrupts
- 
--config WIL6210_DEBUG_TXRX
--	bool "Debug Tx/Rx path for wil6210"
--	depends on WIL6210
--	default n
--	---help---
--	  Enables Tx/Rx path debug. It will emitt lots of messages.
--	  Every Tx and Rx frame will be dumped, with some
--	  auxiliary information.
--	  Use with care.
--
--config WIL6210_DEBUG_IRQ
--	bool "Debug IRQ flows for wil6210"
--	depends on WIL6210
--	default n
--	---help---
--	  Enables IRQ debug. It will emitt lots of messages.
--	  For every IRQ its ISR bits will be printed, with
--	  some extra analysis.
--	  Use with care.
--- 
-1.7.10.4
+Thanks, Seth
+
+Nice series that rolled out of your sleeve ;-) We seem to have been 
+working in parallel here, which is a bit of a pity. One of the things 
+that we noticed was indeed missing flow control. We did not start adding 
+that so not work wasted there.
+
+> As a result I worked up the following patches to add flow control remove
+> the tx queue.
+>
+> These patches change the tx handler to directly hand off packets to the
+> DMA code. The convoluted priority->precedence->fifo mapping is converted
+> to a simple one-to-one mapping of the mac80211 queues to fifos. Non-
+> aggregate frames are immediately inserted into the DMA ring.
+
+We considered this during mainlining brcmsmac. So retries are also 
+queued back on the DMA fifo?
+
+> Handling of aggregate frames is not as simple, as some of the tx header
+> fixups can only happen once we have all the frames for an AMPDU.  To
+> support this without resyncing buffers after they've been added to the
+> DMA ring I've added the concept of AMPDU sessions. An AMPDU session
+> simply queues up the frames for a single AMPDU until we are ready to
+> insert them into the tx ring. There is one session per DMA ring, and
+> descriptors are reserved in the corresponding ring for all frames queued
+> in the AMPDU session. This also has the benefit of allowing non-
+> aggregate frames to be sent without affecting aggregation and without
+> mapping these frames to a different fifo.
+>
+> The patches also add flow control to stop incoming tx packets when the
+> DMA ring is full. In practice I found that we will sometimes receive a
+> single frame from mac80211 after stopping the queues, so some headroom
+> is reserved when stopping the queues. I also reduced the number of tx
+> descriptors per ring to 64 and fixed a bug that prevented having
+> differing non-zero numbers of tx and rx descriptors for a given ring.
+>
+> When workig on this I made extensive use of ftrace for debug and
+> verification. I'm including patches I wrote which expand the trace
+> support and introduce debug macros which can log messages both to dmesg
+> and the trace buffer. iwlwifi has similar trace support which we've
+> enabled in Ubuntu, making it easier to collect debug information from
+> users experiencing wireless problems.
+>
+> With these changes I'm no longer seeing dropped frames when the tx
+> queues are full. Anecdotally I'd also say that my testing with iperf
+> using TCP seems to show more consistent data rates, resulting in a
+> higher average data rate (sometimes significantly so), but I don't have
+> sufficient amounts of data to be sure this is the case.
+>
+> I'm still observing a few problems when testing with iperf, however. The
+> first is "Pkt tx suppressed, illegal channel" messages. There are also
+
+This is tx status feedback coming in directly from ucode. Not found any 
+clues there yet.
+
+> large drops in the data rate reported when using TCP, sometimes even
+> resulting in iperf reporting that no data was transferred for several
+> seconds. Finally, when using iperf with UDP the number of dropped frames
+> periodically spikes to high levels. I'm not sure yet, but it looks like
+> the second and third problems may coincide with scanning.
+>
+> I also continue to see flush timeouts, but the frequency seems to be
+> reduced with these changes. Likely this is related to the much smaller
+> number of packets that will be queued internally for tx.
+
+Last week we have been making progress on the flush timeout so a patch 
+is queued up for that.
+
+Again, thanks for putting a bit of love into brcmsmac. Hope you did not 
+curse too much in that process ;-) I will publish it internally on our 
+review server so we can provide our comments.
+
+See you in Barcelona ;-)
+
+Regards,
+Arend
 
