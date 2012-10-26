@@ -1,34 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:58976 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753123Ab2JPUFr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55010 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980Ab2JZNSu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Oct 2012 16:05:47 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n3so4543280lbo.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2012 13:05:45 -0700 (PDT)
-Date: Tue, 16 Oct 2012 23:10:11 +0300
-From: Eugene <wifi.mailing.list@gmail.com>
+	Fri, 26 Oct 2012 09:18:50 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TRjoG-0000wE-M7
+	for linux-wireless@vger.kernel.org; Fri, 26 Oct 2012 15:18:48 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: mac80211 without data path?
-Message-ID: <20121016231011.2b13db64@gmail.com> (sfid-20121016_220558_153923_8FB5C04F)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: [PATCH v2 0/4] multi-channel/interface TX power handling
+Date: Fri, 26 Oct 2012 15:19:18 +0200
+Message-Id: <1351257562-30729-1-git-send-email-johannes@sipsolutions.net> (sfid-20121026_151853_919727_1AA2D71B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everybody,
+Here's v2, keeping handling of phy TX power setting by
+telling the driver about it with a NULL wdev.
 
-I'm a new one in Linux wireless and want to know.
-Is it possible to use mac80211 without Data Path, just handle
-management frames.
+johannes
 
-I see that a lot of features integrated in to the data path (PS,
-Statistic,...). Some of them looks like can be disabled by
-capabilities.
-
-I'm just thinking to reuse authentication and association services.
-
-Maybe exists some document with description about each feature and
-its requirements for the vendor driver?
-
-Or that is completely wrong way?
