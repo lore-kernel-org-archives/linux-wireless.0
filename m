@@ -1,50 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49846 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759668Ab2JYQjx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 12:39:53 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, m@bues.ch,
-	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] ssb: handle BCM43222 in pmu code.
-Date: Thu, 25 Oct 2012 18:39:29 +0200
-Message-Id: <1351183169-13392-2-git-send-email-hauke@hauke-m.de> (sfid-20121025_184013_861009_4BC0E7B7)
-In-Reply-To: <1351183169-13392-1-git-send-email-hauke@hauke-m.de>
-References: <1351183169-13392-1-git-send-email-hauke@hauke-m.de>
+Received: from youngberry.canonical.com ([91.189.89.112]:34517 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933268Ab2JZOXu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Oct 2012 10:23:50 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace support
+Date: Fri, 26 Oct 2012 09:23:15 -0500
+Message-Id: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162354_545445_35E07215)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The BCM43222 with the chipid 43222 or 0xa8d6 in hex do not need any
-special handling in the pmu code. This prevents some error messages
-being shown.
+I've been looking into the issues with brcmsmac performance reported at
+[0] and [1]. I started out looking into the tx queueing based on the "No
+where to go" messages in the logs. This code has a number of
+shortcomings:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/driver_chipcommon_pmu.c |    3 +++
- 1 file changed, 3 insertions(+)
+ - The amount of bufferring is excessive. The tx queue will buffer up to
+   228 packets, and each of the tx DMA rings will queue up to 256 more.
 
-diff --git a/drivers/ssb/driver_chipcommon_pmu.c b/drivers/ssb/driver_chipcommon_pmu.c
-index b58fef7..d7d5804 100644
---- a/drivers/ssb/driver_chipcommon_pmu.c
-+++ b/drivers/ssb/driver_chipcommon_pmu.c
-@@ -346,6 +346,8 @@ static void ssb_pmu_pll_init(struct ssb_chipcommon *cc)
- 			chipco_write32(cc, SSB_CHIPCO_PLLCTL_DATA, 0x380005C0);
- 		}
- 		break;
-+	case 43222:
-+		break;
- 	default:
- 		ssb_printk(KERN_ERR PFX
- 			   "ERROR: PLL init unknown for device %04X\n",
-@@ -434,6 +436,7 @@ static void ssb_pmu_resources_init(struct ssb_chipcommon *cc)
- 		 min_msk = 0xCBB;
- 		 break;
- 	case 0x4322:
-+	case 43222:
- 		/* We keep the default settings:
- 		 * min_msk = 0xCBB
- 		 * max_msk = 0x7FFFF
--- 
-1.7.9.5
+ - There's no flow control. If the queue fills up packets begin to get
+   dropped, as evidenced by the "No where to go" messages.
+
+ - Without flow control the tx queue probably helps avoid dropping
+   packets for short bursts due to the sheer number of packets that will
+   be buffered, but if flow control is added the only remaining benefit
+   that I can see is that it accumulates packets for aggregation. The tx
+   queue is far more complex than needed for supporting aggergation,
+   however.
+
+As a result I worked up the following patches to add flow control remove
+the tx queue.
+
+These patches change the tx handler to directly hand off packets to the
+DMA code. The convoluted priority->precedence->fifo mapping is converted
+to a simple one-to-one mapping of the mac80211 queues to fifos. Non-
+aggregate frames are immediately inserted into the DMA ring.
+
+Handling of aggregate frames is not as simple, as some of the tx header
+fixups can only happen once we have all the frames for an AMPDU.  To
+support this without resyncing buffers after they've been added to the
+DMA ring I've added the concept of AMPDU sessions. An AMPDU session
+simply queues up the frames for a single AMPDU until we are ready to
+insert them into the tx ring. There is one session per DMA ring, and
+descriptors are reserved in the corresponding ring for all frames queued
+in the AMPDU session. This also has the benefit of allowing non-
+aggregate frames to be sent without affecting aggregation and without
+mapping these frames to a different fifo.
+
+The patches also add flow control to stop incoming tx packets when the
+DMA ring is full. In practice I found that we will sometimes receive a
+single frame from mac80211 after stopping the queues, so some headroom
+is reserved when stopping the queues. I also reduced the number of tx
+descriptors per ring to 64 and fixed a bug that prevented having
+differing non-zero numbers of tx and rx descriptors for a given ring.
+
+When workig on this I made extensive use of ftrace for debug and
+verification. I'm including patches I wrote which expand the trace
+support and introduce debug macros which can log messages both to dmesg
+and the trace buffer. iwlwifi has similar trace support which we've
+enabled in Ubuntu, making it easier to collect debug information from
+users experiencing wireless problems.
+
+With these changes I'm no longer seeing dropped frames when the tx
+queues are full. Anecdotally I'd also say that my testing with iperf
+using TCP seems to show more consistent data rates, resulting in a
+higher average data rate (sometimes significantly so), but I don't have
+sufficient amounts of data to be sure this is the case.
+
+I'm still observing a few problems when testing with iperf, however. The
+first is "Pkt tx suppressed, illegal channel" messages. There are also
+large drops in the data rate reported when using TCP, sometimes even
+resulting in iperf reporting that no data was transferred for several
+seconds. Finally, when using iperf with UDP the number of dropped frames
+periodically spikes to high levels. I'm not sure yet, but it looks like
+the second and third problems may coincide with scanning.
+
+I also continue to see flush timeouts, but the frequency seems to be
+reduced with these changes. Likely this is related to the much smaller
+number of packets that will be queued internally for tx.
+
+Thanks,
+Seth
+
+[0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1046507
+[1] http://www.spinics.net/lists/linux-wireless/msg96287.html
+
+
+Seth Forshee (18):
+  brcmsmac: Rework tx code to avoid internal buffering of packets
+  brcmsmac: Use correct descriptor count when calculating next rx
+    descriptor
+  brcmsmac: Reduce number of entries in tx DMA rings
+  brcm80211: Allow trace support to be enabled separately from debug
+  brcm80211: Add macro for checking if debug log levels are enabled
+  brcm80211: Convert log message levels to debug levels
+  brcmsmac: Add module parameter for setting the debug level
+  brcmsmac: Add support for writing debug messages to the trace buffer
+  brcmsmac: Use debug macros for general error and debug statements
+  brcmsmac: Add BRCMS_DBG_MAC80211 debug macro
+  brcmsmac: Add RX and TX debug macros
+  brcmsmac: Add INT debug macro
+  brcmsmac: Add DMA debug macro
+  brcmsmac: Add HT debug macro
+  brcmsmac: Improve tx trace and debug support
+  brcmsmac: Add tracepoint for macintstatus
+  brcmsmac: Add tracepoint for AMPDU session information
+  brcmsmac: Remove some noisy but uninformative debug messages
+
+ drivers/net/wireless/brcm80211/Kconfig             |   12 +
+ drivers/net/wireless/brcm80211/brcmsmac/Makefile   |    3 +-
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    |  726 ++++++------
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.h    |   29 +-
+ drivers/net/wireless/brcm80211/brcmsmac/antsel.c   |    4 +-
+ .../net/wireless/brcm80211/brcmsmac/brcms_debug.c  |   44 +
+ .../net/wireless/brcm80211/brcmsmac/brcms_debug.h  |   46 +
+ .../brcm80211/brcmsmac/brcms_trace_events.h        |  175 ++-
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c  |   10 +-
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c      |  343 ++++--
+ drivers/net/wireless/brcm80211/brcmsmac/dma.h      |   11 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  123 ++-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     | 1157 ++++++--------------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h     |   48 +-
+ drivers/net/wireless/brcm80211/brcmsmac/stf.c      |    8 +-
+ drivers/net/wireless/brcm80211/brcmsmac/types.h    |    5 +-
+ drivers/net/wireless/brcm80211/include/defs.h      |   11 +-
+ 17 files changed, 1302 insertions(+), 1453 deletions(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
 
