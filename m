@@ -1,72 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:50223 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084Ab2J0SNZ convert rfc822-to-8bit (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:34539 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933290Ab2JZOX7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Oct 2012 14:13:25 -0400
-Received: by mail-vb0-f46.google.com with SMTP id ff1so4147529vbb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2012 11:13:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <50896EA9.2090607@hauke-m.de>
-References: <1351183169-13392-1-git-send-email-hauke@hauke-m.de>
-	<CACna6rwYraTcddRHUh-5a_cQ4QkLiUKrLO5FYvnMneTtWpYEwg@mail.gmail.com>
-	<50896EA9.2090607@hauke-m.de>
-Date: Sat, 27 Oct 2012 20:13:24 +0200
-Message-ID: <CADGCtVSQEthQCkcqChs1FDfoCDrJh7UOj+y6z-N+PXQATr+mkw@mail.gmail.com> (sfid-20121027_201336_298507_F91479E3)
-Subject: Re: [PATCH 1/2] ssb: add PCI ID 0x4350
-From: Aitor Cuartango <aitor.cuartango@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, m@bues.ch
-Content-Type: text/plain; charset=UTF-8
+	Fri, 26 Oct 2012 10:23:59 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 05/18] brcm80211: Add macro for checking if debug log levels are enabled
+Date: Fri, 26 Oct 2012 09:23:20 -0500
+Message-Id: <1351261413-20821-6-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162403_985492_7E99BB87)
+In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you need more information about the device let me know.
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |    2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c  |    2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/types.h |    4 +++-
+ drivers/net/wireless/brcm80211/include/defs.h   |    4 ++--
+ 4 files changed, 7 insertions(+), 5 deletions(-)
 
-With the last openwrt's trunk i can create a wifi network but only in b/g mode.
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index bfb04ec..ba6dbf4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -926,7 +926,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 			wiphy_err(wiphy, "%s: ampdu tx phy error (0x%x)\n",
+ 				  __func__, txs->phyerr);
+ 
+-			if (brcm_msg_level & LOG_ERROR_VAL) {
++			if (brcm_have_debug_level(LOG_ERROR_VAL)) {
+ 				brcmu_prpkt("txpkt (AMPDU)", p);
+ 				brcms_c_print_txdesc((struct d11txh *) p->data);
+ 			}
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 9b6b1e7..5edd84b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -908,7 +908,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	mcl = le16_to_cpu(txh->MacTxControlLow);
+ 
+ 	if (txs->phyerr) {
+-		if (brcm_msg_level & LOG_ERROR_VAL) {
++		if (brcm_have_debug_level(LOG_ERROR_VAL)) {
+ 			wiphy_err(wlc->wiphy, "phyerr 0x%x, rate 0x%x\n",
+ 				  txs->phyerr, txh->MainRates);
+ 			brcms_c_print_txdesc(txh);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/types.h b/drivers/net/wireless/brcm80211/brcmsmac/types.h
+index e3abc0e..a6c91f3 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/types.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/types.h
+@@ -244,9 +244,11 @@
+  * ********************************************************************
+  */
+ 
++#define brcm_have_debug_level(l) (brcm_msg_level & (l))
++
+ #define BCMMSG(dev, fmt, args...)		\
+ do {						\
+-	if (brcm_msg_level & LOG_TRACE_VAL)	\
++	if (brcm_have_debug_level(LOG_TRACE_VAL))		\
+ 		wiphy_err(dev, "%s: " fmt, __func__, ##args);	\
+ } while (0)
+ 
+diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
+index f0d8c04..4652d3c 100644
+--- a/drivers/net/wireless/brcm80211/include/defs.h
++++ b/drivers/net/wireless/brcm80211/include/defs.h
+@@ -79,8 +79,8 @@
+ #define PM_MAX	1
+ 
+ /* Message levels */
+-#define LOG_ERROR_VAL		0x00000001
+-#define LOG_TRACE_VAL		0x00000002
++#define LOG_ERROR_VAL	0x00000001
++#define LOG_TRACE_VAL	0x00000002
+ 
+ #define PM_OFF	0
+ #define PM_MAX	1
+-- 
+1.7.9.5
 
-I've test editing manually /etc/config/wireless  and change :
-        option hwmode '11g'
-with
-        option hwmode '11ng'
-
-but it does not starts, perhaps i need to do more changes in this file...
-
-
-Thanks all!
-aitor
-
-
-2012/10/25 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 10/25/2012 06:47 PM, Rafał Miłecki wrote:
->> 2012/10/25 Hauke Mehrtens <hauke@hauke-m.de>:
->>> 14e4:4350 is found on a Broadcom BCM43222.
->>
->> Huh, I expected BCM43222 to be BCMA based, interesting. Could you
->> provide ssb log for scanning (cores listing) and PHY&RADIO info?
->>
->
-> It is not my device, but Aitor found it, here are the details:
-> http://comments.gmane.org/gmane.comp.embedded.openwrt.user/2031
->
-> Here is the log you requested, without the patches:
-> ...
-> b43-pci-bridge 0000:00:02.0: setting latency timer to 64
-> ssb: Found chip with id 0xA8D6, rev 0x00 and package 0x08
-> ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x1E, vendor 0x4243)
-> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x10, vendor 0x4243)
-> ssb: Core 2 found: PCI (cc 0x804, rev 0x0E, vendor 0x4243)
-> ssb: chipcommon status is 0x40040
-> ssb: Found rev 2 PMU (capabilities 0x044C3002)
-> ssb: ERROR: PLL init unknown for device A8D6
-> ssb: ERROR: PMU resource config unknown for device A8D6
-> ssb: SPROM offset is 0x1000
-> ssb: SPROM revision 8 detected.
-> b43-phy0: Broadcom 43222 WLAN found (core revision 16)
-> ssb: Sonics Silicon Backplane found on PCI device 0000:00:02.0
-> ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-> ...
->
-> Hauke
