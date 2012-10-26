@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39160 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754355Ab2JVX1n (ORCPT
+Received: from smtp29.msg.oleane.net ([62.161.4.29]:37888 "EHLO
+	smtp29.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757584Ab2JZJKh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 19:27:43 -0400
-Message-ID: <5085D66C.3060307@candelatech.com> (sfid-20121023_012747_100309_DEBCD1EF)
-Date: Mon, 22 Oct 2012 16:27:40 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 26 Oct 2012 05:10:37 -0400
+From: =?utf-8?Q?C=C3=A9dric_Debarge_-_ACKSYS?= <cedric.debarge@acksys.fr>
+To: "'Jouni Malinen'" <j@w1.fi>
+Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A31901411778@sbs2003.acksys.local> <1350996238.10322.7.camel@jlt4.sipsolutions.net> <01e901cdb2b6$a41df0b0$ec59d210$@acksys.fr> <20121025145106.GA11453@w1.fi>
+In-Reply-To: <20121025145106.GA11453@w1.fi>
+Subject: RE: TR: Clear data transit during WPA negociation in case of reassociation
+Date: Fri, 26 Oct 2012 11:12:41 +0200
+Message-ID: <021301cdb35a$0d992020$28cb6060$@acksys.fr> (sfid-20121026_111042_541268_8CB08081)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Cannot bring up second VAP on recent kernels?
-References: <5085AA78.1080809@candelatech.com> <5085B866.8060306@openwrt.org> <5085BA0E.6080903@candelatech.com> <5085BE64.6030802@openwrt.org> <5085CE19.2000505@candelatech.com>
-In-Reply-To: <5085CE19.2000505@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/2012 03:52 PM, Ben Greear wrote:
-> On 10/22/2012 02:45 PM, Felix Fietkau wrote:
->> On 2012-10-22 11:26 PM, Ben Greear wrote:
->>> On 10/22/2012 02:19 PM, Felix Fietkau wrote:
->>>> On 2012-10-22 10:20 PM, Ben Greear wrote:
->>>>> Anyone successfully using more than one virtual AP on
->>>>> 3.3 or higher kernels?  It works fine for me on 3.0.32,
->>>>> but my 3.3.8 and 3.5.7 kernels (and a few similar ones)
->>>>> all fail with errors like this below:
->>>>>
->>>>> Hardware is ath9k 3x3 9380 NIC.
->>>> Are you using one hostapd instance per vap, or one hostapd instance for
->>>> all of them?
->>>
->>> One hostapd per VAP.
->> I had issues with that a long time ago. Use one hostapd instance for all
->> vaps on the same wiphy, that'll work better.
->
-> Well, that would be a lot of user-space churn for me, so I think
-> I'll try to figure out why it's failing and see if I can fix it.
->
-> Thanks,
-> Ben
->
+Hi,
+
+	Your patch corrects the problem !!
+	No unencrypted frame observed anymore.
+
+	Thank you very much (and Johannes too). 
+
+Regards,
+
+Cédric DEBARGE
+
+-----Message d'origine-----
+De : Jouni Malinen [mailto:j@w1.fi] 
+Envoyé : jeudi 25 octobre 2012 16:51
+À : Cédric Debarge - ACKSYS
+Cc : 'Johannes Berg'; linux-wireless@vger.kernel.org
+Objet : Re: TR: Clear data transit during WPA negociation in case of reassociation
+
+On Thu, Oct 25, 2012 at 03:42:56PM +0200, Cédric Debarge - ACKSYS wrote:
+> 	Please find attached the wpa_supplicant log file (it is quite big because of the EAP-TLS) you asked for.
+
+Could you please test this with the following change in wpa_supplicant?
 
 
-Well, crap, it looks like it is this commit.  No one considered wanting
-to run two hostapd processes on one wiphy :(
-
-commit 5e760230e42cf759bd923457ca2753aacf2e656e
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Fri Nov 4 11:18:17 2011 +0100
-
-     cfg80211: allow registering to beacons
-
-     Add the ability to register to received beacon frames
-     to allow implementing OLBC logic in userspace. The
-     registration is per wiphy since there's no point in
-     receiving the same frame multiple times.
-
-     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+diff --git a/src/eapol_supp/eapol_supp_sm.c b/src/eapol_supp/eapol_supp_sm.c index 851cf49..f90fb62 100644
+--- a/src/eapol_supp/eapol_supp_sm.c
++++ b/src/eapol_supp/eapol_supp_sm.c
+@@ -1469,10 +1469,7 @@ void eapol_sm_notify_cached(struct eapol_sm *sm)
+ 	if (sm == NULL)
+ 		return;
+ 	wpa_printf(MSG_DEBUG, "EAPOL: PMKSA caching was used - skip EAPOL");
+-	sm->SUPP_PAE_state = SUPP_PAE_AUTHENTICATED;
+-	sm->suppPortStatus = Authorized;
+-	eapol_sm_set_port_authorized(sm);
+-	sm->portValid = TRUE;
++	sm->eapSuccess = TRUE;
+ 	eap_notify_success(sm->eap);
+ 	eapol_sm_step(sm);
+ }
 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Jouni Malinen                                            PGP id EFC895FA
 
