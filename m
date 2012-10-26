@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:40219 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751702Ab2JHPuj (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:54840 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932544Ab2JZOma (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2012 11:50:39 -0400
-Received: by mail-ob0-f174.google.com with SMTP id uo13so3665957obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2012 08:50:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120929093118.GA3022@ritirata.org>
-References: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com>
-	<20581.2614.43943.601901@gargle.gargle.HOWL>
-	<50652E56.10303@qca.qualcomm.com>
-	<20581.32544.134606.56158@gargle.gargle.HOWL>
-	<20120929093118.GA3022@ritirata.org>
-Date: Mon, 8 Oct 2012 21:20:38 +0530
-Message-ID: <CAD2nsn20s3L8b8DT53JYAN-t4q5GpxUVzSCncTt1LQO3w=wsYw@mail.gmail.com> (sfid-20121008_175042_823367_EE16C8B7)
-Subject: Re: [RFC 1/2] ath9k_htc: Advertize allowed vif combinations
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: Sujith Manoharan <c_manoha@qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 26 Oct 2012 10:42:30 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH 2/2] iw: add support for the forced AP scan
+Date: Fri, 26 Oct 2012 16:41:48 +0200
+Message-Id: <1351262508-23386-2-git-send-email-ordex@autistici.org> (sfid-20121026_164249_646055_D73D2FE3)
+In-Reply-To: <1351262508-23386-1-git-send-email-ordex@autistici.org>
+References: <1351262508-23386-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 29, 2012 at 3:01 PM, Antonio Quartulli <ordex@autistici.org> wrote:
-> On Fri, Sep 28, 2012 at 04:12:40 +0530, Sujith Manoharan wrote:
->> Mohammed Shafi Shajakhan wrote:
->> > oh yeah, you are saying that we will have some issues with IBSS
->> > coexistence with other modes because of TSF sync.
->>
->> Yes, this is a problem.
->
-> Is there anyway to overcome this problem? Can we bind the single TSF to multiple
-> virtualTSF? or must the device somehow support us?
+This patch introduces the "ap-force" argument to the scan command.
+This argument instructs mac80211 to trigger the scan even if the
+interface is configured as AP and has already started beaconing (the
+driver may not support such operation)
 
-Antonio, agained i checked with the ath9k_htc maintainer, he said the
-IBSS coexistence is not
-possible. So i would go with my current patch. Please do feel free to
-enhance. Currently
-i am working in some other project, not sure i would be able to take this up.
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ scan.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
->
-> Cheers,
->
->
-> --
-> Antonio Quartulli
->
-> ..each of us alone is worth nothing..
-> Ernesto "Che" Guevara
-
-
-
+diff --git a/scan.c b/scan.c
+index 91984e5..73fb3fe 100644
+--- a/scan.c
++++ b/scan.c
+@@ -103,6 +103,10 @@ static int handle_scan(struct nl80211_state *state,
+ 				parse = NONE;
+ 				flags |= NL80211_SCAN_FLAG_FLUSH;
+ 				break;
++			} else if (strcmp(argv[i], "ap-force") == 0) {
++				parse = NONE;
++				flags |= NL80211_SCAN_FLAG_AP;
++				break;
+ 			} else if (strcmp(argv[i], "ssid") == 0) {
+ 				parse = SSID;
+ 				have_ssids = true;
+@@ -1355,7 +1359,7 @@ static int handle_scan_combined(struct nl80211_state *state,
+ 	dump_argv[0] = argv[0];
+ 	return handle_cmd(state, id, dump_argc, dump_argv);
+ }
+-TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush] [ssid <ssid>*|passive]", 0, 0,
++TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]", 0, 0,
+ 	 CIB_NETDEV, handle_scan_combined,
+ 	 "Scan on the given frequencies and probe for the given SSIDs\n"
+ 	 "(or wildcard if not given) unless passive scanning is requested.\n"
+@@ -1365,7 +1369,7 @@ COMMAND(scan, dump, "[-u]",
+ 	NL80211_CMD_GET_SCAN, NLM_F_DUMP, CIB_NETDEV, handle_scan_dump,
+ 	"Dump the current scan results. If -u is specified, print unknown\n"
+ 	"data in scan results.");
+-COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush] [ssid <ssid>*|passive]",
++COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]",
+ 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
+ 	 "Trigger a scan on the given frequencies with probing for the given\n"
+ 	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
 -- 
-thanks,
-shafi
+1.7.12.4
+
