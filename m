@@ -1,54 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36817 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039Ab2JOISv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55167 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933180Ab2JZORG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 04:18:51 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Subject: [PATCH 03/12] ath9k: Set appropriate bit for AR9565 in btc control register
-Date: Mon, 15 Oct 2012 13:31:28 +0530
-Message-ID: <1350288089-18808-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_101855_547738_6D44713D)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 26 Oct 2012 10:17:06 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: use a counter for remain-on-channel cookie
+Date: Fri, 26 Oct 2012 16:17:36 +0200
+Message-Id: <1351261056-8284-1-git-send-email-johannes@sipsolutions.net> (sfid-20121026_161712_193279_E9BF90FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Instead of using the pointer which can be re-used
+fairly quickly due to allocator patterns and then
+makes debugging difficult, maintain a counter and
+use its value. Since it's a 64-bit value it can't
+really wrap, but catch that case anyway since it
+most likely points to a bug somewhere.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c         |   21 +++++++++++++++------
+ net/mac80211/ieee80211_i.h |    3 ++-
+ net/mac80211/offchannel.c  |    7 +++----
+ 3 files changed, 20 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 6fbd376..b2b9941 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -850,11 +850,18 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 		 SM(1, AR_BTCOEX_CTRL_WBTIMER_EN) |
- 		 SM(1, AR_BTCOEX_CTRL_PA_SHARED) |
- 		 SM(1, AR_BTCOEX_CTRL_LNA_SHARED) |
--		 SM(2, AR_BTCOEX_CTRL_NUM_ANTENNAS) |
--		 SM(3, AR_BTCOEX_CTRL_RX_CHAIN_MASK) |
- 		 SM(0, AR_BTCOEX_CTRL_1_CHAIN_ACK) |
- 		 SM(0, AR_BTCOEX_CTRL_1_CHAIN_BCN) |
- 		 SM(0, AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
-+	if (AR_SREV_9565(ah)) {
-+		regval |= SM(1, AR_BTCOEX_CTRL_NUM_ANTENNAS) |
-+			  SM(1, AR_BTCOEX_CTRL_RX_CHAIN_MASK);
-+		REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2,
-+			      AR_BTCOEX_CTRL2_TX_CHAIN_MASK, 0x1);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 986e9a1..eebb70b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2382,13 +2382,22 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 		list_add_tail(&roc->list, &local->roc_list);
+ 
+ 	/*
+-	 * cookie is either the roc (for normal roc)
++	 * cookie is either the roc cookie (for normal roc)
+ 	 * or the SKB (for mgmt TX)
+ 	 */
+-	if (txskb)
++	if (!txskb) {
++		/* local->mtx protects this */
++		local->roc_cookie_counter++;
++		roc->cookie = local->roc_cookie_counter;
++		/* wow, you wrapped 64 bits ... more likely a bug */
++		if (WARN_ON(roc->cookie == 0)) {
++			roc->cookie = 1;
++			local->roc_cookie_counter++;
++		}
++		*cookie = roc->cookie;
 +	} else {
-+		regval |= SM(2, AR_BTCOEX_CTRL_NUM_ANTENNAS) |
-+			  SM(3, AR_BTCOEX_CTRL_RX_CHAIN_MASK);
+ 		*cookie = (unsigned long)txskb;
+-	else
+-		*cookie = (unsigned long)roc;
 +	}
  
- 	REG_WRITE(ah, AR_BTCOEX_CTRL, regval);
+ 	return 0;
+ }
+@@ -2423,7 +2432,7 @@ static int ieee80211_cancel_roc(struct ieee80211_local *local,
+ 		struct ieee80211_roc_work *dep, *tmp2;
  
+ 		list_for_each_entry_safe(dep, tmp2, &roc->dependents, list) {
+-			if (!mgmt_tx && (unsigned long)dep != cookie)
++			if (!mgmt_tx && dep->cookie != cookie)
+ 				continue;
+ 			else if (mgmt_tx && dep->mgmt_tx_cookie != cookie)
+ 				continue;
+@@ -2435,7 +2444,7 @@ static int ieee80211_cancel_roc(struct ieee80211_local *local,
+ 			return 0;
+ 		}
+ 
+-		if (!mgmt_tx && (unsigned long)roc != cookie)
++		if (!mgmt_tx && roc->cookie != cookie)
+ 			continue;
+ 		else if (mgmt_tx && roc->mgmt_tx_cookie != cookie)
+ 			continue;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c0a3f7d5..37c08d3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -356,7 +356,7 @@ struct ieee80211_roc_work {
+ 
+ 	u32 duration, req_duration;
+ 	struct sk_buff *frame;
+-	u64 mgmt_tx_cookie;
++	u64 cookie, mgmt_tx_cookie;
+ };
+ 
+ /* flags used in struct ieee80211_if_managed.flags */
+@@ -1142,6 +1142,7 @@ struct ieee80211_local {
+ 	struct list_head roc_list;
+ 	struct work_struct hw_roc_start, hw_roc_done;
+ 	unsigned long hw_roc_start_time;
++	u64 roc_cookie_counter;
+ 
+ 	struct idr ack_status_frames;
+ 	spinlock_t ack_status_lock;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index c349f3a..0cd42d5 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -204,7 +204,7 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc)
+ 			roc->frame = NULL;
+ 		}
+ 	} else {
+-		cfg80211_ready_on_channel(&roc->sdata->wdev, (unsigned long)roc,
++		cfg80211_ready_on_channel(&roc->sdata->wdev, roc->cookie,
+ 					  roc->chan, roc->chan_type,
+ 					  roc->req_duration, GFP_KERNEL);
+ 	}
+@@ -320,9 +320,8 @@ void ieee80211_roc_notify_destroy(struct ieee80211_roc_work *roc)
+ 
+ 	if (!roc->mgmt_tx_cookie)
+ 		cfg80211_remain_on_channel_expired(&roc->sdata->wdev,
+-						   (unsigned long)roc,
+-						   roc->chan, roc->chan_type,
+-						   GFP_KERNEL);
++						   roc->cookie, roc->chan,
++						   roc->chan_type, GFP_KERNEL);
+ 
+ 	list_for_each_entry_safe(dep, tmp, &roc->dependents, list)
+ 		ieee80211_roc_notify_destroy(dep);
 -- 
-1.7.12.2
+1.7.10.4
 
