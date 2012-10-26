@@ -1,101 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51713 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932537Ab2J3Lsi (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:34568 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933316Ab2JZOYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 07:48:38 -0400
-From: Ashwini Singh <asingh.engi@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Ashwini Singh <asingh.engi@gmail.com>
-Subject: [PATCH] Linus's tree: wireless: Spelling corrections
-Date: Tue, 30 Oct 2012 17:18:21 +0530
-Message-Id: <1351597701-18216-1-git-send-email-asingh.engi@gmail.com> (sfid-20121030_124859_505782_D87A819E)
+	Fri, 26 Oct 2012 10:24:17 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 12/18] brcmsmac: Add INT debug macro
+Date: Fri, 26 Oct 2012 09:23:27 -0500
+Message-Id: <1351261413-20821-13-git-send-email-seth.forshee@canonical.com> (sfid-20121026_162423_212547_EAAA922E)
+In-Reply-To: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Few spelling corrections in wireless directory.
+Also convert relevant message to use this macro.
 
-Signed-off-by: Ashwini Singh <asingh.engi@gmail.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- net/wireless/radiotap.c    |    2 +-
- net/wireless/reg.c         |    6 +++---
- net/wireless/wext-compat.c |    2 +-
- net/wireless/wext-core.c   |    2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
+ .../net/wireless/brcm80211/brcmsmac/brcms_debug.h  |    1 +
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   12 ++++++------
+ drivers/net/wireless/brcm80211/include/defs.h      |    1 +
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
-index 7d604c0..eaf4282 100644
---- a/net/wireless/radiotap.c
-+++ b/net/wireless/radiotap.c
-@@ -190,7 +190,7 @@ static void find_ns(struct ieee80211_radiotap_iterator *iterator,
-  * present fields.  @this_arg can be changed by the caller (eg,
-  * incremented to move inside a compound argument like
-  * IEEE80211_RADIOTAP_CHANNEL).  The args pointed to are in
-- * little-endian format whatever the endianess of your CPU.
-+ * little-endian format whatever the endianness of your CPU.
-  *
-  * Alignment Gotcha:
-  * You must take care when dereferencing iterator.this_arg
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 3b8cbbc..b98ff98 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -718,7 +718,7 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
+index 2b3ca0d..16f7304 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_debug.h
+@@ -39,5 +39,6 @@ static inline void __brcms_dbg(struct device *dev, u32 level,
+ #define BRCMS_DBG_MAC80211(core, f, a...)	BRCMS_DBG(core, BRCM_DL_MAC80211, f, ##a)
+ #define BRCMS_DBG_RX(core, f, a...)		BRCMS_DBG(core, BRCM_DL_RX, f, ##a)
+ #define BRCMS_DBG_TX(core, f, a...)		BRCMS_DBG(core, BRCM_DL_TX, f, ##a)
++#define BRCMS_DBG_INT(core, f, a...)		BRCMS_DBG(core, BRCM_DL_INT, f, ##a)
  
- 	/*
- 	 * Follow the driver's regulatory domain, if present, unless a country
--	 * IE has been processed or a user wants to help complaince further
-+	 * IE has been processed or a user wants to help compliance further
- 	 */
- 	if (!custom_regd &&
- 	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-@@ -2133,7 +2133,7 @@ bool reg_supported_dfs_region(u8 dfs_region)
- 	case NL80211_DFS_JP:
- 		return true;
- 	default:
--		REG_DBG_PRINT("Ignoring uknown DFS master region: %d\n",
-+		REG_DBG_PRINT("Ignoring unknown DFS master region: %d\n",
- 			      dfs_region);
- 		return false;
- 	}
-@@ -2155,7 +2155,7 @@ static void print_dfs_region(u8 dfs_region)
- 		pr_info(" DFS Master region JP");
- 		break;
- 	default:
--		pr_info(" DFS Master region Uknown");
-+		pr_info(" DFS Master region Unknown");
- 		break;
- 	}
- }
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 494379e..7642f60 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1144,7 +1144,7 @@ static int cfg80211_wext_siwpower(struct net_device *dev,
- 		switch (wrq->flags & IW_POWER_MODE) {
- 		case IW_POWER_ON:       /* If not specified */
- 		case IW_POWER_MODE:     /* If set all mask */
--		case IW_POWER_ALL_R:    /* If explicitely state all */
-+		case IW_POWER_ALL_R:    /* If explicitly state all */
- 			ps = true;
- 			break;
- 		default:                /* Otherwise we ignore */
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index c8717c1..c9514ce 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -849,7 +849,7 @@ out:
-  *
-  * Note : our current commit strategy is currently pretty dumb,
-  * but we will be able to improve on that...
-- * The goal is to try to agreagate as many changes as possible
-+ * The goal is to try to aggregate as many changes as possible
-  * before doing the commit. Drivers that will define a commit handler
-  * are usually those that need a reset after changing parameters, so
-  * we want to minimise the number of reset.
+ #endif /* _BRCMS_DEBUG_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index d6a7076..ba64b38 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2349,8 +2349,8 @@ static void brcms_b_fifoerrors(struct brcms_hardware *wlc_hw)
+ 		if (!intstatus)
+ 			continue;
+ 
+-		BCMMSG(wlc_hw->wlc->wiphy, "wl%d: intstatus%d 0x%x\n",
+-			unit, idx, intstatus);
++		BRCMS_DBG_INT(core, "wl%d: intstatus%d 0x%x\n",
++			      unit, idx, intstatus);
+ 
+ 		if (intstatus & I_RO) {
+ 			BRCMS_ERR(core, "wl%d: fifo %d: receive fifo "
+@@ -2547,8 +2547,8 @@ static inline u32 wlc_intstatus(struct brcms_c_info *wlc, bool in_isr)
+ 	/* macintstatus includes a DMA interrupt summary bit */
+ 	macintstatus = bcma_read32(core, D11REGOFFS(macintstatus));
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: macintstatus: 0x%x\n", wlc_hw->unit,
+-		 macintstatus);
++	BRCMS_DBG_INT(core, "wl%d: macintstatus: 0x%x\n", wlc_hw->unit,
++		      macintstatus);
+ 
+ 	/* detect cardbus removed, in power down(suspend) and in reset */
+ 	if (brcms_deviceremoved(wlc))
+@@ -7956,8 +7956,8 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
+ 	macintstatus = wlc->macintstatus;
+ 	wlc->macintstatus = 0;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d: macintstatus 0x%x\n",
+-	       wlc_hw->unit, macintstatus);
++	BRCMS_DBG_INT(core, "wl%d: macintstatus 0x%x\n",
++		      wlc_hw->unit, macintstatus);
+ 
+ 	WARN_ON(macintstatus & MI_PRQ); /* PRQ Interrupt in non-MBSS */
+ 
+diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
+index 9206d2c..12dd33f 100644
+--- a/drivers/net/wireless/brcm80211/include/defs.h
++++ b/drivers/net/wireless/brcm80211/include/defs.h
+@@ -83,6 +83,7 @@
+ #define BRCM_DL_MAC80211	0x00000002
+ #define BRCM_DL_RX		0x00000004
+ #define BRCM_DL_TX		0x00000008
++#define BRCM_DL_INT		0x00000010
+ 
+ #define PM_OFF	0
+ #define PM_MAX	1
 -- 
-1.7.0.1
+1.7.9.5
 
