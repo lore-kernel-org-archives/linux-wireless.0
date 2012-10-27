@@ -1,135 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:43786 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754447Ab2JCNxr (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43169 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752851Ab2J0ITB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 09:53:47 -0400
-Received: by oagh16 with SMTP id h16so7401585oag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2012 06:53:45 -0700 (PDT)
+	Sat, 27 Oct 2012 04:19:01 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so3250065pbb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Oct 2012 01:19:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1347274394.4272.8.camel@jlt4.sipsolutions.net>
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
-	<1344426823-1795-2-git-send-email-victorg@ti.com>
-	<1347274394.4272.8.camel@jlt4.sipsolutions.net>
-Date: Wed, 3 Oct 2012 15:53:45 +0200
-Message-ID: <CAK80WHYAH3FdoTDGQh54NdLkYMpv7heGsNjn7venC9fHj65RFw@mail.gmail.com> (sfid-20121003_155352_471166_7BFDE32C)
-Subject: Re: [PATCH v3 1/7] nl80211/cfg80211: add radar detection command/event
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <50888021.4050300@candelatech.com>
+References: <1351073603-11616-1-git-send-email-johannes@sipsolutions.net>
+	<50880BD0.6080603@candelatech.com>
+	<1351093332.10709.5.camel@jlt4.sipsolutions.net>
+	<5DA0F03B-BA8C-4D9F-A9F1-0841D6774255@bluemesh.net>
+	<50888021.4050300@candelatech.com>
+Date: Sat, 27 Oct 2012 01:19:00 -0700
+Message-ID: <CAJ-Vmo=eP8EC2760A_0Ydy3bvG93bhVXfHS9TS3VpAf2vejJ=g@mail.gmail.com> (sfid-20121027_101918_633814_D4C7D4DE)
+Subject: Re: Is Multi-Vif (vaps) Different Channel Operation Supported?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Kelly Hogan <kshogan@bluemesh.net>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the review and sorry for the delayed response.
+Yeah, how's hostap mode supposed to work in that case? The hostap
+interface doesn't go into and out of power save like stations can. It
+has to be ready to receive anything from any STA, at any point in
+time.
 
-On Mon, Sep 10, 2012 at 1:53 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-08-08 at 14:53 +0300, Victor Goldenshtein wrote:
->
->> + * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
->
-> How will you know what kind of radar detection is supported? That is, HT
-> 20, HT 40, in the future VHT80/160/80+80?
->
 
-only 20 Mhz is supported at first stage, do you prefer to rename it to
-something like: NL80211_FEATURE_20MHZ_DFS
 
->> +     int     (*start_radar_detection)(struct wiphy *wiphy,
->> +                                      struct net_device *dev,
->> +                                      struct ieee80211_channel *chan);
->
-> Channel type/bandwidth might be needed?
->
 
-np, will add also the channel type here.
+Adrian
 
->> +void cfg80211_radar_detected(struct net_device *dev,
->> +                          struct ieee80211_channel *chan, gfp_t gfp);
+On 24 October 2012 16:56, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/24/2012 04:05 PM, Kelly Hogan wrote:
+>>
+>> Hi All,
+>>
+>> We are utilizing current ath9k and mac80211 and are trying to discern if
+>> multi-channel support is possible on different Vifs, on the same phy.
+>>
+>> Example:
+>>
+>> Two Vifs running as masters, controlled via hostapd
+>> One Vif running as a Station, controlled by wpa_supplicant
+>> One Vif running as a mesh vap
+>>
+>> We can run all the Vifs fine, but it appears that with shared
+>> hostapd/wpa_supplicant control files, that the master Vifs always have to
+>> follow the channel that the station is connected to.  The mesh vap also
+>> seems to require being on the same channel of the station.
+>>
+>> Any info on if this is supported, or what order to process creation,
+>> channel setting, etc to get them to simultaneously allow different channel
+>> support would be helpful, or save us the time of assuming that it can be
+>> done if it in fact can't.
 >
-> Is the channel parameter useful? Only one detection can be triggered at
-> any given time.
-
-yes, for MC platforms and for sanity checks.
-
 >
->>  void cfg80211_send_rx_auth(struct net_device *dev, const u8 *buf, size_t len)
->>  {
->>       struct wireless_dev *wdev = dev->ieee80211_ptr;
->> @@ -1006,3 +1008,39 @@ bool cfg80211_rx_unexpected_4addr_frame(struct net_device *dev,
->>       return nl80211_unexpected_4addr_frame(dev, addr, gfp);
->>  }
->>  EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
->> +
->> +int cfg80211_start_radar_detection(struct cfg80211_registered_device *rdev,
->> +                                struct net_device *dev,
->> +                                struct ieee80211_channel *chan)
->> +{
->> +     int err;
->> +
->> +     if (!rdev->ops->start_radar_detection)
->> +             return -EOPNOTSUPP;
->> +
->> +     err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, chan);
->> +     if (!err)
->> +             chan->radar_detect_timeout = jiffies +
->> +                     msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
->> +     else {
->> +             chan->radar_detect_timeout = 0;
->> +             chan->cac_type = 0;
->> +     }
+> It cannot work as far as I know.
 >
-> You're not setting cac_type in the good case, and also
-> radar_detect_timeout can actually be 0 in the good case due to jiffies
-> wrap. How is that handled?
+> Thanks,
+> Ben
 >
-
-I'm using time_is_after_jiffies() in nl80211_dfs_en_tx() which AFAIK
-can handle jiffies wrap.
-
->> +     chan->cac_type = 0;
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
 >
-> Also here and above you should use channel type enums. In fact, 0 is
-> "NOHT". Oops. Need a boolean I guess that indicates validity.
 >
-
-right, since NOHT is 0 we probably need additional flag something like
-"chan->cac_started"
-alternatively we can add "__NL80211_CHAN_INVALID" at index 0  to the
-enum nl80211_channel_type.
-
->> +     bool dfs_supported = (rdev->wiphy.features & NL80211_FEATURE_DFS);
->
-> why bother with the variable?
->
-
-IMHO in that way the if expression is shorter and more readable.
-
->> +     if (!chan || !(chan->flags & IEEE80211_CHAN_RADAR))
->> +             return -EINVAL;
->> +
->> +     if (chan->cac_type)
->> +             return -EBUSY;
->> +
->> +     chan->cac_type = cac_type;
->
-> Aha. But these things probably should be in the function:
->
->> +     return cfg80211_start_radar_detection(rdev, dev, chan);
->
-> so it's actually a potentially useful function for other places.
-> Otherwise you could just manually inline it here, I see no issues with
-> that either.
->
-
-will manually inline cfg80211_start_radar_detection() into
-nl80211_start_radar_detection().
-
--- 
-Thanks,
-Victor.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
