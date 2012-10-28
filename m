@@ -1,61 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:31686 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758580Ab2JSL2z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 07:28:55 -0400
-Date: Fri, 19 Oct 2012 13:28:21 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 2/2] mac80211: implement set_mcast_rate() callback
-Message-ID: <20121019112821.GD7023@ritirata.org> (sfid-20121019_132911_753724_96D4FECC)
-References: <CAEFj987U5sjk-ze3Tn8bh3OFD8j=p8=ffDS8zwtWO=R3UMi6iw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="95nVhCDQCgPWiQqT"
-In-Reply-To: <CAEFj987U5sjk-ze3Tn8bh3OFD8j=p8=ffDS8zwtWO=R3UMi6iw@mail.gmail.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:60575 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750821Ab2J1IGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Oct 2012 04:06:52 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pcmcia@lists.infradead.org, linux-scsi@vger.kernel.org,
+	devel@open-fcoe.org, virtualization@lists.linux-foundation.org,
+	linux-watchdog@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linux-usb@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: [PATCH 00/16] treewide: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+Date: Sun, 28 Oct 2012 01:05:38 -0700
+Message-Id: <cover.1351411047.git.joe@perches.com> (sfid-20121028_090739_274187_5EE1A41B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+dev_<level> create smaller objects than dev_printk(KERN_<LEVEL>.
+Convert non-debug calls to this form.
 
---95nVhCDQCgPWiQqT
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Joe Perches (16):
+  tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  ata: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  drivers: base: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  block: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  pcmcia: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  dma: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  gpu: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  i2c: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  wireless: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  ethernet: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  pci: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  scsi: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  usb: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  watchdog: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
 
-On Fri, Oct 19, 2012 at 07:24:34PM +0800, Yeoh Chun-Yeow wrote:
-> Hi, Antonio
->=20
-> > +	memcpy(sdata->vif.bss_conf.mcast_rate, &rate, sizeof(rate));
->=20
-> I think that the second argument should be "rate" instead of "&rate".
+ arch/tile/kernel/pci_gx.c                   |   15 ++---
+ drivers/ata/pata_cmd64x.c                   |    6 +-
+ drivers/base/attribute_container.c          |    2 +-
+ drivers/base/devres.c                       |    4 +-
+ drivers/block/umem.c                        |   97 ++++++++++++--------------
+ drivers/char/pcmcia/cm4040_cs.c             |    5 +-
+ drivers/dma/at_hdmac_regs.h                 |    8 +-
+ drivers/dma/iop-adma.c                      |   45 ++++++------
+ drivers/dma/mv_xor.c                        |   62 ++++++++----------
+ drivers/gpu/drm/gma500/cdv_intel_crt.c      |    3 +-
+ drivers/gpu/drm/gma500/cdv_intel_lvds.c     |    7 +-
+ drivers/gpu/drm/gma500/psb_intel_lvds.c     |    7 +-
+ drivers/gpu/drm/i915/intel_opregion.c       |    8 +-
+ drivers/i2c/busses/i2c-piix4.c              |    5 +-
+ drivers/net/ethernet/chelsio/cxgb3/common.h |    7 +-
+ drivers/net/ethernet/marvell/pxa168_eth.c   |    7 +-
+ drivers/net/wireless/at76c50x-usb.c         |   85 +++++++++++------------
+ drivers/net/wireless/iwlegacy/common.h      |    5 +-
+ drivers/net/wireless/iwlwifi/pcie/trans.c   |   28 +++-----
+ drivers/pci/irq.c                           |   10 ++--
+ drivers/pci/pci-stub.c                      |    2 +-
+ drivers/pci/pcie/aspm.c                     |    7 +--
+ drivers/pcmcia/cistpl.c                     |   10 +--
+ drivers/pcmcia/cs.c                         |   28 +++-----
+ drivers/pcmcia/ds.c                         |   38 +++++------
+ drivers/pcmcia/pcmcia_cis.c                 |    4 +-
+ drivers/pcmcia/pcmcia_resource.c            |   11 +--
+ drivers/pcmcia/rsrc_nonstatic.c             |   24 +++----
+ drivers/pcmcia/ti113x.h                     |   80 +++++++++++------------
+ drivers/pcmcia/yenta_socket.c               |   61 ++++++++---------
+ drivers/scsi/53c700.c                       |    2 +-
+ drivers/scsi/aic7xxx/aic79xx_osm_pci.c      |    4 +-
+ drivers/scsi/aic7xxx/aic7xxx_osm_pci.c      |    4 +-
+ drivers/scsi/aic94xx/aic94xx_tmf.c          |    4 +-
+ drivers/scsi/bfa/bfad.c                     |   32 ++++-----
+ drivers/scsi/fcoe/fcoe_sysfs.c              |    3 +-
+ drivers/scsi/lasi700.c                      |    2 +-
+ drivers/scsi/libsas/sas_task.c              |    9 +--
+ drivers/scsi/lpfc/lpfc_attr.c               |    8 +-
+ drivers/scsi/lpfc/lpfc_debugfs.h            |    6 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c            |    4 +-
+ drivers/scsi/lpfc/lpfc_init.c               |   45 ++++++-------
+ drivers/scsi/mpt2sas/mpt2sas_transport.c    |   91 ++++++++++++-------------
+ drivers/scsi/mvsas/mv_64xx.c                |    2 +-
+ drivers/scsi/mvsas/mv_chips.h               |    8 +-
+ drivers/scsi/mvsas/mv_init.c                |   14 ++--
+ drivers/scsi/mvsas/mv_sas.c                 |    9 +--
+ drivers/scsi/pm8001/pm8001_init.c           |   10 +--
+ drivers/scsi/pm8001/pm8001_sas.c            |    4 +-
+ drivers/scsi/raid_class.c                   |    8 +-
+ drivers/scsi/scsi_scan.c                    |    3 +-
+ drivers/scsi/scsi_transport_fc.c            |   31 ++++-----
+ drivers/scsi/scsi_transport_sas.c           |    7 +-
+ drivers/scsi/sni_53c710.c                   |    2 +-
+ drivers/scsi/zalon.c                        |    4 +-
+ drivers/usb/core/hub.c                      |    2 +-
+ drivers/virtio/virtio_balloon.c             |    7 +-
+ drivers/watchdog/mpcore_wdt.c               |   19 +++---
+ sound/pci/asihpi/hpidspcd.c                 |   22 +++----
+ sound/pci/asihpi/hpioctl.c                  |   17 ++---
+ 60 files changed, 485 insertions(+), 579 deletions(-)
 
-Hi Yeoh,
+-- 
+1.7.8.112.g3fd21
 
-correct. Thanks a lot!
-
->=20
-> ---
-> Chun-Yeow
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---95nVhCDQCgPWiQqT
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlCBOVUACgkQpGgxIkP9cwf1dACbBOY2+4VVRjWm/YNCzNpuKFlI
-MvoAni/b/rMO2HixB7nGwyrP1q2ZPOvC
-=emC7
------END PGP SIGNATURE-----
-
---95nVhCDQCgPWiQqT--
