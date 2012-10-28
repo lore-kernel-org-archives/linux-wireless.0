@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31822 "EHLO mx1.redhat.com"
+Received: from plane.gmane.org ([80.91.229.3]:42622 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755391Ab2JELp5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 07:45:57 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3/7] rt2800: compensate tx power also for non 11b rates on 2GHz
-Date: Fri,  5 Oct 2012 13:44:11 +0200
-Message-Id: <1349437455-18754-3-git-send-email-sgruszka@redhat.com> (sfid-20121005_134559_821001_53A9A714)
-In-Reply-To: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
-References: <1349437455-18754-1-git-send-email-sgruszka@redhat.com>
+	id S1753853Ab2J1Wj5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Oct 2012 18:39:57 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TSbWV-0000DT-Kc
+	for linux-wireless@vger.kernel.org; Sun, 28 Oct 2012 23:40:03 +0100
+Received: from 85-211-212-185.dynamic.dsl.as9105.com ([85-211-212-185.dynamic.dsl.as9105.com])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2012 23:40:03 +0100
+Received: from cliffhanger by 85-211-212-185.dynamic.dsl.as9105.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2012 23:40:03 +0100
+To: linux-wireless@vger.kernel.org
+From: Cliff McDiarmid <cliffhanger@gardener.com>
+Subject: RTL8188SU
+Date: Sun, 28 Oct 2012 22:34:04 +0000 (UTC)
+Message-ID: <loom.20121028T233054-8@post.gmane.org> (sfid-20121028_234001_270409_2D4DD391)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We skip compensate calculation for non 11b rates on 2.4GHz band. I do
-not see that on vendor driver
-(2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO).
+Hi
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+As you know this chip uses the 8712u driver.  Is there any progress on this
+driver being able to handle monitor mode for use with aircrack?   At present I
+think I am using the latest staging version.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index f3060d3..57ffbca 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2531,9 +2531,6 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
- 	u8 eirp_txpower_criterion;
- 	u8 reg_limit;
- 
--	if (!((band == IEEE80211_BAND_5GHZ) && is_rate_b))
--		return txpower;
--
- 	if (test_bit(CAPABILITY_POWER_LIMIT, &rt2x00dev->cap_flags)) {
- 		/*
- 		 * Check if eirp txpower exceed txpower_limit.
--- 
-1.7.1
+many thanks
+
+Cliff
 
