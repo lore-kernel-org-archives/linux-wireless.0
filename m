@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33131 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751964Ab2JOKB2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 06:01:28 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 05/11] ath9k_hw: Disable MCI stat counter by default for AR9565
-Date: Mon, 15 Oct 2012 15:29:49 +0530
-Message-ID: <1350295195-23410-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121015_120143_720728_04FB7AFE)
-In-Reply-To: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350295195-23410-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:50697 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751551Ab2J1M01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Oct 2012 08:26:27 -0400
+Message-ID: <1351426335.2008.6.camel@joe-AO722> (sfid-20121028_132638_655724_E03AEF89)
+Subject: Re: [PATCH 00/16] treewide: Convert dev_printk(KERN_<LEVEL> to
+ dev_<level>(
+From: Joe Perches <joe@perches.com>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pcmcia@lists.infradead.org, linux-scsi@vger.kernel.org,
+	devel@open-fcoe.org, virtualization@lists.linux-foundation.org,
+	linux-watchdog@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-i2c@vger.kernel.org, linux-usb@vger.kernel.org,
+	alsa-devel@alsa-project.org
+In-Reply-To: <508D0ECA.8040008@mvista.com>
+References: <cover.1351411047.git.joe@perches.com>
+	 <508D0ECA.8040008@mvista.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Date: Sun, 28 Oct 2012 05:12:15 -0700
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 3 +++
- drivers/net/wireless/ath/ath9k/reg.h        | 3 +++
- 2 files changed, 6 insertions(+)
+On Sun, 2012-10-28 at 14:54 +0400, Sergei Shtylyov wrote:
+> Hello.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index c46d8f1..87d9c34 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -938,6 +938,9 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 	mci->ready = true;
- 	ar9003_mci_prep_interface(ah);
- 
-+	if (AR_SREV_9565(ah))
-+		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
-+			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
- 	if (en_int)
- 		ar9003_mci_enable_interrupt(ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index c7a9ea7..8f40dba 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -2363,5 +2363,8 @@ enum {
- #define AR_MCI_MISC                    0x1a74
- #define AR_MCI_MISC_HW_FIX_EN          0x00000001
- #define AR_MCI_MISC_HW_FIX_EN_S        0
-+#define AR_MCI_DBG_CNT_CTRL            0x1a78
-+#define AR_MCI_DBG_CNT_CTRL_ENABLE     0x00000001
-+#define AR_MCI_DBG_CNT_CTRL_ENABLE_S   0
- 
- #endif
--- 
-1.7.12.2
+Hi Sergei.
+
+> On 28-10-2012 12:05, Joe Perches wrote:
+> 
+> > dev_<level> create smaller objects than dev_printk(KERN_<LEVEL>.
+> > Convert non-debug calls to this form.
+> 
+> > Joe Perches (16):
+> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+> [...]
+> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+> [...]
+> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+> 
+>     Hm, somehow this patch is repeated thrice?
+
+Nope, I forgot to edit the 0000 file after I edited
+patches locally when I noticed I forgot to update
+the subject lines.  Patches are corrected, 0000 not.
+
+I don't think it's a bit deal, I could repost just the 0000
+if you want though.
+
+cheers, Joe
+
+
 
