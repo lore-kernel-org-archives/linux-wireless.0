@@ -1,164 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:34870 "EHLO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750744Ab2JLEE2 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:48693 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755533Ab2J1U75 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 00:04:28 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v4 1/5] {nl,cfg}80211: add a flags word to scan requests
-Date: Thu, 11 Oct 2012 21:03:31 -0700
-Message-Id: <1350014615-14762-2-git-send-email-bzhao@marvell.com> (sfid-20121012_060430_711638_DC78CC3C)
-In-Reply-To: <1350014615-14762-1-git-send-email-bzhao@marvell.com>
-References: <1350014615-14762-1-git-send-email-bzhao@marvell.com>
+	Sun, 28 Oct 2012 16:59:57 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so1718763bkc.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2012 13:59:55 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: dhlii@dlasys.net
+Subject: Re: Bandwidth monitoring
+Date: Sun, 28 Oct 2012 21:59:41 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <1351438667.3551.29.camel@hp-dhlii>
+In-Reply-To: <1351438667.3551.29.camel@hp-dhlii>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201210282159.41759.chunkeey@googlemail.com> (sfid-20121028_220001_324787_0F4B9244)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sam Leffler <sleffler@chromium.org>
+On Sunday, October 28, 2012 04:37:47 PM David H. Lynch Jr. wrote:
+> > From: Christian Lamparter
+> >What might not work is: injecting frames with MCS rates [no code
+> >in ieee80211_parse_tx_radiotap for that?]... So maybe the issue
+> >is indeed at the other end?
+> 
+> Assuming Carl9170/AR9170's at both ends
+Ah, any mac80211 device should do.
 
-Add a flags word to direct and scheduled scan requests; it will
-be used for control of optional behaviours such as flushing the
-bss cache prior to doing a scan.
+> But if I am am using iw to set monitor mode mode, channel, and
+> bandwidth, And using Raw sockets injection with a radiotap header
+> that has no frequency/channel/bandwidth information, 
+> I should then be able to receive that packet on another system
+> with an AR9170 and 1.8.2 Wireshark and the BW40 flag should be true?
+Ah now I see where the problem is.
+You see, the "40MHz bit" is part of the MCS rate meta info (aka flags).
+(See enum mac80211_rate_control_flags in include/net/mac80211.h)
 
-Signed-off-by: Sam Leffler <sleffler@chromium.org>
-Tested-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-v4: rebase to latest mac80211-next tree
-v3: Remove unnecessary "enum cfg80211_scan_flags" and add missing
-    check for "nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS...".
-    (Johannes Berg)
+This stuff is usually set by the rate control algorithm. But because
+you are injecting frames there's not alot of rate control and the frame
+is usually send at the lowest possible data rate for the channel (usually
+these are the 1MBit/6Mbit legacy rates and not HT20 or HT40 rates).
+This is true for almost all mac80211 devices which don't feature a rate
+control offload option in firmware (i.e.: ath9k_htc does have a firmware
+rc and might do things differently).
 
- include/linux/nl80211.h |   14 ++++++++++++++
- include/net/cfg80211.h  |    4 ++++
- net/wireless/nl80211.c  |   12 ++++++++++++
- 3 files changed, 30 insertions(+), 0 deletions(-)
+OffTopic:
+There is also a legacy duplicate flag IEEE80211_TX_RC_DUP_DATA that
+duplicates the 20MHz legacy packet in two 20MHz halves of a 40MHz
+channel. (The downside is that there's no dedicated RX_FLAG for
+that and this information is not available in the radiotap)
+ 
+> I need to do something that involves sending HT40 packets in a
+> completely different context.
+The receiving part should be handled by all of the mac80211 devices
+I listed in the previous post out-of-the-box.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 71ab23b..e47eccd 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1279,6 +1279,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_VHT_CAPABILITY: VHT Capability information element (from
-  *	association request when used with NL80211_CMD_NEW_STATION)
-  *
-+ * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1540,6 +1542,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_VHT_CAPABILITY,
- 
-+	NL80211_ATTR_SCAN_FLAGS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3086,4 +3090,14 @@ enum nl80211_connect_failed_reason {
- 	NL80211_CONN_FAIL_BLOCKED_CLIENT,
- };
- 
-+/**
-+ * enum nl80211_scan_flags -  scan request control flags
-+ *
-+ * Scan request control flags are used to control the handling
-+ * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
-+ * requests.
-+ */
-+enum nl80211_scan_flags {
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1f9ca03..4724372 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1002,6 +1002,7 @@ struct cfg80211_ssid {
-  * @n_channels: total number of channels to scan
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @flags: bit field of flags controlling operation
-  * @rates: bitmap of rates to advertise for each band
-  * @wiphy: the wiphy this was for
-  * @wdev: the wireless device to scan for
-@@ -1014,6 +1015,7 @@ struct cfg80211_scan_request {
- 	u32 n_channels;
- 	const u8 *ie;
- 	size_t ie_len;
-+	u32 flags;
- 
- 	u32 rates[IEEE80211_NUM_BANDS];
- 
-@@ -1046,6 +1048,7 @@ struct cfg80211_match_set {
-  * @interval: interval between each scheduled scan cycle
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @flags: bit field of flags controlling operation
-  * @match_sets: sets of parameters to be matched for a scan result
-  * 	entry to be considered valid and to be passed to the host
-  * 	(others are filtered out).
-@@ -1063,6 +1066,7 @@ struct cfg80211_sched_scan_request {
- 	u32 interval;
- 	const u8 *ie;
- 	size_t ie_len;
-+	u32 flags;
- 	struct cfg80211_match_set *match_sets;
- 	int n_match_sets;
- 	s32 rssi_thold;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8303a2a..9a5acab 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -356,6 +356,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_SAE_DATA] = { .type = NLA_BINARY, },
- 	[NL80211_ATTR_VHT_CAPABILITY] = { .len = NL80211_VHT_CAPABILITY_LEN },
-+	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -4367,6 +4368,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
-+		request->flags = nla_get_u32(
-+			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
- 	request->no_cck =
- 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
-@@ -4598,6 +4603,10 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 		       request->ie_len);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_SCAN_FLAGS])
-+		request->flags = nla_get_u32(
-+			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
- 	request->dev = dev;
- 	request->wiphy = &rdev->wiphy;
- 	request->interval = interval;
-@@ -7663,6 +7672,9 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
- 	    nla_put(msg, NL80211_ATTR_IE, req->ie_len, req->ie))
- 		goto nla_put_failure;
- 
-+	if (req->flags)
-+		nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
-+
- 	return 0;
-  nla_put_failure:
- 	return -ENOBUFS;
--- 
-1.7.0.4
+The sending part is not. AFAICT you'll have to start by declaring
+and defining a new radiotap rate info element (IEEE80211_RADIOTAP_RATE
+can only handle the bit rate and that is not enough). Then you have
+to add a parser which translate the rate info in the radiotap header
+into mac80211 ieee80211_tx_rate and tell mac80211 to bypass rate_ctrl
+tx handler in this case so the info won't be overwritten again...
+And finally you'll have to add a header with this new rate info element
+into the radiotap header of all the frames you send through the raw
+monitor interface.
 
+A proof-of-concept should be easily doable within a day. But getting this
+new radiotap to be part of the spec will take longer ;).
+
+> But I do not have a spectrum analyzer to
+> confirm that i am actually sending what I want.
+I don't think you need a spectrum analyzer... unless of course 
+it can also HT40 generate frames.
+
+> So I have been using airmon, wireshark, ....
+> But i need to be able to send and verify an HT40 packet by some somewhat
+> normal means, to assure myself that my receiving end wireshark
+> hardware/driver/software combination can tell me what i need to know. 
+Well, you should be able to verify if your device picks up HT40 frames
+easily. All you need is any busy 11n network with a 11n AP and a 11n
+client. Just setup the receiver device (correct channel and HT40+/-
+setting) and start listening.
+
+Regards,
+	Chr 
