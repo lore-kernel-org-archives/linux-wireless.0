@@ -1,103 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:64264 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078Ab2JZPTL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37259 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309Ab2J2JL4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Oct 2012 11:19:11 -0400
-Date: Fri, 26 Oct 2012 17:18:32 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Javier Cardona <javier@cozybit.com>
-Cc: devel@lists.open80211s.org, johannes@sipsolutions.net,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH 1/2] ath9k_htc: Add support for NL80211_IFTYPE_MESH_POINT
- interfaces
-Message-ID: <20121026151832.GW7023@ritirata.org> (sfid-20121026_171915_856284_FEA743A1)
-References: <1351108774-7450-1-git-send-email-javier@cozybit.com>
- <1351108774-7450-2-git-send-email-javier@cozybit.com>
- <CAG6hwVNfvcy90tWqFqMDbQqHQmr1X5j6XSyvehspZ0PftzLE-A@mail.gmail.com>
- <CAPjQAd9BgoE_sHyWoeUHmsqeOMm+-AwNGvAdV8Gf0NMBg4f9pA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="yO52jeZL+8sEiVPY"
-In-Reply-To: <CAPjQAd9BgoE_sHyWoeUHmsqeOMm+-AwNGvAdV8Gf0NMBg4f9pA@mail.gmail.com>
+	Mon, 29 Oct 2012 05:11:56 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] mac80211: send deauth only with channel context
+Date: Mon, 29 Oct 2012 10:12:29 +0100
+Message-Id: <1351501949-20169-1-git-send-email-johannes@sipsolutions.net> (sfid-20121029_101206_409414_B2C42FF5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---yO52jeZL+8sEiVPY
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+When userspace asks to deauthenticate and we're just
+authenticated (or still authenticating) send a deauth
+frame instead of deleting the auth request.
 
-Hello,
+On the other hand, if we've just disassociated and
+therefore deleted all our state already, drop the
+deauth request because we no longer have a channel
+context to send it on.
 
-On Thu, Oct 25, 2012 at 11:44:19AM -0700, Javier Cardona wrote:
-> >> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/n=
-et/wireless/ath/ath9k/htc_drv_init.c
-> >> index d98255e..9c5c63c 100644
-> >> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> >> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> >> @@ -707,6 +707,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_pr=
-iv *priv,
-> >>                 IEEE80211_HW_SUPPORTS_PS |
-> >>                 IEEE80211_HW_PS_NULLFUNC_STACK |
-> >>                 IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-> >> +               IEEE80211_HW_SUPPORTS_PER_STA_GTK |
-> >> +               IEEE80211_HW_MFP_CAPABLE |
-> >>                 IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING;
-> >>
-> >>         hw->wiphy->interface_modes =3D
-> >> @@ -714,9 +716,11 @@ static void ath9k_set_hw_capab(struct ath9k_htc_p=
-riv *priv,
-> >>                 BIT(NL80211_IFTYPE_ADHOC) |
-> >>                 BIT(NL80211_IFTYPE_AP) |
-> >>                 BIT(NL80211_IFTYPE_P2P_GO) |
-> >> -               BIT(NL80211_IFTYPE_P2P_CLIENT);
-> >> +               BIT(NL80211_IFTYPE_P2P_CLIENT) |
-> >> +               BIT(NL80211_IFTYPE_MESH_POINT);
-> >>
-> >>         hw->wiphy->flags &=3D ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> >> +       hw->wiphy->flags |=3D WIPHY_FLAG_IBSS_RSN;
-> >>
-> >>         hw->wiphy->flags |=3D WIPHY_FLAG_IBSS_RSN |
-> >
-> > Ahem. Antonio added this in:
-> > http://comments.gmane.org/gmane.linux.kernel.wireless.general/84066,
-> > but that patch also seems to suggest per-STA GTKs are not supported by
-> > the HW, so we shouldn't claim support above?
->=20
-> (Just to let the list know what we just discussed in person...)
->=20
-> I removed the redundant WIPHY_FLAG_IBSS_RSN and the setting of
-> IEEE80211_HW_SUPPORTS_PER_STA_GTK.  We'll retest the series and
-> resubmit.
-> If anyone interested, the reworked series lives here:
-> https://github.com/cozybit/open80211s/tree/ft-ath9k-htc-support
->=20
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |   32 ++++++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 14 deletions(-)
 
-IIRC, per-STA GTK is missing the driver support, so it should not be a HW
-constraint. However it is not a problem because group frames are encrypted =
-in
-SW.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e3f4674..699e17d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3676,40 +3676,44 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++	bool sent_frame = false;
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+-	if (ifmgd->auth_data) {
+-		ieee80211_destroy_auth_data(sdata, false);
+-		mutex_unlock(&ifmgd->mtx);
+-		return 0;
+-	}
+-
+ 	sdata_info(sdata,
+ 		   "deauthenticating from %pM by local choice (reason=%d)\n",
+ 		   req->bssid, req->reason_code);
+ 
+-	if (ifmgd->associated &&
+-	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
+-		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+-				       req->reason_code, true, frame_buf);
+-	} else {
++	if (ifmgd->auth_data) {
+ 		drv_mgd_prepare_tx(sdata->local, sdata);
+ 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
+ 					       IEEE80211_STYPE_DEAUTH,
+ 					       req->reason_code, true,
+ 					       frame_buf);
++		ieee80211_destroy_auth_data(sdata, false);
++		mutex_unlock(&ifmgd->mtx);
++
++		sent_frame = true;
++		goto out;
+ 	}
+ 
++	if (ifmgd->associated &&
++	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
++		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
++				       req->reason_code, true, frame_buf);
++		sent_frame = true;
++	}
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+-	__cfg80211_send_deauth(sdata->dev, frame_buf,
+-			       IEEE80211_DEAUTH_FRAME_LEN);
+-
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+ 	mutex_unlock(&sdata->local->mtx);
+ 
++ out:
++	if (sent_frame)
++		__cfg80211_send_deauth(sdata->dev, frame_buf,
++				       IEEE80211_DEAUTH_FRAME_LEN);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
-Cheers,
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---yO52jeZL+8sEiVPY
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlCKqcgACgkQpGgxIkP9cwcPkwCdFLpispAJCMtVv3TRcsLoastE
-IdIAoJiDdujW4RZ2OHWsMj0qRDGViztn
-=tQtX
------END PGP SIGNATURE-----
-
---yO52jeZL+8sEiVPY--
