@@ -1,110 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4245 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755548Ab2JVUz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 16:55:58 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 12/12] brcmfmac: store IEs per virtual interface
-Date: Mon, 22 Oct 2012 13:55:41 -0700
-Message-ID: <1350939341-17687-13-git-send-email-frankyl@broadcom.com> (sfid-20121022_225624_912674_4A139C7A)
-In-Reply-To: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-References: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:38535 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759511Ab2J2QZ6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2012 12:25:58 -0400
+Message-ID: <1351527990.10925.35.camel@jlt4.sipsolutions.net> (sfid-20121029_172601_413845_8D9FFEF0)
+Subject: Re: [PATCH v2] wireless: Allow registering more than one beacon
+ listener.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 29 Oct 2012 17:26:30 +0100
+In-Reply-To: <508EAC30.8020600@candelatech.com>
+References: <1351288165-24219-1-git-send-email-greearb@candelatech.com>
+	  (sfid-20121026_234937_894351_D69F960C) <1351501451.10925.6.camel@jlt4.sipsolutions.net>
+	 <508EAC30.8020600@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Mon, 2012-10-29 at 09:17 -0700, Ben Greear wrote:
 
-For AP feature the IEs are stored in global structure. For future
-functionality like P2P-GO it needs to be stored per virtual interface
-so better store it in the virtual interface structure.
+> >> +	spin_lock_bh(&rdev->beacon_registrations_lock);
+> > ...
+> >> +	spin_unlock_bh(&rdev->beacon_registrations_lock);
+> >
+> > I have a feeling this is incorrect, this is called with BHs disabled, so
+> > if we disable/enable BHs here we end up with BHs enabled even if the
+> > caller wanted them disabled, no?
+> >
+> > So I suppose unless we need to be able to call this from hard interrupt
+> > in some driver (unlikely) we should add a change like this:
+> 
+> I get confused with the various types of spin-locks,
+> and I just copied this code from the mgt frames logic.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   16 ++++++++--------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   16 ++++++++++++++++
- 2 files changed, 24 insertions(+), 8 deletions(-)
+Uh, that looks like a bug there as well then?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 62b155e..cbad772 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3774,6 +3774,7 @@ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
- 			u8 *vndr_ie_buf, u32 vndr_ie_len)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
-+	struct vif_saved_ie *saved_ie = &ifp->vif->saved_ie;
- 	s32 err = 0;
- 	u8  *iovar_ie_buf;
- 	u8  *curr_ie_buf;
-@@ -3796,18 +3797,17 @@ brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
- 	if (!iovar_ie_buf)
- 		return -ENOMEM;
- 	curr_ie_buf = iovar_ie_buf;
--	if (test_bit(BRCMF_VIF_STATUS_AP_CREATING, &ifp->vif->sme_state) ||
--	    test_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state)) {
-+	if (ifp->vif->mode == WL_MODE_AP) {
- 		switch (pktflag) {
- 		case VNDR_IE_PRBRSP_FLAG:
--			mgmt_ie_buf = cfg->ap_info->probe_res_ie;
--			mgmt_ie_len = &cfg->ap_info->probe_res_ie_len;
--			mgmt_ie_buf_len = sizeof(cfg->ap_info->probe_res_ie);
-+			mgmt_ie_buf = saved_ie->probe_res_ie;
-+			mgmt_ie_len = &saved_ie->probe_res_ie_len;
-+			mgmt_ie_buf_len = sizeof(saved_ie->probe_res_ie);
- 			break;
- 		case VNDR_IE_BEACON_FLAG:
--			mgmt_ie_buf = cfg->ap_info->beacon_ie;
--			mgmt_ie_len = &cfg->ap_info->beacon_ie_len;
--			mgmt_ie_buf_len = sizeof(cfg->ap_info->beacon_ie);
-+			mgmt_ie_buf = saved_ie->beacon_ie;
-+			mgmt_ie_len = &saved_ie->beacon_ie_len;
-+			mgmt_ie_buf_len = sizeof(saved_ie->beacon_ie);
- 			break;
- 		default:
- 			err = -EPERM;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index 85f3adf..1dd96f1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -232,6 +232,21 @@ enum brcmf_vif_status {
- };
- 
- /**
-+ * struct vif_saved_ie - holds saved IEs for a virtual interface.
-+ *
-+ * @probe_res_ie: IE info for probe response.
-+ * @beacon_ie: IE info for beacon frame.
-+ * @probe_res_ie_len: IE info length for probe response.
-+ * @beacon_ie_len: IE info length for beacon frame.
-+ */
-+struct vif_saved_ie {
-+	u8  probe_res_ie[IE_MAX_LEN];
-+	u8  beacon_ie[IE_MAX_LEN];
-+	u32 probe_res_ie_len;
-+	u32 beacon_ie_len;
-+};
-+
-+/**
-  * struct brcmf_cfg80211_vif - virtual interface specific information.
-  *
-  * @ifp: lower layer interface pointer
-@@ -251,6 +266,7 @@ struct brcmf_cfg80211_vif {
- 	s32 roam_off;
- 	unsigned long sme_state;
- 	bool pm_block;
-+	struct vif_saved_ie saved_ie;
- 	struct list_head list;
- };
- 
--- 
-1.7.9.5
+> I did run some tests and my code seems stable, but I could
+> just be getting lucky.
 
+Hmm I guess it depends on the driver, I suppose enabling BHs inside one
+doesn't actually do anything, and it would only really matter for
+drivers using ieee80211_rx_ni()?
+
+> Do you want me to roll in your changes below and re-submit, or
+> do you want to just make the updates?
+
+I can do the update, I guess I'll sort out the mgmt frame part as well.
+
+johannes
 
