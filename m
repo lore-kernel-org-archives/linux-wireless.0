@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:38910 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751359Ab2JTCTu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 22:19:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/7] mwifiex: patches for 3.8
-Date: Fri, 19 Oct 2012 19:19:14 -0700
-Message-Id: <1350699561-852-1-git-send-email-bzhao@marvell.com> (sfid-20121020_041958_795792_F17E9D2D)
+Received: from nbd.name ([46.4.11.11]:40682 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751760Ab2J2OSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2012 10:18:53 -0400
+Message-ID: <508E9048.1060007@openwrt.org> (sfid-20121029_151856_765405_ED202104)
+Date: Mon, 29 Oct 2012 15:18:48 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sven Eckelmann <sven@narfation.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] ath9k: Test for TID only in BlockAcks while checking
+ tx status
+References: <1351513520-23536-1-git-send-email-sven@narfation.org> <508E77DA.8050708@openwrt.org>
+In-Reply-To: <508E77DA.8050708@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-1st patch series intended for 3.8:
-0001~0004: scan related improvements (Amitkumar Karwar)
-     0005: revert a workaround patch for max_power (Amitkumar Karwar)
-0006~0007: random updates (Amitkumar Karwar, Avinash Patil)
+On 2012-10-29 1:34 PM, Felix Fietkau wrote:
+> On 2012-10-29 1:25 PM, Sven Eckelmann wrote:
+>> The ath9k xmit functions for AMPDUs can send frames as non-aggregate in case
+>> only one frame is currently available. The client will then answer using a
+>> normal Ack instead of a BlockAck. This acknowledgement has no TID stored and
+>> therefore the hardware is not able to provide us the corresponding TID.
+>> 
+>> The TID set by the hardware in the tx status descriptor has to be seen as
+>> undefined and not as a valid TID value for normal acknowledgements. Doing
+>> otherwise results in a massive amount of retransmissions and stalls of
+>> connections.
+>> 
+>> Users may experience low bandwidth and complete connection stalls in
+>> environments with transfers using multiple TIDs.
+>> 
+>> This regression was introduced in b11b160defc48e4daa283f785192ea3a23a51f8e
+>> ("ath9k: validate the TID in the tx status information").
+>> 
+>> Signed-off-by: Sven Eckelmann <sven@narfation.org>
+>> Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+> Nice catch, thanks!
+> Acked-by: Felix Fietkau <nbd@openwrt.org>
+One more thing: I think this deserves a
+Cc: stable@vger.kernel.org
 
----
-Amitkumar Karwar (5):
-  mwifiex: use LOW_PRIORITY scan flag provided in scan request
-  mwifiex: abort scan upon interface down
-  mwifiex: minor cleanup and a fix in scan semaphore usage
-  mwifiex: disable channel filtering for SSID specific scan from user
-  Revert "mwifiex: retrieve correct max_power information in
-    reg_notifier handler"
-
-Avinash Patil (2):
-  mwifiex: handle extended supported rates IE for AP
-  mwifiex: rx path enhancement to derive priv only once
-
- drivers/net/wireless/mwifiex/11n_rxreorder.c |    8 ++---
- drivers/net/wireless/mwifiex/cfg80211.c      |   18 +++++++----
- drivers/net/wireless/mwifiex/init.c          |   19 ++++++-----
- drivers/net/wireless/mwifiex/main.c          |    8 +++++
- drivers/net/wireless/mwifiex/main.h          |   11 +++----
- drivers/net/wireless/mwifiex/scan.c          |   42 +++++++++++++++++--------
- drivers/net/wireless/mwifiex/sta_cmdresp.c   |    4 --
- drivers/net/wireless/mwifiex/sta_rx.c        |   26 +++++-----------
- drivers/net/wireless/mwifiex/txrx.c          |   10 +++++-
- drivers/net/wireless/mwifiex/uap_cmd.c       |   11 ++++++-
- drivers/net/wireless/mwifiex/uap_txrx.c      |   17 +++-------
- drivers/net/wireless/mwifiex/util.c          |   19 ++----------
- 12 files changed, 100 insertions(+), 93 deletions(-)
+- Felix
 
