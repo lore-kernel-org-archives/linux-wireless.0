@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33117 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977Ab2JCNPi (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47237 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757089Ab2J2RGM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 09:15:38 -0400
-Date: Wed, 3 Oct 2012 09:08:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [RFC] rt2x00: check return from dma_map_single
-Message-ID: <20121003130803.GA2030@tuxdriver.com> (sfid-20121003_151543_046315_9408DFFA)
-References: <1349202079-14115-1-git-send-email-linville@tuxdriver.com>
- <CAOZOX0URb51i=6wko1MJVsi7du2kyYo9W=LLZSpH7Svh9BgAMw@mail.gmail.com>
+	Mon, 29 Oct 2012 13:06:12 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q9TH6BJL021910
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 10:06:11 -0700
+Message-ID: <508EB783.9080000@candelatech.com> (sfid-20121029_180616_165655_39B11451)
+Date: Mon, 29 Oct 2012 10:06:11 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOZOX0URb51i=6wko1MJVsi7du2kyYo9W=LLZSpH7Svh9BgAMw@mail.gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Any thoughts on how to best shield u.fl connectors on NICs?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 03, 2012 at 11:33:25AM +0200, Ivo Van Doorn wrote:
-> Hi,
-> 
-> On Tue, Oct 2, 2012 at 8:21 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> > From: "John W. Linville" <linville@tuxdriver.com>
-> >
-> > dma_map_single can fail, so it's return value needs to be checked and
-> > handled accordingly.  Failure to do so is akin to failing to check the
-> > return from a kmalloc.
-> >
-> > http://linuxdriverproject.org/mediawiki/index.php/DMA_Mapping_Error_Analysis
-> >
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> > Compile tested only...can the experts take a look at how the failures
-> > are handled?
-> 
-> <snip>
-> 
-> > diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> > index 0751b35..50ff18d 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> > +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> > @@ -605,8 +605,8 @@ struct rt2x00lib_ops {
-> >                                struct txentry_desc *txdesc);
-> >         void (*write_tx_data) (struct queue_entry *entry,
-> >                                struct txentry_desc *txdesc);
-> > -       void (*write_beacon) (struct queue_entry *entry,
-> > -                             struct txentry_desc *txdesc);
-> > +       int (*write_beacon) (struct queue_entry *entry,
-> > +                            struct txentry_desc *txdesc);
-> >         void (*clear_beacon) (struct queue_entry *entry);
-> >         int (*get_tx_data_len) (struct queue_entry *entry);
-> 
-> The only thing I am missing in the commit, is the check for
-> the return value when write_beacon is being called.
+It appears hard to get well-shielded u.fl (IPEX) to SMA pigtails, and all of the
+modern ath9k NICs I've seen use u.fl connectors on the NIC.
 
-D'oh!!  I got in a hurry...that's a lot of trouble to add a return
-value just to not check it! :-)
+I have found a vendor that will do double-shielded 1.32mm cable, and I have some of those
+on order, but the way u.fl connectors are made it seems there is always a bit of un-shielded
+cable where the connector is crimped onto the cable.
+
+I am curious if anyone has any suggestions or experience with connecting u.fl NICs to
+SMA cables in a highly shielded manner...
+
+Thanks,
+Ben
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
