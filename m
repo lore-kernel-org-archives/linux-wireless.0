@@ -1,57 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:50697 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751551Ab2J1M01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2012 08:26:27 -0400
-Message-ID: <1351426335.2008.6.camel@joe-AO722> (sfid-20121028_132638_655724_E03AEF89)
-Subject: Re: [PATCH 00/16] treewide: Convert dev_printk(KERN_<LEVEL> to
- dev_<level>(
-From: Joe Perches <joe@perches.com>
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pcmcia@lists.infradead.org, linux-scsi@vger.kernel.org,
-	devel@open-fcoe.org, virtualization@lists.linux-foundation.org,
-	linux-watchdog@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-i2c@vger.kernel.org, linux-usb@vger.kernel.org,
-	alsa-devel@alsa-project.org
-In-Reply-To: <508D0ECA.8040008@mvista.com>
-References: <cover.1351411047.git.joe@perches.com>
-	 <508D0ECA.8040008@mvista.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Date: Sun, 28 Oct 2012 05:12:15 -0700
+Received: from he.sipsolutions.net ([78.46.109.217]:37269 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941Ab2J2JNF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2012 05:13:05 -0400
+Message-ID: <1351502016.10925.9.camel@jlt4.sipsolutions.net> (sfid-20121029_101309_144140_CE022336)
+Subject: Re: [PATCHv3 1/2] nl/cfg80211: add the NL80211_CMD_SET_MCAST_RATE
+ command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 29 Oct 2012 10:13:36 +0100
+In-Reply-To: <1351267055-21927-1-git-send-email-ordex@autistici.org>
+References: <1351267055-21927-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-10-28 at 14:54 +0400, Sergei Shtylyov wrote:
-> Hello.
+On Fri, 2012-10-26 at 17:57 +0200, Antonio Quartulli wrote:
 
-Hi Sergei.
+> + * @NL80211_CMD_SET_MCAST_RATE: Change the rate used to send multicast frames
+> + *	for IBSS or MESH vif.
 
-> On 28-10-2012 12:05, Joe Perches wrote:
-> 
-> > dev_<level> create smaller objects than dev_printk(KERN_<LEVEL>.
-> > Convert non-debug calls to this form.
-> 
-> > Joe Perches (16):
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> [...]
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> [...]
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> 
->     Hm, somehow this patch is repeated thrice?
+You should probably advertise the new command, see nl80211_send_wiphy()
 
-Nope, I forgot to edit the 0000 file after I edited
-patches locally when I noticed I forgot to update
-the subject lines.  Patches are corrected, 0000 not.
-
-I don't think it's a bit deal, I could repost just the 0000
-if you want though.
-
-cheers, Joe
-
-
+johannes
 
