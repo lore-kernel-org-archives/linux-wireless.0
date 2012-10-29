@@ -1,29 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:48901 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758533Ab2JSLYf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 07:24:35 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so279574oag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Oct 2012 04:24:35 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 19 Oct 2012 19:24:34 +0800
-Message-ID: <CAEFj987U5sjk-ze3Tn8bh3OFD8j=p8=ffDS8zwtWO=R3UMi6iw@mail.gmail.com> (sfid-20121019_132438_924793_F9833FAD)
-Subject: Re: [PATCHv2 2/2] mac80211: implement set_mcast_rate() callback
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: ordex@autistici.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from plane.gmane.org ([80.91.229.3]:42695 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760973Ab2J2VL5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2012 17:11:57 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TSwcs-0005Qp-Hh
+	for linux-wireless@vger.kernel.org; Mon, 29 Oct 2012 22:12:02 +0100
+Received: from 85-211-212-185.dynamic.dsl.as9105.com ([85-211-212-185.dynamic.dsl.as9105.com])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 22:12:02 +0100
+Received: from cliffhanger by 85-211-212-185.dynamic.dsl.as9105.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 22:12:02 +0100
+To: linux-wireless@vger.kernel.org
+From: Cliff McDiarmid <cliffhanger@gardener.com>
+Subject: Re: RTL8188SU
+Date: Mon, 29 Oct 2012 21:11:39 +0000 (UTC)
+Message-ID: <loom.20121029T214630-424@post.gmane.org> (sfid-20121029_221203_228831_CEB7F597)
+References: <loom.20121028T233054-8@post.gmane.org> <201210291257.02249.chunkeey@googlemail.com> <loom.20121029T182405-382@post.gmane.org> <201210292117.45399.chunkeey@googlemail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Antonio
+Christian Lamparter <chunkeey@...> writes:
 
-> +	memcpy(sdata->vif.bss_conf.mcast_rate, &rate, sizeof(rate));
 
-I think that the second argument should be "rate" instead of "&rate".
+> > but could I revert?
+> Well, this is getting confusing ;)
+> Can you explain what you want reverted?
+> 
+> Regards,
 
----
-Chun-Yeow
+Sorry probably bad english.   I was wondering if I revert to using the 'old'
+driver, 8192u, with the rtl8188su and you seem to suggest yes?   However, I have
+the 8192u module built in the kernel at present and it will not load when the
+rtl8188su is plugged in.   
+
+regards
+
+Cliff
+
