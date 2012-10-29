@@ -1,163 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52663 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:37338 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894Ab2JYWqJ (ORCPT
+	with ESMTP id S1752675Ab2J2Jc7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 18:46:09 -0400
+	Mon, 29 Oct 2012 05:32:59 -0400
+Message-ID: <1351503210.10925.23.camel@jlt4.sipsolutions.net> (sfid-20121029_103303_251955_9F9F497D)
+Subject: pull-request: mac80211 2012-10-29
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] mac80211: verify that skb data is present
-Date: Fri, 26 Oct 2012 00:46:39 +0200
-Message-Id: <1351205200-18094-3-git-send-email-johannes@sipsolutions.net> (sfid-20121026_004613_104852_EB7EB85D)
-In-Reply-To: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
-References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 29 Oct 2012 10:33:30 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-xZgUV6j1UMSNc6ASG8th"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-A number of places in the mesh code don't check that
-the frame data is present and in the skb header when
-trying to access. Add those checks and the necessary
-pskb_may_pull() calls. This prevents accessing data
-that doesn't actually exist.
+--=-xZgUV6j1UMSNc6ASG8th
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-To do this, export ieee80211_get_mesh_hdrlen() to be
-able to use it in mac80211.
+John,
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |    9 +++++++++
- net/mac80211/rx.c      |   43 +++++++++++++++++++++++++++++++++++++++----
- net/wireless/util.c    |    3 ++-
- 3 files changed, 50 insertions(+), 5 deletions(-)
+Please pull my mac80211.git tree per below to get a number of fixes. I
+have included a patch from Antonio to fix a memcpy overrun, Felix's
+patches for the antenna gain/tx power issues, a few mesh-related fixes
+from Javier for mac80211 and my own patches to not access data that
+might not be present in an skb at all as well as a patch (the duplicate
+IE check one) to make mac80211 forward-compatible with potential future
+spec extensions that use the same IE multiple times.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f8cd4cf..7d5b600 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2652,6 +2652,15 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
- unsigned int __attribute_const__ ieee80211_hdrlen(__le16 fc);
- 
- /**
-+ * ieee80211_get_mesh_hdrlen - get mesh extension header length
-+ * @meshhdr: the mesh extension header, only the flags field
-+ *	(first byte) will be accessed
-+ * Returns the length of the extension header, which is always at
-+ * least 6 bytes and at most 18 if address 5 and 6 are present.
-+ */
-+unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr);
-+
-+/**
-  * DOC: Data path helpers
-  *
-  * In addition to generic utilities, cfg80211 also offers
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 99cdee1..6d1fd39 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -531,6 +531,11 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
- 
- 		if (ieee80211_is_action(hdr->frame_control)) {
- 			u8 category;
-+
-+			/* make sure category field is present */
-+			if (rx->skb->len < IEEE80211_MIN_ACTION_SIZE)
-+				return RX_DROP_MONITOR;
-+
- 			mgmt = (struct ieee80211_mgmt *)hdr;
- 			category = mgmt->u.action.category;
- 			if (category != WLAN_CATEGORY_MESH_ACTION &&
-@@ -1892,6 +1897,20 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+
-+	/* make sure fixed part of mesh header is there, also checks skb len */
-+	if (!pskb_may_pull(rx->skb, hdrlen + 6))
-+		return RX_DROP_MONITOR;
-+
-+	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
-+
-+	/* make sure full mesh header is there, also checks skb len */
-+	if (!pskb_may_pull(rx->skb,
-+			   hdrlen + ieee80211_get_mesh_hdrlen(mesh_hdr)))
-+		return RX_DROP_MONITOR;
-+
-+	/* reload pointers */
-+	hdr = (struct ieee80211_hdr *) skb->data;
- 	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
- 
- 	/* frame is in RMC, don't forward */
-@@ -1913,11 +1932,19 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 		char *mpp_addr;
- 
- 		if (is_multicast_ether_addr(hdr->addr1)) {
--			mpp_addr = hdr->addr3;
--			proxied_addr = mesh_hdr->eaddr1;
-+			if (mesh_hdr->flags & MESH_FLAGS_AE_A4) {
-+				mpp_addr = hdr->addr3;
-+				proxied_addr = mesh_hdr->eaddr1;
-+			} else {
-+				return RX_DROP_MONITOR;
-+			}
- 		} else {
--			mpp_addr = hdr->addr4;
--			proxied_addr = mesh_hdr->eaddr2;
-+			if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6) {
-+				mpp_addr = hdr->addr4;
-+				proxied_addr = mesh_hdr->eaddr2;
-+			} else {
-+				return RX_DROP_MONITOR;
-+			}
- 		}
- 
- 		rcu_read_lock();
-@@ -2354,6 +2381,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 		}
- 		break;
- 	case WLAN_CATEGORY_SELF_PROTECTED:
-+		if (len < (IEEE80211_MIN_ACTION_SIZE +
-+			   sizeof(mgmt->u.action.u.self_prot.action_code)))
-+			break;
-+
- 		switch (mgmt->u.action.u.self_prot.action_code) {
- 		case WLAN_SP_MESH_PEERING_OPEN:
- 		case WLAN_SP_MESH_PEERING_CLOSE:
-@@ -2372,6 +2403,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 		}
- 		break;
- 	case WLAN_CATEGORY_MESH_ACTION:
-+		if (len < (IEEE80211_MIN_ACTION_SIZE +
-+			   sizeof(mgmt->u.action.u.mesh_action.action_code)))
-+			break;
-+
- 		if (!ieee80211_vif_is_mesh(&sdata->vif))
- 			break;
- 		if (mesh_action_is_path_sel(mgmt) &&
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 45a09de..2762e83 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -309,7 +309,7 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
- }
- EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
- 
--static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
-+unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
- {
- 	int ae = meshhdr->flags & MESH_FLAGS_AE;
- 	/* 802.11-2012, 8.2.4.7.3 */
-@@ -323,6 +323,7 @@ static int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
- 		return 18;
- 	}
- }
-+EXPORT_SYMBOL(ieee80211_get_mesh_hdrlen);
- 
- int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 			   enum nl80211_iftype iftype)
--- 
-1.7.10.4
+It's a bit bigger than I'd like maybe, but I think all of these are
+worthwhile fixes at this point.
+
+Thanks,
+johannes
+
+
+The following changes since commit 3a40414f826a8f1096d9b94c4a53ef91b25ba28d=
+:
+
+  mac80211: connect with HT20 if HT40 is not permitted (2012-10-17 13:46:38=
+ +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 6dbda2d00d466225f9db1dc695ff852443f28832:
+
+  mac80211: make sure data is accessible in EAPOL check (2012-10-26 22:52:4=
+2 +0200)
+
+----------------------------------------------------------------
+Antonio Quartulli (1):
+      mac80211: fix SSID copy on IBSS JOIN
+
+Felix Fietkau (2):
+      cfg80211: fix antenna gain handling
+      cfg80211: fix initialization of chan->max_reg_power
+
+Javier Cardona (3):
+      mac80211: Only process mesh config header on frames that RA_MATCH
+      mac80211: Don't drop frames received with mesh ttl =3D=3D 1
+      mac80211: don't inspect Sequence Control field on control frames
+
+Johannes Berg (5):
+      mac80211: use blacklist for duplicate IE check
+      wireless: drop invalid mesh address extension frames
+      mac80211: check management frame header length
+      mac80211: verify that skb data is present
+      mac80211: make sure data is accessible in EAPOL check
+
+ include/net/cfg80211.h |    9 ++++++
+ net/mac80211/ibss.c    |    2 +-
+ net/mac80211/rx.c      |   74 ++++++++++++++++++++++++++++++++++++--------=
+----
+ net/mac80211/util.c    |   42 ++++++++++++++++++++++-----
+ net/wireless/core.c    |    3 +-
+ net/wireless/reg.c     |    5 ++--
+ net/wireless/util.c    |   14 +++++----
+ 7 files changed, 113 insertions(+), 36 deletions(-)
+
+
+--=-xZgUV6j1UMSNc6ASG8th
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQjk1qAAoJEDBSmw7B7bqrBDYP/iw0QN+SERwBd1NZyJgYVsK9
+4H8ETcKfLu0KOeE/ZZYZZ8TogFgogtl73aoFCxbA2hjUVgvhtZCSPGw2caLJ71EH
+ZevVBf/FqbG1ath9nbVVD17ag08Ts8JuTH4vTkgdEFbGITbme1XsthInIB+4U3UT
+vNgvHUJ531/hkXK0b6J7kZiu6LDKxi92BEt4UoqCOTJpCZXmPuPnz6uvoSZWGtHA
+ZajWPKgZl3wChTUxrYC4T1XSROs77rD/rHqDVAmDdZ4KKikQB9FfpSU41r+CKM/Y
+PTpn9e8BRjd70K4nbPhbQI8aNnKpNEZkB1/hhGM3CFGR7fckB3zbvy/GFv7V+cUY
+mmxQsw0RZSz6nnyRkH05eyA10JvgQeVar8U6UpUMyog9nft8iqe4ZHc9HoiuDQ6K
+WxCsm9nQs7R+YgbwS9ayT/ktO/HjlaOz3h7XLGzQnyYIQon7aHTn1VYXAAJ/hafe
+X3kp7c76R5hch30i6c66fhnicF61egxA/0TemVzUaLddwPLmeQ6TxCnZQGoUZGyk
+qdiEHKKSBGr3FxQ2JJbOxKYSGluw9gyWxEk8ldlc2BkGqhvYsc5eCHoXRtGBCrND
+op0A+cHrrSRXTQEJfb9oMjbTs/Hhh7ns0/3DBE61YslNql9+IDzr5p05hKY8NziA
+zW3VsyydoN4jiwFP9+eP
+=u1rE
+-----END PGP SIGNATURE-----
+
+--=-xZgUV6j1UMSNc6ASG8th--
 
