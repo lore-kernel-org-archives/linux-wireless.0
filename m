@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2930 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754920Ab2JKSHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Oct 2012 14:07:12 -0400
-Message-ID: <50770A50.3010305@broadcom.com> (sfid-20121011_200718_738224_B241AD8E)
-Date: Thu, 11 Oct 2012 20:05:04 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:61102 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758120Ab2J2IwY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2012 04:52:24 -0400
+Date: Mon, 29 Oct 2012 14:22:24 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath9k: Restore main and alternate antenna.
+Message-ID: <20121029085223.GC28932@hemis.qca.qualcomm.com> (sfid-20121029_095230_757051_F438C2A1)
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] wireless: cfg80211: add peer-to-peer related
- definitions
-References: <1349965104-14475-1-git-send-email-arend@broadcom.com>
- <1349973674.13097.11.camel@jlt4.sipsolutions.net>
- <5077008D.7030203@broadcom.com>
- <1349976385.13097.13.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1349976385.13097.13.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2012 07:26 PM, Johannes Berg wrote:
-> On Thu, 2012-10-11 at 19:23 +0200, Arend van Spriel wrote:
->>> Looks ok ... but why would a driver need to parse P2P stuff? For NoA for
->>> example maybe?
->>
->> I did not yet go through a lot of the P2P code that is on my plate to
->> port upstream, but one item that is extracted in the part I already did
->> is the P2P listen channel. I just wanted to do this RFC before sending
->> out the brcmfmac code patches that actually is using it. This change
->> will be part of that patch series.
->
-> Ah, fmac, that will be somewhat interesting. What userspace APIs are you
-> proposing for that case?
+> Restore main to LNA1 and ALT to LNA2 for AR9565 only
+> when shared LNA diversity is not enabled.
+> 
+> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> index 105390a..672530c 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> @@ -3674,7 +3674,10 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+>  			regval &= ~AR_FAST_DIV_ENABLE;
+>  		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
+>  
+> -		if (pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
+> +		if ((AR_SREV_9485_11(ah) &&
+> +		     pCap->hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) ||
+> +		    (AR_SREV_9565(ah) &&
+> +		     !ah->shared_chain_lnadiv)) {
+>  			regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
+>  			/*
+>  			 * clear bits 25-30 main_lnaconf, alt_lnaconf,
+This is not needed. Its already taken care, when lna is disabled manually, we clear
+everything properly via ath_ant_comb_update()
 
-Hi Johannes,
-
-Not sure if I understand the question. I am using wpa_supplicant with 
-wpa_cli for testing and given its p2p support I assumed there is already 
-a nl80211 api in place. I am still trying to get a good sense on it. The 
-P2P code to port does more parsing of P2P stuff and if you mean adding 
-userspace APIs to avoid just that I would definitely prefer that.
-
-Gr. AvS
-
+-Rajkumar
