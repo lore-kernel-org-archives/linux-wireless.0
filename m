@@ -1,81 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:24288 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759921Ab2JLR7A (ORCPT
+Received: from mailrelay02.solcon.nl ([212.45.32.108]:44642 "EHLO
+	mailrelay02.solcon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821Ab2J2Q5x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 13:59:00 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCHv2] nl/cfg80211: force scan using an AP vif if requested
-Date: Fri, 12 Oct 2012 19:58:17 +0200
-Message-Id: <1350064697-21838-1-git-send-email-ordex@autistici.org> (sfid-20121012_195905_137505_5D34E75B)
+	Mon, 29 Oct 2012 12:57:53 -0400
+Message-ID: <508EB140.5010102@solcon.nl> (sfid-20121029_175757_351644_21A28FF9)
+Date: Mon, 29 Oct 2012 17:39:28 +0100
+From: Albert Pool <albertpool@solcon.nl>
+MIME-Version: 1.0
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
+CC: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
+Subject: Unknown Realtek USB device
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the user wants to scan using a vif configured as AP, cfg80211 must give him a
-chance to do it, even if this will disrupt the stations performance due to
-off-channel scanning. To do so, this patch adds a 'force' flag to the
-SCAN_TRIGGER command which tells cfg80211 to perform the scanning operation even
-if the vif is an AP and the beaconing has already started.
+Hi,
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
+Can any of you help me identify the Realtek chip in this device so that the USB ID can be added to the right driver?
+It's a 802.11n USB nano dongle from ISY. I only have the dongle for short time, so I may not be able to test it myself if it takes some time.
+usb-devices and lsusb -v output is attached.
 
-v2: rebased on top of latest mac80211-next/master, in particular this introduced
-Bing's patchset on scan_flags
+Kind regards,
 
+Albert Pool
 
-Cheers,
+T:  Bus=01 Lev=01 Prnt=01 Port=03 Cnt=01 Dev#=  2 Spd=480 MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=050d ProdID=11f2 Rev=02.00
+S:  Manufacturer=Realtek
+S:  Product=802.11n WLAN Adapter
+S:  SerialNumber=00e04c000001
+C:  #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
+I:  If#= 0 Alt= 0 #EPs= 4 Cls=ff(vend.) Sub=ff Prot=ff Driver=(none)
 
- include/linux/nl80211.h |  6 ++++++
- net/mac80211/cfg.c      | 10 +++++++++-
- 2 files changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0e6277a..b3c4a63 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -3103,10 +3103,16 @@ enum nl80211_connect_failed_reason {
-  *
-  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
-  * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
-+ * @NL80211_SCAN_FLAG_FORCE: force a scan even if the interface is configured
-+ *	as AP and the beaconing has already been configured. This attribute is
-+ *	dangerous because will destroy stations performance as a lot of frames
-+ *	will be lost while scanning off-channel, therefore it must be used only
-+ *	when really needed
-  */
- enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
- 	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
-+	NL80211_SCAN_FLAG_FORCE				= 1<<2,
- };
- 
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ed27988..a801270 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1855,7 +1855,15 @@ static int ieee80211_scan(struct wiphy *wiphy,
- 		 * beaconing hasn't been configured yet
- 		 */
- 	case NL80211_IFTYPE_AP:
--		if (sdata->u.ap.beacon)
-+		/*
-+		 * If the scan has been forced, don't care about being beaconing
-+		 * already.
-+		 * This will create problems to the attached stations (e.g. all
-+		 * the  frames sent while scanning on other channel will be
-+		 * lost)
-+		 */
-+		if (sdata->u.ap.beacon &&
-+		    !(req->flags & NL80211_SCAN_FLAG_FORCE))
- 			return -EOPNOTSUPP;
- 		break;
- 	default:
--- 
-1.7.12
+Bus 001 Device 003: ID 050d:11f2 Belkin Components
+Device Descriptor:
+   bLength                18
+   bDescriptorType         1
+   bcdUSB               2.00
+   bDeviceClass            0 (Defined at Interface level)
+   bDeviceSubClass         0
+   bDeviceProtocol         0
+   bMaxPacketSize0        64
+   idVendor           0x050d Belkin Components
+   idProduct          0x11f2
+   bcdDevice            2.00
+   iManufacturer           1 Realtek
+   iProduct                2 802.11n WLAN Adapter
+   iSerial                 3 00e04c000001
+   bNumConfigurations      1
+   Configuration Descriptor:
+     bLength                 9
+     bDescriptorType         2
+     wTotalLength           46
+     bNumInterfaces          1
+     bConfigurationValue     1
+     iConfiguration          0
+     bmAttributes         0x80
+       (Bus Powered)
+     MaxPower              500mA
+     Interface Descriptor:
+       bLength                 9
+       bDescriptorType         4
+       bInterfaceNumber        0
+       bAlternateSetting       0
+       bNumEndpoints           4
+       bInterfaceClass       255 Vendor Specific Class
+       bInterfaceSubClass    255 Vendor Specific Subclass
+       bInterfaceProtocol    255 Vendor Specific Protocol
+       iInterface              0
+       Endpoint Descriptor:
+         bLength                 7
+         bDescriptorType         5
+         bEndpointAddress     0x81  EP 1 IN
+         bmAttributes            2
+           Transfer Type            Bulk
+           Synch Type               None
+           Usage Type               Data
+         wMaxPacketSize     0x0200  1x 512 bytes
+         bInterval               0
+       Endpoint Descriptor:
+         bLength                 7
+         bDescriptorType         5
+         bEndpointAddress     0x02  EP 2 OUT
+         bmAttributes            2
+           Transfer Type            Bulk
+           Synch Type               None
+           Usage Type               Data
+         wMaxPacketSize     0x0200  1x 512 bytes
+         bInterval               0
+       Endpoint Descriptor:
+         bLength                 7
+         bDescriptorType         5
+         bEndpointAddress     0x03  EP 3 OUT
+         bmAttributes            2
+           Transfer Type            Bulk
+           Synch Type               None
+           Usage Type               Data
+         wMaxPacketSize     0x0200  1x 512 bytes
+         bInterval               0
+       Endpoint Descriptor:
+         bLength                 7
+         bDescriptorType         5
+         bEndpointAddress     0x84  EP 4 IN
+         bmAttributes            3
+           Transfer Type            Interrupt
+           Synch Type               None
+           Usage Type               Data
+         wMaxPacketSize     0x0040  1x 64 bytes
+         bInterval               1
+Device Qualifier (for other device speed):
+   bLength                10
+   bDescriptorType         6
+   bcdUSB               2.00
+   bDeviceClass            0 (Defined at Interface level)
+   bDeviceSubClass         0
+   bDeviceProtocol         0
+   bMaxPacketSize0        64
+   bNumConfigurations      1
+Device Status:     0x0000
+   (Bus Powered)
 
