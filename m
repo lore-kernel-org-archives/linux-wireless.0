@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37878 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:37240 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753279Ab2JVNUG (ORCPT
+	with ESMTP id S1755128Ab2J2JJM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 09:20:06 -0400
-Message-ID: <1350912037.10166.5.camel@jlt4.sipsolutions.net> (sfid-20121022_152014_050017_044890AA)
-Subject: Re: [regression][bisected] Handling of channel contexts causes
- wireless to fail (i.e. no wlan* devices)
+	Mon, 29 Oct 2012 05:09:12 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TSlLL-00035g-Ng
+	for linux-wireless@vger.kernel.org; Mon, 29 Oct 2012 10:09:11 +0100
+Message-ID: <1351501787.10925.7.camel@jlt4.sipsolutions.net> (sfid-20121029_100920_684778_E8719A9B)
+Subject: Re: [PATCH 0/3] mac80211: audit for access to skb data
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ronald <ronald645@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 22 Oct 2012 15:20:37 +0200
-In-Reply-To: <CAF1_xX2uo0Q7mNSEENA2uH61itMxjoJ8ejcS9MeW5puibXpeeQ@mail.gmail.com> (sfid-20121022_151350_348128_51F9AA58)
-References: <CAF1_xX2uo0Q7mNSEENA2uH61itMxjoJ8ejcS9MeW5puibXpeeQ@mail.gmail.com>
-	 (sfid-20121022_151350_348128_51F9AA58)
+To: linux-wireless@vger.kernel.org
+Date: Mon, 29 Oct 2012 10:09:47 +0100
+In-Reply-To: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net> (sfid-20121026_004611_616574_5C6C9420)
+References: <1351205200-18094-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121026_004611_616574_5C6C9420)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-10-22 at 15:13 +0200, Ronald wrote:
-> The following commit causes wireless interfaces to not show up (i.e.
-> wlan* is non existant):
-> 
-> fe57d9f: mac80211: track whether to use channel contexts
-> 
-> Reverting this commit on top of current wireless-testing resulted in
-> undefined references to chanctx.
+On Fri, 2012-10-26 at 00:46 +0200, Johannes Berg wrote:
+> While looking at Javier's patch and some other things I found
+> a number of places that don't make sure the skb data is there
+> when it's accessed, fix them.
 
-Oops, my mistake, this should fix it:
-
-http://p.sipsolutions.net/cd55626ca51fc3c5.txt
+Applied all three to mac80211.git.
 
 johannes
 
