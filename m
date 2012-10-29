@@ -1,47 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:46740 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755527Ab2JVQDX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37241 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752552Ab2J2JJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 12:03:23 -0400
-Message-ID: <1350921800.1785.23.camel@aeonflux> (sfid-20121022_180329_784216_8F7D02EE)
-Subject: Re: [PATCH 1/2] NFC: Move pn544.h header file close to the driver
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 22 Oct 2012 09:03:20 -0700
-In-Reply-To: <20121022143009.GB5800@sortiz-mobl>
-References: <1350672971-29716-1-git-send-email-marcel@holtmann.org>
-	 <20121022143009.GB5800@sortiz-mobl>
+	Mon, 29 Oct 2012 05:09:32 -0400
+Message-ID: <1351501806.10925.8.camel@jlt4.sipsolutions.net> (sfid-20121029_100936_092523_739B7AF1)
+Subject: Re: [PATCH] wireless: drop invalid mesh address extension frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com
+Date: Mon, 29 Oct 2012 10:10:06 +0100
+In-Reply-To: <1351195011-30148-1-git-send-email-johannes@sipsolutions.net> (sfid-20121025_215622_269216_205911A7)
+References: <1351195011-30148-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121025_215622_269216_205911A7)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
-
-> > With the removal of the deprecated pn544.c driver, the header
-> > file pn544.h is now used only by the new pn544_hci.c driver. So
-> > move the header file close to the driver.
+On Thu, 2012-10-25 at 21:56 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> There are quite a bit of junk in this header file, as outlined from your
-> second patch. But there is a platform data structure definition (struct
-> pn544_nfc_platform_data) that should be available from the arch code.
-> 
-> By passing function pointers (That don't do anything else than toggling
-> GPIOs) from arch code to the driver, this function is not very nice. Nor
-> flexible as it won't work with e.g. DT platforms. The driver should just get
-> the IRQ and the 3 potentially needed GPIOs and implement the functions itself.
-> Even when that happens, we'll still need a header file that !DT platform could
-> use to pass the GPIO numbers around. So the bottom line is: We need to keep
-> this one under include/linux/nfc/.
+> The mesh header can have address extension by a 4th
+> or a 5th and 6th address, but never both. Drop such
+> frames in 802.11 -> 802.3 conversion.
 
-all good intentions, but it does not seem to work this way anyway. I was
-tempted to actually just merge the one struct and one enum into the
-driver itself.
+Applied.
 
-Regards
-
-Marcel
-
+johannes
 
