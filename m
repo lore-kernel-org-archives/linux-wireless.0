@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:40191 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757391Ab2JLQkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Oct 2012 12:40:45 -0400
-Message-ID: <1350060043.2243.28.camel@joe-AO722> (sfid-20121012_184049_418362_084E9137)
-Subject: Re: [PATCH NEXT 2/2] rtlwifi: rtl8192c: rtl8192ce: rtl8192cu:
- rtl8192se: rtl8192de: Shorten some variable names
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Fri, 12 Oct 2012 09:40:43 -0700
-In-Reply-To: <1350057128-16969-3-git-send-email-Larry.Finger@lwfinger.net>
-References: <1350057128-16969-1-git-send-email-Larry.Finger@lwfinger.net>
-	 <1350057128-16969-3-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from contumacia.investici.org ([178.255.144.35]:40440 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758019Ab2J2Jun (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2012 05:50:43 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv4 2/2] mac80211: implement set_mcast_rate() callback
+Date: Mon, 29 Oct 2012 10:50:03 +0100
+Message-Id: <1351504203-15369-2-git-send-email-ordex@autistici.org> (sfid-20121029_105049_963325_3ECD6FCB)
+In-Reply-To: <1351504203-15369-1-git-send-email-ordex@autistici.org>
+References: <1351504203-15369-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-10-12 at 10:52 -0500, Larry Finger wrote:
-> The private data areas for these drivers contain some very long variable
-> names that cause difficulty in fitting source lines to an 80-character
-> limit.
+This new callback can be used to tune the rate to be used to send
+multicast frames.
 
-[]
+In the current state the multicast rate can be specified on IBSS/MESH
+joining only. This makes it impossible to select a custom multicast
+rate when then join command is sent by an external program (e.g.
+wpa_supplicant)
 
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-[]
-> @@ -177,8 +177,8 @@ static void rtl92c_dm_diginit(struct ieee80211_hw *hw)
->  	dm_digtable->rx_gain_range_max = DM_DIG_MAX;
->  	dm_digtable->rx_gain_range_min = DM_DIG_MIN;
->  	dm_digtable->backoff_val = DM_DIG_BACKOFF_DEFAULT;
-> -	dm_digtable->backoff_val_range_max = DM_DIG_BACKOFF_MAX;
-> -	dm_digtable->backoff_val_range_min = DM_DIG_BACKOFF_MIN;
-> +	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
-> +	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ net/mac80211/cfg.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Hi Larry, good idea but it looks like maybe you grepped
-for long variable names with something like "\w{20,}".
-
-Please try to convert all the similarly grouped names at
-the same time.
-
-iow: backoff_val should probably be changed too.
-
-I didn't read any further.  cheers, Joe
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 34fd3eb..9ef04b0 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1954,6 +1954,16 @@ static int ieee80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+ 	return ieee80211_ibss_leave(IEEE80211_DEV_TO_SUB_IF(dev));
+ }
+ 
++static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
++				    int rate[IEEE80211_NUM_BANDS])
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
++
++	return 0;
++}
++
+ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+@@ -3151,6 +3161,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.disassoc = ieee80211_disassoc,
+ 	.join_ibss = ieee80211_join_ibss,
+ 	.leave_ibss = ieee80211_leave_ibss,
++	.set_mcast_rate = ieee80211_set_mcast_rate,
+ 	.set_wiphy_params = ieee80211_set_wiphy_params,
+ 	.set_tx_power = ieee80211_set_tx_power,
+ 	.get_tx_power = ieee80211_get_tx_power,
+-- 
+1.7.12.4
 
