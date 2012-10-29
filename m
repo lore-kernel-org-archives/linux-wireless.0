@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38331 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752597Ab2JJPam (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 11:30:42 -0400
-Date: Wed, 10 Oct 2012 11:18:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	"alexander.smirnov@siemens.com" <alexander.smirnov@siemens.com>
-Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona!)
-Message-ID: <20121010151854.GA6247@tuxdriver.com> (sfid-20121010_173047_655560_C2E1D4A4)
-References: <20120822201930.GC14913@tuxdriver.com>
- <1345667975.8786.0.camel@jlt3.sipsolutions.net>
- <20120822204122.GA2196@tuxdriver.com>
- <507561C8.7080601@tieto.com>
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:57672 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754318Ab2J2XAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Oct 2012 19:00:09 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TSyJY-0006mF-Ik
+	for linux-wireless@vger.kernel.org; Tue, 30 Oct 2012 00:00:12 +0100
+Received: from 85-211-212-185.dynamic.dsl.as9105.com ([85-211-212-185.dynamic.dsl.as9105.com])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 00:00:12 +0100
+Received: from cliffhanger by 85-211-212-185.dynamic.dsl.as9105.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 00:00:12 +0100
+To: linux-wireless@vger.kernel.org
+From: Cliff McDiarmid <cliffhanger@gardener.com>
+Subject: Re: RTL8188SU
+Date: Mon, 29 Oct 2012 22:59:46 +0000 (UTC)
+Message-ID: <loom.20121029T234700-352@post.gmane.org> (sfid-20121030_000014_375219_BD288A86)
+References: <loom.20121028T233054-8@post.gmane.org> <201210291257.02249.chunkeey@googlemail.com> <loom.20121029T182405-382@post.gmane.org> <201210292117.45399.chunkeey@googlemail.com> <loom.20121029T214630-424@post.gmane.org> <508EFA5D.8090706@lwfinger.net>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <507561C8.7080601@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 10, 2012 at 01:53:44PM +0200, Michal Kazior wrote:
-> On 22/08/12 22:41, John W. Linville wrote:
-> >On Wed, Aug 22, 2012 at 10:39:35PM +0200, Johannes Berg wrote:
-> >>On Wed, 2012-08-22 at 16:19 -0400, John W. Linville wrote:
-> >>
-> >>>With that said, there are still a number of slots available for
-> >>>presentations or discussion topics.  This is especially true for the
-> >>>802.11 group...  Please step-up with some suggested topics!
-> >>
-> >>Anyone want to carefully review & present Michal's and my work on
-> >>multi-channel in mac80211? :-)
-> >
-> >I would _really_ like to see this.  Anyone (smarter than me) that is
-> >willing to do this for the group?
-> >
-> >John
-> >
-> 
-> Hi,
-> 
-> I'd like to do it. I'll update the wiki and put myself in a free
-> timeslot if that's okay.
-> 
-> 
-> -- Pozdrawiam / Best regards, Michal Kazior.
+Larry Finger <Larry.Finger@...> writes:
 
-That sounds great to me!
 
-Thanks,
+> 
+> The "old" driver for the RTL8188SU is r8712u, not 8192u. The USB_DEVICE table 
+> for 8192u is:
+> 
+>          {USB_DEVICE(0x0bda, 0x8709)},
+>          {USB_DEVICE(0x07aa, 0x0043)},
+>          {USB_DEVICE(0x050d, 0x805E)},
+>          {USB_DEVICE(0x0df6, 0x0031)},
+>          {USB_DEVICE(0x1740, 0x9201)},
+>          {USB_DEVICE(0x2001, 0x3301)},
+>          {USB_DEVICE(0x5a57, 0x0290)},
+>          {USB_DEVICE(0x043e, 0x7a01)},
+> 
+> I have an extensive collection of Realtek devices; however, I have never seen 
+> any of these.
+> 
+> Larry
 
-John
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanks Larry I'm confusing the issue here, by not getting the no's right.  I was
+asking about the rtl8192su driver which I understand works in monitor mode.  I
+assume this driver has been 'cleaned up' and become the r8712u.  I was wondering
+if I could use an earlier version of the rtl8192su driver with the RTL8188SU and
+in doing so have the monitor mode.
+
+regards
+
+Cliff
+
+
