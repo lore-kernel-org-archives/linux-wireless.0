@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:44086 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759449Ab2JTCDK (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:33687 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419Ab2J2JsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Oct 2012 22:03:10 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.7 1/2] mwifiex: return -EBUSY if specific scan request cannot be honored
-Date: Fri, 19 Oct 2012 19:01:59 -0700
-Message-Id: <1350698520-522-1-git-send-email-bzhao@marvell.com> (sfid-20121020_040322_184529_3D92CBA8)
+	Mon, 29 Oct 2012 05:48:12 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h16so4452111oag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2012 02:48:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1351501949-20169-1-git-send-email-johannes@sipsolutions.net>
+References: <1351501949-20169-1-git-send-email-johannes@sipsolutions.net>
+Date: Mon, 29 Oct 2012 11:48:11 +0200
+Message-ID: <CAB3XZEeTTAOO1DzPArvaSU-esTFeY7SLAMTkSt5vKD_QScK1vQ@mail.gmail.com> (sfid-20121029_104815_971450_49F36004)
+Subject: Re: [RFC] mac80211: send deauth only with channel context
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previous patch "mwifiex: return -EBUSY if scan request cannot.."
-corrected regular scan request only. There is another case for
-specific scan that needs the same handling.
+On Mon, Oct 29, 2012 at 11:12 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> When userspace asks to deauthenticate and we're just
+> authenticated (or still authenticating) send a deauth
+> frame instead of deleting the auth request.
+>
+why send a deauth if we are not authenticated yet?
 
-Also, removed !req_ssid check as it has already been validated
-by caller.
+>         mutex_lock(&sdata->local->mtx);
+>         ieee80211_recalc_idle(sdata->local);
+>         mutex_unlock(&sdata->local->mtx);
+>
+> + out:
+> +       if (sent_frame)
+> +               __cfg80211_send_deauth(sdata->dev, frame_buf,
+> +                                      IEEE80211_DEAUTH_FRAME_LEN);
+> +
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Paul Stewart <pstew@chromium.org>
-Reviewed-by: Ryan Cairns <rtc@chromium.org>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/scan.c |   13 +++++--------
- 1 files changed, 5 insertions(+), 8 deletions(-)
+shouldn't the "out" label be before recalcing the idle state?
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 5896b1f..fe05684 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1846,21 +1846,18 @@ static int mwifiex_scan_specific_ssid(struct mwifiex_private *priv,
- 				      struct cfg80211_ssid *req_ssid)
- {
- 	struct mwifiex_adapter *adapter = priv->adapter;
--	int ret = 0;
-+	int ret;
- 	struct mwifiex_user_scan_cfg *scan_cfg;
- 
--	if (!req_ssid)
--		return -1;
--
- 	if (adapter->scan_processing) {
--		dev_dbg(adapter->dev, "cmd: Scan already in process...\n");
--		return ret;
-+		dev_err(adapter->dev, "cmd: Scan already in process...\n");
-+		return -EBUSY;
- 	}
- 
- 	if (priv->scan_block) {
--		dev_dbg(adapter->dev,
-+		dev_err(adapter->dev,
- 			"cmd: Scan is blocked during association...\n");
--		return ret;
-+		return -EBUSY;
- 	}
- 
- 	scan_cfg = kzalloc(sizeof(struct mwifiex_user_scan_cfg), GFP_KERNEL);
--- 
-1.7.0.2
-
+Eliad.
