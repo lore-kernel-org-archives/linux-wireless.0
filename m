@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:11693 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755469Ab2J2Ije (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37307 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912Ab2J2JOg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Oct 2012 04:39:34 -0400
-Date: Mon, 29 Oct 2012 14:09:35 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath9k: Do not enable ANT diversity if ANT control
- bit is 0
-Message-ID: <20121029083933.GA28932@hemis.qca.qualcomm.com> (sfid-20121029_093939_069130_BE8042F7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 29 Oct 2012 05:14:36 -0400
+Message-ID: <1351502110.10925.10.camel@jlt4.sipsolutions.net> (sfid-20121029_101440_744356_4BCE417A)
+Subject: Re: [PATCHv3 2/2] mac80211: implement set_mcast_rate() callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 29 Oct 2012 10:15:10 +0100
+In-Reply-To: <1351267055-21927-2-git-send-email-ordex@autistici.org>
+References: <1351267055-21927-1-git-send-email-ordex@autistici.org>
+	 <1351267055-21927-2-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> RvR test is not good when ANT control bit is not set so
-> enable ANT diversity only when ANT control bit is set.
-> 
-> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   22 +++++++++++++++++-----
->  drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    2 ++
->  2 files changed, 19 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> index 189aeb2..d2e44c3 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> @@ -3630,15 +3630,21 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
->  		regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
->  		regval &= (~AR_ANT_DIV_CTRL_ALL);
->  		regval |= (value & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
-> -		/* enable_lnadiv */
-> -		regval &= (~AR_PHY_ANT_DIV_LNADIV);
-> -		regval |= ((value >> 6) & 0x1) << AR_PHY_ANT_DIV_LNADIV_S;
-> +
-> +		if (AR_SREV_9485(ah)) {
-> +			/* enable_lnadiv */
-> +			regval &= (~AR_PHY_ANT_DIV_LNADIV);
-> +			regval |= ((value >> 6) & 0x1) <<
-> +				   AR_PHY_ANT_DIV_LNADIV_S;
-> +		}
->  
->  		if (AR_SREV_9565(ah)) {
-> -			if (ah->shared_chain_lnadiv) {
-> +			if (ah->shared_chain_lnadiv &&
-> +			    (value & AR_EEP_ANT_DIV_ENABLE)) {
-> +				regval |= AR_ANT_DIV_ENABLE;
->  				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
->  			} else {
-> -				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
-> +				regval &= ~AR_ANT_DIV_ENABLE;
->  				regval &= ~(1 << AR_PHY_ANT_SW_RX_PROT_S);
->  			}
->  		}
-> @@ -3649,6 +3655,12 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
->  		regval = REG_READ(ah, AR_PHY_CCK_DETECT);
->  		regval &= (~AR_FAST_DIV_ENABLE);
->  		regval |= ((value >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
-> +		if (ah->shared_chain_lnadiv &&
-> +		    (AR_SREV_9485(ah) || (AR_SREV_9565(ah) &&
-> +		    (value & AR_EEP_FAST_DIV_ENABLE))))
-> +			regval |= AR_FAST_DIV_ENABLE;
-> +		else
-> +			regval &= ~AR_FAST_DIV_ENABLE;
->  		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
->  
-These changes should be done in ar9003_hw_antctrl_shared_chain_lnadiv not in
-eeprom path. Otherwise it breaks AR9330.
+On Fri, 2012-10-26 at 17:57 +0200, Antonio Quartulli wrote:
+> The callback can be used with vif configured as
+> ADHOC or MESH_POINT only.
 
--Rajkumar
+You said the same in the cfg80211 patch, so
+
+> +int ieee80211_mcast_rate(struct ieee80211_sub_if_data *sdata,
+> +			 int rate[IEEE80211_NUM_BANDS])
+> +{
+> +	if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
+> +	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
+> +		return -EOPNOTSUPP;
+
+should that check be in cfg80211?
+
+OTOH, it seems it might be valid in AP mode as well?
+
+johannes
+
