@@ -1,116 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4250 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755559Ab2JVUz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 16:55:58 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/12] brcmfmac: add virtual interface support in
- brcmf_cfg80211_suspend()
-Date: Mon, 22 Oct 2012 13:55:39 -0700
-Message-ID: <1350939341-17687-11-git-send-email-frankyl@broadcom.com> (sfid-20121022_225608_629358_8CB617BB)
-In-Reply-To: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-References: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from oproxy9.bluehost.com ([69.89.24.6]:44253 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754273Ab2J2Aoj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Oct 2012 20:44:39 -0400
+Received: from [70.15.155.205] (port=47052 helo=[206.223.20.150])
+	by host200.hostmonster.com with esmtpa (Exim 4.76)
+	(envelope-from <dhlii@dlasys.net>)
+	id 1TSdT2-0000GT-V1
+	for linux-wireless@vger.kernel.org; Sun, 28 Oct 2012 18:44:37 -0600
+Message-ID: <1351471475.3551.44.camel@hp-dhlii> (sfid-20121029_014447_777678_7AE340F7)
+Subject: Re: Bandwidth monitoring
+From: "David H. Lynch Jr." <dhlii@dlasys.net>
+Reply-To: dhlii@dlasys.net
+To: linux-wireless@vger.kernel.org
+Date: Sun, 28 Oct 2012 20:44:35 -0400
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+>From: Christian Lamparter <chunkeey@...>
+>> But if I am am using iw to set monitor mode mode, channel, and
+>> bandwidth, And using Raw sockets injection with a radiotap header
+>> that has no frequency/channel/bandwidth information, 
+>> I should then be able to receive that packet on another system
+>> with an AR9170 and 1.8.2 Wireshark and the BW40 flag should be true?
+>Ah now I see where the problem is.
+>You see, the "40MHz bit" is part of the MCS rate meta info (aka flags).
+>(See enum mac80211_rate_control_flags in include/net/mac80211.h)
+RADIOTAP packet injection is not a manditory facet of my problem. 
+I am only using it to inject a packet with know parameters so that I can
+trace what is happening for the purposes of duplicating the behavior
+either in firmware or in userspace. But before I can do so I need to see
+the construction and environment changes needed to transmit an HT40
+packet.
 
-With multiple interfaces suspend will need to iterate over all and
-bring down the link.
+I would be happy with any other means of forcing the transmission of an
+HT40 packet. RADIOTAP injection is just the only means I am aware of to
+do so - and from what I am gathering not an effective one. 
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   53 +++++++++++---------
- 1 file changed, 28 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 94c619a..82c7c77 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3008,46 +3008,49 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
- 	struct net_device *ndev = cfg_to_ndev(cfg);
--	struct brcmf_if *ifp = netdev_priv(ndev);
-+	struct brcmf_cfg80211_vif *vif;
- 
- 	WL_TRACE("Enter\n");
- 
- 	/*
--	 * Check for BRCMF_VIF_STATUS_READY before any function call which
--	 * could result is bus access. Don't block the suspend for
--	 * any driver error conditions
--	 */
--
--	/*
--	 * While going to suspend if associated with AP disassociate
--	 * from AP to save power while system is in suspended state
-+	 * if the primary net_device is not READY there is nothing
-+	 * we can do but pray resume goes smoothly.
- 	 */
--	if ((test_bit(BRCMF_VIF_STATUS_CONNECTED, &ifp->vif->sme_state) ||
--	     test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) &&
--	     check_vif_up(ifp->vif)) {
--		WL_INFO("Disassociating from AP"
--			" while entering suspend state\n");
--		brcmf_link_down(cfg);
-+	vif = ((struct brcmf_if *)netdev_priv(ndev))->vif;
-+	if (!check_vif_up(vif))
-+		goto exit;
- 
-+	list_for_each_entry(vif, &cfg->vif_list, list) {
-+		if (!test_bit(BRCMF_VIF_STATUS_READY, &vif->sme_state))
-+			continue;
- 		/*
--		 * Make sure WPA_Supplicant receives all the event
--		 * generated due to DISASSOC call to the fw to keep
--		 * the state fw and WPA_Supplicant state consistent
-+		 * While going to suspend if associated with AP disassociate
-+		 * from AP to save power while system is in suspended state
- 		 */
--		brcmf_delay(500);
-+		if (test_bit(BRCMF_VIF_STATUS_CONNECTED, &vif->sme_state) ||
-+		    test_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state)) {
-+			WL_INFO("Disassociating from AP before suspend\n");
-+			brcmf_link_down(cfg);
-+
-+			/* Make sure WPA_Supplicant receives all the event
-+			 * generated due to DISASSOC call to the fw to keep
-+			 * the state fw and WPA_Supplicant state consistent
-+			 */
-+			brcmf_delay(500);
-+		}
- 	}
- 
--	if (test_bit(BRCMF_VIF_STATUS_READY, &ifp->vif->sme_state))
-+	/* end any scanning */
-+	if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status))
- 		brcmf_abort_scanning(cfg);
--	else
--		clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
- 
- 	/* Turn off watchdog timer */
--	if (test_bit(BRCMF_VIF_STATUS_READY, &ifp->vif->sme_state))
--		brcmf_set_mpc(ndev, 1);
-+	brcmf_set_mpc(ndev, 1);
- 
-+exit:
- 	WL_TRACE("Exit\n");
--
-+	/* clear any scanning activity */
-+	cfg->scan_status = 0;
- 	return 0;
- }
- 
--- 
-1.7.9.5
+
+
+>OffTopic:
+>There is also a legacy duplicate flag IEEE80211_TX_RC_DUP_DATA that
+>duplicates the 20MHz legacy packet in two 20MHz halves of a 40MHz
+>channel. (The downside is that there's no dedicated RX_FLAG for
+>that and this information is not available in the radiotap)
+This might be sufficient - for the purposes of testing I do nto care
+about the data in the packet. 
+
+
+
+
+
+
+>The sending part is not. AFAICT you'll have to start by declaring
+>and defining a new radiotap rate info element (IEEE80211_RADIOTAP_RATE
+>can only handle the bit rate and that is not enough). Then you have
+>to add a parser which translate the rate info in the radiotap header
+>into mac80211 ieee80211_tx_rate and tell mac80211 to bypass rate_ctrl
+>tx handler in this case so the info won't be overwritten again...
+>And finally you'll have to add a header with this new rate info element
+>into the radiotap header of all the frames you send through the raw
+>monitor interface.
+
+>A proof-of-concept should be easily doable within a day. But getting
+>this
+>new radiotap to be part of the spec will take longer ;)
+with my level of Radiotap/mac80211/wifi knowledge this is much more than
+a days work.
+
+Any other ideas for forcing transmission of an HT40 packet ?
+What If I omit radiotap and just send an ieee80211 raw packet ?
+
+>> So I have been using airmon, wireshark, ....
+>> But i need to be able to send and verify an HT40 packet by some
+>>somewhat
+>> normal means, to assure myself that my receiving end wireshark
+>> hardware/driver/software combination can tell me what i need to
+>know. 
+>Well, you should be able to verify if your device picks up HT40 frames
+>easily. All you need is any busy 11n network with a 11n AP and a 11n
+>client. Just setup the receiver device (correct channel and HT40+/-
+>setting) and start listening.
+still not easy - no 80211n AP's just alot of AR9170's.
+I guess I am going to be looking for a cheap 80211n AP. 
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe
+linux-wireless" in
+the body of a message to majordomo@...
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
