@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:51596 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757842Ab2JYDxd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41081 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662Ab2J3IHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Oct 2012 23:53:33 -0400
-Received: by mail-ob0-f174.google.com with SMTP id uo13so1177150obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2012 20:53:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHbMyCa_yUO1XMFRrxAhDCkO+0T1Z5HaQgjhAK6cK2J729O7Cw@mail.gmail.com>
-References: <CAHbMyCb7S1faT_GH8KBag0SVX+7uhC-4qLJOR-DhStpzSMNDqQ@mail.gmail.com>
-	<1349099476.4315.12.camel@dcbw.foobar.com>
-	<CAHbMyCa_yUO1XMFRrxAhDCkO+0T1Z5HaQgjhAK6cK2J729O7Cw@mail.gmail.com>
-Date: Thu, 25 Oct 2012 05:53:32 +0200
-Message-ID: <CAHbMyCYbhennrBXFzrJCp356D5T2FMkHg9zQgOza8_JSq+u=Eg@mail.gmail.com> (sfid-20121025_055336_825673_2F922D60)
-Subject: Re: [Kernel Bug] 3.6, wpasupplicant 1.0, broadcom-sta 6.20.55.19
-From: Jasmine Hassan <jasmine.aura@gmail.com>
+	Tue, 30 Oct 2012 04:07:10 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Assaf Krauss <assaf.krauss@intel.com>
+Subject: [PATCH 2/4] iwlwifi: remove MFP Kconfig option
+Date: Tue, 30 Oct 2012 09:07:41 +0100
+Message-Id: <1351584463-11469-3-git-send-email-johannes@sipsolutions.net> (sfid-20121030_090728_057395_2507D638)
+In-Reply-To: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
+References: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 21, 2012 at 11:19 AM, Jasmine Hassan <jasmine.aura@gmail.com> wrote:
-> However, scan results seem quite limited. That is, discovered BSSID's are
-> noticeably fewer compared to results on 3.2.x-3.5.x, either via
-> `/sbin/iwlist wlan1 scanning`, or networkmanager. Only 3-5 are show by
-> iwlist, sometimes none, and network manager lists 6 at most.
-> Same driver on 3.5 (or prior) quickly picks up at least 15 BSSIDs.
+From: Assaf Krauss <assaf.krauss@intel.com>
 
-I take that back. Limited scanning was due to having laptop's lid
-closed (and working on an external LED) while testing. Obviously, the
-wifi card's antennae are in the bezel of the screen (doh).
+Remove the Kconfig option CONFIG_IWLWIFI_EXPERIMENTAL_MFP,
+if the firmware doesn't support MFP then the user shouldn't
+have the option to enable it as it won't work correctly.
 
-Scanning actually seems even better now, in 3.6.x :)
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig        |    9 ---------
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |    2 --
+ 2 files changed, 11 deletions(-)
 
-Best,
-Jasmine
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 727fbb5..5cf4323 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -133,12 +133,3 @@ config IWLWIFI_P2P
+ 	  support when it is loaded.
+ 
+ 	  Say Y only if you want to experiment with P2P.
+-
+-config IWLWIFI_EXPERIMENTAL_MFP
+-	bool "support MFP (802.11w) even if uCode doesn't advertise"
+-	depends on IWLWIFI
+-	help
+-	  This option enables experimental MFP (802.11W) support
+-	  even if the microcode doesn't advertise it.
+-
+-	  Say Y only if you want to experiment with MFP.
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index ff8162d..46b0d1c 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -168,10 +168,8 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+ 			     IEEE80211_HW_SUPPORTS_STATIC_SMPS;
+ 
+-#ifndef CONFIG_IWLWIFI_EXPERIMENTAL_MFP
+ 	/* enable 11w if the uCode advertise */
+ 	if (capa->flags & IWL_UCODE_TLV_FLAGS_MFP)
+-#endif /* !CONFIG_IWLWIFI_EXPERIMENTAL_MFP */
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+ 
+ 	hw->sta_data_size = sizeof(struct iwl_station_priv);
+-- 
+1.7.10.4
+
