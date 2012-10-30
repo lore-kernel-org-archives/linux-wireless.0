@@ -1,127 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4529 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756204Ab2JVUz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 16:55:58 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/12] brcmfmac: remove debugfs functionality from
- wl_cfg80211.c
-Date: Mon, 22 Oct 2012 13:55:34 -0700
-Message-ID: <1350939341-17687-6-git-send-email-frankyl@broadcom.com> (sfid-20121022_225619_083935_CA63A5DE)
-In-Reply-To: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-References: <1350939341-17687-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:41083 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754987Ab2J3IHL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Oct 2012 04:07:11 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] iwlwifi: support host command with copied data
+Date: Tue, 30 Oct 2012 09:07:42 +0100
+Message-Id: <1351584463-11469-4-git-send-email-johannes@sipsolutions.net> (sfid-20121030_090738_029306_5CB65995)
+In-Reply-To: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
+References: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In wl_cfg80211.c debugfs directory was created to expose
-dtim_period and beacon_interval. However, this can be easily
-obtained using iw so it is removed from the driver.
+In addition to the NOCOPY flag, add a DUP flag that
+tells the transport to kmemdup() the buffer and free
+it after the command completes.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Currently this is only supported for a single buffer
+in a given command, but that could be extended if it
+should be needed.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   43 --------------------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    2 -
- 2 files changed, 45 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |    6 ++-
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    2 +
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |    3 ++
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |    1 +
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |   57 ++++++++++++++++++++++----
+ 5 files changed, 59 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 13971d1..da48894a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2577,9 +2577,6 @@ static s32 brcmf_update_bss_info(struct brcmf_cfg80211_info *cfg)
- 		dtim_period = (u8)var;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index f75ea6d..76c5237 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -221,14 +221,18 @@ struct iwl_device_cmd {
+ /**
+  * struct iwl_hcmd_dataflag - flag for each one of the chunks of the command
+  *
+- * IWL_HCMD_DFL_NOCOPY: By default, the command is copied to the host command's
++ * @IWL_HCMD_DFL_NOCOPY: By default, the command is copied to the host command's
+  *	ring. The transport layer doesn't map the command's buffer to DMA, but
+  *	rather copies it to an previously allocated DMA buffer. This flag tells
+  *	the transport layer not to copy the command, but to map the existing
+  *	buffer. This can save memcpy and is worth with very big comamnds.
++ * @IWL_HCMD_DFL_DUP: Only valid without NOCOPY, duplicate the memory for this
++ *	chunk internally and free it again after the command completes. This
++ *	can (currently) be used only once per command.
+  */
+ enum iwl_hcmd_dataflag {
+ 	IWL_HCMD_DFL_NOCOPY	= BIT(0),
++	IWL_HCMD_DFL_DUP	= BIT(1),
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 6ce58f0..ae0f87e 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -186,6 +186,8 @@ struct iwl_pcie_tx_queue_entry {
+ 	struct iwl_device_cmd *cmd;
+ 	struct iwl_device_cmd *copy_cmd;
+ 	struct sk_buff *skb;
++	/* buffer to free after command completes */
++	const void *free_buf;
+ 	struct iwl_cmd_meta meta;
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 137af4c..3f03f6e 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -452,6 +452,9 @@ static void iwl_rx_handle_rxbuf(struct iwl_trans *trans,
+ 			/* The original command isn't needed any more */
+ 			kfree(txq->entries[cmd_index].copy_cmd);
+ 			txq->entries[cmd_index].copy_cmd = NULL;
++			/* nor is the duplicated part of the command */
++			kfree(txq->entries[cmd_index].free_buf);
++			txq->entries[cmd_index].free_buf = NULL;
+ 		}
+ 
+ 		/*
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index a6a5181..b8a155a 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -496,6 +496,7 @@ static void iwl_tx_queue_free(struct iwl_trans *trans, int txq_id)
+ 		for (i = 0; i < txq->q.n_window; i++) {
+ 			kfree(txq->entries[i].cmd);
+ 			kfree(txq->entries[i].copy_cmd);
++			kfree(txq->entries[i].free_buf);
+ 		}
+ 
+ 	/* De-alloc circular buffer of TFDs */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 5db0314..9cb30ae 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -517,8 +517,9 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	struct iwl_queue *q = &txq->q;
+ 	struct iwl_device_cmd *out_cmd;
+ 	struct iwl_cmd_meta *out_meta;
++	void *dup_buf = NULL;
+ 	dma_addr_t phys_addr;
+-	u32 idx;
++	int idx;
+ 	u16 copy_size, cmd_size;
+ 	bool had_nocopy = false;
+ 	int i;
+@@ -535,10 +536,33 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 			continue;
+ 		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY) {
+ 			had_nocopy = true;
++			if (WARN_ON(cmd->dataflags[i] & IWL_HCMD_DFL_DUP)) {
++				idx = -EINVAL;
++				goto free_dup_buf;
++			}
++		} else if (cmd->dataflags[i] & IWL_HCMD_DFL_DUP) {
++			/*
++			 * This is also a chunk that isn't copied
++			 * to the static buffer so set had_nocopy.
++			 */
++			had_nocopy = true;
++
++			/* only allowed once */
++			if (WARN_ON(dup_buf)) {
++				idx = -EINVAL;
++				goto free_dup_buf;
++			}
++
++			dup_buf = kmemdup(cmd->data[i], cmd->len[i],
++					  GFP_ATOMIC);
++			if (!dup_buf)
++				return -ENOMEM;
+ 		} else {
+ 			/* NOCOPY must not be followed by normal! */
+-			if (WARN_ON(had_nocopy))
+-				return -EINVAL;
++			if (WARN_ON(had_nocopy)) {
++				idx = -EINVAL;
++				goto free_dup_buf;
++			}
+ 			copy_size += cmd->len[i];
+ 		}
+ 		cmd_size += cmd->len[i];
+@@ -553,8 +577,10 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	if (WARN(copy_size > TFD_MAX_PAYLOAD_SIZE,
+ 		 "Command %s (%#x) is too large (%d bytes)\n",
+ 		 trans_pcie_get_cmd_string(trans_pcie, cmd->id),
+-		 cmd->id, copy_size))
+-		return -EINVAL;
++		 cmd->id, copy_size)) {
++		idx = -EINVAL;
++		goto free_dup_buf;
++	}
+ 
+ 	spin_lock_bh(&txq->lock);
+ 
+@@ -563,7 +589,8 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 
+ 		IWL_ERR(trans, "No space in command queue\n");
+ 		iwl_op_mode_cmd_queue_full(trans->op_mode);
+-		return -ENOSPC;
++		idx = -ENOSPC;
++		goto free_dup_buf;
  	}
  
--	profile->beacon_interval = beacon_interval;
--	profile->dtim_period = dtim_period;
--
- update_bss_info_out:
- 	WL_TRACE("Exit");
- 	return err;
-@@ -5264,42 +5261,6 @@ default_conf_out:
+ 	idx = get_cmd_index(q, q->write_ptr);
+@@ -587,7 +614,8 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
+ 		if (!cmd->len[i])
+ 			continue;
+-		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY)
++		if (cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
++					 IWL_HCMD_DFL_DUP))
+ 			break;
+ 		memcpy((u8 *)out_cmd + cmd_pos, cmd->data[i], cmd->len[i]);
+ 		cmd_pos += cmd->len[i];
+@@ -629,11 +657,16 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	iwlagn_txq_attach_buf_to_tfd(trans, txq, phys_addr, copy_size, 1);
  
+ 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
++		const void *data = cmd->data[i];
++
+ 		if (!cmd->len[i])
+ 			continue;
+-		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
++		if (!(cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
++					   IWL_HCMD_DFL_DUP)))
+ 			continue;
+-		phys_addr = dma_map_single(trans->dev, (void *)cmd->data[i],
++		if (cmd->dataflags[i] & IWL_HCMD_DFL_DUP)
++			data = dup_buf;
++		phys_addr = dma_map_single(trans->dev, (void *)data,
+ 					   cmd->len[i], DMA_BIDIRECTIONAL);
+ 		if (dma_mapping_error(trans->dev, phys_addr)) {
+ 			iwl_unmap_tfd(trans, out_meta,
+@@ -648,6 +681,9 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	}
+ 
+ 	out_meta->flags = cmd->flags;
++	if (WARN_ON_ONCE(txq->entries[idx].free_buf))
++		kfree(txq->entries[idx].free_buf);
++	txq->entries[idx].free_buf = dup_buf;
+ 
+ 	txq->need_update = 1;
+ 
+@@ -664,6 +700,9 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 
+  out:
+ 	spin_unlock_bh(&txq->lock);
++ free_dup_buf:
++	if (idx < 0)
++		kfree(dup_buf);
+ 	return idx;
  }
  
--static int brcmf_debugfs_add_netdev_params(struct brcmf_cfg80211_info *cfg)
--{
--	struct net_device *ndev = cfg_to_ndev(cfg);
--	struct brcmf_cfg80211_profile *profile = ndev_to_prof(ndev);
--	char buf[10+IFNAMSIZ];
--	struct dentry *fd;
--	s32 err = 0;
--
--	sprintf(buf, "netdev:%s", ndev->name);
--	cfg->debugfsdir = debugfs_create_dir(buf,
--					cfg_to_wiphy(cfg)->debugfsdir);
--
--	fd = debugfs_create_u16("beacon_int", S_IRUGO, cfg->debugfsdir,
--		(u16 *)&profile->beacon_interval);
--	if (!fd) {
--		err = -ENOMEM;
--		goto err_out;
--	}
--
--	fd = debugfs_create_u8("dtim_period", S_IRUGO, cfg->debugfsdir,
--		(u8 *)&profile->dtim_period);
--	if (!fd) {
--		err = -ENOMEM;
--		goto err_out;
--	}
--
--err_out:
--	return err;
--}
--
--static void brcmf_debugfs_remove_netdev(struct brcmf_cfg80211_info *cfg)
--{
--	debugfs_remove_recursive(cfg->debugfsdir);
--	cfg->debugfsdir = NULL;
--}
--
- static s32 __brcmf_cfg80211_up(struct brcmf_cfg80211_info *cfg)
- {
- 	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
-@@ -5307,8 +5268,6 @@ static s32 __brcmf_cfg80211_up(struct brcmf_cfg80211_info *cfg)
- 
- 	set_bit(BRCMF_VIF_STATUS_READY, &ifp->vif->sme_state);
- 
--	brcmf_debugfs_add_netdev_params(cfg);
--
- 	err = brcmf_config_dongle(cfg);
- 	if (err)
- 		return err;
-@@ -5343,8 +5302,6 @@ static s32 __brcmf_cfg80211_down(struct brcmf_cfg80211_info *cfg)
- 	brcmf_abort_scanning(cfg);
- 	clear_bit(BRCMF_VIF_STATUS_READY, &ifp->vif->sme_state);
- 
--	brcmf_debugfs_remove_netdev(cfg);
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index fca288b..851403f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -228,8 +228,6 @@ struct brcmf_cfg80211_profile {
- 	u32 mode;
- 	struct brcmf_ssid ssid;
- 	u8 bssid[ETH_ALEN];
--	u16 beacon_interval;
--	u8 dtim_period;
- 	struct brcmf_cfg80211_security sec;
- 	struct brcmf_cfg80211_ibss ibss;
- 	s32 band;
 -- 
-1.7.9.5
-
+1.7.10.4
 
