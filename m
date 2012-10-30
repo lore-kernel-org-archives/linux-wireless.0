@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:60174 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992606Ab2JYSsm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41085 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755870Ab2J3IHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 14:48:42 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so969168bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 11:48:40 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Javier Cardona <javier@cozybit.com>
-Subject: Re: [PATCH] mac80211: Don't inspect Sequence Control field on control frames
-Date: Thu, 25 Oct 2012 20:48:33 +0200
-Cc: linville@tuxdriver.com, Javier Lopez <jlopex@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	johannes@sipsolutions.net
-References: <1351188618-11155-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <1351188618-11155-1-git-send-email-javier@cozybit.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201210252048.34083.chunkeey@googlemail.com> (sfid-20121025_204900_960782_5B7AE27D)
+	Tue, 30 Oct 2012 04:07:10 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/4] iwlwifi: don't leak Tx skb when a queue is disabled
+Date: Tue, 30 Oct 2012 09:07:40 +0100
+Message-Id: <1351584463-11469-2-git-send-email-johannes@sipsolutions.net> (sfid-20121030_090724_131836_06E54AD0)
+In-Reply-To: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
+References: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, October 25, 2012 08:10:18 PM Javier Cardona wrote:
-> Per IEEE Std. 802.11-2012, Sec 8.2.4.4.1, the sequence Control field is
-> not present in control frames.  We noticed this problem when processing
-> Block Ack Requests.
-> 
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> Signed-off-by: Javier Lopez <jlopex@cozybit.com>
-> ---
->  net/mac80211/rx.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index f975f64..bf54336 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1467,6 +1467,10 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
->  
->  	hdr = (struct ieee80211_hdr *)rx->skb->data;
->  	fc = hdr->frame_control;
-> +
-> +	if (ieee80211_is_ctl(fc))
-> +		return RX_CONTINUE;
-> +
->  	sc = le16_to_cpu(hdr->seq_ctrl);
->  	frag = sc & IEEE80211_SCTL_FRAG;
->  
-hmm, I see this function also calls skb_linearize() on said
-skb... Does anybody know of any possible side effects? Not
-that control frames (In fact, just BlockACK Requests come
-to my mind) usually so large...
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Regards,
-	Chr 
+Since the queue might not be empty, we need to free the
+pending Tx packets.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    1 +
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |    4 ++--
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |    2 ++
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 401178f..6ce58f0 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -346,6 +346,7 @@ void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+ 		      enum dma_data_direction dma_dir);
+ int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
+ 			 struct sk_buff_head *skbs);
++void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id);
+ int iwl_queue_space(const struct iwl_queue *q);
+ 
+ /*****************************************************
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index f95d88d..a6a5181 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -442,10 +442,10 @@ static int iwl_trans_txq_init(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+ 	return 0;
+ }
+ 
+-/**
++/*
+  * iwl_tx_queue_unmap -  Unmap any remaining DMA mappings and free skb's
+  */
+-static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
++void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_tx_queue *txq = &trans_pcie->txq[txq_id];
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index db3efbb..5db0314 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -494,6 +494,8 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
+ 	_iwl_write_targ_mem_dwords(trans, stts_addr,
+ 				   zero_val, ARRAY_SIZE(zero_val));
+ 
++	iwl_tx_queue_unmap(trans, txq_id);
++
+ 	IWL_DEBUG_TX_QUEUES(trans, "Deactivate queue %d\n", txq_id);
+ }
+ 
+-- 
+1.7.10.4
+
