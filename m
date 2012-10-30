@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60311 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755178Ab2J3Upj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41087 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755994Ab2J3IHL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Oct 2012 16:45:39 -0400
-Message-ID: <1351629925.13356.21.camel@deadeye.wl.decadent.org.uk> (sfid-20121030_214544_029760_67C2F4F6)
-Subject: Re: rtlwifi: rtl8192cu: Add new USB ID
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Albert Pool <albertpool@solcon.nl>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, stable@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Date: Tue, 30 Oct 2012 20:45:25 +0000
-In-Reply-To: <5090314E.7070703@solcon.nl>
-References: <5090314E.7070703@solcon.nl>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-Hp9+pD2JX71Lldw4VXeZ"
-Mime-Version: 1.0
+	Tue, 30 Oct 2012 04:07:11 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] iwlwifi: clarify NOCOPY/DUP documentation
+Date: Tue, 30 Oct 2012 09:07:43 +0100
+Message-Id: <1351584463-11469-5-git-send-email-johannes@sipsolutions.net> (sfid-20121030_090733_696604_BE6502C3)
+In-Reply-To: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
+References: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---=-Hp9+pD2JX71Lldw4VXeZ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Clarify the documentation to indicate that these
+flags can only be used at the end, i.e. after them
+a copy TFD (no flags set) is invalid.
 
-On Tue, 2012-10-30 at 20:58 +0100, Albert Pool wrote:
-> This is an ISY IWL 2000. Probably a clone of Belkin F7D1102 050d:1102.=
-=20
-> Its FCC ID is the same.
->=20
-> Signed-off-by: Albert Pool <albertpool@solcon.nl>
-[...]
+Reported-by: Inbal Hacohen <inbal.hacohen@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-This is not the correct way to submit a change to stable.  See
-Documentation/stable_kernel_rules.txt
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 76c5237..47bbe39 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -225,10 +225,13 @@ struct iwl_device_cmd {
+  *	ring. The transport layer doesn't map the command's buffer to DMA, but
+  *	rather copies it to an previously allocated DMA buffer. This flag tells
+  *	the transport layer not to copy the command, but to map the existing
+- *	buffer. This can save memcpy and is worth with very big comamnds.
++ *	buffer (that is passed in) instead. This saves the memcpy and allows
++ *	commands that are bigger than the fixed buffer to be submitted.
++ *	Note that a TFD entry after a NOCOPY one cannot be a normal copied one.
+  * @IWL_HCMD_DFL_DUP: Only valid without NOCOPY, duplicate the memory for this
+  *	chunk internally and free it again after the command completes. This
+  *	can (currently) be used only once per command.
++ *	Note that a TFD entry after a DUP one cannot be a normal copied one.
+  */
+ enum iwl_hcmd_dataflag {
+ 	IWL_HCMD_DFL_NOCOPY	= BIT(0),
+-- 
+1.7.10.4
 
-Ben.
-
---=20
-Ben Hutchings
-Humans are not rational beings; they are rationalising beings.
-
---=-Hp9+pD2JX71Lldw4VXeZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUJA8Zee/yOyVhhEJAQr7dxAAokyjjQs/9hTYAh4oU3KUBZ42m0hYad+W
-2Su+wZdzXWImsAtLZ6i3JnMOL8GpJnKN1Y9Iko3GoEny6CBr77XnziOSHMHlIWy/
-I/3wdJ5D57H6EfL82dopFQfVtl9UI0/0TTxZEU77fHm3JoE9AnWJAJuEfUTxrBQB
-64upXG7t8Ds1aqzppKXFXE+nc9sPQ6KuTgIkZ/Ro8jl9mv1ZMa7U5xUk34kEmehr
-OI5s35EqBea2CuZCN2bdqrWATm4dVEergbEuYKGoDqYEcCtX34rvsXHSIllUEBe3
-aEja6WgyXx48KJm2orkmGFFfgXjzgO8Ktonm/eYVqHPkewwXxVI/H+hjlYExJQFu
-2/Ed3Q3iiCZLGesYB57JZ3O77mW10IFyfqVUnsFPOEwZ94PhNfrLjadpaD5Mu7BZ
-v3TMsOGM3M8jEw6fMspgRG5TFeuSoqLPM0kEcImtxHOGItywmaOG8JQbswSjgdQ2
-PIjqlnewLB/ZZLsy+3956QnYVMr9PrQ8ueqye8mzxp2WfZSVm5D9IMeL8sgbA0UB
-D9S5vRHXo+MAboC5qWOzYbJoQHWGGkIwZzQa73DrkVPq/At9wQGhxy2Ry4YT5c+v
-qfYELAYGjCYdrKjHKK84isjBVKl/yQIs0wEAcevt2hP5ZIfjiK6HGlJvH6wRhShg
-T4ElhXoVDYc=
-=PBzM
------END PGP SIGNATURE-----
-
---=-Hp9+pD2JX71Lldw4VXeZ--
