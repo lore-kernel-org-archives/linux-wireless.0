@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:59268 "EHLO mail.neratec.com"
+Received: from plane.gmane.org ([80.91.229.3]:41389 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752220Ab2JaN7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Oct 2012 09:59:55 -0400
-Message-ID: <50912ED6.2060201@neratec.com> (sfid-20121031_145959_557231_CF89A422)
-Date: Wed, 31 Oct 2012 14:59:50 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k: [DFS] add pulse width tolerance for ETSI
-References: <1351682581-30683-1-git-send-email-zefir.kurtisi@neratec.com> <5091287C.9030408@hauke-m.de>
-In-Reply-To: <5091287C.9030408@hauke-m.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1758415Ab2J3TYf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Oct 2012 15:24:35 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TTHQW-00009c-FX
+	for linux-wireless@vger.kernel.org; Tue, 30 Oct 2012 20:24:41 +0100
+Received: from 85-211-212-185.dynamic.dsl.as9105.com ([85-211-212-185.dynamic.dsl.as9105.com])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 20:24:40 +0100
+Received: from cliffhanger by 85-211-212-185.dynamic.dsl.as9105.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 20:24:40 +0100
+To: linux-wireless@vger.kernel.org
+From: Cliff McDiarmid <cliffhanger@gardener.com>
+Subject: Re: RTL8188SU
+Date: Tue, 30 Oct 2012 19:24:20 +0000 (UTC)
+Message-ID: <loom.20121030T202116-449@post.gmane.org> (sfid-20121030_202441_976744_134FF0BB)
+References: <loom.20121028T233054-8@post.gmane.org> <201210291257.02249.chunkeey@googlemail.com> <loom.20121029T182405-382@post.gmane.org> <201210292117.45399.chunkeey@googlemail.com> <loom.20121029T214630-424@post.gmane.org> <508EFA5D.8090706@lwfinger.net> <loom.20121029T234700-352@post.gmane.org> <508F423A.4010407@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/2012 02:32 PM, Hauke Mehrtens wrote:
-> On 10/31/2012 12:23 PM, Zefir Kurtisi wrote:
->> Add 5% width tolerance for radar patterns defined by ETSI.
->>
->> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
->> ---
->>  .../net/wireless/ath/ath9k/dfs_pattern_detector.c  |    7 ++++++-
->>  1 files changed, 6 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
->> index 3b12914..24877b0 100644
->> --- a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
->> +++ b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
->> @@ -42,10 +42,15 @@ struct radar_types {
->>  #define MIN_PPB_THRESH	50
->>  #define PPB_THRESH(PPB) ((PPB * MIN_PPB_THRESH + 50) / 100)
->>  #define PRF2PRI(PRF) ((1000000 + PRF / 2) / PRF)
->> +/* percentage of pulse width tolerance */
->> +#define WIDTH_TOLERANCE 5
->> +#define WIDTH_LOWER(X) ((X*(100-WIDTH_TOLERANCE)+50)/100)
->> +#define WIDTH_UPPER(X) ((X*(100+WIDTH_TOLERANCE)+50)/100)
->                                                    ^^^
-> Why are you adding 50 there? If you want to just add 5% tolerance, then
-> the +50 is wrong there, but I do not know anything about radar patterns
-> defined by ETSI.
-> 
-> Hauke
-> 
-Hi Hauke,
 
-the 50 you are referring to are not the 5% defined by ETSI but used for
-proper rounding in the percentage domain within that macros.
+Many thanks for all advice
 
-Take pattern 4 with a maximum pulse width of 30us, WIDTH_UPPER(30) then
-calculates to 32. Since the HW's pulse width resolution is 1us, there is
-no need to move to the nsec domain.
+regards
+
+Cliff McDiarmid
+
+
 
 
