@@ -1,89 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:53039 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754085Ab2JRGfh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41736 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753779Ab2J3Lxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2012 02:35:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
+	Tue, 30 Oct 2012 07:53:35 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v6 4/6] wireless: use OR operation to set wiphy features
-Date: Wed, 17 Oct 2012 23:34:29 -0700
-Message-Id: <1350542071-26498-5-git-send-email-bzhao@marvell.com> (sfid-20121018_083541_052549_8011FC84)
-In-Reply-To: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
-References: <1350542071-26498-1-git-send-email-bzhao@marvell.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2] wireless: add utility function to get P2P attribute
+Date: Tue, 30 Oct 2012 12:54:07 +0100
+Message-Id: <1351598047-20957-1-git-send-email-johannes@sipsolutions.net> (sfid-20121030_125338_711307_23F87F9A)
+In-Reply-To: <1351536651-3176-1-git-send-email-johannes@sipsolutions.net>
+References: <1351536651-3176-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The next patch will introduce a flag that is set
-by default in cfg80211 so drivers and mac80211
-need to use |= to set features they have so that
-they don't clear the already-set feature.
-
-We could set the flag in wiphy_register() instead
-of wiphy_new() to avoid this patch, but then the
-drivers couldn't *unset* flags they don't want to
-use even though the implementation is generic.
+Parsing the P2P attributes can be tricky as their
+contents can be split across multiple (vendor) IEs.
+Thus, it's not possible to parse them like IEs (by
+returning a pointer to the data.) Instead, provide
+a function that copies the attribute data into a
+caller-provided buffer and returns the size needed
+(useful in case the buffer was too small.)
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
- drivers/net/wireless/mwifiex/cfg80211.c    |    4 ++--
- net/mac80211/main.c                        |    6 +++---
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ include/net/cfg80211.h |   19 ++++++++++
+ net/wireless/util.c    |   95 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 114 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index ad252d0..2770899 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3651,7 +3651,7 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 83a2c82..ae6d5e5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3623,6 +3623,25 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate);
+  */
+ void cfg80211_unregister_wdev(struct wireless_dev *wdev);
  
- 	if (test_bit(ATH6KL_FW_CAPABILITY_INACTIVITY_TIMEOUT,
- 		     ar->fw_capabilities))
--		ar->wiphy->features = NL80211_FEATURE_INACTIVITY_TIMER;
-+		ar->wiphy->features |= NL80211_FEATURE_INACTIVITY_TIMER;
++/**
++ * cfg80211_get_p2p_attr - find and copy a P2P attribute from IE buffer
++ * @ies: the input IE buffer
++ * @len: the input length
++ * @attr: the attribute ID to find
++ * @buf: output buffer, can be %NULL if the data isn't needed, e.g.
++ *	if the function is only called to get the needed buffer size
++ * @bufsize: size of the output buffer
++ *
++ * The function finds a given P2P attribute in the (vendor) IEs and
++ * copies its contents to the given buffer.
++ *
++ * The return value is a negative error code (-%EILSEQ or -%ENOENT) if
++ * the data is malformed or the attribute can't be found (respectively),
++ * or the length of the found attribute (which can be zero).
++ */
++unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
++				   u8 attr, u8 *buf, unsigned int bufsize);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
  
- 	ar->wiphy->probe_resp_offload =
- 		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 0679458..38a5871 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2250,8 +2250,8 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->available_antennas_tx = BIT(adapter->number_of_antenna) - 1;
- 	wiphy->available_antennas_rx = BIT(adapter->number_of_antenna) - 1;
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index cf11239..12a8d3d 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -980,6 +980,101 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ }
+ EXPORT_SYMBOL(cfg80211_calculate_bitrate);
  
--	wiphy->features = NL80211_FEATURE_HT_IBSS |
--			  NL80211_FEATURE_INACTIVITY_TIMER;
-+	wiphy->features |= NL80211_FEATURE_HT_IBSS |
-+			   NL80211_FEATURE_INACTIVITY_TIMER;
- 
- 	/* Reserve space for mwifiex specific private data for BSS */
- 	wiphy->bss_priv_size = sizeof(struct mwifiex_bss_priv);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 620f427..931f14f 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -598,9 +598,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	if (ops->remain_on_channel)
- 		wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 
--	wiphy->features = NL80211_FEATURE_SK_TX_STATUS |
--			  NL80211_FEATURE_SAE |
--			  NL80211_FEATURE_HT_IBSS;
-+	wiphy->features |= NL80211_FEATURE_SK_TX_STATUS |
-+			   NL80211_FEATURE_SAE |
-+			   NL80211_FEATURE_HT_IBSS;
- 
- 	if (!ops->set_key)
- 		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
++unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
++				   u8 attr, u8 *buf, unsigned int bufsize)
++{
++	u8 *out = buf;
++	u16 attr_remaining = 0, attr_hdr_remaining = 0;
++	bool desired_attr = false;
++	u16 desired_len = 0;
++
++	while (len > 0) {
++		unsigned int iedatalen;
++		unsigned int copy;
++		const u8 *iedata;
++		u8 attr_hdr[3];
++
++		if (len < 2)
++			return -EILSEQ;
++		iedatalen = ies[1];
++		if (iedatalen + 2 > len)
++			return -EILSEQ;
++
++		if (ies[0] != WLAN_EID_VENDOR_SPECIFIC)
++			goto cont;
++
++		if (iedatalen < 4)
++			goto cont;
++
++		iedata = ies + 2;
++
++		/* check WFA OUI, P2P subtype */
++		if (iedata[0] != 0x50 || iedata[1] != 0x6f ||
++		    iedata[2] != 0x9a || iedata[3] != 0x09)
++			goto cont;
++
++		iedatalen -= 4;
++		iedata += 4;
++
++		while (iedatalen > 0) {
++			if (attr_hdr_remaining) {
++				copy = min_t(unsigned int, iedatalen,
++							   attr_hdr_remaining);
++
++				memcpy(attr_hdr + 3 - attr_hdr_remaining,
++				       iedata, copy);
++				attr_hdr_remaining -= copy;
++				iedata += copy;
++				iedatalen -= copy;
++				if (attr_hdr_remaining)
++					break;
++				desired_attr = attr_hdr[0] == attr;
++				attr_remaining =
++					get_unaligned_le16(attr_hdr + 1);
++			} else if (attr_remaining == 0) {
++				/* next attribute starts */
++				if (iedatalen < 3) {
++					memcpy(attr_hdr, iedata, iedatalen);
++					attr_hdr_remaining = 3 - iedatalen;
++					break;
++				}
++				desired_attr = iedata[0] == attr;
++				attr_remaining = get_unaligned_le16(iedata + 1);
++				iedatalen -= 3;
++				iedata += 3;
++			}
++
++			copy = min_t(unsigned int, attr_remaining, iedatalen);
++
++			if (desired_attr) {
++				desired_len += copy;
++				if (out && copy && bufsize) {
++					memcpy(out, iedata, min(bufsize, copy));
++					out += min(bufsize, copy);
++					bufsize -= min(bufsize, copy);
++				}
++
++				if (copy == attr_remaining)
++					return desired_len;
++			}
++
++			iedata += copy;
++			iedatalen -= copy;
++			attr_remaining -= copy;
++		}
++
++ cont:
++		len -= ies[1] + 2;
++		ies += ies[1] + 2;
++	}
++
++	if (attr_remaining || attr_hdr_remaining)
++		return -EILSEQ;
++
++	return -ENOENT;
++}
++EXPORT_SYMBOL(cfg80211_get_p2p_attr);
++
+ bool ieee80211_operating_class_to_band(u8 operating_class,
+ 				       enum ieee80211_band *band)
+ {
 -- 
-1.7.0.4
+1.7.10.4
 
