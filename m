@@ -1,91 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:47062 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751170Ab2JFDWR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41092 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755865Ab2J3IIg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Oct 2012 23:22:17 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.7 3/4] mwifiex: update cfg80211 with correct reason code when association fails
-Date: Fri,  5 Oct 2012 20:21:42 -0700
-Message-Id: <1349493703-1169-4-git-send-email-bzhao@marvell.com> (sfid-20121006_052222_293038_B6D914DD)
-In-Reply-To: <1349493703-1169-1-git-send-email-bzhao@marvell.com>
-References: <1349493703-1169-1-git-send-email-bzhao@marvell.com>
+	Tue, 30 Oct 2012 04:08:36 -0400
+Message-ID: <1351584547.10097.3.camel@jlt4.sipsolutions.net> (sfid-20121030_090841_705989_3E2246A3)
+Subject: Re: [PATCH 0/4] iwlwifi: some 3.8 updates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 30 Oct 2012 09:09:07 +0100
+In-Reply-To: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net> (sfid-20121030_090719_610608_09EBA71A)
+References: <1351584463-11469-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121030_090719_610608_09EBA71A)
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-SerGQF30qogJjNFtA4zA"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
 
-This patch adds support to send correct reason code got from
-firmware when association attempt fails. Also, the error message
-displayed for association failure due to network incompatibility
-is modified. Current message "cannot find ssid.." misleads user.
+--=-SerGQF30qogJjNFtA4zA
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |   17 ++++++++++++++---
- drivers/net/wireless/mwifiex/scan.c     |    4 ++--
- 2 files changed, 16 insertions(+), 5 deletions(-)
+John,
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 675247b..0679458 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1596,8 +1596,9 @@ done:
- 		}
- 	}
- 
--	if (mwifiex_bss_start(priv, bss, &req_ssid))
--		return -EFAULT;
-+	ret = mwifiex_bss_start(priv, bss, &req_ssid);
-+	if (ret)
-+		return ret;
- 
- 	if (mode == NL80211_IFTYPE_ADHOC) {
- 		/* Inform the BSS information to kernel, otherwise
-@@ -1652,9 +1653,19 @@ done:
- 			"info: association to bssid %pM failed\n",
- 			priv->cfg_bssid);
- 		memset(priv->cfg_bssid, 0, ETH_ALEN);
-+
-+		if (ret > 0)
-+			cfg80211_connect_result(priv->netdev, priv->cfg_bssid,
-+						NULL, 0, NULL, 0, ret,
-+						GFP_KERNEL);
-+		else
-+			cfg80211_connect_result(priv->netdev, priv->cfg_bssid,
-+						NULL, 0, NULL, 0,
-+						WLAN_STATUS_UNSPECIFIED_FAILURE,
-+						GFP_KERNEL);
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index d9295fd..00b658d 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1434,8 +1434,8 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
- 			ret = mwifiex_is_network_compatible(priv, bss_desc,
- 							    priv->bss_mode);
- 			if (ret)
--				dev_err(priv->adapter->dev, "cannot find ssid "
--					"%s\n", bss_desc->ssid.ssid);
-+				dev_err(priv->adapter->dev,
-+					"Incompatible network settings\n");
- 			break;
- 		default:
- 			ret = 0;
--- 
-1.7.0.2
+Please pull these changes as per the pull request below.
+
+Thanks,
+Johannes
+
+The following changes since commit 4e760f1ab267edcd6e4b232ff732fc9cdc659ebb=
+:
+
+  iwlwifi: don't WARN when a non empty queue is disabled (2012-10-16 16:41:=
+40 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to 3e2c159260eed10c44f0dd028c328a40a27ad235:
+
+  iwlwifi: clarify NOCOPY/DUP documentation (2012-10-29 11:27:33 +0100)
+
+----------------------------------------------------------------
+Assaf Krauss (1):
+      iwlwifi: remove MFP Kconfig option
+
+Emmanuel Grumbach (1):
+      iwlwifi: don't leak Tx skb when a queue is disabled
+
+Johannes Berg (2):
+      iwlwifi: support host command with copied data
+      iwlwifi: clarify NOCOPY/DUP documentation
+
+ drivers/net/wireless/iwlwifi/Kconfig         |    9 ----
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c  |    2 -
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |   11 ++++-
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    3 ++
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |    3 ++
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |    5 ++-
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |   59 ++++++++++++++++++++++=
+----
+ 7 files changed, 68 insertions(+), 24 deletions(-)
+
+
+--=-SerGQF30qogJjNFtA4zA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQj4sjAAoJEDBSmw7B7bqrHjsP/1uYJGLZrJgRqKpZAeUEBdoN
+3qBQcS+OVlIeKr+RZsfOZkQu4tb1ctnXGxpc7erY4OMp3Qk1wEhFHnGfo1qMtVhQ
+0GJYWkgmIaYYc46wrV3PRI6mby8RpBZYCAjb3r1I0kkGIikT+EHL6h6mJ191gw9x
+Y++Fxn0CgH1s0aMoMsgKPFXZUx58X9GbRJrAD90k4dE06gSIlDxPEjHzv5LsvADg
+avr5ogagyqSVMl15yyNe0EGYt+6e0Z3xUMF67e6WZtG0ELTTt8hquCcgCgkargkr
+1JftGlEcww7rmOBSOUBsS4Ed4vOGi4jWQ9gOWtenkdd5KZTgTn0yjD8j184v8AiZ
+BS1iaFkH5mSHioFUPDkQSmZKRhBeoTDQvoy6RHMAzNbv9zQHd1okcJmO08qWbeFD
+3TZoTe//CL7ECKr+Y/XNh8xn8mJAuIVHtlBGWfTD1AGv5ALzWgRtciYUsO75k5aR
+wiX6pSMpL0jfrD5hhPGXm4wD8ot+ehjrot6Cd2ba9Cr6F+WKuB0QLYe+HhnFQ8Js
+GbvBil46LRLTr5AyDc93vAAY1+DNOsHlZFlhUNMHFESkNbyzBGM/ge268Zah94p5
+igr/3nwg2VWnzx4/mGbN7/CG5v3GsjynLiKZP9Z5jcxUQYbcIEfpXUFKHRpKV0A8
+0k+zfYedB08BWovjp5Zl
+=PzVy
+-----END PGP SIGNATURE-----
+
+--=-SerGQF30qogJjNFtA4zA--
 
