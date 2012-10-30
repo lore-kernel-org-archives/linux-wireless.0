@@ -1,30 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50700 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753919Ab2JDCd2 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:54317 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932654Ab2J3TOP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 22:33:28 -0400
-Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>
-From: Sujith Manoharan <c_manoha@qti.qualcomm.com>
+	Tue, 30 Oct 2012 15:14:15 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so394866pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Oct 2012 12:14:15 -0700 (PDT)
+Message-ID: <509026FF.1060102@gmail.com> (sfid-20121030_201421_205101_D8108EF6)
+Date: Tue, 30 Oct 2012 12:14:07 -0700
+From: Don deJuan <donjuansjiz@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20588.62828.845432.706022@gargle.gargle.HOWL> (sfid-20121004_043332_151910_688D7F89)
-Date: Thu, 4 Oct 2012 08:03:16 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 3.7 2/3] ath9k: improve suspend/resume reliability
-In-Reply-To: <1349291272-93080-2-git-send-email-nbd@openwrt.org>
-References: <1349291272-93080-1-git-send-email-nbd@openwrt.org>
-	<1349291272-93080-2-git-send-email-nbd@openwrt.org>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Any thoughts on how to best shield u.fl connectors on NICs?
+References: <508EB783.9080000@candelatech.com>
+In-Reply-To: <508EB783.9080000@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> Ensure that drv_start() always returns true, as a failing hw start usually
-> eventually leads to crashes when there's still a station entry present.
-> Call a power-on reset after a resume and after a hw reset failure to bring
-> the hardware back to life again.
+On 10/29/2012 10:06 AM, Ben Greear wrote:
+> It appears hard to get well-shielded u.fl (IPEX) to SMA pigtails, and
+> all of the
+> modern ath9k NICs I've seen use u.fl connectors on the NIC.
+>
+> I have found a vendor that will do double-shielded 1.32mm cable, and I
+> have some of those
+> on order, but the way u.fl connectors are made it seems there is always
+> a bit of un-shielded
+> cable where the connector is crimped onto the cable.
+>
+> I am curious if anyone has any suggestions or experience with connecting
+> u.fl NICs to
+> SMA cables in a highly shielded manner...
+>
+> Thanks,
+> Ben
+>
 
-In what situations did HW reset (via start() or resume()) fail ?
+If you find a solution for this I would be interested in hearing as well.
 
-Sujith
+Thanks.
