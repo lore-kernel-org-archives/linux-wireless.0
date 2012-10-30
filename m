@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:51160 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752310Ab2JDSmw (ORCPT
+Received: from mx-relay12-muc.antispameurope.com ([217.64.175.212]:54720 "EHLO
+	mx-relay12-muc.antispameurope.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751158Ab2J3NOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Oct 2012 14:42:52 -0400
-Date: Thu, 4 Oct 2012 21:42:12 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [patch 2/3] brcmfmac: fix end of loop check (signedness bug)
-Message-ID: <20121004184212.GO13767@mwanda> (sfid-20121004_204257_411825_516F71CA)
-References: <20121003060631.GB3802@elgon.mountain>
- <506DB82B.9010106@broadcom.com>
+	Tue, 30 Oct 2012 09:14:04 -0400
+Message-ID: <508FCF5A.2080204@fokus.fraunhofer.de> (sfid-20121030_141408_561331_2A693278)
+Date: Tue, 30 Oct 2012 14:00:10 +0100
+From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <506DB82B.9010106@broadcom.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
+	<linville@tuxdriver.com>, <mcgrof@qca.qualcomm.com>,
+	<sven@narfation.org>, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] ath9k: apply coverage class on slottime too
+References: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de> <508FCB77.9000303@openwrt.org>
+In-Reply-To: <508FCB77.9000303@openwrt.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 04, 2012 at 06:24:11PM +0200, Arend van Spriel wrote:
-> On 10/03/2012 08:06 AM, Dan Carpenter wrote:
-> >The problem here is that we loop until "remained_buf_len" is less than
-> >zero, but since it is unsigned, it never is.
-> >
-> >"remained_buf_len" has to be large enough to hold the value from
-> >"mgmt_ie_buf_len".  That variable is type u32, but it only holds small
-> >values so I have changed to both variables to int.
-> >
-> >Also I removed the bogus initialization from "mgmt_ie_buf_len" so that
-> >GCC can detect if it is used unitialized.  I moved the declaration of
-> >"remained_buf_len" closer to where it is used so it's easier to read.
-> >
-> 
-> Hi Dan,
-> 
-> Good catch. I applied the patch internally on our HEAD and had it
-> reviewed. We did not take moving the declaration as we prefer to
-> have all variables at the top of the function. It makes it easier to
-> find what is declared in a function and whether exceeding the local
-> variable limit mentioned in Chapter 6. Functions of the CodingStyle
-> (we are exceeding it already ;-) ).
-> 
-> Are you ok with us submitting it? It would be sent out for 3.8 or do
-> you prefer to have it fixed in 3.7?
+On 10/30/2012 01:43 PM, Felix Fietkau wrote:
+> On 2012-10-30 1:07 PM, Simon Wunderlich wrote:
+>> From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+>>
+>> According to 802.11-2007 17.3.8.6 (slot time), the slot time should
+>> be increased by 3 us * coverage class. The code only increased the
+>> ack timeout, which is fixed by this patch.
+>>
+>> We have noticed in our long shot scenario that we see less collisions
+>> with this patch.
+> At some point I had the slot time increase in the driver, but noticed a
+> massive throughput degradation on 10-20 km links. Leaving the slot time
+> alone and changing only the ACK timeout fixed this. What distances did
+> you test?
 
-Uh, I don't know how hard it is to trigger this bug.  If it's
-impossible to trigger then we could wait until 3.8 otherwise I
-would tend to merge it into 3.7 given that we haven't hit -rc1 yet.
+about 11km. did you test UDP (unidirectional) or TCP (bidirectional) throughput ?
 
-regards,
-dan carpenter
+The larger slot time will increase the channel access overhead which should impact 
+unidirectional throughput.
+
+With bidirectional traffic, the larger slottime should help to minimize collisions 
+on loaded links. Overall this seems to increase the net throughput for us, 
+especially in higher access categories (smaller backoff windows).
+
+Cheers,
+
+Mathias
 
