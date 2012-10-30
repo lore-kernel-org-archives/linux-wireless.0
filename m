@@ -1,64 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47072 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788Ab2JOJdT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41179 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751163Ab2J3Ik6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 05:33:19 -0400
-From: Sujith Manoharan <c_manoha@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20603.54602.430150.78107@gargle.gargle.HOWL> (sfid-20121015_113321_755408_BC363081)
-Date: Mon, 15 Oct 2012 14:50:10 +0530
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/12] ath9k_hw: Disable MCI stat counter by default for AR9565
-In-Reply-To: <1350287738-18687-6-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1350287738-18687-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<1350287738-18687-6-git-send-email-rmanohar@qca.qualcomm.com>
+	Tue, 30 Oct 2012 04:40:58 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: send deauth only with channel context
+Date: Tue, 30 Oct 2012 09:41:31 +0100
+Message-Id: <1351586491-28634-1-git-send-email-johannes@sipsolutions.net> (sfid-20121030_094102_786162_CFCF33FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_mci.c | 11 ++++++++++-
->  drivers/net/wireless/ath/ath9k/reg.h        |  3 +++
->  2 files changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-> index c46d8f1..466ac8da 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-> @@ -938,6 +938,9 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
->  	mci->ready = true;
->  	ar9003_mci_prep_interface(ah);
->  
-> +	if (AR_SREV_9565(ah))
-> +		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
-> +			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
->  	if (en_int)
->  		ar9003_mci_enable_interrupt(ah);
->  
-> @@ -1179,13 +1182,19 @@ int ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
->  		     u16 len, u32 sched_addr)
->  {
->  	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-> +	int ret;
->  
->  	mci->gpm_addr = gpm_addr;
->  	mci->gpm_buf = gpm_buf;
->  	mci->gpm_len = len;
->  	mci->sched_addr = sched_addr;
->  
-> -	return ar9003_mci_reset(ah, true, true, true);
-> +	ret = ar9003_mci_reset(ah, true, true, true);
-> +
-> +	if (AR_SREV_9565(ah))
-> +		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
-> +			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
-> +	return ret;
+From: Johannes Berg <johannes.berg@intel.com>
 
-Why do this is two different places, when reset() is actually called from
-setup() ?
+When userspace asks to deauthenticate and we're just
+authenticated (or still authenticating) send a deauth
+frame instead of deleting the auth request.
 
-Sujith
+On the other hand, if we've just disassociated and
+therefore deleted all our state already, drop the
+deauth request because we no longer have a channel
+context to send it on.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |   32 ++++++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 14 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index fb9fd65..35afbbc 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3688,40 +3688,44 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 	bool tx = !req->local_state_change;
++	bool sent_frame = false;
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+-	if (ifmgd->auth_data) {
+-		ieee80211_destroy_auth_data(sdata, false);
+-		mutex_unlock(&ifmgd->mtx);
+-		return 0;
+-	}
+-
+ 	sdata_info(sdata,
+ 		   "deauthenticating from %pM by local choice (reason=%d)\n",
+ 		   req->bssid, req->reason_code);
+ 
+-	if (ifmgd->associated &&
+-	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
+-		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+-				       req->reason_code, tx, frame_buf);
+-	} else {
++	if (ifmgd->auth_data) {
+ 		drv_mgd_prepare_tx(sdata->local, sdata);
+ 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
+ 					       IEEE80211_STYPE_DEAUTH,
+ 					       req->reason_code, tx,
+ 					       frame_buf);
++		ieee80211_destroy_auth_data(sdata, false);
++		mutex_unlock(&ifmgd->mtx);
++
++		sent_frame = tx;
++		goto out;
+ 	}
+ 
++	if (ifmgd->associated &&
++	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
++		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
++				       req->reason_code, tx, frame_buf);
++		sent_frame = tx;
++	}
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+-	__cfg80211_send_deauth(sdata->dev, frame_buf,
+-			       IEEE80211_DEAUTH_FRAME_LEN);
+-
++ out:
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+ 	mutex_unlock(&sdata->local->mtx);
+ 
++	if (sent_frame)
++		__cfg80211_send_deauth(sdata->dev, frame_buf,
++				       IEEE80211_DEAUTH_FRAME_LEN);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
+
