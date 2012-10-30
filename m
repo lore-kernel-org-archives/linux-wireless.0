@@ -1,88 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:48693 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755533Ab2J1U75 (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51676 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932741Ab2J3MHw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Oct 2012 16:59:57 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so1718763bkc.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2012 13:59:55 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: dhlii@dlasys.net
-Subject: Re: Bandwidth monitoring
-Date: Sun, 28 Oct 2012 21:59:41 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <1351438667.3551.29.camel@hp-dhlii>
-In-Reply-To: <1351438667.3551.29.camel@hp-dhlii>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201210282159.41759.chunkeey@googlemail.com> (sfid-20121028_220001_324787_0F4B9244)
+	Tue, 30 Oct 2012 08:07:52 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, nbd@openwrt.org, sven@narfation.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH] ath9k: apply coverage class on slottime too
+Date: Tue, 30 Oct 2012 13:07:35 +0100
+Message-Id: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121030_130756_233071_EAE989B2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, October 28, 2012 04:37:47 PM David H. Lynch Jr. wrote:
-> > From: Christian Lamparter
-> >What might not work is: injecting frames with MCS rates [no code
-> >in ieee80211_parse_tx_radiotap for that?]... So maybe the issue
-> >is indeed at the other end?
-> 
-> Assuming Carl9170/AR9170's at both ends
-Ah, any mac80211 device should do.
+From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 
-> But if I am am using iw to set monitor mode mode, channel, and
-> bandwidth, And using Raw sockets injection with a radiotap header
-> that has no frequency/channel/bandwidth information, 
-> I should then be able to receive that packet on another system
-> with an AR9170 and 1.8.2 Wireshark and the BW40 flag should be true?
-Ah now I see where the problem is.
-You see, the "40MHz bit" is part of the MCS rate meta info (aka flags).
-(See enum mac80211_rate_control_flags in include/net/mac80211.h)
+According to 802.11-2007 17.3.8.6 (slot time), the slot time should
+be increased by 3 us * coverage class. The code only increased the
+ack timeout, which is fixed by this patch.
 
-This stuff is usually set by the rate control algorithm. But because
-you are injecting frames there's not alot of rate control and the frame
-is usually send at the lowest possible data rate for the channel (usually
-these are the 1MBit/6Mbit legacy rates and not HT20 or HT40 rates).
-This is true for almost all mac80211 devices which don't feature a rate
-control offload option in firmware (i.e.: ath9k_htc does have a firmware
-rc and might do things differently).
+We have noticed in our long shot scenario that we see less collisions
+with this patch.
 
-OffTopic:
-There is also a legacy duplicate flag IEEE80211_TX_RC_DUP_DATA that
-duplicates the 20MHz legacy packet in two 20MHz halves of a 40MHz
-channel. (The downside is that there's no dedicated RX_FLAG for
-that and this information is not available in the radiotap)
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+[add standard reference and commit message]
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 71cd9f0..1a3d483 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1114,7 +1114,8 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	}
  
-> I need to do something that involves sending HT40 packets in a
-> completely different context.
-The receiving part should be handled by all of the mac80211 devices
-I listed in the previous post out-of-the-box.
+ 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
+-	acktimeout = slottime + sifstime + 3 * ah->coverage_class + ack_offset;
++	slottime += 3 * ah->coverage_class;
++	acktimeout = slottime + sifstime + ack_offset;
+ 	ctstimeout = acktimeout;
+ 
+ 	/*
+-- 
+1.7.10
 
-The sending part is not. AFAICT you'll have to start by declaring
-and defining a new radiotap rate info element (IEEE80211_RADIOTAP_RATE
-can only handle the bit rate and that is not enough). Then you have
-to add a parser which translate the rate info in the radiotap header
-into mac80211 ieee80211_tx_rate and tell mac80211 to bypass rate_ctrl
-tx handler in this case so the info won't be overwritten again...
-And finally you'll have to add a header with this new rate info element
-into the radiotap header of all the frames you send through the raw
-monitor interface.
-
-A proof-of-concept should be easily doable within a day. But getting this
-new radiotap to be part of the spec will take longer ;).
-
-> But I do not have a spectrum analyzer to
-> confirm that i am actually sending what I want.
-I don't think you need a spectrum analyzer... unless of course 
-it can also HT40 generate frames.
-
-> So I have been using airmon, wireshark, ....
-> But i need to be able to send and verify an HT40 packet by some somewhat
-> normal means, to assure myself that my receiving end wireshark
-> hardware/driver/software combination can tell me what i need to know. 
-Well, you should be able to verify if your device picks up HT40 frames
-easily. All you need is any busy 11n network with a 11n AP and a 11n
-client. Just setup the receiver device (correct channel and HT40+/-
-setting) and start listening.
-
-Regards,
-	Chr 
