@@ -1,35 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51203 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753058Ab2JRPTD (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:59760 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932537Ab2J3Lrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2012 11:19:03 -0400
-Message-ID: <1350573572.10638.18.camel@jlt4.sipsolutions.net> (sfid-20121018_171912_246564_55661305)
-Subject: Re: [PATCH v3 3.7 1/2] cfg80211: fix antenna gain handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Date: Thu, 18 Oct 2012 17:19:32 +0200
-In-Reply-To: <1350474980-59623-1-git-send-email-nbd@openwrt.org>
-References: <1350474980-59623-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 30 Oct 2012 07:47:47 -0400
+From: asingh.engi@gmail.com
+To: johannes@sipsolutions.net
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Ashwini Singh <asingh.engi@gmail.com>
+Subject: [PATCH] Linus's tree: wireless: Spelling corrections
+Date: Tue, 30 Oct 2012 17:17:28 +0530
+Message-Id: <508fbe62.a689440a.0273.2f2b@mx.google.com> (sfid-20121030_124816_317844_85300FE0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-17 at 13:56 +0200, Felix Fietkau wrote:
-> No driver initializes chan->max_antenna_gain to something sensible, and
-> the only place where it is being used right now is inside ath9k. This
-> leads to ath9k potentially using less tx power than it can use, which can
-> decrease performance/range in some rare cases.
-> 
-> Rather than going through every single driver, this patch initializes
-> chan->orig_mag in wiphy_register(), ignoring whatever value the driver
-> left in there. If a driver for some reason wishes to limit it independent
-> from regulatory rulesets, it can do so internally.
+From: Ashwini Singh <asingh.engi@gmail.com>
 
-Applied both.
+Few spelling corrections in wireless directory.
 
-johannes
+Signed-off-by: Ashwini Singh <asingh.engi@gmail.com>
+---
+ net/wireless/radiotap.c    |    2 +-
+ net/wireless/reg.c         |    6 +++---
+ net/wireless/wext-compat.c |    2 +-
+ net/wireless/wext-core.c   |    2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
+index 7d604c0..eaf4282 100644
+--- a/net/wireless/radiotap.c
++++ b/net/wireless/radiotap.c
+@@ -190,7 +190,7 @@ static void find_ns(struct ieee80211_radiotap_iterator *iterator,
+  * present fields.  @this_arg can be changed by the caller (eg,
+  * incremented to move inside a compound argument like
+  * IEEE80211_RADIOTAP_CHANNEL).  The args pointed to are in
+- * little-endian format whatever the endianess of your CPU.
++ * little-endian format whatever the endianness of your CPU.
+  *
+  * Alignment Gotcha:
+  * You must take care when dereferencing iterator.this_arg
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3b8cbbc..b98ff98 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -718,7 +718,7 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
+ 
+ 	/*
+ 	 * Follow the driver's regulatory domain, if present, unless a country
+-	 * IE has been processed or a user wants to help complaince further
++	 * IE has been processed or a user wants to help compliance further
+ 	 */
+ 	if (!custom_regd &&
+ 	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+@@ -2133,7 +2133,7 @@ bool reg_supported_dfs_region(u8 dfs_region)
+ 	case NL80211_DFS_JP:
+ 		return true;
+ 	default:
+-		REG_DBG_PRINT("Ignoring uknown DFS master region: %d\n",
++		REG_DBG_PRINT("Ignoring unknown DFS master region: %d\n",
+ 			      dfs_region);
+ 		return false;
+ 	}
+@@ -2155,7 +2155,7 @@ static void print_dfs_region(u8 dfs_region)
+ 		pr_info(" DFS Master region JP");
+ 		break;
+ 	default:
+-		pr_info(" DFS Master region Uknown");
++		pr_info(" DFS Master region Unknown");
+ 		break;
+ 	}
+ }
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 494379e..7642f60 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1144,7 +1144,7 @@ static int cfg80211_wext_siwpower(struct net_device *dev,
+ 		switch (wrq->flags & IW_POWER_MODE) {
+ 		case IW_POWER_ON:       /* If not specified */
+ 		case IW_POWER_MODE:     /* If set all mask */
+-		case IW_POWER_ALL_R:    /* If explicitely state all */
++		case IW_POWER_ALL_R:    /* If explicitly state all */
+ 			ps = true;
+ 			break;
+ 		default:                /* Otherwise we ignore */
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index c8717c1..c9514ce 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -849,7 +849,7 @@ out:
+  *
+  * Note : our current commit strategy is currently pretty dumb,
+  * but we will be able to improve on that...
+- * The goal is to try to agreagate as many changes as possible
++ * The goal is to try to aggregate as many changes as possible
+  * before doing the commit. Drivers that will define a commit handler
+  * are usually those that need a reset after changing parameters, so
+  * we want to minimise the number of reset.
+-- 
+1.7.0.1
 
