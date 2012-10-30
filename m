@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:53502 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932319Ab2JVWn2 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:52281 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934561Ab2J3VKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Oct 2012 18:43:28 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so1601596dak.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2012 15:43:28 -0700 (PDT)
-Date: Mon, 22 Oct 2012 15:43:24 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, s.L-H@gmx.de
-Cc: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
-Message-ID: <20121022224324.GC24489@kroah.com> (sfid-20121023_004331_576427_539C479C)
-References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com>
- <20121013153923.GA25810@lst.de>
+	Tue, 30 Oct 2012 17:10:16 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: rtlwifi: rtl8192cu: Add new USB ID
+Date: Tue, 30 Oct 2012 22:10:01 +0100
+Cc: Albert Pool <albertpool@solcon.nl>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	stable@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <5090314E.7070703@solcon.nl> <1351629925.13356.21.camel@deadeye.wl.decadent.org.uk>
+In-Reply-To: <1351629925.13356.21.camel@deadeye.wl.decadent.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121013153923.GA25810@lst.de>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201210302210.01258.chunkeey@googlemail.com> (sfid-20121030_221022_082626_3A11FFEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 13, 2012 at 05:39:23PM +0200, Christoph Hellwig wrote:
-> Thanks a lot for picking up the work and finshing the driver.
+On Tuesday, October 30, 2012 09:45:25 PM Ben Hutchings wrote:
+> On Tue, 2012-10-30 at 20:58 +0100, Albert Pool wrote:
+> > This is an ISY IWL 2000. Probably a clone of Belkin F7D1102 050d:1102. 
+> > Its FCC ID is the same.
+> > 
+> > Signed-off-by: Albert Pool <albertpool@solcon.nl>
+> [...]
 > 
-> I agree with the other voices here that the driver should go straight in
-> and not to staging.
+> This is not the correct way to submit a change to stable.  See
+> Documentation/stable_kernel_rules.txt
+> 
+Well, here's a quote from the author in the original post:
+"I can't get the device to connect to my wifi, but it at least detects
+networks with this patch. Probably a clone of Belkin F7D1102 050d:1102.
+Its FCC ID is the same."
 
-Ok, I've dropped this from my patch queue, it should go to the wireless
-driver maintainers instead.
+<http://www.spinics.net/lists/linux-wireless/msg98340.html>
 
-thanks,
+Unless this device is working now, I wouldn't recommend a Cc: stable.
 
-greg k-h
+Regards,
+	Chr
