@@ -1,66 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:51679 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487Ab2JGKQg (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:51713 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932537Ab2J3Lsi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Oct 2012 06:16:36 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n3so2345698lbo.19
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2012 03:16:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAKoUArkmH+tSj8HCTH_Y6FiFbSHbdWofFrxfs0gQ5o6h2k-YEA@mail.gmail.com>
-References: <0C7D424D957547489E16A29D0D15433494C29E7FE8@AMKMS11.ad.turkuamk.fi>
-	<CAKoUArnsntysudq3CRric4gb3eUOLq2f9ppkUGxbqWhSZp7yhg@mail.gmail.com>
-	<5070944B.4010205@lwfinger.net>
-	<20121007113348.42ba05fa@milhouse>
-	<CAKoUArkmH+tSj8HCTH_Y6FiFbSHbdWofFrxfs0gQ5o6h2k-YEA@mail.gmail.com>
-Date: Sun, 7 Oct 2012 12:16:35 +0200
-Message-ID: <CAKoUArnj4WBCVYu4D3AQsLg7Zs6xY8pdeKKw4cyik9vYwimNeg@mail.gmail.com> (sfid-20121007_121640_532413_C52393FC)
-Subject: Re: OpenFWWF for b43
-From: Rami Rosen <roszenrami@gmail.com>
-To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?ISO-8859-1?Q?Mikko_V=2E_Viinam=E4ki?=
-	<Mikko.Viinamaki@students.turkuamk.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 30 Oct 2012 07:48:38 -0400
+From: Ashwini Singh <asingh.engi@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Ashwini Singh <asingh.engi@gmail.com>
+Subject: [PATCH] Linus's tree: wireless: Spelling corrections
+Date: Tue, 30 Oct 2012 17:18:21 +0530
+Message-Id: <1351597701-18216-1-git-send-email-asingh.engi@gmail.com> (sfid-20121030_124859_505782_D87A819E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-A little correction to my previous mail:
-When trying:
- git clone git://git.bues.ch/git/b43-tools.git
-The error was:
+Few spelling corrections in wireless directory.
 
-fatal: remote error: access denied or repository not exported:
-/git/b43-tools.git
+Signed-off-by: Ashwini Singh <asingh.engi@gmail.com>
+---
+ net/wireless/radiotap.c    |    2 +-
+ net/wireless/reg.c         |    6 +++---
+ net/wireless/wext-compat.c |    2 +-
+ net/wireless/wext-core.c   |    2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-Rami Rosen
+diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
+index 7d604c0..eaf4282 100644
+--- a/net/wireless/radiotap.c
++++ b/net/wireless/radiotap.c
+@@ -190,7 +190,7 @@ static void find_ns(struct ieee80211_radiotap_iterator *iterator,
+  * present fields.  @this_arg can be changed by the caller (eg,
+  * incremented to move inside a compound argument like
+  * IEEE80211_RADIOTAP_CHANNEL).  The args pointed to are in
+- * little-endian format whatever the endianess of your CPU.
++ * little-endian format whatever the endianness of your CPU.
+  *
+  * Alignment Gotcha:
+  * You must take care when dereferencing iterator.this_arg
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3b8cbbc..b98ff98 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -718,7 +718,7 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
+ 
+ 	/*
+ 	 * Follow the driver's regulatory domain, if present, unless a country
+-	 * IE has been processed or a user wants to help complaince further
++	 * IE has been processed or a user wants to help compliance further
+ 	 */
+ 	if (!custom_regd &&
+ 	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+@@ -2133,7 +2133,7 @@ bool reg_supported_dfs_region(u8 dfs_region)
+ 	case NL80211_DFS_JP:
+ 		return true;
+ 	default:
+-		REG_DBG_PRINT("Ignoring uknown DFS master region: %d\n",
++		REG_DBG_PRINT("Ignoring unknown DFS master region: %d\n",
+ 			      dfs_region);
+ 		return false;
+ 	}
+@@ -2155,7 +2155,7 @@ static void print_dfs_region(u8 dfs_region)
+ 		pr_info(" DFS Master region JP");
+ 		break;
+ 	default:
+-		pr_info(" DFS Master region Uknown");
++		pr_info(" DFS Master region Unknown");
+ 		break;
+ 	}
+ }
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 494379e..7642f60 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1144,7 +1144,7 @@ static int cfg80211_wext_siwpower(struct net_device *dev,
+ 		switch (wrq->flags & IW_POWER_MODE) {
+ 		case IW_POWER_ON:       /* If not specified */
+ 		case IW_POWER_MODE:     /* If set all mask */
+-		case IW_POWER_ALL_R:    /* If explicitely state all */
++		case IW_POWER_ALL_R:    /* If explicitly state all */
+ 			ps = true;
+ 			break;
+ 		default:                /* Otherwise we ignore */
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index c8717c1..c9514ce 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -849,7 +849,7 @@ out:
+  *
+  * Note : our current commit strategy is currently pretty dumb,
+  * but we will be able to improve on that...
+- * The goal is to try to agreagate as many changes as possible
++ * The goal is to try to aggregate as many changes as possible
+  * before doing the commit. Drivers that will define a commit handler
+  * are usually those that need a reset after changing parameters, so
+  * we want to minimise the number of reset.
+-- 
+1.7.0.1
 
-
-On Sun, Oct 7, 2012 at 12:13 PM, Rami Rosen <roszenrami@gmail.com> wrote:
-> Hi,
->
-> Thanks a lot!
->
->> The bu3sch.de domain is no longer registered (by me). All services are available
->> under bues.ch now.
->>
->> git clone git://git.bues.ch/git/b43-tools.git
->>
->
-> It seems that the "/git/" inside this URL in wrong.
->
-> I tried as suggested:
-> And get:
-> fatal: destination path 'b43-tools' already exists and is not an empty
-> directory.
->
-> However:
-> git clone git://git.bues.ch/b43-tools.git
-> worked fine.
->
-> Regards,
-> Rami Rosen
->
-> http://ramirose.wix.com/ramirosen#!home/mainPage
