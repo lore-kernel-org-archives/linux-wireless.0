@@ -1,44 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23116 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933620Ab2JYHwJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 03:52:09 -0400
-Date: Thu, 25 Oct 2012 09:51:39 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Pavel Lucik <pavel.lucik@gmail.com>
-Subject: [PATCH] rt2800: validate step value for temperature compensation
-Message-ID: <20121025075138.GA2330@redhat.com> (sfid-20121025_095214_277751_9A0CBD6C)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:62305 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752767Ab2JaM6B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Oct 2012 08:58:01 -0400
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v2 1/2] wireless: Driver for 60GHz card wil6210
+Date: Wed, 31 Oct 2012 14:57:54 +0200
+Message-ID: <1578864.KppKrIJQWb@lx-vladimir> (sfid-20121031_135806_970040_2C02E8A6)
+In-Reply-To: <20121031012225.GY3354@lenteja.do-not-panic.com>
+References: <1351511906-19989-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1351511906-19989-2-git-send-email-qca_vkondrat@qca.qualcomm.com> <20121031012225.GY3354@lenteja.do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some hardware has correct (!= 0xff) value of tssi_bounds[4] in the
-EEPROM, but step is equal to 0xff. This results on ridiculous delta
-calculations and completely broke TX power settings.
+On Tuesday, October 30, 2012 06:23:37 PM Luis R. Rodriguez wrote:
+> On Mon, Oct 29, 2012 at 01:58:25PM +0200, Vladimir Kondratiev wrote:
+> > Card wil6210 by Wilocity supports operation on the 60GHz band
+> > 
+> > See
+> > http://wireless.kernel.org/en/users/Drivers/wil6210
+> 
+> Can you update that page to reflect the latest information?
+> Its out of date now.
 
-Reported-and-tested-by: Pavel Lucik <pavel.lucik@gmail.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Sure I will. Wanted to do it after driver merge, to reflect driver status as 
+well.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 3bc206d..c0441a7 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2449,7 +2449,7 @@ static int rt2800_get_gain_calibration_delta(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Check if temperature compensation is supported.
- 	 */
--	if (tssi_bounds[4] == 0xff)
-+	if (tssi_bounds[4] == 0xff || step == 0xff)
- 		return 0;
- 
- 	/*
--- 
-1.7.1
+> 
+> > diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c
+> > b/drivers/net/wireless/ath/wil6210/pcie_bus.c new file mode 100644
+> > index 0000000..d2b14fb
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+> > +static int wil_pcie_probe(struct pci_dev *pdev, const struct
+> > pci_device_id *id) +{
+> > +	{ /* print various info */
+> > +		struct net_device *ndev = wil_to_ndev(wil);
+> > +		const char *pdev_name = pci_name(pdev);
+> > +		const char *wiphydev_name = dev_name(wil_to_dev(wil));
+> > +		const char *ndev_name = netdev_name(ndev);
+> > +		const char *ifc_name = ndev->name;
+> > +		struct pci_driver *drv = pci_dev_driver(pdev);
+> > +		const char *drv_name = drv ? drv->name : "(no drv)";
+> > +		pr_info("Driver  : <%s>\n", drv_name ?: "(null)");
+> > +		pr_info("PCI dev : <%s>\n", pdev_name ?: "(null)");
+> > +		pr_info("Net dev : <%s>\n", ndev_name ?: "(null)");
+> > +		pr_info("Net ifc : <%s>\n", ifc_name ?: "(null)");
+> > +		pr_info("Wiphy   : <%s>\n", wiphydev_name ?: "(null)");
+> > +
+> > +	}
+> 
+> Die nasty code, die! Bleed!
+
+Well, agree. Removed.
+
+> 
+> > diff --git a/drivers/net/wireless/ath/wil6210/txrx.c
+> > b/drivers/net/wireless/ath/wil6210/txrx.c new file mode 100644
+> > index 0000000..463c68e
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/ath/wil6210/txrx.c
+> > +void tx_complete(struct wil6210_priv *wil, int ringid)
+> > +{
+> 
+> ...
+> 
+> > +	{
+> > +		u32 swhead = vring->swhead;
+> > +		u32 swtail = vring->swtail;
+> > +		int used = (vring->size + swhead - swtail) % vring->size;
+> > +		int avail = vring->size - used - 1;
+> > +		if (avail > vring->size/4)
+> > +			netif_tx_wake_all_queues(wil_to_ndev(wil));
+> > +	}
+> > +}
+> 
+> Die!
+
+Done
+
+> 
+> > diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h
+> > b/drivers/net/wireless/ath/wil6210/wil6210.h new file mode 100644
+> > index 0000000..529b790
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+> > @@ -0,0 +1,299 @@
+> 
+> ...
+> 
+> > +#define WIL6210_DRV_VERSION "0.4" /* Driver version */
+> 
+> Again, death to this. I don't care what other drivers do, this
+> is silly practice.
+
+Well, if you insist... done.
+By the way, Atheros driver carl9170 uses MODULE_VERSION, should we consider 
+killing it?
+
+> 
+> You also still use generic routine names, please clean those
+> up. Few examples: tx_complete() rx_handle(), iftype_nl2wmi(),
+> and I'm sure there are plenty others, please prefix
+> these for the driver.
+
+Prefix is cheap, done for all driver's functions.
+
+> 
+> > diff --git a/drivers/net/wireless/ath/wil6210/wil6210_rgf.h
+> > b/drivers/net/wireless/ath/wil6210/wil6210_rgf.h
+> Any reason why this small file is required? Why not just stuff it into
+> one of the other header files?
+
+Initially, it was auto-generated by the hardware compiler; but now I can merge 
+it into other include. Done.
+
+> 
+> You didn't also address my comments regarding WIL6210_ISR_COR #ifdef code.
+
+I added string with short explanation in Kconfig.
+Longer explanation: while clear-on-read is good for production mode, it makes 
+debugging much harder - reading ISR registers clears interrupt, and one can no 
+more monitor ISR with debugfs. So, when debugging ISR flows - and they still 
+need some debugging - one have to use W1C mode. That's why it is still 
+present.
+
+There are exactly 2 #ifdefs: one in ISR acknowledge routine, and other one in 
+ISR configuration routine.
+
+Converting this #ifdef to run-time switch (say, module parameter) is possible, 
+but I am not sure it would be better - changing ISR mode will cause reset; ans 
+code will not more readable.
+
+> 
+> The second patch no longer applies as a new driver was merged.
+
+Fixed this too
+
+> 
+> Apart from all this, looks good.
+> 
+>   Luis
+
+Sending updated version in a minute.
+
+Thanks, Vladimir.
 
