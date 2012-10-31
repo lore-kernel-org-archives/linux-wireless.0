@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:42564 "EHLO ebb06.tieto.com"
+Received: from mail.neratec.com ([80.75.119.105]:60567 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751075Ab2JJLxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 07:53:49 -0400
-Message-ID: <507561C8.7080601@tieto.com> (sfid-20121010_135356_733552_17200C37)
-Date: Wed, 10 Oct 2012 13:53:44 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
+	id S934512Ab2JaOiz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Oct 2012 10:38:55 -0400
+Message-ID: <509137FA.8070801@neratec.com> (sfid-20121031_153919_665182_3E19D0FE)
+Date: Wed, 31 Oct 2012 15:38:50 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	"alexander.smirnov@siemens.com" <alexander.smirnov@siemens.com>
-Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona!)
-References: <20120822201930.GC14913@tuxdriver.com> <1345667975.8786.0.camel@jlt3.sipsolutions.net> <20120822204122.GA2196@tuxdriver.com>
-In-Reply-To: <20120822204122.GA2196@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k: [DFS] add pulse width tolerance for ETSI
+References: <1351682581-30683-1-git-send-email-zefir.kurtisi@neratec.com> <5091287C.9030408@hauke-m.de> <50912E43.7070005@openwrt.org>
+In-Reply-To: <50912E43.7070005@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22/08/12 22:41, John W. Linville wrote:
-> On Wed, Aug 22, 2012 at 10:39:35PM +0200, Johannes Berg wrote:
->> On Wed, 2012-08-22 at 16:19 -0400, John W. Linville wrote:
->>
->>> With that said, there are still a number of slots available for
->>> presentations or discussion topics.  This is especially true for the
->>> 802.11 group...  Please step-up with some suggested topics!
->>
->> Anyone want to carefully review & present Michal's and my work on
->> multi-channel in mac80211? :-)
->
-> I would _really_ like to see this.  Anyone (smarter than me) that is
-> willing to do this for the group?
->
-> John
->
+On 10/31/2012 02:57 PM, Felix Fietkau wrote:
+> On 2012-10-31 2:32 PM, Hauke Mehrtens wrote:
+>> On 10/31/2012 12:23 PM, Zefir Kurtisi wrote:
+>>> Add 5% width tolerance for radar patterns defined by ETSI.
+>>>
+>>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+>>> ---
+>>>  .../net/wireless/ath/ath9k/dfs_pattern_detector.c  |    7 ++++++-
+>>>  1 files changed, 6 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
+>>> index 3b12914..24877b0 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
+>>> @@ -42,10 +42,15 @@ struct radar_types {
+>>>  #define MIN_PPB_THRESH	50
+>>>  #define PPB_THRESH(PPB) ((PPB * MIN_PPB_THRESH + 50) / 100)
+>>>  #define PRF2PRI(PRF) ((1000000 + PRF / 2) / PRF)
+>>> +/* percentage of pulse width tolerance */
+>>> +#define WIDTH_TOLERANCE 5
+>>> +#define WIDTH_LOWER(X) ((X*(100-WIDTH_TOLERANCE)+50)/100)
+>>> +#define WIDTH_UPPER(X) ((X*(100+WIDTH_TOLERANCE)+50)/100)
+>>                                                    ^^^
+>> Why are you adding 50 there? If you want to just add 5% tolerance, then
+>> the +50 is wrong there, but I do not know anything about radar patterns
+>> defined by ETSI.
+> I think the 50 is correct here. It's not the tolerance (which is already
+> included via WIDTH_TOLERANCE in that macro), it's to account for
+> rounding issues.
+> Having said that, I wonder if it shouldn't be -50 instead of +50 in
+> WIDTH_LOWER().
+> 
+> - Felix
+> 
+Right (you were faster on clarifying, thanks ;)).
 
-Hi,
+As for the -50: the macros do rounding to the nearest int, while your
+proposal would resemble a floor(), which would result in the values
+being decremented from their current value. Given that 5us would be
+corrected to 4us, I think it is better to go for the round() approach to
+keep detection balanced.
 
-I'd like to do it. I'll update the wiki and put myself in a free 
-timeslot if that's okay.
+It is maybe not relevant at all for the lower ranges, I came up with the
+modification since we had failures detecting type 4 patterns with
+maximum pulse width including margin with a total of 31us.
+
+(FYI, other than that, the DFS detector works well enough for
+certification by ETSI.)
 
 
--- Pozdrawiam / Best regards, Michal Kazior.
+Cheers,
+Zefir
+
