@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50751 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135Ab2JYLyM (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:42061 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932864Ab2JaNEH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 07:54:12 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TRM0p-00035t-Ns
-	for linux-wireless@vger.kernel.org; Thu, 25 Oct 2012 13:54:11 +0200
-Message-ID: <1351166088.10421.5.camel@jlt4.sipsolutions.net> (sfid-20121025_135420_205722_80A5E002)
-Subject: Re: [PATCH] mac80211: use non-atomic bitmap operation for local
- variable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 25 Oct 2012 13:54:48 +0200
-In-Reply-To: <1351091487-17115-1-git-send-email-johannes@sipsolutions.net> (sfid-20121024_171059_502573_93C73B2D)
-References: <1351091487-17115-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121024_171059_502573_93C73B2D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 31 Oct 2012 09:04:07 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n3so1044943lbo.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2012 06:04:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1578864.KppKrIJQWb@lx-vladimir>
+References: <1351511906-19989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1351511906-19989-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <20121031012225.GY3354@lenteja.do-not-panic.com> <1578864.KppKrIJQWb@lx-vladimir>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Wed, 31 Oct 2012 06:03:45 -0700
+Message-ID: <CAB=NE6WXsQ2PF0Ce8x1wsuYWqgKAOeto4mRzRAnTVBbE4bh-9g@mail.gmail.com> (sfid-20121031_140413_622225_00199B21)
+Subject: Re: [PATCH v2 1/2] wireless: Driver for 60GHz card wil6210
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-24 at 17:11 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> For a local variable there's no need to use the atomic
-> set_bit() operation, use __set_bit() instead.
+On Wed, Oct 31, 2012 at 5:57 AM, Vladimir Kondratiev
+<qca_vkondrat@qca.qualcomm.com> wrote:
+>> You didn't also address my comments regarding WIL6210_ISR_COR #ifdef code.
+>
+> I added string with short explanation in Kconfig.
+> Longer explanation: while clear-on-read is good for production mode, it makes
+> debugging much harder - reading ISR registers clears interrupt, and one can no
+> more monitor ISR with debugfs. So, when debugging ISR flows - and they still
+> need some debugging - one have to use W1C mode. That's why it is still
+> present.
+>
+> There are exactly 2 #ifdefs: one in ISR acknowledge routine, and other one in
+> ISR configuration routine.
+>
+> Converting this #ifdef to run-time switch (say, module parameter) is possible,
+> but I am not sure it would be better - changing ISR mode will cause reset; ans
+> code will not more readable.
 
-Applied
+I meant, can you auto detect the preference for this option instead of
+requiring a Kconfig entry? Ie, can you infer what the desired path
+should be by poking at the driver? If not can you consider folding the
+#ifdef juju code into a helper such as
 
-johannes
+#ifdef CONFIG_FOO
+static void bar()
+{
+   apples()
+}
+#else
+static void bar()
+{
+   oranges()
+}
+#endif
 
+  Luis
