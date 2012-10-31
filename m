@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:65443 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965199Ab2JYUme (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46175 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757790Ab2JaO1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 16:42:34 -0400
-Received: by mail-pa0-f46.google.com with SMTP id hz1so1434871pad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 13:42:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com>
-References: <CAG6hwVP5YkBEN9vZPGGEHbK=9ow2wJJ1x_BvSQbDzUscTiOHTA@mail.gmail.com>
-	<CAJ-Vmokr0293M-yqQ6LvM4WKC+P0w0N2mHjpKK+rSFFjAmhwfQ@mail.gmail.com>
-	<20121024194547.GA19060@shredder>
-	<CAJ-VmonEZbKiVqnu1SDDbNDTj3qeWB2QgTN=h3NHdiZrMp8LDA@mail.gmail.com>
-	<CAJ-VmonzYsUsSOyr34Xj9=mTpsHEbGNUS2RoN=BenqthGfakVw@mail.gmail.com>
-	<20121024220813.GB6723@shredder>
-	<CAJ-VmokGeCLY8pCpL5H0VgznXnB-ob1z_sPaSQUZn0PengSgow@mail.gmail.com>
-	<CAJ-Vmo=-Dj+Le8y0EYNgVednUT7GTedSwdNP5q1P5iLKymRBLg@mail.gmail.com>
-Date: Thu, 25 Oct 2012 13:42:33 -0700
-Message-ID: <CAJ-Vmom0cg09C1D2Eh79K2zoOxL0Ry7g3+DC2iNGBFTa4+Zhzg@mail.gmail.com> (sfid-20121025_224237_596834_C9FF1804)
-Subject: Re: [ath9k-devel] ath9k_htc and reported mactime
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 31 Oct 2012 10:27:14 -0400
+Message-ID: <1351693661.10946.0.camel@jlt4.sipsolutions.net> (sfid-20121031_152721_835259_03DE29C0)
+Subject: Re: [PATCH v2 1/2] wireless: Driver for 60GHz card wil6210
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 31 Oct 2012 15:27:41 +0100
+In-Reply-To: <1578864.KppKrIJQWb@lx-vladimir>
+References: <1351511906-19989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1351511906-19989-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <20121031012225.GY3354@lenteja.do-not-panic.com>
+	 <1578864.KppKrIJQWb@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 October 2012 18:54, Adrian Chadd <adrian@freebsd.org> wrote:
+On Wed, 2012-10-31 at 14:57 +0200, Vladimir Kondratiev wrote:
 
-> Yup, found it. The firmware TSF code was treating the TSF like it was
-> an older pre-11n NIC and only dealing with the low handful of bits.
-> Thomas has verified my test image works.
->
-> I'll go and see about pushing this into the tree so Sujith's next
-> ath9k_htc drop will include this fix.
->
-> Thanks for the debugging info Thomas!
+> > You didn't also address my comments regarding WIL6210_ISR_COR #ifdef code.
+> 
+> I added string with short explanation in Kconfig.
+> Longer explanation: while clear-on-read is good for production mode, it makes 
+> debugging much harder - reading ISR registers clears interrupt, and one can no 
+> more monitor ISR with debugfs. So, when debugging ISR flows - and they still 
+> need some debugging - one have to use W1C mode. That's why it is still 
+> present.
 
-Thomas, is the TSF in the RX status descriptor actually 32 bits, or is
-this a printing error?
+Since I'm CC'ed on your patches (not sure why) I'll offer the opinion
+that you should add interrupt and IO access tracing rather than reading
+registers with some debug thing ;)
 
-The firmware side seems to be populating it with a 64 bit TSF value
-and the rx_status field in question is actually 64 bits. Hence why I'm
-confused.
+johannes
 
-
-Adrian
