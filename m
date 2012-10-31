@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:45827 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754134Ab2JRGfm (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50101 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390Ab2JaF25 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Oct 2012 02:35:42 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v6 0/6] add scan flags support
-Date: Wed, 17 Oct 2012 23:34:25 -0700
-Message-Id: <1350542071-26498-1-git-send-email-bzhao@marvell.com> (sfid-20121018_083544_829732_D683086A)
+	Wed, 31 Oct 2012 01:28:57 -0400
+Message-ID: <5090B711.70808@candelatech.com> (sfid-20121031_062922_167990_36B0F652)
+Date: Tue, 30 Oct 2012 22:28:49 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Any thoughts on how to best shield u.fl connectors on NICs?
+References: <508EB783.9080000@candelatech.com> <CAGRGNgWGfL+_u4fHEfqZAcFHb1H4Z4jFkiE4qKLU6i9XEWzZ6w@mail.gmail.com> <5090560D.1090708@candelatech.com> <CAGRGNgUQ40YW-dwy34nPD65XPWt1VWetyXDdd=L_NxKJ9-_Fiw@mail.gmail.com> <CAJ-Vmoky+46E71wQbF1-J-xEnHdWeMMXf=Yo+SGkqALjvjrJrg@mail.gmail.com>
+In-Reply-To: <CAJ-Vmoky+46E71wQbF1-J-xEnHdWeMMXf=Yo+SGkqALjvjrJrg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-v6: move enum nl80211_scan_flags placeholder from 1/6 to 3/6,
-    and merge with new flag in 3/6 to avoid breaking build in 1/6.
-    This makes patch series friendly to bisect. (Fengguang Wu)
+On 10/30/2012 10:16 PM, Adrian Chadd wrote:
+> On 30 October 2012 16:45, Julian Calaby <julian.calaby@gmail.com> wrote:
+>
+>> That's a good point, all the NICs I've looked at closely (e.g. the
+>> rt2500usb cards on my desk at the moment) have an antenna or u.fl
+>> connector with some passive components around it and usually the
+>> antenna trace runs exposed on the board for a couple of millimetres
+>> before it disappears under the shielding around the RF chip. I'll
+>> check my collection at home tonight, but I'm pretty sure that all the
+>> PCI cards have a couple of cm of exposed antenna trace between the SMA
+>> connector and the RF shield.
+>
+> I've even seen ${COMMERCIAL} kit do this internally.
 
-    Other 4 patches are not changed.
+ From what I can tell, the WPEA-127n has a 1cm or so unshielded
+run from the u.fl mounts to the RF chip logic.  I'm guessing this
+acts as a mini-antenna, and maybe it was done that way on purpose,
+but it's all guessing at this point.
 
----
-Amitkumar Karwar (1):
-  cfg80211: code rearrangement to avoid forward declarations
+>
+> Ben, what are you worried about in particular?
 
-Johannes Berg (1):
-  wireless: use OR operation to set wiphy features
+Two things come to mind:
 
-Sam Leffler (4):
-  {nl,cfg}80211: add a flags word to scan requests
-  cfg80211: add scan flag to indicate its priority
-  cfg80211: add support for flushing old scan results
-  mac80211: add support for tx to abort low priority scan requests
+First, I'd like to put 2+ NICs close together in the same chassis.
+Would be nice if they were as isolated from each other as possible
+so that each NIC could work independently of the other (once I can
+get to SMA connectors, there are > 90db shielded cable options,
+but of course it could just go to antenna where it all mixes again
+anyway).
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
- drivers/net/wireless/mwifiex/cfg80211.c    |    4 +-
- include/net/cfg80211.h                     |    7 ++
- include/uapi/linux/nl80211.h               |   23 +++++
- net/mac80211/ieee80211_i.h                 |    2 +
- net/mac80211/main.c                        |    9 ++-
- net/mac80211/scan.c                        |   21 ++++-
- net/wireless/core.c                        |    2 +
- net/wireless/nl80211.c                     |   30 +++++++
- net/wireless/scan.c                        |  120 +++++++++++++++++-----------
- net/wireless/sme.c                         |    1 +
- 11 files changed, 164 insertions(+), 57 deletions(-)
+Second:  If one wants to use an attenuator and coax cables to connect
+AP and Station systems together, the AP and Station need to NOT also
+be transmitting through the air.  Anything I can do to keep that
+over-the-air communication minimal should help.
+
+Truth is, I'm not sure how much it really matters, but after a few weeks
+of poking at cabling and such, I've gotten kind of curious :)
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
 
