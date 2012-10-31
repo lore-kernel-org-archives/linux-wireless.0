@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:64700 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932386Ab2JJPTt (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:62653 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932663Ab2JaRZs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Oct 2012 11:19:49 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so600751oag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2012 08:19:48 -0700 (PDT)
+	Wed, 31 Oct 2012 13:25:48 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so788290bkc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2012 10:25:47 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v2 1/2] wireless: Driver for 60GHz card wil6210
+Date: Wed, 31 Oct 2012 18:25:36 +0100
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <1351511906-19989-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1578864.KppKrIJQWb@lx-vladimir> <CAB=NE6WRG9yYV=NLORnEEHSkgfjBSdZr_pycLCmCN2cRUFvQKw@mail.gmail.com>
+In-Reply-To: <CAB=NE6WRG9yYV=NLORnEEHSkgfjBSdZr_pycLCmCN2cRUFvQKw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20121010001024.GE22517@ritirata.org>
-References: <1348761132-8344-1-git-send-email-mohammed@qca.qualcomm.com>
-	<20581.2614.43943.601901@gargle.gargle.HOWL>
-	<50652E56.10303@qca.qualcomm.com>
-	<20581.32544.134606.56158@gargle.gargle.HOWL>
-	<20120929093118.GA3022@ritirata.org>
-	<CAD2nsn20s3L8b8DT53JYAN-t4q5GpxUVzSCncTt1LQO3w=wsYw@mail.gmail.com>
-	<20121010001024.GE22517@ritirata.org>
-Date: Wed, 10 Oct 2012 20:49:48 +0530
-Message-ID: <CAD2nsn11fihMnzryTJzRBqbR86FcT6cA8WWtFBvQxgzeWMUmEA@mail.gmail.com> (sfid-20121010_172007_763001_221DBFDC)
-Subject: Re: [RFC 1/2] ath9k_htc: Advertize allowed vif combinations
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: Sujith Manoharan <c_manoha@qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201210311825.37192.chunkeey@googlemail.com> (sfid-20121031_182555_648803_6C0A155E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Antonio,
+On Wednesday 31 October 2012 16:14:19 Luis R. Rodriguez wrote:
+> On Wed, Oct 31, 2012 at 5:57 AM, Vladimir Kondratiev
+> <qca_vkondrat@qca.qualcomm.com> wrote:
+> > By the way, Atheros driver carl9170 uses MODULE_VERSION,
+> > should we consider killing it?
+> 
+> Well its tied pretty heavily to the firmware which BTW is open and
+> GPLv2. Your driver does not need firmware (yet). Why exactly carl9170
+> would use MODULE_VERSION though... or need it.. is perhaps Christian
+> can clarify on. Christian any reason to have MODULE_VERSION(),
+> anything that provide to userspace that cannot be obtained by the
+> kernel release it came from instead?
+Well, to make the api level of the firmware interface which 
+is used by the driver accessible through modinfo without
+having to load the module. So a script check whenever the
+api matches by testing modinfo of the driver and fwinfo
+of the fw.
 
->
-> Hi Mohammed,
->
-> thank you for having taken care of this. Is it possible to have more details
-> about this "impossibility"? I still have to understand, because on one side we
-> all agreed on the fact that IBSS+AP coexistence will create problems on the STA
-> (connected to the AP) because of the TSF jumps, but this would still "work". On
-> the other side the maintainer is claiming this would not work at all :-) At this
-> point, I'd like to clearly understand "why" he is claiming so: is it for the
-> same reason explained above (TSF jumps) or is there something else?
+However, this information is also printed out when the
+firmware is loaded/parsed.
+[  150.588563] usb 1-10: driver   API: 1.9.6 2012-07-07 [1-1]
+[  150.594360] usb 1-10: firmware API: 1.9.6 2012-07-07
+So, it's only really useful if you need to know in advance
+or in absence of a device. [So, it's not very useful in
+most cases]
 
-completely agree with your point, but one thing I am not sure about is
-there something
-specific with ath9k_htc firmware/ h/w code limitations(beacon.c). I
-need to take a close
-look at this. I will just check again with the ath9k_htc maintainer(if
-I can reach him !).
-But if you had tested this better please go ahead and send the patch,
-as it wouldn't be
-breaking. Since the maintainer himself has better understanding about
-ath9k_htc(also its firmware)
-he certainly might have a better reason to say so. Certainly ath9k_htc
-has some limitations
-in firmware and some know issues too!.
+If you want to make a patch to remove it: here is my
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+[Also, if you remove it, you can kill the ugly #defines
+which are used by it too]
 
-I have limited time as i am working in some other project!
-
->
-> Cheers,
->
->
-> --
-> Antonio Quartulli
->
-> ..each of us alone is worth nothing..
-> Ernesto "Che" Guevara
-
-
-
--- 
-thanks,
-shafi
+Regards,
+	Chr
