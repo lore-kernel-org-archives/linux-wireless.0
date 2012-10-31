@@ -1,82 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25399 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751131Ab2JOO47 convert rfc822-to-8bit (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4308 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933109Ab2JaQhI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 10:56:59 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Wed, 31 Oct 2012 12:37:08 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: RE: Lots of trans->state != IWL_TRANS_FW_ALIVE warnings
-Date: Mon, 15 Oct 2012 14:56:45 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3B7D46B@HASMSX106.ger.corp.intel.com> (sfid-20121015_165703_007273_AE378063)
-References: <20121015144722.GA12560@redhat.com>
-In-Reply-To: <20121015144722.GA12560@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Subject: [PATCH v5 0/2] driver for 60g Wilocity chip wil6210
+Date: Wed, 31 Oct 2012 18:36:55 +0200
+Message-ID: <1351701417-3140-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121031_173712_855322_DB6BDAE2)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On Fedora (3.5 and 3.6 kernels) we are currently overwhelmed by tons of
-> iwlwifi warnings at iwlagn_mac_flush() and iwl_dvm_send_cmd() reports.
-> 
-> iwlagn_mac_flush warning is triggered at:
-> 
-> static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans) {
->         WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
->                   "%s bad state = %d", __func__, trans->state);
-> 
->         return trans->ops->wait_tx_queue_empty(trans);
-> }
-> 
-> We have 2 instances of this issue:
-> 
-> - started at ieee80211_scan()
-> https://bugzilla.redhat.com/show_bug.cgi?id=866013
-> - started at ieee80211_sta_monitor_work()
-> https://bugzilla.redhat.com/show_bug.cgi?id=861753
-> 
-> iwl_dvm_send_cmd is triggered at:
-> 
-> static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
->                                 struct iwl_host_cmd *cmd) {
->         WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
->                   "%s bad state = %d", __func__, trans->state);
-> 
->         return trans->ops->send_cmd(trans, cmd); }
-> 
-> And have 3 instances:
-> 
-> - started at ieee80211_set_disassoc()
-> https://bugzilla.redhat.com/show_bug.cgi?id=861599
-> - started at ieee80211_restart_work()
-> https://bugzilla.redhat.com/show_bug.cgi?id=865072
-> - started at ieee80211_auth()
-> https://bugzilla.redhat.com/show_bug.cgi?id=866015
-> 
+Please, disregard [PATCH v4]. Use v5 instead.
 
-I glanced at the bugs and I can only see the trace dump. I am pretty sure there is an issue before the dump - fw assert of something like that. Can it be possible to get the full log?
+Fixed stupid mistake: interrupt clear code was swapped between #ifdef branches.
 
-> Can those be fixed in some reasonable time ?
-> 
-> I'm not sure if they are related with some user visible problem like
-> disconnects.
+Vladimir Kondratiev (2):
+  wireless: Driver for 60GHz card wil6210
+  wireless: integrate wil6210 driver into build structure
 
-Well... if the fw isn't ALIVE then something bad happens, bad enough to get disconnected, yes.
-> 
-> I'll probably revert f0d120af8f55649571c681f49c920b0822050fa5
-> on Fedora, just to stop getting those warnings ...
-> 
+ drivers/net/wireless/ath/Kconfig             |    8 +-
+ drivers/net/wireless/ath/Makefile            |    1 +
+ drivers/net/wireless/ath/ar5523/Kconfig      |    1 +
+ drivers/net/wireless/ath/ath5k/Kconfig       |    1 +
+ drivers/net/wireless/ath/ath6kl/Kconfig      |    1 +
+ drivers/net/wireless/ath/ath9k/Kconfig       |    1 +
+ drivers/net/wireless/ath/carl9170/Kconfig    |    1 +
+ drivers/net/wireless/ath/wil6210/Kconfig     |   30 +
+ drivers/net/wireless/ath/wil6210/Makefile    |   15 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c  |  821 ++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/debugfs.c   |  506 ++++++++++++++
+ drivers/net/wireless/ath/wil6210/interrupt.c |  342 +++++++++
+ drivers/net/wireless/ath/wil6210/main.c      |  400 +++++++++++
+ drivers/net/wireless/ath/wil6210/netdev.c    |  159 +++++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c  |  239 +++++++
+ drivers/net/wireless/ath/wil6210/sysfs.c     |  134 ++++
+ drivers/net/wireless/ath/wil6210/txrx.c      |  821 ++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.h      |  352 ++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  370 ++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.c       |  964 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h       |  928 +++++++++++++++++++++++++
+ 21 files changed, 6093 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/Kconfig
+ create mode 100644 drivers/net/wireless/ath/wil6210/Makefile
+ create mode 100644 drivers/net/wireless/ath/wil6210/cfg80211.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/debugfs.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/interrupt.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/main.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/netdev.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/pcie_bus.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/sysfs.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/wil6210.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/wmi.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/wmi.h
 
-You will stop get the warnings, but that of course won't solve anything else.
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+-- 
+1.7.10.4
 
