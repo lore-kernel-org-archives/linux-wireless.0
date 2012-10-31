@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42083 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:38474 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750820Ab2JHPkm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Oct 2012 11:40:42 -0400
-Date: Mon, 8 Oct 2012 17:38:56 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: David Rientjes <rientjes@google.com>, Mel Gorman <mgorman@suse.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: iwl3945: order 5 allocation during ifconfig up; vm problem?
-Message-ID: <20121008153855.GA9737@redhat.com> (sfid-20121008_174048_061313_31C81436)
-References: <20120909213228.GA5538@elf.ucw.cz>
- <alpine.DEB.2.00.1209091539530.16930@chino.kir.corp.google.com>
- <20120910111113.GA25159@elf.ucw.cz>
- <20120911162536.bd5171a1.akpm@linux-foundation.org>
- <20120912101826.GL11266@suse.de>
- <20121003113659.GD2259@redhat.com>
- <alpine.DEB.2.00.1210031104120.29765@chino.kir.corp.google.com>
- <20121005083659.GA2819@redhat.com>
- <20121006120850.GB18025@elf.ucw.cz>
+	id S1422754Ab2JaN5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Oct 2012 09:57:34 -0400
+Message-ID: <50912E43.7070005@openwrt.org> (sfid-20121031_145737_653064_A1691928)
+Date: Wed, 31 Oct 2012 14:57:23 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121006120850.GB18025@elf.ucw.cz>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Zefir Kurtisi <zefir.kurtisi@neratec.com>, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k: [DFS] add pulse width tolerance for ETSI
+References: <1351682581-30683-1-git-send-email-zefir.kurtisi@neratec.com> <5091287C.9030408@hauke-m.de>
+In-Reply-To: <5091287C.9030408@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 06, 2012 at 02:08:50PM +0200, Pavel Machek wrote:
-> On Fri 2012-10-05 10:37:00, Stanislaw Gruszka wrote:
-> > On Wed, Oct 03, 2012 at 11:07:13AM -0700, David Rientjes wrote:
-> > > On Wed, 3 Oct 2012, Stanislaw Gruszka wrote:
-> > > 
-> > > > So, can this problem be solved like on below patch, or I should rather
-> > > > split firmware loading into chunks similar like was already iwlwifi did?
-> > 
-> > Hmm, I looked at iwl3945 code and looks loading firmware in chunks is
-> > nothing that can be easily done. 3945 bootstrap code expect that runtime
-> > ucode will be placed in physically continue memory, and there are no
-> > separate instructions for copy and for execute, just one to perform both
-> > those actions. Maybe loading firmware in chunks can be done using
-> > undocumented features of the device, but I'm eager to do this.
-> 
-> Just allocate memory during boot?
+On 2012-10-31 2:32 PM, Hauke Mehrtens wrote:
+> On 10/31/2012 12:23 PM, Zefir Kurtisi wrote:
+>> Add 5% width tolerance for radar patterns defined by ETSI.
+>> 
+>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+>> ---
+>>  .../net/wireless/ath/ath9k/dfs_pattern_detector.c  |    7 ++++++-
+>>  1 files changed, 6 insertions(+), 1 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
+>> index 3b12914..24877b0 100644
+>> --- a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
+>> +++ b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
+>> @@ -42,10 +42,15 @@ struct radar_types {
+>>  #define MIN_PPB_THRESH	50
+>>  #define PPB_THRESH(PPB) ((PPB * MIN_PPB_THRESH + 50) / 100)
+>>  #define PRF2PRI(PRF) ((1000000 + PRF / 2) / PRF)
+>> +/* percentage of pulse width tolerance */
+>> +#define WIDTH_TOLERANCE 5
+>> +#define WIDTH_LOWER(X) ((X*(100-WIDTH_TOLERANCE)+50)/100)
+>> +#define WIDTH_UPPER(X) ((X*(100+WIDTH_TOLERANCE)+50)/100)
+>                                                    ^^^
+> Why are you adding 50 there? If you want to just add 5% tolerance, then
+> the +50 is wrong there, but I do not know anything about radar patterns
+> defined by ETSI.
+I think the 50 is correct here. It's not the tolerance (which is already
+included via WIDTH_TOLERANCE in that macro), it's to account for
+rounding issues.
+Having said that, I wonder if it shouldn't be -50 instead of +50 in
+WIDTH_LOWER().
 
-On driver I can reserve memory during module load, but also this isn't
-something I prefer to do.
- 
-> > Pavel, do you still can reproduce this problem on released 3.6 ? 
-> 
-> It happened again yesterday on 3.6.0-rc6+. I don't think mm changed
-> between -rc6 and final...
-
-Could you check  __GFP_REPEAT oneline patch posted previously ?
-And if that fail again, provide full dmesg (on your previous messages
-there is vmap() failure, which I do not understand, where it come
-from) ?
-
-Thanks
-Stanislaw
+- Felix
