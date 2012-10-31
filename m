@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:51620 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757204Ab2JYRLp (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:58530 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088Ab2JaPOl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Oct 2012 13:11:45 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so1814461oag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2012 10:11:45 -0700 (PDT)
-Message-ID: <508972CD.3020004@gmail.com> (sfid-20121025_191154_172074_354C8FBD)
-Date: Thu, 25 Oct 2012 11:11:41 -0600
-From: Henry Ptasinski <hptasins@gmail.com>
+	Wed, 31 Oct 2012 11:14:41 -0400
+Received: by mail-la0-f46.google.com with SMTP id h6so1135273lag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2012 08:14:39 -0700 (PDT)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Sujith Manoharan <c_manoha@qti.qualcomm.com>,
+In-Reply-To: <1578864.KppKrIJQWb@lx-vladimir>
+References: <1351511906-19989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1351511906-19989-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <20121031012225.GY3354@lenteja.do-not-panic.com> <1578864.KppKrIJQWb@lx-vladimir>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Wed, 31 Oct 2012 08:14:19 -0700
+Message-ID: <CAB=NE6WRG9yYV=NLORnEEHSkgfjBSdZr_pycLCmCN2cRUFvQKw@mail.gmail.com> (sfid-20121031_161444_807348_080DC7F5)
+Subject: Re: [PATCH v2 1/2] wireless: Driver for 60GHz card wil6210
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Henry Ptasinski <hptasins@gmail.com>
-Subject: Re: Regression in 3.7-rc2 for b43 and b43legacy [and ath9k]
-References: <50889F60.5090406@lwfinger.net> <20616.41414.398817.807498@gargle.gargle.HOWL> <5088D579.9000703@lwfinger.net>
-In-Reply-To: <5088D579.9000703@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/25/2012 12:00 AM, Larry Finger wrote:
-> On 10/24/2012 09:19 PM, Sujith Manoharan wrote:
->> Larry Finger wrote:
->>
->> This has been fixed:
->> https://patchwork.kernel.org/patch/1625871/
->
-> That patch did the trick.
+On Wed, Oct 31, 2012 at 5:57 AM, Vladimir Kondratiev
+<qca_vkondrat@qca.qualcomm.com> wrote:
+> By the way, Atheros driver carl9170 uses MODULE_VERSION, should we consider
+> killing it?
 
-I hit the same bug with ath9k, and just finished bisecting it when I saw 
-this thread.
+Well its tied pretty heavily to the firmware which BTW is open and
+GPLv2. Your driver does not need firmware (yet). Why exactly carl9170
+would use MODULE_VERSION though... or need it.. is perhaps Christian
+can clarify on. Christian any reason to have MODULE_VERSION(),
+anything that provide to userspace that cannot be obtained by the
+kernel release it came from instead?
 
-This patch works for me also.
-
----
-Henry Ptasinski
-henry@logout.com
+  Luis
