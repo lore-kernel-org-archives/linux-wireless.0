@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:44210 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639Ab2JOJJ1 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:23665 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422944Ab2JaOwd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Oct 2012 05:09:27 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n3so3290437lbo.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2012 02:09:25 -0700 (PDT)
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
-	linuxkbugs@vittgam.net,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH] net/wireless: ipw2200: Fix panic occurring in ipw_handle_promiscuous_tx()
-Date: Mon, 15 Oct 2012 14:14:32 +0000
-Message-Id: <1350310472-602-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20121015_110930_565732_0CFEA48E)
+	Wed, 31 Oct 2012 10:52:33 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v2 1/2] wireless: Driver for 60GHz card wil6210
+Date: Wed, 31 Oct 2012 16:52:28 +0200
+Message-ID: <1955298.py1d357BFe@lx-vladimir> (sfid-20121031_155237_162334_0961497A)
+In-Reply-To: <CA+XFjip4Q40eDE-ppYW5d9znMXzZdjuy8LLqkZZ6-vRP=4NgHQ@mail.gmail.com>
+References: <1351511906-19989-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1351511906-19989-2-git-send-email-qca_vkondrat@qca.qualcomm.com> <CA+XFjip4Q40eDE-ppYW5d9znMXzZdjuy8LLqkZZ6-vRP=4NgHQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver does not count space of radiotap fields when allocating skb for
-radiotap packet. This leads to kernel panic with the following call trace:
+On Wednesday, October 31, 2012 03:29:28 PM Gábor Stefanik wrote:
+> > Card wil6210 by Wilocity supports operation on the 60GHz band
+> 
+> Is this card already on the market?
 
-...
-[67607.676067] [<c152f90f>] error_code+0x67/0x6c
-[67607.676067] [<c142f831>] ? skb_put+0x91/0xa0
-[67607.676067] [<f8cf5e5b>] ? ipw_handle_promiscuous_tx+0x16b/0x2d0 [ipw2200]
-[67607.676067] [<f8cf5e5b>] ipw_handle_promiscuous_tx+0x16b/0x2d0 [ipw2200]
-[67607.676067] [<f8cf899b>] ipw_net_hard_start_xmit+0x8b/0x90 [ipw2200]
-[67607.676067] [<f8741c5a>] libipw_xmit+0x55a/0x980 [libipw]
-[67607.676067] [<c143d3e8>] dev_hard_start_xmit+0x218/0x4d0
-...
+Not yet, it will be in 2013
 
-This bug was found by VittGam.
-https://bugzilla.kernel.org/show_bug.cgi?id=43255
+> Also, is this an Atheros/Qualcomm device?
 
-Cc: stable@kernel.org
-Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
----
- drivers/net/wireless/ipw2x00/ipw2200.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes, Qualcomm/Atheros device produced in cooperation with Wilocity
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 935120f..768bf61 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -10472,7 +10472,7 @@ static void ipw_handle_promiscuous_tx(struct ipw_priv *priv,
- 		} else
- 			len = src->len;
- 
--		dst = alloc_skb(len + sizeof(*rt_hdr), GFP_ATOMIC);
-+		dst = alloc_skb(len + sizeof(*rt_hdr) + sizeof(u16)*2, GFP_ATOMIC);
- 		if (!dst)
- 			continue;
- 
--- 
-1.7.11.7
-
+Thanks, Vladimir.
