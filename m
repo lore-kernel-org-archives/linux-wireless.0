@@ -1,127 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54660 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952Ab2JCTIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Oct 2012 15:08:14 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.7 2/3] ath9k: improve suspend/resume reliability
-Date: Wed,  3 Oct 2012 21:07:51 +0200
-Message-Id: <1349291272-93080-2-git-send-email-nbd@openwrt.org> (sfid-20121003_210817_824567_2F6460D9)
-In-Reply-To: <1349291272-93080-1-git-send-email-nbd@openwrt.org>
-References: <1349291272-93080-1-git-send-email-nbd@openwrt.org>
+Received: from [217.64.175.212] ([217.64.175.212]:34587 "EHLO
+	mx-relay12-muc.antispameurope.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S932866Ab2JaKsV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Oct 2012 06:48:21 -0400
+Message-ID: <509101D9.2040209@fokus.fraunhofer.de> (sfid-20121031_114832_052702_79A5360C)
+Date: Wed, 31 Oct 2012 11:47:53 +0100
+From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
+	<linville@tuxdriver.com>, <mcgrof@qca.qualcomm.com>,
+	<sven@narfation.org>, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] ath9k: apply coverage class on slottime too
+References: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de> <508FCB77.9000303@openwrt.org> <508FCF5A.2080204@fokus.fraunhofer.de> <508FD505.4080404@openwrt.org>
+In-Reply-To: <508FD505.4080404@openwrt.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ensure that drv_start() always returns true, as a failing hw start usually
-eventually leads to crashes when there's still a station entry present.
-Call a power-on reset after a resume and after a hw reset failure to bring
-the hardware back to life again.
+On 10/30/2012 02:24 PM, Felix Fietkau wrote:
+> On 2012-10-30 2:00 PM, Mathias Kretschmer wrote:
+>> On 10/30/2012 01:43 PM, Felix Fietkau wrote:
+>>> On 2012-10-30 1:07 PM, Simon Wunderlich wrote:
+>>>> From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+>>>>
+>>>> According to 802.11-2007 17.3.8.6 (slot time), the slot time should
+>>>> be increased by 3 us * coverage class. The code only increased the
+>>>> ack timeout, which is fixed by this patch.
+>>>>
+>>>> We have noticed in our long shot scenario that we see less collisions
+>>>> with this patch.
+>>> At some point I had the slot time increase in the driver, but noticed a
+>>> massive throughput degradation on 10-20 km links. Leaving the slot time
+>>> alone and changing only the ACK timeout fixed this. What distances did
+>>> you test?
+>>
+>> about 11km. did you test UDP (unidirectional) or TCP (bidirectional) throughput ?
+> I always use TCP, because UDP tests are too unrealistic to estimate real
+> performance.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c   |    5 +++++
- drivers/net/wireless/ath/ath9k/hw.h   |    1 +
- drivers/net/wireless/ath/ath9k/main.c |   13 ++++---------
- drivers/net/wireless/ath/ath9k/pci.c  |    4 +++-
- 4 files changed, 13 insertions(+), 10 deletions(-)
+bidirectional UDP traffic (iperf or preferably mgen) is a good indicator for 
+problems, because there's no flow control that backs off.  depends on the use case, 
+of course.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f9a6ec5..8e1559a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1450,9 +1450,14 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
- 	REG_WRITE(ah, AR_RTC_FORCE_WAKE,
- 		  AR_RTC_FORCE_WAKE_EN | AR_RTC_FORCE_WAKE_ON_INT);
- 
-+	if (!ah->reset_power_on)
-+		type = ATH9K_RESET_POWER_ON;
-+
- 	switch (type) {
- 	case ATH9K_RESET_POWER_ON:
- 		ret = ath9k_hw_set_reset_power_on(ah);
-+		if (!ret)
-+			ah->reset_power_on = true;
- 		break;
- 	case ATH9K_RESET_WARM:
- 	case ATH9K_RESET_COLD:
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 566a4ce..dbc1b7a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -741,6 +741,7 @@ struct ath_hw {
- 	u32 rfkill_polarity;
- 	u32 ah_flags;
- 
-+	bool reset_power_on;
- 	bool htc_reset_init;
- 
- 	enum nl80211_iftype opmode;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 31ab82e..e2fe713 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -639,8 +639,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 		ath_err(common,
- 			"Unable to reset hardware; reset status %d (freq %u MHz)\n",
- 			r, curchan->center_freq);
--		spin_unlock_bh(&sc->sc_pcu_lock);
--		goto mutex_unlock;
-+		ah->reset_power_on = false;
- 	}
- 
- 	/* Setup our intr mask. */
-@@ -665,11 +664,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	clear_bit(SC_OP_INVALID, &sc->sc_flags);
- 	sc->sc_ah->is_monitoring = false;
- 
--	if (!ath_complete_reset(sc, false)) {
--		r = -EIO;
--		spin_unlock_bh(&sc->sc_pcu_lock);
--		goto mutex_unlock;
--	}
-+	if (!ath_complete_reset(sc, false))
-+		ah->reset_power_on = false;
- 
- 	if (ah->led_pin >= 0) {
- 		ath9k_hw_cfg_output(ah, ah->led_pin,
-@@ -688,12 +684,11 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
- 		common->bus_ops->extn_synch_en(common);
- 
--mutex_unlock:
- 	mutex_unlock(&sc->mutex);
- 
- 	ath9k_ps_restore(sc);
- 
--	return r;
-+	return 0;
- }
- 
- static void ath9k_tx(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index ea1d59e..9fa8c51 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -335,7 +335,8 @@ static int ath_pci_resume(struct device *device)
- 	struct pci_dev *pdev = to_pci_dev(device);
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_softc *sc = hw->priv;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 val;
- 
- 	/*
-@@ -348,6 +349,7 @@ static int ath_pci_resume(struct device *device)
- 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
- 
- 	ath_pci_aspm_init(common);
-+	ah->reset_power_on = false;
- 
- 	return 0;
- }
--- 
-1.7.9.6 (Apple Git-31.1)
+>> The larger slot time will increase the channel access overhead which should impact
+>> unidirectional throughput.
+>>
+>> With bidirectional traffic, the larger slottime should help to minimize collisions
+>> on loaded links. Overall this seems to increase the net throughput for us,
+>> especially in higher access categories (smaller backoff windows).
+> When I ran the test, the throughput degradation was so big that the
+> links became almost useless. It was a long time ago, so maybe this was
+> caused by another bug that has been fixed since. I will run another test
+> with this patch in a current version...
+
+we will also test this again. Currently, I can't access those links.
+
+Cheers,
+
+Mathias
+
+> - Felix
+>
 
