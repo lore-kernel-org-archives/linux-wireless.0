@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:49399 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751166Ab2KJCAc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50941 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933938Ab2KATba (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2012 21:00:32 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2] nl/cfg80211: advertise OBSS scan offload capability
-Date: Fri,  9 Nov 2012 17:51:30 -0800
-Message-Id: <1352512290-7316-1-git-send-email-bzhao@marvell.com> (sfid-20121110_030041_280290_F9B05D91)
+	Thu, 1 Nov 2012 15:31:30 -0400
+Message-ID: <1351798320.17469.1.camel@jlt4.sipsolutions.net> (sfid-20121101_203144_522965_C7D4CD89)
+Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Chadd <adrian.chadd@gmail.com>
+Cc: Victor Goldenshtein <victorg@ti.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
+	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"j@w1.fi" <j@w1.fi>, "coelho@ti.com" <coelho@ti.com>,
+	"igalc@ti.com" <igalc@ti.com>, "nbd@nbd.name" <nbd@nbd.name>,
+	"simon.wunderlich@s2003.tu-chemnitz.de"
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Date: Thu, 01 Nov 2012 20:32:00 +0100
+In-Reply-To: <CAJ-Vmom5CrnETTCzaf=fw4Unpxh940KCpbh5D=f8PoeTZUXNiA@mail.gmail.com> (sfid-20121101_181601_259924_BD2A03DE)
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>
+	 <1350226137-13704-6-git-send-email-victorg@ti.com>
+	 <5086371D.2080108@tieto.com> <50922AAF.3060605@ti.com>
+	 <CAJ-Vmom5CrnETTCzaf=fw4Unpxh940KCpbh5D=f8PoeTZUXNiA@mail.gmail.com>
+	 (sfid-20121101_181601_259924_BD2A03DE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Thu, 2012-11-01 at 10:15 -0700, Adrian Chadd wrote:
+> On 1 November 2012 00:54, Victor Goldenshtein <victorg@ti.com> wrote:
+> 
+> > If the driver/device supports MR only on a SC - means it doesn't supports
+> > channel switch in MR, so basically the radar detection event triggers AP
+> > channel switch which fails (with this new check) and the AP shut down.
+> > Of course there are possible driver specific workarounds (as you mentioned
+> > above) but these are not part of this series.
+> >
+> > Just for interest's sake, what is the use case having two APs on the same
+> > channel?
+> 
+> One interface _just_ doing DFS/spectral/etc, and not hampered by
+> trying to do TX/RX.
 
-wpa_supplicant will do OBSS scan for drivers that implement
-auth/assoc API. Drivers that implement nl80211 connect API
-(rather than auth/assoc) may need wpa_supplicant to do this
-as well.
+Or maybe just multi-BSSID use cases?!
 
-New flag is added to inform userspace that this driver will
-make use of wpa_supplicant's OBSS scan feature.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-v2: change flag documentation and commit log to be more specific
-    (Johannes Berg)
-
- include/uapi/linux/nl80211.h | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index cbd2d6b..8ee60c8 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3057,6 +3057,9 @@ enum nl80211_ap_sme_features {
-  * @NL80211_FEATURE_SCAN_FLUSH: Scan flush is supported
-  * @NL80211_FEATURE_AP_SCAN: Support scanning using an AP vif
-  * @NL80211_FEATURE_VIF_TXPOWER: The driver supports per-vif TX power setting
-+ * @NL80211_FEATURE_OBSS_SCAN_OFFLOAD: The driver expects user space to
-+ *	perform OBSS scan and generate 20/40 BSS coex reports. This flag is
-+ *	interested in only in the case of a driver that has connect API.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -3069,6 +3072,7 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_SCAN_FLUSH			= 1 << 7,
- 	NL80211_FEATURE_AP_SCAN				= 1 << 8,
- 	NL80211_FEATURE_VIF_TXPOWER			= 1 << 9,
-+	NL80211_FEATURE_OBSS_SCAN_OFFLOAD		= 1 << 10,
- };
- 
- /**
--- 
-1.8.0
+johannes
 
