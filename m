@@ -1,86 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44838 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039Ab2KUOV3 (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:58920 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276Ab2KAHzh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 09:21:29 -0500
-Message-ID: <1353507714.10444.25.camel@jlt4.sipsolutions.net> (sfid-20121121_152133_265825_B364F946)
-Subject: pull-request: iwlwifi 2012-11-21
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 21 Nov 2012 15:21:54 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-7zQ3CijTPeOpKPCIzZKK"
-Mime-Version: 1.0
+	Thu, 1 Nov 2012 03:55:37 -0400
+Message-ID: <50922AAF.3060605@ti.com> (sfid-20121101_085546_572289_8EC21A1D)
+Date: Thu, 1 Nov 2012 09:54:23 +0200
+From: Victor Goldenshtein <victorg@ti.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
+	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
+	"j@w1.fi" <j@w1.fi>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"coelho@ti.com" <coelho@ti.com>, "igalc@ti.com" <igalc@ti.com>,
+	"adrian@freebsd.org" <adrian@freebsd.org>,
+	"nbd@nbd.name" <nbd@nbd.name>,
+	"simon.wunderlich@s2003.tu-chemnitz.de"
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
+References: <1350226137-13704-1-git-send-email-victorg@ti.com> <1350226137-13704-6-git-send-email-victorg@ti.com> <5086371D.2080108@tieto.com>
+In-Reply-To: <5086371D.2080108@tieto.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 23/10/2012 08:20, Michal Kazior wrote:
+> On 14/10/12 16:48, Victor Goldenshtein wrote:
+>> +static int nl80211_ap_channel_switch(struct sk_buff *skb,
+>> +                     struct genl_info *info)
+>> +{
+>
+> This function should probably enforce interface combinations with
+> `cfg80211_can_use_chan()`. Otherwise we might end up in a state which
+> doesn't correspond to any interface combination - and won't be able to
+> bring up new interfaces.
+>
 
---=-7zQ3CijTPeOpKPCIzZKK
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I guess you're right, we probably should check here whether we can 
+switch to the next channel (with cfg80211_can_use_chan) and in the case 
+we're not, the AP/GO should be disabled.
 
-John,
+> This however introduces a new problem. Let's suppose we have 2 APs on
+> channel 1. The device doesn't support multi-channel. We won't be able to
+> switch channel on these APs at all.
+>
+> We might want to change the channel switch to resolve around the channel
+> itself (not the interface) - so we'd be saying "move all interfaces with
+> channel X to channel Y" instead of "move interface X to channel Y".
+>
+> Or we could let the driver decide what it'll do - e.g. silently switch
+> more than one interface to a different channel (which makes sense with
+> AP/DFS I guess) and just notify cfg/userspace about it. That would
+> require us to provide a way to switch interfaces (atomically possibly)
+> between channels while keeping in sync with interface combinations though.
+>
 
-I'd hoped that my previous pull request was the last ... but then
-Emmanuel was working on ack rates and found another bug that's been
-there for a while.
+If the driver/device supports MR only on a SC - means it doesn't 
+supports channel switch in MR, so basically the radar detection event 
+triggers AP channel switch which fails (with this new check) and the AP 
+shut down.
+Of course there are possible driver specific workarounds (as you 
+mentioned above) but these are not part of this series.
 
-Please pull (per below) to get a fix for the CCK basic rate calculation
-in iwlwifi.
+Just for interest's sake, what is the use case having two APs on the 
+same channel?
 
-If you don't want to put this into 3.7 any more, I think that's ok, this
-code has been broken forever without causing much trouble (it was broken
-even before the change that caused the current bug.)
-
-johannes
-
-
-The following changes since commit e1b69fdf33f63cfa600b992172d7376f9d9ef2e9=
-:
-
-  iwlwifi: don't WARN when a non empty queue is disabled (2012-11-18 11:51:=
-09 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
-or-john
-
-for you to fetch changes up to 5edd0b946a0afeb1d0364a3654328b046fb818a2:
-
-  iwlwifi: fix the basic CCK rates calculation (2012-11-21 11:31:21 +0100)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: fix the basic CCK rates calculation
-
- drivers/net/wireless/iwlwifi/dvm/rxon.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-
---=-7zQ3CijTPeOpKPCIzZKK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJQrOOCAAoJEDBSmw7B7bqrGpYP+wWnyu2PWuTWsOACEABAjy+T
-iM+MbxttphMPE42T26CpusTtrzWHxMMfDk1dPnFgEVmRkcuapHF2QNCNlNgQtQ65
-87WOQ2eCKOH03CAWFaWo7jFd+0Jqb69L3Z4LMnpkk80sLtbhkPxtWOCBqlfwMQdu
-10cXA5lGxZHoQ1KQw9b+oYrVAoY3NT5CoeoATpcTr6RkLs6Wsgnq/AMhS80Bgx/W
-vPXhufznJ1dqEu9RJTD/Egt+sBO3eL98ZX1L0Lf6YBvYUHZeDgfbSK1PSY9GJtPh
-rQGO+4CSyVclvZ+MsBB1lOabhqlYEJfbGHkMhoH784MZcfIM8BekncKRh8ns2yt3
-EvYhHootxJN/uHn1LaeGCjWCzII+ieSigreuLEOBDbxDPhBE4OMXK3oUNqCx8Fz8
-+M5qt2zUs+xGDk/U5UTk/YrEDdaUWqtbDiwe96uEHzbGTiPlsVMUvdU/9Vy47k7S
-UjOj24eNMPXQlS91uyTqNsa/w3NGFIb/t49Zwf1ESQ+B7g0IKockHFr5OIqlfgb0
-WrFtDnyUiRmZsfI0u7GeMGgMH0lu8pqCDaCx5P73AuTKWu1YvrQve/4Q3BqAXg6Z
-eVcoxl3jz3znG1wYMPWSWMIYZIVm42hb5KnuG9cetheuBxg35WcIpYvq2Wx86T6Y
-9flbyDr8+3x3EK9l27QY
-=f5Xz
------END PGP SIGNATURE-----
-
---=-7zQ3CijTPeOpKPCIzZKK--
-
+-- 
+Thanks,
+Victor.
