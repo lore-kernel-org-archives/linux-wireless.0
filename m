@@ -1,159 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:46503 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082Ab2KEUSH (ORCPT
+Received: from nk11p00mm-asmtp003.mac.com ([17.158.161.2]:46101 "EHLO
+	nk11p00mm-asmtp003.mac.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753171Ab2KAFy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 15:18:07 -0500
-Received: by mail-lb0-f174.google.com with SMTP id n3so4583126lbo.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2012 12:18:05 -0800 (PST)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 1/2] ar5523: Fix sparse endianness warnings
-Date: Mon,  5 Nov 2012 21:17:50 +0100
-Message-Id: <1352146671-4318-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20121105_211824_398861_6EAEA06D)
+	Thu, 1 Nov 2012 01:54:57 -0400
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-2022-JP
+Received: from [10.20.200.174]
+ (p3027-ipbf5206marunouchi.tokyo.ocn.ne.jp [118.8.142.27])
+ by nk11p00mm-asmtp003.mac.com
+ (Oracle Communications Messaging Server 7u4-26.01(7.0.4.26.0) 64bit (built Jul
+ 13 2012)) with ESMTPSA id <0MCS00FWJLNJGS30@nk11p00mm-asmtp003.mac.com> for
+ linux-wireless@vger.kernel.org; Thu, 01 Nov 2012 04:54:56 +0000 (GMT)
+Message-id: <509200A2.9060300@mac.com> (sfid-20121101_065514_626032_E7E12016)
+Date: Thu, 01 Nov 2012 13:54:58 +0900
+From: Akira Nonaka <nonaka@mac.com>
+To: linux-wireless@vger.kernel.org
+Subject: rtl8723e disconnect problem on the kernel 3.4.9.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-__be32 variables where used a little careless leading to sparse warnings.
-Treat them a little more gentle.
+Dear all,
 
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+I have a problem RTl8723 wifi connection. I can connect the access point
+fine but exactly 10 seconds later, the connection will be lost. This is
+100% reproducible.  Here is the "iw event" log.
+
 ---
- drivers/net/wireless/ath/ar5523/ar5523.c    |   43 ++++++++++++++-------------
- drivers/net/wireless/ath/ar5523/ar5523_hw.h |    2 +-
- 2 files changed, 24 insertions(+), 21 deletions(-)
+1351707196.317590: wlan0 (phy #0): scan started
+1351707197.302943: wlan0 (phy #0): scan finished: 2412 2417 2422 2427
+2432 2437 2442 2447 2452 2457 2462 2467 2472, ""
+1351707210.124514: wlan0 (phy #0): scan started
+1351707211.109857: wlan0 (phy #0): scan finished: 2412 2417 2422 2427
+2432 2437 2442 2447 2452 2457 2462 2467 2472, ""
+1351707212.091111: wlan0 (phy #0): scan started
+1351707213.075847: wlan0 (phy #0): scan finished: 2412 2417 2422 2427
+2432 2437 2442 2447 2452 2457 2462 2467 2472, "WHRG300N"
+1351707213.125596: wlan0: new station 00:24:a5:b4:d6:28
+1351707213.128086: wlan0 (phy #0): auth 00:24:a5:b4:d6:28 ->
+74:e5:43:d3:83:1f status: 0: Successful [frame: b0 00 3a 01 74 e5 43 d3
+83 1f 00 24 a5 b4 d6 28 00 24 a5 b4 d6 28 40 02 00 00 02 00 00 00]
+1351707213.190419: wlan0 (phy #0): assoc 00:24:a5:b4:d6:28 ->
+74:e5:43:d3:83:1f status: 0: Successful ...
+1351707213.190577: wlan0 (phy #0): connected to 00:24:a5:b4:d6:28
+1351707222.948847: wlan0: unknown event 20
+1351707222.965529: wlan0 (phy #0): deauth 74:e5:43:d3:83:1f ->
+00:24:a5:b4:d6:28 reason 4: Disassociated due to inactivity [frame: c0
+00 00 00 00 24 a5 b4 d6 28 74 e5 43 d3 83 1f 00 24 a5 b4 d6 28 00 00 04 00]
+1351707222.965603: wlan0 (phy #0): disconnected (local request)
+1351707222.979348: phy #0: regulatory domain change: set to world
+roaming by the wireless core upon initialization request
+1351707222.982223: regulatory domain change: set to JP by a user request
+---
 
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index f782b6e..bb774b3 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -50,18 +50,19 @@ static void ar5523_read_reply(struct ar5523 *ar, struct ar5523_cmd_hdr *hdr,
- 			      struct ar5523_tx_cmd *cmd)
- {
- 	int dlen, olen;
--	u32 *rp;
-+	__be32 *rp;
- 
--	dlen = hdr->len - sizeof(*hdr);
-+	dlen = be32_to_cpu(hdr->len) - sizeof(*hdr);
- 
- 	if (dlen < 0) {
- 		WARN_ON(1);
- 		goto out;
- 	}
- 
--	ar5523_dbg(ar, "Code = %d len = %d\n", hdr->code & 0xff, dlen);
-+	ar5523_dbg(ar, "Code = %d len = %d\n", be32_to_cpu(hdr->code) & 0xff,
-+		   dlen);
- 
--	rp = (u32 *)(hdr + 1);
-+	rp = (__be32 *)(hdr + 1);
- 	if (dlen >= sizeof(u32)) {
- 		olen = be32_to_cpu(rp[0]);
- 		dlen -= sizeof(u32);
-@@ -95,6 +96,7 @@ static void ar5523_cmd_rx_cb(struct urb *urb)
- 	struct ar5523_tx_cmd *cmd = &ar->tx_cmd;
- 	struct ar5523_cmd_hdr *hdr = ar->rx_cmd_buf;
- 	int dlen;
-+	u32 code, hdrlen;
- 
- 	if (urb->status) {
- 		if (urb->status != -ESHUTDOWN)
-@@ -110,15 +112,15 @@ static void ar5523_cmd_rx_cb(struct urb *urb)
- 	ar5523_dbg(ar, "%s code %02x priv %d\n", __func__,
- 		   be32_to_cpu(hdr->code) & 0xff, hdr->priv);
- 
--	hdr->code = be32_to_cpu(hdr->code);
--	hdr->len = be32_to_cpu(hdr->len);
-+	code = be32_to_cpu(hdr->code);
-+	hdrlen = be32_to_cpu(hdr->len);
- 
--	switch (hdr->code & 0xff) {
-+	switch (code & 0xff) {
- 	default:
- 		/* reply to a read command */
- 		if (hdr->priv != AR5523_CMD_ID) {
- 			ar5523_err(ar, "Unexpected command id: %02x\n",
--				   hdr->code & 0xff);
-+				   code & 0xff);
- 			goto skip;
- 		}
- 		ar5523_read_reply(ar, hdr, cmd);
-@@ -147,7 +149,7 @@ static void ar5523_cmd_rx_cb(struct urb *urb)
- 	case WDCMSG_TARGET_START:
- 		/* This command returns a bogus id so it needs special
- 		   handling */
--		dlen = hdr->len - sizeof(*hdr);
-+		dlen = hdrlen - sizeof(*hdr);
- 		if (dlen != (int)sizeof(u32)) {
- 			ar5523_err(ar, "Invalid reply to WDCMSG_TARGET_START");
- 			return;
-@@ -303,7 +305,7 @@ static int ar5523_config(struct ar5523 *ar, u32 reg, u32 val)
- 
- 	write.reg = cpu_to_be32(reg);
- 	write.len = cpu_to_be32(0);	/* 0 = single write */
--	*(u32 *)write.data = cpu_to_be32(val);
-+	*(__be32 *)write.data = cpu_to_be32(val);
- 
- 	error = ar5523_cmd_write(ar, WDCMSG_TARGET_SET_CONFIG, &write,
- 				 3 * sizeof(u32), 0);
-@@ -335,29 +337,30 @@ static int ar5523_get_status(struct ar5523 *ar, u32 which, void *odata,
- 			     int olen)
- {
- 	int error;
-+	__be32 which_be;
- 
--	which = cpu_to_be32(which);
-+	which_be = cpu_to_be32(which);
- 	error = ar5523_cmd_read(ar, WDCMSG_TARGET_GET_STATUS,
--	    &which, sizeof(which), odata, olen, AR5523_CMD_FLAG_MAGIC);
-+	    &which_be, sizeof(which_be), odata, olen, AR5523_CMD_FLAG_MAGIC);
- 	if (error != 0)
--		ar5523_err(ar, "could not read EEPROM offset 0x%02x\n",
--			   be32_to_cpu(which));
-+		ar5523_err(ar, "could not read EEPROM offset 0x%02x\n", which);
- 	return error;
- }
- 
- static int ar5523_get_capability(struct ar5523 *ar, u32 cap, u32 *val)
- {
- 	int error;
-+	__be32 cap_be, val_be;
- 
--	cap = cpu_to_be32(cap);
--	error = ar5523_cmd_read(ar, WDCMSG_TARGET_GET_CAPABILITY,
--	    &cap, sizeof(cap), val, sizeof(u32), AR5523_CMD_FLAG_MAGIC);
-+	cap_be = cpu_to_be32(cap);
-+	error = ar5523_cmd_read(ar, WDCMSG_TARGET_GET_CAPABILITY, &cap_be,
-+				sizeof(cap_be), &val_be, sizeof(__be32),
-+				AR5523_CMD_FLAG_MAGIC);
- 	if (error != 0) {
--		ar5523_err(ar, "could not read capability %u\n",
--			   be32_to_cpu(cap));
-+		ar5523_err(ar, "could not read capability %u\n", cap);
- 		return error;
- 	}
--	*val = be32_to_cpu(*val);
-+	*val = be32_to_cpu(val_be);
- 	return error;
- }
- 
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523_hw.h b/drivers/net/wireless/ath/ar5523/ar5523_hw.h
-index a0e8bf4..0fe2c80 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523_hw.h
-+++ b/drivers/net/wireless/ath/ar5523/ar5523_hw.h
-@@ -161,7 +161,7 @@ struct ar5523_rx_desc {
- 
- struct ar5523_tx_desc {
- 	__be32	msglen;
--	__be32	msgid;		/* msg id (supplied by host) */
-+	u32	msgid;		/* msg id (supplied by host) */
- 	__be32	type;		/* opcode: WDMSG_SEND or WDCMSG_FLUSH */
- 	__be32	txqid;		/* tx queue id and flags */
- #define	UATH_TXQID_MASK		0x0f
+Does anyone have the same problem? Can someone tell me what is "wlan0:
+unknown event 20"? I suspect this is the cause of the disconnection. I
+am no wifi expert. Where should I take look at in the source code?
+
+I am using Fedora 16 kernel 3.4.9 with some minor patches and Realktek
+driver provided from my vendor,
+"8723AE_linux_WiFimac80211_0007.0809.2012.tar.gz".
+
+And here is lspci info.
+
+02:00.0 Network controller: Realtek Semiconductor Co., Ltd. Device 8723
+Subsystem: Realtek Semiconductor Co., Ltd. Device 0726
+Flags: bus master, fast devsel, latency 0, IRQ 18
+I/O ports at e000 [size=256]
+Memory at f7b00000 (64-bit, non-prefetchable) [size=16K]
+Capabilities: [40] Power Management version 3
+Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+Capabilities: [70] Express Endpoint, MSI 00
+Capabilities: [100] Advanced Error Reporting
+Capabilities: [140] Virtual Channel
+Capabilities: [160] Device Serial Number 01-23-87-fe-ff-4c-e0-00
+Kernel driver in use: rtl8723e
+Kernel modules: rtl8723e
+
+I have sent the same question to the Realtek support but I also
+appreciate your help.
+
+Regards,
+
 -- 
-1.7.9.5
-
+Akira Nonaka
+Tokyo, Japan
