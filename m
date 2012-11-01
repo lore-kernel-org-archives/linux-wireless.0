@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:54986 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755368Ab2KMR24 (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:39218 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969Ab2KARna (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 12:28:56 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so4133183eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:28:56 -0800 (PST)
-From: Maxim Mikityanskiy <maxtram95@gmail.com>
-To: greg@kroah.com, Larry.Finger@lwfinger.net,
-	linux-wireless@vger.kernel.org
-Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
-Subject: [PATCH 04/17] staging: rtl8187se: Fixed bugs in interrupt handler
-Date: Tue, 13 Nov 2012 19:28:10 +0200
-Message-Id: <1352827703-4659-5-git-send-email-maxtram95@gmail.com> (sfid-20121113_182903_701791_6DADB550)
-In-Reply-To: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
-References: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
+	Thu, 1 Nov 2012 13:43:30 -0400
+Message-ID: <5092B4BE.4080803@infradead.org> (sfid-20121101_184349_655859_54C28E21)
+Date: Thu, 01 Nov 2012 10:43:26 -0700
+From: Randy Dunlap <rdunlap@infradead.org>
+MIME-Version: 1.0
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+CC: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Subject: [PATCH -next] wireless: brcmfmac: fix printk format warning
+References: <20121101163622.129b59967d2ee76e6946874a@canb.auug.org.au>
+In-Reply-To: <20121101163622.129b59967d2ee76e6946874a@canb.auug.org.au>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed typo in rtl8180_interrupt() and added missing line
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
+Fix printk format warning for ssid_len, which is a size_t:
+
+drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:3941:2: warning: format '%d' expects type 'int', but argument 4 has type 'size_t'
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc:	brcm80211-dev-list@broadcom.com
 ---
- drivers/staging/rtl8187se/r8180_core.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8187se/r8180_core.c b/drivers/staging/rtl8187se/r8180_core.c
-index 1a76cc9..6ec3a93 100644
---- a/drivers/staging/rtl8187se/r8180_core.c
-+++ b/drivers/staging/rtl8187se/r8180_core.c
-@@ -3787,7 +3787,7 @@ irqreturn_t rtl8180_interrupt(int irq, void *netdev, struct pt_regs *regs)
- 		priv->stats.txbkperr++;
- 		priv->ieee80211->stats.tx_errors++;
- 		rtl8180_tx_isr(dev, BK_PRIORITY, 1);
--		rtl8180_try_wake_queue(dev, BE_PRIORITY);
-+		rtl8180_try_wake_queue(dev, BK_PRIORITY);
- 	}
+--- linux-next-20121101.orig/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ linux-next-20121101/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3938,7 +3938,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wi
+ 	WL_TRACE("channel_type=%d, beacon_interval=%d, dtim_period=%d,\n",
+ 		 settings->channel_type, settings->beacon_interval,
+ 		 settings->dtim_period);
+-	WL_TRACE("ssid=%s(%d), auth_type=%d, inactivity_timeout=%d\n",
++	WL_TRACE("ssid=%s(%zu), auth_type=%d, inactivity_timeout=%d\n",
+ 		 settings->ssid, settings->ssid_len, settings->auth_type,
+ 		 settings->inactivity_timeout);
  
- 	if (inta & ISR_TBEDER) { /* corresponding to BE_PRIORITY */
-@@ -3841,6 +3841,7 @@ irqreturn_t rtl8180_interrupt(int irq, void *netdev, struct pt_regs *regs)
- 		priv->link_detect.NumTxOkInPeriod++; /* YJ,add,080828 */
- 		priv->stats.txnpokint++;
- 		rtl8180_tx_isr(dev, NORM_PRIORITY, 0);
-+		rtl8180_try_wake_queue(dev, NORM_PRIORITY);
- 	}
- 
- 	if (inta & ISR_TLPDOK) { /* Low priority tx ok */
--- 
-1.7.10.4
-
