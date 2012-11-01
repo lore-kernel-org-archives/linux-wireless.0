@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945979Ab2K2A1u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 19:27:50 -0500
-Message-ID: <1354148894.26800.0.camel@jlt4.sipsolutions.net> (sfid-20121129_012752_674202_1D97C7B5)
-Subject: Re: [PATCH] cfg80211: fix cmp_hidden_bss
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-Date: Thu, 29 Nov 2012 01:28:14 +0100
-In-Reply-To: <CAB3XZEcr_D6hKKcwtXxTbH3quQ4TT_ZjjnbWOvHWSnAP+=Mw2Q@mail.gmail.com> (sfid-20121129_010753_910972_25A7443C)
-References: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEeuZOv_gHD2q0-K3JUXhjgTFx3AgZ1vS0Rc-toOVf-kTA@mail.gmail.com>
-	 <1354147227.9345.47.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEcr_D6hKKcwtXxTbH3quQ4TT_ZjjnbWOvHWSnAP+=Mw2Q@mail.gmail.com>
-	 (sfid-20121129_010753_910972_25A7443C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1662 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752166Ab2KARno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Nov 2012 13:43:44 -0400
+Message-ID: <5092B4C0.7060701@broadcom.com> (sfid-20121101_184350_390509_5DDECF6F)
+Date: Thu, 1 Nov 2012 18:43:28 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 01/18] brcmsmac: Rework tx code to avoid internal
+ buffering of packets
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+ <1351261413-20821-2-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1351261413-20821-2-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-29 at 02:07 +0200, Eliad Peller wrote:
-> On Thu, Nov 29, 2012 at 2:00 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Thu, 2012-11-29 at 01:53 +0200, Eliad Peller wrote:
-> >> On Wed, Nov 28, 2012 at 11:44 PM, Johannes Berg
-> >> <johannes@sipsolutions.net> wrote:
-> >> > From: Johannes Berg <johannes.berg@intel.com>
-> >> >
-> >> > The cmp_bss() comparator function uses memcmp() to
-> >> > compare the SSID. This means that cmp_hidden_bss()
-> >> > needs to similarly return a number bigger than zero
-> >> > (use 1) instead of -1 when ie1 is bigger than ie2,
-> >> > which is the case if an ie2 byte is non-zero.
-> >
-> >> > +++ b/net/wireless/scan.c
-> >> > @@ -472,7 +472,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
-> >> >         /* zeroed SSID ie is another indication of a hidden bss */
-> >> >         for (i = 0; i < ie2[1]; i++)
-> >> >                 if (ie2[i + 2])
-> >> > -                       return -1;
-> >> > +                       return 1;
-> >> >
-> >> >         return 0;
-> >> >  }
-> >>
-> >> maybe i'm misreading it, but there is still no comparison here at all,
-> >> so it seems wrong as well :)
-> >> (practically, i guess it doesn't really matter, because if there is
-> >> some non-null char, this is not a hidden ssid anyway)
-> >
-> > Hmm yeah you're right, it should be
-> >         return ie2[i + 1] - ie1[i + 1];
-> >
-> > (or the other way around? need to sleep on that first...)
-> >
-> that's also not enough, because you ignore the previous chars.
-> ("A" < "B" vs. "AA" > "\x00B")
-> 
-> i think returning memcmp() is the easiest solution, but sleeping on
-> that is definitely a good idea :)
+On 10/26/2012 04:23 PM, Seth Forshee wrote:
+> The brcmsmac internal tx buffering is problematic for a number of
+> reasons. The amount of buffering is excessive (228 packets in addition
+> to the 256 slots in each DMA ring), frames may be dropped due to a lack
+> of flow control, and the structure of the queues complicates the
+> otherwise straightforward mapping of mac80211 queues to device fifos.
+>
+> This patch reworks the transmit code path to eliminate the internal
+> buffering. Frames are immediately handed off to the DMA support rather
+> than passing through an intermediate queue. ieee80211_(stop|wake)_queue()
+> are used for flow control to stop receiving frames when a DMA tx ring is
+> full.
+>
+> To handle aggregation the concept of AMPDU sessions is added to the
+> driver. The AMPDU session allows MPDUs to be temporarily queued by the
+> DMA code until either a full AMPDU has been collected or circumstances
+> dictate that transmission should start with a partial AMPDU. The use of
+> a queue ensures that the tx headers are fully initialized before the
+> buffers are synced for DMA, and it allows non-aggregate frames to be
+> immediately placed in the tx ring so that more frames can be collected
+> for aggregation.
+>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |  666 ++++++++++-------------
+>   drivers/net/wireless/brcm80211/brcmsmac/ampdu.h |   29 +-
+>   drivers/net/wireless/brcm80211/brcmsmac/dma.c   |  182 ++++++-
+>   drivers/net/wireless/brcm80211/brcmsmac/dma.h   |    9 +-
+>   drivers/net/wireless/brcm80211/brcmsmac/main.c  |  514 +++++------------
+>   drivers/net/wireless/brcm80211/brcmsmac/main.h  |   39 +-
+>   drivers/net/wireless/brcm80211/brcmsmac/types.h |    1 -
+>   7 files changed, 628 insertions(+), 812 deletions(-)
 
-Hmm, yeah, indeed. If we find a non-zero byte we should return memcmp().
-I'll fix it in the morning :)
+Hi Seth,
 
-johannes
+The idea behind the change is a good move. However, this change is quite 
+a overhaul especially for ampdu code. This makes it pretty hard to 
+review. At least against the previous implementation. So we still need 
+some time to chew on this one. We have been testing it and it looks good 
+there.
+
+Could you somehow split this change into smaller steps?
+
+Gr. Avs
 
