@@ -1,91 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:57454 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160Ab2KKQIF (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52108 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016Ab2KARPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 11:08:05 -0500
-Received: by mail-ea0-f174.google.com with SMTP id c13so2077811eaa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 08:08:03 -0800 (PST)
-Message-ID: <1352650077.6460.33.camel@canaries32-MCP7A> (sfid-20121111_170809_662632_50828EC5)
-Subject: [PATCH 14/14] staging: vt6656: 64bit fixes: vCommandTimerWait
- change calculation of timer.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 11 Nov 2012 16:07:57 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 1 Nov 2012 13:15:47 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so1867018pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2012 10:15:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <50922AAF.3060605@ti.com>
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>
+	<1350226137-13704-6-git-send-email-victorg@ti.com>
+	<5086371D.2080108@tieto.com>
+	<50922AAF.3060605@ti.com>
+Date: Thu, 1 Nov 2012 10:15:47 -0700
+Message-ID: <CAJ-Vmom5CrnETTCzaf=fw4Unpxh940KCpbh5D=f8PoeTZUXNiA@mail.gmail.com> (sfid-20121101_181602_038613_90FB183E)
+Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
+From: Adrian Chadd <adrian.chadd@gmail.com>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
+	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"j@w1.fi" <j@w1.fi>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"coelho@ti.com" <coelho@ti.com>, "igalc@ti.com" <igalc@ti.com>,
+	"nbd@nbd.name" <nbd@nbd.name>,
+	"simon.wunderlich@s2003.tu-chemnitz.de"
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 1 November 2012 00:54, Victor Goldenshtein <victorg@ti.com> wrote:
 
-The timer appears to run too fast/race on 64 bit systems.
+> If the driver/device supports MR only on a SC - means it doesn't supports
+> channel switch in MR, so basically the radar detection event triggers AP
+> channel switch which fails (with this new check) and the AP shut down.
+> Of course there are possible driver specific workarounds (as you mentioned
+> above) but these are not part of this series.
+>
+> Just for interest's sake, what is the use case having two APs on the same
+> channel?
 
-Using msecs_to_jiffies seems to cause a deadlock on 64 bit.
-
-A calculation of (MSecond * HZ) / 1000 appears to run satisfactory.
-
-Change BSSIDInfoCount to u32.
-
-After this patch the driver can be successfully connect on little endian 64/32 bit systems.
-
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/wcmd.c | 20 +++++++++++---------
- drivers/staging/vt6656/wpa2.h |  4 ++--
- 2 files changed, 13 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index 586fbe1..b854d7e 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -316,17 +316,19 @@ s_MgrMakeProbeRequest(
-     return pTxPacket;
- }
- 
--void vCommandTimerWait(void *hDeviceContext, unsigned int MSecond)
-+void vCommandTimerWait(void *hDeviceContext, unsigned long MSecond)
- {
--    PSDevice        pDevice = (PSDevice)hDeviceContext;
-+	PSDevice pDevice = (PSDevice)hDeviceContext;
- 
--    init_timer(&pDevice->sTimerCommand);
--    pDevice->sTimerCommand.data = (unsigned long)pDevice;
--    pDevice->sTimerCommand.function = (TimerFunction)vRunCommand;
--    // RUN_AT :1 msec ~= (HZ/1024)
--    pDevice->sTimerCommand.expires = (unsigned int)RUN_AT((MSecond * HZ) >> 10);
--    add_timer(&pDevice->sTimerCommand);
--    return;
-+	init_timer(&pDevice->sTimerCommand);
-+
-+	pDevice->sTimerCommand.data = (unsigned long)pDevice;
-+	pDevice->sTimerCommand.function = (TimerFunction)vRunCommand;
-+	pDevice->sTimerCommand.expires = RUN_AT((MSecond * HZ) / 1000);
-+
-+	add_timer(&pDevice->sTimerCommand);
-+
-+	return;
- }
- 
- void vRunCommand(void *hDeviceContext)
-diff --git a/drivers/staging/vt6656/wpa2.h b/drivers/staging/vt6656/wpa2.h
-index 46c2959..c359252 100644
---- a/drivers/staging/vt6656/wpa2.h
-+++ b/drivers/staging/vt6656/wpa2.h
-@@ -45,8 +45,8 @@ typedef struct tagsPMKIDInfo {
- } PMKIDInfo, *PPMKIDInfo;
- 
- typedef struct tagSPMKIDCache {
--    unsigned long       BSSIDInfoCount;
--    PMKIDInfo   BSSIDInfo[MAX_PMKID_CACHE];
-+	u32 BSSIDInfoCount;
-+	PMKIDInfo BSSIDInfo[MAX_PMKID_CACHE];
- } SPMKIDCache, *PSPMKIDCache;
- 
-
--- 
-1.8.0
+One interface _just_ doing DFS/spectral/etc, and not hampered by
+trying to do TX/RX.
 
 
 
+Adrian
