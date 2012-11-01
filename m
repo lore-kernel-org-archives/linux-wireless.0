@@ -1,102 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ye0-f174.google.com ([209.85.213.174]:43232 "EHLO
-	mail-ye0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428Ab2KTWIu (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:59003 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969Ab2KARlJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 17:08:50 -0500
-Date: Tue, 20 Nov 2012 20:08:42 -0200
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com, davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2012-11-20
-Message-ID: <20121120220842.GA15370@joana> (sfid-20121120_230907_661165_98074804)
+	Thu, 1 Nov 2012 13:41:09 -0400
+Received: by mail-lb0-f174.google.com with SMTP id n3so2058697lbo.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2012 10:41:08 -0700 (PDT)
+Message-ID: <5092B430.7040409@gmail.com> (sfid-20121101_184128_925229_486692A2)
+Date: Thu, 01 Nov 2012 18:41:04 +0100
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bp/iNruPH9dso1Pn"
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless@vger.kernel.org, hch@lst.de, s.L-H@gmx.de,
+	linville@tuxdriver.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	achadd@qca.qualcomm.com
+Subject: Re: [PATCH 0/4] Driver for the ar5523 chipset
+References: <1349985702-21322-1-git-send-email-pontus.fuchs@gmail.com> <20121011203112.GB3317@kroah.com> <5077BE43.7050200@gmail.com> <CAGRGNgVAuV7bYaU0rMZit81PFdpSprfdJkaqHqnm1WGx_FBtVA@mail.gmail.com> <5077D5D2.6020302@gmail.com> <CAJ-Vmom7ENhQ4mxq6w1yj-o3ZPK1wz2gPfd+m0fcHFvm6kvk8g@mail.gmail.com>
+In-Reply-To: <CAJ-Vmom7ENhQ4mxq6w1yj-o3ZPK1wz2gPfd+m0fcHFvm6kvk8g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2012-10-30 18:08, Adrian Chadd wrote:
 
---bp/iNruPH9dso1Pn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+>> I've found the firmware source. I have no idea how difficult it will
+>> be to build today, but it's a MIPS CPU core so I should be able to do
+>> it with a cross-compiled MIPS GCC.
+>>
+>> I've also found the AR5523 datasheet here.
+>>
+>> So, poke me if you'd like me to look up what's going on. It honestly
+>> looks like a MIPS core with a USB device controller and an AR5212 MAC
+>> (the datasheet refers to the AR5212 MAC/BB documentation, so it's
+>> quite likely exactly that.)
+>>
 
-Hi John,
+Thanks for looking into this. Sounds great. Is it possible for qca
+to share any of this me, with or without NDA?
 
-A few patches to 3.8. The majority of the work here is from Andrei on the High
-Speed support. Other than that Johan added support for setting LE advertising
-data. The rest are fixes and clean ups and small improvements like support for
-a new broadcom hardware.
+Cheers,
 
-	Gustavo
-
----
-The following changes since commit 57527f8d4d71b5167a02fb6713857f55d3974748:
-
-  ath9k_hw: Program filter coefficients correctly (2012-11-16 14:29:11 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
-
-for you to fetch changes up to 2b2fec4d08a0aabe20d2e749cb7978f04217af65:
-
-  Bluetooth: Remove OOB data if device was discovered in band (2012-11-20 16:03:15 -0200)
-
-----------------------------------------------------------------
-Andrei Emeltchenko (9):
-      Bluetooth: Use __l2cap_no_conn_pending helper
-      Bluetooth: Remove unneeded local_amp_id initialization
-      Bluetooth: Refactor locking in amp_physical_cfm
-      Bluetooth: Disable FCS only for new HS channels
-      Bluetooth: trivial: Use __constant for constants
-      Bluetooth: Fix sending L2CAP Create Chan Req
-      Bluetooth: Set local_amp_id after getting Phylink Completed evt
-      Bluetooth: Improve error message printing
-      Bluetooth: AMP: Set no FCS for incoming L2CAP chan
-
-Jeff Cook (1):
-      Bluetooth: Add support for BCM20702A0 [0b05, 17b5]
-
-Johan Hedberg (3):
-      Bluetooth: Use proper invalid value for tx_power
-      Bluetooth: Add support for setting LE advertising data
-      Bluetooth: Fix updating advertising state flags and data
-
-Szymon Janc (2):
-      Bluetooth: Increase HCI command tx timeout
-      Bluetooth: Remove OOB data if device was discovered in band
-
- drivers/bluetooth/btusb.c        |  1 +
- include/net/bluetooth/hci.h      | 22 +++++++++-
- include/net/bluetooth/hci_core.h |  4 ++
- include/net/bluetooth/l2cap.h    |  2 +-
- net/bluetooth/amp.c              |  8 +++-
- net/bluetooth/hci_core.c         | 98 ++++++++++++++++++++++++++++++++++++++++++
- net/bluetooth/hci_event.c        | 44 ++++++++++++++++++-
- net/bluetooth/l2cap_core.c       | 52 ++++++++++++----------
- net/bluetooth/mgmt.c             |  2 +-
- 9 files changed, 204 insertions(+), 29 deletions(-)
-
---bp/iNruPH9dso1Pn
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQq/9qAAoJEPs3PUX4s20oLEIP/jkq+Kke8MrYQPLwLLkMpybr
-RIv3gm9KOb8Z5btvxHNGj1T9+svzH8x6d5y/uHOgKxkqkQCLYAR0K0ZOUq7ZQrKP
-IP8HoUDTUkIBjJKcZPZReBNCtUty6lLYi+W3fRtBlxxI+w2tWuyaou6+5rOZRxo0
-C9ln7OcvFCSCp9SB62lKJ5PnMZVIrRxIJJp8ZtT3wmTTtTVciLfKuhB984Xh2Fwk
-v1D8jvjn1Cffzo7jTgqHlnk8PfTjtQAN1kISYetfzaS1iA6/P/XnS6kWt7JRReo/
-8eAusYzp/dV9aZGqkwhkgwT9/QEyQdEerIKg7yo5eK3UdDIM0ieA5pxn0/KglaWt
-p12SdKnNCQsqqFwMv3Qvz+3UwIVksg9VSF6k9KbwJCXPXNJK94S+PjS+dYLeLaW2
-8KyUn3jKePs2uYQULUiz+2ALzjf13KXfoOqfp01tneTlViZ67faS++D/LtbVkze4
-lGBUbzQAlBwoCTToiLNxE3OU7XrWLTJIEUnBJZSXhzyYjd7tNMQt+1GfuZ5E29A3
-3LUb4CxjDyFtJ+05RUVpIeSvNE0EAlnp/uatAzdUvo42P4+YhGSVa7xjSnCkpbn0
-GOcaecXaT13bvkgQle/dv5cDg3HrGO+jdunb9MzMtACa669OEAizkT0GLV7HeTC8
-sRtEK+rt5lBa3lXj7niY
-=npXK
------END PGP SIGNATURE-----
-
---bp/iNruPH9dso1Pn--
+Pontus
