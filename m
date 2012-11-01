@@ -1,84 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49299 "EHLO bear.ext.ti.com"
+Received: from lola.svc-box.de ([82.149.231.63]:36295 "EHLO lola.svc-box.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752899Ab2KVSbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:31:06 -0500
-Message-ID: <1353594065.27848.60.camel@cumari.coelho.fi> (sfid-20121122_193130_882216_F16C17FD)
-Subject: Re: [PATCH 06/13] wlcore: update acx enum
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Nov 2012 16:21:05 +0200
-In-Reply-To: <1353585928-28666-7-git-send-email-eliad@wizery.com>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-	 <1353585928-28666-7-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
+	id S1756152Ab2KASLn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Nov 2012 14:11:43 -0400
+Date: Thu, 1 Nov 2012 19:04:20 +0100
+From: Tino Reichardt <list-jfs@mcmilk.de>
+To: jfs-discussion@lists.sourceforge.net,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [Jfs-discussion] Out of memory on 3.5 kernels
+Message-ID: <20121101180420.GA24922@mcmilk.de> (sfid-20121101_191215_298510_21F9FAD7)
+References: <505B1FA0.6030100@broadcom.com>
+ <20120921194931.GA732@schottelius.org>
+ <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com>
+ <20120926060653.GD16575@schottelius.org>
+ <20120926085708.GA7839@schottelius.org>
+ <20120927055208.GA25252@schottelius.org>
+ <20121003212311.GA14018@schottelius.org>
+ <22962.1349452084@turing-police.cc.vt.edu>
+ <20121005175139.GC831@schottelius.org>
+ <20121030103535.GA10526@schottelius.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121030103535.GA10526@schottelius.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
-> update the acx enum to the new fw api.
+* Nico Schottelius <nico-kernel20120920@schottelius.org> wrote:
+> Good morning,
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
->  drivers/net/wireless/ti/wl18xx/acx.c |    2 +-
->  drivers/net/wireless/ti/wl18xx/acx.h |    4 ----
->  drivers/net/wireless/ti/wlcore/acx.h |   10 +++++++++-
->  3 files changed, 10 insertions(+), 6 deletions(-)
+> update: this problem still exists on 3.6.2-1-ARCH and it got worse:
 > 
-> diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-> index 72840e2..adff9cd 100644
-> --- a/drivers/net/wireless/ti/wl18xx/acx.c
-> +++ b/drivers/net/wireless/ti/wl18xx/acx.c
-> @@ -75,7 +75,7 @@ int wl18xx_acx_set_checksum_state(struct wl1271 *wl)
->  
->  	acx->checksum_state = CHECKSUM_OFFLOAD_ENABLED;
->  
-> -	ret = wl1271_cmd_configure(wl, ACX_CHECKSUM_CONFIG, acx, sizeof(*acx));
-> +	ret = wl1271_cmd_configure(wl, ACX_CSUM_CONFIG, acx, sizeof(*acx));
->  	if (ret < 0) {
->  		wl1271_warning("failed to set Tx checksum state: %d", ret);
->  		goto out;
-> diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-> index e2609a6..67733a1 100644
-> --- a/drivers/net/wireless/ti/wl18xx/acx.h
-> +++ b/drivers/net/wireless/ti/wl18xx/acx.h
-> @@ -25,10 +25,6 @@
->  #include "../wlcore/wlcore.h"
->  #include "../wlcore/acx.h"
->  
-> -enum {
-> -	ACX_CLEAR_STATISTICS		 = 0x0047,
-> -};
-> -
->  /* numbers of bits the length field takes (add 1 for the actual number) */
->  #define WL18XX_HOST_IF_LEN_SIZE_FIELD 15
->  
-> diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
-> index d03215d..7833d17 100644
-> --- a/drivers/net/wireless/ti/wlcore/acx.h
-> +++ b/drivers/net/wireless/ti/wlcore/acx.h
-> @@ -1025,7 +1025,15 @@ enum {
->  	ACX_CONFIG_HANGOVER              = 0x0042,
->  	ACX_FEATURE_CFG                  = 0x0043,
->  	ACX_PROTECTION_CFG               = 0x0044,
-> -	ACX_CHECKSUM_CONFIG              = 0x0045,
-> +
-> +	/* start of 18xx specific acxs */
-> +	ACX_NS_IPV6_FILTER               = 0x0050,
-> +	ACX_PEER_HT_OPERATION_MODE_CFG   = 0x0051,
-> +	ACX_CSUM_CONFIG                  = 0x0052,
-> +	ACX_SIM_CONFIG                   = 0x0053,
-> +	ACX_CLEAR_STATISTICS             = 0x0054,
-> +	ACX_AUTO_RX_STREAMING            = 0x0055,
-> +	ACX_PEER_CAP                     = 0x0056
->  };
+> I reformatted the external disk to use xfs, but as the my
+> root filesystem is still jfs, it still appears:
+> 
+>  Active / Total Objects (% used)    : 642732 / 692268 (92.8%)
+>  Active / Total Slabs (% used)      : 24801 / 24801 (100.0%)
+>  Active / Total Caches (% used)     : 79 / 111 (71.2%)
+>  Active / Total Size (% used)       : 603522.30K / 622612.05K (96.9%)
+>  Minimum / Average / Maximum Object : 0.01K / 0.90K / 15.25K
+> 
+>   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+> 475548 467649  98%    1.21K  18722       26    599104K jfs_ip
+>  25670  19143  74%    0.05K    302       85      1208K shared_policy_node
+>  24612  16861  68%    0.19K   1172       21      4688K dentry
+>  24426  19524  79%    0.17K   1062       23      4248K vm_area_struct
+>  21636  21180  97%    0.11K    601       36      2404K sysfs_dir_cache
+>  12352   9812  79%    0.06K    193       64       772K kmalloc-64
+>  11684   9145  78%    0.09K    254       46      1016K anon_vma
+>   9855   8734  88%    0.58K    365       27      5840K inode_cache
+>   9728   9281  95%    0.01K     19      512        76K kmalloc-8
+>   8932   4411  49%    0.55K    319       28      5104K radix_tree_node
+>   6336   5760  90%    0.25K    198       32      1584K kmalloc-256
+>   5632   5632 100%    0.02K     22      256        88K kmalloc-16
+>   4998   2627  52%    0.09K    119       42       476K kmalloc-96
+>   4998   3893  77%    0.04K     49      102       196K Acpi-Namespace
+>   4736   3887  82%    0.03K     37      128       148K kmalloc-32
+>   4144   4144 100%    0.07K     74       56       296K Acpi-ParseExt
+>   3740   3740 100%    0.02K     22      170        88K numa_policy
+>   3486   3023  86%    0.19K    166       21       664K kmalloc-192
+>   3200   2047  63%    0.12K    100       32       400K kmalloc-128
+>   2304   2074  90%    0.50K     72       32      1152K kmalloc-512
+>   2136   2019  94%    0.64K     89       24      1424K proc_inode_cache
+>   2080   2080 100%    0.12K     65       32       260K jfs_mp
+>   2024   1890  93%    0.70K     88       23      1408K shmem_inode_cache
+>   1632   1556  95%    1.00K     51       32      1632K kmalloc-1024
+> 
+> 
+> I am wondering if anyone is feeling responsible for this bug or if the mid-term
+> solution is to move away from jfs?
 
-Why didn't you leave the wl18xx-specific ACXs in the wl18xx/acx.h file
-like it was before? I prefer it like that, because then it's clear that
-those are not supported by wl12xx.
+I also did some tests, when this bug was first reported... but I couln't
+re-produce it... currently I have no idea what is wrong there.
 
---
-Luca.
+I think moving to ext4 or xfs is the best for now...  :(
 
+
+-- 
+regards, TR
