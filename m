@@ -1,71 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:55815 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953Ab2KTLEH (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:42697 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932676Ab2KAWh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 06:04:07 -0500
-Received: by mail-ia0-f174.google.com with SMTP id y25so4123799iay.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:04:06 -0800 (PST)
+	Thu, 1 Nov 2012 18:37:57 -0400
+Date: Thu, 1 Nov 2012 20:37:50 -0200
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth-next 2012-11-01
+Message-ID: <20121101223750.GA1915@joana> (sfid-20121101_233830_352338_42F6B82D)
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEeM8E3V7nNk21tOrzEhV2g543bjixiEiNrid_YDEx-bmA@mail.gmail.com>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
- <1353343170-26516-9-git-send-email-eliad@wizery.com> <CA+XVXfcramc=cNy9cGt9VzJQGWd+a4dtEZ89Ku_jXxwqMPQfqw@mail.gmail.com>
- <CAB3XZEeM8E3V7nNk21tOrzEhV2g543bjixiEiNrid_YDEx-bmA@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 20 Nov 2012 13:03:51 +0200
-Message-ID: <CA+XVXfcsj4n3PXA002veKfGFYHbppBn-gQG_FFSL7JeTqewWLA@mail.gmail.com> (sfid-20121120_120412_305889_236A2280)
-Subject: Re: [PATCH 08/15] wlcore: add chanctx implementation
-To: Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="VS++wcV0S1rZb1Fb"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 20, 2012 at 10:38 AM, Eliad Peller <eliad@wizery.com> wrote:
-> On Mon, Nov 19, 2012 at 11:23 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> On Mon, Nov 19, 2012 at 6:39 PM, Eliad Peller <eliad@wizery.com> wrote:
->>> Add some basic chanctx implementation.
->>>
->>> Only add debug prints, and save the vif's channel/band/type.
->>>
->>> Signed-off-by: Eliad Peller <eliad@wizery.com>
->>> ---
->
->>> +static int wlcore_op_assign_vif_chanctx(struct ieee80211_hw *hw,
->>> +                                       struct ieee80211_vif *vif,
->>> +                                       struct ieee80211_chanctx_conf *ctx)
->>> +{
->>> +       struct wl1271 *wl = hw->priv;
->>> +       struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
->>> +       int channel = ieee80211_frequency_to_channel(
->>> +               ctx->channel->center_freq);
->>> +
->>> +       wl1271_debug(DEBUG_MAC80211,
->>> +                    "mac80211 assign chanctx (role %d) %d (type %d)",
->>> +                    wlvif->role_id, channel, ctx->channel_type);
->>> +
->>> +       wlcore_tx_work_locked(wl);
->>
->> is this some kind of a lame attempt at a flush? :)
->>
->> why not use flush here if the channel was set - or better yet, flush
->> stuff at wlcore_op_unassign_vif_chanctx, which is currently unused.
->> we'll need the TODO there for the per-vif-flush. once everything is
->> upstreamed (hw queues) it would be pretty trivial to implement.
->>
-> ok, you convinced me. i'll do a flush on unassign instead. :)
 
-btw, it's also a bug to call wlcore_tx_work_locked() since you didn't
-take the mutex, which is another bug in your patch. you should take
-the mutex before changing members of wlvif :)
+--VS++wcV0S1rZb1Fb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->
->> also not sure what happened to the rest of the stuff done on channel
->> config - updating the rate_set according to band etc..
->>
-> well, actually you have a pending patch to fix it, and i planned
-> sending it in the next patchset. but since you already asked about it
-> i'll just squash it into this patch (and add your SOB). :)
+Hi John,
 
-any form you prefer.
+Another set of patches for integration in wireless-next. There are two big =
+set
+of changes in it: Andrei Emeltchenko and Mat Martineau added more patches
+towards a full Bluetooth High Speed support and Johan Hedberg improve the
+single mode support for Bluetooth dongles. Apart from that we have small fi=
+xes
+and improvements.=20
+
+Please pull. Thanks a lot.
+
+	Gustavo
+---
+
+The following changes since commit 9917c85b06c2eb9d61c0f2dadd2d5d8788f7e563:
+
+  brcm80211: remove some truely barftastic code (2012-10-19 16:20:56 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next fo=
+r-upstream
+
+for you to fetch changes up to 0c0afedf55ff409be9db0b0aeeaa1c6fe0f3cd3c:
+
+  Bluetooth: Fix parameter order of hci_get_route (2012-11-01 20:27:11 -020=
+0)
+
+----------------------------------------------------------------
+Andrei Emeltchenko (18):
+      Bluetooth: trivial: Remove unneeded assignment
+      Bluetooth: Use helper function sending EFS conf rsp
+      Bluetooth: AMP: Process Physical Link Complete evt
+      Bluetooth: AMP: Process Logical Link complete evt
+      Bluetooth: Add put(hcon) when deleting hchan
+      Bluetooth: trivial: Fix braces style and remove empty line
+      Bluetooth: Save hs_hchan instead of hs_hcon in loglink complete
+      Bluetooth: Return correct L2CAP response type
+      Bluetooth: Derive remote and local amp id from chan struct
+      Bluetooth: AMP: Add Logical Link Create function
+      Bluetooth: AMP: Process Disc Logical Link
+      Bluetooth: AMP: Process Disc Physical Link Complete evt
+      Bluetooth: AMP: Remove hci_conn receiving error command status
+      Bluetooth: Disconnect logical link when deleting chan
+      Bluetooth: AMP: Check for hs_hcon instead of ctrl_id
+      Bluetooth: AMP: Use l2cap_physical_cfm in phylink complete evt
+      Bluetooth: Process Create Chan Request
+      Bluetooth: Rename ctrl_id to remote_amp_id
+
+Denis Kirjanov (1):
+      Bluetooth:Replace list_for_each with list_for_each_entry() helper
+
+Gustavo Padovan (1):
+      Bluetooth: Replace *_init() for *_setup()
+
+Johan Hedberg (16):
+      Bluetooth: Add initial support for LE-only controllers
+      Bluetooth: Fix LE MTU reporting for HCIGETDEVINFO
+      Bluetooth: Add setting of the LE event mask
+      Bluetooth: Read adversiting channel TX power during init sequence
+      Bluetooth: Fix HCI command sending when powering on LE-only adapters
+      Bluetooth: mgmt: Restrict BR/EDR settings to BR/EDR-only adapters
+      Bluetooth: Fix updating host feature bits for LE
+      Bluetooth: Add missing feature test macros
+      Bluetooth: Make use feature test macros
+      Bluetooth: Add flag for LE GAP Peripheral role
+      Bluetooth: Disallow LE scanning and connecting in peripheral role
+      Bluetooth: Fix setting host feature bits for SSP
+      Bluetooth: Fix sending unnecessary HCI_Write_SSP_Mode command
+      Bluetooth: Fix unnecessary EIR update during powering on
+      Bluetooth: Fix sending unnecessary HCI_LE_Host_Enable
+      Bluetooth: Fix parameter order of hci_get_route
+
+Mat Martineau (18):
+      Bluetooth: Add new l2cap_chan struct members for high speed channels
+      Bluetooth: Add L2CAP create channel request handling
+      Bluetooth: Remove unnecessary intermediate function
+      Bluetooth: Lookup channel structure based on DCID
+      Bluetooth: Channel move request handling
+      Bluetooth: Add new ERTM receive states for channel move
+      Bluetooth: Add move channel confirm handling
+      Bluetooth: Add state to hci_chan
+      Bluetooth: Move channel response
+      Bluetooth: Add logical link confirm
+      Bluetooth: Add move confirm response handling
+      Bluetooth: Handle physical link completion
+      Bluetooth: Flag ACL frames as complete for AMP controllers
+      Bluetooth: Do not send data during channel move
+      Bluetooth: Configure appropriate timeouts for AMP controllers
+      Bluetooth: Ignore BR/EDR packet size constraints when fragmenting for=
+ AMP
+      Bluetooth: Do not retransmit data during a channel move
+      Bluetooth: Start channel move when socket option is changed
+
+Syam Sidhardhan (4):
+      Bluetooth: trivial: Remove newline before EOF
+      Bluetooth: Replace include linux/module.h with linux/export.h
+      Bluetooth: Remove unnecessary include export.h
+      Bluetooth: mgmt: Use __constant when dealing with constants
+
+ include/net/bluetooth/amp.h      |    4 +
+ include/net/bluetooth/hci.h      |    7 +
+ include/net/bluetooth/hci_core.h |   44 +-
+ include/net/bluetooth/l2cap.h    |   38 +-
+ net/bluetooth/Kconfig            |    1 -
+ net/bluetooth/a2mp.c             |    4 +-
+ net/bluetooth/amp.c              |   93 ++++
+ net/bluetooth/bnep/netdev.c      |    1 -
+ net/bluetooth/cmtp/capi.c        |    2 +-
+ net/bluetooth/cmtp/sock.c        |    2 +-
+ net/bluetooth/hci_conn.c         |    6 +
+ net/bluetooth/hci_core.c         |   65 +--
+ net/bluetooth/hci_event.c        |  309 +++++++++++--
+ net/bluetooth/l2cap_core.c       | 1000 ++++++++++++++++++++++++++++++++++=
++++---
+ net/bluetooth/l2cap_sock.c       |    5 +
+ net/bluetooth/mgmt.c             |   98 ++--
+ 16 files changed, 1486 insertions(+), 193 deletions(-)
+
+--VS++wcV0S1rZb1Fb
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQkvm+AAoJEPs3PUX4s20oh48QAKc0Cb9KUsMnnZOie6+OYa6i
+HbsF/4mnsU9TsDft2Bwm3ejinqcEyN+n85U9qCuVqe/tlbkqfMTPwYqe25Ny2gBq
+oMIRnQgG0Hq10yx9Hq2QGffMlaCx3WmuVrrWhKwTo8k/ZoiKuGnjaMUubJQJw2wy
+Nr97i7OS5eUuvWP++BrGW0CXZHmKenqA5L9+IlfpeEQj3STRmPA9nLas0Cdp7j1P
+nErse6ol1yXsaik8yBSSmBVOK5NzHhe/XN7R11nd1DO1GDopMMlfJyR+x+0VSEFp
++hYPTs81RndLZv2W29PGdPnZy2JrGURYjIGEbEkorJ95iZprBoqMAOzHT3O+lGf4
+ILoewAy/0nTMaaPOf0057hXPgkQ4pBO+k1AWZUMTOlQoYUfDRzL5E5/VC9/EyABD
+FPEvP7jOp2bKPi6DFnHZpJfrEQETcGlxWwmCVzCgCdDSyrEWlvbdIUCyOt2xvoMh
+vdyufs9iPnHYYp9aXEfs+eYymxuiFOXwgu4OqDFkHvVNekIqX3Wzttq0gjw2OtwY
+rE2M8UEzgIc9OLcvhn1v1CDj8PkWlNRWME1dE0YfazTRhw9GlnE0W4wEluNU0hxw
+wxKO72UUF9rNngRdp24haau0X4qLO8bBogQSsqE9Z1kvLIeWjqexeJGKh3tqLcy/
+PtXnX/mwteuvsEwiBa+z
+=orX4
+-----END PGP SIGNATURE-----
+
+--VS++wcV0S1rZb1Fb--
