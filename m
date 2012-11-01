@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51450 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753270Ab2KSW6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 17:58:50 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: john@phrozen.org, ralf@linux-mips.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 5/8] ssb: add ssb_chipco_gpio_pull{up,down}
-Date: Mon, 19 Nov 2012 23:57:54 +0100
-Message-Id: <1353365877-11131-6-git-send-email-hauke@hauke-m.de> (sfid-20121119_235854_018583_28F0DD20)
-In-Reply-To: <1353365877-11131-1-git-send-email-hauke@hauke-m.de>
-References: <1353365877-11131-1-git-send-email-hauke@hauke-m.de>
+Received: from devils.ext.ti.com ([198.47.26.153]:58907 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754458Ab2KAHzU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Nov 2012 03:55:20 -0400
+Message-ID: <50922A9D.2060409@ti.com> (sfid-20121101_085532_274085_711DEA8F)
+Date: Thu, 1 Nov 2012 09:54:05 +0200
+From: Victor Goldenshtein <victorg@ti.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection command/event
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>   <1350226137-13704-2-git-send-email-victorg@ti.com>  <1350414099.10177.13.camel@jlt4.sipsolutions.net> <50842569.5000602@ti.com> <1350910543.10166.3.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1350910543.10166.3.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add functions to access the GPIO registers for pullup and pulldown.
-These are needed for handling gpio registration.
+On 22/10/2012 14:55, Johannes Berg wrote:
+>> 2. In __nl80211_set_channel() - to cover the case when the CAC was
+>> initiated on a "preset_chan" (during AP init phase) and the IF was
+>> removed before the AP was even started (local->oper_channel wasn't set yet).
+>
+> Hmm, I'm not sure I get it. How is "local->oper_channel" (a mac80211
+> variable) related to this cfg80211 code?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/driver_chipcommon.c           |   16 ++++++++++++++++
- include/linux/ssb/ssb_driver_chipcommon.h |    2 ++
- 2 files changed, 18 insertions(+)
+It's not, just saying that its not set at this point.
 
-diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
-index e9d2ca1..4df4926 100644
---- a/drivers/ssb/driver_chipcommon.c
-+++ b/drivers/ssb/driver_chipcommon.c
-@@ -442,6 +442,22 @@ u32 ssb_chipco_gpio_polarity(struct ssb_chipcommon *cc, u32 mask, u32 value)
- 	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOPOL, mask, value);
- }
- 
-+u32 ssb_chipco_gpio_pullup(struct ssb_chipcommon *cc, u32 mask, u32 value)
-+{
-+	if (cc->dev->id.revision < 20)
-+		return 0xffffffff;
-+
-+	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOPULLUP, mask, value);
-+}
-+
-+u32 ssb_chipco_gpio_pulldown(struct ssb_chipcommon *cc, u32 mask, u32 value)
-+{
-+	if (cc->dev->id.revision < 20)
-+		return 0xffffffff;
-+
-+	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOPULLDOWN, mask, value);
-+}
-+
- #ifdef CONFIG_SSB_SERIAL
- int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
- 			   struct ssb_serial_port *ports)
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index c2b02a5..c8d07c9 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -644,6 +644,8 @@ u32 ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value);
- u32 ssb_chipco_gpio_control(struct ssb_chipcommon *cc, u32 mask, u32 value);
- u32 ssb_chipco_gpio_intmask(struct ssb_chipcommon *cc, u32 mask, u32 value);
- u32 ssb_chipco_gpio_polarity(struct ssb_chipcommon *cc, u32 mask, u32 value);
-+u32 ssb_chipco_gpio_pullup(struct ssb_chipcommon *cc, u32 mask, u32 value);
-+u32 ssb_chipco_gpio_pulldown(struct ssb_chipcommon *cc, u32 mask, u32 value);
- 
- #ifdef CONFIG_SSB_SERIAL
- extern int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
+> start_ap() isn't expected to be able to succeed until CAC passed
+> successfully, but OTOH the channel isn't configured until then?
+
+right, the initial CAC performed before start_ap(), only by setting the 
+channel with __nl80211_set_channel() + radar detection command.
+
 -- 
-1.7.10.4
-
+Thanks,
+Victor.
