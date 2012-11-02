@@ -1,99 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:35430 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751100Ab2K2HsJ (ORCPT
+Received: from nk11p00mm-asmtp009.mac.com ([17.158.161.8]:51013 "EHLO
+	nk11p00mm-asmtp009.mac.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755450Ab2KBAou (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 02:48:09 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so8309867lbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 23:48:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <A16247DB21CEBB409D0827EB13D43B451696F72F@NASANEXD02E.na.qualcomm.com>
-References: <A16247DB21CEBB409D0827EB13D43B4501F6200E@NASANEXD02E.na.qualcomm.com>
- <9DB666D2CF7F704E84559F1AEF4EBA97193ECF5C@aphydexd01a> <906BB7F9E7542D408351AC9D2A8FDABA03DC4DE0@nasanexd02f.na.qualcomm.com>
- <50B6EFC4.4070505@qca.qualcomm.com> <A16247DB21CEBB409D0827EB13D43B451696F72F@NASANEXD02E.na.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 28 Nov 2012 23:47:47 -0800
-Message-ID: <CAB=NE6Wf4WSzej2v+1QM3NEkhoDv28aWahUxD+bPr4erDqsp7g@mail.gmail.com> (sfid-20121129_084813_744057_10294B20)
-Subject: Re: [patch] add K3 and PS to db.txt
-To: "Bu, Jinsong" <jinsong@qca.qualcomm.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Balasubramanian, Senthil Kumar" <senthilb@qca.qualcomm.com>,
-	"Mani, Raja" <rmani@qca.qualcomm.com>,
-	"Sundar, Mohan Kumar" <msundar@qca.qualcomm.com>,
-	"Jin, Navy" <nhjin@qca.qualcomm.com>,
-	"Thiagarajan, Vasanthakumar" <vthiagar@qca.qualcomm.com>,
-	"Yuan, Ye" <yeyuan@qca.qualcomm.com>,
-	wireless-regdb@lists.infradead.org,
-	Michael Green <green@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 1 Nov 2012 20:44:50 -0400
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-2022-JP
+Received: from [10.20.200.174]
+ (p3027-ipbf5206marunouchi.tokyo.ocn.ne.jp [118.8.142.27])
+ by nk11p00mm-asmtp009.mac.com
+ (Oracle Communications Messaging Server 7u4-26.01(7.0.4.26.0) 64bit (built Jul
+ 13 2012)) with ESMTPSA id <0MCU00C594PXL160@nk11p00mm-asmtp009.mac.com> for
+ linux-wireless@vger.kernel.org; Fri, 02 Nov 2012 00:44:23 +0000 (GMT)
+Message-id: <50931755.9070902@mac.com> (sfid-20121102_014505_595513_A7FFDF21)
+Date: Fri, 02 Nov 2012 09:44:05 +0900
+From: Akira Nonaka <nonaka@mac.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: rtl8723e disconnect problem on the kernel 3.4.9.
+References: <509200A2.9060300@mac.com> <50929F0C.5060501@lwfinger.net>
+In-reply-to: <50929F0C.5060501@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 28, 2012 at 11:38 PM, Bu, Jinsong <jinsong@qca.qualcomm.com> wrote:
-> Hi John,
->
-> I created a patch to add K3 and PS country string to db.txt, please review the patch.
->
-> Note that I copied KP's rules for K3 since they are all APL9_WORLD.
->
-> -------------------------------------------------------------------------------------------------------------------------------------
-> From a006587d846cd91a07d3e232421947bc3f96e235 Mon Sep 17 00:00:00 2001
-> From: jinsong <jinsong@qca.qualcomm.com>
-> Date: Thu, 29 Nov 2012 15:15:21 +0800
-> Subject: [PATCH] add K3 and PS
->
->
-> Signed-off-by: jinsong <jinsong@qca.qualcomm.com>
-> ---
->  db.txt |   13 +++++++++++++
->  1 file changed, 13 insertions(+)
->
-> diff --git a/db.txt b/db.txt
-> index 4c54543..a7ff207 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -391,6 +391,13 @@ country JO:
->         (2402 - 2482 @ 40), (N/A, 20)
->         (5170 - 5250 @ 40), (N/A, 18)
->
-> +country K3:
-> +       (2402 - 2482 @ 40), (N/A, 20)
-> +       (5170 - 5330 @ 40), (3, 20)
-> +       (5160 - 5250 @ 40), (3, 20), DFS
-> +       (5490 - 5630 @ 40), (3, 30), DFS
-> +       (5735 - 5815 @ 40), (3, 30)
-> +
+Thanks Larry,
 
-What is K3? Please note that I removed all variations of different
-regulatory domains for a country when I converted the HAL reg code out
-to db.txt format for CRDA. The intent was to provide a unified up to
-date regulatory solution only. All variations that are "preferred"
-should simply just rely on the old rules if these need to be
-productized for whatever OEM/parnoid/stupid reasons. Please let me
-know if you find a good reason to actually add these and if so please
-consider adding them as custom regulatory domains which we do support
--- see the custom world regulatory domains on the ath module.
+(2012/11/02 1:10), Larry Finger wrote:
 
->  country KE:
->         (2402 - 2482 @ 40), (N/A, 20)
->         (5735 - 5835 @ 40), (N/A, 30)
-> @@ -554,6 +561,12 @@ country PL: DFS-ETSI
->         (5250 - 5330 @ 40), (N/A, 20), DFS
->         (5490 - 5710 @ 40), (N/A, 27), DFS
->
-> +country PS:
-> +       (2402 - 2472 @ 40), (3, 27)
-> +       (5170 - 5250 @ 40), (3, 17)
-> +       (5250 - 5330 @ 40), (3, 23), DFS
-> +       (5735 - 5835 @ 40), (3, 30)
-> +
+> (1) What version of the vendor driver are you using?
 
-What is PS? Historically the Atheros HAL has used "PS" for Public
-Safety but not that technically it is the ISO3166-alpha2 country code
-for Palestine, did you intend to define that or Public Safety? If your
-intent was to try to add Public Safety then consider using the custom
-regulatory domains but then also try to figure out with marketing /
-etc if we ever want to sell products to Palestine.
+I got the driver from below, where my PC vendor told me to go.
 
-  Luis
+http://www.liteon.com/UserFiles/driver/Module/Network/WLAN/RTL/rtl_92ce_92se_92de_8723ae_linux_mac80211_0007.0809.2012.tar.gz
+
+> (2) Are the memset errors fixed? There are a number of calls where args 2 and 3
+> are reversed.
+
+I will check the source code.
+
+> (3) Can you build your own kernel? If so, check
+> http://www'lwfinger.com/realtek_drivers/rtl8723ae_master_patch. That will patch
+> a 3.4 kernel to include the driver rtl8723ae that has been submitted for
+> inclusion in kernel 3.8.
+
+I will try this patch also and get back to you.
+
+Regards,
+-- 
+Akira Nonaka
