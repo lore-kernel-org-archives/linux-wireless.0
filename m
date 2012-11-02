@@ -1,107 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:59623 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753222Ab2KKPuH (ORCPT
+Received: from bustia.coneix.com ([77.246.179.53]:35704 "EHLO
+	bustia.coneix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754052Ab2KBWlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 10:50:07 -0500
-Received: by mail-ea0-f174.google.com with SMTP id c13so2074358eaa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 07:50:05 -0800 (PST)
-Message-ID: <1352648999.6460.21.camel@canaries32-MCP7A> (sfid-20121111_165012_643660_C7424A99)
-Subject: [PATCH 10/14] staging: vt6656: 64bit fixes: key.c/h change unsigned
- long to u32
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 11 Nov 2012 15:49:59 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 2 Nov 2012 18:41:21 -0400
+Date: Fri, 2 Nov 2012 23:35:20 +0100
+From: Jaume =?iso-8859-1?Q?Delcl=F2s?= Coll <jaume@delclos.com>
+To: IvDoorn@gmail.com, gwingerde@gmail.com,
+	helmut.schaa@googlemail.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] Wireless: rt2x00: Add device id for Sweex LW323 to
+ rt2800usb.c
+Message-ID: <20121102223520.GB16573@jaume-arch.example.org> (sfid-20121102_234149_483936_C4E40B57)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes long issues.
+From: Jaume Delclòs <jaume@delclos.com>
 
+This patch adds detection for the Sweex LW323 USB wireless network card
+in the rt2x00 driver (just one line in rt2800usb.c).
+It applies to linux-3.7-rc3.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Jaume Delclòs <jaume@delclos.com>
 
----
- drivers/staging/vt6656/key.c | 6 +++---
- drivers/staging/vt6656/key.h | 8 ++++----
- 2 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/vt6656/key.c b/drivers/staging/vt6656/key.c
-index 617fda1..bf24adb 100644
---- a/drivers/staging/vt6656/key.c
-+++ b/drivers/staging/vt6656/key.c
-@@ -223,7 +223,7 @@ BOOL KeybSetKey(
-     PSKeyManagement pTable,
-     PBYTE           pbyBSSID,
-     DWORD           dwKeyIndex,
--    unsigned long           uKeyLength,
-+	u32 uKeyLength,
-     PQWORD          pKeyRSC,
-     PBYTE           pbyKey,
-     BYTE            byKeyDecMode
-@@ -675,7 +675,7 @@ BOOL KeybSetDefaultKey(
-     void *pDeviceHandler,
-     PSKeyManagement pTable,
-     DWORD           dwKeyIndex,
--    unsigned long           uKeyLength,
-+	u32 uKeyLength,
-     PQWORD          pKeyRSC,
-     PBYTE           pbyKey,
-     BYTE            byKeyDecMode
-@@ -791,7 +791,7 @@ BOOL KeybSetAllGroupKey(
-     void *pDeviceHandler,
-     PSKeyManagement pTable,
-     DWORD           dwKeyIndex,
--    unsigned long           uKeyLength,
-+	u32 uKeyLength,
-     PQWORD          pKeyRSC,
-     PBYTE           pbyKey,
-     BYTE            byKeyDecMode
-diff --git a/drivers/staging/vt6656/key.h b/drivers/staging/vt6656/key.h
-index f749c7a..bd35d39 100644
---- a/drivers/staging/vt6656/key.h
-+++ b/drivers/staging/vt6656/key.h
-@@ -58,7 +58,7 @@
- typedef struct tagSKeyItem
- {
-     BOOL        bKeyValid;
--    unsigned long       uKeyLength;
-+	u32 uKeyLength;
-     BYTE        abyKey[MAX_KEY_LEN];
-     QWORD       KeyRSC;
-     DWORD       dwTSC47_16;
-@@ -107,7 +107,7 @@ BOOL KeybSetKey(
-     PSKeyManagement pTable,
-     PBYTE           pbyBSSID,
-     DWORD           dwKeyIndex,
--    unsigned long           uKeyLength,
-+	u32 uKeyLength,
-     PQWORD          pKeyRSC,
-     PBYTE           pbyKey,
-     BYTE            byKeyDecMode
-@@ -146,7 +146,7 @@ BOOL KeybSetDefaultKey(
-     void *pDeviceHandler,
-     PSKeyManagement pTable,
-     DWORD           dwKeyIndex,
--    unsigned long           uKeyLength,
-+	u32 uKeyLength,
-     PQWORD          pKeyRSC,
-     PBYTE           pbyKey,
-     BYTE            byKeyDecMode
-@@ -156,7 +156,7 @@ BOOL KeybSetAllGroupKey(
-     void *pDeviceHandler,
-     PSKeyManagement pTable,
-     DWORD           dwKeyIndex,
--    unsigned long           uKeyLength,
-+	u32 uKeyLength,
-     PQWORD          pKeyRSC,
-     PBYTE           pbyKey,
-     BYTE            byKeyDecMode
--- 
-1.8.0
-
-
-
-
+--- linux-3.7-rc3/drivers/net/wireless/rt2x00/rt2800usb.c.orig	2012-11-02 21:14:01.393082623 +0100
++++ linux-3.7-rc3/drivers/net/wireless/rt2x00/rt2800usb.c	2012-11-02 21:14:57.502778651 +0100
+@@ -1096,6 +1096,7 @@ static struct usb_device_id rt2800usb_de
+ 	{ USB_DEVICE(0x177f, 0x0153) },
+ 	{ USB_DEVICE(0x177f, 0x0302) },
+ 	{ USB_DEVICE(0x177f, 0x0313) },
++	{ USB_DEVICE(0x177f, 0x0323) },
+ 	/* U-Media */
+ 	{ USB_DEVICE(0x157e, 0x300e) },
+ 	{ USB_DEVICE(0x157e, 0x3013) },
