@@ -1,128 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:34951 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121Ab2K1Q7x (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:32948 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753274Ab2KBH2g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 11:59:53 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] wireless: allow Atheros card to not depend on ath.ko
-Date: Wed, 28 Nov 2012 18:59:49 +0200
-Message-ID: <33029430.tJYGzWDyUC@lx-vladimir> (sfid-20121128_175958_171048_8719523B)
-In-Reply-To: <1480359.ZVbZvOVayc@lx-vladimir>
-References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <20121128141319.GA9118@tuxdriver.com> <1480359.ZVbZvOVayc@lx-vladimir>
+	Fri, 2 Nov 2012 03:28:36 -0400
+Date: Fri, 2 Nov 2012 08:28:32 +0100
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 01/18] brcmsmac: Rework tx code to avoid internal
+ buffering of packets
+Message-ID: <20121102072832.GA19430@ubuntu-mba51> (sfid-20121102_082850_187599_D22BD1D2)
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+ <1351261413-20821-2-git-send-email-seth.forshee@canonical.com>
+ <5092B4C0.7060701@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5092B4C0.7060701@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, patch was sent using wrong e-mail. Re-sent. Please, use one from 
-<qca_vkondrat@qca.qualcomm.com>
-and ignore those from 
-<vkondrat@qti.qualcomm.com>
+On Thu, Nov 01, 2012 at 06:43:28PM +0100, Arend van Spriel wrote:
+> On 10/26/2012 04:23 PM, Seth Forshee wrote:
+> >The brcmsmac internal tx buffering is problematic for a number of
+> >reasons. The amount of buffering is excessive (228 packets in addition
+> >to the 256 slots in each DMA ring), frames may be dropped due to a lack
+> >of flow control, and the structure of the queues complicates the
+> >otherwise straightforward mapping of mac80211 queues to device fifos.
+> >
+> >This patch reworks the transmit code path to eliminate the internal
+> >buffering. Frames are immediately handed off to the DMA support rather
+> >than passing through an intermediate queue. ieee80211_(stop|wake)_queue()
+> >are used for flow control to stop receiving frames when a DMA tx ring is
+> >full.
+> >
+> >To handle aggregation the concept of AMPDU sessions is added to the
+> >driver. The AMPDU session allows MPDUs to be temporarily queued by the
+> >DMA code until either a full AMPDU has been collected or circumstances
+> >dictate that transmission should start with a partial AMPDU. The use of
+> >a queue ensures that the tx headers are fully initialized before the
+> >buffers are synced for DMA, and it allows non-aggregate frames to be
+> >immediately placed in the tx ring so that more frames can be collected
+> >for aggregation.
+> >
+> >Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> >---
+> >  drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |  666 ++++++++++-------------
+> >  drivers/net/wireless/brcm80211/brcmsmac/ampdu.h |   29 +-
+> >  drivers/net/wireless/brcm80211/brcmsmac/dma.c   |  182 ++++++-
+> >  drivers/net/wireless/brcm80211/brcmsmac/dma.h   |    9 +-
+> >  drivers/net/wireless/brcm80211/brcmsmac/main.c  |  514 +++++------------
+> >  drivers/net/wireless/brcm80211/brcmsmac/main.h  |   39 +-
+> >  drivers/net/wireless/brcm80211/brcmsmac/types.h |    1 -
+> >  7 files changed, 628 insertions(+), 812 deletions(-)
+> 
+> Hi Seth,
+> 
+> The idea behind the change is a good move. However, this change is
+> quite a overhaul especially for ampdu code. This makes it pretty
+> hard to review. At least against the previous implementation. So we
+> still need some time to chew on this one. We have been testing it
+> and it looks good there.
 
-Sorry for the mess
+Great!
 
-On Wednesday, November 28, 2012 05:53:18 PM Vladimir Kondratiev wrote:
-> There are 2 different things:
-> - sub-menu for "Atheros Wireless cards" family
-> - module ath.ko with common Atheros code
-> 
-> Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
-> Thus, being "Atheros card" and "depending on ath.ko" was the same.
-> 
-> To allow module to belong to the
-> "Atheros Wireless cards" family but not use ath.ko,
-> 2 conditions above need to be separated.
-> 
-> So, this patch introduce new Kconfig variable ATH_CARDS for belonging
-> to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
-> variable to express dependency on common Atheros code in ath.ko. Modules
-> that depend on this common code now express it by setting ATH_COMMON.
-> 
-> Right now, ath6kl do not depend on common code and thus do not set
-> ATH_COMMON.
-> 
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/Kconfig          |    7 +++++--
->  drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
->  drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
->  drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
->  drivers/net/wireless/ath/carl9170/Kconfig |    1 +
->  5 files changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/Kconfig
-> b/drivers/net/wireless/ath/Kconfig index c25dcf1..1a67a4f 100644
-> --- a/drivers/net/wireless/ath/Kconfig
-> +++ b/drivers/net/wireless/ath/Kconfig
-> @@ -1,4 +1,7 @@
-> -menuconfig ATH_COMMON
-> +config ATH_COMMON
-> +	tristate
-> +
-> +menuconfig ATH_CARDS
->  	tristate "Atheros Wireless Cards"
->  	depends on CFG80211 && (!UML || BROKEN)
->  	---help---
-> @@ -14,7 +17,7 @@ menuconfig ATH_COMMON
-> 
->  	  http://wireless.kernel.org/en/users/Drivers/Atheros
-> 
-> -if ATH_COMMON
-> +if ATH_CARDS
-> 
->  config ATH_DEBUG
->  	bool "Atheros wireless debugging"
-> diff --git a/drivers/net/wireless/ath/ar5523/Kconfig
-> b/drivers/net/wireless/ath/ar5523/Kconfig index 11d99ee..0d320cc 100644
-> --- a/drivers/net/wireless/ath/ar5523/Kconfig
-> +++ b/drivers/net/wireless/ath/ar5523/Kconfig
-> @@ -1,6 +1,7 @@
->  config AR5523
->         tristate "Atheros AR5523 wireless driver support"
->         depends on MAC80211 && USB
-> +       select ATH_COMMON
->         select FW_LOADER
->         ---help---
->           This module add support for AR5523 based USB dongles such as
-> D-Link diff --git a/drivers/net/wireless/ath/ath5k/Kconfig
-> b/drivers/net/wireless/ath/ath5k/Kconfig index 338c5c4..c9f81a3 100644
-> --- a/drivers/net/wireless/ath/ath5k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath5k/Kconfig
-> @@ -1,6 +1,7 @@
->  config ATH5K
->  	tristate "Atheros 5xxx wireless cards support"
->  	depends on (PCI || ATHEROS_AR231X) && MAC80211
-> +	select ATH_COMMON
->  	select MAC80211_LEDS
->  	select LEDS_CLASS
->  	select NEW_LEDS
-> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
-> b/drivers/net/wireless/ath/ath9k/Kconfig index c7aa664..5fc15bf 100644
-> --- a/drivers/net/wireless/ath/ath9k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
-> @@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
->  config ATH9K
->  	tristate "Atheros 802.11n wireless cards support"
->  	depends on MAC80211
-> +	select ATH_COMMON
->  	select ATH9K_HW
->  	select MAC80211_LEDS
->  	select LEDS_CLASS
-> diff --git a/drivers/net/wireless/ath/carl9170/Kconfig
-> b/drivers/net/wireless/ath/carl9170/Kconfig index 267d5dc..13a2045 100644
-> --- a/drivers/net/wireless/ath/carl9170/Kconfig
-> +++ b/drivers/net/wireless/ath/carl9170/Kconfig
-> @@ -1,6 +1,7 @@
->  config CARL9170
->  	tristate "Linux Community AR9170 802.11n USB support"
->  	depends on USB && MAC80211 && EXPERIMENTAL
-> +	select ATH_COMMON
->  	select FW_LOADER
->  	select CRC32
->  	help
+The AMPDU changes do look significant, but in large part they're just
+rearranging the code.
+
+> Could you somehow split this change into smaller steps?
+
+I'd given a little thought to breaking it up before I sent the patches,
+but for the bulk of the changes it's a little challenging to do so
+without making some of the commits regress (e.g. break AMPDU in one
+commit then fix it in the next one). I'll take a closer look while I'm
+travelling and see if I can work something out.
+
+Thanks,
+Seth
