@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:57208 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949Ab2KLTA5 (ORCPT
+Received: from nk11p00mm-asmtp002.mac.com ([17.158.161.1]:40901 "EHLO
+	nk11p00mm-asmtp002.mac.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760505Ab2KBJoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 14:00:57 -0500
-Received: by mail-lb0-f174.google.com with SMTP id n3so4909455lbo.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 11:00:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1352746052-1828-2-git-send-email-thomas@cozybit.com>
-References: <1352746052-1828-1-git-send-email-thomas@cozybit.com> <1352746052-1828-2-git-send-email-thomas@cozybit.com>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Mon, 12 Nov 2012 20:00:36 +0100
-Message-ID: <CAB=NE6X-LvntZ+fOV2b1AGmpQxEqyJNEu-wsc1wP7zvb8+vhFA@mail.gmail.com> (sfid-20121112_200101_323550_3D9F5066)
-Subject: Re: [PATCH 1/2] ath9k: RX timestamp is reported at end of frame
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 2 Nov 2012 05:44:22 -0400
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-2022-JP
+Received: from [10.20.200.174]
+ (p3027-ipbf5206marunouchi.tokyo.ocn.ne.jp [118.8.142.27])
+ by nk11p00mm-asmtp002.mac.com
+ (Oracle Communications Messaging Server 7u4-26.01(7.0.4.26.0) 64bit (built Jul
+ 13 2012)) with ESMTPSA id <0MCU00EAHTPVK280@nk11p00mm-asmtp002.mac.com> for
+ linux-wireless@vger.kernel.org; Fri, 02 Nov 2012 09:44:21 +0000 (GMT)
+Message-id: <509395E1.5010609@mac.com> (sfid-20121102_104438_985326_119AE966)
+Date: Fri, 02 Nov 2012 18:44:01 +0900
+From: Akira Nonaka <nonaka@mac.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8723e disconnect problem on the kernel 3.4.9.
+References: <509200A2.9060300@mac.com> <50929F0C.5060501@lwfinger.net>
+ <50931EEC.9040606@mac.com> <509325BA.2060807@lwfinger.net>
+In-reply-to: <509325BA.2060807@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 12, 2012 at 7:47 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> Tested with AR9280.
->
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> ---
->  drivers/net/wireless/ath/ath9k/recv.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index a04028b..d4df98a 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -976,7 +976,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
->         rx_status->freq = hw->conf.channel->center_freq;
->         rx_status->signal = ah->noise + rx_stats->rs_rssi;
->         rx_status->antenna = rx_stats->rs_antenna;
-> -       rx_status->flag |= RX_FLAG_MACTIME_MPDU;
-> +       rx_status->flag |= RX_FLAG_MACTIME_END;
->         if (rx_stats->rs_moreaggr)
->                 rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+Larry,
 
-Thanks but can you clarify the implications of this change within the
-commit log ? Was something not working, if not, why exactly is this
-change important?
+I applied your patch against the compat-wireless-2012-10-03.tar.bz2
+(http://linuxwireless.org/download/compat-wireless-2.6/)
+and it is now working stably on the kernel 3.4.9.
 
-  Luis
+Thank you very much!!!
+
+(2012/11/02 10:45), Larry Finger wrote:
+> Those are all fixed in my patch. The driver that you are using was my starting
+> point for the one that will be included in the kernel. My experience is that the
+> connections that I get are extremely stable, particularly for a new driver.
+> 
+> Larry
+
+
+-- 
+Akira Nonaka
