@@ -1,76 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55460 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751777Ab2KMVoh (ORCPT
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:34148 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759588Ab2KBBpi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 16:44:37 -0500
-Date: Tue, 13 Nov 2012 13:44:36 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Joe Perches <joe@perches.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Jason Baron <jbaron@redhat.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v7 1/2] wireless: Driver for 60GHz card wil6210
-Message-Id: <20121113134436.de5df090.akpm@linux-foundation.org> (sfid-20121113_224440_794716_C733E8E3)
-In-Reply-To: <1352811970.24230.22.camel@joe-AO722>
-References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1352809427-29682-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1352811970.24230.22.camel@joe-AO722>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 1 Nov 2012 21:45:38 -0400
+Received: by mail-ia0-f174.google.com with SMTP id y32so2356658iag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2012 18:45:37 -0700 (PDT)
+Message-ID: <509325BA.2060807@lwfinger.net> (sfid-20121102_024552_526143_70C0BE6C)
+Date: Thu, 01 Nov 2012 20:45:30 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Akira Nonaka <nonaka@mac.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8723e disconnect problem on the kernel 3.4.9.
+References: <509200A2.9060300@mac.com> <50929F0C.5060501@lwfinger.net> <50931EEC.9040606@mac.com>
+In-Reply-To: <50931EEC.9040606@mac.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 13 Nov 2012 05:06:10 -0800
-Joe Perches <joe@perches.com> wrote:
-
-> On Tue, 2012-11-13 at 14:23 +0200, Vladimir Kondratiev wrote:
-> []
-> > diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-> []
-> > +/* Candidate to merge into printk.h and dynamic_debug.h */
-> > +#if defined(CONFIG_DYNAMIC_DEBUG)
-> > +#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > +			 groupsize, buf, len, ascii)		\
-> > +do {								\
-> > +	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
-> > +	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
-> > +		print_hex_dump(KERN_DEBUG, prefix_str,		\
-> > +			       prefix_type, rowsize, groupsize,	\
-> > +			       buf, len, ascii);		\
-> > +} while (0)
-> > +
-> > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > +		       groupsize, buf, len, ascii)		\
-> > +		       dynamic_hex_dump(prefix_str, prefix_type,\
-> > +					rowsize, groupsize, buf,\
-> > +					len, ascii)
-> > +#else
-> > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > +		       groupsize, buf, len, ascii)		\
-> > +		       print_hex_dump(KERN_DEBUG, prefix_str,	\
-> > +				      prefix_type, rowsize,	\
-> > +				      groupsize, buf, len, ascii)
-> > +#endif
+On 11/01/2012 08:16 PM, Akira Nonaka wrote:
+> Larry,
 > 
-> Thanks Vladimir.  I think so too.
+>> (2) Are the memset errors fixed? There are a number of calls where args 2 and 3
+>> are reversed.
 > 
-> Jason?  Andrew?
+> Yes, I found there are a few wrong memset() call in the efuse.c.
 
-(I'm not on linux-wireless)
+Those are all fixed in my patch. The driver that you are using was my starting
+point for the one that will be included in the kernel. My experience is that the
+connections that I get are extremely stable, particularly for a new driver.
 
-Agree that the above should be in a core header file.
+Larry
 
-Disagree with placing it in a wireless header.
 
-Please split it out into a standalone patch.
-
-Does it have to be done as macros?  Can't do at least some of
-this in C?
-
-Some interface documentation would be nice, especially if it's
-implemented in macros - that's an awful lot of arguments to have to
-guess about.
