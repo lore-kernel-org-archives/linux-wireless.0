@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.watchguard.com ([206.191.171.101]:56168 "EHLO
-	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753702Ab2KZEJA (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:45561 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970Ab2KBT7D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 23:09:00 -0500
-From: Felix Liao <Felix.Liao@watchguard.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ocean Su <Ocean.Su@watchguard.com>,
-	Joe Qiao <Joe.Qiao@watchguard.com>,
-	Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-Subject: RE: Badness at net/mac80211/offchannel.c:264
-Date: Mon, 26 Nov 2012 04:08:50 +0000
-Message-ID: <1AA9BD91549CF94C901B05C32D2B081101E0103B@ES02Ch.wgti.net> (sfid-20121126_050906_748787_3F125667)
-References: <1AA9BD91549CF94C901B05C32D2B081101E00C99@ES02Ch.wgti.net>
-	 (sfid-20121123_113037_122856_FE2675E8)
- <1353712774.5908.15.camel@jlt4.sipsolutions.net>
-	 <1AA9BD91549CF94C901B05C32D2B081101E00E00@ES02Ch.wgti.net>
- <1353753342.9789.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353753342.9789.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 2 Nov 2012 15:59:03 -0400
+Received: by mail-vc0-f174.google.com with SMTP id fk26so4109558vcb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Nov 2012 12:59:03 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CA+7oygfnsrqAyU4d3n7EgmOntenhp36DEGhSnJ4FsJFdOKCk-w@mail.gmail.com>
+References: <CA+7oygeOHQLcdEWpedbXDnBoAHrXddkrmNd3-PNQOKzoyNkn6w@mail.gmail.com>
+	<CA+7oygfnsrqAyU4d3n7EgmOntenhp36DEGhSnJ4FsJFdOKCk-w@mail.gmail.com>
+Date: Fri, 2 Nov 2012 15:59:02 -0400
+Message-ID: <CA+7oygdwK=8i_oWgoeXKRgxJAzOyyXjkmuGpO+mBsAdcRRqzGg@mail.gmail.com> (sfid-20121102_205916_963244_786BD123)
+Subject: Re: bug in compat-wireless 3.6, rt2x00 iftype is wrong
+From: George Nychis <gnychis@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhhbmtzIGZvciB5b3VyIGV4cGxhbmF0aW9uLCBJIGNhbiB1bmRlcnN0YW5kIG5vdy4NCg0KLSBG
-ZWxpeA0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSm9oYW5uZXMgQmVyZyBb
-bWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2VudDogU2F0dXJkYXksIE5vdmVt
-YmVyIDI0LCAyMDEyIDY6MzYgUE0NClRvOiBGZWxpeCBMaWFvDQpDYzogbGludXgtd2lyZWxlc3NA
-dmdlci5rZXJuZWwub3JnOyBPY2VhbiBTdTsgSm9lIFFpYW87IEJyeWFuIFBoaWxsaXBwZQ0KU3Vi
-amVjdDogUmU6IEJhZG5lc3MgYXQgbmV0L21hYzgwMjExL29mZmNoYW5uZWwuYzoyNjQNCg0KT24g
-U2F0LCAyMDEyLTExLTI0IGF0IDAxOjE5ICswMDAwLCBGZWxpeCBMaWFvIHdyb3RlOg0KPiBIaSBK
-b2hhbm5lcywNCj4gVGhhbmtzIGZvciB5b3VyIGhlbHAsIEkganVzdCBtYWtlIHNvbWUgdGVzdHMg
-d2l0aCB0aGUgcGF0Y2ggeW91IHByb3ZpZGVkLiANCj4gWWVzLCB0aGVyZSBpcyBub25lIHdhcm5p
-bmcgY2FsbHRyYWNlIGFnYWluLCBhbmQgbm9uZSBvdGhlciBjYWxsdHJhY2UgdG9vLg0KPiANCj4g
-QnV0IGZvciB0aGUgdG1wX2xpc3QsIHdoZW4gd2UgYWJvcnQgYSByb2MgYW5kIGFkZCB0byB0aGUg
-dGFpbCBvZiANCj4gdG1wX2xpc3QsIFdlIHdpbGwgZGVsZXRlIGl0IGZyb20gdG1wX2xpc3QgaW4g
-dGhlIHdvcmsgYXN5bmMsIHdlIG5lZWQgDQo+IHRvIG1vZGlmeSB0aGUgcHJldiBhbmQgbmV4dCBw
-b2ludGVyIG9mIHRoZSBoZWFkIG9mIHRtcF9saXN0LCBJIHRoaW5rIA0KPiB0aGV5IGFyZSBmcmVl
-ZCBmcm9tIHRoZSBzdGFjayBvZiBmdW5jdGlvbiBpZWVlODAyMTFfcm9jX3B1cmdlKCksIGl0IGlz
-IA0KPiBkYW5nZXJvdXMuDQoNCk5vLCBpdCdzIGZpbmUgYmVjYXVzZSB3ZSBmbHVzaCB0aGUgYXN5
-bmNocm9ub3VzIHdvcmsgdGhlcmUgYnkgY2FsbGluZw0KZmx1c2hfZGVsYXllZF93b3JrKCkgc28g
-aXQncyBub3QgYWN0dWFsbHkgYXN5bmNocm9ub3VzIGJ1dCBzeW5jaHJvbm91cy4NCg0KVGhlIHJl
-YXNvbiBJIGRpZG4ndCBqdXN0IG1ha2UgaXQgY2FsbCB0aGUgaWVlZTgwMjExX3N3X3JvY193b3Jr
-KCkgZnVuY3Rpb24gaXMgdGhhdCBpdCBtYXkgYWxyZWFkeSBiZSBzY2hlZHVsZWQsIGFuZCB3ZSBu
-ZWVkIHRvIGNhdGNoIHRoYXQgY2FzZSBhcyB3ZWxsLg0KDQpqb2hhbm5lcw0KDQo=
+in the compat-wireless-3.6.-rc7-1 source code, I'm talking about line
+88 in net/wireless/chan.c which returns -EBUSY.  Note that I have a
+single interface which is in station mode, not monitoring mode.  There
+is no interface in true monitoring mode.
+
+On Fri, Nov 2, 2012 at 3:57 PM, George Nychis <gnychis@gmail.com> wrote:
+> The issue seems to be that in all of these drivers, wdev is NULL when
+> you hit set_channel()  in the older and newer driver.  In the old
+> driver, cfg8011_set_freq() is called with wdev has NULL and it still
+> calls rdev->ops->set_channel(....) which succeeds.
+>
+> However, in the new driver cfg80211_set_monitor_channel() is called
+> since wdev was NULL, but now instead of still calling
+> rdev->ops->set_channel() or rdev->ops->set_monitor_channel() it
+> returns -EBUSY because if(!cfg80211_has_monitors_only(rdev)) returns
+> true.  Is this really the expected behavior, or is meant to only
+> return -EBUSY if there are only monitors, rather? (i.e.,
+> if(cfg80211_has_monitors_only(rdev)) )
+>
+>
+> On Fri, Nov 2, 2012 at 2:46 PM, George Nychis <gnychis@gmail.com> wrote:
+>> I'm still trying to track down the cause for this, but starting in
+>> compat-wireless-3.6 (including early RCs and the most recent 3.6.2),
+>> rt2x00 devices register with the wrong iftype.  They register as
+>> NL80211_IFTYPE_MONITOR instead of NL80211_IFTYPE_STATION, for example.
+>>  I checked cw-3.5, 3.4, 3.2, and 3.1 and none of these versions have
+>> this bug.
+>>
+>> This breaks the ability to set channels, etc.  Hoping to track down
+>> the bug, but wanted to report it in the meantime and see if anyone
+>> else has run in to it.
+>>
+>> - George
