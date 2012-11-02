@@ -1,31 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:37834 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751343Ab2KFNtn (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:25613 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758308Ab2KBM2g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 08:49:43 -0500
-Date: Tue, 6 Nov 2012 19:14:46 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: RE: [PATCH 1/5] mwl8k: defining interface combinations
-Message-ID: <20121106134442.GA8286@markyou.marvell.com> (sfid-20121106_144954_940154_F5219786)
-References: <20121106125327.GA7498@markyou.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121106125327.GA7498@markyou.marvell.com>
+	Fri, 2 Nov 2012 08:28:36 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv5 2/2] mac80211: implement set_mcast_rate() callback
+Date: Fri,  2 Nov 2012 13:27:49 +0100
+Message-Id: <1351859269-27134-2-git-send-email-ordex@autistici.org> (sfid-20121102_132851_118547_AACC9B0B)
+In-Reply-To: <1351859269-27134-1-git-send-email-ordex@autistici.org>
+References: <1351859269-27134-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->AP mode support upto 8 interfaces.
->Defining it using iface_combinations
->
->Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+This new callback can be used to tune the rate to be used to send
+multicast frames.
 
-Please ignore this patch.
-I will resend its replacement soon.
+In the current state the multicast rate can be specified on IBSS/MESH
+joining only. This makes it impossible to select a custom multicast
+rate when then join command is sent by an external program (e.g.
+wpa_supplicant)
 
-Thanks
-Yogesh
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ net/mac80211/cfg.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index eebb70b..80e0618 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1954,6 +1954,16 @@ static int ieee80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+ 	return ieee80211_ibss_leave(IEEE80211_DEV_TO_SUB_IF(dev));
+ }
+ 
++static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
++				    int rate[IEEE80211_NUM_BANDS])
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
++
++	return 0;
++}
++
+ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+@@ -3180,6 +3190,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.disassoc = ieee80211_disassoc,
+ 	.join_ibss = ieee80211_join_ibss,
+ 	.leave_ibss = ieee80211_leave_ibss,
++	.set_mcast_rate = ieee80211_set_mcast_rate,
+ 	.set_wiphy_params = ieee80211_set_wiphy_params,
+ 	.set_tx_power = ieee80211_set_tx_power,
+ 	.get_tx_power = ieee80211_get_tx_power,
+-- 
+1.7.12.4
+
