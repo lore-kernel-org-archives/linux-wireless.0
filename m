@@ -1,85 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:51800 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751474Ab2KMWjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 17:39:41 -0500
-Message-ID: <1352846384.17444.18.camel@joe-AO722> (sfid-20121113_233945_146174_4F681143)
-Subject: Re: [PATCH v7 1/2] wireless: Driver for 60GHz card wil6210
-From: Joe Perches <joe@perches.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Jason Baron <jbaron@redhat.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Tue, 13 Nov 2012 14:39:44 -0800
-In-Reply-To: <20121113134436.de5df090.akpm@linux-foundation.org>
-References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1352809427-29682-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1352811970.24230.22.camel@joe-AO722>
-	 <20121113134436.de5df090.akpm@linux-foundation.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:54871 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750993Ab2KCCB3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Nov 2012 22:01:29 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Tim Shepard <shep@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Daniel Drake <dsd@laptop.org>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Fri, 2 Nov 2012 19:00:08 -0700
+Subject: RE: [PATCH] mwifiex: add support for SDIO card reset 
+Message-ID: <477F20668A386D41ADCC57781B1F7043083BADF6C6@SC-VEXCH1.marvell.com> (sfid-20121103_030142_849195_710F5BB1)
+References: Your message of Thu, 01 Nov 2012 18:44:14 -0700.
+             <1351820654-24433-1-git-send-email-bzhao@marvell.com>
+  <E1TUP4U-0002Fm-00@www.xplot.org>
+In-Reply-To: <E1TUP4U-0002Fm-00@www.xplot.org>
+Content-Type: multipart/mixed;
+	boundary="_002_477F20668A386D41ADCC57781B1F7043083BADF6C6SCVEXCH1marve_"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-13 at 13:44 -0800, Andrew Morton wrote:
-> On Tue, 13 Nov 2012 05:06:10 -0800
-> Joe Perches <joe@perches.com> wrote:
-> 
-> > On Tue, 2012-11-13 at 14:23 +0200, Vladimir Kondratiev wrote:
-> > []
-> > > diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-> > []
-> > > +/* Candidate to merge into printk.h and dynamic_debug.h */
-> > > +#if defined(CONFIG_DYNAMIC_DEBUG)
-> > > +#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > > +			 groupsize, buf, len, ascii)		\
-> > > +do {								\
-> > > +	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
-> > > +	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
-> > > +		print_hex_dump(KERN_DEBUG, prefix_str,		\
-> > > +			       prefix_type, rowsize, groupsize,	\
-> > > +			       buf, len, ascii);		\
-> > > +} while (0)
-> > > +
-> > > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > > +		       groupsize, buf, len, ascii)		\
-> > > +		       dynamic_hex_dump(prefix_str, prefix_type,\
-> > > +					rowsize, groupsize, buf,\
-> > > +					len, ascii)
-> > > +#else
-> > > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > > +		       groupsize, buf, len, ascii)		\
-> > > +		       print_hex_dump(KERN_DEBUG, prefix_str,	\
-> > > +				      prefix_type, rowsize,	\
-> > > +				      groupsize, buf, len, ascii)
-> > > +#endif
-> > 
-> > Thanks Vladimir.  I think so too.
-> > 
-> > Jason?  Andrew?
-> 
-> (I'm not on linux-wireless)
-> 
-> Agree that the above should be in a core header file.
-> 
-> Disagree with placing it in a wireless header.
-> 
-> Please split it out into a standalone patch.
-> 
-> Does it have to be done as macros?  Can't do at least some of
-> this in C?
+--_002_477F20668A386D41ADCC57781B1F7043083BADF6C6SCVEXCH1marve_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Macros are required here because of CONFIG_DYNAMIC_DEBUG
-It's how it's done currently for all dynamic_<foo> uses.
+Hi Tim,
 
-> Some interface documentation would be nice, especially if it's
-> implemented in macros - that's an awful lot of arguments to have to
-> guess about.
+> Bing,
+>=20
+> I am trying to figure out if this patch would help in the situation I
+> told you about in September.
+>=20
+> I was doing suspend/resume testing using
+>=20
+>   rtcwake -s 6 -mmem
+>=20
+> in a loop to test the ability of the mwifiex driver to suspend/resume.
+>=20
+> I was seeing sporadic failures (wedgeups), and the majority of those
+> failures I saw printed the printouts in mwifiex_cmd_timeout_func with
+> cmd =3D 0xe5 which is CMD_802_11_HS_CFG_ENH.  When this happens, two
+> minutes later I get notified that the rtcwake thread is blocked, like
+> this:
+>=20
+>       INFO: task rtcwake:3495 blocked for more than 120 seconds.
+>=20
+>=20
+>=20
+> I believe the hang happens when mwifiex_sdio_suspend() is called in
+> the rtcwake thread it winds winds up blocked waiting on a wait queue
+> in mwifiex_enable_hs() because when the timeout happens it never gets
+> woken up.
 
-kernel-doc should probably be added for all printk forms,
-not just for this.
+You can try it with an asynchronous call.
 
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireles=
+s/mwi
+index c8b50c7..704d344 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -472,7 +472,7 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
 
+        if (mwifiex_set_hs_params(mwifiex_get_priv(adapter,
+                                                   MWIFIEX_BSS_ROLE_STA),
+-                                 HostCmd_ACT_GEN_SET, MWIFIEX_SYNC_CMD,
++                                 HostCmd_ACT_GEN_SET, MWIFIEX_ASYNC_CMD,
+                                  &hscfg)) {
+                dev_err(adapter->dev, "IOCTL request HS enable failed\n");
+                return false;
+
+If this doesn't help, please apply the debug patch attached. Hopefully we c=
+an get some useful information.
+
+Thanks,
+Bing
+
+>=20
+> Reading your patch today, I don't see how your patch will add a new
+> way to get that hung thread unblocked.
+>=20
+> (I'm also not sure doing the reset of the card will work properly while
+>  the system is in the middle of trying to suspend, but that's a
+>  different question.)
+>=20
+> If I'm missing a clue about this, please let me know.
+>=20
+>=20
+> 			-Tim Shepard
+> 			 shep@laptop.org
+
+--_002_477F20668A386D41ADCC57781B1F7043083BADF6C6SCVEXCH1marve_
+Content-Type: application/octet-stream;
+	name="mwifiex_v3.7rc3_debug_suspend_resume.diff"
+Content-Description: mwifiex_v3.7rc3_debug_suspend_resume.diff
+Content-Disposition: attachment;
+	filename="mwifiex_v3.7rc3_debug_suspend_resume.diff"; size=6818;
+	creation-date="Sat, 03 Nov 2012 01:06:57 GMT";
+	modification-date="Sat, 03 Nov 2012 01:06:57 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5jCmluZGV4IGM5NTI4YjMuLmRlMjM5NDcg
+MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMKKysrIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jbWRldnQuYwpAQCAtMTg2LDcgKzE4Niw3IEBA
+IHN0YXRpYyBpbnQgbXdpZmlleF9kbmxkX2NtZF90b19mdyhzdHJ1Y3QgbXdpZmlleF9wcml2YXRl
+ICpwcml2LAogCQlza2JfcHV0KGNtZF9ub2RlLT5jbWRfc2tiLCBjbWRfc2l6ZSAtIGNtZF9ub2Rl
+LT5jbWRfc2tiLT5sZW4pOwogCiAJZG9fZ2V0dGltZW9mZGF5KCZ0c3RhbXApOwotCWRldl9kYmco
+YWRhcHRlci0+ZGV2LCAiY21kOiBETkxEX0NNRDogKCVsdS4lbHUpOiAlI3gsIGFjdCAlI3gsIGxl
+biAlZCwiCisJZGV2X2luZm8oYWRhcHRlci0+ZGV2LCAiY21kOiBETkxEX0NNRDogKCVsdS4lbHUp
+OiAlI3gsIGFjdCAlI3gsIGxlbiAlZCwiCiAJCSIgc2Vxbm8gJSN4XG4iLAogCQl0c3RhbXAudHZf
+c2VjLCB0c3RhbXAudHZfdXNlYywgY21kX2NvZGUsCiAJCWxlMTZfdG9fY3B1KCooX19sZTE2ICop
+ICgodTggKikgaG9zdF9jbWQgKyBTX0RTX0dFTikpLCBjbWRfc2l6ZSwKQEAgLTQ0OSw2ICs0NDks
+OCBAQCBpbnQgbXdpZmlleF9wcm9jZXNzX2V2ZW50KHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFk
+YXB0ZXIpCiAJCXJ4X2luZm8tPmJzc190eXBlID0gcHJpdi0+YnNzX3R5cGU7CiAJfQogCisJZGV2
+X2luZm8oYWRhcHRlci0+ZGV2LCAiZXZlbnQ6ICVsdS4lbHU6IGNhdXNlOiAlI3hcbiIsCisJCXRz
+dGFtcC50dl9zZWMsIHRzdGFtcC50dl91c2VjLCBldmVudGNhdXNlKTsKIAlpZiAoZXZlbnRjYXVz
+ZSAhPSBFVkVOVF9QU19TTEVFUCAmJiBldmVudGNhdXNlICE9IEVWRU5UX1BTX0FXQUtFKSB7CiAJ
+CWRvX2dldHRpbWVvZmRheSgmdHN0YW1wKTsKIAkJZGV2X2RiZyhhZGFwdGVyLT5kZXYsICJldmVu
+dDogJWx1LiVsdTogY2F1c2U6ICUjeFxuIiwKQEAgLTgxNyw3ICs4MTksNyBAQCBpbnQgbXdpZmll
+eF9wcm9jZXNzX2NtZHJlc3Aoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikKIAkJCQkJ
+CQkJb3JpZ19jbWRyZXNwX25vOwogCiAJZG9fZ2V0dGltZW9mZGF5KCZ0c3RhbXApOwotCWRldl9k
+YmcoYWRhcHRlci0+ZGV2LCAiY21kOiBDTURfUkVTUDogKCVsdS4lbHUpOiAweCV4LCByZXN1bHQg
+JWQsIgorCWRldl9pbmZvKGFkYXB0ZXItPmRldiwgImNtZDogQ01EX1JFU1A6ICglbHUuJWx1KTog
+MHgleCwgcmVzdWx0ICVkLCIKIAkJIiBsZW4gJWQsIHNlcW5vIDB4JXhcbiIsCiAJICAgICAgIHRz
+dGFtcC50dl9zZWMsIHRzdGFtcC50dl91c2VjLCBvcmlnX2NtZHJlc3Bfbm8sIGNtZHJlc3BfcmVz
+dWx0LAogCSAgICAgICBsZTE2X3RvX2NwdShyZXNwLT5zaXplKSwgbGUxNl90b19jcHUocmVzcC0+
+c2VxX251bSkpOwpAQCAtMTA5NiwxNSArMTA5OCwxNSBAQCBtd2lmaWV4X2hzX2FjdGl2YXRlZF9l
+dmVudChzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LCB1OCBhY3RpdmF0ZWQpCiAJCQlwcml2
+LT5hZGFwdGVyLT5oc19hY3RpdmF0ZWQgPSB0cnVlOwogCQkJbXdpZmlleF91cGRhdGVfcnhyZW9y
+X2ZsYWdzKHByaXYtPmFkYXB0ZXIsCiAJCQkJCQkgICAgUlhSRU9SX0ZPUkNFX05PX0RST1ApOwot
+CQkJZGV2X2RiZyhwcml2LT5hZGFwdGVyLT5kZXYsICJldmVudDogaHNfYWN0aXZhdGVkXG4iKTsK
+KwkJCWRldl9pbmZvKHByaXYtPmFkYXB0ZXItPmRldiwgImV2ZW50OiBoc19hY3RpdmF0ZWRcbiIp
+OwogCQkJcHJpdi0+YWRhcHRlci0+aHNfYWN0aXZhdGVfd2FpdF9xX3dva2VuID0gdHJ1ZTsKIAkJ
+CXdha2VfdXBfaW50ZXJydXB0aWJsZSgKIAkJCQkmcHJpdi0+YWRhcHRlci0+aHNfYWN0aXZhdGVf
+d2FpdF9xKTsKIAkJfSBlbHNlIHsKLQkJCWRldl9kYmcocHJpdi0+YWRhcHRlci0+ZGV2LCAiZXZl
+bnQ6IEhTIG5vdCBjb25maWd1cmVkXG4iKTsKKwkJCWRldl9pbmZvKHByaXYtPmFkYXB0ZXItPmRl
+diwgImV2ZW50OiBIUyBub3QgY29uZmlndXJlZFxuIik7CiAJCX0KIAl9IGVsc2UgewotCQlkZXZf
+ZGJnKHByaXYtPmFkYXB0ZXItPmRldiwgImV2ZW50OiBoc19kZWFjdGl2YXRlZFxuIik7CisJCWRl
+dl9pbmZvKHByaXYtPmFkYXB0ZXItPmRldiwgImV2ZW50OiBoc19kZWFjdGl2YXRlZFxuIik7CiAJ
+CXByaXYtPmFkYXB0ZXItPmhzX2FjdGl2YXRlZCA9IGZhbHNlOwogCX0KIH0KZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Rpby5jIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbXdpZmlleC9zZGlvLmMKaW5kZXggOTBhODdiNS4uMDJlMjEzNyAxMDA2NDQKLS0tIGEvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zZGlvLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbXdpZmlleC9zZGlvLmMKQEAgLTE2NSw5ICsxNjUsMTEgQEAgc3RhdGljIGludCBtd2lmaWV4
+X3NkaW9fc3VzcGVuZChzdHJ1Y3QgZGV2aWNlICpkZXYpCiAJaW50IGk7CiAJaW50IHJldCA9IDA7
+CiAKKwlwcl9pbmZvKCIlcyBlbnRyeSBkZXY9JXBcbiIsIF9fZnVuY19fLCBkZXYpOworCiAJaWYg
+KGZ1bmMpIHsKIAkJcG1fZmxhZyA9IHNkaW9fZ2V0X2hvc3RfcG1fY2FwcyhmdW5jKTsKLQkJcHJf
+ZGVidWcoImNtZDogJXM6IHN1c3BlbmQ6IFBNIGZsYWcgPSAweCV4XG4iLAorCQlwcl9pbmZvKCJj
+bWQ6ICVzOiBzdXNwZW5kOiBQTSBmbGFnID0gMHgleFxuIiwKIAkJCSBzZGlvX2Z1bmNfaWQoZnVu
+YyksIHBtX2ZsYWcpOwogCQlpZiAoIShwbV9mbGFnICYgTU1DX1BNX0tFRVBfUE9XRVIpKSB7CiAJ
+CQlwcl9lcnIoIiVzOiBjYW5ub3QgcmVtYWluIGFsaXZlIHdoaWxlIGhvc3QgaXMiCkBAIC0xOTAs
+NyArMTkyLDcgQEAgc3RhdGljIGludCBtd2lmaWV4X3NkaW9fc3VzcGVuZChzdHJ1Y3QgZGV2aWNl
+ICpkZXYpCiAJLyogRW5hYmxlIHRoZSBIb3N0IFNsZWVwICovCiAJaHNfYWN0aXZlZCA9IG13aWZp
+ZXhfZW5hYmxlX2hzKGFkYXB0ZXIpOwogCWlmIChoc19hY3RpdmVkKSB7Ci0JCXByX2RlYnVnKCJj
+bWQ6IHN1c3BlbmQgd2l0aCBNTUNfUE1fS0VFUF9QT1dFUlxuIik7CisJCXByX2luZm8oImNtZDog
+c3VzcGVuZCB3aXRoIE1NQ19QTV9LRUVQX1BPV0VSXG4iKTsKIAkJcmV0ID0gc2Rpb19zZXRfaG9z
+dF9wbV9mbGFncyhmdW5jLCBNTUNfUE1fS0VFUF9QT1dFUik7CiAJfQogCkBAIC0yMjEsNiArMjIz
+LDggQEAgc3RhdGljIGludCBtd2lmaWV4X3NkaW9fcmVzdW1lKHN0cnVjdCBkZXZpY2UgKmRldikK
+IAltbWNfcG1fZmxhZ190IHBtX2ZsYWcgPSAwOwogCWludCBpOwogCisJcHJfaW5mbygiJXMgZW50
+cnkgZGV2PSVwXG4iLCBfX2Z1bmNfXywgZGV2KTsKKwogCWlmIChmdW5jKSB7CiAJCXBtX2ZsYWcg
+PSBzZGlvX2dldF9ob3N0X3BtX2NhcHMoZnVuYyk7CiAJCWNhcmQgPSBzZGlvX2dldF9kcnZkYXRh
+KGZ1bmMpOwpAQCAtMjQyLDYgKzI0NiwxMiBAQCBzdGF0aWMgaW50IG13aWZpZXhfc2Rpb19yZXN1
+bWUoc3RydWN0IGRldmljZSAqZGV2KQogCiAJYWRhcHRlci0+aXNfc3VzcGVuZGVkID0gZmFsc2U7
+CiAKKwlpZiAoIWFkYXB0ZXItPmhzX2FjdGl2YXRlZCkgeworCQlkZXZfd2FybihhZGFwdGVyLT5k
+ZXYsCisJCQkgImhvc3Qgc2xlZXAgZGVhY3RpdmF0ZWQgYmVmb3JlIHN1c3BlbmRcbiIpOworCQkv
+L2FkYXB0ZXItPmlmX29wcy53YWtldXAoYWRhcHRlcik7CisJfQorCiAJZm9yIChpID0gMDsgaSA8
+IGFkYXB0ZXItPnByaXZfbnVtOyBpKyspCiAJCWlmIChhZGFwdGVyLT5wcml2W2ldLT5tZWRpYV9j
+b25uZWN0ZWQpCiAJCQluZXRpZl9jYXJyaWVyX29uKGFkYXB0ZXItPnByaXZbaV0tPm5ldGRldik7
+CkBAIC05MTQsNiArOTI0LDcgQEAgbXdpZmlleF9zZGlvX2ludGVycnVwdChzdHJ1Y3Qgc2Rpb19m
+dW5jICpmdW5jKQogCXN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXI7CiAJc3RydWN0IHNk
+aW9fbW1jX2NhcmQgKmNhcmQ7CiAKKwlwcmludGsoIioiKTsKIAljYXJkID0gc2Rpb19nZXRfZHJ2
+ZGF0YShmdW5jKTsKIAlpZiAoIWNhcmQgfHwgIWNhcmQtPmFkYXB0ZXIpIHsKIAkJcHJfZGVidWco
+ImludDogZnVuYz0lcCBjYXJkPSVwIGFkYXB0ZXI9JXBcbiIsCmRpZmYgLS1naXQgYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9td2lmaWV4L3N0YV9jbWRyZXNwLmMgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9td2lmaWV4L3N0YV9jbWRyZXNwLmMKaW5kZXggNjVjMTJlYi4uYmIxZGY4MiAxMDA2NDQKLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zdGFfY21kcmVzcC5jCisrKyBiL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc3RhX2NtZHJlc3AuYwpAQCAtNTEsNiArNTEsOSBAQCBt
+d2lmaWV4X3Byb2Nlc3NfY21kcmVzcF9lcnJvcihzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2
+LAogCWRldl9lcnIoYWRhcHRlci0+ZGV2LCAiQ01EX1JFU1A6IGNtZCAlI3ggZXJyb3IsIHJlc3Vs
+dD0lI3hcbiIsCiAJCXJlc3AtPmNvbW1hbmQsIHJlc3AtPnJlc3VsdCk7CiAKKwlwcmludF9oZXhf
+ZHVtcChLRVJOX0RFQlVHLCAiQ01EUkVTUDoiLCBEVU1QX1BSRUZJWF9PRkZTRVQsIDE2LCAxLCBy
+ZXNwLCBsZTE2X3RvX2NwdShyZXNwLT5zaXplKSwgZmFsc2UpOworCXByaW50ayhLRVJOX0RFQlVH
+ICJcbiIpOworCiAJaWYgKGFkYXB0ZXItPmN1cnJfY21kLT53YWl0X3FfZW5hYmxlZCkKIAkJYWRh
+cHRlci0+Y21kX3dhaXRfcS5zdGF0dXMgPSAtMTsKIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvbXdpZmlleC9zdGFfaW9jdGwuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZp
+ZXgvc3RhX2lvY3RsLmMKaW5kZXggYzhiNTBjNy4uMWY0NzFkZiAxMDA2NDQKLS0tIGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zdGFfaW9jdGwuYworKysgYi9kcml2ZXJzL25ldC93aXJl
+bGVzcy9td2lmaWV4L3N0YV9pb2N0bC5jCkBAIC0zNjAsNyArMzYwLDcgQEAgc3RhdGljIGludCBt
+d2lmaWV4X3NldF9oc19wYXJhbXMoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgdTE2IGFj
+dGlvbiwKIAlzd2l0Y2ggKGFjdGlvbikgewogCWNhc2UgSG9zdENtZF9BQ1RfR0VOX1NFVDoKIAkJ
+aWYgKGFkYXB0ZXItPnBwc191YXBzZF9tb2RlKSB7Ci0JCQlkZXZfZGJnKGFkYXB0ZXItPmRldiwg
+ImluZm86IEhvc3QgU2xlZXAgSU9DVEwiCisJCQlkZXZfaW5mbyhhZGFwdGVyLT5kZXYsICJpbmZv
+OiBIb3N0IFNsZWVwIElPQ1RMIgogCQkJCSIgaXMgYmxvY2tlZCBpbiBVQVBTRC9QUFMgbW9kZVxu
+Iik7CiAJCQlzdGF0dXMgPSAtMTsKIAkJCWJyZWFrOwpAQCAtMzg4LDYgKzM4OCw5IEBAIHN0YXRp
+YyBpbnQgbXdpZmlleF9zZXRfaHNfcGFyYW1zKHN0cnVjdCBtd2lmaWV4X3ByaXZhdGUgKnByaXYs
+IHUxNiBhY3Rpb24sCiAJCQkJc3RhdHVzID0gLTE7CiAJCQkJYnJlYWs7CiAJCQl9CisJCQlkZXZf
+aW5mbyhhZGFwdGVyLT5kZXYsICIlczogJSN4ICUjeCAlI3hcbiIsIF9fZnVuY19fLAorCQkJCWFk
+YXB0ZXItPmhzX2NmZy5jb25kaXRpb25zLAorCQkJCWFkYXB0ZXItPmhzX2NmZy5ncGlvLCBhZGFw
+dGVyLT5oc19jZmcuZ2FwKTsKIAkJCWlmIChjbWRfdHlwZSA9PSBNV0lGSUVYX1NZTkNfQ01EKQog
+CQkJCXN0YXR1cyA9IG13aWZpZXhfc2VuZF9jbWRfc3luYyhwcml2LAogCQkJCQkJSG9zdENtZF9D
+TURfODAyXzExX0hTX0NGR19FTkgsCkBAIC0zOTgsNiArNDAxLDcgQEAgc3RhdGljIGludCBtd2lm
+aWV4X3NldF9oc19wYXJhbXMoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgdTE2IGFjdGlv
+biwKIAkJCQkJCUhvc3RDbWRfQ01EXzgwMl8xMV9IU19DRkdfRU5ILAogCQkJCQkJSG9zdENtZF9B
+Q1RfR0VOX1NFVCwgMCwKIAkJCQkJCSZhZGFwdGVyLT5oc19jZmcpOworCQkJZGV2X2luZm8oYWRh
+cHRlci0+ZGV2LCAiJXM6IEhTX0NGR19FTkggc2VudFxuIiwgX19mdW5jX18pOwogCQkJaWYgKGhz
+X2NmZy0+Y29uZGl0aW9ucyA9PSBIT1NUX1NMRUVQX0NGR19DQU5DRUwpCiAJCQkJLyogUmVzdG9y
+ZSBwcmV2aW91cyBjb25kaXRpb24gKi8KIAkJCQlhZGFwdGVyLT5oc19jZmcuY29uZGl0aW9ucyA9
+CkBAIC00NTIsNiArNDU2LDcgQEAgaW50IG13aWZpZXhfZW5hYmxlX2hzKHN0cnVjdCBtd2lmaWV4
+X2FkYXB0ZXIgKmFkYXB0ZXIpCiAJc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdjsKIAlpbnQg
+aTsKIAorCWRldl9pbmZvKGFkYXB0ZXItPmRldiwgIiVzOiBoc19hY3RpdmF0ZWQ9JWRcbiIsIF9f
+ZnVuY19fLCBhZGFwdGVyLT5oc19hY3RpdmF0ZWQpOwogCWlmIChkaXNjb25uZWN0X29uX3N1c3Bl
+bmQpIHsKIAkJZm9yIChpID0gMDsgaSA8IGFkYXB0ZXItPnByaXZfbnVtOyBpKyspIHsKIAkJCXBy
+aXYgPSBhZGFwdGVyLT5wcml2W2ldOwpAQCAtNDc4LDggKzQ4MywxMCBAQCBpbnQgbXdpZmlleF9l
+bmFibGVfaHMoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikKIAkJcmV0dXJuIGZhbHNl
+OwogCX0KIAorCWRldl9pbmZvKGFkYXB0ZXItPmRldiwgIiVzOiB3YWl0aW5nIGZvciBldmVudCwg
+aHNfYWN0aXZhdGVkPSVkXG4iLCBfX2Z1bmNfXywgYWRhcHRlci0+aHNfYWN0aXZhdGVkKTsKIAl3
+YWl0X2V2ZW50X2ludGVycnVwdGlibGUoYWRhcHRlci0+aHNfYWN0aXZhdGVfd2FpdF9xLAogCQkJ
+CSBhZGFwdGVyLT5oc19hY3RpdmF0ZV93YWl0X3Ffd29rZW4pOworCWRldl9pbmZvKGFkYXB0ZXIt
+PmRldiwgIiVzOiByZXR1cm4gaHNfYWN0aXZhdGVkPSVkXG4iLCBfX2Z1bmNfXywgYWRhcHRlci0+
+aHNfYWN0aXZhdGVkKTsKIAogCXJldHVybiB0cnVlOwogfQo=
+
+--_002_477F20668A386D41ADCC57781B1F7043083BADF6C6SCVEXCH1marve_--
