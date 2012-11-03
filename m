@@ -1,325 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42527 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757371Ab2K0A0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 19:26:07 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, wim@iguana.be
-Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 02/15] watchdog: bcm47xx_wdt.c: use platform device
-Date: Tue, 27 Nov 2012 01:25:12 +0100
-Message-Id: <1353975925-32056-3-git-send-email-hauke@hauke-m.de> (sfid-20121127_012611_790510_FD723F5D)
-In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
-References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:44842 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504Ab2KCNuf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Nov 2012 09:50:35 -0400
+Received: by mail-qa0-f46.google.com with SMTP id s11so731696qaa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Nov 2012 06:50:35 -0700 (PDT)
+Date: Sat, 3 Nov 2012 14:50:22 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
+ support
+Message-ID: <20121103135022.GA13562@eleaks.org> (sfid-20121103_145051_197347_3E971D42)
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+ <20121102104935.GA12843@eleaks.org>
+ <1351941357.21705.4.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1351941357.21705.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of accessing the function to set the watchdog timer directly,
-register a platform driver the platform could register to use this
-watchdog driver.
+On Sat, Nov 03, 2012 at 12:15:57PM +0100, Johannes Berg wrote:
+> On Fri, 2012-11-02 at 11:49 +0100, Karl Beldan wrote:
+> 
+> > > The patches also add flow control to stop incoming tx packets when the
+> > > DMA ring is full. In practice I found that we will sometimes receive a
+> > > single frame from mac80211 after stopping the queues, so some headroom
+> > > is reserved when stopping the queues. I also reduced the number of tx
+> > > descriptors per ring to 64 and fixed a bug that prevented having
+> > > differing non-zero numbers of tx and rx descriptors for a given ring.
+> > >
+> > It is strange that you would get one frame after stopping the queues.
+> > Apart from the iface up/down code which I did not look at, it seems the tx 
+> > codepaths for queues stop/wake are all properly protected by spin_lock_bhs.
+> > You mention a possible race in your code comments .. are you referring to 
+> > mac80211 or the driver itself ?
+> 
+> It's generally a race between mac80211 and the driver, if the driver
+> uses ieee80211_stop_queue() outside the TX path, the TX path can be
+> handing it a packet at the exact same time, and therefore there can be
+> one packet (on each queue!) that goes to the driver during the call to
+> stop_queue().
+> 
+Yes, yet in this case, it seems to be another pb.
+The driver performs ieee80211_stop_queue() inside the TX path exept for the 
+call within the tx status callback tasklet for ampdu retries - and the latter 
+should not trigger the pb since, as the comment puts it:
+{
+                /*
+                 * We shouldn't be out of space in the DMA
+                 * ring here since we're reinserting a frame
+                 * that was just pulled out.
+                 */
+}
+At first sight I would more likely doubt the txavail, though I haven't really
+looked into the code, the potential race caught my attention within the diff 
+and I thought it might be useful to follow up.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/watchdog/bcm47xx_wdt.c |  156 ++++++++++++++++++++--------------------
- include/linux/bcm47xx_wdt.h    |   27 +++++++
- 2 files changed, 105 insertions(+), 78 deletions(-)
- create mode 100644 include/linux/bcm47xx_wdt.h
-
-diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
-index 4c520d6..cf1191b 100644
---- a/drivers/watchdog/bcm47xx_wdt.c
-+++ b/drivers/watchdog/bcm47xx_wdt.c
-@@ -3,6 +3,7 @@
-  *
-  *  Copyright (C) 2008 Aleksandar Radovanovic <biblbroks@sezampro.rs>
-  *  Copyright (C) 2009 Matthieu CASTET <castet.matthieu@free.fr>
-+ *  Copyright (C) 2012 Hauke Mehrtens <hauke@hauke-m.de>
-  *
-  *  This program is free software; you can redistribute it and/or
-  *  modify it under the terms of the GNU General Public License
-@@ -12,19 +13,19 @@
  
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
- 
-+#include <linux/bcm47xx_wdt.h>
- #include <linux/bitops.h>
- #include <linux/errno.h>
- #include <linux/init.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/moduleparam.h>
-+#include <linux/platform_device.h>
- #include <linux/reboot.h>
- #include <linux/types.h>
- #include <linux/watchdog.h>
- #include <linux/timer.h>
- #include <linux/jiffies.h>
--#include <linux/ssb/ssb_embedded.h>
--#include <asm/mach-bcm47xx/bcm47xx.h>
- 
- #define DRV_NAME		"bcm47xx_wdt"
- 
-@@ -43,48 +44,19 @@ MODULE_PARM_DESC(nowayout,
- 		"Watchdog cannot be stopped once started (default="
- 				__MODULE_STRING(WATCHDOG_NOWAYOUT) ")");
- 
--static struct timer_list wdt_timer;
--static atomic_t ticks;
--
--static inline void bcm47xx_wdt_hw_start(void)
-+static inline struct bcm47xx_wdt *bcm47xx_wdt_get(struct watchdog_device *wdd)
- {
--	/* this is 2,5s on 100Mhz clock  and 2s on 133 Mhz */
--	switch (bcm47xx_bus_type) {
--#ifdef CONFIG_BCM47XX_SSB
--	case BCM47XX_BUS_TYPE_SSB:
--		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0xfffffff);
--		break;
--#endif
--#ifdef CONFIG_BCM47XX_BCMA
--	case BCM47XX_BUS_TYPE_BCMA:
--		bcma_chipco_watchdog_timer_set(&bcm47xx_bus.bcma.bus.drv_cc,
--					       0xfffffff);
--		break;
--#endif
--	}
-+	return container_of(wdd, struct bcm47xx_wdt, wdd);
- }
- 
--static inline int bcm47xx_wdt_hw_stop(void)
-+static void bcm47xx_timer_tick(unsigned long data)
- {
--	switch (bcm47xx_bus_type) {
--#ifdef CONFIG_BCM47XX_SSB
--	case BCM47XX_BUS_TYPE_SSB:
--		return ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
--#endif
--#ifdef CONFIG_BCM47XX_BCMA
--	case BCM47XX_BUS_TYPE_BCMA:
--		bcma_chipco_watchdog_timer_set(&bcm47xx_bus.bcma.bus.drv_cc, 0);
--		return 0;
--#endif
--	}
--	return -EINVAL;
--}
-+	struct bcm47xx_wdt *wdt = (struct bcm47xx_wdt *)data;
-+	u32 next_tick = min(wdt->wdd.timeout * 1000, wdt->max_timer_ms);
- 
--static void bcm47xx_timer_tick(unsigned long unused)
--{
--	if (!atomic_dec_and_test(&ticks)) {
--		bcm47xx_wdt_hw_start();
--		mod_timer(&wdt_timer, jiffies + HZ);
-+	if (!atomic_dec_and_test(&wdt->soft_ticks)) {
-+		wdt->timer_set_ms(wdt, next_tick);
-+		mod_timer(&wdt->soft_timer, jiffies + HZ);
- 	} else {
- 		pr_crit("Watchdog will fire soon!!!\n");
- 	}
-@@ -92,23 +64,29 @@ static void bcm47xx_timer_tick(unsigned long unused)
- 
- static int bcm47xx_wdt_keepalive(struct watchdog_device *wdd)
- {
--	atomic_set(&ticks, wdt_time);
-+	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
-+
-+	atomic_set(&wdt->soft_ticks, wdd->timeout);
- 
- 	return 0;
- }
- 
- static int bcm47xx_wdt_start(struct watchdog_device *wdd)
- {
--	bcm47xx_wdt_pet();
--	bcm47xx_timer_tick(0);
-+	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
-+
-+	bcm47xx_wdt_keepalive(wdd);
-+	bcm47xx_timer_tick((unsigned long)wdt);
- 
- 	return 0;
- }
- 
- static int bcm47xx_wdt_stop(struct watchdog_device *wdd)
- {
--	del_timer_sync(&wdt_timer);
--	bcm47xx_wdt_hw_stop();
-+	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
-+
-+	del_timer_sync(&wdt->soft_timer);
-+	wdt->timer_set(wdt, 0);
- 
- 	return 0;
- }
-@@ -116,10 +94,13 @@ static int bcm47xx_wdt_stop(struct watchdog_device *wdd)
- static int bcm47xx_wdt_set_timeout(struct watchdog_device *wdd,
- 				   unsigned int new_time)
- {
--	if ((new_time <= 0) || (new_time > WDT_MAX_TIME))
-+	if (new_time < 1 || new_time > WDT_MAX_TIME) {
-+		pr_warn("timeout value must be 1<=x<=%d, using %d\n",
-+			WDT_MAX_TIME, new_time);
- 		return -EINVAL;
-+	}
- 
--	wdt_time = new_time;
-+	wdd->timeout = new_time;
- 	return 0;
- }
- 
-@@ -133,8 +114,11 @@ static const struct watchdog_info bcm47xx_wdt_info = {
- static int bcm47xx_wdt_notify_sys(struct notifier_block *this,
- 				  unsigned long code, void *unused)
- {
-+	struct bcm47xx_wdt *wdt;
-+
-+	wdt = container_of(this, struct bcm47xx_wdt, notifier);
- 	if (code == SYS_DOWN || code == SYS_HALT)
--		bcm47xx_wdt_stop();
-+		wdt->wdd.ops->stop(&wdt->wdd);
- 	return NOTIFY_DONE;
- }
- 
-@@ -146,56 +130,72 @@ static struct watchdog_ops bcm47xx_wdt_ops = {
- 	.set_timeout	= bcm47xx_wdt_set_timeout,
- };
- 
--static struct watchdog_device bcm47xx_wdt_wdd = {
--	.info		= &bcm47xx_wdt_info,
--	.ops		= &bcm47xx_wdt_ops,
--};
--
--static struct notifier_block bcm47xx_wdt_notifier = {
--	.notifier_call = bcm47xx_wdt_notify_sys,
--};
--
--static int __init bcm47xx_wdt_init(void)
-+static int __devinit bcm47xx_wdt_probe(struct platform_device *pdev)
- {
- 	int ret;
-+	struct bcm47xx_wdt *wdt = dev_get_platdata(&pdev->dev);
- 
--	if (bcm47xx_wdt_hw_stop() < 0)
--		return -ENODEV;
-+	if (!wdt)
-+		return -ENXIO;
- 
--	setup_timer(&wdt_timer, bcm47xx_timer_tick, 0L);
-+	setup_timer(&wdt->soft_timer, bcm47xx_timer_tick,
-+		    (long unsigned int)wdt);
- 
--	if (bcm47xx_wdt_settimeout(wdt_time)) {
--		bcm47xx_wdt_settimeout(WDT_DEFAULT_TIME);
--		pr_info("wdt_time value must be 0 < wdt_time < %d, using %d\n",
--			(WDT_MAX_TIME + 1), wdt_time);
--	}
--	watchdog_set_nowayout(&bcm47xx_wdt_wdd, nowayout);
-+	wdt->wdd.ops = &bcm47xx_wdt_ops;
-+	wdt->wdd.info = &bcm47xx_wdt_info;
-+	wdt->wdd.timeout = WDT_DEFAULT_TIME;
-+	ret = wdt->wdd.ops->set_timeout(&wdt->wdd, timeout);
-+	if (ret)
-+		goto err_timer;
-+	watchdog_set_nowayout(&wdt->wdd, nowayout);
-+
-+	wdt->notifier.notifier_call = &bcm47xx_wdt_notify_sys;
- 
--	ret = register_reboot_notifier(&bcm47xx_wdt_notifier);
-+	ret = register_reboot_notifier(&wdt->notifier);
- 	if (ret)
--		return ret;
-+		goto err_timer;
- 
--	ret = watchdog_register_device(&bcm47xx_wdt_wdd);
--	if (ret) {
--		unregister_reboot_notifier(&bcm47xx_wdt_notifier);
--		return ret;
--	}
-+	ret = watchdog_register_device(&wdt->wdd);
-+	if (ret)
-+		goto err_notifier;
- 
- 	pr_info("BCM47xx Watchdog Timer enabled (%d seconds%s)\n",
- 		wdt_time, nowayout ? ", nowayout" : "");
- 	return 0;
-+
-+err_notifier:
-+	unregister_reboot_notifier(&wdt->notifier);
-+err_timer:
-+	del_timer_sync(&wdt->soft_timer);
-+
-+	return ret;
- }
- 
--static void __exit bcm47xx_wdt_exit(void)
-+static int __devexit bcm47xx_wdt_remove(struct platform_device *pdev)
- {
--	watchdog_unregister_device(&bcm47xx_wdt_wdd);
-+	struct bcm47xx_wdt *wdt = dev_get_platdata(&pdev->dev);
-+
-+	if (!wdt)
-+		return -ENXIO;
-+
-+	watchdog_unregister_device(&wdt->wdd);
-+	unregister_reboot_notifier(&wdt->notifier);
- 
--	unregister_reboot_notifier(&bcm47xx_wdt_notifier);
-+	return 0;
- }
- 
--module_init(bcm47xx_wdt_init);
--module_exit(bcm47xx_wdt_exit);
-+static struct platform_driver bcm47xx_wdt_driver = {
-+	.driver		= {
-+		.owner	= THIS_MODULE,
-+		.name	= "bcm47xx-wdt",
-+	},
-+	.probe		= bcm47xx_wdt_probe,
-+	.remove		= __devexit_p(bcm47xx_wdt_remove),
-+};
-+
-+module_platform_driver(bcm47xx_wdt_driver);
- 
- MODULE_AUTHOR("Aleksandar Radovanovic");
-+MODULE_AUTHOR("Hauke Mehrtens <hauke@hauke-m.de>");
- MODULE_DESCRIPTION("Watchdog driver for Broadcom BCM47xx");
- MODULE_LICENSE("GPL");
-diff --git a/include/linux/bcm47xx_wdt.h b/include/linux/bcm47xx_wdt.h
-new file mode 100644
-index 0000000..b94ac0e
---- /dev/null
-+++ b/include/linux/bcm47xx_wdt.h
-@@ -0,0 +1,27 @@
-+#ifndef LINUX_BCM47XX_WDT_H_
-+#define LINUX_BCM47XX_WDT_H_
-+
-+#include <linux/notifier.h>
-+#include <linux/timer.h>
-+#include <linux/types.h>
-+#include <linux/watchdog.h>
-+
-+
-+struct bcm47xx_wdt {
-+	u32 (*timer_set)(struct bcm47xx_wdt *, u32);
-+	u32 (*timer_set_ms)(struct bcm47xx_wdt *, u32);
-+
-+	void *driver_data;
-+
-+	struct watchdog_device wdd;
-+	struct notifier_block notifier;
-+
-+	struct timer_list soft_timer;
-+	atomic_t soft_ticks;
-+};
-+
-+static inline void *bcm47xx_wdt_get_drvdata(struct bcm47xx_wdt *wdt)
-+{
-+	return wdt->driver_data;
-+}
-+#endif /* LINUX_BCM47XX_WDT_H_ */
--- 
-1.7.10.4
-
+Karl
