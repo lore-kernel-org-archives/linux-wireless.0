@@ -1,31 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36054 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754417Ab2KZPIX (ORCPT
+Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:3579 "EHLO
+	mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753207Ab2KCUag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 10:08:23 -0500
-Message-ID: <1353942528.2800.1.camel@jlt4.sipsolutions.net> (sfid-20121126_160826_131704_5CA02B6E)
-Subject: Re: [RFC] mac80211: add debugfs file for mic failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: saravanad@posedge.com
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 26 Nov 2012 16:08:48 +0100
-In-Reply-To: <67d5ecb12773d91de180d654e6283cbe@posedge.com>
-References: <67d5ecb12773d91de180d654e6283cbe@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 3 Nov 2012 16:30:36 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 8/8] drivers/net/wireless/ath/ath6kl/hif.c: drop if around WARN_ON
+Date: Sat,  3 Nov 2012 21:30:25 +0100
+Message-Id: <1351974625-10282-9-git-send-email-Julia.Lawall@lip6.fr> (sfid-20121103_213255_036732_1259419C)
+In-Reply-To: <1351974625-10282-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1351974625-10282-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 04:56 -0800, saravanad@posedge.com wrote:
-> Add a debugfs file showing the number of failure of
-> rx packet dropped due to mic failures. currently the
-> number of rx packet dropped is counted in general and
-> not with respect to a specific reason. This patch
-> counts the number of packet drop due to mic failure.
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-What's the value of this, shouldn't wpa_s/hostapd start countermeasures
-pretty quickly?
+Just use WARN_ON rather than an if containing only WARN_ON(1).
 
-johannes
+A simplified version of the semantic patch that makes this transformation
+is as follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression e;
+@@
+- if (e) WARN_ON(1);
++ WARN_ON(e);
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/ath/ath6kl/hif.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
+index 68ed6c2..9e47c4a 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.c
++++ b/drivers/net/wireless/ath/ath6kl/hif.c
+@@ -338,8 +338,7 @@ static int ath6kl_hif_proc_err_intr(struct ath6kl_device *dev)
+ 	status = hif_read_write_sync(dev->ar, ERROR_INT_STATUS_ADDRESS,
+ 				     reg_buf, 4, HIF_WR_SYNC_BYTE_FIX);
+ 
+-	if (status)
+-		WARN_ON(1);
++	WARN_ON(status);
+ 
+ 	return status;
+ }
+@@ -383,8 +382,7 @@ static int ath6kl_hif_proc_cpu_intr(struct ath6kl_device *dev)
+ 	status = hif_read_write_sync(dev->ar, CPU_INT_STATUS_ADDRESS,
+ 				     reg_buf, 4, HIF_WR_SYNC_BYTE_FIX);
+ 
+-	if (status)
+-		WARN_ON(1);
++	WARN_ON(status);
+ 
+ 	return status;
+ }
 
