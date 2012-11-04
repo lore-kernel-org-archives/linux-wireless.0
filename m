@@ -1,97 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:45560 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159Ab2KTXxW (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:56737 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751294Ab2KDR7P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 18:53:22 -0500
-Message-ID: <50AC17ED.60405@etit.tu-chemnitz.de> (sfid-20121121_005326_391088_64A4AE9B)
-Date: Tue, 20 Nov 2012 15:53:17 -0800
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: javier@cozybit.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 09/14] mac80211: add power save support structure to mesh
- interface
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>  <1353134886-13256-10-git-send-email-marco.porsch@etit.tu-chemnitz.de> <1353144370.9543.29.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353144370.9543.29.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 4 Nov 2012 12:59:15 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so3458219wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Nov 2012 09:59:14 -0800 (PST)
+Message-ID: <1352051945.7322.2.camel@Route3278> (sfid-20121104_185938_351790_B5696051)
+Subject: [PATCH] staging: vt6656: dead code
+ byCntMeasure/TKIPCounterMeasuresInvoked
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 04 Nov 2012 17:59:05 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2012 01:26 AM, Johannes Berg wrote:
-> On Fri, 2012-11-16 at 22:48 -0800, Marco Porsch wrote:
->
->>   #ifdef CONFIG_MAC80211_MESH
->> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
->> index bc3e3e1..8396602 100644
->> --- a/net/mac80211/iface.c
->> +++ b/net/mac80211/iface.c
->> @@ -769,6 +769,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
->>   		/* free all potentially still buffered bcast frames */
->>   		local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
->>   		skb_queue_purge(&sdata->u.ap.ps.bc_buf);
->> +	} else if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
->> +		local->total_ps_buffered -= skb_queue_len(&sdata->u.mesh.ps.bc_buf);
->> +		skb_queue_purge(&sdata->u.mesh.ps.bc_buf);
->>   	} else if (sdata->vif.type == NL80211_IFTYPE_STATION) {
->>   		ieee80211_mgd_stop(sdata);
->>   	}
->
-> This will not apply, and is in the wrong place anyway.
 
-Moved it to mesh_stop. After disabling the beacon, these buffered 
-broadcast frames are not going to be transmitted anywhere.
+remove TKIPCounterMeasuresInvoked and byCntMeasure
 
->
->> +	/* reset in case we have been in a mesh with PS peers before */
->
-> should amend the comment to say "and leak all the frames that might be
-> on the queue now.
->
->> +	} else if (sta->sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
->> +		ps = &sta->sdata->u.mesh.ps;
->> +		/* TIM map only for AID <= IEEE80211_MAX_AID */
->
-> AID? Seems more like PLID to me:
->
->> +		id = le16_to_cpu(sta->plid) % IEEE80211_MAX_AID;
->
->> -	/* This is only necessary for stations on BSS interfaces */
->> -	if (!sta->sdata->bss)
->> +	/* This is only necessary for stations on BSS/MBSS interfaces */
->> +	if (!sta->sdata->bss &&
->> +	    !ieee80211_vif_is_mesh(&sta->sdata->vif))
->>   		return false;
->
-> Instead of cluttering all the code paths like this, what if we changed
->
-> struct ieee80211_if_ap *sdata->bss
->
-> to
->
-> struct ps_data *sdata->ps
->
->
-> If we know the interface type is AP/AP_VLAN, we can still get the AP
-> sdata from that pointer:
-> 	container_of(sdata->ps, struct ieee80211_sub_if_sdata, u.ap.ps);
->
-> This is only in a few places, and might keep all the RX/TX code simpler?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h |    1 -
+ drivers/staging/vt6656/mib.h    |    1 -
+ drivers/staging/vt6656/rxtx.c   |    5 -----
+ 3 files changed, 7 deletions(-)
 
-When counting, I found twice as many lines that would need the 
-workaround, as the ones that would benefit. Also I don't really have a 
-clue on the AP/VLAN code.
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index 8d9b9c1..f334e64 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -733,7 +733,6 @@ typedef struct __device_info {
+     BYTE                    byKeyIndex;
+ 
+     BOOL                    bAES;
+-    BYTE                    byCntMeasure;
+ 
+     unsigned int                    uKeyLength;
+     BYTE                    abyKey[WLAN_WEP232_KEYLEN];
+diff --git a/drivers/staging/vt6656/mib.h b/drivers/staging/vt6656/mib.h
+index 82d69a9..85c28e9 100644
+--- a/drivers/staging/vt6656/mib.h
++++ b/drivers/staging/vt6656/mib.h
+@@ -68,7 +68,6 @@ typedef struct tagSDot11Counters {
+     unsigned long long   TKIPLocalMICFailures;
+     unsigned long long   TKIPRemoteMICFailures;
+     unsigned long long   TKIPICVErrors;
+-    unsigned long long   TKIPCounterMeasuresInvoked;
+     unsigned long long   TKIPReplays;
+     unsigned long long   CCMPFormatErrors;
+     unsigned long long   CCMPReplays;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index a54c0c1..3a4933e 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -3033,11 +3033,6 @@ int nsDMA_tx_packet(PSDevice pDevice, unsigned int uDMAIdx, struct sk_buff *skb)
+                 }
+             }
+ 
+-            if (pDevice->byCntMeasure == 2) {
+-                bNeedDeAuth = TRUE;
+-                pDevice->s802_11Counter.TKIPCounterMeasuresInvoked++;
+-            }
+-
+             if (pDevice->bEnableHostWEP) {
+                 if ((uNodeIndex != 0) &&
+                     (pMgmt->sNodeDBTable[uNodeIndex].dwKeyIndex & PAIRWISE_KEY)) {
+-- 
+1.7.10.4
 
->
->> +++ b/net/mac80211/tx.c
->> @@ -329,6 +329,8 @@ static void purge_old_ps_buffers(struct ieee80211_local *local)
->>
->>   		if (sdata->vif.type == NL80211_IFTYPE_AP)
->>   			ps = &sdata->u.ap.ps;
->> +		else if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
->> +			ps = &sdata->u.mesh.ps;
->
-> This could just be "ps = sdata->ps" etc.
-
---Marco
 
