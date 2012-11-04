@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:63515 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754985Ab2K2Upu (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:49133 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063Ab2KDWll (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 15:45:50 -0500
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-kernel@vger.kernel.org, tglx@linutronix.de
-Cc: backports@vger.kernel.org, alexander.stein@systec-electronic.com,
-	brudley@broadcom.com, rvossen@broadcom.com, arend@broadcom.com,
-	frankyl@broadcom.com, kanyan@broadcom.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kyungmin.park@samsung.com, s.nawrocki@samsung.com,
-	linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
-	daniel.vetter@ffwll.ch, intel-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, srinidhi.kasagar@stericsson.com,
-	linus.walleij@linaro.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 6/6] ie6xx_wdt: convert struct spinlock to spinlock_t
-Date: Thu, 29 Nov 2012 12:45:10 -0800
-Message-Id: <1354221910-22493-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20121129_214615_789223_CF74CE20)
-In-Reply-To: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 4 Nov 2012 17:41:41 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so3550842wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Nov 2012 14:41:40 -0800 (PST)
+Message-ID: <1352068893.14226.7.camel@Route3278> (sfid-20121104_234153_076669_A8FD31C8)
+Subject: [PATCH] staging: vt6656: [BUG] nsDMA_tx_packet:  free tx context
+ bBoolInUse
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 04 Nov 2012 22:41:33 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+This reduces the number of free TX urbs when key is not found.
 
-spinlock_t should always be used.
-
-  CHECK   drivers/watchdog/ie6xx_wdt.c
-  CC [M]  drivers/watchdog/ie6xx_wdt.o
-  Building modules, stage 2.
-  MODPOST 43 modules
-  LD [M]  drivers/watchdog/ie6xx_wdt.ko
-
-Cc: Alexander Stein <alexander.stein@systec-electronic.com>
-Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/watchdog/ie6xx_wdt.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6656/rxtx.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/watchdog/ie6xx_wdt.c b/drivers/watchdog/ie6xx_wdt.c
-index e24ef6a..f2d6573 100644
---- a/drivers/watchdog/ie6xx_wdt.c
-+++ b/drivers/watchdog/ie6xx_wdt.c
-@@ -82,7 +82,7 @@ MODULE_PARM_DESC(resetmode,
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 3a4933e..0f35a9a 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -3045,6 +3045,7 @@ int nsDMA_tx_packet(PSDevice pDevice, unsigned int uDMAIdx, struct sk_buff *skb)
  
- static struct {
- 	unsigned short sch_wdtba;
--	struct spinlock unlock_sequence;
-+	spinlock_t unlock_sequence;
- #ifdef CONFIG_DEBUG_FS
- 	struct dentry *debugfs;
- #endif
+             if (pTransmitKey == NULL) {
+                 DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"return no tx key\n");
++		pContext->bBoolInUse = FALSE;
+                 dev_kfree_skb_irq(skb);
+                 pStats->tx_dropped++;
+                 return STATUS_FAILURE;
 -- 
 1.7.10.4
+
 
