@@ -1,35 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49901 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932506Ab2KVUoe (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:43722 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147Ab2KDRUO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 15:44:34 -0500
-Message-ID: <1353573266.9806.14.camel@jlt4.sipsolutions.net> (sfid-20121122_214447_895151_E6BBF2E3)
-Subject: Re: [PATCH v2] mac80211: support radiotap vendor namespace RX data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+	Sun, 4 Nov 2012 12:20:14 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so3444748wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Nov 2012 09:20:12 -0800 (PST)
+Message-ID: <1352049606.3056.30.camel@Route3278> (sfid-20121104_182030_673956_AC0B6A34)
+Subject: [PATCH] staging: vt6656: free skbuff and relocate on bReAllocSkb ==
+ FALSE.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Thu, 22 Nov 2012 09:34:26 +0100
-In-Reply-To: <50ADE0E3.2020909@neratec.com>
-References: <1353061591-22284-1-git-send-email-johannes@sipsolutions.net>
-	  <87ehjtygci.fsf@purkki.adurom.net>
-	 <1353063966.9490.1.camel@jlt4.sipsolutions.net>
-	 <50ADE0E3.2020909@neratec.com>
+Date: Sun, 04 Nov 2012 17:20:06 +0000
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-22 at 09:22 +0100, Wojciech Dubowik wrote:
-> Shouldn't all functions between ieee80211_rx
-> and remove_monitor_info map header with
-> (struct ieee80211_hdr *)(skb->data + status->vendor_radiotap_len) ?
-> 
-> Otherwise function like should_drop_frame uses header mapped over
-> potential vendor data.
+bReAllocSkb == FALSE is when data is not fed to user land.
 
-Huh, yes, how did I miss that. It only applies to should_drop_frame()
-though, or do you see any other place?
+Free and relocate skbuff.
 
-johannes
+Where data is not sent return = FALSE from RXbBulkInProcessData.
+
+This appears to reduce false errors when a reused skbuff has old data.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+
+---
+ drivers/staging/vt6656/dpc.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
+index 28edf9e..5ad7abb 100644
+--- a/drivers/staging/vt6656/dpc.c
++++ b/drivers/staging/vt6656/dpc.c
+@@ -617,7 +617,7 @@ RXbBulkInProcessData (
+                 //Discard beacon packet which channel is 0
+                 if ( (WLAN_GET_FC_FSTYPE((pRxPacket->p80211Header->sA3.wFrameCtl)) == WLAN_FSTYPE_BEACON) ||
+                      (WLAN_GET_FC_FSTYPE((pRxPacket->p80211Header->sA3.wFrameCtl)) == WLAN_FSTYPE_PROBERESP) ) {
+-                    return TRUE;
++			return FALSE;
+                 }
+             }
+             pRxPacket->byRxChannel = (*pbyRxSts) >> 2;
+@@ -912,7 +912,7 @@ RXbBulkInProcessData (
+                      pDevice->skb->protocol = htons(ETH_P_802_2);
+                      memset(pDevice->skb->cb, 0, sizeof(pDevice->skb->cb));
+                      netif_rx(pDevice->skb);
+-                     pDevice->skb = dev_alloc_skb((int)pDevice->rx_buf_sz);
++			return TRUE;
+                  }
+ 
+                 return FALSE;
+@@ -1534,6 +1534,11 @@ RXvFreeRCB(
+     ASSERT(!pRCB->Ref);     // should be 0
+     ASSERT(pRCB->pDevice);  // shouldn't be NULL
+ 
++	if (bReAllocSkb == FALSE) {
++		kfree_skb(pRCB->skb);
++		bReAllocSkb = TRUE;
++	}
++
+     if (bReAllocSkb == TRUE) {
+         pRCB->skb = dev_alloc_skb((int)pDevice->rx_buf_sz);
+         // todo error handling
+-- 
+1.7.10.4
+
 
