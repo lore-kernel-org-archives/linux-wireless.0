@@ -1,100 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:54986 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755462Ab2KMR3U (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:39516 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390Ab2KDUZz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 12:29:20 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so4133183eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:29:20 -0800 (PST)
-From: Maxim Mikityanskiy <maxtram95@gmail.com>
-To: greg@kroah.com, Larry.Finger@lwfinger.net,
-	linux-wireless@vger.kernel.org
-Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
-Subject: [PATCH 17/17] staging: rtl8187se: Removed empty stub read_acadapter_file()
-Date: Tue, 13 Nov 2012 19:28:23 +0200
-Message-Id: <1352827703-4659-18-git-send-email-maxtram95@gmail.com> (sfid-20121113_182926_559670_41247464)
-In-Reply-To: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
-References: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
+	Sun, 4 Nov 2012 15:25:55 -0500
+Date: Sun, 4 Nov 2012 21:25:49 +0100
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
+ support
+Message-ID: <20121104202549.GB24905@ubuntu-mba51> (sfid-20121104_212637_251617_42AEABDD)
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+ <50955ADB.9020703@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50955ADB.9020703@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed empty read_acadapter_file() and priv->PowerProfile that never
-changes its value
+On Sat, Nov 03, 2012 at 06:56:43PM +0100, Arend van Spriel wrote:
+> On 10/26/2012 04:23 PM, Seth Forshee wrote:
+> > I've been looking into the issues with brcmsmac performance reported at
+> > [0] and [1]. I started out looking into the tx queueing based on the "No
+> > where to go" messages in the logs. This code has a number of
+> > shortcomings:
+> > 
+> >  - The amount of bufferring is excessive. The tx queue will buffer up to
+> >    228 packets, and each of the tx DMA rings will queue up to 256 more.
+> > 
+> >  - There's no flow control. If the queue fills up packets begin to get
+> >    dropped, as evidenced by the "No where to go" messages.
+> > 
+> >  - Without flow control the tx queue probably helps avoid dropping
+> >    packets for short bursts due to the sheer number of packets that will
+> >    be buffered, but if flow control is added the only remaining benefit
+> >    that I can see is that it accumulates packets for aggregation. The tx
+> >    queue is far more complex than needed for supporting aggergation,
+> >    however.
+> > 
+> > As a result I worked up the following patches to add flow control remove
+> > the tx queue.
+> > 
+> > These patches change the tx handler to directly hand off packets to the
+> > DMA code. The convoluted priority->precedence->fifo mapping is converted
+> > to a simple one-to-one mapping of the mac80211 queues to fifos. Non-
+> > aggregate frames are immediately inserted into the DMA ring.
+> 
+> I mentioned earlier we were still looking at the first patch in this
+> series and do more testing on it. However, I wanted to provide feedback
+> on the other patches now. See below.
+> 
+> > Thanks,
+> > Seth
+> > 
+> > [0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1046507
+> > [1] http://www.spinics.net/lists/linux-wireless/msg96287.html
+> > 
+> > 
+> > Seth Forshee (18):
+> >   brcmsmac: Rework tx code to avoid internal buffering of packets
+> 
+> under test
+> 
+> >   brcmsmac: Use correct descriptor count when calculating next rx
+> >     descriptor
+> 
+> nice catch. acked.
+> 
+> >   brcmsmac: Reduce number of entries in tx DMA rings
+> 
+> under test.
+> 
+> >   brcm80211: Allow trace support to be enabled separately from debug
+> 
+> A bit confusing with BRCMDBG selecting BRCMS_TRACING.
 
-Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
----
- drivers/staging/rtl8187se/r8180.h      |    1 -
- drivers/staging/rtl8187se/r8180_core.c |   18 +-----------------
- 2 files changed, 1 insertion(+), 18 deletions(-)
+I did this so that the effect of selecting BRCMDBG was unchanged, since
+currently tracing is enabled by BRCMDBG. I'm happy to change it so that
+BRCMDBG does not select BRCMS_TRACING if you prefer.
 
-diff --git a/drivers/staging/rtl8187se/r8180.h b/drivers/staging/rtl8187se/r8180.h
-index 1db8257..70ea414 100644
---- a/drivers/staging/rtl8187se/r8180.h
-+++ b/drivers/staging/rtl8187se/r8180.h
-@@ -611,7 +611,6 @@ typedef struct r8180_priv
- 	struct work_struct watch_dog_wq;
- 	short ack_tx_to_ieee;
- 
--	u8 PowerProfile;
- 	u8 dma_poll_stop_mask;
- 
- 	//u8 RegThreeWireMode;
-diff --git a/drivers/staging/rtl8187se/r8180_core.c b/drivers/staging/rtl8187se/r8180_core.c
-index 08fdc4a..ea04eec 100644
---- a/drivers/staging/rtl8187se/r8180_core.c
-+++ b/drivers/staging/rtl8187se/r8180_core.c
-@@ -2480,7 +2480,6 @@ short rtl8180_init(struct net_device *dev)
- 	priv->NumTxOkTotal = 0;
- 	priv->NumTxUnicast = 0;
- 	priv->keepAliveLevel = DEFAULT_KEEP_ALIVE_LEVEL;
--	priv->PowerProfile = POWER_PROFILE_AC;
- 	priv->CurrRetryCnt = 0;
- 	priv->LastRetryCnt = 0;
- 	priv->LastTxokCnt = 0;
-@@ -2927,8 +2926,6 @@ static void MgntLinkKeepAlive(struct r8180_priv *priv)
- 	}
- }
- 
--static u8 read_acadapter_file(char *filename);
--
- void rtl8180_watch_dog(struct net_device *dev)
- {
- 	struct r8180_priv *priv = ieee80211_priv(dev);
-@@ -2961,12 +2958,7 @@ void rtl8180_watch_dog(struct net_device *dev)
- 	MgntLinkKeepAlive(priv);
- 
- 	/* YJ,add,080828,for LPS */
--	if (priv->PowerProfile == POWER_PROFILE_BATTERY)
--		priv->bLeisurePs = true;
--	else if (priv->PowerProfile == POWER_PROFILE_AC) {
--		LeisurePSLeave(priv);
--		priv->bLeisurePs = false;
--	}
-+	LeisurePSLeave(priv);
- 
- 	if (priv->ieee80211->state == IEEE80211_LINKED) {
- 		priv->link_detect.NumRxOkInPeriod = priv->ieee80211->NumRxDataInPeriod;
-@@ -3735,9 +3727,6 @@ void GPIOChangeRFWorkItemCallBack(struct work_struct *work)
- 	static char *envp[] = {"HOME=/", "TERM=linux", "PATH=/usr/bin:/bin", NULL};
- 	static int readf_count = 0;
- 
--	if (readf_count % 10 == 0)
--		priv->PowerProfile = read_acadapter_file("/proc/acpi/ac_adapter/AC0/state");
--
- 	readf_count = (readf_count+1)%0xffff;
- 	/* We should turn off LED before polling FF51[4]. */
- 
-@@ -3782,10 +3771,5 @@ void GPIOChangeRFWorkItemCallBack(struct work_struct *work)
- 	}
- }
- 
--static u8 read_acadapter_file(char *filename)
--{
--	return 0;
--}
--
- module_init(rtl8180_pci_module_init);
- module_exit(rtl8180_pci_module_exit);
--- 
-1.7.10.4
+> >   brcm80211: Add macro for checking if debug log levels are enabled
+> 
+> During mainlining we got rid of such a macro. Strange to put something
+> similar back in there.
 
+I wasn't aware of that. I personally prefer the macro, but I can change
+it back to open coding the checks.
+
+> >   brcm80211: Convert log message levels to debug levels
+> 
+> acked.
+> 
+> >   brcmsmac: Add module parameter for setting the debug level
+> 
+> I would prefer doing this through debugfs.
+
+Okay, I'll change that for v2.
+
+> >   brcmsmac: Add support for writing debug messages to the trace buffer
+> 
+> can you name the new files just debug.[ch]
+
+I'll change this for v2 as well.
+
+> >   brcmsmac: Use debug macros for general error and debug statements
+> 
+> acked.
+> 
+> >   brcmsmac: Add BRCMS_DBG_MAC80211 debug macro
+> >   brcmsmac: Add RX and TX debug macros
+> >   brcmsmac: Add INT debug macro
+> >   brcmsmac: Add DMA debug macro
+> >   brcmsmac: Add HT debug macro
+> 
+> I would prefer the macros to be in lower case.
+
+Will do.
+
+> >   brcmsmac: Improve tx trace and debug support
+> 
+> acked.
+> 
+> >   brcmsmac: Add tracepoint for macintstatus
+> 
+> useful one. acked.
+> 
+> >   brcmsmac: Add tracepoint for AMPDU session information
+> 
+> acked.
+> 
+> >   brcmsmac: Remove some noisy but uninformative debug messages
+> 
+> acked. I would say: noisy *and* uninformative but that is just semantics ;-)
+
+Yes, "and" would be better here.
+
+Thanks for the feedback!
+
+Seth
