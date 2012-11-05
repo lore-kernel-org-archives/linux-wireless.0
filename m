@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:57528 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754122Ab2KFA7Y (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38205 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997Ab2KET2M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 19:59:24 -0500
-From: Bing Zhao <bzhao@marvell.com>
+	Mon, 5 Nov 2012 14:28:12 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2] mwifiex: process RX packets in SDIO IRQ thread directly
-Date: Mon,  5 Nov 2012 16:59:15 -0800
-Message-Id: <1352163555-31558-1-git-send-email-bzhao@marvell.com> (sfid-20121106_021004_926901_B899A081)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: use mac_pton
+Date: Mon,  5 Nov 2012 20:28:47 +0100
+Message-Id: <1352143727-29422-1-git-send-email-johannes@sipsolutions.net> (sfid-20121105_202827_044531_BA5B3ACF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ksdioirqd has higher priority than kworker. Process RX packets
-in SDIO IRQ thread (ksdioirqd/mmcX) directly instead of deferring
-the work to kworker to avoid the extra latency.
-This improves TCP throughput 15~20% on an ARM platform with SDIO
-2.0 controller.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Instead of implementing practically the same
+function (hwaddr_aton) use mac_pton.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-v2: modify the comment to accompany the change
-    (Mukesh Agrawal <quiche@chromium.org>)
+ net/mac80211/debugfs_netdev.c | 30 ++----------------------------
+ 1 file changed, 2 insertions(+), 28 deletions(-)
 
- drivers/net/wireless/mwifiex/main.c |    1 +
- drivers/net/wireless/mwifiex/sdio.c |    6 +++---
- 2 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 1df767b..51a13f8 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -282,6 +282,7 @@ exit_main_proc:
- 		mwifiex_shutdown_drv(adapter);
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(mwifiex_main_process);
- 
- /*
-  * This function frees the adapter structure.
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index fc8a9bf..011c816 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -905,8 +905,8 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
- /*
-  * SDIO interrupt handler.
-  *
-- * This function reads the interrupt status from firmware and assigns
-- * the main process in workqueue which will handle the interrupt.
-+ * This function reads the interrupt status from firmware and handles
-+ * the interrupt in current thread (ksdioirqd) right away.
-  */
- static void
- mwifiex_sdio_interrupt(struct sdio_func *func)
-@@ -929,7 +929,7 @@ mwifiex_sdio_interrupt(struct sdio_func *func)
- 		adapter->ps_state = PS_STATE_AWAKE;
- 
- 	mwifiex_interrupt_status(adapter);
--	queue_work(adapter->workqueue, &adapter->main_work);
-+	mwifiex_main_process(adapter);
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 07c5721..4b68ec7 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -10,6 +10,7 @@
+ #include <linux/kernel.h>
+ #include <linux/device.h>
+ #include <linux/if.h>
++#include <linux/if_ether.h>
+ #include <linux/interrupt.h>
+ #include <linux/netdevice.h>
+ #include <linux/rtnetlink.h>
+@@ -248,27 +249,6 @@ static ssize_t ieee80211_if_fmt_tkip_mic_test(
+ 	return -EOPNOTSUPP;
  }
  
- /*
+-static int hwaddr_aton(const char *txt, u8 *addr)
+-{
+-	int i;
+-
+-	for (i = 0; i < ETH_ALEN; i++) {
+-		int a, b;
+-
+-		a = hex_to_bin(*txt++);
+-		if (a < 0)
+-			return -1;
+-		b = hex_to_bin(*txt++);
+-		if (b < 0)
+-			return -1;
+-		*addr++ = (a << 4) | b;
+-		if (i < 5 && *txt++ != ':')
+-			return -1;
+-	}
+-
+-	return 0;
+-}
+-
+ static ssize_t ieee80211_if_parse_tkip_mic_test(
+ 	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
+ {
+@@ -278,13 +258,7 @@ static ssize_t ieee80211_if_parse_tkip_mic_test(
+ 	struct ieee80211_hdr *hdr;
+ 	__le16 fc;
+ 
+-	/*
+-	 * Assume colon-delimited MAC address with possible white space
+-	 * following.
+-	 */
+-	if (buflen < 3 * ETH_ALEN - 1)
+-		return -EINVAL;
+-	if (hwaddr_aton(buf, addr) < 0)
++	if (!mac_pton(buf, addr))
+ 		return -EINVAL;
+ 
+ 	if (!ieee80211_sdata_running(sdata))
 -- 
-1.7.0.2
+1.8.0
 
