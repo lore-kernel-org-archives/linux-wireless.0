@@ -1,164 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389Ab2K1JnF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37285 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932437Ab2KEOkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:43:05 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:05 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eyal Shapira <eyal@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 05/20] wlcore: increase scan dwell times if no activity
-Date: Wed, 28 Nov 2012 11:42:34 +0200
-Message-Id: <1354095769-8724-6-git-send-email-arik@wizery.com> (sfid-20121128_104311_399112_8FD2A35E)
-In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	Mon, 5 Nov 2012 09:40:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] wireless: add utility function to get P2P attribute
+Date: Mon,  5 Nov 2012 15:40:44 +0100
+Message-Id: <1352126445-25088-2-git-send-email-johannes@sipsolutions.net> (sfid-20121105_154023_337411_E2CE4A41)
+In-Reply-To: <1352126445-25088-1-git-send-email-johannes@sipsolutions.net>
+References: <1352126445-25088-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-There's a limit on scan dwell times of max 30ms in order
-to avoid degrading voip traffic which could be going on
-while scanning. However these dwell times increase the
-chance of missing out on nearby APs leading to partial
-scan results. Allow configuration of longer dwell times
-in case there no active interface (i.e. no STA associated
-or AP up).
+Parsing the P2P attributes can be tricky as their
+contents can be split across multiple (vendor) IEs.
+Thus, it's not possible to parse them like IEs (by
+returning a pointer to the data.) Instead, provide
+a function that copies the attribute data into a
+caller-provided buffer and returns the size needed
+(useful in case the buffer was too small.)
 
-[Arik - count started vifs using an in-driver function]
-
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wl12xx/main.c |    6 ++++--
- drivers/net/wireless/ti/wl18xx/main.c |    6 ++++--
- drivers/net/wireless/ti/wlcore/conf.h |   20 +++++++++++++++++++-
- drivers/net/wireless/ti/wlcore/scan.c |   29 +++++++++++++++++++++++++++--
- 4 files changed, 54 insertions(+), 7 deletions(-)
+ include/net/cfg80211.h | 19 ++++++++++
+ net/wireless/util.c    | 99 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 118 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 5e3c808..a03a847 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -267,8 +267,10 @@ static struct wlcore_conf wl12xx_conf = {
- 		.avg_weight_snr_data          = 10,
- 	},
- 	.scan = {
--		.min_dwell_time_active        = 7500,
--		.max_dwell_time_active        = 30000,
-+		.min_dwell_time_active_conc   = 7500,
-+		.max_dwell_time_active_conc   = 30000,
-+		.min_dwell_time_active        = 25000,
-+		.max_dwell_time_active        = 50000,
- 		.dwell_time_passive           = 100000,
- 		.dwell_time_dfs               = 150000,
- 		.num_probe_reqs               = 2,
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index d806241..9685fc3 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -394,8 +394,10 @@ static struct wlcore_conf wl18xx_conf = {
- 		.avg_weight_snr_data          = 10,
- 	},
- 	.scan = {
--		.min_dwell_time_active        = 7500,
--		.max_dwell_time_active        = 30000,
-+		.min_dwell_time_active_conc   = 7500,
-+		.max_dwell_time_active_conc   = 30000,
-+		.min_dwell_time_active        = 25000,
-+		.max_dwell_time_active        = 50000,
- 		.dwell_time_passive           = 100000,
- 		.dwell_time_dfs               = 150000,
- 		.num_probe_reqs               = 2,
-diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
-index ad15cae..a4eb14c 100644
---- a/drivers/net/wireless/ti/wlcore/conf.h
-+++ b/drivers/net/wireless/ti/wlcore/conf.h
-@@ -1097,6 +1097,24 @@ struct conf_scan_settings {
- 	 */
- 	u32 max_dwell_time_active;
- 
-+	/*
-+	 * The minimum time to wait on each channel for active scans
-+	 * when there's a concurrent active interface. This should
-+	 * lower than min_dwell_time_active usually in order to avoid
-+	 * interfering with possible voip traffic on another interface.
-+	 *
-+	 * Range: u32 tu/1000
-+	 */
-+	u32 min_dwell_time_active_conc;
-+
-+	/*
-+	 * The maximum time to wait on each channel for active scans
-+	 * See explanation about min_dwell_time_active_conc
-+	 *
-+	 * Range: u32 tu/1000
-+	 */
-+	u32 max_dwell_time_active_conc;
-+
- 	/* time to wait on the channel for passive scans (in TU/1000) */
- 	u32 dwell_time_passive;
- 
-@@ -1322,7 +1340,7 @@ struct conf_recovery_settings {
-  * version, the two LSB are the lower driver's private conf
-  * version.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 83a2c82..ae6d5e5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3623,6 +3623,25 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate);
   */
--#define WLCORE_CONF_VERSION	(0x0005 << 16)
-+#define WLCORE_CONF_VERSION	(0x0006 << 16)
- #define WLCORE_CONF_MASK	0xffff0000
- #define WLCORE_CONF_SIZE	(sizeof(struct wlcore_conf_header) +	\
- 				 sizeof(struct wlcore_conf))
-diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
-index 7f42f8a..2cbd5e8 100644
---- a/drivers/net/wireless/ti/wlcore/scan.c
-+++ b/drivers/net/wireless/ti/wlcore/scan.c
-@@ -89,6 +89,25 @@ out:
+ void cfg80211_unregister_wdev(struct wireless_dev *wdev);
  
++/**
++ * cfg80211_get_p2p_attr - find and copy a P2P attribute from IE buffer
++ * @ies: the input IE buffer
++ * @len: the input length
++ * @attr: the attribute ID to find
++ * @buf: output buffer, can be %NULL if the data isn't needed, e.g.
++ *	if the function is only called to get the needed buffer size
++ * @bufsize: size of the output buffer
++ *
++ * The function finds a given P2P attribute in the (vendor) IEs and
++ * copies its contents to the given buffer.
++ *
++ * The return value is a negative error code (-%EILSEQ or -%ENOENT) if
++ * the data is malformed or the attribute can't be found (respectively),
++ * or the length of the found attribute (which can be zero).
++ */
++unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
++				   u8 attr, u8 *buf, unsigned int bufsize);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index cf11239..2964223 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -980,6 +980,105 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
  }
+ EXPORT_SYMBOL(cfg80211_calculate_bitrate);
  
-+static void wlcore_started_vifs_iter(void *data, u8 *mac,
-+				     struct ieee80211_vif *vif)
++unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
++				   u8 attr, u8 *buf, unsigned int bufsize)
 +{
-+	int *count = (int *)data;
++	u8 *out = buf;
++	u16 attr_remaining = 0;
++	bool desired_attr = false;
++	u16 desired_len = 0;
 +
-+	if (!vif->bss_conf.idle)
-+		(*count)++;
++	while (len > 0) {
++		unsigned int iedatalen;
++		unsigned int copy;
++		const u8 *iedata;
++
++		if (len < 2)
++			return -EILSEQ;
++		iedatalen = ies[1];
++		if (iedatalen + 2 > len)
++			return -EILSEQ;
++
++		if (ies[0] != WLAN_EID_VENDOR_SPECIFIC)
++			goto cont;
++
++		if (iedatalen < 4)
++			goto cont;
++
++		iedata = ies + 2;
++
++		/* check WFA OUI, P2P subtype */
++		if (iedata[0] != 0x50 || iedata[1] != 0x6f ||
++		    iedata[2] != 0x9a || iedata[3] != 0x09)
++			goto cont;
++
++		iedatalen -= 4;
++		iedata += 4;
++
++		/* check attribute continuation into this IE */
++		copy = min_t(unsigned int, attr_remaining, iedatalen);
++		if (copy && desired_attr) {
++			desired_len += copy;
++			if (out) {
++				memcpy(out, iedata, min(bufsize, copy));
++				out += min(bufsize, copy);
++				bufsize -= min(bufsize, copy);
++			}
++
++
++			if (copy == attr_remaining)
++				return desired_len;
++		}
++
++		attr_remaining -= copy;
++		if (attr_remaining)
++			goto cont;
++
++		iedatalen -= copy;
++		iedata += copy;
++
++		while (iedatalen > 0) {
++			u16 attr_len;
++
++			/* P2P attribute ID & size must fit */
++			if (iedatalen < 3)
++				return -EILSEQ;
++			desired_attr = iedata[0] == attr;
++			attr_len = get_unaligned_le16(iedata + 1);
++			iedatalen -= 3;
++			iedata += 3;
++
++			copy = min_t(unsigned int, attr_len, iedatalen);
++
++			if (desired_attr) {
++				desired_len += copy;
++				if (out) {
++					memcpy(out, iedata, min(bufsize, copy));
++					out += min(bufsize, copy);
++					bufsize -= min(bufsize, copy);
++				}
++
++				if (copy == attr_len)
++					return desired_len;
++			}
++
++			iedata += copy;
++			iedatalen -= copy;
++			attr_remaining = attr_len - copy;
++		}
++
++ cont:
++		len -= ies[1] + 2;
++		ies += ies[1] + 2;
++	}
++
++	if (attr_remaining && desired_attr)
++		return -EILSEQ;
++
++	return -ENOENT;
 +}
++EXPORT_SYMBOL(cfg80211_get_p2p_attr);
 +
-+static int wlcore_count_started_vifs(struct wl1271 *wl)
-+{
-+	int count = 0;
-+
-+	ieee80211_iterate_active_interfaces_atomic(wl->hw,
-+						   wlcore_started_vifs_iter,
-+						   &count);
-+	return count;
-+}
-+
- static int
- wlcore_scan_get_channels(struct wl1271 *wl,
- 			 struct ieee80211_channel *req_channels[],
-@@ -109,9 +128,15 @@ wlcore_scan_get_channels(struct wl1271 *wl,
- 	/* configure dwell times according to scan type */
- 	if (scan_type == SCAN_TYPE_SEARCH) {
- 		struct conf_scan_settings *c = &wl->conf.scan;
-+		bool active_vif_exists = !!wlcore_count_started_vifs(wl);
-+
-+		min_dwell_time_active = active_vif_exists ?
-+			c->min_dwell_time_active_conc :
-+			c->min_dwell_time_active;
-+		max_dwell_time_active = active_vif_exists ?
-+			c->max_dwell_time_active_conc :
-+			c->max_dwell_time_active;
- 
--		min_dwell_time_active = c->min_dwell_time_active;
--		max_dwell_time_active = c->max_dwell_time_active;
- 		dwell_time_passive = c->dwell_time_passive;
- 		dwell_time_dfs = c->dwell_time_dfs;
- 	} else {
+ bool ieee80211_operating_class_to_band(u8 operating_class,
+ 				       enum ieee80211_band *band)
+ {
 -- 
-1.7.9.5
+1.8.0
 
