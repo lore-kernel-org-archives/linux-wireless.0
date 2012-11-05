@@ -1,61 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33527 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750892Ab2KPKr3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 05:47:29 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, nabhinav3@mail.gatech.edu,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: support radiotap vendor namespace RX data
-References: <1353061591-22284-1-git-send-email-johannes@sipsolutions.net>
-Date: Fri, 16 Nov 2012 12:47:25 +0200
-In-Reply-To: <1353061591-22284-1-git-send-email-johannes@sipsolutions.net>
-	(Johannes Berg's message of "Fri, 16 Nov 2012 11:26:31 +0100")
-Message-ID: <87ehjtygci.fsf@purkki.adurom.net> (sfid-20121116_114738_874292_CF92FF22)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:37367 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932251Ab2KEOzu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2012 09:55:50 -0500
+Message-ID: <1352127385.9466.16.camel@jlt4.sipsolutions.net> (sfid-20121105_155603_813516_8321EC26)
+Subject: Re: [PATCHv5 1/2] nl/cfg80211: add the NL80211_CMD_SET_MCAST_RATE
+ command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 05 Nov 2012 15:56:25 +0100
+In-Reply-To: <1351859269-27134-1-git-send-email-ordex@autistici.org>
+References: <1351859269-27134-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Fri, 2012-11-02 at 13:27 +0100, Antonio Quartulli wrote:
+> This command triggers a new callback: set_mcast_rate(). It enables
+> the user to change the rate used to send multicast frames for vif
+> configured as IBSS or MESH_POINT
+> 
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> In some cases, in particular for experimentation, it
-> can be useful to be able to add vendor namespace data
-> to received frames in addition to the normal radiotap
-> data.
->
-> Allow doing this through mac80211 by adding fields to
-> the RX status descriptor that describe the data while
-> the data itself is prepended to the frame.
->
-> Also add some example code to hwsim, but don't enable
-> it because it doesn't use a proper OUI identifier.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Applied.
 
-[...]
+> v4:
 
-> @@ -769,6 +773,17 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
->  				(data->tsf_offset - data2->tsf_offset) +
->  				24 * 8 * 10 / txrate->bitrate);
->  
-> +#if 0
-> +		memcpy(skb_push(nskb, 8), "ABCDEFGH", 8);
-> +		rx_status.vendor_radiotap_bitmap = BIT(0);
-> +		rx_status.vendor_radiotap_len = 8;
-> +		rx_status.vendor_radiotap_align = 8;
-> +		rx_status.vendor_radiotap_oui[0] = 0x00;
-> +		rx_status.vendor_radiotap_oui[1] = 0x00;
-> +		rx_status.vendor_radiotap_oui[2] = 0x00;
-> +		rx_status.vendor_radiotap_subns = 127;
-> +#endif
+>  - advertise command in nl80211_send_wiphy()
 
-I'm nitpicking (as usual :) but a comment would be nice here, for
-example the last sentence from the commit log. Otherwise I'm sure
-someone will wonder why the code is not compiled.
+I added that back to v5 :)
 
--- 
-Kalle Valo
+johannes
+
