@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25561 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751883Ab2KTM75 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38216 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047Ab2KETav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 07:59:57 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/3] ath9k: Process FATAL interrupts at first
-Date: Tue, 20 Nov 2012 18:29:59 +0530
-Message-ID: <1353416401-5328-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121120_140001_824623_15ADE08F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Nov 2012 14:30:51 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: use kstrtoull return value
+Date: Mon,  5 Nov 2012 20:31:27 +0100
+Message-Id: <1352143887-30654-1-git-send-email-johannes@sipsolutions.net> (sfid-20121105_203102_312615_D3ED23D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FATAL and WATCHDOG interrupts should be processed first followed
-by others.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+If kstrtoull() returns an error code (a value
+smaller than zero), use it since it can be an
+error other than -EINVAL.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 21 +++++++++------------
- 1 file changed, 9 insertions(+), 12 deletions(-)
+ net/mac80211/debugfs_netdev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9594b6f..e59d8e3 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -494,17 +494,6 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	if (status & SCHED_INTR)
- 		sched = true;
- 
--#ifdef CONFIG_PM_SLEEP
--	if (status & ATH9K_INT_BMISS) {
--		if (atomic_read(&sc->wow_sleep_proc_intr) == 0) {
--			ath_dbg(common, ANY, "during WoW we got a BMISS\n");
--			atomic_inc(&sc->wow_got_bmiss_intr);
--			atomic_dec(&sc->wow_sleep_proc_intr);
--		}
--	ath_dbg(common, INTERRUPT, "beacon miss interrupt\n");
--	}
--#endif
--
- 	/*
- 	 * If a FATAL or RXORN interrupt is received, we have to reset the
- 	 * chip immediately.
-@@ -523,7 +512,15 @@ irqreturn_t ath_isr(int irq, void *dev)
- 
- 		goto chip_reset;
- 	}
--
-+#ifdef CONFIG_PM_SLEEP
-+	if (status & ATH9K_INT_BMISS) {
-+		if (atomic_read(&sc->wow_sleep_proc_intr) == 0) {
-+			ath_dbg(common, ANY, "during WoW we got a BMISS\n");
-+			atomic_inc(&sc->wow_got_bmiss_intr);
-+			atomic_dec(&sc->wow_sleep_proc_intr);
-+		}
-+	}
-+#endif
- 	if (status & ATH9K_INT_SWBA)
- 		tasklet_schedule(&sc->bcon_tasklet);
- 
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 99ce871..9b6afb3 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -423,7 +423,7 @@ static ssize_t ieee80211_if_parse_tsf(
+ 		}
+ 		ret = kstrtoull(buf, 10, &tsf);
+ 		if (ret < 0)
+-			return -EINVAL;
++			return ret;
+ 		if (tsf_is_delta)
+ 			tsf = drv_get_tsf(local, sdata) + tsf_is_delta * tsf;
+ 		if (local->ops->set_tsf) {
 -- 
 1.8.0
 
