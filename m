@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:56952 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751230Ab2KTPQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 10:16:48 -0500
-Message-ID: <50AB9E7C.8070204@ti.com> (sfid-20121120_161651_110382_059F2E3D)
-Date: Tue, 20 Nov 2012 17:15:08 +0200
-From: Victor Goldenshtein <victorg@ti.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
-	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
-	"j@w1.fi" <j@w1.fi>, "coelho@ti.com" <coelho@ti.com>,
-	"igalc@ti.com" <igalc@ti.com>,
-	"adrian@freebsd.org" <adrian@freebsd.org>,
-	"nbd@nbd.name" <nbd@nbd.name>,
-	"simon.wunderlich@s2003.tu-chemnitz.de"
-	<simon.wunderlich@s2003.tu-chemnitz.de>, <victorgld@gmail.com>
-Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection command/event
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>     <1350226137-13704-2-git-send-email-victorg@ti.com>    <1350414099.10177.13.camel@jlt4.sipsolutions.net>   <50842569.5000602@ti.com> <1350910543.10166.3.camel@jlt4.sipsolutions.net>   <50922A9D.2060409@ti.com> <1352128887.9466.17.camel@jlt4.sipsolutions.net>  <50A38F68.1020506@tieto.com> <1352896734.9510.29.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1352896734.9510.29.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:37527 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932944Ab2KEPbt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2012 10:31:49 -0500
+Message-ID: <1352129544.9466.25.camel@jlt4.sipsolutions.net> (sfid-20121105_163229_649243_2442AD63)
+Subject: Re: [PATCH v2] wireless: Allow registering more than one beacon
+ listener.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 05 Nov 2012 16:32:24 +0100
+In-Reply-To: <508EB4A9.2040203@openwrt.org>
+References: <1351288165-24219-1-git-send-email-greearb@candelatech.com>
+	   (sfid-20121026_234937_894351_D69F960C) <1351501451.10925.6.camel@jlt4.sipsolutions.net>
+	  <508EAC30.8020600@candelatech.com>
+	 <1351527990.10925.35.camel@jlt4.sipsolutions.net>
+	 <508EB4A9.2040203@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14/11/2012 14:38, Johannes Berg wrote:
-> On Wed, 2012-11-14 at 13:32 +0100, Michal Kazior wrote:
->
->>> Hmm. Maybe then the channel should be passed to the radar detection
->>> command instead? That way, it can be passed through, you can allocate a
->>> channel context, etc. Much easier?
->>
->> I was thinking if putting the radar detection parameter in start_ap() is
->> an option (and thus removing the explicit radar cmd)? We could defer
->> `netif_carrier_on()` to be done after the initial radar detection is done.
->
-> Yeah, I was actually thinking that too for a bit, not sure if it works
-> though.
->
+On Mon, 2012-10-29 at 17:54 +0100, Felix Fietkau wrote:
+> On 2012-10-29 5:26 PM, Johannes Berg wrote:
+> > On Mon, 2012-10-29 at 09:17 -0700, Ben Greear wrote:
+> > 
+> >> >> +	spin_lock_bh(&rdev->beacon_registrations_lock);
+> >> > ...
+> >> >> +	spin_unlock_bh(&rdev->beacon_registrations_lock);
+> >> >
+> >> > I have a feeling this is incorrect, this is called with BHs disabled, so
+> >> > if we disable/enable BHs here we end up with BHs enabled even if the
+> >> > caller wanted them disabled, no?
+> >> >
+> >> > So I suppose unless we need to be able to call this from hard interrupt
+> >> > in some driver (unlikely) we should add a change like this:
+> >> 
+> >> I get confused with the various types of spin-locks,
+> >> and I just copied this code from the mgt frames logic.
+> > 
+> > Uh, that looks like a bug there as well then?
+> As far as I know, local_bh_enable/local_bh_disable (which are used by
+> spin_lock_bh) are re-entrant. Using them from a BH-disabled context is
+> safe. All I can find with a few simple google searches confirms this.
 
-It won't, well.. at least not with current design. Userspace has the 
-responsibility to set the initial channel and reselect the next one if 
-necessary (if radar was detected), also it's responsible for the channel 
-availability check and its timing.
+Hm yeah I must've confused it with something, I'll apply the patch.
 
-Moving radar detection to start AP will require additional DFS state 
-synchronization between kernel and userspace this why we initially 
-agreed to leave the DFS logic (CAC, channel selection etc..) in 
-userspace. Anyway, not sure what would we gain here.
+johannes
 
-
--- 
-Thanks,
-Victor.
