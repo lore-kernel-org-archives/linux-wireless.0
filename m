@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:48591 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753909Ab2K3U0H (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37266 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932365Ab2KEOcs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 15:26:07 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UO8jPYOktteaLeihVqLp251-Q=jv5z_OThXoR+JtRKeg@mail.gmail.com>
-References: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
- <50B87082.3020604@broadcom.com> <CAB=NE6UO8jPYOktteaLeihVqLp251-Q=jv5z_OThXoR+JtRKeg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 30 Nov 2012 12:25:43 -0800
-Message-ID: <CAB=NE6UVA1As_07HOvCbi4oK+CgbNNeeNMfz8agB-00ZRP973w@mail.gmail.com> (sfid-20121130_212632_439661_6319B69C)
-Subject: Re: [PATCH 0/6] drivers: convert struct spinlock to spinlock_t
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	backports@vger.kernel.org, alexander.stein@systec-electronic.com,
-	brudley@broadcom.com, rvossen@broadcom.com, frankyl@broadcom.com,
-	kanyan@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, kyungmin.park@samsung.com,
-	s.nawrocki@samsung.com, linux-arm-kernel@lists.infradead.org,
-	linux-media@vger.kernel.org, daniel.vetter@ffwll.ch,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	srinidhi.kasagar@stericsson.com, linus.walleij@linaro.org,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 5 Nov 2012 09:32:48 -0500
+Message-ID: <1352126003.9466.13.camel@jlt4.sipsolutions.net> (sfid-20121105_153302_476298_5CE1D261)
+Subject: Re: [PATCH v2] [nl,cfg,mac]80211: Add nl80211 command to get mesh
+ network statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	javier@cozybit.com, devel@lists.open80211s.org
+Date: Mon, 05 Nov 2012 15:33:23 +0100
+In-Reply-To: <1351735073-12011-1-git-send-email-ashok@cozybit.com> (sfid-20121101_025812_920021_5A18A159)
+References: <1351735073-12011-1-git-send-email-ashok@cozybit.com>
+	 (sfid-20121101_025812_920021_5A18A159)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 30, 2012 at 11:18 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Fri, Nov 30, 2012 at 12:38 AM, Arend van Spriel <arend@broadcom.com> wrote:
->> So what is the rationale here. During mainlining our drivers we had to
->> remove all uses of 'typedef struct foo foo_t;'. The Linux CodingStyle
->> (chapter 5 Typedefs) is spending a number of lines explaining why.
->>
->> So is spinlock_t an exception to this rule simply because the kernel
->> uses spinlock_t all over the place.
->
-> Yes.
 
-Let me provide a better explanation. In practice drivers should not be
-creating their own typedefs given that generally the reasons to create
-them do not exist for drivers. The kernel may provide their own though
-for reasons explained in CodingStyle and in such cases the drivers
-should use these supplied typedefs.
+> @@ -1281,6 +1286,9 @@ enum nl80211_commands {
+>   *
+>   * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u32)
+>   *
+> + * @NL80211_CMD_GET_MESH_STATS: Get mesh networking statistics for the
+> + *	interface identified by %NL80211_ATTR_IFINDEX
 
-  Luis
+Hmm, what happened here? Should have attribute documentation.
+
+
+
+> +	err = rdev->ops->get_mesh_stats(&rdev->wiphy, dev, &cur_stats);
+
+Now that we have tracing for cfg80211 calls, could you please add that
+here as well?
+
+> +	wdev_unlock(wdev);
+
+I don't see a need for the wdev lock, this protects data inside struct
+wireless_dev so shouldn't be necessary?
+
+> @@ -7275,6 +7338,14 @@ static struct genl_ops nl80211_ops[] = {
+>  		.flags = GENL_ADMIN_PERM,
+>  	},
+>  	{
+> +		.cmd = NL80211_CMD_GET_MESH_STATS,
+> +		.doit = nl80211_get_mesh_stats,
+> +		.policy = nl80211_policy,
+> +		/* can be retrieved by unprivileged users */
+> +		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+> +				  NL80211_FLAG_NEED_RTNL,
+> +	},
+
+There should probably be advertising that this command is supported, see
+send_wiphy's CMD() macro.
+
+johannes
+
