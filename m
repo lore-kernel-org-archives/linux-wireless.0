@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:59601 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752541Ab2KROiv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2012 09:38:51 -0500
-Message-ID: <1353249531.15959.10.camel@joe-AO722> (sfid-20121118_153910_999043_07EF0F1D)
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-From: Joe Perches <joe@perches.com>
-To: Vladimir Kondratiev <vkondrat@qti.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jason Baron <jbaron@redhat.com>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Sun, 18 Nov 2012 06:38:51 -0800
-In-Reply-To: <3304277.iqgq3GH3Yo@lx-vladimir>
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1352912932.9388.23.camel@joe-AO722> <29414886.frl7IkqOMP@lx-vladimir>
-	 <3304277.iqgq3GH3Yo@lx-vladimir>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:14147 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751416Ab2KEQpF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2012 11:45:05 -0500
+Message-ID: <1352133897.2606.16.camel@lorien2> (sfid-20121105_174548_963136_73054ED5)
+Subject: Re: [PATCH] wireless: iwlwifi - add dma_mapping_error() checks to
+ avoid warnings
+From: Shuah Khan <shuah.khan@hp.com>
+Reply-To: shuah.khan@hp.com
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wey-yi.w.guy@intel.com, linville@tuxdriver.com,
+	ilw@linux.intel.com, emmanuel.grumbach@intel.com,
+	donald.h.fry@intel.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	shuahkhan@gmail.com
+Date: Mon, 05 Nov 2012 09:44:57 -0700
+In-Reply-To: <1352132992.9466.27.camel@jlt4.sipsolutions.net>
+References: <1351993233.4369.2.camel@lorien2>
+	 (sfid-20121104_024119_271188_5372C13E) <1352020617.10072.0.camel@jlt4.sipsolutions.net>
+	 <1352132785.2606.14.camel@lorien2>
+	 <1352132992.9466.27.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-11-18 at 11:47 +0200, Vladimir Kondratiev wrote:
-> I see 2 drivers that use dynamic prefix:
+On Mon, 2012-11-05 at 17:29 +0100, Johannes Berg wrote:
+> On Mon, 2012-11-05 at 09:26 -0700, Shuah Khan wrote:
 > 
-> - mentioned above drivers/tty/ipwireless/hardware.c
-> - drivers/isdn/hardware/mISDN/
+> > > Thanks for the report. Since I think doing BUG_ON() in such a scenario
+> > > is a really bad idea, I've applied a different patch with your
+> > > Reported-by.
+> > 
+> > Yeah. I wasn't sure about BUS() either. Did you notice the other cases
+> > of BUG_ON() in this path in iwl_rx_allocate()? I would think those need
+> > fixing as well.
+> > 
+> >               rxb->page_dma =
+> >                         dma_map_page(trans->dev, page, 0,
+> >                                      PAGE_SIZE <<
+> > trans_pcie->rx_page_order,
+> >                                      DMA_FROM_DEVICE);
+> >                 /* dma address must be no more than 36 bits */
+> >                 BUG_ON(rxb->page_dma & ~DMA_BIT_MASK(36));
+> >                 /* and also 256 byte aligned! */
+> >                 BUG_ON(rxb->page_dma & DMA_BIT_MASK(8));
 > 
-> I see several options:
+> Well, yes, we could convert them, but we can leave them as they are
+> because these are assertions that the DMA mapping API guarantees. If
+> this breaks, it's a bug in the DMA mapping code.
 > 
-> 1) require prefix_str to be constant. Patch code mentioned. For example,
-> code above may reads:
-> 
-> static void dump_data_bytes(const char *type, const unsigned char *data,
-> 			    unsigned length)
-> {
-> 	pr_debug(IPWIRELESS_PCCARD_NAME ": %s %s\n",
-> 			type, data_type(data, length));
-> 	print_hex_dump_bytes(IPWIRELESS_PCCARD_NAME, 0, (void *)data,
-> 			length < DUMP_MAX_BYTES ? length : DUMP_MAX_BYTES);
-> }
-> 
-> 2) introduce fixed format string in DEFINE_DYNAMIC_DEBUG_METADATA, like
-> 
-> DEFINE_DYNAMIC_DEBUG_METADATA((descriptor, "hexdump");
-> 
-> 3) remove print_hex_dump_bytes from this patch
-> 
-> I think 1) is the best, opinions?
+> In contrast, if it fails to map, it's not a bug in the code, it's just
+> running out of memory or IO space or whatever.
 
-Another option could be testing __builtin_constant_p(prefix)
+Right.
+> 
+> > Could you please send me commitID for the patch you did. I am interested
+> > in seeing the failure handling in your patch?
+> 
+> It's here:
+> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-fixes.git;a=commit;h=7c34158231b2eda8dcbd297be2bb1559e69cb433
+> 
+
+
+Thanks. 
 
 
