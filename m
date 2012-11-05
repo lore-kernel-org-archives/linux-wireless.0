@@ -1,49 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41515 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754340Ab2KSSfX (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:46503 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082Ab2KEUSH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:35:23 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 490/493] rfkill: remove use of __devexit
-Date: Mon, 19 Nov 2012 13:27:19 -0500
-Message-Id: <1353349642-3677-490-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193539_314901_1E327173)
-In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+	Mon, 5 Nov 2012 15:18:07 -0500
+Received: by mail-lb0-f174.google.com with SMTP id n3so4583126lbo.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2012 12:18:05 -0800 (PST)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 1/2] ar5523: Fix sparse endianness warnings
+Date: Mon,  5 Nov 2012 21:17:50 +0100
+Message-Id: <1352146671-4318-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20121105_211824_398861_6EAEA06D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_HOTPLUG is going away as an option so __devexit is no
-longer needed.
+__be32 variables where used a little careless leading to sparse warnings.
+Treat them a little more gentle.
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Johannes Berg <johannes@sipsolutions.net> 
-Cc: "John W. Linville" <linville@tuxdriver.com> 
-Cc: "David S. Miller" <davem@davemloft.net> 
-Cc: linux-wireless@vger.kernel.org 
-Cc: netdev@vger.kernel.org 
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
 ---
- net/rfkill/rfkill-regulator.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ar5523/ar5523.c    |   43 ++++++++++++++-------------
+ drivers/net/wireless/ath/ar5523/ar5523_hw.h |    2 +-
+ 2 files changed, 24 insertions(+), 21 deletions(-)
 
-diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
-index c864e44..4b5ab21 100644
---- a/net/rfkill/rfkill-regulator.c
-+++ b/net/rfkill/rfkill-regulator.c
-@@ -122,7 +122,7 @@ out:
- 	return ret;
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index f782b6e..bb774b3 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -50,18 +50,19 @@ static void ar5523_read_reply(struct ar5523 *ar, struct ar5523_cmd_hdr *hdr,
+ 			      struct ar5523_tx_cmd *cmd)
+ {
+ 	int dlen, olen;
+-	u32 *rp;
++	__be32 *rp;
+ 
+-	dlen = hdr->len - sizeof(*hdr);
++	dlen = be32_to_cpu(hdr->len) - sizeof(*hdr);
+ 
+ 	if (dlen < 0) {
+ 		WARN_ON(1);
+ 		goto out;
+ 	}
+ 
+-	ar5523_dbg(ar, "Code = %d len = %d\n", hdr->code & 0xff, dlen);
++	ar5523_dbg(ar, "Code = %d len = %d\n", be32_to_cpu(hdr->code) & 0xff,
++		   dlen);
+ 
+-	rp = (u32 *)(hdr + 1);
++	rp = (__be32 *)(hdr + 1);
+ 	if (dlen >= sizeof(u32)) {
+ 		olen = be32_to_cpu(rp[0]);
+ 		dlen -= sizeof(u32);
+@@ -95,6 +96,7 @@ static void ar5523_cmd_rx_cb(struct urb *urb)
+ 	struct ar5523_tx_cmd *cmd = &ar->tx_cmd;
+ 	struct ar5523_cmd_hdr *hdr = ar->rx_cmd_buf;
+ 	int dlen;
++	u32 code, hdrlen;
+ 
+ 	if (urb->status) {
+ 		if (urb->status != -ESHUTDOWN)
+@@ -110,15 +112,15 @@ static void ar5523_cmd_rx_cb(struct urb *urb)
+ 	ar5523_dbg(ar, "%s code %02x priv %d\n", __func__,
+ 		   be32_to_cpu(hdr->code) & 0xff, hdr->priv);
+ 
+-	hdr->code = be32_to_cpu(hdr->code);
+-	hdr->len = be32_to_cpu(hdr->len);
++	code = be32_to_cpu(hdr->code);
++	hdrlen = be32_to_cpu(hdr->len);
+ 
+-	switch (hdr->code & 0xff) {
++	switch (code & 0xff) {
+ 	default:
+ 		/* reply to a read command */
+ 		if (hdr->priv != AR5523_CMD_ID) {
+ 			ar5523_err(ar, "Unexpected command id: %02x\n",
+-				   hdr->code & 0xff);
++				   code & 0xff);
+ 			goto skip;
+ 		}
+ 		ar5523_read_reply(ar, hdr, cmd);
+@@ -147,7 +149,7 @@ static void ar5523_cmd_rx_cb(struct urb *urb)
+ 	case WDCMSG_TARGET_START:
+ 		/* This command returns a bogus id so it needs special
+ 		   handling */
+-		dlen = hdr->len - sizeof(*hdr);
++		dlen = hdrlen - sizeof(*hdr);
+ 		if (dlen != (int)sizeof(u32)) {
+ 			ar5523_err(ar, "Invalid reply to WDCMSG_TARGET_START");
+ 			return;
+@@ -303,7 +305,7 @@ static int ar5523_config(struct ar5523 *ar, u32 reg, u32 val)
+ 
+ 	write.reg = cpu_to_be32(reg);
+ 	write.len = cpu_to_be32(0);	/* 0 = single write */
+-	*(u32 *)write.data = cpu_to_be32(val);
++	*(__be32 *)write.data = cpu_to_be32(val);
+ 
+ 	error = ar5523_cmd_write(ar, WDCMSG_TARGET_SET_CONFIG, &write,
+ 				 3 * sizeof(u32), 0);
+@@ -335,29 +337,30 @@ static int ar5523_get_status(struct ar5523 *ar, u32 which, void *odata,
+ 			     int olen)
+ {
+ 	int error;
++	__be32 which_be;
+ 
+-	which = cpu_to_be32(which);
++	which_be = cpu_to_be32(which);
+ 	error = ar5523_cmd_read(ar, WDCMSG_TARGET_GET_STATUS,
+-	    &which, sizeof(which), odata, olen, AR5523_CMD_FLAG_MAGIC);
++	    &which_be, sizeof(which_be), odata, olen, AR5523_CMD_FLAG_MAGIC);
+ 	if (error != 0)
+-		ar5523_err(ar, "could not read EEPROM offset 0x%02x\n",
+-			   be32_to_cpu(which));
++		ar5523_err(ar, "could not read EEPROM offset 0x%02x\n", which);
+ 	return error;
  }
  
--static int __devexit rfkill_regulator_remove(struct platform_device *pdev)
-+static int rfkill_regulator_remove(struct platform_device *pdev)
+ static int ar5523_get_capability(struct ar5523 *ar, u32 cap, u32 *val)
  {
- 	struct rfkill_regulator_data *rfkill_data = platform_get_drvdata(pdev);
- 	struct rfkill *rf_kill = rfkill_data->rf_kill;
+ 	int error;
++	__be32 cap_be, val_be;
+ 
+-	cap = cpu_to_be32(cap);
+-	error = ar5523_cmd_read(ar, WDCMSG_TARGET_GET_CAPABILITY,
+-	    &cap, sizeof(cap), val, sizeof(u32), AR5523_CMD_FLAG_MAGIC);
++	cap_be = cpu_to_be32(cap);
++	error = ar5523_cmd_read(ar, WDCMSG_TARGET_GET_CAPABILITY, &cap_be,
++				sizeof(cap_be), &val_be, sizeof(__be32),
++				AR5523_CMD_FLAG_MAGIC);
+ 	if (error != 0) {
+-		ar5523_err(ar, "could not read capability %u\n",
+-			   be32_to_cpu(cap));
++		ar5523_err(ar, "could not read capability %u\n", cap);
+ 		return error;
+ 	}
+-	*val = be32_to_cpu(*val);
++	*val = be32_to_cpu(val_be);
+ 	return error;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523_hw.h b/drivers/net/wireless/ath/ar5523/ar5523_hw.h
+index a0e8bf4..0fe2c80 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523_hw.h
++++ b/drivers/net/wireless/ath/ar5523/ar5523_hw.h
+@@ -161,7 +161,7 @@ struct ar5523_rx_desc {
+ 
+ struct ar5523_tx_desc {
+ 	__be32	msglen;
+-	__be32	msgid;		/* msg id (supplied by host) */
++	u32	msgid;		/* msg id (supplied by host) */
+ 	__be32	type;		/* opcode: WDMSG_SEND or WDCMSG_FLUSH */
+ 	__be32	txqid;		/* tx queue id and flags */
+ #define	UATH_TXQID_MASK		0x0f
 -- 
-1.8.0
+1.7.9.5
 
