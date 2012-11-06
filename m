@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:46513 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752962Ab2KVTOl (ORCPT
+Received: from mail.freestuffjunction.co.uk ([109.169.51.71]:50284 "EHLO
+	mail.freestuffjunction.co.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750866Ab2KFRHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 14:14:41 -0500
+	Tue, 6 Nov 2012 12:07:30 -0500
+Message-ID: <509943C1.6080300@ehuk.net> (sfid-20121106_180744_429142_F72E47B6)
+Date: Tue, 06 Nov 2012 17:07:13 +0000
+From: Eddie Chapman <eddie@ehuk.net>
+Reply-To: Eddie Chapman <eddie@ehuk.net>
 MIME-Version: 1.0
-In-Reply-To: <1353585161.9806.37.camel@jlt4.sipsolutions.net>
-References: <1353541455.20173.10.camel@jlt4.sipsolutions.net>
-	<CAC5umyibe0tb+HLxx3dbT7gF_nVAAHso1Y0Qb4Q_+y0KNrnvFg@mail.gmail.com>
-	<1353585161.9806.37.camel@jlt4.sipsolutions.net>
-Date: Thu, 22 Nov 2012 22:29:42 +0900
-Message-ID: <CAC5umyj07UmPtoFowqquoOBERaVa4KngJ=cOa8_AgkcJ_EksSw@mail.gmail.com> (sfid-20121122_201446_148717_48E8ECDC)
-Subject: Re: [POC] recoverable fault injection
-From: Akinobu Mita <akinobu.mita@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+CC: stable@vger.kernel.org, florian@reitmeir.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: Linux 3.6.5
+References: <20121031173811.GA12970@kroah.com> <509575F4.5020109@ehuk.net>  <20121105081757.GA3730@kroah.com> <50979D38.6010002@ehuk.net>  (sfid-20121105_121423_464154_72561532) <1352116868.9466.2.camel@jlt4.sipsolutions.net>  <509838F4.4010301@ehuk.net> <1352188621.9440.4.camel@jlt4.sipsolutions.net>  <50992E0E.3040606@ehuk.net>  <1352217244.9440.16.camel@jlt4.sipsolutions.net>  (sfid-20121106_165343_414402_7F00AE58) <1352219976.9440.18.camel@jlt4.sipsolutions.net>  <50993FC2.7040100@ehuk.net> <1352220942.8814.0.camel@jlt4.sipsolutions.net>  (sfid-20121106_175519_403098_E3B30E7C) <1352221044.8814.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1352221044.8814.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/11/22 Johannes Berg <johannes@sipsolutions.net>:
-
-> I thought about something like that, I actually initially played with
-> macros like this:
+On 06/11/12 16:57, Johannes Berg wrote:
+> On Tue, 2012-11-06 at 17:55 +0100, Johannes Berg wrote:
+>> Hi Eddie,
+>>
+>>> In the AP's dmesg output which I included in my other message, I see this:
+>>>
+>>> <6>[    9.300000] cfg80211: Regulatory domain changed to country: GB
+>>>
+>>> So it seems the AP knows where it is, but is it not transmitting that to
+>>> the client?
+>>
+>> Evidently, I don't see a country IE in the iw scan output you posted.
 >
-> #define FAULT_RECOVERABLE_START(ids)    \
->         /* set up the task state */     \
->  fault_recovery_retry:
+> Then again, what version of iw do you have? This only applies if it's
+> version 0.9.20 or higher.
 >
-> #define FAULT_RECOVERABLE_END(ids)      \
->         if (current->encountered_fault) \
->                 goto fault_recovery_retry;
->
-> or so. However, the problem is that if you exit the function between
-> these points, and this is true for your functions as well, you leave the
-> task's fault injection enabled which isn't what you want. So adding
-> functions or macros like this didn't really seem right. Also, functions
-> (rather than macros) have the problem that the retry can't be
-> encapsulated -- note how my macro calls the function again if it failed.
-> So with functions like that, you introduce new manually-coded error and
-> retry paths, that seemed undesirable.
->
-> As you can see in my macro, it's also possible for an allocation to fail
-> but the function to succeed, so the function that is called must have a
-> return value indicating success or failure. I ran into this with debug
-> objects, their allocation failed all the time but obviously the function
-> succeeded as debug objects fail gracefully if they can't allocate
-> memory.
+> johannes
 
-Oh, I completely missed retrying part in your macro.
+I don't see a country specified in the output I sent you either. We're 
+talking about iw scan on the client right, not the AP?
 
-I looked into FAULT_INJECT_CALL_RECOVERABLE_FUNCTION again,
-then I realized that it is not necessary to be variadic macro.
+Over on the AP, I just looked in the web interface, and there is a drop 
+down box for "Regulatory Domain", and I have it set to "United Kingdom".
 
-You can define macro like wait_event() family and use it like below:
+as for iw version on the client it says:
 
-        return FAULT_INJECT_CALL_RECOVERABLE_FUNCTION(
-                BIT(FAULT_ATTR_SLAB) | BIT(FAULT_ATTR_PAGE_ALLOC),
-                _nl80211_remain_on_channel(skb, info));
+nc6400 ~ # iw --version
+iw version 3.3
+
+You mentioned crda, it seems gentoo has it, I can install it on the 
+client if you think it will help in figuring this out?
+
+nc6400 ~ # emerge --search crda
+Searching...
+[ Results for search key : crda ]
+[ Applications found : 1 ]
+
+*  net-wireless/crda
+       Latest version available: 1.1.2-r3
+       Latest version installed: [ Not Installed ]
+       Size of files: 21 kB
+       Homepage:      http://wireless.kernel.org/en/developers/Regulatory
+       Description:   Central Regulatory Domain Agent for wireless networks.
+       License:       as-is
