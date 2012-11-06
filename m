@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51016 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:41755 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757234Ab2KHXMD (ORCPT
+	with ESMTP id S1751902Ab2KFQjD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 18:12:03 -0500
+	Tue, 6 Nov 2012 11:39:03 -0500
+Message-ID: <1352219976.9440.18.camel@jlt4.sipsolutions.net> (sfid-20121106_173951_781497_2AE1DCC1)
+Subject: Re: Linux 3.6.5
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: maheshp@posedge.com
-Subject: [RFC 0/2] VHT channel configuration support
-Date: Fri,  9 Nov 2012 00:12:35 +0100
-Message-Id: <1352416357-17892-1-git-send-email-johannes@sipsolutions.net> (sfid-20121109_001217_299695_0570E81C)
+To: Eddie Chapman <eddie@ehuk.net>
+Cc: stable@vger.kernel.org, florian@reitmeir.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Date: Tue, 06 Nov 2012 17:39:36 +0100
+In-Reply-To: <1352217244.9440.16.camel@jlt4.sipsolutions.net> (sfid-20121106_165343_414402_7F00AE58)
+References: <20121031173811.GA12970@kroah.com> <509575F4.5020109@ehuk.net>
+	 <20121105081757.GA3730@kroah.com> <50979D38.6010002@ehuk.net>
+	 (sfid-20121105_121423_464154_72561532) <1352116868.9466.2.camel@jlt4.sipsolutions.net>
+	 <509838F4.4010301@ehuk.net> <1352188621.9440.4.camel@jlt4.sipsolutions.net>
+	 <50992E0E.3040606@ehuk.net>
+	 <1352217244.9440.16.camel@jlt4.sipsolutions.net>
+	 (sfid-20121106_165343_414402_7F00AE58)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Tue, 2012-11-06 at 16:54 +0100, Johannes Berg wrote:
 
-I've been hacking a bit on VHT channel specification. Here's
-what I came up with.
+> > BSS 82:e1:fa:1a:65:00 (on wlan0) -- associated
+> [...]
+> > 	HT operation:
+> > 		 * primary channel: 9
+> > 		 * secondary channel offset: above
+> 
+> As you can see, it's using HT40+ on channel 9 (2452 MHz). Your HT40
+> allow (correctly) map showed:
+> 
+> 2452 HT40 -
+> 
+> This is because HT40+ isn't actually allowed on channel 9 by the
+> standard (cf. 802.11-2012 Table E-1 (US), E-2 (Europe), E-3 (Japan).
 
-The first patch changes cfg80211 to pass a channel definition
-struct everywhere instead of channel/channel_type. This of
-course requires the remain-on-channel patch I posted before.
-
-The second patch then changes that struct to support VHT
-configuration, and removes the channel_type field. It has
-a few helpers to get a channel type (unless VHT is used)
-and to create a chan_def from a channel/channel_type.
-
-This is definitely missing the regulatory enforcement and
-probably some helper functions to get the control channel
-offset from a chan_def struct etc., but it's a start.
-
-Also, obviously mac80211 needs to be converted to this new
-API throughout, and possibly mac80211-based drivers (though
-I could see keeping the API for backward compatibility)
-
-Let me know what you think!
-
-If you want to actually run the code, I suggest you check
-out the "wip" branch of my mac80211-next tree (available
-on git.kernel.org), as I haven't sent all the patches to
-the list yet that this depends on, mostly because they're
-boring :)
+Oops, no, that is obviously wrong. This is permitted outside the US, and
+that is reflected in those tables as well (I was confused). However,
+your AP isn't transmitting any info on where it is, and your device is
+set up for world roaming (country is "00" rather than a real country).
+Thus, channel 13 isn't allowed and you can't do HT40+ on channel 9.
 
 johannes
 
