@@ -1,45 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41838 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967Ab2KFQ4p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 11:56:45 -0500
-Message-ID: <1352221044.8814.1.camel@jlt4.sipsolutions.net> (sfid-20121106_175700_534613_9E02EC7A)
-Subject: Re: Linux 3.6.5
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eddie Chapman <eddie@ehuk.net>
-Cc: stable@vger.kernel.org, florian@reitmeir.org,
-	linux-wireless@vger.kernel.org, j@w1.fi
-Date: Tue, 06 Nov 2012 17:57:24 +0100
-In-Reply-To: <1352220942.8814.0.camel@jlt4.sipsolutions.net> (sfid-20121106_175519_403098_E3B30E7C)
-References: <20121031173811.GA12970@kroah.com> <509575F4.5020109@ehuk.net>
-	 <20121105081757.GA3730@kroah.com> <50979D38.6010002@ehuk.net>
-	 (sfid-20121105_121423_464154_72561532) <1352116868.9466.2.camel@jlt4.sipsolutions.net>
-	 <509838F4.4010301@ehuk.net> <1352188621.9440.4.camel@jlt4.sipsolutions.net>
-	 <50992E0E.3040606@ehuk.net>
-	 <1352217244.9440.16.camel@jlt4.sipsolutions.net>
-	 (sfid-20121106_165343_414402_7F00AE58) <1352219976.9440.18.camel@jlt4.sipsolutions.net>
-	 <50993FC2.7040100@ehuk.net> <1352220942.8814.0.camel@jlt4.sipsolutions.net>
-	 (sfid-20121106_175519_403098_E3B30E7C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:1655 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846Ab2KFAWp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2012 19:22:45 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 10/24] brcmfmac: change parameter of
+ brcmf_set_management_ie()
+Date: Mon, 5 Nov 2012 16:22:18 -0800
+Message-ID: <1352161352-30405-11-git-send-email-frankyl@broadcom.com> (sfid-20121106_013117_270946_C24CF034)
+In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-06 at 17:55 +0100, Johannes Berg wrote:
-> Hi Eddie,
-> 
-> > In the AP's dmesg output which I included in my other message, I see this:
-> > 
-> > <6>[    9.300000] cfg80211: Regulatory domain changed to country: GB
-> > 
-> > So it seems the AP knows where it is, but is it not transmitting that to 
-> > the client?
-> 
-> Evidently, I don't see a country IE in the iw scan output you posted.
+From: Arend van Spriel <arend@broadcom.com>
 
-Then again, what version of iw do you have? This only applies if it's
-version 0.9.20 or higher.
+The function brcmf_set_management_ie() operates on virtual
+interface data and brcmf_cfg80211_vif structure provides
+all information needed for interfacing with firmware. As
+this function will also be needed for interface without
+an associated net device it makes sense to provide the vif
+instead of deriving it from the net device.
 
-johannes
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   33 +++++++++++---------
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    6 ++++
+ 2 files changed, 24 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 0970c1a..83a2421 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3344,12 +3344,11 @@ brcmf_vndr_ie(u8 *iebuf, s32 pktflag, u8 *ie_ptr, u32 ie_len, s8 *add_del_cmd)
+ }
+ 
+ static
+-s32 brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
+-			    struct net_device *ndev, s32 pktflag,
+-			    const u8 *vndr_ie_buf, u32 vndr_ie_len)
++s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
++			  const u8 *vndr_ie_buf, u32 vndr_ie_len)
+ {
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct vif_saved_ie *saved_ie = &ifp->vif->saved_ie;
++	struct brcmf_if *ifp;
++	struct vif_saved_ie *saved_ie;
+ 	s32 err = 0;
+ 	u8  *iovar_ie_buf;
+ 	u8  *curr_ie_buf;
+@@ -3366,8 +3365,12 @@ s32 brcmf_set_management_ie(struct brcmf_cfg80211_info *cfg,
+ 	u8 *ptr;
+ 	int remained_buf_len;
+ 
+-	WL_TRACE("bssidx %d, pktflag : 0x%02X\n",
+-		 brcmf_ndev_bssidx(ndev), pktflag);
++	if (!vif)
++		return -ENODEV;
++	ifp = vif->ifp;
++	saved_ie = &vif->saved_ie;
++
++	WL_TRACE("bssidx %d, pktflag : 0x%02X\n", ifp->bssidx, pktflag);
+ 	iovar_ie_buf = kzalloc(WL_EXTRA_BUF_MAX, GFP_KERNEL);
+ 	if (!iovar_ie_buf)
+ 		return -ENOMEM;
+@@ -3585,20 +3588,20 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 		brcmf_configure_opensecurity(ndev, bssidx);
+ 	}
+ 	/* Set Beacon IEs to FW */
+-	err = brcmf_set_management_ie(cfg, ndev,
+-				      VNDR_IE_BEACON_FLAG,
+-				      settings->beacon.tail,
+-				      settings->beacon.tail_len);
++	err = brcmf_vif_set_mgmt_ie(ndev_to_vif(ndev),
++				    VNDR_IE_BEACON_FLAG,
++				    settings->beacon.tail,
++				    settings->beacon.tail_len);
+ 	if (err)
+ 		WL_ERR("Set Beacon IE Failed\n");
+ 	else
+ 		WL_TRACE("Applied Vndr IEs for Beacon\n");
+ 
+ 	/* Set Probe Response IEs to FW */
+-	err = brcmf_set_management_ie(cfg, ndev,
+-				      VNDR_IE_PRBRSP_FLAG,
+-				      settings->beacon.proberesp_ies,
+-				      settings->beacon.proberesp_ies_len);
++	err = brcmf_vif_set_mgmt_ie(ndev_to_vif(ndev),
++				    VNDR_IE_PRBRSP_FLAG,
++				    settings->beacon.proberesp_ies,
++				    settings->beacon.proberesp_ies_len);
+ 	if (err)
+ 		WL_ERR("Set Probe Resp IE Failed\n");
+ 	else
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index 3c59931..e4de9fc 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -468,6 +468,12 @@ static inline struct brcmf_cfg80211_profile *ndev_to_prof(struct net_device *nd)
+ 	return &ifp->vif->profile;
+ }
+ 
++static inline struct brcmf_cfg80211_vif *ndev_to_vif(struct net_device *ndev)
++{
++	struct brcmf_if *ifp = netdev_priv(ndev);
++	return ifp->vif;
++}
++
+ static inline struct
+ brcmf_cfg80211_connect_info *cfg_to_conn(struct brcmf_cfg80211_info *cfg)
+ {
+-- 
+1.7.9.5
+
 
