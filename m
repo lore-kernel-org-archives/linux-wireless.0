@@ -1,66 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753193Ab2K1JnT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:43:19 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:19 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 12/20] wl18xx: limit Tx for the AP single-STA-in-PSM case
-Date: Wed, 28 Nov 2012 11:42:41 +0200
-Message-Id: <1354095769-8724-13-git-send-email-arik@wizery.com> (sfid-20121128_104327_857965_2B7DBCB3)
-In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4440 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753906Ab2KFAWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2012 19:22:49 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 07/24] brcmfmac: handle exceptions in brcmf_bus_start
+ correct.
+Date: Mon, 5 Nov 2012 16:22:15 -0800
+Message-ID: <1352161352-30405-8-git-send-email-frankyl@broadcom.com> (sfid-20121106_012312_191881_795A0A15)
+In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Treat a single connected STA in PSM as a slow link and regulate Tx speed
-according to slow link priority/stop thresholds.
-This allows us to avoid flooding the FW, while delivering decent
-throughput to a peer in forced-PSM.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+On exception during brcmf_bus_start the netdev should be freed,
+if already allocated.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c |   14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 3836dbd..ada4616 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1446,10 +1446,11 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
- 		return false;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index b130f20..9e2451f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -708,7 +708,6 @@ int brcmf_net_attach(struct brcmf_if *ifp)
  
- 	/* the priority thresholds are taken from FW */
--	if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map))
--		thold = status_priv->tx_fast_link_prio_threshold;
--	else
-+	if (!test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) ||
-+	    test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map))
- 		thold = status_priv->tx_slow_link_prio_threshold;
-+	else
-+		thold = status_priv->tx_fast_link_prio_threshold;
- 
- 	return lnk->allocated_pkts < thold;
+ fail:
+ 	ndev->netdev_ops = NULL;
+-	free_netdev(ndev);
+ 	return -EBADE;
  }
-@@ -1464,10 +1465,11 @@ static bool wl18xx_lnk_low_prio(struct wl1271 *wl, u8 hlid,
  
- 	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
- 		thold = status_priv->tx_suspend_threshold;
--	else if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map))
--		thold = status_priv->tx_fast_stop_threshold;
--	else
-+	else if (!test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) ||
-+		 test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map))
- 		thold = status_priv->tx_slow_stop_threshold;
-+	else
-+		thold = status_priv->tx_fast_stop_threshold;
+@@ -858,15 +857,21 @@ int brcmf_bus_start(struct device *dev)
+ 	/* Bus is ready, do any initialization */
+ 	ret = brcmf_c_preinit_dcmds(ifp);
+ 	if (ret < 0)
+-		return ret;
++		goto fail;
  
- 	return lnk->allocated_pkts < thold;
- }
+ 	drvr->config = brcmf_cfg80211_attach(drvr);
+-	if (drvr->config == NULL)
+-		return -ENOMEM;
++	if (drvr->config == NULL) {
++		ret = -ENOMEM;
++		goto fail;
++	}
+ 
+ 	ret = brcmf_net_attach(ifp);
++fail:
+ 	if (ret < 0) {
+ 		brcmf_dbg(ERROR, "brcmf_net_attach failed");
++		if (drvr->config)
++			brcmf_cfg80211_detach(drvr->config);
++		free_netdev(drvr->iflist[0]->ndev);
+ 		drvr->iflist[0] = NULL;
+ 		return ret;
+ 	}
 -- 
 1.7.9.5
+
 
