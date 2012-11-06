@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1729 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753046Ab2KYSRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 13:17:07 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH] cfg80211: change function signature of
- cfg80211_get_p2p_attr()
-Date: Sun, 25 Nov 2012 19:13:28 +0100
-Message-ID: <1353867208-11429-1-git-send-email-arend@broadcom.com> (sfid-20121125_191743_637380_A40A7BF9)
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:53167 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751692Ab2KFN5M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2012 08:57:12 -0500
+Date: Tue, 6 Nov 2012 19:22:16 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwl8k: defining interface combinations
+Message-ID: <20121106135212.GA8439@markyou.marvell.com> (sfid-20121106_145727_849596_A3ED9FF6)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function cfg80211_get_p2p_attr() can fail and returns
-a negative error code. However, the return type is unsigned
-int. The largest positive number is determined by desired_len
-variable in the function, which is u16. So changing the return
-type to int to allow easy error checking. Also change the type
-for the attribute to enum for improved type checking.
+AP mode support upto 8 interfaces.
+Defining it using iface_combinations
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 ---
-Hi Johannes,
+ drivers/net/wireless/mwl8k.c |   19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-I decided to make use of cfg80211_get_p2p_attr() in brcmfmac
-and would like this minor change to it.
-
-The only other "driver" using it is mac80211 and it seems it
-will not mind this change ;-)
-
-Gr. AvS
----
- include/net/cfg80211.h |    5 +++--
- net/wireless/util.c    |    6 ++++--
- 2 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8a1aec5..45eb8ec 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3652,8 +3652,9 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev);
-  * the data is malformed or the attribute can't be found (respectively),
-  * or the length of the found attribute (which can be zero).
-  */
--unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
--				   u8 attr, u8 *buf, unsigned int bufsize);
-+int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
-+			  enum ieee80211_p2p_attr_id attr_id,
-+			  u8 *buf, unsigned int bufsize);
- 
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b99f01c..2344077 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -980,9 +980,11 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 5099e53..cb5594d 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5617,6 +5617,18 @@ fail:
+ 	return rc;
  }
- EXPORT_SYMBOL(cfg80211_calculate_bitrate);
  
--unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
--				   u8 attr, u8 *buf, unsigned int bufsize)
-+int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
-+				   enum ieee80211_p2p_attr_id attr_id,
-+				   u8 *buf, unsigned int bufsize)
++static const struct ieee80211_iface_limit ap_if_limits[] = {
++	{ .max = 8,	.types = BIT(NL80211_IFTYPE_AP) },
++};
++
++static const struct ieee80211_iface_combination ap_if_comb = {
++	.limits = ap_if_limits,
++	.n_limits = ARRAY_SIZE(ap_if_limits),
++	.max_interfaces = 8,
++	.num_different_channels = 1,
++};
++
++
+ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
  {
-+	u8 attr = (u8)attr_id;
- 	u8 *out = buf;
- 	u16 attr_remaining = 0;
- 	bool desired_attr = false;
+ 	struct ieee80211_hw *hw = priv->hw;
+@@ -5696,8 +5708,13 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
+ 		goto err_free_cookie;
+ 
+ 	hw->wiphy->interface_modes = 0;
+-	if (priv->ap_macids_supported || priv->device_info->fw_image_ap)
++
++	if (priv->ap_macids_supported || priv->device_info->fw_image_ap) {
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP);
++		hw->wiphy->iface_combinations = &ap_if_comb;
++		hw->wiphy->n_iface_combinations = 1;
++	}
++
+ 	if (priv->sta_macids_supported || priv->device_info->fw_image_sta)
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_STATION);
+ 
 -- 
-1.7.10.4
-
+1.7.9.2
 
