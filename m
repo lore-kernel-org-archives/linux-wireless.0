@@ -1,86 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:42072 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756149Ab2KWUxZ (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:43045 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751367Ab2KFN5s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 15:53:25 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFCv2 1/4] iw: add beacon interval and DTIM period parameters to mesh join
-Date: Fri, 23 Nov 2012 12:53:11 -0800
-Message-Id: <1353703994-13093-2-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_215336_512246_EE8668D7)
-In-Reply-To: <1353703994-13093-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353703994-13093-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	Tue, 6 Nov 2012 08:57:48 -0500
+Date: Tue, 6 Nov 2012 19:22:48 +0530
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwl8k: Unmap the pci DMA address in xmit error path
+Message-ID: <20121106135244.GA8453@markyou.marvell.com> (sfid-20121106_145759_591564_BB1E3F48)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the beacon interval and DTIM period with the mesh join command:
-iw <dev> mesh join <meshid> beacon-interval <time in TUs> dtim-period <value>
+We should unmap the DMA address in the error path, else it
+causes resource leaks. Fix this.
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
 ---
- mesh.c |   32 ++++++++++++++++++++++++++++++--
- 1 file changed, 30 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwl8k.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/mesh.c b/mesh.c
-index 4fdad6a..958c2c0 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -383,6 +383,7 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- {
- 	struct nlattr *container;
- 	float rate;
-+	int bintval, dtim_period;
- 	char *end;
- 
- 	if (argc < 1)
-@@ -405,6 +406,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 		argc--;
- 	}
- 
-+	if (argc > 1 && strcmp(argv[0], "beacon-interval") == 0) {
-+		argc--;
-+		argv++;
-+
-+		bintval = strtoul(argv[0], &end, 10);
-+		if (*end != '\0')
-+			return 1;
-+
-+		NLA_PUT_U32(msg, NL80211_ATTR_BEACON_INTERVAL, bintval);
-+		argv++;
-+		argc--;
-+	}
-+
-+	if (argc > 1 && strcmp(argv[0], "dtim-period") == 0) {
-+		argc--;
-+		argv++;
-+
-+		dtim_period = strtoul(argv[0], &end, 10);
-+		if (*end != '\0')
-+			return 1;
-+
-+		NLA_PUT_U32(msg, NL80211_ATTR_DTIM_PERIOD, dtim_period);
-+		argv++;
-+		argc--;
-+	}
-+
- 	container = nla_nest_start(msg, NL80211_ATTR_MESH_SETUP);
- 	if (!container)
- 		return -ENOBUFS;
-@@ -431,8 +458,9 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>] [vendor_sync on|off]"
--	" [<param>=<value>]*",
-+COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
-+	" [beacon-interval <time in TUs>] [dtim-period <value>]"
-+	" [vendor_sync on|off] [<param>=<value>]*",
- 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
- 	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
- 
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 9961765..5b5b9ec 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2005,6 +2005,8 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
+ 				spin_unlock(&priv->stream_lock);
+ 			}
+ 			spin_unlock_bh(&priv->tx_lock);
++			pci_unmap_single(priv->pdev, dma, skb->len,
++					 PCI_DMA_TODEVICE);
+ 			dev_kfree_skb(skb);
+ 			return;
+ 		}
 -- 
-1.7.9.5
+1.7.9.2
 
