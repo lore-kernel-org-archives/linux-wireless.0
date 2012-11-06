@@ -1,133 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16392 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752710Ab2KTNAa (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:47433 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234Ab2KFMyt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 08:00:30 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 3/3] ath9k: stomp audio profiles on weak signal strength
-Date: Tue, 20 Nov 2012 18:30:01 +0530
-Message-ID: <1353416401-5328-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121120_140038_033683_6B9D0B4A)
-In-Reply-To: <1353416401-5328-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1353416401-5328-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Tue, 6 Nov 2012 07:54:49 -0500
+Date: Tue, 6 Nov 2012 13:54:47 +0100
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Daniel Wagner <wagi@monom.org>
+Cc: Piotr Haber <phaber@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
+ support
+Message-ID: <20121106125447.GC17892@ubuntu-mba51> (sfid-20121106_135500_977285_BA897E1B)
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+ <5098B858.7090802@monom.org>
+ <5098C7FF.2060308@monom.org>
+ <5098E488.5020206@broadcom.com>
+ <5098EA0C.1020806@broadcom.com>
+ <5099023E.70506@monom.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5099023E.70506@monom.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On lower WLAN signal strength, WLAN downlink traffic might suffer
-from retransmissions. At the mean time, playing SCO/A2DP profiles
-is affecting WLAN stability. In such scenario, by stomping SCO/A2DP
-BT traffic completely for a BTCOEX period, gives WLAN traffic an
-oppertunity to recover PHY rate. It also improves WLAN stability at
-lower RSSI without sacificing BT traffic.
+On Tue, Nov 06, 2012 at 01:27:42PM +0100, Daniel Wagner wrote:
+> Hi Piotr,
+> 
+> On 06.11.2012 11:44, Piotr Haber wrote:
+> > On 11/06/12 11:20, Arend van Spriel wrote:
+> >> On 11/06/2012 09:19 AM, Daniel Wagner wrote:
+> >>> On 06.11.2012 08:12, Daniel Wagner wrote:
+> >>>> Hi Seth,
+> >>>>
+> >>>> I am owner of a MBA 2012 and the mainline driver is kind of 'not fun'
+> >>>> (read broken). Since a few days I am using it and the situation improved
+> >>>
+> >>> it = your patch set on top of 3.7-rc3
+> >>>
+> >>> (/me should not write emails right after getting up)
+> >>>
+> >>>
+> >>
+> >> Just looked at the screen shots. Only could read the last one. It seems
+> >> to indicate a problem in the receive path.
+> >>
+> >> Gr. AvS
+> > Hi Daniel,
+> > 
+> > could you describe your hardware (lspci -nn), infrastructure (iw wlanx
+> > link/scan) and kernel version?
+> 
+> Sure, forgot to include this details in the beginning.
+> 
+> $ lspci -nn
+> 00:00.0 Host bridge [0600]: Intel Corporation Ivy Bridge DRAM Controller [8086:0154] (rev 09)
+> 00:02.0 VGA compatible controller [0300]: Intel Corporation Device [8086:0166] (rev 09)
+> 00:14.0 USB Controller [0c03]: Intel Corporation Panther Point USB xHCI Host Controller [8086:1e31] (rev 04)
+> 00:16.0 Communication controller [0780]: Intel Corporation Panther Point MEI Controller #1 [8086:1e3a] (rev 04)
+> 00:1a.0 USB Controller [0c03]: Intel Corporation Panther Point USB Enhanced Host Controller #2 [8086:1e2d] (rev 04)
+> 00:1b.0 Audio device [0403]: Intel Corporation Panther Point High Definition Audio Controller [8086:1e20] (rev 04)
+> 00:1c.0 PCI bridge [0604]: Intel Corporation Panther Point PCI Express Root Port 1 [8086:1e10] (rev c4)
+> 00:1c.1 PCI bridge [0604]: Intel Corporation Panther Point PCI Express Root Port 2 [8086:1e12] (rev c4)
+> 00:1c.4 PCI bridge [0604]: Intel Corporation Panther Point PCI Express Root Port 5 [8086:1e18] (rev c4)
+> 00:1d.0 USB Controller [0c03]: Intel Corporation Panther Point USB Enhanced Host Controller #1 [8086:1e26] (rev 04)
+> 00:1f.0 ISA bridge [0601]: Intel Corporation Panther Point LPC Controller [8086:1e56] (rev 04)
+> 00:1f.2 SATA controller [0106]: Intel Corporation Panther Point 6 port SATA AHCI Controller [8086:1e03] (rev 04)
+> 00:1f.3 SMBus [0c05]: Intel Corporation Panther Point SMBus Controller [8086:1e22] (rev 04)
+> 02:00.0 Network controller [0280]: Broadcom Corporation BCM43224 802.11a/b/g/n [14e4:4353] (rev 01)
+> 
+> 
+> $ iw wlan0 link
+> Connected to 10:8c:cf:b5:f7:4f (on wlan0)
+>         SSID: Linux Foundation
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |  1 +
- drivers/net/wireless/ath/ath9k/btcoex.c |  1 +
- drivers/net/wireless/ath/ath9k/btcoex.h |  1 +
- drivers/net/wireless/ath/ath9k/gpio.c   |  5 ++++-
- drivers/net/wireless/ath/ath9k/mci.c    | 18 ++++++++++++++++++
- 5 files changed, 25 insertions(+), 1 deletion(-)
+<snip>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9a93d2b..04fa5f3 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -488,6 +488,7 @@ struct ath_btcoex {
- 	int rssi_count;
- 	struct ath_gen_timer *no_stomp_timer; /* Timer for no BT stomping */
- 	struct ath_mci_profile mci;
-+	u8 stomp_audio;
- };
- 
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index c90e9bc..9963b0b 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -49,6 +49,7 @@ static const u32 mci_wlan_weights[ATH_BTCOEX_STOMP_MAX]
- 	{ 0x01017d01, 0x3b3b3b01, 0x3b3b3b01, 0x3b3b3b3b }, /* STOMP_LOW */
- 	{ 0x01017d01, 0x01010101, 0x01010101, 0x01010101 }, /* STOMP_NONE */
- 	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
-+	{ 0xffffff01, 0xffffffff, 0xffffff01, 0xffffffff }, /* STOMP_AUDIO */
- };
- 
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 2f84ab2..6de26ea 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -50,6 +50,7 @@ enum ath_stomp_type {
- 	ATH_BTCOEX_STOMP_LOW,
- 	ATH_BTCOEX_STOMP_NONE,
- 	ATH_BTCOEX_STOMP_LOW_FTP,
-+	ATH_BTCOEX_STOMP_AUDIO,
- 	ATH_BTCOEX_STOMP_MAX
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 4236df8..7b39cc1 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -247,6 +247,9 @@ static void ath_btcoex_period_timer(unsigned long data)
- 			stomp_type = ATH_BTCOEX_STOMP_ALL;
- 			timer_period = btcoex->btscan_no_stomp;
- 		}
-+	} else if (btcoex->stomp_audio >= 5) {
-+		stomp_type = ATH_BTCOEX_STOMP_AUDIO;
-+		btcoex->stomp_audio = 0;
- 	}
- 
- 	ath9k_hw_btcoex_bt_stomp(ah, stomp_type);
-@@ -295,7 +298,7 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 	    (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI) &&
- 	     test_bit(BT_OP_SCAN, &btcoex->op_flags)))
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
--	 else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
-+	else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_LOW);
- 
- 	ath9k_hw_btcoex_enable(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index ece192d..706378e 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -729,12 +729,30 @@ void ath9k_mci_set_txpower(struct ath_softc *sc, bool setchannel,
- 		ath9k_hw_set_txpowerlimit(ah, sc->config.txpowlimit, false);
- }
- 
-+static void ath9k_mci_stomp_audio(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_btcoex *btcoex = &sc->btcoex;
-+	struct ath_mci_profile *mci = &btcoex->mci;
-+
-+	if (!mci->num_sco && !mci->num_a2dp)
-+		return;
-+
-+	if (ah->stats.avgbrssi > 25) {
-+		btcoex->stomp_audio = 0;
-+		return;
-+	}
-+
-+	btcoex->stomp_audio++;
-+}
- void ath9k_mci_update_rssi(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
- 
-+	ath9k_mci_stomp_audio(sc);
-+
- 	if (!(mci_hw->config & ATH_MCI_CONFIG_CONCUR_TX))
- 		return;
- 
--- 
-1.8.0
+I'm running with the same card in the same environment but haven't had
+any problems at all.
+
+> I applied the patches on top of Linus' tree:
+> 
+> 1e207eb1c3f0e8b690401f02fe08e7b53903f010
+> 
+> > I was trying Seth's patches with 4313 and 43224 devices on 3.7-rc3 as
+> > well and did not run into anything like this.
+> 
+> What I did was to resume the laptop and told ConnMan me that the automatic
+> connect to to connect to 'Linux Foundation' network failed and then I told
+> ConnMan to try again to connect. That triggered the panic.  I don't have 
+> any logs for this. 
+
+Do you have logs for the failed connection attempt before the panic? If
+so I'd be interested in seeing them.
+
+Seth
 
