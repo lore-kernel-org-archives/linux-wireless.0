@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:54629 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756207Ab2KVTDH (ORCPT
+Received: from hotel311.server4you.de ([85.25.146.15]:35342 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754410Ab2KFITR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 14:03:07 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so3317571eaa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 11:03:06 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 13/13] wl18xx: make driver operational again
-Date: Thu, 22 Nov 2012 14:05:28 +0200
-Message-Id: <1353585928-28666-14-git-send-email-eliad@wizery.com> (sfid-20121122_200328_034911_33163711)
-In-Reply-To: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+	Tue, 6 Nov 2012 03:19:17 -0500
+Message-ID: <5098C7FF.2060308@monom.org> (sfid-20121106_091928_607426_9A9CF1DE)
+Date: Tue, 06 Nov 2012 09:19:11 +0100
+From: Daniel Wagner <wagi@monom.org>
+MIME-Version: 1.0
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace support
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com> <5098B858.7090802@monom.org>
+In-Reply-To: <5098B858.7090802@monom.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we have done updating the driver to the new fw
-api, so make the driver operational again.
+On 06.11.2012 08:12, Daniel Wagner wrote:
+> Hi Seth,
+>
+> I am owner of a MBA 2012 and the mainline driver is kind of 'not fun'
+> (read broken). Since a few days I am using it and the situation improved
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+it = your patch set on top of 3.7-rc3
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 420da4ae..271e595 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1414,10 +1414,6 @@ static int wl18xx_setup(struct wl1271 *wl)
- 	struct wl18xx_priv *priv = wl->priv;
- 	int ret;
- 
--	wl1271_error("driver is in transitional commit (due to fw api"
--		     "change) and can't be booted!");
--	return -EINVAL;
--
- 	wl->rtable = wl18xx_rtable;
- 	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
- 	wl->num_rx_desc = WL18XX_NUM_TX_DESCRIPTORS;
--- 
-1.7.6.401.g6a319
+(/me should not write emails right after getting up)
 
