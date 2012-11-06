@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:35636 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754375Ab2K2NOz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 08:14:55 -0500
-Date: Thu, 29 Nov 2012 14:14:52 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:33715 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751017Ab2KFM7D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2012 07:59:03 -0500
+Date: Tue, 6 Nov 2012 18:23:27 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: [GIT] [NFC] 3.7 fix pull request
-Message-ID: <20121129131452.GE12685@sortiz-mobl> (sfid-20121129_141458_983935_79475802)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 1/5] mwl8k: defining interface combinations
+Message-ID: <20121106125327.GA7498@markyou.marvell.com> (sfid-20121106_135919_828410_1D50D9A9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+AP mode support upto 8 interfaces.
+Defining it using iface_combinations
 
-I'm hoping it's not too late for 3.7 fixes, so here is a last minute one:
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-This is an NFC LLCP fix for 3.7 and contains only one patch.
-
-It fixes a potential crash when receiving an LLCP HDLC frame acking a frame
-that is not the last sent one. In that case we may dereference an already
-freed pointer.
-
-
-The following changes since commit 6bdd253f635f7b2ef027d116933a6c9ec148b87f:
-
-  mac80211: fix remain-on-channel (non-)cancelling (2012-11-26 14:41:40 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git tags/nfc-fixes-3.7-2
-
-for you to fetch changes up to 289814918ce3af1296ac7d9b05508bde64e97348:
-
-  NFC: Fix incorrect llcp pointer dereference (2012-11-28 18:42:04 +0100)
-
-----------------------------------------------------------------
-Waldemar Rymarkiewicz (1):
-      NFC: Fix incorrect llcp pointer dereference
-
- net/nfc/llcp/llcp.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 5099e53..cb5594d 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5617,6 +5617,18 @@ fail:
+ 	return rc;
+ }
+ 
++static const struct ieee80211_iface_limit ap_if_limits[] = {
++	{ .max = 8,	.types = BIT(NL80211_IFTYPE_AP) },
++};
++
++static const struct ieee80211_iface_combination ap_if_comb = {
++	.limits = ap_if_limits,
++	.n_limits = ARRAY_SIZE(ap_if_limits),
++	.max_interfaces = 8,
++	.num_different_channels = 1,
++};
++
++
+ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
+ {
+ 	struct ieee80211_hw *hw = priv->hw;
+@@ -5696,8 +5708,13 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
+ 		goto err_free_cookie;
+ 
+ 	hw->wiphy->interface_modes = 0;
+-	if (priv->ap_macids_supported || priv->device_info->fw_image_ap)
++
++	if (priv->ap_macids_supported || priv->device_info->fw_image_ap) {
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP);
++		hw->wiphy->iface_combinations = &ap_if_comb;
++		hw->wiphy->n_iface_combinations = 1;
++	}
++
+ 	if (priv->sta_macids_supported || priv->device_info->fw_image_sta)
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_STATION);
+ 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.9.2
+
+\n
+\n
