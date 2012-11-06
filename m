@@ -1,100 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49299 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752894Ab2KVSbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:31:06 -0500
-Message-ID: <1353594254.27848.61.camel@cumari.coelho.fi> (sfid-20121122_193131_500750_8B002D9F)
-Subject: Re: [PATCH 04/13] wlcore: split 18xx and 12xx scan mechanism
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Nov 2012 16:24:14 +0200
-In-Reply-To: <CAB3XZEdy6kTVxMYijut3n4gRQLccd6DetqDCJwrusFgqPYRCWA@mail.gmail.com>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-	 <1353585928-28666-5-git-send-email-eliad@wizery.com>
-	 <1353593475.27848.58.camel@cumari.coelho.fi>
-	 <CAB3XZEdy6kTVxMYijut3n4gRQLccd6DetqDCJwrusFgqPYRCWA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43121 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab2KFKbb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2012 05:31:31 -0500
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <rodrigue@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <backports@vger.kernel.org>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH 0/2] Patches for compat-drivers/linux-3.6.y
+Date: Tue, 6 Nov 2012 16:01:32 +0530
+Message-ID: <1352197894-4352-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20121106_113146_476132_134C1156)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-22 at 16:22 +0200, Eliad Peller wrote:
-> On Thu, Nov 22, 2012 at 4:11 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
-> >> The scan APIs of 12xx and 18xx are totally different.
-> >> Use some common functions as much as possible (e.g.
-> >> for setting scan channels), but split scan.c into
-> >> chip-specific scan.c files, each implementing its
-> >> own scan mechanism.
-> >>
-> >> (in other words - move most of the current wlcore's
-> >> scan.c into wl12xx, and implement a similar mechanism
-> >> in 18xx, according to the new api)
-> >>
-> >> New wlcore ops are introduced in order to call the
-> >> chip-specific scan functions.
-> >>
-> >> The template indices used for each scan (regular/scheduled)
-> >> are also different between the chips, so set the correct
-> >> indices used for each scan type after identifying the chip.
-> >>
-> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> ---
-> >
-> > [...]
-> >
-> >> +/* probe request rate */
-> >> +enum
-> >> +{
-> >> +     WLCORE_SCAN_RATE_1      = 0,
-> >> +     WLCORE_SCAN_RATE_5_5    = 1,
-> >> +     WLCORE_SCAN_RATE_6      = 2,
-> >> +};
-> >
-> > WL18XX_SCAN_RATE_* instead?
-> >
-> right.
-> 
-> >> +
-> >> +struct wl1271_cmd_scan_params {
-> >
-> > wl18xx_cmd_scan_params is better.
-> >
-> > [...]
-> >
-> >> +struct wl12xx_cmd_scan_stop {
-> >
-> > wl18xx_cmd_scan_stop instead?
-> >
-> sure (both).
-> 
-> > [...]
-> >
-> >> @@ -3820,10 +3817,8 @@ static int wlcore_set_bssid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-> >>                                               wlvif->band);
-> >>
-> >>       /* we only support sched_scan while not connected */
-> >> -     if (wl->sched_scanning) {
-> >> -             wl1271_scan_sched_scan_stop(wl, wlvif);
-> >> -             ieee80211_sched_scan_stopped(wl->hw);
-> >> -     }
-> >> +     if (wl->sched_scanning)
-> >> +             wl->ops->sched_scan_stop(wl, wlvif);
-> >
-> > What happened with the ieee80211_sched_scan_stopped()?
-> >
-> it was a bug - we call it when we get the SCAN_SCHED_COMPLETED event.
-> i fixed it while changing the api, but i guess a better place to do it
-> would be in patch [1/12], where i moved it from another place :)
+These two patches are for linux-3.6.y branch and has
+fixes for AR9565.
 
-LOL!
+Balas (2):
+  compat-drivers: Move next-pending patches to cherry-picks
+  compat-drivers: Add a next-pending patch.
 
-> or maybe it even deserves a separate patch?
+ ...5-ath9k-fix-ASPM-initialization-on-resume.patch |   40 +++
+ ...-ath9k-improve-suspend-resume-reliability.patch |  117 ++++++++
+ .../0088-cfg80211-fix-antenna-gain-handling.patch  |   39 +++
+ ...k-Use-a-helper-routine-for-MCI-FTP-tuning.patch |   72 +++++
+ .../0090-ath9k-Fix-BT_OP_SCAN-usage.patch          |   95 ++++++
+ ...091-ath9k-perform-ANI-cycle-in-idle-state.patch |  107 +++++++
+ ...tale-pointers-potentially-causing-access-.patch |   43 +++
+ .../0094-ath9k-Send-WLAN-channel-info-to-BT.patch  |  147 +++++++++
+ ...oncurrent-WLAN-and-BT-tx-support-for-MCI-.patch |  264 +++++++++++++++++
+ .../0096-ath9k-fill-channel-mode-in-caldata.patch  |   44 +++
+ ...djust-WLAN-and-BT-concurrent-transmission.patch |  313 ++++++++++++++++++++
+ ...00-ath9k_hw-Enable-OSLA-hw-fix-for-AR9565.patch |   42 +++
+ ...1-ath9k_hw-Fix-selfgen-chainmask-for-9565.patch |   34 +++
+ ...ppropriate-bit-for-AR9565-in-btc-control-.patch |   39 +++
+ ...off-RXIQ-calibration-while-re-calibrating.patch |   54 ++++
+ ...sable-MCI-stat-counter-by-default-for-AR9.patch |   42 +++
+ ...0105-ath9k_hw-Fix-frequent-BT-rx-recovery.patch |   76 +++++
+ ...-ath9k_hw-Fix-max-rx-rate-drop-for-AR9565.patch |   34 +++
+ ...nfigure-new-switch-table-for-AR9565-BTCOE.patch |   57 ++++
+ ...th9k_hw-Set-default-MCI-config-for-AR9565.patch |   27 ++
+ ...ust-duty-cycle-for-FTP-profile-for-AR9565.patch |   27 ++
+ ...-ath9k-Add-new-BT-profile-info-A2DP_Voice.patch |   52 ++++
+ ...111-cfg80211-Disallow-HT-WEP-in-IBSS-mode.patch |   63 ++++
+ ...9k_hw-Enable-hw-PLL-power-save-for-AR9565.patch |   49 +++
+ ...9k_hw-Fix-concurrent-tx-on-lower-tx-power.patch |   51 ++++
+ ...9k_hw-validate-MCI-stuck-after-RTC-wakeup.patch |   38 +++
+ .../0118-ath9k-Dump-BTCOEX-tuning-parameters.patch |  148 +++++++++
+ ...for-TID-only-in-BlockAcks-while-checking-.patch |   65 ++++
+ ...01-ath9k_hw-Enable-OSLA-hw-fix-for-AR9565.patch |   34 ---
+ ...x-signal-strength-noise-measurements-on-a.patch |   28 ++
+ ...2-ath9k_hw-Fix-selfgen-chainmask-for-9565.patch |   28 --
+ ...ppropriate-bit-for-AR9565-in-btc-control-.patch |   33 --
+ ...off-RXIQ-calibration-while-re-calibrating.patch |   46 ---
+ ...sable-MCI-stat-counter-by-default-for-AR9.patch |   34 ---
+ ...0006-ath9k_hw-Fix-frequent-BT-rx-recovery.patch |   66 ----
+ ...-ath9k_hw-Fix-max-rx-rate-drop-for-AR9565.patch |   28 --
+ ...nfigure-new-switch-table-for-AR9565-BTCOE.patch |   47 ---
+ ...th9k_hw-Set-default-MCI-config-for-AR9565.patch |   21 --
+ ...ust-duty-cycle-for-FTP-profile-for-AR9565.patch |   21 --
+ ...-ath9k-Add-new-BT-profile-info-A2DP_Voice.patch |   44 ---
+ ...012-cfg80211-Disallow-HT-WEP-in-IBSS-mode.patch |   63 ----
+ 41 files changed, 2207 insertions(+), 465 deletions(-)
+ create mode 100644 linux-next-cherry-picks/0085-ath9k-fix-ASPM-initialization-on-resume.patch
+ create mode 100644 linux-next-cherry-picks/0086-ath9k-improve-suspend-resume-reliability.patch
+ create mode 100644 linux-next-cherry-picks/0088-cfg80211-fix-antenna-gain-handling.patch
+ create mode 100644 linux-next-cherry-picks/0089-ath9k-Use-a-helper-routine-for-MCI-FTP-tuning.patch
+ create mode 100644 linux-next-cherry-picks/0090-ath9k-Fix-BT_OP_SCAN-usage.patch
+ create mode 100644 linux-next-cherry-picks/0091-ath9k-perform-ANI-cycle-in-idle-state.patch
+ create mode 100644 linux-next-cherry-picks/0093-ath9k-fix-stale-pointers-potentially-causing-access-.patch
+ create mode 100644 linux-next-cherry-picks/0094-ath9k-Send-WLAN-channel-info-to-BT.patch
+ create mode 100644 linux-next-cherry-picks/0095-ath9k-Add-concurrent-WLAN-and-BT-tx-support-for-MCI-.patch
+ create mode 100644 linux-next-cherry-picks/0096-ath9k-fill-channel-mode-in-caldata.patch
+ create mode 100644 linux-next-cherry-picks/0097-ath9k-adjust-WLAN-and-BT-concurrent-transmission.patch
+ create mode 100644 linux-next-cherry-picks/0100-ath9k_hw-Enable-OSLA-hw-fix-for-AR9565.patch
+ create mode 100644 linux-next-cherry-picks/0101-ath9k_hw-Fix-selfgen-chainmask-for-9565.patch
+ create mode 100644 linux-next-cherry-picks/0102-ath9k-Set-appropriate-bit-for-AR9565-in-btc-control-.patch
+ create mode 100644 linux-next-cherry-picks/0103-ath9k-turn-off-RXIQ-calibration-while-re-calibrating.patch
+ create mode 100644 linux-next-cherry-picks/0104-ath9k_hw-Disable-MCI-stat-counter-by-default-for-AR9.patch
+ create mode 100644 linux-next-cherry-picks/0105-ath9k_hw-Fix-frequent-BT-rx-recovery.patch
+ create mode 100644 linux-next-cherry-picks/0106-ath9k_hw-Fix-max-rx-rate-drop-for-AR9565.patch
+ create mode 100644 linux-next-cherry-picks/0107-ath9k_hw-Configure-new-switch-table-for-AR9565-BTCOE.patch
+ create mode 100644 linux-next-cherry-picks/0108-ath9k_hw-Set-default-MCI-config-for-AR9565.patch
+ create mode 100644 linux-next-cherry-picks/0109-ath9k-adjust-duty-cycle-for-FTP-profile-for-AR9565.patch
+ create mode 100644 linux-next-cherry-picks/0110-ath9k-Add-new-BT-profile-info-A2DP_Voice.patch
+ create mode 100644 linux-next-cherry-picks/0111-cfg80211-Disallow-HT-WEP-in-IBSS-mode.patch
+ create mode 100644 linux-next-cherry-picks/0115-ath9k_hw-Enable-hw-PLL-power-save-for-AR9565.patch
+ create mode 100644 linux-next-cherry-picks/0116-ath9k_hw-Fix-concurrent-tx-on-lower-tx-power.patch
+ create mode 100644 linux-next-cherry-picks/0117-ath9k_hw-validate-MCI-stuck-after-RTC-wakeup.patch
+ create mode 100644 linux-next-cherry-picks/0118-ath9k-Dump-BTCOEX-tuning-parameters.patch
+ create mode 100644 linux-next-cherry-picks/0119-ath9k-Test-for-TID-only-in-BlockAcks-while-checking-.patch
+ delete mode 100644 linux-next-pending/0001-ath9k_hw-Enable-OSLA-hw-fix-for-AR9565.patch
+ create mode 100644 linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch
+ delete mode 100644 linux-next-pending/0002-ath9k_hw-Fix-selfgen-chainmask-for-9565.patch
+ delete mode 100644 linux-next-pending/0003-ath9k-Set-appropriate-bit-for-AR9565-in-btc-control-.patch
+ delete mode 100644 linux-next-pending/0004-ath9k-turn-off-RXIQ-calibration-while-re-calibrating.patch
+ delete mode 100644 linux-next-pending/0005-ath9k_hw-Disable-MCI-stat-counter-by-default-for-AR9.patch
+ delete mode 100644 linux-next-pending/0006-ath9k_hw-Fix-frequent-BT-rx-recovery.patch
+ delete mode 100644 linux-next-pending/0007-ath9k_hw-Fix-max-rx-rate-drop-for-AR9565.patch
+ delete mode 100644 linux-next-pending/0008-ath9k_hw-Configure-new-switch-table-for-AR9565-BTCOE.patch
+ delete mode 100644 linux-next-pending/0009-ath9k_hw-Set-default-MCI-config-for-AR9565.patch
+ delete mode 100644 linux-next-pending/0010-ath9k-adjust-duty-cycle-for-FTP-profile-for-AR9565.patch
+ delete mode 100644 linux-next-pending/0011-ath9k-Add-new-BT-profile-info-A2DP_Voice.patch
+ delete mode 100644 linux-next-pending/0012-cfg80211-Disallow-HT-WEP-in-IBSS-mode.patch
 
-I think it deserves a separate patch that can be easily cherry-picked to
-other trees (and maybe even CC'ed stable?).
-
---
-Luca.
+-- 
+1.7.4.1
 
