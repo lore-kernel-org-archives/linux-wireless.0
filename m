@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:45561 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970Ab2KBT7D (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:57528 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754122Ab2KFA7Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Nov 2012 15:59:03 -0400
-Received: by mail-vc0-f174.google.com with SMTP id fk26so4109558vcb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Nov 2012 12:59:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+7oygfnsrqAyU4d3n7EgmOntenhp36DEGhSnJ4FsJFdOKCk-w@mail.gmail.com>
-References: <CA+7oygeOHQLcdEWpedbXDnBoAHrXddkrmNd3-PNQOKzoyNkn6w@mail.gmail.com>
-	<CA+7oygfnsrqAyU4d3n7EgmOntenhp36DEGhSnJ4FsJFdOKCk-w@mail.gmail.com>
-Date: Fri, 2 Nov 2012 15:59:02 -0400
-Message-ID: <CA+7oygdwK=8i_oWgoeXKRgxJAzOyyXjkmuGpO+mBsAdcRRqzGg@mail.gmail.com> (sfid-20121102_205916_963244_786BD123)
-Subject: Re: bug in compat-wireless 3.6, rt2x00 iftype is wrong
-From: George Nychis <gnychis@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 5 Nov 2012 19:59:24 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2] mwifiex: process RX packets in SDIO IRQ thread directly
+Date: Mon,  5 Nov 2012 16:59:15 -0800
+Message-Id: <1352163555-31558-1-git-send-email-bzhao@marvell.com> (sfid-20121106_021004_926901_B899A081)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-in the compat-wireless-3.6.-rc7-1 source code, I'm talking about line
-88 in net/wireless/chan.c which returns -EBUSY.  Note that I have a
-single interface which is in station mode, not monitoring mode.  There
-is no interface in true monitoring mode.
+ksdioirqd has higher priority than kworker. Process RX packets
+in SDIO IRQ thread (ksdioirqd/mmcX) directly instead of deferring
+the work to kworker to avoid the extra latency.
+This improves TCP throughput 15~20% on an ARM platform with SDIO
+2.0 controller.
 
-On Fri, Nov 2, 2012 at 3:57 PM, George Nychis <gnychis@gmail.com> wrote:
-> The issue seems to be that in all of these drivers, wdev is NULL when
-> you hit set_channel()  in the older and newer driver.  In the old
-> driver, cfg8011_set_freq() is called with wdev has NULL and it still
-> calls rdev->ops->set_channel(....) which succeeds.
->
-> However, in the new driver cfg80211_set_monitor_channel() is called
-> since wdev was NULL, but now instead of still calling
-> rdev->ops->set_channel() or rdev->ops->set_monitor_channel() it
-> returns -EBUSY because if(!cfg80211_has_monitors_only(rdev)) returns
-> true.  Is this really the expected behavior, or is meant to only
-> return -EBUSY if there are only monitors, rather? (i.e.,
-> if(cfg80211_has_monitors_only(rdev)) )
->
->
-> On Fri, Nov 2, 2012 at 2:46 PM, George Nychis <gnychis@gmail.com> wrote:
->> I'm still trying to track down the cause for this, but starting in
->> compat-wireless-3.6 (including early RCs and the most recent 3.6.2),
->> rt2x00 devices register with the wrong iftype.  They register as
->> NL80211_IFTYPE_MONITOR instead of NL80211_IFTYPE_STATION, for example.
->>  I checked cw-3.5, 3.4, 3.2, and 3.1 and none of these versions have
->> this bug.
->>
->> This breaks the ability to set channels, etc.  Hoping to track down
->> the bug, but wanted to report it in the meantime and see if anyone
->> else has run in to it.
->>
->> - George
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+v2: modify the comment to accompany the change
+    (Mukesh Agrawal <quiche@chromium.org>)
+
+ drivers/net/wireless/mwifiex/main.c |    1 +
+ drivers/net/wireless/mwifiex/sdio.c |    6 +++---
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 1df767b..51a13f8 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -282,6 +282,7 @@ exit_main_proc:
+ 		mwifiex_shutdown_drv(adapter);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(mwifiex_main_process);
+ 
+ /*
+  * This function frees the adapter structure.
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index fc8a9bf..011c816 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -905,8 +905,8 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
+ /*
+  * SDIO interrupt handler.
+  *
+- * This function reads the interrupt status from firmware and assigns
+- * the main process in workqueue which will handle the interrupt.
++ * This function reads the interrupt status from firmware and handles
++ * the interrupt in current thread (ksdioirqd) right away.
+  */
+ static void
+ mwifiex_sdio_interrupt(struct sdio_func *func)
+@@ -929,7 +929,7 @@ mwifiex_sdio_interrupt(struct sdio_func *func)
+ 		adapter->ps_state = PS_STATE_AWAKE;
+ 
+ 	mwifiex_interrupt_status(adapter);
+-	queue_work(adapter->workqueue, &adapter->main_work);
++	mwifiex_main_process(adapter);
+ }
+ 
+ /*
+-- 
+1.7.0.2
+
