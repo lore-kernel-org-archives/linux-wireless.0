@@ -1,80 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-out.inet.fi ([195.156.147.13]:41591 "EHLO jenni1.inet.fi"
+Received: from mms3.broadcom.com ([216.31.210.19]:2997 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753315Ab2KYT3e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 14:29:34 -0500
-Subject: Re: Atheros AR3012 problem in Ubuntu 12.04LTS
-From: Jukka Kivari <jukka.kivari@pohjolantietotekniikka.fi>
-Reply-To: jukka.kivari@pohjolantietotekniikka.fi
-To: Kalle Valo <kvalo@adurom.com>
-Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1353870648.2973.9.camel@EDAnovaSRV1>
-References: <1353859765.3743.14.camel@EDAnovaSRV1>
-	 <87a9u5wraw.fsf@purkki.adurom.net>  <1353870648.2973.9.camel@EDAnovaSRV1>
-Content-Type: text/plain
-Date: Sun, 25 Nov 2012 21:29:28 +0200
-Message-Id: <1353871768.3325.3.camel@EDAnovaSRV1> (sfid-20121125_202941_798825_40363681)
-Mime-Version: 1.0
+	id S1750989Ab2KFR5L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2012 12:57:11 -0500
+Message-ID: <50994F65.8020908@broadcom.com> (sfid-20121106_185736_782077_232D149E)
+Date: Tue, 6 Nov 2012 09:56:53 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, arend@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH] brcmfmac: fix typo in CONFIG_BRCMISCAN
+References: <1352067189-29017-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1352067189-29017-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 11/04/2012 02:13 PM, Hauke Mehrtens wrote:
+> The old ifdef CONFIG_BRCMFISCAN looks wrong to me and it makes more
+> sense when CONFIG_BRCMISCAN is used.
+> This patch was just compile tested by me, but not runtime tested.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
+Thanks Hauke, nice catch.
 
-Exactly the sane problem on Acer machine is described here. It includes
-workaround also. The root cause is the same which we figured "New
-atheros AR3012`s id is not included in ath3k bluetooth kernel module"
+Acked-by: Franky Lin <frankyl@broadcom.com>
 
-http://www.linlap.com/acer_aspire_s3
+John,
 
+This is not necessary for 3.8 since the iscan code has been removed by a 
+patch from Hante Meuleman in the train I sent yesterday. But it needs to 
+be merged into 3.7 because iscan doesn't support scheduled scan. Sorry 
+for the trouble.
 
-*************************************
-Bluetooth
-The bluetooth module is the new Atheros AR3012, which requires loading a
-firmware before it can be used. For now, patching the kernel is required
-to recognize this module as AR3012 one.
-
-The patch, and it's upstream progress, can be seen here:
-http://thread.gmane.org/gmane.linux.bluez.kernel/18801
-
-New atheros AR3012`s id is not included in ath3k bluetooth kernel
-module, you can compile your own kernel using this:
-
-https://lkml.org/lkml/2011/12/4/69
-
-More info:
-http://ubuntuforums.org/showthread.php?t=1867447&highlight=zenbook
-
-*************************************
-
--- 
-
--Jukka
-
-
-****************
-Powered by Linux
-****************
-
------Original Message-----
-From: Jukka Kivari <jukka.kivari@pohjolantietotekniikka.fi>
-Reply-to: jukka.kivari@pohjolantietotekniikka.fi
-To: Kalle Valo <kvalo@adurom.com>
-Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: Atheros AR3012 problem in Ubuntu 12.04LTS
-Date: Sun, 25 Nov 2012 21:10:50 +0200
-
-Hi,
-
-Thanks for quick response.
-
-We are using standard Ubuntu release. We don't have access to Dell
-pre-installed version (yet) as it's not available/supported in Finland.
-I have asked it from Dell but let's see if we get it or not.
-
-BT isn't working on standard 11.10 Ubuntu either, nor in 12.10.
-
-We haven't tried manual binding yet. We'll check it.
-
+Thanks,
+Franky
 
 
