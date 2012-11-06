@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:37593 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750801Ab2KPAAJ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42439 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141Ab2KFUbA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2012 19:00:09 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tim Shepard <shep@laptop.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, "3.4+" <stable@vger.kernel.org>
-Subject: [PATCH 3.7] mwifiex: fix system hang issue in cmd timeout error case
-Date: Thu, 15 Nov 2012 15:58:47 -0800
-Message-Id: <1353023928-16983-1-git-send-email-bzhao@marvell.com> (sfid-20121116_010013_992856_8AECAFE2)
+	Tue, 6 Nov 2012 15:31:00 -0500
+Message-ID: <1352233894.8814.10.camel@jlt4.sipsolutions.net> (sfid-20121106_213114_232066_88060714)
+Subject: Re: Linux 3.6.5
+From: Johannes Berg <johannes@sipsolutions.net>
+To: eddie@ehuk.net
+Cc: stable@vger.kernel.org, florian@reitmeir.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Date: Tue, 06 Nov 2012 21:31:34 +0100
+In-Reply-To: <5099669E.2040301@ehuk.net>
+References: <20121031173811.GA12970@kroah.com> <509575F4.5020109@ehuk.net>
+	     <20121105081757.GA3730@kroah.com> <50979D38.6010002@ehuk.net>
+	     (sfid-20121105_121423_464154_72561532) <1352116868.9466.2.camel@jlt4.sipsolutions.net>
+	    <509838F4.4010301@ehuk.net>
+	   <1352188621.9440.4.camel@jlt4.sipsolutions.net>
+	  <50992E0E.3040606@ehuk.net>
+	  <1352217244.9440.16.camel@jlt4.sipsolutions.net>
+	  <50995E25.6080601@ehuk.net>
+	 <1352229634.8814.8.camel@jlt4.sipsolutions.net> <5099669E.2040301@ehuk.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported by Tim Shepard:
-I was seeing sporadic failures (wedgeups), and the majority of those
-failures I saw printed the printouts in mwifiex_cmd_timeout_func with
-cmd = 0xe5 which is CMD_802_11_HS_CFG_ENH.  When this happens, two
-minutes later I get notified that the rtcwake thread is blocked, like
-this:
-      INFO: task rtcwake:3495 blocked for more than 120 seconds.
+On Tue, 2012-11-06 at 19:35 +0000, Eddie Chapman wrote:
 
-To get the hung thread unblocked we wake up the cmd wait queue and
-cancel the ioctl.
+> > Right, we're still looking at that. It seems that it's not an ideal
+> > solution, the regulatory change I proposed is probably better. Could you
+> > check if it helps as well? That is, remove this patch, and apply this
+> > one: http://p.sipsolutions.net/8877cbe3440d94b1.txt
+> 
+> OK, so I've removed 0129f39c7d882289.txt, applied 8877cbe3440d94b1.txt, 
+> and I've kept 3a40414f826a8f1096d9b94c4a53ef91b25ba28d applied.
+> 
+> Rebooted, and happy to report throughput is still good, so 
+> 8877cbe3440d94b1.txt also "fixes" it for me.
 
-Cc: "3.4+" <stable@vger.kernel.org>
-Reported-by: Tim Shepard <shep@laptop.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cmdevt.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
+Great, thanks. I'm not really sure which one to apply, and if we apply
+the 8877 one we'll also want to update the reg db (that you aren't
+using). A lot of people are in Barcelona right now though, so that might
+be a week or so until we can close this.
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index c9528b3..5f438e6 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -890,9 +890,6 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
- 		return;
- 	}
- 	cmd_node = adapter->curr_cmd;
--	if (cmd_node->wait_q_enabled)
--		adapter->cmd_wait_q.status = -ETIMEDOUT;
--
- 	if (cmd_node) {
- 		adapter->dbg.timeout_cmd_id =
- 			adapter->dbg.last_cmd_id[adapter->dbg.last_cmd_index];
-@@ -941,6 +938,14 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
- 
- 		dev_err(adapter->dev, "ps_mode=%d ps_state=%d\n",
- 			adapter->ps_mode, adapter->ps_state);
-+
-+		if (cmd_node->wait_q_enabled) {
-+			adapter->cmd_wait_q.status = -ETIMEDOUT;
-+			wake_up_interruptible(&adapter->cmd_wait_q.wait);
-+			mwifiex_cancel_pending_ioctl(adapter);
-+			/* reset cmd_sent flag to unblock new commands */
-+			adapter->cmd_sent = false;
-+		}
- 	}
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
- 		mwifiex_init_fw_complete(adapter);
--- 
-1.7.0.2
+Thanks for all the testing!
+
+johannes
 
