@@ -1,35 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:50604 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783Ab2KLVtR (ORCPT
+Received: from mail.ultra-3eti.com ([173.13.207.162]:60896 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753141Ab2KFWJn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 16:49:17 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k13so9782700iea.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 13:49:16 -0800 (PST)
+	Tue, 6 Nov 2012 17:09:43 -0500
+Received: from webmail.3eti.com (rockmx01.rock.corp [192.168.200.4]) by mail.ultra-3eti.com with ESMTP id udSPCZ8uiLqyC6Ii (version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Tue, 06 Nov 2012 17:09:41 -0500 (EST)
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: linux 802.11s mesh should process GANN IE for interoperability
+Date: Tue, 6 Nov 2012 22:09:40 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C10ABC@RockMX01.rock.corp> (sfid-20121106_230954_745017_D7C6D114)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmon04wLvn0DDnD9X98bY8DxHRQf10jQJCbuckbztS261vQ@mail.gmail.com>
-References: <CA++BO6SuRgOu7A4BKobrdEeSpSc3UUYHXaECmEGE=R17w7HjQA@mail.gmail.com>
-	<CAJ-Vmon04wLvn0DDnD9X98bY8DxHRQf10jQJCbuckbztS261vQ@mail.gmail.com>
-Date: Mon, 12 Nov 2012 16:49:16 -0500
-Message-ID: <CA++BO6TYf2W23RLKaHSg4a2cuBTmUoG1GYsPjdjt79deg1Lz=A@mail.gmail.com> (sfid-20121112_224920_985807_4BCAB61C)
-Subject: Re: ath9k_htc-based adapter unfunctioning after commit ceb26a6013
-From: Corey Richardson <corey@octayn.net>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 12, 2012 at 4:39 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Hi!
->
-> Please create a bugzilla.kernel.org ticket with this info?
->
+802.11s says gate announcement can be done in 3 ways.
+1. proactive PREQ with gate bit set.
+2. RANN with gate bit set.
+3. GANN
 
-https://bugzilla.kernel.org/show_bug.cgi?id=50441
+Linux mac80211 chooses to ride on RANN, which is fine.
+But, on receiving side, it should process GANN IE because other vendor may choose to use GANN way.
 
---
-Corey Richardson
+At this point (as of kernel 3.6.6). GANN IE is ignored 
+In both  ieee80211_parse_elems_crc() and mesh_rx_path_sel_frame()
