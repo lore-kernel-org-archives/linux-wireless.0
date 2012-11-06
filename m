@@ -1,103 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:42408 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757842Ab2K0GpX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 01:45:23 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hm6so4054043wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:22 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Ido Reis <idor@ti.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 09/20] wlcore: fwlog dynamic mem_block control
-Date: Tue, 27 Nov 2012 08:44:50 +0200
-Message-Id: <1353998701-18171-10-git-send-email-arik@wizery.com> (sfid-20121127_074618_453550_938AE3CE)
-In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
-References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4499 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754010Ab2KFAWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2012 19:22:49 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 08/24] brcmfmac: use wait_event_timeout for 8021x
+ pending count
+Date: Mon, 5 Nov 2012 16:22:16 -0800
+Message-ID: <1352161352-30405-9-git-send-email-frankyl@broadcom.com> (sfid-20121106_013116_503447_1157E719)
+In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Reis <idor@ti.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-number of fwlog mem_blocks can be configured using module param.
-this is a fw debug feature: in case a large fw log data is busrted during
-a short period of time, the memory get filled and data is lost.
-this allows us to dynamicly set the fw log mem_block usage, although
-configuring more mem_block for logger comes at the expense of TP.
+brcmf_netdev_wait_pend8021x was polling to see if 8021x data was
+already sent. Code was replaced using wait_event_timeout.
 
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Ido Reis <idor@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ti/wlcore/conf.h |    5 ++++-
- drivers/net/wireless/ti/wlcore/main.c |   16 ++++++++++++++++
- 2 files changed, 20 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    1 +
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   34 +++++++++-----------
+ 2 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
-index b64d6b5..b3894ef 100644
---- a/drivers/net/wireless/ti/wlcore/conf.h
-+++ b/drivers/net/wireless/ti/wlcore/conf.h
-@@ -1208,6 +1208,9 @@ struct conf_rx_streaming_settings {
- 	u8 always;
- } __packed;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 34bad32..8d4789b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -621,6 +621,7 @@ struct brcmf_pub {
+ 	struct work_struct multicast_work;
+ 	u8 macvalue[ETH_ALEN];
+ 	atomic_t pend_8021x_cnt;
++	wait_queue_head_t pend_8021x_wait;
+ #ifdef DEBUG
+ 	struct dentry *dbgfs_dir;
+ #endif
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 9e2451f..0f81f31 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -52,6 +52,7 @@ MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN fullmac driver.");
+ MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN fullmac cards");
+ MODULE_LICENSE("Dual BSD/GPL");
  
-+#define CONF_FWLOG_MIN_MEM_BLOCKS       2
-+#define CONF_FWLOG_MAX_MEM_BLOCKS	16
-+
- struct conf_fwlog {
- 	/* Continuous or on-demand */
- 	u8 mode;
-@@ -1215,7 +1218,7 @@ struct conf_fwlog {
- 	/*
- 	 * Number of memory blocks dedicated for the FW logger
- 	 *
--	 * Range: 1-3, or 0 to disable the FW logger
-+	 * Range: 2-16, or 0 to disable the FW logger
- 	 */
- 	u8 mem_blocks;
++#define MAX_WAIT_FOR_8021X_TX		50	/* msecs */
  
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index b659efd..8932cca 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -56,6 +56,7 @@
- #define WL1271_BOOT_RETRIES 3
+ /* Error bits */
+ int brcmf_msg_level = BRCMF_ERROR_VAL;
+@@ -404,9 +405,11 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
+ 	eh = (struct ethhdr *)(txp->data);
+ 	type = ntohs(eh->h_proto);
  
- static char *fwlog_param;
-+static int fwlog_mem_blocks = -1;
- static int bug_on_recovery = -1;
- static int no_recovery     = -1;
- 
-@@ -307,6 +308,18 @@ static void wlcore_adjust_conf(struct wl1271 *wl)
- {
- 	/* Adjust settings according to optional module parameters */
- 
-+	/* Firmware Logger params */
-+	if (fwlog_mem_blocks != -1) {
-+		if (fwlog_mem_blocks >= CONF_FWLOG_MIN_MEM_BLOCKS &&
-+		    fwlog_mem_blocks <= CONF_FWLOG_MAX_MEM_BLOCKS) {
-+			wl->conf.fwlog.mem_blocks = fwlog_mem_blocks;
-+		} else {
-+			wl1271_error(
-+				"Illegal fwlog_mem_blocks=%d using default %d",
-+				fwlog_mem_blocks, wl->conf.fwlog.mem_blocks);
-+		}
+-	if (type == ETH_P_PAE)
++	if (type == ETH_P_PAE) {
+ 		atomic_dec(&drvr->pend_8021x_cnt);
+-
++		if (waitqueue_active(&drvr->pend_8021x_wait))
++			wake_up(&drvr->pend_8021x_wait);
 +	}
-+
- 	/* Firmware Log Settings */
- 	if (fwlog_param) {
- 		if (!strcmp(fwlog_param, "continuous")) {
-@@ -6024,6 +6037,9 @@ module_param_named(fwlog, fwlog_param, charp, 0);
- MODULE_PARM_DESC(fwlog,
- 		 "FW logger options: continuous, ondemand, dbgpins or disable");
+ }
  
-+module_param(fwlog_mem_blocks, int, S_IRUSR | S_IWUSR);
-+MODULE_PARM_DESC(fwlog_mem_blocks, "fwlog mem_blocks");
-+
- module_param(bug_on_recovery, int, S_IRUSR | S_IWUSR);
- MODULE_PARM_DESC(bug_on_recovery, "BUG() on fw recovery");
+ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
+@@ -822,6 +825,8 @@ int brcmf_attach(uint bus_hdrlen, struct device *dev)
  
+ 	INIT_LIST_HEAD(&drvr->bus_if->dcmd_list);
+ 
++	init_waitqueue_head(&drvr->pend_8021x_wait);
++
+ 	return ret;
+ 
+ fail:
+@@ -924,26 +929,19 @@ static int brcmf_get_pend_8021x_cnt(struct brcmf_pub *drvr)
+ 	return atomic_read(&drvr->pend_8021x_cnt);
+ }
+ 
+-#define MAX_WAIT_FOR_8021X_TX	10
+-
+ int brcmf_netdev_wait_pend8021x(struct net_device *ndev)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_pub *drvr = ifp->drvr;
+-	int timeout = 10 * HZ / 1000;
+-	int ntimes = MAX_WAIT_FOR_8021X_TX;
+-	int pend = brcmf_get_pend_8021x_cnt(drvr);
+-
+-	while (ntimes && pend) {
+-		if (pend) {
+-			set_current_state(TASK_INTERRUPTIBLE);
+-			schedule_timeout(timeout);
+-			set_current_state(TASK_RUNNING);
+-			ntimes--;
+-		}
+-		pend = brcmf_get_pend_8021x_cnt(drvr);
+-	}
+-	return pend;
++	int err;
++
++	err = wait_event_timeout(drvr->pend_8021x_wait,
++				 !brcmf_get_pend_8021x_cnt(drvr),
++				 msecs_to_jiffies(MAX_WAIT_FOR_8021X_TX));
++
++	WARN_ON(!err);
++
++	return !err;
+ }
+ 
+ static void brcmf_driver_init(struct work_struct *work)
 -- 
 1.7.9.5
+
 
