@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:39780 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053Ab2KGHgX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40303 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753585Ab2KFH42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2012 02:36:23 -0500
-Received: by mail-wi0-f172.google.com with SMTP id hq12so5013023wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Nov 2012 23:36:21 -0800 (PST)
-Date: Wed, 7 Nov 2012 08:36:34 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: eddie@ehuk.net, stable@vger.kernel.org, florian@reitmeir.org,
-	linux-wireless@vger.kernel.org, j@w1.fi
+	Tue, 6 Nov 2012 02:56:28 -0500
+Message-ID: <1352188621.9440.4.camel@jlt4.sipsolutions.net> (sfid-20121106_085641_801796_E0F54F8B)
 Subject: Re: Linux 3.6.5
-Message-ID: <20121107073634.GA6560@kroah.com> (sfid-20121107_083634_884786_236FBE72)
-References: <50979D38.6010002@ehuk.net>
- <1352116868.9466.2.camel@jlt4.sipsolutions.net>
- <509838F4.4010301@ehuk.net>
- <1352188621.9440.4.camel@jlt4.sipsolutions.net>
- <50992E0E.3040606@ehuk.net>
- <1352217244.9440.16.camel@jlt4.sipsolutions.net>
- <50995E25.6080601@ehuk.net>
- <1352229634.8814.8.camel@jlt4.sipsolutions.net>
- <5099669E.2040301@ehuk.net>
- <1352233894.8814.10.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1352233894.8814.10.camel@jlt4.sipsolutions.net>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eddie Chapman <eddie@ehuk.net>
+Cc: stable@vger.kernel.org, florian@reitmeir.org,
+	linux-wireless@vger.kernel.org
+Date: Tue, 06 Nov 2012 08:57:01 +0100
+In-Reply-To: <509838F4.4010301@ehuk.net>
+References: <20121031173811.GA12970@kroah.com> <509575F4.5020109@ehuk.net>
+	  <20121105081757.GA3730@kroah.com> <50979D38.6010002@ehuk.net>
+	  (sfid-20121105_121423_464154_72561532) <1352116868.9466.2.camel@jlt4.sipsolutions.net>
+	 <509838F4.4010301@ehuk.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 06, 2012 at 09:31:34PM +0100, Johannes Berg wrote:
-> On Tue, 2012-11-06 at 19:35 +0000, Eddie Chapman wrote:
+Hi Eddie,
+
+> Here is the output of /sys/kernel/debug/ieee80211/phy0/ht40allow_map:
+
+Ok, thanks.
+
+> 2412 HT40  +
+> 2417 HT40  +
+> 2422 HT40  +
+> 2427 HT40  +
+> 2432 HT40 -+
+> 2437 HT40 -+
+> 2442 HT40 -+
+> 2447 HT40 -
+> 2452 HT40 -
+> 2457 HT40 -
+> 2462 HT40 -
+> 2467 HT40
+> 2472 HT40
+> 2484 HT40
+
+That looks correct.
+
+> and "iw reg get" says:
 > 
-> > > Right, we're still looking at that. It seems that it's not an ideal
-> > > solution, the regulatory change I proposed is probably better. Could you
-> > > check if it helps as well? That is, remove this patch, and apply this
-> > > one: http://p.sipsolutions.net/8877cbe3440d94b1.txt
-> > 
-> > OK, so I've removed 0129f39c7d882289.txt, applied 8877cbe3440d94b1.txt, 
-> > and I've kept 3a40414f826a8f1096d9b94c4a53ef91b25ba28d applied.
-> > 
-> > Rebooted, and happy to report throughput is still good, so 
-> > 8877cbe3440d94b1.txt also "fixes" it for me.
-> 
-> Great, thanks. I'm not really sure which one to apply, and if we apply
-> the 8877 one we'll also want to update the reg db (that you aren't
-> using). A lot of people are in Barcelona right now though, so that might
-> be a week or so until we can close this.
+> country 00:
+> 	(2402 - 2472 @ 40), (6, 20)
+> 	(2457 - 2482 @ 20), (6, 20), PASSIVE-SCAN, NO-IBSS
+> 	(2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
+> 	(5170 - 5250 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
+> 	(5735 - 5835 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
+> 	(57240 - 63720 @ 2160), (N/A, 0)
 
-I'm in Barcelona all this week, but a nice summary of what I'm supposed
-to do here for the stable tree would be great to have when ever you
-figure it out, don't wait for me to return, my email queues up just fine :)
+That also looks fine.
 
-thanks,
+> I captured both of these with the HT20/HT40 patch applied.
 
-greg k-h
+Ok, that shouldn't change anything in this case, but good to know.
+
+> let me know if you need anything else.
+
+Yeah, I forgot to ask about the AP. Can you show the output of "iw wlan0
+scan dump" for your AP while you're connected? It should show something
+like this (note the "associated" indication):
+
+BSS 02:00:00:00:00:00 (on wlan1) -- associated
+	TSF: 1352188517669470 usec (15650d, 07:55:17)
+	freq: 2432
+	[...]
+
+I'm particularly interested in the "freq" (as above) and the HT
+capabilities/operation information.
+
+johannes
+
