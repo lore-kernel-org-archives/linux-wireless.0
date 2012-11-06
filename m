@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1944 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2509 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753017Ab2KSUgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 15:36:00 -0500
-Message-ID: <50AA9824.6020308@broadcom.com> (sfid-20121119_213604_107074_5FFE7C5C)
-Date: Mon, 19 Nov 2012 21:35:48 +0100
+	id S1751454Ab2KFKVH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2012 05:21:07 -0500
+Message-ID: <5098E488.5020206@broadcom.com> (sfid-20121106_112120_016697_C417B134)
+Date: Tue, 6 Nov 2012 11:20:56 +0100
 From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
+To: "Daniel Wagner" <wagi@monom.org>
+cc: "Seth Forshee" <seth.forshee@canonical.com>,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
 	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
 	"Brett Rudley" <brudley@broadcom.com>,
 	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	"Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 12/22] brcmsmac: Add support for writing debug
- messages to the trace buffer
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-13-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1352988492-21340-13-git-send-email-seth.forshee@canonical.com>
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
+ support
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+ <5098B858.7090802@monom.org> <5098C7FF.2060308@monom.org>
+In-Reply-To: <5098C7FF.2060308@monom.org>
 Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2012 03:08 PM, Seth Forshee wrote:
-> Add a new brcmsmac_msg trace system to enable writing of debug messages
-> to the trace buffer, and add brcms_* macros for storing device debug
-> messages in the trace buffer in addition to the printk log buffer.
+On 11/06/2012 09:19 AM, Daniel Wagner wrote:
+> On 06.11.2012 08:12, Daniel Wagner wrote:
+>> Hi Seth,
+>>
+>> I am owner of a MBA 2012 and the mainline driver is kind of 'not fun'
+>> (read broken). Since a few days I am using it and the situation improved
+> 
+> it = your patch set on top of 3.7-rc3
+> 
+> (/me should not write emails right after getting up)
+> 
+> 
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/Makefile   |    3 +-
->   .../brcm80211/brcmsmac/brcms_trace_events.h        |   68 +++++++++++++++++++-
->   drivers/net/wireless/brcm80211/brcmsmac/debug.c    |   44 +++++++++++++
->   drivers/net/wireless/brcm80211/brcmsmac/debug.h    |   40 ++++++++++++
->   4 files changed, 151 insertions(+), 4 deletions(-)
->   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/debug.c
->   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/debug.h
+Just looked at the screen shots. Only could read the last one. It seems
+to indicate a problem in the receive path.
 
-
+Gr. AvS
 
