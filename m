@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49316 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020Ab2KVS16 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:27:58 -0500
-Message-ID: <1353596589.27848.74.camel@cumari.coelho.fi> (sfid-20121122_192811_534938_8B050C60)
-Subject: Re: [PATCH 08/13] wlcore: update events enum/struct to new fw api
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Nov 2012 17:03:09 +0200
-In-Reply-To: <1353585928-28666-9-git-send-email-eliad@wizery.com>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-	 <1353585928-28666-9-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from youngberry.canonical.com ([91.189.89.112]:47403 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132Ab2KFMrv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2012 07:47:51 -0500
+Date: Tue, 6 Nov 2012 13:47:46 +0100
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Daniel Wagner <wagi@monom.org>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
+ support
+Message-ID: <20121106124746.GB17892@ubuntu-mba51> (sfid-20121106_134802_735530_7ECA5D68)
+References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
+ <5098B858.7090802@monom.org>
+ <5098C7FF.2060308@monom.org>
+ <20121106100213.GA17892@ubuntu-mba51>
+ <5098FFB8.7040709@monom.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5098FFB8.7040709@monom.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
-> The event mailbox in wl18xx has a different
-> (non-compatible) structure.
+On Tue, Nov 06, 2012 at 01:16:56PM +0100, Daniel Wagner wrote:
+> On 06.11.2012 11:02, Seth Forshee wrote:
+> >On Tue, Nov 06, 2012 at 09:19:11AM +0100, Daniel Wagner wrote:
+> >>On 06.11.2012 08:12, Daniel Wagner wrote:
+> >>>Hi Seth,
+> >>>
+> >>>I am owner of a MBA 2012 and the mainline driver is kind of 'not fun'
+> >>>(read broken). Since a few days I am using it and the situation improved
+> >>
+> >>it = your patch set on top of 3.7-rc3
+> >
+> >Thanks for the report. I'm currently running these patches on top of
+> >3.7-rc3 as well, but I haven't run into this.
+> >
+> >I'm at a conference and haven't had time to look at this in depth, but
 > 
-> Create common functions in wlcore to handle the
-> events, and call them from the chip-specific
-> event mailbox parsers.
-> 
-> This way, each driver (wl12xx/wl18xx) extracts
-> the event mailbox by itself according to its
-> own structure, and then calls the common
-> wlcore functions to handle it.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
- 
-[...]
+> Me too. LinuxCon Europe? :)
 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index 7c596dd..7b43c6c 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-
-[...]
-
-> @@ -1916,6 +1914,71 @@ static void wlcore_op_stop(struct ieee80211_hw *hw)
-
-[...]
-
-> +static void wl1271_connection_loss_work(struct work_struct *work)
-
-wlcore_connection_loss_work()
-
---
-Luca
-
+Yep :-)
