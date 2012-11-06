@@ -1,114 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:32792 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752345Ab2K0SvO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 13:51:14 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH] iw: allow to set wmm parameters from iw
-Date: Tue, 27 Nov 2012 19:50:32 +0100
-Message-Id: <1354042232-32428-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121127_195120_100493_91AEB95D)
-In-Reply-To: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:1152 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754150Ab2KFAWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Nov 2012 19:22:50 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 22/24] brcmfmac: on halting driver check before release
+ or free.
+Date: Mon, 5 Nov 2012 16:22:30 -0800
+Message-ID: <1352161352-30405-23-git-send-email-frankyl@broadcom.com> (sfid-20121106_013118_542202_BBB79389)
+In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is especially useful in IBSS mode.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+brcmf_netdev_stop shall first check bus_if status before bringing
+down cfg80211. brcmf_detach shall first check if driver is
+allocated.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- phy.c |   76 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 76 insertions(+)
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/phy.c b/phy.c
-index 860f299..b4f4726 100644
---- a/phy.c
-+++ b/phy.c
-@@ -359,3 +359,79 @@ COMMAND(set, antenna, "<bitmap> | all | <tx bitmap> <rx bitmap>",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_antenna,
- 	"Set a bitmap of allowed antennas to use for TX and RX.\n"
- 	"The driver may reject antenna configurations it cannot support.");
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index a0d8950..2bb1207 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -600,10 +600,12 @@ static int brcmf_netdev_stop(struct net_device *ndev)
+ 	struct brcmf_pub *drvr = ifp->drvr;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+-	brcmf_cfg80211_down(drvr->config);
 +
-+static int handle_wmm_params(struct nl80211_state *state,
-+			     struct nl_cb *cb,
-+			     struct nl_msg *msg,
-+			     int argc, char **argv,
-+			     enum id_input id)
-+{
-+	char *end;
-+	struct nlattr *txq, *params;
-+	int queue, cw_min, cw_max, aifs, txop;
+ 	if (drvr->bus_if->drvr_up == 0)
+ 		return 0;
+ 
++	brcmf_cfg80211_down(drvr->config);
 +
-+	if (argc != 5)
-+		return 1;
-+
-+	if (!strcmp(argv[0], "VO"))
-+		queue = NL80211_TXQ_Q_VO;
-+	else if (!strcmp(argv[0], "VI"))
-+		queue = NL80211_TXQ_Q_VI;
-+	else if (!strcmp(argv[0], "BK"))
-+		queue = NL80211_TXQ_Q_BK;
-+	else if (!strcmp(argv[0], "BE"))
-+		queue = NL80211_TXQ_Q_BE;
-+	else {
-+		printf("Invalid parameter: %s\n", argv[0]);
-+		return 2;
-+	}
-+
-+	if (!*argv[1] || !*argv[2] || !*argv[3] || !*argv[4])
-+		return 1;
-+
-+	cw_min = strtoul(argv[1], &end, 0);
-+	if (*end)
-+		return 1;
-+
-+	cw_max = strtoul(argv[2], &end, 0);
-+	if (*end)
-+		return 1;
-+
-+	aifs = strtoul(argv[3], &end, 0);
-+	if (*end)
-+		return 1;
-+
-+	txop = strtoul(argv[4], &end, 0);
-+	if (*end)
-+		return 1;
-+
-+
-+	txq = nla_nest_start(msg, NL80211_ATTR_WIPHY_TXQ_PARAMS);
-+	if (!txq)
-+		goto nla_put_failure;
-+
-+	params = nla_nest_start(msg, 1);
-+	if (!params)
-+		goto nla_put_failure;
-+
-+	NLA_PUT_U8(msg, NL80211_TXQ_ATTR_QUEUE, queue);
-+	NLA_PUT_U16(msg, NL80211_TXQ_ATTR_CWMIN, cw_min);
-+	NLA_PUT_U16(msg, NL80211_TXQ_ATTR_CWMAX, cw_max);
-+	NLA_PUT_U8(msg, NL80211_TXQ_ATTR_AIFS, aifs);
-+	NLA_PUT_U16(msg, NL80211_TXQ_ATTR_TXOP, txop);
-+
-+	nla_nest_end(msg, params);
-+	nla_nest_end(msg, txq);
-+
-+return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, wmm_params, "<VO|VI|BE|BK> <cw_min> <cw_max> <aifs> <txop>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_wmm_params,
-+	"Set WMM parameters for a queue (VO, VI, BE, or BK):\n"
-+	" * cw_min/cw_max - contention window min/max (miliseconds)\n"
-+	" * aifs - interframe spacing (ms)\n"
-+	" * txop - time for tx operation limit (in units of 32 microseconds), 0 = off\n"
-+	);
+ 	/* Set state and stop OS transmissions */
+ 	drvr->bus_if->drvr_up = false;
+ 	netif_stop_queue(ndev);
+@@ -905,6 +907,8 @@ void brcmf_detach(struct device *dev)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
++	if (drvr == NULL)
++		return;
+ 
+ 	/* make sure primary interface removed last */
+ 	for (i = BRCMF_MAX_IFS-1; i > -1; i--)
 -- 
-1.7.10.4
+1.7.9.5
+
 
