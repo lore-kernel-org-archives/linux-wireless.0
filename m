@@ -1,94 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:49333 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343Ab2KXOuH (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43342 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767Ab2KFKcB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2012 09:50:07 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm9so2324525wib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2012 06:50:06 -0800 (PST)
-Message-ID: <1353768600.2318.13.camel@user64-MCP7A> (sfid-20121124_155011_583643_3B7BD6E8)
-Subject: [PATCH 08/10] staging: vt6656: extend wireless definitions to v22
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 24 Nov 2012 14:50:00 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 6 Nov 2012 05:32:01 -0500
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <rodrigue@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <backports@vger.kernel.org>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH 2/2] compat-drivers: Add a next-pending patch.
+Date: Tue, 6 Nov 2012 16:01:34 +0530
+Message-ID: <1352197894-4352-3-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20121106_113211_639943_5CF0CFA1)
+In-Reply-To: <1352197894-4352-1-git-send-email-bkamatch@qca.qualcomm.com>
+References: <1352197894-4352-1-git-send-email-bkamatch@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
- Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 ---
- drivers/staging/vt6656/iwctl.c |   18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ ...x-signal-strength-noise-measurements-on-a.patch |   28 ++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
+ create mode 100644 linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch
 
-diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
-index db5bc62..2cd8b0a 100644
---- a/drivers/staging/vt6656/iwctl.c
-+++ b/drivers/staging/vt6656/iwctl.c
-@@ -42,7 +42,6 @@
- #include "control.h"
- #include "rndis.h"
- 
--#define SUPPORTED_WIRELESS_EXT 19
- 
- static const long frequency_list[] = {
- 	2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472, 2484,
-@@ -133,9 +132,9 @@ int iwctl_siwscan(struct net_device *dev, struct iw_request_info *info,
- 			pItemSSID = (PWLAN_IE_SSID)abyScanSSID;
- 			pItemSSID->byElementID = WLAN_EID_SSID;
- 			memcpy(pItemSSID->abySSID, req->essid, (int)req->essid_len);
--			if (pItemSSID->abySSID[req->essid_len - 1] == '\0') {
-+			if (pItemSSID->abySSID[req->essid_len] == '\0') {
- 				if (req->essid_len > 0)
--					pItemSSID->len = req->essid_len - 1;
-+					pItemSSID->len = req->essid_len;
- 			} else {
- 				pItemSSID->len = req->essid_len;
- 			}
-@@ -606,7 +605,7 @@ int iwctl_giwrange(struct net_device *dev, struct iw_request_info *info,
- 		range->txpower[0] = 100;
- 		range->num_txpower = 1;
- 		range->txpower_capa = IW_TXPOW_MWATT;
--		range->we_version_source = SUPPORTED_WIRELESS_EXT;
-+		range->we_version_source = WIRELESS_EXT;
- 		range->we_version_compiled = WIRELESS_EXT;
- 		range->retry_capa = IW_RETRY_LIMIT | IW_RETRY_LIFETIME;
- 		range->retry_flags = IW_RETRY_LIMIT;
-@@ -801,9 +800,9 @@ int iwctl_siwessid(struct net_device *dev, struct iw_request_info *info,
- 		pItemSSID->byElementID = WLAN_EID_SSID;
- 
- 		memcpy(pItemSSID->abySSID, extra, wrq->length);
--		if (pItemSSID->abySSID[wrq->length - 1] == '\0') {
-+		if (pItemSSID->abySSID[wrq->length] == '\0') {
- 			if (wrq->length>0)
--				pItemSSID->len = wrq->length - 1;
-+				pItemSSID->len = wrq->length;
- 		} else {
- 			pItemSSID->len = wrq->length;
- 		}
-@@ -1400,12 +1399,15 @@ int iwctl_giwpower(struct net_device *dev, struct iw_request_info *info,
- 		return 0;
- 
- 	if ((wrq->flags & IW_POWER_TYPE) == IW_POWER_TIMEOUT) {
--		wrq->value = (int)((pMgmt->wListenInterval * pMgmt->wCurrBeaconPeriod) << 10);
-+		wrq->value = (int)((pMgmt->wListenInterval *
-+			pMgmt->wCurrBeaconPeriod) / 100);
- 		wrq->flags = IW_POWER_TIMEOUT;
- 	} else {
--		wrq->value = (int)((pMgmt->wListenInterval * pMgmt->wCurrBeaconPeriod) << 10);
-+		wrq->value = (int)((pMgmt->wListenInterval *
-+			pMgmt->wCurrBeaconPeriod) / 100);
- 		wrq->flags = IW_POWER_PERIOD;
- 	}
+diff --git a/linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch b/linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch
+new file mode 100644
+index 0000000..727c904
+--- /dev/null
++++ b/linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch
+@@ -0,0 +1,28 @@
++From f91a5adf7e8d778f8f006934400249ec9c84717c Mon Sep 17 00:00:00 2001
++From: Felix Fietkau <nbd@openwrt.org>
++Date: Fri, 2 Nov 2012 16:23:47 +0530
++Subject: [PATCH] ath9k_hw: fix signal strength / noise measurements on ar9462
 +
- 	wrq->flags |= IW_POWER_ALL_R;
- 	return 0;
- }
++The nominal noise floor for most channels is -120, though on some it can
++reach -127. Use -120 for converting noise floor to channel noise to
++avoid overestimating rx signal strength and channel noise.
++
++Signed-off-by: Felix Fietkau <nbd@openwrt.org>
++---
++ drivers/net/wireless/ath/ath9k/ar9003_phy.h | 4 ++--
++ 1 file changed, 2 insertions(+), 2 deletions(-)
++
++--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++@@ -332,9 +332,9 @@
++ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
++ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
++ 
++-#define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -127
+++#define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -120
++ #define AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ     -127
++-#define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -127
+++#define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -120
++ #define AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ     -127
++ 
++ #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
 -- 
-1.7.10.4
-
-
+1.7.4.1
 
