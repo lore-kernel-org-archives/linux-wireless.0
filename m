@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43581 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754657Ab2K1MZu (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:60413 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751285Ab2KGHyx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 07:25:50 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Tdgi4-0006cS-Uc
-	for linux-wireless@vger.kernel.org; Wed, 28 Nov 2012 13:25:49 +0100
-Message-ID: <1354105575.9345.3.camel@jlt4.sipsolutions.net> (sfid-20121128_132553_367681_A492EB7A)
-Subject: Re: [PATCH] nl80211: remove unnecessary checks
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 7 Nov 2012 02:54:53 -0500
+Message-ID: <509A11F9.8050108@posedge.com> (sfid-20121107_085455_907313_19D3A586)
+Date: Wed, 07 Nov 2012 13:17:05 +0530
+From: Saravana <saravanad@posedge.com>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Date: Wed, 28 Nov 2012 13:26:15 +0100
-In-Reply-To: <1353931105-10805-1-git-send-email-johannes@sipsolutions.net> (sfid-20121126_125802_517449_444EA480)
-References: <1353931105-10805-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121126_125802_517449_444EA480)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: Johannes Berg <johannes@sipsolutions.net>
+Subject: Clarification needed on Last Tx Rate statistic update
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 12:58 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The CQM TX-error rate/interval can't be less than
-> zero since they're unsigned values, remove checks.
-> Also fix indentation of the function.
 
-Applied.
+Hi,
 
-johannes
+I am Saravana and i am currently working on adding statistics. It will 
+be really helpful if someone could provide me clarification related to 
+Last Tx Rate statistics.
 
+In ieee80211_tx_status(), the Last Tx Rate (sta->last_tx_rate) update 
+happens only when the rate control is done by the HW 
+(IEEE80211_HW_HAS_RATE_CONTROL) .
+My understanding is that irrespective of whether the rate control is 
+done by the hardware or not, the driver will fill up all the rates that 
+it had tried along with the retry count for each rate to 
+ieee80211_tx_status() using the
+  struct ieee80211_tx_info (info->status.rates).
+
+  The 'info->status.rates[rates_idx]' would point to the rate with which 
+the packet transmission has occured irrespective of the where the rate 
+control is done.
+
+Could somebody clarify why the statistics update happens only when the 
+rate control is done by the hardware(flag IEEE80211_HW_HAS_RATE_CONTROL 
+is set)?
+
+Thanks,
+Saravana
