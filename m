@@ -1,52 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2654 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756637Ab2KZUy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 15:54:27 -0500
-Message-ID: <50B3D6F2.3040701@broadcom.com> (sfid-20121126_215435_544955_58FDC41D)
-Date: Mon, 26 Nov 2012 21:54:10 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:49732 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753575Ab2KGEoW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Nov 2012 23:44:22 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Tim Shepard <shep@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Daniel Drake <dsd@laptop.org>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	John Rhodes <jrhodes@marvell.com>
+Date: Tue, 6 Nov 2012 20:35:48 -0800
+Subject: RE: [PATCH] mwifiex: add support for SDIO card reset 
+Message-ID: <477F20668A386D41ADCC57781B1F7043083BBD66E3@SC-VEXCH1.marvell.com> (sfid-20121107_054434_668465_A958085C)
+References: Your message of Thu, 01 Nov 2012 18:44:14 -0700.
+             <1351820654-24433-1-git-send-email-bzhao@marvell.com>
+  <E1TUP4U-0002Fm-00@www.xplot.org>
+In-Reply-To: <E1TUP4U-0002Fm-00@www.xplot.org>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcmsmac tx patches for 3.7
-References: <50AE8BD3.8040902@broadcom.com>
- <20121126155455.GB27232@tuxdriver.com>
-In-Reply-To: <20121126155455.GB27232@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/26/2012 04:54 PM, John W. Linville wrote:
-> On Thu, Nov 22, 2012 at 09:32:19PM +0100, Arend van Spriel wrote:
-> 
->> When Seth posted his rework on brcmsmac transmit, we had a number of
->> patches ready in the same area albeit less rigorous. With Seth's patches
->> lined up in wireless-next for 3.8, I am wondering what to do here.
->> Should I send our patches against the wireless tree? These patches will
->> definitely result in conflicts when merging to wireless-next, which you
->> typically do. Actually, we do not want these patches in wireless-next as
->> rework from Seth makes them irrelevant.
->>
->> Any advice on this?
-> 
-> If they are fixes, then they should be small and obvious -- hopefully
-> that makes the merging relatively easy?  You might try applying
-> them to a local wireless tree and pulling that into a local copy of
-> wireless-next, then resolving the conflicts locally so that you can
-> give me some idea of any tricky merges?
-> 
-> John
-> 
+Hi Tim,
 
-Hi John,
+> Bing,
+> 
+> I am trying to figure out if this patch would help in the situation I
+> told you about in September.
+> 
+> I was doing suspend/resume testing using
+> 
+>   rtcwake -s 6 -mmem
 
-I did already (re)submit the one 3.7 patch to you fixing a slab
-corruption. As the code is reworked pretty significantly (removing
-packets queues) in 3.8, I have a similar patch for 3.8 that I intend to
-submit soon. So merge of the 3.7 patch can be ignored for wireless-next.
+Since the command times out in 10 seconds, please change the sleep time to 11 or longer for your tests. For example,
 
-Gr. AvS
+rtcwake -s 12 -mmem
 
+> 
+> in a loop to test the ability of the mwifiex driver to suspend/resume.
+> 
+> I was seeing sporadic failures (wedgeups), and the majority of those
+> failures I saw printed the printouts in mwifiex_cmd_timeout_func with
+> cmd = 0xe5 which is CMD_802_11_HS_CFG_ENH.  When this happens, two
+> minutes later I get notified that the rtcwake thread is blocked, like
+> this:
+> 
+>       INFO: task rtcwake:3495 blocked for more than 120 seconds.
+
+In this case, we should wake up the command wait queue and cancel the pending iotcl when timeout happens.
+
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index c9528b3..0847cf0 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -890,9 +890,6 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+ 		return;
+ 	}
+ 	cmd_node = adapter->curr_cmd;
+-	if (cmd_node->wait_q_enabled)
+-		adapter->cmd_wait_q.status = -ETIMEDOUT;
+-
+ 	if (cmd_node) {
+ 		adapter->dbg.timeout_cmd_id =
+ 			adapter->dbg.last_cmd_id[adapter->dbg.last_cmd_index];
+@@ -941,6 +938,12 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+ 
+ 		dev_err(adapter->dev, "ps_mode=%d ps_state=%d\n",
+ 			adapter->ps_mode, adapter->ps_state);
++
++		if (cmd_node->wait_q_enabled) {
++			adapter->cmd_wait_q.status = -ETIMEDOUT;
++			wake_up_interruptible(&adapter->cmd_wait_q.wait);
++			mwifiex_cancel_pending_ioctl(adapter);
++		}
+ 	}
+ 	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
+ 		mwifiex_init_fw_complete(adapter);
+
+> 
+> 
+> 
+> I believe the hang happens when mwifiex_sdio_suspend() is called in
+> the rtcwake thread it winds winds up blocked waiting on a wait queue
+> in mwifiex_enable_hs() because when the timeout happens it never gets
+> woken up.
+> 
+> Reading your patch today, I don't see how your patch will add a new
+> way to get that hung thread unblocked.
+
+Above change should get the hung thread unblocked.
+
+> 
+> (I'm also not sure doing the reset of the card will work properly while
+>  the system is in the middle of trying to suspend, but that's a
+>  different question.)
+
+When suspend command (0xe5) fails we should return failure to MMC core. Once the card is reset the next suspend attempt will likely succeed.
+
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 90a87b5..9779fae 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -189,11 +189,14 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 
+ 	/* Enable the Host Sleep */
+ 	hs_actived = mwifiex_enable_hs(adapter);
+-	if (hs_actived) {
+-		pr_debug("cmd: suspend with MMC_PM_KEEP_POWER\n");
+-		ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
++	if (!hs_actived) {
++		dev_err(adapter->dev, "cmd: failed to suspend\n");
++		return -EFAULT;
+ 	}
+ 
++	dev_dbg(adapter->dev, "cmd: suspend with MMC_PM_KEEP_POWER\n");
++	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
++
+ 	/* Indicate device suspended */
+ 	adapter->is_suspended = true;
+
+Please give it a try with this card reset patch and above two changes applied.
+
+Thanks,
+Bing
 
