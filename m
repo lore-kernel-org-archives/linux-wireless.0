@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56386 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753882Ab2KQI6c (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:61770 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927Ab2KGJ6x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 03:58:32 -0500
-Message-ID: <1353142745.9543.9.camel@jlt4.sipsolutions.net> (sfid-20121117_095834_542062_D63A2FE5)
-Subject: Re: [RFC 03/14] {cfg,nl}80211: set and get default mesh power mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>
-Date: Sat, 17 Nov 2012 09:59:05 +0100
-In-Reply-To: <1353134886-13256-4-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353134886-13256-4-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 7 Nov 2012 04:58:53 -0500
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH] iw: add set_mcast_rate command support
+Date: Wed,  7 Nov 2012 10:58:03 +0100
+Message-Id: <1352282283-31254-1-git-send-email-ordex@autistici.org> (sfid-20121107_105905_880726_D79DA8EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-16 at 22:47 -0800, Marco Porsch wrote:
-> Possibilities of setting and getting mesh default power mode are
-> added.
+This patch adds the support to run the set_mcast_rate() command on
+adhoc and mesh_point vifs. With this command it is possible to tune
+the bitrate to use when sending group frames. This command can be used
+even if the vifs has already joint the ibss/mesh network.
 
-ditto.
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ interface.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-
-> + * @NL80211_MESHCONF_POWER_MODE: default link-specific power save
-> mode
-
-please describe the type of the attribute (u8)
-
-
-> +       FILL_IN_MESH_PARAM_IF_SET(tb, cfg, power_mode,
-> +                                 mask, NL80211_MESHCONF_POWER_MODE,
-> +                                 nla_get_u8);
-
-Huh, ok, how did this FILL_IN_MESH_PARAM thing ever get here ... sad I
-missed that, all of those are *completely* missing range checks.
-
-Please add them here, and somebody should also follow up with a patch to
-fix them on the other attributes.
-
-johannes
+diff --git a/interface.c b/interface.c
+index 945362f..87ac617 100644
+--- a/interface.c
++++ b/interface.c
+@@ -490,3 +490,32 @@ static int handle_interface_wds_peer(struct nl80211_state *state,
+ COMMAND(set, peer, "<MAC address>",
+ 	NL80211_CMD_SET_WDS_PEER, 0, CIB_NETDEV, handle_interface_wds_peer,
+ 	"Set interface WDS peer.");
++
++static int set_mcast_rate(struct nl80211_state *state,
++			  struct nl_cb *cb,
++			  struct nl_msg *msg,
++			  int argc, char **argv,
++			  enum id_input id)
++{
++	float rate;
++	char *end;
++
++	if (argc != 1) {
++		printf("Invalid parameters!\n");
++		return 2;
++	}
++
++	rate = strtod(argv[0], &end);
++	if (*end != '\0')
++		return 1;
++
++	NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int)(rate * 10));
++
++	return 0;
++nla_put_failure:
++	return -ENOBUFS;
++}
++
++COMMAND(set, mcast_rate, "<rate in Mbps>",
++	NL80211_CMD_SET_MCAST_RATE, 0, CIB_NETDEV, set_mcast_rate,
++	"Set the multicast bitrate.");
+-- 
+1.8.0
 
