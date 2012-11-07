@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:61267 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508Ab2KLPVe (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:35860 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751673Ab2KGJBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 10:21:34 -0500
-Received: by mail-la0-f46.google.com with SMTP id h6so4652740lag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 07:21:33 -0800 (PST)
+	Wed, 7 Nov 2012 04:01:46 -0500
+Message-ID: <509A2374.4060601@posedge.com> (sfid-20121107_100201_287130_B8B50831)
+Date: Wed, 07 Nov 2012 14:31:40 +0530
+From: Saravana <saravanad@posedge.com>
 MIME-Version: 1.0
-In-Reply-To: <1352713941-12487-1-git-send-email-johannes@sipsolutions.net>
-References: <1352713941-12487-1-git-send-email-johannes@sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 12 Nov 2012 16:21:13 +0100
-Message-ID: <CAB=NE6WTycoHBeaqryT4B7y968i1ueBcCqBhWYkwb3nb947Jgg@mail.gmail.com> (sfid-20121112_162139_258839_CDEFE9BF)
-Subject: Re: [PATCH 3.7] wireless: allow 40 MHz on world roaming channels 12/13
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Clarification needed on Last Tx Rate statistic update
+References: <509A11F9.8050108@posedge.com> <1352275534.9854.6.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1352275534.9854.6.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 12, 2012 at 10:52 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When in world roaming mode, allow 40 MHz to be used
-> on channels 12 and 13 so that an AP that is, e.g.,
-> using HT40+ on channel 9 (in the UK) can be used.
->
-> Cc: stable@vger.kernel.org
-> Reported-by: Eddie Chapman <eddie@ehuk.net>
-> Tested-by: Eddie Chapman <eddie@ehuk.net>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Hi Johannes,
 
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Thanks for the clarification. So it seems the in the other case that you 
+had mentioned, we can confirm that last_tx_rate is updated with 
+inappropriate value.
+So probably we could add another variable for the highest 
+performing/probability rate and update it with the  txrc.reported rate 
+value.
+The Last_tx_rate update with the highest performing/probability rate can 
+be removed.
 
-  Luis
+As far as Last Tx Rate is concerned, should we need to check for the flag?
+I think the Last Tx Rate can be updated irrespective of the 
+IEEE80211_HW_HAS_RATE_CONTROL set or not.
+
+Please let me know your inputs on this.
+
+Thanks,
+Saravana
+On 11/07/2012 01:35 PM, Johannes Berg wrote:
+> On Wed, 2012-11-07 at 13:17 +0530, Saravana wrote:
+>
+>> Could somebody clarify why the statistics update happens only when the
+>> rate control is done by the hardware(flag IEEE80211_HW_HAS_RATE_CONTROL
+>> is set)?
+> In the other case, it's set to txrc.reported_rate upon transmission, so
+> it's not the *last* rate, but more accurately the highest
+> performing/probability rate.
+>
+> johannes
+>
+>
+
