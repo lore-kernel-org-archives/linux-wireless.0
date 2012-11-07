@@ -1,29 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:47148 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126Ab2KTB3s (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761Ab2KGNYJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 20:29:48 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so1579026lag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 17:29:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1352786641-4321-1-git-send-email-sujith@msujith.org>
-References: <1352786641-4321-1-git-send-email-sujith@msujith.org>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Mon, 19 Nov 2012 17:29:27 -0800
-Message-ID: <CAB=NE6WapgrUy7RXFbovZRY1m8hiro6H=p0wOrTizJ_gOGAgDQ@mail.gmail.com> (sfid-20121120_022950_594572_97075354)
-Subject: Re: [PATCH] qca-swiss-army-knife: Add macro for TXFIR array
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 7 Nov 2012 08:24:09 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TW5bz-0003OZ-MG
+	for linux-wireless@vger.kernel.org; Wed, 07 Nov 2012 14:24:07 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] mac80211: HW reconfiguration improvements
+Date: Wed,  7 Nov 2012 14:24:41 +0100
+Message-Id: <1352294684-19266-1-git-send-email-johannes@sipsolutions.net> (sfid-20121107_142421_598063_D0830406)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 12, 2012 at 10:04 PM, Sujith Manoharan <sujith@msujith.org> wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+During some work with HW reconfiguration, I found a few issues
+and missing features. These patches address them.
 
-Applied and pushed, thanks!
+johannes
 
-  Luis
