@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45861 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45106 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428Ab2KGRAo (ORCPT
+	with ESMTP id S1755008Ab2KGNCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2012 12:00:44 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TW8zb-00073z-9Z
-	for linux-wireless@vger.kernel.org; Wed, 07 Nov 2012 18:00:43 +0100
-Message-ID: <1352307680.9854.10.camel@jlt4.sipsolutions.net> (sfid-20121107_180046_788933_BC475267)
-Subject: Re: [PATCH] mac80211: fix race in TKIP MIC test debugfs file
+	Wed, 7 Nov 2012 08:02:50 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Date: Wed, 07 Nov 2012 18:01:20 +0100
-In-Reply-To: <1352143735-29463-1-git-send-email-johannes@sipsolutions.net> (sfid-20121105_202827_701830_D39396A4)
-References: <1352143735-29463-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121105_202827_701830_D39396A4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix TX error path
+Date: Wed,  7 Nov 2012 14:03:25 +0100
+Message-Id: <1352293405-27692-1-git-send-email-johannes@sipsolutions.net> (sfid-20121107_140302_585568_7ECC7434)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-05 at 20:28 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Accessing sdata->vif.bss_conf.bssid without any
-> protection here is racy, use u.mgd.associated
-> instead and lock the correct mutex for it.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied.
+One error path in ieee80211_subif_start_xmit() will
+double-free the SKB. Set it to NULL to prevent that.
 
-johannes
+This issue was introduced by my channel context
+changes.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 065f81c..b546887 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2089,6 +2089,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		head_need = max_t(int, 0, head_need);
+ 		if (ieee80211_skb_resize(sdata, skb, head_need, true)) {
+ 			ieee80211_free_txskb(&local->hw, skb);
++			skb = NULL;
+ 			goto fail_rcu;
+ 		}
+ 	}
+-- 
+1.8.0
 
