@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:57827 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890Ab2KIGqy convert rfc822-to-8bit (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:34029 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910Ab2KGNvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2012 01:46:54 -0500
-Received: by mail-we0-f174.google.com with SMTP id t9so1603072wey.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 22:46:53 -0800 (PST)
+	Wed, 7 Nov 2012 08:51:09 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so1610214oag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Nov 2012 05:51:08 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAF1EbZh=mPKVy=G4AgK1Fz6FxJjnAgaHdoGt6Uwohe+fvhYkgg@mail.gmail.com>
-References: <CAF1EbZh=mPKVy=G4AgK1Fz6FxJjnAgaHdoGt6Uwohe+fvhYkgg@mail.gmail.com>
-Date: Fri, 9 Nov 2012 07:46:52 +0100
-Message-ID: <CACna6ryLuoEZeTTP9g-RfY-1QofGMf4445huU8PZSyEv8ZSxSA@mail.gmail.com> (sfid-20121109_074709_383923_ECB4708A)
-Subject: Re: [help] WiFi connection //Re: [PATCH][2.6.39?] b43: trivial:
- update module info about firmware
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?B?WmhvdSBoYW5neGluZyDlkajooYzooYw=?=
-	<hangxing.zhou@gmail.com>
+In-Reply-To: <1352294684-19266-4-git-send-email-johannes@sipsolutions.net>
+References: <1352294684-19266-1-git-send-email-johannes@sipsolutions.net>
+	<1352294684-19266-4-git-send-email-johannes@sipsolutions.net>
+Date: Wed, 7 Nov 2012 15:51:08 +0200
+Message-ID: <CAB3XZEd+HYmH5vROd0n2YhBz=LYRDtZjtqTcGn=Vn5U9Fu2qrQ@mail.gmail.com> (sfid-20121107_145121_500916_5A14A715)
+Subject: Re: [PATCH 3/3] mac80211: reassign channel contexts before stations
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/11/9 Zhou hangxing 周行行 <hangxing.zhou@gmail.com>:
-> One question about WiFi connect event in driver layer. I appreciate some
-> information from your guys if possible.
+On Wed, Nov 7, 2012 at 3:24 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> There is a device_A with WiFi module,  the application in smart
-> phone(iPhone) can communicate with the device_A via socket connection.
+> Since channel contexts are usually present before
+> stations can be added to an interface, reassign
+> before stations them in reconfiguration as well.
 >
-> In this case, if user goes to setting screen in iPhone, and disable the WiFi
-> directly( the application is still running).
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+
+>         /* Finally also reconfigure all the BSS information */
+>         list_for_each_entry(sdata, &local->interfaces, list) {
+> -               struct ieee80211_chanctx_conf *ctx_conf;
+>                 u32 changed;
 >
-> Does the driver layer know the status of WiFi connection in device_A?
-> Or any event message can be indicated by WiFi driver in device_A?
+> -               if (!ieee80211_sdata_running(sdata))
+> -                       continue;
+> -
+i think you want to copy it rather than move it.
 
-So... are you using Linux on iPhone? Some Android port?
-
-What WiFi chipset does it have? Some BCM4312 (LP-PHY) with higher PHY
-rev? I though phones are usually using fullmac devices...
-
-You way want to check rfkill, but I'm not sure it Android is using that.
-
--- 
-Rafał
+Eliad.
