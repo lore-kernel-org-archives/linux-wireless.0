@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:54106 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751226Ab2KLLRh (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:59973 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab2KGLxE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 06:17:37 -0500
-Date: Mon, 12 Nov 2012 13:17:19 +0200
-From: Jouni Malinen <j@w1.fi>
+	Wed, 7 Nov 2012 06:53:04 -0500
+From: Antonio Quartulli <ordex@autistici.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: [PATCH v2] nl/cfg80211: advertise OBSS scan offload capability
-Message-ID: <20121112111719.GA6079@w1.fi> (sfid-20121112_121741_526447_DFDB16FD)
-References: <1352512290-7316-1-git-send-email-bzhao@marvell.com>
- <1352712697.9525.4.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1352712697.9525.4.camel@jlt4.sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH 1/2] cfg80211: store the ssid into wirless_dev in AP mode
+Date: Wed,  7 Nov 2012 12:52:19 +0100
+Message-Id: <1352289140-20515-1-git-send-email-ordex@autistici.org> (sfid-20121107_125318_066060_67C78C69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 12, 2012 at 10:31:37AM +0100, Johannes Berg wrote:
-> On Fri, 2012-11-09 at 17:51 -0800, Bing Zhao wrote:
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> > 
-> > wpa_supplicant will do OBSS scan for drivers that implement
-> > auth/assoc API. Drivers that implement nl80211 connect API
-> > (rather than auth/assoc) may need wpa_supplicant to do this
-> > as well.
+Store the configured ssid in wdev->ssid when starting an AP
 
-> Applied, but I changed a lot ;-)
-> 
-> Notably, I reworded the constant name to be
-> NL80211_FEATURE_NEED_OBSS_SCAN, since we typically use the term
-> "offload" to mean that the *device* does something, not to mean that
-> *userspace* does something.
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ net/wireless/ap.c      | 1 +
+ net/wireless/nl80211.c | 2 ++
+ 2 files changed, 3 insertions(+)
 
-Sorry for being a bit late with my comments, but does this single flag
-really cover expected use cases? I would assume that number of more full
-MAC -like designs will have to move to separate auth/assoc commands
-instead of using connect API in the future (e.g., for FT and SAE).
-However, those drivers do not necessarily expect user space to take care
-of OBSS scans. I understand that this is not currently supported since
-wpa_supplicant assuming auth/assoc to mean user space SME, but it should
-be kept in mind that that may need to change in the future..
-
-I guess we can handle the auth/assoc without user space OBSS scan
-separately (a new feature flag for stopping OBSS scan?), so I'm fine
-with this patch moving ahead as-is.
-
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index e143505..324e8d8 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -28,6 +28,7 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 	if (!err) {
+ 		wdev->beacon_interval = 0;
+ 		wdev->channel = NULL;
++		wdev->ssid_len = 0;
+ 	}
+ 
+ 	return err;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ba44f98..e521ca0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2649,6 +2649,8 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		wdev->preset_chantype = params.channel_type;
+ 		wdev->beacon_interval = params.beacon_interval;
+ 		wdev->channel = params.channel;
++		wdev->ssid_len = params.ssid_len;
++		memcpy(wdev->ssid, params.ssid, wdev->ssid_len);
+ 	}
+ 	return err;
+ }
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.8.0
+
