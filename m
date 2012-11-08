@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51661 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49687 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932867Ab2KWHjS (ORCPT
+	with ESMTP id S1751360Ab2KHPif (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 02:39:18 -0500
-Message-ID: <1353656386.10197.2.camel@jlt4.sipsolutions.net> (sfid-20121123_083921_963196_DC549E51)
-Subject: Re: [PATCH v2] mac80211: support radiotap vendor namespace RX data
+	Thu, 8 Nov 2012 10:38:35 -0500
+Message-ID: <1352389150.11421.6.camel@jlt4.sipsolutions.net> (sfid-20121108_163846_935336_C50D01C0)
+Subject: Re: [PATCH] mac80211: add debugfs file for HW queues
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 23 Nov 2012 08:39:46 +0100
-In-Reply-To: <50AF24EF.7080800@neratec.com>
-References: <1353061591-22284-1-git-send-email-johannes@sipsolutions.net>
-	  <87ehjtygci.fsf@purkki.adurom.net>
-	  <1353063966.9490.1.camel@jlt4.sipsolutions.net>
-	  <50ADE0E3.2020909@neratec.com>
-	  <1353573266.9806.14.camel@jlt4.sipsolutions.net>
-	 <1353573671.9806.15.camel@jlt4.sipsolutions.net>
-	 <50ADE504.3060508@neratec.com> <50AF24EF.7080800@neratec.com>
+Date: Thu, 08 Nov 2012 16:39:10 +0100
+In-Reply-To: <CAB3XZEdBFZ+ztESgKwprLmJH+5F=x3z66trn_QRq7WJCdcsz1g@mail.gmail.com> (sfid-20121108_163625_184975_0AED8C0B)
+References: <1352385113-21671-1-git-send-email-johannes@sipsolutions.net>
+	 <CAB3XZEdBFZ+ztESgKwprLmJH+5F=x3z66trn_QRq7WJCdcsz1g@mail.gmail.com>
+	 (sfid-20121108_163625_184975_0AED8C0B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-23 at 08:25 +0100, Wojciech Dubowik wrote:
-> On 11/22/2012 09:40 AM, Wojciech Dubowik wrote:
-> > On 11/22/2012 09:41 AM, Johannes Berg wrote:
-> >> On Thu, 2012-11-22 at 09:34 +0100, Johannes Berg wrote:
-> >>> On Thu, 2012-11-22 at 09:22 +0100, Wojciech Dubowik wrote:
-> >>>> Shouldn't all functions between ieee80211_rx
-> >>>> and remove_monitor_info map header with
-> >>>> (struct ieee80211_hdr *)(skb->data + status->vendor_radiotap_len) ?
-> >>>>
-> >>>> Otherwise function like should_drop_frame uses header mapped over
-> >>>> potential vendor data.
-> >>> Huh, yes, how did I miss that. It only applies to should_drop_frame()
-> >>> though, or do you see any other place?
-> >> So I think this is sufficient?
-> > I guess so. I will test it today.
-> > Wojtek
-> I have tested with ath9k vendor data and it doesn't seem to drop frames. 
-> I will post my patch as RFC
-> once I clean it up a bit. Just for reference.
+On Thu, 2012-11-08 at 17:36 +0200, Eliad Peller wrote:
+> On Thu, Nov 8, 2012 at 4:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > Add a debugfs file showing which HW queues were
+> > allocated to a virtual interface, including the
+> > CAB queue for AP interfaces.
+> >
+> > Change-Id: I486924e961b6ad6785a79db09620919ee644e703
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> >  net/mac80211/debugfs_netdev.c | 21 +++++++++++++++++++++
+> >  1 file changed, 21 insertions(+)
+> >
+> > diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+> > index 3393ad5..c3f089a 100644
+> > --- a/net/mac80211/debugfs_netdev.c
+> > +++ b/net/mac80211/debugfs_netdev.c
+> > @@ -169,6 +169,26 @@ IEEE80211_IF_FILE(flags, flags, HEX);
+> >  IEEE80211_IF_FILE(state, state, LHEX);
+> >  IEEE80211_IF_FILE(channel_type, vif.bss_conf.channel_type, DEC);
+> >
+> > +static ssize_t
+> > +ieee80211_if_fmt_hw_queues(const struct ieee80211_sub_if_data *sdata,
+> > +                          char *buf, int buflen)
+> > +{
+> > +       int len;
+> > +
+> > +       len = scnprintf(buf, buflen, "AC queues: VO:%d VI:%d BE:%d BK:%d\n",
+> > +                       sdata->vif.hw_queue[IEEE80211_AC_VO],
+> > +                       sdata->vif.hw_queue[IEEE80211_AC_VI],
+> > +                       sdata->vif.hw_queue[IEEE80211_AC_BE],
+> > +                       sdata->vif.hw_queue[IEEE80211_AC_BK]);
+> > +
+> > +       if (sdata->vif.type == NL80211_IFTYPE_AP && len < buflen)
+> > +               len += scnprintf(buf + len, buflen - len, "cab queue: %d\n",
+> > +                                sdata->vif.cab_queue);
+> > +
+> the (len < buflen) condition is redundant (scnprintf returns the
+> number of chars written not including the trailing NULL, so it will
+> always be < buflen)
 
-Great, thanks. I'll send out the fix & merge it.
+Err, yeah, good point. Thanks.
 
 johannes
 
