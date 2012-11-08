@@ -1,29 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7488 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab2KPLiZ (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:57748 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756640Ab2KHVBy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 06:38:25 -0500
-Cc: <ath6kl-devel@qca.qualcomm.com>
-Message-ID: <50A625A9.2050501@qca.qualcomm.com> (sfid-20121116_123828_412143_4DA40D95)
-Date: Fri, 16 Nov 2012 13:38:17 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: support NL80211_USER_REG_HINT_CELL_BASE events
-References: <20121116082804.10073.67557.stgit@localhost6.localdomain6>
-In-Reply-To: <20121116082804.10073.67557.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
+	Thu, 8 Nov 2012 16:01:54 -0500
+Date: Thu, 08 Nov 2012 16:01:49 -0500 (EST)
+Message-Id: <20121108.160149.1435441347312920431.davem@davemloft.net> (sfid-20121108_220208_836155_1CF68A27)
+To: jan.ceuleers@computer.org
+Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: essentially offline...
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <509C1BDD.6000405@computer.org>
+References: <20121108.150930.2104308040240146535.davem@davemloft.net>
+	<509C1BDD.6000405@computer.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/16/2012 10:28 AM, Kalle Valo wrote:
-> As ath6kl firmware can't do intersections the driver should only listen
-> to regdom changes from cellular base stations, all other requests need to
-> be refused.
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Date: Thu, 08 Nov 2012 21:53:49 +0100
+
+> On 11/08/2012 09:09 PM, David Miller wrote:
+>> 2) Don't be a jackass and avoid reviewing patches that you can
+>>    actually provide feedback on.
 > 
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> David,
+> 
+> Nobody around here is intentionally being a jackass. Your use of the
+> word is offensive.
 
-Applied.
-
-Kalle
+I used the work jackass just as frequently before I lived part time
+in New York.  Try again...
