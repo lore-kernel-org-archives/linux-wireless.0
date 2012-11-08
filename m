@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:39926 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755409Ab2KUSRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 13:17:37 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: [PATCH] brcmsmac: Add __printf verification to logging prototypes
-Date: Wed, 21 Nov 2012 10:17:34 -0800
-Message-Id: <a74034e340d7db52dfb0b1a01c18759eb091fd18.1353521783.git.joe@perches.com> (sfid-20121121_191756_556787_52C44291)
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:49578 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495Ab2KHMh0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Nov 2012 07:37:26 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1798593wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 04:37:25 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: clear lower drv private data on iface removal
+Date: Thu,  8 Nov 2012 14:37:21 +0200
+Message-Id: <1352378241-31906-1-git-send-email-arik@wizery.com> (sfid-20121108_133738_096409_FA9EC387)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding __printf helps spot format and argument mismatches.
+The lower driver might rely on getting zeroed per-vif private memory
+when an interface is added. Resetting the memory on removal avoids
+adverse affects during recovery, where the interface is added without
+being removed.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/debug.h |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+ net/mac80211/driver-ops.h |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/debug.h b/drivers/net/wireless/brcm80211/brcmsmac/debug.h
-index c0d2cf7..f77066b 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/debug.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/debug.h
-@@ -8,17 +8,23 @@
- #include "main.h"
- #include "mac80211_if.h"
- 
-+__printf(2, 3)
- void __brcms_info(struct device *dev, const char *fmt, ...);
-+__printf(2, 3)
- void __brcms_warn(struct device *dev, const char *fmt, ...);
-+__printf(2, 3)
- void __brcms_err(struct device *dev, const char *fmt, ...);
-+__printf(2, 3)
- void __brcms_crit(struct device *dev, const char *fmt, ...);
- 
- #if defined(CONFIG_BRCMDBG) || defined(CONFIG_BRCM_TRACING)
-+__printf(4, 5)
- void __brcms_dbg(struct device *dev, u32 level, const char *func,
- 		 const char *fmt, ...);
- #else
--static inline void __brcms_dbg(struct device *dev, u32 level,
--			       const char *func, const char *fmt, ...)
-+static inline __printf(4, 5)
-+void __brcms_dbg(struct device *dev, u32 level, const char *func,
-+		 const char *fmt, ...)
- {
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index d3d9fda..4620117 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -183,6 +183,10 @@ static inline void drv_remove_interface(struct ieee80211_local *local,
+ 	trace_drv_remove_interface(local, sdata);
+ 	local->ops->remove_interface(&local->hw, &sdata->vif);
+ 	sdata->flags &= ~IEEE80211_SDATA_IN_DRIVER;
++
++	/* clear driver specific private data */
++	memset(sdata->vif.drv_priv, 0, sdata->local->hw.vif_data_size);
++
+ 	trace_drv_return_void(local);
  }
- #endif
+ 
 -- 
-1.7.8.112.g3fd21
+1.7.9.5
 
