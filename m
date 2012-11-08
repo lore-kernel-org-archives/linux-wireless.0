@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41451 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754128Ab2KSSeK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49084 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669Ab2KHMmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:34:10 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 264/493] rfkill: remove use of __devinit
-Date: Mon, 19 Nov 2012 13:23:33 -0500
-Message-Id: <1353349642-3677-264-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193654_968696_83A498C3)
-In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+	Thu, 8 Nov 2012 07:42:46 -0500
+Message-ID: <1352378602.11421.4.camel@jlt4.sipsolutions.net> (sfid-20121108_134300_307000_E8AB8C41)
+Subject: Re: [PATCH] mac80211: clear lower drv private data on iface removal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 08 Nov 2012 13:43:22 +0100
+In-Reply-To: <1352378241-31906-1-git-send-email-arik@wizery.com> (sfid-20121108_133740_044315_4BAB0F14)
+References: <1352378241-31906-1-git-send-email-arik@wizery.com>
+	 (sfid-20121108_133740_044315_4BAB0F14)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_HOTPLUG is going away as an option so __devinit is no longer
-needed.
+On Thu, 2012-11-08 at 14:37 +0200, Arik Nemtsov wrote:
+> The lower driver might rely on getting zeroed per-vif private memory
+> when an interface is added. Resetting the memory on removal avoids
+> adverse affects during recovery, where the interface is added without
+> being removed.
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Johannes Berg <johannes@sipsolutions.net> 
-Cc: "John W. Linville" <linville@tuxdriver.com> 
-Cc: "David S. Miller" <davem@davemloft.net> 
-Cc: linux-wireless@vger.kernel.org 
-Cc: netdev@vger.kernel.org 
----
- net/rfkill/rfkill-regulator.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+However, it means that data isn't stable across suspend/resume, which
+could be desirable to the driver as it may want to have the same
+configuration after resuming.
 
-diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
-index a87710d..c864e44 100644
---- a/net/rfkill/rfkill-regulator.c
-+++ b/net/rfkill/rfkill-regulator.c
-@@ -55,7 +55,7 @@ struct rfkill_ops rfkill_regulator_ops = {
- 	.set_block = rfkill_regulator_set_block,
- };
- 
--static int __devinit rfkill_regulator_probe(struct platform_device *pdev)
-+static int rfkill_regulator_probe(struct platform_device *pdev)
- {
- 	struct rfkill_regulator_platform_data *pdata = pdev->dev.platform_data;
- 	struct rfkill_regulator_data *rfkill_data;
--- 
-1.8.0
+I think we should therefore leave this to the driver, it's obviously
+easily implemented as the last step of the driver's ->remove_interface()
+
+johannes
 
