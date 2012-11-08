@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50078 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756373Ab2KHRU5 (ORCPT
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:54537 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756208Ab2KHP7w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 12:20:57 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: remove unused tracepoint
-Date: Thu,  8 Nov 2012 18:21:31 +0100
-Message-Id: <1352395291-6845-1-git-send-email-johannes@sipsolutions.net> (sfid-20121108_182108_712329_6E57FAAD)
+	Thu, 8 Nov 2012 10:59:52 -0500
+Received: by mail-ia0-f174.google.com with SMTP id y32so2016682iag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 07:59:51 -0800 (PST)
+Message-ID: <509BD6F3.2000807@lwfinger.net> (sfid-20121108_170005_097341_F3279799)
+Date: Thu, 08 Nov 2012 09:59:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Nonaka Akira <nonaka@mac.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: "mac80211.ko" and "cfg80211.ko" compatibility issue.
+References: <509B73D5.5000206@mac.com> <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com> <9983E05C-2103-49C8-A675-4F5368F53FB5@mac.com> <CAGRGNgXj2rkiHw1D4HqRCyX6yJCDq75k1KtS0OR+t4En+wa_jA@mail.gmail.com>
+In-Reply-To: <CAGRGNgXj2rkiHw1D4HqRCyX6yJCDq75k1KtS0OR+t4En+wa_jA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 11/08/2012 06:20 AM, Julian Calaby wrote:
+> Hi Nonaka,
+>
+> On Thu, Nov 8, 2012 at 10:33 PM, Nonaka Akira <nonaka@mac.com> wrote:
+>> Hi Julian,
+>>
+>> Well, We consider the option of using the entire compat-wireless drivers. However, we are planning the minor update of our product toward the end of the year and I thought it will be nice if I can keep the change minimum.
+>
+> In general, the drivers in compat-wireless are more stable and have
+> more features than the versions in older kernels. (it is a back-port
+> of newer wireless drivers after all)
+>
+> I would expect that you'll spend more time working out a solution to
+> use it for a single driver than you'd spend testing it on the hardware
+> you intend to support.
 
-Clearly the tracepoint drv_offchannel_tx was
-forgotten when that functionality was removed,
-remove it now.
+I agree. If you want to change only rtl8723ae, then you will need to backport it 
+to kernel 3.4.9 yourself. I have no idea how much work that would be, but I have 
+no interest in doing it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/trace.h | 28 ----------------------------
- 1 file changed, 28 deletions(-)
+Larry
 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 8b91a9f..758836c 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1049,34 +1049,6 @@ DEFINE_EVENT(local_only_evt, drv_cancel_remain_on_channel,
- 	TP_ARGS(local)
- );
- 
--TRACE_EVENT(drv_offchannel_tx,
--	TP_PROTO(struct ieee80211_local *local, struct sk_buff *skb,
--		 struct ieee80211_channel *chan,
--		 enum nl80211_channel_type channel_type,
--		 unsigned int wait),
--
--	TP_ARGS(local, skb, chan, channel_type, wait),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--		__field(int, center_freq)
--		__field(int, channel_type)
--		__field(unsigned int, wait)
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--		__entry->center_freq = chan->center_freq;
--		__entry->channel_type = channel_type;
--		__entry->wait = wait;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT " freq:%dMHz, wait:%dms",
--		LOCAL_PR_ARG, __entry->center_freq, __entry->wait
--	)
--);
--
- TRACE_EVENT(drv_set_ringparam,
- 	TP_PROTO(struct ieee80211_local *local, u32 tx, u32 rx),
- 
--- 
-1.8.0
 
