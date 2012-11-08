@@ -1,104 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:47604 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158Ab2KXLWI (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:64791 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752727Ab2KHPgN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2012 06:22:08 -0500
-Received: by mail-oa0-f46.google.com with SMTP id h16so9515911oag.19
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2012 03:22:07 -0800 (PST)
+	Thu, 8 Nov 2012 10:36:13 -0500
+Received: by mail-ob0-f174.google.com with SMTP id uo13so2924771obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 07:36:12 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1353667565-4212-1-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1353667565-4212-1-git-send-email-Wojciech.Dubowik@neratec.com>
-Date: Sat, 24 Nov 2012 16:52:04 +0530
-Message-ID: <CAD2nsn0xrnWbrEZzhaKhipuwE-Hyc-KpCEWcuef+=NeF0gFmDg@mail.gmail.com> (sfid-20121124_122213_588223_7BB2E3CD)
-Subject: Re: [RFC 1/1] ath9k: Add radiotap vendor specific data example
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1352385113-21671-1-git-send-email-johannes@sipsolutions.net>
+References: <1352385113-21671-1-git-send-email-johannes@sipsolutions.net>
+Date: Thu, 8 Nov 2012 17:36:12 +0200
+Message-ID: <CAB3XZEdBFZ+ztESgKwprLmJH+5F=x3z66trn_QRq7WJCdcsz1g@mail.gmail.com> (sfid-20121108_163627_061793_6B817A61)
+Subject: Re: [PATCH] mac80211: add debugfs file for HW queues
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 23, 2012 at 4:16 PM, Wojciech Dubowik
-<Wojciech.Dubowik@neratec.com> wrote:
-> As an exmaple of vendor specific data we can extract rssi
-> and evm values for all the chains so one can see them on
-> per packet basis. More can be added depending on the needs i.e.
-> noise floor, Ness, STBC, key miss, etc.
-> AtheorsC OUI is used in this example but it should be replaced
-> by own when in use.
+On Thu, Nov 8, 2012 at 4:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+> Add a debugfs file showing which HW queues were
+> allocated to a virtual interface, including the
+> CAB queue for AP interfaces.
+>
+> Change-Id: I486924e961b6ad6785a79db09620919ee644e703
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
->  drivers/net/wireless/ath/ath9k/recv.c |   33 +++++++++++++++++++++++++++++++++
->  1 file changed, 33 insertions(+)
+>  net/mac80211/debugfs_netdev.c | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
 >
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 6aafbb7..02c36c4 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -1246,6 +1246,39 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->                 if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
->                         ath_ant_comb_scan(sc, &rs);
+> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+> index 3393ad5..c3f089a 100644
+> --- a/net/mac80211/debugfs_netdev.c
+> +++ b/net/mac80211/debugfs_netdev.c
+> @@ -169,6 +169,26 @@ IEEE80211_IF_FILE(flags, flags, HEX);
+>  IEEE80211_IF_FILE(state, state, LHEX);
+>  IEEE80211_IF_FILE(channel_type, vif.bss_conf.channel_type, DEC);
 >
-> +#if 0
-
-please remove ifdefs .
-
-
-> +               /*TODO: Replace oui and vendor sub namespace with valid data
-> +                * and add/remove fields below
-> +                */
-> +               if( skb_headroom(skb) >  22 ) {
-> +                       int8_t* vendor_data;
-
-we can use s8 ?
-
-
+> +static ssize_t
+> +ieee80211_if_fmt_hw_queues(const struct ieee80211_sub_if_data *sdata,
+> +                          char *buf, int buflen)
+> +{
+> +       int len;
 > +
-> +                       vendor_data = skb_push(skb, 22);
+> +       len = scnprintf(buf, buflen, "AC queues: VO:%d VI:%d BE:%d BK:%d\n",
+> +                       sdata->vif.hw_queue[IEEE80211_AC_VO],
+> +                       sdata->vif.hw_queue[IEEE80211_AC_VI],
+> +                       sdata->vif.hw_queue[IEEE80211_AC_BE],
+> +                       sdata->vif.hw_queue[IEEE80211_AC_BK]);
 > +
-> +                       rxs->vendor_radiotap_len = 22;
-> +                       rxs->vendor_radiotap_align = 4;
-> +                       rxs->vendor_radiotap_oui[0] = 0x0;
-> +                       rxs->vendor_radiotap_oui[1] = 0x3;
-> +                       rxs->vendor_radiotap_oui[2] = 0x7f;
-> +                       rxs->vendor_radiotap_subns = 0;
-> +                       rxs->vendor_radiotap_bitmap = 0x00000001;
+> +       if (sdata->vif.type == NL80211_IFTYPE_AP && len < buflen)
+> +               len += scnprintf(buf + len, buflen - len, "cab queue: %d\n",
+> +                                sdata->vif.cab_queue);
 > +
-> +                       /* count bytes below and put it as the length*/
-> +                       *vendor_data++ = rs.rs_rssi;
-> +                       *vendor_data++ = rs.rs_rssi_ctl0;
-> +                       *vendor_data++ = rs.rs_rssi_ctl1;
-> +                       *vendor_data++ = rs.rs_rssi_ctl2;
-> +                       put_unaligned_le32(rs.evm0, vendor_data);
-> +                       vendor_data += 4;
-> +                       put_unaligned_le32(rs.evm1, vendor_data);
-> +                       vendor_data += 4;
-> +                       put_unaligned_le32(rs.evm2, vendor_data);
-> +                       vendor_data += 4;
-> +                       put_unaligned_le32(rs.evm3, vendor_data);
-> +                       vendor_data += 4;
-> +                       put_unaligned_le16(rs.evm4, vendor_data);
-> +               }
-> +#endif
+the (len < buflen) condition is redundant (scnprintf returns the
+number of chars written not including the trailing NULL, so it will
+always be < buflen)
 
-
-would be nice check this stuff in sniffer.
-
->                 ieee80211_rx(hw, skb);
->
->  requeue_drop_frag:
-> --
-> 1.7.10.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-thanks,
-shafi
+Eliad.
