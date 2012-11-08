@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vmail02-lax.tokbox.com ([72.51.46.97]:49924 "EHLO
-	ns.stoaks-software.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076Ab2KLR5Z (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:51730 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756661Ab2KHW70 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 12:57:25 -0500
-Reply-To: <paul@foresight-mands.com>
-From: "Paul Stoaks" <paul@foresight-mands.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: Noob question:  Development Environment
-Date: Mon, 12 Nov 2012 09:49:54 -0800
-Message-ID: <071701cdc0fe$218fc9b0$64af5d10$@com> (sfid-20121112_185728_961755_0267BB83)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+	Thu, 8 Nov 2012 17:59:26 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] nl/cfg80211: advertise OBSS scan offload capability
+Date: Thu,  8 Nov 2012 14:54:00 -0800
+Message-Id: <1352415240-5168-1-git-send-email-bzhao@marvell.com> (sfid-20121108_235951_925340_19AC9F56)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings.  Sorry to interrupt with a newbie question, but I need some help
-on setting up a linux wireless development and test environment.  What I
-would like to have is a stable development and test environment where I can
-work for a period of months without having to upgrade the kernel version on
-my development and test machines, but staying close to the bleeding edge
-with the core wireless modules and drivers.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-I have successfully built the wireless-testing tree from GIT, but have only
-discovered how to install the entire kernel produced from the build, not
-just the wireless modules.  What I would like to do is to install only the
-wireless modules, as I can do with the compat-wireless tree.  I have gotten
-compat-wireless to work for me with a lot of labor (refreshing patches), but
-I'm unsure of the correct work-flow with it.
+New flag is added to inform userspace that this driver doesn't
+internally perform OBSS scan. It can use this feature available
+in userspace application.
 
-How are you folks accomplishing this?
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/uapi/linux/nl80211.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Please feel free to point me to the archives or a web page.  I've groped all
-around the internet and have failed to answer my questions.  (If you point
-me to the archives, please give me a keyword to search on as I have looked
-and been unsuccessful in finding the relevant information.)
-
-Thank you very much!
-Paul Stoaks
-
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index cbd2d6b..97c096c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3057,6 +3057,8 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_SCAN_FLUSH: Scan flush is supported
+  * @NL80211_FEATURE_AP_SCAN: Support scanning using an AP vif
+  * @NL80211_FEATURE_VIF_TXPOWER: The driver supports per-vif TX power setting
++ * @NL80211_FEATURE_OBSS_SCAN_OFFLOAD: This driver expects user space to perform
++ *	OBSS scan and generate 20/40 BSS coex reports.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3069,6 +3071,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SCAN_FLUSH			= 1 << 7,
+ 	NL80211_FEATURE_AP_SCAN				= 1 << 8,
+ 	NL80211_FEATURE_VIF_TXPOWER			= 1 << 9,
++	NL80211_FEATURE_OBSS_SCAN_OFFLOAD		= 1 << 10,
+ };
+ 
+ /**
+-- 
+1.8.0
 
