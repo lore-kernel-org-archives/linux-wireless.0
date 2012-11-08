@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:41821 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S2993480Ab2KORcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2012 12:32:04 -0500
-Message-ID: <1353000723.17678.10.camel@joe-AO722> (sfid-20121115_183208_768767_016F3472)
-Subject: Re: [PATCH v8 4/4] dynamic_debug: dynamic hex dump
-From: Joe Perches <joe@perches.com>
-To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 15 Nov 2012 09:32:03 -0800
-In-Reply-To: <CAMXE1-oypT8XMZBxBwKP5v9+xW4QS579PtmhCgPhxhodHoVETw@mail.gmail.com>
-References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1352978222-13866-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <CAMXE1-oypT8XMZBxBwKP5v9+xW4QS579PtmhCgPhxhodHoVETw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from he.sipsolutions.net ([78.46.109.217]:48611 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751114Ab2KHJsJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Nov 2012 04:48:09 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TWOiM-0001s4-LC
+	for linux-wireless@vger.kernel.org; Thu, 08 Nov 2012 10:47:58 +0100
+Message-ID: <1352368115.9870.5.camel@jlt4.sipsolutions.net> (sfid-20121108_104817_576651_914CDAA0)
+Subject: Re: [PATCH] mac80211: fix TX error path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 08 Nov 2012 10:48:35 +0100
+In-Reply-To: <1352293405-27692-1-git-send-email-johannes@sipsolutions.net> (sfid-20121107_140302_585568_7ECC7434)
+References: <1352293405-27692-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121107_140302_585568_7ECC7434)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-15 at 17:55 +0200, Andrei Emeltchenko wrote:
-> Hi Vladimir,
+On Wed, 2012-11-07 at 14:03 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> On Thu, Nov 15, 2012 at 1:17 PM, Vladimir Kondratiev
-> <qca_vkondrat@qca.qualcomm.com> wrote:
-> > Introduce print_hex_dump_debug() that can be dynamically controlled, similar to
-> > pr_debug.
+> One error path in ieee80211_subif_start_xmit() will
+> double-free the SKB. Set it to NULL to prevent that.
 > 
-> You could just use "%*ph" specifier in pr_debug
+> This issue was introduced by my channel context
+> changes.
 
-Possibly true, but %*ph doesn't emit ascii nor
-does it format a large block of data very well.
+Applied.
 
-Maybe use of
-	pr_debug("%*ph", len, buf)
-vs
-	print_hex_dump_bytes("prefix", DUMP_PREFIX_<STYLE>, buf, len)
-
-could be described a bit in dynamic_debug_howto
-or perhaps all of the various printk, dev_<level>,
-<subsystem>_<level> styles and all the various
-debugging options would be better described in a
-new printk_howto
+johannes
 
