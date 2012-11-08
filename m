@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:54521 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346Ab2KKOX6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49161 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755599Ab2KHNII (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 09:23:58 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so3615480wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 06:23:57 -0800 (PST)
-Message-ID: <1352643811.3000.49.camel@canaries32-MCP7A> (sfid-20121111_152402_577006_3C68E48A)
-Subject: [PATCH] staging: vt6656: fix viawget_wpa_param size
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 11 Nov 2012 14:23:31 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 8 Nov 2012 08:08:08 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: don't send null data packet when not associated
+Date: Thu,  8 Nov 2012 14:08:42 +0100
+Message-Id: <1352380122-18384-1-git-send-email-johannes@sipsolutions.net> (sfid-20121108_140826_775231_430ADDB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+On resume or firmware recovery, mac80211 sends a null
+data packet to see if the AP is still around and hasn't
+disconnected us. However, it always does this even if
+it wasn't even connected before, leading to a warning
+in the new channel context code. Fix this by checking
+that it's associated.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-
+Change-Id: I8b77a0b3d3ece9ed509b688711c43aeb5be74348
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6656/iwctl.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ net/mac80211/util.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
-index 8f19874..e58049b 100644
---- a/drivers/staging/vt6656/iwctl.c
-+++ b/drivers/staging/vt6656/iwctl.c
-@@ -1488,17 +1488,15 @@ int iwctl_siwencodeext(struct net_device *dev, struct iw_request_info *info,
- 	size_t seq_len = 0;
- 	size_t key_len = 0;
- 	u8 *buf;
--	size_t blen;
- 	u8 key_array[64];
- 	int ret = 0;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 527364f..ba601a8 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1550,6 +1550,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		list_for_each_entry(sdata, &local->interfaces, list) {
+ 			if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 				continue;
++			if (!sdata->u.mgd.associated)
++				continue;
  
--	PRINT_K("SIOCSIWENCODEEXT...... \n");
-+	PRINT_K("SIOCSIWENCODEEXT......\n");
- 
--	blen = sizeof(*param);
--	buf = kmalloc((int)blen, (int)GFP_KERNEL);
-+	buf = kzalloc(sizeof(struct viawget_wpa_param), GFP_KERNEL);
- 	if (buf == NULL)
- 		return -ENOMEM;
--	memset(buf, 0, blen);
-+
- 	param = (struct viawget_wpa_param *)buf;
- 
- // recover alg_name
-@@ -1592,7 +1590,7 @@ int iwctl_siwencodeext(struct net_device *dev, struct iw_request_info *info,
- 	spin_unlock_irq(&pDevice->lock);
- 
- error:
--	kfree(param);
-+	kfree(buf);
- 	return ret;
- }
- 
+ 			ieee80211_send_nullfunc(local, sdata, 0);
+ 		}
 -- 
 1.8.0
-
-
 
