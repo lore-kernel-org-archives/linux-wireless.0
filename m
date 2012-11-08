@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3072 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754273Ab2KUR5F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 12:57:05 -0500
-Message-ID: <50AD15E1.4070006@broadcom.com> (sfid-20121121_185709_484542_787B1343)
-Date: Wed, 21 Nov 2012 18:56:49 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:55755 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755747Ab2KHN22 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Nov 2012 08:28:28 -0500
+Received: by mail-ea0-f174.google.com with SMTP id c13so1056381eaa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 05:28:27 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Piotr Kaczorek <kacz0r1984@o2.pl>
+Subject: Re: p54pci randomly fails to load on boot
+Date: Thu, 8 Nov 2012 14:28:01 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <509BA46B.40601@o2.pl>
+In-Reply-To: <509BA46B.40601@o2.pl>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Daniel Wagner" <wagi@monom.org>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded
- debug/trace support
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org>
- <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org>
- <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org>
- <50AC07F2.8000400@monom.org> <50ACA28F.9010800@broadcom.com>
- <50ACA55F.5050406@monom.org> <20121121143528.GC23606@thinkpad-t410>
-In-Reply-To: <20121121143528.GC23606@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201211081428.01221.chunkeey@googlemail.com> (sfid-20121108_142840_011150_C542954F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2012 03:35 PM, Seth Forshee wrote:
->
-> I'll see if I can reproduce, but if it's specific to the AP then I may
-> not have any luck. Don't expect to hear much from me until next week
-> though; I'm on holiday starting today and will be visiting family.
->
-> Seth
->
+On Thursday, November 08, 2012 01:24:11 PM Piotr Kaczorek wrote:
+> We're using miniPCI WiFi cards in our mini-PC's:
+> 00:02.0 Network controller: Intersil Corporation ISL3886 [Prism 
+> Javelin/Prism Xbow] (rev 01)
+> 
+> OS is Debian Lenny with 'custom' kernel (3.2.24 from kernel.org).
+> 
+> The WiFi cards usually work without problems except that from time to 
+> time they don't start during the boot up process. Here's what I found in 
+> logs:
+> Nov  7 05:12:24 hostname kernel: [   21.323335] ieee80211 phy0: FW rev 
+> 2.13.25.0 - Softmac protocol 5.9
+> Nov  7 05:12:24 hostname kernel: [   21.323435] ieee80211 phy0: 
+> cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+> Nov  7 05:12:24 hostname kernel: [   22.567542] ieee80211 phy0: Cannot 
+> boot firmware!
+> Nov  7 05:12:24 hostname kernel: [   22.567843] p54pci: probe of 
+> 0000:00:02.0 failed with error -110
+> 
+> Anybody got an idea why firmware might not have loaded (and did without 
+> any changes after next reboot 24hrs later)?
+-110 is TIMEDOUT and the firmware simply failed to respond "in time". You could
+try to increase the timeout [see attached patch] or give the firmware a second
+chance.
 
-The family does not like you testing on their AP, huh ;-) Happy holiday(s).
+> Is this a hardware problem with WiFi card (we had few that didn't work 
+> at all 'out of the box')? Maybe a problem with 'hard disk' (we are using 
+> Compact Flash cards)?
+No, I don't think that your harddisk replacement (compact flash cards) would 
+cause such a problem. If you can, try the patch and clean up the dust
+(connectors and on the card itself - at least this works for my pcmcia cards).
 
-Gr. AvS
+About the cards which "refused" to work: Do you know if these were even
+recognized by the system [lspci -vvnn]?
+
+BTW: What happens if you try to reload the module after it failed the first time?
+Does it suddenly work? Or do you have to do a warm/cold reboot/restart to get it
+working again?
+
+Regards,
+	Chr
+---
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index b439079..e7a403d 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -128,7 +128,7 @@ static int p54p_upload_firmware(struct ieee80211_hw *dev)
+ 	udelay(10);
+ 
+ 	/* wait for the firmware to boot properly */
+-	mdelay(100);
++	mdelay(200);
+ 
+ 	return 0;
+ }
 
