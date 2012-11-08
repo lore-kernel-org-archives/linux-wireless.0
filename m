@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54200 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49356 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932147Ab2KWWqD (ORCPT
+	with ESMTP id S1755644Ab2KHOKq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 17:46:03 -0500
+	Thu, 8 Nov 2012 09:10:46 -0500
+Message-ID: <1352383877.11421.5.camel@jlt4.sipsolutions.net> (sfid-20121108_151058_830894_64FFD0DC)
+Subject: Re: Clarification needed on Last Tx Rate statistic update
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] iwlwifi: initialize rx_status
-Date: Fri, 23 Nov 2012 23:46:19 +0100
-Message-Id: <1353710779-7142-1-git-send-email-johannes@sipsolutions.net> (sfid-20121123_234642_526071_AA7F642B)
+To: Saravana <saravanad@posedge.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 08 Nov 2012 15:11:17 +0100
+In-Reply-To: <509A2374.4060601@posedge.com>
+References: <509A11F9.8050108@posedge.com>
+	 <1352275534.9854.6.camel@jlt4.sipsolutions.net>
+	 <509A2374.4060601@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-11-07 at 14:31 +0530, Saravana wrote:
+> Hi Johannes,
+> 
+> Thanks for the clarification. So it seems the in the other case that you 
+> had mentioned, we can confirm that last_tx_rate is updated with 
+> inappropriate value.
+> So probably we could add another variable for the highest 
+> performing/probability rate and update it with the  txrc.reported rate 
+> value.
+> The Last_tx_rate update with the highest performing/probability rate can 
+> be removed.
+> 
+> As far as Last Tx Rate is concerned, should we need to check for the flag?
+> I think the Last Tx Rate can be updated irrespective of the 
+> IEEE80211_HW_HAS_RATE_CONTROL set or not.
 
-The vendor radiotap patch added a few fields to
-struct ieee80211_rx_status that need to be zero,
-initialize the struct instead of using whatever
-was left on the stack.
+Well, "last_tx_rate" might be a bad variable name, but I think the
+behaviour we have now is consistent with something like
+"current_tx_rate" (rather than last), so I don't see any value in
+changing it. What use would the actual last rate have anyway, it keeps
+changing all the time.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/rx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
-index 9a8d502..85b4763 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
-@@ -899,7 +899,7 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
- 			    struct iwl_device_cmd *cmd)
- {
- 	struct ieee80211_hdr *header;
--	struct ieee80211_rx_status rx_status;
-+	struct ieee80211_rx_status rx_status = {};
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_rx_phy_res *phy_res;
- 	__le32 rx_pkt_status;
--- 
-1.8.0
+johannes
 
