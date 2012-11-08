@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:49965 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933086Ab2K0D2l (ORCPT
+Received: from st11p02mm-asmtp002.mac.com ([17.172.220.237]:47078 "EHLO
+	st11p02mm-asmtp002.mac.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755350Ab2KHMeH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 22:28:41 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: advertise GreenField, 40MHz intolerance support to cfg80211
-Date: Mon, 26 Nov 2012 19:28:33 -0800
-Message-Id: <1353986913-3087-1-git-send-email-bzhao@marvell.com> (sfid-20121127_042847_980353_7E7E5C3D)
+	Thu, 8 Nov 2012 07:34:07 -0500
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII
+Received: from [192.168.1.3]
+ (pd284a7bb.kngwnt01.ap.so-net.ne.jp [210.132.167.187])
+ by st11p02mm-asmtp002.mac.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Jan
+  3 2012)) with ESMTPSA id <0MD6000V42SN9C90@st11p02mm-asmtp002.mac.com> for
+ linux-wireless@vger.kernel.org; Thu, 08 Nov 2012 11:34:03 +0000 (GMT)
+Subject: Re: "mac80211.ko" and "cfg80211.ko" compatibility issue.
+From: Nonaka Akira <nonaka@mac.com>
+In-reply-to: <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com>
+Date: Thu, 08 Nov 2012 20:33:58 +0900
+Message-id: <9983E05C-2103-49C8-A675-4F5368F53FB5@mac.com> (sfid-20121108_133420_491963_9D90FBDE)
+References: <509B73D5.5000206@mac.com>
+ <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Hi Julian,
 
-This patch adds support for advertising GreenField, 40MHz intolerance
-or LDPC coding support to cfg80211.
+Well, We consider the option of using the entire compat-wireless drivers. However, we are planning the minor update of our product toward the end of the year and I thought it will be nice if I can keep the change minimum.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |   15 +++++++++++++++
- drivers/net/wireless/mwifiex/fw.h       |    2 ++
- 2 files changed, 17 insertions(+), 0 deletions(-)
+--
+Nonaka Akira
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 3b1c277..13333e4 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1948,6 +1948,21 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
- 	else
- 		ht_info->cap &= ~IEEE80211_HT_CAP_TX_STBC;
- 
-+	if (ISSUPP_GREENFIELD(adapter->hw_dot_11n_dev_cap))
-+		ht_info->cap |= IEEE80211_HT_CAP_GRN_FLD;
-+	else
-+		ht_info->cap &= ~IEEE80211_HT_CAP_GRN_FLD;
-+
-+	if (ISENABLED_40MHZ_INTOLARENT(adapter->hw_dot_11n_dev_cap))
-+		ht_info->cap |= IEEE80211_HT_CAP_40MHZ_INTOLERANT;
-+	else
-+		ht_info->cap &= ~IEEE80211_HT_CAP_40MHZ_INTOLERANT;
-+
-+	if (ISSUPP_RXLDPC(adapter->hw_dot_11n_dev_cap))
-+		ht_info->cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+	else
-+		ht_info->cap &= ~IEEE80211_HT_CAP_LDPC_CODING;
-+
- 	ht_info->cap &= ~IEEE80211_HT_CAP_MAX_AMSDU;
- 	ht_info->cap |= IEEE80211_HT_CAP_SM_PS;
- 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index dda588b..b125b7a 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -194,6 +194,8 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define ISSUPP_TXSTBC(Dot11nDevCap) (Dot11nDevCap & BIT(25))
- #define ISSUPP_RXSTBC(Dot11nDevCap) (Dot11nDevCap & BIT(26))
- #define ISSUPP_GREENFIELD(Dot11nDevCap) (Dot11nDevCap & BIT(29))
-+#define ISENABLED_40MHZ_INTOLARENT(Dot11nDevCap) (Dot11nDevCap & BIT(8))
-+#define ISSUPP_RXLDPC(Dot11nDevCap) (Dot11nDevCap & BIT(22))
- 
- /* httxcfg bitmap
-  * 0		reserved
--- 
-1.7.0.2
+On 2012/11/08, at 20:16, Julian Calaby wrote:
+
+> Hi,
+> 
+> On Thu, Nov 8, 2012 at 7:56 PM, Akira Nonaka <nonaka@mac.com> wrote:
+>> Hi all,
+>> 
+>> I have a problem with the compat-wireless. It seems "mac80211.ko" and
+>> "cfg80211.ko" are not compatible with the ones in main line kernel. In
+>> my case, it is kernel 3.4.9(Fedora 16).
+> 
+> This is expected and pretty much by design.
+> 
+>> I want to use  compat-wireless version of "mac80211.ko" and
+>> "cfg80211.ko" for Realtek rtl8723ae but for other wireless cards, I want
+>> to use main line kernel version of "mac80211.ko" and "cfg80211.ko".
+> 
+> Why? Are the drivers for these other cards not available in compat-wireless?
+> 
+> Thanks,
+> 
+> -- 
+> Julian Calaby
+> 
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
 
