@@ -1,48 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:48934 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930Ab2KMVvj (ORCPT
+Received: from mailrelay012.isp.belgacom.be ([195.238.6.179]:42629 "EHLO
+	mailrelay012.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752689Ab2KIUvp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 16:51:39 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so101191pbc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 13:51:39 -0800 (PST)
-Date: Tue, 13 Nov 2012 13:51:35 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 08/14] staging: vt6656: 64 bit fixes : correct all type
- sizes
-Message-ID: <20121113215135.GA16020@kroah.com> (sfid-20121113_225143_298821_C73707BF)
-References: <1352648485.6460.16.camel@canaries32-MCP7A>
- <20121113205035.GB27716@kroah.com>
- <1352842218.8169.11.camel@user64-MCP7A>
+	Fri, 9 Nov 2012 15:51:45 -0500
+Message-ID: <509D6C58.8090006@computer.org> (sfid-20121109_215150_560652_97F256C5)
+Date: Fri, 09 Nov 2012 21:49:28 +0100
+From: Jan Ceuleers <jan.ceuleers@computer.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1352842218.8169.11.camel@user64-MCP7A>
+To: David Miller <davem@davemloft.net>
+CC: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: essentially offline...
+References: <20121108.150930.2104308040240146535.davem@davemloft.net> <509C1BDD.6000405@computer.org> <20121108.160149.1435441347312920431.davem@davemloft.net>
+In-Reply-To: <20121108.160149.1435441347312920431.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 13, 2012 at 09:30:18PM +0000, Malcolm Priestley wrote:
-> On Tue, 2012-11-13 at 12:50 -0800, Greg KH wrote:
-> > On Sun, Nov 11, 2012 at 03:41:25PM +0000, Malcolm Priestley wrote:
-> > >  /****** Common pointer types ***********************************************/
-> > >  
-> > > -typedef unsigned long   ULONG_PTR;      // 32-bit
-> > > -typedef unsigned long   DWORD_PTR;      // 32-bit
-> > > +typedef u32 ULONG_PTR;
-> > > +typedef u32 DWORD_PTR;
-> > 
-> > A pointer does not fit in u32 on all arches, only unsigned long works
-> > here.
-> > 
-> Hi
-> 
-> The naming is misleading, they are not pointers.
+On 11/08/2012 10:01 PM, David Miller wrote:
+> I used the work jackass just as frequently before I lived part time
+> in New York.  Try again...
 
-Ah, but of course :)
+Well then it seems you were born that way. Still doesn't make it acceptable.
 
-> I have a upcoming patch to remove them.
-
-Ok, that sounds good.
-
-greg k-h
