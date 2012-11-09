@@ -1,36 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44882 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932117Ab2K0Rbq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54712 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752655Ab2KITt5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 12:31:46 -0500
-Date: Tue, 27 Nov 2012 20:31:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] mac80211: silence NULL dereference warning
-Message-ID: <20121127173119.GC1059@elgon.mountain> (sfid-20121127_183150_557638_DD2B4FD2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 9 Nov 2012 14:49:57 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TWuaS-0003Mb-Ac
+	for linux-wireless@vger.kernel.org; Fri, 09 Nov 2012 20:49:56 +0100
+Message-ID: <1352490631.28302.2.camel@jlt4.sipsolutions.net> (sfid-20121109_205001_446286_7F3F49F7)
+Subject: Re: [PATCH 1/2] iwlwifi: handle DMA mapping failures
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 09 Nov 2012 20:50:31 +0100
+In-Reply-To: <1352490583-28609-1-git-send-email-johannes@sipsolutions.net> (sfid-20121109_204915_152301_43A79040)
+References: <1352490162.9238.23.camel@jlt4.sipsolutions.net>
+	 <1352490583-28609-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121109_204915_152301_43A79040)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch complains that we could dereference skb later in the function.
-It's probably unlikely, but we may as well return here and avoid it.
+Err, ok, copy/paste bug -- I meant to have these as replies to the
+*iwlwifi* pull request, not the *mac80211* one. Sorry about that!
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+johannes
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index ec15a49..d923058 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -49,7 +49,7 @@ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
- 			/* driver bug */
- 			WARN_ON(1);
- 			dev_kfree_skb(skb);
--			skb = NULL;
-+			return NULL;
- 		}
- 	}
- 
