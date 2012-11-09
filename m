@@ -1,123 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab2K1JnI (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:46764 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752689Ab2KIUmh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:43:08 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:07 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 06/20] wlcore: improve handling for Rx errors
-Date: Wed, 28 Nov 2012 11:42:35 +0200
-Message-Id: <1354095769-8724-7-git-send-email-arik@wizery.com> (sfid-20121128_104402_476615_D63EC8C8)
-In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	Fri, 9 Nov 2012 15:42:37 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Fri, 9 Nov 2012 12:18:13 -0800
+Subject: RE: [PATCH] nl/cfg80211: advertise OBSS scan offload capability
+Message-ID: <477F20668A386D41ADCC57781B1F7043083BBD703C@SC-VEXCH1.marvell.com> (sfid-20121109_214245_858575_D8C44E25)
+References: <1352415240-5168-1-git-send-email-bzhao@marvell.com>
+ <1352478572.9238.14.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1352478572.9238.14.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Treat Rx error code as a bitmask. This allows sending MIC failures
-when other error bit are on.
-
-Align Rx descriptor status mask to the FW definition.
-
-Ease debugging in case FW reports failure to decrypt on packets.
-
-Discard corrupted packets early in Rx path to avoid reporting other
-abnormalities with corrupted packets that also have other failure bytes on.
-Namely - we don't want to get a MIC failure on a corrupted packet.
-This is mandated by the WiFi specification - see
-section 11.4.2.4.1 in 802.11-2012.
-
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/rx.c |   29 ++++++++++++++---------------
- drivers/net/wireless/ti/wlcore/rx.h |    3 +--
- 2 files changed, 15 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index 4665b96..6791a1a 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -92,9 +92,10 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 		status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED |
- 				RX_FLAG_DECRYPTED;
- 
--		if (unlikely(desc_err_code == WL1271_RX_DESC_MIC_FAIL)) {
-+		if (unlikely(desc_err_code & WL1271_RX_DESC_MIC_FAIL)) {
- 			status->flag |= RX_FLAG_MMIC_ERROR;
--			wl1271_warning("Michael MIC error");
-+			wl1271_warning("Michael MIC error. Desc: 0x%x",
-+				       desc_err_code);
- 		}
- 	}
- 
-@@ -112,7 +113,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 	u8 *buf;
- 	u8 beacon = 0;
- 	u8 is_data = 0;
--	u8 reserved = 0;
-+	u8 reserved = 0, offset_to_data = 0;
- 	u16 seq_num;
- 	u32 pkt_data_len;
- 
-@@ -132,6 +133,8 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 
- 	if (rx_align == WLCORE_RX_BUF_UNALIGNED)
- 		reserved = RX_BUF_ALIGN;
-+	else if (rx_align == WLCORE_RX_BUF_PADDED)
-+		offset_to_data = RX_BUF_ALIGN;
- 
- 	/* the data read starts with the descriptor */
- 	desc = (struct wl1271_rx_descriptor *) data;
-@@ -143,19 +146,15 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 		return 0;
- 	}
- 
--	switch (desc->status & WL1271_RX_DESC_STATUS_MASK) {
- 	/* discard corrupted packets */
--	case WL1271_RX_DESC_DRIVER_RX_Q_FAIL:
--	case WL1271_RX_DESC_DECRYPT_FAIL:
--		wl1271_warning("corrupted packet in RX with status: 0x%x",
--			       desc->status & WL1271_RX_DESC_STATUS_MASK);
--		return -EINVAL;
--	case WL1271_RX_DESC_SUCCESS:
--	case WL1271_RX_DESC_MIC_FAIL:
--		break;
--	default:
--		wl1271_error("invalid RX descriptor status: 0x%x",
--			     desc->status & WL1271_RX_DESC_STATUS_MASK);
-+	if (desc->status & WL1271_RX_DESC_DECRYPT_FAIL) {
-+		hdr = (void *)(data + sizeof(*desc) + offset_to_data);
-+		wl1271_warning("corrupted packet in RX: status: 0x%x len: %d",
-+			       desc->status & WL1271_RX_DESC_STATUS_MASK,
-+			       pkt_data_len);
-+		wl1271_dump((DEBUG_RX|DEBUG_CMD), "PKT: ", data + sizeof(*desc),
-+			    min(pkt_data_len,
-+				ieee80211_hdrlen(hdr->frame_control)));
- 		return -EINVAL;
- 	}
- 
-diff --git a/drivers/net/wireless/ti/wlcore/rx.h b/drivers/net/wireless/ti/wlcore/rx.h
-index 71eba18..3363f60 100644
---- a/drivers/net/wireless/ti/wlcore/rx.h
-+++ b/drivers/net/wireless/ti/wlcore/rx.h
-@@ -84,12 +84,11 @@
-  * Bits 3-5 - process_id tag (AP mode FW)
-  * Bits 6-7 - reserved
-  */
--#define WL1271_RX_DESC_STATUS_MASK      0x03
-+#define WL1271_RX_DESC_STATUS_MASK      0x07
- 
- #define WL1271_RX_DESC_SUCCESS          0x00
- #define WL1271_RX_DESC_DECRYPT_FAIL     0x01
- #define WL1271_RX_DESC_MIC_FAIL         0x02
--#define WL1271_RX_DESC_DRIVER_RX_Q_FAIL 0x03
- 
- #define RX_MEM_BLOCK_MASK            0xFF
- #define RX_BUF_SIZE_MASK             0xFFF00
--- 
-1.7.9.5
-
+SGkgSm9oYW5uZXMsDQoNCj4gPiBGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZl
+bGwuY29tPg0KPiA+DQo+ID4gTmV3IGZsYWcgaXMgYWRkZWQgdG8gaW5mb3JtIHVzZXJzcGFjZSB0
+aGF0IHRoaXMgZHJpdmVyIGRvZXNuJ3QNCj4gPiBpbnRlcm5hbGx5IHBlcmZvcm0gT0JTUyBzY2Fu
+LiBJdCBjYW4gdXNlIHRoaXMgZmVhdHVyZSBhdmFpbGFibGUNCj4gPiBpbiB1c2Vyc3BhY2UgYXBw
+bGljYXRpb24uDQo+IA0KPiBTaG91bGRuJ3QgdGhhdCBiZSBhIGxpdHRsZSBtb3JlIHByZWNpc2Vs
+eSB3b3JkZWQ/IE1vc3QgZHJpdmVycyBhbHJlYWR5DQo+IGV4cGVjdCB3cGFfcyB0byBkbyB0aGlz
+LCBidXQgYXBwYXJlbnRseSB0aGUgYXNzdW1wdGlvbiB3YXMgdGhhdCB3aXRob3V0DQo+IHRoZSBm
+bGFnLCBmdWxsLU1BQyBkcml2ZXJzLCBpLmUuIGRyaXZlcnMgaW1wbGVtZW50aW5nIHRoZSBubDgw
+MjExDQo+IGNvbm5lY3QgQVBJIChyYXRoZXIgdGhhbiBhdXRoL2Fzc29jKSBkbyBpdCB0aGVtc2Vs
+dmVzPw0KDQpUaGF0J3MgcmlnaHQuDQoNCj4gDQo+IE9yIG1heWJlIG1hYzgwMjExIHNob3VsZCBq
+dXN0IHNldCB0aGUgZmxhZz8NCg0KQ3VycmVudGx5IHdwYV9zIGNoZWNrcyBXUEFfRFJJVkVSX0ZM
+QUdTX1NNRSBmbGFnIGZvciBPQlNTIHNjYW4uDQpTaW5jZSBXUEFfRFJJVkVSX0ZMQUdTX1NNRSBi
+aXQgaXMgc2V0IGZvciBtYWM4MDIxMSwgaXQncyB1bm5lY2Vzc2FyeSB0byBzZXQgdGhpcyBuZXcg
+ZmxhZy4NCg0KT3IsIGFyZSB5b3Ugc3VnZ2VzdGluZyB0aGF0IHdlIHNob3VsZCBzZXQgdGhlIG5l
+dyBmbGFnIGluIG1hYzgwMjExIChhbmQgYWxsIGRyaXZlcnMgdGhhdCBuZWVkIE9CU1Mgc2NhbiBm
+ZWF0dXJlIGluIHdwYV9zKSBhbmQgcmVwbGFjZSBXUEFfRFJJVkVSX0ZMQUdTX1NNRSBjaGVjayB3
+aXRoIHRoZSBuZXcgZmxhZz8NCg0KQEAgLTEwMzEsNyArMTAzMSw3IEBAIHZvaWQgc21lX3NjaGVk
+X29ic3Nfc2NhbihzdHJ1Y3Qgd3BhX3N1cHBsaWNhbnQgKndwYV9zLCBpbnQNCiAgICAgICAgaWYg
+KCFlbmFibGUpDQogICAgICAgICAgICAgICAgcmV0dXJuOw0KDQotICAgICAgIGlmICghKHdwYV9z
+LT5kcnZfZmxhZ3MgJiBXUEFfRFJJVkVSX0ZMQUdTX1NNRSkgfHwgc3NpZCA9PSBOVUxMIHx8DQor
+ICAgICAgIGlmICghKHdwYV9zLT5kcnZfZmxhZ3MgJiBXUEFfRFJJVkVSX0ZMQUdTX09CU1NfU0NB
+TikgfHwgc3NpZCA9PSBOVUxMIHx8DQogICAgICAgICAgICBzc2lkLT5tb2RlICE9IElFRUU4MDIx
+MV9NT0RFX0lORlJBKQ0KICAgICAgICAgICAgICAgIHJldHVybjsgLyogTm90IHVzaW5nIHN0YXRp
+b24gU01FIGluIHdwYV9zdXBwbGljYW50ICovDQoNClRoYW5rcywNCkJpbmcNCg0K
