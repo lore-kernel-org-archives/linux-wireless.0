@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DMZ-MAILSEC-SCANNER-7.MIT.EDU ([18.7.68.36]:64235 "EHLO
-	dmz-mailsec-scanner-7.mit.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754774Ab2K1PTG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 10:19:06 -0500
-Date: Wed, 28 Nov 2012 10:13:55 -0500 (EST)
-From: Anders Kaseorg <andersk@MIT.EDU>
-To: Tejun Heo <tj@kernel.org>,
-	Herbert Xu <herbert@gondor.hengli.com.au>,
-	"John W. Linville" <linville@tuxdriver.com>
-cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.org
-Subject: Wireless regression in workqueue: use mod_delayed_work() instead of
- __cancel + queue
-Message-ID: <alpine.DEB.2.00.1211280953350.26602@dr-wily.mit.edu> (sfid-20121128_161910_939654_B37A7BB0)
+Received: from co1ehsobe001.messaging.microsoft.com ([216.32.180.184]:4496
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750976Ab2KIJui convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2012 04:50:38 -0500
+From: "Shen, Jackey" <Jackey.Shen@amd.com>
+To: Bing Zhao <bzhao@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Marvell Avastar 88W8797 firmware
+Date: Fri, 9 Nov 2012 09:50:31 +0000
+Message-ID: <0C8FBB70FF40A94D98BE847F9C171A98033D3931@SCYBEXDAG02.amd.com> (sfid-20121109_105052_623976_9A2DCCE5)
+References: <0C8FBB70FF40A94D98BE847F9C171A98033D23B0@SCYBEXDAG02.amd.com>
+ <477F20668A386D41ADCC57781B1F7043083BBD6CA7@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F7043083BBD6CA7@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My Intel 6250 wireless card (iwldvm) can no longer associate with a 
-WPA-Enterprise network (PEAP-MSCHAPv2).  To my surprise, I bisected this 
-regression to commit e7c2f967445dd2041f0f8e3179cca22bb8bb7f79, 
-workqueue: use mod_delayed_work() instead of __cancel + queue.
+Hi Bing,
 
-A bunch of logs collected by Ubuntu apport are in this bug report: 
-  https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1083980
+Thanks a lot.
+Jackey
 
-How can I help to debug this?
+-----Original Message-----
+From: Bing Zhao [mailto:bzhao@marvell.com] 
+Sent: Friday, November 09, 2012 4:53 AM
+To: Shen, Jackey
+Cc: linux-wireless@vger.kernel.org
+Subject: RE: Marvell Avastar 88W8797 firmware
 
-I see that someone else reported another regression with the same commit 
-last week, although this looks unrelated at first glance: 
-  http://thread.gmane.org/gmane.linux.kernel/1395938
+Hi Jackey,
 
-Anders
+> Hi Bing,
+> 
+> Where can I download sd8797_uapsta.bin and usb8797_uapsta.bin?
+
+If you have a rev B0 SD8797 card, you can get sd8797_uapsta.bin firmware image here:
+
+git://git.marvell.com/mwifiex-firmware.git
+http://git.marvell.com/?p=mwifiex-firmware.git;a=summary
+
+USB8797 firmware image has not been posted to upstream yet.
+
+> 
+> I read "Avastar 88W8797 SoC Product Brief", and want to know how to > select SDIO interface as Host interface described at section " HOST > INTERFACES" in this doc? Now I can use USB interface to surfing the > internet.
+
+Please get help from customer support personnel or the person who supplied the 8797 hardware.
+
+Thanks,
+Bing
+
+
+
