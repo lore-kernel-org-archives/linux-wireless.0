@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41520 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754304Ab2KSSfV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54751 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755582Ab2KIUHk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:35:21 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Subject: [PATCH 473/493] nfc: remove use of __devexit
-Date: Mon, 19 Nov 2012 13:27:02 -0500
-Message-Id: <1353349642-3677-473-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193550_383332_6CB05A57)
-In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+	Fri, 9 Nov 2012 15:07:40 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 06/13] iwlwifi: use list_first_entry
+Date: Fri,  9 Nov 2012 21:08:05 +0100
+Message-Id: <1352491692-28994-7-git-send-email-johannes@sipsolutions.net> (sfid-20121109_210755_696194_F20BAF64)
+In-Reply-To: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
+References: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_HOTPLUG is going away as an option so __devexit is no
-longer needed.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org> 
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org> 
-Cc: Samuel Ortiz <sameo@linux.intel.com> 
-Cc: linux-wireless@vger.kernel.org 
-Cc: linux-nfc@lists.01.org 
+Instead of open-coding it with a temporary list_head
+pointer, just use list_first_entry.
+
+Reviewed-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/nfc/pn544/i2c.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index d48a806..a85d4aa4 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -442,7 +442,7 @@ err_phy_alloc:
- 	return r;
- }
- 
--static __devexit int pn544_hci_i2c_remove(struct i2c_client *client)
-+static int pn544_hci_i2c_remove(struct i2c_client *client)
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 50c9147..25e6f86 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -199,7 +199,6 @@ static void iwl_rx_queue_restock(struct iwl_trans *trans)
  {
- 	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
- 	struct pn544_nfc_platform_data *pdata = client->dev.platform_data;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rx_queue *rxq = &trans_pcie->rxq;
+-	struct list_head *element;
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	unsigned long flags;
+ 
+@@ -221,9 +220,9 @@ static void iwl_rx_queue_restock(struct iwl_trans *trans)
+ 		BUG_ON(rxb && rxb->page);
+ 
+ 		/* Get next free Rx buffer, remove from free list */
+-		element = rxq->rx_free.next;
+-		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
+-		list_del(element);
++		rxb = list_first_entry(&rxq->rx_free, struct iwl_rx_mem_buffer,
++				       list);
++		list_del(&rxb->list);
+ 
+ 		/* Point to Rx buffer via next RBD in circular buffer */
+ 		rxq->bd[rxq->write] = iwl_dma_addr2rbd_ptr(rxb->page_dma);
+@@ -260,7 +259,6 @@ static void iwl_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rx_queue *rxq = &trans_pcie->rxq;
+-	struct list_head *element;
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	struct page *page;
+ 	unsigned long flags;
+@@ -308,10 +306,9 @@ static void iwl_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+ 			__free_pages(page, trans_pcie->rx_page_order);
+ 			return;
+ 		}
+-		element = rxq->rx_used.next;
+-		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
+-		list_del(element);
+-
++		rxb = list_first_entry(&rxq->rx_used, struct iwl_rx_mem_buffer,
++				       list);
++		list_del(&rxb->list);
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 
+ 		BUG_ON(rxb->page);
 -- 
 1.8.0
 
