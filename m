@@ -1,81 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:34012 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751618Ab2K0TBw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54661 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752689Ab2KITmM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 14:01:52 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org,
-	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [RFC] iw: add spectral scan attribute to scan function
-Date: Tue, 27 Nov 2012 20:01:25 +0100
-Message-Id: <1354042885-32688-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121127_200158_416746_AB8F350B)
-In-Reply-To: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Fri, 9 Nov 2012 14:42:12 -0500
+Message-ID: <1352490162.9238.23.camel@jlt4.sipsolutions.net> (sfid-20121109_204215_951530_427D6D95)
+Subject: pull-request: mac80211 2012-11-09
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 09 Nov 2012 20:42:42 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-tHWLbC+kbM8idJUQX7R3"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- scan.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/scan.c b/scan.c
-index 05bad0b..3e28722 100644
---- a/scan.c
-+++ b/scan.c
-@@ -70,7 +70,7 @@ static int handle_scan(struct nl80211_state *state,
- 		DONE,
- 	} parse = NONE;
- 	int freq;
--	bool passive = false, have_ssids = false, have_freqs = false;
-+	bool passive = false, have_ssids = false, have_freqs = false, spec_scan = false;
- 	size_t tmp;
- 	unsigned char *ies;
- 	int flags = 0;
-@@ -115,6 +115,10 @@ static int handle_scan(struct nl80211_state *state,
- 				parse = DONE;
- 				passive = true;
- 				break;
-+			} else if (strcmp(argv[i], "spec-scan") == 0) {
-+				parse = NONE;
-+				spec_scan = true;
-+				break;
- 			}
- 		case DONE:
- 			return 1;
-@@ -151,6 +155,8 @@ static int handle_scan(struct nl80211_state *state,
- 		nla_put_nested(msg, NL80211_ATTR_SCAN_FREQUENCIES, freqs);
- 	if (flags)
- 		NLA_PUT_U32(msg, NL80211_ATTR_SCAN_FLAGS, flags);
-+	if (spec_scan)
-+                NLA_PUT_FLAG(msg, NL80211_ATTR_TX_SPEC_SCAN);
- 
- 	err = 0;
-  nla_put_failure:
-@@ -1450,7 +1456,7 @@ static int handle_scan_combined(struct nl80211_state *state,
- 	dump_argv[0] = argv[0];
- 	return handle_cmd(state, id, dump_argc, dump_argv);
- }
--TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]", 0, 0,
-+TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force,spec-scan] [ssid <ssid>*|passive]", 0, 0,
- 	 CIB_NETDEV, handle_scan_combined,
- 	 "Scan on the given frequencies and probe for the given SSIDs\n"
- 	 "(or wildcard if not given) unless passive scanning is requested.\n"
-@@ -1460,7 +1466,7 @@ COMMAND(scan, dump, "[-u]",
- 	NL80211_CMD_GET_SCAN, NLM_F_DUMP, CIB_NETDEV, handle_scan_dump,
- 	"Dump the current scan results. If -u is specified, print unknown\n"
- 	"data in scan results.");
--COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]",
-+COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force,spec-scan] [ssid <ssid>*|passive]",
- 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
- 	 "Trigger a scan on the given frequencies with probing for the given\n"
- 	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
--- 
-1.7.10.4
+--=-tHWLbC+kbM8idJUQX7R3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+John,
+
+Here are five more fixes from me for 3.7. There's no theme to them, just
+various changes all over mac80211, see the commit logs for more
+information.
+
+Please pull, information below.
+
+johannes
+
+
+The following changes since commit 6dbda2d00d466225f9db1dc695ff852443f28832=
+:
+
+  mac80211: make sure data is accessible in EAPOL check (2012-10-26 22:52:4=
+2 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 20f544eea03db4b498942558b882d463ce575c3e:
+
+  mac80211: don't send null data packet when not associated (2012-11-09 17:=
+31:47 +0100)
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      mac80211: sync acccess to tx_filtered/ps_tx_buf queues
+
+David Spinadel (1):
+      mac80211: init sched_scan_ies
+
+Felix Fietkau (1):
+      mac80211: do not call ieee80211_configure_filter if no interfaces are=
+ up
+
+Johannes Berg (2):
+      mac80211: fix memory leak in device registration error path
+      mac80211: don't send null data packet when not associated
+
+ net/mac80211/cfg.c      | 3 +++
+ net/mac80211/main.c     | 6 ++++--
+ net/mac80211/scan.c     | 2 +-
+ net/mac80211/sta_info.c | 5 +++++
+ net/mac80211/util.c     | 2 ++
+ 5 files changed, 15 insertions(+), 3 deletions(-)
+
+
+--=-tHWLbC+kbM8idJUQX7R3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQnVyyAAoJEDBSmw7B7bqrhgIP/R6+HcVppqWOk+GPcyly+hrS
+NxpKo6P/KJCTGpDXHzK+wAby+JUHn2DoTW0WbN2YRqMA32QAks0zv3rzFnnfPVeP
+skR81Gm24zx7+TMJlMupRMZqvzXjIcGSr7hP24XnqlBQ3/xSYDT8bLsspFuz+ue0
+LvRsDNpYd12nEEy87x1wXaxO9AX4X3SmDwX84L8AFh8nayIRKauFZ4DzSAgfDesE
+eCpQgxKUyJrDahgyqvGVGFvHiPMmn2pkTrCu6TMbwhYEZAEVxhAtM9G1TFRrIJ8f
+y65yVZpovpN5Pchz9/7tsA9DhpDMhFv6Sv/whIfI9Nr7QiPLECdBCJbfxkMyiBlp
+IRRQ3r03hjp8DcuOM3PiDxS+eC/fa7nvspJ35sXzrPZBNRDyVmc+7OVXV1wqla/Q
+vq0yW7ntZiS1rCwE6QtQ4muJh3D5YKzWanT4wdCayjL+V3b4ejsvUem+Qe/0KJM1
+h04Sg5gArZVux43gT8srBNdCDFXyLz9L3CMtpmYsO9FomiprZvjnlv0+f4VCOQ5o
+OQcXJxhIeqFKPUOD0YvHznqAnzfZe0b89kIByDZIyWCJE3X6bE/EVumxEcxdKrNf
+Sz8XZIrdxofqdCdIAfWMar8mFbzAuKeCyU5JwlY95IDDy9zBbvGwng6YRE4vgQI7
+Pu/6TEYUu3O3sY8YeLg0
+=ZM2f
+-----END PGP SIGNATURE-----
+
+--=-tHWLbC+kbM8idJUQX7R3--
 
