@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3239 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751791Ab2KSU4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 15:56:33 -0500
-Message-ID: <50AA9CEE.2030205@broadcom.com> (sfid-20121119_215642_831173_7271CBDE)
-Date: Mon, 19 Nov 2012 21:56:14 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Bill Pemberton" <wfp5p@virginia.edu>
-cc: gregkh@linuxfoundation.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Jiri Slaby" <jirislaby@gmail.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"Simon Kelley" <simon@thekelleys.org.uk>,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	"Stanislav Yakovlev" <stas.yakovlev@gmail.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	"Christian Lamparter" <chunkeey@googlemail.com>,
-	"Ivo van Doorn" <IvDoorn@gmail.com>,
-	"Gertjan van Wingerde" <gwingerde@gmail.com>,
-	"Helmut Schaa" <helmut.schaa@googlemail.com>,
-	"Herton Ronaldo Krzesinski" <herton@canonical.com>,
-	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Luciano Coelho" <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 085/493] net/wireless: remove use of __devexit_p
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
- <1353349642-3677-85-git-send-email-wfp5p@virginia.edu>
-In-Reply-To: <1353349642-3677-85-git-send-email-wfp5p@virginia.edu>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:54769 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755735Ab2KIUJK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2012 15:09:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 10/13] iwlwifi: remove SKU/antenna messages by default
+Date: Fri,  9 Nov 2012 21:08:09 +0100
+Message-Id: <1352491692-28994-11-git-send-email-johannes@sipsolutions.net> (sfid-20121109_210914_657454_50C6251F)
+In-Reply-To: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
+References: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/2012 07:20 PM, Bill Pemberton wrote:
-> CONFIG_HOTPLUG is going away as an option so __devexit_p is no longer
-> needed.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-> Cc: brcm80211-dev-list@broadcom.com
- >
->   drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c | 2 +-
+There's no reason to print these all the time,
+the messages aren't all that interesting. Leave
+them as DEBUG_INFO though, just in case.
 
-For this part of the patch obviously.
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Gr. AvS
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index bcaec84..03cbfa7 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -1204,7 +1204,7 @@ static int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
+ 		return -EINVAL;
+ 	}
+ 
+-	IWL_INFO(priv, "Device SKU: 0x%X\n", priv->eeprom_data->sku);
++	IWL_DEBUG_INFO(priv, "Device SKU: 0x%X\n", priv->eeprom_data->sku);
+ 
+ 	priv->hw_params.tx_chains_num =
+ 		num_of_ant(priv->eeprom_data->valid_tx_ant);
+@@ -1214,9 +1214,9 @@ static int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
+ 		priv->hw_params.rx_chains_num =
+ 			num_of_ant(priv->eeprom_data->valid_rx_ant);
+ 
+-	IWL_INFO(priv, "Valid Tx ant: 0x%X, Valid Rx ant: 0x%X\n",
+-		 priv->eeprom_data->valid_tx_ant,
+-		 priv->eeprom_data->valid_rx_ant);
++	IWL_DEBUG_INFO(priv, "Valid Tx ant: 0x%X, Valid Rx ant: 0x%X\n",
++		       priv->eeprom_data->valid_tx_ant,
++		       priv->eeprom_data->valid_rx_ant);
+ 
+ 	return 0;
+ }
+-- 
+1.8.0
 
