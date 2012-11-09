@@ -1,31 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56373 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52568 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568Ab2KQIxh (ORCPT
+	with ESMTP id S1751595Ab2KIIsX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 03:53:37 -0500
-Message-ID: <1353142451.9543.5.camel@jlt4.sipsolutions.net> (sfid-20121117_095341_598012_6439F8B3)
-Subject: Re: [RFC 01/14] {nl,cfg,mac}80211: add beacon interval and DTIM
- period to mesh config
+	Fri, 9 Nov 2012 03:48:23 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, linux-wireless@vger.kernel.org
-Date: Sat, 17 Nov 2012 09:54:11 +0100
-In-Reply-To: <1353134886-13256-2-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_074838_606880_AF1877A1)
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353134886-13256-2-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 (sfid-20121117_074838_606880_AF1877A1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3.7] mac80211: fix memory leak in device registration error path
+Date: Fri,  9 Nov 2012 09:48:58 +0100
+Message-Id: <1352450938-27533-1-git-send-email-johannes@sipsolutions.net> (sfid-20121109_094838_363840_A9CAFA83)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-16 at 22:47 -0800, Marco Porsch wrote:
-> Moves the default mesh beacon interval and DTIM period to cfg80211 and
-> makes it accessible to nl80211. This enables modifying both values at
-> mesh runtime.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Which doesn't seem to be permitted "just like that", see 13.13.4.3.
+If the cipher suites need to be allocated, but this
+allocation fails, this leaks the internal scan request.
+Fix that by going to the correct error handling label.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index c80c449..f57f597 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -871,8 +871,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 				local->hw.wiphy->cipher_suites,
+ 				sizeof(u32) * local->hw.wiphy->n_cipher_suites,
+ 				GFP_KERNEL);
+-			if (!suites)
+-				return -ENOMEM;
++			if (!suites) {
++				result = -ENOMEM;
++				goto fail_wiphy_register;
++			}
+ 			for (r = 0; r < local->hw.wiphy->n_cipher_suites; r++) {
+ 				u32 suite = local->hw.wiphy->cipher_suites[r];
+ 				if (suite == WLAN_CIPHER_SUITE_WEP40 ||
+-- 
+1.8.0
 
