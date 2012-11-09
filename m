@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:45747 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752943Ab2KVUjb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54745 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754633Ab2KIUHj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 15:39:31 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so3083395pad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 12:39:31 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: ath9k-devel@lists.ath9k.org
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v3 2/2] ath9k_htc: RX timestamp is reported at end of frame
-Date: Wed, 21 Nov 2012 18:06:27 -0800
-Message-Id: <1353549987-24656-2-git-send-email-thomas@cozybit.com> (sfid-20121122_213938_133520_86E0917A)
-In-Reply-To: <1353549987-24656-1-git-send-email-thomas@cozybit.com>
-References: <1353549987-24656-1-git-send-email-thomas@cozybit.com>
+	Fri, 9 Nov 2012 15:07:39 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/13] iwlwifi: don't call stop_device twice
+Date: Fri,  9 Nov 2012 21:08:01 +0100
+Message-Id: <1352491692-28994-3-git-send-email-johannes@sipsolutions.net> (sfid-20121109_210743_586969_F59342ED)
+In-Reply-To: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
+References: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Accurate RX timestamp reporting is important for proper IBSS merging,
-mesh synchronization, and MCCA scheduling. Namely, knowing where the TSF
-is recorded is needed to sync with the beacon timestamp field.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Tested with AR9271.
+When we unregister from mac80211 it will down the device anyway.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-v2:
-        clarify commit log (Luis)
+ drivers/net/wireless/iwlwifi/dvm/main.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-v3:
-	rebase on wt
-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 28cd50e..b6a5a08 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -1082,7 +1082,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	rx_status->freq = hw->conf.channel->center_freq;
- 	rx_status->signal =  rxbuf->rxstatus.rs_rssi + ATH_DEFAULT_NOISE_FLOOR;
- 	rx_status->antenna = rxbuf->rxstatus.rs_antenna;
--	rx_status->flag |= RX_FLAG_MACTIME_START;
-+	rx_status->flag |= RX_FLAG_MACTIME_END;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index 2b50d11..4547f36 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -1507,10 +1507,6 @@ static void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
  
- 	return true;
+ 	iwl_tt_exit(priv);
+ 
+-	/*This will stop the queues, move the device to low power state */
+-	priv->ucode_loaded = false;
+-	iwl_trans_stop_device(priv->trans);
+-
+ 	kfree(priv->eeprom_blob);
+ 	iwl_free_eeprom_data(priv->eeprom_data);
  
 -- 
-1.7.10.4
+1.8.0
 
