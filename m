@@ -1,35 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43722 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53802 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932083Ab2K1NIJ (ORCPT
+	with ESMTP id S1753398Ab2KIPsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 08:08:09 -0500
-Message-ID: <1354108113.9345.23.camel@jlt4.sipsolutions.net> (sfid-20121128_140813_228134_854E0011)
-Subject: Re: [PATCH] mac80211: fix for mesh sync to indicate TBTT adjustment
+	Fri, 9 Nov 2012 10:48:01 -0500
+Message-ID: <1352476116.9238.10.camel@jlt4.sipsolutions.net> (sfid-20121109_164806_024310_85E52F7A)
+Subject: Re: [PATCH] iw: print the ssid when requesting device info
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, thomas@cozybit.com, ashok@cozybit.com,
-	linux-wireless@vger.kernel.org
-Date: Wed, 28 Nov 2012 14:08:33 +0100
-In-Reply-To: <1353702198-12865-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353702198-12865-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 09 Nov 2012 16:48:36 +0100
+In-Reply-To: <1352468278-30931-1-git-send-email-ordex@autistici.org>
+References: <1352468278-30931-1-git-send-email-ordex@autistici.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-23 at 12:23 -0800, Marco Porsch wrote:
-> Currently the mesh sync code checks, whether peers indicate TBTT adjustment,
-> but it never sets the corresponding flag itself.
-> 
-> By setting ifmsh->tbtt_adjusting to true, it will set the corresponding field
-> in the mesh configuration IE of own beacons.
-> This indication will be set in the current beacon. The TBTT adjustment will be
-> performed afterwards, affecting the next beacon. Thus, the first beacon with
-> stable TBTT will not indicate adjustment anymore and peers will continue
-> tracking the new offset.
+On Fri, 2012-11-09 at 14:37 +0100, Antonio Quartulli wrote:
+> The GET_INTERFACE command receives also the ssid as part of the reply.
+> This patch makes iw print the ssid together with the other information
+> when issuing the "iw dev $vif info" command.
 
-Ping mesh folks, does this look sane?
+Applied.
 
 johannes
 
