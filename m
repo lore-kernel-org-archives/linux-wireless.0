@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:21462 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752797Ab2KUHYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 02:24:36 -0500
-Date: Wed, 21 Nov 2012 15:24:13 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [wireless-next:master 203/214]
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:573:17: sparse: Using plain integer as NULL pointer
-Message-ID: <50ac819d.deUknDDzRBMUnMNp%fengguang.wu@intel.com> (sfid-20121121_082439_760367_FBCCF7D1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:54747 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754848Ab2KIUHj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2012 15:07:39 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 04/13] iwlwifi: don't clear CTL_AMPDU on frame status
+Date: Fri,  9 Nov 2012 21:08:03 +0100
+Message-Id: <1352491692-28994-5-git-send-email-johannes@sipsolutions.net> (sfid-20121109_210752_832259_A5DAF705)
+In-Reply-To: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
+References: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
-head:   e2ff0498409af6f2023f91aba07b281e5e87ee15
-commit: b353dda485038d5033b066cc946dfcf66afae128 [203/214] brcmsmac: Use debug macros for general error and debug statements
+From: Johannes Berg <johannes.berg@intel.com>
 
+There's no reason to clear the CTL_AMPDU flag on
+transmitted frame status, it's not used by the
+driver here and mac80211 only uses it for some
+rate statistics.
 
-sparse warnings:
+Also remove a stray space in the function.
 
-+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:573:17: sparse: Using plain integer as NULL pointer
-drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:1311:6: sparse: context imbalance in 'brcms_down' - unexpected unlock
-drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:1598:6: sparse: context imbalance in 'brcms_rfkill_set_hw_state' - unexpected unlock
-
-vim +573 drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-
-5b435de0 Arend van Spriel 2011-10-05  557  static void
-5b435de0 Arend van Spriel 2011-10-05  558  brcms_ops_configure_filter(struct ieee80211_hw *hw,
-5b435de0 Arend van Spriel 2011-10-05  559  			unsigned int changed_flags,
-5b435de0 Arend van Spriel 2011-10-05  560  			unsigned int *total_flags, u64 multicast)
-5b435de0 Arend van Spriel 2011-10-05  561  {
-5b435de0 Arend van Spriel 2011-10-05  562  	struct brcms_info *wl = hw->priv;
-b353dda4 Seth Forshee     2012-11-15  563  	struct bcma_device *core = wl->wlc->hw->d11core;
-5b435de0 Arend van Spriel 2011-10-05  564  
-5b435de0 Arend van Spriel 2011-10-05  565  	changed_flags &= MAC_FILTERS;
-5b435de0 Arend van Spriel 2011-10-05  566  	*total_flags &= MAC_FILTERS;
-be667669 Alwin Beukers    2011-11-22  567  
-5b435de0 Arend van Spriel 2011-10-05  568  	if (changed_flags & FIF_PROMISC_IN_BSS)
-b353dda4 Seth Forshee     2012-11-15  569  		brcms_dbg_info(core, "FIF_PROMISC_IN_BSS\n");
-5b435de0 Arend van Spriel 2011-10-05  570  	if (changed_flags & FIF_ALLMULTI)
-b353dda4 Seth Forshee     2012-11-15  571  		brcms_dbg_info(core, "FIF_ALLMULTI\n");
-5b435de0 Arend van Spriel 2011-10-05  572  	if (changed_flags & FIF_FCSFAIL)
-b353dda4 Seth Forshee     2012-11-15 @573  		brcms_dbg_info(core, 0, "FIF_FCSFAIL\n");
-5b435de0 Arend van Spriel 2011-10-05  574  	if (changed_flags & FIF_CONTROL)
-b353dda4 Seth Forshee     2012-11-15  575  		brcms_dbg_info(core, "FIF_CONTROL\n");
-5b435de0 Arend van Spriel 2011-10-05  576  	if (changed_flags & FIF_OTHER_BSS)
-b353dda4 Seth Forshee     2012-11-15  577  		brcms_dbg_info(core, "FIF_OTHER_BSS\n");
-be667669 Alwin Beukers    2011-11-22  578  	if (changed_flags & FIF_PSPOLL)
-b353dda4 Seth Forshee     2012-11-15  579  		brcms_dbg_info(core, "FIF_PSPOLL\n");
-be667669 Alwin Beukers    2011-11-22  580  	if (changed_flags & FIF_BCN_PRBRESP_PROMISC)
-b353dda4 Seth Forshee     2012-11-15  581  		brcms_dbg_info(core, "FIF_BCN_PRBRESP_PROMISC\n");
-
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-0-DAY kernel build testing backend         Open Source Technology Center
-Fengguang Wu, Yuanhan Liu                              Intel Corporation
+ drivers/net/wireless/iwlwifi/dvm/tx.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+index f5ca73a..4ae031f 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+@@ -1075,14 +1075,11 @@ static void iwlagn_count_tx_err_status(struct iwl_priv *priv, u16 status)
+ 
+ static void iwlagn_set_tx_status(struct iwl_priv *priv,
+ 				 struct ieee80211_tx_info *info,
+-				 struct iwlagn_tx_resp *tx_resp,
+-				 bool is_agg)
++				 struct iwlagn_tx_resp *tx_resp)
+ {
+-	u16  status = le16_to_cpu(tx_resp->status.status);
++	u16 status = le16_to_cpu(tx_resp->status.status);
+ 
+ 	info->status.rates[0].count = tx_resp->failure_frame + 1;
+-	if (is_agg)
+-		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 	info->flags |= iwl_tx_status_to_mac80211(status);
+ 	iwlagn_hwrate_to_tx_control(priv, le32_to_cpu(tx_resp->rate_n_flags),
+ 				    info);
+@@ -1231,7 +1228,7 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			if (is_agg && !iwl_is_tx_success(status))
+ 				info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
+ 			iwlagn_set_tx_status(priv, IEEE80211_SKB_CB(skb),
+-				     tx_resp, is_agg);
++				     tx_resp);
+ 			if (!is_agg)
+ 				iwlagn_non_agg_tx_status(priv, ctx, hdr->addr1);
+ 
+-- 
+1.8.0
+
