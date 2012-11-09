@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nk11p00mm-asmtp007.mac.com ([17.158.161.6]:58332 "EHLO
-	nk11p00mm-asmtp007.mac.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753976Ab2KIAhA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54708 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753079Ab2KITtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 19:37:00 -0500
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII; format=flowed
-Received: from [10.20.200.168]
- (p3027-ipbf5206marunouchi.tokyo.ocn.ne.jp [118.8.142.27])
- by nk11p00mm-asmtp007.mac.com
- (Oracle Communications Messaging Server 7u4-26.01(7.0.4.26.0) 64bit (built Jul
- 13 2012)) with ESMTPSA id <0MD700B3R31LXS70@nk11p00mm-asmtp007.mac.com> for
- linux-wireless@vger.kernel.org; Fri, 09 Nov 2012 00:37:00 +0000 (GMT)
-Message-id: <509C5019.3040002@mac.com> (sfid-20121109_013716_037960_CAB34406)
-Date: Fri, 09 Nov 2012 09:36:41 +0900
-From: Akira Nonaka <nonaka@mac.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: "mac80211.ko" and "cfg80211.ko" compatibility issue.
-References: <509B73D5.5000206@mac.com>
- <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com>
- <9983E05C-2103-49C8-A675-4F5368F53FB5@mac.com>
- <CAGRGNgXj2rkiHw1D4HqRCyX6yJCDq75k1KtS0OR+t4En+wa_jA@mail.gmail.com>
- <509BD6F3.2000807@lwfinger.net>
-In-reply-to: <509BD6F3.2000807@lwfinger.net>
+	Fri, 9 Nov 2012 14:49:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] iwlwifi: use ieee80211_free_txskb
+Date: Fri,  9 Nov 2012 20:49:43 +0100
+Message-Id: <1352490583-28609-2-git-send-email-johannes@sipsolutions.net> (sfid-20121109_204913_789591_EF73D75C)
+In-Reply-To: <1352490583-28609-1-git-send-email-johannes@sipsolutions.net>
+References: <1352490162.9238.23.camel@jlt4.sipsolutions.net>
+ <1352490583-28609-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian, Larry
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thank you for your advise. I will consider taking your suggestion.
+To let mac80211 clean up any TX information when
+a frame is dropped, use ieee80211_free_txskb().
 
-Akira
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c | 2 +-
+ drivers/net/wireless/iwlwifi/dvm/main.c     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-
-(2012/11/09 0:59), Larry Finger wrote:
-> On 11/08/2012 06:20 AM, Julian Calaby wrote:
->> Hi Nonaka,
->>
->> On Thu, Nov 8, 2012 at 10:33 PM, Nonaka Akira <nonaka@mac.com> wrote:
->>> Hi Julian,
->>>
->>> Well, We consider the option of using the entire compat-wireless
->>> drivers. However, we are planning the minor update of our product
->>> toward the end of the year and I thought it will be nice if I can
->>> keep the change minimum.
->>
->> In general, the drivers in compat-wireless are more stable and have
->> more features than the versions in older kernels. (it is a back-port
->> of newer wireless drivers after all)
->>
->> I would expect that you'll spend more time working out a solution to
->> use it for a single driver than you'd spend testing it on the hardware
->> you intend to support.
->
-> I agree. If you want to change only rtl8723ae, then you will need to
-> backport it to kernel 3.4.9 yourself. I have no idea how much work that
-> would be, but I have no interest in doing it.
->
-> Larry
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index ff8162d..fa4d1b8 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -521,7 +521,7 @@ static void iwlagn_mac_tx(struct ieee80211_hw *hw,
+ 		     ieee80211_get_tx_rate(hw, IEEE80211_SKB_CB(skb))->bitrate);
+ 
+ 	if (iwlagn_tx_skb(priv, control->sta, skb))
+-		dev_kfree_skb_any(skb);
++		ieee80211_free_txskb(hw, skb);
+ }
+ 
+ static void iwlagn_mac_update_tkip_key(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index 7ff3f14..408132c 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -2114,7 +2114,7 @@ static void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+ 	iwl_trans_free_tx_cmd(priv->trans, info->driver_data[1]);
+-	dev_kfree_skb_any(skb);
++	ieee80211_free_txskb(priv->hw, skb);
+ }
+ 
+ static void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
 -- 
-Akira Nonaka
+1.8.0
+
