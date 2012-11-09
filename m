@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:60308 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751720Ab2K1KIQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54767 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755724Ab2KIUJI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 05:08:16 -0500
-Received: by mail-vc0-f174.google.com with SMTP id m18so9961310vcm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 02:08:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1354094932-15703-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1354031236-8191-1-git-send-email-helmut.schaa@googlemail.com>
-	<1354094932-15703-1-git-send-email-helmut.schaa@googlemail.com>
-Date: Wed, 28 Nov 2012 11:08:15 +0100
-Message-ID: <CAOZOX0W6PbrsbvsYWaTS7XP3=c4DTYLR2c8ODFr0ndKuTx9P-A@mail.gmail.com> (sfid-20121128_110820_059963_2681D20B)
-Subject: Re: [PATCHv2] rt2x00: Use addr_mask to disallow invalid MAC addresses
- in mutli-bssid mode
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 9 Nov 2012 15:09:08 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 11/13] iwlwifi: remove useless messages
+Date: Fri,  9 Nov 2012 21:08:10 +0100
+Message-Id: <1352491692-28994-12-git-send-email-johannes@sipsolutions.net> (sfid-20121109_210913_440988_1BAFFA0F)
+In-Reply-To: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
+References: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Reported-by: Petr Stetiar <ynezz@true.cz>
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+There's no need to print the PCI resource
+length and base address, nor the hardware
+revision ID (which can be found in lspci)
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 69097d1..f9d9754 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -1182,6 +1182,13 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
->         rt2x00dev->hw->vif_data_size = sizeof(struct rt2x00_intf);
->
->         /*
-> +        * rt2x00 devices can only use the last n bits of the MAC address
-> +        * for virtual interfaces.
-> +        */
-> +       rt2x00dev->hw->wiphy->addr_mask[ETH_ALEN - 1] =
-> +               (rt2x00dev->ops->max_ap_intf - 1);
-> +
-> +       /*
->          * Determine which operating modes are supported, all modes
->          * which require beaconing, depend on the availability of
->          * beacon entries.
-> --
-> 1.7.7
->
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 0703da8..74d4c79 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -2176,15 +2176,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		goto out_pci_release_regions;
+ 	}
+ 
+-	dev_printk(KERN_INFO, &pdev->dev,
+-		   "pci_resource_len = 0x%08llx\n",
+-		   (unsigned long long) pci_resource_len(pdev, 0));
+-	dev_printk(KERN_INFO, &pdev->dev,
+-		   "pci_resource_base = %p\n", trans_pcie->hw_base);
+-
+-	dev_printk(KERN_INFO, &pdev->dev,
+-		   "HW Revision ID = 0x%X\n", pdev->revision);
+-
+ 	/* We disable the RETRY_TIMEOUT register (0x41) to keep
+ 	 * PCI Tx retries from interfering with C3 CPU state */
+ 	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
+-- 
+1.8.0
+
