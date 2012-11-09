@@ -1,80 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:51787 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886Ab2KTRoK (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:48326 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751565Ab2KIQOY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 12:44:10 -0500
-Message-ID: <50ABC168.8080904@monom.org> (sfid-20121120_184414_707020_199934C3)
-Date: Tue, 20 Nov 2012 18:44:08 +0100
-From: Daniel Wagner <wagi@monom.org>
+	Fri, 9 Nov 2012 11:14:24 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k13so6123163iea.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2012 08:14:23 -0800 (PST)
+Message-ID: <509D2BDC.7070805@lwfinger.net> (sfid-20121109_171427_280192_D2D7CC35)
+Date: Fri, 09 Nov 2012 10:14:20 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
- support
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com> <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org> <20121120142822.GA26602@thinkpad-t410>
-In-Reply-To: <20121120142822.GA26602@thinkpad-t410>
+To: Johannes Berg <johannes@sipsolutions.net>, lrodriguez@atheros.com
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Richie Gress <searchfgold67899@live.com>
+Subject: Problem with regulatory info
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Seth,
+Johannes and Luis,
 
-On 20.11.2012 15:28, Seth Forshee wrote:
-> On Tue, Nov 20, 2012 at 08:30:10AM +0100, Daniel Wagner wrote:
->> Hi Seth,
->>
->> On 19.11.2012 20:11, Daniel Wagner wrote:
->>> Works perfectly fine on my machine.
->>
->> Well, not really true. Though I am not sure if this what I am seeing
->> related to your changes. I see following log only when I am using my
->> home AP. The pattern is that when the connection stop working I see
->> something like this in the log:
->>
->> [ 8735.159091] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 4
->> [ 8735.197298] wlan0: Rx A-MPDU request on tid 0 result 0
->> [ 8735.566368] wlan0: Open BA session requested for 1c:c6:3c:1f:50:68 tid 0
->> [ 8735.573701] wlan0: activated addBA response timer on tid 0
->> [ 8735.578826] wlan0: switched off addBA timer for tid 0
->> [ 8735.578834] wlan0: Aggregation is on for tid 0
->> [ 8749.687530] wlan0: tx session timer expired on tid 0
->> [ 8749.687558] wlan0: Tx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0
->> [ 8749.700550] wlan0: Stopping Tx BA session for 1c:c6:3c:1f:50:68 tid 0
->>
->>
->> This is what I do: First establishing a connection, then after a while any
->> traffic seems stops for a period and sometimes it recovers from that point. If
->> not a disconnect/connect (using ConnMan) dance fixes the problem.
->
-> The tx session timer expiring is a result of not having any aggregate
-> transfers in a while. In my testing with iperf I see periods where the
-> transfer seems to stall, but it always recovers. These are less frequent
-> after my patches, but they still happen, and I haven't been able to work
-> out the cause yet. I'm not sure whether these are related to what you're
-> seeing or not.
->
-> Luckily I've added a bunch of new debug code. Could you make sure you
-> have MAC80211_MESSAGE_TRACING and BRCM_TRACING enabled in your config
-> and collect a trace when this is happening by running:
->
->   trace-cmd record -e mac80211 -e mac80211_msg -e brcmsmac \
->          -e brcmsmac_tx -e brcmsmac_msg
->
-> This going to collect a lot of data, and you should bump up the trace
-> buffer size to avoid overruns. Once you've got a trace please compress
-> trace.dat and put it along with your dmesg somewhere where I can get at
-> them.
+I hope you can help me with a problem that is reported in 
+https://bugzilla.kernel.org/show_bug.cgi?id=46171.
 
-I hope I got it right. Here are the requested logs:
+The OP is unable to connect using rtl8192cu, and the only thing I see in the 
+logs is that for each regulatory rule, cfg80211 reports
 
-http://www.monom.org/misc/brcmsmac/traces/
+[10930.963561] cfg80211: Disabling freq 2484 MHz as custom regd has no rule
+that fits a 20 MHz wide channel
 
-thanks,
-daniel
+Later in the log, cfg80211 then reports
+
+[10931.038857] cfg80211: Ignoring regulatory request Set by core since the
+driver uses its own custom regulatory domain.
+
+Do you have any ideas on where this "custom regd" is coming from? The OP has 
+installed the normal crda package on his Ubuntu/Linaro 4.6.3-1ubuntu5 system 
+using kernel 3.6.
+
+Thanks,
+
+Larry
