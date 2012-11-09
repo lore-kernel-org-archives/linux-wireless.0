@@ -1,113 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53295 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753234Ab2KTUy0 (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:37704 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754678Ab2KIRGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 15:54:26 -0500
-Date: Tue, 20 Nov 2012 14:54:18 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Daniel Wagner <wagi@monom.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
- support
-Message-ID: <20121120205418.GB26602@thinkpad-t410> (sfid-20121120_215432_956963_73CF771C)
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <50AA845C.2050809@monom.org>
- <50AB3182.5040505@monom.org>
- <20121120142822.GA26602@thinkpad-t410>
- <50ABC168.8080904@monom.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50ABC168.8080904@monom.org>
+	Fri, 9 Nov 2012 12:06:13 -0500
+Received: by mail-ee0-f46.google.com with SMTP id b15so2295900eek.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2012 09:06:12 -0800 (PST)
+From: Bernhard Urban <lewurm@gmail.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	c_manoha@qca.qualcomm.com, Sujith.Manoharan@atheros.com,
+	linville@tuxdriver.com
+Cc: markus@indoo.rs, lewurm@gmail.com
+Subject: [PATCH] ath9k_htc: update RSSI values only when the device is associated
+Date: Fri,  9 Nov 2012 18:09:26 +0100
+Message-Id: <1352480966-17462-1-git-send-email-lewurm@gmail.com> (sfid-20121109_180617_690815_9769C15B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 20, 2012 at 06:44:08PM +0100, Daniel Wagner wrote:
-> Hi Seth,
-> 
-> On 20.11.2012 15:28, Seth Forshee wrote:
-> >On Tue, Nov 20, 2012 at 08:30:10AM +0100, Daniel Wagner wrote:
-> >>Hi Seth,
-> >>
-> >>On 19.11.2012 20:11, Daniel Wagner wrote:
-> >>>Works perfectly fine on my machine.
-> >>
-> >>Well, not really true. Though I am not sure if this what I am seeing
-> >>related to your changes. I see following log only when I am using my
-> >>home AP. The pattern is that when the connection stop working I see
-> >>something like this in the log:
-> >>
-> >>[ 8735.159091] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 4
-> >>[ 8735.197298] wlan0: Rx A-MPDU request on tid 0 result 0
-> >>[ 8735.566368] wlan0: Open BA session requested for 1c:c6:3c:1f:50:68 tid 0
-> >>[ 8735.573701] wlan0: activated addBA response timer on tid 0
-> >>[ 8735.578826] wlan0: switched off addBA timer for tid 0
-> >>[ 8735.578834] wlan0: Aggregation is on for tid 0
-> >>[ 8749.687530] wlan0: tx session timer expired on tid 0
-> >>[ 8749.687558] wlan0: Tx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0
-> >>[ 8749.700550] wlan0: Stopping Tx BA session for 1c:c6:3c:1f:50:68 tid 0
-> >>
-> >>
-> >>This is what I do: First establishing a connection, then after a while any
-> >>traffic seems stops for a period and sometimes it recovers from that point. If
-> >>not a disconnect/connect (using ConnMan) dance fixes the problem.
-> >
-> >The tx session timer expiring is a result of not having any aggregate
-> >transfers in a while. In my testing with iperf I see periods where the
-> >transfer seems to stall, but it always recovers. These are less frequent
-> >after my patches, but they still happen, and I haven't been able to work
-> >out the cause yet. I'm not sure whether these are related to what you're
-> >seeing or not.
-> >
-> >Luckily I've added a bunch of new debug code. Could you make sure you
-> >have MAC80211_MESSAGE_TRACING and BRCM_TRACING enabled in your config
-> >and collect a trace when this is happening by running:
-> >
-> >  trace-cmd record -e mac80211 -e mac80211_msg -e brcmsmac \
-> >         -e brcmsmac_tx -e brcmsmac_msg
-> >
-> >This going to collect a lot of data, and you should bump up the trace
-> >buffer size to avoid overruns. Once you've got a trace please compress
-> >trace.dat and put it along with your dmesg somewhere where I can get at
-> >them.
-> 
-> I hope I got it right. Here are the requested logs:
-> 
-> http://www.monom.org/misc/brcmsmac/traces/
+add an if-guard, otherwise iw(8) reports weird signal strengths.
 
-Looks like you got it right. The period you traced doesn't seem to cover
-any of the block ack session timeouts, but I do see this:
+The behaviour was fine before this commit:
+7c277349ecbd66e19fad3d949fa6ef6c131a3b62
+This patch is therefore a partially revert of it.
 
-[  225.269777] wlan0: release an RX reorder frame due to timeout on earlier frames
-[  243.869220] wlan0: unexpected AddBA Req from 1c:c6:3c:1f:50:68 on tid 0
-[  243.869233] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 32
-[  243.869250] wlan0: Rx A-MPDU request on tid 0 result 0
-[  252.254013] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: Pkt tx suppressed, illegal channel possibly 13
-<snip repeated messages>
-[  259.798966] wlan0: release an RX reorder frame due to timeout on earlier frames
-<snip repeated messages>
-[  265.193640] wlan0: unexpected AddBA Req from 1c:c6:3c:1f:50:68 on tid 0
-[  265.193648] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 32
-[  265.193663] wlan0: Rx A-MPDU request on tid 0 result 0
+Tested with "TP-Link TL-WN722N"
 
-Does something in this time frame correspond to your loss in
-connectivity? The number of packets being sent and received varies some
-throughout the trace but generally stays pretty low. It never completely
-stops though.
+Thanks to indoo.rs http://indoo.rs/ for sponsoring
 
-Other than the messages above I don't notice any obvious problems. If
-you can pinpoint exactly what range of timestamps corresponds to your
-problems I can look a bit closer.
+Reported-by: Markus Krainz <markus@indoo.rs>
+Tested-by: Markus Krainz <markus@indoo.rs>
+Signed-off-by: Bernhard Urban <lewurm@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   27 ++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
-Is this a regression introduced by these patches, or was the connection
-with this AP also not working well without them?
-
-Thanks,
-Seth
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 47e61d0..d0d329c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -1060,22 +1060,25 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
+ 			   rxbuf->rxstatus.rs_flags);
+ 
+-	if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
+-	    !rxbuf->rxstatus.rs_moreaggr)
+-		ATH_RSSI_LPF(priv->rx.last_rssi,
+-			     rxbuf->rxstatus.rs_rssi);
++	if (priv->num_sta_assoc_vif != 0) {
++		if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
++		    !rxbuf->rxstatus.rs_moreaggr)
++			ATH_RSSI_LPF(priv->rx.last_rssi,
++				     rxbuf->rxstatus.rs_rssi);
+ 
+-	last_rssi = priv->rx.last_rssi;
++		last_rssi = priv->rx.last_rssi;
+ 
+-	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
+-						     ATH_RSSI_EP_MULTIPLIER);
++		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER)) {
++			s8 rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
++			rxbuf->rxstatus.rs_rssi = rssi;
++		}
+ 
+-	if (rxbuf->rxstatus.rs_rssi < 0)
+-		rxbuf->rxstatus.rs_rssi = 0;
++		if (rxbuf->rxstatus.rs_rssi < 0)
++			rxbuf->rxstatus.rs_rssi = 0;
+ 
+-	if (ieee80211_is_beacon(fc))
+-		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
++		if (ieee80211_is_beacon(fc))
++			priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
++	}
+ 
+ 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
+-- 
+1.7.9.5
 
