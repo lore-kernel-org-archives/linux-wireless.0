@@ -1,76 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:34674 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752070Ab2K3IL0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54818 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754333Ab2KIURA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 03:11:26 -0500
-Message-ID: <50B86A28.9090509@posedge.com> (sfid-20121130_091129_103872_F8BDF649)
-Date: Fri, 30 Nov 2012 13:41:20 +0530
-From: Saravana <saravanad@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: add debugfs file for mic failure
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 9 Nov 2012 15:17:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 2/8] nl80211: add documentation for channel type
+Date: Fri,  9 Nov 2012 21:17:28 +0100
+Message-Id: <1352492254-29399-3-git-send-email-johannes@sipsolutions.net> (sfid-20121109_211706_518353_BAEC1468)
+In-Reply-To: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
+References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add a debugfs file showing the number of dropped
-rx packet due to mic failures. currently the
-number of rx packet dropped is counted in general and
-not with respect to a specific reason. This patch
-counts the number of packet drop due to mic failure.
-
-Signed-off-by: Saravana <saravanad@posedge.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/debugfs_sta.c |    1 +
- net/mac80211/sta_info.h    |    3 +++
- net/mac80211/wpa.c         |    1 +
- 3 files changed, 5 insertions(+), 0 deletions(-)
+ include/uapi/linux/nl80211.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 49a1c70..dcdbc2c 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -413,6 +413,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD_COUNTER(rx_duplicates, num_duplicates);
- 	DEBUGFS_ADD_COUNTER(rx_fragments, rx_fragments);
- 	DEBUGFS_ADD_COUNTER(rx_dropped, rx_dropped);
-+	DEBUGFS_ADD_COUNTER(rx_dropped_mic_failure, rx_dropped_mic_failure);
- 	DEBUGFS_ADD_COUNTER(tx_fragments, tx_fragments);
- 	DEBUGFS_ADD_COUNTER(tx_filtered, tx_filtered_count);
- 	DEBUGFS_ADD_COUNTER(tx_retry_failed, tx_retry_failed);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 1489bca..a0c2165 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -248,6 +248,8 @@ struct sta_ampdu_mlme {
-  * @num_duplicates: number of duplicate frames received from this STA
-  * @rx_fragments: number of received MPDUs
-  * @rx_dropped: number of dropped MPDUs from this STA
-+ * @rx_dropped_mic_failure: number of dropped MPDUs
-+ *	due to mic failure from this STA
-  * @last_signal: signal of last received frame from this STA
-  * @avg_signal: moving average of signal of received frames from this STA
-  * @last_ack_signal: signal of last received Ack frame from this STA
-@@ -328,6 +330,7 @@ struct sta_info {
- 	unsigned long num_duplicates;
- 	unsigned long rx_fragments;
- 	unsigned long rx_dropped;
-+	unsigned long rx_dropped_mic_failure;
- 	int last_signal;
- 	struct ewma avg_signal;
- 	int last_ack_signal;
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 8bd2f5c..960403e 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -166,6 +166,7 @@ mic_fail:
- 	 * a driver that supports HW encryption. Send up the key idx only if
- 	 * the key is set.
- 	 */
-+	rx->sta->rx_dropped_mic_failure++;
- 	mac80211_ev_michael_mic_failure(rx->sdata,
- 					rx->key ? rx->key->conf.keyidx : -1,
- 					(void *) skb->data, NULL, GFP_ATOMIC);
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index d33d780..ac5c446 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2436,6 +2436,15 @@ enum nl80211_ac {
+ #define NL80211_TXQ_Q_BE	NL80211_AC_BE
+ #define NL80211_TXQ_Q_BK	NL80211_AC_BK
+ 
++/**
++ * enum nl80211_channel_type - channel type
++ * @NL80211_CHAN_NO_HT: 20 MHz, non-HT channel
++ * @NL80211_CHAN_HT20: 20 MHz HT channel
++ * @NL80211_CHAN_HT40MINUS: HT40 channel, secondary channel
++ *	below the control channel
++ * @NL80211_CHAN_HT40PLUS: HT40 channel, secondary channel
++ *	below the control channel
++ */
+ enum nl80211_channel_type {
+ 	NL80211_CHAN_NO_HT,
+ 	NL80211_CHAN_HT20,
+-- 
+1.8.0
+
