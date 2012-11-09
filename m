@@ -1,40 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:53827 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756670Ab2KHUwj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 15:52:39 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "Shen, Jackey" <Jackey.Shen@amd.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 8 Nov 2012 12:52:30 -0800
-Subject: RE: Marvell Avastar 88W8797 firmware
-Message-ID: <477F20668A386D41ADCC57781B1F7043083BBD6CA7@SC-VEXCH1.marvell.com> (sfid-20121108_215252_488985_F1712479)
-References: <0C8FBB70FF40A94D98BE847F9C171A98033D23B0@SCYBEXDAG02.amd.com>
-In-Reply-To: <0C8FBB70FF40A94D98BE847F9C171A98033D23B0@SCYBEXDAG02.amd.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:54621 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753272Ab2KITTa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Nov 2012 14:19:30 -0500
+Message-ID: <1352488806.9238.18.camel@jlt4.sipsolutions.net> (sfid-20121109_201938_091732_1097B0F0)
+Subject: Re: [PATCHv2] iw: print the ssid when requesting device info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 09 Nov 2012 20:20:06 +0100
+In-Reply-To: <1352486813-26168-1-git-send-email-ordex@autistici.org>
+References: <1352468278-30931-1-git-send-email-ordex@autistici.org>
+	 <1352486813-26168-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jackey,
+On Fri, 2012-11-09 at 19:46 +0100, Antonio Quartulli wrote:
+> The GET_INTERFACE command receives also the ssid as part of the reply.
+> This patch makes iw print the ssid together with the other information
+> when issuing the "iw dev $vif info" command.
 
-> Hi Bing,
-> 
-> Where can I download sd8797_uapsta.bin and usb8797_uapsta.bin?
+Applied.
 
-If you have a rev B0 SD8797 card, you can get sd8797_uapsta.bin firmware image here:
-
-git://git.marvell.com/mwifiex-firmware.git
-http://git.marvell.com/?p=mwifiex-firmware.git;a=summary
-
-USB8797 firmware image has not been posted to upstream yet.
-
-> 
-> I read "Avastar 88W8797 SoC Product Brief", and want to know how to > select SDIO interface as Host interface described at section " HOST > INTERFACES" in this doc? Now I can use USB interface to surfing the > internet.
-
-Please get help from customer support personnel or the person who supplied the 8797 hardware.
-
-Thanks,
-Bing
+johannes
 
