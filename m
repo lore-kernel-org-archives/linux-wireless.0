@@ -1,83 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-1.exch022.serverdata.net ([206.225.164.184]:35145
-	"EHLO HUB022-nj-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751513Ab2KTI1U (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53925 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753464Ab2KIQbh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 03:27:20 -0500
-Message-ID: <50AB3EE1.8060101@posedge.com> (sfid-20121120_092723_138464_29CC8935)
-Date: Tue, 20 Nov 2012 13:57:13 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [RFC v2 4/8] nl80211/cfg80211: support VHT channel configuration
-References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net> <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Fri, 9 Nov 2012 11:31:37 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TWrUW-0000CO-Tr
+	for linux-wireless@vger.kernel.org; Fri, 09 Nov 2012 17:31:37 +0100
+Message-ID: <1352478734.9238.16.camel@jlt4.sipsolutions.net> (sfid-20121109_173140_285725_C0E032A6)
+Subject: Re: [PATCH] mac80211: don't send null data packet when not
+ associated
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 09 Nov 2012 17:32:14 +0100
+In-Reply-To: <1352380122-18384-1-git-send-email-johannes@sipsolutions.net> (sfid-20121108_140826_775231_430ADDB3)
+References: <1352380122-18384-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121108_140826_775231_430ADDB3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/2012 01:47 AM, Johannes Berg wrote:
+On Thu, 2012-11-08 at 14:08 +0100, Johannes Berg wrote:
 > From: Johannes Berg <johannes.berg@intel.com>
+> 
+> On resume or firmware recovery, mac80211 sends a null
+> data packet to see if the AP is still around and hasn't
+> disconnected us. However, it always does this even if
+> it wasn't even connected before, leading to a warning
+> in the new channel context code. Fix this by checking
+> that it's associated.
+> 
+> Change-Id: I8b77a0b3d3ece9ed509b688711c43aeb5be74348
 
-> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+Applied, but I deleted the stupid change-id and added a Cc stable tag
+instead :)
 
-> +static bool cfg80211_check_beacon_chans(struct wiphy *wiphy,
-> +					u32 center_freq, u32 bw)
-> +{
-> +	struct ieee80211_channel *c;
-> +	u32 freq;
-> +
-> +	for (freq = center_freq - bw/2 + 10;
-> +	     freq <= center_freq + bw/2 - 10;
-> +	     freq += 20) {
-> +		c = ieee80211_get_channel(wiphy, freq);
-> +		if (!c || c->flags & (IEEE80211_CHAN_DISABLED |
-> +				      IEEE80211_CHAN_PASSIVE_SCAN |
-> +				      IEEE80211_CHAN_NO_IBSS |
-> +				      IEEE80211_CHAN_RADAR))
-> +			return false;
->   	}
->
-> -	sec_chan = ieee80211_get_channel(wiphy,
-> -					 chandef->chan->center_freq + diff);
-> -	if (!sec_chan) {
-> +	return true;
-> +}
+johannes
 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-
-> +static int nl80211_check_sec_chans(struct cfg80211_registered_device *rdev,
-> +				   u32 center_freq, u32 bw)
->   {
-> -	enum nl80211_channel_type tmp;
-> -
-> -	if (!info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE])
-> -		return false;
-> +	struct ieee80211_channel *c;
-> +	u32 freq;
->
-> -	tmp = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
-> -	if (tmp != NL80211_CHAN_NO_HT &&
-> -	    tmp != NL80211_CHAN_HT20 &&
-> -	    tmp != NL80211_CHAN_HT40PLUS &&
-> -	    tmp != NL80211_CHAN_HT40MINUS)
-> -		return false;
-> -
-> -	if (channel_type)
-> -		*channel_type = tmp;
-> +	for (freq = center_freq - bw/2 + 10;
-> +	     freq <= center_freq + bw/2 - 10;
-> +	     freq += 20) {
-> +		c = ieee80211_get_channel(&rdev->wiphy, freq);
-> +		if (!c || c->flags & IEEE80211_CHAN_DISABLED)
-> +			return -EINVAL;
-> +	}
->
-> -	return true;
-> +	return 0;
->   }
-
-For loops in both functions seems to be similar. One return false, other 
-return -EINVAL. Can we remove duplication?
