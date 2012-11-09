@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52867 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751303Ab2K2W1f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 17:27:35 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	ath9k-devel@lists.ath9k.org, Larry.Finger@lwfinger.net,
-	chunkeey@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/3] wireless: use SIMPLE_DEV_PM_OPS
-Date: Thu, 29 Nov 2012 23:27:14 +0100
-Message-Id: <1354228037-1700-1-git-send-email-hauke@hauke-m.de> (sfid-20121129_232738_714276_41B2D363)
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:33730 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752541Ab2KIEzw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Nov 2012 23:55:52 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 08 Nov 2012 20:46:55 -0800
+From: vivekanandah@posedge.com
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>
+Subject: requesting information for HT operation element and VHT operation
+ element
+Message-ID: <362fd28317fd4b767f750ca5ba40cf51@posedge.com> (sfid-20121109_055605_080944_575BF6F6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of filling struct dev_pm_ops manually use SIMPLE_DEV_PM_OPS.
-This will also make backport in compat-drivers more easily.
+hi,
 
-Hauke Mehrtens (3):
-  ath9k: use SIMPLE_DEV_PM_OPS
-  p54pci: use SIMPLE_DEV_PM_OPS
-  rtlwifi: use SIMPLE_DEV_PM_OPS
+i am vivek and i was looking through the ieee80211_sta structure.
+The HT operation element is not a part of the ieee80211_sta. some of 
+the parameters like HT protection bit in the HT operation element might 
+be relevant for driver use.
 
- drivers/net/wireless/ath/ath9k/pci.c        |   15 ++++-----------
- drivers/net/wireless/p54/p54pci.c           |   13 +++----------
- drivers/net/wireless/rtlwifi/pci.c          |    2 ++
- drivers/net/wireless/rtlwifi/pci.h          |    2 ++
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c |    9 +--------
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c |    9 +--------
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    9 +--------
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.c |    9 +--------
- 8 files changed, 15 insertions(+), 53 deletions(-)
+Also, when 11ac is incorporated, some settings such as channel width in 
+the VHT operation element may be relevant for the driver use.
 
--- 
-1.7.10.4
+should ieee80211_sta structure contain the operation elements for HT 
+now and also for VHT later?
+
+can some one kindly help in throwing more light on the matter ?
+
+thanks in advance
+best regards
+Vivek
 
