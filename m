@@ -1,44 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:65056 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865Ab2KSQjo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54710 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753272Ab2KITtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 11:39:44 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so1209576eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:43 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/15] wlcore: get channel from bss_conf instead of hw->conf
-Date: Mon, 19 Nov 2012 18:39:22 +0200
-Message-Id: <1353343170-26516-8-git-send-email-eliad@wizery.com> (sfid-20121119_173951_029276_5B8956F9)
-In-Reply-To: <1353343170-26516-1-git-send-email-eliad@wizery.com>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	Fri, 9 Nov 2012 14:49:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] iwlwifi: handle DMA mapping failures
+Date: Fri,  9 Nov 2012 20:49:42 +0100
+Message-Id: <1352490583-28609-1-git-send-email-johannes@sipsolutions.net> (sfid-20121109_204915_152301_43A79040)
+In-Reply-To: <1352490162.9238.23.camel@jlt4.sipsolutions.net>
+References: <1352490162.9238.23.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We care only about the operational channel, not
-about the temporal hw channel (which won't have
-any real meaning in multi-channel env anyway)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+The RX replenish code doesn't handle DMA mapping failures,
+which will cause issues if there actually is a failure. This
+was reported by Shuah Khan who found a DMA mapping framework
+warning ("device driver failed to check map error").
+
+Cc: stable@vger.kernel.org
+Reported-by: Shuah Khan <shuah.khan@hp.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index ef299f9..4f4a9e5 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3833,7 +3833,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			goto sta_not_found;
- 
- 		/* save the supp_rates of the ap */
--		sta_rate_set = sta->supp_rates[wl->hw->conf.channel->band];
-+		sta_rate_set = sta->supp_rates[wlvif->band];
- 		if (sta->ht_cap.ht_supported)
- 			sta_rate_set |=
- 			  (sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET) |
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 17c8e5d..bb69f8f 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -321,6 +321,14 @@ static void iwl_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+ 			dma_map_page(trans->dev, page, 0,
+ 				     PAGE_SIZE << trans_pcie->rx_page_order,
+ 				     DMA_FROM_DEVICE);
++		if (dma_mapping_error(trans->dev, rxb->page_dma)) {
++			rxb->page = NULL;
++			spin_lock_irqsave(&rxq->lock, flags);
++			list_add(&rxb->list, &rxq->rx_used);
++			spin_unlock_irqrestore(&rxq->lock, flags);
++			__free_pages(page, trans_pcie->rx_page_order);
++			return;
++		}
+ 		/* dma address must be no more than 36 bits */
+ 		BUG_ON(rxb->page_dma & ~DMA_BIT_MASK(36));
+ 		/* and also 256 byte aligned! */
+@@ -488,8 +496,19 @@ static void iwl_rx_handle_rxbuf(struct iwl_trans *trans,
+ 			dma_map_page(trans->dev, rxb->page, 0,
+ 				     PAGE_SIZE << trans_pcie->rx_page_order,
+ 				     DMA_FROM_DEVICE);
+-		list_add_tail(&rxb->list, &rxq->rx_free);
+-		rxq->free_count++;
++		if (dma_mapping_error(trans->dev, rxb->page_dma)) {
++			/*
++			 * free the page(s) as well to not break
++			 * the invariant that the items on the used
++			 * list have no page(s)
++			 */
++			__free_pages(rxb->page, trans_pcie->rx_page_order);
++			rxb->page = NULL;
++			list_add_tail(&rxb->list, &rxq->rx_used);
++		} else {
++			list_add_tail(&rxb->list, &rxq->rx_free);
++			rxq->free_count++;
++		}
+ 	} else
+ 		list_add_tail(&rxb->list, &rxq->rx_used);
+ 	spin_unlock_irqrestore(&rxq->lock, flags);
 -- 
-1.7.6.401.g6a319
+1.8.0
 
