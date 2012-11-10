@@ -1,60 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:44967 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753675Ab2KPVk2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 16:40:28 -0500
-Date: Sat, 17 Nov 2012 05:39:42 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, Franky Lin <frankyl@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [wireless-next:master 170/188]
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c:485
- brcmf_fweh_process_event() error: potential null dereference 'event'.
-  (kzalloc returns null)
-Message-ID: <50a6b29e.UIxFHk2yaJaNALNe%fengguang.wu@intel.com> (sfid-20121116_224031_397506_3CA0A197)
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:60321 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751429Ab2KJSYb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Nov 2012 13:24:31 -0500
+Date: Sat, 10 Nov 2012 19:24:27 +0100
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2012-11-09
+Message-ID: <20121110182427.GA7523@joana> (sfid-20121110_192459_153601_93E893E9)
+References: <20121012110142.GF10739@joana>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GvXjxJ+pjyke8COw"
+In-Reply-To: <20121012110142.GF10739@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
-head:   57527f8d4d71b5167a02fb6713857f55d3974748
-commit: 607d5c0ef6c4d3a2e7a61ba1b62baa0712366bc0 [170/188] brcmfmac: correct handling IF firmware event
 
+--GvXjxJ+pjyke8COw
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-smatch warnings:
+Hi John,
 
-+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c:485 brcmf_fweh_process_event() error: potential null dereference 'event'.  (kzalloc returns null)
+A few important fixes to go into 3.7. There is a new hw support by Marcos
+Chaparro. Johan added a memory leak fix and hci device index list fix.
+Also Marcel fixed a race condition in the device set up that was prevent the
+bt monitor to work properly. Last, Paulo S=E9rgio added a fix to the error
+status when pairing for LE fails. This was prevent userspace to work to han=
+dle
+the failure properly.
 
-vim +485 +/event drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+Please pull! or let me know of any issues. Thanks.
 
-607d5c0e Arend van Spriel 2012-11-14  469  	/* get event info */
-5c36b99a Arend van Spriel 2012-11-14  470  	code = get_unaligned_be32(&event_packet->msg.event_type);
-607d5c0e Arend van Spriel 2012-11-14  471  	datalen = get_unaligned_be32(&event_packet->msg.datalen);
-5c36b99a Arend van Spriel 2012-11-14  472  	*ifidx = event_packet->msg.ifidx;
-607d5c0e Arend van Spriel 2012-11-14  473  	data = &event_packet[1];
-607d5c0e Arend van Spriel 2012-11-14  474  
-607d5c0e Arend van Spriel 2012-11-14  475  	if (code != BRCMF_E_IF && !fweh->evt_handler[code]) {
-607d5c0e Arend van Spriel 2012-11-14  476  		brcmf_dbg(EVENT, "event ignored: code=%d\n", code);
-607d5c0e Arend van Spriel 2012-11-14  477  		brcmf_dbg_hex_dump(BRCMF_EVENT_ON(), data, datalen, "event:");
-607d5c0e Arend van Spriel 2012-11-14  478  		return;
-607d5c0e Arend van Spriel 2012-11-14  479  	}
-607d5c0e Arend van Spriel 2012-11-14  480  
-607d5c0e Arend van Spriel 2012-11-14  481  	if (in_interrupt())
-607d5c0e Arend van Spriel 2012-11-14  482  		alloc_flag = GFP_ATOMIC;
-607d5c0e Arend van Spriel 2012-11-14  483  
-607d5c0e Arend van Spriel 2012-11-14  484  	event = kzalloc(sizeof(*event) + datalen, alloc_flag);
-607d5c0e Arend van Spriel 2012-11-14 @485  	event->code = code;
-607d5c0e Arend van Spriel 2012-11-14  486  	event->ifidx = *ifidx;
-607d5c0e Arend van Spriel 2012-11-14  487  
-607d5c0e Arend van Spriel 2012-11-14  488  	/* use memcpy to get aligned event message */
-607d5c0e Arend van Spriel 2012-11-14  489  	memcpy(&event->emsg, &event_packet->msg, sizeof(event->emsg));
-607d5c0e Arend van Spriel 2012-11-14  490  	memcpy(event->data, data, datalen);
-607d5c0e Arend van Spriel 2012-11-14  491  	memcpy(event->ifaddr, event_packet->eth.h_dest, ETH_ALEN);
-5c36b99a Arend van Spriel 2012-11-14  492  
-607d5c0e Arend van Spriel 2012-11-14  493  	brcmf_fweh_queue_event(fweh, event);
+	Gustavo
 
 ---
-0-DAY kernel build testing backend         Open Source Technology Center
-Fengguang Wu, Yuanhan Liu                              Intel Corporation
+The following changes since commit 6fe7cc71bbf3a0bc28c9cec3c00bc11e81344412:
+
+  ath9k: Test for TID only in BlockAcks while checking tx status (2012-10-3=
+0 15:58:54 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+
+for you to fetch changes up to 482049f75750d73358e65236b933417b69f9cc25:
+
+  Bluetooth: Fix memory leak when removing a UUID (2012-11-09 16:45:37 +010=
+0)
+
+----------------------------------------------------------------
+Johan Hedberg (2):
+      Bluetooth: Fix having bogus entries in mgmt_read_index_list reply
+      Bluetooth: Fix memory leak when removing a UUID
+
+Marcel Holtmann (1):
+      Bluetooth: Notify about device registration before power on
+
+Marcos Chaparro (1):
+      Bluetooth: ath3k: Add support for VAIO VPCEH [0489:e027]
+
+Paulo S=E9rgio (1):
+      Bluetooth: Fix error status when pairing fails
+
+ drivers/bluetooth/ath3k.c |  1 +
+ drivers/bluetooth/btusb.c |  1 +
+ net/bluetooth/hci_core.c  |  4 ++--
+ net/bluetooth/mgmt.c      | 12 +++++++-----
+ net/bluetooth/smp.c       |  2 +-
+ 5 files changed, 12 insertions(+), 8 deletions(-)
+
+
+--GvXjxJ+pjyke8COw
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQnpvbAAoJEPs3PUX4s20oz2gP/1stWZnrYAP8XCuXv+9FYhwI
+i4CMHyR32Qf4QfSwaCMZXfoNFTMOPb8jXJKTTxslffEWMQ0DCPTQnga3FuQazhx5
+jFvU4DAe4F2SMJUuSfI03b+Mkp+AhoZAcle3zL3fjx0sJY0kzbbClwzMWL33jIVJ
+BCXAk8q56HII/8AcAlEgECqXbjVT6yDgxapHWzIMcUH46hta2pqxhS7/hYKPRWrB
+1JRAkSLpi6xXd4pMk2pqt8a/bW8s0UCh200O9VY6Pmo/H/cVnOphZCLBuRcIbqUm
+oGBxhtRVaVyokcvy2ayXem/uzM57eiHFSzx5T0mh8VonVwaS6YovBZUZZ86tCktW
+xZbHr8pspTpHrebMM1ofk91EsTzeHmL4wwPzOyzyPyBWm+rYN0uDKX6bXBu/aMk9
+R+6jTapeA/H/tDAec7mXUUuvmHqevIMVMTend54JI9fJE1B3EJjgySer3JCPXEEv
+2yeUVhhD40QmEg4admfQq5cMedcG/zRXfETsJo/UzKWZjmCa5Jh8SdRGKDfvRUkT
+RmKHT8cBaHrKi+2fmpE86Jj1Z4WD2CMssx3+aGJKsf0uWEWNs1hL17S0wojYEJnS
+B8KrkQ73oVzKYlqbm8SJtB+Z38X+CQcaGVy3H4NfzJ/zFs1f0wMAhxRMd5iNQW2Z
+/FEriSD7fTpUgwM/gcmW
+=BFkS
+-----END PGP SIGNATURE-----
+
+--GvXjxJ+pjyke8COw--
