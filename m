@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:9017 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800Ab2KNGaQ (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:34156 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474Ab2KJImh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 01:30:16 -0500
-Date: Wed, 14 Nov 2012 12:00:22 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_hw: Fix wrong peak detector DC offset
-Message-ID: <20121114063020.GA1170@hemis.qca.qualcomm.com> (sfid-20121114_073020_456671_E9D1F068)
-References: <1352452890-9512-1-git-send-email-rmanohar@qca.qualcomm.com>
- <20639.52359.988935.16158@gargle.gargle.HOWL>
+	Sat, 10 Nov 2012 03:42:37 -0500
+Received: by mail-pa0-f46.google.com with SMTP id hz1so3283717pad.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Nov 2012 00:42:37 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20639.52359.988935.16158@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20638.4969.882578.804342@gargle.gargle.HOWL> (sfid-20121110_094314_950443_6D17A3D2)
+Date: Sat, 10 Nov 2012 14:12:17 +0530
+To: Bernhard Urban <lewurm@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	c_manoha@qca.qualcomm.com, linville@tuxdriver.com, markus@indoo.rs
+Subject: [PATCH] ath9k_htc: update RSSI values only when the device is associated
+In-Reply-To: <1352480966-17462-1-git-send-email-lewurm@gmail.com>
+References: <1352480966-17462-1-git-send-email-lewurm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 11, 2012 at 09:34:23PM +0530, Sujith Manoharan wrote:
-> Rajkumar Manoharan wrote:
-> > diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-> > index 58f30f6..ccc42a7 100644
-> > --- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-> > +++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-> > @@ -78,7 +78,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
-> >  	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
-> >  	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
-> >  	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
-> > -	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
-> > +	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
-> >  	{0x0000a2d0, 0x00041981, 0x00041981, 0x00041981, 0x00041982},
-> >  	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
-> >  	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+Bernhard Urban wrote:
+> add an if-guard, otherwise iw(8) reports weird signal strengths.
 > 
-> Can you also update the initvals for AR9462 and AR9565 in the initvals tool ?
+> The behaviour was fine before this commit:
+> 7c277349ecbd66e19fad3d949fa6ef6c131a3b62
+> This patch is therefore a partially revert of it.
+> 
+> Tested with "TP-Link TL-WN722N"
 
-Roger that.
+Looks good, but a cleaner fix would be to update the RSSI only for
+beacons that are destined for the station.
 
--Rajkumar
+Sujith
