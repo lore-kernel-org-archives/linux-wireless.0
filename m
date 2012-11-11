@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:51536 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752798Ab2KLTc4 (ORCPT
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:36165
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753160Ab2KKQLS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 14:32:56 -0500
-Received: by mail-pa0-f46.google.com with SMTP id hz1so4504689pad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 11:32:56 -0800 (PST)
+	Sun, 11 Nov 2012 11:11:18 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <CAG6hwVPpivn=Z9F+552AueBptDU88hksQ0nzHkL7dWnx=d1M=w@mail.gmail.com>
-References: <1352746052-1828-1-git-send-email-thomas@cozybit.com>
-	<1352746052-1828-2-git-send-email-thomas@cozybit.com>
-	<CAJ-VmokQ19oSgw6UB616n-7r2YZ7Udmtoh-20MPBYDfx3VPo+A@mail.gmail.com>
-	<CAG6hwVPpivn=Z9F+552AueBptDU88hksQ0nzHkL7dWnx=d1M=w@mail.gmail.com>
-Date: Mon, 12 Nov 2012 11:32:56 -0800
-Message-ID: <CAJ-Vmok_fYed0FywJXkLcC2nMw6u50e8CfsgmZpvTSV3XnGxyA@mail.gmail.com> (sfid-20121112_203300_782188_9252BE5C)
-Subject: Re: [PATCH 1/2] ath9k: RX timestamp is reported at end of frame
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20639.52359.988935.16158@gargle.gargle.HOWL> (sfid-20121111_171121_456784_082C9061)
+Date: Sun, 11 Nov 2012 21:34:23 +0530
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k_hw: Fix wrong peak detector DC offset
+In-Reply-To: <1352452890-9512-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1352452890-9512-1-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 November 2012 11:26, Thomas Pedersen <thomas@cozybit.com> wrote:
+Rajkumar Manoharan wrote:
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+> index 58f30f6..ccc42a7 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+> +++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+> @@ -78,7 +78,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
+>  	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
+>  	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
+>  	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
+> -	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
+> +	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
+>  	{0x0000a2d0, 0x00041981, 0x00041981, 0x00041981, 0x00041982},
+>  	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+>  	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
 
-> From our captures it looks like the entire aggragate gets the same
-> timestamp (first frame?).
+Can you also update the initvals for AR9462 and AR9565 in the initvals tool ?
 
-Right, so MACTIME_END is not appropriate there?
-
-
-
-adrian
+Sujith
