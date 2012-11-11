@@ -1,50 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36508 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544Ab2KSNrK (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:57233 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753318Ab2KKP4J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 08:47:10 -0500
-Message-ID: <1353332858.18299.0.camel@jlt4.sipsolutions.net> (sfid-20121119_144725_220460_13330C9C)
-Subject: Re: [PATCH] mac80211: check add_chanctx callback before use in
- ieee80211_reconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Nov 2012 14:47:38 +0100
-In-Reply-To: <CAB3XZEcv9kV1TG_CfeK7TeNu+kdhb9TcfsFff9jn7aVLCcz+YA@mail.gmail.com> (sfid-20121119_143634_279923_CC11B10C)
-References: <1353322865-7500-1-git-send-email-arend@broadcom.com>
-	 <CAB3XZEcv9kV1TG_CfeK7TeNu+kdhb9TcfsFff9jn7aVLCcz+YA@mail.gmail.com>
-	 (sfid-20121119_143634_279923_CC11B10C)
+	Sun, 11 Nov 2012 10:56:09 -0500
+Received: by mail-ee0-f46.google.com with SMTP id b15so2944750eek.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 07:56:08 -0800 (PST)
+Message-ID: <1352649362.6460.24.camel@canaries32-MCP7A> (sfid-20121111_165613_789899_33CA42FE)
+Subject: [PATCH 12/14] staging: vt6656: 64 bit fixes TKIPvMixKey remove
+ unsigned long
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 11 Nov 2012 15:56:02 +0000
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-19 at 15:36 +0200, Eliad Peller wrote:
-> hi Arend,
-> 
-> On Mon, Nov 19, 2012 at 1:01 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> > During testing our mac80211 driver a fatal error occurred which was
-> > signalled to mac80211. Upon performing the reconfiguration of the
-> > device a WARN_ON was triggered. This warning checked the return value
-> > of drv_add_chanctx(). However, this returns -EOPNOTSUPP when the
-> > driver does not provide the callback. As the callback is optional
-> > better check it is defined before calling drv_add_chanctx().
-> >
-> > Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> > ---
-> 
-> > +       if (local->ops->add_chanctx) {
-> > +               mutex_lock(&local->chanctx_mtx);
-> > +               list_for_each_entry(ctx, &local->chanctx_list, list)
-> > +                       WARN_ON(drv_add_chanctx(local, ctx));
-> > +               mutex_unlock(&local->chanctx_mtx);
-> > +       }
-> 
-> i think checking local->use_chanctx is a bit cleaner.
 
-Makes sense, I'll apply with this change.
+ Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 
-johannes
+---
+ drivers/staging/vt6656/tkip.c | 40 +++++++++++++++++++---------------------
+ 1 file changed, 19 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/staging/vt6656/tkip.c b/drivers/staging/vt6656/tkip.c
+index 003123e..282c08d 100644
+--- a/drivers/staging/vt6656/tkip.c
++++ b/drivers/staging/vt6656/tkip.c
+@@ -189,27 +189,25 @@ void TKIPvMixKey(
+     PBYTE   pbyRC4Key
+     )
+ {
+-    unsigned int p1k[5];
+-//    unsigned int ttak0, ttak1, ttak2, ttak3, ttak4;
+-    unsigned int tsc0, tsc1, tsc2;
+-    unsigned int ppk0, ppk1, ppk2, ppk3, ppk4, ppk5;
+-    unsigned long int pnl,pnh;
+-
+-    int i, j;
+-
+-    pnl = wTSC15_0;
+-    pnh = dwTSC47_16;
+-
+-    tsc0 = (unsigned int)((pnh >> 16) % 65536); /* msb */
+-    tsc1 = (unsigned int)(pnh % 65536);
+-    tsc2 = (unsigned int)(pnl % 65536); /* lsb */
+-
+-    /* Phase 1, step 1 */
+-    p1k[0] = tsc1;
+-    p1k[1] = tsc0;
+-    p1k[2] = (unsigned int)(pbyTA[0] + (pbyTA[1]*256));
+-    p1k[3] = (unsigned int)(pbyTA[2] + (pbyTA[3]*256));
+-    p1k[4] = (unsigned int)(pbyTA[4] + (pbyTA[5]*256));
++	u32 p1k[5];
++	u32 tsc0, tsc1, tsc2;
++	u32 ppk0, ppk1, ppk2, ppk3, ppk4, ppk5;
++	u32 pnl, pnh;
++	int i, j;
++
++	pnl = (u32)wTSC15_0;
++	pnh = (u32)(dwTSC47_16 & 0xffffffff);
++
++	tsc0 = (u32)((pnh >> 16) % 65536); /* msb */
++	tsc1 = (u32)(pnh % 65536);
++	tsc2 = (u32)(pnl % 65536); /* lsb */
++
++	/* Phase 1, step 1 */
++	p1k[0] = tsc1;
++	p1k[1] = tsc0;
++	p1k[2] = (u32)(pbyTA[0] + (pbyTA[1]*256));
++	p1k[3] = (u32)(pbyTA[2] + (pbyTA[3]*256));
++	p1k[4] = (u32)(pbyTA[4] + (pbyTA[5]*256));
+ 
+     /* Phase 1, step 2 */
+     for (i=0; i<8; i++) {
+-- 
+1.8.0
+
+
+
 
