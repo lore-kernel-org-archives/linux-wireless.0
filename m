@@ -1,33 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57221 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754945Ab2KUPYl (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:55684 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752602Ab2KKPU7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 10:24:41 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 0/2] brcmsmac fixes for wireless-next
-Date: Wed, 21 Nov 2012 09:24:29 -0600
-Message-Id: <1353511471-5994-1-git-send-email-seth.forshee@canonical.com> (sfid-20121121_162444_271006_06632A74)
+	Sun, 11 Nov 2012 10:20:59 -0500
+Received: by mail-ea0-f174.google.com with SMTP id c13so2068635eaa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 07:20:58 -0800 (PST)
+Message-ID: <1352647252.6460.2.camel@canaries32-MCP7A> (sfid-20121111_162103_511173_A4AB5B5E)
+Subject: [PATCH 01/14] staging: vt6656: 64 bit- Correctly address void
+ structure.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 11 Nov 2012 15:20:52 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-Here are patches to fix the sparse warnings introduced by my recent
-patch series.
+Fixes 64 bit deadlock on successful association.
 
-Thanks,
-Seth
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 
-Seth Forshee (2):
-  brcmsmac: Remove unused wlc_prio2prec_map and _BRCMS_PREC_* constants
-  brcmsmac: Remove stray argument from debug macro
+---
+ drivers/staging/vt6656/rxtx.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    2 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   27 --------------------
- 2 files changed, 1 insertion(+), 28 deletions(-)
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index ca05c4f..d121285 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -1452,12 +1452,10 @@ s_bPacketToWirelessUsb(
+ 
+
+     pvRrvTime = pMICHDR = pvRTS = pvCTS = pvTxDataHd = NULL;
+-    if ((bNeedEncryption) && (pTransmitKey != NULL))  {
+-        if (((PSKeyTable) (pTransmitKey->pvKeyTable))->bSoftWEP == TRUE) {
+-            // WEP 256
+-            bSoftWEP = TRUE;
+-        }
+-    }
++	if (bNeedEncryption && pTransmitKey->pvKeyTable) {
++		if (((PSKeyTable)&pTransmitKey->pvKeyTable)->bSoftWEP == TRUE)
++			bSoftWEP = TRUE; /* WEP 256 */
++	}
+ 
+     pTxBufHead = (PTX_BUFFER) usbPacketBuf;
+     memset(pTxBufHead, 0, sizeof(TX_BUFFER));
+-- 
+1.8.0
+
+
+
+
+
 
