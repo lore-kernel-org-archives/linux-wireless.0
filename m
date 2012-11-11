@@ -1,135 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:51212 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754121Ab2KZQGI (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:39131 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753442Ab2KKQPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 11:06:08 -0500
-Received: by mail-wg0-f42.google.com with SMTP id dr1so2144136wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 08:06:07 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 06/11] wlcore: use sta_state-based ROCs for AP mode
-Date: Mon, 26 Nov 2012 18:05:45 +0200
-Message-Id: <1353945950-3899-7-git-send-email-arik@wizery.com> (sfid-20121126_170615_386922_D74737B1)
-In-Reply-To: <1353945950-3899-1-git-send-email-arik@wizery.com>
-References: <1353945950-3899-1-git-send-email-arik@wizery.com>
+	Sun, 11 Nov 2012 11:15:12 -0500
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [PATCH v5 1/2] wireless: Driver for 60GHz card wil6210
+Date: Sun, 11 Nov 2012 18:15:05 +0200
+Message-ID: <1647271.ZFHae4zFan@lx-vladimir> (sfid-20121111_171518_389765_6A5A4EEC)
+In-Reply-To: <20121108193010.GC3354@lenteja.do-not-panic.com>
+References: <20121108193010.GC3354@lenteja.do-not-panic.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Luis,
 
-Try an opportunistic ROC when a STA is first added and stop the ROC when
-the STA is removed or successfully authenticated. This would ensure we
-don't miss auth/assoc/EAPOL packets during connection
+Thanks for review, I appreciate time you spent doing this!
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c     |   45 +++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    4 +++
- 2 files changed, 49 insertions(+)
+On Thursday, November 08, 2012 08:29:43 PM Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> 
+> You asked... so I'll review... I'll start reviewing more functional
+> aspects now.
+> 
+> On Wed, Oct 31, 2012 at 06:36:56PM +0200, Vladimir Kondratiev wrote:
+> > diff --git a/drivers/net/wireless/ath/wil6210/Kconfig
+> > b/drivers/net/wireless/ath/wil6210/Kconfig new file mode 100644
+> > index 0000000..b927adc
+> > --- /dev/null
+> > +++ b/drivers/net/wireless/ath/wil6210/Kconfig
+> > +	depends on EXPERIMENTAL
+> 
+> CONFIG_EXPERIMENTAL means nothing today and its usage should
+> be avoided moving further. Please remove this line. And yes
+> if you see other drivers using it please destroy that line
+> too.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index f628297c..45008fa 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4486,6 +4486,45 @@ static int wl12xx_sta_remove(struct wl1271 *wl,
- 	return ret;
- }
- 
-+static void wlcore_roc_if_possible(struct wl1271 *wl,
-+				   struct wl12xx_vif *wlvif)
-+{
-+	if (find_first_bit(wl->roc_map,
-+			   WL12XX_MAX_ROLES) < WL12XX_MAX_ROLES)
-+		return;
-+
-+	if (WARN_ON(wlvif->role_id == WL12XX_INVALID_ROLE_ID))
-+		return;
-+
-+	wl12xx_roc(wl, wlvif, wlvif->role_id, wlvif->band, wlvif->channel);
-+}
-+
-+static void wlcore_update_inconn_sta(struct wl1271 *wl,
-+				     struct wl12xx_vif *wlvif,
-+				     struct wl1271_station *wl_sta,
-+				     bool in_connection)
-+{
-+	if (in_connection) {
-+		if (WARN_ON(wl_sta->in_connection))
-+			return;
-+		wl_sta->in_connection = true;
-+		if (!wlvif->inconn_count++)
-+			wlcore_roc_if_possible(wl, wlvif);
-+	} else {
-+		if (!wl_sta->in_connection)
-+			return;
-+
-+		wl_sta->in_connection = false;
-+		wlvif->inconn_count--;
-+		if (WARN_ON(wlvif->inconn_count < 0))
-+			return;
-+
-+		if (!wlvif->inconn_count)
-+			if (test_bit(wlvif->role_id, wl->roc_map))
-+				wl12xx_croc(wl, wlvif->role_id);
-+	}
-+}
-+
- static int wl12xx_update_sta_state(struct wl1271 *wl,
- 				   struct wl12xx_vif *wlvif,
- 				   struct ieee80211_sta *sta,
-@@ -4508,6 +4547,8 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
- 		ret = wl12xx_sta_add(wl, wlvif, sta);
- 		if (ret)
- 			return ret;
-+
-+		wlcore_update_inconn_sta(wl, wlvif, wl_sta, true);
- 	}
- 
- 	/* Remove station (AP mode) */
-@@ -4516,6 +4557,8 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
- 	    new_state == IEEE80211_STA_NOTEXIST) {
- 		/* must not fail */
- 		wl12xx_sta_remove(wl, wlvif, sta);
-+
-+		wlcore_update_inconn_sta(wl, wlvif, wl_sta, false);
- 	}
- 
- 	/* Authorize station (AP mode) */
-@@ -4529,6 +4572,8 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
- 						     hlid);
- 		if (ret)
- 			return ret;
-+
-+		wlcore_update_inconn_sta(wl, wlvif, wl_sta, false);
- 	}
- 
- 	/* Authorize station */
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index e3a77aa..5a92cb2 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -315,6 +315,7 @@ struct wl12xx_rx_filter {
- 
- struct wl1271_station {
- 	u8 hlid;
-+	bool in_connection;
- };
- 
- struct wl12xx_vif {
-@@ -425,6 +426,9 @@ struct wl12xx_vif {
- 	struct delayed_work channel_switch_work;
- 	struct delayed_work connection_loss_work;
- 
-+	/* number of in connection stations */
-+	int inconn_count;
-+
- 	/*
- 	 * This struct must be last!
- 	 * data that has to be saved acrossed reconfigs (e.g. recovery)
--- 
-1.7.9.5
+Will do
 
+> 
+> > +config WIL6210_DEBUG_TXRX
+> 
+> You add this here and then you kill it in the next patch.
+> Don't add it then.
+> 
+> > +
+> > +config WIL6210_DEBUG_IRQ
+> 
+> Same for this guy.
+
+Sure, my mistake.
+
+> 
+> > diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c
+> > b/drivers/net/wireless/ath/wil6210/cfg80211.c +static void
+> > wil_print_channels(struct wil6210_priv *wil)
+> > +{
+> > +	struct wiphy *wiphy = wil_to_wiphy(wil);
+> > +	int i;
+> 
+> Please use unsigned int for any loop variable. Please change all
+> code to do this. For reasoning behind this see:
+
+Will do
+
+> But then again why the hell even have wil_print_channels() it seems
+> like good debug code to have upon bringup but pretty useless for
+> driver code. Please kill this useless routine.
+
+Will do
+
+> Is the hardware little endian or big endian?
+
+Little endian
+
+> Please see
+> ath6kl's struct wmi_begin_scan_cmd on wmi.h for an example
+> of how to specify endianess to ensure that you can use this
+> driver on big or little endian. So although its great you
+> managed to successfully use sparse with -D__CHECK_ENDIAN__
+> endianess may be broken on this command and all over your
+> wmi.h. I won't even review that file then.
+
+I know about __le16 etc., but I have no big endian host to check it with. 
+Thus, I'd prefer to mention that code is not ready for big endian platform 
+rather then submit untested code. If there is a way to check endiannes without 
+having big endian host, I'd be happy to know.
+Also, is there a good way to check in Kconfig we are on Little endian?
+
+> 
+> > +	wil_info(wil, "%s(%pM)\n", __func__, mac);
+> 
+> Please kill all of these.
+
+Will do
+
+> 
+> > +	if (memcmp(mac, wil->dst_addr[0], ETH_ALEN))
+> > +		return -ENOENT;
+> 
+> Add empty new line.
+
+Sure
+
+> 
+> > +	rc = wmi_call(wil, WMI_NOTIFY_REQ_CMDID, &cmd, sizeof(cmd),
+> > +		      WMI_NOTIFY_REQ_DONE_EVENTID, NULL, 0, 20);
+> > +	if (rc)
+> > +		return rc;
+> > +
+> > +	sinfo->filled |= STATION_INFO_TX_BITRATE;
+> > +	sinfo->txrate.flags = RATE_INFO_FLAGS_MCS | RATE_INFO_FLAGS_60G;
+> > +	sinfo->txrate.mcs = wil->stats.bf_mcs;
+> > +	sinfo->filled |= STATION_INFO_RX_BITRATE;
+> > +	sinfo->rxrate.flags = RATE_INFO_FLAGS_MCS | RATE_INFO_FLAGS_60G;
+> > +	sinfo->rxrate.mcs = wil->stats.last_mcs_rx;
+> > +
+> > +	if (test_bit(wil_status_fwconnected, &wil->status)) {
+> > +		sinfo->filled |= STATION_INFO_SIGNAL;
+> > +		sinfo->signal = 12; /* TODO: provide real value */
+> > +	}
+> > +
+> > +	return 0;
+> 
+> So what did we do here exactlly? Poke firmware and not use anything?
+
+Query current Tx MCS. Used to print "link speed". For debug, Tx/Rx sectors 
+used to target peer printed to dmesg.
+
+> 
+> > +static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+> > +				     struct net_device *ndev,
+> > +				     enum nl80211_iftype type, u32 *flags,
+> > +				     struct vif_params *params)
+> > +{
+> > +	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+> > +	struct wireless_dev *wdev = wil->wdev;
+> > +	wil_info(wil, "%s()\n", __func__);
+> 
+> Kill these single print lines.
+
+Will do
+
+> 
+> > +
+> > +	switch (type) {
+> > +	case NL80211_IFTYPE_STATION:
+> > +		wil_info(wil, "type: STATION\n");
+> 
+> These too. Just leave out the prints. We have better ways
+> to be debugging what cfg80211 is telling us to do that
+> should not require every single driver to add their own
+> prints.
+
+Will do. "better ways" is trace?
+
+> 
+> > +		break;
+> > +	case NL80211_IFTYPE_AP:
+> > +		wil_info(wil, "type: AP\n");
+> > +		break;
+> > +	case NL80211_IFTYPE_P2P_CLIENT:
+> > +		wil_info(wil, "type: P2P_CLIENT\n");
+> > +		break;
+> > +	case NL80211_IFTYPE_P2P_GO:
+> > +		wil_info(wil, "type: P2P_GO\n");
+> > +		break;
+> > +	case NL80211_IFTYPE_MONITOR:
+> > +		wil_info(wil, "type: Monitor\n");
+> > +		if (flags) {
+> > +			wil_info(wil, "Monitor flags: 0x%08x\n", *flags);
+> > +			wil->monitor_flags = *flags;
+> > +		} else {
+> > +			wil->monitor_flags = 0;
+> 
+> This else can just be without a brace.
+
+No, it can't (unless 'if' branch reduced to one line). Quote 
+Documentation/CodingStyle:
+
+This does not apply if only one branch of a conditional statement is a single
+statement; in the latter case use braces in both branches:
+
+if (condition) {
+	do_this();
+	do_that();
+} else {
+	otherwise();
+}
+
+Sending patch v6...
+
+Thanks, Vladimir
