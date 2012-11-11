@@ -1,129 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55608 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755626Ab2KZThr (ORCPT
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:32872 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030Ab2KKVtH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 14:37:47 -0500
-Message-ID: <50B3C505.3090407@candelatech.com> (sfid-20121126_203749_718668_14BA1EE4)
-Date: Mon, 26 Nov 2012 11:37:41 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 11 Nov 2012 16:49:07 -0500
+Received: by mail-ia0-f174.google.com with SMTP id y32so3996366iag.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 13:49:07 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel splat from 3.5.7+ (tainted)
-References: <50B3A275.3010302@candelatech.com>  <50B3AAEB.3070709@candelatech.com> (sfid-20121126_184631_765629_DC554BCF) <1353952597.2800.12.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353952597.2800.12.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAKErNvpyUxNxEMEt6gcVCr_3MTNpHaSU=5yZy2YsYmYOSCJLsw@mail.gmail.com>
+References: <CAKErNvpyUxNxEMEt6gcVCr_3MTNpHaSU=5yZy2YsYmYOSCJLsw@mail.gmail.com>
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+Date: Sun, 11 Nov 2012 23:48:46 +0200
+Message-ID: <CAKErNvq9O5d_vEQnBhD6PSy-gc37UfvhRA4nRh1r=xFSdC98Yw@mail.gmail.com> (sfid-20121111_225051_586117_095B6AE9)
+Subject: Re: Need help with RTL8187SE staging driver
+To: Greg Kroah-Hartman <greg@kroah.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/26/2012 09:56 AM, Johannes Berg wrote:
-> On Mon, 2012-11-26 at 09:46 -0800, Ben Greear wrote:
->
->> 0x182f9 is in __ieee80211_tx (/home/greearb/git/linux-3.5.dev.y/net/mac80211/tx.c:1256).
->> 1251					skb_queue_splice_init(skbs, &local->pending[q]);
->> 1252				} else {
->> 1253					u32 len = skb_queue_len(&local->pending[q]);
->> 1254					if (len >= max_pending_qsize) {
->> 1255						__skb_unlink(skb, skbs);
->> 1256						dev_kfree_skb(skb);
->> 1257						/* TODO:  Add counter for this */
->> 1258					} else {
->
-> Wait .. this appears to be a local patch you have, it doesn't exist.
-> That explains why, the bug doesn't exist upstream (all freeing there is
-> outside the queue lock)
+(I'm sorry, mailing list rejected my previous letter, I'm resending)
 
-Ahh, sorry about that..it is entirely my bug it seems.
+Hello,
 
-I added a patch to keep from queing too many skbs since it can
-OOM my system (for instance, when using pktgen to generate traffic,
-if I recall correctly).
+I've decided to refactor and improve rtl8187se kernel driver from
+staging directory, because it is buggy and lacks some features. It
+causes full system freeze after resume from suspend, there are some
+typos in interrupt handler that affect logic, it causes OOPS when
+rmmoding, it has not rfkill support, it uses private ieee80211 stack
+etc.
 
-Probably this bug isn't normally hit even in my code because
-we rarely over-drive it like this, and upstream probably never
-hits the OOM bug for similar reasons.
+I'm writing to you, because your address is mentioned in
+drivers/staging/rtl8187se/TODO file. Also I'm CCing to linux-wireless
+mailing list in hope that there are people that could also help me.
 
-In case you are still feeling generous of your time, do you think just
-changing the call to dev_kfree_skb_any() and moving it outside
-the spin-lock would be a proper fix?
+You can clone git repository with modified driver source code here:
+git@bitbucket.org:gentoo_root/
+rtl8187se-staging.git. At first, I've removed some non-vital features
+and dead code from original driver in order to simplify code. Then
+I've fixed some bugs and created more clear structure of code. For
+now, I did not fully follow Linux kernel coding style, there are lots
+of long lines, and I hope to fix that later.
 
-commit 4887df3f5409798f633881df7be6cf7168f78e93
-Author: Ben Greear <greearb@candelatech.com>
-Date:   Mon Jun 4 17:34:08 2012 -0700
+The last commit 84fa3ebfbb2a15ddbe160f4cd9ebfb6f8762750c was a try to
+get rid of private ieee80211 stack and to replace it with in-kernel
+mac80211. I've done minimal changes in driver to make it use mac80211.
+But I faced a problem. After that commit I'm unable to connect to
+wireless network. Here is syslog from insmod to rmmod:
+http://paste.ubuntu.com/1351816/. Before that commit all things
+worked. Also, I've tried to modify kernel rtl8180 driver to make it
+work with rtl8187se NIC, but I had the same problem. When I added some
+debug output, I saw that rtl8187se_tx() is called after every auth
+try, then I saw timeout message, and after that there were three TX OK
+interrupts.
 
-     mac80211: Limit number of pending skbs.
+Please help me to find source of this problem and to deal with it. I'm
+stuck here and I have no idea what causes it.
 
-     Current code will allow any number of pending skbs, and
-     this can OOM the system when used with something like
-     the pktgen tool (which may not back off properly if
-     queue is stopped).
+Thanks in advance,
 
-     Possibly this is just a bug in our version of pktgen,
-     but either way, it seems reasonable to add a limit
-     so that it is not possible to go OOM in this manner.
-
-     Signed-off-by: Ben Greear <greearb@candelatech.com>
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d84727a..c5c3b8e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -33,6 +33,17 @@
-  #include "wpa.h"
-  #include "wme.h"
-  #include "rate.h"
-+#include <linux/moduleparam.h>
-+
-+/*
-+ * Maximum number of skbs that may be queued in a pending
-+ * queue.  After that, packets will just be dropped.
-+ */
-+static int max_pending_qsize = 1000;
-+module_param(max_pending_qsize, int, 0644);
-+MODULE_PARM_DESC(max_pending_qsize,
-+                "Maximum number of skbs that may be queued in a pending queue.");
-+
-
-  /* misc utils */
-
-@@ -1236,12 +1247,19 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
-                          * transmission from the tx-pending tasklet when the
-                          * queue is woken again.
-                          */
--                       if (txpending)
-+                       if (txpending) {
-                                 skb_queue_splice_init(skbs, &local->pending[q]);
--                       else
--                               skb_queue_splice_tail_init(skbs,
--                                                          &local->pending[q]);
--
-+                       } else {
-+                               u32 len = skb_queue_len(&local->pending[q]);
-+                               if (len >= max_pending_qsize) {
-+                                       __skb_unlink(skb, skbs);
-+                                       dev_kfree_skb(skb);
-+                                       /* TODO:  Add counter for this */
-+                               } else {
-+                                       skb_queue_splice_tail_init(skbs,
-+                                                                  &local->pending[q]);
-+                               }
-+                       }
-                         spin_unlock_irqrestore(&local->queue_stop_reason_lock,
-                                                flags);
-                         return false;
-
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Maxim Mikityanskiy
