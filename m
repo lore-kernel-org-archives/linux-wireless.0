@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5-smtp.messagingengine.com ([66.111.4.29]:38097 "EHLO
-	out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751245Ab2KLAUl (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:55841 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753941Ab2KLV7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 19:20:41 -0500
-Date: Sun, 11 Nov 2012 16:10:34 -0800
-From: Greg Kroah-Hartman <greg@kroah.com>
-To: Maxim Mikityanskiy <maxtram95@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Need help with RTL8187SE staging driver
-Message-ID: <20121112001034.GA1150@kroah.com> (sfid-20121112_012050_388960_BE1DC088)
-References: <CAKErNvpyUxNxEMEt6gcVCr_3MTNpHaSU=5yZy2YsYmYOSCJLsw@mail.gmail.com>
- <CAKErNvq9O5d_vEQnBhD6PSy-gc37UfvhRA4nRh1r=xFSdC98Yw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKErNvq9O5d_vEQnBhD6PSy-gc37UfvhRA4nRh1r=xFSdC98Yw@mail.gmail.com>
+	Mon, 12 Nov 2012 16:59:16 -0500
+Received: by mail-ea0-f174.google.com with SMTP id o11so438714eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 13:59:16 -0800 (PST)
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+To: greg@kroah.com, linux-wireless@vger.kernel.org
+Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
+Subject: [PATCH 16/17] Fixed size of BEACON_INTERVAL register
+Date: Mon, 12 Nov 2012 23:58:30 +0200
+Message-Id: <1352757511-26957-17-git-send-email-maxtram95@gmail.com> (sfid-20121112_231526_311327_BF3F8203)
+In-Reply-To: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
+References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 11, 2012 at 11:48:46PM +0200, Maxim Mikityanskiy wrote:
-> (I'm sorry, mailing list rejected my previous letter, I'm resending)
-> 
-> Hello,
-> 
-> I've decided to refactor and improve rtl8187se kernel driver from
-> staging directory, because it is buggy and lacks some features. It
-> causes full system freeze after resume from suspend, there are some
-> typos in interrupt handler that affect logic, it causes OOPS when
-> rmmoding, it has not rfkill support, it uses private ieee80211 stack
-> etc.
-> 
-> I'm writing to you, because your address is mentioned in
-> drivers/staging/rtl8187se/TODO file. Also I'm CCing to linux-wireless
-> mailing list in hope that there are people that could also help me.
-> 
-> You can clone git repository with modified driver source code here:
-> git@bitbucket.org:gentoo_root/
-> rtl8187se-staging.git. At first, I've removed some non-vital features
-> and dead code from original driver in order to simplify code. Then
-> I've fixed some bugs and created more clear structure of code. For
-> now, I did not fully follow Linux kernel coding style, there are lots
-> of long lines, and I hope to fix that later.
 
-Why not send patches for this so we can get your cleanups and other dead
-code removal changes into the tree to make your further changes easier?
+Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
+---
+ r8180_core.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-thanks,
+diff --git a/r8180_core.c b/r8180_core.c
+index 1202332..9e0621b 100644
+--- a/r8180_core.c
++++ b/r8180_core.c
+@@ -1984,10 +1984,10 @@ void rtl8180_link_change(struct net_device *dev)
+ 	write_nic_dword(dev, BSSID, ((u32 *)net->bssid)[0]);
+ 	write_nic_word(dev, BSSID+4, ((u16 *)net->bssid)[2]);
+ 
+-	beacon_interval  = read_nic_dword(dev, BEACON_INTERVAL);
++	beacon_interval  = read_nic_word(dev, BEACON_INTERVAL);
+ 	beacon_interval &= ~BEACON_INTERVAL_MASK;
+ 	beacon_interval |= net->beacon_interval;
+-	write_nic_dword(dev, BEACON_INTERVAL, beacon_interval);
++	write_nic_word(dev, BEACON_INTERVAL, beacon_interval);
+ 
+ 	rtl8180_set_mode(dev, EPROM_CMD_NORMAL);
+ 
+-- 
+1.7.10.4
 
-greg k-h
