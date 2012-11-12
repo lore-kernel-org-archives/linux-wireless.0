@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751994Ab2KSOmw (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:49658 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752632Ab2KLV6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 09:42:52 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TaSYl-0007XI-IZ
-	for linux-wireless@vger.kernel.org; Mon, 19 Nov 2012 15:42:51 +0100
-Message-ID: <1353336199.18299.13.camel@jlt4.sipsolutions.net> (sfid-20121119_154255_707240_14E6CA83)
-Subject: Re: [PATCH] mac80211: introduce IEEE80211_NUM_TIDS and use it
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 19 Nov 2012 15:43:19 +0100
-In-Reply-To: <1352978984-15876-1-git-send-email-johannes@sipsolutions.net> (sfid-20121115_122917_415702_1452D5AB)
-References: <1352978984-15876-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121115_122917_415702_1452D5AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 12 Nov 2012 16:58:48 -0500
+Received: by mail-ee0-f46.google.com with SMTP id b15so3644080eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 13:58:47 -0800 (PST)
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+To: greg@kroah.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 00/17] RTL8187SE driver cleanups
+Date: Mon, 12 Nov 2012 23:58:14 +0200
+Message-Id: <1352757511-26957-1-git-send-email-maxtram95@gmail.com> (sfid-20121112_225852_000284_10E9AD1C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-15 at 12:29 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Introduce IEEE80211_NUM_TIDS in the generic 802.11
-> header file and use it in place of STA_TID_NUM and
-> NUM_RX_DATA_QUEUES which are both really the number
-> of TIDs.
+There are some bug fixes, cleanups and dead code removal for
+drivers/staging/rtl8187se
+----------------------------------------------------------------
+Maxim Mikityanskiy (17):
+      Removed dead functions
+      Removed legacy rtl8225_rf_set_chan()
+      Removed empty functions and one-iteration loop
+      Fixed bugs in interrupt handler
+      Simplified function GetSupportedWirelessMode8185()
+      Fix oops when rmmoding
+      Removed unused module parameters and fixed module description
+      Removed dead code
+      Removed unused parameters of HwHSSIThreeWire()
+      Fixed typo in TransmitConfig
+      Removed non-existent function headers from r8180.h
+      Removed unused arrays in r8180_rtl8225z2.c
+      Use ARRAY_SIZE instead of in-code constants
+      Removed unneeded reads from EEPROM
+      Removed unused fields in r8180_priv
+      Fixed size of BEACON_INTERVAL register
+      Removed empty stub read_acadapter_file()
 
-Applied.
-
-johannes
-
+ r8180.h           |   28 ------
+ r8180_core.c      |  436 ++++---------------------------------------------------------------------------------
+ r8180_rtl8225.h   |    2 +-
+ r8180_rtl8225z2.c |  229 +++------------------------------------------
+ r8185b_init.c     |  223 ++++++++++++-------------------------------
+ 5 files changed, 91 insertions(+), 827 deletions(-)
