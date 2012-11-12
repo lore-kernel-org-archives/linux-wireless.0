@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45215 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753629Ab2K1UxW (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:53112 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911Ab2KLTDZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 15:53:22 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mwifiex: fix struct member mismatch
-Date: Wed, 28 Nov 2012 21:53:45 +0100
-Message-Id: <1354136025-21915-1-git-send-email-johannes@sipsolutions.net> (sfid-20121128_215325_599969_E5DEF234)
+	Mon, 12 Nov 2012 14:03:25 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so3966964qcr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 11:03:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6X-LvntZ+fOV2b1AGmpQxEqyJNEu-wsc1wP7zvb8+vhFA@mail.gmail.com>
+References: <1352746052-1828-1-git-send-email-thomas@cozybit.com>
+ <1352746052-1828-2-git-send-email-thomas@cozybit.com> <CAB=NE6X-LvntZ+fOV2b1AGmpQxEqyJNEu-wsc1wP7zvb8+vhFA@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 12 Nov 2012 11:03:04 -0800
+Message-ID: <CAG6hwVM0ELJZ2co_=GrUN+7wbOof_2w-q7Fbow3u=Lf-BKG1Qw@mail.gmail.com> (sfid-20121112_200328_493595_080629D6)
+Subject: Re: [PATCH 1/2] ath9k: RX timestamp is reported at end of frame
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Nov 12, 2012 at 11:00 AM, Luis R. Rodriguez
+<mcgrof@qca.qualcomm.com> wrote:
+> On Mon, Nov 12, 2012 at 7:47 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+>> Tested with AR9280.
+>>
+>> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/recv.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>> index a04028b..d4df98a 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -976,7 +976,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+>>         rx_status->freq = hw->conf.channel->center_freq;
+>>         rx_status->signal = ah->noise + rx_stats->rs_rssi;
+>>         rx_status->antenna = rx_stats->rs_antenna;
+>> -       rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+>> +       rx_status->flag |= RX_FLAG_MACTIME_END;
+>>         if (rx_stats->rs_moreaggr)
+>>                 rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+>
+> Thanks but can you clarify the implications of this change within the
+> commit log ? Was something not working, if not, why exactly is this
+> change important?
 
-Using bss->information_elements and treating
-bss->len_beacon_ies as its size is wrong, the
-real size is len_information_elements.
+Sure.
 
-Found while I was reviewing the use of this
-cfg80211 API (as it is actually potentially
-broken due to races.)
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mwifiex/sta_ioctl.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 24af6ba..f92047d 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -161,8 +161,9 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 	int ret;
- 	u8 *beacon_ie;
- 	struct mwifiex_bss_priv *bss_priv = (void *)bss->priv;
-+	size_t beacon_ie_len = bss->len_information_elements;
- 
--	beacon_ie = kmemdup(bss->information_elements, bss->len_beacon_ies,
-+	beacon_ie = kmemdup(bss->information_elements, beacon_ie_len,
- 			    GFP_KERNEL);
- 	if (!beacon_ie) {
- 		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
-@@ -172,7 +173,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 	memcpy(bss_desc->mac_address, bss->bssid, ETH_ALEN);
- 	bss_desc->rssi = bss->signal;
- 	bss_desc->beacon_buf = beacon_ie;
--	bss_desc->beacon_buf_size = bss->len_beacon_ies;
-+	bss_desc->beacon_buf_size = beacon_ie_len;
- 	bss_desc->beacon_period = bss->beacon_interval;
- 	bss_desc->cap_info_bitmap = bss->capability;
- 	bss_desc->bss_band = bss_priv->band;
--- 
-1.8.0
-
+Thomas
