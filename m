@@ -1,37 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39828 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752556Ab2KTJTo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 04:19:44 -0500
-Message-ID: <1353403213.9399.7.camel@jlt4.sipsolutions.net> (sfid-20121120_101948_248732_AD4BC515)
-Subject: Re: [PATCH] mac80211: fix channel context suspend handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: sujith@msujith.org
-Date: Tue, 20 Nov 2012 10:20:13 +0100
-In-Reply-To: <1353360586-32157-1-git-send-email-johannes@sipsolutions.net> (sfid-20121119_222924_703970_D27B6648)
-References: <1353360586-32157-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121119_222924_703970_D27B6648)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:50133
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751783Ab2KLWgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Nov 2012 17:36:41 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20641.31202.323483.191549@gargle.gargle.HOWL> (sfid-20121112_233646_263646_C77DAA39)
+Date: Tue, 13 Nov 2012 04:06:18 +0530
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k_hw: Update AR9485 initvals
+In-Reply-To: <87pq3iy1mr.fsf@purkki.adurom.net>
+References: <1352698004-10790-1-git-send-email-sujith@msujith.org>
+	<87pq3iy1mr.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-19 at 22:29 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Sujith reported warnings with suspend/resume due to
-> channel contexts. When I looked into it, I realised
-> that the code was completely broken as it unassigned
-> the channel contexts when suspending, which actually
-> means they are destroyed.
-> 
-> Fix this by calling just the driver method (if it is
-> implemented) instead of trying to use the mac80211
-> channel context management code.
+Kalle Valo wrote:
+> This doesn't answer the most important question "Why?". For example,
+> does it fix something, is it just a synch up to get up-to-date with the
+> system team or something else?
 
-Applied.
+A sync - almost a year's backlog of changes.
 
-johannes
-
+Sujith
