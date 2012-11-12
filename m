@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48611 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751114Ab2KHJsJ (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:51309 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752752Ab2KLSrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 04:48:09 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TWOiM-0001s4-LC
-	for linux-wireless@vger.kernel.org; Thu, 08 Nov 2012 10:47:58 +0100
-Message-ID: <1352368115.9870.5.camel@jlt4.sipsolutions.net> (sfid-20121108_104817_576651_914CDAA0)
-Subject: Re: [PATCH] mac80211: fix TX error path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 08 Nov 2012 10:48:35 +0100
-In-Reply-To: <1352293405-27692-1-git-send-email-johannes@sipsolutions.net> (sfid-20121107_140302_585568_7ECC7434)
-References: <1352293405-27692-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121107_140302_585568_7ECC7434)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 12 Nov 2012 13:47:48 -0500
+Received: by mail-pa0-f46.google.com with SMTP id hz1so4478273pad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 10:47:48 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/2] ath9k_htc: RX timestamp is reported at end of frame
+Date: Mon, 12 Nov 2012 10:47:32 -0800
+Message-Id: <1352746052-1828-3-git-send-email-thomas@cozybit.com> (sfid-20121112_194802_738471_911DABE1)
+In-Reply-To: <1352746052-1828-1-git-send-email-thomas@cozybit.com>
+References: <1352746052-1828-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-07 at 14:03 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> One error path in ieee80211_subif_start_xmit() will
-> double-free the SKB. Set it to NULL to prevent that.
-> 
-> This issue was introduced by my channel context
-> changes.
+Tested with AR9271.
 
-Applied.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 06cdcb7..1708b01 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -1082,7 +1082,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	rx_status->freq = hw->conf.channel->center_freq;
+ 	rx_status->signal =  rxbuf->rxstatus.rs_rssi + ATH_DEFAULT_NOISE_FLOOR;
+ 	rx_status->antenna = rxbuf->rxstatus.rs_antenna;
+-	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
++	rx_status->flag |= RX_FLAG_MACTIME_END;
+ 
+ 	return true;
+ 
+-- 
+1.7.10.4
 
