@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35302 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754603Ab2KZKwb (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:54164 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055Ab2KLTSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 05:52:31 -0500
-Message-ID: <1353927177.9488.27.camel@jlt4.sipsolutions.net> (sfid-20121126_115235_257672_02B851A0)
-Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection
- command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name, victorgld@gmail.com
-Date: Mon, 26 Nov 2012 11:52:57 +0100
-In-Reply-To: <50AB9E73.3090802@ti.com>
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
-	 <1350226137-13704-2-git-send-email-victorg@ti.com>
-	 <1350414099.10177.13.camel@jlt4.sipsolutions.net> <50842569.5000602@ti.com>
-	 <1350910543.10166.3.camel@jlt4.sipsolutions.net> <50922A9D.2060409@ti.com>
-	 <1352128887.9466.17.camel@jlt4.sipsolutions.net> <50A26163.10300@ti.com>
-	 <20121113180505.GB19223@pandem0nium> <50AB9E73.3090802@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 12 Nov 2012 14:18:40 -0500
+Received: by mail-pb0-f46.google.com with SMTP id rr4so4576112pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 11:18:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1352746052-1828-2-git-send-email-thomas@cozybit.com>
+References: <1352746052-1828-1-git-send-email-thomas@cozybit.com>
+	<1352746052-1828-2-git-send-email-thomas@cozybit.com>
+Date: Mon, 12 Nov 2012 11:18:40 -0800
+Message-ID: <CAJ-VmokQ19oSgw6UB616n-7r2YZ7Udmtoh-20MPBYDfx3VPo+A@mail.gmail.com> (sfid-20121112_201844_187607_2370BC78)
+Subject: Re: [PATCH 1/2] ath9k: RX timestamp is reported at end of frame
+From: Adrian Chadd <adrian@freebsd.org>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: ath9k-devel@lists.ath9k.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-20 at 17:14 +0200, Victor Goldenshtein wrote:
-> On 13/11/2012 20:05, Simon Wunderlich wrote:
-> > On Tue, Nov 13, 2012 at 05:04:03PM +0200, Victor Goldenshtein wrote:
-> >> On 05/11/2012 17:21, Johannes Berg wrote:
-> >>> On Thu, 2012-11-01 at 09:54 +0200, Victor Goldenshtein wrote:
-> >>>> On 22/10/2012 14:55, Johannes Berg wrote:
-> >>>>>> 2. In __nl80211_set_channel() - to cover the case when the CAC was
-> >>>>>> initiated on a "preset_chan" (during AP init phase) and the IF was
-> >>>>>> removed before the AP was even started (local->oper_channel wasn't set yet).
-> >>>>>
-> >>>>> Hmm, I'm not sure I get it. How is "local->oper_channel" (a mac80211
-> >>>>> variable) related to this cfg80211 code?
-> >>>>
-> >>>> It's not, just saying that its not set at this point.
-> >>>>
-> >>>>> start_ap() isn't expected to be able to succeed until CAC passed
-> >>>>> successfully, but OTOH the channel isn't configured until then?
-> >>>>
-> >>>> right, the initial CAC performed before start_ap(), only by setting the
-> >>>> channel with __nl80211_set_channel() + radar detection command.
-> >>>
-> >>> Hmm. Maybe then the channel should be passed to the radar detection
-> >>> command instead? That way, it can be passed through, you can allocate a
-> >>> channel context, etc. Much easier?
-> >>
-> >> We already pass the frequency in the radar detection command, the
-> >> set channel operation comes during hostapd init flow regardless DFS
-> >> implementation.
-> >
-> > Just for clarification for the API: Is the driver required to (re)set the channel
-> > itself in the radar detection command, or do we expect that the channel was already
-> > set via __nl80211_set_channel() (or other means) before?
-> >
-> > This would be important for other DFS modes like IBSS later.
-> >
-> 
-> Already discussed this privately, still maybe someone else also interested.
-> 
-> The set channel operation is relevant only during initial CAC test,
-> it set and re-set (if necessary - e.g. radar detected on the first
-> channel) by the hostapd it self, so the driver doesn't required to set 
-> the channel in the radar detection command.
+Hi,
 
-Actually, it seems to me the radar detection command has to set the
-channel and be tied to the channel context that way. I'd definitely
-prefer that, even if you could use wdev->preset_chan it would be much
-better to explicitly pass the channel.
+Is that true for aggregate RX too? I didn't think the FIFO was big
+enough to receive the whole aggregate, so I wonder what timestamp
+aggregates sub-frames are receiving.
 
-johannes
 
+
+adrian
+
+On 12 November 2012 10:47, Thomas Pedersen <thomas@cozybit.com> wrote:
+> Tested with AR9280.
+>
+> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/recv.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index a04028b..d4df98a 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -976,7 +976,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+>         rx_status->freq = hw->conf.channel->center_freq;
+>         rx_status->signal = ah->noise + rx_stats->rs_rssi;
+>         rx_status->antenna = rx_stats->rs_antenna;
+> -       rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+> +       rx_status->flag |= RX_FLAG_MACTIME_END;
+>         if (rx_stats->rs_moreaggr)
+>                 rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+>
+> --
+> 1.7.10.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
