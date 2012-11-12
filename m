@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4300 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754374Ab2KSSfi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:35:38 -0500
-Message-ID: <50AA7BD7.8020508@broadcom.com> (sfid-20121119_193555_713365_5D30BB06)
-Date: Mon, 19 Nov 2012 19:35:03 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:49522 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988Ab2KLSOE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Nov 2012 13:14:04 -0500
+Received: by mail-qa0-f53.google.com with SMTP id k31so1713436qat.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 10:14:03 -0800 (PST)
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	"Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 03/22] brcmsmac: Add helper function for updating
- txavail count
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-4-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1352988492-21340-4-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <071701cdc0fe$218fc9b0$64af5d10$@com>
+References: <071701cdc0fe$218fc9b0$64af5d10$@com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 12 Nov 2012 10:13:42 -0800
+Message-ID: <CAG6hwVMvDL12C7n=fOvGYx-jf9F8-fGPNmU6qhhJKcuC8hpFsA@mail.gmail.com> (sfid-20121112_191408_920210_096BE2A8)
+Subject: Re: Noob question: Development Environment
+To: paul@foresight-mands.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2012 03:07 PM, Seth Forshee wrote:
-> Use this helper function rather than open-coding the same calculation in
-> multiple places.
+Hi Paul,
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/dma.c |   15 +++++++++++++--
->   1 file changed, 13 insertions(+), 2 deletions(-)
+On Mon, Nov 12, 2012 at 9:49 AM, Paul Stoaks <paul@foresight-mands.com> wrote:
+> Greetings.  Sorry to interrupt with a newbie question, but I need some help
+> on setting up a linux wireless development and test environment.  What I
+> would like to have is a stable development and test environment where I can
+> work for a period of months without having to upgrade the kernel version on
+> my development and test machines, but staying close to the bleeding edge
+> with the core wireless modules and drivers.
+>
+> I have successfully built the wireless-testing tree from GIT, but have only
+> discovered how to install the entire kernel produced from the build, not
+> just the wireless modules.  What I would like to do is to install only the
+> wireless modules, as I can do with the compat-wireless tree.  I have gotten
+> compat-wireless to work for me with a lot of labor (refreshing patches), but
+> I'm unsure of the correct work-flow with it.
+>
+> How are you folks accomplishing this?
 
+Please see [0] and especially [1] under the section "Generating stable
+releases".
 
+Hope this does what you want.
+Thomas
 
+[0] https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers
+[1] https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/hacking
