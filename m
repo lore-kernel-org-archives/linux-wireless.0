@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2304 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751645Ab2K3VVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 16:21:44 -0500
-Message-ID: <50B9235D.7050309@broadcom.com> (sfid-20121130_222205_129004_33AC9E74)
-Date: Fri, 30 Nov 2012 22:21:33 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:48380 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751666Ab2KLS1X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Nov 2012 13:27:23 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hr7so2721309wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 10:27:22 -0800 (PST)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	backports@vger.kernel.org, alexander.stein@systec-electronic.com,
-	brudley@broadcom.com, rvossen@broadcom.com, frankyl@broadcom.com,
-	kanyan@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, kyungmin.park@samsung.com,
-	s.nawrocki@samsung.com, linux-arm-kernel@lists.infradead.org,
-	linux-media@vger.kernel.org, daniel.vetter@ffwll.ch,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	srinidhi.kasagar@stericsson.com, linus.walleij@linaro.org,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 0/6] drivers: convert struct spinlock to spinlock_t
-References: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
- <50B87082.3020604@broadcom.com>
- <CAB=NE6UO8jPYOktteaLeihVqLp251-Q=jv5z_OThXoR+JtRKeg@mail.gmail.com>
- <CAB=NE6UVA1As_07HOvCbi4oK+CgbNNeeNMfz8agB-00ZRP973w@mail.gmail.com>
-In-Reply-To: <CAB=NE6UVA1As_07HOvCbi4oK+CgbNNeeNMfz8agB-00ZRP973w@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <CAG6hwVMvDL12C7n=fOvGYx-jf9F8-fGPNmU6qhhJKcuC8hpFsA@mail.gmail.com>
+References: <071701cdc0fe$218fc9b0$64af5d10$@com> <CAG6hwVMvDL12C7n=fOvGYx-jf9F8-fGPNmU6qhhJKcuC8hpFsA@mail.gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Mon, 12 Nov 2012 10:27:02 -0800
+Message-ID: <CAPjQAd_BJ+fKzuRX_-vXxuDW6f9Xwu7+GXK_feQQbKZKEB8UAA@mail.gmail.com> (sfid-20121112_192726_900865_9F166697)
+Subject: Re: Noob question: Development Environment
+To: paul@foresight-mands.com
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/30/2012 09:25 PM, Luis R. Rodriguez wrote:
-> On Fri, Nov 30, 2012 at 11:18 AM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
->> On Fri, Nov 30, 2012 at 12:38 AM, Arend van Spriel <arend@broadcom.com> wrote:
->>> So what is the rationale here. During mainlining our drivers we had to
->>> remove all uses of 'typedef struct foo foo_t;'. The Linux CodingStyle
->>> (chapter 5 Typedefs) is spending a number of lines explaining why.
->>>
->>> So is spinlock_t an exception to this rule simply because the kernel
->>> uses spinlock_t all over the place.
->>
->> Yes.
-> 
-> Let me provide a better explanation. In practice drivers should not be
-> creating their own typedefs given that generally the reasons to create
-> them do not exist for drivers. The kernel may provide their own though
-> for reasons explained in CodingStyle and in such cases the drivers
-> should use these supplied typedefs.
+Hi Paul,
 
-Ok. Fine by me. It just looked like a case of saying a and doing b.
-Thanks for taking time giving the better explanation :-)
+On Mon, Nov 12, 2012 at 10:13 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> Hi Paul,
+>
+> On Mon, Nov 12, 2012 at 9:49 AM, Paul Stoaks <paul@foresight-mands.com> wrote:
+>> (...)
+>> What I would like to have is a stable development and test environment where I can
+>> work for a period of months without having to upgrade the kernel version on
+>> my development and test machines, but staying close to the bleeding edge
+>> with the core wireless modules and drivers.
 
-Gr. AvS
+Maybe running the latest kernel inside a virtual machine can be a good
+solution; it all depends on the type of development you intend to do.
+For instance we attach usb wireless cards to our virtualized guests to
+test them with the latest kernels.  Here is a distro that we maintain
+just for this type of virtualized development:
+https://github.com/cozybit/distro11s
 
+Cheers,
 
+Javier
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
