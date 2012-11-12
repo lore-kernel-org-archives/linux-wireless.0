@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:46723
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751646Ab2KMGyO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 01:54:14 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-Message-ID: <20641.61052.448610.964793@gargle.gargle.HOWL> (sfid-20121113_075416_861443_8E54BCDD)
-Date: Tue, 13 Nov 2012 12:23:48 +0530
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:38097 "EHLO
+	out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751245Ab2KLAUl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Nov 2012 19:20:41 -0500
+Date: Sun, 11 Nov 2012 16:10:34 -0800
+From: Greg Kroah-Hartman <greg@kroah.com>
+To: Maxim Mikityanskiy <maxtram95@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Need help with RTL8187SE staging driver
+Message-ID: <20121112001034.GA1150@kroah.com> (sfid-20121112_012050_388960_BE1DC088)
+References: <CAKErNvpyUxNxEMEt6gcVCr_3MTNpHaSU=5yZy2YsYmYOSCJLsw@mail.gmail.com>
+ <CAKErNvq9O5d_vEQnBhD6PSy-gc37UfvhRA4nRh1r=xFSdC98Yw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-To: Harshal Chhaya <harshal@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Looking for WiFi + BT combo cards
-In-Reply-To: <CAJ8GFOgZ00SSLjwpFb_gQnPQVh7QpJeWb_m55KOp3+pi9VrRPQ@mail.gmail.com>
-References: <CAJ8GFOgZ00SSLjwpFb_gQnPQVh7QpJeWb_m55KOp3+pi9VrRPQ@mail.gmail.com>
+In-Reply-To: <CAKErNvq9O5d_vEQnBhD6PSy-gc37UfvhRA4nRh1r=xFSdC98Yw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Harshal Chhaya wrote:
-> I am looking for WiFi + BT combo products/chipsets with a USB
-> interface that are supported by compat-wireless.
+On Sun, Nov 11, 2012 at 11:48:46PM +0200, Maxim Mikityanskiy wrote:
+> (I'm sorry, mailing list rejected my previous letter, I'm resending)
 > 
-> I want to add wireless capabilities (both WiFi and Bluetooth) to an
-> existing device that's running Linux. This device has a couple of USB
-> ports.
+> Hello,
 > 
-> I have found a few WiFi-only products but haven't found combo products.
+> I've decided to refactor and improve rtl8187se kernel driver from
+> staging directory, because it is buggy and lacks some features. It
+> causes full system freeze after resume from suspend, there are some
+> typos in interrupt handler that affect logic, it causes OOPS when
+> rmmoding, it has not rfkill support, it uses private ieee80211 stack
+> etc.
 > 
-> If you know of any such network adapters, please let me know.
+> I'm writing to you, because your address is mentioned in
+> drivers/staging/rtl8187se/TODO file. Also I'm CCing to linux-wireless
+> mailing list in hope that there are people that could also help me.
+> 
+> You can clone git repository with modified driver source code here:
+> git@bitbucket.org:gentoo_root/
+> rtl8187se-staging.git. At first, I've removed some non-vital features
+> and dead code from original driver in order to simplify code. Then
+> I've fixed some bugs and created more clear structure of code. For
+> now, I did not fully follow Linux kernel coding style, there are lots
+> of long lines, and I hope to fix that later.
 
-ath9k_htc supports WB193 which is a WLAN+BT combo device (USB). I am not sure
-if these cards can be bought online. Coexistence has been enabled for this
-card, but I don't think that performance would be anything to brag about.
+Why not send patches for this so we can get your cleanups and other dead
+code removal changes into the tree to make your further changes easier?
 
-Sujith
+thanks,
+
+greg k-h
