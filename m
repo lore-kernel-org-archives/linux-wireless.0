@@ -1,99 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:38242 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940Ab2KKPZj (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:51309 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925Ab2KLSrp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 10:25:39 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so3639173wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 07:25:37 -0800 (PST)
-Message-ID: <1352647531.6460.6.camel@canaries32-MCP7A> (sfid-20121111_162542_655706_B7F7A36A)
-Subject: [PATCH 03/14] staging: vt6656: 64bit fixes: desh.h fix size.
- replace DWORD with u32.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 11 Nov 2012 15:25:31 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 12 Nov 2012 13:47:45 -0500
+Received: by mail-pa0-f46.google.com with SMTP id hz1so4478273pad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 10:47:45 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 0/2] RX timestamp is reported at end of frame
+Date: Mon, 12 Nov 2012 10:47:30 -0800
+Message-Id: <1352746052-1828-1-git-send-email-thomas@cozybit.com> (sfid-20121112_194750_761750_62AF28D5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+At least this is true for the chips tested. Verified by bringing up two mesh
+nodes and checking their reported TSF offset is symmetrical within 5us. Before
+this patch there was a difference of 1.3ms or so.
 
-Fixes size of long issues replace DWORD with u32.
+Thomas Pedersen (2):
+  ath9k: RX timestamp is reported at end of frame
+  ath9k_htc: RX timestamp is reported at end of frame
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c         |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
----
- drivers/staging/vt6656/desc.h | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
-index b68b2ec..5007e98 100644
---- a/drivers/staging/vt6656/desc.h
-+++ b/drivers/staging/vt6656/desc.h
-@@ -298,7 +298,7 @@ typedef const SCTS_FB *PCSCTS_FB;
- // Tx FIFO header
- //
- typedef struct tagSTxBufHead {
--    DWORD   adwTxKey[4];
-+	u32 adwTxKey[4];
-     WORD    wFIFOCtl;
-     WORD    wTimeStamp;
-     WORD    wFragCtl;
-@@ -376,24 +376,24 @@ typedef const STxDataHead_a_FB *PCSTxDataHead_a_FB;
- // MICHDR data header
- //
- typedef struct tagSMICHDRHead {
--    DWORD   adwHDR0[4];
--    DWORD   adwHDR1[4];
--    DWORD   adwHDR2[4];
-+	u32 adwHDR0[4];
-+	u32 adwHDR1[4];
-+	u32 adwHDR2[4];
- } __attribute__ ((__packed__))
- SMICHDRHead, *PSMICHDRHead;
- 
- typedef const SMICHDRHead *PCSMICHDRHead;
- 
- typedef struct tagSBEACONCtl {
--    DWORD   BufReady : 1;
--    DWORD   TSF : 15;
--    DWORD   BufLen : 11;
--    DWORD   Reserved : 5;
-+	u32 BufReady:1;
-+	u32 TSF:15;
-+	u32 BufLen:11;
-+	u32 Reserved:5;
- } __attribute__ ((__packed__))
- SBEACONCtl;
- 
- typedef struct tagSSecretKey {
--    DWORD   dwLowDword;
-+	u32 dwLowDword;
-     BYTE    byHighByte;
- } __attribute__ ((__packed__))
- SSecretKey;
-@@ -402,11 +402,11 @@ typedef struct tagSKeyEntry {
-     BYTE  abyAddrHi[2];
-     WORD  wKCTL;
-     BYTE  abyAddrLo[4];
--    DWORD dwKey0[4];
--    DWORD dwKey1[4];
--    DWORD dwKey2[4];
--    DWORD dwKey3[4];
--    DWORD dwKey4[4];
-+	u32 dwKey0[4];
-+	u32 dwKey1[4];
-+	u32 dwKey2[4];
-+	u32 dwKey3[4];
-+	u32 dwKey4[4];
- } __attribute__ ((__packed__))
- SKeyEntry;
- 
 -- 
-1.8.0
-
-
-
-
+1.7.10.4
 
