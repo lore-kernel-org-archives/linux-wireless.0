@@ -1,158 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40057 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756071Ab2KWUTV (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:49658 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901Ab2KLV7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 15:19:21 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>
-Subject: [RFCv2 07/13] {cfg,nl}80211: allow userspace to read the local and peer mesh power modes
-Date: Fri, 23 Nov 2012 12:18:48 -0800
-Message-Id: <1353701934-12752-8-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_211926_714712_8A97393B)
-In-Reply-To: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	Mon, 12 Nov 2012 16:59:11 -0500
+Received: by mail-ee0-f46.google.com with SMTP id b15so3644080eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 13:59:11 -0800 (PST)
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+To: greg@kroah.com, linux-wireless@vger.kernel.org
+Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
+Subject: [PATCH 13/17] Use ARRAY_SIZE instead of in-code constants
+Date: Mon, 12 Nov 2012 23:58:27 +0200
+Message-Id: <1352757511-26957-14-git-send-email-maxtram95@gmail.com> (sfid-20121112_231527_520619_338FF1F5)
+In-Reply-To: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
+References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow userspace to read following values:
-local PS mode towards remote STA
-remote STA's peer-specific power mode towards local STA
-remote STA's non-peer power mode
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
 ---
- include/net/cfg80211.h       |   12 ++++++++++++
- include/uapi/linux/nl80211.h |    9 +++++++++
- net/mac80211/cfg.c           |    8 +++++++-
- net/wireless/nl80211.c       |   12 ++++++++++++
- 4 files changed, 40 insertions(+), 1 deletion(-)
+ r8180_rtl8225z2.c |   20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6eb0a6b..74b6c59 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -553,6 +553,9 @@ struct station_parameters {
-  * @STATION_INFO_STA_FLAGS: @sta_flags filled
-  * @STATION_INFO_BEACON_LOSS_COUNT: @beacon_loss_count filled
-  * @STATION_INFO_T_OFFSET: @t_offset filled
-+ * @STATION_INFO_LOCAL_MESH_PS_MODE: @local_ps_mode filled
-+ * @STATION_INFO_PEER_MESH_PS_MODE: @peer_ps_mode filled
-+ * @STATION_INFO_NONPEER_MESH_PS_MODE: @nonpeer_ps_mode filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -576,6 +579,9 @@ enum station_info_flags {
- 	STATION_INFO_STA_FLAGS		= 1<<18,
- 	STATION_INFO_BEACON_LOSS_COUNT	= 1<<19,
- 	STATION_INFO_T_OFFSET		= 1<<20,
-+	STATION_INFO_LOCAL_MESH_PS_MODE = 1<<21,
-+	STATION_INFO_PEER_MESH_PS_MODE  = 1<<22,
-+	STATION_INFO_NONPEER_MESH_PS_MODE  = 1<<23,
+diff --git a/r8180_rtl8225z2.c b/r8180_rtl8225z2.c
+index eba9786..c592f79 100644
+--- a/r8180_rtl8225z2.c
++++ b/r8180_rtl8225z2.c
+@@ -132,7 +132,7 @@ static const u16 rtl8225z2_rxgain[] = {
+ 	0x0794, 0x0795, 0x0798, 0x0799, 0x079a, 0x079b, 0x079c, 0x079d,
+ 	0x07a0, 0x07a1, 0x07a2, 0x07a3, 0x07a4, 0x07a5, 0x07a8, 0x07a9,
+ 	0x03aa, 0x03ab, 0x03ac, 0x03ad, 0x03b0, 0x03b1, 0x03b2, 0x03b3,
+-	0x03b4, 0x03b5, 0x03b8, 0x03b9, 0x03ba, 0x03bb, 0x03bb
++	0x03b4, 0x03b5, 0x03b8, 0x03b9, 0x03ba, 0x03bb
+ 
  };
  
- /**
-@@ -679,6 +685,9 @@ struct sta_bss_parameters {
-  * @sta_flags: station flags mask & values
-  * @beacon_loss_count: Number of times beacon loss event has triggered.
-  * @t_offset: Time offset of the station relative to this host.
-+ * @local_ps_mode: local mesh STA power save mode
-+ * @peer_ps_mode: peer mesh STA power save mode
-+ * @nonpeer_ps_mode: non-peer mesh STA power save mode
-  */
- struct station_info {
- 	u32 filled;
-@@ -708,6 +717,9 @@ struct station_info {
+@@ -431,8 +431,8 @@ void rtl8225z2_rf_init(struct net_device *dev)
+ 	struct r8180_priv *priv = ieee80211_priv(dev);
+ 	int i;
+ 	short channel = 1;
+-	u16	brsr;
+-	u32	data, addr;
++	u16 brsr;
++	u32 data;
  
- 	u32 beacon_loss_count;
- 	s64 t_offset;
-+	enum nl80211_mesh_power_mode local_ps_mode;
-+	enum nl80211_mesh_power_mode peer_ps_mode;
-+	enum nl80211_mesh_power_mode nonpeer_ps_mode;
+ 	priv->chan = channel;
  
- 	/*
- 	 * Note: Add a new enum station_info_flags value for each new field and
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index bd54f21..62e5b68 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1793,6 +1793,12 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update.
-  * @NL80211_STA_INFO_BEACON_LOSS: count of times beacon loss was detected (u32)
-  * @NL80211_STA_INFO_T_OFFSET: timing offset with respect to this STA (s64)
-+ * @NL80211_STA_INFO_LOCAL_MESH_PS_MODE: local mesh STA link-specific power
-+ * 	save mode
-+ * @NL80211_STA_INFO_PEER_MESH_PS_MODE: peer mesh STA link-specific power
-+ * 	save mode
-+ * @NL80211_STA_INFO_NONPEER_MESH_PS_MODE: neighbor mesh STA power save mode
-+ * 	towards non-peer STA
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -1817,6 +1823,9 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_STA_FLAGS,
- 	NL80211_STA_INFO_BEACON_LOSS,
- 	NL80211_STA_INFO_T_OFFSET,
-+	NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
-+	NL80211_STA_INFO_PEER_MESH_PS_MODE,
-+	NL80211_STA_INFO_NONPEER_MESH_PS_MODE,
+@@ -473,8 +473,8 @@ void rtl8225z2_rf_init(struct net_device *dev)
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2ed111f..db27208 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -456,7 +456,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- #ifdef CONFIG_MAC80211_MESH
- 		sinfo->filled |= STATION_INFO_LLID |
- 				 STATION_INFO_PLID |
--				 STATION_INFO_PLINK_STATE;
-+				 STATION_INFO_PLINK_STATE |
-+				 STATION_INFO_LOCAL_MESH_PS_MODE |
-+				 STATION_INFO_PEER_MESH_PS_MODE |
-+				 STATION_INFO_NONPEER_MESH_PS_MODE;
+ 	write_rtl8225(dev, 0x0, 0x1b7);
  
- 		sinfo->llid = le16_to_cpu(sta->llid);
- 		sinfo->plid = le16_to_cpu(sta->plid);
-@@ -465,6 +468,9 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 			sinfo->filled |= STATION_INFO_T_OFFSET;
- 			sinfo->t_offset = sta->t_offset;
- 		}
-+		sinfo->local_ps_mode = sta->local_ps_mode;
-+		sinfo->peer_ps_mode = sta->peer_ps_mode;
-+		sinfo->nonpeer_ps_mode = sta->nonpeer_ps_mode;
- #endif
+-	for (i = 0; i < 95; i++) {
+-		write_rtl8225(dev, 0x1, (u8)(i + 1));
++	for (i = 0; i < ARRAY_SIZE(rtl8225z2_rxgain); i++) {
++		write_rtl8225(dev, 0x1, i + 1);
+ 		write_rtl8225(dev, 0x2, rtl8225z2_rxgain[i]);
  	}
  
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8749d3c..84ebe38 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2891,6 +2891,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
- 	    nla_put_u32(msg, NL80211_STA_INFO_BEACON_LOSS,
- 			sinfo->beacon_loss_count))
- 		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_LOCAL_MESH_PS_MODE) &&
-+	    nla_put_u8(msg, NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
-+			sinfo->local_ps_mode))
-+		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_PEER_MESH_PS_MODE) &&
-+	    nla_put_u8(msg, NL80211_STA_INFO_PEER_MESH_PS_MODE,
-+			sinfo->peer_ps_mode))
-+		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_NONPEER_MESH_PS_MODE) &&
-+	    nla_put_u8(msg, NL80211_STA_INFO_NONPEER_MESH_PS_MODE,
-+			sinfo->nonpeer_ps_mode))
-+		goto nla_put_failure;
- 	if (sinfo->filled & STATION_INFO_BSS_PARAM) {
- 		bss_param = nla_nest_start(msg, NL80211_STA_INFO_BSS_PARAM);
- 		if (!bss_param)
+@@ -504,14 +504,12 @@ void rtl8225z2_rf_init(struct net_device *dev)
+ 
+ 	write_rtl8225(dev, 0x0, 0x2bf);
+ 
+-	for (i = 0; i < 128; i++) {
+-		data = rtl8225_agc[i];
+-
+-		addr = i + 0x80; /* enable writing AGC table */
+-		write_phy_ofdm(dev, 0xb, data);
++	for (i = 0; i < ARRAY_SIZE(rtl8225_agc); i++) {
++		write_phy_ofdm(dev, 0xb, rtl8225_agc[i]);
+ 		mdelay(1);
+ 
+-		write_phy_ofdm(dev, 0xa, addr);
++		/* enable writing AGC table */
++		write_phy_ofdm(dev, 0xa, i + 0x80);
+ 		mdelay(1);
+ 	}
+ 
 -- 
-1.7.9.5
+1.7.10.4
 
