@@ -1,104 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52469 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751387Ab2KFQvV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 11:51:21 -0500
-Message-ID: <1352220633.25250.0.camel@dcbw.foobar.com> (sfid-20121106_175147_928168_06BA1D10)
-Subject: Re: [PATCH] add Marvell 88W8688 support to libertas_sdio
-From: Dan Williams <dcbw@redhat.com>
-To: Harro Haan <hrhaan@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Siddarth Gore <gores@marvell.com>
-Date: Tue, 06 Nov 2012 10:50:33 -0600
-In-Reply-To: <1351722266-9304-1-git-send-email-hrhaan@gmail.com>
-References: <1351722266-9304-1-git-send-email-hrhaan@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:64781 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888Ab2KLVje (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Nov 2012 16:39:34 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA++BO6SuRgOu7A4BKobrdEeSpSc3UUYHXaECmEGE=R17w7HjQA@mail.gmail.com>
+References: <CA++BO6SuRgOu7A4BKobrdEeSpSc3UUYHXaECmEGE=R17w7HjQA@mail.gmail.com>
+Date: Mon, 12 Nov 2012 13:39:34 -0800
+Message-ID: <CAJ-Vmon04wLvn0DDnD9X98bY8DxHRQf10jQJCbuckbztS261vQ@mail.gmail.com> (sfid-20121112_223943_971835_E4101AF8)
+Subject: Re: ath9k_htc-based adapter unfunctioning after commit ceb26a6013
+From: Adrian Chadd <adrian@freebsd.org>
+To: Corey Richardson <corey@octayn.net>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-10-31 at 23:24 +0100, Harro Haan wrote:
-> This chip is for example used in the GuruPlug.
-> This patch avoids the following error:
-> libertas_sdio: failed to load firmware
-> libertas_sdio: probe of mmc0:0001:1 failed with error -5
-> 
-> The fix is based on code in:
-> drivers/net/wireless/libertas_uap/uap_sdio_mmc.c
-> 
-> This file can for example be found on the following links:
-> http://www.xilka.com/sheeva/2.6/2.6.36/2.6.36.2/source/0002-Driver-for-Marvell-Libertas-8688-SDIO-micro-AP-suppo-2.6.35.patch
-> http://www.downloadsnewit.co.uk/kernel-v3.0.7/
-> 
-> I followed the following wiki to setup a working WiFi client mode
-> connection on the GuruPlug:
-> http://wiki.debian.org/libertas
-> 
-> Signed-off-by: Harro Haan <hrhaan@gmail.com>
+Hi!
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Please create a bugzilla.kernel.org ticket with this info?
 
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |   39 ++++++++++++++++++++++++--------
->  1 file changed, 30 insertions(+), 9 deletions(-)
-> 
-> Index: linux.git/drivers/net/wireless/libertas/if_sdio.c
-> ===================================================================
-> --- linux.git.orig/drivers/net/wireless/libertas/if_sdio.c
-> +++ linux.git/drivers/net/wireless/libertas/if_sdio.c
-> @@ -588,17 +588,38 @@ static int if_sdio_prog_real(struct if_s
->  	size = fw->size;
->  
->  	while (size) {
-> -		ret = if_sdio_wait_status(card, FW_DL_READY_STATUS);
-> -		if (ret)
-> -			goto release;
-> +		timeout = jiffies + HZ;
-> +		while (1) {
-> +			ret = if_sdio_wait_status(card, FW_DL_READY_STATUS);
-> +			if (ret)
-> +				goto release;
->  
-> -		req_size = sdio_readb(card->func, IF_SDIO_RD_BASE, &ret);
-> -		if (ret)
-> -			goto release;
-> +			req_size = sdio_readb(card->func, IF_SDIO_RD_BASE,
-> +					&ret);
-> +			if (ret)
-> +				goto release;
-> +
-> +			req_size |= sdio_readb(card->func, IF_SDIO_RD_BASE + 1,
-> +					&ret) << 8;
-> +			if (ret)
-> +				goto release;
-> +
-> +			/*
-> +			 * For SD8688 wait until the length is not 0, 1 or 2
-> +			 * before downloading the first FW block,
-> +			 * since BOOT code writes the register to indicate the
-> +			 * helper/FW download winner,
-> +			 * the value could be 1 or 2 (Func1 or Func2).
-> +			 */
-> +			if ((size != fw->size) || (req_size > 2))
-> +				break;
-> +			if (time_after(jiffies, timeout)) {
-> +				ret = -ETIMEDOUT;
-> +				goto release;
-> +			}
-> +			mdelay(1);
-> +		}
->  
-> -		req_size |= sdio_readb(card->func, IF_SDIO_RD_BASE + 1, &ret) << 8;
-> -		if (ret)
-> -			goto release;
->  /*
->  		lbs_deb_sdio("firmware wants %d bytes\n", (int)req_size);
->  */
-> 
-> _______________________________________________
-> libertas-dev mailing list
-> libertas-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/libertas-dev
+Thanks,
 
 
+
+adrian
+
+
+On 12 November 2012 05:34, Corey Richardson <corey@octayn.net> wrote:
+> I was giving 3.7-rc4 a whirl when I discovered my wireless adapter [0] wasn't
+> working: the LED didn't light up. Went and ran 'ip link' and it just hung there.
+> Tried a few other things and discovered that sudo was broken too. With
+> strace I found that they were hanging in sendto().
+>
+> If I then unplug the adapter, everything comes out of the hang.
+>
+> Bisected and found that commit ceb26a6013b962b82f644189ea29d802490fc8fc is
+> to blame.
+>
+> Attached is my .config,. The complete dmesg is attached, as well as
+> dmesg_disconnect which is what gets spat out on disconnect of the device.
+> strace is an strace of 'ip link'.
+>
+> I feel like I haven't given enough information; anything else needed?
+>
+> (Please CC me in any reply to a list; I am not subscribed to them)
+>
+> [0] - http://support.netgear.com/product/WNA1100
+>
+> --
+> Corey Richardson
