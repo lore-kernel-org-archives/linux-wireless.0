@@ -1,43 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50116 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920Ab2KHRkx (ORCPT
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:34105
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750851Ab2KLFdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 12:40:53 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TWW60-0002h9-MC
-	for linux-wireless@vger.kernel.org; Thu, 08 Nov 2012 18:40:52 +0100
-Message-ID: <1352396489.11421.12.camel@jlt4.sipsolutions.net> (sfid-20121108_184104_965023_FE8D9748)
-Subject: Re: [RFC] cfg80211: remove remain-on-channel channel type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 08 Nov 2012 18:41:29 +0100
-In-Reply-To: <1352396268-20776-1-git-send-email-johannes@sipsolutions.net> (sfid-20121108_183732_207729_D15E27D8)
-References: <1352396268-20776-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121108_183732_207729_D15E27D8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 12 Nov 2012 00:33:42 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] ath9k: Remove unused workaround
+Date: Mon, 12 Nov 2012 10:56:44 +0530
+Message-Id: <1352698004-10790-2-git-send-email-sujith@msujith.org> (sfid-20121112_063359_418813_FFC5ACC7)
+In-Reply-To: <1352698004-10790-1-git-send-email-sujith@msujith.org>
+References: <1352698004-10790-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-08 at 18:37 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> As mwifiex (and mac80211 in the software case) are the
-> only drivers actually implementing remain-on-channel
-> with channel type, userspace can't be relying on it.
-> This is the case, as it's used only for P2P operations
-> right now.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The other reason for this, of course, is that I'm starting to work on
-VHT channel configuration, and that can't be using the channel type enum
-any more, so the internal APIs all have to change.
+The workaround for ASPM/L0s is needed only for AR9485 1.0,
+which was never sold and is not supported by ath9k.
 
-Since this really won't be needed for other channel types (for now),
-I've decided to remove it instead rather than make my life more complex
-with VHT. :)
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   |  5 -----
+ drivers/net/wireless/ath/ath9k/hw.h   |  3 ---
+ drivers/net/wireless/ath/ath9k/main.c |  3 ---
+ drivers/net/wireless/ath/ath9k/pci.c  | 12 ------------
+ 4 files changed, 23 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 71cd9f0..756191b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2561,11 +2561,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			pCap->hw_caps |= ATH9K_HW_CAP_ANT_DIV_COMB;
+ 	}
+ 
+-	if (AR_SREV_9485_10(ah)) {
+-		pCap->pcie_lcr_extsync_en = true;
+-		pCap->pcie_lcr_offset = 0x80;
+-	}
+-
+ 	if (ath9k_hw_dfs_tested(ah))
+ 		pCap->hw_caps |= ATH9K_HW_CAP_DFS;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 3e73bfe..bdabbda 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -273,8 +273,6 @@ struct ath9k_hw_capabilities {
+ 	u8 rx_status_len;
+ 	u8 tx_desc_len;
+ 	u8 txs_len;
+-	u16 pcie_lcr_offset;
+-	bool pcie_lcr_extsync_en;
+ };
+ 
+ struct ath9k_ops_config {
+@@ -930,7 +928,6 @@ struct ath_bus_ops {
+ 	void (*read_cachesize)(struct ath_common *common, int *csz);
+ 	bool (*eeprom_read)(struct ath_common *common, u32 off, u16 *data);
+ 	void (*bt_coex_prep)(struct ath_common *common);
+-	void (*extn_synch_en)(struct ath_common *common);
+ 	void (*aspm_init)(struct ath_common *common);
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 578a723..5d5a914 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -686,9 +686,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+-	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
+-		common->bus_ops->extn_synch_en(common);
+-
+ 	mutex_unlock(&sc->mutex);
+ 
+ 	ath9k_ps_restore(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index f088f4b..9553203 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -96,17 +96,6 @@ static bool ath_pci_eeprom_read(struct ath_common *common, u32 off, u16 *data)
+ 	return true;
+ }
+ 
+-static void ath_pci_extn_synch_enable(struct ath_common *common)
+-{
+-	struct ath_softc *sc = (struct ath_softc *) common->priv;
+-	struct pci_dev *pdev = to_pci_dev(sc->dev);
+-	u8 lnkctl;
+-
+-	pci_read_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, &lnkctl);
+-	lnkctl |= PCI_EXP_LNKCTL_ES;
+-	pci_write_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, lnkctl);
+-}
+-
+ /* Need to be called after we discover btcoex capabilities */
+ static void ath_pci_aspm_init(struct ath_common *common)
+ {
+@@ -153,7 +142,6 @@ static const struct ath_bus_ops ath_pci_bus_ops = {
+ 	.ath_bus_type = ATH_PCI,
+ 	.read_cachesize = ath_pci_read_cachesize,
+ 	.eeprom_read = ath_pci_eeprom_read,
+-	.extn_synch_en = ath_pci_extn_synch_enable,
+ 	.aspm_init = ath_pci_aspm_init,
+ };
+ 
+-- 
+1.8.0
 
