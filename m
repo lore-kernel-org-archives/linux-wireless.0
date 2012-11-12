@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:46729 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150Ab2KKPe7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752327Ab2KLJbF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 10:34:59 -0500
-Received: by mail-ea0-f174.google.com with SMTP id c13so2071429eaa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 07:34:57 -0800 (PST)
-Message-ID: <1352648091.6460.12.camel@canaries32-MCP7A> (sfid-20121111_163502_751679_34195351)
-Subject: [PATCH 06/14] staging: vt6656: 64 bit fixes: rxtx.h Replace DWORD
- with u32.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 11 Nov 2012 15:34:51 +0000
+	Mon, 12 Nov 2012 04:31:05 -0500
+Message-ID: <1352712697.9525.4.camel@jlt4.sipsolutions.net> (sfid-20121112_103114_101390_EB18E405)
+Subject: Re: [PATCH v2] nl/cfg80211: advertise OBSS scan offload capability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Mon, 12 Nov 2012 10:31:37 +0100
+In-Reply-To: <1352512290-7316-1-git-send-email-bzhao@marvell.com>
+References: <1352512290-7316-1-git-send-email-bzhao@marvell.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Size of long issues.
+On Fri, 2012-11-09 at 17:51 -0800, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> wpa_supplicant will do OBSS scan for drivers that implement
+> auth/assoc API. Drivers that implement nl80211 connect API
+> (rather than auth/assoc) may need wpa_supplicant to do this
+> as well.
+> 
+> New flag is added to inform userspace that this driver will
+> make use of wpa_supplicant's OBSS scan feature.
 
- Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> + * @NL80211_FEATURE_OBSS_SCAN_OFFLOAD: The driver expects user space to
+> + *	perform OBSS scan and generate 20/40 BSS coex reports. This flag is
+> + *	interested in only in the case of a driver that has connect API.
 
----
- drivers/staging/vt6656/rxtx.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Applied, but I changed a lot ;-)
 
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index f99acf1..dd2198a 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -61,9 +61,9 @@ typedef struct tagSCTSDataF {
- // MICHDR data header
- //
- typedef struct tagSMICHDR {
--    DWORD   adwHDR0[4];
--    DWORD   adwHDR1[4];
--    DWORD   adwHDR2[4];
-+	u32 adwHDR0[4];
-+	u32 adwHDR1[4];
-+	u32 adwHDR2[4];
- } SMICHDR, *PSMICHDR;
- 
+Notably, I reworded the constant name to be
+NL80211_FEATURE_NEED_OBSS_SCAN, since we typically use the term
+"offload" to mean that the *device* does something, not to mean that
+*userspace* does something.
 
-@@ -630,7 +630,7 @@ typedef struct tagSTX_BUFFER
-     BYTE                            byPKTNO;
-     WORD                            wTxByteCount;
- 
--    DWORD                           adwTxKey[4];
-+	u32 adwTxKey[4];
-     WORD                            wFIFOCtl;
-     WORD                            wTimeStamp;
-     WORD                            wFragCtl;
--- 
-1.8.0
-
-
-
+johannes
 
