@@ -1,75 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:58859 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767933Ab2KOOIV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2012 09:08:21 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Daniel Wagner <wagi@monom.org>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v2 03/22] brcmsmac: Add helper function for updating txavail count
-Date: Thu, 15 Nov 2012 08:07:53 -0600
-Message-Id: <1352988492-21340-4-git-send-email-seth.forshee@canonical.com> (sfid-20121115_150837_728252_FE9D2116)
-In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+Received: from purkki.adurom.net ([80.68.90.206]:60148 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751682Ab2KLRWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Nov 2012 12:22:24 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v5 1/2] wireless: Driver for 60GHz card wil6210
+References: <20121108193010.GC3354@lenteja.do-not-panic.com>
+	<1647271.ZFHae4zFan@lx-vladimir>
+Date: Mon, 12 Nov 2012 19:22:19 +0200
+In-Reply-To: <1647271.ZFHae4zFan@lx-vladimir> (Vladimir Kondratiev's message
+	of "Sun, 11 Nov 2012 18:15:05 +0200")
+Message-ID: <87txsuybw4.fsf@purkki.adurom.net> (sfid-20121112_182228_490772_3DBAC386)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use this helper function rather than open-coding the same calculation in
-multiple places.
+Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/dma.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+>> Please see
+>> ath6kl's struct wmi_begin_scan_cmd on wmi.h for an example
+>> of how to specify endianess to ensure that you can use this
+>> driver on big or little endian. So although its great you
+>> managed to successfully use sparse with -D__CHECK_ENDIAN__
+>> endianess may be broken on this command and all over your
+>> wmi.h. I won't even review that file then.
+>
+> I know about __le16 etc., but I have no big endian host to check it with. 
+> Thus, I'd prefer to mention that code is not ready for big endian platform 
+> rather then submit untested code. If there is a way to check endiannes without 
+> having big endian host, I'd be happy to know.
+> Also, is there a good way to check in Kconfig we are on Little endian?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 5e53305..6444cf1 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -1264,6 +1264,17 @@ bool dma_rxreset(struct dma_pub *pub)
- 	return status == D64_RS0_RS_DISABLED;
- }
- 
-+/* Update count of available tx descriptors based on current DMA state */
-+static void dma_update_txavail(struct dma_info *di)
-+{
-+	/*
-+	 * Available space is number of descriptors less the number of
-+	 * active descriptors and the number of queued AMPDU frames.
-+	 */
-+	di->dma.txavail = di->ntxd - ntxdactive(di, di->txin, di->txout) - 1;
-+}
-+
-+
- /*
-  * !! tx entry routine
-  * WARNING: call must check the return value for error.
-@@ -1325,7 +1336,7 @@ int dma_txfast(struct dma_pub *pub, struct sk_buff *p, bool commit)
- 		      di->xmtptrbase + I2B(txout, struct dma64desc));
- 
- 	/* tx flow control */
--	di->dma.txavail = di->ntxd - ntxdactive(di, di->txin, di->txout) - 1;
-+	dma_update_txavail(di);
- 
- 	return 0;
- 
-@@ -1412,7 +1423,7 @@ struct sk_buff *dma_getnexttxp(struct dma_pub *pub, enum txd_range range)
- 	di->txin = i;
- 
- 	/* tx flow control */
--	di->dma.txavail = di->ntxd - ntxdactive(di, di->txin, di->txout) - 1;
-+	dma_update_txavail(di);
- 
- 	return txp;
- 
+I think this is wrong aproach. The endian support doesn't need to be
+perfect, especially if you don't have any hardware to test with. Just
+add endian annotations to all the fields you know of, run sparse and fix
+the warnings. This should only take few hours and is much better than
+refusing to compile on big endian machines.
+
+You will get very close to a working code with that method, and it means
+that all future code will have endian support "automatically" (as the
+code will follow the style already used in the driver). And whenever
+someone will try the driver in a big endian machine there's less to
+debug and fix, with very good luck (and careful review!) it might even
+work out of box :)
+
 -- 
-1.7.9.5
-
+Kalle Valo
