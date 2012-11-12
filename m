@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:59988 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132Ab2K1JM5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38211 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752752Ab2KLUmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:12:57 -0500
-Message-ID: <1354093937.25524.14.camel@cumari.coelho.fi> (sfid-20121128_101300_576099_A745F0B3)
-Subject: Re: [PATCH v2 00/14] update 18xx api
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 28 Nov 2012 11:12:17 +0200
-In-Reply-To: <1353600384-32462-1-git-send-email-eliad@wizery.com>
-References: <1353600384-32462-1-git-send-email-eliad@wizery.com>
+	Mon, 12 Nov 2012 15:42:08 -0500
+Message-ID: <1352752959.12957.2.camel@jlt4.sipsolutions.net> (sfid-20121112_214214_480919_E972F86B)
+Subject: Re: [PATCH] mac80211: support RX_FLAG_MACTIME_END
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 12 Nov 2012 21:42:39 +0100
+In-Reply-To: <1352745513-1265-1-git-send-email-thomas@cozybit.com> (sfid-20121112_193850_215866_5571BA38)
+References: <1352745513-1265-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20121112_193850_215866_5571BA38)
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-22 at 18:06 +0200, Eliad Peller wrote:
-> This patchset updates wl18xx to use the latest
-> 18xx fw api.
-> 
-> Most of the commands are backward compatible with
-> the 12xx fw (e.g. new fields were added at the
-> end of the existing structs).
-> 
-> However, the scan and event mailbox apis were
-> completely changed, so we had to split the
-> existing code (while trying to reuse as much
-> code as possible).
-> 
-> After this patchset, the driver can work with
-> latest versions of both 12xx and 18xx FWs.
-> 
-> v2: handle Luca's comments
-> 
-> Eliad Peller (13):
->   wlcore: don't call ieee80211_sched_scan_stopped directly
->   wlcore: make scan scan configuration functions more generic
->   wl18xx: change fw name and temporarily fail loading
->   wlcore: update commands enum to new fw api
->   wlcore: split 18xx and 12xx scan mechanism
->   wl18xx: increase MAX_CHANNELS_5GHZ
->   wlcore: update acx enum
->   wlcore: update channel_switch/stop_channel_switch commands
->   wlcore: update events enum/struct to new fw api
->   wlcore: pass wmm configuration to the fw
->   wlcore: save session_id per-link
->   wlcore: call ieee80211_sched_scan_stopped on interface removal
->   wl18xx: make driver operational again
-> 
-> Victor Goldenshtein (1):
->   wlcore: add new reg-domain configuration command
+On Mon, 2012-11-12 at 10:38 -0800, Thomas Pedersen wrote:
 
-Applied, thank you!
+> +	if (ieee80211_have_rx_timestamp(rx_status))
+> +		/* time when timestamp field was received */
+> +		t_r = ieee80211_calculate_rx_timestamp(local, rx_status,
+> +						       24 + 12 +
+> +						       elems->total_len + 4,
+> +						       24);
 
---
-Luca.
+This doesn't seem quite right, the FCS isn't accounted for correctly?
+
+I think it might be wortwhile to pass the SKB to the function instead of
+rx_status though, then it could get skb->len and check whether or not
+FCS was before the timestamp (which, btw, you should mention in the
+documentation for the new flag!)
+
+And then I suspect the check for IEEE80211_HW_RX_INCLUDES_FCS is also
+incorrect -- even if the driver didn't report the FCS maybe the
+timestamping semantic was such that it was after the FCS?
+
+This seems to need a little fixing up, but other than that looks good.
+
+johannes
 
