@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:57850 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567Ab2KCWJH (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:11921 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353Ab2KLO6K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Nov 2012 18:09:07 -0400
-Received: by mail-vb0-f46.google.com with SMTP id ff1so4832940vbb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Nov 2012 15:09:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1351941260.21705.2.camel@jlt4.sipsolutions.net>
-References: <CA+7oygeOHQLcdEWpedbXDnBoAHrXddkrmNd3-PNQOKzoyNkn6w@mail.gmail.com>
-	<CA+7oygfnsrqAyU4d3n7EgmOntenhp36DEGhSnJ4FsJFdOKCk-w@mail.gmail.com>
-	<1351941260.21705.2.camel@jlt4.sipsolutions.net>
-Date: Sat, 3 Nov 2012 18:09:06 -0400
-Message-ID: <CA+7oygemJMmhEdy8SeE5w9bXmYB6tn4J03ORkLubV1DVO3hwaQ@mail.gmail.com> (sfid-20121103_230920_585471_35957E4D)
-Subject: Re: bug in compat-wireless 3.6, rt2x00 iftype is wrong
-From: George Nychis <gnychis@gmail.com>
+	Mon, 12 Nov 2012 09:58:10 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>, <j@w1.fi>
+Subject: Re: 60 GHz interface types (was: [PATCH v5 1/2] wireless: Driver for 60GHz card wil6210)
+Date: Mon, 12 Nov 2012 16:57:50 +0200
+Message-ID: <5760018.dRG2Gq6GXs@lx-vladimir> (sfid-20121112_155814_073399_716F887E)
+In-Reply-To: <1352715850.9525.17.camel@jlt4.sipsolutions.net>
+References: <1351701417-3140-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1352715356.9525.12.camel@jlt4.sipsolutions.net> <1352715850.9525.17.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fair enough, this is just behavior that was newly enforced without
-comments that I could find.  For the several years that I've been
-working with compat-wireless, I've been able to change the channel of
-an unassociated Managed interface with a coupled monitoring interface
-using iwconfig or iw on either.  Then, that behavior broke.  I see the
-logic behind the behavior.
-
-On Sat, Nov 3, 2012 at 7:14 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2012-11-02 at 15:57 -0400, George Nychis wrote:
->> The issue seems to be that in all of these drivers, wdev is NULL when
->> you hit set_channel()  in the older and newer driver.  In the old
->> driver, cfg8011_set_freq() is called with wdev has NULL and it still
->> calls rdev->ops->set_channel(....) which succeeds.
->>
->> However, in the new driver cfg80211_set_monitor_channel() is called
->> since wdev was NULL, but now instead of still calling
->> rdev->ops->set_channel() or rdev->ops->set_monitor_channel() it
->> returns -EBUSY because if(!cfg80211_has_monitors_only(rdev)) returns
->> true.  Is this really the expected behavior, or is meant to only
->> return -EBUSY if there are only monitors, rather? (i.e.,
->> if(cfg80211_has_monitors_only(rdev)) )
->
-> No, this is the correct behaviour, if you have non-monitor interfaces
-> you can't set the channel since the channel setting would be done with
-> other actions, e.g. associating a managed mode interface.
->
-> I don't really understand your original complaint though, the iftype you
-> set will be the one the interface is in ...
->
+On Monday, November 12, 2012 11:24:10 AM Johannes Berg wrote:
+> On Mon, 2012-11-12 at 11:15 +0100, Johannes Berg wrote:
+> > > I suppose we can have MAC stuff in the kernel as-is, and at least at the
+> > > beginning try to handle multi-band entirely in the supplicant.
+> > 
+> > But it does raise the question of what happens if a single device
+> > supports both 2.4 and 60 GHz, or maybe all three of 2.4, 5 and 60 GHz.
+> > 
+> > If that would be on a single wiphy, I think we might run into issues
+> > with re-using the interface types?
+> 
+> Let me elaborate on this. Lets say we have a hypothetical device that
+> supports
+> 
+>  2.4 GHz - client mode
+>  60 GHz  - AP and PCP mode
+> 
+> Yes, that would be pretty stupid, but let's say it exists, and even
+> worse than that, it only supports 2.4 GHz *or* 60 GHz, not both at the
+> same time (1).
+> 
+> Now how do you express its capabilities? Obviously it has both 2.4 and
+> 60 GHz channels, and the list of interface types it supports would be
+> client, AP, PCP -- however there's no way to tell which it supports on
+> which bands.
+> 
+> Yes, this is a contrived example, but are you sure it won't exist? The
+> sticking point is the fact that this device only has a single MAC that
+> handles both 2.4 and 60 GHz, as it is usually the case for 2.4 and 5
+> GHz, but then the capabilities are the same, since things *are* the
+> same. Evidently though, a 2.4 GHz client and 60 GHz client are
+> different.
+> 
 > johannes
->
+> 
+> 
+> (1) If it did support both at the same time, it would register two wiphy
+> structs with cfg80211.
+
+I wonder how do we do so if I substitute 5G instead of 60G, i.e. 2.4G client 
+and 5G AP, not same time. How do we handle per-band cababilities in this case?
+
+Something makes me think that in your example it should be 2 wiphy structs; 
+but need then I need to express inter-device restriction. I don't know right 
+answer to this.
+
