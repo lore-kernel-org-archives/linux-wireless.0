@@ -1,52 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36546 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756930Ab2KZRtI (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:54986 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721Ab2KMR2v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 12:49:08 -0500
-Message-ID: <1353952160.2800.8.camel@jlt4.sipsolutions.net> (sfid-20121126_184918_475433_6F6C715B)
-Subject: Re: Kernel splat from 3.5.7+ (tainted)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Nov 2012 18:49:20 +0100
-In-Reply-To: <50B3A275.3010302@candelatech.com> (sfid-20121126_184257_410312_9D3ECF7B)
-References: <50B3A275.3010302@candelatech.com>
-	 (sfid-20121126_184257_410312_9D3ECF7B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 13 Nov 2012 12:28:51 -0500
+Received: by mail-ee0-f46.google.com with SMTP id b15so4133183eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:28:50 -0800 (PST)
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+To: greg@kroah.com, Larry.Finger@lwfinger.net,
+	linux-wireless@vger.kernel.org
+Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
+Subject: [PATCH 01/17] staging: rtl8187se: Removed dead functions
+Date: Tue, 13 Nov 2012 19:28:07 +0200
+Message-Id: <1352827703-4659-2-git-send-email-maxtram95@gmail.com> (sfid-20121113_182856_080187_885FEC8B)
+In-Reply-To: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
+References: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 09:10 -0800, Ben Greear wrote:
-> This looks like some sort of locking bug...the warning comes from the code
-> in softirq.c (below).
-...
-> Nov 21 19:33:17 localhost kernel: WARNING: at /home/greearb/git/linux-3.5.dev.y/kernel/softirq.c:159 _local_bh_enable_ip+0x41/0x9f()
-> Nov 21 19:33:17 localhost kernel: Hardware name: To be filled by O.E.M.
-...
-> Nov 21 19:33:17 localhost kernel: Pid: 5905, comm: kworker/u:0 Tainted: P           O 3.5.7+ #27
-> Nov 21 19:33:17 localhost kernel: Call Trace:
-> Nov 21 19:33:17 localhost kernel: <IRQ>  [<ffffffff8105c5cc>] warn_slowpath_common+0x80/0x98
-> Nov 21 19:33:17 localhost kernel: [<ffffffff8105c5f9>] warn_slowpath_null+0x15/0x17
-> Nov 21 19:33:17 localhost kernel: [<ffffffff81062dfa>] _local_bh_enable_ip+0x41/0x9f
-> Nov 21 19:33:17 localhost kernel: [<ffffffff81062e61>] local_bh_enable_ip+0x9/0xb
-> Nov 21 19:33:17 localhost kernel: [<ffffffff814e31a6>] _raw_spin_unlock_bh+0x1c/0x1e
-> Nov 21 19:33:17 localhost kernel: [<ffffffff8144fee4>] destroy_conntrack+0xbd/0xfc
-> Nov 21 19:33:17 localhost kernel: [<ffffffff8144da47>] nf_conntrack_destroy+0x27/0x2e
-> Nov 21 19:33:17 localhost kernel: [<ffffffff81422934>] skb_release_head_state+0x9a/0xdc
-> Nov 21 19:33:17 localhost kernel: [<ffffffff81422b77>] __kfree_skb+0x11/0x7d
-> Nov 21 19:33:17 localhost kernel: [<ffffffff81422c2c>] consume_skb+0x28/0x2a
-> Nov 21 19:33:17 localhost kernel: [<ffffffffa01fa2f9>] __ieee80211_tx+0x1f9/0x31a [mac80211]
+Removed stale functions that are never called
 
+Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
+---
+ drivers/staging/rtl8187se/r8180_core.c      |  185 ---------------------------
+ drivers/staging/rtl8187se/r8180_rtl8225z2.c |   16 ---
+ 2 files changed, 201 deletions(-)
 
-I think the problem is the dev_kfree_skb(), it should be
-dev_kfree_skb_any() in line 1299 in tx.c because ieee80211_tx() calls
-__ieee80211_tx() with RCU lock held. It has pretty much done that
-forever though, so it's surprising this shows up now? Was that some sort
-of special frame?
-
-Note that this is actually fixed in wireless-next.
-
-johannes
+diff --git a/drivers/staging/rtl8187se/r8180_core.c b/drivers/staging/rtl8187se/r8180_core.c
+index 20e5fb5..8ed94d1 100644
+--- a/drivers/staging/rtl8187se/r8180_core.c
++++ b/drivers/staging/rtl8187se/r8180_core.c
+@@ -695,14 +695,6 @@ void rtl8180_RSSI_calc(struct net_device *dev, u8 *rssi, u8 *qual)
+ 	return;
+ }
+ 
+-void rtl8180_irq_enable(struct net_device *dev)
+-{
+-	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
+-
+-	priv->irq_enabled = 1;
+-	write_nic_word(dev, INTA_MASK, priv->irq_mask);
+-}
+-
+ void rtl8180_irq_disable(struct net_device *dev)
+ {
+ 	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
+@@ -724,7 +716,6 @@ void rtl8180_set_mode(struct net_device *dev, int mode)
+ 	write_nic_byte(dev, EPROM_CMD, ecmd);
+ }
+ 
+-void rtl8180_adapter_start(struct net_device *dev);
+ void rtl8180_beacon_tx_enable(struct net_device *dev);
+ 
+ void rtl8180_update_msr(struct net_device *dev)
+@@ -771,57 +762,6 @@ void rtl8180_set_chan(struct net_device *dev, short ch)
+ 	priv->rf_set_chan(dev, priv->chan);
+ }
+ 
+-void rtl8180_rx_enable(struct net_device *dev)
+-{
+-	u8 cmd;
+-	u32 rxconf;
+-	/* for now we accept data, management & ctl frame*/
+-	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
+-
+-	rxconf = read_nic_dword(dev, RX_CONF);
+-	rxconf = rxconf & ~MAC_FILTER_MASK;
+-	rxconf = rxconf | (1<<ACCEPT_MNG_FRAME_SHIFT);
+-	rxconf = rxconf | (1<<ACCEPT_DATA_FRAME_SHIFT);
+-	rxconf = rxconf | (1<<ACCEPT_BCAST_FRAME_SHIFT);
+-	rxconf = rxconf | (1<<ACCEPT_MCAST_FRAME_SHIFT);
+-	if (dev->flags & IFF_PROMISC)
+-		DMESG("NIC in promisc mode");
+-
+-	if (priv->ieee80211->iw_mode == IW_MODE_MONITOR || \
+-	   dev->flags & IFF_PROMISC) {
+-		rxconf = rxconf | (1<<ACCEPT_ALLMAC_FRAME_SHIFT);
+-	} else {
+-		rxconf = rxconf | (1<<ACCEPT_NICMAC_FRAME_SHIFT);
+-	}
+-
+-	if (priv->ieee80211->iw_mode == IW_MODE_MONITOR) {
+-		rxconf = rxconf | (1<<ACCEPT_CTL_FRAME_SHIFT);
+-		rxconf = rxconf | (1<<ACCEPT_ICVERR_FRAME_SHIFT);
+-		rxconf = rxconf | (1<<ACCEPT_PWR_FRAME_SHIFT);
+-	}
+-
+-	if (priv->crcmon == 1 && priv->ieee80211->iw_mode == IW_MODE_MONITOR)
+-		rxconf = rxconf | (1<<ACCEPT_CRCERR_FRAME_SHIFT);
+-
+-	rxconf = rxconf & ~RX_FIFO_THRESHOLD_MASK;
+-	rxconf = rxconf | (RX_FIFO_THRESHOLD_NONE << RX_FIFO_THRESHOLD_SHIFT);
+-
+-	rxconf = rxconf | (1<<RX_AUTORESETPHY_SHIFT);
+-	rxconf = rxconf & ~MAX_RX_DMA_MASK;
+-	rxconf = rxconf | (MAX_RX_DMA_2048<<MAX_RX_DMA_SHIFT);
+-
+-	rxconf = rxconf | RCR_ONLYERLPKT;
+-
+-	rxconf = rxconf & ~RCR_CS_MASK;
+-
+-	write_nic_dword(dev, RX_CONF, rxconf);
+-
+-	fix_rx_fifo(dev);
+-
+-	cmd = read_nic_byte(dev, CMD);
+-	write_nic_byte(dev, CMD, cmd | (1<<CMD_RX_ENABLE_SHIFT));
+-}
+-
+ void set_nic_txring(struct net_device *dev)
+ {
+ 	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
+@@ -855,60 +795,6 @@ void rtl8180_conttx_disable(struct net_device *dev)
+ 	write_nic_dword(dev, TX_CONF, txconf);
+ }
+ 
+-void rtl8180_tx_enable(struct net_device *dev)
+-{
+-	u8 cmd;
+-	u8 tx_agc_ctl;
+-	u8 byte;
+-	u32 txconf;
+-	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
+-
+-	txconf = read_nic_dword(dev, TX_CONF);
+-
+-	byte = read_nic_byte(dev, CW_CONF);
+-	byte &= ~(1<<CW_CONF_PERPACKET_CW_SHIFT);
+-	byte &= ~(1<<CW_CONF_PERPACKET_RETRY_SHIFT);
+-	write_nic_byte(dev, CW_CONF, byte);
+-
+-	tx_agc_ctl = read_nic_byte(dev, TX_AGC_CTL);
+-	tx_agc_ctl &= ~(1<<TX_AGC_CTL_PERPACKET_GAIN_SHIFT);
+-	tx_agc_ctl &= ~(1<<TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT);
+-	tx_agc_ctl |= (1<<TX_AGC_CTL_FEEDBACK_ANT);
+-	write_nic_byte(dev, TX_AGC_CTL, tx_agc_ctl);
+-	write_nic_byte(dev, 0xec, 0x3f); /* Disable early TX */
+-
+-	txconf = txconf & ~(1<<TCR_PROBE_NOTIMESTAMP_SHIFT);
+-
+-	txconf = txconf & ~TX_LOOPBACK_MASK;
+-	txconf = txconf | (TX_LOOPBACK_NONE<<TX_LOOPBACK_SHIFT);
+-	txconf = txconf & ~TCR_DPRETRY_MASK;
+-	txconf = txconf & ~TCR_RTSRETRY_MASK;
+-	txconf = txconf | (priv->retry_data<<TX_DPRETRY_SHIFT);
+-	txconf = txconf | (priv->retry_rts<<TX_RTSRETRY_SHIFT);
+-	txconf = txconf & ~(1<<TX_NOCRC_SHIFT);
+-
+-	if (priv->hw_plcp_len)
+-		txconf = txconf & ~TCR_PLCP_LEN;
+-	else
+-		txconf = txconf | TCR_PLCP_LEN;
+-
+-	txconf = txconf & ~TCR_MXDMA_MASK;
+-	txconf = txconf | (TCR_MXDMA_2048<<TCR_MXDMA_SHIFT);
+-	txconf = txconf | TCR_CWMIN;
+-	txconf = txconf | TCR_DISCW;
+-
+-	txconf = txconf | (1 << TX_NOICV_SHIFT);
+-
+-	write_nic_dword(dev, TX_CONF, txconf);
+-
+-	fix_tx_fifo(dev);
+-
+-	cmd = read_nic_byte(dev, CMD);
+-	write_nic_byte(dev, CMD, cmd | (1<<CMD_TX_ENABLE_SHIFT));
+-
+-	write_nic_dword(dev, TX_CONF, txconf);
+-}
+-
+ void rtl8180_beacon_tx_enable(struct net_device *dev)
+ {
+ 	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
+@@ -3107,77 +2993,6 @@ void rtl8185_set_rate(struct net_device *dev)
+ 	write_nic_word(dev, BRSR, word);
+ }
+ 
+-void rtl8180_adapter_start(struct net_device *dev)
+-{
+-	struct r8180_priv *priv = ieee80211_priv(dev);
+-
+-	rtl8180_rtx_disable(dev);
+-	rtl8180_reset(dev);
+-
+-	/* enable beacon timeout, beacon TX ok and err
+-	 * LP tx ok and err, HP TX ok and err, NP TX ok and err,
+-	 * RX ok and ERR, and GP timer
+-	 */
+-	priv->irq_mask = 0x6fcf;
+-
+-	priv->dma_poll_mask = 0;
+-
+-	rtl8180_beacon_tx_disable(dev);
+-
+-	rtl8180_set_mode(dev, EPROM_CMD_CONFIG);
+-	write_nic_dword(dev, MAC0, ((u32 *)dev->dev_addr)[0]);
+-	write_nic_word(dev, MAC4, ((u32 *)dev->dev_addr)[1] & 0xffff);
+-	rtl8180_set_mode(dev, EPROM_CMD_NORMAL);
+-
+-	rtl8180_update_msr(dev);
+-
+-	/* These might be unnecessary since we do in rx_enable / tx_enable */
+-	fix_rx_fifo(dev);
+-	fix_tx_fifo(dev);
+-
+-	rtl8180_set_mode(dev, EPROM_CMD_CONFIG);
+-
+-	/*
+-	 * The following is very strange. seems to be that 1 means test mode,
+-	 * but we need to acknowledges the nic when a packet is ready
+-	 * although we set it to 0
+-	 */
+-
+-	write_nic_byte(dev,
+-		       CONFIG2, read_nic_byte(dev, CONFIG2) & ~\
+-		       (1<<CONFIG2_DMA_POLLING_MODE_SHIFT));
+-	/* ^the nic isn't in test mode */
+-	write_nic_byte(dev,
+-		       CONFIG2, read_nic_byte(dev, CONFIG2)|(1<<4));
+-
+-	rtl8180_set_mode(dev, EPROM_CMD_NORMAL);
+-
+-	write_nic_dword(dev, INT_TIMEOUT, 0);
+-
+-	write_nic_byte(dev, WPA_CONFIG, 0);
+-
+-	rtl8180_no_hw_wep(dev);
+-
+-	rtl8185_set_rate(dev);
+-	write_nic_byte(dev, RATE_FALLBACK, 0x81);
+-
+-	write_nic_byte(dev, GP_ENABLE, read_nic_byte(dev, GP_ENABLE) & ~(1<<6));
+-
+-	/* FIXME cfg 3 ClkRun enable - isn't it ReadOnly ? */
+-	rtl8180_set_mode(dev, EPROM_CMD_CONFIG);
+-	write_nic_byte(dev, CONFIG3, read_nic_byte(dev, CONFIG3)
+-		       | (1 << CONFIG3_CLKRUN_SHIFT));
+-	rtl8180_set_mode(dev, EPROM_CMD_NORMAL);
+-
+-	priv->rf_init(dev);
+-
+-	if (priv->rf_set_sens != NULL)
+-		priv->rf_set_sens(dev, priv->sens);
+-	rtl8180_irq_enable(dev);
+-
+-	netif_start_queue(dev);
+-}
+-
+ /*
+  * This configures registers for beacon tx and enables it via
+  * rtl8180_beacon_tx_enable(). rtl8180_beacon_tx_disable() might
+diff --git a/drivers/staging/rtl8187se/r8180_rtl8225z2.c b/drivers/staging/rtl8187se/r8180_rtl8225z2.c
+index d28c1d9..a369a3d 100644
+--- a/drivers/staging/rtl8187se/r8180_rtl8225z2.c
++++ b/drivers/staging/rtl8187se/r8180_rtl8225z2.c
+@@ -412,22 +412,6 @@ static u32 read_rtl8225(struct net_device *dev, u8 adr)
+ 	return dataRead;
+ }
+ 
+-short rtl8225_is_V_z2(struct net_device *dev)
+-{
+-	short vz2 = 1;
+-
+-	if (read_rtl8225(dev, 8) != 0x588)
+-		vz2 = 0;
+-	else	/* reg 9 pg 1 = 24 */
+-		if (read_rtl8225(dev, 9) != 0x700)
+-			vz2 = 0;
+-
+-	/* sw back to pg 0 */
+-	write_rtl8225(dev, 0, 0xb7);
+-
+-	return vz2;
+-}
+-
+ void rtl8225z2_rf_close(struct net_device *dev)
+ {
+ 	RF_WriteReg(dev, 0x4, 0x1f);
+-- 
+1.7.10.4
 
