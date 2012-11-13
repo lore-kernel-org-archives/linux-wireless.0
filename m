@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:35335 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399Ab2K2Uv7 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:59845 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752795Ab2KMPlX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 15:51:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6Ww8SVm51qph=iXNGS8BN1cWdsT-bvKWrDt4b9c7ea9sg@mail.gmail.com>
-References: <1354144069-28611-1-git-send-email-hauke@hauke-m.de>
- <1354144069-28611-7-git-send-email-hauke@hauke-m.de> <CAB=NE6Ww8SVm51qph=iXNGS8BN1cWdsT-bvKWrDt4b9c7ea9sg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 29 Nov 2012 12:51:37 -0800
-Message-ID: <CAB=NE6XiuZCzWXROi35no0nnU4F7-=d_FwX90xEKgSgFGVbfYg@mail.gmail.com> (sfid-20121129_215221_362338_58D65FB9)
-Subject: Re: [PATCH 6/6] compat-drivers: do not use struct spinlock
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: backports@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Arend Van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	Sylwester Nawrocki <s.nawrocki@samsung.com>,
-	Alexander Stein <alexander.stein@systec-electronic.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 13 Nov 2012 10:41:23 -0500
+Received: by mail-pb0-f46.google.com with SMTP id rr4so5180100pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 07:41:23 -0800 (PST)
+From: Syam Sidhardhan <syamsidhardh@gmail.com>
+To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 1/1] ath5k: Use module_platform_driver macro for ahb.c
+Date: Tue, 13 Nov 2012 21:09:50 +0530
+Message-Id: <1352821190-6478-1-git-send-email-s.syam@samsung.com> (sfid-20121113_164130_556957_09DF8781)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 29, 2012 at 11:47 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Wed, Nov 28, 2012 at 3:07 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->
-> IMHO your patch should go upstream and a respective patch should be
-> submitted as well as for these drivers:
->
-> mcgrof@frijol ~/linux-next (git::master)$ git grep "struct spinlock" drivers/
-> drivers/crypto/ux500/cryp/cryp.h:       struct spinlock ctx_lock;
-> drivers/crypto/ux500/cryp/cryp.h:       struct spinlock power_state_spinlock;
-> drivers/crypto/ux500/hash/hash_alg.h:   struct spinlock         ctx_lock;
-> drivers/crypto/ux500/hash/hash_alg.h:   struct spinlock
-> power_state_lock;
-> drivers/gpu/drm/i915/i915_drv.h:        struct spinlock gt_lock;
-> drivers/gpu/drm/i915/i915_drv.h:                struct spinlock lock;
-> drivers/media/platform/s5p-fimc/mipi-csis.c:    struct spinlock slock;
-> drivers/media/platform/s5p-jpeg/jpeg-core.h:    struct spinlock         slock;
-> drivers/watchdog/ie6xx_wdt.c:   struct spinlock unlock_sequence;
->
-> Alexander, please also add your driver to the MAINTAINERS file.
+Simplify the code by make use of module_platform_driver macro.
 
-Hauke, I'll add your patch for now into compat-drivers until shit
-catches up on linux-next if the series I just posted goes through.
+Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
+---
+ drivers/net/wireless/ath/ath5k/ahb.c |   15 +--------------
+ 1 files changed, 1 insertions(+), 14 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+index aec33cc..8e8bcc7 100644
+--- a/drivers/net/wireless/ath/ath5k/ahb.c
++++ b/drivers/net/wireless/ath/ath5k/ahb.c
+@@ -236,17 +236,4 @@ static struct platform_driver ath_ahb_driver = {
+ 	},
+ };
+ 
+-static int __init
+-ath5k_ahb_init(void)
+-{
+-	return platform_driver_register(&ath_ahb_driver);
+-}
+-
+-static void __exit
+-ath5k_ahb_exit(void)
+-{
+-	platform_driver_unregister(&ath_ahb_driver);
+-}
+-
+-module_init(ath5k_ahb_init);
+-module_exit(ath5k_ahb_exit);
++module_platform_driver(ath_ahb_driver);
+-- 
+1.7.4.1
+
