@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44011 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753833Ab2K1O3q (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:39706 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333Ab2KMVab (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 09:29:46 -0500
-Message-ID: <1354113010.9345.27.camel@jlt4.sipsolutions.net> (sfid-20121128_152950_402566_2561197C)
-Subject: Re: iwlwifi hibernate / suspend issue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jens Kapitza <j.kapitza@schwarze-allianz.de>
+	Tue, 13 Nov 2012 16:30:31 -0500
+Received: by mail-ee0-f46.google.com with SMTP id b15so4266245eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 13:30:29 -0800 (PST)
+Message-ID: <1352842218.8169.11.camel@user64-MCP7A> (sfid-20121113_223034_453614_FB57136E)
+Subject: Re: [PATCH 08/14] staging: vt6656: 64 bit fixes : correct all type
+ sizes
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 28 Nov 2012 15:30:10 +0100
-In-Reply-To: <50B61C71.6060007@schwarze-allianz.de> (sfid-20121128_152227_935873_AFE02FFF)
-References: <50B61C71.6060007@schwarze-allianz.de>
-	 (sfid-20121128_152227_935873_AFE02FFF)
+Date: Tue, 13 Nov 2012 21:30:18 +0000
+In-Reply-To: <20121113205035.GB27716@kroah.com>
+References: <1352648485.6460.16.camel@canaries32-MCP7A>
+	 <20121113205035.GB27716@kroah.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 15:15 +0100, Jens Kapitza wrote:
+On Tue, 2012-11-13 at 12:50 -0800, Greg KH wrote:
+> On Sun, Nov 11, 2012 at 03:41:25PM +0000, Malcolm Priestley wrote:
+> >  /****** Common pointer types ***********************************************/
+> >  
+> > -typedef unsigned long   ULONG_PTR;      // 32-bit
+> > -typedef unsigned long   DWORD_PTR;      // 32-bit
+> > +typedef u32 ULONG_PTR;
+> > +typedef u32 DWORD_PTR;
+> 
+> A pointer does not fit in u32 on all arches, only unsigned long works
+> here.
+> 
+Hi
 
-> after suspend phy0: tells Hard blocked: yes
-> 
-> but there is no switch on the laptop.
-> (just a Fn-F2 key) softblocking the antenna [after reboot all works again]
-> 
-> any starting points?  i've looked at the main.c of iwlwifi there is an 
-> wakup call but
-> can someone tell me how the driver works?
-> 
-> which call is done after suspend and why can i unload the driver and 
-> reload it again
-> root@jens-S4216:/home/jens# modprobe -r iwlwifi
-> root@jens-S4216:/home/jens# modprobe  iwlwifi
-> and everythink works?
-> 
-> is it a firmware issue (is it possible to force a firmware reload after 
-> suspend)
+The naming is misleading, they are not pointers.
 
-No, the firmware is stopped anyway during suspend, the card is powered
-off. Can you please post message output? We should read the rfkill state
-during resume, maybe there's a race. Also, what kernel version?
+I have a upcoming patch to remove them.
 
-johannes
+Regards
+
+
+Malcolm
+
 
