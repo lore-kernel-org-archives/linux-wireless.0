@@ -1,105 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:58467
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751513Ab2KUMn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 07:43:57 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/6] ath9k: Add a debugfs file to dump queue statistics
-Date: Wed, 21 Nov 2012 18:13:12 +0530
-Message-Id: <1353501795-10378-3-git-send-email-sujith@msujith.org> (sfid-20121121_134401_131424_71B5E870)
-In-Reply-To: <1353501795-10378-1-git-send-email-sujith@msujith.org>
-References: <1353501795-10378-1-git-send-email-sujith@msujith.org>
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:42671 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721Ab2KMR2t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Nov 2012 12:28:49 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so10386eaa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:28:48 -0800 (PST)
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+To: greg@kroah.com, Larry.Finger@lwfinger.net,
+	linux-wireless@vger.kernel.org
+Subject: staging: rtl8187se: code cleanups
+Date: Tue, 13 Nov 2012 19:28:06 +0200
+Message-Id: <1352827703-4659-1-git-send-email-maxtram95@gmail.com> (sfid-20121113_182853_789195_DD5C559B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+There are some bug fixes, cleanups and dead code removal for
+drivers/staging/rtl8187se
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c | 53 ++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index d9edff8..bbb6bd7 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -558,6 +558,50 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 	return retval;
- }
- 
-+static ssize_t read_file_queues(struct file *file, char __user *user_buf,
-+				size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_txq *txq;
-+	char *buf;
-+	unsigned int len = 0, size = 1024;
-+	ssize_t retval = 0;
-+	int i;
-+	char *qname[4] = {"VO", "VI", "BE", "BK"};
-+
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (buf == NULL)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+		txq = sc->tx.txq_map[i];
-+		len += snprintf(buf + len, size - len, "(%s): ", qname[i]);
-+
-+		ath_txq_lock(sc, txq);
-+
-+		len += snprintf(buf + len, size - len, "%s: %d ",
-+				"qnum", txq->axq_qnum);
-+		len += snprintf(buf + len, size - len, "%s: %2d ",
-+				"qdepth", txq->axq_depth);
-+		len += snprintf(buf + len, size - len, "%s: %2d ",
-+				"ampdu-depth", txq->axq_ampdu_depth);
-+		len += snprintf(buf + len, size - len, "%s: %3d ",
-+				"pending", txq->pending_frames);
-+		len += snprintf(buf + len, size - len, "%s: %d\n",
-+				"stopped", txq->stopped);
-+
-+		ath_txq_unlock(sc, txq);
-+	}
-+
-+	if (len > size)
-+		len = size;
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
-+}
-+
- static ssize_t read_file_stations(struct file *file, char __user *user_buf,
- 				  size_t count, loff_t *ppos)
- {
-@@ -825,6 +869,13 @@ static const struct file_operations fops_xmit = {
- 	.llseek = default_llseek,
- };
- 
-+static const struct file_operations fops_queues = {
-+	.read = read_file_queues,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static const struct file_operations fops_stations = {
- 	.read = read_file_stations,
- 	.open = simple_open,
-@@ -1550,6 +1601,8 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &fops_interrupt);
- 	debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_xmit);
-+	debugfs_create_file("queues", S_IRUSR, sc->debug.debugfs_phy, sc,
-+			    &fops_queues);
- 	debugfs_create_u32("qlen_bk", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
- 			   &sc->tx.txq_max_pending[IEEE80211_AC_BK]);
- 	debugfs_create_u32("qlen_be", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
--- 
-1.8.0
+Some of the patches don't pass checkpatch.pl. That's because original code did not follow kernel coding style and I've made small changes to that bad lines. I haven't done new coding style violations.
 
