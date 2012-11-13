@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:46479 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751795Ab2KGNmV convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:35330 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755076Ab2KMXXt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2012 08:42:21 -0500
-From: <Janusz.Dziedzic@tieto.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <arik@wizery.com>
-Date: Wed, 7 Nov 2012 15:42:19 +0200
-Subject: [PATCH 2/2] wlcore: SPI - fix spi transfer_list
-Message-ID: <3078A9B976EF864C8DDD0C499FFD07912383D647A0@EXMB01.eu.tieto.com> (sfid-20121107_144234_577028_F2D3B917)
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 13 Nov 2012 18:23:49 -0500
+Received: by mail-ee0-f46.google.com with SMTP id b15so4314105eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 15:23:48 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1352836486.9466.25.camel@jlt4.sipsolutions.net>
+References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1352809427-29682-3-git-send-email-qca_vkondrat@qca.qualcomm.com> <1352836486.9466.25.camel@jlt4.sipsolutions.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 14 Nov 2012 10:23:28 +1100
+Message-ID: <CAGRGNgXsGh1qLo8gq+L5Uedu=F=Eob_9j4x6jxrEg_=wPnOfWA@mail.gmail.com> (sfid-20121114_002353_089220_B7A5B013)
+Subject: Re: [PATCH v7 2/2] wireless: integrate wil6210 driver into build structure
+To: Vladimir Kondratiev <vkondrat_qca@qca.qualcomm.com>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In corner case for wl12xx_spi_raw_write() when
-	len == SPI_AGGR_BUFFER_SIZE
-we don't setup correctly spi transfer_list.
-Next we will have garbage and strange errors
-reported by SPI framework (eg. wrong speed_hz,
-failed to transfer one message from queue)
-when iterate transfer_list.
+Hi Vladimir,
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ti/wlcore/spi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Nov 14, 2012 at 6:54 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2012-11-13 at 14:23 +0200, Vladimir Kondratiev wrote:
+>
+>> +config ATH_COMMON
+>> +     tristate
+>
+> I think you should (in the changelog) explain this change and why you
+> touch all drivers.
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index 368d250..6242dd0 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -270,7 +270,7 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
- 					     void *buf, size_t len, bool fixed)
- {
- 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
--	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
-+	struct spi_transfer t[2 * (WSPI_MAX_NUM_OF_CHUNKS + 1)];
- 	struct spi_message m;
- 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS];
- 	u32 *cmd;
+It might be even better to split it out into a separate patch.
+
+Thanks,
+
 -- 
-1.7.9.5
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
