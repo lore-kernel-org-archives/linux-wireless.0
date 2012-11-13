@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:50690 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970Ab2KBT5D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Nov 2012 15:57:03 -0400
-Received: by mail-vc0-f174.google.com with SMTP id fk26so4107782vcb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Nov 2012 12:57:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+7oygeOHQLcdEWpedbXDnBoAHrXddkrmNd3-PNQOKzoyNkn6w@mail.gmail.com>
-References: <CA+7oygeOHQLcdEWpedbXDnBoAHrXddkrmNd3-PNQOKzoyNkn6w@mail.gmail.com>
-Date: Fri, 2 Nov 2012 15:57:02 -0400
-Message-ID: <CA+7oygfnsrqAyU4d3n7EgmOntenhp36DEGhSnJ4FsJFdOKCk-w@mail.gmail.com> (sfid-20121102_205717_681122_4529AA56)
-Subject: Re: bug in compat-wireless 3.6, rt2x00 iftype is wrong
-From: George Nychis <gnychis@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:51800 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751474Ab2KMWjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Nov 2012 17:39:41 -0500
+Message-ID: <1352846384.17444.18.camel@joe-AO722> (sfid-20121113_233945_146174_4F681143)
+Subject: Re: [PATCH v7 1/2] wireless: Driver for 60GHz card wil6210
+From: Joe Perches <joe@perches.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Jason Baron <jbaron@redhat.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Tue, 13 Nov 2012 14:39:44 -0800
+In-Reply-To: <20121113134436.de5df090.akpm@linux-foundation.org>
+References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1352809427-29682-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1352811970.24230.22.camel@joe-AO722>
+	 <20121113134436.de5df090.akpm@linux-foundation.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The issue seems to be that in all of these drivers, wdev is NULL when
-you hit set_channel()  in the older and newer driver.  In the old
-driver, cfg8011_set_freq() is called with wdev has NULL and it still
-calls rdev->ops->set_channel(....) which succeeds.
+On Tue, 2012-11-13 at 13:44 -0800, Andrew Morton wrote:
+> On Tue, 13 Nov 2012 05:06:10 -0800
+> Joe Perches <joe@perches.com> wrote:
+> 
+> > On Tue, 2012-11-13 at 14:23 +0200, Vladimir Kondratiev wrote:
+> > []
+> > > diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+> > []
+> > > +/* Candidate to merge into printk.h and dynamic_debug.h */
+> > > +#if defined(CONFIG_DYNAMIC_DEBUG)
+> > > +#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
+> > > +			 groupsize, buf, len, ascii)		\
+> > > +do {								\
+> > > +	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
+> > > +	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
+> > > +		print_hex_dump(KERN_DEBUG, prefix_str,		\
+> > > +			       prefix_type, rowsize, groupsize,	\
+> > > +			       buf, len, ascii);		\
+> > > +} while (0)
+> > > +
+> > > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
+> > > +		       groupsize, buf, len, ascii)		\
+> > > +		       dynamic_hex_dump(prefix_str, prefix_type,\
+> > > +					rowsize, groupsize, buf,\
+> > > +					len, ascii)
+> > > +#else
+> > > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
+> > > +		       groupsize, buf, len, ascii)		\
+> > > +		       print_hex_dump(KERN_DEBUG, prefix_str,	\
+> > > +				      prefix_type, rowsize,	\
+> > > +				      groupsize, buf, len, ascii)
+> > > +#endif
+> > 
+> > Thanks Vladimir.  I think so too.
+> > 
+> > Jason?  Andrew?
+> 
+> (I'm not on linux-wireless)
+> 
+> Agree that the above should be in a core header file.
+> 
+> Disagree with placing it in a wireless header.
+> 
+> Please split it out into a standalone patch.
+> 
+> Does it have to be done as macros?  Can't do at least some of
+> this in C?
 
-However, in the new driver cfg80211_set_monitor_channel() is called
-since wdev was NULL, but now instead of still calling
-rdev->ops->set_channel() or rdev->ops->set_monitor_channel() it
-returns -EBUSY because if(!cfg80211_has_monitors_only(rdev)) returns
-true.  Is this really the expected behavior, or is meant to only
-return -EBUSY if there are only monitors, rather? (i.e.,
-if(cfg80211_has_monitors_only(rdev)) )
+Macros are required here because of CONFIG_DYNAMIC_DEBUG
+It's how it's done currently for all dynamic_<foo> uses.
+
+> Some interface documentation would be nice, especially if it's
+> implemented in macros - that's an awful lot of arguments to have to
+> guess about.
+
+kernel-doc should probably be added for all printk forms,
+not just for this.
 
 
-On Fri, Nov 2, 2012 at 2:46 PM, George Nychis <gnychis@gmail.com> wrote:
-> I'm still trying to track down the cause for this, but starting in
-> compat-wireless-3.6 (including early RCs and the most recent 3.6.2),
-> rt2x00 devices register with the wrong iftype.  They register as
-> NL80211_IFTYPE_MONITOR instead of NL80211_IFTYPE_STATION, for example.
->  I checked cw-3.5, 3.4, 3.2, and 3.1 and none of these versions have
-> this bug.
->
-> This breaks the ability to set channels, etc.  Hoping to track down
-> the bug, but wanted to report it in the meantime and see if anyone
-> else has run in to it.
->
-> - George
