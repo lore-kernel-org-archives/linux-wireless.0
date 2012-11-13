@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4007 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753975Ab2KSSd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:33:59 -0500
-Message-ID: <50AA7B8C.2040803@broadcom.com> (sfid-20121119_193413_804283_D79EE6FF)
-Date: Mon, 19 Nov 2012 19:33:48 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	"Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 01/22] brcmsmac: Introduce AMPDU sessions for
- assembling AMPDUs
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-2-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1352988492-21340-2-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:57154 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755571Ab2KMSs1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Nov 2012 13:48:27 -0500
+Received: by mail-pa0-f46.google.com with SMTP id hz1so5217594pad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 10:48:26 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v2 2/2] ath9k_htc: RX timestamp is reported at end of frame
+Date: Tue, 13 Nov 2012 10:48:08 -0800
+Message-Id: <1352832488-21516-2-git-send-email-thomas@cozybit.com> (sfid-20121113_194835_893774_2BC3AE8F)
+In-Reply-To: <1352832488-21516-1-git-send-email-thomas@cozybit.com>
+References: <1352832488-21516-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2012 03:07 PM, Seth Forshee wrote:
-> AMPDU session allows MPDUs to be temporarily queued until either a full
-> AMPDU has been collected or circumstances dictate that transmission
-> should start with a partial AMPDU. Packets are added to the session by
-> calling brcms_c_ampdu_add_frame(). brcms_c_ampdu_finalize() should be
-> called to fix up the tx headers in the first and last packet before
-> adding the packets to the DMA ring. brmcs_c_sendampdu() is converted to
-> using AMPDU sessions.
->
-> This patch has no real value on it's own, but is needed in preparation
-> for elimination of the tx packet queue from brcmsmac.
+Accurate RX timestamp reporting is important for proper IBSS merging,
+mesh synchronization, and MCCA scheduling. Namely, knowing where the TSF
+is recorded is needed to sync with the beacon timestamp field.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |  625 +++++++++++++----------
->   drivers/net/wireless/brcm80211/brcmsmac/ampdu.h |   26 +
->   2 files changed, 377 insertions(+), 274 deletions(-)
+Tested with AR9271.
 
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
 
+v2:
+        clarify commit log (Luis)
+
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 06cdcb7..1708b01 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -1082,7 +1082,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	rx_status->freq = hw->conf.channel->center_freq;
+ 	rx_status->signal =  rxbuf->rxstatus.rs_rssi + ATH_DEFAULT_NOISE_FLOOR;
+ 	rx_status->antenna = rxbuf->rxstatus.rs_antenna;
+-	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
++	rx_status->flag |= RX_FLAG_MACTIME_END;
+ 
+ 	return true;
+ 
+-- 
+1.7.10.4
 
