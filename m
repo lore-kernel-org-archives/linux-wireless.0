@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:41152 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521Ab2KLUh7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42340 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753783Ab2KMU4L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 15:37:59 -0500
-Received: by mail-ea0-f174.google.com with SMTP id o11so410492eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 12:37:58 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 12 Nov 2012 14:37:57 -0600
-Message-ID: <CAJ8GFOgZ00SSLjwpFb_gQnPQVh7QpJeWb_m55KOp3+pi9VrRPQ@mail.gmail.com> (sfid-20121112_213802_991365_93525830)
-Subject: Looking for WiFi + BT combo cards
-From: Harshal Chhaya <harshal@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 13 Nov 2012 15:56:11 -0500
+Message-ID: <1352840204.9466.34.camel@jlt4.sipsolutions.net> (sfid-20121113_215614_262498_94FC9E11)
+Subject: Re: [PATCH v2] mac80211: support RX_FLAG_MACTIME_END
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Nov 2012 21:56:44 +0100
+In-Reply-To: <CAG6hwVPhzSyFPHj8p37Si8dHpFBH6Q98RNhuWnRKY7kmk24crA@mail.gmail.com> (sfid-20121113_215347_094983_CB05C52C)
+References: <1352832387-21162-1-git-send-email-thomas@cozybit.com>
+	 <1352839474.9466.33.camel@jlt4.sipsolutions.net>
+	 <CAG6hwVPhzSyFPHj8p37Si8dHpFBH6Q98RNhuWnRKY7kmk24crA@mail.gmail.com>
+	 (sfid-20121113_215347_094983_CB05C52C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am looking for WiFi + BT combo products/chipsets with a USB
-interface that are supported by compat-wireless.
+On Tue, 2012-11-13 at 12:53 -0800, Thomas Pedersen wrote:
+> On Tue, Nov 13, 2012 at 12:44 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Tue, 2012-11-13 at 10:46 -0800, Thomas Pedersen wrote:
+> >> Allow drivers to indicate their mactime is at RX completion and adjust
+> >> for this in mac80211. Also rename the existing RX_FLAG_MACTIME_MPDU to
+> >> RX_FLAG_MACTIME_START to clarify its intent. Based on similar code by
+> >> Johannes Berg.
+> >
+> > Applied, but I had to fix up the patch to apply on mac80211-next, and
+> > even had to make it compile by adjusting the Atheros drivers ...
+> 
+> Rats. It applied on wireless-testing. In the future, submitted
+> mac80211 patches should be rebased onto mac80211-next?
 
-I want to add wireless capabilities (both WiFi and Bluetooth) to an
-existing device that's running Linux. This device has a couple of USB
-ports.
+Honestly, wireless-testing usually works, it's just that John hasn't
+pulled for a while and there's a whole bunch of stuff in mac80211-next
+right now. No biggie to fix up really, though I think you should've
+fixed up the Atheros drivers :)
 
-I have found a few WiFi-only products but haven't found combo products.
+johannes
 
-If you know of any such network adapters, please let me know.
-
-Thanks,
-- Harshal
