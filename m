@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:40126 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932096Ab2KWF6n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 00:58:43 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so3203127eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 21:58:42 -0800 (PST)
+Received: from bear.ext.ti.com ([192.94.94.41]:58057 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752220Ab2KMHeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Nov 2012 02:34:12 -0500
+Message-ID: <1352792012.28369.10.camel@cumari.coelho.fi> (sfid-20121113_083416_155390_E736412E)
+Subject: Re: [PATCH 1/2] wlcore: add power callback for SPI
+From: Luciano Coelho <coelho@ti.com>
+To: <Janusz.Dziedzic@tieto.com>
+CC: <linux-wireless@vger.kernel.org>, <arik@wizery.com>
+Date: Tue, 13 Nov 2012 09:33:32 +0200
+In-Reply-To: <3078A9B976EF864C8DDD0C499FFD07912383D6479F@EXMB01.eu.tieto.com>
+References: <3078A9B976EF864C8DDD0C499FFD07912383D6479F@EXMB01.eu.tieto.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <50AF0E91.30709@posedge.com>
-References: <50AF0E91.30709@posedge.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 23 Nov 2012 16:58:21 +1100
-Message-ID: <CAGRGNgW1x0O26SxytoDQLYXFqWcmfaCGE=Q_pxGg31mW0HyRtw@mail.gmail.com> (sfid-20121123_065846_658191_DB2B531E)
-Subject: Re: RFC[1/2]mac80211: Add Statistic to debugfs
-To: Saravana <saravanad@posedge.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Saravana,
+Hi,
 
-On Fri, Nov 23, 2012 at 4:50 PM, Saravana <saravanad@posedge.com> wrote:
-> Provide additional statistic support to the debugfs.
->
-> The statistic that are added are the
->
-> 1. Number of rx packets dropped due to mic failure
->         - Currently the debugfs has support for number of rx packets
-> dropped. But it doesn't classify the reason for the drop. This statistic
-> will count the number of rx packet dropped due to mic failure.
->
->  2. Rssi of the Last Ack Frame.
->         - This information is available as part of ieee80211_tx_info status
-> structure. Thought this information may be useful(in future).
->
-> Signed-off-by: Saravana <saravanad@posedge.com>
+Now I see that you have already sent the patch I proposed you to
+send. ;)
 
-Firstly, these two changes should be in separate patches.
+On Wed, 2012-11-07 at 15:42 +0200, Janusz.Dziedzic@tieto.com wrote:
+> Add power callback also for SPI.
+> This will also fix a dump:
+> 
+> [  143.111602] Unable to handle kernel NULL pointer dereference at
+> virtual address 00000000
+> [  143.150573] pgd = dda58000
+> [  143.153472] [00000000] *pgd=9d812831, *pte=00000000, *ppte=00000000
+> [  143.181091] Internal error: Oops: 80000007 [#1] PREEMPT ARM
+> [  143.186981] Modules linked in: wlcore_spi(+) wl12xx wlcore mac80211
+> cfg80211 atmel_mxt pvrsrvkm ipv6
 
-Also, as you're adding new statistics which are only used when debugfs
-is enabled, you might want to wrap them in #ifdefs so that they're
-only compiled when debugfs support is compiled.
+[...]
 
->  ---
-> The diff file is generated from wireless-testing git tree.
->
-> net/mac80211/debugfs_sta.c |    3 +++
->  net/mac80211/sta_info.h    |    4 ++++
->  net/mac80211/status.c      |    2 ++
->  net/mac80211/wpa.c         |    1 +
->  4 files changed, 10 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-> index ab63237..19baafc 100644
-> --- a/net/mac80211/status.c
-> +++ b/net/mac80211/status.c
-> @@ -539,6 +539,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw,
-> struct sk_buff *skb)
->                                 sta->lost_packets = 0;
->                         }
->                 }
-> +               if(acked)
-> +               sta->last_ack_signal=info->status.ack_signal;
+> [  143.267578] 3da0:                                     dddad8e0
+> dddaeb70 00000008 dddad8e0
+> [  143.276153] 3dc0: 00000000 bf175ff8 ddfefa50 dddad8e0 ddfef808
+> c02bd12c 00000000 bf194f24
+> [  143.284729] 3de0: 00000000 c02be138 c02be124 c02bcf78 c02be318
+> ddfef808 c02bd12c 00000000
+> [  143.293304] 3e00: 00000000 c02bb968 de4038d8 dd8bed54 ddfef808
+> ddfef83c ddfef808 c02bd208
+> [  143.301879] 3e20: ddfef808 c06a8af0 ddfef808 c02bc394 ddfef808
+> ddfef810 de700c00 c02bb24c
+> [  143.310485] 3e40: ddfef810 00000000 00000000 de700c00 00000000
+> c0259ad4 ddfef800 ddfef800
 
-Either the indentation here is wrong or your mailer mangled the patch.
-Either way it should get fixed up when you resubmit.
+Please don't wrap these lines.  It's hard to read the dump like this.
 
->         }
->
->         rcu_read_unlock();
+--
+Cheers,
+Luca.
 
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
