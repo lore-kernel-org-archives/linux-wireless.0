@@ -1,90 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:50270 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753975Ab2K2UpX (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:54986 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721Ab2KMR26 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 15:45:23 -0500
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-kernel@vger.kernel.org, tglx@linutronix.de
-Cc: backports@vger.kernel.org, alexander.stein@systec-electronic.com,
-	brudley@broadcom.com, rvossen@broadcom.com, arend@broadcom.com,
-	frankyl@broadcom.com, kanyan@broadcom.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kyungmin.park@samsung.com, s.nawrocki@samsung.com,
-	linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
-	daniel.vetter@ffwll.ch, intel-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, srinidhi.kasagar@stericsson.com,
-	linus.walleij@linaro.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 1/6] ux500: convert struct spinlock to spinlock_t
-Date: Thu, 29 Nov 2012 12:45:05 -0800
-Message-Id: <1354221910-22493-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20121129_214547_104366_E20A606B)
-In-Reply-To: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 13 Nov 2012 12:28:58 -0500
+Received: by mail-ee0-f46.google.com with SMTP id b15so4133183eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:28:57 -0800 (PST)
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+To: greg@kroah.com, Larry.Finger@lwfinger.net,
+	linux-wireless@vger.kernel.org
+Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
+Subject: [PATCH 05/17] staging: rtl8187se: Simplified function GetSupportedWirelessMode8185()
+Date: Tue, 13 Nov 2012 19:28:11 +0200
+Message-Id: <1352827703-4659-6-git-send-email-maxtram95@gmail.com> (sfid-20121113_182909_794819_DB9F812F)
+In-Reply-To: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
+References: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Removed unnecessary variable in GetSupportedWirelessMode8185() and
+shortened its code
 
-spinlock_t should always be used.
-
-I was unable to build test with allmodconfig:
-
-mcgrof@frijol ~/linux-next (git::(no branch))$ make C=1 M=drivers/crypto/ux500/
-
-  WARNING: Symbol version dump /home/mcgrof/linux-next/Module.symvers
-           is missing; modules will have no dependencies and modversions.
-
-  LD      drivers/crypto/ux500/built-in.o
-  Building modules, stage 2.
-  MODPOST 0 modules
-
-Cc: Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org
-Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
 ---
- drivers/crypto/ux500/cryp/cryp.h     |    4 ++--
- drivers/crypto/ux500/hash/hash_alg.h |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/rtl8187se/r8185b_init.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/crypto/ux500/cryp/cryp.h b/drivers/crypto/ux500/cryp/cryp.h
-index 14cfd05..ba324b2 100644
---- a/drivers/crypto/ux500/cryp/cryp.h
-+++ b/drivers/crypto/ux500/cryp/cryp.h
-@@ -236,12 +236,12 @@ struct cryp_device_data {
- 	struct clk *clk;
- 	struct regulator *pwr_regulator;
- 	int power_status;
--	struct spinlock ctx_lock;
-+	spinlock_t ctx_lock;
- 	struct cryp_ctx *current_ctx;
- 	struct klist_node list_node;
- 	struct cryp_dma dma;
- 	bool power_state;
--	struct spinlock power_state_spinlock;
-+	spinlock_t power_state_spinlock;
- 	bool restore_dev_ctx;
- };
+diff --git a/drivers/staging/rtl8187se/r8185b_init.c b/drivers/staging/rtl8187se/r8185b_init.c
+index 8fa42de..cf9bcd5 100644
+--- a/drivers/staging/rtl8187se/r8185b_init.c
++++ b/drivers/staging/rtl8187se/r8185b_init.c
+@@ -927,10 +927,7 @@ static void MacConfig_85BASIC(struct net_device *dev)
  
-diff --git a/drivers/crypto/ux500/hash/hash_alg.h b/drivers/crypto/ux500/hash/hash_alg.h
-index cd9351c..0183f5e 100644
---- a/drivers/crypto/ux500/hash/hash_alg.h
-+++ b/drivers/crypto/ux500/hash/hash_alg.h
-@@ -363,10 +363,10 @@ struct hash_device_data {
- 	struct hash_register __iomem	*base;
- 	struct klist_node	list_node;
- 	struct device		*dev;
--	struct spinlock		ctx_lock;
-+	spinlock_t		ctx_lock;
- 	struct hash_ctx		*current_ctx;
- 	bool			power_state;
--	struct spinlock		power_state_lock;
-+	spinlock_t		power_state_lock;
- 	struct regulator	*regulator;
- 	struct clk		*clk;
- 	bool			restore_dev_state;
+ u8 GetSupportedWirelessMode8185(struct net_device *dev)
+ {
+-	u8 btSupportedWirelessMode = 0;
+-
+-	btSupportedWirelessMode = (WIRELESS_MODE_B | WIRELESS_MODE_G);
+-	return btSupportedWirelessMode;
++	return WIRELESS_MODE_B | WIRELESS_MODE_G;
+ }
+ 
+ void ActUpdateChannelAccessSetting(struct net_device *dev,
 -- 
 1.7.10.4
 
