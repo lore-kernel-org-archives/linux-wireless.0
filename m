@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34880 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754603Ab2KNTbT (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:59037 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625Ab2KMTGX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 14:31:19 -0500
-Date: Wed, 14 Nov 2012 14:17:14 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi 2012-11-09
-Message-ID: <20121114191714.GC6128@tuxdriver.com> (sfid-20121114_203122_834099_43E2ADC8)
-References: <1352490506.28302.1.camel@jlt4.sipsolutions.net>
+	Tue, 13 Nov 2012 14:06:23 -0500
+Received: by mail-da0-f46.google.com with SMTP id n41so3326715dak.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 11:06:23 -0800 (PST)
+Message-ID: <50A29A2C.9080606@cozybit.com> (sfid-20121113_200627_027942_D8BC8E16)
+Date: Tue, 13 Nov 2012 11:06:20 -0800
+From: Marco Porsch <marco@cozybit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1352490506.28302.1.camel@jlt4.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>, kvalo@adurom.com,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Javier Cardona <javier@cozybit.com>
+CC: linux-wireless@vger.kernel.org
+Subject: mesh powersave code layout
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 09, 2012 at 08:48:26PM +0100, Johannes Berg wrote:
-> John,
-> 
-> Two more fixes for iwlwifi ... one to use ieee80211_free_txskb(), and
-> one to check DMA mapping errors, please pull.
-> 
-> Thanks!
-> 
-> johannes
-> 
-> The following changes since commit 8f7b8db6e0557c8437adf9371e020cd89a7e85dc:
-> 
->   iwlwifi: fix 6000 series channel switch command (2012-10-16 16:28:36 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+Hi,
 
-Pulled...
- 
-> for you to fetch changes up to 31df3bb78be614fb9125abe56972dfee79bd3e18:
-> 
->   iwlwifi: use ieee80211_free_txskb (2012-11-07 09:18:43 +0100)
-> 
-> ----------------------------------------------------------------
-> Johannes Berg (2):
->       iwlwifi: handle DMA mapping failures
->       iwlwifi: use ieee80211_free_txskb
-> 
->  drivers/net/wireless/iwlwifi/dvm/mac80211.c |  2 +-
->  drivers/net/wireless/iwlwifi/dvm/main.c     |  2 +-
->  drivers/net/wireless/iwlwifi/pcie/rx.c      | 23 +++++++++++++++++++++--
->  3 files changed, 23 insertions(+), 4 deletions(-)
-> 
+I had a presentation on mesh powersave during the Barcelona Wireless 
+summit. In the following discussion Kalle Valo pointed out to me, that 
+there was interest in generally moving powersave code out of mac80211.
+
+Now I am unsure where to place my mesh PS code before submission.
+Currently my code layout for the mesh mode powersave is like this:
+
+mac80211:
+-mesh PS mode setting and state logic
+-mesh PS mode indication towards neighbors
+-neighbor PS mode tracking
+-frame buffering
+-frame release in Peer Service Periods
+-driver configuration
+
+drivers (ath9k, ath9k_htc, ...):
+-configuration
+-tracking of neighbors' beacon TBTTs
+-determining next wakeup TBTT and hardware configuration for wakeup
+-awake window after own beacon (software timer)
 
 
+Javier Cardona recommended changing that and moving all the mesh PS code 
+to mac80211 for easy maintenance. So (if possible) the idea would be to 
+create new ieee80211_ops ála:
+-void (*radio_sleep) (struct ieee80211_hw *hw, u64 until_tbtt);
+-void (*radio_wakeup)(struct ieee80211_hw *hw);
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+So, where should the parts go, that are currently planned for the 
+driver? Is there any general preference?
+
+Regards,
+Marco
+
+
+PS:
+My code is available on github: 
+https://github.com/cozybit/open80211s/tree/ft-powersave .
+My presentation slides should show up on linuxwireless in the following 
+days.
