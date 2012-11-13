@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:59224 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751000Ab2KUIlF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 03:41:05 -0500
-Message-ID: <1353487222.10872.202.camel@cumari.coelho.fi> (sfid-20121121_094109_625540_E9A46B9B)
-Subject: Re: [PATCH 05/10] mac80211: convert to channel definition struct
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 21 Nov 2012 10:40:22 +0200
-In-Reply-To: <1353487020.10444.2.camel@jlt4.sipsolutions.net>
-References: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
-	 <1353447916-17304-6-git-send-email-johannes@sipsolutions.net>
-	 <1353481166.10872.197.camel@cumari.coelho.fi>
-	 <1353487020.10444.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:59450 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253Ab2KMDyn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Nov 2012 22:54:43 -0500
+Received: by mail-pa0-f46.google.com with SMTP id hz1so4763987pad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 19:54:42 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20641.31202.323483.191549@gargle.gargle.HOWL>
+References: <1352698004-10790-1-git-send-email-sujith@msujith.org>
+	<87pq3iy1mr.fsf@purkki.adurom.net>
+	<20641.31202.323483.191549@gargle.gargle.HOWL>
+Date: Mon, 12 Nov 2012 19:54:42 -0800
+Message-ID: <CAJ-Vmo=G=Zkrnw-KnQ6znEaCX_RYcqON4tGO=VTzMZ7LWrXXWw@mail.gmail.com> (sfid-20121113_045446_826729_48A461AA)
+Subject: Re: [PATCH 1/2] ath9k_hw: Update AR9485 initvals
+From: Adrian Chadd <adrian@freebsd.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Kalle Valo <kvalo@adurom.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-21 at 09:37 +0100, Johannes Berg wrote:
-> On Wed, 2012-11-21 at 08:59 +0200, Luciano Coelho wrote:
-> 
-> > I guess these changes depend on something else that you have on your
-> > tree and is not in w-t yet, right? At least I couldn't find the
-> > definition of cfg80211_get_chandef_type().
-> 
-> For the record: it's in patch 4 :-)
+On 12 November 2012 14:36, Sujith Manoharan <sujith@msujith.org> wrote:
 
-Maybe I should have looked at the whole series and not only into the
-patch that changed wlcore. :P
+> A sync - almost a year's backlog of changes.
 
-Too lazy at that time in the morning... heheh
+Do they require any follow-up code changes?
 
---
-Luca.
+(Don't make me go and re-read all of the changed registers to see what
+actually changed, grr. :-)
 
+
+Adrian
