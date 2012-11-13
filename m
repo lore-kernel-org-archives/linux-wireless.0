@@ -1,40 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44422 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754577Ab2K1Qmj (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:42671 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721Ab2KMR3R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 11:42:39 -0500
-Message-ID: <1354120982.9345.35.camel@jlt4.sipsolutions.net> (sfid-20121128_174246_886056_FD8C7512)
-Subject: Re: iwlwifi hibernate / suspend issue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jens Kapitza <j.kapitza@schwarze-allianz.de>
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Wed, 28 Nov 2012 17:43:02 +0100
-In-Reply-To: <50B62BEB.6020109@schwarze-allianz.de>
-References: <50B61C71.6060007@schwarze-allianz.de>
-	 (sfid-20121128_152227_935873_AFE02FFF) <1354113010.9345.27.camel@jlt4.sipsolutions.net>
-	 <50B62254.9070700@schwarze-allianz.de>
-	 <1354113722.9345.28.camel@jlt4.sipsolutions.net>
-	 <50B62BEB.6020109@schwarze-allianz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 13 Nov 2012 12:29:17 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so10386eaa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:29:16 -0800 (PST)
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+To: greg@kroah.com, Larry.Finger@lwfinger.net,
+	linux-wireless@vger.kernel.org
+Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
+Subject: [PATCH 15/17] staging: rtl8187se: Removed unused fields in r8180_priv
+Date: Tue, 13 Nov 2012 19:28:21 +0200
+Message-Id: <1352827703-4659-16-git-send-email-maxtram95@gmail.com> (sfid-20121113_183008_740295_B274FDE7)
+In-Reply-To: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
+References: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 16:21 +0100, Jens Kapitza wrote:
-> > just enter "dmesg" and pastebin the result somewhere
+Removed unused fields in r8180_priv and dead code that appeared after
+field removal
 
-> this line seems to be wrong
-> 
->   [ 4650.687346] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
+---
+ drivers/staging/rtl8187se/r8180.h       |   10 -------
+ drivers/staging/rtl8187se/r8180_core.c  |   49 ++-----------------------------
+ drivers/staging/rtl8187se/r8185b_init.c |    6 ++--
+ 3 files changed, 5 insertions(+), 60 deletions(-)
 
-Well, it's not necessarily wrong, it indicates that the device read that
-the rfkill line was pulled low ("rf should be off").
-
-You said reloading the module fixes this, which is interesting since the
-device should be sending interrupts whenever the state changes, so even
-if it was reading the wrong state at resume time (as it does now) it
-should catch up later...
-
-johannes
+diff --git a/drivers/staging/rtl8187se/r8180.h b/drivers/staging/rtl8187se/r8180.h
+index a819b01..1db8257 100644
+--- a/drivers/staging/rtl8187se/r8180.h
++++ b/drivers/staging/rtl8187se/r8180.h
+@@ -327,12 +327,8 @@ typedef struct r8180_priv
+ 	int irq;
+ 	struct ieee80211_device *ieee80211;
+ 
+-	short phy_ver; /* meaningful for rtl8225 1:A 2:B 3:C */
+-	short enable_gpio0;
+-	short hw_plcp_len;
+ 	short plcp_preamble_mode; // 0:auto 1:short 2:long
+ 
+-	spinlock_t irq_lock;
+ 	spinlock_t irq_th_lock;
+ 	spinlock_t tx_lock;
+ 	spinlock_t ps_lock;
+@@ -350,7 +346,6 @@ typedef struct r8180_priv
+ 	u8 channel_plan;  // it's the channel plan index
+ 	short up;
+ 	short crcmon; //if 1 allow bad crc frame reception in monitor mode
+-	short prism_hdr;
+ 
+ 	struct timer_list scan_timer;
+ 	/*short scanpending;
+@@ -359,7 +354,6 @@ typedef struct r8180_priv
+ 	u8 active_probe;
+ 	//u8 active_scan_num;
+ 	struct semaphore wx_sem;
+-	struct semaphore rf_state;
+ 	short hw_wep;
+ 
+ 	short digphy;
+@@ -489,7 +483,6 @@ typedef struct r8180_priv
+ 	RT_RF_POWER_STATE eRFPowerState;
+ 	u32 RfOffReason;
+ 	bool RFChangeInProgress;
+-	bool bInHctTest;
+ 	bool SetRFPowerStateInProgress;
+ 	u8   RFProgType;
+ 	bool bLeisurePs;
+@@ -616,15 +609,12 @@ typedef struct r8180_priv
+ //	struct workqueue_struct *workqueue;
+ 	struct work_struct reset_wq;
+ 	struct work_struct watch_dog_wq;
+-	struct work_struct tx_irq_wq;
+ 	short ack_tx_to_ieee;
+ 
+ 	u8 PowerProfile;
+-	u32 CSMethod;
+ 	u8 dma_poll_stop_mask;
+ 
+ 	//u8 RegThreeWireMode;
+-	u8 MWIEnable;
+ 	u16 ShortRetryLimit;
+ 	u16 LongRetryLimit;
+ 	u16 EarlyRxThreshold;
+diff --git a/drivers/staging/rtl8187se/r8180_core.c b/drivers/staging/rtl8187se/r8180_core.c
+index e55b93c..744ac8d 100644
+--- a/drivers/staging/rtl8187se/r8180_core.c
++++ b/drivers/staging/rtl8187se/r8180_core.c
+@@ -1437,14 +1437,9 @@ void rtl8180_rx(struct net_device *dev)
+ 				dev_kfree_skb_any(priv->rx_skb);
+ 				priv->stats.rxnolast++;
+ 			}
+-			/* support for prism header has been originally added by Christian */
+-			if (priv->prism_hdr && priv->ieee80211->iw_mode == IW_MODE_MONITOR) {
+-
+-			} else {
+-				priv->rx_skb = dev_alloc_skb(len+2);
+-				if (!priv->rx_skb)
+-					goto drop;
+-			}
++			priv->rx_skb = dev_alloc_skb(len+2);
++			if (!priv->rx_skb)
++				goto drop;
+ 
+ 			priv->rx_skb_complete = 0;
+ 			priv->rx_skb->dev = dev;
+@@ -1717,8 +1712,6 @@ short rtl8180_tx(struct net_device *dev, u8* txbuf, int len, int priority,
+ 	int remain;
+ 	int buflen;
+ 	int count;
+-	u16 duration;
+-	short ext;
+ 	struct buffer *buflist;
+ 	struct ieee80211_hdr_3addr *frag_hdr = (struct ieee80211_hdr_3addr *)txbuf;
+ 	u8 dest[ETH_ALEN];
+@@ -1914,15 +1907,6 @@ short rtl8180_tx(struct net_device *dev, u8* txbuf, int len, int priority,
+ 
+ 		*tail = *tail | ((rate&0xf) << 24);
+ 
+-		/* hw_plcp_len is not used for rtl8180 chip */
+-		/* FIXME */
+-		if (!priv->hw_plcp_len) {
+-			duration = rtl8180_len2duration(len, rate, &ext);
+-			*(tail+1) = *(tail+1) | ((duration & 0x7fff)<<16);
+-			if (ext)
+-				*(tail+1) = *(tail+1) | (1<<31); /* plcp length extension */
+-		}
+-
+ 		if (morefrag)
+ 			*tail = (*tail) | (1<<17); /* more fragment */
+ 		if (!remain)
+@@ -2219,7 +2203,6 @@ void rtl8180_wmm_param_update(struct work_struct *work)
+ 	}
+ }
+ 
+-void rtl8180_tx_irq_wq(struct work_struct *work);
+ void rtl8180_restart_wq(struct work_struct *work);
+ /* void rtl8180_rq_tx_ack(struct work_struct *work); */
+ void rtl8180_watch_dog_wq(struct work_struct *work);
+@@ -2408,7 +2391,6 @@ short rtl8180_init(struct net_device *dev)
+ 	priv->RFChangeInProgress = false;
+ 	priv->SetRFPowerStateInProgress = false;
+ 	priv->RFProgType = 0;
+-	priv->bInHctTest = false;
+ 
+ 	priv->irq_enabled = 0;
+ 
+@@ -2432,14 +2414,12 @@ short rtl8180_init(struct net_device *dev)
+ 	priv->ieee80211->ps_is_queue_empty = rtl8180_is_tx_queue_empty;
+ 
+ 	priv->hw_wep = hwwep;
+-	priv->prism_hdr = 0;
+ 	priv->dev = dev;
+ 	priv->retry_rts = DEFAULT_RETRY_RTS;
+ 	priv->retry_data = DEFAULT_RETRY_DATA;
+ 	priv->RFChangeInProgress = false;
+ 	priv->SetRFPowerStateInProgress = false;
+ 	priv->RFProgType = 0;
+-	priv->bInHctTest = false;
+ 	priv->bInactivePs = true; /* false; */
+ 	priv->ieee80211->bInactivePs = priv->bInactivePs;
+ 	priv->bSwRfProcessing = false;
+@@ -2522,15 +2502,12 @@ short rtl8180_init(struct net_device *dev)
+ 	priv->RegBModeGainStage = 1;
+ 
+ 	priv->promisc = (dev->flags & IFF_PROMISC) ? 1 : 0;
+-	spin_lock_init(&priv->irq_lock);
+ 	spin_lock_init(&priv->irq_th_lock);
+ 	spin_lock_init(&priv->tx_lock);
+ 	spin_lock_init(&priv->ps_lock);
+ 	spin_lock_init(&priv->rf_ps_lock);
+ 	sema_init(&priv->wx_sem, 1);
+-	sema_init(&priv->rf_state, 1);
+ 	INIT_WORK(&priv->reset_wq, (void *)rtl8180_restart_wq);
+-	INIT_WORK(&priv->tx_irq_wq, (void *)rtl8180_tx_irq_wq);
+ 	INIT_DELAYED_WORK(&priv->ieee80211->hw_wakeup_wq,
+ 			  (void *)rtl8180_hw_wakeup_wq);
+ 	INIT_DELAYED_WORK(&priv->ieee80211->hw_sleep_wq,
+@@ -2572,14 +2549,10 @@ short rtl8180_init(struct net_device *dev)
+ 	priv->ieee80211->stop_send_beacons = rtl8180_beacon_tx_disable;
+ 	priv->ieee80211->fts = DEFAULT_FRAG_THRESHOLD;
+ 
+-	priv->MWIEnable = 0;
+-
+ 	priv->ShortRetryLimit = 7;
+ 	priv->LongRetryLimit = 7;
+ 	priv->EarlyRxThreshold = 7;
+ 
+-	priv->CSMethod = (0x01 << 29);
+-
+ 	priv->TransmitConfig =	(1<<TCR_DurProcMode_OFFSET) |
+ 				(7<<TCR_MXDMA_OFFSET) |
+ 				(priv->ShortRetryLimit<<TCR_SRL_OFFSET) |
+@@ -2605,14 +2578,10 @@ short rtl8180_init(struct net_device *dev)
+ 	priv->InitialGain = 6;
+ 
+ 	DMESG("MAC controller is a RTL8187SE b/g");
+-	priv->phy_ver = 2;
+ 
+ 	priv->ieee80211->modulation |= IEEE80211_OFDM_MODULATION;
+ 	priv->ieee80211->short_slot = 1;
+ 
+-	/* just for sync 85 */
+-	priv->enable_gpio0 = 0;
+-
+ 	eeprom_93cx6_read(&eeprom, EEPROM_SW_REVD_OFFSET, &usValue);
+ 	DMESG("usValue is %#hx\n", usValue);
+ 	/* 3Read AntennaDiversity */
+@@ -2639,9 +2608,6 @@ short rtl8180_init(struct net_device *dev)
+ 		/* 1: main, 2: aux. */
+ 		priv->bDefaultAntenna1 = priv->RegDefaultAntenna == 2;
+ 
+-	/* rtl8185 can calc plcp len in HW. */
+-	priv->hw_plcp_len = 1;
+-
+ 	priv->plcp_preamble_mode = 2;
+ 	/* the eeprom type is stored in RCR register bit #6 */
+ 	if (RCR_9356SEL & read_nic_dword(dev, RCR))
+@@ -3594,15 +3560,6 @@ void rtl8180_tx_isr(struct net_device *dev, int pri, short error)
+ 	spin_unlock_irqrestore(&priv->tx_lock, flag);
+ }
+ 
+-void rtl8180_tx_irq_wq(struct work_struct *work)
+-{
+-	struct delayed_work *dwork = to_delayed_work(work);
+-	struct ieee80211_device * ieee = (struct ieee80211_device *)
+-		container_of(dwork, struct ieee80211_device, watch_dog_wq);
+-	struct net_device *dev = ieee->dev;
+-
+-	rtl8180_tx_isr(dev, MANAGE_PRIORITY, 0);
+-}
+ irqreturn_t rtl8180_interrupt(int irq, void *netdev, struct pt_regs *regs)
+ {
+ 	struct net_device *dev = (struct net_device *) netdev;
+diff --git a/drivers/staging/rtl8187se/r8185b_init.c b/drivers/staging/rtl8187se/r8185b_init.c
+index 06a1c0b..5c454fa 100644
+--- a/drivers/staging/rtl8187se/r8185b_init.c
++++ b/drivers/staging/rtl8187se/r8185b_init.c
+@@ -1231,11 +1231,9 @@ bool MgntActSet_RF_State(struct net_device *dev, RT_RF_POWER_STATE StateToSet, u
+ 			priv->RfOffReason = 0;
+ 			bActionAllowed = true;
+ 
+-			if (rtState == eRfOff && ChangeSource >= RF_CHANGE_BY_HW && !priv->bInHctTest)
++			if (rtState == eRfOff && ChangeSource >= RF_CHANGE_BY_HW)
+ 				bConnectBySSID = true;
+-
+-		} else
+-			;
++		}
+ 		break;
+ 
+ 	case eRfOff:
+-- 
+1.7.10.4
 
