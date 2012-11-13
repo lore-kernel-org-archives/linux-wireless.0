@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:50448 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754778Ab2KMQFY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 11:05:24 -0500
-Message-ID: <50A26163.10300@ti.com> (sfid-20121113_170533_588228_D22B396C)
-Date: Tue, 13 Nov 2012 17:04:03 +0200
-From: Victor Goldenshtein <victorg@ti.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:42821 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753488Ab2KMR0H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Nov 2012 12:26:07 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k13so11075463iea.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:26:06 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection command/event
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>    <1350226137-13704-2-git-send-email-victorg@ti.com>   <1350414099.10177.13.camel@jlt4.sipsolutions.net>  <50842569.5000602@ti.com> <1350910543.10166.3.camel@jlt4.sipsolutions.net>  <50922A9D.2060409@ti.com> <1352128887.9466.17.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1352128887.9466.17.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <50A186BD.6060908@lwfinger.net>
+References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
+ <1352757511-26957-16-git-send-email-maxtram95@gmail.com> <50A186BD.6060908@lwfinger.net>
+From: Maxim Mikityanskiy <maxtram95@gmail.com>
+Date: Tue, 13 Nov 2012 19:25:46 +0200
+Message-ID: <CAKErNvrxoc=QFaJ8Tkhm=gHQhLPVU3Mjf5h4rOF1oqOR-d+5fw@mail.gmail.com> (sfid-20121113_182611_988600_E7C3446E)
+Subject: Re: [PATCH 15/17] Removed unused fields in r8180_priv
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Greg Kroah-Hartman <greg@kroah.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2012 17:21, Johannes Berg wrote:
-> On Thu, 2012-11-01 at 09:54 +0200, Victor Goldenshtein wrote:
->> On 22/10/2012 14:55, Johannes Berg wrote:
->>>> 2. In __nl80211_set_channel() - to cover the case when the CAC was
->>>> initiated on a "preset_chan" (during AP init phase) and the IF was
->>>> removed before the AP was even started (local->oper_channel wasn't set yet).
->>>
->>> Hmm, I'm not sure I get it. How is "local->oper_channel" (a mac80211
->>> variable) related to this cfg80211 code?
+2012/11/13 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 11/12/2012 03:58 PM, Maxim Mikityanskiy wrote:
 >>
->> It's not, just saying that its not set at this point.
->>
->>> start_ap() isn't expected to be able to succeed until CAC passed
->>> successfully, but OTOH the channel isn't configured until then?
->>
->> right, the initial CAC performed before start_ap(), only by setting the
->> channel with __nl80211_set_channel() + radar detection command.
+>> Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
+>> ---
+>>   r8180.h       |   10 ----------
+>>   r8180_core.c  |   49 +++----------------------------------------------
+>>   r8185b_init.c |    6 ++----
+>>   3 files changed, 5 insertions(+), 60 deletions(-)
 >
-> Hmm. Maybe then the channel should be passed to the radar detection
-> command instead? That way, it can be passed through, you can allocate a
-> channel context, etc. Much easier?
+>
+> This patch failed to apply, even after the directory level was fixed. A
+> wiggle run fixed it with no manual intervention, but there is some kind of
+> problem. My base system is the staging tree, with a pull today.
+>
+> Larry
+>
 
-We already pass the frequency in the radar detection command, the set 
-channel operation comes during hostapd init flow regardless DFS 
-implementation.
-
--- 
-Thanks,
-Victor.
+Maybe, that's because I used linux-3.6.2 as base for my patches. I'll
+resend patches that should apply cleanly to today's tree.
