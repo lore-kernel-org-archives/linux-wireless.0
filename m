@@ -1,305 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab2K1Jm7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42151 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754329Ab2KMTxk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:42:59 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:42:58 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 02/20] wlcore: add ACX_PEER_CAP command
-Date: Wed, 28 Nov 2012 11:42:31 +0200
-Message-Id: <1354095769-8724-3-git-send-email-arik@wizery.com> (sfid-20121128_104308_148509_598397B3)
-In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	Tue, 13 Nov 2012 14:53:40 -0500
+Message-ID: <1352836449.9466.24.camel@jlt4.sipsolutions.net> (sfid-20121113_205344_245883_DDC7FE63)
+Subject: Re: [PATCH v7 1/2] wireless: Driver for 60GHz card wil6210
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Tue, 13 Nov 2012 20:54:09 +0100
+In-Reply-To: <1352809427-29682-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1352809427-29682-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Alright so I looked at this a little bit.
 
-ACX_PEER_CAP command is just ACX_PEER_HT_CAP, but allows
-configuring the peer's support rates as well.
 
-this is needed because we start the station role when
-the remote rates are not known yet.
+> +static int wil_cfg80211_set_txpower(struct wiphy *wiphy,
 
-the two commands should be unified in future fw versions,
-but for now add a new set_peer_cap per-hw op, that will
-use ACX_PEER_CAP for 18xx, and ACX_PEER_HT_CAP for 12xx.
+> +static int wil_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl12xx/main.c   |   10 ++++++
- drivers/net/wireless/ti/wl18xx/acx.c    |   54 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/acx.h    |   33 +++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/main.c   |    9 ++++++
- drivers/net/wireless/ti/wlcore/acx.c    |    2 ++
- drivers/net/wireless/ti/wlcore/cmd.c    |    7 ++--
- drivers/net/wireless/ti/wlcore/hw_ops.h |   13 ++++++++
- drivers/net/wireless/ti/wlcore/main.c   |    9 +++---
- drivers/net/wireless/ti/wlcore/wlcore.h |    5 +++
- 9 files changed, 134 insertions(+), 8 deletions(-)
+> +static int wil_cfg80211_mgmt_tx(struct wiphy *wiphy,
+> +				struct wireless_dev *wdev,
+> +				struct ieee80211_channel *chan, bool offchan,
+> +				enum nl80211_channel_type channel_type,
+> +				bool channel_type_valid, unsigned int wait,
+> +				const u8 *buf, size_t len, bool no_cck,
+> +				bool dont_wait_for_ack,	u64 *cookie)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 0218edd..951b88c 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1623,6 +1623,15 @@ static int wl12xx_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
- 	return wlcore_set_key(wl, cmd, vif, sta, key_conf);
- }
- 
-+static int wl12xx_set_peer_cap(struct wl1271 *wl,
-+			       struct ieee80211_sta_ht_cap *ht_cap,
-+			       bool allow_ht_operation,
-+			       u32 rate_set, u8 hlid)
-+{
-+	return wl1271_acx_set_ht_capabilities(wl, ht_cap, allow_ht_operation,
-+					      hlid);
-+}
-+
- static int wl12xx_setup(struct wl1271 *wl);
- 
- static struct wlcore_ops wl12xx_ops = {
-@@ -1659,6 +1668,7 @@ static struct wlcore_ops wl12xx_ops = {
- 	.set_key		= wl12xx_set_key,
- 	.channel_switch		= wl12xx_cmd_channel_switch,
- 	.pre_pkt_send		= NULL,
-+	.set_peer_cap		= wl12xx_set_peer_cap,
- };
- 
- static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-index 801d8af..a169bb5 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.c
-+++ b/drivers/net/wireless/ti/wl18xx/acx.c
-@@ -140,3 +140,57 @@ out:
- 	return ret;
- 
- }
-+
-+/*
-+ * this command is basically the same as wl1271_acx_ht_capabilities,
-+ * with the addition of supported rates. they should be unified in
-+ * the next fw api change
-+ */
-+int wl18xx_acx_set_peer_cap(struct wl1271 *wl,
-+			    struct ieee80211_sta_ht_cap *ht_cap,
-+			    bool allow_ht_operation,
-+			    u32 rate_set, u8 hlid)
-+{
-+	struct wlcore_acx_peer_cap *acx;
-+	int ret = 0;
-+	u32 ht_capabilites = 0;
-+
-+	wl1271_debug(DEBUG_ACX,
-+		     "acx set cap ht_supp: %d ht_cap: %d rates: 0x%x",
-+		     ht_cap->ht_supported, ht_cap->cap, rate_set);
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	if (allow_ht_operation && ht_cap->ht_supported) {
-+		/* no need to translate capabilities - use the spec values */
-+		ht_capabilites = ht_cap->cap;
-+
-+		/*
-+		 * this bit is not employed by the spec but only by FW to
-+		 * indicate peer HT support
-+		 */
-+		ht_capabilites |= WL12XX_HT_CAP_HT_OPERATION;
-+
-+		/* get data from A-MPDU parameters field */
-+		acx->ampdu_max_length = ht_cap->ampdu_factor;
-+		acx->ampdu_min_spacing = ht_cap->ampdu_density;
-+	}
-+
-+	acx->hlid = hlid;
-+	acx->ht_capabilites = cpu_to_le32(ht_capabilites);
-+	acx->supported_rates = cpu_to_le32(rate_set);
-+
-+	ret = wl1271_cmd_configure(wl, ACX_PEER_CAP, acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx ht capabilities setting failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-index b57e348..0e636de 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.h
-+++ b/drivers/net/wireless/ti/wl18xx/acx.h
-@@ -297,11 +297,44 @@ struct wlcore_peer_ht_operation_mode {
- 	u8 padding[2];
- };
- 
-+/*
-+ * ACX_PEER_CAP
-+ * this struct is very similar to wl1271_acx_ht_capabilities, with the
-+ * addition of supported rates
-+ */
-+struct wlcore_acx_peer_cap {
-+	struct acx_header header;
-+
-+	/* bitmask of capability bits supported by the peer */
-+	__le32 ht_capabilites;
-+
-+	/* rates supported by the remote peer */
-+	__le32 supported_rates;
-+
-+	/* Indicates to which link these capabilities apply. */
-+	u8 hlid;
-+
-+	/*
-+	 * This the maximum A-MPDU length supported by the AP. The FW may not
-+	 * exceed this length when sending A-MPDUs
-+	 */
-+	u8 ampdu_max_length;
-+
-+	/* This is the minimal spacing required when sending A-MPDUs to the AP*/
-+	u8 ampdu_min_spacing;
-+
-+	u8 padding;
-+} __packed;
-+
- int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
- 				  u32 sdio_blk_size, u32 extra_mem_blks,
- 				  u32 len_field_size);
- int wl18xx_acx_set_checksum_state(struct wl1271 *wl);
- int wl18xx_acx_clear_statistics(struct wl1271 *wl);
- int wl18xx_acx_peer_ht_operation_mode(struct wl1271 *wl, u8 hlid, bool wide);
-+int wl18xx_acx_set_peer_cap(struct wl1271 *wl,
-+			    struct ieee80211_sta_ht_cap *ht_cap,
-+			    bool allow_ht_operation,
-+			    u32 rate_set, u8 hlid);
- 
- #endif /* __WL18XX_ACX_H__ */
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 3f9504c..df8de71 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1414,6 +1414,14 @@ out:
- 	mutex_unlock(&wl->mutex);
- }
- 
-+static int wl18xx_set_peer_cap(struct wl1271 *wl,
-+			       struct ieee80211_sta_ht_cap *ht_cap,
-+			       bool allow_ht_operation,
-+			       u32 rate_set, u8 hlid)
-+{
-+	return wl18xx_acx_set_peer_cap(wl, ht_cap, allow_ht_operation,
-+				       rate_set, hlid);
-+}
- 
- static int wl18xx_setup(struct wl1271 *wl);
- 
-@@ -1451,6 +1459,7 @@ static struct wlcore_ops wl18xx_ops = {
- 	.channel_switch	= wl18xx_cmd_channel_switch,
- 	.pre_pkt_send	= wl18xx_pre_pkt_send,
- 	.sta_rc_update	= wl18xx_sta_rc_update,
-+	.set_peer_cap	= wl18xx_set_peer_cap,
- };
- 
- /* HT cap appropriate for wide channels in 2Ghz */
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index 9c32f0c..c796543 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -1340,6 +1340,8 @@ out:
- 	kfree(acx);
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(wl1271_acx_set_ht_capabilities);
-+
- 
- int wl1271_acx_set_ht_information(struct wl1271 *wl,
- 				   struct wl12xx_vif *wlvif,
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 56432c8..1fbee0d 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -506,11 +506,10 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	cmd->sta.hlid = wlvif->sta.hlid;
- 	cmd->sta.session = wl->session_ids[wlvif->sta.hlid];
- 	/*
--	 * We don't have the correct remote rates in this stage, and there
--	 * is no way to update them later, so use our supported rates instead.
--	 * The fw will take the configured rate policies into account anyway.
-+	 * We don't have the correct remote rates in this stage. the rates
-+	 * will be reconfigured later, after authorization.
- 	 */
--	cmd->sta.remote_rates = cpu_to_le32(supported_rates);
-+	cmd->sta.remote_rates = cpu_to_le32(wlvif->rate_set);
- 
- 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
- 		     "basic_rate_set: 0x%x, remote_rates: 0x%x",
-diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
-index 0e0b656..4db03e1 100644
---- a/drivers/net/wireless/ti/wlcore/hw_ops.h
-+++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
-@@ -209,4 +209,17 @@ wlcore_hw_sta_rc_update(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		wl->ops->sta_rc_update(wl, wlvif, sta, changed);
- }
- 
-+static inline int
-+wlcore_hw_set_peer_cap(struct wl1271 *wl,
-+		       struct ieee80211_sta_ht_cap *ht_cap,
-+		       bool allow_ht_operation,
-+		       u32 rate_set, u8 hlid)
-+{
-+	if (wl->ops->set_peer_cap)
-+		return wl->ops->set_peer_cap(wl, ht_cap, allow_ht_operation,
-+					     rate_set, hlid);
-+
-+	return 0;
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 3834e9d..4ef7ea7 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4147,10 +4147,11 @@ sta_not_found:
- 		bool enabled =
- 			bss_conf->channel_type != NL80211_CHAN_NO_HT;
- 
--		ret = wl1271_acx_set_ht_capabilities(wl,
--						     &sta_ht_cap,
--						     enabled,
--						     wlvif->sta.hlid);
-+		ret = wlcore_hw_set_peer_cap(wl,
-+					     &sta_ht_cap,
-+					     enabled,
-+					     wlvif->rate_set,
-+					     wlvif->sta.hlid);
- 		if (ret < 0) {
- 			wl1271_warning("Set ht cap failed %d", ret);
- 			goto out;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 71137aa..ecdd5e6 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -106,6 +106,11 @@ struct wlcore_ops {
- 	u32 (*pre_pkt_send)(struct wl1271 *wl, u32 buf_offset, u32 last_len);
- 	void (*sta_rc_update)(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			      struct ieee80211_sta *sta, u32 changed);
-+	int (*set_peer_cap)(struct wl1271 *wl,
-+			    struct ieee80211_sta_ht_cap *ht_cap,
-+			    bool allow_ht_operation,
-+			    u32 rate_set, u8 hlid);
-+
- };
- 
- enum wlcore_partitions {
--- 
-1.7.9.5
+> +static void wil_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
+> +					     struct wireless_dev *wdev,
+> +					     u16 frame_type, bool reg)
+
+Don't implement things you don't support.
+
+> +static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+> +				 struct net_device *ndev,
+> +				 struct cfg80211_ap_settings *info)
+> +{
+> +	int rc = 0;
+> +	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+> +	struct ieee80211_channel *channel = info->channel;
+> +
+> +	if (!channel) {
+> +		wil_err(wil, "No channel???\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	rc = wmi_set_ssid(wil, info->ssid_len, info->ssid);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = wmi_set_channel(wil, channel->hw_value);
+> +	if (rc)
+> +		return rc;
+> +
+> +	/* TODO: complete implementation */
+> +
+> +	return 0;
+
+Again, this doesn't seem right? How would it work?
+
+> +static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+> +				      struct net_device *ndev,
+> +				      struct cfg80211_beacon_data *beacon)
+> +{
+> +	return 0;
+
+Really?
+
+> +static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
+> +				struct net_device *ndev)
+
+
+> +static int wil_cfg80211_del_station(struct wiphy *wiphy,
+> +				    struct net_device *ndev,
+> +				    u8 *mac)
+
+> +static int wil_cfg80211_change_station(struct wiphy *wiphy,
+> +				       struct net_device *ndev,
+> +				       u8 *mac,
+> +				       struct station_parameters *params)
+
+So obviously don't implement AP mode yet...
+
+> +static int wil_cfg80211_probe_client(struct wiphy *wiphy,
+> +				     struct net_device *dev,
+> +				     const u8 *peer, u64 *cookie)
+
+> +static int wil_cfg80211_set_pmksa(struct wiphy *wiphy,
+> +				  struct net_device *netdev,
+> +				  struct cfg80211_pmksa *pmksa)
+
+> +static int wil_cfg80211_del_pmksa(struct wiphy *wiphy,
+> +				  struct net_device *netdev,
+> +				  struct cfg80211_pmksa *pmksa)
+
+> +static int wil_cfg80211_flush_pmksa(struct wiphy *wiphy,
+> +				    struct net_device *netdev)
+
+Again, don't implement things you don't support.
+
+And never ever just "return 0", pretending that you actually did
+something.
+
+> +static int wil_cfg80211_add_key(struct wiphy *wiphy,
+> +				struct net_device *ndev,
+> +				u8 key_index, bool pairwise,
+> +				const u8 *mac_addr,
+> +				struct key_params *params)
+> +{
+> +	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+> +
+> +	/* group key is not used */
+> +	if (!pairwise)
+> +		return 0;
+
+Return an error then?
+
+> +	return wmi_add_cipher_key(wil, key_index, mac_addr,
+> +				  params->key_len, params->key);
+> +}
+> +
+> +static int wil_cfg80211_del_key(struct wiphy *wiphy,
+> +				struct net_device *ndev,
+> +				u8 key_index, bool pairwise,
+> +				const u8 *mac_addr)
+> +{
+> +	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+> +
+> +	/* group key is not used */
+> +	if (!pairwise)
+> +		return 0;
+
+
+Ditto
+
+> +static int wil_cfg80211_get_key(struct wiphy *wiphy,
+> +				struct net_device *ndev,
+> +				u8 key_index, bool pairwise,
+> +				const u8 *mac_addr, void *cookie,
+> +				void (*callback) (void *cookie,
+> +						  struct key_params *))
+> +{
+> +	return -ENOENT;
+
+No need to implement this then?
+
+> +static int wil_cfg80211_set_default_key(struct wiphy *wiphy,
+> +					struct net_device *ndev,
+> +					u8 key_index, bool unicast,
+> +					bool multicast)
+> +{
+> +	return 0;
+
+Ok this is possibly the only case where I could think you might need to
+implement it and do nothing, although it does seem strange too.
+
+
+> +	wil->fw_code_blob.data = (void * __force)wil->csr + 0x40000;
+> +	wil->fw_code_blob.size = 0x40000;
+> +	wil_debugfs_create_ioblob("blob_fw_code", S_IRUGO, dbg,
+> +				  &wil->fw_code_blob);
+> +
+> +	wil->fw_data_blob.data = (void * __force)wil->csr + 0x80000;
+> +	wil->fw_data_blob.size = 0x8000;
+> +	wil_debugfs_create_ioblob("blob_fw_data", S_IRUGO, dbg,
+> +				  &wil->fw_data_blob);
+
+This seems a bit strange, why export the blobs that came from the
+filesystem to start with (request_firmware)?
+
+
+> +static int __wil_up(struct wil6210_priv *wil)
+> +{
+
+> +	/* Apply profile in the following order: */
+> +	/* SSID and channel for the AP */
+> +	switch (wdev->iftype) {
+> +	case NL80211_IFTYPE_AP:
+> +	case NL80211_IFTYPE_P2P_GO:
+> +		if (wil->ssid_len == 0) {
+> +			wil_err(wil, "SSID not set\n");
+> +			return -EINVAL;
+> +		}
+> +		wmi_set_ssid(wil, wil->ssid_len, wil->ssid);
+> +		if (wil->channel)
+> +			wmi_set_channel(wil, wil->channel->hw_value);
+> +		break;
+
+I don't think so? The interface shouldn't come up with any
+configuration, that's what start_ap() is used for.
+
+It also seems too early:
+
+> +	/* MAC address - pre-requisite for other commands */
+> +	wmi_set_mac_address(wil, ndev->dev_addr);
+> +
+> +	/* Set up beaconing if required. */
+> +	rc = wmi_set_bcon(wil, bi, wmi_nettype);
+> +	if (rc)
+> +		return rc;
+
+That also should be in start_ap(). Maybe that's the TODO there.
+
+> +static int use_msi = 1;
+> +module_param(use_msi, int, S_IRUGO);
+> +MODULE_PARM_DESC(use_msi,
+> +		 " Use MSI interrupt: "
+> +		 "0 - don't, 1 - (default) - single, or 3");
+
+"or 3"?
+
+> +	rc = wil6210_sysfs_init(wil);
+> +	if (rc)
+> +		goto if_remove;
+> +	/* rollback to sysfs_fini */
+
+Do you really need sysfs in the driver?
+
+> @@ -0,0 +1,134 @@
+
+> +/* attribute: SSID */
+> +/* attribute: bf */
+> +/* attribute: secure_pcp */
+
+None of this looks like it belongs into sysfs, I think you should remove
+sysfs from this entirely.
+
+> +	if (rtap_include_phy_info) {
+> +		rtap_vendor->rtap.rthdr.it_present |= cpu_to_le32(1 <<
+> +				IEEE80211_RADIOTAP_VENDOR_NAMESPACE);
+> +		/* OUI for Wilocity 04:ce:14 */
+> +		rtap_vendor->vendor_oui[0] = 0x04;
+> +		rtap_vendor->vendor_oui[1] = 0xce;
+> +		rtap_vendor->vendor_oui[2] = 0x14;
+> +		rtap_vendor->vendor_ns = 1;
+
+woot, cool! :-)
+Finally somebody using vendor namespaces
+
+
+> +int wmi_tx_eapol(struct wil6210_priv *wil, struct sk_buff *skb)
+
+Why is EAPOL special?
+
+johannes
 
