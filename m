@@ -1,37 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51594 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932834Ab2KWHL2 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55460 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777Ab2KMVoh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 02:11:28 -0500
-Message-ID: <1353654716.10197.0.camel@jlt4.sipsolutions.net> (sfid-20121123_081131_939534_4C9463A1)
-Subject: Re: RFC[1/2]mac80211: Add Statistic to debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Saravana <saravanad@posedge.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 23 Nov 2012 08:11:56 +0100
-In-Reply-To: <50AF1A1E.8090704@posedge.com>
-References: <50AF0E91.30709@posedge.com>
-	 <CAGRGNgW1x0O26SxytoDQLYXFqWcmfaCGE=Q_pxGg31mW0HyRtw@mail.gmail.com>
-	 <50AF1A1E.8090704@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 13 Nov 2012 16:44:37 -0500
+Date: Tue, 13 Nov 2012 13:44:36 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Joe Perches <joe@perches.com>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Jason Baron <jbaron@redhat.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v7 1/2] wireless: Driver for 60GHz card wil6210
+Message-Id: <20121113134436.de5df090.akpm@linux-foundation.org> (sfid-20121113_224440_794716_C733E8E3)
+In-Reply-To: <1352811970.24230.22.camel@joe-AO722>
+References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1352809427-29682-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1352811970.24230.22.camel@joe-AO722>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-23 at 12:09 +0530, Saravana wrote:
+On Tue, 13 Nov 2012 05:06:10 -0800
+Joe Perches <joe@perches.com> wrote:
 
-> > Also, as you're adding new statistics which are only used when debugfs
-> > is enabled, you might want to wrap them in #ifdefs so that they're
-> > only compiled when debugfs support is compiled.
+> On Tue, 2012-11-13 at 14:23 +0200, Vladimir Kondratiev wrote:
+> []
+> > diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+> []
+> > +/* Candidate to merge into printk.h and dynamic_debug.h */
+> > +#if defined(CONFIG_DYNAMIC_DEBUG)
+> > +#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
+> > +			 groupsize, buf, len, ascii)		\
+> > +do {								\
+> > +	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
+> > +	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
+> > +		print_hex_dump(KERN_DEBUG, prefix_str,		\
+> > +			       prefix_type, rowsize, groupsize,	\
+> > +			       buf, len, ascii);		\
+> > +} while (0)
+> > +
+> > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
+> > +		       groupsize, buf, len, ascii)		\
+> > +		       dynamic_hex_dump(prefix_str, prefix_type,\
+> > +					rowsize, groupsize, buf,\
+> > +					len, ascii)
+> > +#else
+> > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
+> > +		       groupsize, buf, len, ascii)		\
+> > +		       print_hex_dump(KERN_DEBUG, prefix_str,	\
+> > +				      prefix_type, rowsize,	\
+> > +				      groupsize, buf, len, ascii)
+> > +#endif
+> 
+> Thanks Vladimir.  I think so too.
+> 
+> Jason?  Andrew?
 
-[...]
-> Hence we don't need to wrap this up in #ifdef as it is already taken 
-> care during the directory creation.
+(I'm not on linux-wireless)
 
-I think Julian is arguing that you should have the *counters* themselves
-be under ifdef, and I tend to agree.
+Agree that the above should be in a core header file.
 
-johannes
+Disagree with placing it in a wireless header.
 
+Please split it out into a standalone patch.
+
+Does it have to be done as macros?  Can't do at least some of
+this in C?
+
+Some interface documentation would be nice, especially if it's
+implemented in macros - that's an awful lot of arguments to have to
+guess about.
