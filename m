@@ -1,55 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:36755 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902Ab2KPONC (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58286 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161168Ab2KNMSB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 09:13:02 -0500
-Date: Fri, 16 Nov 2012 08:12:55 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, Daniel Wagner <wagi@monom.org>
-Subject: Re: [PATCH v2 01/22] brcmsmac: Introduce AMPDU sessions for
- assembling AMPDUs
-Message-ID: <20121116141255.GA19078@thinkpad-t410> (sfid-20121116_151305_869936_00E0FEB1)
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-2-git-send-email-seth.forshee@canonical.com>
- <50A5FB05.4040500@broadcom.com>
+	Wed, 14 Nov 2012 07:18:01 -0500
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Joe Perches <joe@perches.com>
+Subject: [RFC] dynamic_debug: introduce debug_hex_dump()
+Date: Wed, 14 Nov 2012 14:17:43 +0200
+Message-ID: <1352895463-22851-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121114_131805_386269_C8E3F850)
+In-Reply-To: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50A5FB05.4040500@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 16, 2012 at 09:36:21AM +0100, Arend van Spriel wrote:
-> On 11/15/2012 03:07 PM, Seth Forshee wrote:
-> >AMPDU session allows MPDUs to be temporarily queued until either a full
-> >AMPDU has been collected or circumstances dictate that transmission
-> >should start with a partial AMPDU. Packets are added to the session by
-> 
-> I started reviewing this and reading this commit message got me
-> wondering about the .flush() problems. I realized the flush would be
-> a "circumstance" to start transmission of a partial AMPDU, but I am
-> pretty sure it currently is not treated as such.
+Introduce debug_hex_dump() that can be dynamically controlled, similar to
+pr_debug.
 
-I hope my terminology here isn't confusing; I wasn't sure how else to
-express this. By "full" I mean an AMPDU that is transmitted because it
-can accommodate no more packets. A "partial" AMPDU is any that is
-transmitted without being full.
+Implement only 'p' flag (_DPRINTK_FLAGS_PRINT) to keep it simple since hex dump prints
+multiple lines and long prefix would impact readability.
+To provide line/file etc. information, use pr_debug or similar
+before/after debug_hex_dump()
 
-One of the things I added when removing the tx queue was a DMA flush
-operation to force any queued AMPDU packets into the DMA ring. But in
-the current code brcms_c_sendampdu() will transmit the AMPDU with
-whatever it's got when it runs out of packets in the pktq, so I don't
-see a partial AMPDU problem.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ Documentation/dynamic-debug-howto.txt |    9 +++++++--
+ include/linux/dynamic_debug.h         |   10 ++++++++++
+ include/linux/printk.h                |   14 ++++++++++++++
+ 3 files changed, 31 insertions(+), 2 deletions(-)
 
-What does strike me as problematic is the locking in brcms_ops_flush().
-It holds wl->lock, and the interrupt handling tries to acquire the same
-lock. Doesn't this prevent both the txpktpend counts from getting
-updated and any more packets being transmitted from the packet queue?
+diff --git a/Documentation/dynamic-debug-howto.txt b/Documentation/dynamic-debug-howto.txt
+index 6e16849..4be8d9d 100644
+--- a/Documentation/dynamic-debug-howto.txt
++++ b/Documentation/dynamic-debug-howto.txt
+@@ -6,8 +6,11 @@ This document describes how to use the dynamic debug (dyndbg) feature.
+ 
+ Dynamic debug is designed to allow you to dynamically enable/disable
+ kernel code to obtain additional kernel information.  Currently, if
+-CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() calls can
+-be dynamically enabled per-callsite.
++CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() and
++debug_hex_dump() calls can be dynamically enabled per-callsite.
++
++If CONFIG_DYNAMIC_DEBUG is not set, debug_hex_dump() is just shortcut
++for print_hex_dump(KERN_DEBUG).
+ 
+ Dynamic debug has even more useful features:
+ 
+@@ -202,6 +205,8 @@ The flags are:
+   t    Include thread ID in messages not generated from interrupt context
+   _    No flags are set. (Or'd with others on input)
+ 
++For debug_hex_dump(), only 'p' flag have meaning, other flags ignored.
++
+ For display, the flags are preceded by '='
+ (mnemonic: what the flags are currently equal to).
+ 
+diff --git a/include/linux/dynamic_debug.h b/include/linux/dynamic_debug.h
+index 6dd4787..17565ab 100644
+--- a/include/linux/dynamic_debug.h
++++ b/include/linux/dynamic_debug.h
+@@ -95,6 +95,16 @@ do {								\
+ 				     ##__VA_ARGS__);		\
+ } while (0)
+ 
++#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)		\
++do {								\
++	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
++	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
++		print_hex_dump(KERN_DEBUG, prefix_str,		\
++			       prefix_type, rowsize, groupsize,	\
++			       buf, len, ascii);		\
++} while (0)
++
+ #else
+ 
+ #include <linux/string.h>
+diff --git a/include/linux/printk.h b/include/linux/printk.h
+index 9afc01e..0c9be93 100644
+--- a/include/linux/printk.h
++++ b/include/linux/printk.h
+@@ -220,6 +220,20 @@ extern void dump_stack(void) __cold;
+ 	no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+ #endif
+ 
++#if defined(CONFIG_DYNAMIC_DEBUG)
++#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
++		       groupsize, buf, len, ascii)		\
++		       dynamic_hex_dump(prefix_str, prefix_type,\
++					rowsize, groupsize, buf,\
++					len, ascii)
++#else
++#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
++		       groupsize, buf, len, ascii)		\
++		       print_hex_dump(KERN_DEBUG, prefix_str,	\
++				      prefix_type, rowsize,	\
++				      groupsize, buf, len, ascii)
++#endif
++
+ /*
+  * Print a one-time message (analogous to WARN_ONCE() et al):
+  */
+-- 
+1.7.10.4
 
-Seth
