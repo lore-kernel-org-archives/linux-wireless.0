@@ -1,75 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:37048 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752545Ab2K0UMY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44763 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161052Ab2KNLTP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 15:12:24 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2] mwifiex: advertise GreenField, 40MHz intolerance support to cfg80211
-Date: Tue, 27 Nov 2012 12:09:20 -0800
-Message-Id: <1354046960-4513-1-git-send-email-bzhao@marvell.com> (sfid-20121127_211242_373743_D07331FA)
+	Wed, 14 Nov 2012 06:19:15 -0500
+Message-ID: <1352891985.9510.22.camel@jlt4.sipsolutions.net> (sfid-20121114_121918_909503_4C48E26B)
+Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection
+ command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Date: Wed, 14 Nov 2012 12:19:45 +0100
+In-Reply-To: <50A26163.10300@ti.com>
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>
+	    <1350226137-13704-2-git-send-email-victorg@ti.com>
+	   <1350414099.10177.13.camel@jlt4.sipsolutions.net>
+	  <50842569.5000602@ti.com> <1350910543.10166.3.camel@jlt4.sipsolutions.net>
+	  <50922A9D.2060409@ti.com> <1352128887.9466.17.camel@jlt4.sipsolutions.net>
+	 <50A26163.10300@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Tue, 2012-11-13 at 17:04 +0200, Victor Goldenshtein wrote:
 
-This patch adds support for advertising GreenField, 40MHz intolerance
-or LDPC coding support to cfg80211.
+> > Hmm. Maybe then the channel should be passed to the radar detection
+> > command instead? That way, it can be passed through, you can allocate a
+> > channel context, etc. Much easier?
+> 
+> We already pass the frequency in the radar detection command, the set 
+> channel operation comes during hostapd init flow regardless DFS 
+> implementation.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-v2: fix the typo (Gabor Stefanik)
+Ok, but it doesn't seem to be passed through to the driver, nor
+considered as a channel that's currently in use. cfg80211 is now
+tracking which channels are used for multi-channel purposes, and this
+needs to be integrated here.
 
- drivers/net/wireless/mwifiex/cfg80211.c |   15 +++++++++++++++
- drivers/net/wireless/mwifiex/fw.h       |    2 ++
- 2 files changed, 17 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 3b1c277..a875499 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1948,6 +1948,21 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
- 	else
- 		ht_info->cap &= ~IEEE80211_HT_CAP_TX_STBC;
- 
-+	if (ISSUPP_GREENFIELD(adapter->hw_dot_11n_dev_cap))
-+		ht_info->cap |= IEEE80211_HT_CAP_GRN_FLD;
-+	else
-+		ht_info->cap &= ~IEEE80211_HT_CAP_GRN_FLD;
-+
-+	if (ISENABLED_40MHZ_INTOLERANT(adapter->hw_dot_11n_dev_cap))
-+		ht_info->cap |= IEEE80211_HT_CAP_40MHZ_INTOLERANT;
-+	else
-+		ht_info->cap &= ~IEEE80211_HT_CAP_40MHZ_INTOLERANT;
-+
-+	if (ISSUPP_RXLDPC(adapter->hw_dot_11n_dev_cap))
-+		ht_info->cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+	else
-+		ht_info->cap &= ~IEEE80211_HT_CAP_LDPC_CODING;
-+
- 	ht_info->cap &= ~IEEE80211_HT_CAP_MAX_AMSDU;
- 	ht_info->cap |= IEEE80211_HT_CAP_SM_PS;
- 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index dda588b..4dc8e2e 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -194,6 +194,8 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define ISSUPP_TXSTBC(Dot11nDevCap) (Dot11nDevCap & BIT(25))
- #define ISSUPP_RXSTBC(Dot11nDevCap) (Dot11nDevCap & BIT(26))
- #define ISSUPP_GREENFIELD(Dot11nDevCap) (Dot11nDevCap & BIT(29))
-+#define ISENABLED_40MHZ_INTOLERANT(Dot11nDevCap) (Dot11nDevCap & BIT(8))
-+#define ISSUPP_RXLDPC(Dot11nDevCap) (Dot11nDevCap & BIT(22))
- 
- /* httxcfg bitmap
-  * 0		reserved
--- 
-1.7.0.2
+johannes
 
