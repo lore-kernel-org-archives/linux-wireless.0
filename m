@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25740 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988Ab2KLR60 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45855 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932073Ab2KNR1t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 12:58:26 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Kalle Valo <kvalo@adurom.com>
-CC: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v5 1/2] wireless: Driver for 60GHz card wil6210
-Date: Mon, 12 Nov 2012 19:58:22 +0200
-Message-ID: <2199722.SIyuOP2QQY@lx-vladimir> (sfid-20121112_185829_034500_4D736651)
-In-Reply-To: <87txsuybw4.fsf@purkki.adurom.net>
-References: <20121108193010.GC3354@lenteja.do-not-panic.com> <1647271.ZFHae4zFan@lx-vladimir> <87txsuybw4.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 14 Nov 2012 12:27:49 -0500
+Message-ID: <1352914094.9510.38.camel@jlt4.sipsolutions.net> (sfid-20121114_182752_296607_EDF819E3)
+Subject: Re: 'ip' blocking for long time trying to down station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 14 Nov 2012 18:28:14 +0100
+In-Reply-To: <50A3D138.7010906@candelatech.com>
+References: <5091ADDD.4050407@candelatech.com>
+	  (sfid-20121101_000206_244719_62ADC7A2) <1352884491.9510.2.camel@jlt4.sipsolutions.net>
+	 <50A3D138.7010906@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, November 12, 2012 07:22:19 PM Kalle Valo wrote:
-> Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
-> >> Please see
-> >> ath6kl's struct wmi_begin_scan_cmd on wmi.h for an example
-> >> of how to specify endianess to ensure that you can use this
-> >> driver on big or little endian. So although its great you
-> >> managed to successfully use sparse with -D__CHECK_ENDIAN__
-> >> endianess may be broken on this command and all over your
-> >> wmi.h. I won't even review that file then.
-> > 
-> > I know about __le16 etc., but I have no big endian host to check it with.
-> > Thus, I'd prefer to mention that code is not ready for big endian platform
-> > rather then submit untested code. If there is a way to check endiannes
-> > without having big endian host, I'd be happy to know.
-> > Also, is there a good way to check in Kconfig we are on Little endian?
+On Wed, 2012-11-14 at 09:13 -0800, Ben Greear wrote:
+
+> > I'm guessing that the other interfaces are actually re-scheduling work
+> > items while this is trying to flush ... I'm not really sure how to
+> > improve this behaviour though.
 > 
-> I think this is wrong aproach. The endian support doesn't need to be
-> perfect, especially if you don't have any hardware to test with. Just
-> add endian annotations to all the fields you know of, run sparse and fix
-> the warnings. This should only take few hours and is much better than
-> refusing to compile on big endian machines.
+> That seems very likely, as other stations would be trying to associate
+> in this scenario....
 > 
-> You will get very close to a working code with that method, and it means
-> that all future code will have endian support "automatically" (as the
-> code will follow the style already used in the driver). And whenever
-> someone will try the driver in a big endian machine there's less to
-> debug and fix, with very good luck (and careful review!) it might even
-> work out of box :)
+> Can we just purge all of this interface's work items from the list w/out flushing
+> everyone else's work?
 
-Yes, it make sense. I noticed also I have to use __raw_{read|write}l functions 
-to copy buffers to/from PCI iomem, as otherwise io{read|write}32 would swap 
-bytes for big endian hosts, since PCI is little endian.
+Actually, what I said doesn't quite make sense. We evidently use
+flush_work() which doesn't care about *new* items, so I suppose it just
+has to wait so long because there are other items already that are
+taking a long time.
 
-I will go for it.
+However, it seems that doing flush_work() is completely pointless,
+cancel_work_sync() would be just as effective -- the work exits right
+away if the interface is no longer marked running, and it is marked
+not-running before we even do the flush_work(). So using
+cancel_work_sync() should be safe here and would avoid the long delay
+you're seeing.
 
-Thanks, Vladimir
+Could you try this? The flush_work() is in iface.c:ieee80211_do_stop()
+
+johannes
+
