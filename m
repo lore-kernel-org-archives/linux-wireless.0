@@ -1,86 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:57517 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462Ab2KTVyZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44356 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753514Ab2KNJ3O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 16:54:25 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so1562991pad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 13:54:25 -0800 (PST)
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH] net/wireless: ipw2200: introduce ipw_set_geo function
-Date: Tue, 20 Nov 2012 23:54:20 +0000
-Message-Id: <1353455660-534-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20121120_225429_528597_60B212D8)
+	Wed, 14 Nov 2012 04:29:14 -0500
+Message-ID: <1352885386.9510.15.camel@jlt4.sipsolutions.net> (sfid-20121114_102920_276047_BFEB6FD4)
+Subject: Re: mesh powersave code layout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco@cozybit.com>
+Cc: kvalo@adurom.com, "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Javier Cardona <javier@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 14 Nov 2012 10:29:46 +0100
+In-Reply-To: <50A29A2C.9080606@cozybit.com> (sfid-20121113_200626_126301_1D6259DD)
+References: <50A29A2C.9080606@cozybit.com>
+	 (sfid-20121113_200626_126301_1D6259DD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move regulatory domain initialization code to a separate function.
+Hi Marco,
 
-Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
----
- drivers/net/wireless/ipw2x00/ipw2200.c | 37 +++++++++++++++++++++-------------
- 1 file changed, 23 insertions(+), 14 deletions(-)
+> I had a presentation on mesh powersave during the Barcelona Wireless 
+> summit. In the following discussion Kalle Valo pointed out to me, that 
+> there was interest in generally moving powersave code out of mac80211.
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index fea96b5..482f505 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11269,10 +11269,31 @@ static const struct libipw_geo ipw_geos[] = {
- 	 }
- };
- 
-+static void ipw_set_geo(struct ipw_priv *priv)
-+{
-+	int j;
-+
-+	for (j = 0; j < ARRAY_SIZE(ipw_geos); j++) {
-+		if (!memcmp(&priv->eeprom[EEPROM_COUNTRY_CODE],
-+			    ipw_geos[j].name, 3))
-+			break;
-+	}
-+
-+	if (j == ARRAY_SIZE(ipw_geos)) {
-+		IPW_WARNING("SKU [%c%c%c] not recognized.\n",
-+			    priv->eeprom[EEPROM_COUNTRY_CODE + 0],
-+			    priv->eeprom[EEPROM_COUNTRY_CODE + 1],
-+			    priv->eeprom[EEPROM_COUNTRY_CODE + 2]);
-+		j = 0;
-+	}
-+
-+	libipw_set_geo(priv->ieee, &ipw_geos[j]);
-+}
-+
- #define MAX_HW_RESTARTS 5
- static int ipw_up(struct ipw_priv *priv)
- {
--	int rc, i, j;
-+	int rc, i;
- 
- 	/* Age scan list entries found before suspend */
- 	if (priv->suspend_time) {
-@@ -11310,19 +11331,7 @@ static int ipw_up(struct ipw_priv *priv)
- 		memcpy(priv->net_dev->dev_addr, priv->mac_addr, ETH_ALEN);
- 		memcpy(priv->net_dev->perm_addr, priv->mac_addr, ETH_ALEN);
- 
--		for (j = 0; j < ARRAY_SIZE(ipw_geos); j++) {
--			if (!memcmp(&priv->eeprom[EEPROM_COUNTRY_CODE],
--				    ipw_geos[j].name, 3))
--				break;
--		}
--		if (j == ARRAY_SIZE(ipw_geos)) {
--			IPW_WARNING("SKU [%c%c%c] not recognized.\n",
--				    priv->eeprom[EEPROM_COUNTRY_CODE + 0],
--				    priv->eeprom[EEPROM_COUNTRY_CODE + 1],
--				    priv->eeprom[EEPROM_COUNTRY_CODE + 2]);
--			j = 0;
--		}
--		libipw_set_geo(priv->ieee, &ipw_geos[j]);
-+		ipw_set_geo(priv);
- 
- 		if (priv->status & STATUS_RF_KILL_SW) {
- 			IPW_WARNING("Radio disabled by module parameter.\n");
--- 
-1.7.11.7
+Well, I think you should have some background there :-)
+
+The point is that in particular the managed mode powersave is a huge
+mess because it supports complete offloading and complete software
+implementation (except for the wakeups obviously) and a kind of hybrid
+inbetween mode where the device sends a null data frame whenever going
+into or out of PS (I'm looking at you, wl1251!)
+
+This, combined with the fact that the code is older than proper multi
+interface support, makes it a huge mess.
+
+The idea we were floating for a while thus was that we should instead
+try to provide some sort of library, maybe within mac80211 but not tied
+into the core flows, that can take the part of sending null data frames
+etc. To mac80211 then, drivers would seem to all implement complete
+managed mode powersaving.
+
+> Now I am unsure where to place my mesh PS code before submission.
+> Currently my code layout for the mesh mode powersave is like this:
+> 
+> mac80211:
+> -mesh PS mode setting and state logic
+> -mesh PS mode indication towards neighbors
+> -neighbor PS mode tracking
+> -frame buffering
+> -frame release in Peer Service Periods
+> -driver configuration
+> 
+> drivers (ath9k, ath9k_htc, ...):
+> -configuration
+> -tracking of neighbors' beacon TBTTs
+> -determining next wakeup TBTT and hardware configuration for wakeup
+> -awake window after own beacon (software timer)
+> 
+> 
+> Javier Cardona recommended changing that and moving all the mesh PS code 
+> to mac80211 for easy maintenance. So (if possible) the idea would be to 
+> create new ieee80211_ops ála:
+> -void (*radio_sleep) (struct ieee80211_hw *hw, u64 until_tbtt);
+> -void (*radio_wakeup)(struct ieee80211_hw *hw);
+
+I see value in having a shared implementation, but I'm afraid that if
+mesh ever becomes more mainstream vendors will come up with different
+implementations, and then this won't really be the correct API. Look at
+it this way: this kind of API works perfectly for when the driver
+handles everything, but it doesn't work at all if there's any firmware
+involved that can help in any way.
+
+I think the part that you have in mac80211 now is probably fine there,
+even if in AP mode e.g. the TI device tries to do everything itself in
+the firmware :-)
+
+For the remainder, I would suggest to keep the code separate from the
+core mesh code, but maybe make a shared component:
+
+/* provided by driver */
+struct ieee80211_mesh_ps_ops {
+	radio_sleep, radio_wakeup, ...
+};
+
+/* embedded into driver private vif struct */
+struct ieee80211_mesh_ps {
+	...
+};
+
+/* embedded into driver private sta struct */
+struct ieee80211_mesh_sta_ps {
+	...
+};
+
+/* called by driver on interface add/remove */
+int ieee80211_mesh_ps_init(struct ieee80211_mesh_ps *mesh_ps,
+			   const struct ieee80211_mesh_ps_ops *ops);
+void ieee80211_mesh_ps_exit(struct ieee80211_mesh_ps *mesh_ps);
+
+/* called on station add/remove */
+int ieee80211_mesh_ps_add_sta(struct ieee80211_mesh_ps *mesh_ps,
+			      struct ieee80211_mesh_ps_sta *mesh_ps_sta);
+void ieee80211_mesh_ps_del_sta(...);
+/* some sort of notification about TBTT? frame RX maybe? */
+
+etc.
+
+This is more like I wish managed mode worked, and has the advantage that
+if the device/driver wants to implement tracking they can do so, and if
+they don't they can use this library -- which I would expect you'd want
+to use for different QCA devices that you're working with.
+
+Does that make sense?
+
+johannes
 
