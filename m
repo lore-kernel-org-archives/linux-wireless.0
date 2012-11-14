@@ -1,82 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:48632 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029Ab2KQGsd (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34882 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753725Ab2KNTbU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 01:48:33 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFC 00/14] mesh powersave - basics
-Date: Fri, 16 Nov 2012 22:47:52 -0800
-Message-Id: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_074837_464743_440F4B6E)
+	Wed, 14 Nov 2012 14:31:20 -0500
+Date: Wed, 14 Nov 2012 14:18:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2012-11-09
+Message-ID: <20121114191811.GD6128@tuxdriver.com> (sfid-20121114_203140_403056_598DA66D)
+References: <20121012110142.GF10739@joana>
+ <20121110182427.GA7523@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20121110182427.GA7523@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following commits cover the basic subset of functions, that each mesh node
-must support to communicate in the presence of power saving nodes.
-The current patchset does not implement any actual power savings yet (no
-hardware configuration, no doze state).
+On Sat, Nov 10, 2012 at 07:24:27PM +0100, Gustavo Padovan wrote:
+> Hi John,
+> 
+> A few important fixes to go into 3.7. There is a new hw support by Marcos
+> Chaparro. Johan added a memory leak fix and hci device index list fix.
+> Also Marcel fixed a race condition in the device set up that was prevent the
+> bt monitor to work properly. Last, Paulo Sérgio added a fix to the error
+> status when pairing for LE fails. This was prevent userspace to work to handle
+> the failure properly.
+> 
+> Please pull! or let me know of any issues. Thanks.
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit 6fe7cc71bbf3a0bc28c9cec3c00bc11e81344412:
+> 
+>   ath9k: Test for TID only in BlockAcks while checking tx status (2012-10-30 15:58:54 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
 
-Mesh powersave is different from client mode powersave in the sense that
-1) there is not just a singular power mode towards the access point, but a
-   link-specific power mode towards each peer instead
-2) peers also maintain a power mode towards us (the local STA)
-3) each node has to buffer frames towards power saving neighbors
+Pulled...
+ 
+> for you to fetch changes up to 482049f75750d73358e65236b933417b69f9cc25:
+> 
+>   Bluetooth: Fix memory leak when removing a UUID (2012-11-09 16:45:37 +0100)
+> 
+> ----------------------------------------------------------------
+> Johan Hedberg (2):
+>       Bluetooth: Fix having bogus entries in mgmt_read_index_list reply
+>       Bluetooth: Fix memory leak when removing a UUID
+> 
+> Marcel Holtmann (1):
+>       Bluetooth: Notify about device registration before power on
+> 
+> Marcos Chaparro (1):
+>       Bluetooth: ath3k: Add support for VAIO VPCEH [0489:e027]
+> 
+> Paulo Sérgio (1):
+>       Bluetooth: Fix error status when pairing fails
+> 
+>  drivers/bluetooth/ath3k.c |  1 +
+>  drivers/bluetooth/btusb.c |  1 +
+>  net/bluetooth/hci_core.c  |  4 ++--
+>  net/bluetooth/mgmt.c      | 12 +++++++-----
+>  net/bluetooth/smp.c       |  2 +-
+>  5 files changed, 12 insertions(+), 8 deletions(-)
+> 
 
-With that said the different commits cover the following main topics:
-4:  maintaining a local power mode for each peer + one non-peer power mode
-5:  indicate the power mode towards the respective neighbors
-6:  track neighbors' power modes 
-10: buffer frames towards power saving neighbors
-14: release buffered frames in coordination with neighbor
 
-Marco Porsch (14):
-  {nl,cfg,mac}80211: add beacon interval and DTIM period to mesh config
-  {cfg,nl}80211: mesh power mode config parameters
-  {cfg,nl}80211: set and get default mesh power mode
-  mac80211: local link-specific mesh power mode logic
-  mac80211: mesh power mode indication in transmitted frames
-  mac80211: track neighbor STA power modes
-  {cfg,nl}80211: set local link-specific power mode
-  {cfg,nl}80211: get local and peer mesh power modes
-  mac80211: add power save support structure to mesh interface
-  mac80211: enable frame buffering for PS STA
-  {cfg,nl}80211: add awake window to mesh config
-  mac80211: add awake window IE to mesh beacons
-  mac80211: add TIM IE to mesh beacons
-  mac80211: mesh PS individually-addressed frame release
-
- include/linux/ieee80211.h     |   14 +
- include/net/cfg80211.h        |   24 ++
- include/uapi/linux/nl80211.h  |   55 ++++
- net/mac80211/Kconfig          |   11 +
- net/mac80211/Makefile         |    3 +-
- net/mac80211/cfg.c            |   33 ++-
- net/mac80211/debug.h          |   10 +
- net/mac80211/debugfs_netdev.c |    9 +
- net/mac80211/debugfs_sta.c    |    5 +-
- net/mac80211/ieee80211_i.h    |    7 +
- net/mac80211/iface.c          |    3 +
- net/mac80211/mesh.c           |   34 ++-
- net/mac80211/mesh.h           |   26 +-
- net/mac80211/mesh_hwmp.c      |   10 +
- net/mac80211/mesh_pathtbl.c   |    1 +
- net/mac80211/mesh_plink.c     |   39 +++
- net/mac80211/mesh_ps.c        |  578 +++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c             |   32 ++-
- net/mac80211/sta_info.c       |   28 +-
- net/mac80211/sta_info.h       |   18 ++
- net/mac80211/status.c         |    5 +
- net/mac80211/tx.c             |   62 ++++-
- net/mac80211/util.c           |    4 +
- net/mac80211/wme.c            |   15 +-
- net/wireless/mesh.c           |    8 +
- net/wireless/nl80211.c        |   46 +++-
- 26 files changed, 1054 insertions(+), 26 deletions(-)
- create mode 100644 net/mac80211/mesh_ps.c
 
 -- 
-1.7.9.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
