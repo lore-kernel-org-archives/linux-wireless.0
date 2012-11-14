@@ -1,75 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:47764 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751377Ab2KSVPS (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:11882 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932073Ab2KNR1w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 16:15:18 -0500
-Date: Mon, 19 Nov 2012 15:15:11 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Daniel Wagner <wagi@monom.org>
-Subject: Re: [PATCH v2 09/22] brcm80211: Allow trace support to be enabled
- separately from debug
-Message-ID: <20121119211511.GB20301@thinkpad-t410> (sfid-20121119_221521_495274_6B69798F)
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-10-git-send-email-seth.forshee@canonical.com>
- <50AA9789.9070807@broadcom.com>
+	Wed, 14 Nov 2012 12:27:52 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jason Baron <jbaron@redhat.com>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
+Date: Wed, 14 Nov 2012 19:27:47 +0200
+Message-ID: <29414886.frl7IkqOMP@lx-vladimir> (sfid-20121114_182809_489542_99CA75BE)
+In-Reply-To: <1352912932.9388.23.camel@joe-AO722>
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <4818336.JicdpLVKSo@lx-vladimir> <1352912932.9388.23.camel@joe-AO722>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50AA9789.9070807@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 19, 2012 at 09:33:13PM +0100, Arend van Spriel wrote:
-> On 11/15/2012 03:07 PM, Seth Forshee wrote:
-> >Since the runtime overhead of trace support is small when tracing is
-> >disabled, users may be interested in turning on trace support while
-> >leaving other debug features off. Add a new config option named
-> >CONFIG_BRCM_TRACING for this purpose.
+On Wednesday, November 14, 2012 09:08:52 AM Joe Perches wrote:
+> On Wed, 2012-11-14 at 18:18 +0200, Vladimir Kondratiev wrote:
+> > And, here it goes (can I call it PATCH?):
+> Don't see why not.
 > 
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Arend van Spriel
-> >Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> >---
-> >  drivers/net/wireless/brcm80211/Kconfig             |   11 +++++++++++
-> >  .../brcm80211/brcmsmac/brcms_trace_events.h        |    6 +++---
-> >  2 files changed, 14 insertions(+), 3 deletions(-)
-> >
-> >diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-> >index c9d811e..3735c27 100644
-> >--- a/drivers/net/wireless/brcm80211/Kconfig
-> >+++ b/drivers/net/wireless/brcm80211/Kconfig
-> >@@ -63,6 +63,17 @@ config BRCMISCAN
-> >  	  new E-Scan method which uses less memory in firmware and gives no
-> >  	  limitation on the number of scan results.
-> >
-> >+config BRCM_TRACING
-> >+	bool "Broadcom device tracing"
-> >+	depends on BRCMSMAC || BRCMFMAC
-> >+	---help---
-> >+	  If you say Y here, the Broadcom wireless drivers will register
-> >+	  with ftrace to dump event information into the trace ringbuffer.
-> >+	  Tracing can be enabled at runtime to aid in debugging wireless
-> >+	  issues. This option adds a small amount of overhead when tracing
-> >+	  is disabled. If unsure, say Y to allow developers to better help
-> >+	  you when wireless problems occur.
-> >+
+> > From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 > 
-> I regard this as a debugging feature. Did you consider making it
-> depend on BRCMDBG instead? Or do you think that BRCMDBG code would
-> affect run-time behavior during tracing.
+> []
+> 
+> > Introduce debug_hex_dump() that can be dynamically controlled, similar to
+> > pr_debug.
+> > 
+> > Also, make print_hex_dump_bytes() dynamically controlled
+> 
+> print_hex_dump_debug might be a better name than
+> debug_hex_dump because it's more similar to the other
+> print_hex_dump<_foo> names.
 
-It is a debugging feature, but making it depend on BRCMDBG prevents my
-intended use case. I'm planning to enable BRCM_TRACING in Ubuntu and to
-leave BRCMDBG disabled. This will make it easy for us to ask users for
-detailed debug information when needed with minimal overhead during
-normal use.
+Well, let it be:
 
-Seth
+>From 5c9a79ea32e300f9a228d659f325e30d450b57c1 Mon Sep 17 00:00:00 2001
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Wed, 14 Nov 2012 19:24:51 +0200
+Subject: [PATCH] dynamic_debug: dynamic hex dump
+
+Introduce print_hex_dump_debug() that can be dynamically controlled, similar to
+pr_debug.
+
+Also, make print_hex_dump_bytes() dynamically controlled
+
+Implement only 'p' flag (_DPRINTK_FLAGS_PRINT) to keep it simple since hex dump prints
+multiple lines and long prefix would impact readability.
+To provide line/file etc. information, use pr_debug or similar
+before/after print_hex_dump_debug()
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ Documentation/dynamic-debug-howto.txt |   11 +++++++++--
+ include/linux/dynamic_debug.h         |   10 ++++++++++
+ include/linux/printk.h                |   17 +++++++++++++++++
+ 3 files changed, 36 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/dynamic-debug-howto.txt b/Documentation/dynamic-debug-howto.txt
+index 6e16849..b39a771 100644
+--- a/Documentation/dynamic-debug-howto.txt
++++ b/Documentation/dynamic-debug-howto.txt
+@@ -6,8 +6,12 @@ This document describes how to use the dynamic debug (dyndbg) feature.
+ 
+ Dynamic debug is designed to allow you to dynamically enable/disable
+ kernel code to obtain additional kernel information.  Currently, if
+-CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() calls can
+-be dynamically enabled per-callsite.
++CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() and
++print_hex_dump_debug()/print_hex_dump_bytes() calls can be dynamically
++enabled per-callsite.
++
++If CONFIG_DYNAMIC_DEBUG is not set, print_hex_dump_debug() is just
++shortcut for print_hex_dump(KERN_DEBUG).
+ 
+ Dynamic debug has even more useful features:
+ 
+@@ -202,6 +206,9 @@ The flags are:
+   t    Include thread ID in messages not generated from interrupt context
+   _    No flags are set. (Or'd with others on input)
+ 
++For print_hex_dump_debug() and print_hex_dump_bytes(), only 'p' flag
++have meaning, other flags ignored.
++
+ For display, the flags are preceded by '='
+ (mnemonic: what the flags are currently equal to).
+ 
+diff --git a/include/linux/dynamic_debug.h b/include/linux/dynamic_debug.h
+index 6dd4787..17565ab 100644
+--- a/include/linux/dynamic_debug.h
++++ b/include/linux/dynamic_debug.h
+@@ -95,6 +95,16 @@ do {								\
+ 				     ##__VA_ARGS__);		\
+ } while (0)
+ 
++#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)		\
++do {								\
++	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
++	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
++		print_hex_dump(KERN_DEBUG, prefix_str,		\
++			       prefix_type, rowsize, groupsize,	\
++			       buf, len, ascii);		\
++} while (0)
++
+ #else
+ 
+ #include <linux/string.h>
+diff --git a/include/linux/printk.h b/include/linux/printk.h
+index 9afc01e..02c95cf 100644
+--- a/include/linux/printk.h
++++ b/include/linux/printk.h
+@@ -321,8 +321,13 @@ extern void hex_dump_to_buffer(const void *buf, size_t len,
+ extern void print_hex_dump(const char *level, const char *prefix_str,
+ 			   int prefix_type, int rowsize, int groupsize,
+ 			   const void *buf, size_t len, bool ascii);
++#if defined(CONFIG_DYNAMIC_DEBUG)
++#define print_hex_dump_bytes(prefix_str, prefix_type, buf, len)	\
++	dynamic_hex_dump(prefix_str, prefix_type, 16, 1, buf, len, true)
++#else
+ extern void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
+ 				 const void *buf, size_t len);
++#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
+ #else
+ static inline void print_hex_dump(const char *level, const char *prefix_str,
+ 				  int prefix_type, int rowsize, int groupsize,
+@@ -336,4 +341,16 @@ static inline void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
+ 
+ #endif
+ 
++#if defined(CONFIG_DYNAMIC_DEBUG)
++#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,	\
++			     groupsize, buf, len, ascii)	\
++	dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)
++#else
++#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,		\
++			     groupsize, buf, len, ascii)		\
++	print_hex_dump(KERN_DEBUG, prefix_str, prefix_type, rowsize,	\
++		       groupsize, buf, len, ascii)
++#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
++
+ #endif
+-- 
+1.7.10.4
+
 
