@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:43045 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751367Ab2KFN5s (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44994 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422702Ab2KNMhb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 08:57:48 -0500
-Date: Tue, 6 Nov 2012 19:22:48 +0530
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwl8k: Unmap the pci DMA address in xmit error path
-Message-ID: <20121106135244.GA8453@markyou.marvell.com> (sfid-20121106_145759_591564_BB1E3F48)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 14 Nov 2012 07:37:31 -0500
+Message-ID: <1352896680.9510.28.camel@jlt4.sipsolutions.net> (sfid-20121114_133734_312580_D3517045)
+Subject: Re: [PATCH v4 6/6] mac80211: add ap channel switch command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Victor Goldenshtein <victorg@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
+	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
+	"j@w1.fi" <j@w1.fi>, "coelho@ti.com" <coelho@ti.com>,
+	"igalc@ti.com" <igalc@ti.com>,
+	"adrian@freebsd.org" <adrian@freebsd.org>,
+	"nbd@nbd.name" <nbd@nbd.name>,
+	"simon.wunderlich@s2003.tu-chemnitz.de"
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Date: Wed, 14 Nov 2012 13:38:00 +0100
+In-Reply-To: <50A38C3A.20908@tieto.com>
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>
+	     <1350226137-13704-7-git-send-email-victorg@ti.com>
+	    <1350414472.10177.17.camel@jlt4.sipsolutions.net>
+	   <50842563.4010201@ti.com>
+	 <1350910599.10166.4.camel@jlt4.sipsolutions.net>
+	   <50922AA9.4030509@ti.com>
+	 <1352128994.9466.19.camel@jlt4.sipsolutions.net>  <50A2617B.3060807@ti.com>
+	 <1352892233.9510.26.camel@jlt4.sipsolutions.net> <50A38C3A.20908@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should unmap the DMA address in the error path, else it
-causes resource leaks. Fix this.
+On Wed, 2012-11-14 at 13:19 +0100, Michal Kazior wrote:
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    2 ++
- 1 file changed, 2 insertions(+)
+> > However, then I realised that that still doesn't work -- once initial
+> > radar detection is done, it needs to continue while the AP is active. If
+> > the channel context was going to be relinquished, or even just the
+> > channel changed for a few seconds, it would be unsafe. So as a result,
+> > the radar detect operation has to somehow be coupled to the start AP
+> > operation and prohibit channel changes and additional channel contexts
+> > during the entire operation time.
+> 
+> Hmm.. cfg80211 doesn't really know about channel contexts.
+>
+> The problem I see is that cfg80211 may be in a combination with 
+> `num_different_channels = 1` and mac80211 can have 2 channel contexts 
+> due to channel type incompatibilities.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 9961765..5b5b9ec 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2005,6 +2005,8 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 				spin_unlock(&priv->stream_lock);
- 			}
- 			spin_unlock_bh(&priv->tx_lock);
-+			pci_unmap_single(priv->pdev, dma, skb->len,
-+					 PCI_DMA_TODEVICE);
- 			dev_kfree_skb(skb);
- 			return;
- 		}
--- 
-1.7.9.2
+Yes, this is a concern, we need to fix that anyway though, otherwise it
+may assume that some operations are possible when they really aren't
+(e.g. starting an HT40+ and HT40- AP on the same channel, which
+shouldn't be done anyway, but still)
+
+> We'd need to tell cfg80211 that multi-interface is not possible when DFS 
+> is active if we want to at least consider single-channel only DFS.
+
+Not sure about multi-interface, but multi-channel at least.
+
+johannes
 
