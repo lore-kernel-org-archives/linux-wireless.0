@@ -1,96 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49299 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752931Ab2KVSbF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:31:05 -0500
-Message-ID: <1353594696.27848.63.camel@cumari.coelho.fi> (sfid-20121122_193132_492696_F043DDE0)
-Subject: Re: [PATCH 06/13] wlcore: update acx enum
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Nov 2012 16:31:36 +0200
-In-Reply-To: <CAB3XZEeRS5CPyU0h4BrKOH2uoi95coVMwghkaEk=zy1AzSki4Q@mail.gmail.com>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-	 <1353585928-28666-7-git-send-email-eliad@wizery.com>
-	 <1353594065.27848.60.camel@cumari.coelho.fi>
-	 <CAB3XZEeRS5CPyU0h4BrKOH2uoi95coVMwghkaEk=zy1AzSki4Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:62888 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423096Ab2KNRtr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2012 12:49:47 -0500
+Received: by mail-ia0-f174.google.com with SMTP id y25so428152iay.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2012 09:49:47 -0800 (PST)
+Date: Wed, 14 Nov 2012 12:49:40 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Sam Leffler <sleffler@google.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: RX timestamp is reported at end of frame
+Message-ID: <20121114174940.GA22375@localhost> (sfid-20121114_184951_243079_FE95904F)
+References: <1352746438-2404-1-git-send-email-thomas@cozybit.com>
+ <CAJ-Vmom4Q9ToOokeLf91tSDmmPDehcqfofuPu=wL+=Pf4fUr_g@mail.gmail.com>
+ <20121112192859.GB6842@localhost>
+ <CA+yqC4ZkeKgLKoPh18f1qDyLuOGf22GyL92+suca+gveoq7ZVw@mail.gmail.com>
+ <20121113043226.GA4064@localhost>
+ <CA+yqC4bFBFBccmeHWOaQHP0E=A0OWk+uef2ASdmLmR6pJfXRGw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+yqC4bFBFBccmeHWOaQHP0E=A0OWk+uef2ASdmLmR6pJfXRGw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-22 at 16:26 +0200, Eliad Peller wrote:
-> On Thu, Nov 22, 2012 at 4:21 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
-> >> update the acx enum to the new fw api.
-> >>
-> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> ---
-> >>  drivers/net/wireless/ti/wl18xx/acx.c |    2 +-
-> >>  drivers/net/wireless/ti/wl18xx/acx.h |    4 ----
-> >>  drivers/net/wireless/ti/wlcore/acx.h |   10 +++++++++-
-> >>  3 files changed, 10 insertions(+), 6 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-> >> index 72840e2..adff9cd 100644
-> >> --- a/drivers/net/wireless/ti/wl18xx/acx.c
-> >> +++ b/drivers/net/wireless/ti/wl18xx/acx.c
-> >> @@ -75,7 +75,7 @@ int wl18xx_acx_set_checksum_state(struct wl1271 *wl)
-> >>
-> >>       acx->checksum_state = CHECKSUM_OFFLOAD_ENABLED;
-> >>
-> >> -     ret = wl1271_cmd_configure(wl, ACX_CHECKSUM_CONFIG, acx, sizeof(*acx));
-> >> +     ret = wl1271_cmd_configure(wl, ACX_CSUM_CONFIG, acx, sizeof(*acx));
-> >>       if (ret < 0) {
-> >>               wl1271_warning("failed to set Tx checksum state: %d", ret);
-> >>               goto out;
-> >> diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-> >> index e2609a6..67733a1 100644
-> >> --- a/drivers/net/wireless/ti/wl18xx/acx.h
-> >> +++ b/drivers/net/wireless/ti/wl18xx/acx.h
-> >> @@ -25,10 +25,6 @@
-> >>  #include "../wlcore/wlcore.h"
-> >>  #include "../wlcore/acx.h"
-> >>
-> >> -enum {
-> >> -     ACX_CLEAR_STATISTICS             = 0x0047,
-> >> -};
-> >> -
-> >>  /* numbers of bits the length field takes (add 1 for the actual number) */
-> >>  #define WL18XX_HOST_IF_LEN_SIZE_FIELD 15
-> >>
-> >> diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
-> >> index d03215d..7833d17 100644
-> >> --- a/drivers/net/wireless/ti/wlcore/acx.h
-> >> +++ b/drivers/net/wireless/ti/wlcore/acx.h
-> >> @@ -1025,7 +1025,15 @@ enum {
-> >>       ACX_CONFIG_HANGOVER              = 0x0042,
-> >>       ACX_FEATURE_CFG                  = 0x0043,
-> >>       ACX_PROTECTION_CFG               = 0x0044,
-> >> -     ACX_CHECKSUM_CONFIG              = 0x0045,
-> >> +
-> >> +     /* start of 18xx specific acxs */
-> >> +     ACX_NS_IPV6_FILTER               = 0x0050,
-> >> +     ACX_PEER_HT_OPERATION_MODE_CFG   = 0x0051,
-> >> +     ACX_CSUM_CONFIG                  = 0x0052,
-> >> +     ACX_SIM_CONFIG                   = 0x0053,
-> >> +     ACX_CLEAR_STATISTICS             = 0x0054,
-> >> +     ACX_AUTO_RX_STREAMING            = 0x0055,
-> >> +     ACX_PEER_CAP                     = 0x0056
-> >>  };
-> >
-> > Why didn't you leave the wl18xx-specific ACXs in the wl18xx/acx.h file
-> > like it was before? I prefer it like that, because then it's clear that
-> > those are not supported by wl12xx.
-> >
-> this way it's easier to verify that the ACX are compatible with each
-> other (i.e. no ACX number is used for 2 different commands).
-> but since you prefer it the old way, i'll revert.
+On Tue, Nov 13, 2012 at 08:27:43AM -0800, Sam Leffler wrote:
+> It's close enough that if you adjust by the air time for the frame
+> you'll get an accurate measure of when the preamble was received at
+> the sta--at least accurate enough for me to synchronize clocks over
+> 100+ km.  Details are available if you search and the code has been in
+> freebsd for many years...
 
-Yeah, I get your point, but unfortunately it doesn't help if *we* make
-sure they're compatible, because it's the firmware people who decide
-them. :(
+Indeed, that was a good read; thanks for the pointer.
 
---
-Luca.
-
+-- 
+Bob Copeland %% www.bobcopeland.com
