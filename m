@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54331 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45008 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932272Ab2KWXb5 (ORCPT
+	with ESMTP id S1422702Ab2KNMiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 18:31:57 -0500
+	Wed, 14 Nov 2012 07:38:21 -0500
+Message-ID: <1352896734.9510.29.camel@jlt4.sipsolutions.net> (sfid-20121114_133823_674033_04ED1842)
+Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection
+ command/event
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Felix.Liao@watchguard.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.7] mac80211: fix remain-on-channel (non-)cancelling
-Date: Sat, 24 Nov 2012 00:32:19 +0100
-Message-Id: <1353713539-8094-1-git-send-email-johannes@sipsolutions.net> (sfid-20121124_003200_783757_97E6C453)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Victor Goldenshtein <victorg@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
+	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
+	"j@w1.fi" <j@w1.fi>, "coelho@ti.com" <coelho@ti.com>,
+	"igalc@ti.com" <igalc@ti.com>,
+	"adrian@freebsd.org" <adrian@freebsd.org>,
+	"nbd@nbd.name" <nbd@nbd.name>,
+	"simon.wunderlich@s2003.tu-chemnitz.de"
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Date: Wed, 14 Nov 2012 13:38:54 +0100
+In-Reply-To: <50A38F68.1020506@tieto.com>
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>
+	    <1350226137-13704-2-git-send-email-victorg@ti.com>
+	   <1350414099.10177.13.camel@jlt4.sipsolutions.net>
+	  <50842569.5000602@ti.com> <1350910543.10166.3.camel@jlt4.sipsolutions.net>
+	  <50922A9D.2060409@ti.com> <1352128887.9466.17.camel@jlt4.sipsolutions.net>
+	 <50A38F68.1020506@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-11-14 at 13:32 +0100, Michal Kazior wrote:
 
-Felix Liao reported that when an interface is set DOWN
-while another interface is executing a ROC, the warning
-in ieee80211_start_next_roc() (about the first item on
-the list having started already) triggers.
+> > Hmm. Maybe then the channel should be passed to the radar detection
+> > command instead? That way, it can be passed through, you can allocate a
+> > channel context, etc. Much easier?
+> 
+> I was thinking if putting the radar detection parameter in start_ap() is 
+> an option (and thus removing the explicit radar cmd)? We could defer 
+> `netif_carrier_on()` to be done after the initial radar detection is done.
 
-This is because ieee80211_roc_purge() calls it even if
-it never actually changed the list of ROC items. To fix
-this, simply remove the function call. If it is needed
-then it will be done by the ieee80211_sw_roc_work()
-function when the ROC item that is being removed while
-active is cleaned up.
+Yeah, I was actually thinking that too for a bit, not sure if it works
+though.
 
-Cc: stable@vger.kernel.org
-Reported-by: Felix Liao <Felix.Liao@watchguard.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/offchannel.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 83608ac..2c84185 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -458,8 +458,6 @@ void ieee80211_roc_purge(struct ieee80211_sub_if_data *sdata)
- 		list_move_tail(&roc->list, &tmp_list);
- 		roc->abort = true;
- 	}
--
--	ieee80211_start_next_roc(local);
- 	mutex_unlock(&local->mtx);
- 
- 	list_for_each_entry_safe(roc, tmp, &tmp_list, list) {
--- 
-1.8.0
+johannes
 
