@@ -1,71 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:42765 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258Ab2K3J3d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 04:29:33 -0500
-Received: by mail-ie0-f174.google.com with SMTP id c11so316033ieb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Nov 2012 01:29:33 -0800 (PST)
+Received: from mms1.broadcom.com ([216.31.210.17]:3253 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933217Ab2KOCqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2012 21:46:32 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 14/19] brcmfmac: Handle mmc exceptions during init
+ correct.
+Date: Wed, 14 Nov 2012 18:46:18 -0800
+Message-ID: <1352947583-25341-15-git-send-email-frankyl@broadcom.com> (sfid-20121115_041526_456364_49DC9DD6)
+In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 30 Nov 2012 14:59:12 +0530
-Message-ID: <CABPxzYL=MBQ3uZR=EmcNAa-9iELPKRWtwZNBnxpFdk7z5XpPKw@mail.gmail.com> (sfid-20121130_102938_440132_9B042444)
-Subject: [PATCH] iwl4965:Fixing Broken Monitor Mode Functionality
-To: johannes@sipsolutions.net
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	maheshp@posedge.com, chaitanyatk@posedge.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From the patch  "90b9e446fbb64630c72cab48c007d7081aec2533: mac80211:
-support radiotap vendor namespace RX data"
-the monitor mode functionality in iwl4965 stopped working, because of
-below issues
+From: Hante Meuleman <meuleman@broadcom.com>
 
-1) The driver doesnt fill the newly added fields in the ieee80211_rx_status
-and also doesn't do a memset leading to junk values.
+when brcmf_sdbrcm_probe_attach results in error then cleanup
+will result in null pointer access. In brcmf_sdbrcm_release and
+in brcmf_ops_sdio_remove. This patch fixes order of init and
+de-init.
 
-ieee80211_rx_monitor:
-
-"pskb_may_pull(origskb, 2 + status->vendor_radiotap_len)" the pull
-fails because of junk value in vendor_radiotap_len.
-And all the frames are dropped.
-
-2) We also see a kernel trace in
-
-ieee80211_rx_radiotap_space:
-        if (status->vendor_radiotap_len) {
-                if (WARN_ON_ONCE(status->vendor_radiotap_align == 0))
-
-This patch fixed both the issues, this is tested with iwl4965 intel
-wireless nic.
-
-Signed-off-by: Chaitanya T K<chaitanya.mgit@gmail.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    8 +++++++-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   17 +++++++++--------
+ 2 files changed, 16 insertions(+), 9 deletions(-)
 
- drivers/net/wireless/iwlegacy/4965-mac.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c
-b/drivers/net/wireless/iwlegacy/4965-mac.c
-index ef68b72..d4b801e 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -671,6 +671,16 @@ il4965_hdl_rx(struct il_priv *il, struct il_rx_buf *rxb)
-        /* This will be used in several places later */
-        rate_n_flags = le32_to_cpu(phy_res->rate_n_flags);
-
-+        /* To Avoid Junk values to mac80211 causing the frames
-+        * to drop when NIC is on monitor mode:wireshark doesnt work
-+         * This came in to light with the patch from
-+         * johannes "support radiotap vendor namespace RX data"
-+         * which introduced 2 more  entries to the rx_stats struct,
-+         * but as the driver is not configuring those, they become
-+         * junk when accessed at mac80211.
-+         */
-+        memset(&rx_status,0,sizeof(rx_status));
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index c62ec2a..8545733 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -512,6 +512,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 
+ 		brcmf_dbg(TRACE, "F2 found, calling brcmf_sdio_probe...\n");
+ 		ret = brcmf_sdio_probe(sdiodev);
++		if (ret)
++			dev_set_drvdata(&func->dev, NULL);
+ 	}
+ 
+ 	return ret;
+@@ -532,8 +534,12 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
+ 		sdiodev = bus_if->bus_priv.sdio;
+ 		brcmf_dbg(TRACE, "F2 found, calling brcmf_sdio_remove...\n");
+ 		brcmf_sdio_remove(sdiodev);
+-		dev_set_drvdata(&func->card->dev, NULL);
+ 		dev_set_drvdata(&func->dev, NULL);
++	}
++	if (func->num == 1) {
++		sdiodev = dev_get_drvdata(&func->card->dev);
++		bus_if = sdiodev->bus_if;
++		dev_set_drvdata(&func->card->dev, NULL);
+ 		kfree(bus_if);
+ 		kfree(sdiodev);
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index e2351a7..40a37ac 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3867,7 +3867,8 @@ static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
+ 		brcmf_sdio_intr_unregister(bus->sdiodev);
+ 
+ 		cancel_work_sync(&bus->datawork);
+-		destroy_workqueue(bus->brcmf_wq);
++		if (bus->brcmf_wq)
++			destroy_workqueue(bus->brcmf_wq);
+ 
+ 		if (bus->sdiodev->bus_if->drvr) {
+ 			brcmf_detach(bus->sdiodev->dev);
+@@ -3909,6 +3910,13 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	bus->txminmax = BRCMF_TXMINMAX;
+ 	bus->tx_seq = SDPCM_SEQUENCE_WRAP - 1;
+ 
++	INIT_WORK(&bus->datawork, brcmf_sdio_dataworker);
++	bus->brcmf_wq = create_singlethread_workqueue("brcmf_wq");
++	if (bus->brcmf_wq == NULL) {
++		brcmf_dbg(ERROR, "insufficient memory to create txworkqueue\n");
++		goto fail;
++	}
 +
-        /* rx_status carries information about the packet to mac80211 */
-        rx_status.mactime = le64_to_cpu(phy_res->timestamp);
-        rx_status.band =
+ 	/* attempt to attach to the dongle */
+ 	if (!(brcmf_sdbrcm_probe_attach(bus, regsva))) {
+ 		brcmf_dbg(ERROR, "brcmf_sdbrcm_probe_attach failed\n");
+@@ -3920,13 +3928,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	init_waitqueue_head(&bus->ctrl_wait);
+ 	init_waitqueue_head(&bus->dcmd_resp_wait);
+ 
+-	bus->brcmf_wq = create_singlethread_workqueue("brcmf_wq");
+-	if (bus->brcmf_wq == NULL) {
+-		brcmf_dbg(ERROR, "insufficient memory to create txworkqueue\n");
+-		goto fail;
+-	}
+-	INIT_WORK(&bus->datawork, brcmf_sdio_dataworker);
+-
+ 	/* Set up the watchdog timer */
+ 	init_timer(&bus->timer);
+ 	bus->timer.data = (unsigned long)bus;
+-- 
+1.7.9.5
+
+
