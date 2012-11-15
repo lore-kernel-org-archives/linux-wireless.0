@@ -1,96 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:39058 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754131Ab2KZQGH (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:58852 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767935Ab2KOOIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 11:06:07 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm9so3611509wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 08:06:06 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 05/11] wlcore/wl18xx/wl12xx: separate channel count between chips
-Date: Mon, 26 Nov 2012 18:05:44 +0200
-Message-Id: <1353945950-3899-6-git-send-email-arik@wizery.com> (sfid-20121126_170637_803238_000468F4)
-In-Reply-To: <1353945950-3899-1-git-send-email-arik@wizery.com>
-References: <1353945950-3899-1-git-send-email-arik@wizery.com>
+	Thu, 15 Nov 2012 09:08:19 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Daniel Wagner <wagi@monom.org>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v2 02/22] brcmsmac: Don't weight AMPDU packets in txfifo
+Date: Thu, 15 Nov 2012 08:07:52 -0600
+Message-Id: <1352988492-21340-3-git-send-email-seth.forshee@canonical.com> (sfid-20121115_150840_096635_59C78433)
+In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-18xx chips are capable of staying on 2 channels at the same time.
-Introduce a chip-family specific parameter to set the number of channels
-in the interface-combinations published by the driver.
+According to the comments this "reduces rate lag," but in reality the
+only way this value is used is for determining whether or not any frames
+remain to be transmitted. Therefore there's no reason for AMPDU packets
+to receive any weighting.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- drivers/net/wireless/ti/wl12xx/main.c   |    1 +
- drivers/net/wireless/ti/wl18xx/main.c   |    1 +
- drivers/net/wireless/ti/wlcore/main.c   |    4 ++--
- drivers/net/wireless/ti/wlcore/wlcore.h |    3 +++
- 4 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |   12 +++---------
+ drivers/net/wireless/brcm80211/brcmsmac/main.c  |   19 +++++++++----------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h  |    6 ++----
+ 3 files changed, 14 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 032a639..dafcdf6 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1676,6 +1676,7 @@ static int wl12xx_setup(struct wl1271 *wl)
- 	wl->rtable = wl12xx_rtable;
- 	wl->num_tx_desc = WL12XX_NUM_TX_DESCRIPTORS;
- 	wl->num_rx_desc = WL12XX_NUM_RX_DESCRIPTORS;
-+	wl->num_channels = 1;
- 	wl->num_mac_addr = WL12XX_NUM_MAC_ADDRESSES;
- 	wl->band_rate_to_idx = wl12xx_band_rate_to_idx;
- 	wl->hw_tx_rate_tbl_size = WL12XX_CONF_HW_RXTX_RATE_MAX;
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 5e81d9c..9d2fa91 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1456,6 +1456,7 @@ static int wl18xx_setup(struct wl1271 *wl)
- 	wl->rtable = wl18xx_rtable;
- 	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
- 	wl->num_rx_desc = WL18XX_NUM_TX_DESCRIPTORS;
-+	wl->num_channels = 2;
- 	wl->num_mac_addr = WL18XX_NUM_MAC_ADDRESSES;
- 	wl->band_rate_to_idx = wl18xx_band_rate_to_idx;
- 	wl->hw_tx_rate_tbl_size = WL18XX_CONF_HW_RXTX_RATE_MAX;
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 49ff7ee..f628297c 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5464,10 +5464,9 @@ static const struct ieee80211_iface_limit wlcore_iface_limits[] = {
- 	},
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index 5739534..ea84087 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -40,8 +40,6 @@
+ #define AMPDU_DEF_RETRY_LIMIT		5
+ /* default tx retry limit at reg rate */
+ #define AMPDU_DEF_RR_RETRY_LIMIT	2
+-/* default weight of ampdu in txfifo */
+-#define AMPDU_DEF_TXPKT_WEIGHT		2
+ /* default ffpld reserved bytes */
+ #define AMPDU_DEF_FFPLD_RSVD		2048
+ /* # of inis to be freed on detach */
+@@ -114,7 +112,6 @@ struct brcms_fifo_info {
+  * mpdu_density: min mpdu spacing (0-7) ==> 2^(x-1)/8 usec
+  * max_pdu: max pdus allowed in ampdu
+  * dur: max duration of an ampdu (in msec)
+- * txpkt_weight: weight of ampdu in txfifo; reduces rate lag
+  * rx_factor: maximum rx ampdu factor (0-3) ==> 2^(13+x) bytes
+  * ffpld_rsvd: number of bytes to reserve for preload
+  * max_txlen: max size of ampdu per mcs, bw and sgi
+@@ -136,7 +133,6 @@ struct ampdu_info {
+ 	u8 mpdu_density;
+ 	s8 max_pdu;
+ 	u8 dur;
+-	u8 txpkt_weight;
+ 	u8 rx_factor;
+ 	u32 ffpld_rsvd;
+ 	u32 max_txlen[MCS_TABLE_SIZE][2][2];
+@@ -247,7 +243,6 @@ struct ampdu_info *brcms_c_ampdu_attach(struct brcms_c_info *wlc)
+ 	ampdu->mpdu_density = AMPDU_DEF_MPDU_DENSITY;
+ 	ampdu->max_pdu = AUTO;
+ 	ampdu->dur = AMPDU_MAX_DUR;
+-	ampdu->txpkt_weight = AMPDU_DEF_TXPKT_WEIGHT;
+ 
+ 	ampdu->ffpld_rsvd = AMPDU_DEF_FFPLD_RSVD;
+ 	/*
+@@ -942,8 +937,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
+ 
+ 		while ((p = skb_dequeue(&session.skb_list)) != NULL)
+ 			brcms_c_txfifo(wlc, fifo, p,
+-				       skb_queue_empty(&session.skb_list),
+-				       ampdu->txpkt_weight);
++				       skb_queue_empty(&session.skb_list));
+ 	}
+ 	/* endif (count) */
+ 	return err;
+@@ -1162,7 +1156,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 	/* update rate state */
+ 	antselid = brcms_c_antsel_antsel2id(wlc->asi, mimoantsel);
+ 
+-	brcms_c_txfifo_complete(wlc, queue, ampdu->txpkt_weight);
++	brcms_c_txfifo_complete(wlc, queue);
+ }
+ 
+ void
+@@ -1219,7 +1213,7 @@ brcms_c_ampdu_dotxstatus(struct ampdu_info *ampdu, struct scb *scb,
+ 			p = dma_getnexttxp(wlc->hw->di[queue],
+ 					   DMA_RANGE_TRANSMITTED);
+ 		}
+-		brcms_c_txfifo_complete(wlc, queue, ampdu->txpkt_weight);
++		brcms_c_txfifo_complete(wlc, queue);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 75086b3..e4ef457 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -982,7 +982,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	totlen = p->len;
+ 	free_pdu = true;
+ 
+-	brcms_c_txfifo_complete(wlc, queue, 1);
++	brcms_c_txfifo_complete(wlc, queue);
+ 
+ 	if (lastframe) {
+ 		/* remove PLCP & Broadcom tx descriptor header */
+@@ -7319,8 +7319,7 @@ void brcms_c_send_q(struct brcms_c_info *wlc)
+ 			err = brcms_c_prep_pdu(wlc, pkt[0], &fifo);
+ 			if (!err) {
+ 				for (i = 0; i < count; i++)
+-					brcms_c_txfifo(wlc, fifo, pkt[i], true,
+-						       1);
++					brcms_c_txfifo(wlc, fifo, pkt[i], true);
+ 			}
+ 		}
+ 
+@@ -7340,7 +7339,7 @@ void brcms_c_send_q(struct brcms_c_info *wlc)
+ 
+ void
+ brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo, struct sk_buff *p,
+-	       bool commit, s8 txpktpend)
++	       bool commit)
+ {
+ 	u16 frameid = INVALIDFID;
+ 	struct d11txh *txh;
+@@ -7358,9 +7357,9 @@ brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo, struct sk_buff *p,
+ 	 * used, this will be handled in brcms_b_txfifo()
+ 	 */
+ 	if (commit) {
+-		wlc->core->txpktpend[fifo] += txpktpend;
+-		BCMMSG(wlc->wiphy, "pktpend inc %d to %d\n",
+-			 txpktpend, wlc->core->txpktpend[fifo]);
++		wlc->core->txpktpend[fifo] += 1;
++		BCMMSG(wlc->wiphy, "pktpend inc 1 to %d\n",
++			 wlc->core->txpktpend[fifo]);
+ 	}
+ 
+ 	/* Commit BCMC sequence number in the SHM frame ID location */
+@@ -7424,10 +7423,10 @@ brcms_c_rspec_to_rts_rspec(struct brcms_c_info *wlc, u32 rspec,
+ }
+ 
+ void
+-brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo, s8 txpktpend)
++brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo)
+ {
+-	wlc->core->txpktpend[fifo] -= txpktpend;
+-	BCMMSG(wlc->wiphy, "pktpend dec %d to %d\n", txpktpend,
++	wlc->core->txpktpend[fifo] -= 1;
++	BCMMSG(wlc->wiphy, "pktpend dec 1 to %d\n",
+ 	       wlc->core->txpktpend[fifo]);
+ 
+ 	/* There is more room; mark precedences related to this FIFO sendable */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+index 8debc74..0ab7d36 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+@@ -638,10 +638,8 @@ struct brcms_bss_cfg {
  };
  
--static const struct ieee80211_iface_combination
-+static struct ieee80211_iface_combination
- wlcore_iface_combinations[] = {
- 	{
--	  .num_different_channels = 1,
- 	  .max_interfaces = 3,
- 	  .limits = wlcore_iface_limits,
- 	  .n_limits = ARRAY_SIZE(wlcore_iface_limits),
-@@ -5570,6 +5569,7 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
- 
- 	/* allowed interface combinations */
-+	wlcore_iface_combinations[0].num_different_channels = wl->num_channels;
- 	wl->hw->wiphy->iface_combinations = wlcore_iface_combinations;
- 	wl->hw->wiphy->n_iface_combinations =
- 		ARRAY_SIZE(wlcore_iface_combinations);
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 037c56e..5f580e5 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -441,6 +441,9 @@ struct wl1271 {
- 	unsigned int min_fw_ver[NUM_FW_VER];
- 
- 	struct completion nvs_loading_complete;
-+
-+	/* number of concurrent channels the HW supports */
-+	u32 num_channels;
- };
- 
- int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
+ extern void brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo,
+-			   struct sk_buff *p,
+-			   bool commit, s8 txpktpend);
+-extern void brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo,
+-				    s8 txpktpend);
++			   struct sk_buff *p, bool commit);
++extern void brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo);
+ extern void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+ 			    struct sk_buff *sdu, uint prec);
+ extern void brcms_c_print_txstatus(struct tx_status *txs);
 -- 
 1.7.9.5
 
