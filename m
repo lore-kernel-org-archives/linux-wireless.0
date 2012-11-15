@@ -1,38 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41039 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956Ab2KFMW7 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:58961 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767968Ab2KOOJC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 07:22:59 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TViBF-0005fl-Sf
-	for linux-wireless@vger.kernel.org; Tue, 06 Nov 2012 13:22:58 +0100
-Message-ID: <1352204615.9440.9.camel@jlt4.sipsolutions.net> (sfid-20121106_132310_718208_5D9AAE23)
-Subject: Re: [PATCH 0/2] mac80211: client-side P2P powersave
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Tue, 06 Nov 2012 13:23:35 +0100
-In-Reply-To: <1352126445-25088-1-git-send-email-johannes@sipsolutions.net> (sfid-20121105_154021_900032_74F25FFB)
-References: <1352126445-25088-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121105_154021_900032_74F25FFB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 15 Nov 2012 09:09:02 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Daniel Wagner <wagi@monom.org>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v2 22/22] brcmsmac: Remove some noisy and uninformative debug messages
+Date: Thu, 15 Nov 2012 08:08:12 -0600
+Message-Id: <1352988492-21340-23-git-send-email-seth.forshee@canonical.com> (sfid-20121115_150908_309051_0CAA8AEC)
+In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-05 at 15:40 +0100, Johannes Berg wrote:
-> Implement passing the P2P powersave parameters (except NoA
-> schedules) to the mac80211 hardware driver. To do this, I
-> introduced a generic function to get a copy of some P2P
-> attribute into a buffer, I did it that way because of the
-> potential for fragmentation into multiple IEs.
-> 
-> The only change over the RFC is that I now use the correct
-> attribute ID definition from Arend's patch.
+These messages clutter up the trace buffer without adding any useful
+information.
 
-Applied both.
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c  |    2 --
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   25 ------------------------
+ 2 files changed, 27 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index 0f44bd9..511e457 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -1377,8 +1377,6 @@ int dma_txfast(struct brcms_c_info *wlc, struct dma_pub *pub,
+ 	struct ieee80211_tx_info *tx_info;
+ 	bool is_ampdu;
+ 
+-	brcms_dbg_dma(di->core, "%s:\n", di->name);
+-
+ 	/* no use to transmit a zero length packet */
+ 	if (p->len == 0)
+ 		return 0;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index f7da9b3..f2c05d5 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -647,10 +647,6 @@ static uint brcms_c_calc_frame_time(struct brcms_c_info *wlc, u32 ratespec,
+ 		rate = BRCM_RATE_1M;
+ 	}
+ 
+-	brcms_dbg_mac80211(wlc->hw->d11core,
+-			   "wl%d: rspec 0x%x, preamble_type %d, len%d\n",
+-			   wlc->pub->unit, ratespec, preamble_type, mac_len);
+-
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+ 		int tot_streams = mcs_2_txstreams(mcs) + rspec_stc(ratespec);
+@@ -4943,8 +4939,6 @@ uint brcms_c_detach(struct brcms_c_info *wlc)
+ 	if (wlc == NULL)
+ 		return 0;
+ 
+-	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+-
+ 	callbacks += brcms_b_detach(wlc);
+ 
+ 	/* delete software timers */
+@@ -5778,9 +5772,6 @@ brcms_c_calc_ack_time(struct brcms_c_info *wlc, u32 rspec,
+ {
+ 	uint dur = 0;
+ 
+-	brcms_dbg_mac80211(wlc->hw->d11core,
+-			   "wl%d: rspec 0x%x, preamble_type %d\n",
+-			   wlc->pub->unit, rspec, preamble_type);
+ 	/*
+ 	 * Spec 9.6: ack rate is the highest rate in BSSBasicRateSet that
+ 	 * is less than or equal to the rate of the immediately previous
+@@ -5798,9 +5789,6 @@ static uint
+ brcms_c_calc_cts_time(struct brcms_c_info *wlc, u32 rspec,
+ 		      u8 preamble_type)
+ {
+-	brcms_dbg_mac80211(wlc->hw->d11core,
+-			   "wl%d: ratespec 0x%x, preamble_type %d\n",
+-			   wlc->pub->unit, rspec, preamble_type);
+ 	return brcms_c_calc_ack_time(wlc, rspec, preamble_type);
+ }
+ 
+@@ -5808,9 +5796,6 @@ static uint
+ brcms_c_calc_ba_time(struct brcms_c_info *wlc, u32 rspec,
+ 		     u8 preamble_type)
+ {
+-	brcms_dbg_mac80211(wlc->hw->d11core,
+-			   "wl%d: rspec 0x%x, preamble_type %d\n",
+-			   wlc->pub->unit, rspec, preamble_type);
+ 	/*
+ 	 * Spec 9.6: ack rate is the highest rate in BSSBasicRateSet that
+ 	 * is less than or equal to the rate of the immediately previous
+@@ -5864,10 +5849,6 @@ brcms_c_calc_frame_len(struct brcms_c_info *wlc, u32 ratespec,
+ 	uint nsyms, mac_len, Ndps, kNdps;
+ 	uint rate = rspec2rate(ratespec);
+ 
+-	brcms_dbg_mac80211(wlc->hw->d11core,
+-			   "wl%d: rspec 0x%x, preamble_type %d, dur %d\n",
+-			   wlc->pub->unit, ratespec, preamble_type, dur);
+-
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+ 		int tot_streams = mcs_2_txstreams(mcs) + rspec_stc(ratespec);
+@@ -7272,9 +7253,6 @@ brcms_c_calc_lsig_len(struct brcms_c_info *wlc, u32 ratespec,
+ {
+ 	uint nsyms, len = 0, kNdps;
+ 
+-	brcms_dbg_mac80211(wlc->hw->d11core, "wl%d: rate %d, len%d\n",
+-			   wlc->pub->unit, rspec2rate(ratespec), mac_len);
+-
+ 	if (is_mcs_rate(ratespec)) {
+ 		uint mcs = ratespec & RSPEC_RATE_MASK;
+ 		int tot_streams = (mcs_2_txstreams(mcs) + 1) +
+@@ -7628,8 +7606,6 @@ static void brcms_c_recv(struct brcms_c_info *wlc, struct sk_buff *p)
+ 	uint len;
+ 	bool is_amsdu;
+ 
+-	brcms_dbg_rx(wlc->hw->d11core, "wl%d\n", wlc->pub->unit);
+-
+ 	/* frame starts with rxhdr */
+ 	rxh = (struct d11rxhdr *) (p->data);
+ 
+@@ -7686,7 +7662,6 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 	uint n = 0;
+ 	uint bound_limit = bound ? RXBND : -1;
+ 
+-	brcms_dbg_rx(wlc_hw->d11core, "wl%d\n", wlc_hw->unit);
+ 	skb_queue_head_init(&recv_frames);
+ 
+ 	/* gather received frames */
+-- 
+1.7.9.5
 
