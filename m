@@ -1,89 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756273Ab2KVUoc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 15:44:32 -0500
-Message-ID: <1353585161.9806.37.camel@jlt4.sipsolutions.net> (sfid-20121122_214552_316648_998A7653)
-Subject: Re: [POC] recoverable fault injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Thu, 22 Nov 2012 12:52:41 +0100
-In-Reply-To: <CAC5umyibe0tb+HLxx3dbT7gF_nVAAHso1Y0Qb4Q_+y0KNrnvFg@mail.gmail.com> (sfid-20121122_124034_444494_4D7B6C5A)
-References: <1353541455.20173.10.camel@jlt4.sipsolutions.net>
-	 <CAC5umyibe0tb+HLxx3dbT7gF_nVAAHso1Y0Qb4Q_+y0KNrnvFg@mail.gmail.com>
-	 (sfid-20121122_124034_444494_4D7B6C5A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3373 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933242Ab2KOCqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2012 21:46:35 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 10/19] brcmfmac: fix wrong usage of unaligned include
+ file
+Date: Wed, 14 Nov 2012 18:46:14 -0800
+Message-ID: <1352947583-25341-11-git-send-email-frankyl@broadcom.com> (sfid-20121115_034654_172940_E21EC7E6)
+In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-22 at 20:40 +0900, Akinobu Mita wrote:
+From: Arend van Spriel <arend@broadcom.com>
 
-> > I was thinking: what if we could do fault injection during regular
-> > testing, at least on those code paths that are not supposed to have side
-> > effects when they fail? Now obviously this isn't all code paths, and
-> > many probably erroneously *do* have side effects even if they're not
-> > supposed to, but it does apply to a number of code paths.
-> 
-> It sounds interesting. I have never thought of this idea.
+Replaced <linux/unaligned/access_ok.h> by <asm/unaligned.h>
+to make it work on ARM and other architectures.
 
-:-)
-It also occurred to me that if the function is defined to not have side
-effects when failing, this actually also lets you test that in a way.
-Anyway, it's really just an idea at this point.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > So I decided to play with this, and the result it the patch below. It
-> > adds a new knob "recoverable-only" to the slab and page_alloc fault
-> > attributes. If enabled, then a single fault can be injected if the task
-> > executing it is in a "recoverable section", this is implemented by some
-> > new fields in struct task_struct and the (very ugly!) macro
-> > FAULT_INJECT_CALL_RECOVERABLE_FUNCTION.
-> 
-> I suggest introducing a pair of function like:
-> 
-> void fault_recoverable_enable(unsigned long fault_ids);
-> void fault_recoverable_disable();
-> [...]
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+index 13bd333..b39246a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+@@ -18,7 +18,7 @@
+ #ifndef FWEH_H_
+ #define FWEH_H_
+ 
+-#include <linux/unaligned/access_ok.h>
++#include <asm/unaligned.h>
+ #include <linux/skbuff.h>
+ #include <linux/if_ether.h>
+ #include <linux/if.h>
+-- 
+1.7.9.5
 
-I thought about something like that, I actually initially played with
-macros like this:
-
-#define FAULT_RECOVERABLE_START(ids)	\
-	/* set up the task state */	\
- fault_recovery_retry:
-
-#define FAULT_RECOVERABLE_END(ids)	\
-	if (current->encountered_fault)	\
-		goto fault_recovery_retry;
-
-or so. However, the problem is that if you exit the function between
-these points, and this is true for your functions as well, you leave the
-task's fault injection enabled which isn't what you want. So adding
-functions or macros like this didn't really seem right. Also, functions
-(rather than macros) have the problem that the retry can't be
-encapsulated -- note how my macro calls the function again if it failed.
-So with functions like that, you introduce new manually-coded error and
-retry paths, that seemed undesirable.
-
-As you can see in my macro, it's also possible for an allocation to fail
-but the function to succeed, so the function that is called must have a
-return value indicating success or failure. I ran into this with debug
-objects, their allocation failed all the time but obviously the function
-succeeded as debug objects fail gracefully if they can't allocate
-memory.
-
-Now, I'm not saying I'm happy with this, but I haven't found a better
-solution yet, but I'll admit that I haven't thought about it for long.
-If this was python I'd add a decorator to the function ;-)
-
-Oh another thing I realized: when a fault is injected, I currently set
-current->fail_recoverable = 0, but I could just unset the failed bit
-instead which would allow multiple different failures. Not sure which is
-better though.
-
-Thanks for looking at this :-)
-
-johannes
 
