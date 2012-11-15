@@ -1,75 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:47006 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881Ab2K0GpH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 01:45:07 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so3808120wer.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:06 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 00/20] wlcore fixes for 3.8 (part2)
-Date: Tue, 27 Nov 2012 08:44:41 +0200
-Message-Id: <1353998701-18171-1-git-send-email-arik@wizery.com> (sfid-20121127_074516_007905_3D91AB59)
+Received: from mms1.broadcom.com ([216.31.210.17]:3241 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933205Ab2KOCqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2012 21:46:32 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 18/19] brcmfmac: limit hex dump on fwil.
+Date: Wed, 14 Nov 2012 18:46:22 -0800
+Message-ID: <1352947583-25341-19-git-send-email-frankyl@broadcom.com> (sfid-20121115_034651_620755_0FC5A6A1)
+In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series applies on top of part 1 sent yesterday.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-The main addition is a new Tx scheduling algorithm for
-better multi-channel operation.
+When debug is turned on for fwil then the whole data buffer is
+dumped. In some cases this gives excessive amount of debug. With
+this patch the dumps are limited to 64 bytes.
 
-Arik Nemtsov (9):
-  wlcore: clear roc_vif on iface removal
-  wlcore: take the mutex before resetting Tx queues
-  wlcore: consolidate free_link and always call it
-  wlcore: initialize per-link FW freed blocks correctly
-  wlcore: track wlvif inside per-link structure
-  wlcore: count packets held per AC in each vif
-  wlcore: track FW-allocated packets per link
-  wlcore: improved Tx scheduling algorithm
-  wl18xx: set last Tx rate from FW status
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c |   21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-Eliad Peller (4):
-  wlcore: allow fw commands to fail
-  wlcore: allow ACX_BA_SESSION_RX_SETUP to fail
-  wlcore: remove WLCORE_QUIRK_NO_ELP
-  wl18xx: declare support for greenfield ht_cap
-
-Ido Reis (3):
-  wl18xx: update default mac/phy parameters
-  wlcore: fwlog dynamic mem_block control
-  wl18xx: FDSP Code RAM Corruption fix
-
-Ido Yariv (1):
-  wlcore: Allow memory access when the FW crashes
-
-Victor Goldenshtein (2):
-  wlcore: remove unnecessary WARN_ON in wl12xx_tx_reset
-  wlcore: restore default channel configuration
-
-Yair Shapira (1):
-  wl18xx: support 2nd set of mac/phy tx-power params
-
- drivers/net/wireless/ti/wl12xx/main.c     |    2 +
- drivers/net/wireless/ti/wl18xx/conf.h     |   21 +++-
- drivers/net/wireless/ti/wl18xx/main.c     |   87 +++++++++++---
- drivers/net/wireless/ti/wl18xx/reg.h      |   20 ++++
- drivers/net/wireless/ti/wl18xx/tx.c       |   56 ++++++++-
- drivers/net/wireless/ti/wlcore/acx.c      |   13 ++-
- drivers/net/wireless/ti/wlcore/cmd.c      |   96 +++++++++++++---
- drivers/net/wireless/ti/wlcore/cmd.h      |    7 +-
- drivers/net/wireless/ti/wlcore/conf.h     |   76 ++++++++++---
- drivers/net/wireless/ti/wlcore/debugfs.c  |    8 +-
- drivers/net/wireless/ti/wlcore/init.c     |    3 -
- drivers/net/wireless/ti/wlcore/main.c     |  176 ++++++++++++++++++-----------
- drivers/net/wireless/ti/wlcore/ps.c       |    8 +-
- drivers/net/wireless/ti/wlcore/tx.c       |  157 +++++++++++++++++--------
- drivers/net/wireless/ti/wlcore/wlcore.h   |    9 +-
- drivers/net/wireless/ti/wlcore/wlcore_i.h |   13 ++-
- 16 files changed, 566 insertions(+), 186 deletions(-)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+index 62e0960..7e678e9 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+@@ -29,6 +29,9 @@
+ #include "fwil.h"
+ 
+ 
++#define MAX_HEX_DUMP_LEN	64
++
++
+ static s32
+ brcmf_fil_cmd_data(struct brcmf_if *ifp, u32 cmd, void *data, u32 len, bool set)
+ {
+@@ -64,7 +67,8 @@ brcmf_fil_cmd_data_set(struct brcmf_if *ifp, u32 cmd, void *data, u32 len)
+ 	mutex_lock(&ifp->drvr->proto_block);
+ 
+ 	brcmf_dbg(FIL, "cmd=%d, len=%d\n", cmd, len);
+-	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data, len, "data");
++	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
++			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data");
+ 
+ 	err = brcmf_fil_cmd_data(ifp, cmd, data, len, true);
+ 	mutex_unlock(&ifp->drvr->proto_block);
+@@ -81,7 +85,8 @@ brcmf_fil_cmd_data_get(struct brcmf_if *ifp, u32 cmd, void *data, u32 len)
+ 	err = brcmf_fil_cmd_data(ifp, cmd, data, len, false);
+ 
+ 	brcmf_dbg(FIL, "cmd=%d, len=%d\n", cmd, len);
+-	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data, len, "data");
++	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
++			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data");
+ 
+ 	mutex_unlock(&ifp->drvr->proto_block);
+ 
+@@ -147,7 +152,8 @@ brcmf_fil_iovar_data_set(struct brcmf_if *ifp, char *name, void *data,
+ 	mutex_lock(&drvr->proto_block);
+ 
+ 	brcmf_dbg(FIL, "name=%s, len=%d\n", name, len);
+-	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data, len, "data");
++	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
++			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data");
+ 
+ 	buflen = brcmf_create_iovar(name, data, len, drvr->proto_buf,
+ 				    sizeof(drvr->proto_buf));
+@@ -186,7 +192,8 @@ brcmf_fil_iovar_data_get(struct brcmf_if *ifp, char *name, void *data,
+ 	}
+ 
+ 	brcmf_dbg(FIL, "name=%s, len=%d\n", name, len);
+-	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data, len, "data");
++	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
++			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data");
+ 
+ 	mutex_unlock(&drvr->proto_block);
+ 	return err;
+@@ -268,7 +275,8 @@ brcmf_fil_bsscfg_data_set(struct brcmf_if *ifp, char *name,
+ 	mutex_lock(&drvr->proto_block);
+ 
+ 	brcmf_dbg(FIL, "bssidx=%d, name=%s, len=%d\n", ifp->bssidx, name, len);
+-	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data, len, "data");
++	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
++			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data");
+ 
+ 	buflen = brcmf_create_bsscfg(ifp->bssidx, name, data, len,
+ 				     drvr->proto_buf, sizeof(drvr->proto_buf));
+@@ -306,7 +314,8 @@ brcmf_fil_bsscfg_data_get(struct brcmf_if *ifp, char *name,
+ 		brcmf_dbg(ERROR, "Creating bsscfg failed\n");
+ 	}
+ 	brcmf_dbg(FIL, "bssidx=%d, name=%s, len=%d\n", ifp->bssidx, name, len);
+-	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data, len, "data");
++	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
++			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data");
+ 
+ 	mutex_unlock(&drvr->proto_block);
+ 	return err;
 -- 
 1.7.9.5
+
 
