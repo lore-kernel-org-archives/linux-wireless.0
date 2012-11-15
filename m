@@ -1,120 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4499 "EHLO mms3.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3249 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754010Ab2KFAWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 19:22:49 -0500
+	id S933193Ab2KOCqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2012 21:46:32 -0500
 From: "Franky Lin" <frankyl@broadcom.com>
 To: linville@tuxdriver.com
 cc: linux-wireless@vger.kernel.org,
-	"Hante Meuleman" <meuleman@broadcom.com>
-Subject: [PATCH 08/24] brcmfmac: use wait_event_timeout for 8021x
- pending count
-Date: Mon, 5 Nov 2012 16:22:16 -0800
-Message-ID: <1352161352-30405-9-git-send-email-frankyl@broadcom.com> (sfid-20121106_013116_503447_1157E719)
-In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 11/19] brcmfmac: ignore IF event if it is a add for
+ ifidx 0
+Date: Wed, 14 Nov 2012 18:46:15 -0800
+Message-ID: <1352947583-25341-12-git-send-email-frankyl@broadcom.com> (sfid-20121115_041528_626178_BA780FAA)
+In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Arend van Spriel <arend@broadcom.com>
 
-brcmf_netdev_wait_pend8021x was polling to see if 8021x data was
-already sent. Code was replaced using wait_event_timeout.
+Firmware fires IF event to add the primary interface but that
+is already created in the driver.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
 Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    1 +
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   34 +++++++++-----------
- 2 files changed, 17 insertions(+), 18 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   15 ++++++++++-----
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |    7 +++++--
+ 2 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 34bad32..8d4789b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -621,6 +621,7 @@ struct brcmf_pub {
- 	struct work_struct multicast_work;
- 	u8 macvalue[ETH_ALEN];
- 	atomic_t pend_8021x_cnt;
-+	wait_queue_head_t pend_8021x_wait;
- #ifdef DEBUG
- 	struct dentry *dbgfs_dir;
- #endif
 diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 9e2451f..0f81f31 100644
+index 51cbc72..a39ea20 100644
 --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
 +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -52,6 +52,7 @@ MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN fullmac driver.");
- MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN fullmac cards");
- MODULE_LICENSE("Dual BSD/GPL");
+@@ -696,12 +696,17 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, int ifidx, s32 bssidx,
+ 	 * in case we missed the BRCMF_E_IF_DEL event.
+ 	 */
+ 	if (ifp) {
+-		brcmf_dbg(ERROR, "ERROR: netdev:%s already exists, try free & unregister\n",
++		brcmf_dbg(ERROR, "ERROR: netdev:%s already exists\n",
+ 			  ifp->ndev->name);
+-		netif_stop_queue(ifp->ndev);
+-		unregister_netdev(ifp->ndev);
+-		free_netdev(ifp->ndev);
+-		drvr->iflist[ifidx] = NULL;
++		if (ifidx) {
++			netif_stop_queue(ifp->ndev);
++			unregister_netdev(ifp->ndev);
++			free_netdev(ifp->ndev);
++			drvr->iflist[ifidx] = NULL;
++		} else {
++			brcmf_dbg(ERROR, "ignore IF event\n");
++			return ERR_PTR(-EINVAL);
++		}
+ 	}
  
-+#define MAX_WAIT_FOR_8021X_TX		50	/* msecs */
- 
- /* Error bits */
- int brcmf_msg_level = BRCMF_ERROR_VAL;
-@@ -404,9 +405,11 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
- 	eh = (struct ethhdr *)(txp->data);
- 	type = ntohs(eh->h_proto);
- 
--	if (type == ETH_P_PAE)
-+	if (type == ETH_P_PAE) {
- 		atomic_dec(&drvr->pend_8021x_cnt);
--
-+		if (waitqueue_active(&drvr->pend_8021x_wait))
-+			wake_up(&drvr->pend_8021x_wait);
-+	}
+ 	/* Allocate netdev, including space for private structure */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index 283acee..7b57b89 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -402,7 +402,8 @@ int brcmf_fweh_register(struct brcmf_pub *drvr, enum brcmf_fweh_event_code code,
+ 		return -ENOSPC;
+ 	}
+ 	drvr->fweh.evt_handler[code] = handler;
+-	brcmf_dbg(TRACE, "event handler registered for code %d\n", code);
++	brcmf_dbg(TRACE, "event handler registered for %s\n",
++		  brcmf_fweh_event_name(code));
+ 	return 0;
  }
  
- static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
-@@ -822,6 +825,8 @@ int brcmf_attach(uint bus_hdrlen, struct device *dev)
- 
- 	INIT_LIST_HEAD(&drvr->bus_if->dcmd_list);
- 
-+	init_waitqueue_head(&drvr->pend_8021x_wait);
-+
- 	return ret;
- 
- fail:
-@@ -924,26 +929,19 @@ static int brcmf_get_pend_8021x_cnt(struct brcmf_pub *drvr)
- 	return atomic_read(&drvr->pend_8021x_cnt);
- }
- 
--#define MAX_WAIT_FOR_8021X_TX	10
--
- int brcmf_netdev_wait_pend8021x(struct net_device *ndev)
+@@ -415,7 +416,8 @@ int brcmf_fweh_register(struct brcmf_pub *drvr, enum brcmf_fweh_event_code code,
+ void brcmf_fweh_unregister(struct brcmf_pub *drvr,
+ 			   enum brcmf_fweh_event_code code)
  {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_pub *drvr = ifp->drvr;
--	int timeout = 10 * HZ / 1000;
--	int ntimes = MAX_WAIT_FOR_8021X_TX;
--	int pend = brcmf_get_pend_8021x_cnt(drvr);
--
--	while (ntimes && pend) {
--		if (pend) {
--			set_current_state(TASK_INTERRUPTIBLE);
--			schedule_timeout(timeout);
--			set_current_state(TASK_RUNNING);
--			ntimes--;
--		}
--		pend = brcmf_get_pend_8021x_cnt(drvr);
--	}
--	return pend;
-+	int err;
-+
-+	err = wait_event_timeout(drvr->pend_8021x_wait,
-+				 !brcmf_get_pend_8021x_cnt(drvr),
-+				 msecs_to_jiffies(MAX_WAIT_FOR_8021X_TX));
-+
-+	WARN_ON(!err);
-+
-+	return !err;
+-	brcmf_dbg(TRACE, "event handler cleared for code %d\n", code);
++	brcmf_dbg(TRACE, "event handler cleared for %s\n",
++		  brcmf_fweh_event_name(code));
+ 	drvr->fweh.evt_handler[code] = NULL;
  }
  
- static void brcmf_driver_init(struct work_struct *work)
+@@ -438,6 +440,7 @@ int brcmf_fweh_activate_events(struct brcmf_if *ifp)
+ 	}
+ 
+ 	/* want to handle IF event as well */
++	brcmf_dbg(EVENT, "enable event IF\n");
+ 	setbit(eventmask, BRCMF_E_IF);
+ 
+ 	err = brcmf_fil_iovar_data_set(ifp, "event_msgs",
 -- 
 1.7.9.5
 
