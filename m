@@ -1,170 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36017 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752861Ab2KZOwq (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:58894 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767951Ab2KOOIg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 09:52:46 -0500
-Message-ID: <1353941587.9488.37.camel@jlt4.sipsolutions.net> (sfid-20121126_155254_304828_66C19566)
-Subject: pull-request: mac80211-next 2012-11-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 26 Nov 2012 15:53:07 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-ids6+la6YvfcFDeueS7h"
-Mime-Version: 1.0
+	Thu, 15 Nov 2012 09:08:36 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Daniel Wagner <wagi@monom.org>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v2 10/22] brcm80211: Convert log message levels to debug levels
+Date: Thu, 15 Nov 2012 08:08:00 -0600
+Message-Id: <1352988492-21340-11-git-send-email-seth.forshee@canonical.com> (sfid-20121115_150842_930535_BA365471)
+In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In preparation for enhancements to debug and trace support, convert the
+message levels to debug levels which will be used for enabling
+categories of debug messages. The two message levels are little-used
+anyway and are combined into the BRCM_DL_INFO debug level.
 
---=-ids6+la6YvfcFDeueS7h
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |    2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c  |    4 ++--
+ drivers/net/wireless/brcm80211/brcmsmac/types.h |    2 +-
+ drivers/net/wireless/brcm80211/include/defs.h   |    5 ++---
+ 4 files changed, 6 insertions(+), 7 deletions(-)
 
-John,
-
-After deliberating on it for a bit I decided to pull the initial VHT
-support patches into the tree now so we don't have to deal with two
-different mac80211 channel context APIs.
-
-Please pull (see below) to get the following changes:
- * a fix & a debug aid in IBSS from Antonio,
- * mesh cleanups from Marco,
- * a few bugfixes for some of my previous patches from Arend and myself,
- * and the big initial VHT support patchset
-
-johannes
-
-
-
-The following changes since commit 77d2ece6fde80631193054edc9c9a3edad519565=
-:
-
-  mac80211: Add debugfs callbacks for station addition/removal (2012-11-21 =
-11:46:25 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
--john
-
-for you to fetch changes up to ec816087e8978b74c1bd5fae0e335dd97d964e9f:
-
-  cfg80211: fix some tracing output issues (2012-11-26 12:48:17 +0100)
-
-----------------------------------------------------------------
-Antonio Quartulli (2):
-      mac80211: in ADHOC don't update last_rx if sta is not authorized
-      mac80211: in ADHOC print debug message for every Auth message
-
-Arend van Spriel (1):
-      cfg80211: change function signature of cfg80211_get_p2p_attr()
-
-Johannes Berg (18):
-      mac80211: fix radiotap vendor area skipping
-      mac80211: fix RX chains configuration
-      mac80211: rename IEEE80211_STA_DISABLE_11N to HT
-      mac80211: disable HT advertising unless AP supports it
-      cfg80211: use DS or HT operation IEs to determine BSS channel
-      mac80211: fix managed mode channel flags handling
-      cfg80211: remove remain-on-channel channel type
-      nl80211: add documentation for channel type
-      cfg80211: pass a channel definition struct
-      nl80211/cfg80211: support VHT channel configuration
-      mac80211: convert to channel definition struct
-      nl80211/cfg80211: add VHT MCS support
-      mac80211: support drivers reporting VHT RX
-      mac80211: support VHT rates in TX info
-      wireless: add definitions for VHT MCS support
-      mac80211_hwsim: advertise VHT support
-      mac80211_hwsim: remove printing scan config
-      cfg80211: fix some tracing output issues
-
-Marco Porsch (3):
-      mac80211: move Mesh Capability field definition to ieee80211.h
-      mac80211: refactor ieee80211_set_qos_hdr
-      mac80211: remove mesh config macros from mesh_plink.c
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |  27 +-
- drivers/net/wireless/ath/ath6kl/wmi.c              |   5 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  11 +-
- drivers/net/wireless/iwlwifi/dvm/dev.h             |   1 -
- drivers/net/wireless/iwlwifi/dvm/mac80211.c        |   2 -
- drivers/net/wireless/libertas/cfg.c                |  24 +-
- drivers/net/wireless/mac80211_hwsim.c              |  68 ++--
- drivers/net/wireless/mwifiex/cfg80211.c            |  46 +--
- drivers/net/wireless/mwifiex/main.h                |   2 -
- drivers/net/wireless/mwifiex/sta_event.c           |   1 -
- drivers/net/wireless/mwifiex/sta_ioctl.c           |   3 +-
- drivers/net/wireless/orinoco/cfg.c                 |  11 +-
- drivers/net/wireless/rndis_wlan.c                  |   2 +-
- drivers/net/wireless/ti/wlcore/main.c              |   9 +-
- include/linux/ieee80211.h                          |  38 ++
- include/net/cfg80211.h                             | 170 ++++++---
- include/net/mac80211.h                             |  66 +++-
- include/uapi/linux/nl80211.h                       |  96 ++++-
- net/mac80211/cfg.c                                 | 137 +++----
- net/mac80211/chan.c                                | 128 ++-----
- net/mac80211/debugfs_netdev.c                      |   2 -
- net/mac80211/driver-ops.h                          |   5 +-
- net/mac80211/ibss.c                                |  46 ++-
- net/mac80211/ieee80211_i.h                         |  22 +-
- net/mac80211/iface.c                               |   5 +-
- net/mac80211/main.c                                |  23 +-
- net/mac80211/mesh.c                                |  36 +-
- net/mac80211/mesh.h                                |  14 -
- net/mac80211/mesh_plink.c                          |  47 +--
- net/mac80211/mesh_sync.c                           |   2 +-
- net/mac80211/mlme.c                                |  94 ++---
- net/mac80211/offchannel.c                          |   8 +-
- net/mac80211/rate.c                                |   5 +-
- net/mac80211/rate.h                                |   2 +-
- net/mac80211/rx.c                                  |  41 +-
- net/mac80211/scan.c                                |   9 +-
- net/mac80211/sta_info.c                            |   2 +-
- net/mac80211/sta_info.h                            |   8 +-
- net/mac80211/trace.h                               |  29 +-
- net/mac80211/tx.c                                  |  20 +-
- net/mac80211/util.c                                |  59 ++-
- net/mac80211/wme.c                                 |  40 +-
- net/wireless/chan.c                                | 280 +++++++++++---
- net/wireless/core.h                                |  23 +-
- net/wireless/ibss.c                                |  27 +-
- net/wireless/mesh.c                                |  49 +--
- net/wireless/mlme.c                                |  36 +-
- net/wireless/nl80211.c                             | 415 ++++++++++++-----=
-----
- net/wireless/nl80211.h                             |   8 +-
- net/wireless/rdev-ops.h                            |  42 +--
- net/wireless/scan.c                                |  45 ++-
- net/wireless/trace.h                               | 295 +++++++--------
- net/wireless/util.c                                |  79 +++-
- net/wireless/wext-compat.c                         |  28 +-
- net/wireless/wext-sme.c                            |  11 +-
- 55 files changed, 1642 insertions(+), 1062 deletions(-)
-
-
---=-ids6+la6YvfcFDeueS7h
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJQs4JTAAoJEDBSmw7B7bqr1icP+wWfjWe5Byf/ZeuATcG8ibs8
-0X7N1azXCfkQBbgunYuwKYWBTPiCsDrr2lcd7MyO+B5cR3uv9CR4w4F8K1liBWBT
-qrDBSEyNZ8fDcaXxHDEbw0pz6fhyOFSevooU944cbKxcgpPVtzk4hjJnFywJ61ib
-HZFbDJnyV0+FTmmF3vc4oAv0RO5TUMy19SNiGzw20pfAhDVRZZbkKHiKYCeQEKl9
-RojIx7ZC7jrx4r5LAbKt6mnMuPrX3skdIJyXAOpeowWirVzK0ueV6aoKB5/NPcA4
-y8TkdVx19Cav3yX/HS/+2Gl3v8H3zAXbYBXaOlTxP2xoHCaylK1zT8kqhk/OK7wg
-sz2DRiUmIGhH/dQsVGqwKKw5sJ9iJ83ffiFbC2aCv7s8zGaMyKH/KEPiyyuIFPai
-s5JZ0IvoPL4W9mmtw2t2pjoMK2bN2DQMjbeoXqgsw6X2NdHMxdLXmOCt5Phl3Gvw
-ivjRLnruysyNFeN8QyCGjYsye6EHV4tGVHOdRv3jWypdxGsNuEK0s0AyS/i3P4Pd
-N1vQxcxlqQsR+Xv/YzUYJTmVuF6WHYhc70q84h3wHF1DWfaOtmqm2NY8KXWRCxMW
-hfxoRJRhPH36hOCbTt7DKX62YMkwSQRRJTTei0vXb0JLjMbCElHF7BYH+U/KNZMd
-VIPjBtLKkwaYrpiMqDSj
-=4kcd
------END PGP SIGNATURE-----
-
---=-ids6+la6YvfcFDeueS7h--
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index c62fd3d..93d4ecd 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -926,7 +926,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 			wiphy_err(wiphy, "%s: ampdu tx phy error (0x%x)\n",
+ 				  __func__, txs->phyerr);
+ 
+-			if (brcm_msg_level & LOG_ERROR_VAL) {
++			if (brcm_msg_level & BRCM_DL_INFO) {
+ 				brcmu_prpkt("txpkt (AMPDU)", p);
+ 				brcms_c_print_txdesc((struct d11txh *) p->data);
+ 			}
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index ca93214..a5bf3b6 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -281,7 +281,7 @@ struct edcf_acparam {
+ /* debug/trace */
+ uint brcm_msg_level =
+ #if defined(DEBUG)
+-	LOG_ERROR_VAL;
++	BRCM_DL_INFO;
+ #else
+ 	0;
+ #endif				/* DEBUG */
+@@ -902,7 +902,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	mcl = le16_to_cpu(txh->MacTxControlLow);
+ 
+ 	if (txs->phyerr) {
+-		if (brcm_msg_level & LOG_ERROR_VAL) {
++		if (brcm_msg_level & BRCM_DL_INFO) {
+ 			wiphy_err(wlc->wiphy, "phyerr 0x%x, rate 0x%x\n",
+ 				  txs->phyerr, txh->MainRates);
+ 			brcms_c_print_txdesc(txh);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/types.h b/drivers/net/wireless/brcm80211/brcmsmac/types.h
+index e3abc0e..ae1f3ad 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/types.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/types.h
+@@ -246,7 +246,7 @@
+ 
+ #define BCMMSG(dev, fmt, args...)		\
+ do {						\
+-	if (brcm_msg_level & LOG_TRACE_VAL)	\
++	if (brcm_msg_level & BRCM_DL_INFO)	\
+ 		wiphy_err(dev, "%s: " fmt, __func__, ##args);	\
+ } while (0)
+ 
+diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
+index f0d8c04..223eb2b 100644
+--- a/drivers/net/wireless/brcm80211/include/defs.h
++++ b/drivers/net/wireless/brcm80211/include/defs.h
+@@ -78,9 +78,8 @@
+ #define PM_OFF	0
+ #define PM_MAX	1
+ 
+-/* Message levels */
+-#define LOG_ERROR_VAL		0x00000001
+-#define LOG_TRACE_VAL		0x00000002
++/* Debug levels */
++#define BRCM_DL_INFO		0x00000001
+ 
+ #define PM_OFF	0
+ #define PM_MAX	1
+-- 
+1.7.9.5
 
