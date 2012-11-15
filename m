@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35488 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826Ab2KZLqE (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:58886 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767951Ab2KOOIc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 06:46:04 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Tcx8U-0001TA-8U
-	for linux-wireless@vger.kernel.org; Mon, 26 Nov 2012 12:46:02 +0100
-Message-ID: <1353930390.9488.29.camel@jlt4.sipsolutions.net> (sfid-20121126_124608_573988_75856CFB)
-Subject: Re: [PATCH] mac80211: fix managed mode channel flags handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 26 Nov 2012 12:46:30 +0100
-In-Reply-To: <1353927754-17265-1-git-send-email-johannes@sipsolutions.net> (sfid-20121126_120213_647898_7E3AD214)
-References: <1353927754-17265-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121126_120213_647898_7E3AD214)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 15 Nov 2012 09:08:32 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Daniel Wagner <wagi@monom.org>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v2 08/22] brcmsmac: Reduce number of entries in tx DMA rings
+Date: Thu, 15 Nov 2012 08:07:58 -0600
+Message-Id: <1352988492-21340-9-git-send-email-seth.forshee@canonical.com> (sfid-20121115_150841_507287_BE035CB6)
+In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 12:02 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If ieee80211_prep_channel() decides that HT should be
-> disabled (because the HT IEs from the AP were invalid)
-> it will set the IEEE80211_STA_DISABLE_HT to not send
-> HT capabilities to the AP when associating. If this
-> happens during authentication, the flag will be lost
-> and we send HT frames, even if the channel config was
-> set up for non-HT. This can lead to issues.
-> 
-> Fix this by always resetting the ifmgd flags to zero
-> when the channel context is released so that the flag
-> resetting in ieee80211_mgd_assoc() isn't necessary.
-> 
-> To make the code a bit easier move the call to release
-> the channel in ieee80211_set_disassoc() to the end of
-> the function together with the flag resetting (which
-> needs to be at the end to avoid timers setting flags.)
+Currently up to 256 frames can be queued for each DMA ring. This is
+excessive, and now that we have better flow control we can get by with
+less. Experimentation has shown 64 to work well.
 
-Applied. :)
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 2b8987c..ca93214 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -232,8 +232,8 @@
+ 
+ #define MAX_DMA_SEGS			4
+ 
+-/* Max # of entries in Tx FIFO based on 4kb page size */
+-#define NTXD				256
++/* # of entries in Tx FIFO */
++#define NTXD				64
+ /* Max # of entries in Rx FIFO based on 4kb page size */
+ #define NRXD				256
+ 
+-- 
+1.7.9.5
 
