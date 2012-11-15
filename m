@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:39283 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752881Ab2KPSZO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 13:25:14 -0500
-Message-ID: <1353090276.10872.84.camel@cumari.coelho.fi> (sfid-20121116_192531_392307_F014BF61)
-Subject: Re: [PATCH 14/14] wlcore: Remove redundant check on unsigned
- variable
-From: Luciano Coelho <coelho@ti.com>
-To: Tushar Behera <tushar.behera@linaro.org>
-CC: <linux-kernel@vger.kernel.org>, <patches@linaro.org>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Date: Fri, 16 Nov 2012 20:24:36 +0200
-In-Reply-To: <1353048646-10935-15-git-send-email-tushar.behera@linaro.org>
-References: <1353048646-10935-1-git-send-email-tushar.behera@linaro.org>
-	 <1353048646-10935-15-git-send-email-tushar.behera@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:44310
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1768435Ab2KORhn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Nov 2012 12:37:43 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20645.10318.653310.433256@gargle.gargle.HOWL> (sfid-20121115_183746_240897_F5A3DD2D)
+Date: Thu, 15 Nov 2012 23:07:18 +0530
+To: <paul@foresight-mands.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: Debugging support
+In-Reply-To: <085801cdc355$6abcb180$40361480$@com>
+References: <085801cdc355$6abcb180$40361480$@com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-16 at 12:20 +0530, Tushar Behera wrote:
-> No need to check whether unsigned variable is less than 0.
+Paul Stoaks wrote:
+> Hi Folks,
 > 
-> CC: Luciano Coelho <coelho@ti.com>
-> CC: linux-wireless@vger.kernel.org
-> CC: netdev@vger.kernel.org
-> Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
-> ---
+> I have another noob question for you.  Can you point me to documentation for
+> the protocol-level debugging facilities built into mac80211 (and/or
+> drivers)?  I see references to "debugfs" and some ath9k debugging features,
+> some of which are enabled in the kernel configuration.  What I'm
+> particularly interested in at this point is any kind of protocol or
+> management packet logging as well as mac80211 event logging.  I have some
+> ath9k hardware, but I also have Broadcom B43 devices that I'd like to
+> monitor.
 
-Applied in the wl12xx.git tree.  Thanks!
+mac80211 has tracing:
+http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
 
---
-Luca.
+wpa_supplicant has tracing:
+(Enable CONFIG_DEBUG_LINUX_TRACING in wpa_s).
 
+Event monitoring in "iw" is useful too.
+
+ath9k doesn't have tracing or packet-logging currently.
+
+Sujith
