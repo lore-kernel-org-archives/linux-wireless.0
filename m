@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37637 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754452Ab2KSUcX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 15:32:23 -0500
-Message-ID: <1353357162.18299.32.camel@jlt4.sipsolutions.net> (sfid-20121119_213226_943989_1B7110A1)
-Subject: Re: [RFC 05/14] mac80211: mesh power mode indication in transmitted
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Date: Mon, 19 Nov 2012 21:32:42 +0100
-In-Reply-To: <50AA9177.5030408@etit.tu-chemnitz.de>
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	  <1353134886-13256-6-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353143459.9543.19.camel@jlt4.sipsolutions.net>
-	 <50AA9177.5030408@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3376 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933303Ab2KOCrF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2012 21:47:05 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 17/19] brcmfmac: sdio module load fix.
+Date: Wed, 14 Nov 2012 18:46:21 -0800
+Message-ID: <1352947583-25341-18-git-send-email-frankyl@broadcom.com> (sfid-20121115_041528_006736_F42A70F8)
+In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Hante Meuleman <meuleman@broadcom.com>
 
-> Sorry, I don't get that one. According to IEEE80211-2012 8.4.2.100 Mesh 
-> Configuration element and 8.4.2.100.8 Mesh Capability, the capability 
-> field is just u8.
-> It is currently written as follows:
-> 
-> mesh.c : mesh_add_meshconf_ie
-> 
-> /* Mesh capability */
-> *pos = MESHCONF_CAPAB_FORWARDING;
-> *pos |= ifmsh->accepting_plinks ?
->      MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
-> *pos++ |= ifmsh->adjusting_tbtt ?
->      MESHCONF_CAPAB_TBTT_ADJUSTING : 0x00;
-> 
-> Should I change anything? Just move the enum?
+On sdio module unload followed by load (without removing the
+device) the access window should be moved back to enumeration
+space. Force this by removing initialisation of sbwad during
+probe.
 
-Err, I misinterpreted the code, sorry. I would appreciate if you moved
-it to ieee80211.h with all the other protocol definitions.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 4c3315c..334ddab 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -516,9 +516,6 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 
+ 	regs = SI_ENUM_BASE;
+ 
+-	/* Report the BAR, to fix if needed */
+-	sdiodev->sbwad = SI_ENUM_BASE;
+-
+ 	/* try to attach to the target device */
+ 	sdiodev->bus = brcmf_sdbrcm_probe(regs, sdiodev);
+ 	if (!sdiodev->bus) {
+-- 
+1.7.9.5
+
 
