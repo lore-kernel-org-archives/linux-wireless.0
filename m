@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:42778 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671Ab2KDPSI (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33137 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933286Ab2KOPzY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Nov 2012 10:18:08 -0500
-Received: by mail-la0-f46.google.com with SMTP id h6so3635184lag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Nov 2012 07:18:06 -0800 (PST)
+	Thu, 15 Nov 2012 10:55:24 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gp3so1408951lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2012 07:55:23 -0800 (PST)
 MIME-Version: 1.0
-Date: Sun, 4 Nov 2012 16:18:06 +0100
-Message-ID: <CAJZtC_ksyKZtOEye3xqTySKf49JTy5-=Jf=G1qvoPaexJCieTw@mail.gmail.com> (sfid-20121104_161822_798208_CDAFF88C)
-Subject: 802.11h support?
-From: Rene Bartsch <renne.bartsch@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1352978222-13866-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1352978222-13866-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Thu, 15 Nov 2012 17:55:23 +0200
+Message-ID: <CAMXE1-oypT8XMZBxBwKP5v9+xW4QS579PtmhCgPhxhodHoVETw@mail.gmail.com> (sfid-20121115_165528_691338_24FC5966)
+Subject: Re: [PATCH v8 4/4] dynamic_debug: dynamic hex dump
+From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Vladimir,
 
-according to ETSI regulations, mesh-communities can only use 5500 MHz -
-5700 MHz (channel 100 - 140) with Dynamic Frequency Selection and Transmit
-Power Control for outdoor connections. But currently there seems to be no
-support for DFS and TPC in the linux kernel, which is a big show-stopper
-for mesh-communities.
+On Thu, Nov 15, 2012 at 1:17 PM, Vladimir Kondratiev
+<qca_vkondrat@qca.qualcomm.com> wrote:
+> Introduce print_hex_dump_debug() that can be dynamically controlled, similar to
+> pr_debug.
 
-Is 802.11h-development discontinued or is there any progress/support in the
-kernel?
+You could just use "%*ph" specifier in pr_debug
 
-Best regards,
-
-Rene Bartsch
+Regards,
+Andrei
