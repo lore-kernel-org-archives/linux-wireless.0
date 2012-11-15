@@ -1,47 +1,510 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54818 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754333Ab2KIURA (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:58935 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767963Ab2KOOIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2012 15:17:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 2/8] nl80211: add documentation for channel type
-Date: Fri,  9 Nov 2012 21:17:28 +0100
-Message-Id: <1352492254-29399-3-git-send-email-johannes@sipsolutions.net> (sfid-20121109_211706_518353_BAEC1468)
-In-Reply-To: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
-References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 15 Nov 2012 09:08:52 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Daniel Wagner <wagi@monom.org>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v2 17/22] brcmsmac: Add brcms_dbg_dma() debug macro
+Date: Thu, 15 Nov 2012 08:08:07 -0600
+Message-Id: <1352988492-21340-18-git-send-email-seth.forshee@canonical.com> (sfid-20121115_150859_437206_6A5292B8)
+In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Also convert relevant messages to use this macro.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- include/uapi/linux/nl80211.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/brcm80211/brcmsmac/debug.h |    1 +
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c   |  155 ++++++++++-------------
+ drivers/net/wireless/brcm80211/brcmsmac/dma.h   |    2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c  |   10 +-
+ drivers/net/wireless/brcm80211/include/defs.h   |    1 +
+ 5 files changed, 73 insertions(+), 96 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d33d780..ac5c446 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2436,6 +2436,15 @@ enum nl80211_ac {
- #define NL80211_TXQ_Q_BE	NL80211_AC_BE
- #define NL80211_TXQ_Q_BK	NL80211_AC_BK
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/debug.h b/drivers/net/wireless/brcm80211/brcmsmac/debug.h
+index 1114833..2e7e077 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/debug.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/debug.h
+@@ -40,5 +40,6 @@ static inline void __brcms_dbg(struct device *dev, u32 level,
+ #define brcms_dbg_rx(core, f, a...)		brcms_dbg(core, BRCM_DL_RX, f, ##a)
+ #define brcms_dbg_tx(core, f, a...)		brcms_dbg(core, BRCM_DL_TX, f, ##a)
+ #define brcms_dbg_int(core, f, a...)		brcms_dbg(core, BRCM_DL_INT, f, ##a)
++#define brcms_dbg_dma(core, f, a...)		brcms_dbg(core, BRCM_DL_DMA, f, ##a)
  
-+/**
-+ * enum nl80211_channel_type - channel type
-+ * @NL80211_CHAN_NO_HT: 20 MHz, non-HT channel
-+ * @NL80211_CHAN_HT20: 20 MHz HT channel
-+ * @NL80211_CHAN_HT40MINUS: HT40 channel, secondary channel
-+ *	below the control channel
-+ * @NL80211_CHAN_HT40PLUS: HT40 channel, secondary channel
-+ *	below the control channel
-+ */
- enum nl80211_channel_type {
- 	NL80211_CHAN_NO_HT,
- 	NL80211_CHAN_HT20,
+ #endif /* _BRCMS_DEBUG_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index d7ce1ac..ba33443 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -14,8 +14,6 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/slab.h>
+ #include <linux/delay.h>
+ #include <linux/pci.h>
+@@ -30,6 +28,7 @@
+ #include "soc.h"
+ #include "scb.h"
+ #include "ampdu.h"
++#include "debug.h"
+ 
+ /*
+  * dma register field offset calculation
+@@ -181,28 +180,6 @@
+ 
+ #define BCMEXTRAHDROOM 172
+ 
+-/* debug/trace */
+-#ifdef DEBUG
+-#define	DMA_ERROR(fmt, ...)					\
+-do {								\
+-	if (*di->msg_level & 1)					\
+-		pr_debug("%s: " fmt, __func__, ##__VA_ARGS__);	\
+-} while (0)
+-#define	DMA_TRACE(fmt, ...)					\
+-do {								\
+-	if (*di->msg_level & 2)					\
+-		pr_debug("%s: " fmt, __func__, ##__VA_ARGS__);	\
+-} while (0)
+-#else
+-#define	DMA_ERROR(fmt, ...)			\
+-	no_printk(fmt, ##__VA_ARGS__)
+-#define	DMA_TRACE(fmt, ...)			\
+-	no_printk(fmt, ##__VA_ARGS__)
+-#endif				/* DEBUG */
+-
+-#define	DMA_NONE(fmt, ...)			\
+-	no_printk(fmt, ##__VA_ARGS__)
+-
+ #define	MAXNAMEL	8	/* 8 char names */
+ 
+ /* macros to convert between byte offsets and indexes */
+@@ -229,7 +206,6 @@ struct dma64desc {
+ /* dma engine software state */
+ struct dma_info {
+ 	struct dma_pub dma; /* exported structure */
+-	uint *msg_level;	/* message level pointer */
+ 	char name[MAXNAMEL];	/* callers name for diag msgs */
+ 
+ 	struct bcma_device *core;
+@@ -306,12 +282,6 @@ struct dma_info {
+ 	bool aligndesc_4k;
+ };
+ 
+-/*
+- * default dma message level (if input msg_level
+- * pointer is null in dma_attach())
+- */
+-static uint dma_msg_level;
+-
+ /* Check for odd number of 1's */
+ static u32 parity32(__le32 data)
+ {
+@@ -379,7 +349,7 @@ static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
+ 	uint dmactrlflags;
+ 
+ 	if (di == NULL) {
+-		DMA_ERROR("NULL dma handle\n");
++		brcms_dbg_dma(di->core, "NULL dma handle\n");
+ 		return 0;
+ 	}
+ 
+@@ -431,13 +401,15 @@ static bool _dma_isaddrext(struct dma_info *di)
+ 	/* not all tx or rx channel are available */
+ 	if (di->d64txregbase != 0) {
+ 		if (!_dma64_addrext(di, DMA64TXREGOFFS(di, control)))
+-			DMA_ERROR("%s: DMA64 tx doesn't have AE set\n",
+-				  di->name);
++			brcms_dbg_dma(di->core,
++				      "%s: DMA64 tx doesn't have AE set\n",
++				      di->name);
+ 		return true;
+ 	} else if (di->d64rxregbase != 0) {
+ 		if (!_dma64_addrext(di, DMA64RXREGOFFS(di, control)))
+-			DMA_ERROR("%s: DMA64 rx doesn't have AE set\n",
+-				  di->name);
++			brcms_dbg_dma(di->core,
++				      "%s: DMA64 rx doesn't have AE set\n",
++				      di->name);
+ 		return true;
+ 	}
+ 
+@@ -538,8 +510,9 @@ static bool dma64_alloc(struct dma_info *di, uint direction)
+ 		va = dma_ringalloc(di, D64RINGALIGN, size, &align_bits,
+ 			&alloced, &di->txdpaorig);
+ 		if (va == NULL) {
+-			DMA_ERROR("%s: DMA_ALLOC_CONSISTENT(ntxd) failed\n",
+-				  di->name);
++			brcms_dbg_dma(di->core,
++				      "%s: DMA_ALLOC_CONSISTENT(ntxd) failed\n",
++				      di->name);
+ 			return false;
+ 		}
+ 		align = (1 << align_bits);
+@@ -552,8 +525,9 @@ static bool dma64_alloc(struct dma_info *di, uint direction)
+ 		va = dma_ringalloc(di, D64RINGALIGN, size, &align_bits,
+ 			&alloced, &di->rxdpaorig);
+ 		if (va == NULL) {
+-			DMA_ERROR("%s: DMA_ALLOC_CONSISTENT(nrxd) failed\n",
+-				  di->name);
++			brcms_dbg_dma(di->core,
++				      "%s: DMA_ALLOC_CONSISTENT(nrxd) failed\n",
++				      di->name);
+ 			return false;
+ 		}
+ 		align = (1 << align_bits);
+@@ -575,7 +549,7 @@ static bool _dma_alloc(struct dma_info *di, uint direction)
+ struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 			   uint txregbase, uint rxregbase, uint ntxd, uint nrxd,
+ 			   uint rxbufsize, int rxextheadroom,
+-			   uint nrxpost, uint rxoffset, uint *msg_level)
++			   uint nrxpost, uint rxoffset)
+ {
+ 	struct si_pub *sih = wlc->hw->sih;
+ 	struct bcma_device *core = wlc->hw->d11core;
+@@ -589,9 +563,6 @@ struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 	if (di == NULL)
+ 		return NULL;
+ 
+-	di->msg_level = msg_level ? msg_level : &dma_msg_level;
+-
+-
+ 	di->dma64 =
+ 		((bcma_aread32(core, BCMA_IOST) & SISF_DMA64) == SISF_DMA64);
+ 
+@@ -607,11 +578,11 @@ struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 	 */
+ 	_dma_ctrlflags(di, DMA_CTRL_ROC | DMA_CTRL_PEN, 0);
+ 
+-	DMA_TRACE("%s: %s flags 0x%x ntxd %d nrxd %d "
+-		  "rxbufsize %d rxextheadroom %d nrxpost %d rxoffset %d "
+-		  "txregbase %u rxregbase %u\n", name, "DMA64",
+-		  di->dma.dmactrlflags, ntxd, nrxd, rxbufsize,
+-		  rxextheadroom, nrxpost, rxoffset, txregbase, rxregbase);
++	brcms_dbg_dma(di->core, "%s: %s flags 0x%x ntxd %d nrxd %d "
++		      "rxbufsize %d rxextheadroom %d nrxpost %d rxoffset %d "
++		      "txregbase %u rxregbase %u\n", name, "DMA64",
++		      di->dma.dmactrlflags, ntxd, nrxd, rxbufsize,
++		      rxextheadroom, nrxpost, rxoffset, txregbase, rxregbase);
+ 
+ 	/* make a private copy of our callers name */
+ 	strncpy(di->name, name, MAXNAMEL);
+@@ -673,8 +644,8 @@ struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 		di->dmadesc_align = 4;	/* 16 byte alignment */
+ 	}
+ 
+-	DMA_NONE("DMA descriptor align_needed %d, align %d\n",
+-		 di->aligndesc_4k, di->dmadesc_align);
++	brcms_dbg_dma(di->core, "DMA descriptor align_needed %d, align %d\n",
++		      di->aligndesc_4k, di->dmadesc_align);
+ 
+ 	/* allocate tx packet pointer vector */
+ 	if (ntxd) {
+@@ -712,13 +683,15 @@ struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 
+ 	if ((di->ddoffsetlow != 0) && !di->addrext) {
+ 		if (di->txdpa > SI_PCI_DMA_SZ) {
+-			DMA_ERROR("%s: txdpa 0x%x: addrext not supported\n",
+-				  di->name, (u32)di->txdpa);
++			brcms_dbg_dma(di->core,
++				      "%s: txdpa 0x%x: addrext not supported\n",
++				      di->name, (u32)di->txdpa);
+ 			goto fail;
+ 		}
+ 		if (di->rxdpa > SI_PCI_DMA_SZ) {
+-			DMA_ERROR("%s: rxdpa 0x%x: addrext not supported\n",
+-				  di->name, (u32)di->rxdpa);
++			brcms_dbg_dma(di->core,
++				      "%s: rxdpa 0x%x: addrext not supported\n",
++				      di->name, (u32)di->rxdpa);
+ 			goto fail;
+ 		}
+ 	}
+@@ -726,10 +699,11 @@ struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 	/* Initialize AMPDU session */
+ 	brcms_c_ampdu_reset_session(&di->ampdu_session, wlc);
+ 
+-	DMA_TRACE("ddoffsetlow 0x%x ddoffsethigh 0x%x dataoffsetlow 0x%x dataoffsethigh 0x%x addrext %d\n",
+-		  di->ddoffsetlow, di->ddoffsethigh,
+-		  di->dataoffsetlow, di->dataoffsethigh,
+-		  di->addrext);
++	brcms_dbg_dma(di->core,
++		      "ddoffsetlow 0x%x ddoffsethigh 0x%x dataoffsetlow 0x%x dataoffsethigh 0x%x addrext %d\n",
++		      di->ddoffsetlow, di->ddoffsethigh,
++		      di->dataoffsetlow, di->dataoffsethigh,
++		      di->addrext);
+ 
+ 	return (struct dma_pub *) di;
+ 
+@@ -775,7 +749,7 @@ void dma_detach(struct dma_pub *pub)
+ {
+ 	struct dma_info *di = (struct dma_info *)pub;
+ 
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	/* free dma descriptor rings */
+ 	if (di->txd64)
+@@ -851,7 +825,7 @@ static void _dma_rxenable(struct dma_info *di)
+ 	uint dmactrlflags = di->dma.dmactrlflags;
+ 	u32 control;
+ 
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	control = D64_RC_RE | (bcma_read32(di->core,
+ 					   DMA64RXREGOFFS(di, control)) &
+@@ -871,7 +845,7 @@ void dma_rxinit(struct dma_pub *pub)
+ {
+ 	struct dma_info *di = (struct dma_info *)pub;
+ 
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	if (di->nrxd == 0)
+ 		return;
+@@ -966,7 +940,7 @@ int dma_rx(struct dma_pub *pub, struct sk_buff_head *skb_list)
+ 		return 0;
+ 
+ 	len = le16_to_cpu(*(__le16 *) (p->data));
+-	DMA_TRACE("%s: dma_rx len %d\n", di->name, len);
++	brcms_dbg_dma(di->core, "%s: dma_rx len %d\n", di->name, len);
+ 	dma_spin_for_len(len, p);
+ 
+ 	/* set actual length */
+@@ -993,14 +967,15 @@ int dma_rx(struct dma_pub *pub, struct sk_buff_head *skb_list)
+ 					      DMA64RXREGOFFS(di, status0)) &
+ 				  D64_RS0_CD_MASK) - di->rcvptrbase) &
+ 				D64_RS0_CD_MASK, struct dma64desc);
+-			DMA_ERROR("rxin %d rxout %d, hw_curr %d\n",
+-				   di->rxin, di->rxout, cur);
++			brcms_dbg_dma(di->core,
++				      "rxin %d rxout %d, hw_curr %d\n",
++				      di->rxin, di->rxout, cur);
+ 		}
+ #endif				/* DEBUG */
+ 
+ 		if ((di->dma.dmactrlflags & DMA_CTRL_RXMULTI) == 0) {
+-			DMA_ERROR("%s: bad frame length (%d)\n",
+-				  di->name, len);
++			brcms_dbg_dma(di->core, "%s: bad frame length (%d)\n",
++				      di->name, len);
+ 			skb_queue_walk_safe(&dma_frames, p, next) {
+ 				skb_unlink(p, &dma_frames);
+ 				brcmu_pkt_buf_free_skb(p);
+@@ -1017,7 +992,7 @@ int dma_rx(struct dma_pub *pub, struct sk_buff_head *skb_list)
+ 
+ static bool dma64_rxidle(struct dma_info *di)
+ {
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	if (di->nrxd == 0)
+ 		return true;
+@@ -1070,7 +1045,7 @@ bool dma_rxfill(struct dma_pub *pub)
+ 
+ 	n = di->nrxpost - nrxdactive(di, rxin, rxout);
+ 
+-	DMA_TRACE("%s: post %d\n", di->name, n);
++	brcms_dbg_dma(di->core, "%s: post %d\n", di->name, n);
+ 
+ 	if (di->rxbufsize > BCMEXTRAHDROOM)
+ 		extra_offset = di->rxextrahdrroom;
+@@ -1083,9 +1058,11 @@ bool dma_rxfill(struct dma_pub *pub)
+ 		p = brcmu_pkt_buf_get_skb(di->rxbufsize + extra_offset);
+ 
+ 		if (p == NULL) {
+-			DMA_ERROR("%s: out of rxbufs\n", di->name);
++			brcms_dbg_dma(di->core, "%s: out of rxbufs\n",
++				      di->name);
+ 			if (i == 0 && dma64_rxidle(di)) {
+-				DMA_ERROR("%s: ring is empty !\n", di->name);
++				brcms_dbg_dma(di->core, "%s: ring is empty !\n",
++					      di->name);
+ 				ring_empty = true;
+ 			}
+ 			di->dma.rxnobuf++;
+@@ -1130,7 +1107,7 @@ void dma_rxreclaim(struct dma_pub *pub)
+ 	struct dma_info *di = (struct dma_info *)pub;
+ 	struct sk_buff *p;
+ 
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	while ((p = _dma_getnextrxp(di, true)))
+ 		brcmu_pkt_buf_free_skb(p);
+@@ -1161,7 +1138,7 @@ void dma_txinit(struct dma_pub *pub)
+ 	struct dma_info *di = (struct dma_info *)pub;
+ 	u32 control = D64_XC_XE;
+ 
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	if (di->ntxd == 0)
+ 		return;
+@@ -1193,7 +1170,7 @@ void dma_txsuspend(struct dma_pub *pub)
+ {
+ 	struct dma_info *di = (struct dma_info *)pub;
+ 
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	if (di->ntxd == 0)
+ 		return;
+@@ -1205,7 +1182,7 @@ void dma_txresume(struct dma_pub *pub)
+ {
+ 	struct dma_info *di = (struct dma_info *)pub;
+ 
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	if (di->ntxd == 0)
+ 		return;
+@@ -1228,11 +1205,11 @@ void dma_txreclaim(struct dma_pub *pub, enum txd_range range)
+ 	struct dma_info *di = (struct dma_info *)pub;
+ 	struct sk_buff *p;
+ 
+-	DMA_TRACE("%s: %s\n",
+-		  di->name,
+-		  range == DMA_RANGE_ALL ? "all" :
+-		  range == DMA_RANGE_TRANSMITTED ? "transmitted" :
+-		  "transferred");
++	brcms_dbg_dma(di->core, "%s: %s\n",
++		      di->name,
++		      range == DMA_RANGE_ALL ? "all" :
++		      range == DMA_RANGE_TRANSMITTED ? "transmitted" :
++		      "transferred");
+ 
+ 	if (di->txin == di->txout)
+ 		return;
+@@ -1392,7 +1369,7 @@ int dma_txfast(struct brcms_c_info *wlc, struct dma_pub *pub,
+ 	struct ieee80211_tx_info *tx_info;
+ 	bool is_ampdu;
+ 
+-	DMA_TRACE("%s:\n", di->name);
++	brcms_dbg_dma(di->core, "%s:\n", di->name);
+ 
+ 	/* no use to transmit a zero length packet */
+ 	if (p->len == 0)
+@@ -1430,7 +1407,7 @@ int dma_txfast(struct brcms_c_info *wlc, struct dma_pub *pub,
+ 	return 0;
+ 
+  outoftxd:
+-	DMA_ERROR("%s: out of txds !!!\n", di->name);
++	brcms_dbg_dma(di->core, "%s: out of txds !!!\n", di->name);
+ 	brcmu_pkt_buf_free_skb(p);
+ 	di->dma.txavail = 0;
+ 	di->dma.txnobuf++;
+@@ -1482,11 +1459,11 @@ struct sk_buff *dma_getnexttxp(struct dma_pub *pub, enum txd_range range)
+ 	u16 active_desc;
+ 	struct sk_buff *txp;
+ 
+-	DMA_TRACE("%s: %s\n",
+-		  di->name,
+-		  range == DMA_RANGE_ALL ? "all" :
+-		  range == DMA_RANGE_TRANSMITTED ? "transmitted" :
+-		  "transferred");
++	brcms_dbg_dma(di->core, "%s: %s\n",
++		      di->name,
++		      range == DMA_RANGE_ALL ? "all" :
++		      range == DMA_RANGE_TRANSMITTED ? "transmitted" :
++		      "transferred");
+ 
+ 	if (di->ntxd == 0)
+ 		return NULL;
+@@ -1545,8 +1522,8 @@ struct sk_buff *dma_getnexttxp(struct dma_pub *pub, enum txd_range range)
+ 	return txp;
+ 
+  bogus:
+-	DMA_NONE("bogus curr: start %d end %d txout %d\n",
+-		 start, end, di->txout);
++	brcms_dbg_dma(di->core, "bogus curr: start %d end %d txout %d\n",
++		      start, end, di->txout);
+ 	return NULL;
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.h b/drivers/net/wireless/brcm80211/brcmsmac/dma.h
+index 459abf1..ff5b80b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.h
+@@ -78,7 +78,7 @@ extern struct dma_pub *dma_attach(char *name, struct brcms_c_info *wlc,
+ 				  uint txregbase, uint rxregbase,
+ 				  uint ntxd, uint nrxd,
+ 				  uint rxbufsize, int rxextheadroom,
+-				  uint nrxpost, uint rxoffset, uint *msg_level);
++				  uint nrxpost, uint rxoffset);
+ 
+ void dma_rxinit(struct dma_pub *pub);
+ int dma_rx(struct dma_pub *pub, struct sk_buff_head *skb_list);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 54fa177..58e1f01 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -1153,7 +1153,7 @@ static bool brcms_b_attach_dmapio(struct brcms_c_info *wlc, uint j, bool wme)
+ 					   dmareg(DMA_RX, 0),
+ 					   (wme ? NTXD : 0), NRXD,
+ 					   RXBUFSZ, -1, NRXBUFPOST,
+-					   BRCMS_HWRXOFF, &brcm_msg_level);
++					   BRCMS_HWRXOFF);
+ 		dma_attach_err |= (NULL == wlc_hw->di[0]);
+ 
+ 		/*
+@@ -1164,8 +1164,7 @@ static bool brcms_b_attach_dmapio(struct brcms_c_info *wlc, uint j, bool wme)
+ 		 */
+ 		wlc_hw->di[1] = dma_attach(name, wlc,
+ 					   dmareg(DMA_TX, 1), 0,
+-					   NTXD, 0, 0, -1, 0, 0,
+-					   &brcm_msg_level);
++					   NTXD, 0, 0, -1, 0, 0);
+ 		dma_attach_err |= (NULL == wlc_hw->di[1]);
+ 
+ 		/*
+@@ -1175,8 +1174,7 @@ static bool brcms_b_attach_dmapio(struct brcms_c_info *wlc, uint j, bool wme)
+ 		 */
+ 		wlc_hw->di[2] = dma_attach(name, wlc,
+ 					   dmareg(DMA_TX, 2), 0,
+-					   NTXD, 0, 0, -1, 0, 0,
+-					   &brcm_msg_level);
++					   NTXD, 0, 0, -1, 0, 0);
+ 		dma_attach_err |= (NULL == wlc_hw->di[2]);
+ 		/*
+ 		 * FIFO 3
+@@ -1186,7 +1184,7 @@ static bool brcms_b_attach_dmapio(struct brcms_c_info *wlc, uint j, bool wme)
+ 		wlc_hw->di[3] = dma_attach(name, wlc,
+ 					   dmareg(DMA_TX, 3),
+ 					   0, NTXD, 0, 0, -1,
+-					   0, 0, &brcm_msg_level);
++					   0, 0);
+ 		dma_attach_err |= (NULL == wlc_hw->di[3]);
+ /* Cleaner to leave this as if with AP defined */
+ 
+diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
+index 12dd33f..54ffe7f 100644
+--- a/drivers/net/wireless/brcm80211/include/defs.h
++++ b/drivers/net/wireless/brcm80211/include/defs.h
+@@ -84,6 +84,7 @@
+ #define BRCM_DL_RX		0x00000004
+ #define BRCM_DL_TX		0x00000008
+ #define BRCM_DL_INT		0x00000010
++#define BRCM_DL_DMA		0x00000020
+ 
+ #define PM_OFF	0
+ #define PM_MAX	1
 -- 
-1.8.0
+1.7.9.5
 
