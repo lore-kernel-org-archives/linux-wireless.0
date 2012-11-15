@@ -1,103 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:38984 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392Ab2K2GId (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 01:08:33 -0500
+Received: from mms2.broadcom.com ([216.31.210.18]:3380 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933302Ab2KOCrF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2012 21:47:05 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 02/19] brcmfmac: cleanup of usb firmware download
+ routines
+Date: Wed, 14 Nov 2012 18:46:06 -0800
+Message-ID: <1352947583-25341-3-git-send-email-frankyl@broadcom.com> (sfid-20121115_041528_384329_BE2D1EC4)
+In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHR064jC1rkHumt898XrfaFieu8PShRM7c_o6dxkPrp3Jb2W6A@mail.gmail.com>
-References: <CAMz9Wg8y3JaJiEhsOz94viqpC4XXhQeE-eruBUGkXdY78-G=4A@mail.gmail.com>
-	<1354004901.9576.4.camel@jlt4.sipsolutions.net>
-	<CAHR064jC1rkHumt898XrfaFieu8PShRM7c_o6dxkPrp3Jb2W6A@mail.gmail.com>
-Date: Thu, 29 Nov 2012 14:08:31 +0800
-Message-ID: <CAMz9Wg9gzExOkXwWa4g-KfvSiuJeDj1FBZi5=1+=tCbSdcj2Zg@mail.gmail.com> (sfid-20121129_070838_582905_A44F831E)
-Subject: Re: A weird rfkill problem after rebooting the system
-From: AceLan Kao <acelan.kao@canonical.com>
-To: Corentin Chary <corentin.chary@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"platform-driver-x86@vger.kernel.org"
-	<platform-driver-x86@vger.kernel.org>,
-	acpi4asus-user <acpi4asus-user@lists.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Corentin,
+From: Hante Meuleman <meuleman@broadcom.com>
 
-2012/11/27 Corentin Chary <corentin.chary@gmail.com>:
-> On Tue, Nov 27, 2012 at 8:28 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Tue, 2012-11-27 at 14:35 +0800, AceLan Kao wrote:
->>> Hi,
->>>
->>> I encountered a strange rfkill problem on the ASUS laptop.
->>> But it's more like an rfkill issue to me, so I mail to the
->>> linux-wireless mailing list and
->>> CC'd to the maintainer of the asus-wmi driver.
->>
->> This totally sounds like a platform driver issue, adding that mailing
->> list (left full text intact below). Nothing I can help you with.
->>
->> johannes
->>
->>> I attached 2 rfkill event log files.
->>> 1. The first one(rfkill.0.log) is the driver we use currently,
->>> you can see that I can soft block/unblock the devices by hitting the hotkey.
->>> But the behavior is abnormal if I reboot the system with the devices blocked.
->>> They are blocked after reboot is as expected.
->>> But while I'm trying to unblock them, the phy0(the one keeps changing
->>> its index) will become blocked.
->>> So, there is no way to unblock the bt device by hitting hotkey.
->>>
->>> 2. The second log file is I try to remove the line from asus-wmi.c
->>>    rfkill_init_sw_state(*rfkill, !result);
->>> Then, it works after rebooting.
->>> I suspect the problem comes from the line in rfkill_init_sw_state() function
->>>    rfkill->persistent = true;
->
-> Well, persistent means:
-> "Whether the soft blocked state is initialised from non-volatile
-> storage at startup."
-> So if we call rfkill_init_sw_state(), that makes some sense
->
->>> While calling rfkill_register() with persistent is false, then it'll
->>> call rfkill_sync_work()
->>> to set device block state, so that it prevents this issue.
->>> But I'm not sure if my guess is correct and have no idea why it
->>> doesn't need to this if persistent is true.
->>> The persistent value seems doesn't affect the rfkill state that much
->>> after reboot, the rfkill state is correct all the time.
->>
->>> BTW, the BIOS of this ASUS machine doesn't set the rfkill state while
->>> we hit the hotkey.
->
-> We are missing some context here. What is the hotkey doing in userspace ?
-> Who owns this phy0 rfkill ? The asus platform driver, or the wireless driver ?
-> If it's the asus platform driver, why is it different from bluetooth ?
-> Something special done by the BIOS ? or the driver ?
-Sorry, my fault, it's hci0, not phy0
-The hci0 is not controlled by asus-wmi driver,
-I think only asus-wlan and asus-bluetooth are controlled by asus-wmi driver.
+Clean code related to firmware download routines. Remove obsolete
+delay and increase delay after reset command.
 
-I didn't report keyevent while receiving the WMI hotkey event,
-so I think userspace app don't know what happened.
-And as far as I know, ASUS BIOS engineer says in the wapf=4 mode,
-BIOS will do nothing.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |   43 +++++++++----------------
+ 1 file changed, 15 insertions(+), 28 deletions(-)
 
->
-> --
-> Corentin Chary
-> http://xf.iksaif.net
-> --
-> To unsubscribe from this list: send the line "unsubscribe platform-driver-x86" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 15070b6..395c49d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -42,13 +42,11 @@
+ 
+ #define IOCTL_RESP_TIMEOUT  2000
+ 
+-#define BRCMF_USB_DLIMAGE_SPINWAIT	100	/* in unit of ms */
+-#define BRCMF_USB_DLIMAGE_LIMIT		500	/* spinwait limit (ms) */
++#define BRCMF_USB_RESET_GETVER_SPINWAIT	100	/* in unit of ms */
++#define BRCMF_USB_RESET_GETVER_LOOP_CNT	10
+ 
+ #define BRCMF_POSTBOOT_ID		0xA123  /* ID to detect if dongle
+ 						   has boot up */
+-#define BRCMF_USB_RESETCFG_SPINWAIT	1	/* wait after resetcfg (ms) */
+-
+ #define BRCMF_USB_NRXQ	50
+ #define BRCMF_USB_NTXQ	50
+ 
+@@ -829,8 +827,7 @@ brcmf_usb_dlneeded(struct brcmf_usbdev_info *devinfo)
+ 
+ 	/* Check if firmware downloaded already by querying runtime ID */
+ 	id.chip = cpu_to_le32(0xDEAD);
+-	brcmf_usb_dl_cmd(devinfo, DL_GETVER, &id,
+-		sizeof(struct bootrom_id_le));
++	brcmf_usb_dl_cmd(devinfo, DL_GETVER, &id, sizeof(id));
+ 
+ 	chipid = le32_to_cpu(id.chip);
+ 	chiprev = le32_to_cpu(id.chiprev);
+@@ -841,8 +838,7 @@ brcmf_usb_dlneeded(struct brcmf_usbdev_info *devinfo)
+ 		brcmf_dbg(USB, "chip %d rev 0x%x\n", chipid, chiprev);
+ 	if (chipid == BRCMF_POSTBOOT_ID) {
+ 		brcmf_dbg(USB, "firmware already downloaded\n");
+-		brcmf_usb_dl_cmd(devinfo, DL_RESETCFG, &id,
+-			sizeof(struct bootrom_id_le));
++		brcmf_usb_dl_cmd(devinfo, DL_RESETCFG, &id, sizeof(id));
+ 		return false;
+ 	} else {
+ 		devinfo->bus_pub.devid = chipid;
+@@ -855,38 +851,29 @@ static int
+ brcmf_usb_resetcfg(struct brcmf_usbdev_info *devinfo)
+ {
+ 	struct bootrom_id_le id;
+-	u16 wait = 0, wait_time;
++	u32 loop_cnt;
+ 
+ 	brcmf_dbg(USB, "Enter\n");
+ 
+-	if (devinfo == NULL)
+-		return -EINVAL;
+-
+-	/* Give dongle chance to boot */
+-	wait_time = BRCMF_USB_DLIMAGE_SPINWAIT;
+-	while (wait < BRCMF_USB_DLIMAGE_LIMIT) {
+-		mdelay(wait_time);
+-		wait += wait_time;
++	loop_cnt = 0;
++	do {
++		mdelay(BRCMF_USB_RESET_GETVER_SPINWAIT);
++		loop_cnt++;
+ 		id.chip = cpu_to_le32(0xDEAD);       /* Get the ID */
+-		brcmf_usb_dl_cmd(devinfo, DL_GETVER, &id,
+-			sizeof(struct bootrom_id_le));
++		brcmf_usb_dl_cmd(devinfo, DL_GETVER, &id, sizeof(id));
+ 		if (id.chip == cpu_to_le32(BRCMF_POSTBOOT_ID))
+ 			break;
+-	}
++	} while (loop_cnt < BRCMF_USB_RESET_GETVER_LOOP_CNT);
+ 
+ 	if (id.chip == cpu_to_le32(BRCMF_POSTBOOT_ID)) {
+-		brcmf_dbg(USB, "download done %d ms postboot chip 0x%x/rev 0x%x\n",
+-			  wait, le32_to_cpu(id.chip), le32_to_cpu(id.chiprev));
+-
+-		brcmf_usb_dl_cmd(devinfo, DL_RESETCFG, &id,
+-			sizeof(struct bootrom_id_le));
++		brcmf_dbg(USB, "postboot chip 0x%x/rev 0x%x\n",
++			  le32_to_cpu(id.chip), le32_to_cpu(id.chiprev));
+ 
+-		/* XXX this wait may not be necessary */
+-		mdelay(BRCMF_USB_RESETCFG_SPINWAIT);
++		brcmf_usb_dl_cmd(devinfo, DL_RESETCFG, &id, sizeof(id));
+ 		return 0;
+ 	} else {
+ 		brcmf_dbg(ERROR, "Cannot talk to Dongle. Firmware is not UP, %d ms\n",
+-			  wait);
++			  BRCMF_USB_RESET_GETVER_SPINWAIT * loop_cnt);
+ 		return -EINVAL;
+ 	}
+ }
 -- 
-Chia-Lin Kao(AceLan)
-http://blog.acelan.idv.tw/
-E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+1.7.9.5
+
+
