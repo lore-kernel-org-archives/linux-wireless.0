@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4925 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2556 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754128Ab2KFAWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 19:22:50 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 13/24] brcmfmac: fix NULL pointer access in
- brcmf_create_iovar()
-Date: Mon, 5 Nov 2012 16:22:21 -0800
-Message-ID: <1352161352-30405-14-git-send-email-frankyl@broadcom.com> (sfid-20121106_012312_887310_9F21D7F6)
-In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+	id S1423250Ab2KOMtc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Nov 2012 07:49:32 -0500
+Message-ID: <50A4E458.4090508@broadcom.com> (sfid-20121115_134935_797766_BEA7C99C)
+Date: Thu, 15 Nov 2012 13:47:20 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: rework on .flush() callback
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Hi Johannes,
 
-The function brcmf_fil_bsscfg_data_get() calls brcmf_create_iovar()
-with data pointer set to NULL, which caused a NULL pointer access.
-As it should be possible to provide data in message towards the
-firmware, it should just pass the data buffer instead.
+The brcmsmac driver still faces a lot of bug reports related to the 
+.flush() callback (see [1] from Dave Jones).
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwil.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Previously I had looked into this and found that during the flush the 
+.tx callback still gets new frames. So I put ieee80211_stop_queues() in 
+the flush and upon exit call ieee80211_wake_queues(). Due to issues 
+still persisting we went a bit deeper in mac80211.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-index 4b272c3..f121d41 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-@@ -294,7 +294,7 @@ brcmf_fil_bsscfg_data_get(struct brcmf_if *ifp, char *name,
- 
- 	mutex_lock(&drvr->proto_block);
- 
--	buflen = brcmf_create_bsscfg(ifp->bssidx, name, NULL, len,
-+	buflen = brcmf_create_bsscfg(ifp->bssidx, name, data, len,
- 				     drvr->proto_buf, sizeof(drvr->proto_buf));
- 	if (buflen) {
- 		err = brcmf_fil_cmd_data(ifp, BRCMF_C_GET_VAR, drvr->proto_buf,
--- 
-1.7.9.5
+It turns out that mac80211 stops the netif queues for each interface 
+(except monitor iftype) and not the internal queues during a scan. So it 
+stops the netif queues, calls the flush(), and upon returning to the 
+associated channel it wakes up the netif queues.
 
+The problem here is that in brcmsmac the flush does the 
+ieee80211_wake_queues() call, because that could also wakeup the netif 
+queues. So doing it in the driver seems a bad idea. Any suggestion on 
+how to solve this?
+
+off topic question: boy or girl?
+
+Gr. AvS
+
+[1] http://codemonkey.org.uk/2012/11/09/brcmsmac-bugs/
 
