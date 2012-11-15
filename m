@@ -1,230 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:57714 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426Ab2KTLUT (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:49625 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767745Ab2KONY6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 06:20:19 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so1625946eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:20:19 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 05/11] wlcore: add chanctx implementation
-Date: Tue, 20 Nov 2012 13:20:05 +0200
-Message-Id: <1353410411-18833-6-git-send-email-eliad@wizery.com> (sfid-20121120_124526_093665_F25AAD9C)
-In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
-References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+	Thu, 15 Nov 2012 08:24:58 -0500
+Received: by mail-qa0-f46.google.com with SMTP id c11so2570066qad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2012 05:24:57 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 15 Nov 2012 21:24:57 +0800
+Message-ID: <CAPgLHd92hMAagQLtKDJW7nyTmFKUgGz6HE5mis7T=KbLt8VXEQ@mail.gmail.com> (sfid-20121115_142502_013773_8E7F8455)
+Subject: [PATCH] rtlwifi: use eth_zero_addr() to assign zero address
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some basic chanctx implementation - debug prints,
-and save the vif's channel/band/type.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-After that, we no longer need to handle channel change
-notifications on op_config.
+Using eth_zero_addr() to assign zero address insetad of
+memset() or an inefficient copy from a static array.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
-v2: take mutex, flush on unassign (thanks Arik!)
-    squash patch [09/15] into this one (thanks Johannes!)
+ drivers/net/wireless/rtlwifi/cam.c  | 2 +-
+ drivers/net/wireless/rtlwifi/core.c | 5 ++---
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-drivers/net/wireless/ti/wlcore/main.c |  145 ++++++++++++++++++---------------
- 1 files changed, 79 insertions(+), 66 deletions(-)
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 5b4b4d4..4511a39 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -340,7 +340,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 		if (((bitmap & BIT(0)) == BIT(0)) &&
+ 		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
+ 			/* Remove from HW Security CAM */
+-			memset(rtlpriv->sec.hwsec_cam_sta_addr[i], 0, ETH_ALEN);
++			eth_zero_addr(rtlpriv->sec.hwsec_cam_sta_addr[i]);
+ 			rtlpriv->sec.hwsec_cam_bitmap &= ~(BIT(0) << i);
+ 			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
+ 				 "del CAM entry %d\n", i);
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 18ac8d1..450ff49 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2682,49 +2682,7 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			     struct ieee80211_conf *conf, u32 changed)
- {
- 	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
--	int channel, ret;
--
--	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
--
--	/* if the channel changes while joined, join again */
--	if (changed & IEEE80211_CONF_CHANGE_CHANNEL &&
--	    ((wlvif->band != conf->channel->band) ||
--	     (wlvif->channel != channel) ||
--	     (wlvif->channel_type != conf->channel_type))) {
--		/* send all pending packets */
--		ret = wlcore_tx_work_locked(wl);
--		if (ret < 0)
--			return ret;
--
--		wlvif->band = conf->channel->band;
--		wlvif->channel = channel;
--		wlvif->channel_type = conf->channel_type;
--
--		if (is_ap) {
--			wl1271_set_band_rate(wl, wlvif);
--			ret = wl1271_init_ap_rates(wl, wlvif);
--			if (ret < 0)
--				wl1271_error("AP rate policy change failed %d",
--					     ret);
--		} else {
--			/*
--			 * FIXME: the mac80211 should really provide a fixed
--			 * rate to use here. for now, just use the smallest
--			 * possible rate for the band as a fixed rate for
--			 * association frames and other control messages.
--			 */
--			if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
--				wl1271_set_band_rate(wl, wlvif);
--
--			wlvif->basic_rate =
--				wl1271_tx_min_rate_get(wl,
--						       wlvif->basic_rate_set);
--			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
--			if (ret < 0)
--				wl1271_warning("rate policy for channel "
--					       "failed %d", ret);
--		}
--	}
-+	int ret;
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index a7c0e52..be33aa1 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -962,7 +962,6 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	int err = 0;
+ 	u8 mac_addr[ETH_ALEN];
+ 	u8 bcast_addr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+-	u8 zero_addr[ETH_ALEN] = { 0 };
  
- 	if ((changed & IEEE80211_CONF_CHANGE_PS) && !is_ap) {
- 
-@@ -2779,37 +2737,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	struct wl1271 *wl = hw->priv;
- 	struct wl12xx_vif *wlvif;
- 	struct ieee80211_conf *conf = &hw->conf;
--	int channel, ret = 0;
--
--	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
-+	int ret = 0;
- 
--	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s"
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 config psm %s power %d %s"
- 		     " changed 0x%x",
--		     channel,
- 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
- 		     conf->power_level,
- 		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use",
- 			 changed);
- 
--	/*
--	 * mac80211 will go to idle nearly immediately after transmitting some
--	 * frames, such as the deauth. To make sure those frames reach the air,
--	 * wait here until the TX queue is fully flushed.
--	 */
--	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) ||
--	    ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
--	     (conf->flags & IEEE80211_CONF_IDLE)))
--		wl1271_tx_flush(wl);
--
- 	mutex_lock(&wl->mutex);
- 
--	/* we support configuring the channel and band even while off */
--	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
--		wl->band = conf->channel->band;
--		wl->channel = channel;
--		wl->channel_type = conf->channel_type;
--	}
--
- 	if (changed & IEEE80211_CONF_CHANGE_POWER)
- 		wl->power_level = conf->power_level;
- 
-@@ -3758,7 +3696,7 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
- 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
- 	int ret = 0;
- 
--	if ((changed & BSS_CHANGED_BASIC_RATES)) {
-+	if (changed & BSS_CHANGED_BASIC_RATES) {
- 		u32 rates = bss_conf->basic_rates;
- 
- 		wlvif->basic_rate_set = wl1271_tx_enabled_rates_get(wl, rates,
-@@ -4184,6 +4122,76 @@ out:
- 	mutex_unlock(&wl->mutex);
- }
- 
-+static int wlcore_op_add_chanctx(struct ieee80211_hw *hw,
-+				 struct ieee80211_chanctx_conf *ctx)
-+{
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 add chanctx %d (type %d)",
-+		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-+		     ctx->channel_type);
-+	return 0;
-+}
-+
-+static void wlcore_op_remove_chanctx(struct ieee80211_hw *hw,
-+				     struct ieee80211_chanctx_conf *ctx)
-+{
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 remove chanctx %d (type %d)",
-+		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-+		     ctx->channel_type);
-+}
-+
-+static void wlcore_op_change_chanctx(struct ieee80211_hw *hw,
-+				     struct ieee80211_chanctx_conf *ctx,
-+				     u32 changed)
-+{
-+	wl1271_debug(DEBUG_MAC80211,
-+		     "mac80211 change chanctx %d (type %d) changed 0x%x",
-+		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-+		     ctx->channel_type, changed);
-+}
-+
-+static int wlcore_op_assign_vif_chanctx(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif,
-+					struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+	int channel = ieee80211_frequency_to_channel(
-+		ctx->channel->center_freq);
-+
-+	wl1271_debug(DEBUG_MAC80211,
-+		     "mac80211 assign chanctx (role %d) %d (type %d)",
-+		     wlvif->role_id, channel, ctx->channel_type);
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wlvif->band = ctx->channel->band;
-+	wlvif->channel = channel;
-+	wlvif->channel_type = ctx->channel_type;
-+
-+	/* update default rates according to the band */
-+	wl1271_set_band_rate(wl, wlvif);
-+
-+	mutex_unlock(&wl->mutex);
-+
-+	return 0;
-+}
-+
-+static void wlcore_op_unassign_vif_chanctx(struct ieee80211_hw *hw,
-+					   struct ieee80211_vif *vif,
-+					   struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+
-+	wl1271_debug(DEBUG_MAC80211,
-+		     "mac80211 unassign chanctx (role %d) %d (type %d)",
-+		     wlvif->role_id,
-+		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-+		     ctx->channel_type);
-+
-+	wl1271_tx_flush(wl);
-+}
-+
- static int wl1271_op_conf_tx(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
-@@ -4996,6 +5004,11 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.flush = wlcore_op_flush,
- 	.remain_on_channel = wlcore_op_remain_on_channel,
- 	.cancel_remain_on_channel = wlcore_op_cancel_remain_on_channel,
-+	.add_chanctx = wlcore_op_add_chanctx,
-+	.remove_chanctx = wlcore_op_remove_chanctx,
-+	.change_chanctx = wlcore_op_change_chanctx,
-+	.assign_vif_chanctx = wlcore_op_assign_vif_chanctx,
-+	.unassign_vif_chanctx = wlcore_op_unassign_vif_chanctx,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
- 
--- 
-1.7.6.401.g6a319
+ 	if (rtlpriv->cfg->mod_params->sw_crypto || rtlpriv->sec.use_sw_sec) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+@@ -1057,7 +1056,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			memcpy(rtlpriv->sec.key_buf[key_idx],
+ 			       key->key, key->keylen);
+ 			rtlpriv->sec.key_len[key_idx] = key->keylen;
+-			memcpy(mac_addr, zero_addr, ETH_ALEN);
++			eth_zero_addr(mac_addr);
+ 		} else if (group_key) {	/* group key */
+ 			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+ 				 "set group key\n");
+@@ -1108,7 +1107,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		}
+ 		memset(rtlpriv->sec.key_buf[key_idx], 0, key->keylen);
+ 		rtlpriv->sec.key_len[key_idx] = 0;
+-		memcpy(mac_addr, zero_addr, ETH_ALEN);
++		eth_zero_addr(mac_addr);
+ 		/*
+ 		 *mac80211 will delete entrys one by one,
+ 		 *so don't use rtl_cam_reset_all_entry
+
 
