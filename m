@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51601 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758007Ab2K3Lom (ORCPT
+Received: from vmail02-lax.tokbox.com ([72.51.46.97]:45036 "EHLO
+	ns.stoaks-software.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S2992436Ab2KORUk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 06:44:42 -0500
-Message-ID: <1354275905.10035.2.camel@jlt4.sipsolutions.net> (sfid-20121130_124448_535399_24FCCA93)
-Subject: Re: [RFCv2 01/13] {nl,cfg,mac}80211: set beacon interval and DTIM
- period on mesh join
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, thomas@cozybit.com,
-	linux-wireless@vger.kernel.org
-Date: Fri, 30 Nov 2012 12:45:05 +0100
-In-Reply-To: <1353701934-12752-2-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353701934-12752-2-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 15 Nov 2012 12:20:40 -0500
+Reply-To: <paul@foresight-mands.com>
+From: "Paul Stoaks" <paul@foresight-mands.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Debugging support
+Date: Thu, 15 Nov 2012 09:19:48 -0800
+Message-ID: <085801cdc355$6abcb180$40361480$@com> (sfid-20121115_182047_951154_9EBECF69)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-23 at 12:18 -0800, Marco Porsch wrote:
-> Move the default mesh beacon interval and DTIM period to cfg80211 and
-> make it accessible to nl80211. This enables setting both values when joining
-> an MBSS.
-> 
-> NOTE: In a mesh with links in PS mode it is not advised to use the default
-> parameters 1000:4, as these cause excessive buffering delays that exceed
-> various timeouts (e.g. HWMP path request).
+Hi Folks,
 
-Looks fine, I think you should change the minimum BI to 10 or so though.
+I have another noob question for you.  Can you point me to documentation for
+the protocol-level debugging facilities built into mac80211 (and/or
+drivers)?  I see references to "debugfs" and some ath9k debugging features,
+some of which are enabled in the kernel configuration.  What I'm
+particularly interested in at this point is any kind of protocol or
+management packet logging as well as mac80211 event logging.  I have some
+ath9k hardware, but I also have Broadcom B43 devices that I'd like to
+monitor.
 
-johannes
+Thanks,
+Paul
 
 
