@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37699 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566Ab2KEQ32 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 11:29:28 -0500
-Message-ID: <1352132992.9466.27.camel@jlt4.sipsolutions.net> (sfid-20121105_172956_423001_FE9962F8)
-Subject: Re: [PATCH] wireless: iwlwifi - add dma_mapping_error() checks to
- avoid warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: shuah.khan@hp.com
-Cc: wey-yi.w.guy@intel.com, linville@tuxdriver.com,
-	ilw@linux.intel.com, emmanuel.grumbach@intel.com,
-	donald.h.fry@intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	shuahkhan@gmail.com
-Date: Mon, 05 Nov 2012 17:29:52 +0100
-In-Reply-To: <1352132785.2606.14.camel@lorien2>
-References: <1351993233.4369.2.camel@lorien2>
-	 (sfid-20121104_024119_271188_5372C13E) <1352020617.10072.0.camel@jlt4.sipsolutions.net>
-	 <1352132785.2606.14.camel@lorien2>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3376 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933250Ab2KOCqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Nov 2012 21:46:35 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: [PATCH 09/19] brcmfmac: fix NULL pointer access in
+ brcmf_fweh_detach()
+Date: Wed, 14 Nov 2012 18:46:13 -0800
+Message-ID: <1352947583-25341-10-git-send-email-frankyl@broadcom.com> (sfid-20121115_034654_871807_FAC0869F)
+In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-05 at 09:26 -0700, Shuah Khan wrote:
+From: Hante Meuleman <meuleman@broadcom.com>
 
-> > Thanks for the report. Since I think doing BUG_ON() in such a scenario
-> > is a really bad idea, I've applied a different patch with your
-> > Reported-by.
-> 
-> Yeah. I wasn't sure about BUS() either. Did you notice the other cases
-> of BUG_ON() in this path in iwl_rx_allocate()? I would think those need
-> fixing as well.
-> 
->               rxb->page_dma =
->                         dma_map_page(trans->dev, page, 0,
->                                      PAGE_SIZE <<
-> trans_pcie->rx_page_order,
->                                      DMA_FROM_DEVICE);
->                 /* dma address must be no more than 36 bits */
->                 BUG_ON(rxb->page_dma & ~DMA_BIT_MASK(36));
->                 /* and also 256 byte aligned! */
->                 BUG_ON(rxb->page_dma & DMA_BIT_MASK(8));
+brcmf_fweh_detach can be called while ifp is already NULL, due to
+init error. Fix NULL pointer access by checking ifp.
 
-Well, yes, we could convert them, but we can leave them as they are
-because these are assertions that the DMA mapping API guarantees. If
-this breaks, it's a bug in the DMA mapping code.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-In contrast, if it fails to map, it's not a bug in the code, it's just
-running out of memory or IO space or whatever.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index e1521af..283acee 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -374,11 +374,13 @@ void brcmf_fweh_detach(struct brcmf_pub *drvr)
+ 	struct brcmf_if *ifp = drvr->iflist[0];
+ 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
+ 
+-	/* clear all events */
+-	memset(eventmask, 0, BRCMF_EVENTING_MASK_LEN);
+-	(void)brcmf_fil_iovar_data_set(ifp, "event_msgs",
+-				       eventmask, BRCMF_EVENTING_MASK_LEN);
+-
++	if (ifp) {
++		/* clear all events */
++		memset(eventmask, 0, BRCMF_EVENTING_MASK_LEN);
++		(void)brcmf_fil_iovar_data_set(ifp, "event_msgs",
++					       eventmask,
++					       BRCMF_EVENTING_MASK_LEN);
++	}
+ 	/* cancel the worker */
+ 	cancel_work_sync(&fweh->event_work);
+ 	WARN_ON(!list_empty(&fweh->event_q));
+-- 
+1.7.9.5
 
-> Could you please send me commitID for the patch you did. I am interested
-> in seeing the failure handling in your patch?
-
-It's here:
-http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-fixes.git;a=commit;h=7c34158231b2eda8dcbd297be2bb1559e69cb433
-
-johannes
 
