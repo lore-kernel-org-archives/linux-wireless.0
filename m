@@ -1,101 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:50933
-	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750963Ab2KSFtA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 00:49:00 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from purkki.adurom.net ([80.68.90.206]:33527 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750892Ab2KPKr3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2012 05:47:29 -0500
+From: Kalle Valo <kvalo@adurom.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC] mac80211: Add debugfs callbacks for station addition/removal
-Date: Mon, 19 Nov 2012 11:18:36 +0530
-Message-Id: <1353304116-7124-1-git-send-email-sujith@msujith.org> (sfid-20121119_064908_778391_F225FDAF)
+Cc: linux-wireless@vger.kernel.org, nabhinav3@mail.gatech.edu,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] mac80211: support radiotap vendor namespace RX data
+References: <1353061591-22284-1-git-send-email-johannes@sipsolutions.net>
+Date: Fri, 16 Nov 2012 12:47:25 +0200
+In-Reply-To: <1353061591-22284-1-git-send-email-johannes@sipsolutions.net>
+	(Johannes Berg's message of "Fri, 16 Nov 2012 11:26:31 +0100")
+Message-ID: <87ehjtygci.fsf@purkki.adurom.net> (sfid-20121116_114738_874292_CF92FF22)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Provide drivers with hooks to create debugfs files when
-a new station is added. This would help drivers to take
-advantage of mac80211's station list infrastructure and not maintain
-tedious station management code internally.
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> In some cases, in particular for experimentation, it
+> can be useful to be able to add vendor namespace data
+> to received frames in addition to the normal radiotap
+> data.
+>
+> Allow doing this through mac80211 by adding fields to
+> the RX status descriptor that describe the data while
+> the data itself is prepended to the frame.
+>
+> Also add some example code to hwsim, but don't enable
+> it because it doesn't use a proper OUI identifier.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- include/net/mac80211.h     | 18 ++++++++++++++++++
- net/mac80211/debugfs_sta.c | 12 ++++++++++++
- 2 files changed, 30 insertions(+)
+[...]
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a789dd1..f697b28 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2192,6 +2192,14 @@ enum ieee80211_rate_control_changed {
-  * @sta_remove: Notifies low level driver about removal of an associated
-  *	station, AP, IBSS/WDS/mesh peer etc. This callback can sleep.
-  *
-+ * @sta_add_debugfs: Drivers can use this callback to add debugfs files
-+ *	when a station is added to mac80211's station list. This callback
-+ *	and @sta_remove_debugfs should be within a CONFIG_MAC80211_DEBUGFS
-+ *	conditional. This callback can sleep.
-+ *
-+ * @sta_remove_debugfs: Remove the debugfs files which were added using
-+ *	@sta_add_debugfs. This callback can sleep.
-+ *
-  * @sta_notify: Notifies low level driver about power state transition of an
-  *	associated station, AP,  IBSS/WDS/mesh peer etc. For a VIF operating
-  *	in AP mode, this callback will not be called when the flag
-@@ -2473,6 +2481,16 @@ struct ieee80211_ops {
- 		       struct ieee80211_sta *sta);
- 	int (*sta_remove)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			  struct ieee80211_sta *sta);
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+	void (*sta_add_debugfs)(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta,
-+				struct dentry *dir);
-+	void (*sta_remove_debugfs)(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_sta *sta,
-+				   struct dentry *dir);
-+#endif
- 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
- 	int (*sta_state)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 5ccec2c..32a45ed 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -334,6 +334,8 @@ STA_OPS(ht_capa);
- 
- void ieee80211_sta_debugfs_add(struct sta_info *sta)
- {
-+	struct ieee80211_local *local = sta->local;
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct dentry *stations_dir = sta->sdata->debugfs.subdir_stations;
- 	u8 mac[3*ETH_ALEN];
- 
-@@ -379,10 +381,20 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD_COUNTER(tx_retry_failed, tx_retry_failed);
- 	DEBUGFS_ADD_COUNTER(tx_retry_count, tx_retry_count);
- 	DEBUGFS_ADD_COUNTER(wep_weak_iv_count, wep_weak_iv_count);
-+
-+	if (local->ops->sta_add_debugfs)
-+		local->ops->sta_add_debugfs(&local->hw, &sdata->vif,
-+					    &sta->sta, sta->debugfs.dir);
- }
- 
- void ieee80211_sta_debugfs_remove(struct sta_info *sta)
- {
-+	struct ieee80211_local *local = sta->local;
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+
-+	if (local->ops->sta_remove_debugfs)
-+		local->ops->sta_remove_debugfs(&local->hw, &sdata->vif,
-+					       &sta->sta, sta->debugfs.dir);
- 	debugfs_remove_recursive(sta->debugfs.dir);
- 	sta->debugfs.dir = NULL;
- }
+> @@ -769,6 +773,17 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
+>  				(data->tsf_offset - data2->tsf_offset) +
+>  				24 * 8 * 10 / txrate->bitrate);
+>  
+> +#if 0
+> +		memcpy(skb_push(nskb, 8), "ABCDEFGH", 8);
+> +		rx_status.vendor_radiotap_bitmap = BIT(0);
+> +		rx_status.vendor_radiotap_len = 8;
+> +		rx_status.vendor_radiotap_align = 8;
+> +		rx_status.vendor_radiotap_oui[0] = 0x00;
+> +		rx_status.vendor_radiotap_oui[1] = 0x00;
+> +		rx_status.vendor_radiotap_oui[2] = 0x00;
+> +		rx_status.vendor_radiotap_subns = 127;
+> +#endif
+
+I'm nitpicking (as usual :) but a comment would be nice here, for
+example the last sentence from the commit log. Otherwise I'm sure
+someone will wonder why the code is not compiled.
+
 -- 
-1.8.0
-
+Kalle Valo
