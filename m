@@ -1,140 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:40324 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813Ab2KXOTm (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31060 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816Ab2KPLbV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2012 09:19:42 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hm6so2253799wib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2012 06:19:41 -0800 (PST)
-Message-ID: <1353766774.2318.1.camel@user64-MCP7A> (sfid-20121124_151948_739246_C8CD70B8)
-Subject: [PATCH 01/10] staging: vt6656: fix headers and add cfg80211.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 24 Nov 2012 14:19:34 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 16 Nov 2012 06:31:21 -0500
+Cc: <ath6kl-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>
+Message-ID: <50A62400.2020603@qca.qualcomm.com> (sfid-20121116_123133_548958_C6B0E2D9)
+Date: Fri, 16 Nov 2012 13:31:12 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Set HT caps when an interface is added
+References: <1350402738-6422-1-git-send-email-mohammed@qca.qualcomm.com> <873918b0z0.fsf@qca.qualcomm.com> <5084D8C0.80708@qca.qualcomm.com>
+In-Reply-To: <5084D8C0.80708@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
- Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+On 10/22/2012 08:25 AM, Mohammed Shafi Shajakhan wrote:
+> On Sunday 21 October 2012 03:28 PM, Kalle Valo wrote:
+>> Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com> writes:
+>>
+>>> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>>>
+>>> Set HT capabilites when a vif is added (based on ht_supported
+>>> advertized is 'true'). ath6kl_set_htcap
+>>> seems to be called when an AP vif is added but not so in
+>>> other vifs. Fix this.
+>>>
+>>> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>>
+>> This was found during code review, right? Or does it fix a real bug?
+> 
+> yes this was based on code review, would soon come with some test 
+> results with multivif.
 
----
- drivers/staging/vt6656/80211mgr.c |    2 +-
- drivers/staging/vt6656/device.h   |   39 ++++++++++++-------------------------
- drivers/staging/vt6656/key.c      |    2 +-
- drivers/staging/vt6656/wpa2.c     |    2 +-
- 4 files changed, 15 insertions(+), 30 deletions(-)
+I'm not sure what was the conclusion, is this safe to apply?
 
-diff --git a/drivers/staging/vt6656/80211mgr.c b/drivers/staging/vt6656/80211mgr.c
-index 39f9842..e6ced95 100644
---- a/drivers/staging/vt6656/80211mgr.c
-+++ b/drivers/staging/vt6656/80211mgr.c
-@@ -52,11 +52,11 @@
-  *
-  */
- 
-+#include "device.h"
- #include "tmacro.h"
- #include "tether.h"
- #include "80211mgr.h"
- #include "80211hdr.h"
--#include "device.h"
- #include "wpa.h"
- 
- /*---------------------  Static Definitions -------------------------*/
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 2595ac5..9a04900 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -30,43 +30,28 @@
- #define __DEVICE_H__
- 
- #include <linux/module.h>
--#include <linux/types.h>
--#include <linux/init.h>
--#include <linux/mm.h>
--#include <linux/errno.h>
--#include <linux/ioport.h>
--#include <linux/pci.h>
- #include <linux/kernel.h>
--#include <linux/netdevice.h>
--#include <linux/etherdevice.h>
--#include <linux/skbuff.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
- #include <linux/slab.h>
--#include <linux/interrupt.h>
--#include <linux/string.h>
--#include <linux/wait.h>
-+#include <linux/init.h>
-+#include <linux/delay.h>
-+#include <linux/device.h>
-+#include <linux/firmware.h>
-+#include <linux/etherdevice.h>
-+#include <linux/suspend.h>
- #include <linux/if_arp.h>
--#include <linux/sched.h>
--#include <linux/if.h>
--#include <linux/rtnetlink.h>//James
--#include <linux/proc_fs.h>
--#include <linux/inetdevice.h>
--#include <linux/reboot.h>
-+#include <linux/wireless.h>
-+#include <net/iw_handler.h>
-+#include <net/cfg80211.h>
-+#include <linux/timer.h>
- #include <linux/usb.h>
--#include <linux/signal.h>
--#include <linux/firmware.h>
--#include <asm/io.h>
--#include <asm/uaccess.h>
-+
-+
- #ifdef SIOCETHTOOL
- #define DEVICE_ETHTOOL_IOCTL_SUPPORT
- #include <linux/ethtool.h>
- #else
- #undef DEVICE_ETHTOOL_IOCTL_SUPPORT
- #endif
--/* Include Wireless Extension definition and check version - Jean II */
--#include <linux/wireless.h>
--#include <net/iw_handler.h>	// New driver API
- 
- //please copy below macro to driver_event.c for API
- #define RT_INSMOD_EVENT_FLAG                             0x0101
-diff --git a/drivers/staging/vt6656/key.c b/drivers/staging/vt6656/key.c
-index bf24adb..8c78b86 100644
---- a/drivers/staging/vt6656/key.c
-+++ b/drivers/staging/vt6656/key.c
-@@ -36,9 +36,9 @@
-  *
-  */
- 
-+#include "mac.h"
- #include "tmacro.h"
- #include "key.h"
--#include "mac.h"
- #include "rndis.h"
- #include "control.h"
- 
-diff --git a/drivers/staging/vt6656/wpa2.c b/drivers/staging/vt6656/wpa2.c
-index c092697..616e24d 100644
---- a/drivers/staging/vt6656/wpa2.c
-+++ b/drivers/staging/vt6656/wpa2.c
-@@ -31,8 +31,8 @@
-  *
-  */
- 
--#include "wpa2.h"
- #include "device.h"
-+#include "wpa2.h"
- 
- /*---------------------  Static Definitions -------------------------*/
- static int          msglevel                =MSG_LEVEL_INFO;
--- 
-1.7.10.4
-
-
-
+Kalle
