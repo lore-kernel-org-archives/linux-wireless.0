@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:42086 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756149Ab2KWUxb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54377 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751682Ab2KPUgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 15:53:31 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFCv2 4/4] iw: add mesh awake window to mesh config
-Date: Fri, 23 Nov 2012 12:53:14 -0800
-Message-Id: <1353703994-13093-5-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_215340_609559_9DAF76F4)
-In-Reply-To: <1353703994-13093-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353703994-13093-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	Fri, 16 Nov 2012 15:36:16 -0500
+Message-ID: <1353098204.9490.21.camel@jlt4.sipsolutions.net> (sfid-20121116_213631_514198_885B62C5)
+Subject: Re: removal of sysfs wext extension broke on F16
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Airlie <airlied@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bill Nottingham <notting@redhat.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 16 Nov 2012 21:36:44 +0100
+In-Reply-To: <1353098137.9490.20.camel@jlt4.sipsolutions.net> (sfid-20121116_213518_404111_CB0441EC)
+References: <CAPM=9twSHBet=vDY9q4BXKv7ZUPR-eme75tOzxrWf6Bsp4MMkw@mail.gmail.com>
+	 <1352795227.9466.8.camel@jlt4.sipsolutions.net>
+	 <CA+55aFw8Rx6TScXV_nsh4EFeCDTxsjn9mJPqo8VzPhbG9jC5Fw@mail.gmail.com>
+	 (sfid-20121116_192027_176167_6DFB40B3) <1353098137.9490.20.camel@jlt4.sipsolutions.net>
+	 (sfid-20121116_213518_404111_CB0441EC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The awake window is the duration the local STA will stay awake after sending
-its own beacon in PS mode. The value can be modified as part of the mesh
-params.
+On Fri, 2012-11-16 at 21:35 +0100, Johannes Berg wrote:
+> On Fri, 2012-11-16 at 10:20 -0800, Linus Torvalds wrote:
+> > On Tue, Nov 13, 2012 at 12:27 AM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> > >
+> > > Should I revert it and send it in my next pull request?
+> > 
+> > Please do. Or perhaps we could just add the directory back, without
+> > the actual entries, if that is sufficient..
+> 
+> Yeah, that does seem to be sufficient, I'll queue up the patch below.
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
----
- mesh.c |    2 ++
- 1 file changed, 2 insertions(+)
+Err, no, wishful thinking. I need a *little* bit more for sysfs to work.
 
-diff --git a/mesh.c b/mesh.c
-index 94f1012..6119b15 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -257,6 +257,8 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
- 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
- 	{"mesh_power_mode", NL80211_MESHCONF_POWER_MODE,
- 	_my_nla_put_u8, _parse_u8_power_mode, _print_u8_power_mode},
-+	{"mesh_awake_window", NL80211_MESHCONF_AWAKE_WINDOW,
-+	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
- };
- 
- static void print_all_mesh_param_descr(void)
--- 
-1.7.9.5
+johannes
 
