@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327Ab2KLJbF (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22278 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576Ab2KPMyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 04:31:05 -0500
-Message-ID: <1352712697.9525.4.camel@jlt4.sipsolutions.net> (sfid-20121112_103114_101390_EB18E405)
-Subject: Re: [PATCH v2] nl/cfg80211: advertise OBSS scan offload capability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Mon, 12 Nov 2012 10:31:37 +0100
-In-Reply-To: <1352512290-7316-1-git-send-email-bzhao@marvell.com>
-References: <1352512290-7316-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 16 Nov 2012 07:54:45 -0500
+To: <ath6kl-devel@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 8/8] ath6kl: minor optimization using if, else if
+Date: Fri, 16 Nov 2012 18:24:37 +0530
+Message-ID: <1353070477-6183-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121116_135449_060267_B1AFCEB5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-09 at 17:51 -0800, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> wpa_supplicant will do OBSS scan for drivers that implement
-> auth/assoc API. Drivers that implement nl80211 connect API
-> (rather than auth/assoc) may need wpa_supplicant to do this
-> as well.
-> 
-> New flag is added to inform userspace that this driver will
-> make use of wpa_supplicant's OBSS scan feature.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> + * @NL80211_FEATURE_OBSS_SCAN_OFFLOAD: The driver expects user space to
-> + *	perform OBSS scan and generate 20/40 BSS coex reports. This flag is
-> + *	interested in only in the case of a driver that has connect API.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-Applied, but I changed a lot ;-)
-
-Notably, I reworded the constant name to be
-NL80211_FEATURE_NEED_OBSS_SCAN, since we typically use the term
-"offload" to mean that the *device* does something, not to mean that
-*userspace* does something.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index dc059e2..7f6439b 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -640,13 +640,13 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 					vif->req_bssid, vif->ch_hint,
+ 					ar->connect_ctrl_flags, nw_subtype);
+ 
+-	/* disable background scan if period is 0 */
+-	if (sme->bg_scan_period == 0)
++	if (sme->bg_scan_period == 0) {
++		/* disable background scan if period is 0 */
+ 		sme->bg_scan_period = 0xffff;
+-
+-	/* configure default value if not specified */
+-	if (sme->bg_scan_period == -1)
++	} else if (sme->bg_scan_period == -1) {
++		/* configure default value if not specified */
+ 		sme->bg_scan_period = DEFAULT_BG_SCAN_PERIOD;
++	}
+ 
+ 	ath6kl_wmi_scanparams_cmd(ar->wmi, vif->fw_vif_idx, 0, 0,
+ 				  sme->bg_scan_period, 0, 0, 0, 3, 0, 0, 0);
+-- 
+1.7.0.4
 
