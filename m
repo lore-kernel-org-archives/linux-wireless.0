@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:53665 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600Ab2KTIqe (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4514 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333Ab2KPMvv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 03:46:34 -0500
-Received: by mail-ob0-f174.google.com with SMTP id wc20so5702834obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 00:46:34 -0800 (PST)
+	Fri, 16 Nov 2012 07:51:51 -0500
+To: <ath6kl-devel@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	wei-jen jlin <jenlin@qca.qualcomm.com>
+Subject: [PATCH 1/8] ath6kl: Remove erroneous flag clearing
+Date: Fri, 16 Nov 2012 18:21:41 +0530
+Message-ID: <1353070301-5902-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121116_135153_332408_D78BC456)
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgV=4Lyumy=ivykkEgY=EVRjWM4MWPvGh-uUmPdGyJUxJw@mail.gmail.com>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
-	<1353343170-26516-4-git-send-email-eliad@wizery.com>
-	<CAGRGNgV=4Lyumy=ivykkEgY=EVRjWM4MWPvGh-uUmPdGyJUxJw@mail.gmail.com>
-Date: Tue, 20 Nov 2012 10:46:34 +0200
-Message-ID: <CAB3XZEdKr+BwhoOH+z2H9Wwo_5cuwomxkwy-RRNUi_8WNRHUSA@mail.gmail.com> (sfid-20121120_094642_278782_B94888F4)
-Subject: Re: [PATCH 03/15] wlcore: always use sta.hlid
-From: Eliad Peller <eliad@wizery.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Luciano Coelho <coelho@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-On Tue, Nov 20, 2012 at 12:39 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> On Tue, Nov 20, 2012 at 3:39 AM, Eliad Peller <eliad@wizery.com> wrote:
->> since we no longer use dev role in the connection flow,
->> we should always use the hlid of the sta role.
->
-> I don't really know the hardware, but this seems like something
-> something that should be combined with the first patch.
->
-Thanks.
-Johannes had a similar comment regarding another patch.
-i split the patches in order to make them easier to review, even if it
-temporarily breaks the driver.
-As agreed with Luca, i'll send the next version (which will hopefully
-be the last one ;), after squashing such patches together.
+WLAN_ENABLED is vif specific, not part of
+the driver's struct ath6kl. Proper clearing
+of this flag is already taken care in
+ath6kl_cleanup_vif.
 
-Eliad.
+Cc: wei-jen jlin <jenlin@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 424676e..4fddf12 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1798,8 +1798,6 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
+ 		   "attempting to reset target on instance destroy\n");
+ 	ath6kl_reset_device(ar, ar->target_type, true, true);
+ 
+-	clear_bit(WLAN_ENABLED, &ar->flag);
+-
+ 	up(&ar->sem);
+ }
+ EXPORT_SYMBOL(ath6kl_stop_txrx);
+-- 
+1.7.0.4
+
