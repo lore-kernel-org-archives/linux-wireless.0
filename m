@@ -1,430 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:58575 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753187Ab2KYQ1H (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:57552 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750816Ab2KPIga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 11:27:07 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq7so2336059wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Nov 2012 08:27:05 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Victor Goldenshtein <victorg@ti.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3] wlcore: add new reg-domain configuration command
-Date: Sun, 25 Nov 2012 18:26:59 +0200
-Message-Id: <1353860819-10417-1-git-send-email-arik@wizery.com> (sfid-20121125_172718_714818_AFC193E9)
+	Fri, 16 Nov 2012 03:36:30 -0500
+Subject: [PATCH] ath6kl: support NL80211_USER_REG_HINT_CELL_BASE events
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com
+Date: Fri, 16 Nov 2012 10:28:04 +0200
+Message-ID: <20121116082804.10073.67557.stgit@localhost6.localdomain6> (sfid-20121116_093641_729910_9B7E95C0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Victor Goldenshtein <victorg@ti.com>
+As ath6kl firmware can't do intersections the driver should only listen
+to regdom changes from cellular base stations, all other requests need to
+be refused.
 
-In 18xx the calibration process of the PHY Cortex domain
-requires to perform an active calibration of the channel
-before it can be used for transmission. To fulfill world
-wide regulatory restrictions, fw should be always
-synchronized/updated with current CRDA configuration.
-Add a new "CMD_DFS_CHANNEL_CONFIG" command to update the
-fw with current reg-domain, this command passes a bit map
-of channels that are allowed to be used for transmission.
-
-The driver shall update the fw during initialization and
-after each change in the current reg-domain
-configuration. The driver will save the channel number of
-incoming beacons during the scan process, as they might
-be a result of the passive scan on
-"IEEE80211_CHAN_PASSIVE_SCAN" channel and will update the
-fw accordingly once the scan is finished, the purpose of
-this is to be ready in case of the authentication request
-on one of these disabled (uncalibrated) channels.
-
-The new command requires to wait for the fw completion
-event "DFS_CHANNELS_CONFIG_COMPLETE_EVENT".
-
-No scan commands (including the sched scan) can be
-executed concurrently with the "CMD_DFS_CHANNEL_CONFIG",
-wl->mutex ensures that.
-
-[Arik - move reset of reg_ch_conf_last to safe place inside
-op_stop_locked]
-[Eliad - adjust to new event waiting api]
-
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
-v3: remove chip_family_event_mask since the event mask
-of each chip family is now separate.
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/ti/wl18xx/event.c  |    4 +
- drivers/net/wireless/ti/wl18xx/main.c   |    4 +-
- drivers/net/wireless/ti/wlcore/cmd.c    |  125 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wlcore/cmd.h    |   10 +++
- drivers/net/wireless/ti/wlcore/event.h  |    1 +
- drivers/net/wireless/ti/wlcore/init.c   |    4 +
- drivers/net/wireless/ti/wlcore/main.c   |   34 +++++++++
- drivers/net/wireless/ti/wlcore/rx.c     |    4 +
- drivers/net/wireless/ti/wlcore/scan.c   |    2 +
- drivers/net/wireless/ti/wlcore/wlcore.h |   10 +++
- 10 files changed, 197 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index bf4233c..02ef5aa 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -34,6 +34,10 @@ int wl18xx_wait_for_event(struct wl1271 *wl, enum wlcore_wait_event event,
- 		local_event = PEER_REMOVE_COMPLETE_EVENT_ID;
- 		break;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index bf5e7d5..41dea0d 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3500,11 +3500,18 @@ static int ath6kl_cfg80211_reg_notify(struct wiphy *wiphy,
+ 	int ret, i;
  
-+	case WLCORE_EVENT_DFS_CONFIG_COMPLETE:
-+		local_event = DFS_CHANNELS_CONFIG_COMPLETE_EVENT;
-+		break;
-+
- 	default:
- 		/* event not implemented */
- 		return 0;
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 0895ffa..f1eaf9a 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -616,6 +616,7 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
- 			      WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN |
- 			      WLCORE_QUIRK_NO_SCHED_SCAN_WHILE_CONN |
- 			      WLCORE_QUIRK_TX_PAD_LAST_FRAME |
-+			      WLCORE_QUIRK_REGDOMAIN_CONF |
- 			      WLCORE_QUIRK_DUAL_PROBE_TMPL;
- 
- 		wlcore_set_min_fw_ver(wl, WL18XX_CHIP_VER, WL18XX_IFTYPE_VER,
-@@ -862,7 +863,8 @@ static int wl18xx_boot(struct wl1271 *wl)
- 		REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID |
- 		INACTIVE_STA_EVENT_ID |
- 		MAX_TX_FAILURE_EVENT_ID |
--		CHANNEL_SWITCH_COMPLETE_EVENT_ID;
-+		CHANNEL_SWITCH_COMPLETE_EVENT_ID |
-+		DFS_CHANNELS_CONFIG_COMPLETE_EVENT;
- 
- 	ret = wlcore_boot_run_firmware(wl);
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 1735a53..599c006 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -1503,6 +1503,131 @@ out:
- 	return ret;
- }
- 
-+static int wlcore_get_reg_conf_ch_idx(enum ieee80211_band band, u16 ch)
-+{
-+	int idx = -1;
-+
-+	switch (band) {
-+	case IEEE80211_BAND_5GHZ:
-+		if (ch >= 8 && ch <= 16)
-+			idx = ((ch-8)/4 + 18);
-+		else if (ch >= 34 && ch <= 64)
-+			idx = ((ch-34)/2 + 3 + 18);
-+		else if (ch >= 100 && ch <= 140)
-+			idx = ((ch-100)/4 + 15 + 18);
-+		else if (ch >= 149 && ch <= 165)
-+			idx = ((ch-149)/4 + 26 + 18);
-+		else
-+			idx = -1;
-+		break;
-+	case IEEE80211_BAND_2GHZ:
-+		if (ch >= 1 && ch <= 14)
-+			idx = ch - 1;
-+		else
-+			idx = -1;
-+		break;
-+	default:
-+		wl1271_error("get reg conf ch idx - unknown band: %d",
-+			     (int)band);
-+	}
-+
-+	return idx;
-+}
-+
-+void wlcore_set_pending_regdomain_ch(struct wl1271 *wl, u16 channel,
-+				     enum ieee80211_band band)
-+{
-+	int ch_bit_idx = 0;
-+
-+	if (!(wl->quirks & WLCORE_QUIRK_REGDOMAIN_CONF))
-+		return;
-+
-+	ch_bit_idx = wlcore_get_reg_conf_ch_idx(band, channel);
-+
-+	if (ch_bit_idx > 0 && ch_bit_idx <= WL1271_MAX_CHANNELS)
-+		set_bit(ch_bit_idx, (long *)wl->reg_ch_conf_pending);
-+}
-+
-+int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl)
-+{
-+	struct wl12xx_cmd_regdomain_dfs_config *cmd = NULL;
-+	int ret = 0, i, b, ch_bit_idx;
-+	struct ieee80211_channel *channel;
-+	u32 tmp_ch_bitmap[2];
-+	u16 ch;
-+	struct wiphy *wiphy = wl->hw->wiphy;
-+	struct ieee80211_supported_band *band;
-+	bool timeout = false;
-+
-+	if (!(wl->quirks & WLCORE_QUIRK_REGDOMAIN_CONF))
-+		return 0;
-+
-+	wl1271_debug(DEBUG_CMD, "cmd reg domain config");
-+
-+	memset(tmp_ch_bitmap, 0, sizeof(tmp_ch_bitmap));
-+
-+	for (b = IEEE80211_BAND_2GHZ; b <= IEEE80211_BAND_5GHZ; b++) {
-+		band = wiphy->bands[b];
-+		for (i = 0; i < band->n_channels; i++) {
-+			channel = &band->channels[i];
-+			ch = channel->hw_value;
-+
-+			if (channel->flags & (IEEE80211_CHAN_DISABLED |
-+					      IEEE80211_CHAN_RADAR |
-+					      IEEE80211_CHAN_PASSIVE_SCAN))
-+				continue;
-+
-+			ch_bit_idx = wlcore_get_reg_conf_ch_idx(b, ch);
-+			if (ch_bit_idx < 0)
-+				continue;
-+
-+			set_bit(ch_bit_idx, (long *)tmp_ch_bitmap);
-+		}
-+	}
-+
-+	tmp_ch_bitmap[0] |= wl->reg_ch_conf_pending[0];
-+	tmp_ch_bitmap[1] |= wl->reg_ch_conf_pending[1];
-+
-+	if (!memcmp(tmp_ch_bitmap, wl->reg_ch_conf_last, sizeof(tmp_ch_bitmap)))
-+		goto out;
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	cmd->ch_bit_map1 = cpu_to_le32(tmp_ch_bitmap[0]);
-+	cmd->ch_bit_map2 = cpu_to_le32(tmp_ch_bitmap[1]);
-+
-+	wl1271_debug(DEBUG_CMD,
-+		     "cmd reg domain bitmap1: 0x%08x, bitmap2: 0x%08x",
-+		     cmd->ch_bit_map1, cmd->ch_bit_map2);
-+
-+	ret = wl1271_cmd_send(wl, CMD_DFS_CHANNEL_CONFIG, cmd, sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_error("failed to send reg domain dfs config");
-+		goto out;
-+	}
-+
-+	ret = wl->ops->wait_for_event(wl,
-+				      WLCORE_EVENT_DFS_CONFIG_COMPLETE,
-+				      &timeout);
-+	if (ret < 0 || timeout) {
-+		wl1271_error("reg domain conf %serror",
-+			     timeout ? "completion " : "");
-+		ret = timeout ? -ETIMEDOUT : ret;
-+		goto out;
-+	}
-+
-+	memcpy(wl->reg_ch_conf_last, tmp_ch_bitmap, sizeof(tmp_ch_bitmap));
-+	memset(wl->reg_ch_conf_pending, 0, sizeof(wl->reg_ch_conf_pending));
-+
-+out:
-+	kfree(cmd);
-+	return ret;
-+}
-+
- int wl12xx_cmd_config_fwlog(struct wl1271 *wl)
- {
- 	struct wl12xx_cmd_config_fwlog *cmd;
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index c9f8268..7f378b7 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -84,6 +84,9 @@ int wl12xx_croc(struct wl1271 *wl, u8 role_id);
- int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			struct ieee80211_sta *sta, u8 hlid);
- int wl12xx_cmd_remove_peer(struct wl1271 *wl, u8 hlid);
-+void wlcore_set_pending_regdomain_ch(struct wl1271 *wl, u16 channel,
-+				     enum ieee80211_band band);
-+int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl);
- int wl12xx_cmd_config_fwlog(struct wl1271 *wl);
- int wl12xx_cmd_start_fwlog(struct wl1271 *wl);
- int wl12xx_cmd_stop_fwlog(struct wl1271 *wl);
-@@ -623,6 +626,13 @@ enum wl12xx_fwlogger_output {
- 	WL12XX_FWLOG_OUTPUT_HOST,
- };
- 
-+struct wl12xx_cmd_regdomain_dfs_config {
-+	struct wl1271_cmd_header header;
-+
-+	__le32 ch_bit_map1;
-+	__le32 ch_bit_map2;
-+} __packed;
-+
- struct wl12xx_cmd_config_fwlog {
- 	struct wl1271_cmd_header header;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/event.h b/drivers/net/wireless/ti/wlcore/event.h
-index 766b02f..b4353be 100644
---- a/drivers/net/wireless/ti/wlcore/event.h
-+++ b/drivers/net/wireless/ti/wlcore/event.h
-@@ -54,6 +54,7 @@ enum {
- enum wlcore_wait_event {
- 	WLCORE_EVENT_ROLE_STOP_COMPLETE,
- 	WLCORE_EVENT_PEER_REMOVE_COMPLETE,
-+	WLCORE_EVENT_DFS_CONFIG_COMPLETE
- };
- 
- enum {
-diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
-index 06e1bf9..68828b4 100644
---- a/drivers/net/wireless/ti/wlcore/init.c
-+++ b/drivers/net/wireless/ti/wlcore/init.c
-@@ -681,6 +681,10 @@ int wl1271_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
-+	ret = wlcore_cmd_regdomain_config_locked(wl);
-+	if (ret < 0)
-+		return ret;
-+
- 	/* Bluetooth WLAN coexistence */
- 	ret = wl1271_init_pta(wl);
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 9237f4b..d9f0442 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -93,6 +93,8 @@ static int wl1271_reg_notify(struct wiphy *wiphy,
- 	struct ieee80211_supported_band *band;
- 	struct ieee80211_channel *ch;
- 	int i;
-+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
-+	struct wl1271 *wl = hw->priv;
- 
- 	band = wiphy->bands[IEEE80211_BAND_5GHZ];
- 	for (i = 0; i < band->n_channels; i++) {
-@@ -106,6 +108,9 @@ static int wl1271_reg_notify(struct wiphy *wiphy,
- 
- 	}
- 
-+	if (likely(wl->state == WLCORE_STATE_ON))
-+		wlcore_regdomain_config(wl);
-+
- 	return 0;
- }
- 
-@@ -1900,6 +1905,12 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
- 	wl->tx_res_if = NULL;
- 	kfree(wl->target_mem_map);
- 	wl->target_mem_map = NULL;
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+-		   "cfg reg_notify %c%c%s%s initiator %d\n",
++		   "cfg reg_notify %c%c%s%s initiator %d hint_type %d\n",
+ 		   request->alpha2[0], request->alpha2[1],
+ 		   request->intersect ? " intersect" : "",
+ 		   request->processed ? " processed" : "",
+-		   request->initiator);
++		   request->initiator, request->user_reg_hint_type);
 +
 +	/*
-+	 * FW channels must be re-calibrated after recovery,
-+	 * clear the last Reg-Domain channel configuration.
++	 * As firmware is not able intersect regdoms, we can only listen to
++	 * cellular hints.
 +	 */
-+	memset(wl->reg_ch_conf_last, 0, sizeof(wl->reg_ch_conf_last));
- }
++	if (request->user_reg_hint_type != NL80211_USER_REG_HINT_CELL_BASE)
++		return -EOPNOTSUPP;
  
- static void wlcore_op_stop(struct ieee80211_hw *hw)
-@@ -3284,6 +3295,29 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
- }
- EXPORT_SYMBOL_GPL(wlcore_set_key);
+ 	ret = ath6kl_wmi_set_regdomain_cmd(ar->wmi, request->alpha2);
+ 	if (ret) {
+@@ -3668,8 +3675,10 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+ 	}
  
-+void wlcore_regdomain_config(struct wl1271 *wl)
-+{
-+	int ret;
-+
-+	if (!(wl->quirks & WLCORE_QUIRK_REGDOMAIN_CONF))
-+		return;
-+
-+	mutex_lock(&wl->mutex);
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wlcore_cmd_regdomain_config_locked(wl);
-+	if (ret < 0) {
-+		wl12xx_queue_recovery_work(wl);
-+		goto out;
+ 	if (config_enabled(CONFIG_ATH6KL_REGDOMAIN) &&
+-	    test_bit(ATH6KL_FW_CAPABILITY_REGDOMAIN, ar->fw_capabilities))
++	    test_bit(ATH6KL_FW_CAPABILITY_REGDOMAIN, ar->fw_capabilities)) {
+ 		wiphy->reg_notifier = ath6kl_cfg80211_reg_notify;
++		ar->wiphy->features |= NL80211_FEATURE_CELL_BASE_REG_HINTS;
 +	}
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+}
-+
- static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif,
- 			     struct cfg80211_scan_request *req)
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index 9ee0ec6..4665b96 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -97,6 +97,10 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 			wl1271_warning("Michael MIC error");
- 		}
- 	}
-+
-+	if (beacon)
-+		wlcore_set_pending_regdomain_ch(wl, (u16)desc->channel,
-+						status->band);
- }
  
- static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
-diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
-index eeb6188..c913700 100644
---- a/drivers/net/wireless/ti/wlcore/scan.c
-+++ b/drivers/net/wireless/ti/wlcore/scan.c
-@@ -80,6 +80,8 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 		wl12xx_queue_recovery_work(wl);
- 	}
- 
-+	wlcore_cmd_regdomain_config_locked(wl);
-+
- 	ieee80211_scan_completed(wl->hw, false);
- 
- out:
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index e9254b7..d3818ef 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -284,6 +284,11 @@ struct wl1271 {
- 	struct work_struct recovery_work;
- 	bool watchdog_recovery;
- 
-+	/* Reg domain last configuration */
-+	u32 reg_ch_conf_last[2];
-+	/* Reg domain pending configuration */
-+	u32 reg_ch_conf_pending[2];
-+
- 	/* Pointer that holds DMA-friendly block for the mailbox */
- 	void *mbox;
- 
-@@ -445,6 +450,7 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
- 		   struct ieee80211_vif *vif,
- 		   struct ieee80211_sta *sta,
- 		   struct ieee80211_key_conf *key_conf);
-+void wlcore_regdomain_config(struct wl1271 *wl);
- 
- static inline void
- wlcore_set_ht_cap(struct wl1271 *wl, enum ieee80211_band band,
-@@ -503,6 +509,10 @@ wlcore_set_min_fw_ver(struct wl1271 *wl, unsigned int chip,
- /* separate probe response templates for one-shot and sched scans */
- #define WLCORE_QUIRK_DUAL_PROBE_TMPL		BIT(10)
- 
-+/* Firmware requires reg domain configuration for active calibration */
-+#define WLCORE_QUIRK_REGDOMAIN_CONF		BIT(11)
-+
-+
- /* TODO: move to the lower drivers when all usages are abstracted */
- #define CHIP_ID_1271_PG10              (0x4030101)
- #define CHIP_ID_1271_PG20              (0x4030111)
--- 
-1.7.9.5
+ 	/* max num of ssids that can be probed during scanning */
+ 	wiphy->max_scan_ssids = MAX_PROBED_SSIDS;
 
