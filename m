@@ -1,92 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40380 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005Ab2KMSFQ (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:17695 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607Ab2KPMx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 13:05:16 -0500
-Date: Tue, 13 Nov 2012 19:05:05 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection
- command/event
-Message-ID: <20121113180505.GB19223@pandem0nium> (sfid-20121113_190522_515177_6DCAB9DD)
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
- <1350226137-13704-2-git-send-email-victorg@ti.com>
- <1350414099.10177.13.camel@jlt4.sipsolutions.net>
- <50842569.5000602@ti.com>
- <1350910543.10166.3.camel@jlt4.sipsolutions.net>
- <50922A9D.2060409@ti.com>
- <1352128887.9466.17.camel@jlt4.sipsolutions.net>
- <50A26163.10300@ti.com>
+	Fri, 16 Nov 2012 07:53:27 -0500
+To: <ath6kl-devel@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Sumathi Mandipati <sumathi@qca.qualcomm.com>
+Subject: [PATCH 6/8] ath6kl: Parse beacon interval from userspace
+Date: Fri, 16 Nov 2012 18:23:15 +0530
+Message-ID: <1353070395-6078-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121116_135330_056598_F06609D9)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="neYutvxvOLaeuPCA"
-In-Reply-To: <50A26163.10300@ti.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
---neYutvxvOLaeuPCA
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Parse beacon interval from userspace to
+firmware. Incase the firmware does not
+supports it, just print a warning message
+and continue with AP settings.
 
-On Tue, Nov 13, 2012 at 05:04:03PM +0200, Victor Goldenshtein wrote:
-> On 05/11/2012 17:21, Johannes Berg wrote:
-> >On Thu, 2012-11-01 at 09:54 +0200, Victor Goldenshtein wrote:
-> >>On 22/10/2012 14:55, Johannes Berg wrote:
-> >>>>2. In __nl80211_set_channel() - to cover the case when the CAC was
-> >>>>initiated on a "preset_chan" (during AP init phase) and the IF was
-> >>>>removed before the AP was even started (local->oper_channel wasn't se=
-t yet).
-> >>>
-> >>>Hmm, I'm not sure I get it. How is "local->oper_channel" (a mac80211
-> >>>variable) related to this cfg80211 code?
-> >>
-> >>It's not, just saying that its not set at this point.
-> >>
-> >>>start_ap() isn't expected to be able to succeed until CAC passed
-> >>>successfully, but OTOH the channel isn't configured until then?
-> >>
-> >>right, the initial CAC performed before start_ap(), only by setting the
-> >>channel with __nl80211_set_channel() + radar detection command.
-> >
-> >Hmm. Maybe then the channel should be passed to the radar detection
-> >command instead? That way, it can be passed through, you can allocate a
-> >channel context, etc. Much easier?
->=20
-> We already pass the frequency in the radar detection command, the
-> set channel operation comes during hostapd init flow regardless DFS
-> implementation.
+Cc: Sumathi Mandipati <sumathi@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 +++++---
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   17 +++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    6 ++++++
+ 3 files changed, 28 insertions(+), 3 deletions(-)
 
-Just for clarification for the API: Is the driver required to (re)set the c=
-hannel
-itself in the radar detection command, or do we expect that the channel was=
- already
-set via __nl80211_set_channel() (or other means) before?
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b8d99c2..8325daf 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2769,9 +2769,11 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	ar->ap_mode_bkey.valid = false;
+ 
+-	/* TODO:
+-	 * info->interval
+-	 */
++	ret = ath6kl_wmi_ap_set_beacon_intvl_cmd(ar->wmi, vif->fw_vif_idx,
++						 info->beacon_interval);
++
++	if (ret)
++		ath6kl_warn("Failed to set beacon interval: %d\n", ret);
+ 
+ 	ret = ath6kl_wmi_ap_set_dtim_cmd(ar->wmi, vif->fw_vif_idx,
+ 					 info->dtim_period);
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 7c5da1e..fb11199 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -752,6 +752,23 @@ int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid)
+ 				   NO_SYNC_WMIFLAG);
+ }
+ 
++int ath6kl_wmi_ap_set_beacon_intvl_cmd(struct wmi *wmi, u8 if_idx,
++				       u32 beacon_intvl)
++{
++	struct sk_buff *skb;
++	struct set_beacon_int_cmd *cmd;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct set_beacon_int_cmd *) skb->data;
++
++	cmd->beacon_intvl = cpu_to_le32(beacon_intvl);
++	return ath6kl_wmi_cmd_send(wmi, if_idx, skb,
++				   WMI_SET_BEACON_INT_CMDID, NO_SYNC_WMIFLAG);
++}
++
+ int ath6kl_wmi_ap_set_dtim_cmd(struct wmi *wmi, u8 if_idx, u32 dtim_period)
+ {
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 98b1755..b5f2265 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1660,6 +1660,10 @@ struct roam_ctrl_cmd {
+ 	u8 roam_ctrl;
+ } __packed;
+ 
++struct set_beacon_int_cmd {
++	__le32 beacon_intvl;
++} __packed;
++
+ struct set_dtim_cmd {
+ 	__le32 dtim_period;
+ } __packed;
+@@ -2649,6 +2653,8 @@ int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
+ int ath6kl_wmi_set_rssi_filter_cmd(struct wmi *wmi, u8 if_idx, s8 rssi);
+ int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi);
+ int ath6kl_wmi_ap_set_dtim_cmd(struct wmi *wmi, u8 if_idx, u32 dtim_period);
++int ath6kl_wmi_ap_set_beacon_intvl_cmd(struct wmi *wmi, u8 if_idx,
++				       u32 beacon_interval);
+ int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid);
+ int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
+ int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on);
+-- 
+1.7.0.4
 
-This would be important for other DFS modes like IBSS later.
-
-Thanks,
-	Simon
-
---neYutvxvOLaeuPCA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlCii9EACgkQrzg/fFk7axZjewCgweRU0jFTYSth4w3Jh2BwT+Ue
-QqYAn3LVXi/cv0ckAOm2g0kSfl4wIvS0
-=3UXr
------END PGP SIGNATURE-----
-
---neYutvxvOLaeuPCA--
