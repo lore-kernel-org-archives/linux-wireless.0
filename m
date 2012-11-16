@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:55750 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756490Ab2KVUlC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 15:41:02 -0500
-Received: by mail-oa0-f46.google.com with SMTP id h16so8364374oag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 12:41:01 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:3028 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751932Ab2KPO6x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2012 09:58:53 -0500
+Message-ID: <50A65443.2000101@broadcom.com> (sfid-20121116_155857_776532_135CFE5B)
+Date: Fri, 16 Nov 2012 15:57:07 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20652.56145.6291.392891@gargle.gargle.HOWL>
-References: <1353381362-437-1-git-send-email-sujith@msujith.org>
-	<1353494712.10444.20.camel@jlt4.sipsolutions.net>
-	<CANUX_P3e4ut9Jh25wXP7dOcvQh_YhuZ_LCkQV4QHpaNGrzbYuQ@mail.gmail.com>
-	<20652.56145.6291.392891@gargle.gargle.HOWL>
-Date: Thu, 22 Nov 2012 13:17:25 +0200
-Message-ID: <CANUX_P12Zs0m+v_0E09MZ7+_3aSgLkotG2GgVhHmUw0vm_SdBQ@mail.gmail.com> (sfid-20121122_214124_784718_A2C746B8)
-Subject: Re: [PATCH] mac80211: Add debugfs callbacks for station addition/removal
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Mahesh Palivela" <maheshp@posedge.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: VHT support, take 2
+References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
+ (sfid-20121109_211702_930840_209B43F6)
+ <1352492493.28302.7.camel@jlt4.sipsolutions.net>
+ <50A4DB80.2020209@posedge.com>
+ <1353072509.9490.7.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1353072509.9490.7.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Emmanuel Grumbach wrote:
->> Do you see value to add this for vif too?
+On 11/16/2012 02:28 PM, Johannes Berg wrote:
+> On Thu, 2012-11-15 at 17:39 +0530, Mahesh Palivela wrote:
 >
-> Not sure, mac80211 currently doesn't have a per-VIF debugfs area.
-> Also, we have ieee80211_iterate_active_interfaces(), which could be used
-> by drivers.
+>> vht regulatory code already posted long back. After went through several
+>> back n forth emails from Luis Rodriguez, accepted the patch.
+>> But not commited anywhere.
+>> Now I have to change that to match to new structs like chan_def etc from
+>> the vht channel work patches you posted 5 days back.
+>>
+>> Also helper funcs to replace chan->flags bit checking to dynamically
+>> check channel through regulatory
 >
+> Yeah, actually I'm not sure it's that easy. We'll also need per
+> bandwidth TX power restrictions, raise the 40 MHz bandwidth restriction
+> to 160 MHz (or get rid of it entirely), etc. That seems to require a new
+> regulatory database format?
 
-Well it does: under sdata.
-Anyway I added it internally. Patch will be posted soon :-)
+Luis discussed the regulatory framework during the wireless summit in 
+Barcelona last week. My (possibly limited) recollection was that the 
+current regulatory code can accommodate VHT limits as well. I assume 
+that also includes the regulatory database format.
+
+Gr. AvS
+
+
