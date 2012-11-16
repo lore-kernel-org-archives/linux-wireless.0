@@ -1,96 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54661 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752689Ab2KITmM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2012 14:42:12 -0500
-Message-ID: <1352490162.9238.23.camel@jlt4.sipsolutions.net> (sfid-20121109_204215_951530_427D6D95)
-Subject: pull-request: mac80211 2012-11-09
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 09 Nov 2012 20:42:42 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-tHWLbC+kbM8idJUQX7R3"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43420 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752114Ab2KPROI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2012 12:14:08 -0500
+Message-ID: <50A67454.6000804@hauke-m.de> (sfid-20121116_181411_886063_67B06EB0)
+Date: Fri, 16 Nov 2012 18:13:56 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Elliott Mitchell <ehem+outbound@m5p.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcm4716 and PCIe
+References: <20121116044429.GA73539@scollay.m5p.com>
+In-Reply-To: <20121116044429.GA73539@scollay.m5p.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/16/2012 05:44 AM, Elliott Mitchell wrote:
+> I happened to be browsing the linux-mips git repository and noticed the
+> commit at Tue, 10 Jul 2012 16:16:47.
 
---=-tHWLbC+kbM8idJUQX7R3
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+What commit are you talking about? Do you have a commit id?
 
-John,
+> The Broadcom 4716 *does* have an external PCI Express interface! Take a
+> look at the images on http://wiki.openwrt.org/toh/asus/rt-n16  If you
+> look at the image of the underside
+> (http://wiki.openwrt.org/_media/inbox/rt-n16_back_hires.jpg) on the right
+> side, CON3 and CON5 are the solder pads for mounting a mini-PCIe
+> connector and bracket.  Apparently V11 is a voltage regulator needed for
+> that to work, but on this an example of a Broadcom 4716 board that really
+> does allow a useable PCIe interface (with some hardware hacking).
 
-Here are five more fixes from me for 3.7. There's no theme to them, just
-various changes all over mac80211, see the commit logs for more
-information.
+Are you sure the Asus rt-n16 has a BCM4716 and not an BCM4718? Both have
+the same chip id (0x4716), but a different revision number (BCM4716 =
+rev 8, BCM4718 = rev 10). The BCM4716 and BCM4717 do not have a PCIe
+controller, just the BCM4718 has one [0].
 
-Please pull, information below.
+> What is the status of brcm4716 support?  The ASUS source code is in the
+> wild, but that includes many files marked, "UNPUBLISHED PROPRIETARY
+> SOURCE CODE of Broadcom Corporation".  Bit silly since they've been
+> published at this point, but they still retain the rights...
 
-johannes
+Some of the code for BCM4716 is upstream, some is just in OpenWrt [1]
+and not yet upstream and some is missing. The Ethernet driver is still
+missing. The Asus GPL tar contains all the code expect the one for the
+wireless driver, but b43 and brcmsmac already have support for this wifi
+core.
 
+Hauke
 
-The following changes since commit 6dbda2d00d466225f9db1dc695ff852443f28832=
-:
-
-  mac80211: make sure data is accessible in EAPOL check (2012-10-26 22:52:4=
-2 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 20f544eea03db4b498942558b882d463ce575c3e:
-
-  mac80211: don't send null data packet when not associated (2012-11-09 17:=
-31:47 +0100)
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      mac80211: sync acccess to tx_filtered/ps_tx_buf queues
-
-David Spinadel (1):
-      mac80211: init sched_scan_ies
-
-Felix Fietkau (1):
-      mac80211: do not call ieee80211_configure_filter if no interfaces are=
- up
-
-Johannes Berg (2):
-      mac80211: fix memory leak in device registration error path
-      mac80211: don't send null data packet when not associated
-
- net/mac80211/cfg.c      | 3 +++
- net/mac80211/main.c     | 6 ++++--
- net/mac80211/scan.c     | 2 +-
- net/mac80211/sta_info.c | 5 +++++
- net/mac80211/util.c     | 2 ++
- 5 files changed, 15 insertions(+), 3 deletions(-)
-
-
---=-tHWLbC+kbM8idJUQX7R3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJQnVyyAAoJEDBSmw7B7bqrhgIP/R6+HcVppqWOk+GPcyly+hrS
-NxpKo6P/KJCTGpDXHzK+wAby+JUHn2DoTW0WbN2YRqMA32QAks0zv3rzFnnfPVeP
-skR81Gm24zx7+TMJlMupRMZqvzXjIcGSr7hP24XnqlBQ3/xSYDT8bLsspFuz+ue0
-LvRsDNpYd12nEEy87x1wXaxO9AX4X3SmDwX84L8AFh8nayIRKauFZ4DzSAgfDesE
-eCpQgxKUyJrDahgyqvGVGFvHiPMmn2pkTrCu6TMbwhYEZAEVxhAtM9G1TFRrIJ8f
-y65yVZpovpN5Pchz9/7tsA9DhpDMhFv6Sv/whIfI9Nr7QiPLECdBCJbfxkMyiBlp
-IRRQ3r03hjp8DcuOM3PiDxS+eC/fa7nvspJ35sXzrPZBNRDyVmc+7OVXV1wqla/Q
-vq0yW7ntZiS1rCwE6QtQ4muJh3D5YKzWanT4wdCayjL+V3b4ejsvUem+Qe/0KJM1
-h04Sg5gArZVux43gT8srBNdCDFXyLz9L3CMtpmYsO9FomiprZvjnlv0+f4VCOQ5o
-OQcXJxhIeqFKPUOD0YvHznqAnzfZe0b89kIByDZIyWCJE3X6bE/EVumxEcxdKrNf
-Sz8XZIrdxofqdCdIAfWMar8mFbzAuKeCyU5JwlY95IDDy9zBbvGwng6YRE4vgQI7
-Pu/6TEYUu3O3sY8YeLg0
-=ZM2f
------END PGP SIGNATURE-----
-
---=-tHWLbC+kbM8idJUQX7R3--
+[0]: http://www.datasheetdir.com/BCM4717+Communications-Processor
+[1]:
+https://dev.openwrt.org/browser/trunk/target/linux/brcm47xx/patches-3.3/
 
