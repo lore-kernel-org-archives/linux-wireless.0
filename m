@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:60022 "EHLO
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18435 "EHLO
 	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752839Ab2KLPBO (ORCPT
+	with ESMTP id S1751075Ab2KPLkA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 10:01:14 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>, <j@w1.fi>
-Subject: Re: 60 GHz interface types (was: [PATCH v5 1/2] wireless: Driver for 60GHz card wil6210)
-Date: Mon, 12 Nov 2012 17:01:10 +0200
-Message-ID: <6324890.n28cQKm0cl@lx-vladimir> (sfid-20121112_160117_813979_741C0214)
-In-Reply-To: <1352715356.9525.12.camel@jlt4.sipsolutions.net>
-References: <1351701417-3140-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <9805542.8YLh3g7mqN@lx-vladimir> <1352715356.9525.12.camel@jlt4.sipsolutions.net>
+	Fri, 16 Nov 2012 06:40:00 -0500
+Message-ID: <50A62607.4060900@qca.qualcomm.com> (sfid-20121116_124006_872076_BCDE526E)
+Date: Fri, 16 Nov 2012 13:39:51 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+CC: <kernel-janitors@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 8/8] drivers/net/wireless/ath/ath6kl/hif.c: drop if around
+ WARN_ON
+References: <1351974625-10282-1-git-send-email-Julia.Lawall@lip6.fr> <1351974625-10282-9-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1351974625-10282-9-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, November 12, 2012 11:15:56 AM Johannes Berg wrote:
-> Should it really (ab)use the AP interface type then? I'd argue we should
-> get this right from the start, rather than fudging it, and then maybe
-> having some kernel that has it wrong and userspace having to handle that
-> etc.?
+On 11/03/2012 10:30 PM, Julia Lawall wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> Just use WARN_ON rather than an if containing only WARN_ON(1).
+> 
+> A simplified version of the semantic patch that makes this transformation
+> is as follows: (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @@
+> expression e;
+> @@
+> - if (e) WARN_ON(1);
+> + WARN_ON(e);
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-No, we should not. Right way is to add PBSS as BSS type.
+Thanks, applied to ath6kl.git.
 
-I will describe PBSS in separate mail.
-
-Thanks, Vladimir
+Kalle
