@@ -1,59 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:63515 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753975Ab2K2UpR (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:37736 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937Ab2KPG46 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 15:45:17 -0500
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-kernel@vger.kernel.org, tglx@linutronix.de
-Cc: backports@vger.kernel.org, alexander.stein@systec-electronic.com,
-	brudley@broadcom.com, rvossen@broadcom.com, arend@broadcom.com,
-	frankyl@broadcom.com, kanyan@broadcom.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kyungmin.park@samsung.com, s.nawrocki@samsung.com,
-	linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
-	daniel.vetter@ffwll.ch, intel-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, srinidhi.kasagar@stericsson.com,
-	linus.walleij@linaro.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 0/6] drivers: convert struct spinlock to spinlock_t
-Date: Thu, 29 Nov 2012 12:45:04 -0800
-Message-Id: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20121129_214930_481254_30779A01)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 16 Nov 2012 01:56:58 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so1734370pbc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2012 22:56:58 -0800 (PST)
+From: Tushar Behera <tushar.behera@linaro.org>
+To: linux-kernel@vger.kernel.org
+Cc: patches@linaro.org, Mauro Carvalho Chehab <mchehab@infradead.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Ian Campbell <ian.campbell@citrix.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Jack Steiner <steiner@sgi.com>, Arnd Bergmann <arnd@arndb.de>,
+	Luciano Coelho <coelho@ti.com>, Jiri Kosina <jkosina@suse.cz>,
+	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
+	xen-devel@lists.xensource.com, netdev@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	linux-atm-general@lists.sourceforge.net, linux-usb@vger.kernel.org,
+	linux-input@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 00/14] Modify signed comparisons of unsigned variables
+Date: Fri, 16 Nov 2012 12:20:32 +0530
+Message-Id: <1353048646-10935-1-git-send-email-tushar.behera@linaro.org> (sfid-20121116_080058_972022_D37BD1AA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+The occurrences were identified through the coccinelle script at
+following location.
 
-Turns out a few drivers have strayed away from using the
-spinlock_t typedef and decided to use struct spinlock
-directly. This series converts these drivers to use
-spinlock_t. Each change has been compile tested with
-allmodconfig and sparse checked. Driver developers
-may want to look at the compile error output / sparse
-error report supplied in each commit log, in particular
-brcmfmac and i915, there are quite a few things that
-are not related to this change that the developers
-can clean up / fix.
+http://www.emn.fr/z-info/coccinelle/rules/find_unsigned.cocci
 
-Luis R. Rodriguez (6):
-  ux500: convert struct spinlock to spinlock_t
-  i915: convert struct spinlock to spinlock_t
-  s5p-fimc: convert struct spinlock to spinlock_t
-  s5p-jpeg: convert struct spinlock to spinlock_t
-  brcmfmac: convert struct spinlock to spinlock_t
-  ie6xx_wdt: convert struct spinlock to spinlock_t
+Signed checks for unsigned variables are removed if it is also checked
+for upper error limit. For error checks, IS_ERR_VALUE() macros is used.
 
- drivers/crypto/ux500/cryp/cryp.h               |    4 ++--
- drivers/crypto/ux500/hash/hash_alg.h           |    4 ++--
- drivers/gpu/drm/i915/i915_drv.h                |    4 ++--
- drivers/media/platform/s5p-fimc/mipi-csis.c    |    2 +-
- drivers/media/platform/s5p-jpeg/jpeg-core.h    |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h |    2 +-
- drivers/watchdog/ie6xx_wdt.c                   |    2 +-
- 7 files changed, 10 insertions(+), 10 deletions(-)
+Tushar Behera (14):
+  [media] ivtv: Remove redundant check on unsigned variable
+  [media] meye: Remove redundant check on unsigned variable
+  [media] saa7134: Remove redundant check on unsigned variable
+  [media] tlg2300: Remove redundant check on unsigned variable
+  [media] atmel-isi: Update error check for unsigned variables
+  pinctrl: samsung: Update error check for unsigned variables
+  pinctrl: SPEAr: Update error check for unsigned variables
+  xen: netback: Remove redundant check on unsigned variable
+  xen: events: Remove redundant check on unsigned variable
+  atm: Removed redundant check on unsigned variable
+  HID: hiddev: Remove redundant check on unsigned variable
+  gru: Remove redundant check on unsigned variable
+  misc: tsl2550: Remove redundant check on unsigned variable
+  wlcore: Remove redundant check on unsigned variable
+
+ drivers/atm/fore200e.c                        |    2 +-
+ drivers/hid/usbhid/hiddev.c                   |    2 +-
+ drivers/media/pci/ivtv/ivtv-ioctl.c           |    2 +-
+ drivers/media/pci/meye/meye.c                 |    2 +-
+ drivers/media/pci/saa7134/saa7134-video.c     |    2 +-
+ drivers/media/platform/soc_camera/atmel-isi.c |    2 +-
+ drivers/media/usb/tlg2300/pd-video.c          |    2 +-
+ drivers/misc/sgi-gru/grukdump.c               |    2 +-
+ drivers/misc/tsl2550.c                        |    4 ++--
+ drivers/net/wireless/ti/wlcore/debugfs.c      |    2 +-
+ drivers/net/xen-netback/netback.c             |    4 ++--
+ drivers/pinctrl/pinctrl-samsung.c             |    2 +-
+ drivers/pinctrl/spear/pinctrl-plgpio.c        |    2 +-
+ drivers/xen/events.c                          |    2 +-
+ 14 files changed, 16 insertions(+), 16 deletions(-)
 
 -- 
-1.7.10.4
+1.7.4.1
 
+CC: Mauro Carvalho Chehab <mchehab@infradead.org>
+CC: Linus Walleij <linus.walleij@linaro.org>
+CC: Ian Campbell <ian.campbell@citrix.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Jeremy Fitzhardinge <jeremy@goop.org>
+CC: Chas Williams <chas@cmf.nrl.navy.mil>
+CC: Jack Steiner <steiner@sgi.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Luciano Coelho <coelho@ti.com>
+CC: Jiri Kosina <jkosina@suse.cz>
+CC: ivtv-devel@ivtvdriver.org
+CC: linux-media@vger.kernel.org
+CC: xen-devel@lists.xensource.com
+CC: netdev@vger.kernel.org
+CC: virtualization@lists.linux-foundation.org
+CC: linux-atm-general@lists.sourceforge.net
+CC: linux-usb@vger.kernel.org
+CC: linux-input@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
