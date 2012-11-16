@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:60937 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785Ab2K2FLB (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:37132 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752183Ab2KPPTD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 00:11:01 -0500
+	Fri, 16 Nov 2012 10:19:03 -0500
+Date: Fri, 16 Nov 2012 09:18:57 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, Daniel Wagner <wagi@monom.org>
+Subject: Re: [PATCH v2 01/22] brcmsmac: Introduce AMPDU sessions for
+ assembling AMPDUs
+Message-ID: <20121116151857.GB19078@thinkpad-t410> (sfid-20121116_161908_882903_10AB1205)
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <1352988492-21340-2-git-send-email-seth.forshee@canonical.com>
+ <50A5FB05.4040500@broadcom.com>
+ <20121116141255.GA19078@thinkpad-t410>
+ <50A65586.9080102@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1354107152-28563-1-git-send-email-bkamatch@qca.qualcomm.com>
-References: <1354107152-28563-1-git-send-email-bkamatch@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Wed, 28 Nov 2012 21:10:39 -0800
-Message-ID: <CAB=NE6VPC0nzZT5jo3HN7ZRX6oWSroLSt74vcSxkG7L-wGNHRg@mail.gmail.com> (sfid-20121129_061107_170268_36B7AAA6)
-Subject: Re: [PATCH v2 3/3] compat-drivers: Add a crap patch for AR9565
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50A65586.9080102@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 28, 2012 at 4:52 AM, Bala Shanmugam
-<bkamatch@qca.qualcomm.com> wrote:
-> This patch is required to improve BT throughput to
-> meet customer requirement.  This patch is a workaround
-> to put WLAN to sleep during BT cycle and cannot be
-> upstreamed.
->
-> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+On Fri, Nov 16, 2012 at 04:02:30PM +0100, Arend van Spriel wrote:
+> On 11/16/2012 03:12 PM, Seth Forshee wrote:
+> >What does strike me as problematic is the locking in brcms_ops_flush().
+> >It holds wl->lock, and the interrupt handling tries to acquire the same
+> >lock. Doesn't this prevent both the txpktpend counts from getting
+> >updated and any more packets being transmitted from the packet queue?
+> >
+> >Seth
+> >
+> 
+> Actually, in the brcms_c_wait_for_tx_completion() the while loop
+> does a brcms_msleep() which releases the wl->lock, does an msleep()
+> and acquires the lock. At least that is what is currently in
+> wireless-testing. I changed it internally to wait_for_event()
+> mechanism, but it was not accepted as people still were seeing
+> issues.
 
-Thanks applied and pushed all, and new releases made:
+Ah, I failed to look at what brcms_msleep() is doing so I didn't notice
+that. Nevermind then.
 
-http://wireless.kernel.org/en/users/Download/stable#compat-wireless_3.6_stable_releases
-
-  Luis
+Seth
