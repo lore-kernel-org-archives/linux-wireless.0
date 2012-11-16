@@ -1,137 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:36456 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755396Ab2KMR3E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 12:29:04 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so4133294eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:29:03 -0800 (PST)
-From: Maxim Mikityanskiy <maxtram95@gmail.com>
-To: greg@kroah.com, Larry.Finger@lwfinger.net,
-	linux-wireless@vger.kernel.org
-Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
-Subject: [PATCH 08/17] staging: rtl8187se: Removed dead code
-Date: Tue, 13 Nov 2012 19:28:14 +0200
-Message-Id: <1352827703-4659-9-git-send-email-maxtram95@gmail.com> (sfid-20121113_182953_405870_6E457BF0)
-In-Reply-To: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
-References: <1352827703-4659-1-git-send-email-maxtram95@gmail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3285 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752393Ab2KPRIf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2012 12:08:35 -0500
+Message-ID: <50A67308.8020709@broadcom.com> (sfid-20121116_180842_150172_EA301A82)
+Date: Fri, 16 Nov 2012 18:08:24 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: rework on .flush() callback
+References: <50A4E458.4090508@broadcom.com>
+ <1353072892.9490.12.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1353072892.9490.12.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed some unused functions, arrays and #define in r8180_core.c
+On 11/16/2012 02:34 PM, Johannes Berg wrote:
+>> The problem here is that in brcmsmac the flush does the
+>> >ieee80211_wake_queues() call, because that could also wakeup the netif
+>> >queues. So doing it in the driver seems a bad idea. Any suggestion on
+>> >how to solve this?
+> Yeah so .. I actually thought about this at some point, it's tricky. For
+> the global queues we check what reasons we had for stopping them, but we
+> don't do that for the netif queues. Maybe we should? I also think flush
+> should at least have the option to be per queue, so that we could do
+> something per sdata in mac80211 if the driver uses different HW queues
+> for different interfaces.
 
-Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
----
- drivers/staging/rtl8187se/r8180_core.c |   82 --------------------------------
- 1 file changed, 82 deletions(-)
+To me so from driver perspective, it was not clear what 
+ieee80211_stop/wake_queues was operating on. Somehow the knowledge that 
+the netif queues are already stopped upon calling 
+ieee80211_stop_queues() should be retained.
 
-diff --git a/drivers/staging/rtl8187se/r8180_core.c b/drivers/staging/rtl8187se/r8180_core.c
-index e741954..be2344d 100644
---- a/drivers/staging/rtl8187se/r8180_core.c
-+++ b/drivers/staging/rtl8187se/r8180_core.c
-@@ -606,66 +606,6 @@ void fix_rx_fifo(struct net_device *dev)
- 	set_nic_rxring(dev);
- }
- 
--unsigned char QUALITY_MAP[] = {
--	0x64, 0x64, 0x64, 0x63, 0x63, 0x62, 0x62, 0x61,
--	0x61, 0x60, 0x60, 0x5f, 0x5f, 0x5e, 0x5d, 0x5c,
--	0x5b, 0x5a, 0x59, 0x57, 0x56, 0x54, 0x52, 0x4f,
--	0x4c, 0x49, 0x45, 0x41, 0x3c, 0x37, 0x31, 0x29,
--	0x24, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22,
--	0x22, 0x22, 0x21, 0x21, 0x21, 0x21, 0x21, 0x20,
--	0x20, 0x20, 0x20, 0x1f, 0x1f, 0x1e, 0x1e, 0x1e,
--	0x1d, 0x1d, 0x1c, 0x1c, 0x1b, 0x1a, 0x19, 0x19,
--	0x18, 0x17, 0x16, 0x15, 0x14, 0x12, 0x11, 0x0f,
--	0x0e, 0x0c, 0x0a, 0x08, 0x06, 0x04, 0x01, 0x00
--};
--
--unsigned char STRENGTH_MAP[] = {
--	0x64, 0x64, 0x63, 0x62, 0x61, 0x60, 0x5f, 0x5e,
--	0x5d, 0x5c, 0x5b, 0x5a, 0x57, 0x54, 0x52, 0x50,
--	0x4e, 0x4c, 0x4a, 0x48, 0x46, 0x44, 0x41, 0x3f,
--	0x3c, 0x3a, 0x37, 0x36, 0x36, 0x1c, 0x1c, 0x1b,
--	0x1b, 0x1a, 0x1a, 0x19, 0x19, 0x18, 0x18, 0x17,
--	0x17, 0x16, 0x16, 0x15, 0x15, 0x14, 0x14, 0x13,
--	0x13, 0x12, 0x12, 0x11, 0x11, 0x10, 0x10, 0x0f,
--	0x0f, 0x0e, 0x0e, 0x0d, 0x0d, 0x0c, 0x0c, 0x0b,
--	0x0b, 0x0a, 0x0a, 0x09, 0x09, 0x08, 0x08, 0x07,
--	0x07, 0x06, 0x06, 0x05, 0x04, 0x03, 0x02, 0x00
--};
--
--void rtl8180_RSSI_calc(struct net_device *dev, u8 *rssi, u8 *qual)
--{
--	u32 temp;
--	u32 temp2;
--	u32 q;
--	u32 orig_qual;
--	u8  _rssi;
--
--	q = *qual;
--	orig_qual = *qual;
--	_rssi = 0; /* avoid gcc complains.. */
--
--	if (q <= 0x4e) {
--		temp = QUALITY_MAP[q];
--	} else {
--		if (q & 0x80)
--			temp = 0x32;
--		else
--			temp = 1;
--	}
--
--	*qual = temp;
--	temp2 = *rssi;
--
--	if (_rssi < 0x64) {
--		if (_rssi == 0)
--			*rssi = 1;
--	} else {
--		*rssi = 0x64;
--	}
--
--	return;
--}
--
- void rtl8180_irq_disable(struct net_device *dev)
- {
- 	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
-@@ -746,26 +686,6 @@ void set_nic_txring(struct net_device *dev)
- 	write_nic_dword(dev, TX_BEACON_RING_ADDR, priv->txbeaconringdma);
- }
- 
--void rtl8180_conttx_enable(struct net_device *dev)
--{
--	u32 txconf;
--
--	txconf = read_nic_dword(dev, TX_CONF);
--	txconf = txconf & ~TX_LOOPBACK_MASK;
--	txconf = txconf | (TX_LOOPBACK_CONTINUE<<TX_LOOPBACK_SHIFT);
--	write_nic_dword(dev, TX_CONF, txconf);
--}
--
--void rtl8180_conttx_disable(struct net_device *dev)
--{
--	u32 txconf;
--
--	txconf = read_nic_dword(dev, TX_CONF);
--	txconf = txconf & ~TX_LOOPBACK_MASK;
--	txconf = txconf | (TX_LOOPBACK_NONE<<TX_LOOPBACK_SHIFT);
--	write_nic_dword(dev, TX_CONF, txconf);
--}
--
- void rtl8180_beacon_tx_enable(struct net_device *dev)
- {
- 	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
-@@ -2136,8 +2056,6 @@ short rtl8180_is_tx_queue_empty(struct net_device *dev)
- 				return 0;
- 	return 1;
- }
--/* FIXME FIXME 5msecs is random */
--#define HW_WAKE_DELAY 5
- 
- void rtl8180_hw_wakeup(struct net_device *dev)
- {
--- 
-1.7.10.4
+Regarding the flush do you mean flush per queue or flush per vif? Per 
+vif could have its perks, I guess.
+
+> However, I'm not sure I'll have time to work on corner cases with
+> software scanning since we don't use that. I might work on the flush
+> thing though, that could be interesting.
+
+ok. The drv_flush() call is done in several places so not only scanning. 
+All with the drop flag set to false. Is that just to be prepared or do 
+you foresee an actual use-case?
+
+Gr. AvS
 
