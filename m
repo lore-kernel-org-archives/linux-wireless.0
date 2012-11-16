@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36682 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798Ab2KSOxQ (ORCPT
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:34794
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751075Ab2KPMVw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 09:53:16 -0500
-Message-ID: <1353336826.18299.20.camel@jlt4.sipsolutions.net> (sfid-20121119_155318_840800_57F2A369)
-Subject: Re: [PATCH] mac80211: make remain_on_channel() op pass vif param
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Nov 2012 15:53:46 +0100
-In-Reply-To: <CAB3XZEcnew_7uJaWcMYF2Fv2ORKSUfPRGY0t-yrr1LKmwfWKYQ@mail.gmail.com> (sfid-20121119_155219_470602_06BF2B27)
-References: <1353239862-11313-1-git-send-email-eliad@wizery.com>
-	 <1353336285.18299.14.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEcnew_7uJaWcMYF2Fv2ORKSUfPRGY0t-yrr1LKmwfWKYQ@mail.gmail.com>
-	 (sfid-20121119_155219_470602_06BF2B27)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 16 Nov 2012 07:21:52 -0500
+Message-ID: <50A62FDA.2070307@posedge.com> (sfid-20121116_132155_383981_A48625F4)
+Date: Fri, 16 Nov 2012 17:51:46 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v2 4/8] nl80211/cfg80211: support VHT channel configuration
+References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net> <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-19 at 16:52 +0200, Eliad Peller wrote:
-> On Mon, Nov 19, 2012 at 4:44 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Sun, 2012-11-18 at 13:57 +0200, Eliad Peller wrote:
-> >> Drivers (e.g. wl12xx) might need to know the vif
-> >> to roc on (mainly in order to configure the
-> >> rx filters correctly).
-> >>
-> >> Add the vif to the op params, and update the current
-> >> users (iwlwifi) to use the new api.
-> >
-> > Hmm, ok, but I think then the ROC merge logic may have to be changed?
-> >
-> yeah, i guess you're right.
-> 
-> @@ -2247,7 +2247,8 @@ static int ieee80211_start_roc_work(struct
-> ieee80211_local *local,
-> 
->   out_check_combine:
->         list_for_each_entry(tmp, &local->roc_list, list) {
-> -               if (tmp->chan != channel || tmp->chan_type != channel_type)
-> +               if (tmp->chan != channel || tmp->chan_type != channel_type ||
-> +                   tmp->sdata != sdata)
->                         continue;
-> 
-> should something like this be enough?
+On 11/10/2012 01:47 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
 
-Yes, that seems right. I wasn't entirely sure the sdata pointer is
-there, so I didn't go into specifics :)
+> + *
+> + * @NL80211_CHAN_WIDTH_20_NOHT: 20 MHz, non-HT channel
 
-johannes
+Should we have NL80211_CHAN_WIDTH_LEGACY or rename 
+NL80211_CHAN_WIDTH_20_NOHT to NL80211_CHAN_WIDTH_NOHT to cover non HT 
+associations in both 2.4 & 5 GHz bands.
 
+> + * @NL80211_CHAN_WIDTH_20: 20 MHz HT channel
+> + * @NL80211_CHAN_WIDTH_40: 40 MHz channel, the %NL80211_ATTR_CENTER_FREQ1
+> + *	attribute must be provided as well
+> + * @NL80211_CHAN_WIDTH_80: 80 MHz channel, the %NL80211_ATTR_CENTER_FREQ1
+> + *	attribute must be provided as well
+> + * @NL80211_CHAN_WIDTH_160: 160 MHz channel, the %NL80211_ATTR_CENTER_FREQ1
+> + *	attribute must be provided as well
+> + * @NL80211_CHAN_WIDTH_80P80: 80+80 MHz channel, the %NL80211_ATTR_CENTER_FREQ1
+> + *	and %NL80211_ATTR_CENTER_FREQ2 attributes must be provided as well
+> + */
+> +enum nl80211_chan_width {
+> +	NL80211_CHAN_WIDTH_20_NOHT,
+> +	NL80211_CHAN_WIDTH_20,
+> +	NL80211_CHAN_WIDTH_40,
+> +	NL80211_CHAN_WIDTH_80,
+> +	NL80211_CHAN_WIDTH_160,
+> +	NL80211_CHAN_WIDTH_80P80,
+> +};
