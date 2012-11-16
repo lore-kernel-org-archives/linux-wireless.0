@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60139 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752981Ab2KYOAw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 09:00:52 -0500
-Message-ID: <1353852070.9875.2.camel@jlt4.sipsolutions.net> (sfid-20121125_150056_200428_1ADFB536)
-Subject: Re: mips: warning in net/mac80211/tx.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sun, 25 Nov 2012 15:01:10 +0100
-In-Reply-To: <50B20DAD.9030204@broadcom.com>
-References: <50B20DAD.9030204@broadcom.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:60255 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752908Ab2KPSTp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2012 13:19:45 -0500
+Message-ID: <1353089938.10872.79.camel@cumari.coelho.fi> (sfid-20121116_191948_265738_38F6CA67)
+Subject: Re: [PATCH] wlcore: sdio: use platform_device_unregister in
+ wl1271_remove()
+From: Luciano Coelho <coelho@ti.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+CC: <linville@tuxdriver.com>, <yongjun_wei@trendmicro.com.cn>,
+	<linux-wireless@vger.kernel.org>
+Date: Fri, 16 Nov 2012 20:18:58 +0200
+In-Reply-To: <CAPgLHd9_Hx+XiHTZkEcP53fJTT5Ys5aPd+ngM=3Vh9VK9JQcaQ@mail.gmail.com>
+References: <CAPgLHd9_Hx+XiHTZkEcP53fJTT5Ys5aPd+ngM=3Vh9VK9JQcaQ@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-11-25 at 13:23 +0100, Arend van Spriel wrote:
-> Hi Johannes,
+On Tue, 2012-10-23 at 13:23 +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > 
-> I played with crosstool-ng to compile test our driver for a number of
-> platforms that it is supposed to work on. The gcc version is 4.7.2.
+> platform_device_unregister() only calls platform_device_del() and
+> platform_device_put(), thus use platform_device_unregister() to
+> simplify the code.
 > 
-> *mips*:
->   CC [M]  net/mac80211/tx.o
-> net/mac80211/tx.c: In function 'ieee80211_subif_start_xmit':
-> net/mac80211/tx.c:1797:22: error: 'chanctx_conf' may be used
-> uninitialized in this function [-Werror=maybe-uninitialized]
+> Also the documents in platform.c shows that platform_device_del
+> and platform_device_put must _only_ be externally called in error
+> cases.  All other usage is a bug.
+> 
+> dpatch engine is used to auto generate this patch.
+> (https://github.com/weiyj/dpatch)
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
 
-Yeah it seems to randomly throw this warning under certain
-circumstances, sometimes gcc doesn't seem to be able to prove that in
-fact it *isn't* used uninitialized.
+Applied and pushed, thanks!
 
-I think we should just leave the warning though, anything else I could
-come up with to suppress it would just cause real ones to be suppressed
-as well if somebody changes this code.
-
-johannes
+--
+Luca.
 
