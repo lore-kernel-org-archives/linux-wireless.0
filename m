@@ -1,46 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51193 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932708Ab2KNIXm (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:17338 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733Ab2KPMwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 03:23:42 -0500
-Date: Wed, 14 Nov 2012 11:23:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] ath5k: precedence error in ath5k_hw_nic_wakeup()
-Message-ID: <20121114082307.GA31792@elgon.mountain> (sfid-20121114_092347_951659_68072C69)
+	Fri, 16 Nov 2012 07:52:30 -0500
+To: <ath6kl-devel@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 3/8] ath6kl: remove unnecessary check for NULL skb
+Date: Fri, 16 Nov 2012 18:22:22 +0530
+Message-ID: <1353070342-5973-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121116_135234_113721_E8E98E76)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'|' has higher precedence than ?:.  Since AR5K_PHY_TURBO_MODE is 0x1 and
-"AR5K_PHY_TURBO_MODE | (ah->ah_radio == AR5K_RF2425)" is true then we
-always set turbo to zero.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+dev_kfree_skb kernel API itself takes for checking for NULL
+skb, so an explicit check is not required.
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-Static analysis fix.  I don't have a way to test this.
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |    8 +++-----
+ drivers/net/wireless/ath/ath6kl/usb.c      |    6 ++----
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   11 +++--------
+ 3 files changed, 8 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 0c2dd47..4084b10 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -789,9 +789,9 @@ ath5k_hw_nic_wakeup(struct ath5k_hw *ah, struct ieee80211_channel *channel)
- 		 * (I don't think it supports 44MHz) */
- 		/* On 2425 initvals TURBO_SHORT is not present */
- 		if (ah->ah_bwmode == AR5K_BWMODE_40MHZ) {
--			turbo = AR5K_PHY_TURBO_MODE |
--				(ah->ah_radio == AR5K_RF2425) ? 0 :
--				AR5K_PHY_TURBO_SHORT;
-+			turbo = AR5K_PHY_TURBO_MODE;
-+			if (ah->ah_radio != AR5K_RF2425)
-+				turbo |= AR5K_PHY_TURBO_SHORT;
- 		} else if (ah->ah_bwmode != AR5K_BWMODE_DEFAULT) {
- 			if (ah->ah_radio == AR5K_RF5413) {
- 				mode |= (ah->ah_bwmode == AR5K_BWMODE_10MHZ) ?
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index 575e7d7..73a38f9 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -509,9 +509,7 @@ static void destroy_htc_txctrl_packet(struct htc_packet *packet)
+ {
+ 	struct sk_buff *skb;
+ 	skb = packet->skb;
+-	if (skb != NULL)
+-		dev_kfree_skb(skb);
+-
++	dev_kfree_skb(skb);
+ 	kfree(packet);
+ }
+ 
+@@ -1054,6 +1052,7 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
+ 
+ 		dev_kfree_skb(skb);
+ 		skb = NULL;
++
+ 		goto free_skb;
+ 	}
+ 
+@@ -1089,8 +1088,7 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
+ 	skb = NULL;
+ 
+ free_skb:
+-	if (skb != NULL)
+-		dev_kfree_skb(skb);
++	dev_kfree_skb(skb);
+ 
+ 	return status;
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index a6d1377..d425c5d 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -159,10 +159,8 @@ static void ath6kl_usb_free_urb_to_pipe(struct ath6kl_usb_pipe *pipe,
+ 
+ static void ath6kl_usb_cleanup_recv_urb(struct ath6kl_urb_context *urb_context)
+ {
+-	if (urb_context->skb != NULL) {
+-		dev_kfree_skb(urb_context->skb);
+-		urb_context->skb = NULL;
+-	}
++	dev_kfree_skb(urb_context->skb);
++	urb_context->skb = NULL;
+ 
+ 	ath6kl_usb_free_urb_to_pipe(urb_context->pipe, urb_context);
+ }
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index f3aeebb..7c5da1e 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2481,16 +2481,11 @@ static int ath6kl_wmi_sync_point(struct wmi *wmi, u8 if_idx)
+ 
+ free_cmd_skb:
+ 	/* free up any resources left over (possibly due to an error) */
+-	if (skb)
+-		dev_kfree_skb(skb);
++	dev_kfree_skb(skb);
+ 
+ free_data_skb:
+-	for (index = 0; index < num_pri_streams; index++) {
+-		if (data_sync_bufs[index].skb != NULL) {
+-			dev_kfree_skb((struct sk_buff *)data_sync_bufs[index].
+-				      skb);
+-		}
+-	}
++	for (index = 0; index < num_pri_streams; index++)
++		dev_kfree_skb((struct sk_buff *)data_sync_bufs[index].skb);
+ 
+ 	return ret;
+ }
+-- 
+1.7.0.4
+
