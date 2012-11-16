@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:53725
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+Received: from blackhole.sdinet.de ([176.9.52.58]:47042 "EHLO mail.sdinet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753270Ab2KMH2X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 02:28:23 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	id S1753724Ab2KPWnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2012 17:43:25 -0500
+Date: Fri, 16 Nov 2012 23:32:32 +0100 (CET)
+From: Sven-Haegar Koch <haegar@sdinet.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Airlie <airlied@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bill Nottingham <notting@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: removal of sysfs wext extension broke on F16
+In-Reply-To: <1353098379.9490.22.camel@jlt4.sipsolutions.net>
+Message-ID: <alpine.DEB.2.02.1211162330090.19580@aurora.sdinet.de> (sfid-20121116_234328_907516_98DA01EA)
+References: <CAPM=9twSHBet=vDY9q4BXKv7ZUPR-eme75tOzxrWf6Bsp4MMkw@mail.gmail.com>  <1352795227.9466.8.camel@jlt4.sipsolutions.net>  <CA+55aFw8Rx6TScXV_nsh4EFeCDTxsjn9mJPqo8VzPhbG9jC5Fw@mail.gmail.com>  (sfid-20121116_192027_176167_6DFB40B3)
+ <1353098137.9490.20.camel@jlt4.sipsolutions.net>  (sfid-20121116_213518_404111_CB0441EC) <1353098204.9490.21.camel@jlt4.sipsolutions.net>  (sfid-20121116_213631_514198_885B62C5) <1353098379.9490.22.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20641.63106.943323.923565@gargle.gargle.HOWL> (sfid-20121113_082834_068383_4707CF11)
-Date: Tue, 13 Nov 2012 12:58:02 +0530
-To: Corey Richardson <corey@octayn.net>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	nbd@openwrt.org
-Subject: ath9k_htc-based adapter unfunctioning after commit ceb26a6013
-In-Reply-To: <CA++BO6SuRgOu7A4BKobrdEeSpSc3UUYHXaECmEGE=R17w7HjQA@mail.gmail.com>
-References: <CA++BO6SuRgOu7A4BKobrdEeSpSc3UUYHXaECmEGE=R17w7HjQA@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Corey Richardson wrote:
-> I was giving 3.7-rc4 a whirl when I discovered my wireless adapter [0] wasn't
-> working: the LED didn't light up. Went and ran 'ip link' and it just hung there.
-> Tried a few other things and discovered that sudo was broken too. With
-> strace I found that they were hanging in sendto().
+On Fri, 16 Nov 2012, Johannes Berg wrote:
+
+> On Fri, 2012-11-16 at 21:36 +0100, Johannes Berg wrote:
+> > On Fri, 2012-11-16 at 21:35 +0100, Johannes Berg wrote:
+> > > On Fri, 2012-11-16 at 10:20 -0800, Linus Torvalds wrote:
+> > > > On Tue, Nov 13, 2012 at 12:27 AM, Johannes Berg
+> > > > <johannes@sipsolutions.net> wrote:
+> > > > >
+> > > > > Should I revert it and send it in my next pull request?
+> > > > 
+> > > > Please do. Or perhaps we could just add the directory back, without
+> > > > the actual entries, if that is sufficient..
+> > > 
+> > > Yeah, that does seem to be sufficient, I'll queue up the patch below.
+> > 
+> > Err, no, wishful thinking. I need a *little* bit more for sysfs to work.
 > 
-> If I then unplug the adapter, everything comes out of the hang.
-> 
-> Bisected and found that commit ceb26a6013b962b82f644189ea29d802490fc8fc is
-> to blame.
+> This works, sorry about that.
 
-I can see this issue too. I am not entirely convinced that the commit in
-question is valid. If a HW reset fails for some reason in start(), bailing
-out seems the right thing to do instead of continuing to fiddle with the HW
-and silently returning a success code to mac80211.
+> +#if IS_ENABLED(CONFIG_WIRELESS_EXT) || IS_ENABLED(CONFIG_CFG80211)
+> +static struct attribute *wireless_attrs[] = {
+> +	NULL
+> +};
+> +
+> +static struct attribute_group wireless_group = {
+> +	.name = "wireless",
+> +	.attrs = wireless_attrs,
+> +};
+> +#endif
+>  #endif /* CONFIG_SYSFS */
+>  
 
-I was able to bring up the device with this patch.
+How about a small comment in the source why it is there? I suppose 
+otherwise in a year or two someone will find it, see "WTF? Useless 
+empty directory?" and try to remove it again...
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 756191b..e06bcec 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1456,7 +1456,7 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
- 	switch (type) {
- 	case ATH9K_RESET_POWER_ON:
- 		ret = ath9k_hw_set_reset_power_on(ah);
--		if (!ret)
-+		if (ret)
- 			ah->reset_power_on = true;
- 		break;
- 	case ATH9K_RESET_WARM:
+c'ya
+sven-haegar
 
-Sujith
+-- 
+Three may keep a secret, if two of them are dead.
+- Ben F.
