@@ -1,71 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754275Ab2K1MnM (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:39855 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102Ab2KQGtz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 07:43:12 -0500
-Message-ID: <1354106616.9345.13.camel@jlt4.sipsolutions.net> (sfid-20121128_134316_136924_969C54C1)
-Subject: Re: [RFC 1/3] nl80211: add spec scan flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org,
-	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Wed, 28 Nov 2012 13:43:36 +0100
-In-Reply-To: <1354106128.9345.6.camel@jlt4.sipsolutions.net> (sfid-20121128_133513_369326_2A721201)
-References: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1354042885-32688-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1354106128.9345.6.camel@jlt4.sipsolutions.net>
-	 (sfid-20121128_133513_369326_2A721201)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 17 Nov 2012 01:49:55 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Subject: [RFC 3/4] iw: add support for link-specific mesh power modes
+Date: Fri, 16 Nov 2012 22:49:38 -0800
+Message-Id: <1353134979-13314-4-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_074958_373273_A0C3250C)
+In-Reply-To: <1353134979-13314-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353134979-13314-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 13:35 +0100, Johannes Berg wrote:
-> On Tue, 2012-11-27 at 20:01 +0100, Simon Wunderlich wrote:
-> > This flag indicates that a spectrum scan is requested, if supported.
-> 
-> That "if supported" here is pretty problematic. There's no way to know.
-> Feature flag maybe?
-> 
-> Also, there are scan flags now. However, I don't see that this should
-> (ab)use the scan function. It doesn't seem likely that you want to do
-> this while you're sending probe requests, etc. OTOH, it seems likely
-> you'd want identical dwell times on all channels to have comparable
-> values, which isn't the case here.
-> 
-> I really think you need to decouple the API for this from scanning.
+The different power modes of links towards neighbor STA can be read using
+iw <dev> station get
+-or-
+iw <dev> station dump
 
-And then you can also define APIs to get the data out. While I realize
-that the data is implementation-dependent, you could have an enum that
-indicates the data format and describes it:
+The different power modes shown are:
+- mesh local PS mode
+- mesh peer PS mode
+- mesh non-peer PS mode
+where the local PS mode is "our" mode towards the neighbor, the peer PS mode
+is the neighbor's mode towards us, and the non-peer PS mode is the neighbor's
+non-peer PS mode as indicated in beacons and management frames.
 
-@NL80211_SPECTRAL_DATA_ATHEROS: u8 rssi,ext_rssi,noise,fft_data[] ...
+The local PS mode can be modified for each neighbor using
+iw <dev> station set <mac-addr> mesh_power_mode <active|light|deep>
 
-enum nl80211_spectral_data {
-	NL80211_SPECTRAL_DATA_ATHEROS,
-	...
-};
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+---
+ station.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 89 insertions(+)
 
-Then you can define a function to send the data to the userspace socket
-that asked for it (yes, if you have a separate command you can send it
-only to that app... wohoo! :P ) and don't even have to store it in the
-kernel...
-
-So bottom line is that I think there are two choices:
-1) for a proof of concept, implement it in debugfs only, in ath9k only,
-   with e.g. a debugfs file that sets a flag that then triggers the
-   spectral scan when you do a scan (using sw_scan_start, config hooks)
-   --> no need to modify nl80211 at all
-2) implement some well-defined API in nl80211, but don't tie it to
-   scanning or a debugfs implementation of getting the data out, with
-   versioning of the FFT data packets etc. so it can be updated later
-   without breaking everything
-
-This hybrid isn't a good approach at all.
-
-johannes
+diff --git a/station.c b/station.c
+index 247f445..09ccb8f 100644
+--- a/station.c
++++ b/station.c
+@@ -29,6 +29,25 @@ enum plink_actions {
+ 	PLINK_ACTION_BLOCK,
+ };
+ 
++static void print_power_mode(struct nlattr *a)
++{
++	enum nl80211_mesh_power_mode pm = nla_get_u8(a);
++
++	switch (pm) {
++	case NL80211_MESH_POWER_ACTIVE:
++		printf("ACTIVE");
++		break;
++	case NL80211_MESH_POWER_LIGHT_SLEEP:
++		printf("LIGHT SLEEP");
++		break;
++	case NL80211_MESH_POWER_DEEP_SLEEP:
++		printf("DEEP SLEEP");
++		break;
++	default:
++		printf("UNKNOWN");
++		break;
++	}
++}
+ 
+ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ {
+@@ -54,6 +73,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_TX_FAILED] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_STA_FLAGS] =
+ 			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
++		[NL80211_STA_INFO_LOCAL_MESH_PS_MODE] = { .type = NLA_U8},
++		[NL80211_STA_INFO_PEER_MESH_PS_MODE] = { .type = NLA_U8},
++		[NL80211_STA_INFO_NONPEER_MESH_PS_MODE] = { .type = NLA_U8},
+ 	};
+ 
+ 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+@@ -177,6 +199,18 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		}
+ 		printf("\n\tmesh plink:\t%s", state_name);
+ 	}
++	if (sinfo[NL80211_STA_INFO_LOCAL_MESH_PS_MODE]) {
++		printf("\n\tmesh local PS mode:\t");
++		print_power_mode(sinfo[NL80211_STA_INFO_LOCAL_MESH_PS_MODE]);
++	}
++	if (sinfo[NL80211_STA_INFO_PEER_MESH_PS_MODE]) {
++		printf("\n\tmesh peer PS mode:\t");
++		print_power_mode(sinfo[NL80211_STA_INFO_PEER_MESH_PS_MODE]);
++	}
++	if (sinfo[NL80211_STA_INFO_NONPEER_MESH_PS_MODE]) {
++		printf("\n\tmesh non-peer PS mode:\t");
++		print_power_mode(sinfo[NL80211_STA_INFO_NONPEER_MESH_PS_MODE]);
++	}
+ 
+ 	if (sinfo[NL80211_STA_INFO_STA_FLAGS]) {
+ 		sta_flags = (struct nl80211_sta_flag_update *)
+@@ -274,6 +308,7 @@ COMMAND(station, del, "<MAC address>",
+ 
+ static const struct cmd *station_set_plink;
+ static const struct cmd *station_set_vlan;
++static const struct cmd *station_set_mesh_power_mode;
+ 
+ static const struct cmd *select_station_cmd(int argc, char **argv)
+ {
+@@ -283,6 +318,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
+ 		return station_set_plink;
+ 	if (strcmp(argv[1], "vlan") == 0)
+ 		return station_set_vlan;
++	if (strcmp(argv[1], "mesh_power_mode") == 0)
++		return station_set_mesh_power_mode;
+ 	return NULL;
+ }
+ 
+@@ -384,6 +421,58 @@ COMMAND_ALIAS(station, set, "<MAC address> vlan <ifindex>",
+ 	"Set an AP VLAN for this station.",
+ 	select_station_cmd, station_set_vlan);
+ 
++static int handle_station_set_mesh_power_mode(struct nl80211_state *state,
++					      struct nl_cb *cb,
++					      struct nl_msg *msg,
++					      int argc, char **argv,
++					      enum id_input id)
++{
++	unsigned char mesh_power_mode;
++	unsigned char mac_addr[ETH_ALEN];
++
++	if (argc < 3)
++		return 1;
++
++	if (mac_addr_a2n(mac_addr, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
++	}
++	argc--;
++	argv++;
++
++	if (strcmp("mesh_power_mode", argv[0]) != 0)
++		return 1;
++	argc--;
++	argv++;
++
++	if (strcmp("active", argv[0]) == 0)
++		mesh_power_mode = NL80211_MESH_POWER_ACTIVE;
++	else if (strcmp("light", argv[0]) == 0)
++		mesh_power_mode = NL80211_MESH_POWER_LIGHT_SLEEP;
++	else if (strcmp("deep", argv[0]) == 0)
++		mesh_power_mode = NL80211_MESH_POWER_DEEP_SLEEP;
++	else {
++		fprintf(stderr, "unknown mesh power mode\n");
++		return 2;
++	}
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
++	NLA_PUT_U8(msg, NL80211_ATTR_LOCAL_MESH_POWER_MODE, mesh_power_mode);
++
++	return 0;
++nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
++	"<active|light|deep>", NL80211_CMD_SET_STATION, 0, CIB_NETDEV,
++	handle_station_set_mesh_power_mode,
++	"Set link-specific mesh power mode for this station",
++	select_station_cmd, station_set_mesh_power_mode);
+ 
+ static int handle_station_dump(struct nl80211_state *state,
+ 			       struct nl_cb *cb,
+-- 
+1.7.9.5
 
