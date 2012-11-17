@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51765 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56463 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756493Ab2K3MiB (ORCPT
+	with ESMTP id S1753423Ab2KQJPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 07:38:01 -0500
-Message-ID: <1354279104.10035.27.camel@jlt4.sipsolutions.net> (sfid-20121130_133818_410796_2E4A2C8E)
-Subject: Re: [PATCH] mac80211: allow userspace registration for ProbeReq in
- IBSS
+	Sat, 17 Nov 2012 04:15:39 -0500
+Message-ID: <1353143772.9543.24.camel@jlt4.sipsolutions.net> (sfid-20121117_101544_237729_5D3333A2)
+Subject: Re: [RFC 07/14] {cfg,nl}80211: set local link-specific power mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@open-mesh.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 30 Nov 2012 13:38:24 +0100
-In-Reply-To: <1354231092-10654-1-git-send-email-antonio@open-mesh.com>
-References: <1354231092-10654-1-git-send-email-antonio@open-mesh.com>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>
+Date: Sat, 17 Nov 2012 10:16:12 +0100
+In-Reply-To: <1353134886-13256-8-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1353134886-13256-8-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-30 at 00:18 +0100, Antonio Quartulli wrote:
-> This change allows userspace to register for ProbeReq on an
-> IBSS interface.
+On Fri, 2012-11-16 at 22:47 -0800, Marco Porsch wrote:
 
-I guess this is fine, you just have to handle them if you register for
-them.
+> +	if (info->attrs[NL80211_ATTR_LOCAL_MESH_POWER_MODE])
+> +		params.local_ps_mode =
+> +			nla_get_u8(info->attrs[NL80211_ATTR_LOCAL_MESH_POWER_MODE]);
 
->  However ProbeRequests are not redirected from
-> their normal rx path.
+As usual, missing range checks.
 
-Well umm so the last sentence is just bogus, I'll delete it.
+However I don't get this entire patch? Doesn't the station control its
+own link PS mode?
 
-Applied.
+What happens if userspace uses this on a kernel that doesn't support it?
 
 johannes
 
