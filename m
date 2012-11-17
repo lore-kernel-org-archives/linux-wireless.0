@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:61038 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326Ab2KQXjJ (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:32932 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404Ab2KQKc7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 18:39:09 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq7so682096wib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Nov 2012 15:39:07 -0800 (PST)
+	Sat, 17 Nov 2012 05:32:59 -0500
 MIME-Version: 1.0
-In-Reply-To: <1353142745.9543.9.camel@jlt4.sipsolutions.net>
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
- <1353134886-13256-4-git-send-email-marco.porsch@etit.tu-chemnitz.de> <1353142745.9543.9.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Sat, 17 Nov 2012 15:38:47 -0800
-Message-ID: <CAG6hwVO1j6zLPHziiZB5bzJDw4uz5Q5tXuPoz33zFkN-wW8eBg@mail.gmail.com> (sfid-20121118_003913_362944_968804BF)
-Subject: Re: [RFC 03/14] {cfg,nl}80211: set and get default mesh power mode
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
-	javier@cozybit.com, linux-wireless@vger.kernel.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>
+In-Reply-To: <alpine.DEB.2.02.1211162330090.19580@aurora.sdinet.de>
+References: <CAPM=9twSHBet=vDY9q4BXKv7ZUPR-eme75tOzxrWf6Bsp4MMkw@mail.gmail.com>
+ <1352795227.9466.8.camel@jlt4.sipsolutions.net> <CA+55aFw8Rx6TScXV_nsh4EFeCDTxsjn9mJPqo8VzPhbG9jC5Fw@mail.gmail.com>
+ <1353098137.9490.20.camel@jlt4.sipsolutions.net> <1353098204.9490.21.camel@jlt4.sipsolutions.net>
+ <1353098379.9490.22.camel@jlt4.sipsolutions.net> <alpine.DEB.2.02.1211162330090.19580@aurora.sdinet.de>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 17 Nov 2012 21:32:37 +1100
+Message-ID: <CAGRGNgWZHvs2Fb-BLd+wgqz5WcmdBHvodvnHOBE_4+w7dqzRPg@mail.gmail.com> (sfid-20121117_113418_652108_43EDC36E)
+Subject: Re: removal of sysfs wext extension broke on F16
+To: Sven-Haegar Koch <haegar@sdinet.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Airlie <airlied@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bill Nottingham <notting@redhat.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 17, 2012 at 12:59 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-11-16 at 22:47 -0800, Marco Porsch wrote:
->> Possibilities of setting and getting mesh default power mode are
->> added.
->
-> ditto.
->
->
->> + * @NL80211_MESHCONF_POWER_MODE: default link-specific power save
->> mode
->
-> please describe the type of the attribute (u8)
->
->
->> +       FILL_IN_MESH_PARAM_IF_SET(tb, cfg, power_mode,
->> +                                 mask, NL80211_MESHCONF_POWER_MODE,
->> +                                 nla_get_u8);
->
-> Huh, ok, how did this FILL_IN_MESH_PARAM thing ever get here ... sad I
-> missed that, all of those are *completely* missing range checks.
->
-> Please add them here, and somebody should also follow up with a patch to
-> fix them on the other attributes.
+Hi Sven,
 
-Noted.
+On Sat, Nov 17, 2012 at 9:32 AM, Sven-Haegar Koch <haegar@sdinet.de> wrote:
+> On Fri, 16 Nov 2012, Johannes Berg wrote:
+>
+>> On Fri, 2012-11-16 at 21:36 +0100, Johannes Berg wrote:
+>> > On Fri, 2012-11-16 at 21:35 +0100, Johannes Berg wrote:
+>> > > On Fri, 2012-11-16 at 10:20 -0800, Linus Torvalds wrote:
+>> > > > On Tue, Nov 13, 2012 at 12:27 AM, Johannes Berg
+>> > > > <johannes@sipsolutions.net> wrote:
+>> > > > >
+>> > > > > Should I revert it and send it in my next pull request?
+>> > > >
+>> > > > Please do. Or perhaps we could just add the directory back, without
+>> > > > the actual entries, if that is sufficient..
+>> > >
+>> > > Yeah, that does seem to be sufficient, I'll queue up the patch below.
+>> >
+>> > Err, no, wishful thinking. I need a *little* bit more for sysfs to work.
+>>
+>> This works, sorry about that.
+>
+>> +#if IS_ENABLED(CONFIG_WIRELESS_EXT) || IS_ENABLED(CONFIG_CFG80211)
+>> +static struct attribute *wireless_attrs[] = {
+>> +     NULL
+>> +};
+>> +
+>> +static struct attribute_group wireless_group = {
+>> +     .name = "wireless",
+>> +     .attrs = wireless_attrs,
+>> +};
+>> +#endif
+>>  #endif /* CONFIG_SYSFS */
+>>
+>
+> How about a small comment in the source why it is there? I suppose
+> otherwise in a year or two someone will find it, see "WTF? Useless
+> empty directory?" and try to remove it again...
 
-Thomas
+Hopefully by then Fedora's networking scripts won't need it =)
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
