@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45369 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56386 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755752Ab2K1Vob (ORCPT
+	with ESMTP id S1753882Ab2KQI6c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 16:44:31 -0500
+	Sat, 17 Nov 2012 03:58:32 -0500
+Message-ID: <1353142745.9543.9.camel@jlt4.sipsolutions.net> (sfid-20121117_095834_542062_D63A2FE5)
+Subject: Re: [RFC 03/14] {cfg,nl}80211: set and get default mesh power mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: fix cmp_hidden_bss
-Date: Wed, 28 Nov 2012 22:44:55 +0100
-Message-Id: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net> (sfid-20121128_224434_557114_B5AB2119)
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>
+Date: Sat, 17 Nov 2012 09:59:05 +0100
+In-Reply-To: <1353134886-13256-4-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1353134886-13256-4-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2012-11-16 at 22:47 -0800, Marco Porsch wrote:
+> Possibilities of setting and getting mesh default power mode are
+> added.
 
-The cmp_bss() comparator function uses memcmp() to
-compare the SSID. This means that cmp_hidden_bss()
-needs to similarly return a number bigger than zero
-(use 1) instead of -1 when ie1 is bigger than ie2,
-which is the case if an ie2 byte is non-zero.
+ditto.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 9233910..57855bc 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -472,7 +472,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
- 	/* zeroed SSID ie is another indication of a hidden bss */
- 	for (i = 0; i < ie2[1]; i++)
- 		if (ie2[i + 2])
--			return -1;
-+			return 1;
- 
- 	return 0;
- }
--- 
-1.8.0
+> + * @NL80211_MESHCONF_POWER_MODE: default link-specific power save
+> mode
+
+please describe the type of the attribute (u8)
+
+
+> +       FILL_IN_MESH_PARAM_IF_SET(tb, cfg, power_mode,
+> +                                 mask, NL80211_MESHCONF_POWER_MODE,
+> +                                 nla_get_u8);
+
+Huh, ok, how did this FILL_IN_MESH_PARAM thing ever get here ... sad I
+missed that, all of those are *completely* missing range checks.
+
+Please add them here, and somebody should also follow up with a patch to
+fix them on the other attributes.
+
+johannes
 
