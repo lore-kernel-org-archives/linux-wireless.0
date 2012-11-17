@@ -1,229 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31519 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751608Ab2KPMxo (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:39846 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102Ab2KQGtx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 07:53:44 -0500
-To: <ath6kl-devel@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 7/8] ath6kl: Move and rename ath6kl_cleanup_vif function
-Date: Fri, 16 Nov 2012 18:23:36 +0530
-Message-ID: <1353070416-6113-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121116_135347_296422_64C2954E)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 17 Nov 2012 01:49:53 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Subject: [RFC 2/4] iw: add default mesh power mode to mesh config
+Date: Fri, 16 Nov 2012 22:49:37 -0800
+Message-Id: <1353134979-13314-3-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_074956_449882_6FEC6551)
+In-Reply-To: <1353134979-13314-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353134979-13314-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+The default mesh power mode is the power mode that will be assigned to newly
+established peer links.
 
-Rename ath6kl_cleanup_vif function as 'ath6kl_cfg80211_vif_stop'
-which is the more appropriate name considering the functionality
-of the module and vif specific cleanup is actually done by
-ath6kl_cfg80211_vif_cleanup. Also move it to cfg80211.c.
-Also make ath6kl_cfg80211_sta_bmiss_enhance as static function.
-This addresses a FIXME/TODO.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   81 +++++++++++++++++++---------
- drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 -
- drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
- drivers/net/wireless/ath/ath6kl/init.c     |   34 +-----------
- 4 files changed, 58 insertions(+), 61 deletions(-)
+ mesh.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 49 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 8325daf..dc059e2 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -427,6 +427,30 @@ static bool ath6kl_is_tx_pending(struct ath6kl *ar)
- 	return ar->tx_pending[ath6kl_wmi_get_control_ep(ar->wmi)] == 0;
- }
- 
-+static void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif,
-+					      bool enable)
-+{
-+	int err;
-+
-+	if (WARN_ON(!test_bit(WMI_READY, &vif->ar->flag)))
-+		return;
-+
-+	if (vif->nw_type != INFRA_NETWORK)
-+		return;
-+
-+	if (!test_bit(ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
-+		      vif->ar->fw_capabilities))
-+		return;
-+
-+	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s fw bmiss enhance\n",
-+		   enable ? "enable" : "disable");
-+
-+	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
-+					       vif->fw_vif_idx, enable);
-+	if (err)
-+		ath6kl_err("failed to %s enhanced bmiss detection: %d\n",
-+			   enable ? "enable" : "disable", err);
-+}
- 
- static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 				   struct cfg80211_connect_params *sme)
-@@ -1507,7 +1531,7 @@ static int ath6kl_cfg80211_del_iface(struct wiphy *wiphy,
- 	list_del(&vif->list);
- 	spin_unlock_bh(&ar->list_lock);
- 
--	ath6kl_cleanup_vif(vif, test_bit(WMI_READY, &ar->flag));
-+	ath6kl_cfg80211_vif_stop(vif, test_bit(WMI_READY, &ar->flag));
- 
- 	ath6kl_cfg80211_vif_cleanup(vif);
- 
-@@ -2667,30 +2691,6 @@ static int ath6kl_set_ies(struct ath6kl_vif *vif,
+diff --git a/mesh.c b/mesh.c
+index 26fd1b8..b2eb69d 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -73,6 +73,24 @@ static uint32_t _parse_u8_as_bool(const char *str, _any *ret)
  	return 0;
  }
  
--void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable)
--{
--	int err;
--
--	if (WARN_ON(!test_bit(WMI_READY, &vif->ar->flag)))
--		return;
--
--	if (vif->nw_type != INFRA_NETWORK)
--		return;
--
--	if (!test_bit(ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
--		      vif->ar->fw_capabilities))
--		return;
--
--	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s fw bmiss enhance\n",
--		   enable ? "enable" : "disable");
--
--	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
--					       vif->fw_vif_idx, enable);
--	if (err)
--		ath6kl_err("failed to %s enhanced bmiss detection: %d\n",
--			   enable ? "enable" : "disable", err);
--}
--
- static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
- 				u8 *rsn_capab)
- {
-@@ -3546,6 +3546,37 @@ static int ath6kl_cfg80211_vif_init(struct ath6kl_vif *vif)
- 	return 0;
- }
- 
-+void ath6kl_cfg80211_vif_stop(struct ath6kl_vif *vif, bool wmi_ready)
++static uint32_t _parse_u8_power_mode(const char *str, _any *ret)
 +{
-+	static u8 bcast_mac[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+	bool discon_issued;
++	unsigned long int v;
 +
-+	netif_stop_queue(vif->ndev);
++	/* Parse attribute for the name of power mode */
++	if (!strcmp(str, "active"))
++		v = NL80211_MESH_POWER_ACTIVE;
++	else if (!strcmp(str, "light"))
++		v = NL80211_MESH_POWER_LIGHT_SLEEP;
++	else if (!strcmp(str, "deep"))
++		v = NL80211_MESH_POWER_DEEP_SLEEP;
++	else
++		return 0xff;
 +
-+	clear_bit(WLAN_ENABLED, &vif->flags);
-+
-+	if (wmi_ready) {
-+		discon_issued = test_bit(CONNECTED, &vif->flags) ||
-+				test_bit(CONNECT_PEND, &vif->flags);
-+		ath6kl_disconnect(vif);
-+		del_timer(&vif->disconnect_timer);
-+
-+		if (discon_issued)
-+			ath6kl_disconnect_event(vif, DISCONNECT_CMD,
-+						(vif->nw_type & AP_NETWORK) ?
-+						bcast_mac : vif->bssid,
-+						0, NULL, 0);
-+	}
-+
-+	if (vif->scan_req) {
-+		cfg80211_scan_done(vif->scan_req, true);
-+		vif->scan_req = NULL;
-+	}
-+
-+	/* need to clean up enhanced bmiss detection fw state */
-+	ath6kl_cfg80211_sta_bmiss_enhance(vif, false);
++	ret->u.as_8 = (uint8_t)v;
++	return 0;
 +}
 +
- void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif)
+ static uint32_t _parse_u16(const char *str, _any *ret)
  {
- 	struct ath6kl *ar = vif->ar;
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-index 3d6a0b5..7a42b49 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-@@ -61,7 +61,5 @@ void ath6kl_cfg80211_cleanup(struct ath6kl *ar);
- 
- struct ath6kl *ath6kl_cfg80211_create(void);
- void ath6kl_cfg80211_destroy(struct ath6kl *ar);
--/* TODO: remove this once ath6kl_vif_cleanup() is moved to cfg80211.c */
--void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable);
- 
- #endif /* ATH6KL_CFG80211_H */
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 3b2dfc1..f7ef041 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -937,7 +937,7 @@ void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
- 			 bool wait_fot_compltn, bool cold_reset);
- void ath6kl_init_control_info(struct ath6kl_vif *vif);
- struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar);
--void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready);
-+void ath6kl_cfg80211_vif_stop(struct ath6kl_vif *vif, bool wmi_ready);
- int ath6kl_init_hw_start(struct ath6kl *ar);
- int ath6kl_init_hw_stop(struct ath6kl *ar);
- int ath6kl_init_fetch_firmwares(struct ath6kl *ar);
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 4fddf12..3779f1d 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1712,38 +1712,6 @@ void ath6kl_init_hw_restart(struct ath6kl *ar)
- 	}
+ 	char *endptr = NULL;
+@@ -115,6 +133,26 @@ static void _print_u8(struct nlattr *a)
+ 	printf("%d", nla_get_u8(a));
  }
  
--/* FIXME: move this to cfg80211.c and rename to ath6kl_cfg80211_vif_stop() */
--void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready)
--{
--	static u8 bcast_mac[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
--	bool discon_issued;
--
--	netif_stop_queue(vif->ndev);
--
--	clear_bit(WLAN_ENABLED, &vif->flags);
--
--	if (wmi_ready) {
--		discon_issued = test_bit(CONNECTED, &vif->flags) ||
--				test_bit(CONNECT_PEND, &vif->flags);
--		ath6kl_disconnect(vif);
--		del_timer(&vif->disconnect_timer);
--
--		if (discon_issued)
--			ath6kl_disconnect_event(vif, DISCONNECT_CMD,
--						(vif->nw_type & AP_NETWORK) ?
--						bcast_mac : vif->bssid,
--						0, NULL, 0);
--	}
--
--	if (vif->scan_req) {
--		cfg80211_scan_done(vif->scan_req, true);
--		vif->scan_req = NULL;
--	}
--
--	/* need to clean up enhanced bmiss detection fw state */
--	ath6kl_cfg80211_sta_bmiss_enhance(vif, false);
--}
--
- void ath6kl_stop_txrx(struct ath6kl *ar)
++static void _print_u8_power_mode(struct nlattr *a)
++{
++	unsigned long v = nla_get_u8(a);
++
++	switch (v) {
++	case NL80211_MESH_POWER_ACTIVE:
++		printf("active");
++		break;
++	case NL80211_MESH_POWER_LIGHT_SLEEP:
++		printf("light");
++		break;
++	case NL80211_MESH_POWER_DEEP_SLEEP:
++		printf("deep");
++		break;
++	default:
++		printf("undefined");
++		break;
++	}
++}
++
+ static void _print_u16(struct nlattr *a)
  {
- 	struct ath6kl_vif *vif, *tmp_vif;
-@@ -1763,7 +1731,7 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
- 	list_for_each_entry_safe(vif, tmp_vif, &ar->vif_list, list) {
- 		list_del(&vif->list);
- 		spin_unlock_bh(&ar->list_lock);
--		ath6kl_cleanup_vif(vif, test_bit(WMI_READY, &ar->flag));
-+		ath6kl_cfg80211_vif_stop(vif, test_bit(WMI_READY, &ar->flag));
- 		rtnl_lock();
- 		ath6kl_cfg80211_vif_cleanup(vif);
- 		rtnl_unlock();
+ 	printf("%d", nla_get_u16(a));
+@@ -221,6 +259,8 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
+ 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
+ 	{"mesh_dtim_period", NL80211_MESHCONF_DTIM_PERIOD,
+ 	_my_nla_put_u8, _parse_u8, _print_u8},
++	{"mesh_power_mode", NL80211_MESHCONF_POWER_MODE,
++	_my_nla_put_u8, _parse_u8_power_mode, _print_u8_power_mode},
+ };
+ 
+ static void print_all_mesh_param_descr(void)
+@@ -298,8 +338,15 @@ static int set_interface_meshparam(struct nl80211_state *state,
+ 		/* Parse the new value */
+ 		ret = mdescr->parse_fn(value, &any);
+ 		if (ret != 0) {
+-			printf("%s must be set to a number "
+-			       "between 0 and %u\n", mdescr->name, ret);
++			if (mdescr->mesh_param_num
++			    == NL80211_MESHCONF_POWER_MODE)
++				printf("%s must be set to active, light or "
++					"deep.\n", mdescr->name);
++			else
++				printf("%s must be set to a number "
++					"between 0 and %u\n",
++					mdescr->name, ret);
++
+ 			return 2;
+ 		}
+ 
 -- 
-1.7.0.4
+1.7.9.5
 
