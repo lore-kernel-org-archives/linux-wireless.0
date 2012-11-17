@@ -1,37 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:38151 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755102Ab2KMLUp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 06:20:45 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k_hw: Update AR9485 initvals
-References: <1352698004-10790-1-git-send-email-sujith@msujith.org>
-	<87pq3iy1mr.fsf@purkki.adurom.net>
-	<20641.31202.323483.191549@gargle.gargle.HOWL>
-Date: Tue, 13 Nov 2012 13:20:38 +0200
-In-Reply-To: <20641.31202.323483.191549@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Tue, 13 Nov 2012 04:06:18 +0530")
-Message-ID: <87lie5ycjd.fsf@purkki.adurom.net> (sfid-20121113_122051_202356_69404B6E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:48649 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102Ab2KQGsi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Nov 2012 01:48:38 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>
+Subject: [RFC 03/14] {cfg,nl}80211: set and get default mesh power mode
+Date: Fri, 16 Nov 2012 22:47:55 -0800
+Message-Id: <1353134886-13256-4-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_074842_442341_5B677543)
+In-Reply-To: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+Possibilities of setting and getting mesh default power mode are
+added.
 
-> Kalle Valo wrote:
->> This doesn't answer the most important question "Why?". For example,
->> does it fix something, is it just a synch up to get up-to-date with the
->> system team or something else?
->
-> A sync - almost a year's backlog of changes.
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+---
+ include/uapi/linux/nl80211.h |    3 +++
+ net/mac80211/cfg.c           |    2 ++
+ net/wireless/nl80211.c       |    8 +++++++-
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
-Ok, makes sense. But you should document in the commit log so that
-people understand what's happening and if there's a need to backport
-etc.
-
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index ee80ffc..a6b2886 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2329,6 +2329,8 @@ enum nl80211_mesh_power_mode {
+  *
+  * @NL80211_MESHCONF_DTIM_PERIOD: DTIM period to use
+  *
++ * @NL80211_MESHCONF_POWER_MODE: default link-specific power save mode
++ *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+  */
+ enum nl80211_meshconf_params {
+@@ -2360,6 +2362,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
+ 	NL80211_MESHCONF_BEACON_INTERVAL,
+ 	NL80211_MESHCONF_DTIM_PERIOD,
++	NL80211_MESHCONF_POWER_MODE,
+ 
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index aef8445..84d63fc 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1678,6 +1678,8 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 		sdata->vif.bss_conf.dtim_period = nconf->dtim_period;
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ 	}
++	if (_chg_mesh_attr(NL80211_MESHCONF_POWER_MODE, mask))
++		conf->power_mode = nconf->power_mode;
+ 	return 0;
+ }
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 636634d..0312d74 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3774,7 +3774,9 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
+ 	    nla_put_u16(msg, NL80211_MESHCONF_BEACON_INTERVAL,
+ 			cur_params.beacon_interval) ||
+ 	    nla_put_u8(msg, NL80211_MESHCONF_DTIM_PERIOD,
+-		       cur_params.dtim_period))
++		       cur_params.dtim_period) ||
++	    nla_put_u8(msg, NL80211_MESHCONF_POWER_MODE,
++		       cur_params.power_mode))
+ 		goto nla_put_failure;
+ 	nla_nest_end(msg, pinfoattr);
+ 	genlmsg_end(msg, hdr);
+@@ -3815,6 +3817,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
+ 	[NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_BEACON_INTERVAL] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_DTIM_PERIOD] = { .type = NLA_U8 },
++	[NL80211_MESHCONF_POWER_MODE] = { .type = NLA_U8 },
+ };
+ 
+ static const struct nla_policy
+@@ -3939,6 +3942,9 @@ do {\
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dtim_period,
+ 				  mask, NL80211_MESHCONF_DTIM_PERIOD,
+ 				  nla_get_u8);
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, power_mode,
++				  mask, NL80211_MESHCONF_POWER_MODE,
++				  nla_get_u8);
+ 	if (mask_out)
+ 		*mask_out = mask;
+ 
 -- 
-Kalle Valo
+1.7.9.5
+
