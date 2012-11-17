@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:58462 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459Ab2KPIvC (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:39859 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102Ab2KQGt5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 03:51:02 -0500
-Received: by mail-vc0-f174.google.com with SMTP id fk26so2606709vcb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2012 00:51:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1353055762.9490.0.camel@jlt4.sipsolutions.net>
-References: <1353055599-8332-1-git-send-email-eliad@wizery.com>
-	<1353055762.9490.0.camel@jlt4.sipsolutions.net>
-Date: Fri, 16 Nov 2012 10:51:00 +0200
-Message-ID: <CAB3XZEezU0DTkhQQsRs06GSbSnWTkMof_PYX9ppXjyMHkguF6g@mail.gmail.com> (sfid-20121116_095106_683453_DCEAC01E)
-Subject: Re: [PATCH] mac80211: fix invalid kfree on sched scan
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 17 Nov 2012 01:49:57 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [RFC 4/4] iw: add mesh awake window to mesh config
+Date: Fri, 16 Nov 2012 22:49:39 -0800
+Message-Id: <1353134979-13314-5-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_081526_021223_F72F56E7)
+In-Reply-To: <1353134979-13314-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353134979-13314-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 16, 2012 at 10:49 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-11-16 at 10:46 +0200, Eliad Peller wrote:
->> Commit 30dd3ed ("mac80211: don't hang on to sched_scan_ies")
->> converted sched_scan_ies to a local variable.
->> However, since it wasn't initialized, in a case of
->> unsupported band, sched_scan_ies.ie[] was uninitialized,
->> and freeing it could corrupt the memory.
->>
->> Fix it by simply initializing sched_scan_ies to 0.
->
-> Yep, already have that in the tree :-)
->
-> commit bca1e29fb54c51856dda6772d488d41b10ed91da
-> Author: David Spinadel <david.spinadel@intel.com>
-> Date:   Mon Oct 29 14:49:41 2012 +0200
->
->     mac80211: init sched_scan_ies
->
->
-oops... sorry :)
+The awake window is the duration the local STA will stay awake after sending
+its own beacon in PS mode. The value can be modified as part of the mesh
+params.
 
-Eliad.
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ mesh.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mesh.c b/mesh.c
+index b2eb69d..c8de327 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -261,6 +261,8 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
+ 	_my_nla_put_u8, _parse_u8, _print_u8},
+ 	{"mesh_power_mode", NL80211_MESHCONF_POWER_MODE,
+ 	_my_nla_put_u8, _parse_u8_power_mode, _print_u8_power_mode},
++	{"mesh_awake_window", NL80211_MESHCONF_AWAKE_WINDOW,
++	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
+ };
+ 
+ static void print_all_mesh_param_descr(void)
+-- 
+1.7.9.5
+
