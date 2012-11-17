@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateout03.mbox.net ([165.212.64.25]:53914 "EHLO gwo3.mbox.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161166Ab2KNLUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 06:20:33 -0500
-Received: from gwo3.mbox.net (localhost [127.0.0.1])
-	by gwo3.mbox.net (Postfix) with ESMTP id 630A3E001D2E
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2012 11:09:33 +0000 (UTC)
-Message-ID: <50A37BE6.1010600@ok-labs.com> (sfid-20121114_122040_993611_1D26934F)
-Date: Wed, 14 Nov 2012 22:09:26 +1100
-From: Jonathan Gordon <jdgordon@ok-labs.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:42437 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753780Ab2KQAIH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Nov 2012 19:08:07 -0500
+Date: Fri, 16 Nov 2012 16:10:46 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Mahesh Palivela <maheshp@posedge.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: VHT support, take 2
+Message-ID: <20121117001046.GP3354@lenteja.do-not-panic.com> (sfid-20121117_010812_345955_92E68DD3)
+References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
+ <1352492493.28302.7.camel@jlt4.sipsolutions.net>
+ <50A4DB80.2020209@posedge.com>
+ <1353072509.9490.7.camel@jlt4.sipsolutions.net>
+ <50A65443.2000101@broadcom.com>
 MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-Subject: nl80211 notification when scanning is finished?
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <50A65443.2000101@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Fri, Nov 16, 2012 at 03:57:07PM +0100, Arend van Spriel wrote:
+> On 11/16/2012 02:28 PM, Johannes Berg wrote:
+> >On Thu, 2012-11-15 at 17:39 +0530, Mahesh Palivela wrote:
+> >
+> >>vht regulatory code already posted long back. After went through several
+> >>back n forth emails from Luis Rodriguez, accepted the patch.
+> >>But not commited anywhere.
+> >>Now I have to change that to match to new structs like chan_def etc from
+> >>the vht channel work patches you posted 5 days back.
+> >>
+> >>Also helper funcs to replace chan->flags bit checking to dynamically
+> >>check channel through regulatory
+> >
+> >Yeah, actually I'm not sure it's that easy. We'll also need per
+> >bandwidth TX power restrictions, raise the 40 MHz bandwidth restriction
+> >to 160 MHz (or get rid of it entirely), etc. That seems to require a new
+> >regulatory database format?
+> 
+> Luis discussed the regulatory framework during the wireless summit
+> in Barcelona last week. My (possibly limited) recollection was that
+> the current regulatory code can accommodate VHT limits as well. I
+> assume that also includes the regulatory database format.
 
-I'm writing a fake wifi driver (basically a proxy between two devices) 
-which uses nl80211 to talk to a real wifi device, and it mostly works, 
-but I have a problem with the scanning interface.
+The only thing mentioned which I had not considered is the per bandwidth
+TX power restrictions. Where did these come from ?
 
- From userland, after sending the NL80211_CMD_GET_SCAN the results come 
-in as a single netlink read (split up and the handler gets called once 
-for each) and I know it is finished after that read, but I'm triggering 
-the scan from a different kernel driver (so driverA -> driverB -> genl 
-to userland -> nl80211 -> userland -> driverB -> driverA). I don't want 
-to modify the nl80211 message (with the theory that i could go driverB 
--> nl80211 directly later) but I have no way to know when scanning 
-results have been fully sent. (Or even how many results to expect so I 
-can finally call cfg80211_scan_done() in driverA when that many stations 
-have been reported from nl80211).
-
-Is there any way to do what I want? Is it possible to know when we get 
-the NLMSG_DONE type from the post_doit?
-Is it possible to figure it out using a combination of the pre_doit() 
-and post_doit() callbacks?
-
-The really nasty hack I'm using currently is having a timeout of 1s 
-after I receive a NL80211_CMD_GET_SCAN (resetting the timeout for each 
-one) but I'm praying there is a nicer way?
-
-Thanks.
-Jonathan Gordon
-
-P.S yes, the design is convoluted, but there is no other way to do what 
-we want. :)
+  Luis
