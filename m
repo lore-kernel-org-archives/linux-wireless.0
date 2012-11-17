@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1183 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755708Ab2KVSsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:48:42 -0500
-Message-ID: <50AE2BB8.106@broadcom.com> (sfid-20121122_194848_463936_391BEBA7)
-Date: Thu, 22 Nov 2012 14:42:16 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	"Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 12/22] brcmsmac: Add support for writing debug
- messages to the trace buffer
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-13-git-send-email-seth.forshee@canonical.com>
- <50AA9824.6020308@broadcom.com>
-In-Reply-To: <50AA9824.6020308@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:48707 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752389Ab2KQGs5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Nov 2012 01:48:57 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [RFC 13/14] mac80211: add TIM IE to mesh beacons
+Date: Fri, 16 Nov 2012 22:48:05 -0800
+Message-Id: <1353134886-13256-14-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_074903_443571_9FF73B96)
+In-Reply-To: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/2012 09:35 PM, Arend van Spriel wrote:
-> On 11/15/2012 03:08 PM, Seth Forshee wrote:
->> Add a new brcmsmac_msg trace system to enable writing of debug messages
->> to the trace buffer, and add brcms_* macros for storing device debug
->> messages in the trace buffer in addition to the printk log buffer.
-> 
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Arend van Spriel <arend@broadcom.com>
->> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
->> ---
->>   drivers/net/wireless/brcm80211/brcmsmac/Makefile   |    3 +-
->>   .../brcm80211/brcmsmac/brcms_trace_events.h        |   68
->> +++++++++++++++++++-
->>   drivers/net/wireless/brcm80211/brcmsmac/debug.c    |   44 +++++++++++++
->>   drivers/net/wireless/brcm80211/brcmsmac/debug.h    |   40 ++++++++++++
->>   4 files changed, 151 insertions(+), 4 deletions(-)
->>   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/debug.c
->>   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/debug.h
+Create a TIM IE similarly to AP mode and add it to mesh beacons.
+Use the peer's link ID instead of the access point's association ID.
 
-Hi Seth,
+Since the TIM map only supports announcing buffered frames for
+IEEE80211_MAX_AID STA (2007), we mod down our mesh LLID/PLID to fit.
 
-Internally, we already had a debug.[ch] as we added some debugfs
-functionality. I am merging your changes into it, but that means your
-code will be put under the same permissive license as the other source
-code, ie. Dual BSD/GPL. So I feel obliged to ask: Are you ok with me
-doing that and do you want me to add your name in the copyright notice?
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ net/mac80211/tx.c |   27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-Gr. AvS
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a62deaf..bfcda52 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2333,6 +2333,31 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 	}
+ }
+ 
++static int mesh_add_tim_ie(struct sk_buff *skb,
++			   struct ieee80211_sub_if_data *sdata,
++			   u16 *tim_offset, u16 *tim_length)
++{
++	struct ieee80211_local *local = sdata->local;
++	u16 tmp = skb->len;
++
++	if (local->tim_in_locked_section) {
++		ieee80211_beacon_add_tim(sdata, &sdata->u.mesh.ps, skb);
++	} else {
++		unsigned long flags;
++
++		spin_lock_irqsave(&local->tim_lock, flags);
++		ieee80211_beacon_add_tim(sdata, &sdata->u.mesh.ps, skb);
++		spin_unlock_irqrestore(&local->tim_lock, flags);
++	}
++
++	if (tim_offset)
++		*tim_offset = tmp - local->hw.extra_tx_headroom;
++	if (tim_length)
++		*tim_length = skb->len - tmp;
++
++	return 0;
++}
++
+ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 					 struct ieee80211_vif *vif,
+ 					 u16 *tim_offset, u16 *tim_length)
+@@ -2440,6 +2465,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 				    2 + /* NULL SSID */
+ 				    2 + 8 + /* supported rates */
+ 				    2 + 3 + /* DS params */
++				    256 + /* TIM IE */
+ 				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
+ 				    2 + sizeof(struct ieee80211_ht_cap) +
+ 				    2 + sizeof(struct ieee80211_ht_operation) +
+@@ -2473,6 +2499,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 
+ 		if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
+ 		    mesh_add_ds_params_ie(skb, sdata) ||
++		    mesh_add_tim_ie(skb, sdata, tim_offset, tim_length) ||
+ 		    ieee80211_add_ext_srates_ie(sdata, skb, true, band) ||
+ 		    mesh_add_rsn_ie(skb, sdata) ||
+ 		    mesh_add_ht_cap_ie(skb, sdata) ||
+-- 
+1.7.9.5
 
