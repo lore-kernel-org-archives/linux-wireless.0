@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42092 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56486 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752247Ab2KMTjQ (ORCPT
+	with ESMTP id S1752399Ab2KQJ2d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 14:39:16 -0500
-Message-ID: <1352835582.9466.12.camel@jlt4.sipsolutions.net> (sfid-20121113_203919_586192_ADC6A050)
-Subject: Re: [PATCH v5 1/2] wireless: Driver for 60GHz card wil6210
+	Sat, 17 Nov 2012 04:28:33 -0500
+Message-ID: <1353144547.9543.31.camel@jlt4.sipsolutions.net> (sfid-20121117_102836_998214_B754D5D6)
+Subject: Re: [RFC 11/14] {cfg,nl}80211: add awake window to mesh config
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Tue, 13 Nov 2012 20:39:42 +0100
-In-Reply-To: <2199722.SIyuOP2QQY@lx-vladimir>
-References: <20121108193010.GC3354@lenteja.do-not-panic.com>
-	 <1647271.ZFHae4zFan@lx-vladimir> <87txsuybw4.fsf@purkki.adurom.net>
-	 <2199722.SIyuOP2QQY@lx-vladimir>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>
+Date: Sat, 17 Nov 2012 10:29:07 +0100
+In-Reply-To: <1353134886-13256-12-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1353134886-13256-12-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-12 at 19:58 +0200, Vladimir Kondratiev wrote:
+On Fri, 2012-11-16 at 22:48 -0800, Marco Porsch wrote:
 
-> Yes, it make sense. I noticed also I have to use __raw_{read|write}l functions 
-> to copy buffers to/from PCI iomem, as otherwise io{read|write}32 would swap 
-> bytes for big endian hosts, since PCI is little endian.
+> --- a/net/mac80211/cfg.c
 
-No, this is what you want, they simple read/write host endian (u32)
-values.
+*looks at subject*
+Oops.
 
 johannes
 
