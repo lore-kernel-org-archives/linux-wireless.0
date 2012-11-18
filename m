@@ -1,86 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-out.inet.fi ([195.156.147.13]:58107 "EHLO kirsi1.inet.fi"
+Received: from mms2.broadcom.com ([216.31.210.18]:2353 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753277Ab2KYTK4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 14:10:56 -0500
-Subject: Re: Atheros AR3012 problem in Ubuntu 12.04LTS
-From: Jukka Kivari <jukka.kivari@pohjolantietotekniikka.fi>
-Reply-To: jukka.kivari@pohjolantietotekniikka.fi
-To: Kalle Valo <kvalo@adurom.com>
-Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
-In-Reply-To: <87a9u5wraw.fsf@purkki.adurom.net>
-References: <1353859765.3743.14.camel@EDAnovaSRV1>
-	 <87a9u5wraw.fsf@purkki.adurom.net>
-Content-Type: text/plain
-Date: Sun, 25 Nov 2012 21:10:47 +0200
-Message-Id: <1353870648.2973.9.camel@EDAnovaSRV1> (sfid-20121125_201058_358765_746C0401)
-Mime-Version: 1.0
+	id S1752073Ab2KRSa1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Nov 2012 13:30:27 -0500
+Message-ID: <50A92935.5070802@broadcom.com> (sfid-20121118_193125_756391_ED21334F)
+Date: Sun, 18 Nov 2012 19:30:13 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Mark Ellis" <m@rkellis.com>
+cc: linux-kernel@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>
+Subject: Re: PROBLEM: REGRESSION in drivers/platform/x86/dell-laptop.c
+References: <50A8BCA6.7080102@rkellis.com>
+In-Reply-To: <50A8BCA6.7080102@rkellis.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Thanks for quick response.
-
-We are using standard Ubuntu release. We don't have access to Dell
-pre-installed version (yet) as it's not available/supported in Finland.
-I have asked it from Dell but let's see if we get it or not.
-
-BT isn't working on standard 11.10 Ubuntu either, nor in 12.10.
-
-We haven't tried manual binding yet. We'll check it.
-
-
--- 
-
--Jukka
-
-
-****************
-Powered by Linux
-****************
-
-
-
-
------Original Message-----
-From: Kalle Valo <kvalo@adurom.com>
-To: jukka.kivari@pohjolantietotekniikka.fi
-Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: Atheros AR3012 problem in Ubuntu 12.04LTS
-Date: Sun, 25 Nov 2012 19:00:55 +0200
-
-Moro,
-
-Jukka Kivari <jukka.kivari@pohjolantietotekniikka.fi> writes:
-
-> We have found out the Device is AR3012, VID/PID 0cf3:a003. It seems Dell
-> has some special driver for this in pre-installed Ubuntu
-> 11.10 
-
-So the driver works with the pre-installed version?
-
-Are the sources for this pre-installed Ubuntu publically available
-somewhere or is it just a stock Ubuntu release? Being able to see kernel
-sources from that release would help.
-
-> My current analysis of the problem is:
+On 11/18/2012 11:47 AM, Mark Ellis wrote:
+> 1. rfkill code removal causes hang
 >
-> 1) BT device is recognized correctly (PID=e003)
-> 2) Ubuntu 12.04 has all drivers and firmaware available
+> 2. the rfkill code was removed from this driver in commit
+> 53039f222c548bfc119eea6df4dca2b57550e271 this results in my computer
+> hanging (dell n5050) if booting with the wireless (hardware) disabled.
+> downgrading this module to the version prior to this commit fixes the
+> issue.
 
-I didn't quite get this 2) part. How do you know that all drivers and
-firmware are available? Earlier you mentioned about some special driver.
+The commit you mention does not touch dell-laptop.c. The commit before 
+that one doe, but it is only adding code. Digging the tree I found this 
+one between kernel v3.4 and v3.5-rc1:
 
-> 3) driver/firmaware loading fails, there is no PID e003 in btusb.c or
-> ath3k.c
+commit a6c2390cd6d2083d27a2359658e08f2d3df375ac
+Author: Matthew Garrett <mjg@redhat.com>
+Date:   Fri Jun 1 12:46:56 2012 -0400
 
-Have you tried to manually bind the device to those drivers? With very
-good luck it might work (but I doubt it).
+     dell-laptop: Remove rfkill code
 
-http://lwn.net/Articles/143397/
+     The interface just doesn't work on some machines, and Dell haven't been
+     able to tell us either which machines those are or what we should be
+     doing instead. This would be fine, except it results in userspace 
+ending
+     up confused and general sadness. So let's just rip it out for now.
 
-Also did you file a bug to Ubuntu? If the driver works in 11.10 but not
-in 12.04 that's a regression.
+     Signed-off-by: Matthew Garrett <mjg@redhat.com>
 
+Actually, the behavior you describe and given you have a BCM4313 running 
+with brcmsmac I may point out that this driver has an issue coming up 
+with wireless disabled. This has been fixed in 3.7 kernel so you may 
+want to try:
+
+commit 82d8eba358badb466a4e988ecabf0668a8d92e9c
+Author: Piotr Haber <phaber@broadcom.com>
+Date:   Wed Sep 19 22:21:15 2012 +0200
+
+     brcmsmac: don't start device when RfKill is engaged
+
+     This patch fixes a bug when device is being started
+     while RfKill switch is engaged, leading to hang
+     due to partial initialization of hardware.
+
+     Tested-by: <dragonn@op.pl>
+     Reviewed-by: Arend van Spriel <arend@broadcom.com>
+     Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+     Signed-off-by: Piotr Haber <phaber@broadcom.com>
+     Signed-off-by: Arend van Spriel <arend@broadcom.com>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Maybe I should resubmit it to stable. Now there is an idea.
+
+Gr. AvS
 
