@@ -1,81 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:42058 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034Ab2K2PuN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60500 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353Ab2KRLDR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 10:50:13 -0500
-Message-ID: <1354204171.5254.11.camel@cumari.coelho.fi> (sfid-20121129_165018_077700_3AE1EA36)
-Subject: Re: [PATCH 20/20] wl18xx: set last Tx rate from FW status
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 29 Nov 2012 17:49:31 +0200
-In-Reply-To: <CA+XVXfdsymv3bSp4SSTCCPCx8igKgE=ODoyT+vf-LRa48cX2xw@mail.gmail.com>
-References: <1353998701-18171-1-git-send-email-arik@wizery.com>
-	 <1353998701-18171-21-git-send-email-arik@wizery.com>
-	 <1354193471.5254.6.camel@cumari.coelho.fi>
-	 <CA+XVXfdsymv3bSp4SSTCCPCx8igKgE=ODoyT+vf-LRa48cX2xw@mail.gmail.com>
+	Sun, 18 Nov 2012 06:03:17 -0500
+Message-ID: <1353236622.9649.2.camel@jlt4.sipsolutions.net> (sfid-20121118_120327_588286_11CD74EA)
+Subject: Re: VHT support, take 2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Mahesh Palivela <maheshp@posedge.com>,
+	linux-wireless@vger.kernel.org, green@qca.qualcomm.com,
+	dquan@qca.qualcomm.com
+Date: Sun, 18 Nov 2012 12:03:42 +0100
+In-Reply-To: <20121117233409.GT3354@lenteja.do-not-panic.com>
+References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
+	 <1352492493.28302.7.camel@jlt4.sipsolutions.net>
+	 <50A4DB80.2020209@posedge.com>
+	 <1353072509.9490.7.camel@jlt4.sipsolutions.net>
+	 <50A65443.2000101@broadcom.com>
+	 <20121117001046.GP3354@lenteja.do-not-panic.com>
+	 <1353142108.9543.4.camel@jlt4.sipsolutions.net>
+	 <20121117233409.GT3354@lenteja.do-not-panic.com>
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-29 at 17:33 +0200, Arik Nemtsov wrote:
-> On Thu, Nov 29, 2012 at 2:51 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Tue, 2012-11-27 at 08:45 +0200, Arik Nemtsov wrote:
-> >> Obtain the last Tx rate from the FW status and translate it to
-> >> the mac80211 rate+flag format before sending it up via the Tx status.
-> >>
-> >> Bump up the min FW version to the first FW that supports the rate byte.
-> >>
-> >> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> >> ---
-> >
-> > [...]
-> >
-> >> +static
-> >> +void wl18xx_get_last_tx_rate(struct wl1271 *wl, struct ieee80211_vif *vif,
-> >> +                          u8 *tx_rate, u8 *tx_rate_flags)
-> >
-> > [...]
-> >
-> >> +     /*
-> >> +      * first pass info->control.vif while it's valid, and then fill out
-> >> +      * the info->status structures
-> >> +      */
-> >> +     wl18xx_get_last_tx_rate(wl, info->control.vif,
-> >> +                             &info->status.rates[0].idx,
-> >> +                             &info->status.rates[0].flags);
-> >
-> > This doesn't work anymore, because commit 8bc83c24 (mac80211: support
-> > VHT rates in TX info) changed the struct like this:
-> >
-> > @@ -560,10 +568,32 @@ enum mac80211_rate_control_flags {
-> >   */
-> >  struct ieee80211_tx_rate {
-> >         s8 idx;
-> > -       u8 count;
-> > -       u8 flags;
-> > +       u16 count:5,
-> > +           flags:11;
-> >  } __packed;
-> >
-> > So you can't get the address of flags anymore.
-> >
-> > Do you mind respinning it?
+On Sat, 2012-11-17 at 15:34 -0800, Luis R. Rodriguez wrote:
+
+> > > The only thing mentioned which I had not considered is the per bandwidth
+> > > TX power restrictions. Where did these come from ?
+> > 
+> > As usual, they come from the regulations :-)
 > 
-> Technically you should do it, since your master branch was pointing to
-> an older revision at the time. But I'm feeling generous.
+> Which one in particular decided to add per bandwidth
+> TX power restrictions for VHT ?
 
-Well, yes I should do it, kind of.
+German regulations have always had bandwidth restrictions, we've just
+fuzzed around it by restricting it to the lowest common power between 20
+and 40 MHz bandwidth.
 
-
-> I'll also rebase the part 3 series on top of the latest code to fix
-> any breakage. So I'll at least re-spin the patches containing
-> ieee80211_iterate_active_interfaces() (as the prototype was changed)
-
-Thanks! :)
-
---
-Luca.
+johannes
 
