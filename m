@@ -1,103 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51669 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932945Ab2KWHmd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 02:42:33 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] mac80211: fix RX chains configuration
-Date: Fri, 23 Nov 2012 08:42:58 +0100
-Message-Id: <1353656580-12134-2-git-send-email-johannes@sipsolutions.net> (sfid-20121123_084236_760953_121D63CC)
-In-Reply-To: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net>
-References: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net>
+Received: from perches-mx.perches.com ([206.117.179.246]:59601 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752541Ab2KROiv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Nov 2012 09:38:51 -0500
+Message-ID: <1353249531.15959.10.camel@joe-AO722> (sfid-20121118_153910_999043_07EF0F1D)
+Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
+From: Joe Perches <joe@perches.com>
+To: Vladimir Kondratiev <vkondrat@qti.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jason Baron <jbaron@redhat.com>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Sun, 18 Nov 2012 06:38:51 -0800
+In-Reply-To: <3304277.iqgq3GH3Yo@lx-vladimir>
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1352912932.9388.23.camel@joe-AO722> <29414886.frl7IkqOMP@lx-vladimir>
+	 <3304277.iqgq3GH3Yo@lx-vladimir>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, 2012-11-18 at 11:47 +0200, Vladimir Kondratiev wrote:
+> I see 2 drivers that use dynamic prefix:
+> 
+> - mentioned above drivers/tty/ipwireless/hardware.c
+> - drivers/isdn/hardware/mISDN/
+> 
+> I see several options:
+> 
+> 1) require prefix_str to be constant. Patch code mentioned. For example,
+> code above may reads:
+> 
+> static void dump_data_bytes(const char *type, const unsigned char *data,
+> 			    unsigned length)
+> {
+> 	pr_debug(IPWIRELESS_PCCARD_NAME ": %s %s\n",
+> 			type, data_type(data, length));
+> 	print_hex_dump_bytes(IPWIRELESS_PCCARD_NAME, 0, (void *)data,
+> 			length < DUMP_MAX_BYTES ? length : DUMP_MAX_BYTES);
+> }
+> 
+> 2) introduce fixed format string in DEFINE_DYNAMIC_DEBUG_METADATA, like
+> 
+> DEFINE_DYNAMIC_DEBUG_METADATA((descriptor, "hexdump");
+> 
+> 3) remove print_hex_dump_bytes from this patch
+> 
+> I think 1) is the best, opinions?
 
-If the driver doesn't support 40 MHz channels, then
-mac80211 erroneously sets number of RX chains to one
-although the number of chains is independent of the
-support for 40 MHz channels.
+Another option could be testing __builtin_constant_p(prefix)
 
-Fix this by checking the 40 MHz support only for the
-code that sets the 40 MHz channel not the complete
-HT code block.
-
-This also means the HT20 channel type will always be
-set in the changed code block so there's no need to
-set it in case we override the AP due to invalid IEs
-in the probe response/beacon.
-
-The indentation is a bit quirky, but I'm rewriting
-this code for VHT support so this will change again
-very soon.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 37 +++++++++++++++++++++----------------
- 1 file changed, 21 insertions(+), 16 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6161446..19969ec 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3219,12 +3219,10 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 				   ht_cfreq, ht_oper->primary_chan,
- 				   cbss->channel->band);
- 			ht_oper = NULL;
--		} else {
--			channel_type = NL80211_CHAN_HT20;
- 		}
- 	}
- 
--	if (ht_oper && sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
-+	if (ht_oper) {
- 		/*
- 		 * cfg80211 already verified that the channel itself can
- 		 * be used, but it didn't check that we can do the right
-@@ -3237,19 +3235,26 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 
- 		channel_type = NL80211_CHAN_HT20;
- 
--		switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
--		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--			if (cbss->channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
--				ifmgd->flags |= IEEE80211_STA_DISABLE_40MHZ;
--			else
--				channel_type = NL80211_CHAN_HT40PLUS;
--			break;
--		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--			if (cbss->channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
--				ifmgd->flags |= IEEE80211_STA_DISABLE_40MHZ;
--			else
--				channel_type = NL80211_CHAN_HT40MINUS;
--			break;
-+		if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
-+			switch (ht_oper->ht_param &
-+					IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+				if (cbss->channel->flags &
-+						IEEE80211_CHAN_NO_HT40PLUS)
-+					ifmgd->flags |=
-+						IEEE80211_STA_DISABLE_40MHZ;
-+				else
-+					channel_type = NL80211_CHAN_HT40PLUS;
-+				break;
-+			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+				if (cbss->channel->flags &
-+						IEEE80211_CHAN_NO_HT40MINUS)
-+					ifmgd->flags |=
-+						IEEE80211_STA_DISABLE_40MHZ;
-+				else
-+					channel_type = NL80211_CHAN_HT40MINUS;
-+				break;
-+			}
- 		}
- 
- 		ht_cap_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY,
--- 
-1.8.0
 
