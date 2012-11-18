@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1031 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754139Ab2KFAWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 19:22:51 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 19/24] brcmfmac: fix build regression
-Date: Mon, 5 Nov 2012 16:22:27 -0800
-Message-ID: <1352161352-30405-20-git-send-email-frankyl@broadcom.com> (sfid-20121106_012315_313164_D2AA9268)
-In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
+Received: from smtpfb2-g21.free.fr ([212.27.42.10]:49191 "EHLO
+	smtpfb2-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700Ab2KRXyz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Nov 2012 18:54:55 -0500
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
+	by smtpfb2-g21.free.fr (Postfix) with ESMTP id 0250DD198C2
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 00:54:51 +0100 (CET)
+Received: from zimbra4-e1.priv.proxad.net (unknown [172.20.243.154])
+	by smtp2-g21.free.fr (Postfix) with ESMTP id 5F1964B002F
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 00:54:14 +0100 (CET)
+Date: Mon, 19 Nov 2012 00:54:13 +0100 (CET)
+From: sebastien.major@free.fr
+To: linux-wireless@vger.kernel.org
+Message-ID: <1169888163.63483054.1353282853141.JavaMail.root@zimbra4-e1.priv.proxad.net> (sfid-20121119_005459_727105_7A95B38D)
+In-Reply-To: <767233844.63481367.1353282635209.JavaMail.root@zimbra4-e1.priv.proxad.net>
+Subject: Edimax EW-7612Aun does not work.
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
 
-This fixes a build regression for x86_64 target that showed up
-in 3.7-rc1 due to:
+Hello,
 
-commit 1a87334239757b69eb9885979c32bbf871b3ec88
-Author: Hante Meuleman <meuleman@broadcom.com>
-Date:   Thu Sep 27 14:17:54 2012 +0200
+All is said in title : my edimax refuse to start correctly.
 
-    brcmfmac: add hostap supoort.
+kernel choose to load rtl8192cu and appropriate firmware but nothing : I see a reply in dmesg which says "wlan10 : link not ready".
 
-Reported-by: Yuanhan Liu <yuanhan.liu@intel.com>
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Reported-by: Randy Dunlap <rdunlap@infradead.org>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+tested on Acer laptop Core 2 duo with linux 3.6.7 freshly compiled by kpkg-buildpackage (Debian unstable).
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 4b5b475..228fcae 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3515,7 +3515,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 	WL_TRACE("channel_type=%d, beacon_interval=%d, dtim_period=%d,\n",
- 		 settings->channel_type, settings->beacon_interval,
- 		 settings->dtim_period);
--	WL_TRACE("ssid=%s(%d), auth_type=%d, inactivity_timeout=%d\n",
-+	WL_TRACE("ssid=%s(%zu), auth_type=%d, inactivity_timeout=%d\n",
- 		 settings->ssid, settings->ssid_len, settings->auth_type,
- 		 settings->inactivity_timeout);
- 
--- 
-1.7.9.5
+Edimax driver are old and for i386 (32 bits).
 
 
+Any doc is welcome : thanks by advance.
+
+Best regards.
+S. Major
