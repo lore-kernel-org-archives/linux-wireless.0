@@ -1,39 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ultra-3eti.com ([173.13.207.162]:45517 "EHLO
-	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632Ab2KFVqT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 16:46:19 -0500
-Received: from webmail.3eti.com (rockmx01.rock.corp [192.168.200.4]) by mail.ultra-3eti.com with ESMTP id ADmsR1gVc6GiOTMw (version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Tue, 06 Nov 2012 16:46:06 -0500 (EST)
-From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: minor bug on these three macros for mesh
-Date: Tue, 6 Nov 2012 21:46:06 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C10AAB@RockMX01.rock.corp> (sfid-20121106_224630_322372_5927AE31)
-Content-Type: text/plain; charset="us-ascii"
+Received: from 212.199.104.198.static.012.net.il ([212.199.104.198]:26123 "EHLO
+	qualcomm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751900Ab2KRN7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Nov 2012 08:59:35 -0500
+From: Vladimir Kondratiev <vkondrat@qti.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jason Baron <jbaron@redhat.com>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH 1/2] dynamic_debug: dynamic hex dump
+Date: Sun, 18 Nov 2012 15:57:26 +0200
+Message-ID: <1765751.MA4eoSHVRZ@lx-vladimir> (sfid-20121118_145950_416626_A286E6D1)
+In-Reply-To: <1367870.EsNpLZfRqp@lx-vladimir>
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <3304277.iqgq3GH3Yo@lx-vladimir> <1367870.EsNpLZfRqp@lx-vladimir>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Should be two not three.
-disc_timeout_jiff()
-root_path_confirmation_jiffies()
+>From 26bb3835fe438622d108716420c3cc191f2e881b Mon Sep 17 00:00:00 2001
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Sun, 18 Nov 2012 15:37:20 +0200
+Subject: [PATCH 1/2] dynamic_debug: dynamic hex dump
 
------Original Message-----
-From: Chaoxing Lin 
-Sent: Tuesday, November 06, 2012 4:44 PM
-To: linux-wireless@vger.kernel.org
-Subject: minor bug on these three macros for mesh
+Introduce print_hex_dump_debug() that can be dynamically controlled, similar to
+pr_debug.
 
-Net/mac80211/mesh_hwmp.c
+Also, make print_hex_dump_bytes() dynamically controlled
 
-#define max_preq_retries(s) (s->u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries)
-#define disc_timeout_jiff(s) \
-    msecs_to_jiffies(sdata->u.mesh.mshcfg.min_discovery_timeout)
-#define root_path_confirmation_jiffies(s) \
-    msecs_to_jiffies(sdata->u.mesh.mshcfg.dot11MeshHWMPconfirmationInterval)
+Implement only 'p' flag (_DPRINTK_FLAGS_PRINT) to keep it simple since hex dump prints
+multiple lines and long prefix would impact readability.
+To provide line/file etc. information, use pr_debug or similar
+before/after print_hex_dump_debug()
 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ Documentation/dynamic-debug-howto.txt |   11 +++++++++--
+ include/linux/dynamic_debug.h         |   10 ++++++++++
+ include/linux/printk.h                |   17 +++++++++++++++++
+ lib/hexdump.c                         |    4 +++-
+ 4 files changed, 39 insertions(+), 3 deletions(-)
 
-The "sdata" in these 3 macros should be "s".
-For now, code just happens to work since caller always passes in "sdata"
+diff --git a/Documentation/dynamic-debug-howto.txt b/Documentation/dynamic-debug-howto.txt
+index 6e16849..b39a771 100644
+--- a/Documentation/dynamic-debug-howto.txt
++++ b/Documentation/dynamic-debug-howto.txt
+@@ -6,8 +6,12 @@ This document describes how to use the dynamic debug (dyndbg) feature.
+ 
+ Dynamic debug is designed to allow you to dynamically enable/disable
+ kernel code to obtain additional kernel information.  Currently, if
+-CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() calls can
+-be dynamically enabled per-callsite.
++CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() and
++print_hex_dump_debug()/print_hex_dump_bytes() calls can be dynamically
++enabled per-callsite.
++
++If CONFIG_DYNAMIC_DEBUG is not set, print_hex_dump_debug() is just
++shortcut for print_hex_dump(KERN_DEBUG).
+ 
+ Dynamic debug has even more useful features:
+ 
+@@ -202,6 +206,9 @@ The flags are:
+   t    Include thread ID in messages not generated from interrupt context
+   _    No flags are set. (Or'd with others on input)
+ 
++For print_hex_dump_debug() and print_hex_dump_bytes(), only 'p' flag
++have meaning, other flags ignored.
++
+ For display, the flags are preceded by '='
+ (mnemonic: what the flags are currently equal to).
+ 
+diff --git a/include/linux/dynamic_debug.h b/include/linux/dynamic_debug.h
+index 6dd4787..17565ab 100644
+--- a/include/linux/dynamic_debug.h
++++ b/include/linux/dynamic_debug.h
+@@ -95,6 +95,16 @@ do {								\
+ 				     ##__VA_ARGS__);		\
+ } while (0)
+ 
++#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)		\
++do {								\
++	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
++	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
++		print_hex_dump(KERN_DEBUG, prefix_str,		\
++			       prefix_type, rowsize, groupsize,	\
++			       buf, len, ascii);		\
++} while (0)
++
+ #else
+ 
+ #include <linux/string.h>
+diff --git a/include/linux/printk.h b/include/linux/printk.h
+index 9afc01e..02c95cf 100644
+--- a/include/linux/printk.h
++++ b/include/linux/printk.h
+@@ -321,8 +321,13 @@ extern void hex_dump_to_buffer(const void *buf, size_t len,
+ extern void print_hex_dump(const char *level, const char *prefix_str,
+ 			   int prefix_type, int rowsize, int groupsize,
+ 			   const void *buf, size_t len, bool ascii);
++#if defined(CONFIG_DYNAMIC_DEBUG)
++#define print_hex_dump_bytes(prefix_str, prefix_type, buf, len)	\
++	dynamic_hex_dump(prefix_str, prefix_type, 16, 1, buf, len, true)
++#else
+ extern void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
+ 				 const void *buf, size_t len);
++#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
+ #else
+ static inline void print_hex_dump(const char *level, const char *prefix_str,
+ 				  int prefix_type, int rowsize, int groupsize,
+@@ -336,4 +341,16 @@ static inline void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
+ 
+ #endif
+ 
++#if defined(CONFIG_DYNAMIC_DEBUG)
++#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,	\
++			     groupsize, buf, len, ascii)	\
++	dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)
++#else
++#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,		\
++			     groupsize, buf, len, ascii)		\
++	print_hex_dump(KERN_DEBUG, prefix_str, prefix_type, rowsize,	\
++		       groupsize, buf, len, ascii)
++#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
++
+ #endif
+diff --git a/lib/hexdump.c b/lib/hexdump.c
+index 6540d65..3f0494c 100644
+--- a/lib/hexdump.c
++++ b/lib/hexdump.c
+@@ -227,6 +227,7 @@ void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
+ }
+ EXPORT_SYMBOL(print_hex_dump);
+ 
++#if !defined(CONFIG_DYNAMIC_DEBUG)
+ /**
+  * print_hex_dump_bytes - shorthand form of print_hex_dump() with default params
+  * @prefix_str: string to prefix each line with;
+@@ -246,4 +247,5 @@ void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
+ 		       buf, len, true);
+ }
+ EXPORT_SYMBOL(print_hex_dump_bytes);
+-#endif
++#endif /* !defined(CONFIG_DYNAMIC_DEBUG) */
++#endif /* defined(CONFIG_PRINTK) */
+-- 
+1.7.10.4
+
 
