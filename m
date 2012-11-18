@@ -1,50 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:60595 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753193Ab2K1JnQ (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:56152 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab2KRL5r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:43:16 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq7so4584332wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:15 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Yair Shapira <yair.shapira@ti.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 10/20] wl18xx: fix a bug in wl->num_rx_desc initialization
-Date: Wed, 28 Nov 2012 11:42:39 +0200
-Message-Id: <1354095769-8724-11-git-send-email-arik@wizery.com> (sfid-20121128_104324_471768_72C815C7)
-In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	Sun, 18 Nov 2012 06:57:47 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so621300eek.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Nov 2012 03:57:45 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: make remain_on_channel() op pass vif param
+Date: Sun, 18 Nov 2012 13:57:42 +0200
+Message-Id: <1353239862-11313-1-git-send-email-eliad@wizery.com> (sfid-20121118_125755_228675_1232B9E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yair Shapira <yair.shapira@ti.com>
+Drivers (e.g. wl12xx) might need to know the vif
+to roc on (mainly in order to configure the 
+rx filters correctly).
 
-wl->num_rx_desc was mistakenly initialized with WL18XX_NUM_TX_DESCRIPTORS
-but it should use WL18XX_NUM_RX_DESCRIPTORS instead.
+Add the vif to the op params, and update the current
+users (iwlwifi) to use the new api.
 
-This bug was passed unnoticed because currently both RX and TX descriptors
-are initialized to the same value (32).
-
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |    1 +
+ include/net/mac80211.h                      |    1 +
+ net/mac80211/cfg.c                          |    3 ++-
+ net/mac80211/driver-ops.h                   |    7 ++++---
+ net/mac80211/offchannel.c                   |    2 +-
+ net/mac80211/trace.h                        |   13 +++++++++----
+ 6 files changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 9685fc3..dc73f8a 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1538,7 +1538,7 @@ static int wl18xx_setup(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index ff8162d..e75d803 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -1032,6 +1032,7 @@ done:
+ }
  
- 	wl->rtable = wl18xx_rtable;
- 	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
--	wl->num_rx_desc = WL18XX_NUM_TX_DESCRIPTORS;
-+	wl->num_rx_desc = WL18XX_NUM_RX_DESCRIPTORS;
- 	wl->num_channels = 2;
- 	wl->num_mac_addr = WL18XX_NUM_MAC_ADDRESSES;
- 	wl->band_rate_to_idx = wl18xx_band_rate_to_idx;
+ static int iwlagn_mac_remain_on_channel(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_channel *channel,
+ 				     enum nl80211_channel_type channel_type,
+ 				     int duration)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 00b7204..322ac6d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2488,6 +2488,7 @@ struct ieee80211_ops {
+ 	int (*get_antenna)(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant);
+ 
+ 	int (*remain_on_channel)(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_channel *chan,
+ 				 enum nl80211_channel_type channel_type,
+ 				 int duration);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5eab132..57d15f1 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2236,7 +2236,8 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 	if (!duration)
+ 		duration = 10;
+ 
+-	ret = drv_remain_on_channel(local, channel, channel_type, duration);
++	ret = drv_remain_on_channel(local, sdata, channel, channel_type,
++				    duration);
+ 	if (ret) {
+ 		kfree(roc);
+ 		return ret;
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 77407b3..73dbf24 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -704,6 +704,7 @@ static inline int drv_get_antenna(struct ieee80211_local *local,
+ }
+ 
+ static inline int drv_remain_on_channel(struct ieee80211_local *local,
++					struct ieee80211_sub_if_data *sdata,
+ 					struct ieee80211_channel *chan,
+ 					enum nl80211_channel_type chantype,
+ 					unsigned int duration)
+@@ -712,9 +713,9 @@ static inline int drv_remain_on_channel(struct ieee80211_local *local,
+ 
+ 	might_sleep();
+ 
+-	trace_drv_remain_on_channel(local, chan, chantype, duration);
+-	ret = local->ops->remain_on_channel(&local->hw, chan, chantype,
+-					    duration);
++	trace_drv_remain_on_channel(local, sdata, chan, chantype, duration);
++	ret = local->ops->remain_on_channel(&local->hw, &sdata->vif,
++					    chan, chantype, duration);
+ 	trace_drv_return_int(local, ret);
+ 
+ 	return ret;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index c349f3a..1d01459 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -283,7 +283,7 @@ void ieee80211_start_next_roc(struct ieee80211_local *local)
+ 		if (!duration)
+ 			duration = 10;
+ 
+-		ret = drv_remain_on_channel(local, roc->chan,
++		ret = drv_remain_on_channel(local, roc->sdata, roc->chan,
+ 					    roc->chan_type,
+ 					    duration);
+ 
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0638541..c9aff6f 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1013,13 +1013,16 @@ TRACE_EVENT(drv_get_antenna,
+ );
+ 
+ TRACE_EVENT(drv_remain_on_channel,
+-	TP_PROTO(struct ieee80211_local *local, struct ieee80211_channel *chan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_channel *chan,
+ 		 enum nl80211_channel_type chantype, unsigned int duration),
+ 
+-	TP_ARGS(local, chan, chantype, duration),
++	TP_ARGS(local, sdata, chan, chantype, duration),
+ 
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
++		VIF_ENTRY
+ 		__field(int, center_freq)
+ 		__field(int, channel_type)
+ 		__field(unsigned int, duration)
+@@ -1027,14 +1030,16 @@ TRACE_EVENT(drv_remain_on_channel,
+ 
+ 	TP_fast_assign(
+ 		LOCAL_ASSIGN;
++		VIF_ASSIGN;
+ 		__entry->center_freq = chan->center_freq;
+ 		__entry->channel_type = chantype;
+ 		__entry->duration = duration;
+ 	),
+ 
+ 	TP_printk(
+-		LOCAL_PR_FMT " freq:%dMHz duration:%dms",
+-		LOCAL_PR_ARG, __entry->center_freq, __entry->duration
++		LOCAL_PR_FMT  VIF_PR_FMT " freq:%dMHz duration:%dms",
++		LOCAL_PR_ARG, VIF_PR_ARG,
++		__entry->center_freq, __entry->duration
+ 	)
+ );
+ 
 -- 
-1.7.9.5
+1.7.6.401.g6a319
 
