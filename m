@@ -1,103 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50712 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333Ab2KPMws (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:45184 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753859Ab2KSRsr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 07:52:48 -0500
-To: <ath6kl-devel@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 4/8] ath6kl: Fix kernel panic on continuous driver load/unload
-Date: Fri, 16 Nov 2012 18:22:40 +0530
-Message-ID: <1353070360-6008-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121116_135251_367983_E0B9D1C1)
+	Mon, 19 Nov 2012 12:48:47 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so5070518oag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 09:48:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1353346581.10872.117.camel@cumari.coelho.fi>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	<1353343170-26516-9-git-send-email-eliad@wizery.com>
+	<1353344601.18299.31.camel@jlt4.sipsolutions.net>
+	<CAB3XZEepFkTNZMAzB+Jy9R4wSzAyQuNVHdWcdHMoRN+FRe5=9A@mail.gmail.com>
+	<1353346581.10872.117.camel@cumari.coelho.fi>
+Date: Mon, 19 Nov 2012 19:48:46 +0200
+Message-ID: <CAB3XZEdniop27NjoCR6KcD4Cp_r=OUU1=tuB1xk2gASs0CW6iw@mail.gmail.com> (sfid-20121119_184851_787839_619082C0)
+Subject: Re: [PATCH 08/15] wlcore: add chanctx implementation
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Mon, Nov 19, 2012 at 7:36 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Mon, 2012-11-19 at 19:16 +0200, Eliad Peller wrote:
+>> On Mon, Nov 19, 2012 at 7:03 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+>> >> Add some basic chanctx implementation.
+>> >
+>> > This patch will leave the driver in a broken state, and in fact probably
+>> > crashing trying to use hw.conf.channel.
+>> >
+>> you are right. i'm taking care of these in the following patches.
+>> i preferred splitting the patches for clarity instead of squashing
+>> them all into one big patch (removing hw.conf.channel references
+>> before implementing chanctx will break the driver as well).
+>> i guess i can squash them in this case, but i'm not sure it will
+>> really help, as other intermediate patches in this patchset might
+>> still break some functionality of the driver.
+>>
+>> i don't mind either way. whatever Luca will prefer :)
+>> (maybe keeping it that way for review, and only squashing them on apply?)
+>
+> I prefer if we can do it so that the driver is not broken, to make it
+> easier to bisect.  But I also agree that for review, it's better to have
+> split up patches.
+>
+> So, your suggestion sounds good to me.  Maybe you could send a final
+> squashed patchset when they're reviewed and ready to be applied?
+>
+sure.
 
-On continuous loading and unloading of AR6004 ath6kl USB
-driver it triggers a panic due to NULL pointer dereference of
-'target' pointer.
-
-while true; do sudo modprobe -v ath6kl_core;
-sudo modprobe -v ath6kl_usb; sudo modprobe -r usb;
-sudo modprobe -r ath6kl_core; done
-
-ar->htc_target can be NULL due to a race condition that can occur
-during driver initialization(we do 'ath6kl_hif_power_on' before
-initializing 'ar->htc_target' via 'ath6kl_htc_create').
-'ath6kl_hif_power_on' assigns 'ath6kl_recv_complete' as
-usb_complete_t/callback function for 'usb_fill_bulk_urb'.
-Thus the possibility of ar->htc_target being NULL
-via ath6kl_recv_complete -> ath6kl_usb_io_comp_work
-before even 'ath6kl_htc_create' is finished to initialize
-ar->htc_create.
-
-Worth noting is the obvious solution  of doing 'ath6kl_hif_power_on'
-later(i.e after we are done with 'ath6kl_htc_create', causes a
-h/w bring up failure in AR6003 SDIO, as 'ath6kl_hif_power_on' is a
-pre-requisite to get the target version 'ath6kl_bmi_get_target_info'.
-So simply check for NULL pointer for 'ar->htc_target' and bail out.
-
-[23614.518282] BUG: unable to handle kernel NULL pointer dereference at
-00000904
-[23614.518463] IP: [<c012e7a6>] __ticket_spin_trylock+0x6/0x30
-[23614.518570] *pde = 00000000
-[23614.518664] Oops: 0000 [#1] SMP
-[23614.518795] Modules linked in: ath6kl_usb(O+) ath6kl_core(O)
-[23614.520012] EIP: 0060:[<c012e7a6>] EFLAGS: 00010286 CPU: 0
-[23614.520012] EIP is at __ticket_spin_trylock+0x6/0x30
-Call Trace:
-	[<c03f2a44>] do_raw_spin_trylock+0x14/0x40
-	[<c06daa12>] _raw_spin_lock_bh+0x52/0x80
-	[<f85464b4>] ? ath6kl_htc_pipe_rx_complete+0x3b4/0x4c0 [ath6kl_core]
-	[<f85464b4>] ath6kl_htc_pipe_rx_complete+0x3b4/0x4c0 [ath6kl_core]
-	[<c05bc272>] ? skb_dequeue+0x22/0x70
-	[<c05bc272>] ? skb_dequeue+0x22/0x70
-	[<f855bb32>] ath6kl_core_rx_complete+0x12/0x20 [ath6kl_core]
-	[<f848771a>] ath6kl_usb_io_comp_work+0xaa/0xb0 [ath6kl_usb]
-	[<c015b863>] process_one_work+0x1a3/0x5e0
-	[<c015b7e7>] ? process_one_work+0x127/0x5e0
-	[<f8487670>] ? ath6kl_usb_reset_resume+0x30/0x30 [ath6kl_usb]
-	[<c015bfde>] worker_thread+0x11e/0x3f0
-	Kernel panic - not syncing: Fatal exception in interrupt
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc_pipe.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-index 73a38f9..2813901 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-@@ -967,6 +967,22 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
- 	u16 payload_len;
- 	int status = 0;
- 
-+	/*
-+	 * ar->htc_target can be NULL due to a race condition that can occur
-+	 * during driver initialization(we do 'ath6kl_hif_power_on' before
-+	 * initializing 'ar->htc_target' via 'ath6kl_htc_create').
-+	 * 'ath6kl_hif_power_on' assigns 'ath6kl_recv_complete' as
-+	 * usb_complete_t/callback function for 'usb_fill_bulk_urb'.
-+	 * Thus the possibility of ar->htc_target being NULL
-+	 * via ath6kl_recv_complete -> ath6kl_usb_io_comp_work.
-+	 */
-+	if (WARN_ON_ONCE(!target)) {
-+		ath6kl_err("Target not yet initialized\n");
-+		status = -EINVAL;
-+		goto free_skb;
-+	}
-+
-+
- 	netdata = skb->data;
- 	netlen = skb->len;
- 
--- 
-1.7.0.4
-
+Eliad.
