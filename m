@@ -1,86 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:39058 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754149Ab2KZQGS (ORCPT
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:33499
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751944Ab2KSPAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 11:06:18 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm9so3611509wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 08:06:17 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 10/11] wlcore: gather information about firmware stability
-Date: Mon, 26 Nov 2012 18:05:49 +0200
-Message-Id: <1353945950-3899-11-git-send-email-arik@wizery.com> (sfid-20121126_170630_740900_80A2C53F)
-In-Reply-To: <1353945950-3899-1-git-send-email-arik@wizery.com>
-References: <1353945950-3899-1-git-send-email-arik@wizery.com>
+	Mon, 19 Nov 2012 10:00:06 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20650.18783.6821.78205@gargle.gargle.HOWL> (sfid-20121119_160011_381727_73392675)
+Date: Mon, 19 Nov 2012 20:29:43 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: Add debugfs callbacks for station addition/removal
+In-Reply-To: <1353334496.18299.5.camel@jlt4.sipsolutions.net>
+References: <1353304116-7124-1-git-send-email-sujith@msujith.org>
+	<1353334496.18299.5.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+Johannes Berg wrote:
+> Can the files stay across a firmware restart or suspend/resume? I guess
+> with suspend/resume nothing can access them, but accessing them during
+> firmware restart might be ... strange? Not that I'm too worried about
+> that.
 
-It's sometimes useful to gather information about the firmware
-stability in long test runs, especially to see if problems are
-recurring frequently or not.  With this commit we count the number of
-times a hardware recovery was issued and print it out during recovery
-and in the driver_state in debugfs.
+As discussed in irc, leaving it to the drivers would be reasonable.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/debugfs.c |    1 +
- drivers/net/wireless/ti/wlcore/main.c    |    4 +++-
- drivers/net/wireless/ti/wlcore/wlcore.h  |    2 ++
- 3 files changed, 6 insertions(+), 1 deletion(-)
+BTW, here are few warnings that I saw when doing a suspend/resume cycle:
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index 7fbab3c..78d2eb3 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -490,6 +490,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_HEX(chip.id);
- 	DRIVER_STATE_PRINT_STR(chip.fw_ver_str);
- 	DRIVER_STATE_PRINT_STR(chip.phy_fw_ver_str);
-+	DRIVER_STATE_PRINT_INT(recovery_count);
- 
- #undef DRIVER_STATE_PRINT_INT
- #undef DRIVER_STATE_PRINT_LONG
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index a6283df..a48a36c 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -879,7 +879,8 @@ static void wlcore_print_recovery(struct wl1271 *wl)
- 	if (ret < 0)
- 		return;
- 
--	wl1271_info("pc: 0x%x, hint_sts: 0x%08x", pc, hint_sts);
-+	wl1271_info("pc: 0x%x, hint_sts: 0x%08x count: %d",
-+				pc, hint_sts, ++wl->recovery_count);
- 
- 	wlcore_set_partition(wl, &wl->ptable[PART_WORK]);
- }
-@@ -5685,6 +5686,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 	wl->flags = 0;
- 	wl->sg_enabled = true;
- 	wl->sleep_auth = WL1271_PSM_ILLEGAL;
-+	wl->recovery_count = 0;
- 	wl->hw_pg_ver = -1;
- 	wl->ap_ps_map = 0;
- 	wl->ap_fw_ps_map = 0;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 5f580e5..4d5c69e 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -337,6 +337,8 @@ struct wl1271 {
- 
- 	bool enable_11a;
- 
-+	int recovery_count;
-+
- 	/* Most recently reported noise in dBm */
- 	s8 noise;
- 
--- 
-1.7.9.5
+linux-test kernel: WARNING: at /home/sujith/dev/wireless-testing/net/mac80211/chan.c:379 ieee80211_vif_release_channel+0x36/0x70 [mac80211]()
+linux-test kernel: Hardware name: LIFEBOOK AH531
+linux-test kernel: Pid: 4139, comm: pm-suspend Tainted: G        W  O 3.7.0-rc5-wl-debug #31
+linux-test kernel: Call Trace:
+linux-test kernel:  [<ffffffff8105697f>] warn_slowpath_common+0x7f/0xc0
+linux-test kernel:  [<ffffffff810569da>] warn_slowpath_null+0x1a/0x20
+linux-test kernel:  [<ffffffffa056e566>] ieee80211_vif_release_channel+0x36/0x70 [mac80211]
+linux-test kernel:  [<ffffffffa059a3ca>] __ieee80211_suspend+0x45a/0xd10 [mac80211]
+linux-test kernel:  [<ffffffff81388e27>] ? rtnl_lock+0x17/0x20
+linux-test kernel:  [<ffffffffa055cbba>] ieee80211_suspend+0x1a/0x20 [mac80211]
+linux-test kernel:  [<ffffffffa03d2945>] wiphy_suspend+0x95/0x180 [cfg80211]
+linux-test kernel:  [<ffffffffa03d28b0>] ? wiphy_resume+0x180/0x180 [cfg80211]
+linux-test kernel:  [<ffffffff8147852f>] legacy_suspend+0x2a/0x58
+linux-test kernel:  [<ffffffff81324fec>] __device_suspend+0x1fc/0x210
+linux-test kernel:  [<ffffffff81325a48>] dpm_suspend+0x68/0x240
+linux-test kernel:  [<ffffffff81325ea7>] dpm_suspend_start+0x57/0x60
+linux-test kernel:  [<ffffffff8109f9c1>] suspend_devices_and_enter+0x81/0x340
+linux-test kernel:  [<ffffffff8109fe74>] pm_suspend+0x1f4/0x200
+linux-test kernel:  [<ffffffff8109ed87>] state_store+0x87/0xf0
+linux-test kernel:  [<ffffffff8124c2cf>] kobj_attr_store+0xf/0x20
+linux-test kernel:  [<ffffffff811f73e0>] sysfs_write_file+0xe0/0x150
+linux-test kernel:  [<ffffffff81182aa8>] vfs_write+0xa8/0x180
+linux-test kernel:  [<ffffffff81182df2>] sys_write+0x52/0xa0
+linux-test kernel:  [<ffffffff8147ef19>] system_call_fastpath+0x16/0x1b
 
+and
+
+linux-test kernel: WARNING: at /home/sujith/dev/wireless-testing/net/mac80211/ieee80211_i.h:1503 ieee80211_send_nullfunc+0xfe/0x130 [mac80211]()
+linux-test kernel: Hardware name: LIFEBOOK AH531
+linux-test kernel: Pid: 4139, comm: pm-suspend Tainted: G        W  O 3.7.0-rc5-wl-debug #31
+linux-test kernel: Call Trace:
+linux-test kernel:  [<ffffffff8105697f>] warn_slowpath_common+0x7f/0xc0
+linux-test kernel:  [<ffffffff810569da>] warn_slowpath_null+0x1a/0x20
+linux-test kernel:  [<ffffffffa058501e>] ieee80211_send_nullfunc+0xfe/0x130 [mac80211]
+linux-test kernel:  [<ffffffffa0584f81>] ? ieee80211_send_nullfunc+0x61/0x130 [mac80211]
+linux-test kernel:  [<ffffffffa05858a5>] ? ieee80211_recalc_ps+0x1e5/0x230 [mac80211]
+linux-test kernel:  [<ffffffffa056be8c>] ieee80211_reconfig+0x15ac/0x1c00 [mac80211]
+linux-test kernel:  [<ffffffffa055acbd>] ieee80211_resume+0x2d/0x70 [mac80211]
+linux-test kernel:  [<ffffffffa03d27c9>] wiphy_resume+0x99/0x180 [cfg80211]
+linux-test kernel:  [<ffffffffa03d2730>] ? index_show+0x30/0x30 [cfg80211]
+linux-test kernel:  [<ffffffff8132437b>] dpm_run_callback.isra.4+0x3b/0x70
+linux-test kernel:  [<ffffffff8132515c>] device_resume+0xbc/0x150
+linux-test kernel:  [<ffffffff81325694>] dpm_resume+0x114/0x250
+linux-test kernel:  [<ffffffff813259c5>] dpm_resume_end+0x15/0x30
+linux-test kernel:  [<ffffffff812a8069>] ? acpi_suspend_begin_old+0x2d/0x2d
+linux-test kernel:  [<ffffffff8109f9f6>] suspend_devices_and_enter+0xb6/0x340
+linux-test kernel:  [<ffffffff8109fe74>] pm_suspend+0x1f4/0x200
+linux-test kernel:  [<ffffffff8109ed87>] state_store+0x87/0xf0
+linux-test kernel:  [<ffffffff8124c2cf>] kobj_attr_store+0xf/0x20
+linux-test kernel:  [<ffffffff811f73e0>] sysfs_write_file+0xe0/0x150
+linux-test kernel:  [<ffffffff81182aa8>] vfs_write+0xa8/0x180
+linux-test kernel:  [<ffffffff81182df2>] sys_write+0x52/0xa0
+linux-test kernel:  [<ffffffff8147ef19>] system_call_fastpath+0x16/0x1b
+
+
+Sujith
