@@ -1,211 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:47781 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756421Ab2KVTFs (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:61797 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751564Ab2KSVNy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 14:05:48 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so3318461eaa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 11:05:47 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/13] wlcore: save session_id per-link
-Date: Thu, 22 Nov 2012 14:05:25 +0200
-Message-Id: <1353585928-28666-11-git-send-email-eliad@wizery.com> (sfid-20121122_200604_722620_EBFD28F0)
-In-Reply-To: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+	Mon, 19 Nov 2012 16:13:54 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k13so7525884iea.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 13:13:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1353343170-26516-6-git-send-email-eliad@wizery.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com> <1353343170-26516-6-git-send-email-eliad@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 19 Nov 2012 23:13:39 +0200
+Message-ID: <CA+XVXfeUxiSPu58mYEaS-gJbT1L1-sWrH9R8mkXBVyaUaS09fw@mail.gmail.com> (sfid-20121119_221358_481560_36D9FDF0)
+Subject: Re: [PATCH 05/15] wlcore: implement .remain_on_channel() callback
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new session_id is generated on link allocation.
-it is saved in a global array and used later, on tx.
+On Mon, Nov 19, 2012 at 6:39 PM, Eliad Peller <eliad@wizery.com> wrote:
+> implement the reamin_on_channel() callback by starting
+> a dev role (already associated with the current vif)
+> on the requested channel/band.
+>
+> This channel is usually different from the channel
+> of the sta role, so pass it to wl12xx_roc() as well,
+> and notify mac80211 (async) when the fw is ready
+> on the new channel.
+>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+[...]
+> @@ -1608,7 +1610,7 @@ static int wl12xx_cmd_roc(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>         }
+>
+>         cmd->role_id = role_id;
+> -       cmd->channel = wlvif->channel;
+> +       cmd->channel = channel;
+>         switch (wlvif->band) {
+>         case IEEE80211_BAND_2GHZ:
+>                 cmd->band = WLCORE_BAND_2_4GHZ;
 
-The new fw api adds new bcast/global_session_id
-fields to start_role(ap) command, and a new session_id
-field to add_peer command. align the driver with it.
+This seems wrong... What happens if the roc is on another band from
+the one the vif is connected on?
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/cmd.c      |   30 ++++++++++++++++------------
- drivers/net/wireless/ti/wlcore/cmd.h      |    6 +++-
- drivers/net/wireless/ti/wlcore/debugfs.c  |    1 -
- drivers/net/wireless/ti/wlcore/main.c     |    1 +
- drivers/net/wireless/ti/wlcore/tx.c       |    2 +-
- drivers/net/wireless/ti/wlcore/wlcore.h   |    2 +
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    3 --
- 7 files changed, 25 insertions(+), 20 deletions(-)
+The dev role is started on the correct band, but the roc will be on
+the band of the wlvif..
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index b2ebe39..1735a53 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -266,6 +266,16 @@ out:
- 	return ret;
- }
- 
-+static int wlcore_get_new_session_id(struct wl1271 *wl, u8 hlid)
-+{
-+	if (wl->session_ids[hlid] >= SESSION_COUNTER_MAX)
-+		wl->session_ids[hlid] = 0;
-+
-+	wl->session_ids[hlid]++;
-+
-+	return wl->session_ids[hlid];
-+}
-+
- int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
- {
- 	unsigned long flags;
-@@ -273,6 +283,8 @@ int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
- 	if (link >= WL12XX_MAX_LINKS)
- 		return -EBUSY;
- 
-+	wl->session_ids[link] = wlcore_get_new_session_id(wl, link);
-+
- 	/* these bits are used by op_tx */
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	__set_bit(link, wl->links_map);
-@@ -304,17 +316,6 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
- 	*hlid = WL12XX_INVALID_LINK_ID;
- }
- 
--static int wl12xx_get_new_session_id(struct wl1271 *wl,
--				     struct wl12xx_vif *wlvif)
--{
--	if (wlvif->session_counter >= SESSION_COUNTER_MAX)
--		wlvif->session_counter = 0;
--
--	wlvif->session_counter++;
--
--	return wlvif->session_counter;
--}
--
- static u8 wlcore_get_native_channel_type(u8 nl_channel_type)
- {
- 	switch (nl_channel_type) {
-@@ -359,7 +360,7 @@ static int wl12xx_cmd_role_start_dev(struct wl1271 *wl,
- 			goto out_free;
- 	}
- 	cmd->device.hlid = wlvif->dev_hlid;
--	cmd->device.session = wl12xx_get_new_session_id(wl, wlvif);
-+	cmd->device.session = wl->session_ids[wlvif->dev_hlid];
- 
- 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d",
- 		     cmd->role_id, cmd->device.hlid, cmd->device.session);
-@@ -460,7 +461,7 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 			goto out_free;
- 	}
- 	cmd->sta.hlid = wlvif->sta.hlid;
--	cmd->sta.session = wl12xx_get_new_session_id(wl, wlvif);
-+	cmd->sta.session = wl->session_ids[wlvif->sta.hlid];
- 	/*
- 	 * We don't have the correct remote rates in this stage, and there
- 	 * is no way to update them later, so use our supported rates instead.
-@@ -564,6 +565,8 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	cmd->ap.bss_index = WL1271_AP_BSS_INDEX;
- 	cmd->ap.global_hlid = wlvif->ap.global_hlid;
- 	cmd->ap.broadcast_hlid = wlvif->ap.bcast_hlid;
-+	cmd->ap.global_session_id = wl->session_ids[wlvif->ap.global_hlid];
-+	cmd->ap.bcast_session_id = wl->session_ids[wlvif->ap.bcast_hlid];
- 	cmd->ap.basic_rate_set = cpu_to_le32(wlvif->basic_rate_set);
- 	cmd->ap.beacon_interval = cpu_to_le16(wlvif->beacon_int);
- 	cmd->ap.dtim_interval = bss_conf->dtim_period;
-@@ -1419,6 +1422,7 @@ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	cmd->hlid = hlid;
- 	cmd->sp_len = sta->max_sp;
- 	cmd->wmm = sta->wme ? 1 : 0;
-+	cmd->session_id = wl->session_ids[hlid];
- 
- 	for (i = 0; i < NUM_ACCESS_CATEGORIES_COPY; i++)
- 		if (sta->wme && (sta->uapsd_queues & BIT(i)))
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index 2070a10..c9f8268 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -362,7 +362,9 @@ struct wl12xx_cmd_role_start {
- 			 */
- 			u8 wmm;
- 
--			u8 padding_1[3];
-+			u8 bcast_session_id;
-+			u8 global_session_id;
-+			u8 padding_1[1];
- 		} __packed ap;
- 	};
- } __packed;
-@@ -582,7 +584,7 @@ struct wl12xx_cmd_add_peer {
- 	u8 bss_index;
- 	u8 sp_len;
- 	u8 wmm;
--	u8 padding1;
-+	u8 session_id;
- } __packed;
- 
- struct wl12xx_cmd_remove_peer {
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index c86bb00..f0f88e6 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -589,7 +589,6 @@ static ssize_t vifs_state_read(struct file *file, char __user *user_buf,
- 		VIF_STATE_PRINT_INT(beacon_int);
- 		VIF_STATE_PRINT_INT(default_key);
- 		VIF_STATE_PRINT_INT(aid);
--		VIF_STATE_PRINT_INT(session_counter);
- 		VIF_STATE_PRINT_INT(psm_entry_retry);
- 		VIF_STATE_PRINT_INT(power_level);
- 		VIF_STATE_PRINT_INT(rssi_thold);
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 5924309..d53bb8b 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1871,6 +1871,7 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
- 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
- 	memset(wl->links_map, 0, sizeof(wl->links_map));
- 	memset(wl->roc_map, 0, sizeof(wl->roc_map));
-+	memset(wl->session_ids, 0, sizeof(wl->session_ids));
- 	wl->active_sta_count = 0;
- 
- 	/* The system link is always allocated */
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 2844f30..68f73f9 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -294,7 +294,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		tx_attr |= TX_HW_ATTR_TX_DUMMY_REQ;
- 	} else if (wlvif) {
- 		/* configure the tx attributes */
--		tx_attr = wlvif->session_counter <<
-+		tx_attr = wl->session_ids[hlid] <<
- 			  TX_HW_ATTR_OFST_SESSION_COUNTER;
- 	}
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index d47eb6c..e9254b7 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -215,6 +215,8 @@ struct wl1271 {
- 	unsigned long klv_templates_map[
- 			BITS_TO_LONGS(WLCORE_MAX_KLV_TEMPLATES)];
- 
-+	u8 session_ids[WL12XX_MAX_LINKS];
-+
- 	struct list_head wlvif_list;
- 
- 	u8 sta_count;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 8478bbc..6be1e8e 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -396,9 +396,6 @@ struct wl12xx_vif {
- 	/* Our association ID */
- 	u16 aid;
- 
--	/* Session counter for the chipset */
--	int session_counter;
--
- 	/* retry counter for PSM entries */
- 	u8 psm_entry_retry;
- 
--- 
-1.7.6.401.g6a319
+[...]
+> +static int wlcore_op_remain_on_channel(struct ieee80211_hw *hw,
+> +                                      struct ieee80211_vif *vif,
+> +                                      struct ieee80211_channel *chan,
+> +                                      enum nl80211_channel_type channel_type,
+> +                                      int duration)
+> +{
+> +       struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+> +       struct wl1271 *wl = hw->priv;
+> +       int channel, ret = 0;
+> +
+> +       channel = ieee80211_frequency_to_channel(chan->center_freq);
+> +
+> +       wl1271_debug(DEBUG_MAC80211, "mac80211 roc %d (%d)",
+> +                    channel, wlvif->role_id);
+> +
+> +       mutex_lock(&wl->mutex);
+> +
+> +       if (unlikely(wl->state != WLCORE_STATE_ON))
+> +               goto out;
+> +
+> +       /* return EBUSY if we can't ROC right now */
+> +       if (WARN_ON(wl->roc_vif ||
+> +                   find_first_bit(wl->roc_map,
+> +                                  WL12XX_MAX_ROLES) < WL12XX_MAX_ROLES)) {
+> +               ret = -EBUSY;
+> +               goto out;
+> +       }
+> +
+> +       /*
+> +        * make sure the vif has dev role.
+> +        * TODO: enable dev role dynamically instead of pre-allocating it.
+> +        */
 
+Not sure what you mean here. Seems pretty dynamic to me..
+
+> +       if (WARN_ON_ONCE(!(wlvif->bss_type == BSS_TYPE_STA_BSS ||
+> +                          wlvif->bss_type == BSS_TYPE_IBSS))) {
+> +               ret = -EINVAL;
+> +               goto out;
+> +       }
+> +
+> +       ret = wl1271_ps_elp_wakeup(wl);
+> +       if (ret < 0)
+> +               goto out;
+> +
+> +       ret = wl12xx_start_dev(wl, wlvif, chan->band, channel);
+> +       if (ret < 0)
+> +               goto out_sleep;
+> +
+> +       wl->roc_vif = vif;
+> +       ieee80211_queue_delayed_work(hw, &wl->roc_complete_work,
+> +                                    msecs_to_jiffies(duration));
+> +out_sleep:
+> +       wl1271_ps_elp_sleep(wl);
+> +out:
+> +       mutex_unlock(&wl->mutex);
+> +       return ret;
+> +}
+> +
+> +static int __wlcore_roc_completed(struct wl1271 *wl)
+> +{
+> +       struct wl12xx_vif *wlvif;
+> +       int ret;
+> +
+> +       /* already completed */
+> +       if (unlikely(!wl->roc_vif))
+> +               return 0;
+> +
+> +       wlvif = wl12xx_vif_to_data(wl->roc_vif);
+> +
+> +       if (!test_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags))
+> +               return -EBUSY;
+> +
+> +       ret = wl12xx_stop_dev(wl, wlvif);
+> +       if (ret < 0)
+> +               return ret;
+> +
+> +       wl->roc_vif = NULL;
+> +
+> +       return 0;
+> +}
+> +
+> +static int wlcore_roc_completed(struct wl1271 *wl)
+> +{
+> +       int ret;
+> +
+> +       wl1271_debug(DEBUG_MAC80211, "roc complete");
+> +
+> +       mutex_lock(&wl->mutex);
+> +
+> +       if (unlikely(wl->state != WLCORE_STATE_ON)) {
+> +               ret = -EBUSY;
+> +               goto out;
+> +       }
+> +
+> +       ret = wl1271_ps_elp_wakeup(wl);
+> +       if (ret < 0)
+> +               goto out;
+> +
+> +       ret = __wlcore_roc_completed(wl);
+> +
+> +       wl1271_ps_elp_sleep(wl);
+> +out:
+> +       mutex_unlock(&wl->mutex);
+> +
+> +       return ret;
+> +}
+> +
+> +static void wlcore_roc_complete_work(struct work_struct *work)
+> +{
+> +       struct delayed_work *dwork;
+> +       struct wl1271 *wl;
+> +       int ret;
+> +
+> +       dwork = container_of(work, struct delayed_work, work);
+> +       wl = container_of(dwork, struct wl1271, roc_complete_work);
+> +
+> +       ret = wlcore_roc_completed(wl);
+> +       if (!ret)
+> +               ieee80211_remain_on_channel_expired(wl->hw);
+> +}
+> +
+> +static int wlcore_op_cancel_remain_on_channel(struct ieee80211_hw *hw)
+> +{
+> +       struct wl1271 *wl = hw->priv;
+> +
+> +       wl1271_debug(DEBUG_MAC80211, "mac80211 croc");
+> +
+> +       /* TODO: per-vif */
+> +       wl1271_tx_flush(wl);
+> +
+> +       /*
+> +        * we can't just flush_work here, because it might deadlock
+> +        * (as we might get called from the same workqueue)
+> +        */
+> +       cancel_delayed_work_sync(&wl->roc_complete_work);
+> +       wlcore_roc_completed(wl);
+> +
+> +       return 0;
+> +}
+> +
+>  static bool wl1271_tx_frames_pending(struct ieee80211_hw *hw)
+>  {
+>         struct wl1271 *wl = hw->priv;
+> @@ -4849,6 +4970,8 @@ static const struct ieee80211_ops wl1271_ops = {
+>         .set_bitrate_mask = wl12xx_set_bitrate_mask,
+>         .channel_switch = wl12xx_op_channel_switch,
+>         .flush = wlcore_op_flush,
+> +       .remain_on_channel = wlcore_op_remain_on_channel,
+> +       .cancel_remain_on_channel = wlcore_op_cancel_remain_on_channel,
+>         CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+>  };
+>
+> @@ -5245,6 +5368,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+>         wl->hw->wiphy->max_sched_scan_ie_len = WL1271_CMD_TEMPL_MAX_SIZE -
+>                 sizeof(struct ieee80211_header);
+>
+> +       wl->hw->wiphy->max_remain_on_channel_duration = 5000;
+
+Isn't this the default?
+
+> +
+>         wl->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD |
+>                                 WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+>
+> @@ -5343,6 +5468,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size)
+>         INIT_WORK(&wl->tx_work, wl1271_tx_work);
+>         INIT_WORK(&wl->recovery_work, wl1271_recovery_work);
+>         INIT_DELAYED_WORK(&wl->scan_complete_work, wl1271_scan_complete_work);
+> +       INIT_DELAYED_WORK(&wl->roc_complete_work, wlcore_roc_complete_work);
+>         INIT_DELAYED_WORK(&wl->tx_watchdog_work, wl12xx_tx_watchdog_work);
+>         INIT_DELAYED_WORK(&wl->connection_loss_work,
+>                           wl1271_connection_loss_work);
+> diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+> index 1030b6b..b636f1d 100644
+> --- a/drivers/net/wireless/ti/wlcore/wlcore.h
+> +++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+> @@ -286,6 +286,9 @@ struct wl1271 {
+>         /* Connection loss work */
+>         struct delayed_work connection_loss_work;
+>
+> +       struct ieee80211_vif *roc_vif;
+> +       struct delayed_work roc_complete_work;
+> +
+>         bool sched_scanning;
+>
+>         /* The current band */
+> --
+> 1.7.6.401.g6a319
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
