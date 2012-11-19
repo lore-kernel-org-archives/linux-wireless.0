@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:54164 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055Ab2KLTSk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37792 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816Ab2KSV3V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 14:18:40 -0500
-Received: by mail-pb0-f46.google.com with SMTP id rr4so4576112pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 11:18:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1352746052-1828-2-git-send-email-thomas@cozybit.com>
-References: <1352746052-1828-1-git-send-email-thomas@cozybit.com>
-	<1352746052-1828-2-git-send-email-thomas@cozybit.com>
-Date: Mon, 12 Nov 2012 11:18:40 -0800
-Message-ID: <CAJ-VmokQ19oSgw6UB616n-7r2YZ7Udmtoh-20MPBYDfx3VPo+A@mail.gmail.com> (sfid-20121112_201844_187607_2370BC78)
-Subject: Re: [PATCH 1/2] ath9k: RX timestamp is reported at end of frame
-From: Adrian Chadd <adrian@freebsd.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: ath9k-devel@lists.ath9k.org, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Nov 2012 16:29:21 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: sujith@msujith.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix channel context suspend handling
+Date: Mon, 19 Nov 2012 22:29:46 +0100
+Message-Id: <1353360586-32157-1-git-send-email-johannes@sipsolutions.net> (sfid-20121119_222924_703970_D27B6648)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Is that true for aggregate RX too? I didn't think the FIFO was big
-enough to receive the whole aggregate, so I wonder what timestamp
-aggregates sub-frames are receiving.
+Sujith reported warnings with suspend/resume due to
+channel contexts. When I looked into it, I realised
+that the code was completely broken as it unassigned
+the channel contexts when suspending, which actually
+means they are destroyed.
 
+Fix this by calling just the driver method (if it is
+implemented) instead of trying to use the mac80211
+channel context management code.
 
+Reported-by: Sujith Manoharan <sujith@msujith.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/pm.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-adrian
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 0f1c434..792d5ce 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -139,8 +139,23 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 		    rcu_access_pointer(sdata->u.ap.beacon))
+ 			drv_stop_ap(local, sdata);
+ 
+-		/* the interface is leaving the channel and is removed */
+-		ieee80211_vif_release_channel(sdata);
++		if (local->use_chanctx) {
++			struct ieee80211_chanctx_conf *conf;
++			struct ieee80211_chanctx *ctx;
++
++			mutex_lock(&local->chanctx_mtx);
++			conf = rcu_dereference_protected(
++					sdata->vif.chanctx_conf,
++					lockdep_is_held(&local->chanctx_mtx));
++			if (conf) {
++				ctx = container_of(conf,
++						   struct ieee80211_chanctx,
++						   conf);
++				drv_unassign_vif_chanctx(local, sdata, ctx);
++			}
++
++			mutex_unlock(&local->chanctx_mtx);
++		}
+ 		drv_remove_interface(local, sdata);
+ 	}
+ 
+-- 
+1.8.0
 
-On 12 November 2012 10:47, Thomas Pedersen <thomas@cozybit.com> wrote:
-> Tested with AR9280.
->
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> ---
->  drivers/net/wireless/ath/ath9k/recv.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index a04028b..d4df98a 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -976,7 +976,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
->         rx_status->freq = hw->conf.channel->center_freq;
->         rx_status->signal = ah->noise + rx_stats->rs_rssi;
->         rx_status->antenna = rx_stats->rs_antenna;
-> -       rx_status->flag |= RX_FLAG_MACTIME_MPDU;
-> +       rx_status->flag |= RX_FLAG_MACTIME_END;
->         if (rx_stats->rs_moreaggr)
->                 rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
->
-> --
-> 1.7.10.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
