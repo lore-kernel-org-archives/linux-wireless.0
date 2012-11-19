@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4342 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754960Ab2K3Iil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 03:38:41 -0500
-Message-ID: <50B87082.3020604@broadcom.com> (sfid-20121130_093858_575934_9B2E9445)
-Date: Fri, 30 Nov 2012 09:38:26 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:65263 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354Ab2KSNgc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 08:36:32 -0500
+Received: by mail-ob0-f174.google.com with SMTP id wc20so4798768obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 05:36:31 -0800 (PST)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	backports@vger.kernel.org, alexander.stein@systec-electronic.com,
-	brudley@broadcom.com, rvossen@broadcom.com, frankyl@broadcom.com,
-	kanyan@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, kyungmin.park@samsung.com,
-	s.nawrocki@samsung.com, linux-arm-kernel@lists.infradead.org,
-	linux-media@vger.kernel.org, daniel.vetter@ffwll.ch,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	srinidhi.kasagar@stericsson.com, linus.walleij@linaro.org,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 0/6] drivers: convert struct spinlock to spinlock_t
-References: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <1353322865-7500-1-git-send-email-arend@broadcom.com>
+References: <1353322865-7500-1-git-send-email-arend@broadcom.com>
+Date: Mon, 19 Nov 2012 15:36:31 +0200
+Message-ID: <CAB3XZEcv9kV1TG_CfeK7TeNu+kdhb9TcfsFff9jn7aVLCcz+YA@mail.gmail.com> (sfid-20121119_143635_477436_8F9F72D9)
+Subject: Re: [PATCH] mac80211: check add_chanctx callback before use in ieee80211_reconfig
+From: Eliad Peller <eliad@wizery.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/29/2012 09:45 PM, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> 
-> Turns out a few drivers have strayed away from using the
-> spinlock_t typedef and decided to use struct spinlock
-> directly. This series converts these drivers to use
-> spinlock_t. Each change has been compile tested with
-> allmodconfig and sparse checked. Driver developers
-> may want to look at the compile error output / sparse
-> error report supplied in each commit log, in particular
-> brcmfmac and i915, there are quite a few things that
-> are not related to this change that the developers
-> can clean up / fix.
+hi Arend,
 
-So what is the rationale here. During mainlining our drivers we had to
-remove all uses of 'typedef struct foo foo_t;'. The Linux CodingStyle
-(chapter 5 Typedefs) is spending a number of lines explaining why.
+On Mon, Nov 19, 2012 at 1:01 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> During testing our mac80211 driver a fatal error occurred which was
+> signalled to mac80211. Upon performing the reconfiguration of the
+> device a WARN_ON was triggered. This warning checked the return value
+> of drv_add_chanctx(). However, this returns -EOPNOTSUPP when the
+> driver does not provide the callback. As the callback is optional
+> better check it is defined before calling drv_add_chanctx().
+>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
 
-So is spinlock_t an exception to this rule simply because the kernel
-uses spinlock_t all over the place. Using Greg's favorite final email
-remark:
+> +       if (local->ops->add_chanctx) {
+> +               mutex_lock(&local->chanctx_mtx);
+> +               list_for_each_entry(ctx, &local->chanctx_list, list)
+> +                       WARN_ON(drv_add_chanctx(local, ctx));
+> +               mutex_unlock(&local->chanctx_mtx);
+> +       }
 
-Confused.
+i think checking local->use_chanctx is a bit cleaner.
 
-Gr. AvS
-
-> Luis R. Rodriguez (6):
->   ux500: convert struct spinlock to spinlock_t
->   i915: convert struct spinlock to spinlock_t
->   s5p-fimc: convert struct spinlock to spinlock_t
->   s5p-jpeg: convert struct spinlock to spinlock_t
->   brcmfmac: convert struct spinlock to spinlock_t
->   ie6xx_wdt: convert struct spinlock to spinlock_t
-> 
->  drivers/crypto/ux500/cryp/cryp.h               |    4 ++--
->  drivers/crypto/ux500/hash/hash_alg.h           |    4 ++--
->  drivers/gpu/drm/i915/i915_drv.h                |    4 ++--
->  drivers/media/platform/s5p-fimc/mipi-csis.c    |    2 +-
->  drivers/media/platform/s5p-jpeg/jpeg-core.h    |    2 +-
->  drivers/net/wireless/brcm80211/brcmfmac/fweh.h |    2 +-
->  drivers/watchdog/ie6xx_wdt.c                   |    2 +-
->  7 files changed, 10 insertions(+), 10 deletions(-)
-> 
-
-
+Eliad.
