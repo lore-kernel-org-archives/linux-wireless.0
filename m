@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41684 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754522Ab2KSSiI (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:47827 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883Ab2KSVdW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:38:08 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Subject: [PATCH 137/493] NFC: remove use of __devexit_p
-Date: Mon, 19 Nov 2012 13:21:26 -0500
-Message-Id: <1353349642-3677-137-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193832_020642_A2924EAF)
-In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+	Mon, 19 Nov 2012 16:33:22 -0500
+Date: Mon, 19 Nov 2012 15:33:17 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Daniel Wagner <wagi@monom.org>
+Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
+ support
+Message-ID: <20121119213317.GD20301@thinkpad-t410> (sfid-20121119_223325_214749_84328B5C)
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <50AA9A4C.3070500@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50AA9A4C.3070500@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_HOTPLUG is going away as an option so __devexit_p is no longer
-needed.
+On Mon, Nov 19, 2012 at 09:45:00PM +0100, Arend van Spriel wrote:
+> On 11/15/2012 03:07 PM, Seth Forshee wrote:
+> >Hi Arend,
+> >
+> >As promised, here's the updated patch series for brcmsmac to remove the
+> >tx packet queue, add flow control, and add enhanced debug trace support.
+> >I've broken up the tx rework into multiple patches as you requested.
+> >Most notably I've split out the AMPDU session support into a separate
+> >patch, which should make it easier to review that change. I've done
+> >basic testing of each of the new commits to try and verify that no
+> >obvious regressions are introduced by any of them.
+> 
+> I replied to the patches that were reworked. We skipped the already
+> Acked-by patches in this review round.
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org> 
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org> 
-Cc: Samuel Ortiz <sameo@linux.intel.com> 
-Cc: linux-wireless@vger.kernel.org 
-Cc: linux-nfc@lists.01.org 
----
- drivers/nfc/pn544/i2c.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Great, thanks! I'm hoping it's not to late to get these in for 3.8.
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index fb430d8..407cdd6 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -469,7 +469,7 @@ static struct i2c_driver pn544_hci_i2c_driver = {
- 		  },
- 	.probe = pn544_hci_i2c_probe,
- 	.id_table = pn544_hci_i2c_id_table,
--	.remove = __devexit_p(pn544_hci_i2c_remove),
-+	.remove = pn544_hci_i2c_remove,
- };
- 
- static int __init pn544_hci_i2c_init(void)
--- 
-1.8.0
+John: Arend had contacted me off-list last week noting a conflict with
+wireless-testing. I resolved this and pushed it to the following branch
+if you'd like to take the patches from there. It is lacking the
+Reviewed-by tags that Arend supplied today, however.
+
+ git://kernel.ubuntu.com/sforshee/linux.git brcms-tx-wireless-testing
+
+> The patches have been in nightly testing on bcm43224 for a couple of
+> days. It still occasionally does show the infamous warning in the
+> .flush() callback. Can not have it all. I want to run the changes on
+> bcm4313 as well.
+
+Hopefully we can get this one taken care of soon, and the channel
+suppression errors as well ;-)
+
+Seth
 
