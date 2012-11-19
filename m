@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1674 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932279Ab2K1Uoc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 15:44:32 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/11] brcmfmac: change debug output for received event.
-Date: Wed, 28 Nov 2012 21:44:14 +0100
-Message-ID: <1354135454-7035-12-git-send-email-arend@broadcom.com> (sfid-20121128_214442_296379_5F871B76)
-In-Reply-To: <1354135454-7035-1-git-send-email-arend@broadcom.com>
-References: <1354135454-7035-1-git-send-email-arend@broadcom.com>
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:63092 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883Ab2KSV0n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 16:26:43 -0500
+Received: by mail-ia0-f174.google.com with SMTP id y25so3722305iay.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 13:26:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1353343170-26516-10-git-send-email-eliad@wizery.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com> <1353343170-26516-10-git-send-email-eliad@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 19 Nov 2012 23:26:27 +0200
+Message-ID: <CA+XVXfdRhHKhDcfReYuv8ncnkgG=Msr1eqh63rx08vTO5epLSQ@mail.gmail.com> (sfid-20121119_222646_202073_C42E3B15)
+Subject: Re: [PATCH 09/15] wlcore: remove channel handling from op_config
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Mon, Nov 19, 2012 at 6:39 PM, Eliad Peller <eliad@wizery.com> wrote:
+> After setting the channel on chanctx callbacks, we
+> no longer need to handle channel change notifications
+> on op_config.
+>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+[...]
+> -       /*
+> -        * mac80211 will go to idle nearly immediately after transmitting some
+> -        * frames, such as the deauth. To make sure those frames reach the air,
+> -        * wait here until the TX queue is fully flushed.
+> -        */
+> -       if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) ||
+> -           ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
+> -            (conf->flags & IEEE80211_CONF_IDLE)))
+> -               wl1271_tx_flush(wl);
 
-see header.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-index fa8fc44..7a00c46 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-@@ -314,7 +314,7 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
- 	while ((event = brcmf_fweh_dequeue_event(fweh))) {
- 		ifp = drvr->iflist[event->ifidx];
- 
--		brcmf_dbg(EVENT, "event %s (%u) ifidx %u bsscfg %u addr %pM:\n",
-+		brcmf_dbg(EVENT, "event %s (%u) ifidx %u bsscfg %u addr %pM\n",
- 			  brcmf_fweh_event_name(event->code), event->code,
- 			  event->emsg.ifidx, event->emsg.bsscfgidx,
- 			  event->emsg.addr);
-@@ -337,7 +337,7 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
- 			  emsg.version, emsg.flags, emsg.status, emsg.reason);
- 		brcmf_dbg_hex_dump(BRCMF_EVENT_ON(), event->data,
- 				   min_t(u32, emsg.datalen, 64),
--				   "appended:");
-+				   "event payload, len=%d\n", emsg.datalen);
- 
- 		/* special handling of interface event */
- 		if (event->code == BRCMF_E_IF) {
--- 
-1.7.10.4
-
-
+This flush (and the comment above) is also a good reason for flushing
+tx during wlcore_op_unassign_vif_chanctx...
