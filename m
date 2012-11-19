@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35490 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754647Ab2KZQj0 (ORCPT
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41576 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026Ab2KSSh7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 11:39:26 -0500
-Message-ID: <50B39B31.8040707@candelatech.com> (sfid-20121126_173929_748734_1DEAD84D)
-Date: Mon, 26 Nov 2012 08:39:13 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 19 Nov 2012 13:37:59 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: =?UTF-8?q?=5BPATCH=20040/493=5D=20bcma=3A=20remove=20use=20of=20=5F=5Fdevexit=5Fp?=
+Date: Mon, 19 Nov 2012 13:19:49 -0500
+Message-Id: <1353349642-3677-40-git-send-email-wfp5p@virginia.edu> (sfid-20121119_194006_236292_32605C92)
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: saravanad@posedge.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: add debugfs file for current tx rate
-References: <3cce329ee6381f0ab4dd4d86ea76c2da@posedge.com> <1353942595.2800.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353942595.2800.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/26/2012 07:09 AM, Johannes Berg wrote:
-> On Mon, 2012-11-26 at 05:22 -0800, saravanad@posedge.com wrote:
->> Add a debugfs file showing the current tx rate.
->> The information available in the rc_stats file
->> doesn't evidently provides us the current tx rate.
->> This patch adds the support for the same.
->
-> I don't see any value in this, you can just do "iw station dump" to get
-> the information.
+CONFIG_HOTPLUG is going away as an option so __devexit_p is no longer
+needed.
 
-Perhaps the missing bits could be added to the ethtool stats
-logic...that is easily parsed on the command line and relatively
-straight-forward to use programatically as well...
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: "Rafał Miłecki" <zajec5@gmail.com> 
+Cc: linux-wireless@vger.kernel.org 
+---
+ drivers/bcma/host_pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index 98fdc3e..fdd8dde 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -284,7 +284,7 @@ static struct pci_driver bcma_pci_bridge_driver = {
+ 	.name = "bcma-pci-bridge",
+ 	.id_table = bcma_pci_bridge_tbl,
+ 	.probe = bcma_host_pci_probe,
+-	.remove = __devexit_p(bcma_host_pci_remove),
++	.remove = bcma_host_pci_remove,
+ 	.driver.pm = BCMA_PM_OPS,
+ };
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.0
 
