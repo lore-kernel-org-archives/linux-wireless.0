@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:34787 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979Ab2KLRza (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:48502 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314Ab2KSVmP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 12:55:30 -0500
-Received: by mail-ia0-f174.google.com with SMTP id y25so7001iay.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 09:55:30 -0800 (PST)
+	Mon, 19 Nov 2012 16:42:15 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k13so7568373iea.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 13:42:14 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20121112001034.GA1150@kroah.com>
-References: <CAKErNvpyUxNxEMEt6gcVCr_3MTNpHaSU=5yZy2YsYmYOSCJLsw@mail.gmail.com>
- <CAKErNvq9O5d_vEQnBhD6PSy-gc37UfvhRA4nRh1r=xFSdC98Yw@mail.gmail.com> <20121112001034.GA1150@kroah.com>
-From: Maxim Mikityanskiy <maxtram95@gmail.com>
-Date: Mon, 12 Nov 2012 19:55:05 +0200
-Message-ID: <CAKErNvq=NBksnSkTGOkh0LnGLVKYCHGVfMbCdZ+bxYAZB=dReg@mail.gmail.com> (sfid-20121112_185534_598905_D820A9B9)
-Subject: Re: Need help with RTL8187SE staging driver
-To: Greg Kroah-Hartman <greg@kroah.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1353343170-26516-11-git-send-email-eliad@wizery.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com> <1353343170-26516-11-git-send-email-eliad@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 19 Nov 2012 23:41:59 +0200
+Message-ID: <CA+XVXfet9PT9j2TCWsK2O-P3CTn+-6kO-U+OJ=ajvRJim+8LeQ@mail.gmail.com> (sfid-20121119_224222_591338_0D092836)
+Subject: Re: [PATCH 10/15] wlcore: initiate ROC/CROC on sta state updates
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/11/12 Greg Kroah-Hartman <greg@kroah.com>:
-> On Sun, Nov 11, 2012 at 11:48:46PM +0200, Maxim Mikityanskiy wrote:
->> (I'm sorry, mailing list rejected my previous letter, I'm resending)
->>
->> Hello,
->>
->> I've decided to refactor and improve rtl8187se kernel driver from
->> staging directory, because it is buggy and lacks some features. It
->> causes full system freeze after resume from suspend, there are some
->> typos in interrupt handler that affect logic, it causes OOPS when
->> rmmoding, it has not rfkill support, it uses private ieee80211 stack
->> etc.
->>
->> I'm writing to you, because your address is mentioned in
->> drivers/staging/rtl8187se/TODO file. Also I'm CCing to linux-wireless
->> mailing list in hope that there are people that could also help me.
->>
->> You can clone git repository with modified driver source code here:
->> git@bitbucket.org:gentoo_root/
->> rtl8187se-staging.git. At first, I've removed some non-vital features
->> and dead code from original driver in order to simplify code. Then
->> I've fixed some bugs and created more clear structure of code. For
->> now, I did not fully follow Linux kernel coding style, there are lots
->> of long lines, and I hope to fix that later.
+On Mon, Nov 19, 2012 at 6:39 PM, Eliad Peller <eliad@wizery.com> wrote:
+> Use the sta_state notifications to ROC when a station
+> is about to connect, and CROC respectively on
+> authorization (success) / deletion (failure).
 >
-> Why not send patches for this so we can get your cleanups and other dead
-> code removal changes into the tree to make your further changes easier?
+> Change the wl12xx_update_sta_state() flow to bail out
+> only on error, so multiple code blocks could refer
+> to the same state.
 >
-> thanks,
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+[...]
 >
-> greg k-h
+> +       /* clear ROCs on failure or authorization */
+> +       if (is_sta &&
+> +           (new_state == IEEE80211_STA_AUTHORIZED ||
+> +            new_state == IEEE80211_STA_NOTEXIST)) {
+> +               if (test_bit(wlvif->role_id, wl->roc_map))
+> +                       wl12xx_croc(wl, wlvif->role_id);
+> +       }
+> +
+> +       if (is_sta &&
+> +           old_state == IEEE80211_STA_NOTEXIST &&
+> +           new_state == IEEE80211_STA_NONE) {
+> +               if (find_first_bit(wl->roc_map,
+> +                                  WL12XX_MAX_ROLES) >= WL12XX_MAX_ROLES) {
+> +                       WARN_ON(wlvif->role_id == WL12XX_INVALID_ROLE_ID);
+> +                       wl12xx_roc(wl, wlvif, wlvif->role_id, wlvif->channel);
+> +               }
+> +       }
 
-I'm preparing some patches now, and they will be ready soon. They will
-only contain some bug fixes and unused code removal. I can't commit
-all of my changes, because it will remove some features such as power
-management etc. I wanted to refactor vital code at first, and then
-re-add missing features, but I'm stuck with switch to mac80211.
-
-Really, it would be better and easier to fully rewrite that driver
-from scratch using mac80211, skb queues and more clear structures
-similar to the ones used in rtl8180 driver. I tried this way too, but
-I faced the same problem with authentication timeouts. So I can't
-continue my work unless I find a solution. That's why I'm asking for
-help.
+what about AP mode? we don't have an opportunistic ROC there as well
+for connecting stations?
