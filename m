@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:57002 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753470Ab2K1Ob0 (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:48918 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798Ab2KSOwR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 09:31:26 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k11so10137416iea.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 06:31:25 -0800 (PST)
-Date: Wed, 28 Nov 2012 09:31:02 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Erich Titl <erich.titl@think.ch>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: regulatory domain settings overwritten
-Message-ID: <20121128143102.GC23259@localhost> (sfid-20121128_153129_275957_9CADC81A)
-References: <50B470CE.8070402@think.ch>
- <CAGRGNgVT-Yru2ti9CWgwS5H2cfW=RTeL144zsdAmSRCAsLwOsg@mail.gmail.com>
- <50B4B7B6.7020205@think.ch>
- <CAGRGNgXz9L+DBuxii7p+r0m2SEa0Xy1JgDZqGf2-8xWuHBYdfQ@mail.gmail.com>
- <50B5B915.2030706@think.ch>
+	Mon, 19 Nov 2012 09:52:17 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so4863803oag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 06:52:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50B5B915.2030706@think.ch>
+In-Reply-To: <1353336285.18299.14.camel@jlt4.sipsolutions.net>
+References: <1353239862-11313-1-git-send-email-eliad@wizery.com>
+	<1353336285.18299.14.camel@jlt4.sipsolutions.net>
+Date: Mon, 19 Nov 2012 16:52:16 +0200
+Message-ID: <CAB3XZEcnew_7uJaWcMYF2Fv2ORKSUfPRGY0t-yrr1LKmwfWKYQ@mail.gmail.com> (sfid-20121119_155221_026264_1588EF2F)
+Subject: Re: [PATCH] mac80211: make remain_on_channel() op pass vif param
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 28, 2012 at 08:11:17AM +0100, Erich Titl wrote:
-> Oh, I don't pretend the developers are short sighted, just that the
-> person writing the code sat possibly somewhere in the US midwest and his
-> perception of the world might be restricted to the county border, been
-> there, seen it. The driver IMHO should be written in a way that it can
-> meet the local regulatory law, and the default should not be US imposed
-> by the driver.
+On Mon, Nov 19, 2012 at 4:44 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2012-11-18 at 13:57 +0200, Eliad Peller wrote:
+>> Drivers (e.g. wl12xx) might need to know the vif
+>> to roc on (mainly in order to configure the
+>> rx filters correctly).
+>>
+>> Add the vif to the op params, and update the current
+>> users (iwlwifi) to use the new api.
+>
+> Hmm, ok, but I think then the ROC merge logic may have to be changed?
+>
+yeah, i guess you're right.
 
-For what it's worth, the ath5k author lives in Greece :P
+@@ -2247,7 +2247,8 @@ static int ieee80211_start_roc_work(struct
+ieee80211_local *local,
 
-(Well, actually this code came from ath9k which is pretty much from the
-horse's mouth...)
+  out_check_combine:
+        list_for_each_entry(tmp, &local->roc_list, list) {
+-               if (tmp->chan != channel || tmp->chan_type != channel_type)
++               if (tmp->chan != channel || tmp->chan_type != channel_type ||
++                   tmp->sdata != sdata)
+                        continue;
 
--- 
-Bob Copeland %% www.bobcopeland.com
+should something like this be enough?
+
+Eliad.
