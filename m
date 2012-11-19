@@ -1,70 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42088 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462Ab2KTVp0 (ORCPT
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:49626 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753996Ab2KSSvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 16:45:26 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 10/10] mac80211_hwsim: advertise VHT support
-Date: Tue, 20 Nov 2012 22:45:16 +0100
-Message-Id: <1353447916-17304-11-git-send-email-johannes@sipsolutions.net> (sfid-20121120_224643_238615_33B25A5C)
-In-Reply-To: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
-References: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 19 Nov 2012 13:51:04 -0500
+Message-ID: <50AA7F89.1020504@pengutronix.de> (sfid-20121119_195108_800720_2B4531F9)
+Date: Mon, 19 Nov 2012 19:50:49 +0100
+From: Marc Kleine-Budde <mkl@pengutronix.de>
+MIME-Version: 1.0
+To: Bill Pemberton <wfp5p@virginia.edu>
+CC: gregkh@linuxfoundation.org,
+	Wolfgang Grandegger <wg@grandegger.com>,
+	"Maciej W. Rozycki" <macro@linux-mips.org>,
+	Jes Sorensen <jes@trained-monkey.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-can@vger.kernel.org, netdev@vger.kernel.org,
+	linux-hippi@sunsite.dk, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 333/493] net: remove use of __devinitdata
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu> <1353349642-3677-333-git-send-email-wfp5p@virginia.edu>
+In-Reply-To: <1353349642-3677-333-git-send-email-wfp5p@virginia.edu>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigE7DB2B6D387D3DC5400C6E07"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigE7DB2B6D387D3DC5400C6E07
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-If the number of channels is > 1, which means that
-hwsim will use mac80211 channel contexts, it can
-also advertise VHT support.
+On 11/19/2012 07:24 PM, Bill Pemberton wrote:
+> CONFIG_HOTPLUG is going away as an option so __devinitdata is no
+> longer needed.
+>=20
+> Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+> Cc: Wolfgang Grandegger <wg@grandegger.com>=20
+> Cc: Marc Kleine-Budde <mkl@pengutronix.de>=20
+> Cc: "Maciej W. Rozycki" <macro@linux-mips.org>=20
+> Cc: Jes Sorensen <jes@trained-monkey.org>=20
+> Cc: "John W. Linville" <linville@tuxdriver.com>=20
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>=20
+> Cc: Chaoming Li <chaoming_li@realsil.com.cn>=20
+> Cc: linux-can@vger.kernel.org=20
+> Cc: netdev@vger.kernel.org=20
+> Cc: linux-hippi@sunsite.dk=20
+> Cc: linux-wireless@vger.kernel.org=20
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+You've missed (mainlined via net-next/master):
+> ./sja1000/plx_pci.c:229:static struct plx_pci_card_info plx_pci_card_in=
+fo_cti __devinitdata =3D {
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 6be3fae..f1c05d5 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2208,6 +2208,34 @@ static int __init init_mac80211_hwsim(void)
- 			sband->ht_cap.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
- 
- 			hw->wiphy->bands[band] = sband;
-+
-+			if (channels == 1)
-+				continue;
-+
-+			sband->vht_cap.vht_supported = true;
-+			sband->vht_cap.cap =
-+				IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
-+				IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ |
-+				IEEE80211_VHT_CAP_RXLDPC |
-+				IEEE80211_VHT_CAP_SHORT_GI_80 |
-+				IEEE80211_VHT_CAP_SHORT_GI_160 |
-+				IEEE80211_VHT_CAP_TXSTBC |
-+				IEEE80211_VHT_CAP_RXSTBC_1 |
-+				IEEE80211_VHT_CAP_RXSTBC_2 |
-+				IEEE80211_VHT_CAP_RXSTBC_3 |
-+				IEEE80211_VHT_CAP_RXSTBC_4 |
-+				IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT;
-+			sband->vht_cap.vht_mcs.rx_mcs_map =
-+				cpu_to_le16(IEEE80211_VHT_MCS_SUPPORT_0_8 << 0 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 2 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 4 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 6 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 8 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 10 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 12 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 14);
-+			sband->vht_cap.vht_mcs.tx_mcs_map =
-+				sband->vht_cap.vht_mcs.rx_mcs_map;
- 		}
- 		/* By default all radios are belonging to the first group */
- 		data->group = 1;
--- 
-1.8.0
+Otherwise...
+Acked-by: Marc Kleine-Budde <mkl@pengutronix.de> (for the CAN part)
 
+--=20
+Pengutronix e.K.                  | Marc Kleine-Budde           |
+Industrial Linux Solutions        | Phone: +49-231-2826-924     |
+Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
+Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
+
+
+--------------enigE7DB2B6D387D3DC5400C6E07
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
+
+iEYEARECAAYFAlCqf4kACgkQjTAFq1RaXHPGvACdG0eLBLrkna9F93jnuxcADGQB
+u6YAnjaWLnG+qswOL22ZSiaRWz3mVRob
+=77FE
+-----END PGP SIGNATURE-----
+
+--------------enigE7DB2B6D387D3DC5400C6E07--
