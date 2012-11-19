@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44300 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755072Ab2KNJOV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 04:14:21 -0500
-Message-ID: <1352884491.9510.2.camel@jlt4.sipsolutions.net> (sfid-20121114_101439_085410_B4E4E8AA)
-Subject: Re: 'ip' blocking for long time trying to down station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 14 Nov 2012 10:14:51 +0100
-In-Reply-To: <5091ADDD.4050407@candelatech.com> (sfid-20121101_000206_244719_62ADC7A2)
-References: <5091ADDD.4050407@candelatech.com>
-	 (sfid-20121101_000206_244719_62ADC7A2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2728 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751459Ab2KSLCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 06:02:19 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH] mac80211: check add_chanctx callback before use in
+ ieee80211_reconfig
+Date: Mon, 19 Nov 2012 12:01:05 +0100
+Message-ID: <1353322865-7500-1-git-send-email-arend@broadcom.com> (sfid-20121119_120223_124392_C9E3AC54)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+During testing our mac80211 driver a fatal error occurred which was
+signalled to mac80211. Upon performing the reconfiguration of the
+device a WARN_ON was triggered. This warning checked the return value
+of drv_add_chanctx(). However, this returns -EOPNOTSUPP when the
+driver does not provide the callback. As the callback is optional
+better check it is defined before calling drv_add_chanctx().
 
-Sorry for the late reply.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ net/mac80211/util.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-> This is on the 400 station test machine.  No more crashes, but I'm seeing long
-> pauses (10+ seconds) when trying to down station interfaces (and sometimes other
-> commands as well).  The system cannot stabilize (my user-space app times out
-> after a while due to blocking on system() calls such as the one below,
-> and gives up, causing endless loops of up/down, associate, dhcp, etc)
-> I'm going to tweak the user-space code more to try to bring up stations
-> in smaller batches, but it still seems like there is room for improvement
-> in the OS.
-> 
-> Using sysrq, I got this trace of the command.  I'm not sure it was blocked
-> in the same place the whole time, but it seems likely.  Any ideas for how
-> to speed this sort of thing up?
-> 
-> ./local/sbin/ip link set sta140 down
-> 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 5bad758..9c3b3ba 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1417,10 +1417,12 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	}
+ 
+ 	/* add channel contexts */
+-	mutex_lock(&local->chanctx_mtx);
+-	list_for_each_entry(ctx, &local->chanctx_list, list)
+-		WARN_ON(drv_add_chanctx(local, ctx));
+-	mutex_unlock(&local->chanctx_mtx);
++	if (local->ops->add_chanctx) {
++		mutex_lock(&local->chanctx_mtx);
++		list_for_each_entry(ctx, &local->chanctx_list, list)
++			WARN_ON(drv_add_chanctx(local, ctx));
++		mutex_unlock(&local->chanctx_mtx);
++	}
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		struct ieee80211_chanctx_conf *ctx_conf;
+-- 
+1.7.10.4
 
->   [<ffffffff81070e2e>] flush_work+0x2b/0x34
->   [<ffffffff8106f857>] ? cwq_dec_nr_in_flight+0x76/0x76
->   [<ffffffffa026a673>] ieee80211_do_stop+0x379/0x544 [mac80211]
-
-I'm guessing that the other interfaces are actually re-scheduling work
-items while this is trying to flush ... I'm not really sure how to
-improve this behaviour though.
-
-johannes
 
