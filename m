@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:59845 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752795Ab2KMPlX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36707 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752219Ab2KSPKS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 10:41:23 -0500
-Received: by mail-pb0-f46.google.com with SMTP id rr4so5180100pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 07:41:23 -0800 (PST)
-From: Syam Sidhardhan <syamsidhardh@gmail.com>
-To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 1/1] ath5k: Use module_platform_driver macro for ahb.c
-Date: Tue, 13 Nov 2012 21:09:50 +0530
-Message-Id: <1352821190-6478-1-git-send-email-s.syam@samsung.com> (sfid-20121113_164130_556957_09DF8781)
+	Mon, 19 Nov 2012 10:10:18 -0500
+Message-ID: <1353337847.18299.24.camel@jlt4.sipsolutions.net> (sfid-20121119_161021_862820_DC84D717)
+Subject: Re: [RFC] mac80211: Add debugfs callbacks for station
+ addition/removal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 19 Nov 2012 16:10:47 +0100
+In-Reply-To: <20650.18783.6821.78205@gargle.gargle.HOWL>
+References: <1353304116-7124-1-git-send-email-sujith@msujith.org>
+	 <1353334496.18299.5.camel@jlt4.sipsolutions.net>
+	 <20650.18783.6821.78205@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify the code by make use of module_platform_driver macro.
+On Mon, 2012-11-19 at 20:29 +0530, Sujith Manoharan wrote:
+> 
+> BTW, here are few warnings that I saw when doing a suspend/resume cycle:
+> 
+> linux-test kernel: WARNING: at /home/sujith/dev/wireless-testing/net/mac80211/chan.c:379 ieee80211_vif_release_channel+0x36/0x70 [mac80211]()
+> linux-test kernel: Hardware name: LIFEBOOK AH531
+> linux-test kernel: Pid: 4139, comm: pm-suspend Tainted: G        W  O 3.7.0-rc5-wl-debug #31
+> linux-test kernel: Call Trace:
+> linux-test kernel:  [<ffffffff8105697f>] warn_slowpath_common+0x7f/0xc0
+> linux-test kernel:  [<ffffffff810569da>] warn_slowpath_null+0x1a/0x20
+> linux-test kernel:  [<ffffffffa056e566>] ieee80211_vif_release_channel+0x36/0x70 [mac80211]
+> linux-test kernel:  [<ffffffffa059a3ca>] __ieee80211_suspend+0x45a/0xd10 [mac80211]
 
-Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
----
- drivers/net/wireless/ath/ath5k/ahb.c |   15 +--------------
- 1 files changed, 1 insertions(+), 14 deletions(-)
+Oops. I should fix this.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-index aec33cc..8e8bcc7 100644
---- a/drivers/net/wireless/ath/ath5k/ahb.c
-+++ b/drivers/net/wireless/ath/ath5k/ahb.c
-@@ -236,17 +236,4 @@ static struct platform_driver ath_ahb_driver = {
- 	},
- };
- 
--static int __init
--ath5k_ahb_init(void)
--{
--	return platform_driver_register(&ath_ahb_driver);
--}
--
--static void __exit
--ath5k_ahb_exit(void)
--{
--	platform_driver_unregister(&ath_ahb_driver);
--}
--
--module_init(ath5k_ahb_init);
--module_exit(ath5k_ahb_exit);
-+module_platform_driver(ath_ahb_driver);
--- 
-1.7.4.1
+> linux-test kernel: WARNING: at /home/sujith/dev/wireless-testing/net/mac80211/ieee80211_i.h:1503 ieee80211_send_nullfunc+0xfe/0x130 [mac80211]()
+> linux-test kernel: Hardware name: LIFEBOOK AH531
+> linux-test kernel: Pid: 4139, comm: pm-suspend Tainted: G        W  O 3.7.0-rc5-wl-debug #31
+> linux-test kernel: Call Trace:
+> linux-test kernel:  [<ffffffff8105697f>] warn_slowpath_common+0x7f/0xc0
+> linux-test kernel:  [<ffffffff810569da>] warn_slowpath_null+0x1a/0x20
+> linux-test kernel:  [<ffffffffa058501e>] ieee80211_send_nullfunc+0xfe/0x130 [mac80211]
+
+This is already fixed, but the fix is in wireless while the WARN was
+only introduced in -next, so we need to have some patience.
+
+johannes
 
