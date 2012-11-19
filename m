@@ -1,45 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:54537 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756208Ab2KHP7w (ORCPT
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41652 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754032Ab2KSSiD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 10:59:52 -0500
-Received: by mail-ia0-f174.google.com with SMTP id y32so2016682iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 07:59:51 -0800 (PST)
-Message-ID: <509BD6F3.2000807@lwfinger.net> (sfid-20121108_170005_097341_F3279799)
-Date: Thu, 08 Nov 2012 09:59:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Nonaka Akira <nonaka@mac.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: "mac80211.ko" and "cfg80211.ko" compatibility issue.
-References: <509B73D5.5000206@mac.com> <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com> <9983E05C-2103-49C8-A675-4F5368F53FB5@mac.com> <CAGRGNgXj2rkiHw1D4HqRCyX6yJCDq75k1KtS0OR+t4En+wa_jA@mail.gmail.com>
-In-Reply-To: <CAGRGNgXj2rkiHw1D4HqRCyX6yJCDq75k1KtS0OR+t4En+wa_jA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 19 Nov 2012 13:38:03 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 017/493] wireless: remove CONFIG_HOTPLUG ifdefs
+Date: Mon, 19 Nov 2012 13:19:26 -0500
+Message-Id: <1353349642-3677-17-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193952_433644_1D848EEC)
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/08/2012 06:20 AM, Julian Calaby wrote:
-> Hi Nonaka,
->
-> On Thu, Nov 8, 2012 at 10:33 PM, Nonaka Akira <nonaka@mac.com> wrote:
->> Hi Julian,
->>
->> Well, We consider the option of using the entire compat-wireless drivers. However, we are planning the minor update of our product toward the end of the year and I thought it will be nice if I can keep the change minimum.
->
-> In general, the drivers in compat-wireless are more stable and have
-> more features than the versions in older kernels. (it is a back-port
-> of newer wireless drivers after all)
->
-> I would expect that you'll spend more time working out a solution to
-> use it for a single driver than you'd spend testing it on the hardware
-> you intend to support.
+Remove conditional code based on CONFIG_HOTPLUG being false.  It's
+always on now in preparation of it going away as an option.
 
-I agree. If you want to change only rtl8723ae, then you will need to backport it 
-to kernel 3.4.9 yourself. I have no idea how much work that would be, but I have 
-no interest in doing it.
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Johannes Berg <johannes@sipsolutions.net> 
+Cc: "John W. Linville" <linville@tuxdriver.com> 
+Cc: "David S. Miller" <davem@davemloft.net> 
+Cc: linux-wireless@vger.kernel.org 
+Cc: netdev@vger.kernel.org 
+---
+ net/wireless/reg.c   | 7 -------
+ net/wireless/sysfs.c | 4 ----
+ 2 files changed, 11 deletions(-)
 
-Larry
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b75756b..d3768a3 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2365,7 +2365,6 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 	return r;
+ }
+ 
+-#ifdef CONFIG_HOTPLUG
+ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+ 	if (last_request && !last_request->processed) {
+@@ -2377,12 +2376,6 @@ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 
+ 	return 0;
+ }
+-#else
+-int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+-{
+-	return -ENODEV;
+-}
+-#endif /* CONFIG_HOTPLUG */
+ 
+ void wiphy_regulatory_register(struct wiphy *wiphy)
+ {
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 9bf6d5e..1f6f01e 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -77,13 +77,11 @@ static void wiphy_dev_release(struct device *dev)
+ 	cfg80211_dev_free(rdev);
+ }
+ 
+-#ifdef CONFIG_HOTPLUG
+ static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+ 	/* TODO, we probably need stuff here */
+ 	return 0;
+ }
+-#endif
+ 
+ static int wiphy_suspend(struct device *dev, pm_message_t state)
+ {
+@@ -134,9 +132,7 @@ struct class ieee80211_class = {
+ 	.owner = THIS_MODULE,
+ 	.dev_release = wiphy_dev_release,
+ 	.dev_attrs = ieee80211_dev_attrs,
+-#ifdef CONFIG_HOTPLUG
+ 	.dev_uevent = wiphy_uevent,
+-#endif
+ 	.suspend = wiphy_suspend,
+ 	.resume = wiphy_resume,
+ 	.ns_type = &net_ns_type_operations,
+-- 
+1.8.0
 
