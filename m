@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:37629 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752666Ab2KPSYu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 13:24:50 -0500
-Message-ID: <1353090250.10872.83.camel@cumari.coelho.fi> (sfid-20121116_192453_545458_8184B956)
-Subject: Re: [PATCH 2/2] wlcore: SPI - fix spi transfer_list
-From: Luciano Coelho <coelho@ti.com>
-To: <Janusz.Dziedzic@tieto.com>
-CC: <linux-wireless@vger.kernel.org>, <arik@wizery.com>
-Date: Fri, 16 Nov 2012 20:24:10 +0200
-In-Reply-To: <3078A9B976EF864C8DDD0C499FFD07912383D647A0@EXMB01.eu.tieto.com>
-References: <3078A9B976EF864C8DDD0C499FFD07912383D647A0@EXMB01.eu.tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41684 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754522Ab2KSSiI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 13:38:08 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Subject: [PATCH 137/493] NFC: remove use of __devexit_p
+Date: Mon, 19 Nov 2012 13:21:26 -0500
+Message-Id: <1353349642-3677-137-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193832_020642_A2924EAF)
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-07 at 15:42 +0200, Janusz.Dziedzic@tieto.com wrote:
-> In corner case for wl12xx_spi_raw_write() when
-> 	len == SPI_AGGR_BUFFER_SIZE
-> we don't setup correctly spi transfer_list.
-> Next we will have garbage and strange errors
-> reported by SPI framework (eg. wrong speed_hz,
-> failed to transfer one message from queue)
-> when iterate transfer_list.
-> 
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
+CONFIG_HOTPLUG is going away as an option so __devexit_p is no longer
+needed.
 
-Thanks for trying out the SPI support on our driver! And, even better,
-fixing it! :)
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org> 
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org> 
+Cc: Samuel Ortiz <sameo@linux.intel.com> 
+Cc: linux-wireless@vger.kernel.org 
+Cc: linux-nfc@lists.01.org 
+---
+ drivers/nfc/pn544/i2c.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied and pushed.
-
---
-Luca.
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index fb430d8..407cdd6 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -469,7 +469,7 @@ static struct i2c_driver pn544_hci_i2c_driver = {
+ 		  },
+ 	.probe = pn544_hci_i2c_probe,
+ 	.id_table = pn544_hci_i2c_id_table,
+-	.remove = __devexit_p(pn544_hci_i2c_remove),
++	.remove = pn544_hci_i2c_remove,
+ };
+ 
+ static int __init pn544_hci_i2c_init(void)
+-- 
+1.8.0
 
