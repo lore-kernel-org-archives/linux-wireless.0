@@ -1,73 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:52537 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161178Ab2KNMTK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 07:19:10 -0500
-Message-ID: <50A38C3A.20908@tieto.com> (sfid-20121114_131914_662658_57F94696)
-Date: Wed, 14 Nov 2012 13:19:06 +0100
-From: Michal Kazior <michal.kazior@tieto.com>
-MIME-Version: 1.0
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:50933
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750963Ab2KSFtA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 00:49:00 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Victor Goldenshtein <victorg@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
-	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
-	"j@w1.fi" <j@w1.fi>, "coelho@ti.com" <coelho@ti.com>,
-	"igalc@ti.com" <igalc@ti.com>,
-	"adrian@freebsd.org" <adrian@freebsd.org>,
-	"nbd@nbd.name" <nbd@nbd.name>,
-	"simon.wunderlich@s2003.tu-chemnitz.de"
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [PATCH v4 6/6] mac80211: add ap channel switch command/event
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>     <1350226137-13704-7-git-send-email-victorg@ti.com>    <1350414472.10177.17.camel@jlt4.sipsolutions.net>   <50842563.4010201@ti.com> <1350910599.10166.4.camel@jlt4.sipsolutions.net>   <50922AA9.4030509@ti.com> <1352128994.9466.19.camel@jlt4.sipsolutions.net>  <50A2617B.3060807@ti.com> <1352892233.9510.26.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1352892233.9510.26.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: Add debugfs callbacks for station addition/removal
+Date: Mon, 19 Nov 2012 11:18:36 +0530
+Message-Id: <1353304116-7124-1-git-send-email-sujith@msujith.org> (sfid-20121119_064908_778391_F225FDAF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14/11/12 12:23, Johannes Berg wrote:
-> On Tue, 2012-11-13 at 17:04 +0200, Victor Goldenshtein wrote:
->
->>> No ... channel contexts are in the kernel now, so you do have to think
->>> about it now.
->>
->> Well thinking is one thing implementing is another ;)
->
-> Well ... :)
->
->> This whole DFS implementation initially intended for a single channel
->> mac. I don't might to deal with the channel context stuff but not sure
->> how much available time I"ll have for it, so it might take awhile.
->> I know there are people waiting for this, so I'm thinking would you
->> consider to go first with this single channel DFS support and later to
->> extend it to work with channel context stuff ?
->
-> Fair enough, but like I've been telling you, the current code doesn't
-> even match the current APIs.
->
-> Initially, I thought that for radar detection, you need to reserve the
-> channel context (in mac80211), make sure it's the only channel context
-> and prohibit other channel contexts from being added, until radar
-> detection is done.
->
-> However, then I realised that that still doesn't work -- once initial
-> radar detection is done, it needs to continue while the AP is active. If
-> the channel context was going to be relinquished, or even just the
-> channel changed for a few seconds, it would be unsafe. So as a result,
-> the radar detect operation has to somehow be coupled to the start AP
-> operation and prohibit channel changes and additional channel contexts
-> during the entire operation time.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Hmm.. cfg80211 doesn't really know about channel contexts.
+Provide drivers with hooks to create debugfs files when
+a new station is added. This would help drivers to take
+advantage of mac80211's station list infrastructure and not maintain
+tedious station management code internally.
 
-The problem I see is that cfg80211 may be in a combination with 
-`num_different_channels = 1` and mac80211 can have 2 channel contexts 
-due to channel type incompatibilities.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ include/net/mac80211.h     | 18 ++++++++++++++++++
+ net/mac80211/debugfs_sta.c | 12 ++++++++++++
+ 2 files changed, 30 insertions(+)
 
-We'd need to tell cfg80211 that multi-interface is not possible when DFS 
-is active if we want to at least consider single-channel only DFS.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a789dd1..f697b28 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2192,6 +2192,14 @@ enum ieee80211_rate_control_changed {
+  * @sta_remove: Notifies low level driver about removal of an associated
+  *	station, AP, IBSS/WDS/mesh peer etc. This callback can sleep.
+  *
++ * @sta_add_debugfs: Drivers can use this callback to add debugfs files
++ *	when a station is added to mac80211's station list. This callback
++ *	and @sta_remove_debugfs should be within a CONFIG_MAC80211_DEBUGFS
++ *	conditional. This callback can sleep.
++ *
++ * @sta_remove_debugfs: Remove the debugfs files which were added using
++ *	@sta_add_debugfs. This callback can sleep.
++ *
+  * @sta_notify: Notifies low level driver about power state transition of an
+  *	associated station, AP,  IBSS/WDS/mesh peer etc. For a VIF operating
+  *	in AP mode, this callback will not be called when the flag
+@@ -2473,6 +2481,16 @@ struct ieee80211_ops {
+ 		       struct ieee80211_sta *sta);
+ 	int (*sta_remove)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			  struct ieee80211_sta *sta);
++#ifdef CONFIG_MAC80211_DEBUGFS
++	void (*sta_add_debugfs)(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ieee80211_sta *sta,
++				struct dentry *dir);
++	void (*sta_remove_debugfs)(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   struct ieee80211_sta *sta,
++				   struct dentry *dir);
++#endif
+ 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			enum sta_notify_cmd, struct ieee80211_sta *sta);
+ 	int (*sta_state)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 5ccec2c..32a45ed 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -334,6 +334,8 @@ STA_OPS(ht_capa);
+ 
+ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ {
++	struct ieee80211_local *local = sta->local;
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct dentry *stations_dir = sta->sdata->debugfs.subdir_stations;
+ 	u8 mac[3*ETH_ALEN];
+ 
+@@ -379,10 +381,20 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD_COUNTER(tx_retry_failed, tx_retry_failed);
+ 	DEBUGFS_ADD_COUNTER(tx_retry_count, tx_retry_count);
+ 	DEBUGFS_ADD_COUNTER(wep_weak_iv_count, wep_weak_iv_count);
++
++	if (local->ops->sta_add_debugfs)
++		local->ops->sta_add_debugfs(&local->hw, &sdata->vif,
++					    &sta->sta, sta->debugfs.dir);
+ }
+ 
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+ {
++	struct ieee80211_local *local = sta->local;
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++
++	if (local->ops->sta_remove_debugfs)
++		local->ops->sta_remove_debugfs(&local->hw, &sdata->vif,
++					       &sta->sta, sta->debugfs.dir);
+ 	debugfs_remove_recursive(sta->debugfs.dir);
+ 	sta->debugfs.dir = NULL;
+ }
+-- 
+1.8.0
 
-
--- Pozdrawiam / Best regards, Michal Kazior.
