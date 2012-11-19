@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:57714 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816Ab2KTLUR (ORCPT
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41451 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754128Ab2KSSeK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 06:20:17 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so1625946eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:20:16 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 04/11] wlcore: get channel from bss_conf instead of hw->conf
-Date: Tue, 20 Nov 2012 13:20:04 +0200
-Message-Id: <1353410411-18833-5-git-send-email-eliad@wizery.com> (sfid-20121120_122025_083640_451834D1)
-In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
-References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+	Mon, 19 Nov 2012 13:34:10 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 264/493] rfkill: remove use of __devinit
+Date: Mon, 19 Nov 2012 13:23:33 -0500
+Message-Id: <1353349642-3677-264-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193654_968696_83A498C3)
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We care only about the operational channel, not
-about the temporal hw channel (which won't have
-any real meaning in multi-channel env anyway)
+CONFIG_HOTPLUG is going away as an option so __devinit is no longer
+needed.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Johannes Berg <johannes@sipsolutions.net> 
+Cc: "John W. Linville" <linville@tuxdriver.com> 
+Cc: "David S. Miller" <davem@davemloft.net> 
+Cc: linux-wireless@vger.kernel.org 
+Cc: netdev@vger.kernel.org 
 ---
- drivers/net/wireless/ti/wlcore/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/rfkill/rfkill-regulator.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index e9a8092..18ac8d1 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3977,7 +3977,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			goto sta_not_found;
+diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
+index a87710d..c864e44 100644
+--- a/net/rfkill/rfkill-regulator.c
++++ b/net/rfkill/rfkill-regulator.c
+@@ -55,7 +55,7 @@ struct rfkill_ops rfkill_regulator_ops = {
+ 	.set_block = rfkill_regulator_set_block,
+ };
  
- 		/* save the supp_rates of the ap */
--		sta_rate_set = sta->supp_rates[wl->hw->conf.channel->band];
-+		sta_rate_set = sta->supp_rates[wlvif->band];
- 		if (sta->ht_cap.ht_supported)
- 			sta_rate_set |=
- 			  (sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET) |
+-static int __devinit rfkill_regulator_probe(struct platform_device *pdev)
++static int rfkill_regulator_probe(struct platform_device *pdev)
+ {
+ 	struct rfkill_regulator_platform_data *pdata = pdev->dev.platform_data;
+ 	struct rfkill_regulator_data *rfkill_data;
 -- 
-1.7.6.401.g6a319
+1.8.0
 
