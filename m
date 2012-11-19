@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51322 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161022Ab2K3SRl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36621 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994Ab2KSOk7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 13:17:41 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 1/2] mac80211: return if CSA is not handle
-Date: Fri, 30 Nov 2012 19:17:27 +0100
-Message-Id: <1354299448-19928-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121130_191745_173662_B2BFFABC)
+	Mon, 19 Nov 2012 09:40:59 -0500
+Message-ID: <1353336088.18299.11.camel@jlt4.sipsolutions.net> (sfid-20121119_154102_757368_99FC8910)
+Subject: Re: [PATCH] iw: add set_mcast_rate command support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 19 Nov 2012 15:41:28 +0100
+In-Reply-To: <1352282283-31254-1-git-send-email-ordex@autistici.org>
+References: <1352282283-31254-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If channel contexts are enabled, the CSA should not be processed
-further. A return is missing here.
+On Wed, 2012-11-07 at 10:58 +0100, Antonio Quartulli wrote:
+> This patch adds the support to run the set_mcast_rate() command on
+> adhoc and mesh_point vifs. With this command it is possible to tune
+> the bitrate to use when sending group frames. This command can be used
+> even if the vifs has already joint the ibss/mesh network.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- net/mac80211/mlme.c |    1 +
- 1 file changed, 1 insertion(+)
+Applied.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d2a4f78..1099e07 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -775,6 +775,7 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			   "not handling channel switch with channel contexts\n");
- 		ieee80211_queue_work(&sdata->local->hw,
- 				     &ifmgd->csa_connection_drop_work);
-+		return;
- 	}
- 
- 	mutex_lock(&sdata->local->chanctx_mtx);
--- 
-1.7.10.4
+johannes
 
