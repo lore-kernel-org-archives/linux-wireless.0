@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51673 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932931Ab2KWHme (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:43574 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753056Ab2KSPOG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 02:42:34 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] mac80211: disable HT advertising unless AP supports it
-Date: Fri, 23 Nov 2012 08:43:00 +0100
-Message-Id: <1353656580-12134-4-git-send-email-johannes@sipsolutions.net> (sfid-20121123_084238_804173_782858A8)
-In-Reply-To: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net>
-References: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 19 Nov 2012 10:14:06 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so1153182eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 07:14:05 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] wlcore: print role_id on bss_info_changed
+Date: Mon, 19 Nov 2012 17:14:05 +0200
+Message-Id: <1353338046-12625-1-git-send-email-eliad@wizery.com> (sfid-20121119_161411_629482_F443675F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In multi-vif setup it's useful to know the role_id
+being configured.
 
-If the AP doesn't support HT, or more importantly if
-it does but we have to disable it because its IEs are
-broken, don't advertise HT support in our association
-request. Otherwise, we configure our channel to be a
-20 MHz non-HT channel but the AP might still think we
-support HT, or even 40 MHz.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/mac80211/mlme.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ti/wlcore/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 42b2c3f..6d49d6c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3267,6 +3267,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 		sdata->needed_rx_chains = min(chains, local->rx_chains);
- 	} else {
- 		sdata->needed_rx_chains = 1;
-+		sdata->u.mgd.flags |= IEEE80211_STA_DISABLE_HT;
- 	}
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 25530c8..8f06c88 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4156,8 +4156,8 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
+ 	int ret;
  
- 	/* will change later if needed */
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed 0x%x",
+-		     (int)changed);
++	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info role %d changed 0x%x",
++		     wlvif->role_id, (int)changed);
+ 
+ 	/*
+ 	 * make sure to cancel pending disconnections if our association
 -- 
-1.8.0
+1.7.6.401.g6a319
 
