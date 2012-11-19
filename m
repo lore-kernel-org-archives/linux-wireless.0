@@ -1,95 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:40614 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753884Ab2KMQ1n (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:65056 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753767Ab2KSQju (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 11:27:43 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k13so10964031iea.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 08:27:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20121113043226.GA4064@localhost>
-References: <1352746438-2404-1-git-send-email-thomas@cozybit.com>
-	<CAJ-Vmom4Q9ToOokeLf91tSDmmPDehcqfofuPu=wL+=Pf4fUr_g@mail.gmail.com>
-	<20121112192859.GB6842@localhost>
-	<CA+yqC4ZkeKgLKoPh18f1qDyLuOGf22GyL92+suca+gveoq7ZVw@mail.gmail.com>
-	<20121113043226.GA4064@localhost>
-Date: Tue, 13 Nov 2012 08:27:43 -0800
-Message-ID: <CA+yqC4bFBFBccmeHWOaQHP0E=A0OWk+uef2ASdmLmR6pJfXRGw@mail.gmail.com> (sfid-20121113_172753_955434_45ED5EDB)
-Subject: Re: [PATCH] ath5k: RX timestamp is reported at end of frame
-From: Sam Leffler <sleffler@google.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Nov 2012 11:39:50 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so1209576eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:50 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/15] wlcore: initiate ROC/CROC on sta state updates
+Date: Mon, 19 Nov 2012 18:39:25 +0200
+Message-Id: <1353343170-26516-11-git-send-email-eliad@wizery.com> (sfid-20121119_173957_547954_8316FF85)
+In-Reply-To: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 12, 2012 at 8:32 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Mon, Nov 12, 2012 at 11:40:15AM -0800, Sam Leffler wrote:
->> > I'll do some testing tonight with whatever cards I have around here to
->> > see if we can at least get a better idea of which chipsets do what.
->>
->> >From my experience doing tdma on ath chipsets I know the timestamp is
->> a snapshot of the tsf recorded by the dma engine when it writes the
->> descriptor on dma completion.  This was only legacy frames; don't know
->> how things work for aggregate frames.
->
-> On dma completion, so that might be even a bit further beyond
-> end-of-frame?
+Use the sta_state notifications to ROC when a station
+is about to connect, and CROC respectively on
+authorization (success) / deletion (failure).
 
-It's close enough that if you adjust by the air time for the frame
-you'll get an accurate measure of when the preamble was received at
-the sta--at least accurate enough for me to synchronize clocks over
-100+ km.  Details are available if you search and the code has been in
-freebsd for many years...
+Change the wl12xx_update_sta_state() flow to bail out
+only on error, so multiple code blocks could refer
+to the same state.
 
->
-> For the record, I just tested this as follows: I set up a mesh
-> network between an ath5k and an ath9k card (the ath9k driver being
-> already patched similarly), with the mesh beacon having a few
-> information elements, and operating in 2.4 GHz band.
->
-> Then I watched toffset adjustments.  A more accurate timestamp
-> means the toffsets between the stations should be closer to each
-> other.
->
-> Here are some representative numbers:
->
-> ath5k: phy2: Atheros AR2413 chip found (MAC: 0x78, PHY: 0x45)
-> -------------------------------------------------------------
-> Without patch:
-> updated toffset for 00:80:48:63:a2:f8: 52987952
-> updated toffset for 00:03:7f:10:4d:d6: -52989071
-> (diff 1119 us)
->
-> With patch:
-> updated toffset for 00:80:48:63:a2:f8: -92733857
-> updated toffset for 00:03:7f:10:4d:d6: 92733496
-> (diff 361 us)
->
-> ath5k: phy0: Atheros 5414 chip found (MAC: 0xa3, PHY: 0x61)
-> -------------------------------------------------------------
-> Without patch:
-> updated toffset for 00:17:f2:43:be:3a: -2557256031
-> updated toffset for 00:03:7f:10:4d:d6: 2557254935
-> (diff 1096 us)
->
-> With patch:
-> updated toffset for 00:17:f2:43:be:3a: -2054754842
-> updated toffset for 00:03:7f:10:4d:d6: 2054755003
-> (diff 161 us)
->
-> Sorry, those are all the ath5k devices I have access to without
-> digging through some boxes, but in the absence of someone with
-> old old hardware showing up and saying this is worse for them,
-> I'd say ship it...
->
-> Thomas, feel free to add my:
->
-> Tested-by: Bob Copeland <me@bobcopeland.com>
->
-> --
-> Bob Copeland %% www.bobcopeland.com
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |   43 ++++++++++++++++++++------------
+ 1 files changed, 27 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index fcdf381..e1f0606 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -83,8 +83,6 @@ static int wl12xx_set_authorized(struct wl1271 *wl,
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	wl12xx_croc(wl, wlvif->role_id);
+-
+ 	wl1271_info("Association completed.");
+ 	return 0;
+ }
+@@ -3944,14 +3942,6 @@ sta_not_found:
+ 			wl1271_warning("cmd join failed %d", ret);
+ 			goto out;
+ 		}
+-
+-		/* ROC until connected (after EAPOL exchange) */
+-		if (!is_ibss) {
+-			ret = wl12xx_roc(wl, wlvif, wlvif->role_id,
+-					 wlvif->channel);
+-			if (ret < 0)
+-				goto out;
+-		}
+ 	}
+ 
+ 	if (set_assoc) {
+@@ -4355,8 +4345,11 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
+ 	/* Add station (AP mode) */
+ 	if (is_ap &&
+ 	    old_state == IEEE80211_STA_NOTEXIST &&
+-	    new_state == IEEE80211_STA_NONE)
+-		return wl12xx_sta_add(wl, wlvif, sta);
++	    new_state == IEEE80211_STA_NONE) {
++		ret = wl12xx_sta_add(wl, wlvif, sta);
++		if (ret)
++			return ret;
++	}
+ 
+ 	/* Remove station (AP mode) */
+ 	if (is_ap &&
+@@ -4364,7 +4357,6 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
+ 	    new_state == IEEE80211_STA_NOTEXIST) {
+ 		/* must not fail */
+ 		wl12xx_sta_remove(wl, wlvif, sta);
+-		return 0;
+ 	}
+ 
+ 	/* Authorize station (AP mode) */
+@@ -4376,14 +4368,17 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
+ 
+ 		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true,
+ 						     hlid);
+-		return ret;
++		if (ret)
++			return ret;
+ 	}
+ 
+ 	/* Authorize station */
+ 	if (is_sta &&
+ 	    new_state == IEEE80211_STA_AUTHORIZED) {
+ 		set_bit(WLVIF_FLAG_STA_AUTHORIZED, &wlvif->flags);
+-		return wl12xx_set_authorized(wl, wlvif);
++		ret = wl12xx_set_authorized(wl, wlvif);
++		if (ret)
++			return ret;
+ 	}
+ 
+ 	if (is_sta &&
+@@ -4391,9 +4386,25 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
+ 	    new_state == IEEE80211_STA_ASSOC) {
+ 		clear_bit(WLVIF_FLAG_STA_AUTHORIZED, &wlvif->flags);
+ 		clear_bit(WLVIF_FLAG_STA_STATE_SENT, &wlvif->flags);
+-		return 0;
+ 	}
+ 
++	/* clear ROCs on failure or authorization */
++	if (is_sta &&
++	    (new_state == IEEE80211_STA_AUTHORIZED ||
++	     new_state == IEEE80211_STA_NOTEXIST)) {
++		if (test_bit(wlvif->role_id, wl->roc_map))
++			wl12xx_croc(wl, wlvif->role_id);
++	}
++
++	if (is_sta &&
++	    old_state == IEEE80211_STA_NOTEXIST &&
++	    new_state == IEEE80211_STA_NONE) {
++		if (find_first_bit(wl->roc_map,
++				   WL12XX_MAX_ROLES) >= WL12XX_MAX_ROLES) {
++			WARN_ON(wlvif->role_id == WL12XX_INVALID_ROLE_ID);
++			wl12xx_roc(wl, wlvif, wlvif->role_id, wlvif->channel);
++		}
++	}
+ 	return 0;
+ }
+ 
+-- 
+1.7.6.401.g6a319
+
