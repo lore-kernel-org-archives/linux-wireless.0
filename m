@@ -1,49 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41424 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462Ab2KSSdo (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52281 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753599Ab2KSKLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:33:44 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Subject: [PATCH 239/493] nfc: remove use of __devinit
-Date: Mon, 19 Nov 2012 13:23:08 -0500
-Message-Id: <1353349642-3677-239-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193359_163970_DEA4508E)
-In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+	Mon, 19 Nov 2012 05:11:23 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so3361372pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 02:11:23 -0800 (PST)
+Message-ID: <50AA05C3.8030005@rkellis.com> (sfid-20121119_111127_291837_7D77EC9D)
+Date: Mon, 19 Nov 2012 18:11:15 +0800
+From: Mark Ellis <m@rkellis.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linux-kernel@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Piotr Haber <phaber@broadcom.com>
+Subject: Re: PROBLEM: REGRESSION in drivers/platform/x86/dell-laptop.c
+References: <50A8BCA6.7080102@rkellis.com> <50A92935.5070802@broadcom.com>
+In-Reply-To: <50A92935.5070802@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_HOTPLUG is going away as an option so __devinit is no longer
-needed.
+On 19/11/12 02:30, Arend van Spriel wrote:
+> On 11/18/2012 11:47 AM, Mark Ellis wrote:
+>> 1. rfkill code removal causes hang
+>>
+>> 2. the rfkill code was removed from this driver in commit
+>> 53039f222c548bfc119eea6df4dca2b57550e271 this results in my computer
+>> hanging (dell n5050) if booting with the wireless (hardware) disabled.
+>> downgrading this module to the version prior to this commit fixes the
+>> issue.
+>
+> The commit you mention does not touch dell-laptop.c. The commit before
+> that one doe, but it is only adding code. Digging the tree I found this
+> one between kernel v3.4 and v3.5-rc1:
+>
+> commit a6c2390cd6d2083d27a2359658e08f2d3df375ac
+> Author: Matthew Garrett <mjg@redhat.com>
+> Date: Fri Jun 1 12:46:56 2012 -0400
+>
+> dell-laptop: Remove rfkill code
+>
+> The interface just doesn't work on some machines, and Dell haven't been
+> able to tell us either which machines those are or what we should be
+> doing instead. This would be fine, except it results in userspace ending
+> up confused and general sadness. So let's just rip it out for now.
+>
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org> 
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org> 
-Cc: Samuel Ortiz <sameo@linux.intel.com> 
-Cc: linux-wireless@vger.kernel.org 
-Cc: linux-nfc@lists.01.org 
----
- drivers/nfc/pn544/i2c.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+You're right, I have no idea where I got that commit number from! Sorry 
+about that.
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 407cdd6..d48a806 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -361,7 +361,7 @@ static struct nfc_phy_ops i2c_phy_ops = {
- 	.disable = pn544_hci_i2c_disable,
- };
- 
--static int __devinit pn544_hci_i2c_probe(struct i2c_client *client,
-+static int pn544_hci_i2c_probe(struct i2c_client *client,
- 				     const struct i2c_device_id *id)
- {
- 	struct pn544_i2c_phy *phy;
--- 
-1.8.0
+> Actually, the behavior you describe and given you have a BCM4313 running
+> with brcmsmac I may point out that this driver has an issue coming up
+> with wireless disabled. This has been fixed in 3.7 kernel so you may
+> want to try:
+>
+> commit 82d8eba358badb466a4e988ecabf0668a8d92e9c
+> Author: Piotr Haber <phaber@broadcom.com>
+> Date: Wed Sep 19 22:21:15 2012 +0200
+>
+> brcmsmac: don't start device when RfKill is engaged
+>
+> This patch fixes a bug when device is being started
+> while RfKill switch is engaged, leading to hang
+> due to partial initialization of hardware.
+>
+> Tested-by: <dragonn@op.pl>
+> Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Piotr Haber <phaber@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> Maybe I should resubmit it to stable. Now there is an idea.
 
+Yep that fixed it, thanks very much!
+
+Mark
