@@ -1,99 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:54365 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756742Ab2KHWvb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 17:51:31 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so1857530eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 14:51:30 -0800 (PST)
+Received: from arroyo.ext.ti.com ([192.94.94.40]:58921 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753180Ab2KSSO6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 13:14:58 -0500
+Message-ID: <1353348860.10872.131.camel@cumari.coelho.fi> (sfid-20121119_191530_560630_A59F36D2)
+Subject: Re: [PATCH 01/15] wlcore: start sta role on CHANGED_BSSID
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Mon, 19 Nov 2012 20:14:20 +0200
+In-Reply-To: <1353343170-26516-2-git-send-email-eliad@wizery.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	 <1353343170-26516-2-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XzDrTt1azuEdZTUkVgP0LeLB5Jynb6h_h5N-+_ArCGGQ@mail.gmail.com>
-References: <1351709571-23301-1-git-send-email-mcgrof@do-not-panic.com>
- <CAGRGNgXyyvpSfFqd+L6J166Lfu7yfWc8-zMwpTMxLzFY+Qs0nA@mail.gmail.com> <CAB=NE6XzDrTt1azuEdZTUkVgP0LeLB5Jynb6h_h5N-+_ArCGGQ@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 9 Nov 2012 09:51:10 +1100
-Message-ID: <CAGRGNgUi9Pagf0Kq4m0w_hfBTA1AW5pVAeaq-UC_1jyYfujNyw@mail.gmail.com> (sfid-20121108_235149_447826_01B27B54)
-Subject: Re: [PATCH] carl9170: kill MODULE_VERSION
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+> Make the connection flow simpler by starting
+> sta role on bssid change.
+> 
+> Currently, we start dev role when going idle-off,
+> and start the sta role only after association
+> indication. This complicates the connection
+> flow with some possible intermediate states.
+> 
+> Make it simpler by starting sta role on bssid change,
+> which now happens *before* auth req get sent.
+> 
+> Update the handling of mac80211's notifications
+> and change wl1271_join/unjoin accordingly -
+> * Split wl1271_join() into wlcore_join (tuning on
+>   a channel/bssid) and wlcore_set_assoc (configure
+>   sta after association).
+> * Rename wl1271_unjoin() to wlcore_disconnect(), as
+>   it is no longer the inversion of wl1271_join()
+>   (now it's only used to disconnect associated sta /
+>   joined ibss, without stopping the role).
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-On Fri, Nov 9, 2012 at 4:46 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Wed, Oct 31, 2012 at 11:36 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> Hi Luis,
->>
->> On Thu, Nov 1, 2012 at 5:52 AM, Luis R. Rodriguez
->> <mcgrof@do-not-panic.com> wrote:
->>> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
->>>
->>> This is pretty pointless. Lets kill this to stop people from
->>> thinking that its actually used. Maybe we should go on
->>> a crusade and kill this completely from the kernel.
->>
->> I'm sure that there are a multitude of places where MODULE_VERSION is
->> unnecessary, but killing it from the entire kernel simply won't
->> happen.
->
-> Easily, nope, hard yes.
+[...]
 
-Completely agree.
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index 41ed1d5..41a8502 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -2468,8 +2468,7 @@ static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
 
->> I know that in the SCSI subsystem some of the
->> vendor-maintained drivers use this to keep track of exactly which
->> version is running on a given kernel.
->
-> What's this "vendor-maintained" thing?
+[...]
 
-I must have written that while tired and consequently mangled my point.
+> -static int wl1271_unjoin(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+> +static void wlcore_disconnect(struct wl1271 *wl, struct wl12xx_vif *wlvif)
 
-I meant that they're maintained like the brcm[sf]mac drivers - i.e. by
-the manufacturer of the hardware - but with a thicker layer of
-corporate enterprise stuff between us mortals in the kernel
-development community and them. I bring this up because the "average"
-patchset for these drivers reads like a new release of a piece of
-software "this is version 13.3.7 here's what's changed, and following
-is it split into patches" (Example patchset from Emulex [1]) rather
-than a set of patches and I recall that there's been some friction in
-the past between how they want to do things: distributing their
-drivers separately for the distros they support (see [2]) as well as
-sending it upstream; and what we consider to be the right way to do
-things.
+Why not wlcore_unset_assoc()? Or change the wlcore_set_assoc() to
+wlcore_connect()?
 
-That said, I haven't seen any real conflict over this in the SCSI
-subsystem recently, so maybe my fears are based on behaviours from the
-past. IIRC most of the hardware manufacturers are realising that they
-have to follow the "Linux way" to get their stuff out there, but I'm
-pretty sure there's still at least one manufacturer who is still doing
-the absolute minimum they have to to make their throw-it-over-the-wall
-strategy acceptable to upstream.
+[...]
 
->> (Why not use kernel releases? not sure, probably a combination of user-interface, distro backporting
->> and internal systems.)
->
-> Exactly, I'm alluding there's better ways to do this and to reflect
-> provenance better, but also by prioritizing upstream development.
+> @@ -3921,15 +3850,63 @@ sta_not_found:
+>  			wlvif->basic_rate =
+>  				wl1271_tx_min_rate_get(wl,
+>  						       wlvif->basic_rate_set);
+> +
+>  			if (sta_rate_set)
+>  				wlvif->rate_set =
+>  					wl1271_tx_enabled_rates_get(wl,
+>  								sta_rate_set,
+>  								wlvif->band);
+> +
+> +			/* we only supports sched_scan while not connected */
 
-For what it's worth, I completely support your plan and agree that
-there are much better ways to do things (e.g. backporting with
-compat-drivers) I just want you to be aware that there are still some
-companies out there which are still very wedded to the "old" ways of
-doing things and have "good" reasons for doing things that way.
+s/supports/support/
 
-[1] : http://marc.info/?l=linux-scsi&m=135170911826107&w=2
-[2] : http://www.emulex.com/downloads/emulex/cnas-and-hbas/drivers/linux.html
+> +			if (wl->sched_scanning) {
+> +				wl1271_scan_sched_scan_stop(wl, wlvif);
+> +				ieee80211_sched_scan_stopped(wl->hw);
+> +			}
+> +
+>  			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
+>  			if (ret < 0)
+>  				goto out;
+>  
+> +			ret = wl12xx_cmd_build_null_data(wl, wlvif);
+> +			if (ret < 0)
+> +				goto out;
+> +
+> +			ret = wl1271_build_qos_null_data(wl, vif);
+> +			if (ret < 0)
+> +				goto out;
+> +
+> +			/* Need to update the BSSID (for filtering etc) */
+> +			set_bit(WLVIF_FLAG_IN_USE, &wlvif->flags);
+> +			do_join = true;
+> +		} else {
+> +			/* revert back to minimum rates for the current band */
+> +			wl1271_set_band_rate(wl, wlvif);
+> +			wlvif->basic_rate =
+> +				wl1271_tx_min_rate_get(wl,
+> +						       wlvif->basic_rate_set);
+> +			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
+> +			if (ret < 0)
+> +				goto out;
+> +
+> +			if (!is_ibss &&
+> +			    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags)) {
+> +				ret = wl12xx_cmd_role_stop_sta(wl, wlvif);
+> +				if (ret < 0)
+> +					goto out;
+> +			}
+> +			clear_bit(WLVIF_FLAG_IN_USE, &wlvif->flags);
+> +		}
+> +	}
 
-Thanks,
+It would be nice to keep all this stuff in a separate function instead
+of bringing it back into this already-huge wl1271_bss_info_changed_sta()
+function.
 
--- 
-Julian Calaby
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+> +	if ((changed & BSS_CHANGED_ASSOC)) {
+
+Same thing for this if, but you already did a great job removing things
+from here. ;)
+
+> +		if (bss_conf->assoc) {
+> +			int ieoffset;
+> +			wlvif->aid = bss_conf->aid;
+> +			wlvif->channel_type = bss_conf->channel_type;
+> +			wlvif->beacon_int = bss_conf->beacon_int;
+> +
+> +			set_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags);
+
+Wouldn't it be better to put this in the set_assoc() function?
+
+--
+Luca.
+
