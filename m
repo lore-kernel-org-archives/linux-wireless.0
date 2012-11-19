@@ -1,129 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54296 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932202Ab2KWXTI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 18:19:08 -0500
-Message-ID: <1353712774.5908.15.camel@jlt4.sipsolutions.net> (sfid-20121124_001923_938111_E322397C)
-Subject: Re: Badness at net/mac80211/offchannel.c:264
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Liao <Felix.Liao@watchguard.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ocean Su <Ocean.Su@watchguard.com>,
-	Joe Qiao <Joe.Qiao@watchguard.com>,
-	Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-Date: Sat, 24 Nov 2012 00:19:34 +0100
-In-Reply-To: <1AA9BD91549CF94C901B05C32D2B081101E00C99@ES02Ch.wgti.net> (sfid-20121123_113037_122856_FE2675E8)
-References: <1AA9BD91549CF94C901B05C32D2B081101E00C99@ES02Ch.wgti.net>
-	 (sfid-20121123_113037_122856_FE2675E8)
+Received: from comal.ext.ti.com ([198.47.26.152]:53909 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752681Ab2KSRhD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 12:37:03 -0500
+Message-ID: <1353346581.10872.117.camel@cumari.coelho.fi> (sfid-20121119_183706_681902_1BD8A83A)
+Subject: Re: [PATCH 08/15] wlcore: add chanctx implementation
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 19 Nov 2012 19:36:21 +0200
+In-Reply-To: <CAB3XZEepFkTNZMAzB+Jy9R4wSzAyQuNVHdWcdHMoRN+FRe5=9A@mail.gmail.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	 <1353343170-26516-9-git-send-email-eliad@wizery.com>
+	 <1353344601.18299.31.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEepFkTNZMAzB+Jy9R4wSzAyQuNVHdWcdHMoRN+FRe5=9A@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+On Mon, 2012-11-19 at 19:16 +0200, Eliad Peller wrote:
+> On Mon, Nov 19, 2012 at 7:03 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+> >> Add some basic chanctx implementation.
+> >
+> > This patch will leave the driver in a broken state, and in fact probably
+> > crashing trying to use hw.conf.channel.
+> >
+> you are right. i'm taking care of these in the following patches.
+> i preferred splitting the patches for clarity instead of squashing
+> them all into one big patch (removing hw.conf.channel references
+> before implementing chanctx will break the driver as well).
+> i guess i can squash them in this case, but i'm not sure it will
+> really help, as other intermediate patches in this patchset might
+> still break some functionality of the driver.
+> 
+> i don't mind either way. whatever Luca will prefer :)
+> (maybe keeping it that way for review, and only squashing them on apply?)
 
-Thanks for the report and the detailed description and analysis.
+I prefer if we can do it so that the driver is not broken, to make it
+easier to bisect.  But I also agree that for review, it's better to have
+split up patches.
 
-> hostapd->ieee80211_start_roc_work[2146] local->roc_list: <empty>
-> hostapd->ieee80211_start_roc_work[2300] local->roc_list: <1>
->     roc d90e7480 started 0 abrt 0 hw_beg 0 notified 0 hw_start 0 dur 60(60)
-> phy0->ieee80211_sw_roc_work[333] local->roc_list: <1>
->     roc d90e7480 started 0 abrt 0 hw_beg 0 notified 0 hw_start 0 dur 60(60)
-> phy0->ieee80211_sw_roc_work[392] local->roc_list: <1>
->     roc d90e7480 started 1 abrt 0 hw_beg 0 notified 1 hw_start 0 dur 60(60)
-> hostapd->ieee80211_roc_purge[465] local->roc_list: <1>
->     roc d90e7480 started 1 abrt 0 hw_beg 0 notified 1 hw_start 0 dur 60(60)
-> hostapd->ieee80211_start_next_roc[264] roc d90e7480 cause call trace!
-> hostapd->ieee80211_roc_purge[480] local->roc_list: <1>
->     roc d90e7480 started 1 abrt 0 hw_beg 0 notified 1 hw_start 0 dur 60(60)
+So, your suggestion sounds good to me.  Maybe you could send a final
+squashed patchset when they're reviewed and ready to be applied?
 
-I think it would have been instrumental here to print out the different
-interfaces. It seems to me that the roc_purge() is called for a
-different interface, and doesn't actually remove any ROC work item at
-all.
-
-> I suspect the root cause of this issue is after ieee80211_sw_roc_work
-> set roc->start to true and queue it again, the hostapd just call
-> linux_set_iface_flags right now.
-
-Yes and no, hostapd is changing an interface to be down, but it would
-appear to be some other interface, not the one that's executing the ROC.
-
->   I just increase the delay time to magnify the probability of this
-> issue, then it is more easier to reproduce this issue. 
-
-Makes sense.
-
-> So I think we should schedule the work as soon as possible, and should
-> set the delay time to zero, that is,
-
-> @@ -367,7 +367,7 @@ void ieee80211_sw_roc_work(struct work_struct *work)
->  
->                 roc->started = true;
-> -               ieee80211_queue_delayed_work(&local->hw, &roc->work,
-> -                                            msecs_to_jiffies(roc->duration));
-> +               ieee80211_queue_delayed_work(&local->hw, &roc->work, 0);
-
-definitely not, no, this would defeat the purpose of the ROC, to stay on
-the given channel for the given time -- now you've cut the time to zero
-which isn't what we want at all.
-
-> At last, to be save I think we should use a static tmp_list or a
-> global tmp_list to save the abort roc in ieee80211_roc_purge.
-
-No, that totally doesn't seem right, a static list here would completely
-break if the function was called on two CPUs at the same time (this
-can't happen right now, but still)
-
-
-> I had test this patch using the same testcase above 10 times, it runs
-> very well and never dump the warning calltrace,
-
-I can believe that, but it totally defeats the purpose of the ACS patch
-you're using :-)
-
-I think the root cause of the issue is that in ieee80211_roc_purge() we
-unconditionally call ieee80211_start_next_roc(), even if nothing was
-removed.
-
-So I think what happens overall is this:
-
-* roc is added on, e.g., wlan0
-* roc starts running (roc->started becomes true)
-* hostapd decides to turn off some other interface (say moni.wlan0?)
-* therefore, ieee80211_roc_purge() is called _for that other interface_
-* the loop in ieee80211_roc_purge() does nothing since there's no roc
-  for the other interface and the original roc stays at the front of the
-  list
-* we call ieee80211_start_next_roc() and it (correctly) warns
-
-So the first thing that comes to mind is that we must not call
-ieee80211_start_next_roc() when there was no ROC item removed from the
-list. However, it turns out we can completely remove the call, since the
-second loop (over the tmp_list) will actually clear all the ROC items,
-and run ieee80211_sw_roc_work() for each item. If the ROC was started,
-then this function will call ieee80211_start_next_roc().
-
-So this simple patch should fix your issue:
-
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 635c325..2138dc3 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -453,8 +453,6 @@ void ieee80211_roc_purge(struct ieee80211_sub_if_data *sdata)
- 		list_move_tail(&roc->list, &tmp_list);
- 		roc->abort = true;
- 	}
--
--	ieee80211_start_next_roc(local);
- 	mutex_unlock(&local->mtx);
- 
- 	list_for_each_entry_safe(roc, tmp, &tmp_list, list) {
-
-
-Please let me know if it doesn't, that would mean my analysis is
-completely wrong.
-
-johannes
+--
+Luca.
 
