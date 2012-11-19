@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:38401 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751854Ab2KTJEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 04:04:12 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id qAK94B3s027315
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:04:11 -0600
-Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id qAK94B3b030617
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:04:11 -0600
-From: Luciano Coelho <coelho@ti.com>
-To: <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] wlcore: avoid using goto in normal code flow
-Date: Tue, 20 Nov 2012 11:03:31 +0200
-Message-ID: <1353402212-20439-2-git-send-email-coelho@ti.com> (sfid-20121120_100424_197558_D6FABB6F)
-In-Reply-To: <1353402212-20439-1-git-send-email-coelho@ti.com>
-References: <1353402212-20439-1-git-send-email-coelho@ti.com>
+Received: from mail.ultra-3eti.com ([173.13.207.162]:40899 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754438Ab2KSTeA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 14:34:00 -0500
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: FYI: "Failed to stop TX DMA!"  not fixed in kernel 3.6.7
+Date: Mon, 19 Nov 2012 19:33:56 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C10F39@RockMX01.rock.corp> (sfid-20121119_203405_497705_F506E7E8)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove goto and label in the code where a simple if can be used.  If
-nothing else, this is at least confusing git diff, which shows the
-label name as the name of the function.
+Just FYI
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   27 ++++++++++++++-------------
- 1 file changed, 14 insertions(+), 13 deletions(-)
+Kernel 3.6.7 change log says "This patch might fix crashes and "Failed to stop TX DMA!" messages."
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 0eb739b..c056bb3 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3884,19 +3884,20 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 	if (changed & (BSS_CHANGED_ASSOC | BSS_CHANGED_HT)) {
- 		rcu_read_lock();
- 		sta = ieee80211_find_sta(vif, bss_conf->bssid);
--		if (!sta)
--			goto sta_not_found;
--
--		/* save the supp_rates of the ap */
--		sta_rate_set = sta->supp_rates[wl->hw->conf.channel->band];
--		if (sta->ht_cap.ht_supported)
--			sta_rate_set |=
--			  (sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET) |
--			  (sta->ht_cap.mcs.rx_mask[1] << HW_MIMO_RATES_OFFSET);
--		sta_ht_cap = sta->ht_cap;
--		sta_exists = true;
--
--sta_not_found:
-+		if (sta) {
-+			u8 *rx_mask = sta->ht_cap.mcs.rx_mask;
-+
-+			/* save the supp_rates of the ap */
-+			sta_rate_set =
-+				sta->supp_rates[wl->hw->conf.channel->band];
-+			if (sta->ht_cap.ht_supported)
-+				sta_rate_set |=
-+					(rx_mask[0] << HW_HT_RATES_OFFSET) |
-+					(rx_mask[1] << HW_MIMO_RATES_OFFSET);
-+			sta_ht_cap = sta->ht_cap;
-+			sta_exists = true;
-+		}
-+
- 		rcu_read_unlock();
- 	}
- 
--- 
-1.7.10.4
+I tried it on Dell laptop with ar9390 radio.
+Still, I got error message like below
 
+"ath: phy0: Failed to stop TX DMA, queues=0x005!"
+"ath: phy0: Failed to stop TX DMA, queues=0x001!"
+
+I am testing 802.11s mesh on 802.11a channel 40, no HT enabled.
+
+
+-----------------------------
+
+commit cd585fb70b89fb57f8dffb03a2a72c30f81f5da6
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Fri Oct 26 00:31:11 2012 +0200
+
+    ath9k: fix stale pointers potentially causing access to free'd skbs
+    
+    commit 8c6e30936a7893a85f6222084f0f26aceb81137a upstream.
+    
+    bf->bf_next is only while buffers are chained as part of an A-MPDU
+    in the tx queue. When a tid queue is flushed (e.g. on tearing down
+    an aggregation session), frames can be enqueued again as normal
+    transmission, without bf_next being cleared. This can lead to the
+    old pointer being dereferenced again later.
+    
+    This patch might fix crashes and "Failed to stop TX DMA!" messages.
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+    Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
