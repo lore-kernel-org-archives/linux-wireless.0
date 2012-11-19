@@ -1,63 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43342 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751767Ab2KFKcB (ORCPT
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41484 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754226Ab2KSSer (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 05:32:01 -0500
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <rodrigue@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <backports@vger.kernel.org>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Subject: [PATCH 2/2] compat-drivers: Add a next-pending patch.
-Date: Tue, 6 Nov 2012 16:01:34 +0530
-Message-ID: <1352197894-4352-3-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20121106_113211_639943_5CF0CFA1)
-In-Reply-To: <1352197894-4352-1-git-send-email-bkamatch@qca.qualcomm.com>
-References: <1352197894-4352-1-git-send-email-bkamatch@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 19 Nov 2012 13:34:47 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: Wolfgang Grandegger <wg@grandegger.com>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-can@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 379/493] net: remove use of __devinitconst
+Date: Mon, 19 Nov 2012 13:25:28 -0500
+Message-Id: <1353349642-3677-379-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193626_669577_A55832C1)
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
- ...x-signal-strength-noise-measurements-on-a.patch |   28 ++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
- create mode 100644 linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch
+CONFIG_HOTPLUG is going away as an option so __devinitconst is no
+longer needed.
 
-diff --git a/linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch b/linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch
-new file mode 100644
-index 0000000..727c904
---- /dev/null
-+++ b/linux-next-pending/0001-ath9k_hw-fix-signal-strength-noise-measurements-on-a.patch
-@@ -0,0 +1,28 @@
-+From f91a5adf7e8d778f8f006934400249ec9c84717c Mon Sep 17 00:00:00 2001
-+From: Felix Fietkau <nbd@openwrt.org>
-+Date: Fri, 2 Nov 2012 16:23:47 +0530
-+Subject: [PATCH] ath9k_hw: fix signal strength / noise measurements on ar9462
-+
-+The nominal noise floor for most channels is -120, though on some it can
-+reach -127. Use -120 for converting noise floor to channel noise to
-+avoid overestimating rx signal strength and channel noise.
-+
-+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-+---
-+ drivers/net/wireless/ath/ath9k/ar9003_phy.h | 4 ++--
-+ 1 file changed, 2 insertions(+), 2 deletions(-)
-+
-+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+@@ -332,9 +332,9 @@
-+ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
-+ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
-+ 
-+-#define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -127
-++#define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -120
-+ #define AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ     -127
-+-#define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -127
-++#define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -120
-+ #define AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ     -127
-+ 
-+ #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Wolfgang Grandegger <wg@grandegger.com> 
+Cc: Marc Kleine-Budde <mkl@pengutronix.de> 
+Cc: Luciano Coelho <coelho@ti.com> 
+Cc: "John W. Linville" <linville@tuxdriver.com> 
+Cc: linux-can@vger.kernel.org 
+Cc: netdev@vger.kernel.org 
+Cc: linux-wireless@vger.kernel.org 
+---
+ drivers/net/can/at91_can.c            | 2 +-
+ drivers/net/can/mscan/mpc5xxx_can.c   | 6 +++---
+ drivers/net/can/sja1000/tscan1.c      | 2 +-
+ drivers/net/wireless/ti/wl12xx/main.c | 2 +-
+ drivers/net/wireless/ti/wl18xx/main.c | 2 +-
+ drivers/net/wireless/ti/wlcore/sdio.c | 2 +-
+ 6 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/can/at91_can.c b/drivers/net/can/at91_can.c
+index 32e60dd..da807f3 100644
+--- a/drivers/net/can/at91_can.c
++++ b/drivers/net/can/at91_can.c
+@@ -154,7 +154,7 @@ struct at91_priv {
+ 	canid_t mb0_id;
+ };
+ 
+-static const struct at91_devtype_data at91_devtype_data[] __devinitconst = {
++static const struct at91_devtype_data at91_devtype_data[] = {
+ 	[AT91_DEVTYPE_SAM9263] = {
+ 		.rx_first = 1,
+ 		.rx_split = 8,
+diff --git a/drivers/net/can/mscan/mpc5xxx_can.c b/drivers/net/can/mscan/mpc5xxx_can.c
+index 254c168..508cbad 100644
+--- a/drivers/net/can/mscan/mpc5xxx_can.c
++++ b/drivers/net/can/mscan/mpc5xxx_can.c
+@@ -380,17 +380,17 @@ static int mpc5xxx_can_resume(struct platform_device *ofdev)
+ }
+ #endif
+ 
+-static const struct mpc5xxx_can_data __devinitconst mpc5200_can_data = {
++static const struct mpc5xxx_can_data mpc5200_can_data = {
+ 	.type = MSCAN_TYPE_MPC5200,
+ 	.get_clock = mpc52xx_can_get_clock,
+ };
+ 
+-static const struct mpc5xxx_can_data __devinitconst mpc5121_can_data = {
++static const struct mpc5xxx_can_data mpc5121_can_data = {
+ 	.type = MSCAN_TYPE_MPC5121,
+ 	.get_clock = mpc512x_can_get_clock,
+ };
+ 
+-static const struct of_device_id __devinitconst mpc5xxx_can_table[] = {
++static const struct of_device_id mpc5xxx_can_table[] = {
+ 	{ .compatible = "fsl,mpc5200-mscan", .data = &mpc5200_can_data, },
+ 	/* Note that only MPC5121 Rev. 2 (and later) is supported */
+ 	{ .compatible = "fsl,mpc5121-mscan", .data = &mpc5121_can_data, },
+diff --git a/drivers/net/can/sja1000/tscan1.c b/drivers/net/can/sja1000/tscan1.c
+index 9b608d8..6a6db7e 100644
+--- a/drivers/net/can/sja1000/tscan1.c
++++ b/drivers/net/can/sja1000/tscan1.c
+@@ -71,7 +71,7 @@ MODULE_LICENSE("GPL");
+ #define TSCAN1_SJA1000_XTAL 16000000
+ 
+ /* SJA1000 IO base addresses */
+-static const unsigned short tscan1_sja1000_addresses[] __devinitconst = {
++static const unsigned short tscan1_sja1000_addresses[] = {
+ 	0x100, 0x120, 0x180, 0x1a0, 0x200, 0x240, 0x280, 0x320
+ };
+ 
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index c10e691..e5f5f8f 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1725,7 +1725,7 @@ out:
+ 	return ret;
+ }
+ 
+-static const struct platform_device_id wl12xx_id_table[] __devinitconst = {
++static const struct platform_device_id wl12xx_id_table[] = {
+ 	{ "wl12xx", 0 },
+ 	{  } /* Terminating Entry */
+ };
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 7171c93..8d8c1f8 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1528,7 +1528,7 @@ out:
+ 	return ret;
+ }
+ 
+-static const struct platform_device_id wl18xx_id_table[] __devinitconst = {
++static const struct platform_device_id wl18xx_id_table[] = {
+ 	{ "wl18xx", 0 },
+ 	{  } /* Terminating Entry */
+ };
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 6fa2a01..7bf612c 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -54,7 +54,7 @@ struct wl12xx_sdio_glue {
+ 	struct platform_device *core;
+ };
+ 
+-static const struct sdio_device_id wl1271_devices[] __devinitconst = {
++static const struct sdio_device_id wl1271_devices[] = {
+ 	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1271) },
+ 	{}
+ };
 -- 
-1.7.4.1
+1.8.0
 
