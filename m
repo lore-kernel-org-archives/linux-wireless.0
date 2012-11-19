@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:58057 "EHLO bear.ext.ti.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1935 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752220Ab2KMHeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 02:34:12 -0500
-Message-ID: <1352792012.28369.10.camel@cumari.coelho.fi> (sfid-20121113_083416_155390_E736412E)
-Subject: Re: [PATCH 1/2] wlcore: add power callback for SPI
-From: Luciano Coelho <coelho@ti.com>
-To: <Janusz.Dziedzic@tieto.com>
-CC: <linux-wireless@vger.kernel.org>, <arik@wizery.com>
-Date: Tue, 13 Nov 2012 09:33:32 +0200
-In-Reply-To: <3078A9B976EF864C8DDD0C499FFD07912383D6479F@EXMB01.eu.tieto.com>
-References: <3078A9B976EF864C8DDD0C499FFD07912383D6479F@EXMB01.eu.tieto.com>
-Content-Type: text/plain; charset="UTF-8"
+	id S1751470Ab2KSUj0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 15:39:26 -0500
+Message-ID: <50AA98F1.8070501@broadcom.com> (sfid-20121119_213931_047639_AC0FF45C)
+Date: Mon, 19 Nov 2012 21:39:13 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	"Daniel Wagner" <wagi@monom.org>
+Subject: Re: [PATCH v2 18/22] brcmsmac: Add brcms_dbg_ht() debug macro
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <1352988492-21340-19-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1352988492-21340-19-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 11/15/2012 03:08 PM, Seth Forshee wrote:
+> Also convert relevant messages to use this macro.
 
-Now I see that you have already sent the patch I proposed you to
-send. ;)
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |   35 ++++++++++++-----------
+>   drivers/net/wireless/brcm80211/brcmsmac/debug.h |    1 +
+>   drivers/net/wireless/brcm80211/brcmsmac/stf.c   |    8 ++++--
+>   drivers/net/wireless/brcm80211/include/defs.h   |    1 +
+>   4 files changed, 25 insertions(+), 20 deletions(-)
 
-On Wed, 2012-11-07 at 15:42 +0200, Janusz.Dziedzic@tieto.com wrote:
-> Add power callback also for SPI.
-> This will also fix a dump:
-> 
-> [  143.111602] Unable to handle kernel NULL pointer dereference at
-> virtual address 00000000
-> [  143.150573] pgd = dda58000
-> [  143.153472] [00000000] *pgd=9d812831, *pte=00000000, *ppte=00000000
-> [  143.181091] Internal error: Oops: 80000007 [#1] PREEMPT ARM
-> [  143.186981] Modules linked in: wlcore_spi(+) wl12xx wlcore mac80211
-> cfg80211 atmel_mxt pvrsrvkm ipv6
 
-[...]
-
-> [  143.267578] 3da0:                                     dddad8e0
-> dddaeb70 00000008 dddad8e0
-> [  143.276153] 3dc0: 00000000 bf175ff8 ddfefa50 dddad8e0 ddfef808
-> c02bd12c 00000000 bf194f24
-> [  143.284729] 3de0: 00000000 c02be138 c02be124 c02bcf78 c02be318
-> ddfef808 c02bd12c 00000000
-> [  143.293304] 3e00: 00000000 c02bb968 de4038d8 dd8bed54 ddfef808
-> ddfef83c ddfef808 c02bd208
-> [  143.301879] 3e20: ddfef808 c06a8af0 ddfef808 c02bc394 ddfef808
-> ddfef810 de700c00 c02bb24c
-> [  143.310485] 3e40: ddfef810 00000000 00000000 de700c00 00000000
-> c0259ad4 ddfef800 ddfef800
-
-Please don't wrap these lines.  It's hard to read the dump like this.
-
---
-Cheers,
-Luca.
 
