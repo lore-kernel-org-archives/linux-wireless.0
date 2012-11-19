@@ -1,102 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39178 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111Ab2KMRzz (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:47764 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377Ab2KSVPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 12:55:55 -0500
-Date: Tue, 13 Nov 2012 18:55:47 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Ignacy Gawedzki <i@lri.fr>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCHv3] mac80211: deinitialize ibss-internals after
- emptiness check
-Message-ID: <20121113175547.GA19223@pandem0nium> (sfid-20121113_185559_850169_1F9D6C8C)
-References: <1352828583-19502-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Mon, 19 Nov 2012 16:15:18 -0500
+Date: Mon, 19 Nov 2012 15:15:11 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Daniel Wagner <wagi@monom.org>
+Subject: Re: [PATCH v2 09/22] brcm80211: Allow trace support to be enabled
+ separately from debug
+Message-ID: <20121119211511.GB20301@thinkpad-t410> (sfid-20121119_221521_495274_6B69798F)
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <1352988492-21340-10-git-send-email-seth.forshee@canonical.com>
+ <50AA9789.9070807@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
-In-Reply-To: <1352828583-19502-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50AA9789.9070807@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Nov 19, 2012 at 09:33:13PM +0100, Arend van Spriel wrote:
+> On 11/15/2012 03:07 PM, Seth Forshee wrote:
+> >Since the runtime overhead of trace support is small when tracing is
+> >disabled, users may be interested in turning on trace support while
+> >leaving other debug features off. Add a new config option named
+> >CONFIG_BRCM_TRACING for this purpose.
+> 
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Arend van Spriel
+> >Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> >---
+> >  drivers/net/wireless/brcm80211/Kconfig             |   11 +++++++++++
+> >  .../brcm80211/brcmsmac/brcms_trace_events.h        |    6 +++---
+> >  2 files changed, 14 insertions(+), 3 deletions(-)
+> >
+> >diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
+> >index c9d811e..3735c27 100644
+> >--- a/drivers/net/wireless/brcm80211/Kconfig
+> >+++ b/drivers/net/wireless/brcm80211/Kconfig
+> >@@ -63,6 +63,17 @@ config BRCMISCAN
+> >  	  new E-Scan method which uses less memory in firmware and gives no
+> >  	  limitation on the number of scan results.
+> >
+> >+config BRCM_TRACING
+> >+	bool "Broadcom device tracing"
+> >+	depends on BRCMSMAC || BRCMFMAC
+> >+	---help---
+> >+	  If you say Y here, the Broadcom wireless drivers will register
+> >+	  with ftrace to dump event information into the trace ringbuffer.
+> >+	  Tracing can be enabled at runtime to aid in debugging wireless
+> >+	  issues. This option adds a small amount of overhead when tracing
+> >+	  is disabled. If unsure, say Y to allow developers to better help
+> >+	  you when wireless problems occur.
+> >+
+> 
+> I regard this as a debugging feature. Did you consider making it
+> depend on BRCMDBG instead? Or do you think that BRCMDBG code would
+> affect run-time behavior during tracing.
 
---x+6KMIRAuhnl3hBn
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It is a debugging feature, but making it depend on BRCMDBG prevents my
+intended use case. I'm planning to enable BRCM_TRACING in Ubuntu and to
+leave BRCMDBG disabled. This will make it easy for us to ask users for
+detailed debug information when needed with minimal overhead during
+normal use.
 
-Whoops, there was actually never a version one or two posted here ...
-Please consider this version 1.
+Seth
 
-Sorry,
-	Simon
-
-On Tue, Nov 13, 2012 at 06:43:03PM +0100, Simon Wunderlich wrote:
-> The check whether the IBSS is active and can be removed should be
-> performed before deinitializing the fields used for the check/search.
-> Otherwise, the configured BSS will not be found and removed properly.
->=20
-> To make it more clear for the future, rename sdata->u.ibss to the
-> local pointer ifibss which is used within the checks.
->=20
-> This behaviour was introduced by
-> f3209bea110cade12e2b133da8b8499689cb0e2e
-> ("mac80211: fix IBSS teardown race")
->=20
-> Cc: Ignacy Gawedzki <i@lri.fr>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-> ---
->  net/mac80211/ibss.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->=20
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index c7386b2..67774b0 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -1156,10 +1156,6 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_d=
-ata *sdata)
-> =20
->  	mutex_lock(&sdata->u.ibss.mtx);
-> =20
-> -	sdata->u.ibss.state =3D IEEE80211_IBSS_MLME_SEARCH;
-> -	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
-> -	sdata->u.ibss.ssid_len =3D 0;
-> -
->  	active_ibss =3D ieee80211_sta_active_ibss(sdata);
-> =20
->  	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
-> @@ -1180,6 +1176,10 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_d=
-ata *sdata)
->  		}
->  	}
-> =20
-> +	ifibss->state =3D IEEE80211_IBSS_MLME_SEARCH;
-> +	memset(ifibss->bssid, 0, ETH_ALEN);
-> +	ifibss->ssid_len =3D 0;
-> +
->  	sta_info_flush(sdata->local, sdata);
-> =20
->  	spin_lock_bh(&ifibss->incomplete_lock);
-> --=20
-> 1.7.10
->=20
->=20
-
---x+6KMIRAuhnl3hBn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlCiiaMACgkQrzg/fFk7axbxPACeOk41LYcbQbaCpZ10+DL8rwLo
-ALAAoK9vuJaSTUN/yJuSb2us/qzM5qtR
-=5ozk
------END PGP SIGNATURE-----
-
---x+6KMIRAuhnl3hBn--
