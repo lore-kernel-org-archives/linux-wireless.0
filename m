@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:58878 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767951Ab2KOOIa (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:65056 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753865Ab2KSQjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2012 09:08:30 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Daniel Wagner <wagi@monom.org>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v2 07/22] brcmsmac: Use correct descriptor count when calculating next rx descriptor
-Date: Thu, 15 Nov 2012 08:07:57 -0600
-Message-Id: <1352988492-21340-8-git-send-email-seth.forshee@canonical.com> (sfid-20121115_150840_795833_3922540B)
-In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+	Mon, 19 Nov 2012 11:39:44 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so1209576eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:43 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/15] wlcore: get channel from bss_conf instead of hw->conf
+Date: Mon, 19 Nov 2012 18:39:22 +0200
+Message-Id: <1353343170-26516-8-git-send-email-eliad@wizery.com> (sfid-20121119_173951_029276_5B8956F9)
+In-Reply-To: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nextrxd() is calling txd(), which means that the tx descriptor count is
-used to determine when to wrap for determining the next ring buffer
-entry. This has worked so far since the driver has been using the same
-number of rx and tx descriptors, but it's obviously going to be a
-problem if different numbers of descriptors are used.
+We care only about the operational channel, not
+about the temporal hw channel (which won't have
+any real meaning in multi-channel env anyway)
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/dma.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 426b9a9..d7ce1ac 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -361,7 +361,7 @@ static uint prevtxd(struct dma_info *di, uint i)
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index ef299f9..4f4a9e5 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -3833,7 +3833,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 			goto sta_not_found;
  
- static uint nextrxd(struct dma_info *di, uint i)
- {
--	return txd(di, i + 1);
-+	return rxd(di, i + 1);
- }
- 
- static uint ntxdactive(struct dma_info *di, uint h, uint t)
+ 		/* save the supp_rates of the ap */
+-		sta_rate_set = sta->supp_rates[wl->hw->conf.channel->band];
++		sta_rate_set = sta->supp_rates[wlvif->band];
+ 		if (sta->ht_cap.ht_supported)
+ 			sta_rate_set |=
+ 			  (sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET) |
 -- 
-1.7.9.5
+1.7.6.401.g6a319
 
