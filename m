@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:58463 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753477Ab2K1JnN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:43:13 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so3507315wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:13 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Yair Shapira <yair.shapira@ti.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 09/20] wlcore: disable elp sleep while in plt mode
-Date: Wed, 28 Nov 2012 11:42:38 +0200
-Message-Id: <1354095769-8724-10-git-send-email-arik@wizery.com> (sfid-20121128_104321_490837_5F503524)
-In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2935 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753035Ab2KSUg4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 15:36:56 -0500
+Message-ID: <50AA9857.8060807@broadcom.com> (sfid-20121119_213658_518235_040EE9F5)
+Date: Mon, 19 Nov 2012 21:36:39 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	"Daniel Wagner" <wagi@monom.org>
+Subject: Re: [PATCH v2 14/22] brcmsmac: Add brcms_dbg_mac80211() debug
+ macro
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <1352988492-21340-15-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1352988492-21340-15-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yair Shapira <yair.shapira@ti.com>
+On 11/15/2012 03:08 PM, Seth Forshee wrote:
+> This macro is used for messages related to the 802.11 MAC layer.
+> Relevant messages are also converted to use this macro.
 
-We now disable elp sleep during plt mode to allow normal operation of
-plt tools such as calibrator.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/debug.h |    3 +-
+>   drivers/net/wireless/brcm80211/brcmsmac/main.c  |   59 +++++++++++++----------
+>   drivers/net/wireless/brcm80211/include/defs.h   |    1 +
+>   3 files changed, 36 insertions(+), 27 deletions(-)
 
-Having elp_sleep enabled during plt mode is actually not required and
-in fact it disrupt plt operations such as rx statistics etc...
 
-This is based on wl12xx (R5) commit 5cf0fe31ab
-
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/ps.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ti/wlcore/ps.c b/drivers/net/wireless/ti/wlcore/ps.c
-index 9b7b6e2..db7d902 100644
---- a/drivers/net/wireless/ti/wlcore/ps.c
-+++ b/drivers/net/wireless/ti/wlcore/ps.c
-@@ -82,6 +82,10 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
- 	struct wl12xx_vif *wlvif;
- 	u32 timeout;
- 
-+	/* We do not enter elp sleep in PLT mode */
-+	if (wl->plt)
-+		return;
-+
- 	if (wl->sleep_auth != WL1271_PSM_ELP)
- 		return;
- 
--- 
-1.7.9.5
 
