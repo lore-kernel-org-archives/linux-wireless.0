@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:49443 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754663Ab2KHLQ6 (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:33837 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799Ab2KSLvs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 06:16:58 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so1470656eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 03:16:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <509B73D5.5000206@mac.com>
-References: <509B73D5.5000206@mac.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 8 Nov 2012 22:16:37 +1100
-Message-ID: <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com> (sfid-20121108_121711_327185_DD631123)
-Subject: Re: "mac80211.ko" and "cfg80211.ko" compatibility issue.
-To: Akira Nonaka <nonaka@mac.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Nov 2012 06:51:48 -0500
+Received: by mail-da0-f46.google.com with SMTP id p5so724893dak.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 03:51:48 -0800 (PST)
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: johannes.berg@intel.com, ilw@linux.intel.com,
+	wey-yi.w.guy@intel.com, sachin.kamat@linaro.org, patches@linaro.org
+Subject: [PATCH 1/1] iwlwifi: Remove duplicate inclusion of iwl-trans.h in pcie/drv.c
+Date: Mon, 19 Nov 2012 17:15:40 +0530
+Message-Id: <1353325540-9338-1-git-send-email-sachin.kamat@linaro.org> (sfid-20121119_125157_651111_5B3E39AD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+iwl-trans.h was included twice.
 
-On Thu, Nov 8, 2012 at 7:56 PM, Akira Nonaka <nonaka@mac.com> wrote:
-> Hi all,
->
-> I have a problem with the compat-wireless. It seems "mac80211.ko" and
-> "cfg80211.ko" are not compatible with the ones in main line kernel. In
-> my case, it is kernel 3.4.9(Fedora 16).
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+---
+ drivers/net/wireless/iwlwifi/pcie/drv.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-This is expected and pretty much by design.
-
-> I want to use  compat-wireless version of "mac80211.ko" and
-> "cfg80211.ko" for Realtek rtl8723ae but for other wireless cards, I want
-> to use main line kernel version of "mac80211.ko" and "cfg80211.ko".
-
-Why? Are the drivers for these other cards not available in compat-wireless?
-
-Thanks,
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 2a46753..956fe6c 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -69,7 +69,6 @@
+ 
+ #include "iwl-trans.h"
+ #include "iwl-drv.h"
+-#include "iwl-trans.h"
+ 
+ #include "cfg.h"
+ #include "internal.h"
 -- 
-Julian Calaby
+1.7.4.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
