@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:56998 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992684Ab2K3TZ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 14:25:28 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH] mac80211: fix redundant if in transmit path
-Date: Fri, 30 Nov 2012 20:25:14 +0100
-Message-Id: <1354303514-20255-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121130_202538_071123_76703A96)
+Received: from mms2.broadcom.com ([216.31.210.18]:3572 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754321Ab2KSSfQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 13:35:16 -0500
+Message-ID: <50AA7BB4.3000209@broadcom.com> (sfid-20121119_193618_848467_B982C5F9)
+Date: Mon, 19 Nov 2012 19:34:28 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	"Daniel Wagner" <wagi@monom.org>
+Subject: Re: [PATCH v2 02/22] brcmsmac: Don't weight AMPDU packets in
+ txfifo
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <1352988492-21340-3-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1352988492-21340-3-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is already in the right switch branch, no need to check again and
-provoke a compiler warning about chanctx_conf might be used
-uninitialized.
+On 11/15/2012 03:07 PM, Seth Forshee wrote:
+> According to the comments this "reduces rate lag," but in reality the
+> only way this value is used is for determining whether or not any frames
+> remain to be transmitted. Therefore there's no reason for AMPDU packets
+> to receive any weighting.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- net/mac80211/tx.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |   12 +++---------
+>   drivers/net/wireless/brcm80211/brcmsmac/main.c  |   19 +++++++++----------
+>   drivers/net/wireless/brcm80211/brcmsmac/main.h  |    6 ++----
+>   3 files changed, 14 insertions(+), 23 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d287a4f..ccf0499 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1790,8 +1790,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		memcpy(hdr.addr2, sdata->vif.addr, ETH_ALEN);
- 		memcpy(hdr.addr3, skb->data + ETH_ALEN, ETH_ALEN);
- 		hdrlen = 24;
--		if (sdata->vif.type == NL80211_IFTYPE_AP)
--			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-+		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
- 		if (!chanctx_conf)
- 			goto fail_rcu;
- 		band = chanctx_conf->def.chan->band;
--- 
-1.7.10.4
 
