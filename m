@@ -1,25 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51668 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932907Ab2KWHmc (ORCPT
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41484 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247Ab2KSSev (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 02:42:32 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TbnuB-0004FL-Iq
-	for linux-wireless@vger.kernel.org; Fri, 23 Nov 2012 08:42:32 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] mac80211: some HT fixes/cleanups
-Date: Fri, 23 Nov 2012 08:42:57 +0100
-Message-Id: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net> (sfid-20121123_084235_819167_70339120)
+	Mon, 19 Nov 2012 13:34:51 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: =?UTF-8?q?=5BPATCH=20391/493=5D=20bcma=3A=20remove=20use=20of=20=5F=5Fdevexit?=
+Date: Mon, 19 Nov 2012 13:25:40 -0500
+Message-Id: <1353349642-3677-391-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193505_622176_1C7F737F)
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While working on VHT support I found a few small issues with
-the HT support, fix these and also rename the DISABLE_11N
-flag to DISABLE_HT to make it less confusing.
+CONFIG_HOTPLUG is going away as an option so __devexit is no
+longer needed.
 
-johannes
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: "Rafał Miłecki" <zajec5@gmail.com> 
+Cc: linux-wireless@vger.kernel.org 
+---
+ drivers/bcma/host_pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index efb8cec..b5c42bc9 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -226,7 +226,7 @@ err_kfree_bus:
+ 	return err;
+ }
+ 
+-static void __devexit bcma_host_pci_remove(struct pci_dev *dev)
++static void bcma_host_pci_remove(struct pci_dev *dev)
+ {
+ 	struct bcma_bus *bus = pci_get_drvdata(dev);
+ 
+-- 
+1.8.0
 
