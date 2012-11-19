@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47683 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754093Ab2K2MS1 (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:64681 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473Ab2KSXCR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 07:18:27 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Te34U-0006Ki-G8
-	for linux-wireless@vger.kernel.org; Thu, 29 Nov 2012 13:18:26 +0100
-Message-ID: <1354191531.9557.3.camel@jlt4.sipsolutions.net> (sfid-20121129_131830_987906_42A77BDC)
-Subject: Re: [RFC] cfg80211: fix BSS struct IE access races
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 29 Nov 2012 13:18:51 +0100
-In-Reply-To: <1354148804-26678-1-git-send-email-johannes@sipsolutions.net> (sfid-20121129_012627_328755_CFFDFE23)
-References: <1354148804-26678-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121129_012627_328755_CFFDFE23)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 19 Nov 2012 18:02:17 -0500
+Received: by mail-wg0-f42.google.com with SMTP id fm10so1348170wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 15:02:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAJ-VmomL6g1LfTNsk6HPeKEySS57-646L6i9rcOT0V9cDK0b9w@mail.gmail.com>
+References: <1352832488-21516-1-git-send-email-thomas@cozybit.com>
+ <1353361141.18299.36.camel@jlt4.sipsolutions.net> <CAJ-VmomL6g1LfTNsk6HPeKEySS57-646L6i9rcOT0V9cDK0b9w@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 19 Nov 2012 15:01:56 -0800
+Message-ID: <CAG6hwVPVbyL+6HTUv+4=zNMvb4KSPMowXwbb1B2H5ugYBuo0gQ@mail.gmail.com> (sfid-20121120_000221_008985_89BD6BEB)
+Subject: Re: [PATCH v2 1/2] ath9k: RX timestamp is reported at end of frame
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@lists.ath9k.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-29 at 01:26 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When a BSS struct is updated, the IEs are currently
-> overwritten or freed. This can lead to races if some
-> other CPU is accessing the BSS struct and using the
-> IEs concurrently.
-> 
-> Fix this by always allocating the IEs in a new struct
-> that holds the data and length and protecting access
-> to this new struct with RCU.
+On Mon, Nov 19, 2012 at 2:32 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 19 November 2012 13:39, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>> Before you repost though I think it would make sense to fix the
+>> calculation issue that Simon pointed out on the radiotap list? I hope he
+>> comes up with some code though as I'm not good enough at bitrate
+>> calculations :-)
+>
+> What was his comment?
 
-Eliad pointed out to me that the mac80211 code will call
-kmalloc(GFP_KERNEL) inside the rcu critical section, which isn't
-allowed. So instead of changing that to GFP_ATOMIC or something, I just
-posted two patches to remove the allocation :-)
+Since it's not on gmane yet:
 
-johannes
+"Unfortunately this patch does not do a very accurate calculation, so
+it makes the problem worse. It simply multiplies rate by the number of
+bits to get a time. This does not take into account the limited
+accuracy in rate (11n has fractional rates), nor does it consider the
+rounding into blocks caused by FEC, or symbols. As a result the data
+is made worse by the current code. Either the code should do an
+accurate fix, or it should record the raw value and let the end user
+correct it properly."
 
+---
+
+Thomas
