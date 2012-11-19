@@ -1,40 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:48048 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758141Ab2K0Hm6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37022 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753785Ab2KSRCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 02:42:58 -0500
-Message-ID: <50B46EFC.5000804@posedge.com> (sfid-20121127_084318_125570_E3F36A83)
-Date: Tue, 27 Nov 2012 13:12:52 +0530
-From: Saravana <saravanad@posedge.com>
-MIME-Version: 1.0
-To: Saravana <saravanad@posedge.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: re-organize the rx rate calculation logic
-References: <d4c0566bd33c1afdcc0f7b820024d19f@posedge.com> <1353942490.2800.0.camel@jlt4.sipsolutions.net> <50B45BC2.3070406@posedge.com>
-In-Reply-To: <50B45BC2.3070406@posedge.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 19 Nov 2012 12:02:52 -0500
+Message-ID: <1353344601.18299.31.camel@jlt4.sipsolutions.net> (sfid-20121119_180256_467235_AAF278DF)
+Subject: Re: [PATCH 08/15] wlcore: add chanctx implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Date: Mon, 19 Nov 2012 18:03:21 +0100
+In-Reply-To: <1353343170-26516-9-git-send-email-eliad@wizery.com> (sfid-20121119_173952_507956_82E60242)
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	 <1353343170-26516-9-git-send-email-eliad@wizery.com>
+	 (sfid-20121119_173952_507956_82E60242)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/27/2012 11:50 AM, Saravana wrote:
+On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+> Add some basic chanctx implementation.
 
->>> The diff file is generated from wireless-testing git tree.
->>
->> I just changed this code in mac80211-next and would appreciate if you
->> would rebase onto that.
->>
-> I am also facing the same problem in cloning the mac80211-next. once
-> that is resolved, will use the mac80211-next as base and then send
-> patches on top of that.
+This patch will leave the driver in a broken state, and in fact probably
+crashing trying to use hw.conf.channel.
 
-The cloning problem is solved(from Mahesh reply). Have started cloning. 
-will re-submit the patch using mac80211-next as base.
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+johannes
 
