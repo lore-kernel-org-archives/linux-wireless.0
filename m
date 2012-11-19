@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:49658 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753769Ab2KLV67 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 16:58:59 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so3644080eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 13:58:58 -0800 (PST)
-From: Maxim Mikityanskiy <maxtram95@gmail.com>
-To: greg@kroah.com, linux-wireless@vger.kernel.org
-Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
-Subject: [PATCH 06/17] Fix oops when rmmoding
-Date: Mon, 12 Nov 2012 23:58:20 +0200
-Message-Id: <1352757511-26957-7-git-send-email-maxtram95@gmail.com> (sfid-20121112_225904_085861_F9B736FA)
-In-Reply-To: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
-References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1944 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753017Ab2KSUgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 15:36:00 -0500
+Message-ID: <50AA9824.6020308@broadcom.com> (sfid-20121119_213604_107074_5FFE7C5C)
+Date: Mon, 19 Nov 2012 21:35:48 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	"Daniel Wagner" <wagi@monom.org>
+Subject: Re: [PATCH v2 12/22] brcmsmac: Add support for writing debug
+ messages to the trace buffer
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <1352988492-21340-13-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1352988492-21340-13-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/15/2012 03:08 PM, Seth Forshee wrote:
+> Add a new brcmsmac_msg trace system to enable writing of debug messages
+> to the trace buffer, and add brcms_* macros for storing device debug
+> messages in the trace buffer in addition to the printk log buffer.
 
-Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
----
- r8180_core.c |    1 -
- 1 file changed, 1 deletion(-)
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/Makefile   |    3 +-
+>   .../brcm80211/brcmsmac/brcms_trace_events.h        |   68 +++++++++++++++++++-
+>   drivers/net/wireless/brcm80211/brcmsmac/debug.c    |   44 +++++++++++++
+>   drivers/net/wireless/brcm80211/brcmsmac/debug.h    |   40 ++++++++++++
+>   4 files changed, 151 insertions(+), 4 deletions(-)
+>   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/debug.c
+>   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/debug.h
 
-diff --git a/r8180_core.c b/r8180_core.c
-index d903786..e04bb04 100644
---- a/r8180_core.c
-+++ b/r8180_core.c
-@@ -323,7 +323,6 @@ void rtl8180_proc_remove_one(struct net_device *dev)
- 		remove_proc_entry("stats-tx", priv->dir_dev);
- 		remove_proc_entry("stats-rx", priv->dir_dev);
- 		remove_proc_entry("registers", priv->dir_dev);
--		remove_proc_entry(dev->name, rtl8180_proc);
- 		priv->dir_dev = NULL;
- 	}
- }
--- 
-1.7.10.4
+
 
