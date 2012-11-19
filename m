@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:50938 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462Ab2KLWTE (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:37423 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756Ab2KSQja (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 17:19:04 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k13so9820834iea.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 14:19:04 -0800 (PST)
-Message-ID: <50A175D4.8090404@lwfinger.net> (sfid-20121112_231909_701694_011B15DE)
-Date: Mon, 12 Nov 2012 16:19:00 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Maxim Mikityanskiy <maxtram95@gmail.com>
-CC: greg@kroah.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/17] RTL8187SE driver cleanups
-References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
-In-Reply-To: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 19 Nov 2012 11:39:30 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so2051722eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:29 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/15] wlcore: prepare to multi-channel
+Date: Mon, 19 Nov 2012 18:39:15 +0200
+Message-Id: <1353343170-26516-1-git-send-email-eliad@wizery.com> (sfid-20121119_173938_199656_600E7908)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/12/2012 03:58 PM, Maxim Mikityanskiy wrote:
-> There are some bug fixes, cleanups and dead code removal for
-> drivers/staging/rtl8187se
+Make the connection flow simpler by using only the sta
+role (i.e. no need for dev role).
 
-This comment applies to all 17 patches. The subject should be of the form
+This is possible now, as we know the AP's BSSID even
+before authentication.
 
-[PATCH XX/17] staging: rtl8187se: blah-blah
+This means we no longer start dev role when the device
+is non-idle, so now we use the .remain_on_channel()
+and start device role only then.
 
-By using both staging and rtl8187se in the subject, it is a lot easier to search 
-the git log.
+Finally, implement the chanctx callbacks in order to
+have a clear per-vif channel (instead of the global
+hw->channel)
 
-I expect there will be comments on others of the series.
+(this patchset depends on
+"mac80211: make remain_on_channel() op pass vif param")
 
-Larry
+Eliad Peller (15):
+  wlcore: start sta role on CHANGED_BSSID
+  wlcore: set ssid before starting station role
+  wlcore: always use sta.hlid
+  wlcore: workaround start_sta problem in wl12xx fw
+  wlcore: implement .remain_on_channel() callback
+  wlcore: use dev_hlid if the tx is offchannel
+  wlcore: get channel from bss_conf instead of hw->conf
+  wlcore: add chanctx implementation
+  wlcore: remove channel handling from op_config
+  wlcore: initiate ROC/CROC on sta state updates
+  wlcore: set active psm on association
+  wlcore: specify correct supported_rates
+  wlcore: reconfigure rate policy on association
+  wlcore: refactor CHANGED_HT handling
+  wlcore: configure the remote rates with our own rates
 
+ drivers/net/wireless/ti/wl12xx/main.c   |    9 +-
+ drivers/net/wireless/ti/wlcore/cmd.c    |   56 ++--
+ drivers/net/wireless/ti/wlcore/cmd.h    |    6 +-
+ drivers/net/wireless/ti/wlcore/event.c  |    7 +
+ drivers/net/wireless/ti/wlcore/main.c   |  663 ++++++++++++++++++-------------
+ drivers/net/wireless/ti/wlcore/tx.c     |   14 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h |    6 +
+ 7 files changed, 454 insertions(+), 307 deletions(-)
+
+-- 
+1.7.6.401.g6a319
 
