@@ -1,40 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:47115 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab2KDMZK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Nov 2012 07:25:10 -0500
-Received: by mail-ea0-f174.google.com with SMTP id c13so1912043eaa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Nov 2012 04:25:09 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Cliff McDiarmid <cliffhanger@gardener.com>
-Subject: Re: 8192su beta - trying to build
-Date: Sun, 4 Nov 2012 13:25:04 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <loom.20121104T125621-892@post.gmane.org>
-In-Reply-To: <loom.20121104T125621-892@post.gmane.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:2023 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754485Ab2KSSmV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 13:42:21 -0500
+Message-ID: <50AA7D7C.8020208@broadcom.com> (sfid-20121119_194229_472627_A6A49AD6)
+Date: Mon, 19 Nov 2012 19:42:04 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201211041325.04965.chunkeey@googlemail.com> (sfid-20121104_132618_266614_83DE911A)
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	"Daniel Wagner" <wagi@monom.org>
+Subject: Re: [PATCH v2 05/22] brcmsmac: Use IEEE 802.11 AC levels for
+ pktq precedence levels
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <1352988492-21340-6-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1352988492-21340-6-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 04 November 2012 13:01:33 Cliff McDiarmid wrote:
-> I'm trying to build this driver which I know is in beta.  I'm using a relatively
-> new kernel (3.6.2).  Do I need an older one perhaps, getting the following error?
+On 11/15/2012 03:07 PM, Seth Forshee wrote:
+> The mac80211 tx queues and brcmsmac DMA fifos both map directly to AC
+> levels. Therefore it's much more straightforward to queue tx frames and
+> choose the tx fifo based on the mac80211 queue instead of mapping 802.1D
+> priority tags to precedence levels then back to AC levels. mac80211
+> already maps the 802.1D levels to the appropriate AC levels and queues
+> management frames at the maximum priority, so the results should be
+> identical.
+>
+> One functional change resulting from this patch is that AMPDU retries no
+> longer get a priority boost to queue them ahead of packets with the same
 
-No, due to the developer process you need something even newer.
-For a full description you can visit our wiki, but here's just
-the relevant part:
-<http://linuxwireless.org/en/developers/process#wireless-testing.git>
-"Developers should work off of this git tree [wireless-testing.git]
-for all 802.11 development."
+True. I believe the statement actually applies to any retry include 
+non-AMPDU.
 
-Note: While rtl8192su should no longer cause a crash when
-unloaded, the firmware rate control still needs to be
-figured out (apparently something is very different from
-rtl8192se).
+> priority already in the tx queue. This behavior will be restored (in
+> effect at least) in a later patch when the tx queue is removed.
 
-Regards,
-	Chr
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |   13 +----
+>   drivers/net/wireless/brcm80211/brcmsmac/main.c  |   67 ++++++++---------------
+>   drivers/net/wireless/brcm80211/brcmsmac/main.h  |    6 +-
+>   drivers/net/wireless/brcm80211/brcmsmac/pub.h   |   26 +--------
+>   4 files changed, 26 insertions(+), 86 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> index 135af9a..8abf39d 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> @@ -365,6 +342,21 @@ static const char fifo_names[6][0];
+>   static struct brcms_c_info *wlc_info_dbg = (struct brcms_c_info *) (NULL);
+>   #endif
+>
+> +/* Mapping of ieee80211 AC numbers to tx fifos */
+> +static const u8 ac_to_fifo_mapping[IEEE80211_NUM_ACS] = {
+> +	[IEEE80211_AC_VO]	= TX_AC_VO_FIFO,
+> +	[IEEE80211_AC_VI]	= TX_AC_VI_FIFO,
+> +	[IEEE80211_AC_BE]	= TX_AC_BE_FIFO,
+> +	[IEEE80211_AC_BK]	= TX_AC_BK_FIFO,
+
+Minor comment: Can you get rid of the tab before the equal sign and use 
+space instead?
+
+> @@ -6068,14 +6054,13 @@ static bool brcms_c_prec_enq(struct brcms_c_info *wlc, struct pktq *q,
+>   }
+>
+>   void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+> -		     struct sk_buff *sdu, uint prec)
+> +		     struct sk_buff *sdu)
+>   {
+>   	struct brcms_txq_info *qi = wlc->pkt_queue;	/* Check me */
+>   	struct pktq *q = &qi->q;
+> -	int prio;
+> -
+> -	prio = sdu->priority;
+> +	uint prec;
+
+the term prec, short for precedence, may be confusing as the concept is 
+removed.
+
+> +	prec = brcms_ac_to_fifo(skb_get_queue_mapping(sdu));
+>   	if (!brcms_c_prec_enq(wlc, q, sdu, prec)) {
+>   		/*
+>   		 * we might hit this condtion in case
+
+
