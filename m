@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:37976 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752812Ab2KMRnN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36626 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994Ab2KSOmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 12:43:13 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Mon, 19 Nov 2012 09:42:52 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TaSYl-0007XI-IZ
+	for linux-wireless@vger.kernel.org; Mon, 19 Nov 2012 15:42:51 +0100
+Message-ID: <1353336199.18299.13.camel@jlt4.sipsolutions.net> (sfid-20121119_154255_707240_14E6CA83)
+Subject: Re: [PATCH] mac80211: introduce IEEE80211_NUM_TIDS and use it
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Ignacy Gawedzki <i@lri.fr>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCHv3] mac80211: deinitialize ibss-internals after emptiness check
-Date: Tue, 13 Nov 2012 18:43:03 +0100
-Message-Id: <1352828583-19502-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121113_184317_125714_179E68F7)
+Date: Mon, 19 Nov 2012 15:43:19 +0100
+In-Reply-To: <1352978984-15876-1-git-send-email-johannes@sipsolutions.net> (sfid-20121115_122917_415702_1452D5AB)
+References: <1352978984-15876-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121115_122917_415702_1452D5AB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The check whether the IBSS is active and can be removed should be
-performed before deinitializing the fields used for the check/search.
-Otherwise, the configured BSS will not be found and removed properly.
+On Thu, 2012-11-15 at 12:29 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Introduce IEEE80211_NUM_TIDS in the generic 802.11
+> header file and use it in place of STA_TID_NUM and
+> NUM_RX_DATA_QUEUES which are both really the number
+> of TIDs.
 
-To make it more clear for the future, rename sdata->u.ibss to the
-local pointer ifibss which is used within the checks.
+Applied.
 
-This behaviour was introduced by
-f3209bea110cade12e2b133da8b8499689cb0e2e
-("mac80211: fix IBSS teardown race")
-
-Cc: Ignacy Gawedzki <i@lri.fr>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- net/mac80211/ibss.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index c7386b2..67774b0 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1156,10 +1156,6 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 
- 	mutex_lock(&sdata->u.ibss.mtx);
- 
--	sdata->u.ibss.state = IEEE80211_IBSS_MLME_SEARCH;
--	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
--	sdata->u.ibss.ssid_len = 0;
--
- 	active_ibss = ieee80211_sta_active_ibss(sdata);
- 
- 	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
-@@ -1180,6 +1176,10 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 		}
- 	}
- 
-+	ifibss->state = IEEE80211_IBSS_MLME_SEARCH;
-+	memset(ifibss->bssid, 0, ETH_ALEN);
-+	ifibss->ssid_len = 0;
-+
- 	sta_info_flush(sdata->local, sdata);
- 
- 	spin_lock_bh(&ifibss->incomplete_lock);
--- 
-1.7.10
+johannes
 
