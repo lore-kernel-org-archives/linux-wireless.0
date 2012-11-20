@@ -1,81 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42507 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754871Ab2K0A0C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 19:26:02 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, wim@iguana.be
-Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 00/15] watchdog/bcm47xx/bcma/ssb: add support for SoCs with PMU
-Date: Tue, 27 Nov 2012 01:25:10 +0100
-Message-Id: <1353975925-32056-1-git-send-email-hauke@hauke-m.de> (sfid-20121127_012608_615624_CC0C3859)
+Received: from bear.ext.ti.com ([192.94.94.41]:43490 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752141Ab2KTPQe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 10:16:34 -0500
+Message-ID: <50AB9E73.3090802@ti.com> (sfid-20121120_161638_405644_3290EEE0)
+Date: Tue, 20 Nov 2012 17:14:59 +0200
+From: Victor Goldenshtein <victorg@ti.com>
+MIME-Version: 1.0
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
+	<victorgld@gmail.com>
+Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection command/event
+References: <1350226137-13704-1-git-send-email-victorg@ti.com> <1350226137-13704-2-git-send-email-victorg@ti.com> <1350414099.10177.13.camel@jlt4.sipsolutions.net> <50842569.5000602@ti.com> <1350910543.10166.3.camel@jlt4.sipsolutions.net> <50922A9D.2060409@ti.com> <1352128887.9466.17.camel@jlt4.sipsolutions.net> <50A26163.10300@ti.com> <20121113180505.GB19223@pandem0nium>
+In-Reply-To: <20121113180505.GB19223@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series improves the watchdog driver used on the Broadcom 
-bcm47xx SoCs.
-The watchdog driver does not access the functions directly any more, 
-but it registers as a platform device driver and ssb and bcma are 
-registering a device for this watchdog driver.
-This also adds support for SoCs with a power management unit (PMU), 
-which have different clock rates.
+On 13/11/2012 20:05, Simon Wunderlich wrote:
+> On Tue, Nov 13, 2012 at 05:04:03PM +0200, Victor Goldenshtein wrote:
+>> On 05/11/2012 17:21, Johannes Berg wrote:
+>>> On Thu, 2012-11-01 at 09:54 +0200, Victor Goldenshtein wrote:
+>>>> On 22/10/2012 14:55, Johannes Berg wrote:
+>>>>>> 2. In __nl80211_set_channel() - to cover the case when the CAC was
+>>>>>> initiated on a "preset_chan" (during AP init phase) and the IF was
+>>>>>> removed before the AP was even started (local->oper_channel wasn't set yet).
+>>>>>
+>>>>> Hmm, I'm not sure I get it. How is "local->oper_channel" (a mac80211
+>>>>> variable) related to this cfg80211 code?
+>>>>
+>>>> It's not, just saying that its not set at this point.
+>>>>
+>>>>> start_ap() isn't expected to be able to succeed until CAC passed
+>>>>> successfully, but OTOH the channel isn't configured until then?
+>>>>
+>>>> right, the initial CAC performed before start_ap(), only by setting the
+>>>> channel with __nl80211_set_channel() + radar detection command.
+>>>
+>>> Hmm. Maybe then the channel should be passed to the radar detection
+>>> command instead? That way, it can be passed through, you can allocate a
+>>> channel context, etc. Much easier?
+>>
+>> We already pass the frequency in the radar detection command, the
+>> set channel operation comes during hostapd init flow regardless DFS
+>> implementation.
+>
+> Just for clarification for the API: Is the driver required to (re)set the channel
+> itself in the radar detection command, or do we expect that the channel was already
+> set via __nl80211_set_channel() (or other means) before?
+>
+> This would be important for other DFS modes like IBSS later.
+>
 
-This code is currently based on the wireless-testing/master tree by 
-John Linville, because there are some changes in ssb and bcma in that 
-tree queued for 3.8 which will conflict with these changes, if this 
-would be based on an other tree. I have no problem with rebasing this 
-onto any other tree.
+Already discussed this privately, still maybe someone else also interested.
 
-@Wim Could you give me an ACK on the "watchdog: bcm47xx_wdt.c:" patches
-     so that John could take them trough the wireless-testing tree, or
-     provide me with some feedback on what I should change.
+The set channel operation is relevant only during initial CAC test,
+it set and re-set (if necessary - e.g. radar detected on the first
+channel) by the hostapd it self, so the driver doesn't required to set 
+the channel in the radar detection command.
 
-v2:
- * reword some commit messages
- * rebase on current wireless-testing/master with 
-      "ssb: extif: fix compile errors" applied on top of it.
- * do not change value of WDT_SOFTTIMER_MAX
- * moved some small changes in the bcm47xx_wdt.c patches
-
-Hauke Mehrtens (15):
-  watchdog: bcm47xx_wdt.c: convert to watchdog core api
-  watchdog: bcm47xx_wdt.c: use platform device
-  watchdog: bcm47xx_wdt.c: rename ops methods
-  watchdog: bcm47xx_wdt.c: rename wdt_time to timeout
-  watchdog: bcm47xx_wdt.c: add hard timer
-  bcma: add bcma_chipco_alp_clock
-  bcma: set the pmu watchdog if available
-  bcma: add methods for watchdog driver
-  bcma: register watchdog driver
-  ssb: get alp clock from devices with PMU
-  ssb: set the PMU watchdog if available
-  ssb: add methods for watchdog driver
-  ssb: extif: add check for max value before setting watchdog register
-  ssb: extif: add methods for watchdog driver
-  ssb: register watchdog driver
-
- drivers/bcma/bcma_private.h                 |    2 +
- drivers/bcma/driver_chipcommon.c            |  114 ++++++++-
- drivers/bcma/main.c                         |    8 +
- drivers/ssb/driver_chipcommon.c             |  100 +++++++-
- drivers/ssb/driver_chipcommon_pmu.c         |   27 +++
- drivers/ssb/driver_extif.c                  |   24 +-
- drivers/ssb/embedded.c                      |   35 +++
- drivers/ssb/main.c                          |    8 +
- drivers/ssb/ssb_private.h                   |   31 +++
- drivers/watchdog/Kconfig                    |    1 +
- drivers/watchdog/bcm47xx_wdt.c              |  339 ++++++++++++---------------
- include/linux/bcm47xx_wdt.h                 |   28 +++
- include/linux/bcma/bcma_driver_chipcommon.h |    7 +-
- include/linux/ssb/ssb.h                     |    2 +
- include/linux/ssb/ssb_driver_chipcommon.h   |    5 +-
- include/linux/ssb/ssb_driver_extif.h        |   10 +-
- 16 files changed, 522 insertions(+), 219 deletions(-)
- create mode 100644 include/linux/bcm47xx_wdt.h
 
 -- 
-1.7.10.4
-
+Thanks,
+Victor.
