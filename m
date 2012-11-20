@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752815Ab2KZK0g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 05:26:36 -0500
-Message-ID: <1353925623.9488.8.camel@jlt4.sipsolutions.net> (sfid-20121126_112638_885319_E67ABCE9)
-Subject: Re: [PATCH] cfg80211: change function signature of
- cfg80211_get_p2p_attr()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Nov 2012 11:27:03 +0100
-In-Reply-To: <1353867208-11429-1-git-send-email-arend@broadcom.com>
-References: <1353867208-11429-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:41830 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751596Ab2KTH5g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 02:57:36 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: "Arend van Spriel" <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Fengguang Wu" <fengguang.wu@intel.com>,
+	"Franky Lin" <frankyl@broadcom.com>
+Subject: Re: [PATCH] brcmfmac: check return from kzalloc in brcmf_fweh_process_event
+References: <1353340412-22757-1-git-send-email-linville@tuxdriver.com>
+	<50AA6EBF.9050001@broadcom.com>
+Date: Tue, 20 Nov 2012 09:57:31 +0200
+In-Reply-To: <50AA6EBF.9050001@broadcom.com> (Arend van Spriel's message of
+	"Mon, 19 Nov 2012 18:39:11 +0100")
+Message-ID: <87y5hwwvtg.fsf@purkki.adurom.net> (sfid-20121120_085739_139064_D0099997)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-11-25 at 19:13 +0100, Arend van Spriel wrote:
-> The function cfg80211_get_p2p_attr() can fail and returns
-> a negative error code. However, the return type is unsigned
-> int. The largest positive number is determined by desired_len
-> variable in the function, which is u16. So changing the return
-> type to int to allow easy error checking. Also change the type
-> for the attribute to enum for improved type checking.
-> 
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Hi Johannes,
-> 
-> I decided to make use of cfg80211_get_p2p_attr() in brcmfmac
-> and would like this minor change to it.
-> 
-> The only other "driver" using it is mac80211 and it seems it
-> will not mind this change ;-)
+"Arend van Spriel" <arend@broadcom.com> writes:
 
-Yeah, well, it actually uses an int as this should, thanks for fixing!
+> On 11/19/2012 04:53 PM, John W. Linville wrote:
+>> From: "John W. Linville" <linville@tuxdriver.com>
+>>
+>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
 
-Applied, but I've fixed your indentation:
+[...]
 
-> +int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
-> +				   enum ieee80211_p2p_attr_id attr_id,
-> +				   u8 *buf, unsigned int bufsize)
->  {
-> +	u8 attr = (u8)attr_id;
+>>   	event = kzalloc(sizeof(*event) + datalen, alloc_flag);
+>> +	if (!event)
+>
+> My fix included a debug statement about the discarded event from firmware.
 
-Also this isn't actually needed, you can compare a u8 to attr later :)
+Someone once suggested that memory allocation errors should not be
+printed by the drivers as the memory subsystem does that anyway. No idea
+if that's a good advice or not, but I try to follow it.
 
-johannes
-
+-- 
+Kalle Valo
