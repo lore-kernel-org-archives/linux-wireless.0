@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:54269 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756149Ab2KWUxY (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:55090 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752212Ab2KTITN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 15:53:24 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFCv2 0/4] iw: mesh power save
-Date: Fri, 23 Nov 2012 12:53:10 -0800
-Message-Id: <1353703994-13093-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_215334_610948_3C232A77)
+	Tue, 20 Nov 2012 03:19:13 -0500
+Message-ID: <1353399515.10872.153.camel@cumari.coelho.fi> (sfid-20121120_091917_187101_29E2ADEF)
+Subject: Re: [PATCH 15/15] wlcore: configure the remote rates with our own
+ rates
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 20 Nov 2012 10:18:35 +0200
+In-Reply-To: <1353343170-26516-16-git-send-email-eliad@wizery.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	 <1353343170-26516-16-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following commits cover neccessary iw commands for mesh power save.
-Beacon interval, DTIM period, default power mode and awake window are accessed
-as part of the mesh params. The link-specific power modes are station-specific.
+On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+> With the new connection flow, start_sta is called before
+> the remote rates where updated. Use our own supported rates
+> instead to make sure we don't disable any potential rate
+> (the rate policies will be updated later, but there is
+> currently no way to update the remote rates)
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/cmd.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+> index 4c2ed25..ec7e8b3 100644
+> --- a/drivers/net/wireless/ti/wlcore/cmd.c
+> +++ b/drivers/net/wireless/ti/wlcore/cmd.c
+> @@ -479,7 +479,12 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+>  	}
+>  	cmd->sta.hlid = wlvif->sta.hlid;
+>  	cmd->sta.session = wl12xx_get_new_session_id(wl, wlvif);
+> -	cmd->sta.remote_rates = cpu_to_le32(wlvif->rate_set);
+> +	/*
+> +	 * We don't have the correct remote rates in this stage, and there
+> +	 * is no way to update them later, so use our supported rates instead.
+> +	 * The fw will take the configured rate policies into account anyway.
+> +	 */
+> +	cmd->sta.remote_rates = cpu_to_le32(supported_rates);
 
-v2:
--beacon interval and DTIM period set as part of mesh join -> no change during
- mesh runtime anymore
+Why do we even have to pass this value, then? Any hidden reason that we
+may be overlooking?
 
-Marco Porsch (4):
-  iw: add beacon interval and DTIM period parameters to mesh join
-  iw: add default mesh power mode to mesh config
-  iw: add support for link-specific mesh power modes
-  iw: add mesh awake window to mesh config
-
- mesh.c    |   85 +++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- station.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 170 insertions(+), 4 deletions(-)
-
--- 
-1.7.9.5
+--
+Luca.
 
