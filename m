@@ -1,129 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:48266 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754481Ab2K1Q5X (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40393 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751868Ab2KTMVO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 11:57:23 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] wireless: allow Atheros card to not depend on ath.ko
-Date: Wed, 28 Nov 2012 18:57:19 +0200
-Message-ID: <1967408.WlU5HIbjCs@lx-vladimir> (sfid-20121128_175727_482230_3AD89F65)
-In-Reply-To: <20121128141319.GA9118@tuxdriver.com>
-References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1834420.jzvmO1yYKo@lx-vladimir> <20121128141319.GA9118@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 20 Nov 2012 07:21:14 -0500
+Message-ID: <1353414102.9399.16.camel@jlt4.sipsolutions.net> (sfid-20121120_132117_586059_4B3F3222)
+Subject: Re: [RFC v2 4/8] nl80211/cfg80211: support VHT channel configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 20 Nov 2012 13:21:42 +0100
+In-Reply-To: <50AB70B9.1010505@posedge.com>
+References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
+	  <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>
+	  <50AB3EE1.8060101@posedge.com>
+	  <1353400890.9399.3.camel@jlt4.sipsolutions.net>
+	  (sfid-20121120_094103_819884_8535CF9F) <1353404398.9399.9.camel@jlt4.sipsolutions.net>
+	 <50AB70B9.1010505@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2012-11-20 at 17:29 +0530, Mahesh Palivela wrote:
 
-There are 2 different things:
-- sub-menu for "Atheros Wireless cards" family
-- module ath.ko with common Atheros code
+> >>> For loops in both functions seems to be similar. One return false, other
+> >>> return -EINVAL. Can we remove duplication?
+> >>
+> >> True, but they check different flags. I suppose we could have a common
+> >> function where the checked flags are passed in, I can try that.
+> >
+> > I'll add this to the patch:
+> >
+> > http://p.sipsolutions.net/24eb25fb98ef2d0b.txt
+> >
+> 
+> Looks good to me Johannes. Overall your VHT channel config 
+> implementation done so well.
 
-Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
-Thus, being "Atheros card" and "depending on ath.ko" was the same.
+Thanks for reviewing!
 
-To allow module to belong to the
-"Atheros Wireless cards" family but not use ath.ko,
-2 conditions above need to be separated.
+> Partial regulatory check in nl80211_parse_chandef() has to be modified 
+> to include BW check. I see your TODO comment there.
 
-So, this patch introduce new Kconfig variable ATH_CARDS for belonging
-to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
-variable to express dependency on common Atheros code in ath.ko. Modules
-that depend on this common code now express it by setting ATH_COMMON.
+Yes, although I'm not completely sure the bandwidth check ever made
+sense? We'll need to discuss that.
 
-Right now, ath6kl do not depend on common code and thus do not set ATH_COMMON.
+Regardless of that though, I'm tempted to put this into the tree now. As
+we don't have any drivers (but hwsim) using it, we won't have any
+regulatory issues without the bandwidth check for now, and then we can
+base further work on this.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/Kconfig          |    7 +++++--
- drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
- drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
- drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
- drivers/net/wireless/ath/carl9170/Kconfig |    1 +
- 5 files changed, 9 insertions(+), 2 deletions(-)
+Any objections from you? If not I'll repost the whole thing as [PATCH].
 
-diff --git a/drivers/net/wireless/ath/Kconfig 
-b/drivers/net/wireless/ath/Kconfig
-index c25dcf1..1a67a4f 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -1,4 +1,7 @@
--menuconfig ATH_COMMON
-+config ATH_COMMON
-+	tristate
-+
-+menuconfig ATH_CARDS
- 	tristate "Atheros Wireless Cards"
- 	depends on CFG80211 && (!UML || BROKEN)
- 	---help---
-@@ -14,7 +17,7 @@ menuconfig ATH_COMMON
- 
- 	  http://wireless.kernel.org/en/users/Drivers/Atheros
- 
--if ATH_COMMON
-+if ATH_CARDS
- 
- config ATH_DEBUG
- 	bool "Atheros wireless debugging"
-diff --git a/drivers/net/wireless/ath/ar5523/Kconfig 
-b/drivers/net/wireless/ath/ar5523/Kconfig
-index 11d99ee..0d320cc 100644
---- a/drivers/net/wireless/ath/ar5523/Kconfig
-+++ b/drivers/net/wireless/ath/ar5523/Kconfig
-@@ -1,6 +1,7 @@
- config AR5523
-        tristate "Atheros AR5523 wireless driver support"
-        depends on MAC80211 && USB
-+       select ATH_COMMON
-        select FW_LOADER
-        ---help---
-          This module add support for AR5523 based USB dongles such as D-Link
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig 
-b/drivers/net/wireless/ath/ath5k/Kconfig
-index 338c5c4..c9f81a3 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,6 +1,7 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig 
-b/drivers/net/wireless/ath/ath9k/Kconfig
-index c7aa664..5fc15bf 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on MAC80211
-+	select ATH_COMMON
- 	select ATH9K_HW
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
-diff --git a/drivers/net/wireless/ath/carl9170/Kconfig 
-b/drivers/net/wireless/ath/carl9170/Kconfig
-index 267d5dc..13a2045 100644
---- a/drivers/net/wireless/ath/carl9170/Kconfig
-+++ b/drivers/net/wireless/ath/carl9170/Kconfig
-@@ -1,6 +1,7 @@
- config CARL9170
- 	tristate "Linux Community AR9170 802.11n USB support"
- 	depends on USB && MAC80211 && EXPERIMENTAL
-+	select ATH_COMMON
- 	select FW_LOADER
- 	select CRC32
- 	help
--- 
-1.7.10.4
-
+johannes
 
