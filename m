@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:49578 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495Ab2KHMh0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 07:37:26 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1798593wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 04:37:25 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: clear lower drv private data on iface removal
-Date: Thu,  8 Nov 2012 14:37:21 +0200
-Message-Id: <1352378241-31906-1-git-send-email-arik@wizery.com> (sfid-20121108_133738_096409_FA9EC387)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54520 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752787Ab2KTVHx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 16:07:53 -0500
+Message-ID: <50ABF11E.204@hauke-m.de> (sfid-20121120_220756_504411_89D90599)
+Date: Tue, 20 Nov 2012 22:07:42 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: John Crispin <john@phrozen.org>
+CC: ralf@linux-mips.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, florian@openwrt.org,
+	zajec5@gmail.com, m@bues.ch
+Subject: Re: [PATCH 7/8] ssb: add GPIO driver
+References: <1353365877-11131-1-git-send-email-hauke@hauke-m.de> <1353365877-11131-8-git-send-email-hauke@hauke-m.de> <50AB3B6C.4000505@phrozen.org>
+In-Reply-To: <50AB3B6C.4000505@phrozen.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The lower driver might rely on getting zeroed per-vif private memory
-when an interface is added. Resetting the memory on removal avoids
-adverse affects during recovery, where the interface is added without
-being removed.
+On 11/20/2012 09:12 AM, John Crispin wrote:
+> Hi Hauke,
+> 
+> 
+>> +#ifdef CONFIG_SSB_DRIVER_EXTIF
+> 
+> ...
+> 
+>> +}
+>> +
+>> +#else
+>> +static int ssb_gpio_extif_init(struct ssb_bus *bus)
+>> +{
+>> +    return 0;
+>> +}
+>> +#endif
+> 
+> ssb_gpio_extif_init() is also defined as a static inline stub in the
+> header files. you should drop this definition from the code file
+> 
+>     John
+No, ssb_gpio_extif_init() is only defined in drivers/ssb/driver_gpio.c
+and not ssb_private.h, ssb_gpio_init() is defined in ssb_private.h.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/driver-ops.h |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index d3d9fda..4620117 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -183,6 +183,10 @@ static inline void drv_remove_interface(struct ieee80211_local *local,
- 	trace_drv_remove_interface(local, sdata);
- 	local->ops->remove_interface(&local->hw, &sdata->vif);
- 	sdata->flags &= ~IEEE80211_SDATA_IN_DRIVER;
-+
-+	/* clear driver specific private data */
-+	memset(sdata->vif.drv_priv, 0, sdata->local->hw.vif_data_size);
-+
- 	trace_drv_return_void(local);
- }
- 
--- 
-1.7.9.5
-
+Hauke
