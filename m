@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:33101 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754215Ab2K1XvB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 18:51:01 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so4746769wer.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 15:50:59 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:33664 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751649Ab2KTINk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 03:13:40 -0500
+Message-ID: <50AB3B6C.4000505@phrozen.org> (sfid-20121120_091342_955610_4EFEE5EC)
+Date: Tue, 20 Nov 2012 09:12:28 +0100
+From: John Crispin <john@phrozen.org>
 MIME-Version: 1.0
-Date: Wed, 28 Nov 2012 15:50:59 -0800
-Message-ID: <CAJ-VmomxqY4FbzRSXtXTgUbVJOSwTJJAF953UO0xN275pPTJLg@mail.gmail.com> (sfid-20121129_005106_044845_EA483CA1)
-Subject: ath9k_htc test release: please test
-From: Adrian Chadd <adrian@freebsd.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: ralf@linux-mips.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, florian@openwrt.org,
+	zajec5@gmail.com, m@bues.ch
+Subject: Re: [PATCH 7/8] ssb: add GPIO driver
+References: <1353365877-11131-1-git-send-email-hauke@hauke-m.de> <1353365877-11131-8-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1353365877-11131-8-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-
-I've done an updated build of the ath9k_htc firmware images. I don't
-currently have a HTC setup working so this is just a recompilation of
-the current firmware.
-
-http://dev.qca.qualcomm.com/~adrian/htc/20121128/
-
-Please let me know if it works or doesn't work for you.
-
-The specific two changes from Sujith's last release:
-
-* Fix the TSF extension logic to correctly extend TSF from 32 bit to 64 bit;
-* Update the embedded runtime OS code to the latest from Tensilica, in
-preparation for open sourcing it;
-
-I don't plan on fixing any bugs that already exist in the latest
-ath9k_htc drop in the firmware git repository; I just want to check
-that the build hasn't broken any existing behaviour (ie, "made things
-worse.")
-
-Thanks,
+Hi Hauke,
 
 
-Adrian
+ > +#ifdef CONFIG_SSB_DRIVER_EXTIF
+
+...
+
+> +}
+> +
+> +#else
+> +static int ssb_gpio_extif_init(struct ssb_bus *bus)
+> +{
+> +	return 0;
+> +}
+> +#endif
+
+ssb_gpio_extif_init() is also defined as a static inline stub in the 
+header files. you should drop this definition from the code file
+
+	John
