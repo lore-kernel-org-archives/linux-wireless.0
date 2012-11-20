@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blackhole.sdinet.de ([176.9.52.58]:47042 "EHLO mail.sdinet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753724Ab2KPWnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 17:43:25 -0500
-Date: Fri, 16 Nov 2012 23:32:32 +0100 (CET)
-From: Sven-Haegar Koch <haegar@sdinet.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Dave Airlie <airlied@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bill Nottingham <notting@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: removal of sysfs wext extension broke on F16
-In-Reply-To: <1353098379.9490.22.camel@jlt4.sipsolutions.net>
-Message-ID: <alpine.DEB.2.02.1211162330090.19580@aurora.sdinet.de> (sfid-20121116_234328_907516_98DA01EA)
-References: <CAPM=9twSHBet=vDY9q4BXKv7ZUPR-eme75tOzxrWf6Bsp4MMkw@mail.gmail.com>  <1352795227.9466.8.camel@jlt4.sipsolutions.net>  <CA+55aFw8Rx6TScXV_nsh4EFeCDTxsjn9mJPqo8VzPhbG9jC5Fw@mail.gmail.com>  (sfid-20121116_192027_176167_6DFB40B3)
- <1353098137.9490.20.camel@jlt4.sipsolutions.net>  (sfid-20121116_213518_404111_CB0441EC) <1353098204.9490.21.camel@jlt4.sipsolutions.net>  (sfid-20121116_213631_514198_885B62C5) <1353098379.9490.22.camel@jlt4.sipsolutions.net>
+Received: from hotel311.server4you.de ([85.25.146.15]:52045 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753137Ab2KTWpH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 17:45:07 -0500
+Message-ID: <50AC07F2.8000400@monom.org> (sfid-20121120_234512_177089_ABE5E097)
+Date: Tue, 20 Nov 2012 23:45:06 +0100
+From: Daniel Wagner <wagi@monom.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
+ support
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com> <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org> <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org> <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org>
+In-Reply-To: <50AC05A5.3090706@monom.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 16 Nov 2012, Johannes Berg wrote:
+>> Looks like you got it right. The period you traced doesn't seem to cover
+>> any of the block ack session timeouts, but I do see this:
+>>
+>> [  225.269777] wlan0: release an RX reorder frame due to timeout on earlier frames
+>> [  243.869220] wlan0: unexpected AddBA Req from 1c:c6:3c:1f:50:68 on tid 0
+>> [  243.869233] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 32
+>> [  243.869250] wlan0: Rx A-MPDU request on tid 0 result 0
+>> [  252.254013] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: Pkt tx suppressed, illegal channel possibly 13
+>> <snip repeated messages>
+>> [  259.798966] wlan0: release an RX reorder frame due to timeout on earlier frames
+>> <snip repeated messages>
+>> [  265.193640] wlan0: unexpected AddBA Req from 1c:c6:3c:1f:50:68 on tid 0
+>> [  265.193648] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 32
+>> [  265.193663] wlan0: Rx A-MPDU request on tid 0 result 0
+>>
+>> Does something in this time frame correspond to your loss in
+>> connectivity? The number of packets being sent and received varies some
+>> throughout the trace but generally stays pretty low. It never completely
+>> stops though.
+>
+> I am currently not able to reproduce a complete loss of connectivity.
 
-> On Fri, 2012-11-16 at 21:36 +0100, Johannes Berg wrote:
-> > On Fri, 2012-11-16 at 21:35 +0100, Johannes Berg wrote:
-> > > On Fri, 2012-11-16 at 10:20 -0800, Linus Torvalds wrote:
-> > > > On Tue, Nov 13, 2012 at 12:27 AM, Johannes Berg
-> > > > <johannes@sipsolutions.net> wrote:
-> > > > >
-> > > > > Should I revert it and send it in my next pull request?
-> > > > 
-> > > > Please do. Or perhaps we could just add the directory back, without
-> > > > the actual entries, if that is sufficient..
-> > > 
-> > > Yeah, that does seem to be sufficient, I'll queue up the patch below.
-> > 
-> > Err, no, wishful thinking. I need a *little* bit more for sysfs to work.
-> 
-> This works, sorry about that.
+I fear it is a heisenbug. After turning the tracing off I was able to 
+reproduce it very easily.
 
-> +#if IS_ENABLED(CONFIG_WIRELESS_EXT) || IS_ENABLED(CONFIG_CFG80211)
-> +static struct attribute *wireless_attrs[] = {
-> +	NULL
-> +};
-> +
-> +static struct attribute_group wireless_group = {
-> +	.name = "wireless",
-> +	.attrs = wireless_attrs,
-> +};
-> +#endif
->  #endif /* CONFIG_SYSFS */
->  
 
-How about a small comment in the source why it is there? I suppose 
-otherwise in a year or two someone will find it, see "WTF? Useless 
-empty directory?" and try to remove it again...
-
-c'ya
-sven-haegar
-
--- 
-Three may keep a secret, if two of them are dead.
-- Ben F.
