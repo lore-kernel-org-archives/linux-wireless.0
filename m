@@ -1,73 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:44781 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751445Ab2KFN57 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42077 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462Ab2KTVox (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 08:57:59 -0500
-Date: Tue, 6 Nov 2012 19:23:01 +0530
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwl8k: Do not expire eapol frames
-Message-ID: <20121106135256.GA8458@markyou.marvell.com> (sfid-20121106_145801_870543_1EA5FC0F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 20 Nov 2012 16:44:53 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 06/10] nl80211/cfg80211: add VHT MCS support
+Date: Tue, 20 Nov 2012 22:45:12 +0100
+Message-Id: <1353447916-17304-7-git-send-email-johannes@sipsolutions.net> (sfid-20121120_224508_332628_B68A18A0)
+In-Reply-To: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
+References: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can cause issues when clients try to connect when the
-traffic is heavy
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Add support for reporting and calculating VHT MCSes.
+
+Note that I'm not completely sure that the bitrate
+calculations are correct, nor that they can't be
+simplified.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwl8k.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ include/net/cfg80211.h       | 24 +++++++++-----
+ include/uapi/linux/nl80211.h | 12 ++++++-
+ net/wireless/nl80211.c       | 58 +++++++++++++++++++++++++---------
+ net/wireless/util.c          | 74 +++++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 144 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 5b5b9ec..a4d3dcb 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1851,6 +1851,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 	bool start_ba_session = false;
- 	bool mgmtframe = false;
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
-+	bool eapol_frame = false;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fd4c3c1..277758a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -662,16 +662,24 @@ enum station_info_flags {
+  * Used by the driver to indicate the specific rate transmission
+  * type for 802.11n transmissions.
+  *
+- * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
+- * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
++ * @RATE_INFO_FLAGS_MCS: mcs field filled with HT MCS
++ * @RATE_INFO_FLAGS_VHT_MCS: mcs field filled with VHT MCS
++ * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 MHz width transmission
++ * @RATE_INFO_FLAGS_80_MHZ_WIDTH: 80 MHz width transmission
++ * @RATE_INFO_FLAGS_80P80_MHZ_WIDTH: 80+80 MHz width transmission
++ * @RATE_INFO_FLAGS_160_MHZ_WIDTH: 160 MHz width transmission
+  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
+- * @RATE_INFO_FLAGS_60G: 60gHz MCS
++ * @RATE_INFO_FLAGS_60G: 60GHz MCS
+  */
+ enum rate_info_flags {
+-	RATE_INFO_FLAGS_MCS		= 1<<0,
+-	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
+-	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
+-	RATE_INFO_FLAGS_60G		= 1<<3,
++	RATE_INFO_FLAGS_MCS			= BIT(0),
++	RATE_INFO_FLAGS_VHT_MCS			= BIT(1),
++	RATE_INFO_FLAGS_40_MHZ_WIDTH		= BIT(2),
++	RATE_INFO_FLAGS_80_MHZ_WIDTH		= BIT(3),
++	RATE_INFO_FLAGS_80P80_MHZ_WIDTH		= BIT(4),
++	RATE_INFO_FLAGS_160_MHZ_WIDTH		= BIT(5),
++	RATE_INFO_FLAGS_SHORT_GI		= BIT(6),
++	RATE_INFO_FLAGS_60G			= BIT(7),
+ };
  
- 	wh = (struct ieee80211_hdr *)skb->data;
- 	if (ieee80211_is_data_qos(wh->frame_control))
-@@ -1858,6 +1859,9 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 	else
- 		qos = 0;
+ /**
+@@ -682,11 +690,13 @@ enum rate_info_flags {
+  * @flags: bitflag of flags from &enum rate_info_flags
+  * @mcs: mcs index if struct describes a 802.11n bitrate
+  * @legacy: bitrate in 100kbit/s for 802.11abg
++ * @nss: number of streams (VHT only)
+  */
+ struct rate_info {
+ 	u8 flags;
+ 	u8 mcs;
+ 	u16 legacy;
++	u8 nss;
+ };
  
-+	if (skb->protocol == cpu_to_be16(ETH_P_PAE))
-+		eapol_frame = true;
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 84f9c7d..33a4174 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1734,10 +1734,15 @@ struct nl80211_sta_flag_update {
+  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
+  * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
+  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
+- * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
++ * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 MHz dualchannel bitrate
+  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
+  * @NL80211_RATE_INFO_BITRATE32: total bitrate (u32, 100kbit/s)
+  * @NL80211_RATE_INFO_MAX: highest rate_info number currently defined
++ * @NL80211_RATE_INFO_VHT_MCS: MCS index for VHT (u8)
++ * @NL80211_RATE_INFO_VHT_NSS: number of streams in VHT (u8)
++ * @NL80211_RATE_INFO_80_MHZ_WIDTH: 80 MHz VHT rate
++ * @NL80211_RATE_INFO_80P80_MHZ_WIDTH: 80+80 MHz VHT rate
++ * @NL80211_RATE_INFO_160_MHZ_WIDTH: 160 MHz VHT rate
+  * @__NL80211_RATE_INFO_AFTER_LAST: internal use
+  */
+ enum nl80211_rate_info {
+@@ -1747,6 +1752,11 @@ enum nl80211_rate_info {
+ 	NL80211_RATE_INFO_40_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_SHORT_GI,
+ 	NL80211_RATE_INFO_BITRATE32,
++	NL80211_RATE_INFO_VHT_MCS,
++	NL80211_RATE_INFO_VHT_NSS,
++	NL80211_RATE_INFO_80_MHZ_WIDTH,
++	NL80211_RATE_INFO_80P80_MHZ_WIDTH,
++	NL80211_RATE_INFO_160_MHZ_WIDTH,
+ 
+ 	/* keep last */
+ 	__NL80211_RATE_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 15158a3..d038fa4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2890,29 +2890,52 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
+ 
+ 	rate = nla_nest_start(msg, attr);
+ 	if (!rate)
+-		goto nla_put_failure;
++		return false;
+ 
+ 	/* cfg80211_calculate_bitrate will return 0 for mcs >= 32 */
+ 	bitrate = cfg80211_calculate_bitrate(info);
+ 	/* report 16-bit bitrate only if we can */
+ 	bitrate_compat = bitrate < (1UL << 16) ? bitrate : 0;
+-	if ((bitrate > 0 &&
+-	     nla_put_u32(msg, NL80211_RATE_INFO_BITRATE32, bitrate)) ||
+-	    (bitrate_compat > 0 &&
+-	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate_compat)) ||
+-	    ((info->flags & RATE_INFO_FLAGS_MCS) &&
+-	     nla_put_u8(msg, NL80211_RATE_INFO_MCS, info->mcs)) ||
+-	    ((info->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) &&
+-	     nla_put_flag(msg, NL80211_RATE_INFO_40_MHZ_WIDTH)) ||
+-	    ((info->flags & RATE_INFO_FLAGS_SHORT_GI) &&
+-	     nla_put_flag(msg, NL80211_RATE_INFO_SHORT_GI)))
+-		goto nla_put_failure;
++	if (bitrate > 0 &&
++	    nla_put_u32(msg, NL80211_RATE_INFO_BITRATE32, bitrate))
++		return false;
++	if (bitrate_compat > 0 &&
++	    nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate_compat))
++		return false;
 +
- 	if (ieee80211_is_mgmt(wh->frame_control))
- 		mgmtframe = true;
++	if (info->flags & RATE_INFO_FLAGS_MCS) {
++		if (nla_put_u8(msg, NL80211_RATE_INFO_MCS, info->mcs))
++			return false;
++		if (info->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH &&
++		    nla_put_flag(msg, NL80211_RATE_INFO_40_MHZ_WIDTH))
++			return false;
++		if (info->flags & RATE_INFO_FLAGS_SHORT_GI &&
++		    nla_put_flag(msg, NL80211_RATE_INFO_SHORT_GI))
++			return false;
++	} else if (info->flags & RATE_INFO_FLAGS_VHT_MCS) {
++		if (nla_put_u8(msg, NL80211_RATE_INFO_VHT_MCS, info->mcs))
++			return false;
++		if (nla_put_u8(msg, NL80211_RATE_INFO_VHT_NSS, info->nss))
++			return false;
++		if (info->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH &&
++		    nla_put_flag(msg, NL80211_RATE_INFO_40_MHZ_WIDTH))
++			return false;
++		if (info->flags & RATE_INFO_FLAGS_80_MHZ_WIDTH &&
++		    nla_put_flag(msg, NL80211_RATE_INFO_80_MHZ_WIDTH))
++			return false;
++		if (info->flags & RATE_INFO_FLAGS_80P80_MHZ_WIDTH &&
++		    nla_put_flag(msg, NL80211_RATE_INFO_80P80_MHZ_WIDTH))
++			return false;
++		if (info->flags & RATE_INFO_FLAGS_160_MHZ_WIDTH &&
++		    nla_put_flag(msg, NL80211_RATE_INFO_160_MHZ_WIDTH))
++			return false;
++		if (info->flags & RATE_INFO_FLAGS_SHORT_GI &&
++		    nla_put_flag(msg, NL80211_RATE_INFO_SHORT_GI))
++			return false;
++	}
  
-@@ -1916,9 +1920,8 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
+ 	nla_nest_end(msg, rate);
+ 	return true;
+-
+-nla_put_failure:
+-	return false;
+ }
  
- 	txpriority = index;
+ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
+@@ -5475,6 +5498,11 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &ibss.chandef))
+ 		return -EINVAL;
  
--	if (priv->ap_fw && sta && sta->ht_cap.ht_supported
--			&& skb->protocol != cpu_to_be16(ETH_P_PAE)
--			&& ieee80211_is_data_qos(wh->frame_control)) {
-+	if (priv->ap_fw && sta && sta->ht_cap.ht_supported && !eapol_frame &&
-+	    ieee80211_is_data_qos(wh->frame_control)) {
- 		tid = qos & 0xf;
- 		mwl8k_tx_count_packet(sta, tid);
- 		spin_lock(&priv->stream_lock);
-@@ -2027,7 +2030,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 	else
- 		tx->peer_id = 0;
++	if (ibss.chandef.width > NL80211_CHAN_WIDTH_40)
++		return -EINVAL;
++	if (ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
++	    !(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
++
+ 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
+ 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
  
--	if (priv->ap_fw)
-+	if (priv->ap_fw && ieee80211_is_data(wh->frame_control) && !eapol_frame)
- 		tx->timestamp = cpu_to_le32(ioread32(priv->regs +
- 						MWL8K_HW_TIMER_REGISTER));
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b99f01c..465efb0 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -944,14 +944,86 @@ static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
+ 	return __mcs2bitrate[rate->mcs];
+ }
  
++static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
++{
++	static const u32 base[4][10] = {
++		{   6500000,
++		   13000000,
++		   19500000,
++		   26000000,
++		   39000000,
++		   52000000,
++		   58500000,
++		   65000000,
++		   78000000,
++		   0,
++		},
++		{  13500000,
++		   27000000,
++		   40500000,
++		   54000000,
++		   81000000,
++		  108000000,
++		  121500000,
++		  135000000,
++		  162000000,
++		  180000000,
++		},
++		{  29300000,
++		   58500000,
++		   87800000,
++		  117000000,
++		  175500000,
++		  234000000,
++		  263300000,
++		  292500000,
++		  351000000,
++		  390000000,
++		},
++		{  58500000,
++		  117000000,
++		  175500000,
++		  234000000,
++		  351000000,
++		  468000000,
++		  526500000,
++		  585000000,
++		  702000000,
++		  780000000,
++		},
++	};
++	u32 bitrate;
++	int idx;
++
++	if (WARN_ON_ONCE(rate->mcs > 9))
++		return 0;
++
++	idx = rate->flags & (RATE_INFO_FLAGS_160_MHZ_WIDTH |
++			     RATE_INFO_FLAGS_80P80_MHZ_WIDTH) ? 3 :
++		  rate->flags & RATE_INFO_FLAGS_80_MHZ_WIDTH ? 2 :
++		  rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH ? 1 : 0;
++
++	bitrate = base[idx][rate->mcs];
++	bitrate *= rate->nss;
++
++	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
++		bitrate = (bitrate / 9) * 10;
++
++	/* do NOT round down here */
++	return (bitrate + 50000) / 100000;
++}
++
+ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ {
+ 	int modulation, streams, bitrate;
+ 
+-	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS) &&
++	    !(rate->flags & RATE_INFO_FLAGS_VHT_MCS))
+ 		return rate->legacy;
+ 	if (rate->flags & RATE_INFO_FLAGS_60G)
+ 		return cfg80211_calculate_bitrate_60g(rate);
++	if (rate->flags & RATE_INFO_FLAGS_VHT_MCS)
++		return cfg80211_calculate_bitrate_vht(rate);
+ 
+ 	/* the formula below does only work for MCS values smaller than 32 */
+ 	if (WARN_ON_ONCE(rate->mcs >= 32))
 -- 
-1.7.9.2
+1.8.0
 
