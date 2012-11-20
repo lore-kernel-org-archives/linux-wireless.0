@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50835 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801Ab2KOXFs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2012 18:05:48 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] lib80211: hide Kconfig symbol
-Date: Fri, 16 Nov 2012 00:06:20 +0100
-Message-Id: <1353020780-5459-1-git-send-email-johannes@sipsolutions.net> (sfid-20121116_000551_995132_EBB46C5F)
+Received: from mga09.intel.com ([134.134.136.24]:12319 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752906Ab2KTAmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 19:42:13 -0500
+Date: Tue, 20 Nov 2012 01:42:10 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux NFC <linux-nfc@lists.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: [GIT] [3.8] NFC pull request
+Message-ID: <20121120004210.GA15237@sortiz-mobl> (sfid-20121120_014218_713039_8A398B52)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi John,
 
-There's no need to ask the user about lib80211
-since it will be selected by drivers requiring
-it, hide it from Kconfig.
+This is the 2nd NFC pull request for 3.8.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/Kconfig | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+With this one we have:
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index fe4adb1..16d08b3 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -140,14 +140,13 @@ config CFG80211_WEXT
- 	  extensions with cfg80211-based drivers.
- 
- config LIB80211
--	tristate "Common routines for IEEE802.11 drivers"
-+	tristate
- 	default n
- 	help
- 	  This options enables a library of common routines used
- 	  by IEEE802.11 wireless LAN drivers.
- 
--	  Drivers should select this themselves if needed.  Say Y if
--	  you want this built into your kernel.
-+	  Drivers should select this themselves if needed.
- 
- config LIB80211_CRYPT_WEP
- 	tristate
+- A few HCI improvements in preparation for an upcoming HCI chipset support.
+- A pn544 code cleanup after the old driver was removed.
+- An LLCP improvement for notifying user space when one peer stops ACKing I
+  frames.
+
+Thanks in advance for pulling those in.
+
+The following changes since commit ac46ba4384d2c44c56702d0da591696045fba682:
+
+  ath9k: Fix BTCOEX debugfs file usage (2012-11-19 10:45:40 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git tags/nfc-next-3.8-2
+
+for you to fetch changes up to be02b6b624005d47c388f799ce23714136430217:
+
+  NFC: Queue a copy of the transmitted LLCP skb (2012-11-19 23:57:01 +0100)
+
+----------------------------------------------------------------
+Eric Lapuyade (5):
+      NFC: Fix hci_connect_gate() when a pre-opened pipe is passed
+      NFC: Ignore err when chip doesn't implement HW/SW info registers
+      NFC: Dot not dispatch HCI event received on unopened pipe
+      NFC: Export nfc_hci_result_to_errno as it can be needed by HCI drivers
+      NFC: Export nfc_hci_sak_to_protocol()
+
+Marcel Holtmann (3):
+      NFC: Remove unused details from pn544.h header file
+      NFC: Move pn544.h to linux/platform_data/
+      MAINTAINERS: Add reference to pn544.h platform data header
+
+Samuel Ortiz (3):
+      NFC: Copy user space buffer when sending UI frames
+      NFC: Stop sending LLCP frames when tx queues are getting too deep
+      NFC: Queue a copy of the transmitted LLCP skb
+
+ MAINTAINERS                         |    1 +
+ drivers/nfc/pn544/i2c.c             |    2 +-
+ include/linux/nfc/pn544.h           |  104 -----------------------------------
+ include/linux/platform_data/pn544.h |   44 +++++++++++++++
+ include/net/nfc/hci.h               |    3 +
+ net/nfc/hci/command.c               |    4 +-
+ net/nfc/hci/core.c                  |   25 ++++++---
+ net/nfc/llcp/commands.c             |   32 ++++++++++-
+ net/nfc/llcp/llcp.c                 |   17 ++++--
+ 9 files changed, 112 insertions(+), 120 deletions(-)
+ delete mode 100644 include/linux/nfc/pn544.h
+ create mode 100644 include/linux/platform_data/pn544.h
 -- 
-1.8.0
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
