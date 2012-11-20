@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:37423 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753875Ab2KSQjw (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:40628 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753104Ab2KTLrD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 11:39:52 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so2051722eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:52 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/15] wlcore: set active psm on association
-Date: Mon, 19 Nov 2012 18:39:26 +0200
-Message-Id: <1353343170-26516-12-git-send-email-eliad@wizery.com> (sfid-20121119_174527_322426_1AC06CCC)
-In-Reply-To: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	Tue, 20 Nov 2012 06:47:03 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so5793155oag.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:47:02 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1353411746.9399.14.camel@jlt4.sipsolutions.net>
 References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	<1353343170-26516-9-git-send-email-eliad@wizery.com>
+	<1353411746.9399.14.camel@jlt4.sipsolutions.net>
+Date: Tue, 20 Nov 2012 13:47:02 +0200
+Message-ID: <CAB3XZEeDuAr3Vy2K4TMGHGOpSBW5a_f8-A6SiFGL6XwykTs7hg@mail.gmail.com> (sfid-20121120_124707_605614_227D9DA3)
+Subject: Re: [PATCH 08/15] wlcore: add chanctx implementation
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luciano Coelho <coelho@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The default ps mode of the fw is auto, while the default
-ps mode of mac80211 is active (ps off).
-In order to sync them, configure active ps on association.
+On Tue, Nov 20, 2012 at 1:42 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+>
+>> +static int wlcore_op_add_chanctx(struct ieee80211_hw *hw,
+>> +                              struct ieee80211_chanctx_conf *ctx)
+>> +{
+>> +     wl1271_debug(DEBUG_MAC80211, "mac80211 add chanctx %d (type %d)",
+>> +                  ieee80211_frequency_to_channel(ctx->channel->center_freq),
+>> +                  ctx->channel_type);
+>
+> Ok so I just realized there's another small issue with this patch/these
+> patches -- my VHT changes, which I'm planning to merge soon, will change
+> the chanctx_conf structure contents, which might then be tricky with git
+> tree handling?
+>
+> I'm not too worried about that, but might be something to keep in mind.
+> Right now my changes are easy because they only affect hwsim as the only
+> driver using channel contexts.
+>
+yeah, we don't do anything fancy with the chanctx, so i guess the
+merge should be fairly easy.
+thanks for the heads up. we'll keep it in mind.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index e1f0606..0dd0ec1 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2534,6 +2534,15 @@ static int wlcore_set_assoc(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 					   ACX_KEEP_ALIVE_TPL_VALID);
- 	if (ret < 0)
- 		goto out;
-+
-+	/*
-+	 * The default fw psm configuration is AUTO, while mac80211 default
-+	 * setting is off (ACTIVE), so sync the fw with the correct value.
-+	 */
-+	ret = wl1271_ps_set_mode(wl, wlvif, STATION_ACTIVE_MODE);
-+	if (ret < 0)
-+		goto out;
-+
- out:
- 	return ret;
- }
--- 
-1.7.6.401.g6a319
-
+Eliad.
