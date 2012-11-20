@@ -1,77 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:32932 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752404Ab2KQKc7 (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:35828 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100Ab2KTLmo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 05:32:59 -0500
+	Tue, 20 Nov 2012 06:42:44 -0500
+Message-ID: <1353411725.10872.159.camel@cumari.coelho.fi> (sfid-20121120_124247_861111_A326902A)
+Subject: Re: [PATCH v2 01/11] wlcore: start sta role on CHANGED_BSSID
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 20 Nov 2012 13:42:05 +0200
+In-Reply-To: <1353410411-18833-2-git-send-email-eliad@wizery.com>
+References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+	 <1353410411-18833-2-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1211162330090.19580@aurora.sdinet.de>
-References: <CAPM=9twSHBet=vDY9q4BXKv7ZUPR-eme75tOzxrWf6Bsp4MMkw@mail.gmail.com>
- <1352795227.9466.8.camel@jlt4.sipsolutions.net> <CA+55aFw8Rx6TScXV_nsh4EFeCDTxsjn9mJPqo8VzPhbG9jC5Fw@mail.gmail.com>
- <1353098137.9490.20.camel@jlt4.sipsolutions.net> <1353098204.9490.21.camel@jlt4.sipsolutions.net>
- <1353098379.9490.22.camel@jlt4.sipsolutions.net> <alpine.DEB.2.02.1211162330090.19580@aurora.sdinet.de>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 17 Nov 2012 21:32:37 +1100
-Message-ID: <CAGRGNgWZHvs2Fb-BLd+wgqz5WcmdBHvodvnHOBE_4+w7dqzRPg@mail.gmail.com> (sfid-20121117_113418_652108_43EDC36E)
-Subject: Re: removal of sysfs wext extension broke on F16
-To: Sven-Haegar Koch <haegar@sdinet.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Dave Airlie <airlied@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bill Nottingham <notting@redhat.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sven,
+On Tue, 2012-11-20 at 13:20 +0200, Eliad Peller wrote:
+> Make the connection flow simpler by starting
+> sta role on bssid change.
+> 
+> Currently, we start dev role when going idle-off,
+> and start the sta role only after association
+> indication. This complicates the connection
+> flow with some possible intermediate states.
+> 
+> Make it simpler by starting sta role on bssid change,
+> which now happens *before* auth req get sent.
+> 
+> Update the handling of mac80211's notifications
+> and change wl1271_join/unjoin accordingly -
+> * Split wl1271_join() into wlcore_join (tuning on
+>   a channel/bssid) and wlcore_set_assoc (configure
+>   sta after association).
+> * Rename wl1271_unjoin() to wlcore_unset_assoc(), as
+>   it is no longer the inversion of wl1271_join()
+>   (now it's only used to disconnect associated sta /
+>   joined ibss, without stopping the role).
+> * Set ssid before starting station role (needed for
+>   start_role(sta)
+> 
+> While on it, split wl1271_bss_info_changed_sta() into
+> some sub-functions.
+> 
+> since we no longer use dev role in the connection flow,
+> we now always use the hlid of the sta role.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+> v2: take some more code out of wl1271_bss_info_changed_sta (thanks Luca!)
+>     squash patches [2/15, 3/15] into this one (thanks Julian!)
+> 
 
-On Sat, Nov 17, 2012 at 9:32 AM, Sven-Haegar Koch <haegar@sdinet.de> wrote:
-> On Fri, 16 Nov 2012, Johannes Berg wrote:
->
->> On Fri, 2012-11-16 at 21:36 +0100, Johannes Berg wrote:
->> > On Fri, 2012-11-16 at 21:35 +0100, Johannes Berg wrote:
->> > > On Fri, 2012-11-16 at 10:20 -0800, Linus Torvalds wrote:
->> > > > On Tue, Nov 13, 2012 at 12:27 AM, Johannes Berg
->> > > > <johannes@sipsolutions.net> wrote:
->> > > > >
->> > > > > Should I revert it and send it in my next pull request?
->> > > >
->> > > > Please do. Or perhaps we could just add the directory back, without
->> > > > the actual entries, if that is sufficient..
->> > >
->> > > Yeah, that does seem to be sufficient, I'll queue up the patch below.
->> >
->> > Err, no, wishful thinking. I need a *little* bit more for sysfs to work.
->>
->> This works, sorry about that.
->
->> +#if IS_ENABLED(CONFIG_WIRELESS_EXT) || IS_ENABLED(CONFIG_CFG80211)
->> +static struct attribute *wireless_attrs[] = {
->> +     NULL
->> +};
->> +
->> +static struct attribute_group wireless_group = {
->> +     .name = "wireless",
->> +     .attrs = wireless_attrs,
->> +};
->> +#endif
->>  #endif /* CONFIG_SYSFS */
->>
->
-> How about a small comment in the source why it is there? I suppose
-> otherwise in a year or two someone will find it, see "WTF? Useless
-> empty directory?" and try to remove it again...
+[...]
 
-Hopefully by then Fedora's networking scripts won't need it =)
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index 41ed1d5..2690fe9 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
 
-Thanks,
+[...]
 
--- 
-Julian Calaby
+> @@ -2510,29 +2587,58 @@ static int wl1271_join(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>  	 */
+>  	ret = wl1271_acx_keep_alive_mode(wl, wlvif, true);
+>  	if (ret < 0)
+> -		goto out;
+> +		return ret;
+>  
+>  	ret = wl1271_acx_aid(wl, wlvif, wlvif->aid);
+>  	if (ret < 0)
+> -		goto out;
+> +		return ret;
+>  
+>  	ret = wl12xx_cmd_build_klv_null_data(wl, wlvif);
+>  	if (ret < 0)
+> -		goto out;
+> +		return ret;
+>  
+>  	ret = wl1271_acx_keep_alive_config(wl, wlvif,
+>  					   wlvif->sta.klv_template_id,
+>  					   ACX_KEEP_ALIVE_TPL_VALID);
+>  	if (ret < 0)
+> -		goto out;
+> +		return ret;
+>  
+> -out:
+>  	return ret;
+>  }
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+This is, of course, functionally okay, but seems like an unrelated
+change.  Also, this is different than the general style we use in the
+driver (ie. use goto out in most error cases).
+
+Same thing for the other functions you added.  It would be nice to be
+consistent with the existing style, at least in error paths.
+
+--
+Luca.
+
