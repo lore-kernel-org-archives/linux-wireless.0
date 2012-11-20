@@ -1,26 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:38813 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933167Ab2KODHd (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:50920 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582Ab2KTHRR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 22:07:33 -0500
-Date: Wed, 14 Nov 2012 22:07:31 -0500 (EST)
-Message-Id: <20121114.220731.278562830655607486.davem@davemloft.net> (sfid-20121115_040753_752260_C55BA444)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-11-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20121114190510.GA6128@tuxdriver.com>
-References: <20121114190510.GA6128@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 20 Nov 2012 02:17:17 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so1049802pad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 23:17:17 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAJ-VmomHxArtZ+1tqkmGdTobv2Y9CdXHrfxPyJkeAKboqYJoxQ@mail.gmail.com>
+References: <1352832488-21516-1-git-send-email-thomas@cozybit.com>
+	<1353361141.18299.36.camel@jlt4.sipsolutions.net>
+	<CAJ-VmomL6g1LfTNsk6HPeKEySS57-646L6i9rcOT0V9cDK0b9w@mail.gmail.com>
+	<CAG6hwVPVbyL+6HTUv+4=zNMvb4KSPMowXwbb1B2H5ugYBuo0gQ@mail.gmail.com>
+	<CAJ-VmomHxArtZ+1tqkmGdTobv2Y9CdXHrfxPyJkeAKboqYJoxQ@mail.gmail.com>
+Date: Mon, 19 Nov 2012 23:17:16 -0800
+Message-ID: <CAJ-Vmok8Zyx7Pr9bVLp2NHnUZu5uaweT+sxVKvyFu7qV+de6hA@mail.gmail.com> (sfid-20121120_081726_528054_6E665C48)
+Subject: Re: [PATCH v2 1/2] ath9k: RX timestamp is reported at end of frame
+From: Adrian Chadd <adrian@freebsd.org>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@lists.ath9k.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 14 Nov 2012 14:05:11 -0500
+On 19 November 2012 17:22, Adrian Chadd <adrian@freebsd.org> wrote:
+> Just do what Sam did in the FreeBSD TDMA code - calculate the actual
+> beginning of the frame by using the TSF, the size of the last frame,
+> the rate from the last frame, and call ath_hal_calctxtime() (or the
+> linux equivalent, obviously.)
+>
+> For clarification we should find out what the TSF is for 11n
+> aggregates. Or the math is totally wrong.
 
-> This pull request is intended for the 3.8 stream...
+For reference - only the TSF in the final subframe in an aggregate is
+valid. The others aren't.
 
-Pulled, thanks John.
+We'll have to jump through some hoops to calculate the timestamp of
+each individual MPDU.
+
+
+Adrian
