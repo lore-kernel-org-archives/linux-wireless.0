@@ -1,122 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33028 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428Ab2KKNlp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 08:41:45 -0500
-Message-ID: <1352641337.12119.7.camel@jlt4.sipsolutions.net> (sfid-20121111_144150_439102_2E62B21F)
-Subject: Re: 60 GHz interface types (was: [PATCH v5 1/2] wireless: Driver
- for 60GHz card wil6210)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
+Received: from mms1.broadcom.com ([216.31.210.17]:3262 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752206Ab2KTVJZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 16:09:25 -0500
+Message-ID: <50ABF17A.6020604@broadcom.com> (sfid-20121120_220928_697610_1ECAFF7D)
+Date: Tue, 20 Nov 2012 22:09:14 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Daniel Wagner" <wagi@monom.org>
+cc: "Seth Forshee" <seth.forshee@canonical.com>,
 	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>, j@w1.fi
-Date: Sun, 11 Nov 2012 14:42:17 +0100
-In-Reply-To: <12645035.o6OUeozobZ@lx-vladimir>
-References: <1351701417-3140-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1351701417-3140-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1352450346.9238.9.camel@jlt4.sipsolutions.net>
-	 <12645035.o6OUeozobZ@lx-vladimir>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded
+ debug/trace support
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org>
+ <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org>
+In-Reply-To: <50ABC168.8080904@monom.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-11-11 at 10:15 +0200, Vladimir Kondratiev wrote:
+On 11/20/2012 06:44 PM, Daniel Wagner wrote:
+> Hi Seth,
+>
+> On 20.11.2012 15:28, Seth Forshee wrote:
+>> On Tue, Nov 20, 2012 at 08:30:10AM +0100, Daniel Wagner wrote:
+>>> Hi Seth,
+>>>
+>>> On 19.11.2012 20:11, Daniel Wagner wrote:
+>>>> Works perfectly fine on my machine.
+>>>
+>>> Well, not really true. Though I am not sure if this what I am seeing
+>>> related to your changes. I see following log only when I am using my
+>>> home AP. The pattern is that when the connection stop working I see
+>>> something like this in the log:
+>>>
+>>> [ 8735.159091] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 4
+>>> [ 8735.197298] wlan0: Rx A-MPDU request on tid 0 result 0
+>>> [ 8735.566368] wlan0: Open BA session requested for 1c:c6:3c:1f:50:68
+>>> tid 0
+>>> [ 8735.573701] wlan0: activated addBA response timer on tid 0
+>>> [ 8735.578826] wlan0: switched off addBA timer for tid 0
+>>> [ 8735.578834] wlan0: Aggregation is on for tid 0
+>>> [ 8749.687530] wlan0: tx session timer expired on tid 0
+>>> [ 8749.687558] wlan0: Tx BA session stop requested for
+>>> 1c:c6:3c:1f:50:68 tid 0
+>>> [ 8749.700550] wlan0: Stopping Tx BA session for 1c:c6:3c:1f:50:68 tid 0
+>>>
+>>>
+>>> This is what I do: First establishing a connection, then after a
+>>> while any
+>>> traffic seems stops for a period and sometimes it recovers from that
+>>> point. If
+>>> not a disconnect/connect (using ConnMan) dance fixes the problem.
+>>
+>> The tx session timer expiring is a result of not having any aggregate
+>> transfers in a while. In my testing with iperf I see periods where the
+>> transfer seems to stall, but it always recovers. These are less frequent
+>> after my patches, but they still happen, and I haven't been able to work
+>> out the cause yet. I'm not sure whether these are related to what you're
+>> seeing or not.
+>>
+>> Luckily I've added a bunch of new debug code. Could you make sure you
+>> have MAC80211_MESSAGE_TRACING and BRCM_TRACING enabled in your config
+>> and collect a trace when this is happening by running:
+>>
+>>   trace-cmd record -e mac80211 -e mac80211_msg -e brcmsmac \
+>>          -e brcmsmac_tx -e brcmsmac_msg
+>>
+>> This going to collect a lot of data, and you should bump up the trace
+>> buffer size to avoid overruns. Once you've got a trace please compress
+>> trace.dat and put it along with your dmesg somewhere where I can get at
+>> them.
+>
+> I hope I got it right. Here are the requested logs:
+>
+> http://www.monom.org/misc/brcmsmac/traces/
 
-> > 802.11ad obviously distinguishes between a regular BSS, IBSS, and the
-> > new PBSS. We also differentiate between BSS and IBSS in our interface
-> > types, so I have a feeling that maybe we should also differentiate here,
-> > and not re-use the NL80211_IFTYPE_AP/... interface types.
-> 
-> Yes, you are absolutely right. Standard says about PBSS (802.11ad draft 9):
-> 
-> ---cut---
+What channel is you AP on?
 
-> A PBSS can be established only by DMG STAs. Not every DMG BSS is a PBSS. A DMG 
-> BSS can be a PBSS, an infrastructure BSS or an IBSS.
+Gr. AvS
 
-I actually missed this last bit and thought a DMG STA can only be in a
-PBSS, sorry.
-
-> Right now I do not have patch for this; but yes, it need to be done. I want to 
-> finish with initial driver submission first, then continue with 
-> infrastructure. As you mentioned earlier (and yes, I agree), without single 
-> 60g driver infrastructure work have little meaning.
-
-However in your patch submission you said "STA, PCP and monitor modes"
-are supported. Don't you mean "STA, AP and monitor" then?
-
-Do we need/want a PCP_CLIENT mode?
-
-> > It seems that then we'd also need a PBSS_P2P_CLIENT and PBSS_P2P_GO,
-> > which is a bit odd, but then again we also do that for P2P_CLIENT vs.
-> > normal managed and P2P_GO vs. AP.
-> 
-> This time - not exactly. P2P spec says that in DMG (Direct Multi-Gigabit) 
-> networks P2P GO is PCP. From P2P spec 1.3 draft 4 (#2.1 P2P components):
-
-Ok, I hadn't checked the P2P update for this yet.
-
-> So, for P2P it is sufficient to have P2P_GO and P2P_CLIENT. In DMG, spec 
-> dictates that P2P group is PBSS. P2P supplicant may deduce everything from 
-> band.
-
-Ok.
-
-
-> > I'm not sure if we're ever going to see chipsets that have 60GHz and
-> > 2.4/5 GHz combined, and are not going to just register two wiphy's with
-> > the system for that, but if there was then this would certainly help
-> > with interface combinations etc.
-> 
-> Most likely, 60g chips will be accompanied with 2.4/5 GHZ ones. Spec actually 
-> encourage this; it defines FST (Fast Session Transfer) mechanism to bundle 60g 
-> with 2.4/5.
-
-Right, of course. I was thinking along the lines of "what happens if the
-same wiphy (in cfg80211) supports both 2.4 (or 5) and 60 GHz". Does that
-even make sense? I don't know. But if it does make sense, is there a
-need to distinguish between 60 GHz client/AP/PCP interface types and the
-same on the low band?
-
-Now, I'd actually think that it's more likely that even if there's a
-device that supports both 2.4/5 and 60 GHz, it'll register two wiphys
-with cfg80211, since 2.4/5 and 60 are intended to cooperate, I think, so
-it wouldn't really make sense to build hardware that can be one of 2.4,
-5, 60 (like today's 2.4/5 GHz hardware that can't be both at the same
-time)
-
-OTOH, maybe there would be value in being able to tell the difference
-between 2.4/5 and 60 purely on the interface types? Not sure either!
-
-> > Even if there isn't, it could help tools like network-manager not manage
-> > the 60 GHz device (without having to add special checks), which I
-> > suspect is what you'd want? Not really sure though.
-> 
-> Yes, and I am working with Jouni for wpa_supplicant additions.
-> 
-> Sure I want 60g to be managed by the network manager as it does for other 
-> devices.
-
-Oh ok :)
-I guess that kinda means you *don't* want this to look different.
-
-> It works well right now for PBSS client - I connect using GUI frontend as 
-> provided by Ubuntu or Fedora. Actually, PBSS client is like BSS one. There is 
-> some work pending to display PCP (differentiate from AP) in the scan list.
-
-Ok so we use the same interface type for AP clients and PCP clients? I
-guess that's ok, or should we differentiate for some reason? I'm not
-familiar enough with the spec -- how close are those two?
-
-> It is correct PBSS need additional work as it should allow for automatic PCP 
-> selection - it is like simplified P2P. P2P need some work as well. I am 
-> looking in this direction right now. For P2P, we don't have GUI right now - or 
-> do I miss something here?
-
-No, I don't think we have P2P UIs (other than Android?)
-
-johannes
 
