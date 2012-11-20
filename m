@@ -1,176 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2012 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752667Ab2KWLpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 06:45:00 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v3.7] brcmsmac: handle packet drop on enqueuing
- correctly
-Date: Fri, 23 Nov 2012 12:44:42 +0100
-Message-ID: <1353671082-7775-1-git-send-email-arend@broadcom.com> (sfid-20121123_124510_062199_06118937)
+Received: from mail-la0-f46.google.com ([209.85.215.46]:47148 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126Ab2KTB3s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Nov 2012 20:29:48 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so1579026lag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 17:29:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1352786641-4321-1-git-send-email-sujith@msujith.org>
+References: <1352786641-4321-1-git-send-email-sujith@msujith.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 19 Nov 2012 17:29:27 -0800
+Message-ID: <CAB=NE6WapgrUy7RXFbovZRY1m8hiro6H=p0wOrTizJ_gOGAgDQ@mail.gmail.com> (sfid-20121120_022950_594572_97075354)
+Subject: Re: [PATCH] qca-swiss-army-knife: Add macro for TXFIR array
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Piotr Haber <phaber@broadcom.com>
+On Mon, Nov 12, 2012 at 10:04 PM, Sujith Manoharan <sujith@msujith.org> wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-In the event that tx packet can not be queued by the driver
-the packet is dropped. Propagate that information to the .tx()
-callback to make sure the freed packet is not accessed after
-that.
+Applied and pushed, thanks!
 
-This has happened causing slab corruptions as reported by
-Stanislaw Gruszka.
-
-Bug #47721: https://bugzilla.kernel.org/show_bug.cgi?id=47721
-
-Reported-by: Stanislaw Gruszka <stf_xl@wp.pl>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Fixing a kernel bug so based on the wireless repository. The
-fix for wireless-next will be posted separately as the patches
-differ. So this patch does not need to be merged to the
-wireless-next tree.
-
-Gr. AvS
----
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c       |    7 ++++---
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 ++--
- drivers/net/wireless/brcm80211/brcmsmac/main.c        |   14 +++++++++-----
- drivers/net/wireless/brcm80211/brcmsmac/main.h        |    2 +-
- drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 +-
- 5 files changed, 17 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index be5bcfb..a6605b1 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -901,7 +901,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 	struct ieee80211_hdr *h;
- 	u16 seq, start_seq = 0, bindex, index, mcl;
- 	u8 mcs = 0;
--	bool ba_recd = false, ack_recd = false;
-+	bool ba_recd = false, ack_recd = false, last_packet = false;
- 	u8 suc_mpdu = 0, tot_mpdu = 0;
- 	uint supr_status;
- 	bool update_rate = true, retry = true, tx_error = false;
-@@ -1010,6 +1010,8 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 
- 		index = TX_SEQ_TO_INDEX(seq);
- 		ack_recd = false;
-+		last_packet = (((mcl & TXC_AMPDU_MASK) >> TXC_AMPDU_SHIFT) ==
-+			TXC_AMPDU_LAST);
- 		if (ba_recd) {
- 			bindex = MODSUB_POW2(seq, start_seq, SEQNUM_MAX);
- 			BCMMSG(wiphy,
-@@ -1074,8 +1076,7 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 		tot_mpdu++;
- 
- 		/* break out if last packet of ampdu */
--		if (((mcl & TXC_AMPDU_MASK) >> TXC_AMPDU_SHIFT) ==
--		    TXC_AMPDU_LAST)
-+		if (last_packet)
- 			break;
- 
- 		p = dma_getnexttxp(wlc->hw->di[queue], DMA_RANGE_TRANSMITTED);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index a744ea5..5590499 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -280,8 +280,8 @@ static void brcms_ops_tx(struct ieee80211_hw *hw,
- 		kfree_skb(skb);
- 		goto done;
- 	}
--	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
--	tx_info->rate_driver_data[0] = control->sta;
-+	if (brcms_c_sendpkt_mac80211(wl->wlc, skb, hw))
-+		tx_info->rate_driver_data[0] = control->sta;
-  done:
- 	spin_unlock_bh(&wl->lock);
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 75086b3..9fb0a4c9 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -6095,7 +6095,7 @@ static bool brcms_c_prec_enq(struct brcms_c_info *wlc, struct pktq *q,
- 	return brcms_c_prec_enq_head(wlc, q, pkt, prec, false);
- }
- 
--void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
-+bool brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
- 		     struct sk_buff *sdu, uint prec)
- {
- 	struct brcms_txq_info *qi = wlc->pkt_queue;	/* Check me */
-@@ -6110,7 +6110,9 @@ void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
- 		 * packet flooding from mac80211 stack
- 		 */
- 		brcmu_pkt_buf_free_skb(sdu);
-+		return false;
- 	}
-+	return true;
- }
- 
- /*
-@@ -7273,7 +7275,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
- 	return 0;
- }
- 
--void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
-+bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
- 			      struct ieee80211_hw *hw)
- {
- 	u8 prio;
-@@ -7288,10 +7290,12 @@ void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
- 	prio = ieee80211_is_data(d11_header->frame_control) ? sdu->priority :
- 		MAXPRIO;
- 	fifo = prio2fifo[prio];
--	if (brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0))
--		return;
--	brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio));
-+	brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0);
-+	if (!brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio)))
-+		return false;
- 	brcms_c_send_q(wlc);
-+
-+	return true;
- }
- 
- void brcms_c_send_q(struct brcms_c_info *wlc)
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index 8debc74..b44725c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -642,7 +642,7 @@ extern void brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo,
- 			   bool commit, s8 txpktpend);
- extern void brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo,
- 				    s8 txpktpend);
--extern void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
-+extern bool brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
- 			    struct sk_buff *sdu, uint prec);
- extern void brcms_c_print_txstatus(struct tx_status *txs);
- extern int brcms_b_xmtfifo_sz_get(struct brcms_hardware *wlc_hw, uint fifo,
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 5855f4f..bfa2630 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -321,7 +321,7 @@ extern void brcms_c_intrsrestore(struct brcms_c_info *wlc, u32 macintmask);
- extern bool brcms_c_intrsupd(struct brcms_c_info *wlc);
- extern bool brcms_c_isr(struct brcms_c_info *wlc, bool *wantdpc);
- extern bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded);
--extern void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
-+extern bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
- 				     struct sk_buff *sdu,
- 				     struct ieee80211_hw *hw);
- extern bool brcms_c_aggregatable(struct brcms_c_info *wlc, u8 tid);
--- 
-1.7.10.4
-
-
+  Luis
