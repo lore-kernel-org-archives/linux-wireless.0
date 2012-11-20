@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:57233 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753318Ab2KKP4J (ORCPT
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:58786 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033Ab2KTKZk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 10:56:09 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so2944750eek.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 07:56:08 -0800 (PST)
-Message-ID: <1352649362.6460.24.camel@canaries32-MCP7A> (sfid-20121111_165613_789899_33CA42FE)
-Subject: [PATCH 12/14] staging: vt6656: 64 bit fixes TKIPvMixKey remove
- unsigned long
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 11 Nov 2012 15:56:02 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 20 Nov 2012 05:25:40 -0500
+Received: by mail-ia0-f174.google.com with SMTP id y25so4105784iay.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 02:25:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB3XZEdVi2FADa-4YOtBfexMU+G8YG8LOnL22FuUji_P18ggfQ@mail.gmail.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+ <1353343170-26516-11-git-send-email-eliad@wizery.com> <CA+XVXfet9PT9j2TCWsK2O-P3CTn+-6kO-U+OJ=ajvRJim+8LeQ@mail.gmail.com>
+ <CAB3XZEdVi2FADa-4YOtBfexMU+G8YG8LOnL22FuUji_P18ggfQ@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 20 Nov 2012 12:25:24 +0200
+Message-ID: <CA+XVXfeMiWnUVwLYdhBsCtZ=ZRh9vo2W==y-_wY-upCywJeYBw@mail.gmail.com> (sfid-20121120_112544_045716_AEC3EA3A)
+Subject: Re: [PATCH 10/15] wlcore: initiate ROC/CROC on sta state updates
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Nov 20, 2012 at 10:42 AM, Eliad Peller <eliad@wizery.com> wrote:
+> On Mon, Nov 19, 2012 at 11:41 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>> On Mon, Nov 19, 2012 at 6:39 PM, Eliad Peller <eliad@wizery.com> wrote:
+>>> Use the sta_state notifications to ROC when a station
+>>> is about to connect, and CROC respectively on
+>>> authorization (success) / deletion (failure).
+>>>
+>>> Change the wl12xx_update_sta_state() flow to bail out
+>>> only on error, so multiple code blocks could refer
+>>> to the same state.
+>>>
+>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> [...]
+>>>
+>>> +       /* clear ROCs on failure or authorization */
+>>> +       if (is_sta &&
+>>> +           (new_state == IEEE80211_STA_AUTHORIZED ||
+>>> +            new_state == IEEE80211_STA_NOTEXIST)) {
+>>> +               if (test_bit(wlvif->role_id, wl->roc_map))
+>>> +                       wl12xx_croc(wl, wlvif->role_id);
+>>> +       }
+>>> +
+>>> +       if (is_sta &&
+>>> +           old_state == IEEE80211_STA_NOTEXIST &&
+>>> +           new_state == IEEE80211_STA_NONE) {
+>>> +               if (find_first_bit(wl->roc_map,
+>>> +                                  WL12XX_MAX_ROLES) >= WL12XX_MAX_ROLES) {
+>>> +                       WARN_ON(wlvif->role_id == WL12XX_INVALID_ROLE_ID);
+>>> +                       wl12xx_roc(wl, wlvif, wlvif->role_id, wlvif->channel);
+>>> +               }
+>>> +       }
+>>
+>> what about AP mode? we don't have an opportunistic ROC there as well
+>> for connecting stations?
+>
+> yeah, we do. but since in order to really be effective it requires
+> supplicant changes that weren't upstreamed yet (adding non-associated
+> station), i preferred postponing it to another patchset.
+> on the other hand, this might help protecting the EAPOL exchange even
+> in its current form, so i guess we can upstream it even before the
+> supplicant changes.
 
- Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-
----
- drivers/staging/vt6656/tkip.c | 40 +++++++++++++++++++---------------------
- 1 file changed, 19 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/staging/vt6656/tkip.c b/drivers/staging/vt6656/tkip.c
-index 003123e..282c08d 100644
---- a/drivers/staging/vt6656/tkip.c
-+++ b/drivers/staging/vt6656/tkip.c
-@@ -189,27 +189,25 @@ void TKIPvMixKey(
-     PBYTE   pbyRC4Key
-     )
- {
--    unsigned int p1k[5];
--//    unsigned int ttak0, ttak1, ttak2, ttak3, ttak4;
--    unsigned int tsc0, tsc1, tsc2;
--    unsigned int ppk0, ppk1, ppk2, ppk3, ppk4, ppk5;
--    unsigned long int pnl,pnh;
--
--    int i, j;
--
--    pnl = wTSC15_0;
--    pnh = dwTSC47_16;
--
--    tsc0 = (unsigned int)((pnh >> 16) % 65536); /* msb */
--    tsc1 = (unsigned int)(pnh % 65536);
--    tsc2 = (unsigned int)(pnl % 65536); /* lsb */
--
--    /* Phase 1, step 1 */
--    p1k[0] = tsc1;
--    p1k[1] = tsc0;
--    p1k[2] = (unsigned int)(pbyTA[0] + (pbyTA[1]*256));
--    p1k[3] = (unsigned int)(pbyTA[2] + (pbyTA[3]*256));
--    p1k[4] = (unsigned int)(pbyTA[4] + (pbyTA[5]*256));
-+	u32 p1k[5];
-+	u32 tsc0, tsc1, tsc2;
-+	u32 ppk0, ppk1, ppk2, ppk3, ppk4, ppk5;
-+	u32 pnl, pnh;
-+	int i, j;
-+
-+	pnl = (u32)wTSC15_0;
-+	pnh = (u32)(dwTSC47_16 & 0xffffffff);
-+
-+	tsc0 = (u32)((pnh >> 16) % 65536); /* msb */
-+	tsc1 = (u32)(pnh % 65536);
-+	tsc2 = (u32)(pnl % 65536); /* lsb */
-+
-+	/* Phase 1, step 1 */
-+	p1k[0] = tsc1;
-+	p1k[1] = tsc0;
-+	p1k[2] = (u32)(pbyTA[0] + (pbyTA[1]*256));
-+	p1k[3] = (u32)(pbyTA[2] + (pbyTA[3]*256));
-+	p1k[4] = (u32)(pbyTA[4] + (pbyTA[5]*256));
- 
-     /* Phase 1, step 2 */
-     for (i=0; i<8; i++) {
--- 
-1.8.0
-
-
-
-
+yea. since this is opportunistic, it can't really hurt.
