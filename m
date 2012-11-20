@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34932 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754111Ab2KZJLf (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:57714 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816Ab2KTLUX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 04:11:35 -0500
-Message-ID: <1353921122.9488.1.camel@jlt4.sipsolutions.net> (sfid-20121126_101314_683798_1E1F9320)
-Subject: Re: RFC[2/4] mac80211: add statistic to debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Saravana <saravanad@posedge.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 26 Nov 2012 10:12:02 +0100
-In-Reply-To: <50B2FB62.2080808@posedge.com>
-References: <50B2FB62.2080808@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 20 Nov 2012 06:20:23 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so1625946eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:20:23 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 07/11] wlcore: set active psm on association
+Date: Tue, 20 Nov 2012 13:20:07 +0200
+Message-Id: <1353410411-18833-8-git-send-email-eliad@wizery.com> (sfid-20121120_122028_589779_AAD264CF)
+In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 10:47 +0530, Saravana wrote:
-> Provide additional statistic support to the debugfs.
-> 
-> Rssi of the Last Ack Frame
->          This information is available as part of ieee80211_tx_info 
-> status structure. Thought this information may be useful(in future).
-> 
-> Signed-off-by: Saravana <saravanad@posedge.com>
+The default ps mode of the fw is auto, while the default
+ps mode of mac80211 is active (ps off).
+In order to sync them, configure active ps on association.
 
-Your changelog entries all need work. Additionally, please check coding
-style and send patches without line wrapping please, I can't apply them
-otherwise.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 55dce4a..e393cea 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2614,6 +2614,12 @@ static int wlcore_set_assoc(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/*
++	 * The default fw psm configuration is AUTO, while mac80211 default
++	 * setting is off (ACTIVE), so sync the fw with the correct value.
++	 */
++	ret = wl1271_ps_set_mode(wl, wlvif, STATION_ACTIVE_MODE);
++
+ 	return ret;
+ }
+ 
+-- 
+1.7.6.401.g6a319
 
