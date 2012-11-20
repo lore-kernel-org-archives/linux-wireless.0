@@ -1,93 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:41416 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932553Ab2KWGxy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 01:53:54 -0500
-Message-ID: <50AF1D7D.6060506@posedge.com> (sfid-20121123_075357_977033_10EE0137)
-Date: Fri, 23 Nov 2012 12:23:49 +0530
-From: Saravana <saravanad@posedge.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:54264 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753569Ab2KTPRS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 10:17:18 -0500
+Message-ID: <50AB9E9D.2090801@ti.com> (sfid-20121120_161834_106599_BC197B71)
+Date: Tue, 20 Nov 2012 17:15:41 +0200
+From: Victor Goldenshtein <victorg@ti.com>
 MIME-Version: 1.0
-To: Saravana <saravanad@posedge.com>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: RFC[1/2]mac80211: Add Statistic to debugfs
-References: <50AF0E91.30709@posedge.com> <CAGRGNgW1x0O26SxytoDQLYXFqWcmfaCGE=Q_pxGg31mW0HyRtw@mail.gmail.com> <50AF1A1E.8090704@posedge.com>
-In-Reply-To: <50AF1A1E.8090704@posedge.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
+	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
+	"j@w1.fi" <j@w1.fi>, "coelho@ti.com" <coelho@ti.com>,
+	"igalc@ti.com" <igalc@ti.com>,
+	"adrian@freebsd.org" <adrian@freebsd.org>,
+	"nbd@nbd.name" <nbd@nbd.name>,
+	"simon.wunderlich@s2003.tu-chemnitz.de"
+	<simon.wunderlich@s2003.tu-chemnitz.de>, <victorgld@gmail.com>
+Subject: Re: [PATCH v4 6/6] mac80211: add ap channel switch command/event
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>      <1350226137-13704-7-git-send-email-victorg@ti.com>     <1350414472.10177.17.camel@jlt4.sipsolutions.net>    <50842563.4010201@ti.com>  <1350910599.10166.4.camel@jlt4.sipsolutions.net>    <50922AA9.4030509@ti.com>  <1352128994.9466.19.camel@jlt4.sipsolutions.net>  <50A2617B.3060807@ti.com>  <1352892233.9510.26.camel@jlt4.sipsolutions.net> <50A38C3A.20908@tieto.com> <1352896680.9510.28.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1352896680.9510.28.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/23/2012 12:09 PM, Saravana wrote:
-> Hi Julian,
+On 14/11/2012 14:38, Johannes Berg wrote:
+> On Wed, 2012-11-14 at 13:19 +0100, Michal Kazior wrote:
 >
-> Thanks for the comments. I will post individual statistics as individual
-> patch.
-> Please find my comments inline.
+>>> However, then I realised that that still doesn't work -- once initial
+>>> radar detection is done, it needs to continue while the AP is active. If
+>>> the channel context was going to be relinquished, or even just the
+>>> channel changed for a few seconds, it would be unsafe. So as a result,
+>>> the radar detect operation has to somehow be coupled to the start AP
+>>> operation and prohibit channel changes and additional channel contexts
+>>> during the entire operation time.
+>>
+>> Hmm.. cfg80211 doesn't really know about channel contexts.
+>>
+>> The problem I see is that cfg80211 may be in a combination with
+>> `num_different_channels = 1` and mac80211 can have 2 channel contexts
+>> due to channel type incompatibilities.
 >
-> On 11/23/2012 11:28 AM, Julian Calaby wrote:
->> Hi Saravana,
->>
->> On Fri, Nov 23, 2012 at 4:50 PM, Saravana <saravanad@posedge.com> wrote:
->>> Provide additional statistic support to the debugfs.
->>>
->> Also, as you're adding new statistics which are only used when debugfs
->> is enabled, you might want to wrap them in #ifdefs so that they're
->> only compiled when debugfs support is compiled.
->>
->
-> The function ieee80211_sta_debugfs_add(struct sta_info *sta) which adds
-> the debugfs will try to create the directory first.This
-> debugfs_create_dir(mac, stations_dir) will be return a valid dentry only
-> when CONFIG_DEBUG_FS is defined.if CONFIG_DEBUG_FS is not defined then
-> dentry will be invalid and hence the ieee80211_sta_debugfs_add() will
-> return without adding the files.
-> Hence we don't need to wrap this up in #ifdef as it is already taken
-> care during the directory creation.
-Just One another thing. DEBUGFS_ADD() will internally use 
-debugfs_create_file(). This debugfs_create_file() will return be a dummy 
-function (returning invalid) when CONFIG_DEBUG_FS is not defined. Hence 
-the predefined debugfs macros are taking care of this.
->>>   ---
->>> The diff file is generated from wireless-testing git tree.
->>>
->>> net/mac80211/debugfs_sta.c |    3 +++
->>>   net/mac80211/sta_info.h    |    4 ++++
->>>   net/mac80211/status.c      |    2 ++
->>>   net/mac80211/wpa.c         |    1 +
->>>   4 files changed, 10 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
->>> index ab63237..19baafc 100644
->>> --- a/net/mac80211/status.c
->>> +++ b/net/mac80211/status.c
->>> @@ -539,6 +539,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw,
->>> struct sk_buff *skb)
->>>                                  sta->lost_packets = 0;
->>>                          }
->>>                  }
->>> +               if(acked)
->>> +               sta->last_ack_signal=info->status.ack_signal;
->>
->> Either the indentation here is wrong or your mailer mangled the patch.
->> Either way it should get fixed up when you resubmit.
->>
-> +        if (acked)
-> +            sta->last_ack_signal=info->status.ack_signal;
-> Please find the corrected indentation.
->>>          }
->>>
->>>          rcu_read_unlock();
->>
->> Thanks,
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Yes, this is a concern, we need to fix that anyway though, otherwise it
+> may assume that some operations are possible when they really aren't
+> (e.g. starting an HT40+ and HT40- AP on the same channel, which
+> shouldn't be done anyway, but still)
 >
 
+not sure how it can happen if have this check:
+
+if ((cac_type != NL80211_CHAN_HT20) && (cac_type != NL80211_CHAN_NO_HT))
+		return -EOPNOTSUPP;
+
+in both start_radar_detection() & enable_tx() ?
+
+>> We'd need to tell cfg80211 that multi-interface is not possible when DFS
+>> is active if we want to at least consider single-channel only DFS.
+>
+> Not sure about multi-interface, but multi-channel at least.
+>
+
+Agree, maybe you have an idea how we should do this ?
+
+
+-- 
+Thanks,
+Victor.
