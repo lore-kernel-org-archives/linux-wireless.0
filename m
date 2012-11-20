@@ -1,60 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:18181 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752651Ab2KEQ03 (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:57714 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752278Ab2KTLUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 11:26:29 -0500
-Message-ID: <1352132785.2606.14.camel@lorien2> (sfid-20121105_172657_773644_29101F50)
-Subject: Re: [PATCH] wireless: iwlwifi - add dma_mapping_error() checks to
- avoid warnings
-From: Shuah Khan <shuah.khan@hp.com>
-Reply-To: shuah.khan@hp.com
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	linville@tuxdriver.com, ilw@linux.intel.com,
-	emmanuel.grumbach@intel.com, donald.h.fry@intel.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
-Date: Mon, 05 Nov 2012 09:26:25 -0700
-In-Reply-To: <1352020617.10072.0.camel@jlt4.sipsolutions.net>
-References: <1351993233.4369.2.camel@lorien2>
-	 (sfid-20121104_024119_271188_5372C13E) <1352020617.10072.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 20 Nov 2012 06:20:25 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so1625946eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:20:25 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 08/11] wlcore: specify correct supported_rates
+Date: Tue, 20 Nov 2012 13:20:08 +0200
+Message-Id: <1353410411-18833-9-git-send-email-eliad@wizery.com> (sfid-20121120_122034_731268_FAA707BC)
+In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-11-04 at 10:16 +0100, Johannes Berg wrote:
-> On Sat, 2012-11-03 at 19:40 -0600, Shuah Khan wrote:
-> > Add missing dma_mapping_error() checks to validate dma addresses returned by
-> > dma_map_page() calls to avoid the following warning:
-> > 
-> > [   28.475686] WARNING: at lib/dma-debug.c:933 check_unmap+0x459/0x8a0()
-> > [   28.475688] Hardware name: HP EliteBook 6930p
-> > [   28.475690] iwlwifi 0000:03:00.0: DMA-API: device driver failed to check map error[device address=0x00000000ffffa000] [size=8192 bytes] [mapped as page]
-> > [   28.475691] Modules linked in: arc4 bnep rfcomm iwldvm mac80211 snd_hda_codec_analog radeon snd_hda_intel snd_hda_codec coretemp kvm_intel snd_hwdep snd_pcm iwlwifi kvm btusb bluetooth snd_seq_midi snd_rawmidi ttm cfg80211 snd_seq_midi_event drm_kms_helper pata_pcmcia drm snd_seq binfmt_misc pcmcia snd_timer snd_seq_device tpm_infineon snd dm_multipath yenta_socket joydev pcmcia_rsrc pcmcia_core hp_wmi psmouse hp_accel microcode soundcore i2c_algo_bit sparse_keymap wmi ppdev lpc_ich lis3lv02d snd_page_alloc video tpm_tis serio_raw parport_pc input_polldev mac_hid lp parport firewire_ohci firewire_core crc_itu_t sdhci_pci sdhci e1000e
-> 
-> Thanks for the report. Since I think doing BUG_ON() in such a scenario
-> is a really bad idea, I've applied a different patch with your
-> Reported-by.
+The supported_rates field should contain all our supported
+rates, even if the remote peer doesn't support them.
 
-Yeah. I wasn't sure about BUS() either. Did you notice the other cases
-of BUG_ON() in this path in iwl_rx_allocate()? I would think those need
-fixing as well.
+(rename CONF_TX_AP_ENABLED_RATES to CONF_TX_ENABLED_RATES,
+as we now use it for both ap and sta)
 
-              rxb->page_dma =
-                        dma_map_page(trans->dev, page, 0,
-                                     PAGE_SIZE <<
-trans_pcie->rx_page_order,
-                                     DMA_FROM_DEVICE);
-                /* dma address must be no more than 36 bits */
-                BUG_ON(rxb->page_dma & ~DMA_BIT_MASK(36));
-                /* and also 256 byte aligned! */
-                BUG_ON(rxb->page_dma & DMA_BIT_MASK(8));
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: rename CONF_TX_AP_ENABLED_RATES (thanks Luca!)
 
-Could you please send me commitID for the patch you did. I am interested
-in seeing the failure handling in your patch?
+ drivers/net/wireless/ti/wlcore/cmd.c  |   12 ++++++++++--
+ drivers/net/wireless/ti/wlcore/conf.h |    4 ++--
+ drivers/net/wireless/ti/wlcore/init.c |    2 +-
+ drivers/net/wireless/ti/wlcore/main.c |    6 +++---
+ 4 files changed, 16 insertions(+), 8 deletions(-)
 
--- Shuah
-
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 38fa8ff..1cf1225 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -441,6 +441,7 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ {
+ 	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
+ 	struct wl12xx_cmd_role_start *cmd;
++	u32 supported_rates;
+ 	int ret;
+ 
+ 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+@@ -461,7 +462,14 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	cmd->sta.ssid_len = wlvif->ssid_len;
+ 	memcpy(cmd->sta.ssid, wlvif->ssid, wlvif->ssid_len);
+ 	memcpy(cmd->sta.bssid, vif->bss_conf.bssid, ETH_ALEN);
+-	cmd->sta.local_rates = cpu_to_le32(wlvif->rate_set);
++
++	supported_rates = CONF_TX_ENABLED_RATES | CONF_TX_MCS_RATES |
++			  wlcore_hw_sta_get_ap_rate_mask(wl, wlvif);
++	if (wlvif->p2p)
++		supported_rates &= ~CONF_TX_CCK_RATES;
++
++	cmd->sta.local_rates = cpu_to_le32(supported_rates);
++
+ 	cmd->channel_type = wlcore_get_native_channel_type(wlvif->channel_type);
+ 
+ 	if (wlvif->sta.hlid == WL12XX_INVALID_LINK_ID) {
+@@ -601,7 +609,7 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 		memcpy(cmd->ap.ssid, bss_conf->ssid, bss_conf->ssid_len);
+ 	}
+ 
+-	supported_rates = CONF_TX_AP_ENABLED_RATES | CONF_TX_MCS_RATES |
++	supported_rates = CONF_TX_ENABLED_RATES | CONF_TX_MCS_RATES |
+ 		wlcore_hw_ap_get_mimo_wide_rate_mask(wl, wlvif);
+ 
+ 	wl1271_debug(DEBUG_CMD, "cmd role start ap with supported_rates 0x%08x",
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index 9e40760..a5d1908 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -415,11 +415,11 @@ struct conf_rx_settings {
+ #define CONF_TX_RATE_MASK_BASIC_P2P    CONF_HW_BIT_RATE_6MBPS
+ 
+ /*
+- * Rates supported for data packets when operating as AP. Note the absence
++ * Rates supported for data packets when operating as STA/AP. Note the absence
+  * of the 22Mbps rate. There is a FW limitation on 12 rates so we must drop
+  * one. The rate dropped is not mandatory under any operating mode.
+  */
+-#define CONF_TX_AP_ENABLED_RATES       (CONF_HW_BIT_RATE_1MBPS | \
++#define CONF_TX_ENABLED_RATES       (CONF_HW_BIT_RATE_1MBPS |    \
+ 	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS |      \
+ 	CONF_HW_BIT_RATE_6MBPS | CONF_HW_BIT_RATE_9MBPS |        \
+ 	CONF_HW_BIT_RATE_11MBPS | CONF_HW_BIT_RATE_12MBPS |      \
+diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
+index 32d157f..84641b3 100644
+--- a/drivers/net/wireless/ti/wlcore/init.c
++++ b/drivers/net/wireless/ti/wlcore/init.c
+@@ -463,7 +463,7 @@ int wl1271_init_ap_rates(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	if ((wlvif->basic_rate_set & CONF_TX_OFDM_RATES))
+ 		supported_rates = CONF_TX_OFDM_RATES;
+ 	else
+-		supported_rates = CONF_TX_AP_ENABLED_RATES;
++		supported_rates = CONF_TX_ENABLED_RATES;
+ 
+ 	/* unconditionally enable HT rates */
+ 	supported_rates |= CONF_TX_MCS_RATES;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index e393cea..6170e9e 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2035,15 +2035,15 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 		for (i = 0; i < CONF_TX_MAX_AC_COUNT; i++)
+ 			wl12xx_allocate_rate_policy(wl,
+ 						&wlvif->ap.ucast_rate_idx[i]);
+-		wlvif->basic_rate_set = CONF_TX_AP_ENABLED_RATES;
++		wlvif->basic_rate_set = CONF_TX_ENABLED_RATES;
+ 		/*
+ 		 * TODO: check if basic_rate shouldn't be
+ 		 * wl1271_tx_min_rate_get(wl, wlvif->basic_rate_set);
+ 		 * instead (the same thing for STA above).
+ 		*/
+-		wlvif->basic_rate = CONF_TX_AP_ENABLED_RATES;
++		wlvif->basic_rate = CONF_TX_ENABLED_RATES;
+ 		/* TODO: this seems to be used only for STA, check it */
+-		wlvif->rate_set = CONF_TX_AP_ENABLED_RATES;
++		wlvif->rate_set = CONF_TX_ENABLED_RATES;
+ 	}
+ 
+ 	wlvif->bitrate_masks[IEEE80211_BAND_2GHZ] = wl->conf.tx.basic_rate;
+-- 
+1.7.6.401.g6a319
 
