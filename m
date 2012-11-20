@@ -1,38 +1,306 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bustia.coneix.com ([77.246.179.53]:35704 "EHLO
-	bustia.coneix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754052Ab2KBWlV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Nov 2012 18:41:21 -0400
-Date: Fri, 2 Nov 2012 23:35:20 +0100
-From: Jaume =?iso-8859-1?Q?Delcl=F2s?= Coll <jaume@delclos.com>
-To: IvDoorn@gmail.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] Wireless: rt2x00: Add device id for Sweex LW323 to
- rt2800usb.c
-Message-ID: <20121102223520.GB16573@jaume-arch.example.org> (sfid-20121102_234149_483936_C4E40B57)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55145 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752883Ab2KTXZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 18:25:22 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: john@phrozen.org, ralf@linux-mips.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3 7/8] ssb: add GPIO driver
+Date: Wed, 21 Nov 2012 00:24:33 +0100
+Message-Id: <1353453874-523-8-git-send-email-hauke@hauke-m.de> (sfid-20121121_002528_236545_4389F11F)
+In-Reply-To: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
+References: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jaume Delclòs <jaume@delclos.com>
+Register a GPIO driver to access the GPIOs provided by the chip.
+The GPIOs of the SoC should always start at 0 and the other GPIOs could
+start at a random position. There is just one SoC in a system and when
+they start at 0 the number is predictable.
 
-This patch adds detection for the Sweex LW323 USB wireless network card
-in the rt2x00 driver (just one line in rt2800usb.c).
-It applies to linux-3.7-rc3.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/ssb/Kconfig       |    9 +++
+ drivers/ssb/Makefile      |    1 +
+ drivers/ssb/driver_gpio.c |  176 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ssb/main.c        |    6 ++
+ drivers/ssb/ssb_private.h |    9 +++
+ include/linux/ssb/ssb.h   |    4 ++
+ 6 files changed, 205 insertions(+)
+ create mode 100644 drivers/ssb/driver_gpio.c
 
-Signed-off-by: Jaume Delclòs <jaume@delclos.com>
+diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+index 42cdaa9..ff3c8a2 100644
+--- a/drivers/ssb/Kconfig
++++ b/drivers/ssb/Kconfig
+@@ -160,4 +160,13 @@ config SSB_DRIVER_GIGE
+ 
+ 	  If unsure, say N
+ 
++config SSB_DRIVER_GPIO
++	bool "SSB GPIO driver"
++	depends on SSB
++	select GPIOLIB
++	help
++	  Driver to provide access to the GPIO pins on the bus.
++
++	  If unsure, say N
++
+ endmenu
+diff --git a/drivers/ssb/Makefile b/drivers/ssb/Makefile
+index 656e58b..9159ba7 100644
+--- a/drivers/ssb/Makefile
++++ b/drivers/ssb/Makefile
+@@ -15,6 +15,7 @@ ssb-$(CONFIG_SSB_DRIVER_MIPS)		+= driver_mipscore.o
+ ssb-$(CONFIG_SSB_DRIVER_EXTIF)		+= driver_extif.o
+ ssb-$(CONFIG_SSB_DRIVER_PCICORE)	+= driver_pcicore.o
+ ssb-$(CONFIG_SSB_DRIVER_GIGE)		+= driver_gige.o
++ssb-$(CONFIG_SSB_DRIVER_GPIO)		+= driver_gpio.o
+ 
+ # b43 pci-ssb-bridge driver
+ # Not strictly a part of SSB, but kept here for convenience
+diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+new file mode 100644
+index 0000000..97ac0a3
+--- /dev/null
++++ b/drivers/ssb/driver_gpio.c
+@@ -0,0 +1,176 @@
++/*
++ * Sonics Silicon Backplane
++ * GPIO driver
++ *
++ * Copyright 2011, Broadcom Corporation
++ * Copyright 2012, Hauke Mehrtens <hauke@hauke-m.de>
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++
++#include <linux/gpio.h>
++#include <linux/export.h>
++#include <linux/ssb/ssb.h>
++
++#include "ssb_private.h"
++
++static struct ssb_bus *ssb_gpio_get_bus(struct gpio_chip *chip)
++{
++	return container_of(chip, struct ssb_bus, gpio);
++}
++
++static int ssb_gpio_chipco_get_value(struct gpio_chip *chip, unsigned gpio)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	return !!ssb_chipco_gpio_in(&bus->chipco, 1 << gpio);
++}
++
++static void ssb_gpio_chipco_set_value(struct gpio_chip *chip, unsigned gpio,
++				      int value)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	ssb_chipco_gpio_out(&bus->chipco, 1 << gpio, value ? 1 << gpio : 0);
++}
++
++static int ssb_gpio_chipco_direction_input(struct gpio_chip *chip,
++					   unsigned gpio)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	ssb_chipco_gpio_outen(&bus->chipco, 1 << gpio, 0);
++	return 0;
++}
++
++static int ssb_gpio_chipco_direction_output(struct gpio_chip *chip,
++					    unsigned gpio, int value)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	ssb_chipco_gpio_outen(&bus->chipco, 1 << gpio, 1 << gpio);
++	ssb_chipco_gpio_out(&bus->chipco, 1 << gpio, value ? 1 << gpio : 0);
++	return 0;
++}
++
++static int ssb_gpio_chipco_request(struct gpio_chip *chip, unsigned gpio)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	ssb_chipco_gpio_control(&bus->chipco, 1 << gpio, 0);
++	/* clear pulldown */
++	ssb_chipco_gpio_pulldown(&bus->chipco, 1 << gpio, 0);
++	/* Set pullup */
++	ssb_chipco_gpio_pullup(&bus->chipco, 1 << gpio, 1 << gpio);
++
++	return 0;
++}
++
++static void ssb_gpio_chipco_free(struct gpio_chip *chip, unsigned gpio)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	/* clear pullup */
++	ssb_chipco_gpio_pullup(&bus->chipco, 1 << gpio, 0);
++}
++
++static int ssb_gpio_chipco_init(struct ssb_bus *bus)
++{
++	struct gpio_chip *chip = &bus->gpio;
++
++	chip->label		= "ssb_chipco_gpio";
++	chip->owner		= THIS_MODULE;
++	chip->request		= ssb_gpio_chipco_request;
++	chip->free		= ssb_gpio_chipco_free;
++	chip->get		= ssb_gpio_chipco_get_value;
++	chip->set		= ssb_gpio_chipco_set_value;
++	chip->direction_input	= ssb_gpio_chipco_direction_input;
++	chip->direction_output	= ssb_gpio_chipco_direction_output;
++	chip->ngpio		= 16;
++	/* There is just one SoC in one device and its GPIO addresses should be
++	 * deterministic to address them more easily. The other buses could get
++	 * a random base number. */
++	if (bus->bustype == SSB_BUSTYPE_SSB)
++		chip->base		= 0;
++	else
++		chip->base		= -1;
++
++	return gpiochip_add(chip);
++}
++
++#ifdef CONFIG_SSB_DRIVER_EXTIF
++
++static int ssb_gpio_extif_get_value(struct gpio_chip *chip, unsigned gpio)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	return !!ssb_extif_gpio_in(&bus->extif, 1 << gpio);
++}
++
++static void ssb_gpio_extif_set_value(struct gpio_chip *chip, unsigned gpio,
++				     int value)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	ssb_extif_gpio_out(&bus->extif, 1 << gpio, value ? 1 << gpio : 0);
++}
++
++static int ssb_gpio_extif_direction_input(struct gpio_chip *chip,
++					  unsigned gpio)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	ssb_extif_gpio_outen(&bus->extif, 1 << gpio, 0);
++	return 0;
++}
++
++static int ssb_gpio_extif_direction_output(struct gpio_chip *chip,
++					   unsigned gpio, int value)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	ssb_extif_gpio_outen(&bus->extif, 1 << gpio, 1 << gpio);
++	ssb_extif_gpio_out(&bus->extif, 1 << gpio, value ? 1 << gpio : 0);
++	return 0;
++}
++
++static int ssb_gpio_extif_init(struct ssb_bus *bus)
++{
++	struct gpio_chip *chip = &bus->gpio;
++
++	chip->label		= "ssb_extif_gpio";
++	chip->owner		= THIS_MODULE;
++	chip->get		= ssb_gpio_extif_get_value;
++	chip->set		= ssb_gpio_extif_set_value;
++	chip->direction_input	= ssb_gpio_extif_direction_input;
++	chip->direction_output	= ssb_gpio_extif_direction_output;
++	chip->ngpio		= 5;
++	/* There is just one SoC in one device and its GPIO addresses should be
++	 * deterministic to address them more easily. The other buses could get
++	 * a random base number. */
++	if (bus->bustype == SSB_BUSTYPE_SSB)
++		chip->base		= 0;
++	else
++		chip->base		= -1;
++
++	return gpiochip_add(chip);
++}
++
++#else
++static int ssb_gpio_extif_init(struct ssb_bus *bus)
++{
++	return -ENOTSUPP;
++}
++#endif
++
++int ssb_gpio_init(struct ssb_bus *bus)
++{
++	if (ssb_chipco_available(&bus->chipco))
++		return ssb_gpio_chipco_init(bus);
++	else if (ssb_extif_available(&bus->extif))
++		return ssb_gpio_extif_init(bus);
++	else
++		SSB_WARN_ON(1);
++
++	return -1;
++}
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 6fe2d10..87f0ddf 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -798,6 +798,12 @@ static int __devinit ssb_bus_register(struct ssb_bus *bus,
+ 	ssb_chipcommon_init(&bus->chipco);
+ 	ssb_extif_init(&bus->extif);
+ 	ssb_mipscore_init(&bus->mipscore);
++	err = ssb_gpio_init(bus);
++	if (err == -ENOTSUPP)
++		ssb_dprintk(KERN_DEBUG PFX "GPIO driver not activated\n");
++	else if (err)
++		ssb_dprintk(KERN_ERR PFX
++			   "Error registering GPIO driver: %i\n", err);
+ 	err = ssb_fetch_invariants(bus, get_invariants);
+ 	if (err) {
+ 		ssb_bus_may_powerdown(bus);
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index d6a1ba9..463b76a2 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -219,4 +219,13 @@ static inline void ssb_extif_init(struct ssb_extif *extif)
+ }
+ #endif
+ 
++#ifdef CONFIG_SSB_DRIVER_GPIO
++extern int ssb_gpio_init(struct ssb_bus *bus);
++#else /* CONFIG_SSB_DRIVER_GPIO */
++static inline int ssb_gpio_init(struct ssb_bus *bus)
++{
++	return -ENOTSUPP;
++}
++#endif /* CONFIG_SSB_DRIVER_GPIO */
++
+ #endif /* LINUX_SSB_PRIVATE_H_ */
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index bb674c0..3862a5b 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -6,6 +6,7 @@
+ #include <linux/types.h>
+ #include <linux/spinlock.h>
+ #include <linux/pci.h>
++#include <linux/gpio.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/dma-mapping.h>
+ 
+@@ -433,6 +434,9 @@ struct ssb_bus {
+ 	/* Lock for GPIO register access. */
+ 	spinlock_t gpio_lock;
+ #endif /* EMBEDDED */
++#ifdef CONFIG_SSB_DRIVER_GPIO
++	struct gpio_chip gpio;
++#endif /* DRIVER_GPIO */
+ 
+ 	/* Internal-only stuff follows. Do not touch. */
+ 	struct list_head list;
+-- 
+1.7.10.4
 
---- linux-3.7-rc3/drivers/net/wireless/rt2x00/rt2800usb.c.orig	2012-11-02 21:14:01.393082623 +0100
-+++ linux-3.7-rc3/drivers/net/wireless/rt2x00/rt2800usb.c	2012-11-02 21:14:57.502778651 +0100
-@@ -1096,6 +1096,7 @@ static struct usb_device_id rt2800usb_de
- 	{ USB_DEVICE(0x177f, 0x0153) },
- 	{ USB_DEVICE(0x177f, 0x0302) },
- 	{ USB_DEVICE(0x177f, 0x0313) },
-+	{ USB_DEVICE(0x177f, 0x0323) },
- 	/* U-Media */
- 	{ USB_DEVICE(0x157e, 0x300e) },
- 	{ USB_DEVICE(0x157e, 0x3013) },
