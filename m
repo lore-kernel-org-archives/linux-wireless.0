@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:39218 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969Ab2KARna (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:47148 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab2KTB3b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2012 13:43:30 -0400
-Message-ID: <5092B4BE.4080803@infradead.org> (sfid-20121101_184349_655859_54C28E21)
-Date: Thu, 01 Nov 2012 10:43:26 -0700
-From: Randy Dunlap <rdunlap@infradead.org>
+	Mon, 19 Nov 2012 20:29:31 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so1579026lag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 17:29:30 -0800 (PST)
 MIME-Version: 1.0
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-CC: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: [PATCH -next] wireless: brcmfmac: fix printk format warning
-References: <20121101163622.129b59967d2ee76e6946874a@canb.auug.org.au>
-In-Reply-To: <20121101163622.129b59967d2ee76e6946874a@canb.auug.org.au>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1352704474-13572-1-git-send-email-sujith@msujith.org>
+References: <1352704474-13572-1-git-send-email-sujith@msujith.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Mon, 19 Nov 2012 17:29:09 -0800
+Message-ID: <CAB=NE6UB5ddSr0DhkxcJitoB2mN07HBK4oD20B14kM1PN1F=YA@mail.gmail.com> (sfid-20121120_022934_886690_C4C5DA97)
+Subject: Re: [PATCH] qca-swiss-army-knife: Update AR9485 initvals
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+On Sun, Nov 11, 2012 at 11:14 PM, Sujith Manoharan <sujith@msujith.org> wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> Sync with the latest INI from systems and fix the version.
+>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Fix printk format warning for ssid_len, which is a size_t:
+Applied and pushed, thanks!
 
-drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:3941:2: warning: format '%d' expects type 'int', but argument 4 has type 'size_t'
-
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc:	brcm80211-dev-list@broadcom.com
----
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- linux-next-20121101.orig/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ linux-next-20121101/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3938,7 +3938,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wi
- 	WL_TRACE("channel_type=%d, beacon_interval=%d, dtim_period=%d,\n",
- 		 settings->channel_type, settings->beacon_interval,
- 		 settings->dtim_period);
--	WL_TRACE("ssid=%s(%d), auth_type=%d, inactivity_timeout=%d\n",
-+	WL_TRACE("ssid=%s(%zu), auth_type=%d, inactivity_timeout=%d\n",
- 		 settings->ssid, settings->ssid_len, settings->auth_type,
- 		 settings->inactivity_timeout);
- 
+  Luis
