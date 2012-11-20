@@ -1,15 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:52045 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753137Ab2KTWpH (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:53295 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753234Ab2KTUy0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 17:45:07 -0500
-Message-ID: <50AC07F2.8000400@monom.org> (sfid-20121120_234512_177089_ABE5E097)
-Date: Tue, 20 Nov 2012 23:45:06 +0100
-From: Daniel Wagner <wagi@monom.org>
-MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Arend van Spriel <arend@broadcom.com>,
+	Tue, 20 Nov 2012 15:54:26 -0500
+Date: Tue, 20 Nov 2012 14:54:18 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Daniel Wagner <wagi@monom.org>
+Cc: Arend van Spriel <arend@broadcom.com>,
 	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
 	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
@@ -18,35 +16,98 @@ CC: Arend van Spriel <arend@broadcom.com>,
 	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
 Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
  support
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com> <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org> <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org> <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org>
-In-Reply-To: <50AC05A5.3090706@monom.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-ID: <20121120205418.GB26602@thinkpad-t410> (sfid-20121120_215432_956963_73CF771C)
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <50AA845C.2050809@monom.org>
+ <50AB3182.5040505@monom.org>
+ <20121120142822.GA26602@thinkpad-t410>
+ <50ABC168.8080904@monom.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50ABC168.8080904@monom.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Looks like you got it right. The period you traced doesn't seem to cover
->> any of the block ack session timeouts, but I do see this:
->>
->> [  225.269777] wlan0: release an RX reorder frame due to timeout on earlier frames
->> [  243.869220] wlan0: unexpected AddBA Req from 1c:c6:3c:1f:50:68 on tid 0
->> [  243.869233] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 32
->> [  243.869250] wlan0: Rx A-MPDU request on tid 0 result 0
->> [  252.254013] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: Pkt tx suppressed, illegal channel possibly 13
->> <snip repeated messages>
->> [  259.798966] wlan0: release an RX reorder frame due to timeout on earlier frames
->> <snip repeated messages>
->> [  265.193640] wlan0: unexpected AddBA Req from 1c:c6:3c:1f:50:68 on tid 0
->> [  265.193648] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 32
->> [  265.193663] wlan0: Rx A-MPDU request on tid 0 result 0
->>
->> Does something in this time frame correspond to your loss in
->> connectivity? The number of packets being sent and received varies some
->> throughout the trace but generally stays pretty low. It never completely
->> stops though.
->
-> I am currently not able to reproduce a complete loss of connectivity.
+On Tue, Nov 20, 2012 at 06:44:08PM +0100, Daniel Wagner wrote:
+> Hi Seth,
+> 
+> On 20.11.2012 15:28, Seth Forshee wrote:
+> >On Tue, Nov 20, 2012 at 08:30:10AM +0100, Daniel Wagner wrote:
+> >>Hi Seth,
+> >>
+> >>On 19.11.2012 20:11, Daniel Wagner wrote:
+> >>>Works perfectly fine on my machine.
+> >>
+> >>Well, not really true. Though I am not sure if this what I am seeing
+> >>related to your changes. I see following log only when I am using my
+> >>home AP. The pattern is that when the connection stop working I see
+> >>something like this in the log:
+> >>
+> >>[ 8735.159091] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 4
+> >>[ 8735.197298] wlan0: Rx A-MPDU request on tid 0 result 0
+> >>[ 8735.566368] wlan0: Open BA session requested for 1c:c6:3c:1f:50:68 tid 0
+> >>[ 8735.573701] wlan0: activated addBA response timer on tid 0
+> >>[ 8735.578826] wlan0: switched off addBA timer for tid 0
+> >>[ 8735.578834] wlan0: Aggregation is on for tid 0
+> >>[ 8749.687530] wlan0: tx session timer expired on tid 0
+> >>[ 8749.687558] wlan0: Tx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0
+> >>[ 8749.700550] wlan0: Stopping Tx BA session for 1c:c6:3c:1f:50:68 tid 0
+> >>
+> >>
+> >>This is what I do: First establishing a connection, then after a while any
+> >>traffic seems stops for a period and sometimes it recovers from that point. If
+> >>not a disconnect/connect (using ConnMan) dance fixes the problem.
+> >
+> >The tx session timer expiring is a result of not having any aggregate
+> >transfers in a while. In my testing with iperf I see periods where the
+> >transfer seems to stall, but it always recovers. These are less frequent
+> >after my patches, but they still happen, and I haven't been able to work
+> >out the cause yet. I'm not sure whether these are related to what you're
+> >seeing or not.
+> >
+> >Luckily I've added a bunch of new debug code. Could you make sure you
+> >have MAC80211_MESSAGE_TRACING and BRCM_TRACING enabled in your config
+> >and collect a trace when this is happening by running:
+> >
+> >  trace-cmd record -e mac80211 -e mac80211_msg -e brcmsmac \
+> >         -e brcmsmac_tx -e brcmsmac_msg
+> >
+> >This going to collect a lot of data, and you should bump up the trace
+> >buffer size to avoid overruns. Once you've got a trace please compress
+> >trace.dat and put it along with your dmesg somewhere where I can get at
+> >them.
+> 
+> I hope I got it right. Here are the requested logs:
+> 
+> http://www.monom.org/misc/brcmsmac/traces/
 
-I fear it is a heisenbug. After turning the tracing off I was able to 
-reproduce it very easily.
+Looks like you got it right. The period you traced doesn't seem to cover
+any of the block ack session timeouts, but I do see this:
 
+[  225.269777] wlan0: release an RX reorder frame due to timeout on earlier frames
+[  243.869220] wlan0: unexpected AddBA Req from 1c:c6:3c:1f:50:68 on tid 0
+[  243.869233] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 32
+[  243.869250] wlan0: Rx A-MPDU request on tid 0 result 0
+[  252.254013] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: Pkt tx suppressed, illegal channel possibly 13
+<snip repeated messages>
+[  259.798966] wlan0: release an RX reorder frame due to timeout on earlier frames
+<snip repeated messages>
+[  265.193640] wlan0: unexpected AddBA Req from 1c:c6:3c:1f:50:68 on tid 0
+[  265.193648] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 32
+[  265.193663] wlan0: Rx A-MPDU request on tid 0 result 0
+
+Does something in this time frame correspond to your loss in
+connectivity? The number of packets being sent and received varies some
+throughout the trace but generally stays pretty low. It never completely
+stops though.
+
+Other than the messages above I don't notice any obvious problems. If
+you can pinpoint exactly what range of timestamps corresponds to your
+problems I can look a bit closer.
+
+Is this a regression introduced by these patches, or was the connection
+with this AP also not working well without them?
+
+Thanks,
+Seth
 
