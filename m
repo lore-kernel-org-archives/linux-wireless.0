@@ -1,95 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55944 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755918Ab2KMWwu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40268 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753087Ab2KTLl5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 17:52:50 -0500
-Date: Tue, 13 Nov 2012 14:52:48 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Joe Perches <joe@perches.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Jason Baron <jbaron@redhat.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v7 1/2] wireless: Driver for 60GHz card wil6210
-Message-Id: <20121113145248.f617e67f.akpm@linux-foundation.org> (sfid-20121113_235253_386112_D6A7C948)
-In-Reply-To: <1352846384.17444.18.camel@joe-AO722>
-References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1352809427-29682-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1352811970.24230.22.camel@joe-AO722>
-	<20121113134436.de5df090.akpm@linux-foundation.org>
-	<1352846384.17444.18.camel@joe-AO722>
+	Tue, 20 Nov 2012 06:41:57 -0500
+Message-ID: <1353411746.9399.14.camel@jlt4.sipsolutions.net> (sfid-20121120_124200_608974_9D2EFB2E)
+Subject: Re: [PATCH 08/15] wlcore: add chanctx implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Date: Tue, 20 Nov 2012 12:42:26 +0100
+In-Reply-To: <1353343170-26516-9-git-send-email-eliad@wizery.com> (sfid-20121119_173952_507956_82E60242)
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	 <1353343170-26516-9-git-send-email-eliad@wizery.com>
+	 (sfid-20121119_173952_507956_82E60242)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 13 Nov 2012 14:39:44 -0800
-Joe Perches <joe@perches.com> wrote:
+On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
 
-> On Tue, 2012-11-13 at 13:44 -0800, Andrew Morton wrote:
-> > On Tue, 13 Nov 2012 05:06:10 -0800
-> > Joe Perches <joe@perches.com> wrote:
-> > 
-> > > On Tue, 2012-11-13 at 14:23 +0200, Vladimir Kondratiev wrote:
-> > > []
-> > > > diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-> > > []
-> > > > +/* Candidate to merge into printk.h and dynamic_debug.h */
-> > > > +#if defined(CONFIG_DYNAMIC_DEBUG)
-> > > > +#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > > > +			 groupsize, buf, len, ascii)		\
-> > > > +do {								\
-> > > > +	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
-> > > > +	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
-> > > > +		print_hex_dump(KERN_DEBUG, prefix_str,		\
-> > > > +			       prefix_type, rowsize, groupsize,	\
-> > > > +			       buf, len, ascii);		\
-> > > > +} while (0)
-> > > > +
-> > > > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > > > +		       groupsize, buf, len, ascii)		\
-> > > > +		       dynamic_hex_dump(prefix_str, prefix_type,\
-> > > > +					rowsize, groupsize, buf,\
-> > > > +					len, ascii)
-> > > > +#else
-> > > > +#define debug_hex_dump(prefix_str, prefix_type, rowsize,	\
-> > > > +		       groupsize, buf, len, ascii)		\
-> > > > +		       print_hex_dump(KERN_DEBUG, prefix_str,	\
-> > > > +				      prefix_type, rowsize,	\
-> > > > +				      groupsize, buf, len, ascii)
-> > > > +#endif
-> > > 
-> > > Thanks Vladimir.  I think so too.
-> > > 
-> > > Jason?  Andrew?
-> > 
-> > (I'm not on linux-wireless)
-> > 
-> > Agree that the above should be in a core header file.
-> > 
-> > Disagree with placing it in a wireless header.
-> > 
-> > Please split it out into a standalone patch.
-> > 
-> > Does it have to be done as macros?  Can't do at least some of
-> > this in C?
-> 
-> Macros are required here because of CONFIG_DYNAMIC_DEBUG
+> +static int wlcore_op_add_chanctx(struct ieee80211_hw *hw,
+> +				 struct ieee80211_chanctx_conf *ctx)
+> +{
+> +	wl1271_debug(DEBUG_MAC80211, "mac80211 add chanctx %d (type %d)",
+> +		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
+> +		     ctx->channel_type);
 
-I don't see why?
+Ok so I just realized there's another small issue with this patch/these
+patches -- my VHT changes, which I'm planning to merge soon, will change
+the chanctx_conf structure contents, which might then be tricky with git
+tree handling?
 
-> It's how it's done currently for all dynamic_<foo> uses.
-> 
-> > Some interface documentation would be nice, especially if it's
-> > implemented in macros - that's an awful lot of arguments to have to
-> > guess about.
-> 
-> kernel-doc should probably be added for all printk forms,
-> not just for this.
+I'm not too worried about that, but might be something to keep in mind.
+Right now my changes are easy because they only affect hwsim as the only
+driver using channel contexts.
 
-These ones are pretty egregious but on reflection, they're just
-wrappers around print_hex_dump(), which is documented - there's no
-point in saying the same thing in two places.  
+johannes
+
