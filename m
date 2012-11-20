@@ -1,87 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.freestuffjunction.co.uk ([109.169.51.71]:36968 "EHLO
-	mail.freestuffjunction.co.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750831Ab2KELNx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 06:13:53 -0500
-Message-ID: <50979D38.6010002@ehuk.net> (sfid-20121105_121423_464154_72561532)
-Date: Mon, 05 Nov 2012 11:04:24 +0000
-From: Eddie Chapman <eddie@ehuk.net>
-Reply-To: Eddie Chapman <eddie@ehuk.net>
-MIME-Version: 1.0
-To: stable@vger.kernel.org
-CC: johannes.berg@intel.com, florian@reitmeir.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Linux 3.6.5
-References: <20121031173811.GA12970@kroah.com> <509575F4.5020109@ehuk.net> <20121105081757.GA3730@kroah.com>
-In-Reply-To: <20121105081757.GA3730@kroah.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55115 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752883Ab2KTXZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 18:25:09 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: john@phrozen.org, ralf@linux-mips.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3s 3/8] bcma: add comment to bcma_chipco_gpio_control
+Date: Wed, 21 Nov 2012 00:24:29 +0100
+Message-Id: <1353453874-523-4-git-send-email-hauke@hauke-m.de> (sfid-20121121_002515_740745_BC0CC1CB)
+In-Reply-To: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
+References: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/12 08:17, Greg KH wrote:
-> On Sat, Nov 03, 2012 at 07:52:20PM +0000, Eddie Chapman wrote:
->> On 3.6.5 my rt2800usb adapter's speeds (measured downloading a file
->> on the my LAN with wget) dropped down to around 900 Kbyte/s from the
->> usual approx. 4 Mbyte/s.  Also some packet loss and latency spikes.
->> Nothing unusual reported in dmesg.
->>
->> Rebooting back into 3.6.4 with identical .config and the problem goes away.
->>
->> So I reversed the following 4 patches introduced in 3.6.5:
->>
->> Felix Fietkau:
->>          mac80211: use ieee80211_free_txskb in a few more places
->>
->> Johannes Berg:
->>          mac80211: connect with HT20 if HT40 is not permitted
->>
->> Stanislaw Gruszka:
->>          mac80211: check if key has TKIP type before updating IV
->>          cfg80211/mac80211: avoid state mishmash on deauth
->>
->> rebuilt 3.6.5, rebooted into it, and speeds back to normal.
->>
->> Sorry can't be more specific, didn't have enough time to revert each
->> one individually to find out which one caused the regression.
->> Though if anyone would really like me to find out let me know.
->
-> I would, if you could narrow this down to one patch, that would be
-> great.
->
-> Also, copying the wireless developers on the email about this, would be
-> best, there's nothing that the stable tree developers can do about this
-> on their own.
->
-> And, can you also test 3.7-rc4, to ensure that the problem isn't there
-> as well?
->
-> thanks,
->
-> greg k-h
+Add description to the function.
 
-Thanks Greg.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_chipcommon.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-I've narrowed it down to this patch which introduces the problem:
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 0945383..994fce6 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -108,6 +108,10 @@ u32 bcma_chipco_gpio_outen(struct bcma_drv_cc *cc, u32 mask, u32 value)
+ 	return res;
+ }
+ 
++/*
++ * If the bit is set to 0, chipcommon controlls this GPIO,
++ * if the bit is set to 1, it is used by some part of the chip and not our code.
++ */
+ u32 bcma_chipco_gpio_control(struct bcma_drv_cc *cc, u32 mask, u32 value)
+ {
+ 	unsigned long flags;
+-- 
+1.7.10.4
 
-Johannes Berg:
-mac80211: connect with HT20 if HT40 is not permitted
-commit: 3a40414f826a8f1096d9b94c4a53ef91b25ba28d
-
-The other 3 patches above give me no problems at all, so I am now 
-running my 3.6.5 with those 3 back in, and just the HT20/HT40 patch 
-removed, and throughput is perfect. As soon as I introduce the patch 
-HT20/HT40 throughput drops right down to a fifth of what it was.
-
-So I've copied into this message the original people from the HT20/HT40 
-patch as well as linux-wireless.
-
-This is my original message in full sent to stable list for the benefit 
-of the new recipients:
-http://www.mail-archive.com/stable@vger.kernel.org/msg22645.html
-
-If I can do anything else to help figure out why this patch causes 
-problems for my device, please let me know.
-
-thanks,
-Eddie
