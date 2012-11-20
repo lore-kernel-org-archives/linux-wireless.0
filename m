@@ -1,99 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm23-vm6.bullet.mail.ird.yahoo.com ([212.82.109.235]:44973 "EHLO
-	nm23-vm6.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756913Ab2KWBXD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 20:23:03 -0500
-Message-ID: <1353564693.32049.YahooMailClassic@web172303.mail.ir2.yahoo.com> (sfid-20121123_022307_743684_1931BEBB)
-Date: Thu, 22 Nov 2012 06:11:33 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH 471/493] net: remove use of __devexit
-To: gregkh@linuxfoundation.org, Bill Pemberton <wfp5p@virginia.edu>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1353349642-3677-471-git-send-email-wfp5p@virginia.edu>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:65269 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752616Ab2KTMEg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 07:04:36 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so5805414oag.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 04:04:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CA+XVXfcXYbqgOaX43_X4b1+CL4Pchr_cR2_4Y1YyycF4dk6_Hg@mail.gmail.com>
+References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+	<1353410411-18833-6-git-send-email-eliad@wizery.com>
+	<CA+XVXfcXYbqgOaX43_X4b1+CL4Pchr_cR2_4Y1YyycF4dk6_Hg@mail.gmail.com>
+Date: Tue, 20 Nov 2012 14:04:35 +0200
+Message-ID: <CAB3XZEdLVeow_0RHSYyU-HeuaiddNYA=yxWNbUik8HWm=rD+8Q@mail.gmail.com> (sfid-20121120_130439_057703_560C5862)
+Subject: Re: [PATCH v2 05/11] wlcore: add chanctx implementation
+From: Eliad Peller <eliad@wizery.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Nov 20, 2012 at 1:45 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> On Tue, Nov 20, 2012 at 1:20 PM, Eliad Peller <eliad@wizery.com> wrote:
+>> Add some basic chanctx implementation - debug prints,
+>> and save the vif's channel/band/type.
+>>
+>> After that, we no longer need to handle channel change
+>> notifications on op_config.
+>>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>> +       /* update default rates according to the band */
+>> +       wl1271_set_band_rate(wl, wlvif);
+>
+> set_band_rate should be fixed to also set wl->basic_rate. but this can
+> be a separate patch..
+> previously we had some manual code to set the basic_rate, which you removed.
 
+as i mentioned before, there is a huge mess in the rates handling.
+for sta - we set wlvif->basic_rate anyway on CHANGED_BSSID
+for ap - we don't use it at all, but use wl1271_tx_min_rate_get(wl,
+wlvif->basic_rate_set)
 
---- On Mon, 19/11/12, Bill Pemberton <wfp5p@virginia.edu> wrote:
+so it's not really an issue.
+i think we should handle all this in a separate patch.
 
-> CONFIG_HOTPLUG is going away as an
-> option so __devexit is no
-> longer needed.
-> 
-> Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-> Cc: Wolfgang Grandegger <wg@grandegger.com>
-> 
-> Cc: Marc Kleine-Budde <mkl@pengutronix.de>
-> 
-> Cc: "Maciej W. Rozycki" <macro@linux-mips.org>
-> 
-> Cc: Jes Sorensen <jes@trained-monkey.org>
-> 
-> Cc: Samuel Ortiz <samuel@sortiz.org>
-> 
-> Cc: Rusty Russell <rusty@rustcorp.com.au>
-> 
-> Cc: "Michael S. Tsirkin" <mst@redhat.com>
-> 
-> Cc: Shreyas Bhatewara <sbhatewara@vmware.com>
-> 
-> Cc: "VMware, Inc." <pv-drivers@vmware.com>
-> 
-> Cc: Francois Romieu <romieu@fr.zoreil.com>
-> 
-> Cc: Krzysztof Halasa <khc@pm.waw.pl> 
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> 
-> Cc: Jiri Slaby <jirislaby@gmail.com>
-> 
-> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> 
-> Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-> 
-> Cc: Simon Kelley <simon@thekelleys.org.uk>
-> 
-> Cc: Stefano Brivio <stefano.brivio@polimi.it>
-> 
-> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-> 
-> Cc: Dan Williams <dcbw@redhat.com>
-> 
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> 
-> Cc: Herton Ronaldo Krzesinski <herton@canonical.com>
-> 
-> Cc: Hin-Tak Leung <htl10@users.sourceforge.net>
-> 
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> Cc: Luciano Coelho <coelho@ti.com> 
-> Cc: netdev@vger.kernel.org
-> 
-> Cc: linux-can@vger.kernel.org
-> 
-> Cc: linux-hippi@sunsite.dk
-> 
-> Cc: virtualization@lists.linux-foundation.org
-> 
-> Cc: linux-wireless@vger.kernel.org
-> 
-> Cc: ath5k-devel@lists.ath5k.org
-> 
-> Cc: b43-dev@lists.infradead.org
-> 
-> Cc: libertas-dev@lists.infradead.org
-> 
-> Cc: xen-devel@lists.xensource.com
-> 
-> ---
-
-
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-
-The rtl818x parts.
-
+Eliad.
