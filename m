@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:38810 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349Ab2KZM7Y (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42019 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752346Ab2KTVjg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 07:59:24 -0500
-Received: by mail-oa0-f46.google.com with SMTP id h16so10678975oag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 04:59:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1353930289-2710-3-git-send-email-johannes@sipsolutions.net>
-References: <1353930289-2710-1-git-send-email-johannes@sipsolutions.net>
-	<1353930289-2710-3-git-send-email-johannes@sipsolutions.net>
-Date: Mon, 26 Nov 2012 14:59:23 +0200
-Message-ID: <CAB3XZEdRa2=_eq9q0Bt07SA=qasnpA6cm1r8YiLZ-qkiQAg5JA@mail.gmail.com> (sfid-20121126_135927_596690_FB0ACA7F)
-Subject: Re: [PATCH 2/2] mac80211: support P2P GO powersave configuration
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Nov 2012 16:39:36 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211_hwsim: remove printing scan config
+Date: Tue, 20 Nov 2012 22:40:04 +0100
+Message-Id: <1353447604-16327-1-git-send-email-johannes@sipsolutions.net> (sfid-20121120_223939_351202_C7318DE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 26, 2012 at 1:44 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> If the low-level driver wants to support P2P GO
-> powersave configuration, it must set the cfg80211
-> flags and mac80211 will pass the parameters to it.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  net/mac80211/cfg.c | 16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 5d30e5f..97cf615 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -893,7 +893,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
->         u32 changed = BSS_CHANGED_BEACON_INT |
->                       BSS_CHANGED_BEACON_ENABLED |
->                       BSS_CHANGED_BEACON |
-> -                     BSS_CHANGED_SSID;
-> +                     BSS_CHANGED_SSID |
-> +                     BSS_CHANGED_P2P_PS;
->         int err;
->
-you'd probably want to add it to ieee80211_reconfig as well.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Eliad.
+The frequencies will be printed when actually
+doing the scan, and the IEs can be captured
+on the hwsim0 monitor.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index f1c05d5..2aa8a1a 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1367,7 +1367,6 @@ static int mac80211_hwsim_hw_scan(struct ieee80211_hw *hw,
+ 				  struct cfg80211_scan_request *req)
+ {
+ 	struct mac80211_hwsim_data *hwsim = hw->priv;
+-	int i;
+ 
+ 	mutex_lock(&hwsim->mutex);
+ 	if (WARN_ON(hwsim->tmp_chan || hwsim->hw_scan_request)) {
+@@ -1380,11 +1379,6 @@ static int mac80211_hwsim_hw_scan(struct ieee80211_hw *hw,
+ 	mutex_unlock(&hwsim->mutex);
+ 
+ 	wiphy_debug(hw->wiphy, "hwsim hw_scan request\n");
+-	for (i = 0; i < req->n_channels; i++)
+-		printk(KERN_DEBUG "hwsim hw_scan freq %d\n",
+-			req->channels[i]->center_freq);
+-	print_hex_dump(KERN_DEBUG, "scan IEs: ", DUMP_PREFIX_OFFSET,
+-			16, 1, req->ie, req->ie_len, 1);
+ 
+ 	ieee80211_queue_delayed_work(hwsim->hw, &hwsim->hw_scan, 0);
+ 
+-- 
+1.8.0
+
