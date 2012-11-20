@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47275 "EHLO bear.ext.ti.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2770 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751851Ab2KMPFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 10:05:33 -0500
-Message-ID: <50A26172.7000703@ti.com> (sfid-20121113_160537_706037_ADED442C)
-Date: Tue, 13 Nov 2012 17:04:18 +0200
-From: Victor Goldenshtein <victorg@ti.com>
+	id S1751600Ab2KTTvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 14:51:47 -0500
+Message-ID: <50ABDF4B.5020506@broadcom.com> (sfid-20121120_205152_004357_5BEBEE06)
+Date: Tue, 20 Nov 2012 20:51:39 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>    <1350226137-13704-6-git-send-email-victorg@ti.com>   <1350414390.10177.16.camel@jlt4.sipsolutions.net>  <5084256F.2030502@ti.com> <1350910332.10166.0.camel@jlt4.sipsolutions.net>  <50922AA3.7000404@ti.com> <1352129245.9466.21.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1352129245.9466.21.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: "Kalle Valo" <kvalo@adurom.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Fengguang Wu" <fengguang.wu@intel.com>,
+	"Franky Lin" <frankyl@broadcom.com>
+Subject: Re: [PATCH] brcmfmac: check return from kzalloc in
+ brcmf_fweh_process_event
+References: <1353340412-22757-1-git-send-email-linville@tuxdriver.com>
+ <50AA6EBF.9050001@broadcom.com> <87y5hwwvtg.fsf@purkki.adurom.net>
+In-Reply-To: <87y5hwwvtg.fsf@purkki.adurom.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2012 17:27, Johannes Berg wrote:
-> On Thu, 2012-11-01 at 09:54 +0200, Victor Goldenshtein wrote:
+On 11/20/2012 08:57 AM, Kalle Valo wrote:
+> "Arend van Spriel" <arend@broadcom.com> writes:
 >
->>>> Yes it works with our 12xx, in the 12xx the FW (upon channel switch
->>>> command) is responsible to decrement the channel switch count in the
->>>> beacon CSA IE and to remove the CSA IE from the beacon once device moves
->>>> to the new channel (+ to updates the DS).
+>> On 11/19/2012 04:53 PM, John W. Linville wrote:
+>>> From: "John W. Linville" <linville@tuxdriver.com>
 >>>
->>> So ... you've made this kind of behaviour a mandatory part of the
->>> userspace API. Where is it documented then? How will it work with other
->>> devices?
+>>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+>
+> [...]
+>
+>>>    	event = kzalloc(sizeof(*event) + datalen, alloc_flag);
+>>> +	if (!event)
 >>
->> It's should work the same with other devices, each device should
->> implement AP channel switch op according the spec, the implementation
->> can be hardware/driver depended. I just mentioned how we do it in our
->> devices, which I think is the right way without introducing any races
->> (as you mentioned), So no behavior enforcement here as long as it
->> according the spec.
+>> My fix included a debug statement about the discarded event from firmware.
 >
-> I don't think that's how it works ... you should describe what is
-> expected of the driver in the right API documentation. Even saying
-> "implement the procedures as described in 802.11-2012 section ..." could
-> be sufficient, but I think that needs to be there.
+> Someone once suggested that memory allocation errors should not be
+> printed by the drivers as the memory subsystem does that anyway. No idea
+> if that's a good advice or not, but I try to follow it.
 >
 
-np, I can add it.
+Hi Kalle,
 
--- 
-Thanks,
-Victor.
+In general, I follow the same suggestion. However, in this particular 
+code path we are handling an event message from the device, which is 
+being discarded due to the allocation failure. That could be derived 
+from the trace that kzalloc spews, but I preferred to have it explicitly 
+stated in the logs.
+
+Gr. AvS
+
