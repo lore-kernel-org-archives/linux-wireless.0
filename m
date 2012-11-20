@@ -1,386 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40038 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756071Ab2KWUTO (ORCPT
+Received: from hotel311.server4you.de ([85.25.146.15]:51188 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799Ab2KTHaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 15:19:14 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Subject: [RFCv2 04/13] mac80211: mesh power mode indication in transmitted frames
-Date: Fri, 23 Nov 2012 12:18:45 -0800
-Message-Id: <1353701934-12752-5-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_211923_637141_C24A5DC0)
-In-Reply-To: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	Tue, 20 Nov 2012 02:30:12 -0500
+Message-ID: <50AB3182.5040505@monom.org> (sfid-20121120_083304_204610_30464E21)
+Date: Tue, 20 Nov 2012 08:30:10 +0100
+From: Daniel Wagner <wagi@monom.org>
+MIME-Version: 1.0
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
+ support
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com> <50AA845C.2050809@monom.org>
+In-Reply-To: <50AA845C.2050809@monom.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to IEEE802.11-2012 a mesh STA shall indicate the current power mode
-in transmitted frames. This differs for individually addressed frames and
-group addressed frames as well as whether the frames are addressed to peers
-or non-peers.
+Hi Seth,
 
-Indicate the link-specific power mode with the Power Management field in the
-Frame Control field and the Mesh Power Save Level field in the QoS Control
-field in all individually addressed Mesh Data frames.
-Especially indicate a peer-specific mesh power mode transition with an
-individually-addressed QoS Null frame to the respective peer.
+On 19.11.2012 20:11, Daniel Wagner wrote:
+> Works perfectly fine on my machine.
 
-  | PM | PSL| Mesh Power Mode |
-  +----+----+-----------------+
-  | 0  |Rsrv|    Active       |
-  | 1  | 0  |    Light        |
-  | 1  | 1  |    Deep         |
+Well, not really true. Though I am not sure if this what I am seeing 
+related to your changes. I see following log only when I am using my 
+home AP. The pattern is that when the connection stop working I see
+something like this in the log:
 
-Indicate the non-peer mesh power mode in frames transmitted to non-peer STA
-and in management frames in the Power Management field of the Frame Control
-field.
-In group addressed Mesh QoS Data frames the Mesh Power Save Level field
-in the QoS Control field indicates whether the local STA has any deep
-sleep peers.
-In beacon (and probe response) frames indicate whether we have any deep sleep
-peers, by setting the Mesh Power Save Level field of the Mesh Capability field.
+[ 8735.159091] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 4
+[ 8735.197298] wlan0: Rx A-MPDU request on tid 0 result 0
+[ 8735.566368] wlan0: Open BA session requested for 1c:c6:3c:1f:50:68 tid 0
+[ 8735.573701] wlan0: activated addBA response timer on tid 0
+[ 8735.578826] wlan0: switched off addBA timer for tid 0
+[ 8735.578834] wlan0: Aggregation is on for tid 0
+[ 8749.687530] wlan0: tx session timer expired on tid 0
+[ 8749.687558] wlan0: Tx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0
+[ 8749.700550] wlan0: Stopping Tx BA session for 1c:c6:3c:1f:50:68 tid 0
 
-For performance reasons, calls to the function setting the frame flags are
-placed in HWMP routing routines, as there the STA pointer is already availible.
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- include/linux/ieee80211.h   |    6 +++
- net/mac80211/mesh.c         |    3 ++
- net/mac80211/mesh.h         |    3 ++
- net/mac80211/mesh_hwmp.c    |   10 ++++
- net/mac80211/mesh_pathtbl.c |    1 +
- net/mac80211/mesh_ps.c      |  111 +++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c           |    3 ++
- net/mac80211/tx.c           |   18 ++++---
- net/mac80211/wme.c          |   13 ++++-
- 9 files changed, 160 insertions(+), 8 deletions(-)
+This is what I do: First establishing a connection, then after a while any
+traffic seems stops for a period and sometimes it recovers from that point. If
+not a disconnect/connect (using ConnMan) dance fixes the problem. 
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 9a85397..2ba972c 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -149,6 +149,9 @@
- /* Mesh Control 802.11s */
- #define IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT  0x0100
- 
-+/* mesh power save level subfield mask */
-+#define IEEE80211_QOS_CTL_MESH_PS_LEVEL 	0x0200
-+
- /* U-APSD queue for WMM IEs sent by AP */
- #define IEEE80211_WMM_IE_AP_QOSINFO_UAPSD	(1<<7)
- #define IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK	0x0f
-@@ -672,11 +675,14 @@ struct ieee80211_meshconf_ie {
-  *	additional mesh peerings with other mesh STAs
-  * @MESHCONF_CAPAB_FORWARDING: the STA forwards MSDUs
-  * @MESHCONF_CAPAB_TBTT_ADJUSTING: TBTT adjustment procedure is ongoing
-+ * @MESHCONF_CAPAB_POWER_SAVE_LEVEL: STA is in deep sleep mode or has
-+ *	neighbors in deep sleep mode
-  */
- enum mesh_config_capab_flags {
- 	MESHCONF_CAPAB_ACCEPT_PLINKS =		0x01,
- 	MESHCONF_CAPAB_FORWARDING =		0x08,
- 	MESHCONF_CAPAB_TBTT_ADJUSTING =		0x20,
-+	MESHCONF_CAPAB_POWER_SAVE_LEVEL	=	0x40,
- };
- 
- /**
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index d4e90ba..5f72739 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -272,6 +272,9 @@ mesh_add_meshconf_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	*pos = MESHCONF_CAPAB_FORWARDING;
- 	*pos |= ifmsh->accepting_plinks ?
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
-+	/* Mesh PS mode. See IEEE802.11-2012 8.4.2.100.8 */
-+	*pos |= ifmsh->ps_peers_deep_sleep ?
-+	    MESHCONF_CAPAB_POWER_SAVE_LEVEL : 0x00;
- 	*pos++ |= ifmsh->adjusting_tbtt ?
- 	    MESHCONF_CAPAB_TBTT_ADJUSTING : 0x00;
- 	*pos++ = 0x00;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 64781dd..49a3114 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -247,6 +247,9 @@ void ieee80211_mesh_local_ps_update(struct ieee80211_sub_if_data *sdata);
- void ieee80211_set_sta_mesh_local_ps_mode(struct sta_info *sta,
- 		enum nl80211_mesh_power_mode pm, u32 delay);
- void ieee80211_sta_mesh_local_ps_mode_timer(unsigned long data);
-+void ieee80211_set_mesh_ps_flags(struct ieee80211_sub_if_data *sdata,
-+				 struct sta_info *sta,
-+				 struct ieee80211_hdr *hdr);
- 
- /* Mesh paths */
- int mesh_nexthop_lookup(struct sk_buff *skb,
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 47aeee2..fe1d83c 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -205,6 +205,7 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
- 		struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 
- 	skb_set_mac_header(skb, 0);
- 	skb_set_network_header(skb, 0);
-@@ -216,6 +217,7 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
- 
- 	info->control.vif = &sdata->vif;
- 	ieee80211_set_qos_hdr(sdata, skb);
-+	ieee80211_set_mesh_ps_flags(sdata, NULL, hdr);
- }
- 
- /**
-@@ -1074,6 +1076,13 @@ int mesh_nexthop_resolve(struct sk_buff *skb,
- 	u8 *target_addr = hdr->addr3;
- 	int err = 0;
- 
-+	/*
-+	 * Nulls are only sent to direct peers for PS and
-+	 * should already be addressed
-+	 */
-+	if (ieee80211_is_qos_nullfunc(hdr->frame_control))
-+		return err;
-+
- 	rcu_read_lock();
- 	err = mesh_nexthop_lookup(skb, sdata);
- 	if (!err)
-@@ -1145,6 +1154,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 	if (next_hop) {
- 		memcpy(hdr->addr1, next_hop->sta.addr, ETH_ALEN);
- 		memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
-+		ieee80211_set_mesh_ps_flags(sdata, next_hop, hdr);
- 		err = 0;
- 	}
- 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index aa74981..a8e4040 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -212,6 +212,7 @@ void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
- 		memcpy(hdr->addr2, mpath->sdata->vif.addr, ETH_ALEN);
-+		ieee80211_set_mesh_ps_flags(sta->sdata, sta, hdr);
- 	}
- 
- 	spin_unlock_irqrestore(&mpath->frame_queue.lock, flags);
-diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
-index 14bf65b..0d496fe 100644
---- a/net/mac80211/mesh_ps.c
-+++ b/net/mac80211/mesh_ps.c
-@@ -10,6 +10,60 @@
- #include "mesh.h"
- 
- /**
-+ * ieee80211_mesh_null_get - create pre-addressed QoS Null frame
-+ *
-+ * Returns the created sk_buff
-+ *
-+ * @sta: mesh STA
-+ */
-+static struct sk_buff *ieee80211_mesh_null_get(struct sta_info *sta)
-+{
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_hdr *nullfunc; /* use 4addr header */
-+	struct sk_buff *skb;
-+	int size = sizeof(*nullfunc);
-+	__le16 fc;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + size + 2);
-+	if (!skb)
-+		return NULL;
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	nullfunc = (struct ieee80211_hdr *) skb_put(skb, size);
-+	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
-+	ieee80211_fill_mesh_addresses(nullfunc, &fc, sta->sta.addr,
-+				      sdata->vif.addr);
-+	nullfunc->frame_control = fc;
-+	nullfunc->duration_id = 0;
-+	/* no address resolution for this frame -> set addr 1 immediately */
-+	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
-+	skb_put(skb, 2); /* append QoS control field */
-+	ieee80211_set_mesh_ps_flags(sdata, sta, nullfunc);
-+
-+	return skb;
-+}
-+
-+/**
-+ * ieee80211_send_mesh_null - send a QoS Null to peer to indicate power mode
-+ *
-+ * @sta: mesh STA to inform
-+ */
-+static void ieee80211_send_mesh_null(struct sta_info *sta)
-+{
-+	struct sk_buff *skb;
-+
-+	skb = ieee80211_mesh_null_get(sta);
-+	if (!skb)
-+		return;
-+
-+	mps_dbg(sta->sdata, "announcing peer-specific power mode to %pM\n",
-+		sta->sta.addr);
-+
-+	ieee80211_tx_skb(sta->sdata, skb);
-+}
-+
-+/**
-  * ieee80211_mesh_local_ps_update - keep track of link-specific PS modes
-  *
-  * @sdata: local mesh subif
-@@ -107,6 +161,13 @@ void ieee80211_set_sta_mesh_local_ps_mode(struct sta_info *sta,
- 
- 	sta->local_ps_mode = pm;
- 
-+	/*
-+	 * announce peer-specific power mode transition
-+	 * see IEEE802.11-2012 13.14.3.2 and 13.14.3.3
-+	 */
-+	if (sta->plink_state == NL80211_PLINK_ESTAB)
-+		ieee80211_send_mesh_null(sta);
-+
- 	ieee80211_mesh_local_ps_update(sdata);
- }
- 
-@@ -122,3 +183,53 @@ void ieee80211_sta_mesh_local_ps_mode_timer(unsigned long data)
- 	ieee80211_set_sta_mesh_local_ps_mode(sta, sta->local_ps_mode_delayed,
- 					     0);
- }
-+
-+/**
-+ * ieee80211_set_mesh_ps_flags - set mesh PS flags in FC (and QoS Control)
-+ *
-+ * @sdata: local mesh subif
-+ * @sta: mesh STA
-+ * @hdr: 802.11 frame header
-+ *
-+ * see IEEE802.11-2012 8.2.4.1.7 and 8.2.4.5.11
-+ *
-+ * NOTE: sta must be given when an individually-addressed QoS frame header
-+ * is handed, for group-addressed and management frames it not used
-+ */
-+void ieee80211_set_mesh_ps_flags(struct ieee80211_sub_if_data *sdata,
-+				 struct sta_info *sta,
-+				 struct ieee80211_hdr *hdr)
-+{
-+	enum nl80211_mesh_power_mode pm;
-+	__le16 *qc;
-+
-+	if (WARN_ON(is_unicast_ether_addr(hdr->addr1) &&
-+	       ieee80211_is_data_qos(hdr->frame_control) &&
-+	       !sta))
-+		return;
-+
-+	if (is_unicast_ether_addr(hdr->addr1) &&
-+	    ieee80211_is_data_qos(hdr->frame_control) &&
-+	    sta->plink_state == NL80211_PLINK_ESTAB)
-+		pm = sta->local_ps_mode;
-+	else
-+		pm = sdata->u.mesh.nonpeer_ps_mode;
-+
-+	if (pm == NL80211_MESH_POWER_ACTIVE)
-+		hdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_PM);
-+	else
-+		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-+
-+	if (!ieee80211_is_data_qos(hdr->frame_control))
-+		return;
-+
-+	qc = (__le16 *) ieee80211_get_qos_ctl(hdr);
-+
-+	if ((is_unicast_ether_addr(hdr->addr1) &&
-+	     pm == NL80211_MESH_POWER_DEEP_SLEEP) ||
-+	    (is_multicast_ether_addr(hdr->addr1) &&
-+	     sdata->u.mesh.ps_peers_deep_sleep > 0))
-+		*qc |= cpu_to_le16(IEEE80211_QOS_CTL_MESH_PS_LEVEL);
-+	else
-+		*qc &= cpu_to_le16(~IEEE80211_QOS_CTL_MESH_PS_LEVEL);
-+}
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8c1f152..67aa26c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1998,7 +1998,10 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	if (is_multicast_ether_addr(fwd_hdr->addr1)) {
- 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_mcast);
- 		memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
-+		/* update power mode indication when forwarding */
-+		ieee80211_set_mesh_ps_flags(sdata, NULL, fwd_hdr);
- 	} else if (!mesh_nexthop_lookup(fwd_skb, sdata)) {
-+		/* mesh power mode flags updated in mesh_nexthop_lookup */
- 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_unicast);
- 	} else {
- 		/* unable to resolve next hop */
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6f19818..70aa64f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1472,12 +1472,16 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	info->control.vif = &sdata->vif;
- 
--	if (ieee80211_vif_is_mesh(&sdata->vif) &&
--	    ieee80211_is_data(hdr->frame_control) &&
--	    !is_multicast_ether_addr(hdr->addr1) &&
--	    mesh_nexthop_resolve(skb, sdata)) {
--		/* skb queued: don't free */
--		return;
-+	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-+		if (ieee80211_is_data(hdr->frame_control) &&
-+		    is_unicast_ether_addr(hdr->addr1)) {
-+			if (mesh_nexthop_resolve(skb, sdata)) {
-+				/* skb queued: don't free */
-+				return;
-+			}
-+		} else {
-+			ieee80211_set_mesh_ps_flags(sdata, NULL, hdr);
-+		}
- 	}
- 
- 	ieee80211_set_qos_hdr(sdata, skb);
-@@ -2448,6 +2452,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		eth_broadcast_addr(mgmt->da);
- 		memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
- 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
-+		ieee80211_set_mesh_ps_flags(sdata, NULL,
-+					    (struct ieee80211_hdr *) mgmt);
- 		mgmt->u.beacon.beacon_int =
- 			cpu_to_le16(sdata->vif.bss_conf.beacon_int);
- 		mgmt->u.beacon.capab_info |= cpu_to_le16(
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 906f00c..afba19c 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -191,6 +191,15 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 
- 	/* qos header is 2 bytes */
- 	*p++ = ack_policy | tid;
--	*p = ieee80211_vif_is_mesh(&sdata->vif) ?
--		(IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT >> 8) : 0;
-+	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-+		/* preserve RSPI and Mesh PS Level bit */
-+		*p &= ((IEEE80211_QOS_CTL_RSPI |
-+			IEEE80211_QOS_CTL_MESH_PS_LEVEL) >> 8);
-+
-+		/* Nulls don't have a mesh header (frame body) */
-+		if (!ieee80211_is_qos_nullfunc(hdr->frame_control))
-+			*p |= (IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT >> 8);
-+	} else {
-+		*p = 0;
-+	}
- }
--- 
-1.7.9.5
+Here some more logs with the reconnect dance.
 
+[ 8726.077111] wlan0: deauthenticating from 1c:c6:3c:1f:50:68 by local choice (reason=3)
+[ 8726.077147] wlan0: Tx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0
+[ 8726.078819] wlan0: Rx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0 recipient reason: 36
+[ 8726.078824] wlan0: Stopping Tx BA session for 1c:c6:3c:1f:50:68 tid 0
+[ 8726.080882] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 3
+[ 8726.080892] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 2
+[ 8726.080899] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 1
+[ 8726.080904] wlan0: Removed STA 1c:c6:3c:1f:50:68
+[ 8726.081038] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: disassociated
+[ 8726.081061] brcmsmac bcma0:0: brcms_ops_bss_info_changed: arp filtering: enabled false, count 1 (implement)
+[ 8726.081069] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
+[ 8726.083399] cfg80211: Calling CRDA to update world regulatory domain
+[ 8726.087764] wlan0: Destroyed STA 1c:c6:3c:1f:50:68
+[ 8726.094448] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[ 8726.110106] cfg80211: World regulatory domain updated:
+[ 8726.110116] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[ 8726.110123] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[ 8726.110130] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[ 8726.110135] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[ 8726.110141] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[ 8726.110145] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[ 8726.110192] cfg80211: Calling CRDA for country: DE
+[ 8726.122480] cfg80211: Regulatory domain changed to country: DE
+[ 8726.122490] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[ 8726.122496] cfg80211:   (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[ 8726.122502] cfg80211:   (5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[ 8726.122508] cfg80211:   (5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[ 8726.122513] cfg80211:   (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
+[ 8727.076039] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[ 8735.043286] wlan0: authenticate with 1c:c6:3c:1f:50:68
+[ 8735.043307] wlan0: Allocated STA 1c:c6:3c:1f:50:68
+[ 8735.049752] wlan0: Inserted STA 1c:c6:3c:1f:50:68
+[ 8735.049761] wlan0: send auth to 1c:c6:3c:1f:50:68 (try 1/3)
+[ 8735.057482] wlan0: authenticated
+[ 8735.057497] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 2
+[ 8735.058281] wlan0: associate with 1c:c6:3c:1f:50:68 (try 1/3)
+[ 8735.114690] wlan0: RX AssocResp from 1c:c6:3c:1f:50:68 (capab=0x431 status=0 aid=3)
+[ 8735.114709] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 3
+[ 8735.114717] wlan0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0 uapsd=0
+[ 8735.114844] wlan0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0 uapsd=0
+[ 8735.114965] wlan0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94 uapsd=0
+[ 8735.115087] wlan0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47 uapsd=0
+[ 8735.115301] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: associated
+[ 8735.115321] brcmsmac bcma0:0: brcms_ops_bss_info_changed: arp filtering: enabled true, count 0 (implement)
+[ 8735.115334] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
+[ 8735.115361] wlan0: associated
+[ 8735.116132] cfg80211: Calling CRDA for country: DE
+[ 8735.116218] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[ 8735.118204] wlan0: dropped frame to 1c:c6:3c:1f:50:68 (unauthorized port)
+[ 8735.120665] cfg80211: Regulatory domain changed to country: DE
+[ 8735.120672] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[ 8735.120678] cfg80211:   (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[ 8735.120682] cfg80211:   (5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[ 8735.120687] cfg80211:   (5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[ 8735.120692] cfg80211:   (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
+[ 8735.159091] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 4
+[ 8735.197298] wlan0: Rx A-MPDU request on tid 0 result 0
+[ 8735.566368] wlan0: Open BA session requested for 1c:c6:3c:1f:50:68 tid 0
+[ 8735.573701] wlan0: activated addBA response timer on tid 0
+[ 8735.578826] wlan0: switched off addBA timer for tid 0
+[ 8735.578834] wlan0: Aggregation is on for tid 0
+[ 8749.687530] wlan0: tx session timer expired on tid 0
+[ 8749.687558] wlan0: Tx BA session stop requested for 1c:c6:3c:1f:50:68 tid 0
+[ 8749.700550] wlan0: Stopping Tx BA session for 1c:c6:3c:1f:50:68 tid 0
+
+
+cheers,
+daniel
