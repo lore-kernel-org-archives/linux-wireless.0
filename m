@@ -1,86 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54741 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755388Ab2KIUHj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2012 15:07:39 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/13] iwlwifi: fix flush command
-Date: Fri,  9 Nov 2012 21:08:02 +0100
-Message-Id: <1352491692-28994-4-git-send-email-johannes@sipsolutions.net> (sfid-20121109_210752_034655_12931CA6)
-In-Reply-To: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
-References: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:4371 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753269Ab2KTQJG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 11:09:06 -0500
+Date: Tue, 20 Nov 2012 11:08:45 -0500
+From: Jason Baron <jbaron@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Vladimir Kondratiev <vkondrat@qti.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
+Message-ID: <20121120160845.GB31176@redhat.com> (sfid-20121120_170927_448119_F2211920)
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1353249531.15959.10.camel@joe-AO722>
+ <1380367.3QOKJVXxFC@lx-vladimir>
+ <2748656.Zh8WY0OSmS@lx-vladimir>
+ <1353263740.28214.2.camel@joe-AO722>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1353263740.28214.2.camel@joe-AO722>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Nov 18, 2012 at 10:35:40AM -0800, Joe Perches wrote:
+> On Sun, 2012-11-18 at 19:01 +0200, Vladimir Kondratiev wrote:
+> > In case this option wins, patch follows. There is no need for
+> > 2-nd one to fix existing drivers.
+> 
+> Thanks Vladimir.
+> 
+> 
 
-The flush command really flushes queues, not
-FIFOs, and the first 32 bits indicate the
-queues to flush, not FIFOs. Change the command
-accordingly.
+Yes, thanks. I've pulled in this patch, and posted a dynamic debug tree
+at: git clone git://github.com/jibaron/ddebug.git
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/commands.h |  4 ++--
- drivers/net/wireless/iwlwifi/dvm/lib.c      | 10 +++++-----
- 2 files changed, 7 insertions(+), 7 deletions(-)
+I will push the collected set of patches to Greg.
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/commands.h b/drivers/net/wireless/iwlwifi/dvm/commands.h
-index 01128c9..ac24861 100644
---- a/drivers/net/wireless/iwlwifi/dvm/commands.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/commands.h
-@@ -1004,14 +1004,14 @@ struct iwl_rem_sta_cmd {
-  * the flush operation ends when both the scheduler DMA done and TXFIFO empty
-  * are set.
-  *
-- * @fifo_control: bit mask for which queues to flush
-+ * @queue_control: bit mask for which queues to flush
-  * @flush_control: flush controls
-  *	0: Dump single MSDU
-  *	1: Dump multiple MSDU according to PS, INVALID STA, TTL, TID disable.
-  *	2: Dump all FIFO
-  */
- struct iwl_txfifo_flush_cmd {
--	__le32 fifo_control;
-+	__le32 queue_control;
- 	__le16 flush_control;
- 	__le16 reserved;
- } __packed;
-diff --git a/drivers/net/wireless/iwlwifi/dvm/lib.c b/drivers/net/wireless/iwlwifi/dvm/lib.c
-index bef88c1..01ff55f 100644
---- a/drivers/net/wireless/iwlwifi/dvm/lib.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/lib.c
-@@ -150,21 +150,21 @@ int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control)
- 
- 	memset(&flush_cmd, 0, sizeof(flush_cmd));
- 	if (flush_control & BIT(IWL_RXON_CTX_BSS))
--		flush_cmd.fifo_control = IWL_SCD_VO_MSK | IWL_SCD_VI_MSK |
-+		flush_cmd.queue_control = IWL_SCD_VO_MSK | IWL_SCD_VI_MSK |
- 				 IWL_SCD_BE_MSK | IWL_SCD_BK_MSK |
- 				 IWL_SCD_MGMT_MSK;
- 	if ((flush_control & BIT(IWL_RXON_CTX_PAN)) &&
- 	    (priv->valid_contexts != BIT(IWL_RXON_CTX_BSS)))
--		flush_cmd.fifo_control |= IWL_PAN_SCD_VO_MSK |
-+		flush_cmd.queue_control |= IWL_PAN_SCD_VO_MSK |
- 				IWL_PAN_SCD_VI_MSK | IWL_PAN_SCD_BE_MSK |
- 				IWL_PAN_SCD_BK_MSK | IWL_PAN_SCD_MGMT_MSK |
- 				IWL_PAN_SCD_MULTICAST_MSK;
- 
- 	if (priv->eeprom_data->sku & EEPROM_SKU_CAP_11N_ENABLE)
--		flush_cmd.fifo_control |= IWL_AGG_TX_QUEUE_MSK;
-+		flush_cmd.queue_control |= IWL_AGG_TX_QUEUE_MSK;
- 
--	IWL_DEBUG_INFO(priv, "fifo queue control: 0X%x\n",
--		       flush_cmd.fifo_control);
-+	IWL_DEBUG_INFO(priv, "queue control: 0x%x\n",
-+		       flush_cmd.queue_control);
- 	flush_cmd.flush_control = cpu_to_le16(flush_control);
- 
- 	return iwl_dvm_send_cmd(priv, &cmd);
--- 
-1.8.0
+I also added a couple of patches there to convert dynamic debug to use
+'jump labels', which shows good results.
 
+Thanks,
+
+-Jason
