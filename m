@@ -1,62 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37261 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753499Ab2KLPQo (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:45560 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752159Ab2KTXxW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 10:16:44 -0500
-Message-ID: <1352733436.9445.2.camel@jlt4.sipsolutions.net> (sfid-20121112_161648_183740_D946758F)
-Subject: Re: 60 GHz interface types (was: [PATCH v5 1/2] wireless: Driver
- for 60GHz card wil6210)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>, j@w1.fi
-Date: Mon, 12 Nov 2012 16:17:16 +0100
-In-Reply-To: <5760018.dRG2Gq6GXs@lx-vladimir>
-References: <1351701417-3140-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1352715356.9525.12.camel@jlt4.sipsolutions.net>
-	 <1352715850.9525.17.camel@jlt4.sipsolutions.net>
-	 <5760018.dRG2Gq6GXs@lx-vladimir>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 20 Nov 2012 18:53:22 -0500
+Message-ID: <50AC17ED.60405@etit.tu-chemnitz.de> (sfid-20121121_005326_391088_64A4AE9B)
+Date: Tue, 20 Nov 2012 15:53:17 -0800
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: javier@cozybit.com, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 09/14] mac80211: add power save support structure to mesh
+ interface
+References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>  <1353134886-13256-10-git-send-email-marco.porsch@etit.tu-chemnitz.de> <1353144370.9543.29.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1353144370.9543.29.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-12 at 16:57 +0200, Vladimir Kondratiev wrote:
+On 11/17/2012 01:26 AM, Johannes Berg wrote:
+> On Fri, 2012-11-16 at 22:48 -0800, Marco Porsch wrote:
+>
+>>   #ifdef CONFIG_MAC80211_MESH
+>> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+>> index bc3e3e1..8396602 100644
+>> --- a/net/mac80211/iface.c
+>> +++ b/net/mac80211/iface.c
+>> @@ -769,6 +769,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+>>   		/* free all potentially still buffered bcast frames */
+>>   		local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
+>>   		skb_queue_purge(&sdata->u.ap.ps.bc_buf);
+>> +	} else if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
+>> +		local->total_ps_buffered -= skb_queue_len(&sdata->u.mesh.ps.bc_buf);
+>> +		skb_queue_purge(&sdata->u.mesh.ps.bc_buf);
+>>   	} else if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+>>   		ieee80211_mgd_stop(sdata);
+>>   	}
+>
+> This will not apply, and is in the wrong place anyway.
 
-> > Let me elaborate on this. Lets say we have a hypothetical device that
-> > supports
-> > 
-> >  2.4 GHz - client mode
-> >  60 GHz  - AP and PCP mode
-> > 
-> > Yes, that would be pretty stupid, but let's say it exists, and even
-> > worse than that, it only supports 2.4 GHz *or* 60 GHz, not both at the
-> > same time (1).
-> > 
-> > Now how do you express its capabilities? [...]
+Moved it to mesh_stop. After disabling the beacon, these buffered 
+broadcast frames are not going to be transmitted anywhere.
 
-> I wonder how do we do so if I substitute 5G instead of 60G, i.e. 2.4G client 
-> and 5G AP, not same time. How do we handle per-band cababilities in this case?
+>
+>> +	/* reset in case we have been in a mesh with PS peers before */
+>
+> should amend the comment to say "and leak all the frames that might be
+> on the queue now.
+>
+>> +	} else if (sta->sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
+>> +		ps = &sta->sdata->u.mesh.ps;
+>> +		/* TIM map only for AID <= IEEE80211_MAX_AID */
+>
+> AID? Seems more like PLID to me:
+>
+>> +		id = le16_to_cpu(sta->plid) % IEEE80211_MAX_AID;
+>
+>> -	/* This is only necessary for stations on BSS interfaces */
+>> -	if (!sta->sdata->bss)
+>> +	/* This is only necessary for stations on BSS/MBSS interfaces */
+>> +	if (!sta->sdata->bss &&
+>> +	    !ieee80211_vif_is_mesh(&sta->sdata->vif))
+>>   		return false;
+>
+> Instead of cluttering all the code paths like this, what if we changed
+>
+> struct ieee80211_if_ap *sdata->bss
+>
+> to
+>
+> struct ps_data *sdata->ps
+>
+>
+> If we know the interface type is AP/AP_VLAN, we can still get the AP
+> sdata from that pointer:
+> 	container_of(sdata->ps, struct ieee80211_sub_if_sdata, u.ap.ps);
+>
+> This is only in a few places, and might keep all the RX/TX code simpler?
 
-We don't -- they share the same MAC and everything, so there's no real
-difference between 2.4 and 5 GHz that would make a device have such
-contrived capabilities with 2.4/5 GHz. (and if we did, we'd have a big
-problem :) )
+When counting, I found twice as many lines that would need the 
+workaround, as the ones that would benefit. Also I don't really have a 
+clue on the AP/VLAN code.
 
-Somehow I have a feeling 60 GHz is different though.
+>
+>> +++ b/net/mac80211/tx.c
+>> @@ -329,6 +329,8 @@ static void purge_old_ps_buffers(struct ieee80211_local *local)
+>>
+>>   		if (sdata->vif.type == NL80211_IFTYPE_AP)
+>>   			ps = &sdata->u.ap.ps;
+>> +		else if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+>> +			ps = &sdata->u.mesh.ps;
+>
+> This could just be "ps = sdata->ps" etc.
 
-> Something makes me think that in your example it should be 2 wiphy structs; 
-> but need then I need to express inter-device restriction. I don't know right 
-> answer to this.
-
-Would there be inter-device restrictions though? In my contrived
-example, there would be, but with a real device?
-
-With my example, the only way to handle it seems to be separate
-interface types for 60 GHz, but maybe you can convince me that the
-example is stupid :)
-
-johannes
+--Marco
 
