@@ -1,140 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:54251 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757178Ab2KVTfx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 14:35:53 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so3059964eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 11:35:52 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/13] wlcore: call ieee80211_sched_scan_stopped on interface removal
-Date: Thu, 22 Nov 2012 14:05:27 +0200
-Message-Id: <1353585928-28666-13-git-send-email-eliad@wizery.com> (sfid-20121122_203605_092367_82867C85)
-In-Reply-To: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:38405 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752080Ab2KTJEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 04:04:13 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id qAK94CdE027319
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:04:12 -0600
+Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id qAK94Ckc030681
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:04:12 -0600
+From: Luciano Coelho <coelho@ti.com>
+To: <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] wlcore: remove a bunch of unnecessary parentheses
+Date: Tue, 20 Nov 2012 11:03:32 +0200
+Message-ID: <1353402212-20439-3-git-send-email-coelho@ti.com> (sfid-20121120_100420_910747_CB5506E4)
+In-Reply-To: <1353402212-20439-1-git-send-email-coelho@ti.com>
+References: <1353402212-20439-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The interface might go down before we got the SCHED_STOPPED
-event, so make sure to call ieee80211_sched_scan_stopped()
-if the scanned interface is removed.
+Some if statements had unnecessary parentheses.  Remove them for
+consistency.
 
-Replace sched_scanning with sched_vif in order to save
-the scanned interface.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ti/wlcore/debugfs.c |    1 -
- drivers/net/wireless/ti/wlcore/event.c   |    4 ++--
- drivers/net/wireless/ti/wlcore/main.c    |   16 +++++++---------
- drivers/net/wireless/ti/wlcore/wlcore.h  |    2 +-
- 4 files changed, 10 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index f0f88e6..43ecb3a 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -490,7 +490,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_HEX(chip.id);
- 	DRIVER_STATE_PRINT_STR(chip.fw_ver_str);
- 	DRIVER_STATE_PRINT_STR(chip.phy_fw_ver_str);
--	DRIVER_STATE_PRINT_INT(sched_scanning);
- 
- #undef DRIVER_STATE_PRINT_INT
- #undef DRIVER_STATE_PRINT_LONG
-diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
-index 3c20393..cb32c02 100644
---- a/drivers/net/wireless/ti/wlcore/event.c
-+++ b/drivers/net/wireless/ti/wlcore/event.c
-@@ -109,9 +109,9 @@ void wlcore_event_sched_scan_completed(struct wl1271 *wl,
- 	wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_COMPLETE_EVENT (status 0x%0x)",
- 		     status);
- 
--	if (wl->sched_scanning) {
-+	if (wl->sched_vif) {
- 		ieee80211_sched_scan_stopped(wl->hw);
--		wl->sched_scanning = false;
-+		wl->sched_vif = NULL;
- 	}
- }
- EXPORT_SYMBOL_GPL(wlcore_event_sched_scan_completed);
 diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 221762b..75de758 100644
+index c056bb3..11d20b1 100644
 --- a/drivers/net/wireless/ti/wlcore/main.c
 +++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -923,11 +923,6 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	/* Prevent spurious TX during FW restart */
- 	wlcore_stop_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
+@@ -3692,7 +3692,7 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
+ 	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
+ 	int ret = 0;
  
--	if (wl->sched_scanning) {
--		ieee80211_sched_scan_stopped(wl->hw);
--		wl->sched_scanning = false;
--	}
--
- 	/* reboot the chipset */
- 	while (!list_empty(&wl->wlvif_list)) {
- 		wlvif = list_first_entry(&wl->wlvif_list,
-@@ -1871,7 +1866,6 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
- 	wl->time_offset = 0;
- 	wl->ap_fw_ps_map = 0;
- 	wl->ap_ps_map = 0;
--	wl->sched_scanning = false;
- 	wl->sleep_auth = WL1271_PSM_ILLEGAL;
- 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
- 	memset(wl->links_map, 0, sizeof(wl->links_map));
-@@ -2405,6 +2399,11 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 		ieee80211_scan_completed(wl->hw, true);
+-	if ((changed & BSS_CHANGED_BEACON_INT)) {
++	if (changed & BSS_CHANGED_BEACON_INT) {
+ 		wl1271_debug(DEBUG_MASTER, "beacon interval updated: %d",
+ 			bss_conf->beacon_int);
+ 
+@@ -3705,7 +3705,7 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
+ 		wl1271_ap_set_probe_resp_tmpl(wl, rate, vif);
  	}
  
-+	if (wl->sched_vif == wlvif) {
-+		ieee80211_sched_scan_stopped(wl->hw);
-+		wl->sched_vif = NULL;
-+	}
-+
- 	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
- 		/* disable active roles */
- 		ret = wl1271_ps_elp_wakeup(wl);
-@@ -3439,7 +3438,7 @@ static int wl1271_op_sched_scan_start(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out_sleep;
+-	if ((changed & BSS_CHANGED_BEACON)) {
++	if (changed & BSS_CHANGED_BEACON) {
+ 		ret = wlcore_set_beacon_template(wl, vif, is_ap);
+ 		if (ret < 0)
+ 			goto out;
+@@ -3726,7 +3726,7 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+ 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	int ret = 0;
  
--	wl->sched_scanning = true;
-+	wl->sched_vif = wlvif;
+-	if ((changed & BSS_CHANGED_BASIC_RATES)) {
++	if (changed & BSS_CHANGED_BASIC_RATES) {
+ 		u32 rates = bss_conf->basic_rates;
  
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
-@@ -3928,7 +3927,7 @@ static int wlcore_set_bssid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 						wlvif->band);
+ 		wlvif->basic_rate_set = wl1271_tx_enabled_rates_get(wl, rates,
+@@ -3858,7 +3858,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 			wl1271_warning("idle mode change failed %d", ret);
+ 	}
  
- 	/* we only support sched_scan while not connected */
--	if (wl->sched_scanning)
-+	if (wl->sched_vif == wlvif)
- 		wl->ops->sched_scan_stop(wl, wlvif);
+-	if ((changed & BSS_CHANGED_CQM)) {
++	if (changed & BSS_CHANGED_CQM) {
+ 		bool enable = false;
+ 		if (bss_conf->cqm_rssi_thold)
+ 			enable = true;
+@@ -3901,7 +3901,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 		rcu_read_unlock();
+ 	}
  
- 	ret = wl1271_acx_sta_rate_policies(wl, wlvif);
-@@ -5638,7 +5637,6 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 	wl->ap_fw_ps_map = 0;
- 	wl->quirks = 0;
- 	wl->platform_quirks = 0;
--	wl->sched_scanning = false;
- 	wl->system_hlid = WL12XX_SYSTEM_HLID;
- 	wl->active_sta_count = 0;
- 	wl->fwlog_size = 0;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index eacace0..6614b59 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -309,7 +309,7 @@ struct wl1271 {
- 	struct ieee80211_vif *roc_vif;
- 	struct delayed_work roc_complete_work;
- 
--	bool sched_scanning;
-+	struct wl12xx_vif *sched_vif;
- 
- 	/* The current band */
- 	enum ieee80211_band band;
+-	if ((changed & BSS_CHANGED_ASSOC)) {
++	if (changed & BSS_CHANGED_ASSOC) {
+ 		if (bss_conf->assoc) {
+ 			u32 rates;
+ 			int ieoffset;
 -- 
-1.7.6.401.g6a319
+1.7.10.4
 
