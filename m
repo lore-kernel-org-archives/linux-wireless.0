@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44763 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39864 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161052Ab2KNLTP (ORCPT
+	with ESMTP id S1751582Ab2KTJj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 06:19:15 -0500
-Message-ID: <1352891985.9510.22.camel@jlt4.sipsolutions.net> (sfid-20121114_121918_909503_4C48E26B)
-Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection
- command/event
+	Tue, 20 Nov 2012 04:39:27 -0500
+Message-ID: <1353404398.9399.9.camel@jlt4.sipsolutions.net> (sfid-20121120_103933_348998_AF83A2BE)
+Subject: Re: [RFC v2 4/8] nl80211/cfg80211: support VHT channel configuration
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Date: Wed, 14 Nov 2012 12:19:45 +0100
-In-Reply-To: <50A26163.10300@ti.com>
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
-	    <1350226137-13704-2-git-send-email-victorg@ti.com>
-	   <1350414099.10177.13.camel@jlt4.sipsolutions.net>
-	  <50842569.5000602@ti.com> <1350910543.10166.3.camel@jlt4.sipsolutions.net>
-	  <50922A9D.2060409@ti.com> <1352128887.9466.17.camel@jlt4.sipsolutions.net>
-	 <50A26163.10300@ti.com>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 20 Nov 2012 10:39:58 +0100
+In-Reply-To: <1353400890.9399.3.camel@jlt4.sipsolutions.net> (sfid-20121120_094103_819884_8535CF9F)
+References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
+	 <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>
+	 <50AB3EE1.8060101@posedge.com>
+	 <1353400890.9399.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20121120_094103_819884_8535CF9F)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-13 at 17:04 +0200, Victor Goldenshtein wrote:
-
-> > Hmm. Maybe then the channel should be passed to the radar detection
-> > command instead? That way, it can be passed through, you can allocate a
-> > channel context, etc. Much easier?
+On Tue, 2012-11-20 at 09:41 +0100, Johannes Berg wrote:
+> On Tue, 2012-11-20 at 13:57 +0530, Mahesh Palivela wrote:
 > 
-> We already pass the frequency in the radar detection command, the set 
-> channel operation comes during hostapd init flow regardless DFS 
-> implementation.
+> > > +	for (freq = center_freq - bw/2 + 10;
+> > > +	     freq <= center_freq + bw/2 - 10;
+> > > +	     freq += 20) {
+> > > +		c = ieee80211_get_channel(wiphy, freq);
+> > > +		if (!c || c->flags & (IEEE80211_CHAN_DISABLED |
+> > > +				      IEEE80211_CHAN_PASSIVE_SCAN |
+> > > +				      IEEE80211_CHAN_NO_IBSS |
+> > > +				      IEEE80211_CHAN_RADAR))
+> > > +			return false;
+> 
+> 
+> > > +	for (freq = center_freq - bw/2 + 10;
+> > > +	     freq <= center_freq + bw/2 - 10;
+> > > +	     freq += 20) {
+> > > +		c = ieee80211_get_channel(&rdev->wiphy, freq);
+> > > +		if (!c || c->flags & IEEE80211_CHAN_DISABLED)
+> > > +			return -EINVAL;
+> 
+> 
+> > For loops in both functions seems to be similar. One return false, other 
+> > return -EINVAL. Can we remove duplication?
+> 
+> True, but they check different flags. I suppose we could have a common
+> function where the checked flags are passed in, I can try that.
 
-Ok, but it doesn't seem to be passed through to the driver, nor
-considered as a channel that's currently in use. cfg80211 is now
-tracking which channels are used for multi-channel purposes, and this
-needs to be integrated here.
+I'll add this to the patch:
 
-johannes
+http://p.sipsolutions.net/24eb25fb98ef2d0b.txt
 
