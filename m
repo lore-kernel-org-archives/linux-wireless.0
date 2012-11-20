@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52889 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752545Ab2K2W1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 17:27:38 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	ath9k-devel@lists.ath9k.org, Larry.Finger@lwfinger.net,
-	chunkeey@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] p54pci: use SIMPLE_DEV_PM_OPS
-Date: Thu, 29 Nov 2012 23:27:16 +0100
-Message-Id: <1354228037-1700-3-git-send-email-hauke@hauke-m.de> (sfid-20121129_232741_619803_6DAB0A3E)
-In-Reply-To: <1354228037-1700-1-git-send-email-hauke@hauke-m.de>
-References: <1354228037-1700-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:46315 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751698Ab2KTJOX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 04:14:23 -0500
+Received: by mail-ob0-f174.google.com with SMTP id wc20so5719428obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 01:14:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1353399218.10872.152.camel@cumari.coelho.fi>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	<1353343170-26516-14-git-send-email-eliad@wizery.com>
+	<1353399218.10872.152.camel@cumari.coelho.fi>
+Date: Tue, 20 Nov 2012 11:14:23 +0200
+Message-ID: <CAB3XZEd_2LfKC=nUt3DQEtSMQLov9k0mM=_UDCvGBWT4bvJ-CA@mail.gmail.com> (sfid-20121120_101429_719711_DBCF4323)
+Subject: Re: [PATCH 13/15] wlcore: reconfigure rate policy on association
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-p54pci does not provide any runtime pm callbacks, so support for
-PM_RUNTIME is not needed and we could go to PM_SLEEP.
-This also makes it possible to use SIMPLE_DEV_PM_OPS instead of
-manually filling struct dev_pm_ops.
+On Tue, Nov 20, 2012 at 10:13 AM, Luciano Coelho <coelho@ti.com> wrote:
+> On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+>> When first configuring the rate policy, before auth,
+>> we still don't have the correct rates that were
+>> agreed during association.
+>>
+>> Reconfigure the rate policy on association in order
+>> to update them.
+>>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>>  drivers/net/wireless/ti/wlcore/main.c |   14 +++++++++++++-
+>>  1 files changed, 13 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+>> index 0dd0ec1..a1ad326 100644
+>> --- a/drivers/net/wireless/ti/wlcore/main.c
+>> +++ b/drivers/net/wireless/ti/wlcore/main.c
+>> @@ -3771,7 +3771,8 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+>>               wlvif->rssi_thold = bss_conf->cqm_rssi_thold;
+>>       }
+>>
+>> -     if (changed & (BSS_CHANGED_BSSID | BSS_CHANGED_HT)) {
+>> +     if (changed & (BSS_CHANGED_BSSID | BSS_CHANGED_HT |
+>> +                    BSS_CHANGED_ASSOC)) {
+>>               rcu_read_lock();
+>>               sta = ieee80211_find_sta(vif, bss_conf->bssid);
+>>               if (!sta)
+>> @@ -3958,6 +3959,17 @@ sta_not_found:
+>>               if (ret < 0)
+>>                       goto out;
+>>
+>> +             if (sta_rate_set) {
+>> +                     wlvif->rate_set =
+>> +                             wl1271_tx_enabled_rates_get(wl,
+>> +                                                         sta_rate_set,
+>> +                                                         wlvif->band);
+>> +
+>> +                     ret = wl1271_acx_sta_rate_policies(wl, wlvif);
+>> +                     if (ret < 0)
+>> +                             goto out;
+>> +             }
+>> +
+>>               if (test_bit(WLVIF_FLAG_STA_AUTHORIZED, &wlvif->flags))
+>>                       wl12xx_set_authorized(wl, wlvif);
+>>       }
+>
+> Yes, it's messy that we use the same value for vif-supported rates and
+> current association negotiated rates... :(
+>
+yeah, we have a total mess with all the configured/supported rates.
+we'll have to reorganize it at some point.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/p54/p54pci.c |   13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index b439079..810c343 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -659,7 +659,7 @@ static void __devexit p54p_remove(struct pci_dev *pdev)
- 	p54_free_common(dev);
- }
- 
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- static int p54p_suspend(struct device *device)
- {
- 	struct pci_dev *pdev = to_pci_dev(device);
-@@ -681,19 +681,12 @@ static int p54p_resume(struct device *device)
- 	return pci_set_power_state(pdev, PCI_D0);
- }
- 
--static const struct dev_pm_ops p54pci_pm_ops = {
--	.suspend = p54p_suspend,
--	.resume = p54p_resume,
--	.freeze = p54p_suspend,
--	.thaw = p54p_resume,
--	.poweroff = p54p_suspend,
--	.restore = p54p_resume,
--};
-+static SIMPLE_DEV_PM_OPS(p54pci_pm_ops, p54p_suspend, p54p_resume);
- 
- #define P54P_PM_OPS (&p54pci_pm_ops)
- #else
- #define P54P_PM_OPS (NULL)
--#endif /* CONFIG_PM */
-+#endif /* CONFIG_PM_SLEEP */
- 
- static struct pci_driver p54p_driver = {
- 	.name		= "p54pci",
--- 
-1.7.10.4
-
+Eliad.
