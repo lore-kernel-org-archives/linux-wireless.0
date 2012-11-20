@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:56485 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750817Ab2KPIqp (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:48451 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786Ab2KTBWk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 03:46:45 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so966729eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2012 00:46:43 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: fix invalid kfree on sched scan
-Date: Fri, 16 Nov 2012 10:46:39 +0200
-Message-Id: <1353055599-8332-1-git-send-email-eliad@wizery.com> (sfid-20121116_094648_574237_21D29BC6)
+	Mon, 19 Nov 2012 20:22:40 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so3869523pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 17:22:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAG6hwVPVbyL+6HTUv+4=zNMvb4KSPMowXwbb1B2H5ugYBuo0gQ@mail.gmail.com>
+References: <1352832488-21516-1-git-send-email-thomas@cozybit.com>
+	<1353361141.18299.36.camel@jlt4.sipsolutions.net>
+	<CAJ-VmomL6g1LfTNsk6HPeKEySS57-646L6i9rcOT0V9cDK0b9w@mail.gmail.com>
+	<CAG6hwVPVbyL+6HTUv+4=zNMvb4KSPMowXwbb1B2H5ugYBuo0gQ@mail.gmail.com>
+Date: Mon, 19 Nov 2012 17:22:39 -0800
+Message-ID: <CAJ-VmomHxArtZ+1tqkmGdTobv2Y9CdXHrfxPyJkeAKboqYJoxQ@mail.gmail.com> (sfid-20121120_022242_749108_F17A1603)
+Subject: Re: [PATCH v2 1/2] ath9k: RX timestamp is reported at end of frame
+From: Adrian Chadd <adrian@freebsd.org>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@lists.ath9k.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 30dd3ed ("mac80211: don't hang on to sched_scan_ies")
-converted sched_scan_ies to a local variable.
-However, since it wasn't initialized, in a case of
-unsupported band, sched_scan_ies.ie[] was uninitialized,
-and freeing it could corrupt the memory.
+Just do what Sam did in the FreeBSD TDMA code - calculate the actual
+beginning of the frame by using the TSF, the size of the last frame,
+the rate from the last frame, and call ath_hal_calctxtime() (or the
+linux equivalent, obviously.)
 
-Fix it by simply initializing sched_scan_ies to 0.
+For clarification we should find out what the TSF is for 11n
+aggregates. Or the math is totally wrong.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks,
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 13d2329..8e9bb168 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -934,7 +934,7 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 				       struct cfg80211_sched_scan_request *req)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_sched_scan_ies sched_scan_ies;
-+	struct ieee80211_sched_scan_ies sched_scan_ies = {};
- 	int ret, i;
- 
- 	mutex_lock(&local->mtx);
--- 
-1.7.6.401.g6a319
 
+Adrian
