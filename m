@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41697 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754532Ab2KSSiL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42069 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904Ab2KTVot (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:38:11 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 126/493] rfkill: remove use of __devexit_p
-Date: Mon, 19 Nov 2012 13:21:15 -0500
-Message-Id: <1353349642-3677-126-git-send-email-wfp5p@virginia.edu> (sfid-20121119_193902_643277_193C156E)
-In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+	Tue, 20 Nov 2012 16:44:49 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/10] nl80211: add documentation for channel type
+Date: Tue, 20 Nov 2012 22:45:08 +0100
+Message-Id: <1353447916-17304-3-git-send-email-johannes@sipsolutions.net> (sfid-20121120_224452_604703_7A99B4EB)
+In-Reply-To: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
+References: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_HOTPLUG is going away as an option so __devexit_p is no longer
-needed.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Johannes Berg <johannes@sipsolutions.net> 
-Cc: "John W. Linville" <linville@tuxdriver.com> 
-Cc: "David S. Miller" <davem@davemloft.net> 
-Cc: linux-wireless@vger.kernel.org 
-Cc: netdev@vger.kernel.org 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/rfkill/rfkill-gpio.c      | 2 +-
- net/rfkill/rfkill-regulator.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ include/uapi/linux/nl80211.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 865adb6..78fc093 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -213,7 +213,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 43cd6fa..82b5ad3 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2438,6 +2438,15 @@ enum nl80211_ac {
+ #define NL80211_TXQ_Q_BE	NL80211_AC_BE
+ #define NL80211_TXQ_Q_BK	NL80211_AC_BK
  
- static struct platform_driver rfkill_gpio_driver = {
- 	.probe = rfkill_gpio_probe,
--	.remove = __devexit_p(rfkill_gpio_remove),
-+	.remove = rfkill_gpio_remove,
- 	.driver = {
- 		   .name = "rfkill_gpio",
- 		   .owner = THIS_MODULE,
-diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
-index 11da301..a87710d 100644
---- a/net/rfkill/rfkill-regulator.c
-+++ b/net/rfkill/rfkill-regulator.c
-@@ -137,7 +137,7 @@ static int __devexit rfkill_regulator_remove(struct platform_device *pdev)
- 
- static struct platform_driver rfkill_regulator_driver = {
- 	.probe = rfkill_regulator_probe,
--	.remove = __devexit_p(rfkill_regulator_remove),
-+	.remove = rfkill_regulator_remove,
- 	.driver = {
- 		.name = "rfkill-regulator",
- 		.owner = THIS_MODULE,
++/**
++ * enum nl80211_channel_type - channel type
++ * @NL80211_CHAN_NO_HT: 20 MHz, non-HT channel
++ * @NL80211_CHAN_HT20: 20 MHz HT channel
++ * @NL80211_CHAN_HT40MINUS: HT40 channel, secondary channel
++ *	below the control channel
++ * @NL80211_CHAN_HT40PLUS: HT40 channel, secondary channel
++ *	above the control channel
++ */
+ enum nl80211_channel_type {
+ 	NL80211_CHAN_NO_HT,
+ 	NL80211_CHAN_HT20,
 -- 
 1.8.0
 
