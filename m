@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:62434 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755442Ab2K0Pr2 (ORCPT
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:50600
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750818Ab2KTGDs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 10:47:28 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so2973168wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 07:47:27 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-	gwingerde@gmail.com, IvDoorn@gmail.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] rt2x00: Use addr_mask to catch invalid MAC addresses
-Date: Tue, 27 Nov 2012 16:47:16 +0100
-Message-Id: <1354031236-8191-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20121127_164732_197743_77A49FB7)
+	Tue, 20 Nov 2012 01:03:48 -0500
+Message-ID: <50AB1D3E.4090808@posedge.com> (sfid-20121120_070351_459643_6582D73D)
+Date: Tue, 20 Nov 2012 11:33:42 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v2 4/8] nl80211/cfg80211: support VHT channel configuration
+References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>  <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>  <50AA237F.4090102@posedge.com> <1353334304.18299.2.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1353334304.18299.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This ensures that a user cannot accidentally set up a virtual interface
-with a MAC address the rt2800 hw cannot handle.
+On 11/19/2012 07:41 PM, Johannes Berg wrote:
+> On Mon, 2012-11-19 at 17:48 +0530, Mahesh Palivela wrote:
+>
+>>> +	case NL80211_CHAN_WIDTH_160:
+>>> +		if (chandef->center_freq1 != control_freq + 70 &&
+>>> +		    chandef->center_freq1 != control_freq + 50 &&
+>>> +		    chandef->center_freq1 != control_freq + 30 &&
+>>> +		    chandef->center_freq1 != control_freq + 10 &&
+>>> +		    chandef->center_freq1 != control_freq - 10 &&
+>>> +		    chandef->center_freq1 != control_freq - 30 &&
+>>> +		    chandef->center_freq1 != control_freq - 50 &&
+>>> +		    chandef->center_freq1 != control_freq - 70)
+>>> +			return false;
+>>
+>> Should we create a macro instead of +70 to -70 to take care of all 3
+>> cases 80, 80p80 and 160?
+>
+> Not sure, I hope we won't duplicate this code anywhere else, so I don't
+> really think we need to?
+>
 
-Reported-by: Petr Stetiar <ynezz@true.cz>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+you kind of used it in cfg80211_check_beacon_chans() in wireless/chan.c
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index c0441a7..7f0df12 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -5108,6 +5108,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 				rt2x00_eeprom_addr(rt2x00dev,
- 						   EEPROM_MAC_ADDR_0));
- 
-+	/* Only the last three bits are variable in rt2800 devices. */
-+	rt2x00dev->hw->wiphy->addr_mask[ETH_ALEN - 1] = 0x7;
-+
- 	/*
- 	 * As rt2800 has a global fallback table we cannot specify
- 	 * more then one tx rate per frame but since the hw will
--- 
-1.7.7
+         for (freq = center_freq - bw/2 + 10;
+              freq <= center_freq + bw/2 - 10;
+              freq += 20)
 
+we can use in 3 switch cases, 80, 80p80 and 160.
