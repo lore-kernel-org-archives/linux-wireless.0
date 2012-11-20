@@ -1,88 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54784 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699Ab2KJJQA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Nov 2012 04:16:00 -0500
-Message-ID: <509E1B47.3050107@openwrt.org> (sfid-20121110_101605_505708_4DA129B8)
-Date: Sat, 10 Nov 2012 10:15:51 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:49500 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752492Ab2KTLtW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 06:49:22 -0500
+Received: by mail-ia0-f174.google.com with SMTP id y25so4144992iay.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:49:21 -0800 (PST)
 MIME-Version: 1.0
-To: Bernhard Urban <lewurm@gmail.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	c_manoha@qca.qualcomm.com, Sujith.Manoharan@atheros.com,
-	linville@tuxdriver.com, markus@indoo.rs
-Subject: Re: [PATCH] ath9k_htc: update RSSI values only when the device is
- associated
-References: <1352480966-17462-1-git-send-email-lewurm@gmail.com>
-In-Reply-To: <1352480966-17462-1-git-send-email-lewurm@gmail.com>
+In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 20 Nov 2012 13:49:05 +0200
+Message-ID: <CA+XVXfdqzOq5xYt+7UKQQnHUbnyraa73agW8t1mzWCo1M7Toeg@mail.gmail.com> (sfid-20121120_124925_266263_34AE7728)
+Subject: Re: [PATCH v2 00/11] wlcore: prepare to multi-channel
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-11-09 6:09 PM, Bernhard Urban wrote:
-> add an if-guard, otherwise iw(8) reports weird signal strengths.
-> 
-> The behaviour was fine before this commit:
-> 7c277349ecbd66e19fad3d949fa6ef6c131a3b62
-> This patch is therefore a partially revert of it.
-> 
-> Tested with "TP-Link TL-WN722N"
-> 
-> Thanks to indoo.rs http://indoo.rs/ for sponsoring
-> 
-> Reported-by: Markus Krainz <markus@indoo.rs>
-> Tested-by: Markus Krainz <markus@indoo.rs>
-> Signed-off-by: Bernhard Urban <lewurm@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   27 ++++++++++++++-----------
->  1 file changed, 15 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> index 47e61d0..d0d329c 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> @@ -1060,22 +1060,25 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
->  	ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
->  			   rxbuf->rxstatus.rs_flags);
->  
-> -	if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
-> -	    !rxbuf->rxstatus.rs_moreaggr)
-> -		ATH_RSSI_LPF(priv->rx.last_rssi,
-> -			     rxbuf->rxstatus.rs_rssi);
-> +	if (priv->num_sta_assoc_vif != 0) {
-> +		if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
-> +		    !rxbuf->rxstatus.rs_moreaggr)
-> +			ATH_RSSI_LPF(priv->rx.last_rssi,
-> +				     rxbuf->rxstatus.rs_rssi);
->  
-> -	last_rssi = priv->rx.last_rssi;
-> +		last_rssi = priv->rx.last_rssi;
->  
-> -	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
-> -		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
-> -						     ATH_RSSI_EP_MULTIPLIER);
-> +		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER)) {
-> +			s8 rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
-> +			rxbuf->rxstatus.rs_rssi = rssi;
-> +		}
->  
-> -	if (rxbuf->rxstatus.rs_rssi < 0)
-> -		rxbuf->rxstatus.rs_rssi = 0;
-> +		if (rxbuf->rxstatus.rs_rssi < 0)
-> +			rxbuf->rxstatus.rs_rssi = 0;
->  
-> -	if (ieee80211_is_beacon(fc))
-> -		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
-> +		if (ieee80211_is_beacon(fc))
-> +			priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
-> +	}
->  
->  	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
->  	rx_status->band = hw->conf.channel->band;
-> 
-Please check how RSSI is handled in ath9k, and use that as reference.
-The per-packet RSSI should not be set from some internal average, it
-should contain the real RSSI value of the packet. This change disables
-RSSI reporting for anything but station mode, which is not a good idea.
+On Tue, Nov 20, 2012 at 1:20 PM, Eliad Peller <eliad@wizery.com> wrote:
+> Make the connection flow simpler by using only the sta
+> role (i.e. no need for dev role).
+>
+> This is possible now, as we know the AP's BSSID even
+> before authentication.
+>
+> This means we no longer start dev role when the device
+> is non-idle, so now we use the .remain_on_channel()
+> and start device role only then.
+>
+> Finally, implement the chanctx callbacks in order to
+> have a clear per-vif channel (instead of the global
+> hw->channel)
+>
+> (this patchset depends on
+> "mac80211: make remain_on_channel() op pass vif param")
+>
+> v2: fix some issues pointed out by Arik/Luca (thanks!)
+>     squash some patches together (thanks Johannes and Julian!)
 
-- Felix
+You can add my reviewed-by to this patch-set, if you care about this stuff :)
+
+Arik
