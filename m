@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43549 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753080Ab2KTPRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 10:17:12 -0500
-Message-ID: <50AB9EA3.6070804@ti.com> (sfid-20121120_162017_822227_FDFD48C3)
-Date: Tue, 20 Nov 2012 17:15:47 +0200
-From: Victor Goldenshtein <victorg@ti.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:63714 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582Ab2KTJVe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 04:21:34 -0500
+Received: by mail-ob0-f174.google.com with SMTP id wc20so5723760obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 01:21:34 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <coelho@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
-	<simon.wunderlich@s2003.tu-chemnitz.de>, <victorgld@gmail.com>
-Subject: Re: [PATCH v4 6/6] mac80211: add ap channel switch command/event
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>     <1350226137-13704-7-git-send-email-victorg@ti.com>    <1350414472.10177.17.camel@jlt4.sipsolutions.net>   <50842563.4010201@ti.com> <1350910599.10166.4.camel@jlt4.sipsolutions.net>   <50922AA9.4030509@ti.com> <1352128994.9466.19.camel@jlt4.sipsolutions.net>  <50A2617B.3060807@ti.com> <1352892233.9510.26.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1352892233.9510.26.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1353399515.10872.153.camel@cumari.coelho.fi>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	<1353343170-26516-16-git-send-email-eliad@wizery.com>
+	<1353399515.10872.153.camel@cumari.coelho.fi>
+Date: Tue, 20 Nov 2012 11:21:34 +0200
+Message-ID: <CAB3XZEcsL6Jn7x-N8aRFXkEfP8O+nuofmYDpG8oqcAozs6X8CQ@mail.gmail.com> (sfid-20121120_102138_722590_A79BD5D9)
+Subject: Re: [PATCH 15/15] wlcore: configure the remote rates with our own rates
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14/11/2012 13:23, Johannes Berg wrote:
-> On Tue, 2012-11-13 at 17:04 +0200, Victor Goldenshtein wrote:
->> This whole DFS implementation initially intended for a single channel
->> mac. I don't might to deal with the channel context stuff but not sure
->> how much available time I"ll have for it, so it might take awhile.
->> I know there are people waiting for this, so I'm thinking would you
->> consider to go first with this single channel DFS support and later to
->> extend it to work with channel context stuff ?
+On Tue, Nov 20, 2012 at 10:18 AM, Luciano Coelho <coelho@ti.com> wrote:
+> On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+>> With the new connection flow, start_sta is called before
+>> the remote rates where updated. Use our own supported rates
+>> instead to make sure we don't disable any potential rate
+>> (the rate policies will be updated later, but there is
+>> currently no way to update the remote rates)
+>>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>>  drivers/net/wireless/ti/wlcore/cmd.c |    7 ++++++-
+>>  1 files changed, 6 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+>> index 4c2ed25..ec7e8b3 100644
+>> --- a/drivers/net/wireless/ti/wlcore/cmd.c
+>> +++ b/drivers/net/wireless/ti/wlcore/cmd.c
+>> @@ -479,7 +479,12 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+>>       }
+>>       cmd->sta.hlid = wlvif->sta.hlid;
+>>       cmd->sta.session = wl12xx_get_new_session_id(wl, wlvif);
+>> -     cmd->sta.remote_rates = cpu_to_le32(wlvif->rate_set);
+>> +     /*
+>> +      * We don't have the correct remote rates in this stage, and there
+>> +      * is no way to update them later, so use our supported rates instead.
+>> +      * The fw will take the configured rate policies into account anyway.
+>> +      */
+>> +     cmd->sta.remote_rates = cpu_to_le32(supported_rates);
 >
-> Fair enough, but like I've been telling you, the current code doesn't
-> even match the current APIs.
+> Why do we even have to pass this value, then? Any hidden reason that we
+> may be overlooking?
 >
-> Initially, I thought that for radar detection, you need to reserve the
-> channel context (in mac80211), make sure it's the only channel context
-> and prohibit other channel contexts from being added, until radar
-> detection is done.
->
+the fw uses an intersection our local_supported_rates, the
+remote_rates and the rate_policy in order to determine the rates.
+i'm not too familiar with its whole logic, though.
 
-I thought the same, but to prohibit other channel contexts from being 
-added as long as we on DFS channel (not just until the end of the CAC).
-
-> However, then I realised that that still doesn't work -- once initial
-> radar detection is done, it needs to continue while the AP is active. If
-> the channel context was going to be relinquished, or even just the
-> channel changed for a few seconds, it would be unsafe. So as a result,
-> the radar detect operation has to somehow be coupled to the start AP
-> operation and prohibit channel changes and additional channel contexts
-> during the entire operation time.
->
-
-What would be "unsafe" here if from the beginning we will allow only one 
-channel context ?
-
-> I definitely think this needs some work, because the APIs and cfg80211
-> code have to be correct for multi-channel operation even if you don't
-> support it.
->
-
-Agree.
-
--- 
-Thanks,
-Victor.
+Eliad.
