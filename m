@@ -1,140 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39858 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871Ab2KTJiF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 04:38:05 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: sujith@msujith.org, eliad@wizery.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211: fix channel context suspend/reconfig handling
-Date: Tue, 20 Nov 2012 10:38:29 +0100
-Message-Id: <1353404309-17381-1-git-send-email-johannes@sipsolutions.net> (sfid-20121120_103813_110341_2183B17C)
-In-Reply-To: <1353360586-32157-1-git-send-email-johannes@sipsolutions.net>
-References: <1353360586-32157-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55081 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751953Ab2KTXYz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 18:24:55 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: john@phrozen.org, ralf@linux-mips.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3 0/8] bcma/ssb/BCM47XX: add GPIO driver to ssb/bcma
+Date: Wed, 21 Nov 2012 00:24:26 +0100
+Message-Id: <1353453874-523-1-git-send-email-hauke@hauke-m.de> (sfid-20121121_002457_611282_A740D1C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is a complete rewrote of the original patch "MIPS: BCM47xx: use 
+gpiolib"
+Instead of providing the GPIO driver in the arch code it is now moved 
+into ssb and bcma and could also be used by other systems. The GPIO 
+functions in drivers/ssb/embedded.c are still used by arch/mips/bcm47xx
+/wgt634u.c, but I am planing to write some code for baord detection and 
+a driver for LED and the buttons, after that wgt634u.c could be removed.
 
-Sujith reported warnings with suspend/resume due to
-channel contexts. When I looked into it, I realised
-that the code was completely broken as it unassigned
-the channel contexts when suspending, which actually
-means they are destroyed.
+This is based on mips/master tree.
 
-Eliad Peller then pointed out that we also need to
-remove the channel contexts from the driver. When I
-looked into this, I also noticed that the code isn't
-handling the virtual monitor interface correctly (if
-it exists.)
+v3:
+ * make BCMA_DRIVER_GPIO and SSB_DRIVER_GPIO selectable in Kconfig
+ * return -ENOTSUPP if the gpio driver is not activated
+ * handle error -ENOTSUPP with debug message
+ * do not lock *_gpio_in()
+ * add comment above chip->base = 0
 
-Fix this by calling just the driver methods (if they
-are implemented) instead of using the channel context
-management code. Also add reconfiguration for the
-virtual monitor interface.
+v2:
+ * fix compile problem in ssb: add GPIO driver
 
-Reported-by: Sujith Manoharan <sujith@msujith.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/pm.c   | 44 +++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/util.c | 15 +++++++++++++++
- 2 files changed, 56 insertions(+), 3 deletions(-)
+Hauke Mehrtens (8):
+  bcma: add locking around GPIO register accesses
+  bcma: add bcma_chipco_gpio_pull{up,down}
+  bcma: add comment to bcma_chipco_gpio_control
+  bcma: add GPIO driver
+  ssb: add ssb_chipco_gpio_pull{up,down}
+  ssb: add locking around gpio register accesses
+  ssb: add GPIO driver
+  MIPS: BCM47XX: remove GPIO driver
 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 0f1c434..79a48f3 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -33,6 +33,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
-+	struct ieee80211_chanctx *ctx;
- 
- 	if (!local->open_count)
- 		goto suspend;
-@@ -139,14 +140,51 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 		    rcu_access_pointer(sdata->u.ap.beacon))
- 			drv_stop_ap(local, sdata);
- 
--		/* the interface is leaving the channel and is removed */
--		ieee80211_vif_release_channel(sdata);
-+		if (local->use_chanctx) {
-+			struct ieee80211_chanctx_conf *conf;
-+
-+			mutex_lock(&local->chanctx_mtx);
-+			conf = rcu_dereference_protected(
-+					sdata->vif.chanctx_conf,
-+					lockdep_is_held(&local->chanctx_mtx));
-+			if (conf) {
-+				ctx = container_of(conf,
-+						   struct ieee80211_chanctx,
-+						   conf);
-+				drv_unassign_vif_chanctx(local, sdata, ctx);
-+			}
-+
-+			mutex_unlock(&local->chanctx_mtx);
-+		}
- 		drv_remove_interface(local, sdata);
- 	}
- 
- 	sdata = rtnl_dereference(local->monitor_sdata);
--	if (sdata)
-+	if (sdata) {
-+		if (local->use_chanctx) {
-+			struct ieee80211_chanctx_conf *conf;
-+
-+			mutex_lock(&local->chanctx_mtx);
-+			conf = rcu_dereference_protected(
-+					sdata->vif.chanctx_conf,
-+					lockdep_is_held(&local->chanctx_mtx));
-+			if (conf) {
-+				ctx = container_of(conf,
-+						   struct ieee80211_chanctx,
-+						   conf);
-+				drv_unassign_vif_chanctx(local, sdata, ctx);
-+			}
-+
-+			mutex_unlock(&local->chanctx_mtx);
-+		}
-+
- 		drv_remove_interface(local, sdata);
-+	}
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	list_for_each_entry(ctx, &local->chanctx_list, list)
-+		drv_remove_chanctx(local, ctx);
-+	mutex_unlock(&local->chanctx_mtx);
- 
- 	/* stop hardware - this must stop RX */
- 	if (local->open_count)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7fb55bf..2f08a7e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1441,6 +1441,21 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		mutex_unlock(&local->chanctx_mtx);
- 	}
- 
-+	sdata = rtnl_dereference(local->monitor_sdata);
-+	if (sdata && local->use_chanctx && ieee80211_sdata_running(sdata)) {
-+		struct ieee80211_chanctx_conf *ctx_conf;
-+
-+		mutex_lock(&local->chanctx_mtx);
-+		ctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+				lockdep_is_held(&local->chanctx_mtx));
-+		if (ctx_conf) {
-+			ctx = container_of(ctx_conf, struct ieee80211_chanctx,
-+					   conf);
-+			drv_assign_vif_chanctx(local, sdata, ctx);
-+		}
-+		mutex_unlock(&local->chanctx_mtx);
-+	}
-+
- 	/* add STAs back */
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry(sta, &local->sta_list, list) {
+ arch/mips/Kconfig                           |    2 +-
+ arch/mips/bcm47xx/Kconfig                   |    2 +
+ arch/mips/bcm47xx/Makefile                  |    2 +-
+ arch/mips/bcm47xx/gpio.c                    |  102 ----------------
+ arch/mips/include/asm/mach-bcm47xx/gpio.h   |  154 ++---------------------
+ drivers/bcma/Kconfig                        |    9 ++
+ drivers/bcma/Makefile                       |    1 +
+ drivers/bcma/bcma_private.h                 |   10 ++
+ drivers/bcma/driver_chipcommon.c            |   81 +++++++++++-
+ drivers/bcma/driver_gpio.c                  |   98 +++++++++++++++
+ drivers/bcma/main.c                         |    5 +
+ drivers/ssb/Kconfig                         |    9 ++
+ drivers/ssb/Makefile                        |    1 +
+ drivers/ssb/driver_chipcommon.c             |   78 +++++++++++-
+ drivers/ssb/driver_extif.c                  |   43 ++++++-
+ drivers/ssb/driver_gpio.c                   |  176 +++++++++++++++++++++++++++
+ drivers/ssb/main.c                          |    7 ++
+ drivers/ssb/ssb_private.h                   |   17 +++
+ include/linux/bcma/bcma_driver_chipcommon.h |   10 ++
+ include/linux/ssb/ssb.h                     |    4 +
+ include/linux/ssb/ssb_driver_chipcommon.h   |    3 +
+ include/linux/ssb/ssb_driver_extif.h        |    1 +
+ 22 files changed, 551 insertions(+), 264 deletions(-)
+ delete mode 100644 arch/mips/bcm47xx/gpio.c
+ create mode 100644 drivers/bcma/driver_gpio.c
+ create mode 100644 drivers/ssb/driver_gpio.c
+
 -- 
-1.8.0
+1.7.10.4
 
