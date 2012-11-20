@@ -1,78 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:46834 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492Ab2KSWjg (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:57312 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752831Ab2KTIdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 17:39:36 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so1393003eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 14:39:35 -0800 (PST)
+	Tue, 20 Nov 2012 03:33:10 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so5673896oag.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 00:33:09 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1353343170-26516-4-git-send-email-eliad@wizery.com>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com> <1353343170-26516-4-git-send-email-eliad@wizery.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 20 Nov 2012 09:39:15 +1100
-Message-ID: <CAGRGNgV=4Lyumy=ivykkEgY=EVRjWM4MWPvGh-uUmPdGyJUxJw@mail.gmail.com> (sfid-20121119_233939_938337_FA7432DD)
-Subject: Re: [PATCH 03/15] wlcore: always use sta.hlid
-To: Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <CA+XVXfeUxiSPu58mYEaS-gJbT1L1-sWrH9R8mkXBVyaUaS09fw@mail.gmail.com>
+References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	<1353343170-26516-6-git-send-email-eliad@wizery.com>
+	<CA+XVXfeUxiSPu58mYEaS-gJbT1L1-sWrH9R8mkXBVyaUaS09fw@mail.gmail.com>
+Date: Tue, 20 Nov 2012 10:33:09 +0200
+Message-ID: <CAB3XZEeqTS2N==W=6Ym__RioaswaCkYeP7z2-65YX7EGUBYZUQ@mail.gmail.com> (sfid-20121120_093317_057100_07B8C974)
+Subject: Re: [PATCH 05/15] wlcore: implement .remain_on_channel() callback
+From: Eliad Peller <eliad@wizery.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eliad,
-
-On Tue, Nov 20, 2012 at 3:39 AM, Eliad Peller <eliad@wizery.com> wrote:
-> since we no longer use dev role in the connection flow,
-> we should always use the hlid of the sta role.
-
-I don't really know the hardware, but this seems like something
-something that should be combined with the first patch.
-
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
->  drivers/net/wireless/ti/wlcore/tx.c |   10 +---------
->  1 files changed, 1 insertions(+), 9 deletions(-)
+On Mon, Nov 19, 2012 at 11:13 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> On Mon, Nov 19, 2012 at 6:39 PM, Eliad Peller <eliad@wizery.com> wrote:
+>> implement the reamin_on_channel() callback by starting
+>> a dev role (already associated with the current vif)
+>> on the requested channel/band.
+>>
+>> This channel is usually different from the channel
+>> of the sta role, so pass it to wl12xx_roc() as well,
+>> and notify mac80211 (async) when the fw is ready
+>> on the new channel.
+>>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> [...]
+>> @@ -1608,7 +1610,7 @@ static int wl12xx_cmd_roc(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>>         }
+>>
+>>         cmd->role_id = role_id;
+>> -       cmd->channel = wlvif->channel;
+>> +       cmd->channel = channel;
+>>         switch (wlvif->band) {
+>>         case IEEE80211_BAND_2GHZ:
+>>                 cmd->band = WLCORE_BAND_2_4GHZ;
 >
-> diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-> index a90d3cd..a555a70 100644
-> --- a/drivers/net/wireless/ti/wlcore/tx.c
-> +++ b/drivers/net/wireless/ti/wlcore/tx.c
-> @@ -155,21 +155,13 @@ static u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
->  u8 wl12xx_tx_get_hlid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
->                       struct sk_buff *skb, struct ieee80211_sta *sta)
->  {
-> -       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> -
->         if (!wlvif || wl12xx_is_dummy_packet(wl, skb))
->                 return wl->system_hlid;
+> This seems wrong... What happens if the roc is on another band from
+> the one the vif is connected on?
 >
->         if (wlvif->bss_type == BSS_TYPE_AP_BSS)
->                 return wl12xx_tx_get_hlid_ap(wl, wlvif, skb, sta);
+> The dev role is started on the correct band, but the roc will be on
+> the band of the wlvif..
 >
-> -       if ((test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) ||
-> -            test_bit(WLVIF_FLAG_IBSS_JOINED, &wlvif->flags)) &&
-> -           !ieee80211_is_auth(hdr->frame_control) &&
-> -           !ieee80211_is_assoc_req(hdr->frame_control))
-> -               return wlvif->sta.hlid;
-> -       else
-> -               return wlvif->dev_hlid;
-> +       return wlvif->sta.hlid;
->  }
->
->  unsigned int wlcore_calc_packet_alignment(struct wl1271 *wl,
-> --
-> 1.7.6.401.g6a319
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+good catch. i'll fix it.
 
 
+>> +static int wlcore_op_remain_on_channel(struct ieee80211_hw *hw,
+>> +                                      struct ieee80211_vif *vif,
+>> +                                      struct ieee80211_channel *chan,
+>> +                                      enum nl80211_channel_type channel_type,
+>> +                                      int duration)
+>> +{
+>> +       struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+>> +       struct wl1271 *wl = hw->priv;
+>> +       int channel, ret = 0;
+>> +
+>> +       channel = ieee80211_frequency_to_channel(chan->center_freq);
+>> +
+>> +       wl1271_debug(DEBUG_MAC80211, "mac80211 roc %d (%d)",
+>> +                    channel, wlvif->role_id);
+>> +
+>> +       mutex_lock(&wl->mutex);
+>> +
+>> +       if (unlikely(wl->state != WLCORE_STATE_ON))
+>> +               goto out;
+>> +
+>> +       /* return EBUSY if we can't ROC right now */
+>> +       if (WARN_ON(wl->roc_vif ||
+>> +                   find_first_bit(wl->roc_map,
+>> +                                  WL12XX_MAX_ROLES) < WL12XX_MAX_ROLES)) {
+>> +               ret = -EBUSY;
+>> +               goto out;
+>> +       }
+>> +
+>> +       /*
+>> +        * make sure the vif has dev role.
+>> +        * TODO: enable dev role dynamically instead of pre-allocating it.
+>> +        */
+>
+> Not sure what you mean here. Seems pretty dynamic to me..
+>
+yeah... i referred to the lazy-enable of dev role, but forgot that we
+already upstreamed it :)
+so i'll just drop this check (as we can start dev role along with any
+other role).
 
--- 
-Julian Calaby
+>> @@ -5245,6 +5368,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+>>         wl->hw->wiphy->max_sched_scan_ie_len = WL1271_CMD_TEMPL_MAX_SIZE -
+>>                 sizeof(struct ieee80211_header);
+>>
+>> +       wl->hw->wiphy->max_remain_on_channel_duration = 5000;
+>
+> Isn't this the default?
+>
+only for drivers that don't implement .remain_on_channel (i.e.
+implemented by mac80211).
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Eliad.
