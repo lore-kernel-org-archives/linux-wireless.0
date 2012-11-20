@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4791 "EHLO mms2.broadcom.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:56952 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752003Ab2KNTlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 14:41:24 -0500
-Message-ID: <50A3F3CB.4040402@broadcom.com> (sfid-20121114_204137_091366_2DFC67AC)
-Date: Wed, 14 Nov 2012 20:40:59 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1751230Ab2KTPQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 10:16:48 -0500
+Message-ID: <50AB9E7C.8070204@ti.com> (sfid-20121120_161651_110382_059F2E3D)
+Date: Tue, 20 Nov 2012 17:15:08 +0200
+From: Victor Goldenshtein <victorg@ti.com>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
- support
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
- <50955ADB.9020703@broadcom.com> <20121104202549.GB24905@ubuntu-mba51>
- <20121114160559.GA18738@thinkpad-t410>
-In-Reply-To: <20121114160559.GA18738@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
+	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
+	"j@w1.fi" <j@w1.fi>, "coelho@ti.com" <coelho@ti.com>,
+	"igalc@ti.com" <igalc@ti.com>,
+	"adrian@freebsd.org" <adrian@freebsd.org>,
+	"nbd@nbd.name" <nbd@nbd.name>,
+	"simon.wunderlich@s2003.tu-chemnitz.de"
+	<simon.wunderlich@s2003.tu-chemnitz.de>, <victorgld@gmail.com>
+Subject: Re: [PATCH v4 1/6] nl80211/cfg80211: add radar detection command/event
+References: <1350226137-13704-1-git-send-email-victorg@ti.com>     <1350226137-13704-2-git-send-email-victorg@ti.com>    <1350414099.10177.13.camel@jlt4.sipsolutions.net>   <50842569.5000602@ti.com> <1350910543.10166.3.camel@jlt4.sipsolutions.net>   <50922A9D.2060409@ti.com> <1352128887.9466.17.camel@jlt4.sipsolutions.net>  <50A38F68.1020506@tieto.com> <1352896734.9510.29.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1352896734.9510.29.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/14/2012 05:05 PM, Seth Forshee wrote:
-> Hi Arend,
+On 14/11/2012 14:38, Johannes Berg wrote:
+> On Wed, 2012-11-14 at 13:32 +0100, Michal Kazior wrote:
 >
-> I've got v2 patches prepped with your request changes, which I'll send
-> as soon as I'm finished testing. I did have a question about one of your
-> requests though.
+>>> Hmm. Maybe then the channel should be passed to the radar detection
+>>> command instead? That way, it can be passed through, you can allocate a
+>>> channel context, etc. Much easier?
+>>
+>> I was thinking if putting the radar detection parameter in start_ap() is
+>> an option (and thus removing the explicit radar cmd)? We could defer
+>> `netif_carrier_on()` to be done after the initial radar detection is done.
 >
-> On Sun, Nov 04, 2012 at 09:25:49PM +0100, Seth Forshee wrote:
->> On Sat, Nov 03, 2012 at 06:56:43PM +0100, Arend van Spriel wrote:
->>>>    brcmsmac: Add module parameter for setting the debug level
->>>
->>> I would prefer doing this through debugfs.
+> Yeah, I was actually thinking that too for a bit, not sure if it works
+> though.
 >
-> I mentioned this to you at the wireless summit. If this is moved to
-> debugfs it will not allow for setting the debug level at module load
-> time. If we leave it a module parameter it can still be set at runtime
-> via /sys/module/parameters/brcmsmac/debug, assuming BRCMDBG is enabled.
-> I currently don't have this change in my v2 patches, but if you still
-> want it changed to debugfs let me know and I'll take care of it.
->
-> Thanks,
-> Seth
 
-Indeed we discussed it. I do not have a strong preference and having it 
-set during module init has its perks. So you can leave it as it is. I am 
-looking forward to your v2 patches ;-)
+It won't, well.. at least not with current design. Userspace has the 
+responsibility to set the initial channel and reselect the next one if 
+necessary (if radar was detected), also it's responsible for the channel 
+availability check and its timing.
 
-Gr. AvS
+Moving radar detection to start AP will require additional DFS state 
+synchronization between kernel and userspace this why we initially 
+agreed to leave the DFS logic (CAC, channel selection etc..) in 
+userspace. Anyway, not sure what would we gain here.
 
 
+-- 
+Thanks,
+Victor.
