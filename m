@@ -1,96 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ibawizard.net ([82.208.49.253]:40737 "EHLO
-	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753305Ab2KYTjQ (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:57714 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751426Ab2KTLUT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 14:39:16 -0500
-Date: Sun, 25 Nov 2012 20:39:10 +0100
-From: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: Multi-bss operation issue with rt2x00 and hostapd on rt305x
-	platform
-Message-ID: <20121125193910.GR8292@ibawizard.net> (sfid-20121125_203919_312565_6EBF20CA)
-Reply-To: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
-References: <20121125190019.GQ8292@ibawizard.net> <1353871018.9875.7.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <1353871018.9875.7.camel@jlt4.sipsolutions.net>
+	Tue, 20 Nov 2012 06:20:19 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so1625946eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:20:19 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 05/11] wlcore: add chanctx implementation
+Date: Tue, 20 Nov 2012 13:20:05 +0200
+Message-Id: <1353410411-18833-6-git-send-email-eliad@wizery.com> (sfid-20121120_124526_093665_F25AAD9C)
+In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> [2012-11-25 20:16:58]:
+Add some basic chanctx implementation - debug prints,
+and save the vif's channel/band/type.
 
-> On Sun, 2012-11-25 at 20:00 +0100, Petr ©tetiar wrote:
-> 
-> > 	nl80211: CMD_FRAME freq=2457 wait=0 no_cck=0 no_ack=0 offchanok=0
-> > 	nl80211: Frame TX command accepted; cookie 0x81937c00
-> > 	Add randomness: count=39 entropy=38
-> > 	nl80211: Event message available
-> > -->	nl80211: MLME event 60 (NL80211_CMD_REGISTER_FRAME)
-> 
-> That command string is wrong. 60 really is NL80211_CMD_FRAME_TX_STATUS.
-> How did you print that string? The other one, 59, is NL80211_CMD_FRAME,
-> not NL80211_CMD_SET_TX_BITRATE_MASK.
-> 
-> It seems to me that you've messed up the nl80211.h header in either
-> hostapd or the kernel.
+After that, we no longer need to handle channel change
+notifications on op_config.
 
-Sorry, my bad. I've created small helper function and messed the enum -> txt
-conversion macro in Vim which simply didn't handled the following assign case:
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: take mutex, flush on unassign (thanks Arik!)
+    squash patch [09/15] into this one (thanks Johannes!)
 
-	NL80211_CMD_NEW_BEACON = NL80211_CMD_START_AP
+drivers/net/wireless/ti/wlcore/main.c |  145 ++++++++++++++++++---------------
+ 1 files changed, 79 insertions(+), 66 deletions(-)
 
-I've compared the headers in the hostapd/kernel and here's the diff:
-
-	--- nl_hostapd.h	2012-11-25 20:35:47.733001929 +0100
-	+++ nl_linux.h	2012-11-25 20:36:04.997001488 +0100
-	@@ -138,6 +138,11 @@
-	 
-		NL80211_CMD_CH_SWITCH_NOTIFY,
-	 
-	+	NL80211_CMD_START_P2P_DEVICE,
-	+	NL80211_CMD_STOP_P2P_DEVICE,
-	+
-	+	NL80211_CMD_CONN_FAILED,
-	+
-		/* add new commands above here */
-	 
-		/* used to define NL80211_CMD_MAX below */
-
-So I hope it should be ok. Thanks.
-
--- ynezz
-
-	--- driver_nl80211.c.orig	2012-11-25 17:19:40.609302795 +0100
-	+++ driver_nl80211.c
-	2012-11-25 16:58:03.929335949 +0100
-	@@ -1444,6 +1444,107 @@
-		wpa_supplicant_event(drv->ctx, type, &event);
-	 }
-	 
-	+static const char* cmd_txt(int cmd)
-	+{
-	+	const char *tmp[] = {
-	+		"NL80211_CMD_UNSPEC",
-
-			...snipped...
-
-	+		"NL80211_CMD_CH_SWITCH_NOTIFY",
-	+	};
-	+
-	+	return tmp[cmd];
-	+}
-	 
-	 static void mlme_event(struct wpa_driver_nl80211_data *drv,
-			       enum nl80211_commands cmd, struct nlattr *frame,
-	@@ -1462,8 +1563,8 @@
-			return;
-		}
-	 
-	-	wpa_printf(MSG_DEBUG, "nl80211: MLME event %d", cmd);
-	+	wpa_printf(MSG_DEBUG, "nl80211: MLME event %d (%s)", cmd, cmd_txt(cmd));
-	 
-		switch (cmd) {
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 18ac8d1..450ff49 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2682,49 +2682,7 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			     struct ieee80211_conf *conf, u32 changed)
+ {
+ 	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
+-	int channel, ret;
+-
+-	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
+-
+-	/* if the channel changes while joined, join again */
+-	if (changed & IEEE80211_CONF_CHANGE_CHANNEL &&
+-	    ((wlvif->band != conf->channel->band) ||
+-	     (wlvif->channel != channel) ||
+-	     (wlvif->channel_type != conf->channel_type))) {
+-		/* send all pending packets */
+-		ret = wlcore_tx_work_locked(wl);
+-		if (ret < 0)
+-			return ret;
+-
+-		wlvif->band = conf->channel->band;
+-		wlvif->channel = channel;
+-		wlvif->channel_type = conf->channel_type;
+-
+-		if (is_ap) {
+-			wl1271_set_band_rate(wl, wlvif);
+-			ret = wl1271_init_ap_rates(wl, wlvif);
+-			if (ret < 0)
+-				wl1271_error("AP rate policy change failed %d",
+-					     ret);
+-		} else {
+-			/*
+-			 * FIXME: the mac80211 should really provide a fixed
+-			 * rate to use here. for now, just use the smallest
+-			 * possible rate for the band as a fixed rate for
+-			 * association frames and other control messages.
+-			 */
+-			if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
+-				wl1271_set_band_rate(wl, wlvif);
+-
+-			wlvif->basic_rate =
+-				wl1271_tx_min_rate_get(wl,
+-						       wlvif->basic_rate_set);
+-			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
+-			if (ret < 0)
+-				wl1271_warning("rate policy for channel "
+-					       "failed %d", ret);
+-		}
+-	}
++	int ret;
+ 
+ 	if ((changed & IEEE80211_CONF_CHANGE_PS) && !is_ap) {
+ 
+@@ -2779,37 +2737,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct wl1271 *wl = hw->priv;
+ 	struct wl12xx_vif *wlvif;
+ 	struct ieee80211_conf *conf = &hw->conf;
+-	int channel, ret = 0;
+-
+-	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
++	int ret = 0;
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s"
++	wl1271_debug(DEBUG_MAC80211, "mac80211 config psm %s power %d %s"
+ 		     " changed 0x%x",
+-		     channel,
+ 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
+ 		     conf->power_level,
+ 		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use",
+ 			 changed);
+ 
+-	/*
+-	 * mac80211 will go to idle nearly immediately after transmitting some
+-	 * frames, such as the deauth. To make sure those frames reach the air,
+-	 * wait here until the TX queue is fully flushed.
+-	 */
+-	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) ||
+-	    ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
+-	     (conf->flags & IEEE80211_CONF_IDLE)))
+-		wl1271_tx_flush(wl);
+-
+ 	mutex_lock(&wl->mutex);
+ 
+-	/* we support configuring the channel and band even while off */
+-	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		wl->band = conf->channel->band;
+-		wl->channel = channel;
+-		wl->channel_type = conf->channel_type;
+-	}
+-
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER)
+ 		wl->power_level = conf->power_level;
+ 
+@@ -3758,7 +3696,7 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+ 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	int ret = 0;
+ 
+-	if ((changed & BSS_CHANGED_BASIC_RATES)) {
++	if (changed & BSS_CHANGED_BASIC_RATES) {
+ 		u32 rates = bss_conf->basic_rates;
+ 
+ 		wlvif->basic_rate_set = wl1271_tx_enabled_rates_get(wl, rates,
+@@ -4184,6 +4122,76 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
++static int wlcore_op_add_chanctx(struct ieee80211_hw *hw,
++				 struct ieee80211_chanctx_conf *ctx)
++{
++	wl1271_debug(DEBUG_MAC80211, "mac80211 add chanctx %d (type %d)",
++		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
++		     ctx->channel_type);
++	return 0;
++}
++
++static void wlcore_op_remove_chanctx(struct ieee80211_hw *hw,
++				     struct ieee80211_chanctx_conf *ctx)
++{
++	wl1271_debug(DEBUG_MAC80211, "mac80211 remove chanctx %d (type %d)",
++		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
++		     ctx->channel_type);
++}
++
++static void wlcore_op_change_chanctx(struct ieee80211_hw *hw,
++				     struct ieee80211_chanctx_conf *ctx,
++				     u32 changed)
++{
++	wl1271_debug(DEBUG_MAC80211,
++		     "mac80211 change chanctx %d (type %d) changed 0x%x",
++		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
++		     ctx->channel_type, changed);
++}
++
++static int wlcore_op_assign_vif_chanctx(struct ieee80211_hw *hw,
++					struct ieee80211_vif *vif,
++					struct ieee80211_chanctx_conf *ctx)
++{
++	struct wl1271 *wl = hw->priv;
++	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
++	int channel = ieee80211_frequency_to_channel(
++		ctx->channel->center_freq);
++
++	wl1271_debug(DEBUG_MAC80211,
++		     "mac80211 assign chanctx (role %d) %d (type %d)",
++		     wlvif->role_id, channel, ctx->channel_type);
++
++	mutex_lock(&wl->mutex);
++
++	wlvif->band = ctx->channel->band;
++	wlvif->channel = channel;
++	wlvif->channel_type = ctx->channel_type;
++
++	/* update default rates according to the band */
++	wl1271_set_band_rate(wl, wlvif);
++
++	mutex_unlock(&wl->mutex);
++
++	return 0;
++}
++
++static void wlcore_op_unassign_vif_chanctx(struct ieee80211_hw *hw,
++					   struct ieee80211_vif *vif,
++					   struct ieee80211_chanctx_conf *ctx)
++{
++	struct wl1271 *wl = hw->priv;
++	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
++
++	wl1271_debug(DEBUG_MAC80211,
++		     "mac80211 unassign chanctx (role %d) %d (type %d)",
++		     wlvif->role_id,
++		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
++		     ctx->channel_type);
++
++	wl1271_tx_flush(wl);
++}
++
+ static int wl1271_op_conf_tx(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif, u16 queue,
+ 			     const struct ieee80211_tx_queue_params *params)
+@@ -4996,6 +5004,11 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.flush = wlcore_op_flush,
+ 	.remain_on_channel = wlcore_op_remain_on_channel,
+ 	.cancel_remain_on_channel = wlcore_op_cancel_remain_on_channel,
++	.add_chanctx = wlcore_op_add_chanctx,
++	.remove_chanctx = wlcore_op_remove_chanctx,
++	.change_chanctx = wlcore_op_change_chanctx,
++	.assign_vif_chanctx = wlcore_op_assign_vif_chanctx,
++	.unassign_vif_chanctx = wlcore_op_unassign_vif_chanctx,
+ 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+ };
+ 
+-- 
+1.7.6.401.g6a319
 
