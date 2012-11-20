@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:52108 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016Ab2KARPr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2012 13:15:47 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so1867018pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2012 10:15:47 -0700 (PDT)
+Received: from arroyo.ext.ti.com ([192.94.94.40]:38401 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751854Ab2KTJEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Nov 2012 04:04:12 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id qAK94B3s027315
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:04:11 -0600
+Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id qAK94B3b030617
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:04:11 -0600
+From: Luciano Coelho <coelho@ti.com>
+To: <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] wlcore: avoid using goto in normal code flow
+Date: Tue, 20 Nov 2012 11:03:31 +0200
+Message-ID: <1353402212-20439-2-git-send-email-coelho@ti.com> (sfid-20121120_100424_197558_D6FABB6F)
+In-Reply-To: <1353402212-20439-1-git-send-email-coelho@ti.com>
+References: <1353402212-20439-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <50922AAF.3060605@ti.com>
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
-	<1350226137-13704-6-git-send-email-victorg@ti.com>
-	<5086371D.2080108@tieto.com>
-	<50922AAF.3060605@ti.com>
-Date: Thu, 1 Nov 2012 10:15:47 -0700
-Message-ID: <CAJ-Vmom5CrnETTCzaf=fw4Unpxh940KCpbh5D=f8PoeTZUXNiA@mail.gmail.com> (sfid-20121101_181602_038613_90FB183E)
-Subject: Re: [PATCH v4 5/6] nl80211/cfg80211: add ap channel switch command
-From: Adrian Chadd <adrian.chadd@gmail.com>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
-	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"j@w1.fi" <j@w1.fi>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"coelho@ti.com" <coelho@ti.com>, "igalc@ti.com" <igalc@ti.com>,
-	"nbd@nbd.name" <nbd@nbd.name>,
-	"simon.wunderlich@s2003.tu-chemnitz.de"
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 November 2012 00:54, Victor Goldenshtein <victorg@ti.com> wrote:
+Remove goto and label in the code where a simple if can be used.  If
+nothing else, this is at least confusing git diff, which shows the
+label name as the name of the function.
 
-> If the driver/device supports MR only on a SC - means it doesn't supports
-> channel switch in MR, so basically the radar detection event triggers AP
-> channel switch which fails (with this new check) and the AP shut down.
-> Of course there are possible driver specific workarounds (as you mentioned
-> above) but these are not part of this series.
->
-> Just for interest's sake, what is the use case having two APs on the same
-> channel?
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |   27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
 
-One interface _just_ doing DFS/spectral/etc, and not hampered by
-trying to do TX/RX.
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 0eb739b..c056bb3 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -3884,19 +3884,20 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 	if (changed & (BSS_CHANGED_ASSOC | BSS_CHANGED_HT)) {
+ 		rcu_read_lock();
+ 		sta = ieee80211_find_sta(vif, bss_conf->bssid);
+-		if (!sta)
+-			goto sta_not_found;
+-
+-		/* save the supp_rates of the ap */
+-		sta_rate_set = sta->supp_rates[wl->hw->conf.channel->band];
+-		if (sta->ht_cap.ht_supported)
+-			sta_rate_set |=
+-			  (sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET) |
+-			  (sta->ht_cap.mcs.rx_mask[1] << HW_MIMO_RATES_OFFSET);
+-		sta_ht_cap = sta->ht_cap;
+-		sta_exists = true;
+-
+-sta_not_found:
++		if (sta) {
++			u8 *rx_mask = sta->ht_cap.mcs.rx_mask;
++
++			/* save the supp_rates of the ap */
++			sta_rate_set =
++				sta->supp_rates[wl->hw->conf.channel->band];
++			if (sta->ht_cap.ht_supported)
++				sta_rate_set |=
++					(rx_mask[0] << HW_HT_RATES_OFFSET) |
++					(rx_mask[1] << HW_MIMO_RATES_OFFSET);
++			sta_ht_cap = sta->ht_cap;
++			sta_exists = true;
++		}
++
+ 		rcu_read_unlock();
+ 	}
+ 
+-- 
+1.7.10.4
 
-
-
-Adrian
