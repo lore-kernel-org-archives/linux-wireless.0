@@ -1,109 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63057 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756Ab2KSQjk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43878 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115Ab2KUIgd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 11:39:40 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so1209547eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:38 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
+	Wed, 21 Nov 2012 03:36:33 -0500
+Message-ID: <1353487020.10444.2.camel@jlt4.sipsolutions.net> (sfid-20121121_093637_006019_D6ABD8E2)
+Subject: Re: [PATCH 05/10] mac80211: convert to channel definition struct
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/15] wlcore: workaround start_sta problem in wl12xx fw
-Date: Mon, 19 Nov 2012 18:39:19 +0200
-Message-Id: <1353343170-26516-5-git-send-email-eliad@wizery.com> (sfid-20121119_174526_794936_1B95FCFC)
-In-Reply-To: <1353343170-26516-1-git-send-email-eliad@wizery.com>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 21 Nov 2012 09:37:00 +0100
+In-Reply-To: <1353481166.10872.197.camel@cumari.coelho.fi>
+References: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
+	 <1353447916-17304-6-git-send-email-johannes@sipsolutions.net>
+	 <1353481166.10872.197.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-for some reason, the wl12xx fw is not able to rx/tx
-on the first start_sta cmd.
-Workaround it by issuing a dummy start_sta + stop_sta
-before starting the sta for the final time.
+On Wed, 2012-11-21 at 08:59 +0200, Luciano Coelho wrote:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl12xx/main.c   |    9 ++++++---
- drivers/net/wireless/ti/wlcore/main.c   |   15 ++++++++++++++-
- drivers/net/wireless/ti/wlcore/wlcore.h |    3 +++
- 3 files changed, 23 insertions(+), 4 deletions(-)
+> I guess these changes depend on something else that you have on your
+> tree and is not in w-t yet, right? At least I couldn't find the
+> definition of cfg80211_get_chandef_type().
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index dadf1db..6c9fba4 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -637,7 +637,8 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
- 
- 		wl->quirks |= WLCORE_QUIRK_LEGACY_NVS |
- 			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
--			      WLCORE_QUIRK_TKIP_HEADER_SPACE;
-+			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
-+			      WLCORE_QUIRK_START_STA_FAILS;
- 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
- 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
- 		memcpy(&wl->conf.mem, &wl12xx_default_priv_conf.mem_wl127x,
-@@ -657,7 +658,8 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
- 
- 		wl->quirks |= WLCORE_QUIRK_LEGACY_NVS |
- 			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
--			      WLCORE_QUIRK_TKIP_HEADER_SPACE;
-+			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
-+			      WLCORE_QUIRK_START_STA_FAILS;
- 		wl->plt_fw_name = WL127X_PLT_FW_NAME;
- 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
- 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
-@@ -682,7 +684,8 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
- 		/* wl128x requires TX blocksize alignment */
- 		wl->quirks |= WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN |
- 			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
--			      WLCORE_QUIRK_TKIP_HEADER_SPACE;
-+			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
-+			      WLCORE_QUIRK_START_STA_FAILS;
- 
- 		wlcore_set_min_fw_ver(wl, WL128X_CHIP_VER, WL128X_IFTYPE_VER,
- 				      WL128X_MAJOR_VER, WL128X_SUBTYPE_VER,
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 2cb978e..f4017f3 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2490,8 +2490,21 @@ static int wlcore_join(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 
- 	if (is_ibss)
- 		ret = wl12xx_cmd_role_start_ibss(wl, wlvif);
--	else
-+	else {
-+		if (wl->quirks & WLCORE_QUIRK_START_STA_FAILS) {
-+			/*
-+			 * TODO: this is an ugly workaround for wl12xx fw
-+			 * bug - we are not able to tx/rx after the first
-+			 * start_sta, so make dummy start+stop calls,
-+			 * and then call start_sta again.
-+			 * this should be fixed in the fw.
-+			 */
-+			wl12xx_cmd_role_start_sta(wl, wlvif);
-+			wl12xx_cmd_role_stop_sta(wl, wlvif);
-+		}
-+
- 		ret = wl12xx_cmd_role_start_sta(wl, wlvif);
-+	}
- 
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 68584aa..1030b6b 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -450,6 +450,9 @@ wlcore_set_min_fw_ver(struct wl1271 *wl, unsigned int chip,
- /* Each RX/TX transaction requires an end-of-transaction transfer */
- #define WLCORE_QUIRK_END_OF_TRANSACTION		BIT(0)
- 
-+/* the first start_role(sta) sometimes doesn't work on wl12xx */
-+#define WLCORE_QUIRK_START_STA_FAILS		BIT(1)
-+
- /* wl127x and SPI don't support SDIO block size alignment */
- #define WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN		BIT(2)
- 
--- 
-1.7.6.401.g6a319
+For the record: it's in patch 4 :-)
+
+johannes
 
