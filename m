@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108Ab2K1Jm5 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:53360 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755334Ab2KUQt3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:42:57 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:42:56 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Ido Reis <idor@ti.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 01/20] wl12xx/wl18xx: update default fw logger's settings
-Date: Wed, 28 Nov 2012 11:42:30 +0200
-Message-Id: <1354095769-8724-2-git-send-email-arik@wizery.com> (sfid-20121128_104304_036776_2CB49F40)
-In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	Wed, 21 Nov 2012 11:49:29 -0500
+Date: Wed, 21 Nov 2012 11:49:27 -0500 (EST)
+Message-Id: <20121121.114927.2236597401100258829.davem@davemloft.net> (sfid-20121121_174945_733510_BD3361A0)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-11-21
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20121121162406.GA2066@tuxdriver.com>
+References: <20121121162406.GA2066@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Reis <idor@ti.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 21 Nov 2012 11:24:06 -0500
 
-update the fw logger mode to continuous, and output to dbgpins (uart).
+> Included are two pulls.  Regarding the mac80211 tree, Johannes says:
+> 
+> "Please pull my mac80211.git tree (see below) to get two more fixes for
+> 3.7. Both fix regressions introduced *before* this cycle that weren't
+> noticed until now, one for IBSS not cleaning up properly and the other
+> to add back the "wireless" sysfs directory for Fedora's startup scripts."
+> 
+> Regarding the iwlwifi tree, Johannes says:
+> 
+> "Please also pull my iwlwifi.git tree, I have two fixes: one to remove a
+> spurious warning that can actually trigger in legitimate situations, and
+> the other to fix a regression from when monitor mode was changed to use
+> the "sniffer" firmware mode."
+> 
+> Also included is an nfc tree pull.  Samuel says:
+> 
+> "We mostly have pn533 fixes here, 2 memory leaks and an early unlocking fix.
+> Moreover, we also have an LLCP adapter linked list insertion fix."
+> 
+> On top of that, a few more bits...  Albert Pool adds a USB ID
+> to rtlwifi.  Bing Zhao provides two mwifiex fixes -- one to fix
+> a system hang during a command timeout, and the other to properly
+> report a suspend error to the MMC core.  Finally, Sujith Manoharan
+> fixes a thinko that would trigger an ath9k hang during device reset.
 
-Signed-off-by: Ido Reis <idor@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl12xx/main.c |    4 ++--
- drivers/net/wireless/ti/wl18xx/main.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 9ac042b..0218edd 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -331,11 +331,11 @@ static struct wlcore_conf wl12xx_conf = {
- 		.always                        = 0,
- 	},
- 	.fwlog = {
--		.mode                         = WL12XX_FWLOG_ON_DEMAND,
-+		.mode                         = WL12XX_FWLOG_CONTINUOUS,
- 		.mem_blocks                   = 2,
- 		.severity                     = 0,
- 		.timestamp                    = WL12XX_FWLOG_TIMESTAMP_DISABLED,
--		.output                       = WL12XX_FWLOG_OUTPUT_HOST,
-+		.output                       = WL12XX_FWLOG_OUTPUT_DBG_PINS,
- 		.threshold                    = 0,
- 	},
- 	.rate = {
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 53f4ba8..3f9504c 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -453,11 +453,11 @@ static struct wlcore_conf wl18xx_conf = {
- 		.always                        = 0,
- 	},
- 	.fwlog = {
--		.mode                         = WL12XX_FWLOG_ON_DEMAND,
-+		.mode                         = WL12XX_FWLOG_CONTINUOUS,
- 		.mem_blocks                   = 2,
- 		.severity                     = 0,
- 		.timestamp                    = WL12XX_FWLOG_TIMESTAMP_DISABLED,
--		.output                       = WL12XX_FWLOG_OUTPUT_HOST,
-+		.output                       = WL12XX_FWLOG_OUTPUT_DBG_PINS,
- 		.threshold                    = 0,
- 	},
- 	.rate = {
--- 
-1.7.9.5
-
+Pulled, thanks John.
