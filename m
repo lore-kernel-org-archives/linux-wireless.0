@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nk11p00mm-asmtp002.mac.com ([17.158.161.1]:40901 "EHLO
-	nk11p00mm-asmtp002.mac.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760505Ab2KBJoW (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:2347 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754072Ab2KUJiN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Nov 2012 05:44:22 -0400
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-2022-JP
-Received: from [10.20.200.174]
- (p3027-ipbf5206marunouchi.tokyo.ocn.ne.jp [118.8.142.27])
- by nk11p00mm-asmtp002.mac.com
- (Oracle Communications Messaging Server 7u4-26.01(7.0.4.26.0) 64bit (built Jul
- 13 2012)) with ESMTPSA id <0MCU00EAHTPVK280@nk11p00mm-asmtp002.mac.com> for
- linux-wireless@vger.kernel.org; Fri, 02 Nov 2012 09:44:21 +0000 (GMT)
-Message-id: <509395E1.5010609@mac.com> (sfid-20121102_104438_985326_119AE966)
-Date: Fri, 02 Nov 2012 18:44:01 +0900
-From: Akira Nonaka <nonaka@mac.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8723e disconnect problem on the kernel 3.4.9.
-References: <509200A2.9060300@mac.com> <50929F0C.5060501@lwfinger.net>
- <50931EEC.9040606@mac.com> <509325BA.2060807@lwfinger.net>
-In-reply-to: <509325BA.2060807@lwfinger.net>
+	Wed, 21 Nov 2012 04:38:13 -0500
+Message-ID: <50ACA09F.2000102@broadcom.com> (sfid-20121121_103826_405417_22499E70)
+Date: Wed, 21 Nov 2012 10:36:31 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "George Nychis" <gnychis@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: what dictates p2p0 address?
+References: <CA+7oygeWvsbrNz3k8ypqK=J6LMg1Zx0dN8S+ee-ywGEgtvQxqQ@mail.gmail.com>
+In-Reply-To: <CA+7oygeWvsbrNz3k8ypqK=J6LMg1Zx0dN8S+ee-ywGEgtvQxqQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry,
+On 11/21/2012 09:40 AM, George Nychis wrote:
+> For an ad-hoc or Wifi-Direct interface, which usually seems to be
+> named p2p0, I'm finding that the MAC address mirrors the Wifi card's
+> MAC address for octets 2-6, but it seems as though octet 1 is dynamic.
+>   So, for example:
+>
+> Wifi: 7c:d1:c3:e0:a6:81
+> p2p0: 0e:d1:c3:e0:a6:81
+>
+> This is true across a bunch of devices that I own, but I can't seem to
+> find a definitive answer to how octet 1 is mutated to choose the p2p0
+> address.
 
-I applied your patch against the compat-wireless-2012-10-03.tar.bz2
-(http://linuxwireless.org/download/compat-wireless-2.6/)
-and it is now working stably on the kernel 3.4.9.
+First dealing with your opening sentence. Not sure if you truly mean 
+ad-hoc here. Do not use that term if you are actually talking about 
+wifi-direct because it is a totally different beast.
 
-Thank you very much!!!
+The definitive, but unambiguous, answer is in the WFA spec:
 
-(2012/11/02 10:45), Larry Finger wrote:
-> Those are all fixed in my patch. The driver that you are using was my starting
-> point for the one that will be included in the kernel. My experience is that the
-> connections that I get are extremely stable, particularly for a new driver.
-> 
-> Larry
+"The P2P Device shall assign a P2P Interface Address, corresponding to 
+the format as described in §7.1.3.3.1 of IEEE Std 802.11‑2007 [1], which 
+is used to communicate with the P2P Group Owner or Clients within a P2P 
+Group. A P2P Interface Address is not required to be globally unique and 
+may be locally administered. A P2P Interface Address may be the same as 
+the P2P Device Address provided the requirements for P2P Interface 
+Address in this clause are satisfied."
 
+Actually, the MAC address details are in 802 spec (free IEEE download) 
+in paragraph 9.2. Your p2p0 address has locally administered bit set and 
+fiddle some more bits.
 
--- 
-Akira Nonaka
+> Is this something chosen randomly, or is it a function of some other
+> part of the address?
+
+Most likely, as you can see from the example, it is derived. This is 
+done in the device (or the driver) so there is no single rule or 
+implementation except the guidelines/requirements from the spec.
+
+Gr. AvS
+
