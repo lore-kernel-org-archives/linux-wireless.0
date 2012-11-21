@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:64781 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888Ab2KLVje (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56772 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754675Ab2KUOM4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 16:39:34 -0500
+	Wed, 21 Nov 2012 09:12:56 -0500
+Date: Wed, 21 Nov 2012 08:12:49 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [wireless-next:master 196/214]
+ drivers/net/wireless/brcm80211/brcmsmac/main.c:308:10: sparse: symbol
+ 'wlc_prio2prec_map' was not declared. Should it be static?
+Message-ID: <20121121141249.GA23606@thinkpad-t410> (sfid-20121121_151305_582549_D4C45879)
+References: <50ac7bc7.tSErItiXQxTyHiGi%fengguang.wu@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CA++BO6SuRgOu7A4BKobrdEeSpSc3UUYHXaECmEGE=R17w7HjQA@mail.gmail.com>
-References: <CA++BO6SuRgOu7A4BKobrdEeSpSc3UUYHXaECmEGE=R17w7HjQA@mail.gmail.com>
-Date: Mon, 12 Nov 2012 13:39:34 -0800
-Message-ID: <CAJ-Vmon04wLvn0DDnD9X98bY8DxHRQf10jQJCbuckbztS261vQ@mail.gmail.com> (sfid-20121112_223943_971835_E4101AF8)
-Subject: Re: ath9k_htc-based adapter unfunctioning after commit ceb26a6013
-From: Adrian Chadd <adrian@freebsd.org>
-To: Corey Richardson <corey@octayn.net>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50ac7bc7.tSErItiXQxTyHiGi%fengguang.wu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Wed, Nov 21, 2012 at 02:59:19PM +0800, kbuild test robot wrote:
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+> head:   e2ff0498409af6f2023f91aba07b281e5e87ee15
+> commit: e041f65d5f00011049c7d6af0e31ce69ce9e2655 [196/214] brcmsmac: Remove internal tx queue
+> 
+> 
+> sparse warnings:
+> 
+> + drivers/net/wireless/brcm80211/brcmsmac/main.c:308:10: sparse: symbol 'wlc_prio2prec_map' was not declared. Should it be static?
+> drivers/net/wireless/brcm80211/brcmsmac/main.c:6500:43:   also defined here
+> 
+> Please consider folding the attached diff :-)
 
-Please create a bugzilla.kernel.org ticket with this info?
+Actually this just isn't used anymore. I'll send a patch to remove it
+next week when I'm back from holiday.
 
-Thanks,
+Seth
 
-
-
-adrian
-
-
-On 12 November 2012 05:34, Corey Richardson <corey@octayn.net> wrote:
-> I was giving 3.7-rc4 a whirl when I discovered my wireless adapter [0] wasn't
-> working: the LED didn't light up. Went and ran 'ip link' and it just hung there.
-> Tried a few other things and discovered that sudo was broken too. With
-> strace I found that they were hanging in sendto().
->
-> If I then unplug the adapter, everything comes out of the hang.
->
-> Bisected and found that commit ceb26a6013b962b82f644189ea29d802490fc8fc is
-> to blame.
->
-> Attached is my .config,. The complete dmesg is attached, as well as
-> dmesg_disconnect which is what gets spat out on disconnect of the device.
-> strace is an strace of 'ip link'.
->
-> I feel like I haven't given enough information; anything else needed?
->
-> (Please CC me in any reply to a list; I am not subscribed to them)
->
-> [0] - http://support.netgear.com/product/WNA1100
->
-> --
-> Corey Richardson
