@@ -1,56 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32199 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757363Ab2KAJsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2012 05:48:21 -0400
-Date: Thu, 1 Nov 2012 11:48:14 +0200
-From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-To: Daniel Mack <zonque@gmail.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	"Porter, Matt" <mporter@ti.com>
-Subject: Re: mwifiex_sdio problem: firmware fails to be active in time
-Message-ID: <20121101094812.GC17693@aemeltch-MOBL1> (sfid-20121101_104911_952328_2F8A7F6F)
-References: <507F4448.2040707@gmail.com>
- <477F20668A386D41ADCC57781B1F7043083B80E44A@SC-VEXCH1.marvell.com>
- <50802984.6070203@gmail.com>
- <CAMXE1-qWOKphtOjUYWUz1CLDUtAynODvHmLm60rJMC=jBtRsNw@mail.gmail.com>
- <508AF992.8070606@gmail.com>
- <508D53EE.7050405@gmail.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:42897 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000Ab2KUIkv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2012 03:40:51 -0500
+Received: by mail-vc0-f174.google.com with SMTP id m18so3322451vcm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Nov 2012 00:40:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <508D53EE.7050405@gmail.com>
+Date: Wed, 21 Nov 2012 03:40:51 -0500
+Message-ID: <CA+7oygeWvsbrNz3k8ypqK=J6LMg1Zx0dN8S+ee-ywGEgtvQxqQ@mail.gmail.com> (sfid-20121121_094055_898265_89B247B0)
+Subject: what dictates p2p0 address?
+From: George Nychis <gnychis@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+For an ad-hoc or Wifi-Direct interface, which usually seems to be
+named p2p0, I'm finding that the MAC address mirrors the Wifi card's
+MAC address for octets 2-6, but it seems as though octet 1 is dynamic.
+ So, for example:
 
-On Sun, Oct 28, 2012 at 04:49:02PM +0100, Daniel Mack wrote:
-> On 26.10.2012 22:58, Daniel Mack wrote:
-> > [have to re-open this issue again]
-> > 
-> > On 21.10.2012 16:16, Andrei Emeltchenko wrote:
-> >> I have the same board and see this problem sometimes. Reloading modules
-> >> might help, if not reboot always works :).
-> > 
-> > I thought I solved this issue, but I can't reproduce the running version
-> > anymore unfortunately. It constantly fails with the error I described,
-> > even though the clock and all voltages etc are definitely stable.
-> 
-> Ok, following up on my own writings: I solved this issue. It took me
-> awhile to figure out that the 88WSD8787 is really picky about the
-> clock/power sequencing. It really needs >= 1ms delay in the startup
-> phase, otherwise the firmware won't start up.
+Wifi: 7c:d1:c3:e0:a6:81
+p2p0: 0e:d1:c3:e0:a6:81
 
-So did you put delay in a marvell sdio driver?
+This is true across a bunch of devices that I own, but I can't seem to
+find a definitive answer to how octet 1 is mutated to choose the p2p0
+address.
 
-Best regards 
-Andrei Emeltchenko 
+Is this something chosen randomly, or is it a function of some other
+part of the address?
 
-> 
-> So if anyone has this problem, make sure to care for that very detail.
-> 
-> 
-> 
-> Daniel
+- George
