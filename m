@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:58410
-	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751786Ab2KTBUs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 20:20:48 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20650.56024.392104.393540@gargle.gargle.HOWL> (sfid-20121120_022051_140469_253EB37F)
-Date: Tue, 20 Nov 2012 06:50:24 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: fix channel context suspend handling
-In-Reply-To: <1353360586-32157-1-git-send-email-johannes@sipsolutions.net>
-References: <1353360586-32157-1-git-send-email-johannes@sipsolutions.net>
+Received: from perches-mx.perches.com ([206.117.179.246]:39926 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755409Ab2KUSRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2012 13:17:37 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: [PATCH] brcmsmac: Add __printf verification to logging prototypes
+Date: Wed, 21 Nov 2012 10:17:34 -0800
+Message-Id: <a74034e340d7db52dfb0b1a01c18759eb091fd18.1353521783.git.joe@perches.com> (sfid-20121121_191756_556787_52C44291)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Sujith reported warnings with suspend/resume due to
-> channel contexts. When I looked into it, I realised
-> that the code was completely broken as it unassigned
-> the channel contexts when suspending, which actually
-> means they are destroyed.
-> 
-> Fix this by calling just the driver method (if it is
-> implemented) instead of trying to use the mac80211
-> channel context management code.
-> 
-> Reported-by: Sujith Manoharan <sujith@msujith.org>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Adding __printf helps spot format and argument mismatches.
 
-Thanks. So there were three warnings which are fixed by:
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/debug.h |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-mac80211: fix channel context warning on suspend
-mac80211: fix channel context suspend handling
-mac80211: check add_chanctx callback before use in ieee80211_reconfig
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/debug.h b/drivers/net/wireless/brcm80211/brcmsmac/debug.h
+index c0d2cf7..f77066b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/debug.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/debug.h
+@@ -8,17 +8,23 @@
+ #include "main.h"
+ #include "mac80211_if.h"
+ 
++__printf(2, 3)
+ void __brcms_info(struct device *dev, const char *fmt, ...);
++__printf(2, 3)
+ void __brcms_warn(struct device *dev, const char *fmt, ...);
++__printf(2, 3)
+ void __brcms_err(struct device *dev, const char *fmt, ...);
++__printf(2, 3)
+ void __brcms_crit(struct device *dev, const char *fmt, ...);
+ 
+ #if defined(CONFIG_BRCMDBG) || defined(CONFIG_BRCM_TRACING)
++__printf(4, 5)
+ void __brcms_dbg(struct device *dev, u32 level, const char *func,
+ 		 const char *fmt, ...);
+ #else
+-static inline void __brcms_dbg(struct device *dev, u32 level,
+-			       const char *func, const char *fmt, ...)
++static inline __printf(4, 5)
++void __brcms_dbg(struct device *dev, u32 level, const char *func,
++		 const char *fmt, ...)
+ {
+ }
+ #endif
+-- 
+1.7.8.112.g3fd21
 
-Sujith
