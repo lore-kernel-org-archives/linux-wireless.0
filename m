@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754300Ab2KZLp3 (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:2347 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753455Ab2KUJiR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 06:45:29 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Tcx7w-0001Sj-OH
-	for linux-wireless@vger.kernel.org; Mon, 26 Nov 2012 12:45:28 +0100
-Message-ID: <1353930355.9488.28.camel@jlt4.sipsolutions.net> (sfid-20121126_124534_397759_42B45D8C)
-Subject: Re: [PATCH 00/10] initial VHT support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 26 Nov 2012 12:45:55 +0100
-In-Reply-To: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net> (sfid-20121120_224451_615250_64DF204A)
-References: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121120_224451_615250_64DF204A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 21 Nov 2012 04:38:17 -0500
+Message-ID: <50ACA0B0.6090700@broadcom.com> (sfid-20121121_103827_171568_0D06B078)
+Date: Wed, 21 Nov 2012 10:36:48 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "George Nychis" <gnychis@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: what dictates p2p0 address?
+References: <CA+7oygeWvsbrNz3k8ypqK=J6LMg1Zx0dN8S+ee-ywGEgtvQxqQ@mail.gmail.com>
+In-Reply-To: <CA+7oygeWvsbrNz3k8ypqK=J6LMg1Zx0dN8S+ee-ywGEgtvQxqQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-20 at 22:45 +0100, Johannes Berg wrote:
-> Ok, so here's a repost of the VHT support. I've had to work on
-> the compatibility code (since I needed it in hostapd as well),
-> so that's new. Other than that, not many changes over the last
-> version.
-> 
-> I now tested that the channel settings go through to the driver
-> (i.e. hwsim) for both monitor mode and AP mode. Managed mode
-> still needs mac80211 work to parse the VHT operation IE and set
-> the channel context accordingly, I plan to work on that soon.
-> 
-> This also still needs regulatory work (TODO in the code) but as
-> we don't have any drivers we don't have to worry about it yet.
-> 
-> I'm planning to merge this soon so everybody can work with the
-> new APIs and more people can contribute the missing pieces.
+On 11/21/2012 09:40 AM, George Nychis wrote:
+> For an ad-hoc or Wifi-Direct interface, which usually seems to be
+> named p2p0, I'm finding that the MAC address mirrors the Wifi card's
+> MAC address for octets 2-6, but it seems as though octet 1 is dynamic.
+>   So, for example:
+>
+> Wifi: 7c:d1:c3:e0:a6:81
+> p2p0: 0e:d1:c3:e0:a6:81
+>
+> This is true across a bunch of devices that I own, but I can't seem to
+> find a definitive answer to how octet 1 is mutated to choose the p2p0
+> address.
 
-Applied all.
+First dealing with your opening sentence. Not sure if you truly mean 
+ad-hoc here. Do not use that term if you are actually talking about 
+wifi-direct because it is a totally different beast.
 
-johannes
+The definitive, but unambiguous, answer is in the WFA spec:
+
+"The P2P Device shall assign a P2P Interface Address, corresponding to 
+the format as described in §7.1.3.3.1 of IEEE Std 802.11‑2007 [1], which 
+is used to communicate with the P2P Group Owner or Clients within a P2P 
+Group. A P2P Interface Address is not required to be globally unique and 
+may be locally administered. A P2P Interface Address may be the same as 
+the P2P Device Address provided the requirements for P2P Interface 
+Address in this clause are satisfied."
+
+Actually, the MAC address details are in 802 spec (free IEEE download) 
+in paragraph 9.2. Your p2p0 address has locally administered bit set and 
+fiddle some more bits.
+
+> Is this something chosen randomly, or is it a function of some other
+> part of the address?
+
+Most likely, as you can see from the example, it is derived. This is 
+done in the device (or the driver) so there is no single rule or 
+implementation except the guidelines/requirements from the spec.
+
+Gr. AvS
 
