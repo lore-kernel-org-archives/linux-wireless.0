@@ -1,771 +1,522 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:61797 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052Ab2KXOgU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2012 09:36:20 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so2786642wer.19
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2012 06:36:18 -0800 (PST)
-Message-ID: <1353767772.2318.5.camel@user64-MCP7A> (sfid-20121124_153627_511078_DADA7BBD)
-Subject: [PATCH 04/10] staging: vt6656: dead code removal : wpactl.c/h
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:48987
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751536Ab2KUMn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2012 07:43:58 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Sat, 24 Nov 2012 14:36:12 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: [PATCH 1/6] ath9k/ath9k_htc: Remove WME macros
+Date: Wed, 21 Nov 2012 18:13:10 +0530
+Message-Id: <1353501795-10378-1-git-send-email-sujith@msujith.org> (sfid-20121121_134403_399809_83369C07)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Relates to redundant viawget, a proprietary version of wpa supplicant.
+Use the macros provided by mac80211 and remove redundant
+declarations inside the drivers.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/staging/vt6656/device.h   |    1 -
- drivers/staging/vt6656/main_usb.c |   14 +-
- drivers/staging/vt6656/wpactl.c   |  636 -------------------------------------
- drivers/staging/vt6656/wpactl.h   |    8 -
- 4 files changed, 1 insertion(+), 658 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h          | 16 ++++-----
+ drivers/net/wireless/ath/ath9k/beacon.c         |  2 +-
+ drivers/net/wireless/ath/ath9k/common.h         |  7 ----
+ drivers/net/wireless/ath/ath9k/debug.c          | 44 ++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/gpio.c           |  2 +-
+ drivers/net/wireless/ath/ath9k/htc.h            |  4 +--
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |  2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c  |  8 ++---
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c   |  2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |  8 ++---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |  4 +--
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   | 26 +++++++--------
+ drivers/net/wireless/ath/ath9k/init.c           |  2 +-
+ drivers/net/wireless/ath/ath9k/link.c           |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c           | 26 +++++++--------
+ drivers/net/wireless/ath/ath9k/xmit.c           | 10 +++---
+ 16 files changed, 79 insertions(+), 86 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 9a04900..25bf03a 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -793,7 +793,6 @@ typedef struct __device_info {
-     //WPA supplicant daemon
- 	struct net_device       *wpadev;
- 	BOOL                    bWPADEVUp;
--    struct sk_buff          *skb;
-     //--
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9a93d2b..1bb7fca 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -129,10 +129,10 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
+ #define ATH_TXMAXTRY            13
  
-         BOOL                 bwextstep0;
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index c70bafb..5e55752 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1188,9 +1188,9 @@ static void vt6656_disconnect(struct usb_interface *intf)
+ #define TID_TO_WME_AC(_tid)				\
+-	((((_tid) == 0) || ((_tid) == 3)) ? WME_AC_BE :	\
+-	 (((_tid) == 1) || ((_tid) == 2)) ? WME_AC_BK :	\
+-	 (((_tid) == 4) || ((_tid) == 5)) ? WME_AC_VI :	\
+-	 WME_AC_VO)
++	((((_tid) == 0) || ((_tid) == 3)) ? IEEE80211_AC_BE :	\
++	 (((_tid) == 1) || ((_tid) == 2)) ? IEEE80211_AC_BK :	\
++	 (((_tid) == 4) || ((_tid) == 5)) ? IEEE80211_AC_VI :	\
++	 IEEE80211_AC_VO)
  
- 	if (device->dev) {
- 		unregister_netdev(device->dev);
--		wpa_set_wpadev(device, 0);
- 		free_netdev(device->dev);
+ #define ATH_AGGR_DELIM_SZ          4
+ #define ATH_AGGR_MINPLEN           256 /* in bytes, minimum packet length */
+@@ -265,7 +265,7 @@ struct ath_node {
+ 	struct ieee80211_sta *sta; /* station struct we're part of */
+ 	struct ieee80211_vif *vif; /* interface with which we're associated */
+ 	struct ath_atx_tid tid[WME_NUM_TID];
+-	struct ath_atx_ac ac[WME_NUM_AC];
++	struct ath_atx_ac ac[IEEE80211_NUM_ACS];
+ 	int ps_key;
+ 
+ 	u16 maxampdu;
+@@ -299,9 +299,9 @@ struct ath_tx {
+ 	struct list_head txbuf;
+ 	struct ath_txq txq[ATH9K_NUM_TX_QUEUES];
+ 	struct ath_descdma txdma;
+-	struct ath_txq *txq_map[WME_NUM_AC];
+-	u32 txq_max_pending[WME_NUM_AC];
+-	u16 max_aggr_framelen[WME_NUM_AC][4][32];
++	struct ath_txq *txq_map[IEEE80211_NUM_ACS];
++	u32 txq_max_pending[IEEE80211_NUM_ACS];
++	u16 max_aggr_framelen[IEEE80211_NUM_ACS][4][32];
+ };
+ 
+ struct ath_rx_edma {
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 1b48414..531fffd 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -46,7 +46,7 @@ static void ath9k_beaconq_config(struct ath_softc *sc)
+ 		qi.tqi_cwmax = 0;
+ 	} else {
+ 		/* Adhoc mode; important thing is to use 2x cwmin. */
+-		txq = sc->tx.txq_map[WME_AC_BE];
++		txq = sc->tx.txq_map[IEEE80211_AC_BE];
+ 		ath9k_hw_get_txq_props(ah, txq->axq_qnum, &qi_be);
+ 		qi.tqi_aifs = qi_be.tqi_aifs;
+ 		if (ah->slottime == ATH9K_SLOT_TIME_20)
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index ad14fec..76b5439 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -28,13 +28,6 @@
+ #define WME_MAX_BA              WME_BA_BMP_SIZE
+ #define ATH_TID_MAX_BUFS        (2 * WME_MAX_BA)
+ 
+-/* These must match mac80211 skb queue mapping numbers */
+-#define WME_AC_VO   0
+-#define WME_AC_VI   1
+-#define WME_AC_BE   2
+-#define WME_AC_BK   3
+-#define WME_NUM_AC  4
+-
+ #define ATH_RSSI_DUMMY_MARKER   0x127
+ #define ATH_RSSI_LPF_LEN 		10
+ #define RSSI_LPF_THRESHOLD		-20
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 585aee4..0b488f8 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -517,10 +517,10 @@ static const struct file_operations fops_interrupt = {
+ 	do {								\
+ 		len += snprintf(buf + len, size - len,			\
+ 				"%s%13u%11u%10u%10u\n", str,		\
+-		sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem, \
+-		sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem, \
+-		sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem, \
+-		sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem); \
++		sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BE)].elem, \
++		sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BK)].elem, \
++		sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VI)].elem, \
++		sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VO)].elem); \
+ 		if (len >= size)			  \
+ 			goto done;			  \
+ } while(0)
+@@ -529,10 +529,10 @@ static const struct file_operations fops_interrupt = {
+ do {									\
+ 	len += snprintf(buf + len, size - len,				\
+ 			"%s%13u%11u%10u%10u\n", str,			\
+-			(unsigned int)(sc->tx.txq_map[WME_AC_BE]->elem),	\
+-			(unsigned int)(sc->tx.txq_map[WME_AC_BK]->elem),	\
+-			(unsigned int)(sc->tx.txq_map[WME_AC_VI]->elem),	\
+-			(unsigned int)(sc->tx.txq_map[WME_AC_VO]->elem));	\
++			(unsigned int)(sc->tx.txq_map[IEEE80211_AC_BE]->elem),	\
++			(unsigned int)(sc->tx.txq_map[IEEE80211_AC_BK]->elem),	\
++			(unsigned int)(sc->tx.txq_map[IEEE80211_AC_VI]->elem),	\
++			(unsigned int)(sc->tx.txq_map[IEEE80211_AC_VO]->elem));	\
+ 	if (len >= size)						\
+ 		goto done;						\
+ } while(0)
+@@ -541,10 +541,10 @@ do {									\
+ do {									\
+ 	len += snprintf(buf + len, size - len,				\
+ 			"%s%13i%11i%10i%10i\n", str,			\
+-			list_empty(&sc->tx.txq_map[WME_AC_BE]->elem),	\
+-			list_empty(&sc->tx.txq_map[WME_AC_BK]->elem),	\
+-			list_empty(&sc->tx.txq_map[WME_AC_VI]->elem),	\
+-			list_empty(&sc->tx.txq_map[WME_AC_VO]->elem));	\
++			list_empty(&sc->tx.txq_map[IEEE80211_AC_BE]->elem),	\
++			list_empty(&sc->tx.txq_map[IEEE80211_AC_BK]->elem),	\
++			list_empty(&sc->tx.txq_map[IEEE80211_AC_VI]->elem),	\
++			list_empty(&sc->tx.txq_map[IEEE80211_AC_VO]->elem));	\
+ 	if (len >= size)						\
+ 		goto done;						\
+ } while (0)
+@@ -593,10 +593,10 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("TX-Failed:       ", txfailed);
+ 	len += snprintf(buf + len, size - len,
+ 			"%s%11p%11p%10p%10p\n", "txq-memory-address:",
+-			sc->tx.txq_map[WME_AC_BE],
+-			sc->tx.txq_map[WME_AC_BK],
+-			sc->tx.txq_map[WME_AC_VI],
+-			sc->tx.txq_map[WME_AC_VO]);
++			sc->tx.txq_map[IEEE80211_AC_BE],
++			sc->tx.txq_map[IEEE80211_AC_BK],
++			sc->tx.txq_map[IEEE80211_AC_VI],
++			sc->tx.txq_map[IEEE80211_AC_VO]);
+ 	if (len >= size)
+ 		goto done;
+ 
+@@ -617,7 +617,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
  	}
-+
+ 
+ 	/* Print out more detailed queue-info */
+-	for (i = 0; i <= WME_AC_BK; i++) {
++	for (i = 0; i <= IEEE80211_AC_BK; i++) {
+ 		struct ath_txq *txq = &(sc->tx.txq[i]);
+ 		struct ath_atx_ac *ac;
+ 		struct ath_atx_tid *tid;
+@@ -695,7 +695,7 @@ static ssize_t read_file_stations(struct file *file, char __user *user_buf,
+ 				goto done;
+ 		}
+ 
+-		for (q = 0; q < WME_NUM_AC; q++) {
++		for (q = 0; q < IEEE80211_NUM_ACS; q++) {
+ 			struct ath_atx_ac *ac = &(an->ac[q]);
+ 			len += snprintf(buf + len, size - len,
+ 					" ac: %p %s %i %p\n",
+@@ -1645,13 +1645,13 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 	debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_xmit);
+ 	debugfs_create_u32("qlen_bk", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+-			   &sc->tx.txq_max_pending[WME_AC_BK]);
++			   &sc->tx.txq_max_pending[IEEE80211_AC_BK]);
+ 	debugfs_create_u32("qlen_be", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+-			   &sc->tx.txq_max_pending[WME_AC_BE]);
++			   &sc->tx.txq_max_pending[IEEE80211_AC_BE]);
+ 	debugfs_create_u32("qlen_vi", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+-			   &sc->tx.txq_max_pending[WME_AC_VI]);
++			   &sc->tx.txq_max_pending[IEEE80211_AC_VI]);
+ 	debugfs_create_u32("qlen_vo", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+-			   &sc->tx.txq_max_pending[WME_AC_VO]);
++			   &sc->tx.txq_max_pending[IEEE80211_AC_VO]);
+ 	debugfs_create_file("stations", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_stations);
+ 	debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy, sc,
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 4236df8..f4eebc3 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -471,7 +471,7 @@ int ath9k_init_btcoex(struct ath_softc *sc)
+ 		r = ath_init_btcoex_timer(sc);
+ 		if (r)
+ 			return -1;
+-		txq = sc->tx.txq_map[WME_AC_BE];
++		txq = sc->tx.txq_map[IEEE80211_AC_BE];
+ 		ath9k_hw_init_btcoex_hw(sc->sc_ah, txq->axq_qnum);
+ 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+ 		if (ath9k_hw_mci_is_enabled(ah)) {
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index b30596f..96bfb18 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -331,7 +331,7 @@ struct ath_tx_stats {
+ 	u32 skb_success;
+ 	u32 skb_failed;
+ 	u32 cab_queued;
+-	u32 queue_stats[WME_NUM_AC];
++	u32 queue_stats[IEEE80211_NUM_ACS];
+ };
+ 
+ struct ath_rx_stats {
+@@ -493,7 +493,7 @@ struct ath9k_htc_priv {
+ 
+ 	int beaconq;
+ 	int cabq;
+-	int hwq_map[WME_NUM_AC];
++	int hwq_map[IEEE80211_NUM_ACS];
+ 
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	struct ath_btcoex btcoex;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 1318d79..d0ce1f5 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -33,7 +33,7 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+ 		qi.tqi_cwmin = 0;
+ 		qi.tqi_cwmax = 0;
+ 	} else if (priv->ah->opmode == NL80211_IFTYPE_ADHOC) {
+-		int qnum = priv->hwq_map[WME_AC_BE];
++		int qnum = priv->hwq_map[IEEE80211_AC_BE];
+ 
+ 		ath9k_hw_get_txq_props(ah, qnum, &qi_be);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 3035deb..87110de5 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -218,16 +218,16 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "BE queued",
+-			priv->debug.tx_stats.queue_stats[WME_AC_BE]);
++			priv->debug.tx_stats.queue_stats[IEEE80211_AC_BE]);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "BK queued",
+-			priv->debug.tx_stats.queue_stats[WME_AC_BK]);
++			priv->debug.tx_stats.queue_stats[IEEE80211_AC_BK]);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "VI queued",
+-			priv->debug.tx_stats.queue_stats[WME_AC_VI]);
++			priv->debug.tx_stats.queue_stats[IEEE80211_AC_VI]);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "VO queued",
+-			priv->debug.tx_stats.queue_stats[WME_AC_VO]);
++			priv->debug.tx_stats.queue_stats[IEEE80211_AC_VO]);
+ 
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 0eacfc1..105582d 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -207,7 +207,7 @@ void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product)
+ 		priv->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+ 		ath9k_hw_btcoex_init_3wire(priv->ah);
+ 		ath_htc_init_btcoex_work(priv);
+-		qnum = priv->hwq_map[WME_AC_BE];
++		qnum = priv->hwq_map[IEEE80211_AC_BE];
+ 		ath9k_hw_init_btcoex_hw(priv->ah, qnum);
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 5ecf128..05d5ba6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -549,20 +549,20 @@ static int ath9k_init_queues(struct ath9k_htc_priv *priv)
+ 		goto err;
+ 	}
+ 
+-	if (!ath9k_htc_txq_setup(priv, WME_AC_BE)) {
++	if (!ath9k_htc_txq_setup(priv, IEEE80211_AC_BE)) {
+ 		ath_err(common, "Unable to setup xmit queue for BE traffic\n");
+ 		goto err;
+ 	}
+ 
+-	if (!ath9k_htc_txq_setup(priv, WME_AC_BK)) {
++	if (!ath9k_htc_txq_setup(priv, IEEE80211_AC_BK)) {
+ 		ath_err(common, "Unable to setup xmit queue for BK traffic\n");
+ 		goto err;
+ 	}
+-	if (!ath9k_htc_txq_setup(priv, WME_AC_VI)) {
++	if (!ath9k_htc_txq_setup(priv, IEEE80211_AC_VI)) {
+ 		ath_err(common, "Unable to setup xmit queue for VI traffic\n");
+ 		goto err;
+ 	}
+-	if (!ath9k_htc_txq_setup(priv, WME_AC_VO)) {
++	if (!ath9k_htc_txq_setup(priv, IEEE80211_AC_VO)) {
+ 		ath_err(common, "Unable to setup xmit queue for VO traffic\n");
+ 		goto err;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 02cce95..9c07a8f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1349,7 +1349,7 @@ static int ath9k_htc_conf_tx(struct ieee80211_hw *hw,
+ 	struct ath9k_tx_queue_info qi;
+ 	int ret = 0, qnum;
+ 
+-	if (queue >= WME_NUM_AC)
++	if (queue >= IEEE80211_NUM_ACS)
+ 		return 0;
+ 
+ 	mutex_lock(&priv->mutex);
+@@ -1376,7 +1376,7 @@ static int ath9k_htc_conf_tx(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if ((priv->ah->opmode == NL80211_IFTYPE_ADHOC) &&
+-	    (qnum == priv->hwq_map[WME_AC_BE]))
++	    (qnum == priv->hwq_map[IEEE80211_AC_BE]))
+ 		    ath9k_htc_beaconq_config(priv);
+ out:
+ 	ath9k_htc_ps_restore(priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 06cdcb7..3a22d17 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -21,10 +21,10 @@
+ /******/
+ 
+ static const int subtype_txq_to_hwq[] = {
+-	[WME_AC_BE] = ATH_TXQ_AC_BE,
+-	[WME_AC_BK] = ATH_TXQ_AC_BK,
+-	[WME_AC_VI] = ATH_TXQ_AC_VI,
+-	[WME_AC_VO] = ATH_TXQ_AC_VO,
++	[IEEE80211_AC_BE] = ATH_TXQ_AC_BE,
++	[IEEE80211_AC_BK] = ATH_TXQ_AC_BK,
++	[IEEE80211_AC_VI] = ATH_TXQ_AC_VI,
++	[IEEE80211_AC_VO] = ATH_TXQ_AC_VO,
+ };
+ 
+ #define ATH9K_HTC_INIT_TXQ(subtype) do {			\
+@@ -41,15 +41,15 @@ int get_hw_qnum(u16 queue, int *hwq_map)
+ {
+ 	switch (queue) {
+ 	case 0:
+-		return hwq_map[WME_AC_VO];
++		return hwq_map[IEEE80211_AC_VO];
+ 	case 1:
+-		return hwq_map[WME_AC_VI];
++		return hwq_map[IEEE80211_AC_VI];
+ 	case 2:
+-		return hwq_map[WME_AC_BE];
++		return hwq_map[IEEE80211_AC_BE];
+ 	case 3:
+-		return hwq_map[WME_AC_BK];
++		return hwq_map[IEEE80211_AC_BK];
+ 	default:
+-		return hwq_map[WME_AC_BE];
++		return hwq_map[IEEE80211_AC_BE];
+ 	}
  }
  
- static int device_dma0_tx_80211(struct sk_buff *skb, struct net_device *dev)
-@@ -1579,18 +1579,6 @@ static int  device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd) {
- 		rc = vt6656_hostap_ioctl(pDevice, &wrq->u.data);
-         break;
+@@ -106,20 +106,20 @@ static inline enum htc_endpoint_id get_htc_epid(struct ath9k_htc_priv *priv,
  
--    case IOCTL_CMD_WPA:
--
--		if (!(pDevice->flags & DEVICE_FLAGS_OPENED)) {
--		    rc = -EFAULT;
--		    break;
--		} else {
--		    rc = 0;
--		}
--
--		rc = wpa_ioctl(pDevice, &wrq->u.data);
--        break;
--
- 	case SIOCETHTOOL:
-         return ethtool_ioctl(dev, (void *) rq->ifr_data);
+ 	switch (qnum) {
+ 	case 0:
+-		TX_QSTAT_INC(WME_AC_VO);
++		TX_QSTAT_INC(IEEE80211_AC_VO);
+ 		epid = priv->data_vo_ep;
+ 		break;
+ 	case 1:
+-		TX_QSTAT_INC(WME_AC_VI);
++		TX_QSTAT_INC(IEEE80211_AC_VI);
+ 		epid = priv->data_vi_ep;
+ 		break;
+ 	case 2:
+-		TX_QSTAT_INC(WME_AC_BE);
++		TX_QSTAT_INC(IEEE80211_AC_BE);
+ 		epid = priv->data_be_ep;
+ 		break;
+ 	case 3:
+ 	default:
+-		TX_QSTAT_INC(WME_AC_BK);
++		TX_QSTAT_INC(IEEE80211_AC_BK);
+ 		epid = priv->data_bk_ep;
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 546bae9..345a01a 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -435,7 +435,7 @@ static int ath9k_init_queues(struct ath_softc *sc)
+ 	sc->config.cabqReadytime = ATH_CABQ_READY_TIME;
+ 	ath_cabq_update(sc);
  
-diff --git a/drivers/staging/vt6656/wpactl.c b/drivers/staging/vt6656/wpactl.c
-index 3e65aa1..4fe2e60 100644
---- a/drivers/staging/vt6656/wpactl.c
-+++ b/drivers/staging/vt6656/wpactl.c
-@@ -44,13 +44,6 @@
+-	for (i = 0; i < WME_NUM_AC; i++) {
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 		sc->tx.txq_map[i] = ath_txq_setup(sc, ATH9K_TX_QUEUE_DATA, i);
+ 		sc->tx.txq_map[i]->mac80211_qnum = i;
+ 		sc->tx.txq_max_pending[i] = ATH_MAX_QDEPTH;
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 223b969..227fdb8 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -211,7 +211,7 @@ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int
+ 	int time_left;
  
- /*---------------------  Static Definitions -------------------------*/
+ 	memset(&txctl, 0, sizeof(txctl));
+-	txctl.txq = sc->tx.txq_map[WME_AC_BE];
++	txctl.txq = sc->tx.txq_map[IEEE80211_AC_BE];
  
--#define VIAWGET_WPA_MAX_BUF_SIZE 1024
--
--static const int frequency_list[] = {
--	2412, 2417, 2422, 2427, 2432, 2437, 2442,
--	2447, 2452, 2457, 2462, 2467, 2472, 2484
--};
--
- /*---------------------  Static Classes  ----------------------------*/
+ 	memset(tx_info, 0, sizeof(*tx_info));
+ 	tx_info->band = hw->conf.channel->band;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9594b6f..4233913 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1328,7 +1328,7 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
+ 	struct ath9k_tx_queue_info qi;
+ 	int ret = 0;
  
- /*---------------------  Static Variables  --------------------------*/
-@@ -59,118 +52,7 @@ static int msglevel = MSG_LEVEL_INFO;
- /*---------------------  Static Functions  --------------------------*/
+-	if (queue >= WME_NUM_AC)
++	if (queue >= IEEE80211_NUM_ACS)
+ 		return 0;
  
- /*---------------------  Export Variables  --------------------------*/
--static void wpadev_setup(struct net_device *dev)
--{
--	dev->type               = ARPHRD_IEEE80211;
--	dev->hard_header_len    = ETH_HLEN;
--	dev->mtu                = 2048;
--	dev->addr_len           = ETH_ALEN;
--	dev->tx_queue_len       = 1000;
--
--	memset(dev->broadcast, 0xFF, ETH_ALEN);
--
--	dev->flags              = IFF_BROADCAST | IFF_MULTICAST;
--}
--
--/*
-- * Description:
-- *      register netdev for wpa supplicant daemon
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             -
-- *      enable              -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_init_wpadev(PSDevice pDevice)
--{
--	PSDevice wpadev_priv;
--	struct net_device *dev = pDevice->dev;
--	int ret = 0;
--
--	pDevice->wpadev = alloc_netdev(sizeof(PSDevice), "vntwpa", wpadev_setup);
--	if (pDevice->wpadev == NULL)
--		return -ENOMEM;
--
--	wpadev_priv = netdev_priv(pDevice->wpadev);
--	*wpadev_priv = *pDevice;
--	memcpy(pDevice->wpadev->dev_addr, dev->dev_addr, ETH_ALEN);
--	pDevice->wpadev->base_addr = dev->base_addr;
--	pDevice->wpadev->irq = dev->irq;
--	pDevice->wpadev->mem_start = dev->mem_start;
--	pDevice->wpadev->mem_end = dev->mem_end;
--	ret = register_netdev(pDevice->wpadev);
--	if (ret) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "%s: register_netdev(WPA) failed!\n",
--			dev->name);
--		free_netdev(pDevice->wpadev);
--		return -1;
--	}
--
--	if (pDevice->skb == NULL) {
--		pDevice->skb = dev_alloc_skb((int)pDevice->rx_buf_sz);
--		if (pDevice->skb == NULL)
--			return -ENOMEM;
--	}
--
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "%s: Registered netdev %s for WPA management\n",
--		dev->name, pDevice->wpadev->name);
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      unregister net_device (wpadev)
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_release_wpadev(PSDevice pDevice)
--{
--	if (pDevice->skb) {
--		dev_kfree_skb(pDevice->skb);
--		pDevice->skb = NULL;
--	}
--
--	if (pDevice->wpadev) {
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "%s: Netdevice %s unregistered\n",
--			pDevice->dev->name, pDevice->wpadev->name);
--		unregister_netdev(pDevice->wpadev);
--		free_netdev(pDevice->wpadev);
--		pDevice->wpadev = NULL;
--	}
--
--	return 0;
--}
+ 	txq = sc->tx.txq_map[queue];
+@@ -1959,10 +1959,10 @@ static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
+ #define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
+ #define AWDATA(elem)							\
+ 	do {								\
+-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BE)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BK)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VI)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VO)].elem; \
+ 	} while (0)
  
--/*
-- * Description:
-- *      Set enable/disable dev for wpa supplicant daemon
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             -
-- *      val                 -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--int wpa_set_wpadev(PSDevice pDevice, int val)
--{
--	if (val)
--		return wpa_init_wpadev(pDevice);
--	return wpa_release_wpadev(pDevice);
--}
+ #define AWDATA_RX(elem)						\
+@@ -1977,14 +1977,14 @@ static void ath9k_get_et_stats(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc = hw->priv;
+ 	int i = 0;
  
- /*
-  * Description:
-@@ -399,521 +281,3 @@ int wpa_set_wpadev(PSDevice pDevice, int val)
- }
+-	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_pkts_all +
+-		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_pkts_all +
+-		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_pkts_all +
+-		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_pkts_all);
+-	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_bytes_all +
+-		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_bytes_all +
+-		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_bytes_all +
+-		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_bytes_all);
++	data[i++] = (sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BE)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BK)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VI)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VO)].tx_pkts_all);
++	data[i++] = (sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BE)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BK)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VI)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VO)].tx_bytes_all);
+ 	AWDATA_RX(rx_pkts_all);
+ 	AWDATA_RX(rx_bytes_all);
  
-
--/*
-- * Description:
-- *      enable wpa auth & mode
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_set_wpa(PSDevice pDevice, struct viawget_wpa_param *param)
--{
--	PSMgmtObject pMgmt = &pDevice->sMgmtObj;
--	int ret = 0;
--
--	pMgmt->eAuthenMode = WMAC_AUTH_OPEN;
--	pMgmt->bShareKeyAlgorithm = FALSE;
--
--	return ret;
--}
--
-- /*
-- * Description:
-- *      set disassociate
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_set_disassociate(PSDevice pDevice, struct viawget_wpa_param *param)
--{
--	PSMgmtObject pMgmt = &pDevice->sMgmtObj;
--	int ret = 0;
--
--	spin_lock_irq(&pDevice->lock);
--	if (pDevice->bLinkPass) {
--		if (!memcmp(param->addr, pMgmt->abyCurrBSSID, 6))
--			bScheduleCommand((void *)pDevice, WLAN_CMD_DISASSOCIATE, NULL);
--	}
--	spin_unlock_irq(&pDevice->lock);
--
--	return ret;
--}
--
--/*
-- * Description:
-- *      enable scan process
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_set_scan(PSDevice pDevice, struct viawget_wpa_param *param)
--{
--	int ret = 0;
--
--/**set ap_scan=1&&scan_ssid=1 under hidden ssid mode**/
--        PSMgmtObject pMgmt = &pDevice->sMgmtObj;
--        PWLAN_IE_SSID pItemSSID;
--	printk("wpa_set_scan-->desired [ssid=%s,ssid_len=%d]\n",
--		param->u.scan_req.ssid,param->u.scan_req.ssid_len);
--// Set the SSID
--	memset(pMgmt->abyDesireSSID, 0, WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1);
--	pItemSSID = (PWLAN_IE_SSID)pMgmt->abyDesireSSID;
--	pItemSSID->byElementID = WLAN_EID_SSID;
--	memcpy(pItemSSID->abySSID, param->u.scan_req.ssid, param->u.scan_req.ssid_len);
--	pItemSSID->len = param->u.scan_req.ssid_len;
--
--	spin_lock_irq(&pDevice->lock);
--	BSSvClearBSSList((void *) pDevice, pDevice->bLinkPass);
--	bScheduleCommand((void *) pDevice, WLAN_CMD_BSSID_SCAN,
--			pMgmt->abyDesireSSID);
--	spin_unlock_irq(&pDevice->lock);
--
--	return ret;
--}
--
--/*
-- * Description:
-- *      get bssid
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_get_bssid(PSDevice pDevice, struct viawget_wpa_param *param)
--{
--    PSMgmtObject pMgmt = &pDevice->sMgmtObj;
--    int ret = 0;
--    memcpy(param->u.wpa_associate.bssid, pMgmt->abyCurrBSSID, 6);
--
--    return ret;
--}
--
--/*
-- * Description:
-- *      get bssid
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_get_ssid(PSDevice pDevice, struct viawget_wpa_param *param)
--{
--	PSMgmtObject pMgmt = &pDevice->sMgmtObj;
--	PWLAN_IE_SSID pItemSSID;
--	int ret = 0;
--
--	pItemSSID = (PWLAN_IE_SSID)pMgmt->abyCurrSSID;
--
--	memcpy(param->u.wpa_associate.ssid, pItemSSID->abySSID, pItemSSID->len);
--	param->u.wpa_associate.ssid_len = pItemSSID->len;
--
--	return ret;
--}
--
--/*
-- * Description:
-- *      get scan results
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_get_scan(PSDevice pDevice, struct viawget_wpa_param *param)
--{
--	struct viawget_scan_result *scan_buf;
--	PSMgmtObject pMgmt = &pDevice->sMgmtObj;
--	PWLAN_IE_SSID pItemSSID;
--	PKnownBSS pBSS;
--	PBYTE pBuf;
--	int ret = 0;
--	u16 count = 0;
--	u16 ii;
--	u16 jj;
--	long ldBm; //James //add
--
--//******mike:bubble sort by stronger RSSI*****//
--	PBYTE ptempBSS;
--
--	ptempBSS = kmalloc(sizeof(KnownBSS), GFP_ATOMIC);
--
--	if (ptempBSS == NULL) {
--		printk("bubble sort kmalloc memory fail@@@\n");
--		ret = -ENOMEM;
--		return ret;
--	}
--
--	for (ii = 0; ii < MAX_BSS_NUM; ii++) {
--		for (jj = 0; jj < MAX_BSS_NUM - ii - 1; jj++) {
--			if ((pMgmt->sBSSList[jj].bActive != TRUE)
--				|| ((pMgmt->sBSSList[jj].uRSSI > pMgmt->sBSSList[jj + 1].uRSSI)
--					&& (pMgmt->sBSSList[jj + 1].bActive != FALSE))) {
--				memcpy(ptempBSS,&pMgmt->sBSSList[jj], sizeof(KnownBSS));
--				memcpy(&pMgmt->sBSSList[jj], &pMgmt->sBSSList[jj + 1],
--					sizeof(KnownBSS));
--				memcpy(&pMgmt->sBSSList[jj + 1], ptempBSS, sizeof(KnownBSS));
--			}
--		}
--	}
--	kfree(ptempBSS);
--
--	count = 0;
--	pBSS = &(pMgmt->sBSSList[0]);
--	for (ii = 0; ii < MAX_BSS_NUM; ii++) {
--		pBSS = &(pMgmt->sBSSList[ii]);
--		if (!pBSS->bActive)
--			continue;
--		count++;
--	}
--
--	pBuf = kcalloc(count, sizeof(struct viawget_scan_result), GFP_ATOMIC);
--
--	if (pBuf == NULL) {
--		ret = -ENOMEM;
--		return ret;
--	}
--	scan_buf = (struct viawget_scan_result *)pBuf;
--	pBSS = &(pMgmt->sBSSList[0]);
--	for (ii = 0, jj = 0; ii < MAX_BSS_NUM; ii++) {
--		pBSS = &(pMgmt->sBSSList[ii]);
--		if (pBSS->bActive) {
--			if (jj >= count)
--				break;
--			memcpy(scan_buf->bssid, pBSS->abyBSSID, WLAN_BSSID_LEN);
--			pItemSSID = (PWLAN_IE_SSID)pBSS->abySSID;
--			memcpy(scan_buf->ssid, pItemSSID->abySSID, pItemSSID->len);
--			scan_buf->ssid_len = pItemSSID->len;
--			scan_buf->freq = frequency_list[pBSS->uChannel-1];
--			scan_buf->caps = pBSS->wCapInfo; // DavidWang for sharemode
--
--			RFvRSSITodBm(pDevice, (BYTE)(pBSS->uRSSI), &ldBm);
--			if (-ldBm < 50)
--				scan_buf->qual = 100;
--			else if (-ldBm > 90)
--				scan_buf->qual = 0;
--			else
--				scan_buf->qual=(40-(-ldBm-50))*100/40;
--
--			//James
--			//scan_buf->caps = pBSS->wCapInfo;
--			//scan_buf->qual =
--			scan_buf->noise = 0;
--			scan_buf->level = ldBm;
--
--			//scan_buf->maxrate =
--			if (pBSS->wWPALen != 0) {
--				scan_buf->wpa_ie_len = pBSS->wWPALen;
--				memcpy(scan_buf->wpa_ie, pBSS->byWPAIE, pBSS->wWPALen);
--			}
--			if (pBSS->wRSNLen != 0) {
--				scan_buf->rsn_ie_len = pBSS->wRSNLen;
--				memcpy(scan_buf->rsn_ie, pBSS->byRSNIE, pBSS->wRSNLen);
--			}
--			scan_buf = (struct viawget_scan_result *)((PBYTE)scan_buf + sizeof(struct viawget_scan_result));
--			jj ++;
--		}
--	}
--
--	if (jj < count)
--		count = jj;
--
--	if (copy_to_user(param->u.scan_results.buf, pBuf, sizeof(struct viawget_scan_result) * count))
--		ret = -EFAULT;
--
--	param->u.scan_results.scan_count = count;
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " param->u.scan_results.scan_count = %d\n", count);
--
--	kfree(pBuf);
--	return ret;
--}
--
--/*
-- * Description:
-- *      set associate with AP
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int wpa_set_associate(PSDevice pDevice, struct viawget_wpa_param *param)
--{
--	PSMgmtObject pMgmt = &pDevice->sMgmtObj;
--	PWLAN_IE_SSID pItemSSID;
--	BYTE abyNullAddr[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
--	BYTE abyWPAIE[64];
--	int ret = 0;
--	BOOL bwepEnabled=FALSE;
--
--	// set key type & algorithm
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "pairwise_suite = %d\n", param->u.wpa_associate.pairwise_suite);
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "group_suite = %d\n", param->u.wpa_associate.group_suite);
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "key_mgmt_suite = %d\n", param->u.wpa_associate.key_mgmt_suite);
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "auth_alg = %d\n", param->u.wpa_associate.auth_alg);
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "mode = %d\n", param->u.wpa_associate.mode);
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "wpa_ie_len = %d\n", param->u.wpa_associate.wpa_ie_len);
--	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Roaming dBm = %d\n", param->u.wpa_associate.roam_dbm); // Davidwang
--
--	if (param->u.wpa_associate.wpa_ie) {
--		if (param->u.wpa_associate.wpa_ie_len > sizeof(abyWPAIE))
--			return -EINVAL;
--
--		if (copy_from_user(&abyWPAIE[0], param->u.wpa_associate.wpa_ie,
--					param->u.wpa_associate.wpa_ie_len))
--			return -EFAULT;
--	}
--
--	if (param->u.wpa_associate.mode == 1)
--		pMgmt->eConfigMode = WMAC_CONFIG_IBSS_STA;
--	else
--		pMgmt->eConfigMode = WMAC_CONFIG_ESS_STA;
--
--	// set bssid
--	if (memcmp(param->u.wpa_associate.bssid, &abyNullAddr[0], 6) != 0)
--		memcpy(pMgmt->abyDesireBSSID, param->u.wpa_associate.bssid, 6);
--	// set ssid
--	memset(pMgmt->abyDesireSSID, 0, WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1);
--	pItemSSID = (PWLAN_IE_SSID)pMgmt->abyDesireSSID;
--	pItemSSID->byElementID = WLAN_EID_SSID;
--	pItemSSID->len = param->u.wpa_associate.ssid_len;
--	memcpy(pItemSSID->abySSID, param->u.wpa_associate.ssid, pItemSSID->len);
--
--	if (param->u.wpa_associate.wpa_ie_len == 0) {
--		if (param->u.wpa_associate.auth_alg & AUTH_ALG_SHARED_KEY)
--			pMgmt->eAuthenMode = WMAC_AUTH_SHAREKEY;
--		else
--			pMgmt->eAuthenMode = WMAC_AUTH_OPEN;
--	} else if (abyWPAIE[0] == RSN_INFO_ELEM) {
--		if (param->u.wpa_associate.key_mgmt_suite == KEY_MGMT_PSK)
--			pMgmt->eAuthenMode = WMAC_AUTH_WPA2PSK;
--		else
--			pMgmt->eAuthenMode = WMAC_AUTH_WPA2;
--	} else {
--		if (param->u.wpa_associate.key_mgmt_suite == KEY_MGMT_WPA_NONE)
--			pMgmt->eAuthenMode = WMAC_AUTH_WPANONE;
--		else if (param->u.wpa_associate.key_mgmt_suite == KEY_MGMT_PSK)
--			pMgmt->eAuthenMode = WMAC_AUTH_WPAPSK;
--		else
--			pMgmt->eAuthenMode = WMAC_AUTH_WPA;
--	}
--
--	switch (param->u.wpa_associate.pairwise_suite) {
--	case CIPHER_CCMP:
--		pDevice->eEncryptionStatus = Ndis802_11Encryption3Enabled;
--		break;
--	case CIPHER_TKIP:
--		pDevice->eEncryptionStatus = Ndis802_11Encryption2Enabled;
--		break;
--	case CIPHER_WEP40:
--	case CIPHER_WEP104:
--		pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
--		bwepEnabled = TRUE;
--		break;
--	case CIPHER_NONE:
--		if (param->u.wpa_associate.group_suite == CIPHER_CCMP)
--			pDevice->eEncryptionStatus = Ndis802_11Encryption3Enabled;
--		else
--			pDevice->eEncryptionStatus = Ndis802_11Encryption2Enabled;
--		break;
--	default:
--		pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
--	}
--
--	pMgmt->Roam_dbm = param->u.wpa_associate.roam_dbm;
--	if (pMgmt->eAuthenMode == WMAC_AUTH_SHAREKEY) { // @wep-sharekey
--		pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
--		pMgmt->bShareKeyAlgorithm = TRUE;
--	} else if (pMgmt->eAuthenMode == WMAC_AUTH_OPEN) {
--		if(bwepEnabled==TRUE) { //@open-wep
--			pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
--	   	} else {
--			// @only open
--			pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
--	   	}
--	}
--	// mike save old encryption status
--	pDevice->eOldEncryptionStatus = pDevice->eEncryptionStatus;
--
--	if (pDevice->eEncryptionStatus !=  Ndis802_11EncryptionDisabled)
--		pDevice->bEncryptionEnable = TRUE;
--	else
--		pDevice->bEncryptionEnable = FALSE;
--
--	if ((pMgmt->eAuthenMode == WMAC_AUTH_SHAREKEY) ||
--		((pMgmt->eAuthenMode == WMAC_AUTH_OPEN) && (bwepEnabled==TRUE)))  {
--		// mike re-comment:open-wep && sharekey-wep needn't do initial key!!
--	} else {
--		KeyvInitTable(pDevice,&pDevice->sKey);
--	}
--
--	spin_lock_irq(&pDevice->lock);
--	pDevice->bLinkPass = FALSE;
--	ControlvMaskByte(pDevice, MESSAGE_REQUEST_MACREG, MAC_REG_PAPEDELAY, LEDSTS_STS, LEDSTS_SLOW);
--	memset(pMgmt->abyCurrBSSID, 0, 6);
--	pMgmt->eCurrState = WMAC_STATE_IDLE;
--	netif_stop_queue(pDevice->dev);
--
--/******* search if ap_scan=2, which is associating request in hidden ssid mode ****/
--	{
--		PKnownBSS pCurr = NULL;
--		pCurr = BSSpSearchBSSList(pDevice,
--					pMgmt->abyDesireBSSID,
--					pMgmt->abyDesireSSID,
--					pDevice->eConfigPHYMode
--			);
--
--		if (pCurr == NULL){
--			printk("wpa_set_associate---->hidden mode site survey before associate.......\n");
--			bScheduleCommand((void *)pDevice,
--					WLAN_CMD_BSSID_SCAN,
--					pMgmt->abyDesireSSID);
--		}
--	}
--/****************************************************************/
--
--	bScheduleCommand((void *)pDevice, WLAN_CMD_SSID, NULL);
--	spin_unlock_irq(&pDevice->lock);
--
--	return ret;
--}
--
--/*
-- * Description:
-- *      wpa_ioctl main function supported for wpa supplicant
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      iw_point  -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--int wpa_ioctl(PSDevice pDevice, struct iw_point *p)
--{
--	struct viawget_wpa_param *param;
--	int ret = 0;
--	int wpa_ioctl = 0;
--
--	if (p->length < sizeof(struct viawget_wpa_param) ||
--		p->length > VIAWGET_WPA_MAX_BUF_SIZE || !p->pointer)
--		return -EINVAL;
--
--	param = kmalloc((int)p->length, GFP_KERNEL);
--	if (param == NULL)
--		return -ENOMEM;
--
--	if (copy_from_user(param, p->pointer, p->length)) {
--		ret = -EFAULT;
--		goto out;
--	}
--
--	switch (param->cmd) {
--	case VIAWGET_SET_WPA:
--		ret = wpa_set_wpa(pDevice, param);
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_SET_WPA \n");
--		break;
--
--	case VIAWGET_SET_KEY:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_SET_KEY \n");
--		spin_lock_irq(&pDevice->lock);
--		ret = wpa_set_keys(pDevice, param, FALSE);
--		spin_unlock_irq(&pDevice->lock);
--		break;
--
--	case VIAWGET_SET_SCAN:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_SET_SCAN \n");
--		ret = wpa_set_scan(pDevice, param);
--		break;
--
--	case VIAWGET_GET_SCAN:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_GET_SCAN\n");
--		ret = wpa_get_scan(pDevice, param);
--		wpa_ioctl = 1;
--		break;
--
--	case VIAWGET_GET_SSID:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_GET_SSID \n");
--		ret = wpa_get_ssid(pDevice, param);
--		wpa_ioctl = 1;
--		break;
--
--	case VIAWGET_GET_BSSID:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_GET_BSSID \n");
--		ret = wpa_get_bssid(pDevice, param);
--		wpa_ioctl = 1;
--		break;
--
--	case VIAWGET_SET_ASSOCIATE:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_SET_ASSOCIATE \n");
--		ret = wpa_set_associate(pDevice, param);
--		break;
--
--	case VIAWGET_SET_DISASSOCIATE:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_SET_DISASSOCIATE \n");
--		ret = wpa_set_disassociate(pDevice, param);
--		break;
--
--	case VIAWGET_SET_DROP_UNENCRYPT:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_SET_DROP_UNENCRYPT \n");
--		break;
--
--	case VIAWGET_SET_DEAUTHENTICATE:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "VIAWGET_SET_DEAUTHENTICATE \n");
--		break;
--
--	default:
--		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "wpa_ioctl: unknown cmd=%d\n",
--			param->cmd);
--		kfree(param);
--		return -EOPNOTSUPP;
--	}
--
--	if ((ret == 0) && wpa_ioctl) {
--		if (copy_to_user(p->pointer, param, p->length)) {
--			ret = -EFAULT;
--			goto out;
--		}
--	}
--
--out:
--	kfree(param);
--	return ret;
--}
-diff --git a/drivers/staging/vt6656/wpactl.h b/drivers/staging/vt6656/wpactl.h
-index 19ab8b6..14dcf0b 100644
---- a/drivers/staging/vt6656/wpactl.h
-+++ b/drivers/staging/vt6656/wpactl.h
-@@ -38,17 +38,11 @@
- //WPA related
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 741918a..ae7f289 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1354,10 +1354,10 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath9k_tx_queue_info qi;
+ 	static const int subtype_txq_to_hwq[] = {
+-		[WME_AC_BE] = ATH_TXQ_AC_BE,
+-		[WME_AC_BK] = ATH_TXQ_AC_BK,
+-		[WME_AC_VI] = ATH_TXQ_AC_VI,
+-		[WME_AC_VO] = ATH_TXQ_AC_VO,
++		[IEEE80211_AC_BE] = ATH_TXQ_AC_BE,
++		[IEEE80211_AC_BK] = ATH_TXQ_AC_BK,
++		[IEEE80211_AC_VI] = ATH_TXQ_AC_VI,
++		[IEEE80211_AC_VO] = ATH_TXQ_AC_VO,
+ 	};
+ 	int axq_qnum, i;
  
- typedef enum { WPA_ALG_NONE, WPA_ALG_WEP, WPA_ALG_TKIP, WPA_ALG_CCMP } wpa_alg;
--typedef enum { CIPHER_NONE, CIPHER_WEP40, CIPHER_TKIP, CIPHER_CCMP,
--	       CIPHER_WEP104 } wpa_cipher;
--typedef enum { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE,
--	       KEY_MGMT_802_1X_NO_WPA, KEY_MGMT_WPA_NONE, KEY_MGMT_CCKM } wpa_key_mgmt;//20080717-02,<Modify> by James Li
+@@ -2464,7 +2464,7 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
+ 	}
  
- #define AUTH_ALG_OPEN_SYSTEM	0x01
- #define AUTH_ALG_SHARED_KEY	0x02
- #define AUTH_ALG_LEAP		0x04
- 
--#define GENERIC_INFO_ELEM 0xdd
--#define RSN_INFO_ELEM 0x30
- 
- typedef unsigned long long NDIS_802_11_KEY_RSC;
- 
-@@ -58,8 +52,6 @@ typedef unsigned long long NDIS_802_11_KEY_RSC;
- 
- /*---------------------  Export Functions  --------------------------*/
- 
--int wpa_set_wpadev(PSDevice pDevice, int val);
--int wpa_ioctl(PSDevice pDevice, struct iw_point *p);
- int wpa_set_keys(PSDevice pDevice, void *ctx, BOOL  fcpfkernel);
- 
- #endif /* __WPACL_H__ */
+ 	for (acno = 0, ac = &an->ac[acno];
+-	     acno < WME_NUM_AC; acno++, ac++) {
++	     acno < IEEE80211_NUM_ACS; acno++, ac++) {
+ 		ac->sched    = false;
+ 		ac->txq = sc->tx.txq_map[acno];
+ 		INIT_LIST_HEAD(&ac->tid_q);
 -- 
-1.7.10.4
-
-
+1.8.0
 
