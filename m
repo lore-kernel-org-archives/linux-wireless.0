@@ -1,41 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34918 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754003Ab2KZQBb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 11:01:31 -0500
-Date: Mon, 26 Nov 2012 10:54:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcmsmac tx patches for 3.7
-Message-ID: <20121126155455.GB27232@tuxdriver.com> (sfid-20121126_170135_306266_43668E1E)
-References: <50AE8BD3.8040902@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50AE8BD3.8040902@broadcom.com>
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:58467
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751513Ab2KUMn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2012 07:43:57 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/6] ath9k: Add a debugfs file to dump queue statistics
+Date: Wed, 21 Nov 2012 18:13:12 +0530
+Message-Id: <1353501795-10378-3-git-send-email-sujith@msujith.org> (sfid-20121121_134401_131424_71B5E870)
+In-Reply-To: <1353501795-10378-1-git-send-email-sujith@msujith.org>
+References: <1353501795-10378-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 22, 2012 at 09:32:19PM +0100, Arend van Spriel wrote:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> When Seth posted his rework on brcmsmac transmit, we had a number of
-> patches ready in the same area albeit less rigorous. With Seth's patches
-> lined up in wireless-next for 3.8, I am wondering what to do here.
-> Should I send our patches against the wireless tree? These patches will
-> definitely result in conflicts when merging to wireless-next, which you
-> typically do. Actually, we do not want these patches in wireless-next as
-> rework from Seth makes them irrelevant.
-> 
-> Any advice on this?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 53 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
-If they are fixes, then they should be small and obvious -- hopefully
-that makes the merging relatively easy?  You might try applying
-them to a local wireless tree and pulling that into a local copy of
-wireless-next, then resolving the conflicts locally so that you can
-give me some idea of any tricky merges?
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index d9edff8..bbb6bd7 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -558,6 +558,50 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	return retval;
+ }
+ 
++static ssize_t read_file_queues(struct file *file, char __user *user_buf,
++				size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_txq *txq;
++	char *buf;
++	unsigned int len = 0, size = 1024;
++	ssize_t retval = 0;
++	int i;
++	char *qname[4] = {"VO", "VI", "BE", "BK"};
++
++	buf = kzalloc(size, GFP_KERNEL);
++	if (buf == NULL)
++		return -ENOMEM;
++
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		txq = sc->tx.txq_map[i];
++		len += snprintf(buf + len, size - len, "(%s): ", qname[i]);
++
++		ath_txq_lock(sc, txq);
++
++		len += snprintf(buf + len, size - len, "%s: %d ",
++				"qnum", txq->axq_qnum);
++		len += snprintf(buf + len, size - len, "%s: %2d ",
++				"qdepth", txq->axq_depth);
++		len += snprintf(buf + len, size - len, "%s: %2d ",
++				"ampdu-depth", txq->axq_ampdu_depth);
++		len += snprintf(buf + len, size - len, "%s: %3d ",
++				"pending", txq->pending_frames);
++		len += snprintf(buf + len, size - len, "%s: %d\n",
++				"stopped", txq->stopped);
++
++		ath_txq_unlock(sc, txq);
++	}
++
++	if (len > size)
++		len = size;
++
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++
++	return retval;
++}
++
+ static ssize_t read_file_stations(struct file *file, char __user *user_buf,
+ 				  size_t count, loff_t *ppos)
+ {
+@@ -825,6 +869,13 @@ static const struct file_operations fops_xmit = {
+ 	.llseek = default_llseek,
+ };
+ 
++static const struct file_operations fops_queues = {
++	.read = read_file_queues,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static const struct file_operations fops_stations = {
+ 	.read = read_file_stations,
+ 	.open = simple_open,
+@@ -1550,6 +1601,8 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &fops_interrupt);
+ 	debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_xmit);
++	debugfs_create_file("queues", S_IRUSR, sc->debug.debugfs_phy, sc,
++			    &fops_queues);
+ 	debugfs_create_u32("qlen_bk", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+ 			   &sc->tx.txq_max_pending[IEEE80211_AC_BK]);
+ 	debugfs_create_u32("qlen_be", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0
+
