@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35731 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754861Ab2KZNSb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 08:18:31 -0500
-Message-ID: <1353935938.9488.32.camel@jlt4.sipsolutions.net> (sfid-20121126_141841_768326_ADAE0D0A)
-Subject: Re: [PATCH 2/2] mac80211: support P2P GO powersave configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Nov 2012 14:18:58 +0100
-In-Reply-To: <CAB3XZEdRa2=_eq9q0Bt07SA=qasnpA6cm1r8YiLZ-qkiQAg5JA@mail.gmail.com> (sfid-20121126_135926_175728_F3459150)
-References: <1353930289-2710-1-git-send-email-johannes@sipsolutions.net>
-	 <1353930289-2710-3-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEdRa2=_eq9q0Bt07SA=qasnpA6cm1r8YiLZ-qkiQAg5JA@mail.gmail.com>
-	 (sfid-20121126_135926_175728_F3459150)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:4953 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754470Ab2KUSAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Nov 2012 13:00:07 -0500
+Message-ID: <50AD169D.3040206@broadcom.com> (sfid-20121121_190011_476904_6B10E40D)
+Date: Wed, 21 Nov 2012 18:59:57 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: "kbuild test robot" <fengguang.wu@intel.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [wireless-next:master 203/214]
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:573:17: sparse:
+ Using plain integer as NULL pointer
+References: <50ac819d.deUknDDzRBMUnMNp%fengguang.wu@intel.com>
+ <20121121141812.GB23606@thinkpad-t410>
+In-Reply-To: <20121121141812.GB23606@thinkpad-t410>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 14:59 +0200, Eliad Peller wrote:
-> On Mon, Nov 26, 2012 at 1:44 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > If the low-level driver wants to support P2P GO
-> > powersave configuration, it must set the cfg80211
-> > flags and mac80211 will pass the parameters to it.
-> >
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > ---
-> >  net/mac80211/cfg.c | 16 +++++++++++++++-
-> >  1 file changed, 15 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> > index 5d30e5f..97cf615 100644
-> > --- a/net/mac80211/cfg.c
-> > +++ b/net/mac80211/cfg.c
-> > @@ -893,7 +893,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
-> >         u32 changed = BSS_CHANGED_BEACON_INT |
-> >                       BSS_CHANGED_BEACON_ENABLED |
-> >                       BSS_CHANGED_BEACON |
-> > -                     BSS_CHANGED_SSID;
-> > +                     BSS_CHANGED_SSID |
-> > +                     BSS_CHANGED_P2P_PS;
-> >         int err;
-> >
-> you'd probably want to add it to ieee80211_reconfig as well.
+On 11/21/2012 03:18 PM, Seth Forshee wrote:
+> On Wed, Nov 21, 2012 at 03:24:13PM +0800, kbuild test robot wrote:
+>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+>> head:   e2ff0498409af6f2023f91aba07b281e5e87ee15
+>> commit: b353dda485038d5033b066cc946dfcf66afae128 [203/214] brcmsmac: Use debug macros for general error and debug statements
+>>
+>>
+>> sparse warnings:
+>>
+>> + drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:573:17: sparse: Using plain integer as NULL pointer
+>
+> There's actually a bug here. I'll send a patch.
 
-Good point. I also have some changes in the nl80211 for verification,
-let me repost.
+So much for us reviewing your patches. The human eye can only see so 
+much, the mind can only process so much. Where would we be without 
+compilers. Using assemblers probably.
 
-johannes
+Gr. AvS
+
 
