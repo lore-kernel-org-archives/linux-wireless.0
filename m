@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:60641 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945912Ab2K2AHw (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:62375 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754070Ab2KVSuJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 19:07:52 -0500
-Received: by mail-vc0-f174.google.com with SMTP id m18so10799345vcm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 16:07:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1354147227.9345.47.camel@jlt4.sipsolutions.net>
-References: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net>
-	<CAB3XZEeuZOv_gHD2q0-K3JUXhjgTFx3AgZ1vS0Rc-toOVf-kTA@mail.gmail.com>
-	<1354147227.9345.47.camel@jlt4.sipsolutions.net>
-Date: Thu, 29 Nov 2012 02:07:51 +0200
-Message-ID: <CAB3XZEcr_D6hKKcwtXxTbH3quQ4TT_ZjjnbWOvHWSnAP+=Mw2Q@mail.gmail.com> (sfid-20121129_010756_536737_D2A2D9BC)
-Subject: Re: [PATCH] cfg80211: fix cmp_hidden_bss
+	Thu, 22 Nov 2012 13:50:09 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so3043433eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 10:50:08 -0800 (PST)
 From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 14/14] wl18xx: make driver operational again
+Date: Thu, 22 Nov 2012 18:06:24 +0200
+Message-Id: <1353600384-32462-15-git-send-email-eliad@wizery.com> (sfid-20121122_220807_323126_C27415D8)
+In-Reply-To: <1353600384-32462-1-git-send-email-eliad@wizery.com>
+References: <1353600384-32462-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 29, 2012 at 2:00 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-11-29 at 01:53 +0200, Eliad Peller wrote:
->> On Wed, Nov 28, 2012 at 11:44 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > From: Johannes Berg <johannes.berg@intel.com>
->> >
->> > The cmp_bss() comparator function uses memcmp() to
->> > compare the SSID. This means that cmp_hidden_bss()
->> > needs to similarly return a number bigger than zero
->> > (use 1) instead of -1 when ie1 is bigger than ie2,
->> > which is the case if an ie2 byte is non-zero.
->
->> > +++ b/net/wireless/scan.c
->> > @@ -472,7 +472,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
->> >         /* zeroed SSID ie is another indication of a hidden bss */
->> >         for (i = 0; i < ie2[1]; i++)
->> >                 if (ie2[i + 2])
->> > -                       return -1;
->> > +                       return 1;
->> >
->> >         return 0;
->> >  }
->>
->> maybe i'm misreading it, but there is still no comparison here at all,
->> so it seems wrong as well :)
->> (practically, i guess it doesn't really matter, because if there is
->> some non-null char, this is not a hidden ssid anyway)
->
-> Hmm yeah you're right, it should be
->         return ie2[i + 1] - ie1[i + 1];
->
-> (or the other way around? need to sleep on that first...)
->
-that's also not enough, because you ignore the previous chars.
-("A" < "B" vs. "AA" > "\x00B")
+we have done updating the driver to the new fw
+api, so make the driver operational again.
 
-i think returning memcmp() is the easiest solution, but sleeping on
-that is definitely a good idea :)
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-Eliad.
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 420da4ae..271e595 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1414,10 +1414,6 @@ static int wl18xx_setup(struct wl1271 *wl)
+ 	struct wl18xx_priv *priv = wl->priv;
+ 	int ret;
+ 
+-	wl1271_error("driver is in transitional commit (due to fw api"
+-		     "change) and can't be booted!");
+-	return -EINVAL;
+-
+ 	wl->rtable = wl18xx_rtable;
+ 	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
+ 	wl->num_rx_desc = WL18XX_NUM_TX_DESCRIPTORS;
+-- 
+1.7.6.401.g6a319
+
