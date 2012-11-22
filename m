@@ -1,56 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34937 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754031Ab2KZJMu (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:46625 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756996Ab2KVTdT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 04:12:50 -0500
-Message-ID: <1353921196.9488.2.camel@jlt4.sipsolutions.net> (sfid-20121126_101254_882419_4949FF71)
-Subject: Re: RFC[1/2]mac80211: Add Statistic to debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Saravana <saravanad@posedge.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 26 Nov 2012 10:13:16 +0100
-In-Reply-To: <50AF4844.2040001@posedge.com>
-References: <50AF0E91.30709@posedge.com>
-	  <CAGRGNgW1x0O26SxytoDQLYXFqWcmfaCGE=Q_pxGg31mW0HyRtw@mail.gmail.com>
-	  <50AF1A1E.8090704@posedge.com>
-	 <1353654716.10197.0.camel@jlt4.sipsolutions.net>
-	 <50AF4844.2040001@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 22 Nov 2012 14:33:19 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so3326207eaa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 11:33:17 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/13] wl18xx: increase MAX_CHANNELS_5GHZ
+Date: Thu, 22 Nov 2012 14:05:20 +0200
+Message-Id: <1353585928-28666-6-git-send-email-eliad@wizery.com> (sfid-20121122_203325_977525_1E0F7626)
+In-Reply-To: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-23 at 15:26 +0530, Saravana wrote:
-> Hi Johannes,
-> On 11/23/2012 12:41 PM, Johannes Berg wrote:
-> > On Fri, 2012-11-23 at 12:09 +0530, Saravana wrote:
-> >
-> >>> Also, as you're adding new statistics which are only used when debugfs
-> >>> is enabled, you might want to wrap them in #ifdefs so that they're
-> >>> only compiled when debugfs support is compiled.
-> >
-> > [...]
-> >> Hence we don't need to wrap this up in #ifdef as it is already taken
-> >> care during the directory creation.
-> >
-> > I think Julian is arguing that you should have the *counters* themselves
-> > be under ifdef, and I tend to agree.
-> >
-> When we went through the make file of mac80211, it is seen that the only 
-> when CONFIG_MAC80211_DEBUGFS macro is enabled, the files debugfs.c, 
-> debugfs_sta.c, debugfs_netdev.c, debugfs_key.c are compiled in.
-> 
-> So it may not be required to wrap up any piece of code in these files 
-> are they will not be compiled in the first place when the macro 
-> CONFIG_MAC80211_DEBUGFS is disabled.
+Some regdomains have more than 23 valid 5ghz channels,
+so 18xx's MAX_CHANNELS_5GHZ was increased to 32.
 
-You're thinking of the wrong code -- Julian was saying the *counters*
-themselves could be ifdef'ed.
+Since now we have different max 5ghz channels values
+for wl12xx and wl18xx, add a new wl->max_channels_5ghz
+field, and use it for scan channels configuration.
 
-I'd say you don't want to ifdef every single counter, but check which
-ones could be expensive to keep etc.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl12xx/main.c   |    1 +
+ drivers/net/wireless/ti/wl12xx/scan.h   |    4 +++-
+ drivers/net/wireless/ti/wl18xx/main.c   |    1 +
+ drivers/net/wireless/ti/wl18xx/scan.h   |    4 +++-
+ drivers/net/wireless/ti/wlcore/scan.c   |    6 +++---
+ drivers/net/wireless/ti/wlcore/scan.h   |   10 +++++++++-
+ drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
+ 7 files changed, 21 insertions(+), 6 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index ada7031..0c81eeb 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -704,6 +704,7 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+ 	wl->scan_templ_id_5 = CMD_TEMPL_APP_PROBE_REQ_5_LEGACY;
+ 	wl->sched_scan_templ_id_2_4 = CMD_TEMPL_CFG_PROBE_REQ_2_4;
+ 	wl->sched_scan_templ_id_5 = CMD_TEMPL_CFG_PROBE_REQ_5;
++	wl->max_channels_5 = WL12XX_MAX_CHANNELS_5GHZ;
+ out:
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ti/wl12xx/scan.h b/drivers/net/wireless/ti/wl12xx/scan.h
+index bd075de..264af7a 100644
+--- a/drivers/net/wireless/ti/wl12xx/scan.h
++++ b/drivers/net/wireless/ti/wl12xx/scan.h
+@@ -26,6 +26,8 @@
+ #include "../wlcore/cmd.h"
+ #include "../wlcore/scan.h"
+ 
++#define WL12XX_MAX_CHANNELS_5GHZ 23
++
+ struct basic_scan_params {
+ 	/* Scan option flags (WL1271_SCAN_OPT_*) */
+ 	__le16 scan_options;
+@@ -107,7 +109,7 @@ struct wl1271_cmd_sched_scan_config {
+ 	u8 role_id;
+ 	u8 padding[1];
+ 	struct conn_scan_ch_params channels_2[MAX_CHANNELS_2GHZ];
+-	struct conn_scan_ch_params channels_5[MAX_CHANNELS_5GHZ];
++	struct conn_scan_ch_params channels_5[WL12XX_MAX_CHANNELS_5GHZ];
+ 	struct conn_scan_ch_params channels_4[MAX_CHANNELS_4GHZ];
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 97c23c8..e81b351 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -636,6 +636,7 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
+ 	wl->scan_templ_id_5 = CMD_TEMPL_CFG_PROBE_REQ_5;
+ 	wl->sched_scan_templ_id_2_4 = CMD_TEMPL_PROBE_REQ_2_4_PERIODIC;
+ 	wl->sched_scan_templ_id_5 = CMD_TEMPL_PROBE_REQ_5_PERIODIC;
++	wl->max_channels_5 = WL18XX_MAX_CHANNELS_5GHZ;
+ out:
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ti/wl18xx/scan.h b/drivers/net/wireless/ti/wl18xx/scan.h
+index b99865d..fc2fd58 100644
+--- a/drivers/net/wireless/ti/wl18xx/scan.h
++++ b/drivers/net/wireless/ti/wl18xx/scan.h
+@@ -50,6 +50,8 @@ enum
+ 	WLCORE_SCAN_RATE_6	= 2,
+ };
+ 
++#define WL18XX_MAX_CHANNELS_5GHZ 32
++
+ struct wl1271_cmd_scan_params {
+ 	struct wl1271_cmd_header header;
+ 
+@@ -89,7 +91,7 @@ struct wl1271_cmd_scan_params {
+ 	union {
+ 		struct {
+ 			struct conn_scan_ch_params channels_2[MAX_CHANNELS_2GHZ];
+-			struct conn_scan_ch_params channels_5[MAX_CHANNELS_5GHZ];
++			struct conn_scan_ch_params channels_5[WL18XX_MAX_CHANNELS_5GHZ];
+ 			struct conn_scan_ch_params channels_4[MAX_CHANNELS_4GHZ];
+ 		};
+ 		struct tracking_ch_params channels_tracking[WL1271_SCAN_MAX_CHANNELS];
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index 9eab64d..e7d0a02 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -228,7 +228,7 @@ wlcore_set_scan_chan_params(struct wl1271 *wl,
+ 					 cfg->channels_5,
+ 					 IEEE80211_BAND_5GHZ,
+ 					 false, true, 0,
+-					 MAX_CHANNELS_5GHZ,
++					 wl->max_channels_5,
+ 					 &n_pactive_ch);
+ 	cfg->dfs =
+ 		wlcore_scan_get_channels(wl,
+@@ -239,7 +239,7 @@ wlcore_set_scan_chan_params(struct wl1271 *wl,
+ 					 IEEE80211_BAND_5GHZ,
+ 					 true, true,
+ 					 cfg->passive[1],
+-					 MAX_CHANNELS_5GHZ,
++					 wl->max_channels_5,
+ 					 &n_pactive_ch);
+ 	cfg->active[1] =
+ 		wlcore_scan_get_channels(wl,
+@@ -250,7 +250,7 @@ wlcore_set_scan_chan_params(struct wl1271 *wl,
+ 					 IEEE80211_BAND_5GHZ,
+ 					 false, false,
+ 					 cfg->passive[1] + cfg->dfs,
+-					 MAX_CHANNELS_5GHZ,
++					 wl->max_channels_5,
+ 					 &n_pactive_ch);
+ 
+ 	/* 802.11j channels are not supported yet */
+diff --git a/drivers/net/wireless/ti/wlcore/scan.h b/drivers/net/wireless/ti/wlcore/scan.h
+index 25b0422..8465f35 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.h
++++ b/drivers/net/wireless/ti/wlcore/scan.h
+@@ -71,9 +71,17 @@ struct wl1271_cmd_trigger_scan_to {
+ } __packed;
+ 
+ #define MAX_CHANNELS_2GHZ	14
+-#define MAX_CHANNELS_5GHZ	23
+ #define MAX_CHANNELS_4GHZ	4
+ 
++/*
++ * This max value here is used only for the struct definition of
++ * wlcore_scan_channels. This struct is used by both 12xx
++ * and 18xx (which have different max 5ghz channels value).
++ * In order to make sure this is large enough, just use the
++ * max possible 5ghz channels.
++ */
++#define MAX_CHANNELS_5GHZ	42
++
+ #define SCAN_MAX_CYCLE_INTERVALS 16
+ #define SCAN_MAX_BANDS 3
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 9f82ee3..36fde4e 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -382,6 +382,7 @@ struct wl1271 {
+ 	u8 scan_templ_id_5;
+ 	u8 sched_scan_templ_id_2_4;
+ 	u8 sched_scan_templ_id_5;
++	u8 max_channels_5;
+ 
+ 	/* per-chip-family private structure */
+ 	void *priv;
+-- 
+1.7.6.401.g6a319
 
