@@ -1,79 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:34656 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753803Ab2K1KS3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49899 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273Ab2KVUoc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 05:18:29 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id qASAISgF013129
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 04:18:28 -0600
-Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id qASAISpj000520
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 04:18:28 -0600
-Received: from [172.24.78.8] (h78-8.vpn.ti.com [172.24.78.8])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id qASAIRdM029993	for
- <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 04:18:27 -0600
-Message-ID: <1354097868.25524.26.camel@cumari.coelho.fi> (sfid-20121128_111833_530688_DE053E99)
-Subject: Re: [PATCH 6/6] wl18xx: ignore irrelevant firmware version fields
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Date: Wed, 28 Nov 2012 12:17:48 +0200
-In-Reply-To: <1354024321-20635-7-git-send-email-coelho@ti.com>
-References: <1354024321-20635-1-git-send-email-coelho@ti.com>
-	 <1354024321-20635-7-git-send-email-coelho@ti.com>
+	Thu, 22 Nov 2012 15:44:32 -0500
+Message-ID: <1353585161.9806.37.camel@jlt4.sipsolutions.net> (sfid-20121122_214552_316648_998A7653)
+Subject: Re: [POC] recoverable fault injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Thu, 22 Nov 2012 12:52:41 +0100
+In-Reply-To: <CAC5umyibe0tb+HLxx3dbT7gF_nVAAHso1Y0Qb4Q_+y0KNrnvFg@mail.gmail.com> (sfid-20121122_124034_444494_4D7B6C5A)
+References: <1353541455.20173.10.camel@jlt4.sipsolutions.net>
+	 <CAC5umyibe0tb+HLxx3dbT7gF_nVAAHso1Y0Qb4Q_+y0KNrnvFg@mail.gmail.com>
+	 (sfid-20121122_124034_444494_4D7B6C5A)
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-27 at 15:52 +0200, Luciano Coelho wrote:
-> For wl18xx, only the chip ID and the minor version number are
-> relevant.  Ignore the other numbers which are either not used or
-> relate to internal projects or internal branches.
+On Thu, 2012-11-22 at 20:40 +0900, Akinobu Mita wrote:
+
+> > I was thinking: what if we could do fault injection during regular
+> > testing, at least on those code paths that are not supposed to have side
+> > effects when they fail? Now obviously this isn't all code paths, and
+> > many probably erroneously *do* have side effects even if they're not
+> > supposed to, but it does apply to a number of code paths.
 > 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->  drivers/net/wireless/ti/wl18xx/wl18xx.h |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> It sounds interesting. I have never thought of this idea.
+
+:-)
+It also occurred to me that if the function is defined to not have side
+effects when failing, this actually also lets you test that in a way.
+Anyway, it's really just an idea at this point.
+
+> > So I decided to play with this, and the result it the patch below. It
+> > adds a new knob "recoverable-only" to the slab and page_alloc fault
+> > attributes. If enabled, then a single fault can be injected if the task
+> > executing it is in a "recoverable section", this is implemented by some
+> > new fields in struct task_struct and the (very ugly!) macro
+> > FAULT_INJECT_CALL_RECOVERABLE_FUNCTION.
 > 
-> diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-> index 96a1e43..5d87bd3 100644
-> --- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-> +++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-> @@ -26,9 +26,9 @@
->  
->  /* minimum FW required for driver */
->  #define WL18XX_CHIP_VER		8
-> -#define WL18XX_IFTYPE_VER	2
-> -#define WL18XX_MAJOR_VER	0
-> -#define WL18XX_SUBTYPE_VER	0
-> +#define WL18XX_IFTYPE_VER	WLCORE_FW_VER_IGNORE
-> +#define WL18XX_MAJOR_VER	WLCORE_FW_VER_IGNORE
-> +#define WL18XX_SUBTYPE_VER	WLCORE_FW_VER_IGNORE
->  #define WL18XX_MINOR_VER	100
+> I suggest introducing a pair of function like:
+> 
+> void fault_recoverable_enable(unsigned long fault_ids);
+> void fault_recoverable_disable();
+> [...]
 
-While merging this on top of the wl18xx FW API changes patchset, I
-noticed that the version has already changed.  We can't ignore IFTYPE
-because MINOR has been restarted from zero.  So, this patch was applied
-like this:
+I thought about something like that, I actually initially played with
+macros like this:
 
-diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-index 4d295a5..3105fbf 100644
---- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-+++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-@@ -27,8 +27,8 @@
- /* minimum FW required for driver */
- #define WL18XX_CHIP_VER                8
- #define WL18XX_IFTYPE_VER      5
--#define WL18XX_MAJOR_VER       0
--#define WL18XX_SUBTYPE_VER     0
-+#define WL18XX_MAJOR_VER       WLCORE_FW_VER_IGNORE
-+#define WL18XX_SUBTYPE_VER     WLCORE_FW_VER_IGNORE
- #define WL18XX_MINOR_VER       28
- 
- #define WL18XX_CMD_MAX_SIZE          740
+#define FAULT_RECOVERABLE_START(ids)	\
+	/* set up the task state */	\
+ fault_recovery_retry:
 
---
-Luca.
+#define FAULT_RECOVERABLE_END(ids)	\
+	if (current->encountered_fault)	\
+		goto fault_recovery_retry;
+
+or so. However, the problem is that if you exit the function between
+these points, and this is true for your functions as well, you leave the
+task's fault injection enabled which isn't what you want. So adding
+functions or macros like this didn't really seem right. Also, functions
+(rather than macros) have the problem that the retry can't be
+encapsulated -- note how my macro calls the function again if it failed.
+So with functions like that, you introduce new manually-coded error and
+retry paths, that seemed undesirable.
+
+As you can see in my macro, it's also possible for an allocation to fail
+but the function to succeed, so the function that is called must have a
+return value indicating success or failure. I ran into this with debug
+objects, their allocation failed all the time but obviously the function
+succeeded as debug objects fail gracefully if they can't allocate
+memory.
+
+Now, I'm not saying I'm happy with this, but I haven't found a better
+solution yet, but I'll admit that I haven't thought about it for long.
+If this was python I'd add a decorator to the function ;-)
+
+Oh another thing I realized: when a fault is injected, I currently set
+current->fail_recoverable = 0, but I could just unset the failed bit
+instead which would allow multiple different failures. Not sure which is
+better though.
+
+Thanks for looking at this :-)
+
+johannes
 
