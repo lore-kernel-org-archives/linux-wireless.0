@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2038 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753193Ab2KPTHo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 14:07:44 -0500
-Message-ID: <50A68EB6.8090403@broadcom.com> (sfid-20121116_200747_868755_9E7E4FE6)
-Date: Fri, 16 Nov 2012 20:06:30 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:48963 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936Ab2KVUQI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 15:16:08 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so3075339pad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 12:16:08 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
 	linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes.berg@intel.com>
-Subject: Re: [PATCH] lib80211: hide Kconfig symbol
-References: <1353020780-5459-1-git-send-email-johannes@sipsolutions.net>
- <20121116185721.GC29426@tuxdriver.com>
-In-Reply-To: <20121116185721.GC29426@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v3 1/2] ath9k: RX timestamp is reported at end of frame
+Date: Wed, 21 Nov 2012 18:06:26 -0800
+Message-Id: <1353549987-24656-1-git-send-email-thomas@cozybit.com> (sfid-20121122_211620_150367_D4BADE8A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/16/2012 07:57 PM, John W. Linville wrote:
-> On Fri, Nov 16, 2012 at 12:06:20AM +0100, Johannes Berg wrote:
->> From: Johannes Berg <johannes.berg@intel.com>
->>
->> There's no need to ask the user about lib80211
->> since it will be selected by drivers requiring
->> it, hide it from Kconfig.
->>
->> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->
-> ACK -- I'll merge it...sorry that we still have to deal with this eyesore!
->
+Accurate RX timestamp reporting is important for proper IBSS merging,
+mesh synchronization, and MCCA scheduling. Namely, knowing where the TSF
+is recorded is needed to sync with the beacon timestamp field.
 
-Now that it is hidden, it does not hurt so much :-) At least it does not 
-give you "eyeball cancer" (my favorite quote when going down memory lane).
+Tested with AR9280.
 
-Gr. AvS
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+
+v2:
+	clarify commit log (Luis)
+
+v3:
+	rebase on wt
+
+ drivers/net/wireless/ath/ath9k/recv.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 6aafbb7..d4df98a 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -976,7 +976,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 	rx_status->freq = hw->conf.channel->center_freq;
+ 	rx_status->signal = ah->noise + rx_stats->rs_rssi;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+-	rx_status->flag |= RX_FLAG_MACTIME_START;
++	rx_status->flag |= RX_FLAG_MACTIME_END;
+ 	if (rx_stats->rs_moreaggr)
+ 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+ 
+-- 
+1.7.10.4
 
