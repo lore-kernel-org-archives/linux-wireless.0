@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:25324 "EHLO
-	userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162Ab2KVTlS (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:39285 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750Ab2KVS0t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 14:41:18 -0500
-Message-ID: <50AD5791.5010702@oracle.com> (sfid-20121122_204146_591207_572C44C0)
-Date: Wed, 21 Nov 2012 16:37:05 -0600
-From: Dave Kleikamp <dave.kleikamp@oracle.com>
+	Thu, 22 Nov 2012 13:26:49 -0500
 MIME-Version: 1.0
-To: Nico Schottelius <nico-kernel20120920@schottelius.org>,
-	Valdis.Kletnieks@vt.edu, David Rientjes <rientjes@google.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	jfs-discussion@lists.sourceforge.net
-Subject: Re: Out of memory on 3.5 kernels
-References: <505B1FA0.6030100@broadcom.com> <20120921194931.GA732@schottelius.org> <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com> <20120926060653.GD16575@schottelius.org> <20120926085708.GA7839@schottelius.org> <20120927055208.GA25252@schottelius.org> <20121003212311.GA14018@schottelius.org> <22962.1349452084@turing-police.cc.vt.edu> <20121005175139.GC831@schottelius.org> <20121030103535.GA10526@schottelius.org>
-In-Reply-To: <20121030103535.GA10526@schottelius.org>
+In-Reply-To: <1353541455.20173.10.camel@jlt4.sipsolutions.net>
+References: <1353541455.20173.10.camel@jlt4.sipsolutions.net>
+Date: Thu, 22 Nov 2012 20:40:31 +0900
+Message-ID: <CAC5umyibe0tb+HLxx3dbT7gF_nVAAHso1Y0Qb4Q_+y0KNrnvFg@mail.gmail.com> (sfid-20121123_000715_757962_4597716B)
+Subject: Re: [POC] recoverable fault injection
+From: Akinobu Mita <akinobu.mita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2012 05:35 AM, Nico Schottelius wrote:
-> Good morning,
-> 
-> update: this problem still exists on 3.6.2-1-ARCH and it got worse:
-> 
-> I reformatted the external disk to use xfs, but as the my
-> root filesystem is still jfs, it still appears:
-> 
->  Active / Total Objects (% used)    : 642732 / 692268 (92.8%)
->  Active / Total Slabs (% used)      : 24801 / 24801 (100.0%)
->  Active / Total Caches (% used)     : 79 / 111 (71.2%)
->  Active / Total Size (% used)       : 603522.30K / 622612.05K (96.9%)
->  Minimum / Average / Maximum Object : 0.01K / 0.90K / 15.25K
-> 
->   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
-> 475548 467649  98%    1.21K  18722       26    599104K jfs_ip
->  25670  19143  74%    0.05K    302       85      1208K shared_policy_node
->  24612  16861  68%    0.19K   1172       21      4688K dentry
->  24426  19524  79%    0.17K   1062       23      4248K vm_area_struct
->  21636  21180  97%    0.11K    601       36      2404K sysfs_dir_cache
->  12352   9812  79%    0.06K    193       64       772K kmalloc-64
->  11684   9145  78%    0.09K    254       46      1016K anon_vma
->   9855   8734  88%    0.58K    365       27      5840K inode_cache
->   9728   9281  95%    0.01K     19      512        76K kmalloc-8
->   8932   4411  49%    0.55K    319       28      5104K radix_tree_node
->   6336   5760  90%    0.25K    198       32      1584K kmalloc-256
->   5632   5632 100%    0.02K     22      256        88K kmalloc-16
->   4998   2627  52%    0.09K    119       42       476K kmalloc-96
->   4998   3893  77%    0.04K     49      102       196K Acpi-Namespace
->   4736   3887  82%    0.03K     37      128       148K kmalloc-32
->   4144   4144 100%    0.07K     74       56       296K Acpi-ParseExt
->   3740   3740 100%    0.02K     22      170        88K numa_policy
->   3486   3023  86%    0.19K    166       21       664K kmalloc-192
->   3200   2047  63%    0.12K    100       32       400K kmalloc-128
->   2304   2074  90%    0.50K     72       32      1152K kmalloc-512
->   2136   2019  94%    0.64K     89       24      1424K proc_inode_cache
->   2080   2080 100%    0.12K     65       32       260K jfs_mp
->   2024   1890  93%    0.70K     88       23      1408K shmem_inode_cache
->   1632   1556  95%    1.00K     51       32      1632K kmalloc-1024
-> 
-> 
-> I am wondering if anyone is feeling responsible for this bug or if the mid-term
-> solution is to move away from jfs?
+2012/11/22 Johannes Berg <johannes@sipsolutions.net>:
+> This idea has been floating around in my head for a long time now ...
+>
+> I was thinking: what if we could do fault injection during regular
+> testing, at least on those code paths that are not supposed to have side
+> effects when they fail? Now obviously this isn't all code paths, and
+> many probably erroneously *do* have side effects even if they're not
+> supposed to, but it does apply to a number of code paths.
 
-Sorry, I haven't taken too close a look at this, but I did notice
-another conversation that may be related:
+It sounds interesting. I have never thought of this idea.
 
-https://lkml.org/lkml/2012/11/17/26
+> So I decided to play with this, and the result it the patch below. It
+> adds a new knob "recoverable-only" to the slab and page_alloc fault
+> attributes. If enabled, then a single fault can be injected if the task
+> executing it is in a "recoverable section", this is implemented by some
+> new fields in struct task_struct and the (very ugly!) macro
+> FAULT_INJECT_CALL_RECOVERABLE_FUNCTION.
 
-The commit in question first showed up in 3.5-rc1, which coincides with
-your problem.
+I suggest introducing a pair of function like:
 
-> 
-> Cheers,
-> 
-> Nico
-> 
+void fault_recoverable_enable(unsigned long fault_ids);
+void fault_recoverable_disable();
+
+fault_recoverable_enable() sets current task's recoverable state to the
+value specified with the argument.  fault_recoverable_disable() resets
+the recoverable state.
+
+I think this can be more readable than FAULT_INJECT_CALL_RECOVERABLE_FUNCTION
+macro.  In case of nl80211_remain_on_channel(), you can just put
+them in exit and entrance:
+
+fault_recoverable_enable(FAULT_ATTR_SLAB | FAULT_ATTR_PAGE_ALLOC);
+...
+fault_recoverable_disable();
+
+return err;
