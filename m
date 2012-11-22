@@ -1,146 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:39516 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390Ab2KDUZz (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:63500 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753979Ab2KVS7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Nov 2012 15:25:55 -0500
-Date: Sun, 4 Nov 2012 21:25:49 +0100
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
- support
-Message-ID: <20121104202549.GB24905@ubuntu-mba51> (sfid-20121104_212637_251617_42AEABDD)
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
- <50955ADB.9020703@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50955ADB.9020703@broadcom.com>
+	Thu, 22 Nov 2012 13:59:53 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so3047065eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 10:59:52 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 00/14] update 18xx api
+Date: Thu, 22 Nov 2012 18:06:10 +0200
+Message-Id: <1353600384-32462-1-git-send-email-eliad@wizery.com> (sfid-20121122_195958_251227_5F5B59DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 03, 2012 at 06:56:43PM +0100, Arend van Spriel wrote:
-> On 10/26/2012 04:23 PM, Seth Forshee wrote:
-> > I've been looking into the issues with brcmsmac performance reported at
-> > [0] and [1]. I started out looking into the tx queueing based on the "No
-> > where to go" messages in the logs. This code has a number of
-> > shortcomings:
-> > 
-> >  - The amount of bufferring is excessive. The tx queue will buffer up to
-> >    228 packets, and each of the tx DMA rings will queue up to 256 more.
-> > 
-> >  - There's no flow control. If the queue fills up packets begin to get
-> >    dropped, as evidenced by the "No where to go" messages.
-> > 
-> >  - Without flow control the tx queue probably helps avoid dropping
-> >    packets for short bursts due to the sheer number of packets that will
-> >    be buffered, but if flow control is added the only remaining benefit
-> >    that I can see is that it accumulates packets for aggregation. The tx
-> >    queue is far more complex than needed for supporting aggergation,
-> >    however.
-> > 
-> > As a result I worked up the following patches to add flow control remove
-> > the tx queue.
-> > 
-> > These patches change the tx handler to directly hand off packets to the
-> > DMA code. The convoluted priority->precedence->fifo mapping is converted
-> > to a simple one-to-one mapping of the mac80211 queues to fifos. Non-
-> > aggregate frames are immediately inserted into the DMA ring.
-> 
-> I mentioned earlier we were still looking at the first patch in this
-> series and do more testing on it. However, I wanted to provide feedback
-> on the other patches now. See below.
-> 
-> > Thanks,
-> > Seth
-> > 
-> > [0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1046507
-> > [1] http://www.spinics.net/lists/linux-wireless/msg96287.html
-> > 
-> > 
-> > Seth Forshee (18):
-> >   brcmsmac: Rework tx code to avoid internal buffering of packets
-> 
-> under test
-> 
-> >   brcmsmac: Use correct descriptor count when calculating next rx
-> >     descriptor
-> 
-> nice catch. acked.
-> 
-> >   brcmsmac: Reduce number of entries in tx DMA rings
-> 
-> under test.
-> 
-> >   brcm80211: Allow trace support to be enabled separately from debug
-> 
-> A bit confusing with BRCMDBG selecting BRCMS_TRACING.
+This patchset updates wl18xx to use the latest
+18xx fw api.
 
-I did this so that the effect of selecting BRCMDBG was unchanged, since
-currently tracing is enabled by BRCMDBG. I'm happy to change it so that
-BRCMDBG does not select BRCMS_TRACING if you prefer.
+Most of the commands are backward compatible with
+the 12xx fw (e.g. new fields were added at the
+end of the existing structs).
 
-> >   brcm80211: Add macro for checking if debug log levels are enabled
-> 
-> During mainlining we got rid of such a macro. Strange to put something
-> similar back in there.
+However, the scan and event mailbox apis were
+completely changed, so we had to split the
+existing code (while trying to reuse as much
+code as possible).
 
-I wasn't aware of that. I personally prefer the macro, but I can change
-it back to open coding the checks.
+After this patchset, the driver can work with
+latest versions of both 12xx and 18xx FWs.
 
-> >   brcm80211: Convert log message levels to debug levels
-> 
-> acked.
-> 
-> >   brcmsmac: Add module parameter for setting the debug level
-> 
-> I would prefer doing this through debugfs.
+v2: handle Luca's comments
 
-Okay, I'll change that for v2.
+Eliad Peller (13):
+  wlcore: don't call ieee80211_sched_scan_stopped directly
+  wlcore: make scan scan configuration functions more generic
+  wl18xx: change fw name and temporarily fail loading
+  wlcore: update commands enum to new fw api
+  wlcore: split 18xx and 12xx scan mechanism
+  wl18xx: increase MAX_CHANNELS_5GHZ
+  wlcore: update acx enum
+  wlcore: update channel_switch/stop_channel_switch commands
+  wlcore: update events enum/struct to new fw api
+  wlcore: pass wmm configuration to the fw
+  wlcore: save session_id per-link
+  wlcore: call ieee80211_sched_scan_stopped on interface removal
+  wl18xx: make driver operational again
 
-> >   brcmsmac: Add support for writing debug messages to the trace buffer
-> 
-> can you name the new files just debug.[ch]
+Victor Goldenshtein (1):
+  wlcore: add new reg-domain configuration command
 
-I'll change this for v2 as well.
+ drivers/net/wireless/ti/wl12xx/Makefile   |    2 +-
+ drivers/net/wireless/ti/wl12xx/cmd.c      |   37 ++
+ drivers/net/wireless/ti/wl12xx/cmd.h      |   20 +
+ drivers/net/wireless/ti/wl12xx/event.c    |  112 +++++
+ drivers/net/wireless/ti/wl12xx/event.h    |  111 +++++
+ drivers/net/wireless/ti/wl12xx/main.c     |   35 ++-
+ drivers/net/wireless/ti/wl12xx/scan.c     |  500 ++++++++++++++++++++++
+ drivers/net/wireless/ti/wl12xx/scan.h     |  140 +++++++
+ drivers/net/wireless/ti/wl18xx/Makefile   |    2 +-
+ drivers/net/wireless/ti/wl18xx/acx.c      |    2 +-
+ drivers/net/wireless/ti/wl18xx/acx.h      |    8 +-
+ drivers/net/wireless/ti/wl18xx/cmd.c      |   80 ++++
+ drivers/net/wireless/ti/wl18xx/cmd.h      |   52 +++
+ drivers/net/wireless/ti/wl18xx/event.c    |  103 +++++
+ drivers/net/wireless/ti/wl18xx/event.h    |   76 ++++
+ drivers/net/wireless/ti/wl18xx/main.c     |   37 ++-
+ drivers/net/wireless/ti/wl18xx/scan.c     |  320 ++++++++++++++
+ drivers/net/wireless/ti/wl18xx/scan.h     |  122 ++++++
+ drivers/net/wireless/ti/wl18xx/wl18xx.h   |    4 +-
+ drivers/net/wireless/ti/wlcore/acx.h      |    1 -
+ drivers/net/wireless/ti/wlcore/boot.c     |   21 +-
+ drivers/net/wireless/ti/wlcore/cmd.c      |  259 ++++++++-----
+ drivers/net/wireless/ti/wlcore/cmd.h      |   68 ++--
+ drivers/net/wireless/ti/wlcore/debugfs.c  |    2 -
+ drivers/net/wireless/ti/wlcore/event.c    |  336 +++++++--------
+ drivers/net/wireless/ti/wlcore/event.h    |  101 ++----
+ drivers/net/wireless/ti/wlcore/init.c     |   14 +-
+ drivers/net/wireless/ti/wlcore/main.c     |  215 +++++++---
+ drivers/net/wireless/ti/wlcore/rx.c       |    4 +
+ drivers/net/wireless/ti/wlcore/scan.c     |  644 ++++++-----------------------
+ drivers/net/wireless/ti/wlcore/scan.h     |  137 ++-----
+ drivers/net/wireless/ti/wlcore/tx.c       |    3 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h   |   46 ++-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    8 +-
+ 34 files changed, 2511 insertions(+), 1111 deletions(-)
+ create mode 100644 drivers/net/wireless/ti/wl12xx/event.c
+ create mode 100644 drivers/net/wireless/ti/wl12xx/event.h
+ create mode 100644 drivers/net/wireless/ti/wl12xx/scan.c
+ create mode 100644 drivers/net/wireless/ti/wl12xx/scan.h
+ create mode 100644 drivers/net/wireless/ti/wl18xx/cmd.c
+ create mode 100644 drivers/net/wireless/ti/wl18xx/cmd.h
+ create mode 100644 drivers/net/wireless/ti/wl18xx/event.c
+ create mode 100644 drivers/net/wireless/ti/wl18xx/event.h
+ create mode 100644 drivers/net/wireless/ti/wl18xx/scan.c
+ create mode 100644 drivers/net/wireless/ti/wl18xx/scan.h
 
-> >   brcmsmac: Use debug macros for general error and debug statements
-> 
-> acked.
-> 
-> >   brcmsmac: Add BRCMS_DBG_MAC80211 debug macro
-> >   brcmsmac: Add RX and TX debug macros
-> >   brcmsmac: Add INT debug macro
-> >   brcmsmac: Add DMA debug macro
-> >   brcmsmac: Add HT debug macro
-> 
-> I would prefer the macros to be in lower case.
+-- 
+1.7.6.401.g6a319
 
-Will do.
-
-> >   brcmsmac: Improve tx trace and debug support
-> 
-> acked.
-> 
-> >   brcmsmac: Add tracepoint for macintstatus
-> 
-> useful one. acked.
-> 
-> >   brcmsmac: Add tracepoint for AMPDU session information
-> 
-> acked.
-> 
-> >   brcmsmac: Remove some noisy but uninformative debug messages
-> 
-> acked. I would say: noisy *and* uninformative but that is just semantics ;-)
-
-Yes, "and" would be better here.
-
-Thanks for the feedback!
-
-Seth
