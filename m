@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-1.exch022.serverdata.net ([206.225.164.184]:32103
-	"EHLO HUB022-nj-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758039Ab2K0HJn (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:46513 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752962Ab2KVTOl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 02:09:43 -0500
-Message-ID: <50B46731.4010003@posedge.com> (sfid-20121127_080946_364345_185028D3)
-Date: Tue, 27 Nov 2012 12:39:37 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+	Thu, 22 Nov 2012 14:14:41 -0500
 MIME-Version: 1.0
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Unable to clone mac80211-next
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FD27514@mbx022-e1-nj-10.exch022.domain.local>
-In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FD27514@mbx022-e1-nj-10.exch022.domain.local>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1353585161.9806.37.camel@jlt4.sipsolutions.net>
+References: <1353541455.20173.10.camel@jlt4.sipsolutions.net>
+	<CAC5umyibe0tb+HLxx3dbT7gF_nVAAHso1Y0Qb4Q_+y0KNrnvFg@mail.gmail.com>
+	<1353585161.9806.37.camel@jlt4.sipsolutions.net>
+Date: Thu, 22 Nov 2012 22:29:42 +0900
+Message-ID: <CAC5umyj07UmPtoFowqquoOBERaVa4KngJ=cOa8_AgkcJ_EksSw@mail.gmail.com> (sfid-20121122_201446_148717_48E8ECDC)
+Subject: Re: [POC] recoverable fault injection
+From: Akinobu Mita <akinobu.mita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+2012/11/22 Johannes Berg <johannes@sipsolutions.net>:
 
-Please ignore below error. My bad. I need to use 
-git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
+> I thought about something like that, I actually initially played with
+> macros like this:
+>
+> #define FAULT_RECOVERABLE_START(ids)    \
+>         /* set up the task state */     \
+>  fault_recovery_retry:
+>
+> #define FAULT_RECOVERABLE_END(ids)      \
+>         if (current->encountered_fault) \
+>                 goto fault_recovery_retry;
+>
+> or so. However, the problem is that if you exit the function between
+> these points, and this is true for your functions as well, you leave the
+> task's fault injection enabled which isn't what you want. So adding
+> functions or macros like this didn't really seem right. Also, functions
+> (rather than macros) have the problem that the retry can't be
+> encapsulated -- note how my macro calls the function again if it failed.
+> So with functions like that, you introduce new manually-coded error and
+> retry paths, that seemed undesirable.
+>
+> As you can see in my macro, it's also possible for an allocation to fail
+> but the function to succeed, so the function that is called must have a
+> return value indicating success or failure. I ran into this with debug
+> objects, their allocation failed all the time but obviously the function
+> succeeded as debug objects fail gracefully if they can't allocate
+> memory.
 
-instead of http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git
+Oh, I completely missed retrying part in your macro.
 
-Thanks,
-Mahesh
+I looked into FAULT_INJECT_CALL_RECOVERABLE_FUNCTION again,
+then I realized that it is not necessary to be variadic macro.
 
-On 11/27/2012 11:33 AM, Mahesh Palivela wrote:
-> Johannes,
->
-> I am getting below error when trying to clone mac80211-next git tree.
->
-> /work/tmp# git clone http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git
-> Cloning into mac80211-next...
-> fatal: http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git/info/refs not found: did you run git update-server-info on the server?
-> /work/tmp#
->
-> Thanks,
-> Mahesh
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+You can define macro like wait_event() family and use it like below:
+
+        return FAULT_INJECT_CALL_RECOVERABLE_FUNCTION(
+                BIT(FAULT_ATTR_SLAB) | BIT(FAULT_ATTR_PAGE_ALLOC),
+                _nl80211_remain_on_channel(skb, info));
