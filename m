@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43924 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754825Ab2K1OBR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 09:01:17 -0500
-Message-ID: <1354111295.9345.25.camel@jlt4.sipsolutions.net> (sfid-20121128_150120_762602_BFCB64AD)
-Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from outside
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Wed, 28 Nov 2012 15:01:35 +0100
-In-Reply-To: <1354042232-32428-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1354042232-32428-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:53848 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755411Ab2KVSla (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 13:41:30 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v8 2/4] wireless: allow Atheros card to not depend on ath.ko
+References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1352978222-13866-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<8206721.qz6ygglX4j@lx-vladimir> <87txsjvwdw.fsf@purkki.adurom.net>
+	<CAB=NE6XP83QVZ8Vv1R247HLW3ep_quQ8yP9STKT5L_jMrpxUOA@mail.gmail.com>
+Date: Thu, 22 Nov 2012 09:08:48 +0200
+In-Reply-To: <CAB=NE6XP83QVZ8Vv1R247HLW3ep_quQ8yP9STKT5L_jMrpxUOA@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Wed, 21 Nov 2012 07:10:44 -0800")
+Message-ID: <87mwyaw1vj.fsf@purkki.adurom.net> (sfid-20121122_194137_397701_517C83C6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-27 at 19:50 +0100, Simon Wunderlich wrote:
-> It can be useful to set own WMM parameters from outside, otherwise there
-> is no way to change this in Ad-Hoc networks.
+"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com> writes:
 
-Having proper WMM support for IBSS doesn't seem this simple.
+>> > As was discussed, I prepared this patch that address Kconfig issue for the
+>> > Atheros wifi cards.
+>> >
+>> > Any opinions on this?
+>>
+>> Looks good to me, but I didn't check that carefully...
+>>
+>> Actually I think ath6kl can make use of this as well, it shouldn't
+>> depend anything from ath.ko.
+>
+> Indeed it should.
 
-What about IBSS merging? What about adding WMM IEs? etc.
+-ECONFUSED :)
 
-johannes
+Do you mean that ath6kl should or should not depend on ath.ko?
 
+-- 
+Kalle Valo
