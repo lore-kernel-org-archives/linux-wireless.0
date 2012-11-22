@@ -1,67 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49687 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360Ab2KHPif (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39118 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755362Ab2KVTW0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 10:38:35 -0500
-Message-ID: <1352389150.11421.6.camel@jlt4.sipsolutions.net> (sfid-20121108_163846_935336_C50D01C0)
-Subject: Re: [PATCH] mac80211: add debugfs file for HW queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 08 Nov 2012 16:39:10 +0100
-In-Reply-To: <CAB3XZEdBFZ+ztESgKwprLmJH+5F=x3z66trn_QRq7WJCdcsz1g@mail.gmail.com> (sfid-20121108_163625_184975_0AED8C0B)
-References: <1352385113-21671-1-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEdBFZ+ztESgKwprLmJH+5F=x3z66trn_QRq7WJCdcsz1g@mail.gmail.com>
-	 (sfid-20121108_163625_184975_0AED8C0B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 22 Nov 2012 14:22:26 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [PATCH 3/3] mac80211: remove mesh config macros from mesh_plink.c
+Date: Wed, 21 Nov 2012 18:40:32 -0800
+Message-Id: <1353552032-15600-4-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121122_202231_563928_C162B2C1)
+In-Reply-To: <1353552032-15600-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353552032-15600-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-08 at 17:36 +0200, Eliad Peller wrote:
-> On Thu, Nov 8, 2012 at 4:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > Add a debugfs file showing which HW queues were
-> > allocated to a virtual interface, including the
-> > CAB queue for AP interfaces.
-> >
-> > Change-Id: I486924e961b6ad6785a79db09620919ee644e703
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > ---
-> >  net/mac80211/debugfs_netdev.c | 21 +++++++++++++++++++++
-> >  1 file changed, 21 insertions(+)
-> >
-> > diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-> > index 3393ad5..c3f089a 100644
-> > --- a/net/mac80211/debugfs_netdev.c
-> > +++ b/net/mac80211/debugfs_netdev.c
-> > @@ -169,6 +169,26 @@ IEEE80211_IF_FILE(flags, flags, HEX);
-> >  IEEE80211_IF_FILE(state, state, LHEX);
-> >  IEEE80211_IF_FILE(channel_type, vif.bss_conf.channel_type, DEC);
-> >
-> > +static ssize_t
-> > +ieee80211_if_fmt_hw_queues(const struct ieee80211_sub_if_data *sdata,
-> > +                          char *buf, int buflen)
-> > +{
-> > +       int len;
-> > +
-> > +       len = scnprintf(buf, buflen, "AC queues: VO:%d VI:%d BE:%d BK:%d\n",
-> > +                       sdata->vif.hw_queue[IEEE80211_AC_VO],
-> > +                       sdata->vif.hw_queue[IEEE80211_AC_VI],
-> > +                       sdata->vif.hw_queue[IEEE80211_AC_BE],
-> > +                       sdata->vif.hw_queue[IEEE80211_AC_BK]);
-> > +
-> > +       if (sdata->vif.type == NL80211_IFTYPE_AP && len < buflen)
-> > +               len += scnprintf(buf + len, buflen - len, "cab queue: %d\n",
-> > +                                sdata->vif.cab_queue);
-> > +
-> the (len < buflen) condition is redundant (scnprintf returns the
-> number of chars written not including the trailing NULL, so it will
-> always be < buflen)
+Use shortcut pointer instead where it is appropriate.
 
-Err, yeah, good point. Thanks.
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ net/mac80211/mesh_plink.c |   28 +++++++++++++---------------
+ 1 file changed, 13 insertions(+), 15 deletions(-)
 
-johannes
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 234fe75..7a47f40 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -19,12 +19,6 @@
+ #define mod_plink_timer(s, t) (mod_timer(&s->plink_timer, \
+ 				jiffies + HZ * t / 1000))
+ 
+-#define dot11MeshMaxRetries(s) (s->u.mesh.mshcfg.dot11MeshMaxRetries)
+-#define dot11MeshRetryTimeout(s) (s->u.mesh.mshcfg.dot11MeshRetryTimeout)
+-#define dot11MeshConfirmTimeout(s) (s->u.mesh.mshcfg.dot11MeshConfirmTimeout)
+-#define dot11MeshHoldingTimeout(s) (s->u.mesh.mshcfg.dot11MeshHoldingTimeout)
+-#define dot11MeshMaxPeerLinks(s) (s->u.mesh.mshcfg.dot11MeshMaxPeerLinks)
+-
+ /* We only need a valid sta if user configured a minimum rssi_threshold. */
+ #define rssi_threshold_check(sta, sdata) \
+ 		(sdata->u.mesh.mshcfg.rssi_threshold == 0 ||\
+@@ -430,6 +424,7 @@ static void mesh_plink_timer(unsigned long data)
+ 	struct sta_info *sta;
+ 	__le16 llid, plid, reason;
+ 	struct ieee80211_sub_if_data *sdata;
++	struct mesh_config *mshcfg;
+ 
+ 	/*
+ 	 * This STA is valid because sta_info_destroy() will
+@@ -456,12 +451,13 @@ static void mesh_plink_timer(unsigned long data)
+ 	llid = sta->llid;
+ 	plid = sta->plid;
+ 	sdata = sta->sdata;
++	mshcfg = &sdata->u.mesh.mshcfg;
+ 
+ 	switch (sta->plink_state) {
+ 	case NL80211_PLINK_OPN_RCVD:
+ 	case NL80211_PLINK_OPN_SNT:
+ 		/* retry timer */
+-		if (sta->plink_retries < dot11MeshMaxRetries(sdata)) {
++		if (sta->plink_retries < mshcfg->dot11MeshMaxRetries) {
+ 			u32 rand;
+ 			mpl_dbg(sta->sdata,
+ 				"Mesh plink for %pM (retry, timeout): %d %d\n",
+@@ -484,7 +480,7 @@ static void mesh_plink_timer(unsigned long data)
+ 		if (!reason)
+ 			reason = cpu_to_le16(WLAN_REASON_MESH_CONFIRM_TIMEOUT);
+ 		sta->plink_state = NL80211_PLINK_HOLDING;
+-		mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
++		mod_plink_timer(sta, mshcfg->dot11MeshHoldingTimeout);
+ 		spin_unlock_bh(&sta->lock);
+ 		mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
+ 				    sta->sta.addr, llid, plid, reason);
+@@ -543,7 +539,7 @@ int mesh_plink_open(struct sta_info *sta)
+ 		return -EBUSY;
+ 	}
+ 	sta->plink_state = NL80211_PLINK_OPN_SNT;
+-	mesh_plink_timer_set(sta, dot11MeshRetryTimeout(sdata));
++	mesh_plink_timer_set(sta, sdata->u.mesh.mshcfg.dot11MeshRetryTimeout);
+ 	spin_unlock_bh(&sta->lock);
+ 	mpl_dbg(sdata,
+ 		"Mesh plink: starting establishment with %pM\n",
+@@ -570,6 +566,7 @@ void mesh_plink_block(struct sta_info *sta)
+ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_mgmt *mgmt,
+ 			 size_t len, struct ieee80211_rx_status *rx_status)
+ {
++	struct mesh_config *mshcfg = &sdata->u.mesh.mshcfg;
+ 	struct ieee802_11_elems elems;
+ 	struct sta_info *sta;
+ 	enum plink_event event;
+@@ -777,7 +774,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			sta->plid = plid;
+ 			get_random_bytes(&llid, 2);
+ 			sta->llid = llid;
+-			mesh_plink_timer_set(sta, dot11MeshRetryTimeout(sdata));
++			mesh_plink_timer_set(sta,
++					     mshcfg->dot11MeshRetryTimeout);
+ 			spin_unlock_bh(&sta->lock);
+ 			mesh_plink_frame_tx(sdata,
+ 					    WLAN_SP_MESH_PEERING_OPEN,
+@@ -803,7 +801,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			sta->reason = reason;
+ 			sta->plink_state = NL80211_PLINK_HOLDING;
+ 			if (!mod_plink_timer(sta,
+-					     dot11MeshHoldingTimeout(sdata)))
++					     mshcfg->dot11MeshHoldingTimeout))
+ 				sta->ignore_plink_timer = true;
+ 
+ 			llid = sta->llid;
+@@ -825,7 +823,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		case CNF_ACPT:
+ 			sta->plink_state = NL80211_PLINK_CNF_RCVD;
+ 			if (!mod_plink_timer(sta,
+-					     dot11MeshConfirmTimeout(sdata)))
++					     mshcfg->dot11MeshConfirmTimeout))
+ 				sta->ignore_plink_timer = true;
+ 
+ 			spin_unlock_bh(&sta->lock);
+@@ -847,7 +845,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			sta->reason = reason;
+ 			sta->plink_state = NL80211_PLINK_HOLDING;
+ 			if (!mod_plink_timer(sta,
+-					     dot11MeshHoldingTimeout(sdata)))
++					     mshcfg->dot11MeshHoldingTimeout))
+ 				sta->ignore_plink_timer = true;
+ 
+ 			llid = sta->llid;
+@@ -888,7 +886,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			sta->reason = reason;
+ 			sta->plink_state = NL80211_PLINK_HOLDING;
+ 			if (!mod_plink_timer(sta,
+-					     dot11MeshHoldingTimeout(sdata)))
++					     mshcfg->dot11MeshHoldingTimeout))
+ 				sta->ignore_plink_timer = true;
+ 
+ 			llid = sta->llid;
+@@ -923,7 +921,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			changed |= __mesh_plink_deactivate(sta);
+ 			sta->plink_state = NL80211_PLINK_HOLDING;
+ 			llid = sta->llid;
+-			mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
++			mod_plink_timer(sta, mshcfg->dot11MeshHoldingTimeout);
+ 			spin_unlock_bh(&sta->lock);
+ 			changed |= mesh_set_ht_prot_mode(sdata);
+ 			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
+-- 
+1.7.9.5
 
