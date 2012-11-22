@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4868 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750816Ab2KPIh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 03:37:28 -0500
-Message-ID: <50A5FB05.4040500@broadcom.com> (sfid-20121116_093731_533991_F071A28D)
-Date: Fri, 16 Nov 2012 09:36:21 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, "Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 01/22] brcmsmac: Introduce AMPDU sessions for
- assembling AMPDUs
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-2-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1352988492-21340-2-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:49897 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756118Ab2KVUo2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 15:44:28 -0500
+Message-ID: <1353585496.9806.38.camel@jlt4.sipsolutions.net> (sfid-20121122_214459_638051_642CF951)
+Subject: [PATCH] iwlegacy: initialize rx_status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 22 Nov 2012 12:58:16 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2012 03:07 PM, Seth Forshee wrote:
-> AMPDU session allows MPDUs to be temporarily queued until either a full
-> AMPDU has been collected or circumstances dictate that transmission
-> should start with a partial AMPDU. Packets are added to the session by
+From: Johannes Berg <johannes.berg@intel.com>
 
-I started reviewing this and reading this commit message got me 
-wondering about the .flush() problems. I realized the flush would be a 
-"circumstance" to start transmission of a partial AMPDU, but I am pretty 
-sure it currently is not treated as such.
+The vendor radiotap patch added a few fields to
+struct ieee80211_rx_status that need to be zero,
+initialize the struct instead of using whatever
+was left on the stack.
 
-Regards,
-Arend
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+I have a patch for iwlwifi queued as well, all other drivers seem fine.
 
-> calling brcms_c_ampdu_add_frame(). brcms_c_ampdu_finalize() should be
-> called to fix up the tx headers in the first and last packet before
-> adding the packets to the DMA ring. brmcs_c_sendampdu() is converted to
-> using AMPDU sessions.
->
-> This patch has no real value on it's own, but is needed in preparation
-> for elimination of the tx packet queue from brcmsmac.
->
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |  625 +++++++++++++----------
->   drivers/net/wireless/brcm80211/brcmsmac/ampdu.h |   26 +
->   2 files changed, 377 insertions(+), 274 deletions(-)
+ drivers/net/wireless/iwlegacy/3945.c     | 2 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
+index 87e5398..e0b9d7f 100644
+--- a/drivers/net/wireless/iwlegacy/3945.c
++++ b/drivers/net/wireless/iwlegacy/3945.c
+@@ -516,7 +516,7 @@ static void
+ il3945_hdl_rx(struct il_priv *il, struct il_rx_buf *rxb)
+ {
+ 	struct ieee80211_hdr *header;
+-	struct ieee80211_rx_status rx_status;
++	struct ieee80211_rx_status rx_status = {};
+ 	struct il_rx_pkt *pkt = rxb_addr(rxb);
+ 	struct il3945_rx_frame_stats *rx_stats = IL_RX_STATS(pkt);
+ 	struct il3945_rx_frame_hdr *rx_hdr = IL_RX_HDR(pkt);
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index ef68b72..07ffa57 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -613,7 +613,7 @@ void
+ il4965_hdl_rx(struct il_priv *il, struct il_rx_buf *rxb)
+ {
+ 	struct ieee80211_hdr *header;
+-	struct ieee80211_rx_status rx_status;
++	struct ieee80211_rx_status rx_status = {};
+ 	struct il_rx_pkt *pkt = rxb_addr(rxb);
+ 	struct il_rx_phy_res *phy_res;
+ 	__le32 rx_pkt_status;
+-- 
+1.8.0
+
 
 
