@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35482 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752765Ab2KZLoY (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:52080 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755639Ab2KVTbv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 06:44:24 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] mac80211: support P2P GO powersave configuration
-Date: Mon, 26 Nov 2012 12:44:49 +0100
-Message-Id: <1353930289-2710-3-git-send-email-johannes@sipsolutions.net> (sfid-20121126_124429_345320_69BD38C6)
-In-Reply-To: <1353930289-2710-1-git-send-email-johannes@sipsolutions.net>
-References: <1353930289-2710-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 22 Nov 2012 14:31:51 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so3325786eaa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 11:31:50 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/13] wlcore: update acx enum
+Date: Thu, 22 Nov 2012 14:05:21 +0200
+Message-Id: <1353585928-28666-7-git-send-email-eliad@wizery.com> (sfid-20121122_203221_880153_30625DD0)
+In-Reply-To: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+update the acx enum to the new fw api.
 
-If the low-level driver wants to support P2P GO
-powersave configuration, it must set the cfg80211
-flags and mac80211 will pass the parameters to it.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/mac80211/cfg.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ti/wl18xx/acx.c |    2 +-
+ drivers/net/wireless/ti/wl18xx/acx.h |    4 ----
+ drivers/net/wireless/ti/wlcore/acx.h |   10 +++++++++-
+ 3 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5d30e5f..97cf615 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -893,7 +893,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	u32 changed = BSS_CHANGED_BEACON_INT |
- 		      BSS_CHANGED_BEACON_ENABLED |
- 		      BSS_CHANGED_BEACON |
--		      BSS_CHANGED_SSID;
-+		      BSS_CHANGED_SSID |
-+		      BSS_CHANGED_P2P_PS;
- 	int err;
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
+index 72840e2..adff9cd 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.c
++++ b/drivers/net/wireless/ti/wl18xx/acx.c
+@@ -75,7 +75,7 @@ int wl18xx_acx_set_checksum_state(struct wl1271 *wl)
  
- 	old = rtnl_dereference(sdata->u.ap.beacon);
-@@ -932,6 +933,9 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	sdata->vif.bss_conf.hidden_ssid =
- 		(params->hidden_ssid != NL80211_HIDDEN_SSID_NOT_IN_USE);
+ 	acx->checksum_state = CHECKSUM_OFFLOAD_ENABLED;
  
-+	sdata->vif.bss_conf.p2p_ctwindow = params->p2p_ctwindow;
-+	sdata->vif.bss_conf.p2p_oppps = params->p2p_opp_ps;
+-	ret = wl1271_cmd_configure(wl, ACX_CHECKSUM_CONFIG, acx, sizeof(*acx));
++	ret = wl1271_cmd_configure(wl, ACX_CSUM_CONFIG, acx, sizeof(*acx));
+ 	if (ret < 0) {
+ 		wl1271_warning("failed to set Tx checksum state: %d", ret);
+ 		goto out;
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+index e2609a6..67733a1 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.h
++++ b/drivers/net/wireless/ti/wl18xx/acx.h
+@@ -25,10 +25,6 @@
+ #include "../wlcore/wlcore.h"
+ #include "../wlcore/acx.h"
+ 
+-enum {
+-	ACX_CLEAR_STATISTICS		 = 0x0047,
+-};
+-
+ /* numbers of bits the length field takes (add 1 for the actual number) */
+ #define WL18XX_HOST_IF_LEN_SIZE_FIELD 15
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
+index d03215d..7833d17 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.h
++++ b/drivers/net/wireless/ti/wlcore/acx.h
+@@ -1025,7 +1025,15 @@ enum {
+ 	ACX_CONFIG_HANGOVER              = 0x0042,
+ 	ACX_FEATURE_CFG                  = 0x0043,
+ 	ACX_PROTECTION_CFG               = 0x0044,
+-	ACX_CHECKSUM_CONFIG              = 0x0045,
 +
- 	err = ieee80211_assign_beacon(sdata, &params->beacon);
- 	if (err < 0)
- 		return err;
-@@ -1807,6 +1811,16 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 		changed |= BSS_CHANGED_HT;
- 	}
++	/* start of 18xx specific acxs */
++	ACX_NS_IPV6_FILTER               = 0x0050,
++	ACX_PEER_HT_OPERATION_MODE_CFG   = 0x0051,
++	ACX_CSUM_CONFIG                  = 0x0052,
++	ACX_SIM_CONFIG                   = 0x0053,
++	ACX_CLEAR_STATISTICS             = 0x0054,
++	ACX_AUTO_RX_STREAMING            = 0x0055,
++	ACX_PEER_CAP                     = 0x0056
+ };
  
-+	if (params->p2p_ctwindow >= 0) {
-+		sdata->vif.bss_conf.p2p_ctwindow = params->p2p_ctwindow;
-+		changed |= BSS_CHANGED_P2P_PS;
-+	}
-+
-+	if (params->p2p_opp_ps >= 0) {
-+		sdata->vif.bss_conf.p2p_oppps = params->p2p_opp_ps;
-+		changed |= BSS_CHANGED_P2P_PS;
-+	}
-+
- 	ieee80211_bss_info_change_notify(sdata, changed);
  
- 	return 0;
 -- 
-1.8.0
+1.7.6.401.g6a319
 
