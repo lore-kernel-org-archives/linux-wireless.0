@@ -1,88 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:52037 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752489Ab2KTWf7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49900 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932461Ab2KVUod (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 17:35:59 -0500
-Message-ID: <50AC05CD.8060702@monom.org> (sfid-20121120_233601_840592_B0E01A38)
-Date: Tue, 20 Nov 2012 23:35:57 +0100
-From: Daniel Wagner <wagi@monom.org>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
- support
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com> <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org> <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org> <50ABF17A.6020604@broadcom.com>
-In-Reply-To: <50ABF17A.6020604@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 22 Nov 2012 15:44:33 -0500
+Message-ID: <1353573671.9806.15.camel@jlt4.sipsolutions.net> (sfid-20121122_214500_330146_2FDA5F02)
+Subject: Re: [PATCH v2] mac80211: support radiotap vendor namespace RX data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 22 Nov 2012 09:41:11 +0100
+In-Reply-To: <1353573266.9806.14.camel@jlt4.sipsolutions.net>
+References: <1353061591-22284-1-git-send-email-johannes@sipsolutions.net>
+	 <87ehjtygci.fsf@purkki.adurom.net>
+	 <1353063966.9490.1.camel@jlt4.sipsolutions.net>
+	 <50ADE0E3.2020909@neratec.com>
+	 <1353573266.9806.14.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20.11.2012 22:09, Arend van Spriel wrote:
-> On 11/20/2012 06:44 PM, Daniel Wagner wrote:
->> Hi Seth,
->>
->> On 20.11.2012 15:28, Seth Forshee wrote:
->>> On Tue, Nov 20, 2012 at 08:30:10AM +0100, Daniel Wagner wrote:
->>>> Hi Seth,
->>>>
->>>> On 19.11.2012 20:11, Daniel Wagner wrote:
->>>>> Works perfectly fine on my machine.
->>>>
->>>> Well, not really true. Though I am not sure if this what I am seeing
->>>> related to your changes. I see following log only when I am using my
->>>> home AP. The pattern is that when the connection stop working I see
->>>> something like this in the log:
->>>>
->>>> [ 8735.159091] wlan0: moving STA 1c:c6:3c:1f:50:68 to state 4
->>>> [ 8735.197298] wlan0: Rx A-MPDU request on tid 0 result 0
->>>> [ 8735.566368] wlan0: Open BA session requested for 1c:c6:3c:1f:50:68
->>>> tid 0
->>>> [ 8735.573701] wlan0: activated addBA response timer on tid 0
->>>> [ 8735.578826] wlan0: switched off addBA timer for tid 0
->>>> [ 8735.578834] wlan0: Aggregation is on for tid 0
->>>> [ 8749.687530] wlan0: tx session timer expired on tid 0
->>>> [ 8749.687558] wlan0: Tx BA session stop requested for
->>>> 1c:c6:3c:1f:50:68 tid 0
->>>> [ 8749.700550] wlan0: Stopping Tx BA session for 1c:c6:3c:1f:50:68
->>>> tid 0
->>>>
->>>>
->>>> This is what I do: First establishing a connection, then after a
->>>> while any
->>>> traffic seems stops for a period and sometimes it recovers from that
->>>> point. If
->>>> not a disconnect/connect (using ConnMan) dance fixes the problem.
->>>
->>> The tx session timer expiring is a result of not having any aggregate
->>> transfers in a while. In my testing with iperf I see periods where the
->>> transfer seems to stall, but it always recovers. These are less frequent
->>> after my patches, but they still happen, and I haven't been able to work
->>> out the cause yet. I'm not sure whether these are related to what you're
->>> seeing or not.
->>>
->>> Luckily I've added a bunch of new debug code. Could you make sure you
->>> have MAC80211_MESSAGE_TRACING and BRCM_TRACING enabled in your config
->>> and collect a trace when this is happening by running:
->>>
->>>   trace-cmd record -e mac80211 -e mac80211_msg -e brcmsmac \
->>>          -e brcmsmac_tx -e brcmsmac_msg
->>>
->>> This going to collect a lot of data, and you should bump up the trace
->>> buffer size to avoid overruns. Once you've got a trace please compress
->>> trace.dat and put it along with your dmesg somewhere where I can get at
->>> them.
->>
->> I hope I got it right. Here are the requested logs:
->>
->> http://www.monom.org/misc/brcmsmac/traces/
->
-> What channel is you AP on?
+On Thu, 2012-11-22 at 09:34 +0100, Johannes Berg wrote:
+> On Thu, 2012-11-22 at 09:22 +0100, Wojciech Dubowik wrote:
+> > Shouldn't all functions between ieee80211_rx
+> > and remove_monitor_info map header with
+> > (struct ieee80211_hdr *)(skb->data + status->vendor_radiotap_len) ?
+> > 
+> > Otherwise function like should_drop_frame uses header mapped over
+> > potential vendor data.
+> 
+> Huh, yes, how did I miss that. It only applies to should_drop_frame()
+> though, or do you see any other place?
 
-It's on 13 which is the only not too crowed channel in my place.
+So I think this is sufficient?
+
+johannes
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index ec15a49..ec87902 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -62,13 +62,16 @@ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
+ static inline int should_drop_frame(struct sk_buff *skb, int present_fcs_len)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_hdr *hdr;
++
++	hdr = (void *)(skb->data + status->vendor_radiotap_len);
+ 
+ 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC |
+ 			    RX_FLAG_FAILED_PLCP_CRC |
+ 			    RX_FLAG_AMPDU_IS_ZEROLEN))
+ 		return 1;
+-	if (unlikely(skb->len < 16 + present_fcs_len))
++	if (unlikely(skb->len < 16 + present_fcs_len +
++				status->vendor_radiotap_len))
+ 		return 1;
+ 	if (ieee80211_is_ctl(hdr->frame_control) &&
+ 	    !ieee80211_is_pspoll(hdr->frame_control) &&
+@@ -341,8 +344,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
+ 		present_fcs_len = FCS_LEN;
+ 
+-	/* make sure hdr->frame_control is on the linear part */
+-	if (!pskb_may_pull(origskb, 2)) {
++	/* ensure hdr->frame_control and vendor radiotap data are in skb head */
++	if (!pskb_may_pull(origskb, 2 + status->vendor_radiotap_len)) {
+ 		dev_kfree_skb(origskb);
+ 		return NULL;
+ 	}
+
+
