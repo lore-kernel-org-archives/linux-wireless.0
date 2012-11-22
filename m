@@ -1,37 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:56525 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752732Ab2KLTaR (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:40928 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899Ab2KVS12 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 14:30:17 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k13so9572356iea.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 11:30:15 -0800 (PST)
-Date: Mon, 12 Nov 2012 14:28:59 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Thomas Pedersen <thomas@cozybit.com>, ath5k-devel@lists.ath5k.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: RX timestamp is reported at end of frame
-Message-ID: <20121112192859.GB6842@localhost> (sfid-20121112_203034_966131_91D458CC)
-References: <1352746438-2404-1-git-send-email-thomas@cozybit.com>
- <CAJ-Vmom4Q9ToOokeLf91tSDmmPDehcqfofuPu=wL+=Pf4fUr_g@mail.gmail.com>
+	Thu, 22 Nov 2012 13:27:28 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so8275018oag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 10:27:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ-Vmom4Q9ToOokeLf91tSDmmPDehcqfofuPu=wL+=Pf4fUr_g@mail.gmail.com>
+In-Reply-To: <1353594065.27848.60.camel@cumari.coelho.fi>
+References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+	<1353585928-28666-7-git-send-email-eliad@wizery.com>
+	<1353594065.27848.60.camel@cumari.coelho.fi>
+Date: Thu, 22 Nov 2012 16:26:33 +0200
+Message-ID: <CAB3XZEeRS5CPyU0h4BrKOH2uoi95coVMwghkaEk=zy1AzSki4Q@mail.gmail.com> (sfid-20121122_192751_214380_A21EF918)
+Subject: Re: [PATCH 06/13] wlcore: update acx enum
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 12, 2012 at 11:17:36AM -0800, Adrian Chadd wrote:
-[undid top-post]
-> On 12 November 2012 10:53, Thomas Pedersen <thomas@cozybit.com> wrote:
-> > This is true for at least AR5213, and shouldn't be different for other
-> > ath5k PHYs.
-> 
-> It may be; that's the problem. :/
+On Thu, Nov 22, 2012 at 4:21 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
+>> update the acx enum to the new fw api.
+>>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>>  drivers/net/wireless/ti/wl18xx/acx.c |    2 +-
+>>  drivers/net/wireless/ti/wl18xx/acx.h |    4 ----
+>>  drivers/net/wireless/ti/wlcore/acx.h |   10 +++++++++-
+>>  3 files changed, 10 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
+>> index 72840e2..adff9cd 100644
+>> --- a/drivers/net/wireless/ti/wl18xx/acx.c
+>> +++ b/drivers/net/wireless/ti/wl18xx/acx.c
+>> @@ -75,7 +75,7 @@ int wl18xx_acx_set_checksum_state(struct wl1271 *wl)
+>>
+>>       acx->checksum_state = CHECKSUM_OFFLOAD_ENABLED;
+>>
+>> -     ret = wl1271_cmd_configure(wl, ACX_CHECKSUM_CONFIG, acx, sizeof(*acx));
+>> +     ret = wl1271_cmd_configure(wl, ACX_CSUM_CONFIG, acx, sizeof(*acx));
+>>       if (ret < 0) {
+>>               wl1271_warning("failed to set Tx checksum state: %d", ret);
+>>               goto out;
+>> diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+>> index e2609a6..67733a1 100644
+>> --- a/drivers/net/wireless/ti/wl18xx/acx.h
+>> +++ b/drivers/net/wireless/ti/wl18xx/acx.h
+>> @@ -25,10 +25,6 @@
+>>  #include "../wlcore/wlcore.h"
+>>  #include "../wlcore/acx.h"
+>>
+>> -enum {
+>> -     ACX_CLEAR_STATISTICS             = 0x0047,
+>> -};
+>> -
+>>  /* numbers of bits the length field takes (add 1 for the actual number) */
+>>  #define WL18XX_HOST_IF_LEN_SIZE_FIELD 15
+>>
+>> diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
+>> index d03215d..7833d17 100644
+>> --- a/drivers/net/wireless/ti/wlcore/acx.h
+>> +++ b/drivers/net/wireless/ti/wlcore/acx.h
+>> @@ -1025,7 +1025,15 @@ enum {
+>>       ACX_CONFIG_HANGOVER              = 0x0042,
+>>       ACX_FEATURE_CFG                  = 0x0043,
+>>       ACX_PROTECTION_CFG               = 0x0044,
+>> -     ACX_CHECKSUM_CONFIG              = 0x0045,
+>> +
+>> +     /* start of 18xx specific acxs */
+>> +     ACX_NS_IPV6_FILTER               = 0x0050,
+>> +     ACX_PEER_HT_OPERATION_MODE_CFG   = 0x0051,
+>> +     ACX_CSUM_CONFIG                  = 0x0052,
+>> +     ACX_SIM_CONFIG                   = 0x0053,
+>> +     ACX_CLEAR_STATISTICS             = 0x0054,
+>> +     ACX_AUTO_RX_STREAMING            = 0x0055,
+>> +     ACX_PEER_CAP                     = 0x0056
+>>  };
+>
+> Why didn't you leave the wl18xx-specific ACXs in the wl18xx/acx.h file
+> like it was before? I prefer it like that, because then it's clear that
+> those are not supported by wl12xx.
+>
+this way it's easier to verify that the ACX are compatible with each
+other (i.e. no ACX number is used for 2 different commands).
+but since you prefer it the old way, i'll revert.
 
-I'll do some testing tonight with whatever cards I have around here to
-see if we can at least get a better idea of which chipsets do what.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Eliad.
