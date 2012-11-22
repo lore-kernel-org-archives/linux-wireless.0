@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:58409 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753665Ab2K0TQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 14:16:50 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1TdQeS-0004XD-25
-	for linux-wireless@vger.kernel.org; Tue, 27 Nov 2012 20:17:00 +0100
-Received: from g231079119.adsl.alicedsl.de ([92.231.79.119])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 20:17:00 +0100
-Received: from drahemmaps by g231079119.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 20:17:00 +0100
-To: linux-wireless@vger.kernel.org
-From: Martin Schleier <drahemmaps@gmx.net>
-Subject: Re: [RFC 0/3] Add spectral scan support for Atheros AR92xx/AR93xx
-Date: Tue, 27 Nov 2012 19:16:38 +0000 (UTC)
-Message-ID: <loom.20121127T201036-82@post.gmane.org> (sfid-20121127_201654_183265_CA7D13D9)
-References: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39119 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755418Ab2KVTW2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 14:22:28 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [PATCH 1/3] mac80211: move Mesh Capability field definition to ieee80211.h
+Date: Wed, 21 Nov 2012 18:40:30 -0800
+Message-Id: <1353552032-15600-2-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121122_202236_052300_5A5B1D24)
+In-Reply-To: <1353552032-15600-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353552032-15600-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simon Wunderlich <simon.wunderlich@...> writes:
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ include/linux/ieee80211.h |   14 ++++++++++++++
+ net/mac80211/mesh.h       |   14 --------------
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-> This patchset is a first request for comments for the upcoming spectral
-> scan feature. It adds a new attribute to nl80211 to ask for a spectral
-> scan while scanning, because we cycle through the channels anyway at
-> this time. If enabled by the driver, spectral scan results will be
-> collected. This feature has been enabled for AR92xx and AR93xx based
-> chipsets. As the FFT samples are very hardware dependent, they are only
-> provided via a debugfs file for further evaluation.
-> 
-> [3] http://www.wehavemorefun.de/fritzbox/Ath_spectral.ko#Symbole
-
-Erm. Just a quick question, since you mentioned this fritzbox ath_spectral.ko
-module... Is your "work" based or related to it, i.e.: did you peek at the
-assembler listings of it, or did someone else write a spec. and you just
-implemented it? 
-
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 85764a9..9a85397 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -666,6 +666,20 @@ struct ieee80211_meshconf_ie {
+ } __attribute__ ((packed));
+ 
+ /**
++ * enum mesh_config_capab_flags - Mesh Configuration IE capability field flags
++ *
++ * @MESHCONF_CAPAB_ACCEPT_PLINKS: STA is willing to establish
++ *	additional mesh peerings with other mesh STAs
++ * @MESHCONF_CAPAB_FORWARDING: the STA forwards MSDUs
++ * @MESHCONF_CAPAB_TBTT_ADJUSTING: TBTT adjustment procedure is ongoing
++ */
++enum mesh_config_capab_flags {
++	MESHCONF_CAPAB_ACCEPT_PLINKS =		0x01,
++	MESHCONF_CAPAB_FORWARDING =		0x08,
++	MESHCONF_CAPAB_TBTT_ADJUSTING =		0x20,
++};
++
++/**
+  * struct ieee80211_rann_ie
+  *
+  * This structure refers to "Root Announcement information element"
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 9285f3f..7c9215f 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -19,20 +19,6 @@
+ /* Data structures */
+ 
+ /**
+- * enum mesh_config_capab_flags - mesh config IE capability flags
+- *
+- * @MESHCONF_CAPAB_ACCEPT_PLINKS: STA is willing to establish
+- * additional mesh peerings with other mesh STAs
+- * @MESHCONF_CAPAB_FORWARDING: the STA forwards MSDUs
+- * @MESHCONF_CAPAB_TBTT_ADJUSTING: TBTT adjustment procedure is ongoing
+- */
+-enum mesh_config_capab_flags {
+-	MESHCONF_CAPAB_ACCEPT_PLINKS = BIT(0),
+-	MESHCONF_CAPAB_FORWARDING = BIT(3),
+-	MESHCONF_CAPAB_TBTT_ADJUSTING = BIT(5),
+-};
+-
+-/**
+  * enum mesh_path_flags - mac80211 mesh path flags
+  *
+  *
+-- 
+1.7.9.5
 
