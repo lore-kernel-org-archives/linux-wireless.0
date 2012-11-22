@@ -1,143 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1648 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950Ab2KFAWp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 19:22:45 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/24] brcmfmac: remove obsolete structure ap_info
-Date: Mon, 5 Nov 2012 16:22:09 -0800
-Message-ID: <1352161352-30405-2-git-send-email-frankyl@broadcom.com> (sfid-20121106_013118_058047_2C8D8499)
-In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:54251 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757178Ab2KVTfx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 14:35:53 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so3059964eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 11:35:52 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/13] wlcore: call ieee80211_sched_scan_stopped on interface removal
+Date: Thu, 22 Nov 2012 14:05:27 +0200
+Message-Id: <1353585928-28666-13-git-send-email-eliad@wizery.com> (sfid-20121122_203605_092367_82867C85)
+In-Reply-To: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+The interface might go down before we got the SCHED_STOPPED
+event, so make sure to call ieee80211_sched_scan_stopped()
+if the scanned interface is removed.
 
-The data stored in ap_info structure is no longer used so remove
-it from the driver.
+Replace sched_scanning with sched_vif in order to save
+the scanned interface.
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   28 --------------------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   13 ---------
- 2 files changed, 41 deletions(-)
+ drivers/net/wireless/ti/wlcore/debugfs.c |    1 -
+ drivers/net/wireless/ti/wlcore/event.c   |    4 ++--
+ drivers/net/wireless/ti/wlcore/main.c    |   16 +++++++---------
+ drivers/net/wireless/ti/wlcore/wlcore.h  |    2 +-
+ 4 files changed, 10 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index cb30fea..9da9d05 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -486,13 +486,6 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index f0f88e6..43ecb3a 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -490,7 +490,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 	DRIVER_STATE_PRINT_HEX(chip.id);
+ 	DRIVER_STATE_PRINT_STR(chip.fw_ver_str);
+ 	DRIVER_STATE_PRINT_STR(chip.phy_fw_ver_str);
+-	DRIVER_STATE_PRINT_INT(sched_scanning);
  
- 	if (ap) {
- 		set_bit(BRCMF_VIF_STATUS_AP_CREATING, &ifp->vif->sme_state);
--		if (!cfg->ap_info)
--			cfg->ap_info = kzalloc(sizeof(*cfg->ap_info),
--					       GFP_KERNEL);
--		if (!cfg->ap_info) {
--			err = -ENOMEM;
--			goto done;
--		}
- 		WL_INFO("IF Type = AP\n");
- 	} else {
- 		err = brcmf_fil_cmd_int_set(netdev_priv(ndev),
-@@ -3990,11 +3983,6 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 	wpa_ie = brcmf_find_wpaie((u8 *)settings->beacon.tail,
- 				  settings->beacon.tail_len);
+ #undef DRIVER_STATE_PRINT_INT
+ #undef DRIVER_STATE_PRINT_LONG
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 3c20393..cb32c02 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -109,9 +109,9 @@ void wlcore_event_sched_scan_completed(struct wl1271 *wl,
+ 	wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_COMPLETE_EVENT (status 0x%0x)",
+ 		     status);
  
--	kfree(cfg->ap_info->rsn_ie);
--	cfg->ap_info->rsn_ie = NULL;
--	kfree(cfg->ap_info->wpa_ie);
--	cfg->ap_info->wpa_ie = NULL;
--
- 	if ((wpa_ie != NULL || rsn_ie != NULL)) {
- 		WL_TRACE("WPA(2) IE is found\n");
- 		if (wpa_ie != NULL) {
-@@ -4003,26 +3991,16 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 						    bssidx);
- 			if (err < 0)
- 				goto exit;
--			cfg->ap_info->wpa_ie = kmemdup(wpa_ie,
--							    wpa_ie->len +
--							    TLV_HDR_LEN,
--							    GFP_KERNEL);
- 		} else {
- 			/* RSN IE */
- 			err = brcmf_configure_wpaie(ndev,
- 				(struct brcmf_vs_tlv *)rsn_ie, true, bssidx);
- 			if (err < 0)
- 				goto exit;
--			cfg->ap_info->rsn_ie = kmemdup(rsn_ie,
--							    rsn_ie->len +
--							    TLV_HDR_LEN,
--							    GFP_KERNEL);
- 		}
--		cfg->ap_info->security_mode = true;
- 	} else {
- 		WL_TRACE("No WPA(2) IEs found\n");
- 		brcmf_configure_opensecurity(ndev, bssidx);
--		cfg->ap_info->security_mode = false;
+-	if (wl->sched_scanning) {
++	if (wl->sched_vif) {
+ 		ieee80211_sched_scan_stopped(wl->hw);
+-		wl->sched_scanning = false;
++		wl->sched_vif = NULL;
  	}
- 	/* Set Beacon IEs to FW */
- 	err = brcmf_set_management_ie(cfg, ndev,
-@@ -4766,12 +4744,6 @@ static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_info *cfg)
- 	cfg->iscan = NULL;
- 	kfree(cfg->pmk_list);
- 	cfg->pmk_list = NULL;
--	if (cfg->ap_info) {
--		kfree(cfg->ap_info->wpa_ie);
--		kfree(cfg->ap_info->rsn_ie);
--		kfree(cfg->ap_info);
--		cfg->ap_info = NULL;
--	}
  }
+ EXPORT_SYMBOL_GPL(wlcore_event_sched_scan_completed);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 221762b..75de758 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -923,11 +923,6 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	/* Prevent spurious TX during FW restart */
+ 	wlcore_stop_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
  
- static s32 brcmf_init_priv_mem(struct brcmf_cfg80211_info *cfg)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index 1dd96f1..d7d473c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -323,17 +323,6 @@ struct escan_info {
- 	struct net_device *ndev;
- };
- 
--/* Structure to hold WPS, WPA IEs for a AP */
--struct ap_info {
--	u8 probe_res_ie[IE_MAX_LEN];
--	u8 beacon_ie[IE_MAX_LEN];
--	u32 probe_res_ie_len;
--	u32 beacon_ie_len;
--	u8 *wpa_ie;
--	u8 *rsn_ie;
--	bool security_mode;
--};
+-	if (wl->sched_scanning) {
+-		ieee80211_sched_scan_stopped(wl->hw);
+-		wl->sched_scanning = false;
+-	}
 -
- /**
-  * struct brcmf_pno_param_le - PNO scan configuration parameters
-  *
-@@ -455,7 +444,6 @@ struct brcmf_pno_scanresults_le {
-  * @escan_timeout: Timer for catch scan timeout.
-  * @escan_timeout_work: scan timeout worker.
-  * @escan_ioctl_buf: dongle command buffer for escan commands.
-- * @ap_info: host ap information.
-  * @vif_list: linked list of vif instances.
-  * @vif_cnt: number of vif instances.
-  */
-@@ -497,7 +485,6 @@ struct brcmf_cfg80211_info {
- 	struct timer_list escan_timeout;
- 	struct work_struct escan_timeout_work;
- 	u8 *escan_ioctl_buf;
--	struct ap_info *ap_info;
- 	struct list_head vif_list;
- 	u8 vif_cnt;
- };
+ 	/* reboot the chipset */
+ 	while (!list_empty(&wl->wlvif_list)) {
+ 		wlvif = list_first_entry(&wl->wlvif_list,
+@@ -1871,7 +1866,6 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
+ 	wl->time_offset = 0;
+ 	wl->ap_fw_ps_map = 0;
+ 	wl->ap_ps_map = 0;
+-	wl->sched_scanning = false;
+ 	wl->sleep_auth = WL1271_PSM_ILLEGAL;
+ 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
+ 	memset(wl->links_map, 0, sizeof(wl->links_map));
+@@ -2405,6 +2399,11 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 		ieee80211_scan_completed(wl->hw, true);
+ 	}
+ 
++	if (wl->sched_vif == wlvif) {
++		ieee80211_sched_scan_stopped(wl->hw);
++		wl->sched_vif = NULL;
++	}
++
+ 	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
+ 		/* disable active roles */
+ 		ret = wl1271_ps_elp_wakeup(wl);
+@@ -3439,7 +3438,7 @@ static int wl1271_op_sched_scan_start(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out_sleep;
+ 
+-	wl->sched_scanning = true;
++	wl->sched_vif = wlvif;
+ 
+ out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
+@@ -3928,7 +3927,7 @@ static int wlcore_set_bssid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 						wlvif->band);
+ 
+ 	/* we only support sched_scan while not connected */
+-	if (wl->sched_scanning)
++	if (wl->sched_vif == wlvif)
+ 		wl->ops->sched_scan_stop(wl, wlvif);
+ 
+ 	ret = wl1271_acx_sta_rate_policies(wl, wlvif);
+@@ -5638,7 +5637,6 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
+ 	wl->ap_fw_ps_map = 0;
+ 	wl->quirks = 0;
+ 	wl->platform_quirks = 0;
+-	wl->sched_scanning = false;
+ 	wl->system_hlid = WL12XX_SYSTEM_HLID;
+ 	wl->active_sta_count = 0;
+ 	wl->fwlog_size = 0;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index eacace0..6614b59 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -309,7 +309,7 @@ struct wl1271 {
+ 	struct ieee80211_vif *roc_vif;
+ 	struct delayed_work roc_complete_work;
+ 
+-	bool sched_scanning;
++	struct wl12xx_vif *sched_vif;
+ 
+ 	/* The current band */
+ 	enum ieee80211_band band;
 -- 
-1.7.9.5
-
+1.7.6.401.g6a319
 
