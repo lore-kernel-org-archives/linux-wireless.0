@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swm.pp.se ([212.247.200.143]:47068 "EHLO uplift.swm.pp.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932081Ab2K1TJI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 14:09:08 -0500
-Date: Wed, 28 Nov 2012 20:02:15 +0100 (CET)
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: Jens Kapitza <j.kapitza@schwarze-allianz.de>,
-	linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Subject: Re: iwlwifi hibernate / suspend issue
-In-Reply-To: <1354126096.9345.45.camel@jlt4.sipsolutions.net>
-Message-ID: <alpine.DEB.2.00.1211281957400.27834@uplift.swm.pp.se> (sfid-20121128_200912_592454_19B91014)
-References: <50B61C71.6060007@schwarze-allianz.de>  (sfid-20121128_152227_935873_AFE02FFF) <1354113010.9345.27.camel@jlt4.sipsolutions.net>  <50B62254.9070700@schwarze-allianz.de>  <1354113722.9345.28.camel@jlt4.sipsolutions.net>  <50B62BEB.6020109@schwarze-allianz.de>
-  <1354120982.9345.35.camel@jlt4.sipsolutions.net>  (sfid-20121128_174246_886056_FD8C7512) <1354126096.9345.45.camel@jlt4.sipsolutions.net>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:55750 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756490Ab2KVUlC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 15:41:02 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so8364374oag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 12:41:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <20652.56145.6291.392891@gargle.gargle.HOWL>
+References: <1353381362-437-1-git-send-email-sujith@msujith.org>
+	<1353494712.10444.20.camel@jlt4.sipsolutions.net>
+	<CANUX_P3e4ut9Jh25wXP7dOcvQh_YhuZ_LCkQV4QHpaNGrzbYuQ@mail.gmail.com>
+	<20652.56145.6291.392891@gargle.gargle.HOWL>
+Date: Thu, 22 Nov 2012 13:17:25 +0200
+Message-ID: <CANUX_P12Zs0m+v_0E09MZ7+_3aSgLkotG2GgVhHmUw0vm_SdBQ@mail.gmail.com> (sfid-20121122_214124_784718_A2C746B8)
+Subject: Re: [PATCH] mac80211: Add debugfs callbacks for station addition/removal
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 28 Nov 2012, Johannes Berg wrote:
+> Emmanuel Grumbach wrote:
+>> Do you see value to add this for vif too?
+>
+> Not sure, mac80211 currently doesn't have a per-VIF debugfs area.
+> Also, we have ieee80211_iterate_active_interfaces(), which could be used
+> by drivers.
+>
 
-> So yeah, you were right when you said it's related to the BIOS, I just 
-> thought you said reloading the module fixed it which I thought was very 
-> strange. Since it doesn't, it's just the BIOS/whatever pulling the line 
-> low and there's nothing the wifi driver can do about that, we can't even 
-> ignore that.
-
-I on the other hand, have the issue of iwlwifi sometimes stops working and 
-rmmod iwlwifi ; modprobe iwlwifi fixes (most of the time) the issue.
-
-Lenovo Thinkpad, Intel 5300.
-03:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
-
-I am running Ubuntu 12.04, just for kicks I tried loading the kernel 3.6 
-backport modules which made the situation worse. I have historically tried 
-to bug report here a few times before without anyone replying, so I 
-stopped since I figured there wasn't anyone interested.
-
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/76919
-http://www.spinics.net/lists/linux-wireless/msg96442.html
-
-If someone could tell me what information I can provide that might be 
-important to bring the development forward, I'm all game.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Well it does: under sdata.
+Anyway I added it internally. Patch will be posted soon :-)
