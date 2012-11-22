@@ -1,326 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36358 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752336Ab2KXWZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2012 17:25:00 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wim@iguana.be,
-	linux-watchdog@vger.kernel.org, castet.matthieu@free.fr,
-	biblbroks@sezampro.rs, m@bues.ch, zajec5@gmail.com,
-	linux-mips@linux-mips.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 02/15] watchdog: bcm47xx_wdt.c: use platform device
-Date: Sat, 24 Nov 2012 23:24:02 +0100
-Message-Id: <1353795855-22236-3-git-send-email-hauke@hauke-m.de> (sfid-20121124_232513_760928_8EC218AF)
-In-Reply-To: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
-References: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:45526 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965190Ab2KVTzX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 14:55:23 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so8334951oag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 11:55:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1353593475.27848.58.camel@cumari.coelho.fi>
+References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+	<1353585928-28666-5-git-send-email-eliad@wizery.com>
+	<1353593475.27848.58.camel@cumari.coelho.fi>
+Date: Thu, 22 Nov 2012 16:22:01 +0200
+Message-ID: <CAB3XZEdy6kTVxMYijut3n4gRQLccd6DetqDCJwrusFgqPYRCWA@mail.gmail.com> (sfid-20121122_205536_140800_072F4FA0)
+Subject: Re: [PATCH 04/13] wlcore: split 18xx and 12xx scan mechanism
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of accessing the function to set the watchdog timer directly
-register a platform driver the platform could register to use this
-watchdog driver.
+On Thu, Nov 22, 2012 at 4:11 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
+>> The scan APIs of 12xx and 18xx are totally different.
+>> Use some common functions as much as possible (e.g.
+>> for setting scan channels), but split scan.c into
+>> chip-specific scan.c files, each implementing its
+>> own scan mechanism.
+>>
+>> (in other words - move most of the current wlcore's
+>> scan.c into wl12xx, and implement a similar mechanism
+>> in 18xx, according to the new api)
+>>
+>> New wlcore ops are introduced in order to call the
+>> chip-specific scan functions.
+>>
+>> The template indices used for each scan (regular/scheduled)
+>> are also different between the chips, so set the correct
+>> indices used for each scan type after identifying the chip.
+>>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>
+> [...]
+>
+>> +/* probe request rate */
+>> +enum
+>> +{
+>> +     WLCORE_SCAN_RATE_1      = 0,
+>> +     WLCORE_SCAN_RATE_5_5    = 1,
+>> +     WLCORE_SCAN_RATE_6      = 2,
+>> +};
+>
+> WL18XX_SCAN_RATE_* instead?
+>
+right.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/watchdog/bcm47xx_wdt.c |  157 ++++++++++++++++++++--------------------
- include/linux/bcm47xx_wdt.h    |   27 +++++++
- 2 files changed, 105 insertions(+), 79 deletions(-)
- create mode 100644 include/linux/bcm47xx_wdt.h
+>> +
+>> +struct wl1271_cmd_scan_params {
+>
+> wl18xx_cmd_scan_params is better.
+>
+> [...]
+>
+>> +struct wl12xx_cmd_scan_stop {
+>
+> wl18xx_cmd_scan_stop instead?
+>
+sure (both).
 
-diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
-index a527175..cf1191b 100644
---- a/drivers/watchdog/bcm47xx_wdt.c
-+++ b/drivers/watchdog/bcm47xx_wdt.c
-@@ -3,6 +3,7 @@
-  *
-  *  Copyright (C) 2008 Aleksandar Radovanovic <biblbroks@sezampro.rs>
-  *  Copyright (C) 2009 Matthieu CASTET <castet.matthieu@free.fr>
-+ *  Copyright (C) 2012 Hauke Mehrtens <hauke@hauke-m.de>
-  *
-  *  This program is free software; you can redistribute it and/or
-  *  modify it under the terms of the GNU General Public License
-@@ -12,19 +13,19 @@
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
- 
-+#include <linux/bcm47xx_wdt.h>
- #include <linux/bitops.h>
- #include <linux/errno.h>
- #include <linux/init.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/moduleparam.h>
-+#include <linux/platform_device.h>
- #include <linux/reboot.h>
- #include <linux/types.h>
- #include <linux/watchdog.h>
- #include <linux/timer.h>
- #include <linux/jiffies.h>
--#include <linux/ssb/ssb_embedded.h>
--#include <asm/mach-bcm47xx/bcm47xx.h>
- 
- #define DRV_NAME		"bcm47xx_wdt"
- 
-@@ -43,48 +44,19 @@ MODULE_PARM_DESC(nowayout,
- 		"Watchdog cannot be stopped once started (default="
- 				__MODULE_STRING(WATCHDOG_NOWAYOUT) ")");
- 
--static struct timer_list wdt_timer;
--static atomic_t ticks;
--
--static inline void bcm47xx_wdt_hw_start(void)
-+static inline struct bcm47xx_wdt *bcm47xx_wdt_get(struct watchdog_device *wdd)
- {
--	/* this is 2,5s on 100Mhz clock  and 2s on 133 Mhz */
--	switch (bcm47xx_bus_type) {
--#ifdef CONFIG_BCM47XX_SSB
--	case BCM47XX_BUS_TYPE_SSB:
--		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0xfffffff);
--		break;
--#endif
--#ifdef CONFIG_BCM47XX_BCMA
--	case BCM47XX_BUS_TYPE_BCMA:
--		bcma_chipco_watchdog_timer_set(&bcm47xx_bus.bcma.bus.drv_cc,
--					       0xfffffff);
--		break;
--#endif
--	}
-+	return container_of(wdd, struct bcm47xx_wdt, wdd);
- }
- 
--static inline int bcm47xx_wdt_hw_stop(void)
-+static void bcm47xx_timer_tick(unsigned long data)
- {
--	switch (bcm47xx_bus_type) {
--#ifdef CONFIG_BCM47XX_SSB
--	case BCM47XX_BUS_TYPE_SSB:
--		return ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
--#endif
--#ifdef CONFIG_BCM47XX_BCMA
--	case BCM47XX_BUS_TYPE_BCMA:
--		bcma_chipco_watchdog_timer_set(&bcm47xx_bus.bcma.bus.drv_cc, 0);
--		return 0;
--#endif
--	}
--	return -EINVAL;
--}
-+	struct bcm47xx_wdt *wdt = (struct bcm47xx_wdt *)data;
-+	u32 next_tick = min(wdt->wdd.timeout * 1000, wdt->max_timer_ms);
- 
--static void bcm47xx_timer_tick(unsigned long unused)
--{
--	if (!atomic_dec_and_test(&ticks)) {
--		bcm47xx_wdt_hw_start();
--		mod_timer(&wdt_timer, jiffies + HZ);
-+	if (!atomic_dec_and_test(&wdt->soft_ticks)) {
-+		wdt->timer_set_ms(wdt, next_tick);
-+		mod_timer(&wdt->soft_timer, jiffies + HZ);
- 	} else {
- 		pr_crit("Watchdog will fire soon!!!\n");
- 	}
-@@ -92,23 +64,29 @@ static void bcm47xx_timer_tick(unsigned long unused)
- 
- static int bcm47xx_wdt_keepalive(struct watchdog_device *wdd)
- {
--	atomic_set(&ticks, wdt_time);
-+	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
-+
-+	atomic_set(&wdt->soft_ticks, wdd->timeout);
- 
- 	return 0;
- }
- 
- static int bcm47xx_wdt_start(struct watchdog_device *wdd)
- {
--	bcm47xx_wdt_pet();
--	bcm47xx_timer_tick(0);
-+	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
-+
-+	bcm47xx_wdt_keepalive(wdd);
-+	bcm47xx_timer_tick((unsigned long)wdt);
- 
- 	return 0;
- }
- 
- static int bcm47xx_wdt_stop(struct watchdog_device *wdd)
- {
--	del_timer_sync(&wdt_timer);
--	bcm47xx_wdt_hw_stop();
-+	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
-+
-+	del_timer_sync(&wdt->soft_timer);
-+	wdt->timer_set(wdt, 0);
- 
- 	return 0;
- }
-@@ -116,10 +94,13 @@ static int bcm47xx_wdt_stop(struct watchdog_device *wdd)
- static int bcm47xx_wdt_set_timeout(struct watchdog_device *wdd,
- 				   unsigned int new_time)
- {
--	if ((new_time <= 0) || (new_time > WDT_MAX_TIME))
-+	if (new_time < 1 || new_time > WDT_MAX_TIME) {
-+		pr_warn("timeout value must be 1<=x<=%d, using %d\n",
-+			WDT_MAX_TIME, new_time);
- 		return -EINVAL;
-+	}
- 
--	wdt_time = new_time;
-+	wdd->timeout = new_time;
- 	return 0;
- }
- 
-@@ -133,8 +114,11 @@ static const struct watchdog_info bcm47xx_wdt_info = {
- static int bcm47xx_wdt_notify_sys(struct notifier_block *this,
- 				  unsigned long code, void *unused)
- {
-+	struct bcm47xx_wdt *wdt;
-+
-+	wdt = container_of(this, struct bcm47xx_wdt, notifier);
- 	if (code == SYS_DOWN || code == SYS_HALT)
--		bcm47xx_wdt_stop();
-+		wdt->wdd.ops->stop(&wdt->wdd);
- 	return NOTIFY_DONE;
- }
- 
-@@ -146,57 +130,72 @@ static struct watchdog_ops bcm47xx_wdt_ops = {
- 	.set_timeout	= bcm47xx_wdt_set_timeout,
- };
- 
--static struct watchdog_device bcm47xx_wdt_wdd = {
--	.info		= &bcm47xx_wdt_info,
--	.ops		= &bcm47xx_wdt_ops,
--};
--
--static struct notifier_block bcm47xx_wdt_notifier = {
--	.notifier_call = bcm47xx_wdt_notify_sys,
--};
--
--static int __init bcm47xx_wdt_init(void)
-+static int __devinit bcm47xx_wdt_probe(struct platform_device *pdev)
- {
- 	int ret;
-+	struct bcm47xx_wdt *wdt = dev_get_platdata(&pdev->dev);
- 
--	if (bcm47xx_wdt_hw_stop() < 0)
--		return -ENODEV;
-+	if (!wdt)
-+		return -ENXIO;
- 
--	setup_timer(&wdt_timer, bcm47xx_timer_tick, 0L);
-+	setup_timer(&wdt->soft_timer, bcm47xx_timer_tick,
-+		    (long unsigned int)wdt);
- 
--	if (bcm47xx_wdt_settimeout(wdt_time)) {
--		bcm47xx_wdt_settimeout(WDT_DEFAULT_TIME);
--		pr_info("wdt_time value must be 0 < wdt_time < %d, using %d\n",
--			(WDT_MAX_TIME + 1), wdt_time);
--	}
--	watchdog_set_nowayout(&bcm47xx_wdt_wdd, nowayout);
-+	wdt->wdd.ops = &bcm47xx_wdt_ops;
-+	wdt->wdd.info = &bcm47xx_wdt_info;
-+	wdt->wdd.timeout = WDT_DEFAULT_TIME;
-+	ret = wdt->wdd.ops->set_timeout(&wdt->wdd, timeout);
-+	if (ret)
-+		goto err_timer;
-+	watchdog_set_nowayout(&wdt->wdd, nowayout);
-+
-+	wdt->notifier.notifier_call = &bcm47xx_wdt_notify_sys;
- 
--	ret = register_reboot_notifier(&bcm47xx_wdt_notifier);
-+	ret = register_reboot_notifier(&wdt->notifier);
- 	if (ret)
--		return ret;
-+		goto err_timer;
- 
--	ret = watchdog_register_device(&bcm47xx_wdt_wdd);
--	if (ret) {
--		unregister_reboot_notifier(&bcm47xx_wdt_notifier);
--		return ret;
--	}
-+	ret = watchdog_register_device(&wdt->wdd);
-+	if (ret)
-+		goto err_notifier;
- 
- 	pr_info("BCM47xx Watchdog Timer enabled (%d seconds%s)\n",
- 		wdt_time, nowayout ? ", nowayout" : "");
- 	return 0;
-+
-+err_notifier:
-+	unregister_reboot_notifier(&wdt->notifier);
-+err_timer:
-+	del_timer_sync(&wdt->soft_timer);
-+
-+	return ret;
- }
- 
--static void __exit bcm47xx_wdt_exit(void)
-+static int __devexit bcm47xx_wdt_remove(struct platform_device *pdev)
- {
--	watchdog_stop(&bcm47xx_wdt_wdd);
--	watchdog_unregister_device(&bcm47xx_wdt_wdd);
-+	struct bcm47xx_wdt *wdt = dev_get_platdata(&pdev->dev);
-+
-+	if (!wdt)
-+		return -ENXIO;
-+
-+	watchdog_unregister_device(&wdt->wdd);
-+	unregister_reboot_notifier(&wdt->notifier);
- 
--	unregister_reboot_notifier(&bcm47xx_wdt_notifier);
-+	return 0;
- }
- 
--module_init(bcm47xx_wdt_init);
--module_exit(bcm47xx_wdt_exit);
-+static struct platform_driver bcm47xx_wdt_driver = {
-+	.driver		= {
-+		.owner	= THIS_MODULE,
-+		.name	= "bcm47xx-wdt",
-+	},
-+	.probe		= bcm47xx_wdt_probe,
-+	.remove		= __devexit_p(bcm47xx_wdt_remove),
-+};
-+
-+module_platform_driver(bcm47xx_wdt_driver);
- 
- MODULE_AUTHOR("Aleksandar Radovanovic");
-+MODULE_AUTHOR("Hauke Mehrtens <hauke@hauke-m.de>");
- MODULE_DESCRIPTION("Watchdog driver for Broadcom BCM47xx");
- MODULE_LICENSE("GPL");
-diff --git a/include/linux/bcm47xx_wdt.h b/include/linux/bcm47xx_wdt.h
-new file mode 100644
-index 0000000..b94ac0e
---- /dev/null
-+++ b/include/linux/bcm47xx_wdt.h
-@@ -0,0 +1,27 @@
-+#ifndef LINUX_BCM47XX_WDT_H_
-+#define LINUX_BCM47XX_WDT_H_
-+
-+#include <linux/notifier.h>
-+#include <linux/timer.h>
-+#include <linux/types.h>
-+#include <linux/watchdog.h>
-+
-+
-+struct bcm47xx_wdt {
-+	u32 (*timer_set)(struct bcm47xx_wdt *, u32);
-+	u32 (*timer_set_ms)(struct bcm47xx_wdt *, u32);
-+
-+	void *driver_data;
-+
-+	struct watchdog_device wdd;
-+	struct notifier_block notifier;
-+
-+	struct timer_list soft_timer;
-+	atomic_t soft_ticks;
-+};
-+
-+static inline void *bcm47xx_wdt_get_drvdata(struct bcm47xx_wdt *wdt)
-+{
-+	return wdt->driver_data;
-+}
-+#endif /* LINUX_BCM47XX_WDT_H_ */
--- 
-1.7.10.4
+> [...]
+>
+>> @@ -3820,10 +3817,8 @@ static int wlcore_set_bssid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>>                                               wlvif->band);
+>>
+>>       /* we only support sched_scan while not connected */
+>> -     if (wl->sched_scanning) {
+>> -             wl1271_scan_sched_scan_stop(wl, wlvif);
+>> -             ieee80211_sched_scan_stopped(wl->hw);
+>> -     }
+>> +     if (wl->sched_scanning)
+>> +             wl->ops->sched_scan_stop(wl, wlvif);
+>
+> What happened with the ieee80211_sched_scan_stopped()?
+>
+it was a bug - we call it when we get the SCAN_SCHED_COMPLETED event.
+i fixed it while changing the api, but i guess a better place to do it
+would be in patch [1/12], where i moved it from another place :)
+or maybe it even deserves a separate patch?
 
+Eliad.
