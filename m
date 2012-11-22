@@ -1,75 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35277 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754971Ab2KZKuT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 05:50:19 -0500
-Message-ID: <1353927043.9488.24.camel@jlt4.sipsolutions.net> (sfid-20121126_115029_283563_4EDB20A5)
-Subject: Re: [PATCH v4 6/6] mac80211: add ap channel switch command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kgiori@qca.qualcomm.com" <kgiori@qca.qualcomm.com>,
-	"mcgrof@frijolero.org" <mcgrof@frijolero.org>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"adrian.chadd@gmail.com" <adrian.chadd@gmail.com>,
-	"j@w1.fi" <j@w1.fi>, "coelho@ti.com" <coelho@ti.com>,
-	"igalc@ti.com" <igalc@ti.com>,
-	"adrian@freebsd.org" <adrian@freebsd.org>,
-	"nbd@nbd.name" <nbd@nbd.name>,
-	"simon.wunderlich@s2003.tu-chemnitz.de"
-	<simon.wunderlich@s2003.tu-chemnitz.de>, victorgld@gmail.com
-Date: Mon, 26 Nov 2012 11:50:43 +0100
-In-Reply-To: <50AB9E9D.2090801@ti.com>
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
-	      <1350226137-13704-7-git-send-email-victorg@ti.com>
-	     <1350414472.10177.17.camel@jlt4.sipsolutions.net>
-	    <50842563.4010201@ti.com>
-	  <1350910599.10166.4.camel@jlt4.sipsolutions.net>
-	    <50922AA9.4030509@ti.com>
-	  <1352128994.9466.19.camel@jlt4.sipsolutions.net>
-	  <50A2617B.3060807@ti.com>
-	  <1352892233.9510.26.camel@jlt4.sipsolutions.net>
-	 <50A38C3A.20908@tieto.com> <1352896680.9510.28.camel@jlt4.sipsolutions.net>
-	 <50AB9E9D.2090801@ti.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:49299 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752894Ab2KVSbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 13:31:06 -0500
+Message-ID: <1353594254.27848.61.camel@cumari.coelho.fi> (sfid-20121122_193131_500750_8B002D9F)
+Subject: Re: [PATCH 04/13] wlcore: split 18xx and 12xx scan mechanism
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 22 Nov 2012 16:24:14 +0200
+In-Reply-To: <CAB3XZEdy6kTVxMYijut3n4gRQLccd6DetqDCJwrusFgqPYRCWA@mail.gmail.com>
+References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
+	 <1353585928-28666-5-git-send-email-eliad@wizery.com>
+	 <1353593475.27848.58.camel@cumari.coelho.fi>
+	 <CAB3XZEdy6kTVxMYijut3n4gRQLccd6DetqDCJwrusFgqPYRCWA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-20 at 17:15 +0200, Victor Goldenshtein wrote:
-> On 14/11/2012 14:38, Johannes Berg wrote:
-> > On Wed, 2012-11-14 at 13:19 +0100, Michal Kazior wrote:
-> >
-> >>> However, then I realised that that still doesn't work -- once initial
-> >>> radar detection is done, it needs to continue while the AP is active. If
-> >>> the channel context was going to be relinquished, or even just the
-> >>> channel changed for a few seconds, it would be unsafe. So as a result,
-> >>> the radar detect operation has to somehow be coupled to the start AP
-> >>> operation and prohibit channel changes and additional channel contexts
-> >>> during the entire operation time.
+On Thu, 2012-11-22 at 16:22 +0200, Eliad Peller wrote:
+> On Thu, Nov 22, 2012 at 4:11 PM, Luciano Coelho <coelho@ti.com> wrote:
+> > On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
+> >> The scan APIs of 12xx and 18xx are totally different.
+> >> Use some common functions as much as possible (e.g.
+> >> for setting scan channels), but split scan.c into
+> >> chip-specific scan.c files, each implementing its
+> >> own scan mechanism.
 > >>
-> >> Hmm.. cfg80211 doesn't really know about channel contexts.
+> >> (in other words - move most of the current wlcore's
+> >> scan.c into wl12xx, and implement a similar mechanism
+> >> in 18xx, according to the new api)
 > >>
-> >> The problem I see is that cfg80211 may be in a combination with
-> >> `num_different_channels = 1` and mac80211 can have 2 channel contexts
-> >> due to channel type incompatibilities.
+> >> New wlcore ops are introduced in order to call the
+> >> chip-specific scan functions.
+> >>
+> >> The template indices used for each scan (regular/scheduled)
+> >> are also different between the chips, so set the correct
+> >> indices used for each scan type after identifying the chip.
+> >>
+> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> >> ---
 > >
-> > Yes, this is a concern, we need to fix that anyway though, otherwise it
-> > may assume that some operations are possible when they really aren't
-> > (e.g. starting an HT40+ and HT40- AP on the same channel, which
-> > shouldn't be done anyway, but still)
+> > [...]
 > >
+> >> +/* probe request rate */
+> >> +enum
+> >> +{
+> >> +     WLCORE_SCAN_RATE_1      = 0,
+> >> +     WLCORE_SCAN_RATE_5_5    = 1,
+> >> +     WLCORE_SCAN_RATE_6      = 2,
+> >> +};
+> >
+> > WL18XX_SCAN_RATE_* instead?
+> >
+> right.
 > 
-> not sure how it can happen if have this check:
+> >> +
+> >> +struct wl1271_cmd_scan_params {
+> >
+> > wl18xx_cmd_scan_params is better.
+> >
+> > [...]
+> >
+> >> +struct wl12xx_cmd_scan_stop {
+> >
+> > wl18xx_cmd_scan_stop instead?
+> >
+> sure (both).
 > 
-> if ((cac_type != NL80211_CHAN_HT20) && (cac_type != NL80211_CHAN_NO_HT))
-> 		return -EOPNOTSUPP;
-> 
-> in both start_radar_detection() & enable_tx() ?
+> > [...]
+> >
+> >> @@ -3820,10 +3817,8 @@ static int wlcore_set_bssid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+> >>                                               wlvif->band);
+> >>
+> >>       /* we only support sched_scan while not connected */
+> >> -     if (wl->sched_scanning) {
+> >> -             wl1271_scan_sched_scan_stop(wl, wlvif);
+> >> -             ieee80211_sched_scan_stopped(wl->hw);
+> >> -     }
+> >> +     if (wl->sched_scanning)
+> >> +             wl->ops->sched_scan_stop(wl, wlvif);
+> >
+> > What happened with the ieee80211_sched_scan_stopped()?
+> >
+> it was a bug - we call it when we get the SCAN_SCHED_COMPLETED event.
+> i fixed it while changing the api, but i guess a better place to do it
+> would be in patch [1/12], where i moved it from another place :)
 
-The discussion between Michal and me above was unrelated to DFS :-)
+LOL!
 
-johannes
+> or maybe it even deserves a separate patch?
+
+I think it deserves a separate patch that can be easily cherry-picked to
+other trees (and maybe even CC'ed stable?).
+
+--
+Luca.
 
