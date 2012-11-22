@@ -1,116 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.watchguard.com ([206.191.171.101]:49448 "EHLO
-	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932477Ab2KXBId (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:38997 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754779Ab2KVSzk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 20:08:33 -0500
-From: Felix Liao <Felix.Liao@watchguard.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ocean Su <Ocean.Su@watchguard.com>,
-	Joe Qiao <Joe.Qiao@watchguard.com>,
-	Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-Subject: RE: Badness at net/mac80211/offchannel.c:264
-Date: Sat, 24 Nov 2012 01:08:26 +0000
-Message-ID: <1AA9BD91549CF94C901B05C32D2B081101E00DE7@ES02Ch.wgti.net> (sfid-20121124_020842_735792_2C22049B)
-References: <1AA9BD91549CF94C901B05C32D2B081101E00C99@ES02Ch.wgti.net>
-	 (sfid-20121123_113037_122856_FE2675E8)
- <1353712774.5908.15.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353712774.5908.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Thu, 22 Nov 2012 13:55:40 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so3315186eaa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 10:55:39 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 03/14] wl18xx: change fw name and temporarily fail loading
+Date: Thu, 22 Nov 2012 18:06:13 +0200
+Message-Id: <1353600384-32462-4-git-send-email-eliad@wizery.com> (sfid-20121122_195547_054344_2AA19623)
+In-Reply-To: <1353600384-32462-1-git-send-email-eliad@wizery.com>
+References: <1353600384-32462-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQpUaGFua3MgZm9yIHlvdXIgaGVscCwgSSBqdXN0IG1ha2Ugc29tZSB0ZXN0
-cyB3aXRoIHRoZSBwYXRjaCB5b3UgcHJvdmlkZWQuIA0KWWVzLCB0aGVyZSBpcyBub25lIHdhcm5p
-bmcgY2FsbHRyYWNlIGFnYWluLCBhbmQgbm9uZSBvdGhlciBjYWxsdHJhY2UgdG9vLg0KDQpCdXQg
-Zm9yIHRoZSB0bXBfbGlzdCwgd2hlbiB3ZSBhYm9ydCBhIHJvYyBhbmQgYWRkIHRvIHRoZSB0YWls
-IG9mIHRtcF9saXN0LCANCldlIHdpbGwgZGVsZXRlIGl0IGZyb20gdG1wX2xpc3QgaW4gdGhlIHdv
-cmsgYXN5bmMsIHdlIG5lZWQgdG8gbW9kaWZ5IHRoZSANCnByZXYgYW5kIG5leHQgcG9pbnRlciBv
-ZiB0aGUgaGVhZCBvZiB0bXBfbGlzdCwgSSB0aGluayB0aGV5IGFyZSBmcmVlZCANCmZyb20gdGhl
-IHN0YWNrIG9mIGZ1bmN0aW9uIGllZWU4MDIxMV9yb2NfcHVyZ2UoKSwgaXQgaXMgZGFuZ2Vyb3Vz
-Lg0KDQpGZWxpeCBMaWFvDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hh
-bm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBTYXR1
-cmRheSwgTm92ZW1iZXIgMjQsIDIwMTIgNzoyMCBBTQ0KVG86IEZlbGl4IExpYW8NCkNjOiBsaW51
-eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IE9jZWFuIFN1OyBKb2UgUWlhbzsgQnJ5YW4gUGhp
-bGxpcHBlDQpTdWJqZWN0OiBSZTogQmFkbmVzcyBhdCBuZXQvbWFjODAyMTEvb2ZmY2hhbm5lbC5j
-OjI2NA0KDQpIaSBGZWxpeCwNCg0KVGhhbmtzIGZvciB0aGUgcmVwb3J0IGFuZCB0aGUgZGV0YWls
-ZWQgZGVzY3JpcHRpb24gYW5kIGFuYWx5c2lzLg0KDQo+IGhvc3RhcGQtPmllZWU4MDIxMV9zdGFy
-dF9yb2Nfd29ya1syMTQ2XSBsb2NhbC0+cm9jX2xpc3Q6IDxlbXB0eT4gDQo+IGhvc3RhcGQtPmll
-ZWU4MDIxMV9zdGFydF9yb2Nfd29ya1syMzAwXSBsb2NhbC0+cm9jX2xpc3Q6IDwxPg0KPiAgICAg
-cm9jIGQ5MGU3NDgwIHN0YXJ0ZWQgMCBhYnJ0IDAgaHdfYmVnIDAgbm90aWZpZWQgMCBod19zdGFy
-dCAwIGR1ciANCj4gNjAoNjApDQo+IHBoeTAtPmllZWU4MDIxMV9zd19yb2Nfd29ya1szMzNdIGxv
-Y2FsLT5yb2NfbGlzdDogPDE+DQo+ICAgICByb2MgZDkwZTc0ODAgc3RhcnRlZCAwIGFicnQgMCBo
-d19iZWcgMCBub3RpZmllZCAwIGh3X3N0YXJ0IDAgZHVyIA0KPiA2MCg2MCkNCj4gcGh5MC0+aWVl
-ZTgwMjExX3N3X3JvY193b3JrWzM5Ml0gbG9jYWwtPnJvY19saXN0OiA8MT4NCj4gICAgIHJvYyBk
-OTBlNzQ4MCBzdGFydGVkIDEgYWJydCAwIGh3X2JlZyAwIG5vdGlmaWVkIDEgaHdfc3RhcnQgMCBk
-dXIgDQo+IDYwKDYwKQ0KPiBob3N0YXBkLT5pZWVlODAyMTFfcm9jX3B1cmdlWzQ2NV0gbG9jYWwt
-PnJvY19saXN0OiA8MT4NCj4gICAgIHJvYyBkOTBlNzQ4MCBzdGFydGVkIDEgYWJydCAwIGh3X2Jl
-ZyAwIG5vdGlmaWVkIDEgaHdfc3RhcnQgMCBkdXIgDQo+IDYwKDYwKQ0KPiBob3N0YXBkLT5pZWVl
-ODAyMTFfc3RhcnRfbmV4dF9yb2NbMjY0XSByb2MgZDkwZTc0ODAgY2F1c2UgY2FsbCB0cmFjZSEN
-Cj4gaG9zdGFwZC0+aWVlZTgwMjExX3JvY19wdXJnZVs0ODBdIGxvY2FsLT5yb2NfbGlzdDogPDE+
-DQo+ICAgICByb2MgZDkwZTc0ODAgc3RhcnRlZCAxIGFicnQgMCBod19iZWcgMCBub3RpZmllZCAx
-IGh3X3N0YXJ0IDAgZHVyIA0KPiA2MCg2MCkNCg0KSSB0aGluayBpdCB3b3VsZCBoYXZlIGJlZW4g
-aW5zdHJ1bWVudGFsIGhlcmUgdG8gcHJpbnQgb3V0IHRoZSBkaWZmZXJlbnQgaW50ZXJmYWNlcy4g
-SXQgc2VlbXMgdG8gbWUgdGhhdCB0aGUgcm9jX3B1cmdlKCkgaXMgY2FsbGVkIGZvciBhIGRpZmZl
-cmVudCBpbnRlcmZhY2UsIGFuZCBkb2Vzbid0IGFjdHVhbGx5IHJlbW92ZSBhbnkgUk9DIHdvcmsg
-aXRlbSBhdCBhbGwuDQoNCj4gSSBzdXNwZWN0IHRoZSByb290IGNhdXNlIG9mIHRoaXMgaXNzdWUg
-aXMgYWZ0ZXIgaWVlZTgwMjExX3N3X3JvY193b3JrIA0KPiBzZXQgcm9jLT5zdGFydCB0byB0cnVl
-IGFuZCBxdWV1ZSBpdCBhZ2FpbiwgdGhlIGhvc3RhcGQganVzdCBjYWxsIA0KPiBsaW51eF9zZXRf
-aWZhY2VfZmxhZ3MgcmlnaHQgbm93Lg0KDQpZZXMgYW5kIG5vLCBob3N0YXBkIGlzIGNoYW5naW5n
-IGFuIGludGVyZmFjZSB0byBiZSBkb3duLCBidXQgaXQgd291bGQgYXBwZWFyIHRvIGJlIHNvbWUg
-b3RoZXIgaW50ZXJmYWNlLCBub3QgdGhlIG9uZSB0aGF0J3MgZXhlY3V0aW5nIHRoZSBST0MuDQoN
-Cj4gICBJIGp1c3QgaW5jcmVhc2UgdGhlIGRlbGF5IHRpbWUgdG8gbWFnbmlmeSB0aGUgcHJvYmFi
-aWxpdHkgb2YgdGhpcyANCj4gaXNzdWUsIHRoZW4gaXQgaXMgbW9yZSBlYXNpZXIgdG8gcmVwcm9k
-dWNlIHRoaXMgaXNzdWUuDQoNCk1ha2VzIHNlbnNlLg0KDQo+IFNvIEkgdGhpbmsgd2Ugc2hvdWxk
-IHNjaGVkdWxlIHRoZSB3b3JrIGFzIHNvb24gYXMgcG9zc2libGUsIGFuZCBzaG91bGQgDQo+IHNl
-dCB0aGUgZGVsYXkgdGltZSB0byB6ZXJvLCB0aGF0IGlzLA0KDQo+IEBAIC0zNjcsNyArMzY3LDcg
-QEAgdm9pZCBpZWVlODAyMTFfc3dfcm9jX3dvcmsoc3RydWN0IHdvcmtfc3RydWN0IA0KPiAqd29y
-aykNCj4gIA0KPiAgICAgICAgICAgICAgICAgcm9jLT5zdGFydGVkID0gdHJ1ZTsNCj4gLSAgICAg
-ICAgICAgICAgIGllZWU4MDIxMV9xdWV1ZV9kZWxheWVkX3dvcmsoJmxvY2FsLT5odywgJnJvYy0+
-d29yaywNCj4gLSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbXNl
-Y3NfdG9famlmZmllcyhyb2MtPmR1cmF0aW9uKSk7DQo+ICsgICAgICAgICAgICAgICBpZWVlODAy
-MTFfcXVldWVfZGVsYXllZF93b3JrKCZsb2NhbC0+aHcsICZyb2MtPndvcmssIA0KPiArIDApOw0K
-DQpkZWZpbml0ZWx5IG5vdCwgbm8sIHRoaXMgd291bGQgZGVmZWF0IHRoZSBwdXJwb3NlIG9mIHRo
-ZSBST0MsIHRvIHN0YXkgb24gdGhlIGdpdmVuIGNoYW5uZWwgZm9yIHRoZSBnaXZlbiB0aW1lIC0t
-IG5vdyB5b3UndmUgY3V0IHRoZSB0aW1lIHRvIHplcm8gd2hpY2ggaXNuJ3Qgd2hhdCB3ZSB3YW50
-IGF0IGFsbC4NCg0KPiBBdCBsYXN0LCB0byBiZSBzYXZlIEkgdGhpbmsgd2Ugc2hvdWxkIHVzZSBh
-IHN0YXRpYyB0bXBfbGlzdCBvciBhIA0KPiBnbG9iYWwgdG1wX2xpc3QgdG8gc2F2ZSB0aGUgYWJv
-cnQgcm9jIGluIGllZWU4MDIxMV9yb2NfcHVyZ2UuDQoNCk5vLCB0aGF0IHRvdGFsbHkgZG9lc24n
-dCBzZWVtIHJpZ2h0LCBhIHN0YXRpYyBsaXN0IGhlcmUgd291bGQgY29tcGxldGVseSBicmVhayBp
-ZiB0aGUgZnVuY3Rpb24gd2FzIGNhbGxlZCBvbiB0d28gQ1BVcyBhdCB0aGUgc2FtZSB0aW1lICh0
-aGlzIGNhbid0IGhhcHBlbiByaWdodCBub3csIGJ1dCBzdGlsbCkNCg0KDQo+IEkgaGFkIHRlc3Qg
-dGhpcyBwYXRjaCB1c2luZyB0aGUgc2FtZSB0ZXN0Y2FzZSBhYm92ZSAxMCB0aW1lcywgaXQgcnVu
-cyANCj4gdmVyeSB3ZWxsIGFuZCBuZXZlciBkdW1wIHRoZSB3YXJuaW5nIGNhbGx0cmFjZSwNCg0K
-SSBjYW4gYmVsaWV2ZSB0aGF0LCBidXQgaXQgdG90YWxseSBkZWZlYXRzIHRoZSBwdXJwb3NlIG9m
-IHRoZSBBQ1MgcGF0Y2ggeW91J3JlIHVzaW5nIDotKQ0KDQpJIHRoaW5rIHRoZSByb290IGNhdXNl
-IG9mIHRoZSBpc3N1ZSBpcyB0aGF0IGluIGllZWU4MDIxMV9yb2NfcHVyZ2UoKSB3ZSB1bmNvbmRp
-dGlvbmFsbHkgY2FsbCBpZWVlODAyMTFfc3RhcnRfbmV4dF9yb2MoKSwgZXZlbiBpZiBub3RoaW5n
-IHdhcyByZW1vdmVkLg0KDQpTbyBJIHRoaW5rIHdoYXQgaGFwcGVucyBvdmVyYWxsIGlzIHRoaXM6
-DQoNCiogcm9jIGlzIGFkZGVkIG9uLCBlLmcuLCB3bGFuMA0KKiByb2Mgc3RhcnRzIHJ1bm5pbmcg
-KHJvYy0+c3RhcnRlZCBiZWNvbWVzIHRydWUpDQoqIGhvc3RhcGQgZGVjaWRlcyB0byB0dXJuIG9m
-ZiBzb21lIG90aGVyIGludGVyZmFjZSAoc2F5IG1vbmkud2xhbjA/KQ0KKiB0aGVyZWZvcmUsIGll
-ZWU4MDIxMV9yb2NfcHVyZ2UoKSBpcyBjYWxsZWQgX2ZvciB0aGF0IG90aGVyIGludGVyZmFjZV8N
-CiogdGhlIGxvb3AgaW4gaWVlZTgwMjExX3JvY19wdXJnZSgpIGRvZXMgbm90aGluZyBzaW5jZSB0
-aGVyZSdzIG5vIHJvYw0KICBmb3IgdGhlIG90aGVyIGludGVyZmFjZSBhbmQgdGhlIG9yaWdpbmFs
-IHJvYyBzdGF5cyBhdCB0aGUgZnJvbnQgb2YgdGhlDQogIGxpc3QNCiogd2UgY2FsbCBpZWVlODAy
-MTFfc3RhcnRfbmV4dF9yb2MoKSBhbmQgaXQgKGNvcnJlY3RseSkgd2FybnMNCg0KU28gdGhlIGZp
-cnN0IHRoaW5nIHRoYXQgY29tZXMgdG8gbWluZCBpcyB0aGF0IHdlIG11c3Qgbm90IGNhbGwNCmll
-ZWU4MDIxMV9zdGFydF9uZXh0X3JvYygpIHdoZW4gdGhlcmUgd2FzIG5vIFJPQyBpdGVtIHJlbW92
-ZWQgZnJvbSB0aGUgbGlzdC4gSG93ZXZlciwgaXQgdHVybnMgb3V0IHdlIGNhbiBjb21wbGV0ZWx5
-IHJlbW92ZSB0aGUgY2FsbCwgc2luY2UgdGhlIHNlY29uZCBsb29wIChvdmVyIHRoZSB0bXBfbGlz
-dCkgd2lsbCBhY3R1YWxseSBjbGVhciBhbGwgdGhlIFJPQyBpdGVtcywgYW5kIHJ1biBpZWVlODAy
-MTFfc3dfcm9jX3dvcmsoKSBmb3IgZWFjaCBpdGVtLiBJZiB0aGUgUk9DIHdhcyBzdGFydGVkLCB0
-aGVuIHRoaXMgZnVuY3Rpb24gd2lsbCBjYWxsIGllZWU4MDIxMV9zdGFydF9uZXh0X3JvYygpLg0K
-DQpTbyB0aGlzIHNpbXBsZSBwYXRjaCBzaG91bGQgZml4IHlvdXIgaXNzdWU6DQoNCmRpZmYgLS1n
-aXQgYS9uZXQvbWFjODAyMTEvb2ZmY2hhbm5lbC5jIGIvbmV0L21hYzgwMjExL29mZmNoYW5uZWwu
-YyBpbmRleCA2MzVjMzI1Li4yMTM4ZGMzIDEwMDY0NA0KLS0tIGEvbmV0L21hYzgwMjExL29mZmNo
-YW5uZWwuYw0KKysrIGIvbmV0L21hYzgwMjExL29mZmNoYW5uZWwuYw0KQEAgLTQ1Myw4ICs0NTMs
-NiBAQCB2b2lkIGllZWU4MDIxMV9yb2NfcHVyZ2Uoc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0
-YSAqc2RhdGEpDQogCQlsaXN0X21vdmVfdGFpbCgmcm9jLT5saXN0LCAmdG1wX2xpc3QpOw0KIAkJ
-cm9jLT5hYm9ydCA9IHRydWU7DQogCX0NCi0NCi0JaWVlZTgwMjExX3N0YXJ0X25leHRfcm9jKGxv
-Y2FsKTsNCiAJbXV0ZXhfdW5sb2NrKCZsb2NhbC0+bXR4KTsNCiANCiAJbGlzdF9mb3JfZWFjaF9l
-bnRyeV9zYWZlKHJvYywgdG1wLCAmdG1wX2xpc3QsIGxpc3QpIHsNCg0KDQpQbGVhc2UgbGV0IG1l
-IGtub3cgaWYgaXQgZG9lc24ndCwgdGhhdCB3b3VsZCBtZWFuIG15IGFuYWx5c2lzIGlzIGNvbXBs
-ZXRlbHkgd3JvbmcuDQoNCmpvaGFubmVzDQoNCg==
+The new fw (8.5.0.0.28) is not backward compatible
+with older drivers.
+
+Use a new fw name (along with bumping the min
+fw version), and add some code to fail
+any boot attempt during the fw api alignment
+patches (as the driver is not functional in
+these transitional patches).
+
+This code will be removed after the api alignment
+will be done.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c   |    6 +++++-
+ drivers/net/wireless/ti/wl18xx/wl18xx.h |    4 ++--
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index a39682a..8ba1c93 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -595,7 +595,7 @@ static const struct wl18xx_clk_cfg wl18xx_clk_table[NUM_CLOCK_CONFIGS] = {
+ };
+ 
+ /* TODO: maybe move to a new header file? */
+-#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw.bin"
++#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw-2.bin"
+ 
+ static int wl18xx_identify_chip(struct wl1271 *wl)
+ {
+@@ -1385,6 +1385,10 @@ static int wl18xx_setup(struct wl1271 *wl)
+ 	struct wl18xx_priv *priv = wl->priv;
+ 	int ret;
+ 
++	wl1271_error("driver is in transitional commit (due to fw api"
++		     "change) and can't be booted!");
++	return -EINVAL;
++
+ 	wl->rtable = wl18xx_rtable;
+ 	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
+ 	wl->num_rx_desc = WL18XX_NUM_TX_DESCRIPTORS;
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index 96a1e43..4d295a5 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -26,10 +26,10 @@
+ 
+ /* minimum FW required for driver */
+ #define WL18XX_CHIP_VER		8
+-#define WL18XX_IFTYPE_VER	2
++#define WL18XX_IFTYPE_VER	5
+ #define WL18XX_MAJOR_VER	0
+ #define WL18XX_SUBTYPE_VER	0
+-#define WL18XX_MINOR_VER	100
++#define WL18XX_MINOR_VER	28
+ 
+ #define WL18XX_CMD_MAX_SIZE          740
+ 
+-- 
+1.7.6.401.g6a319
+
