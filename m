@@ -1,41 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40268 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753087Ab2KTLl5 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31705 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754736Ab2KVUMN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 06:41:57 -0500
-Message-ID: <1353411746.9399.14.camel@jlt4.sipsolutions.net> (sfid-20121120_124200_608974_9D2EFB2E)
-Subject: Re: [PATCH 08/15] wlcore: add chanctx implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Date: Tue, 20 Nov 2012 12:42:26 +0100
-In-Reply-To: <1353343170-26516-9-git-send-email-eliad@wizery.com> (sfid-20121119_173952_507956_82E60242)
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
-	 <1353343170-26516-9-git-send-email-eliad@wizery.com>
-	 (sfid-20121119_173952_507956_82E60242)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 22 Nov 2012 15:12:13 -0500
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v9 0/2] driver for 60g Wilocity chip wil6210
+Date: Thu, 22 Nov 2012 15:25:32 +0200
+Message-ID: <1353590734-28704-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121122_211223_020755_74CD3D6D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
+This iteration includes the following:
 
-> +static int wlcore_op_add_chanctx(struct ieee80211_hw *hw,
-> +				 struct ieee80211_chanctx_conf *ctx)
-> +{
-> +	wl1271_debug(DEBUG_MAC80211, "mac80211 add chanctx %d (type %d)",
-> +		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-> +		     ctx->channel_type);
+- some refactoring in reset code
+- AP mode implemented with start_ap().
+  It require patch (submitted) for wpa_supplicant
+- use wdev's SSID and channel, remove private ones
+- remove sysfs, migrate stuff from there to the debugfs
+- small update for API with firmware
+- add more hardware registers (interrupt throttling control) to debugfs
 
-Ok so I just realized there's another small issue with this patch/these
-patches -- my VHT changes, which I'm planning to merge soon, will change
-the chanctx_conf structure contents, which might then be tricky with git
-tree handling?
+It is assumed 2 other patches present, both work in progress,
+likely to merge soon:
 
-I'm not too worried about that, but might be something to keep in mind.
-Right now my changes are easy because they only affect hwsim as the only
-driver using channel contexts.
+wireless: allow Atheros card to not depend on ath.ko
+dynamic_debug: dynamic hex dump
 
-johannes
+the 2-nd one is for code includes, it is on its way to Greg K-H.
+
+Vladimir Kondratiev (2):
+  wireless: Driver for 60GHz card wil6210
+  wireless: integrate wil6210 driver into build
+
+ drivers/net/wireless/ath/Kconfig             |    1 +
+ drivers/net/wireless/ath/Makefile            |    1 +
+ drivers/net/wireless/ath/wil6210/Kconfig     |   29 +
+ drivers/net/wireless/ath/wil6210/Makefile    |   14 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c  |  560 +++++++++++++++
+ drivers/net/wireless/ath/wil6210/debugfs.c   |  603 ++++++++++++++++
+ drivers/net/wireless/ath/wil6210/interrupt.c |  374 ++++++++++
+ drivers/net/wireless/ath/wil6210/main.c      |  406 +++++++++++
+ drivers/net/wireless/ath/wil6210/netdev.c    |  156 +++++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c  |  208 ++++++
+ drivers/net/wireless/ath/wil6210/txrx.c      |  826 ++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.h      |  352 ++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  357 ++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.c       |  966 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h       |  945 +++++++++++++++++++++++++
+ 15 files changed, 5798 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wil6210/Kconfig
+ create mode 100644 drivers/net/wireless/ath/wil6210/Makefile
+ create mode 100644 drivers/net/wireless/ath/wil6210/cfg80211.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/debugfs.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/interrupt.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/main.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/netdev.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/pcie_bus.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/wil6210.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/wmi.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/wmi.h
+
+-- 
+1.7.10.4
 
