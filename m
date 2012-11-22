@@ -1,66 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:61770 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927Ab2KGJ6x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2012 04:58:53 -0500
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH] iw: add set_mcast_rate command support
-Date: Wed,  7 Nov 2012 10:58:03 +0100
-Message-Id: <1352282283-31254-1-git-send-email-ordex@autistici.org> (sfid-20121107_105905_880726_D79DA8EB)
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:58099
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755456Ab2KVTUq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 14:20:46 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20654.31459.529704.513741@gargle.gargle.HOWL> (sfid-20121122_202051_456159_30CD5373)
+Date: Fri, 23 Nov 2012 00:50:03 +0530
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add debugfs callbacks for station addition/removal
+In-Reply-To: <CANUX_P12Zs0m+v_0E09MZ7+_3aSgLkotG2GgVhHmUw0vm_SdBQ@mail.gmail.com>
+References: <1353381362-437-1-git-send-email-sujith@msujith.org>
+	<1353494712.10444.20.camel@jlt4.sipsolutions.net>
+	<CANUX_P3e4ut9Jh25wXP7dOcvQh_YhuZ_LCkQV4QHpaNGrzbYuQ@mail.gmail.com>
+	<20652.56145.6291.392891@gargle.gargle.HOWL>
+	<CANUX_P12Zs0m+v_0E09MZ7+_3aSgLkotG2GgVhHmUw0vm_SdBQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the support to run the set_mcast_rate() command on
-adhoc and mesh_point vifs. With this command it is possible to tune
-the bitrate to use when sending group frames. This command can be used
-even if the vifs has already joint the ibss/mesh network.
+Emmanuel Grumbach wrote:
+> Well it does: under sdata.
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
- interface.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+Ouch, sorry. Of course mac80211 does..
 
-diff --git a/interface.c b/interface.c
-index 945362f..87ac617 100644
---- a/interface.c
-+++ b/interface.c
-@@ -490,3 +490,32 @@ static int handle_interface_wds_peer(struct nl80211_state *state,
- COMMAND(set, peer, "<MAC address>",
- 	NL80211_CMD_SET_WDS_PEER, 0, CIB_NETDEV, handle_interface_wds_peer,
- 	"Set interface WDS peer.");
-+
-+static int set_mcast_rate(struct nl80211_state *state,
-+			  struct nl_cb *cb,
-+			  struct nl_msg *msg,
-+			  int argc, char **argv,
-+			  enum id_input id)
-+{
-+	float rate;
-+	char *end;
-+
-+	if (argc != 1) {
-+		printf("Invalid parameters!\n");
-+		return 2;
-+	}
-+
-+	rate = strtod(argv[0], &end);
-+	if (*end != '\0')
-+		return 1;
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int)(rate * 10));
-+
-+	return 0;
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
-+COMMAND(set, mcast_rate, "<rate in Mbps>",
-+	NL80211_CMD_SET_MCAST_RATE, 0, CIB_NETDEV, set_mcast_rate,
-+	"Set the multicast bitrate.");
--- 
-1.8.0
-
+Sujith
