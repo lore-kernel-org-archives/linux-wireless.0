@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:62241 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708Ab2KKVal (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40326 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899Ab2KWUX1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 16:30:41 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k13so8158685iea.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 13:30:41 -0800 (PST)
-MIME-Version: 1.0
-From: Pedro Gs <simplew8@gmail.com>
-Date: Sun, 11 Nov 2012 21:30:21 +0000
-Message-ID: <CAKVccoWKaKAi8A0Yw_ffAX=VUFYc=QNyzB9bkZRTwDYgWFRNWA@mail.gmail.com> (sfid-20121111_223054_764999_48F78D81)
-Subject: rtl8192ce stops working
-To: Linux Wireless ML <linux-wireless@vger.kernel.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 23 Nov 2012 15:23:27 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com,
+	ashok@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [PATCH] mac80211: fix for mesh sync to indicate TBTT adjustment
+Date: Fri, 23 Nov 2012 12:23:18 -0800
+Message-Id: <1353702198-12865-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_212330_948675_F65BACEB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Currently the mesh sync code checks, whether peers indicate TBTT adjustment,
+but it never sets the corresponding flag itself.
 
-in the past i have reported that kernel wifi module rtl8192ce was
-interfering with the keyboard and mouse, for example when writing
-sometimes i got a letter repeated without pressing on it to have that
-effect, the mouse moved alone.
-To be able to have those keyboard and mouse behaviors i had to
-disabled some module parameters, the ips and fwlps parameters.
+By setting ifmsh->tbtt_adjusting to true, it will set the corresponding field
+in the mesh configuration IE of own beacons.
+This indication will be set in the current beacon. The TBTT adjustment will be
+performed afterwards, affecting the next beacon. Thus, the first beacon with
+stable TBTT will not indicate adjustment anymore and peers will continue
+tracking the new offset.
 
-Currently im running the distro Kubuntu which has kernel
-3.5.0-17-generic #28-Ubuntu SMP, so i added into /etc/modprobe.d  the
-file  rtl8192ce.conf which contains:
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ net/mac80211/mesh_sync.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-options rtl8192ce fwlps=0 ips=0
+diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
+index 407c870..c0dc0a9 100644
+--- a/net/mac80211/mesh_sync.c
++++ b/net/mac80211/mesh_sync.c
+@@ -225,11 +225,15 @@ static void mesh_sync_offset_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
+ 			  ifmsh->sync_offset_clockdrift_max);
+ 		set_bit(MESH_WORK_DRIFT_ADJUST,
+ 			&ifmsh->wrkq_flags);
++
++		ifmsh->adjusting_tbtt = true;
+ 	} else {
+ 		msync_dbg(sdata,
+ 			  "TBTT : max clockdrift=%lld; too small to adjust\n",
+ 			  (long long)ifmsh->sync_offset_clockdrift_max);
+ 		ifmsh->sync_offset_clockdrift_max = 0;
++
++		ifmsh->adjusting_tbtt = false;
+ 	}
+ 	spin_unlock_bh(&ifmsh->sync_offset_lock);
+ }
+-- 
+1.7.9.5
 
-but what happens now is that the wifi module stops working properly,
-passed sometime stops showing the wifi networks (only showing mine),
-and to be able to have wifi networks (other than mine) i need to
-reload the kernel wifi module rtl8192ce:
-sudo rmmode rtl8192ce
-sudo modprobe rto8192ce
-
-and voila, i get again all wifi networks listed in network-manager.
-
-If i stop changing the parameters values this doesn't happen anymore
-but i get again the keyboard and mouse working badly as described
-above.
-
-Can i do anything to get this fixed?
-
-regards,
-Pedro
