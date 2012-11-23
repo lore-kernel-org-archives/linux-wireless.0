@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54815 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51665 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753443Ab2KIUQ7 (ORCPT
+	with ESMTP id S1756401Ab2KWHlN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2012 15:16:59 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TWv0c-0003n7-8M
-	for linux-wireless@vger.kernel.org; Fri, 09 Nov 2012 21:16:58 +0100
+	Fri, 23 Nov 2012 02:41:13 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: VHT support, take 2
-Date: Fri,  9 Nov 2012 21:17:26 +0100
-Message-Id: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net> (sfid-20121109_211702_930840_209B43F6)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix radiotap vendor area skipping
+Date: Fri, 23 Nov 2012 08:41:39 +0100
+Message-Id: <1353656499-11817-1-git-send-email-johannes@sipsolutions.net> (sfid-20121123_084116_346366_7F59EB8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Here's a new version of the VHT patches, in case you're bored
-over the weekend and want some exciting code to read! ;-)
+The radiotap vendor area in the skb head must be skipped
+and accounted for in a few functions until it is removed.
+I missed this in my patch, so a few places use this data
+as though it was the 802.11 header, fix these places.
 
-I do need to test these, I had tested the previous set but not
-after the mac80211 rework yet.
+Reported-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Tested-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-However, at this point I'm more interested in seeing whether
-you all think this is sane at all or if I'm on crack?
-
-What I intend to do next is this have a patch to parse the VHT
-operation IE in mac80211 (or have a helper in cfg80211?) to
-select the VHT channel configuration in MLME code.
-
-I'm kinda hoping the posedge folks will come back with the
-regulatory code so I don't have to worry about that ...
-*hint hint* :-)
-
-After that, I'll need to work on the remaining hostapd code,
-that should just need channel configuration etc. now. Then I
-think it just needs a good test run.
-
-I'm not interested in VHT IBSS, so I'm not going to do anything
-there, nor VHT mesh.
-
-The other thing would be rate control, e.g. minstrel_vht, but
-I'm not sure we can use minstrel at all, so I'll probalby not
-work on minstrel myself.
-
-johannes
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index ec15a49..ec87902 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -62,13 +62,16 @@ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
+ static inline int should_drop_frame(struct sk_buff *skb, int present_fcs_len)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_hdr *hdr;
++
++	hdr = (void *)(skb->data + status->vendor_radiotap_len);
+ 
+ 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC |
+ 			    RX_FLAG_FAILED_PLCP_CRC |
+ 			    RX_FLAG_AMPDU_IS_ZEROLEN))
+ 		return 1;
+-	if (unlikely(skb->len < 16 + present_fcs_len))
++	if (unlikely(skb->len < 16 + present_fcs_len +
++				status->vendor_radiotap_len))
+ 		return 1;
+ 	if (ieee80211_is_ctl(hdr->frame_control) &&
+ 	    !ieee80211_is_pspoll(hdr->frame_control) &&
+@@ -341,8 +344,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
+ 		present_fcs_len = FCS_LEN;
+ 
+-	/* make sure hdr->frame_control is on the linear part */
+-	if (!pskb_may_pull(origskb, 2)) {
++	/* ensure hdr->frame_control and vendor radiotap data are in skb head */
++	if (!pskb_may_pull(origskb, 2 + status->vendor_radiotap_len)) {
+ 		dev_kfree_skb(origskb);
+ 		return NULL;
+ 	}
+-- 
+1.8.0
 
