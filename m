@@ -1,98 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:42694 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753602Ab2K0Nwo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 08:52:44 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id qARDqheT031473
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 07:52:43 -0600
-Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id qARDqhBe014262
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 07:52:43 -0600
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>
-Subject: [PATCH 2/6] wlcore/wl12xx: remove deprecated FW version check
-Date: Tue, 27 Nov 2012 15:51:57 +0200
-Message-ID: <1354024321-20635-3-git-send-email-coelho@ti.com> (sfid-20121127_145248_614093_78D7700B)
-In-Reply-To: <1354024321-20635-1-git-send-email-coelho@ti.com>
-References: <1354024321-20635-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40019 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756071Ab2KWUTH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2012 15:19:07 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [RFCv2 00/13] mesh powersave - basics
+Date: Fri, 23 Nov 2012 12:18:41 -0800
+Message-Id: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_211913_448201_EDDB2126)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't distinguish between STA and AP firmwares anymore, so the
-firmware version checking and quirks setting in wl12xx isn't needed
-anymore.
+The following commits cover the basic subset of functions, that each mesh node
+must support to communicate in the presence of power saving nodes.
+The current patchset does not implement any actual power savings yet (no
+hardware configuration, no doze state).
 
-Remove implementation of .identify_fw in wl12xx and deprecated
-definitions.  Don't remove the op entirely from wlcore, because it may
-be needed for more fine-grained checking later.
+Mesh powersave is different from client mode powersave in the sense that
+1) there is not just a singular power mode towards the access point, but a
+   link-specific power mode towards each peer instead
+2) peers also maintain a power mode towards us (the local STA)
+3) each node has to buffer frames towards power saving neighbors
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl12xx/main.c     |   17 -----------------
- drivers/net/wireless/ti/wlcore/wlcore_i.h |   11 -----------
- 2 files changed, 28 deletions(-)
+With that said the different commits cover the following main topics:
+3:  maintaining a local power mode for each peer + one non-peer power mode
+4:  indicate the power mode towards the respective neighbors
+5:  track neighbors' power modes 
+9: buffer frames towards power saving neighbors
+13: release buffered frames in coordination with neighbor
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 0b11029..cadd7f3 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1394,22 +1394,6 @@ static u32 wl12xx_sta_get_ap_rate_mask(struct wl1271 *wl,
- 	return wlvif->rate_set;
- }
- 
--static int wl12xx_identify_fw(struct wl1271 *wl)
--{
--	unsigned int *fw_ver = wl->chip.fw_ver;
--
--	/* Only new station firmwares support routing fw logs to the host */
--	if ((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_STA) &&
--	    (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_FWLOG_STA_MIN))
--		wl->quirks |= WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED;
--
--	/* This feature is not yet supported for AP mode */
--	if (fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_AP)
--		wl->quirks |= WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED;
--
--	return 0;
--}
--
- static void wl12xx_conf_init(struct wl1271 *wl)
- {
- 	struct wl12xx_priv *priv = wl->priv;
-@@ -1594,7 +1578,6 @@ static int wl12xx_setup(struct wl1271 *wl);
- static struct wlcore_ops wl12xx_ops = {
- 	.setup			= wl12xx_setup,
- 	.identify_chip		= wl12xx_identify_chip,
--	.identify_fw		= wl12xx_identify_fw,
- 	.boot			= wl12xx_boot,
- 	.plt_init		= wl12xx_plt_init,
- 	.trigger_cmd		= wl12xx_trigger_cmd,
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 6678d4b..dbbfca1 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -109,17 +109,6 @@ enum {
- 	NUM_FW_VER
- };
- 
--#define FW_VER_CHIP_WL127X 6
--#define FW_VER_CHIP_WL128X 7
--
--#define FW_VER_IF_TYPE_STA 1
--#define FW_VER_IF_TYPE_AP  2
--
--#define FW_VER_MINOR_1_SPARE_STA_MIN 58
--#define FW_VER_MINOR_1_SPARE_AP_MIN  47
--
--#define FW_VER_MINOR_FWLOG_STA_MIN 70
--
- struct wl1271_chip {
- 	u32 id;
- 	char fw_ver_str[ETHTOOL_BUSINFO_LEN];
+
+v2:
+-active voice commit logs
+-beacon interval and DTIM period set during mesh join (no change during mesh
+ runtime anymore)
+-power mode "unknown" instead of "invalid"
+-merged mesh power mode parameters and set/get commits
+-"mesh" and "sta" in function names where useful
+-sdata check in list_for_each_entry_rcu(sta, &sdata->local->sta_list, list)
+-sta timer setup in sta_info_alloc
+-BUG_ON -> WARN_ON + return
+-clarify comments
+-kernel-doc style
+-clear separation {cfg,nl}80211 & mac80211
+-removed debug strings
+-ieee80211_has_qos_pm int -> bool
+-#IFDEF CONFIG_MESH around use of sta->plid
+-move skb_queue_purge to stop_mesh
+-move counter cleanup to stop_mesh
+-no use of sta_ps_transition anymore - own routines instead
+-no use of ieee80211_sta_ps_deliver_response anymore, no use of ambiguous
+ UAPSD enum anymore - own function instead
+-concentrate PS stuff in ieee80211_mesh_ps_rx_bcn
+-less exposed functions in mesh.h
+
+not done:
+range checks and FILL_IN_MESH_PARAM_IF_SET - follows later in one cleanup
+
+Concerning the patch series ordering etc., everything *should* be safe.
+1-7 just adds lots of overhead to maintain a power mode and track neighbors
+without actually having any effects. Before any frames are buffered in 9,
+8 adds all the neccessary data structures. In that snapshot state buffered
+unicast frames would not be released, but would just time out. 10-12 add more
+overhead until 13 allows unicast frame release. Of course for the patch
+submission I can merge everything together, if that is helpful. The current
+splitted state helps to understand the semantics, though.
+
+
+Marco Porsch (13):
+  {nl,cfg,mac}80211: set beacon interval and DTIM period on mesh join
+  {cfg,nl}80211: mesh power mode config parameters
+  mac80211: local link-specific mesh power mode logic
+  mac80211: mesh power mode indication in transmitted frames
+  mac80211: track neighbor STA power modes
+  {cfg,nl}80211: allow userspace to set the local link-specific power
+    mode
+  {cfg,nl}80211: allow userspace to read the local and peer mesh power
+    modes
+  mac80211: add power save support structure to mesh interface
+  mac80211: enable frame buffering for PS STA
+  {cfg,nl}80211: add awake window to mesh config
+  mac80211: add awake window IE to mesh beacons
+  mac80211: add TIM IE to mesh beacons
+  mac80211: mesh PS individually-addressed frame release
+
+ include/linux/ieee80211.h     |   17 ++
+ include/net/cfg80211.h        |   24 ++
+ include/uapi/linux/nl80211.h  |   49 ++++
+ net/mac80211/Kconfig          |   11 +
+ net/mac80211/Makefile         |    3 +-
+ net/mac80211/cfg.c            |   24 +-
+ net/mac80211/debug.h          |   10 +
+ net/mac80211/debugfs_netdev.c |    6 +
+ net/mac80211/debugfs_sta.c    |    5 +-
+ net/mac80211/ieee80211_i.h    |    7 +
+ net/mac80211/mesh.c           |   36 ++-
+ net/mac80211/mesh.h           |   22 +-
+ net/mac80211/mesh_hwmp.c      |   10 +
+ net/mac80211/mesh_pathtbl.c   |    1 +
+ net/mac80211/mesh_plink.c     |   22 ++
+ net/mac80211/mesh_ps.c        |  632 +++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rx.c             |   24 ++
+ net/mac80211/sta_info.c       |   19 +-
+ net/mac80211/sta_info.h       |   14 +
+ net/mac80211/status.c         |    5 +
+ net/mac80211/tx.c             |   59 +++-
+ net/mac80211/util.c           |    4 +
+ net/mac80211/wme.c            |   13 +-
+ net/wireless/mesh.c           |    8 +
+ net/wireless/nl80211.c        |   56 +++-
+ 25 files changed, 1060 insertions(+), 21 deletions(-)
+ create mode 100644 net/mac80211/mesh_ps.c
+
 -- 
-1.7.10.4
+1.7.9.5
 
