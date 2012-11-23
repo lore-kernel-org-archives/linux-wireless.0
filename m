@@ -1,79 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:53798 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742Ab2KBUd4 (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:38704 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752687Ab2KWFuP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Nov 2012 16:33:56 -0400
-Received: by mail-vc0-f174.google.com with SMTP id fk26so4139708vcb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Nov 2012 13:33:56 -0700 (PDT)
+	Fri, 23 Nov 2012 00:50:15 -0500
+Message-ID: <50AF0E91.30709@posedge.com> (sfid-20121123_065025_988486_8AADA812)
+Date: Fri, 23 Nov 2012 11:20:09 +0530
+From: Saravana <saravanad@posedge.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+7oygdwK=8i_oWgoeXKRgxJAzOyyXjkmuGpO+mBsAdcRRqzGg@mail.gmail.com>
-References: <CA+7oygeOHQLcdEWpedbXDnBoAHrXddkrmNd3-PNQOKzoyNkn6w@mail.gmail.com>
-	<CA+7oygfnsrqAyU4d3n7EgmOntenhp36DEGhSnJ4FsJFdOKCk-w@mail.gmail.com>
-	<CA+7oygdwK=8i_oWgoeXKRgxJAzOyyXjkmuGpO+mBsAdcRRqzGg@mail.gmail.com>
-Date: Fri, 2 Nov 2012 16:33:56 -0400
-Message-ID: <CA+7oygd9aCHHWaUy56QkRfnVpnOzcw26E6NA=L8T1bB71K9Fug@mail.gmail.com> (sfid-20121102_213408_935446_81997245)
-Subject: Re: bug in compat-wireless 3.6, rt2x00 iftype is wrong
-From: George Nychis <gnychis@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=f46d043893b303e6c504cd890e24
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: RFC[1/2]mac80211: Add Statistic to debugfs
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---f46d043893b303e6c504cd890e24
-Content-Type: text/plain; charset=ISO-8859-1
+Provide additional statistic support to the debugfs.
 
-This fixes my issue, but I don't know if it's the ideal patch.
+The statistic that are added are the
 
-On Fri, Nov 2, 2012 at 3:59 PM, George Nychis <gnychis@gmail.com> wrote:
-> in the compat-wireless-3.6.-rc7-1 source code, I'm talking about line
-> 88 in net/wireless/chan.c which returns -EBUSY.  Note that I have a
-> single interface which is in station mode, not monitoring mode.  There
-> is no interface in true monitoring mode.
->
-> On Fri, Nov 2, 2012 at 3:57 PM, George Nychis <gnychis@gmail.com> wrote:
->> The issue seems to be that in all of these drivers, wdev is NULL when
->> you hit set_channel()  in the older and newer driver.  In the old
->> driver, cfg8011_set_freq() is called with wdev has NULL and it still
->> calls rdev->ops->set_channel(....) which succeeds.
->>
->> However, in the new driver cfg80211_set_monitor_channel() is called
->> since wdev was NULL, but now instead of still calling
->> rdev->ops->set_channel() or rdev->ops->set_monitor_channel() it
->> returns -EBUSY because if(!cfg80211_has_monitors_only(rdev)) returns
->> true.  Is this really the expected behavior, or is meant to only
->> return -EBUSY if there are only monitors, rather? (i.e.,
->> if(cfg80211_has_monitors_only(rdev)) )
->>
->>
->> On Fri, Nov 2, 2012 at 2:46 PM, George Nychis <gnychis@gmail.com> wrote:
->>> I'm still trying to track down the cause for this, but starting in
->>> compat-wireless-3.6 (including early RCs and the most recent 3.6.2),
->>> rt2x00 devices register with the wrong iftype.  They register as
->>> NL80211_IFTYPE_MONITOR instead of NL80211_IFTYPE_STATION, for example.
->>>  I checked cw-3.5, 3.4, 3.2, and 3.1 and none of these versions have
->>> this bug.
->>>
->>> This breaks the ability to set channels, etc.  Hoping to track down
->>> the bug, but wanted to report it in the meantime and see if anyone
->>> else has run in to it.
->>>
->>> - George
+1. Number of rx packets dropped due to mic failure
+	- Currently the debugfs has support for number of rx packets dropped. 
+But it doesn't classify the reason for the drop. This statistic will 
+count the number of rx packet dropped due to mic failure.
 
---f46d043893b303e6c504cd890e24
-Content-Type: application/octet-stream; name="rt2x00_setchan_fix.patch"
-Content-Disposition: attachment; filename="rt2x00_setchan_fix.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h91rgo9j0
+  2. Rssi of the Last Ack Frame.
+	- This information is available as part of ieee80211_tx_info status 
+structure. Thought this information may be useful(in future).
 
-ZGlmZiAtLWdpdCBhL2NvbXBhdC13aXJlbGVzcy0zLjYtcmM3LTEvbmV0L3dpcmVsZXNzL2NoYW4u
-YyBiL2NvbXBhdC13aXJlbGVzcy0zLjYtcmM3LTEvbmV0L3dpcmVsZXNzL2NoYW4uYwppbmRleCBk
-MzU1ZjY3Li5lMDg1YTEwIDEwMDY0NAotLS0gYS9jb21wYXQtd2lyZWxlc3MtMy42LXJjNy0xL25l
-dC93aXJlbGVzcy9jaGFuLmMKKysrIGIvY29tcGF0LXdpcmVsZXNzLTMuNi1yYzctMS9uZXQvd2ly
-ZWxlc3MvY2hhbi5jCkBAIC04NSw3ICs4NSw3IEBAIGludCBjZmc4MDIxMV9zZXRfbW9uaXRvcl9j
-aGFubmVsKHN0cnVjdCBjZmc4MDIxMV9yZWdpc3RlcmVkX2RldmljZSAqcmRldiwKIAogCWlmICgh
-cmRldi0+b3BzLT5zZXRfbW9uaXRvcl9jaGFubmVsKQogCQlyZXR1cm4gLUVPUE5PVFNVUFA7Ci0J
-aWYgKCFjZmc4MDIxMV9oYXNfbW9uaXRvcnNfb25seShyZGV2KSkKKwlpZiAoY2ZnODAyMTFfaGFz
-X21vbml0b3JzX29ubHkocmRldikpCiAJCXJldHVybiAtRUJVU1k7CiAKIAljaGFuID0gcmRldl9m
-cmVxX3RvX2NoYW4ocmRldiwgZnJlcSwgY2hhbnR5cGUpOwo=
---f46d043893b303e6c504cd890e24--
+Signed-off-by: Saravana <saravanad@posedge.com>
+  ---
+The diff file is generated from wireless-testing git tree.
+
+net/mac80211/debugfs_sta.c |    3 +++
+  net/mac80211/sta_info.h    |    4 ++++
+  net/mac80211/status.c      |    2 ++
+  net/mac80211/wpa.c         |    1 +
+  4 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 5ccec2c..d0508d6 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -52,6 +52,7 @@ static const struct file_operations sta_ ##name##
+_ops = {		\
+  STA_FILE(aid, sta.aid, D);
+  STA_FILE(dev, sdata->name, S);
+  STA_FILE(last_signal, last_signal, D);
++STA_FILE(last_ack_signal, last_ack_signal, D);
+
+  static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
+  			      size_t count, loff_t *ppos)
+@@ -366,6 +367,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+  	DEBUGFS_ADD(dev);
+  	DEBUGFS_ADD(last_signal);
+  	DEBUGFS_ADD(ht_capa);
++	DEBUGFS_ADD(last_ack_signal);
+
+  	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
+  	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
+@@ -374,6 +376,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+  	DEBUGFS_ADD_COUNTER(rx_duplicates, num_duplicates);
+  	DEBUGFS_ADD_COUNTER(rx_fragments, rx_fragments);
+  	DEBUGFS_ADD_COUNTER(rx_dropped, rx_dropped);
++	DEBUGFS_ADD_COUNTER(rx_dropped_mic_failure,rx_dropped_mic_failure);
+  	DEBUGFS_ADD_COUNTER(tx_fragments, tx_fragments);
+  	DEBUGFS_ADD_COUNTER(tx_filtered, tx_filtered_count);
+  	DEBUGFS_ADD_COUNTER(tx_retry_failed, tx_retry_failed);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index c88f161f..0905eda 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -248,8 +248,10 @@ struct sta_ampdu_mlme {
+   * @num_duplicates: number of duplicate frames received from this STA
+   * @rx_fragments: number of received MPDUs
+   * @rx_dropped: number of dropped MPDUs from this STA
++ * @rx_dropped_mic_failure: number of dropped MPDUs due to mic failure
+from this STA
+   * @last_signal: signal of last received frame from this STA
+   * @avg_signal: moving average of signal of received frames from this STA
++ * @last_ack_signal: signal of last received Ack frame from this STA
+   * @last_seq_ctrl: last received seq/frag number from this STA (per RX
+queue)
+   * @tx_filtered_count: number of frames the hardware filtered for this STA
+   * @tx_retry_failed: number of frames that failed retry
+@@ -327,8 +329,10 @@ struct sta_info {
+  	unsigned long num_duplicates;
+  	unsigned long rx_fragments;
+  	unsigned long rx_dropped;
++	unsigned long rx_dropped_mic_failure;
+  	int last_signal;
+  	struct ewma avg_signal;
++	int last_ack_signal;
+  	/* Plus 1 for non-QoS frames */
+  	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES + 1];
+
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index ab63237..19baafc 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -539,6 +539,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw,
+struct sk_buff *skb)
+  				sta->lost_packets = 0;
+  			}
+  		}
++		if(acked)
++		sta->last_ack_signal=info->status.ack_signal;
+  	}
+
+  	rcu_read_unlock();
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 8bd2f5c..87c0c3c 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -166,6 +166,7 @@ mic_fail:
+  	 * a driver that supports HW encryption. Send up the key idx only if
+  	 * the key is set.
+  	 */
++	 rx->sta->rx_dropped_mic_failure++;
+
+
