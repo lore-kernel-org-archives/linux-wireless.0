@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53361 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753129Ab2KTVQw (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:37531 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757365Ab2KWCnD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 16:16:52 -0500
-Date: Tue, 20 Nov 2012 15:16:47 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Daniel Wagner <wagi@monom.org>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
- support
-Message-ID: <20121120211647.GC26602@thinkpad-t410> (sfid-20121120_221655_599363_50205DFA)
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <50AA845C.2050809@monom.org>
- <50AB3182.5040505@monom.org>
- <20121120142822.GA26602@thinkpad-t410>
- <50ABC168.8080904@monom.org>
- <50ABF17A.6020604@broadcom.com>
+	Thu, 22 Nov 2012 21:43:03 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so312489wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 18:43:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50ABF17A.6020604@broadcom.com>
+In-Reply-To: <1353635958-12298-1-git-send-email-yeohchunyeow@gmail.com>
+References: <1353635958-12298-1-git-send-email-yeohchunyeow@gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 22 Nov 2012 18:42:41 -0800
+Message-ID: <CAG6hwVPxVsR2JCEiHSBCho1fwe4igd1q6o9BL_-ei=K8RHXa5g@mail.gmail.com> (sfid-20121123_034307_798319_81818648)
+Subject: Re: [PATCH] mac80211: Fix macro definitions in Mesh
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 20, 2012 at 10:09:14PM +0100, Arend van Spriel wrote:
-> >I hope I got it right. Here are the requested logs:
-> >
-> >http://www.monom.org/misc/brcmsmac/traces/
-> 
-> What channel is you AP on?
+On Thu, Nov 22, 2012 at 5:59 PM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+> Macro definitions should be static inlines.
 
-Based on the trace it looks like channel 13.
+Then maybe this patch should do that as well? :)
 
-If you want to take a look at the decoded trace data I've uploaded it to
-http://people.canonical.com/~sforshee/brcms-trace/trace.log. I've got a
-trace-cmd plugin for the tracepoints I added that makes it easier to
-decipher.
-
-Seth
+> Reported by: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+>  net/mac80211/mesh_hwmp.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+> index 47aeee2..5d3e965 100644
+> --- a/net/mac80211/mesh_hwmp.c
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -88,9 +88,9 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
+>         (msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPpreqMinInterval))
+>  #define max_preq_retries(s) (s->u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries)
+>  #define disc_timeout_jiff(s) \
+> -       msecs_to_jiffies(sdata->u.mesh.mshcfg.min_discovery_timeout)
+> +       msecs_to_jiffies(s->u.mesh.mshcfg.min_discovery_timeout)
+>  #define root_path_confirmation_jiffies(s) \
+> -       msecs_to_jiffies(sdata->u.mesh.mshcfg.dot11MeshHWMPconfirmationInterval)
+> +       msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPconfirmationInterval)
+>
+>  enum mpath_frame_type {
+>         MPATH_PREQ = 0,
+> --
+> 1.7.0.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
