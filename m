@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ibawizard.net ([82.208.49.253]:48860 "EHLO
-	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753585Ab2KYX11 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51673 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932931Ab2KWHme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 18:27:27 -0500
-Date: Mon, 26 Nov 2012 00:27:20 +0100
-From: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
-To: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: Multi-bss operation issue with rt2x00 and hostapd on rt305x
-	platform
-Message-ID: <20121125232720.GB16095@ibawizard.net> (sfid-20121126_002730_350392_1888B082)
-Reply-To: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
-References: <20121125190019.GQ8292@ibawizard.net> <50B29159.20209@googlemail.com> <CAGXE3d_Wgk5Eo5Y2k-9jr3ULuOeZydmWA_pJVd8ARnKHwSGtgQ@mail.gmail.com> <20121125222940.GA16095@ibawizard.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <20121125222940.GA16095@ibawizard.net>
+	Fri, 23 Nov 2012 02:42:34 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/3] mac80211: disable HT advertising unless AP supports it
+Date: Fri, 23 Nov 2012 08:43:00 +0100
+Message-Id: <1353656580-12134-4-git-send-email-johannes@sipsolutions.net> (sfid-20121123_084238_804173_782858A8)
+In-Reply-To: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net>
+References: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Petr ©tetiar <ynezz@true.cz> [2012-11-25 23:29:40]:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> I don't see a pattern here, why it didn't worked with :88, :89, :90? Just the
-> last one :90 was working and :88, :89, :8a works fine. There need to be some
-> hole/spacing? Thanks a lot!
+If the AP doesn't support HT, or more importantly if
+it does but we have to disable it because its IEs are
+broken, don't advertise HT support in our association
+request. Otherwise, we configure our channel to be a
+20 MHz non-HT channel but the AP might still think we
+support HT, or even 40 MHz.
 
-Ok, I should go rather to bed (90 decimal vs 0x8a) :-) So, the BSSIDs should
-simply use continuous numbering from the base BSSID and it works. Thank you
-again.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 1 +
+ 1 file changed, 1 insertion(+)
 
--- ynezz
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 42b2c3f..6d49d6c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3267,6 +3267,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 		sdata->needed_rx_chains = min(chains, local->rx_chains);
+ 	} else {
+ 		sdata->needed_rx_chains = 1;
++		sdata->u.mgd.flags |= IEEE80211_STA_DISABLE_HT;
+ 	}
+ 
+ 	/* will change later if needed */
+-- 
+1.8.0
+
