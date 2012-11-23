@@ -1,91 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:40928 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899Ab2KVS12 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51594 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932834Ab2KWHL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:27:28 -0500
-Received: by mail-oa0-f46.google.com with SMTP id h16so8275018oag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 10:27:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1353594065.27848.60.camel@cumari.coelho.fi>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-	<1353585928-28666-7-git-send-email-eliad@wizery.com>
-	<1353594065.27848.60.camel@cumari.coelho.fi>
-Date: Thu, 22 Nov 2012 16:26:33 +0200
-Message-ID: <CAB3XZEeRS5CPyU0h4BrKOH2uoi95coVMwghkaEk=zy1AzSki4Q@mail.gmail.com> (sfid-20121122_192751_214380_A21EF918)
-Subject: Re: [PATCH 06/13] wlcore: update acx enum
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 23 Nov 2012 02:11:28 -0500
+Message-ID: <1353654716.10197.0.camel@jlt4.sipsolutions.net> (sfid-20121123_081131_939534_4C9463A1)
+Subject: Re: RFC[1/2]mac80211: Add Statistic to debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Saravana <saravanad@posedge.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 23 Nov 2012 08:11:56 +0100
+In-Reply-To: <50AF1A1E.8090704@posedge.com>
+References: <50AF0E91.30709@posedge.com>
+	 <CAGRGNgW1x0O26SxytoDQLYXFqWcmfaCGE=Q_pxGg31mW0HyRtw@mail.gmail.com>
+	 <50AF1A1E.8090704@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 22, 2012 at 4:21 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
->> update the acx enum to the new fw api.
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->>  drivers/net/wireless/ti/wl18xx/acx.c |    2 +-
->>  drivers/net/wireless/ti/wl18xx/acx.h |    4 ----
->>  drivers/net/wireless/ti/wlcore/acx.h |   10 +++++++++-
->>  3 files changed, 10 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
->> index 72840e2..adff9cd 100644
->> --- a/drivers/net/wireless/ti/wl18xx/acx.c
->> +++ b/drivers/net/wireless/ti/wl18xx/acx.c
->> @@ -75,7 +75,7 @@ int wl18xx_acx_set_checksum_state(struct wl1271 *wl)
->>
->>       acx->checksum_state = CHECKSUM_OFFLOAD_ENABLED;
->>
->> -     ret = wl1271_cmd_configure(wl, ACX_CHECKSUM_CONFIG, acx, sizeof(*acx));
->> +     ret = wl1271_cmd_configure(wl, ACX_CSUM_CONFIG, acx, sizeof(*acx));
->>       if (ret < 0) {
->>               wl1271_warning("failed to set Tx checksum state: %d", ret);
->>               goto out;
->> diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
->> index e2609a6..67733a1 100644
->> --- a/drivers/net/wireless/ti/wl18xx/acx.h
->> +++ b/drivers/net/wireless/ti/wl18xx/acx.h
->> @@ -25,10 +25,6 @@
->>  #include "../wlcore/wlcore.h"
->>  #include "../wlcore/acx.h"
->>
->> -enum {
->> -     ACX_CLEAR_STATISTICS             = 0x0047,
->> -};
->> -
->>  /* numbers of bits the length field takes (add 1 for the actual number) */
->>  #define WL18XX_HOST_IF_LEN_SIZE_FIELD 15
->>
->> diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
->> index d03215d..7833d17 100644
->> --- a/drivers/net/wireless/ti/wlcore/acx.h
->> +++ b/drivers/net/wireless/ti/wlcore/acx.h
->> @@ -1025,7 +1025,15 @@ enum {
->>       ACX_CONFIG_HANGOVER              = 0x0042,
->>       ACX_FEATURE_CFG                  = 0x0043,
->>       ACX_PROTECTION_CFG               = 0x0044,
->> -     ACX_CHECKSUM_CONFIG              = 0x0045,
->> +
->> +     /* start of 18xx specific acxs */
->> +     ACX_NS_IPV6_FILTER               = 0x0050,
->> +     ACX_PEER_HT_OPERATION_MODE_CFG   = 0x0051,
->> +     ACX_CSUM_CONFIG                  = 0x0052,
->> +     ACX_SIM_CONFIG                   = 0x0053,
->> +     ACX_CLEAR_STATISTICS             = 0x0054,
->> +     ACX_AUTO_RX_STREAMING            = 0x0055,
->> +     ACX_PEER_CAP                     = 0x0056
->>  };
->
-> Why didn't you leave the wl18xx-specific ACXs in the wl18xx/acx.h file
-> like it was before? I prefer it like that, because then it's clear that
-> those are not supported by wl12xx.
->
-this way it's easier to verify that the ACX are compatible with each
-other (i.e. no ACX number is used for 2 different commands).
-but since you prefer it the old way, i'll revert.
+On Fri, 2012-11-23 at 12:09 +0530, Saravana wrote:
 
-Eliad.
+> > Also, as you're adding new statistics which are only used when debugfs
+> > is enabled, you might want to wrap them in #ifdefs so that they're
+> > only compiled when debugfs support is compiled.
+
+[...]
+> Hence we don't need to wrap this up in #ifdef as it is already taken 
+> care during the directory creation.
+
+I think Julian is arguing that you should have the *counters* themselves
+be under ifdef, and I tend to agree.
+
+johannes
+
