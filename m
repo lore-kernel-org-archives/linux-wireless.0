@@ -1,248 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42079 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51671 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160Ab2KTVoy (ORCPT
+	with ESMTP id S932907Ab2KWHme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 16:44:54 -0500
+	Fri, 23 Nov 2012 02:42:34 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 07/10] mac80211: support drivers reporting VHT RX
-Date: Tue, 20 Nov 2012 22:45:13 +0100
-Message-Id: <1353447916-17304-8-git-send-email-johannes@sipsolutions.net> (sfid-20121120_224510_818704_41C5957F)
-In-Reply-To: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
-References: <1353447916-17304-1-git-send-email-johannes@sipsolutions.net>
+Subject: [PATCH 2/3] mac80211: rename IEEE80211_STA_DISABLE_11N to HT
+Date: Fri, 23 Nov 2012 08:42:59 +0100
+Message-Id: <1353656580-12134-3-git-send-email-johannes@sipsolutions.net> (sfid-20121123_084239_880572_054C0951)
+In-Reply-To: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net>
+References: <1353656580-12134-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add support to mac80211 for having drivers report
-received VHT MCS information.
+Since the 11n spec amendment was rolled into the
+2012 version, "11n" no longer makes sense. Use
+"HT" instead.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h  | 12 +++++++++++-
- net/mac80211/cfg.c      | 26 +++++++++++++++++++++++---
- net/mac80211/rx.c       | 20 +++++++++++++++-----
- net/mac80211/sta_info.h |  4 +++-
- net/mac80211/util.c     | 14 ++++++++++++++
- 5 files changed, 66 insertions(+), 10 deletions(-)
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/mlme.c        | 16 ++++++++--------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 23e4180..c846526 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -717,7 +717,11 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  *	(including FCS) was received.
-  * @RX_FLAG_SHORTPRE: Short preamble was used for this frame
-  * @RX_FLAG_HT: HT MCS was used and rate_idx is MCS index
-+ * @RX_FLAG_VHT: VHT MCS was used and rate_index is MCS index
-  * @RX_FLAG_40MHZ: HT40 (40 MHz) was used
-+ * @RX_FLAG_80MHZ: 80 MHz was used
-+ * @RX_FLAG_80P80MHZ: 80+80 MHz was used
-+ * @RX_FLAG_160MHZ: 160 MHz was used
-  * @RX_FLAG_SHORT_GI: Short guard interval was used
-  * @RX_FLAG_NO_SIGNAL_VAL: The signal strength value is not present.
-  *	Valid only for data frames (mainly A-MPDU)
-@@ -760,6 +764,10 @@ enum mac80211_rx_flags {
- 	RX_FLAG_AMPDU_DELIM_CRC_ERROR	= BIT(19),
- 	RX_FLAG_AMPDU_DELIM_CRC_KNOWN	= BIT(20),
- 	RX_FLAG_MACTIME_END		= BIT(21),
-+	RX_FLAG_VHT			= BIT(22),
-+	RX_FLAG_80MHZ			= BIT(23),
-+	RX_FLAG_80P80MHZ		= BIT(24),
-+	RX_FLAG_160MHZ			= BIT(25),
- };
- 
- /**
-@@ -780,7 +788,8 @@ enum mac80211_rx_flags {
-  *	@IEEE80211_HW_SIGNAL_*
-  * @antenna: antenna used
-  * @rate_idx: index of data rate into band's supported rates or MCS index if
-- *	HT rates are use (RX_FLAG_HT)
-+ *	HT or VHT is used (%RX_FLAG_HT/%RX_FLAG_VHT)
-+ * @vht_nss: number of streams (VHT only)
-  * @flag: %RX_FLAG_*
-  * @rx_flags: internal RX flags for mac80211
-  * @ampdu_reference: A-MPDU reference number, must be a different value for
-@@ -803,6 +812,7 @@ struct ieee80211_rx_status {
- 	u16 vendor_radiotap_len;
- 	u16 freq;
- 	u8 rate_idx;
-+	u8 vht_nss;
- 	u8 rx_flags;
- 	u8 band;
- 	u8 antenna;
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b9702d1..0b9de4f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -374,7 +374,8 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
- {
- 	enum ieee80211_band band = ieee80211_get_sdata_band(sta->sdata);
- 
--	if (!(rate->flags & RATE_INFO_FLAGS_MCS)) {
-+	if (!(rate->flags & RATE_INFO_FLAGS_MCS) &&
-+	    !(rate->flags & RATE_INFO_FLAGS_VHT_MCS)) {
- 		struct ieee80211_supported_band *sband;
- 		sband = sta->local->hw.wiphy->bands[band];
- 		rate->legacy = sband->bitrates[idx].bitrate;
-@@ -444,13 +445,32 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &sinfo->txrate);
- 
- 	sinfo->rxrate.flags = 0;
--	if (sta->last_rx_rate_flag & RX_FLAG_HT)
-+	if (sta->last_rx_rate_flag & RX_FLAG_HT) {
- 		sinfo->rxrate.flags |= RATE_INFO_FLAGS_MCS;
-+		sinfo->rxrate.mcs = sta->last_rx_rate_idx;
-+	} else if (sta->last_rx_rate_flag & RX_FLAG_VHT) {
-+		sinfo->rxrate.flags |= RATE_INFO_FLAGS_VHT_MCS;
-+		sinfo->rxrate.nss = sta->last_rx_rate_vht_nss;
-+		sinfo->rxrate.mcs = sta->last_rx_rate_idx;
-+	} else {
-+		struct ieee80211_supported_band *sband;
-+
-+		sband = sta->local->hw.wiphy->bands[
-+				ieee80211_get_sdata_band(sta->sdata)];
-+		sinfo->rxrate.legacy =
-+			sband->bitrates[sta->last_rx_rate_idx].bitrate;
-+	}
-+
- 	if (sta->last_rx_rate_flag & RX_FLAG_40MHZ)
- 		sinfo->rxrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
- 	if (sta->last_rx_rate_flag & RX_FLAG_SHORT_GI)
- 		sinfo->rxrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
--	rate_idx_to_bitrate(&sinfo->rxrate, sta, sta->last_rx_rate_idx);
-+	if (sta->last_rx_rate_flag & RX_FLAG_80MHZ)
-+		sinfo->rxrate.flags |= RATE_INFO_FLAGS_80_MHZ_WIDTH;
-+	if (sta->last_rx_rate_flag & RX_FLAG_80P80MHZ)
-+		sinfo->rxrate.flags |= RATE_INFO_FLAGS_80P80_MHZ_WIDTH;
-+	if (sta->last_rx_rate_flag & RX_FLAG_160MHZ)
-+		sinfo->rxrate.flags |= RATE_INFO_FLAGS_160_MHZ_WIDTH;
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index ec15a49..5d12c02 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -190,7 +190,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	pos++;
- 
- 	/* IEEE80211_RADIOTAP_RATE */
--	if (!rate || status->flag & RX_FLAG_HT) {
-+	if (!rate || status->flag & (RX_FLAG_HT | RX_FLAG_VHT)) {
- 		/*
- 		 * Without rate information don't add it. If we have,
- 		 * MCS information is a separate field in radiotap,
-@@ -210,7 +210,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	if (status->band == IEEE80211_BAND_5GHZ)
- 		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
- 				   pos);
--	else if (status->flag & RX_FLAG_HT)
-+	else if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT))
- 		put_unaligned_le16(IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ,
- 				   pos);
- 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
-@@ -1349,6 +1349,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 			if (ieee80211_is_data(hdr->frame_control)) {
- 				sta->last_rx_rate_idx = status->rate_idx;
- 				sta->last_rx_rate_flag = status->flag;
-+				sta->last_rx_rate_vht_nss = status->vht_nss;
- 			}
- 		}
- 	} else if (!is_multicast_ether_addr(hdr->addr1)) {
-@@ -1360,6 +1361,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 		if (ieee80211_is_data(hdr->frame_control)) {
- 			sta->last_rx_rate_idx = status->rate_idx;
- 			sta->last_rx_rate_flag = status->flag;
-+			sta->last_rx_rate_vht_nss = status->vht_nss;
- 		}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bff82a8..d5da0fe 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -364,7 +364,7 @@ enum ieee80211_sta_flags {
+ 	IEEE80211_STA_BEACON_POLL	= BIT(0),
+ 	IEEE80211_STA_CONNECTION_POLL	= BIT(1),
+ 	IEEE80211_STA_CONTROL_PORT	= BIT(2),
+-	IEEE80211_STA_DISABLE_11N	= BIT(4),
++	IEEE80211_STA_DISABLE_HT	= BIT(4),
+ 	IEEE80211_STA_CSA_RECEIVED	= BIT(5),
+ 	IEEE80211_STA_MFP_ENABLED	= BIT(6),
+ 	IEEE80211_STA_UAPSD_ENABLED	= BIT(7),
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 19969ec..42b2c3f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -541,7 +541,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		offset = noffset;
  	}
  
-@@ -2703,7 +2705,8 @@ static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
- 		status = IEEE80211_SKB_RXCB((rx->skb));
+-	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
++	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT))
+ 		ieee80211_add_ht_ie(sdata, skb, assoc_data->ap_ht_param,
+ 				    sband, chan, sdata->smps_mode);
  
- 		sband = rx->local->hw.wiphy->bands[status->band];
--		if (!(status->flag & RX_FLAG_HT))
-+		if (!(status->flag & RX_FLAG_HT) &&
-+		    !(status->flag & RX_FLAG_VHT))
- 			rate = &sband->bitrates[status->rate_idx];
+@@ -2170,7 +2170,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
  
- 		ieee80211_rx_cooked_monitor(rx, rate);
-@@ -2870,8 +2873,8 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
- 		} else if (!rx->sta) {
- 			int rate_idx;
--			if (status->flag & RX_FLAG_HT)
--				rate_idx = 0; /* TODO: HT rates */
-+			if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT))
-+				rate_idx = 0; /* TODO: HT/VHT rates */
- 			else
- 				rate_idx = status->rate_idx;
- 			ieee80211_ibss_rx_no_sta(sdata, bssid, hdr->addr2,
-@@ -3147,6 +3150,13 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				 status->rate_idx,
- 				 status->rate_idx))
- 				goto drop;
-+		} else if (status->flag & RX_FLAG_VHT) {
-+			if (WARN_ONCE(status->rate_idx > 9 ||
-+				      !status->vht_nss ||
-+				      status->vht_nss > 8,
-+				      "Rate marked as a VHT rate but data is invalid: MCS: %d, NSS: %d\n",
-+				      status->rate_idx, status->vht_nss))
-+				goto drop;
- 		} else {
- 			if (WARN_ON(status->rate_idx >= sband->n_bitrates))
- 				goto drop;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 2b2d5aa..6835cea 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -227,6 +227,7 @@ struct sta_ampdu_mlme {
-  *	"the" transmit rate
-  * @last_rx_rate_idx: rx status rate index of the last data packet
-  * @last_rx_rate_flag: rx status flag of the last data packet
-+ * @last_rx_rate_vht_nss: rx status nss of last data packet
-  * @lock: used for locking all fields that require locking, see comments
-  *	in the header file.
-  * @drv_unblock_wk: used for driver PS unblocking
-@@ -343,7 +344,8 @@ struct sta_info {
- 	unsigned long tx_fragments;
- 	struct ieee80211_tx_rate last_tx_rate;
- 	int last_rx_rate_idx;
--	int last_rx_rate_flag;
-+	u32 last_rx_rate_flag;
-+	u8 last_rx_rate_vht_nss;
- 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
+ 	sband = local->hw.wiphy->bands[ieee80211_get_sdata_band(sdata)];
  
- 	/*
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3b3dd32..dc7f6b2 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2069,6 +2069,20 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
- 			ri.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
- 		if (status->flag & RX_FLAG_SHORT_GI)
- 			ri.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+	} else if (status->flag & RX_FLAG_VHT) {
-+		ri.flags |= RATE_INFO_FLAGS_VHT_MCS;
-+		ri.mcs = status->rate_idx;
-+		ri.nss = status->vht_nss;
-+		if (status->flag & RX_FLAG_40MHZ)
-+			ri.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
-+		if (status->flag & RX_FLAG_80MHZ)
-+			ri.flags |= RATE_INFO_FLAGS_80_MHZ_WIDTH;
-+		if (status->flag & RX_FLAG_80P80MHZ)
-+			ri.flags |= RATE_INFO_FLAGS_80P80_MHZ_WIDTH;
-+		if (status->flag & RX_FLAG_160MHZ)
-+			ri.flags |= RATE_INFO_FLAGS_160_MHZ_WIDTH;
-+		if (status->flag & RX_FLAG_SHORT_GI)
-+			ri.flags |= RATE_INFO_FLAGS_SHORT_GI;
- 	} else {
- 		struct ieee80211_supported_band *sband;
+-	if (elems.ht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
++	if (elems.ht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_HT))
+ 		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
+ 				elems.ht_cap_elem, &sta->sta.ht_cap);
  
+@@ -2222,7 +2222,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	changed |= BSS_CHANGED_QOS;
+ 
+ 	if (elems.ht_operation && elems.wmm_param &&
+-	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
++	    !(ifmgd->flags & IEEE80211_STA_DISABLE_HT))
+ 		changed |= ieee80211_config_ht_tx(sdata, elems.ht_operation,
+ 						  cbss->bssid, false);
+ 
+@@ -2658,7 +2658,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 
+ 	if (elems.ht_cap_elem && elems.ht_operation && elems.wmm_param &&
+-	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
++	    !(ifmgd->flags & IEEE80211_STA_DISABLE_HT))
+ 		changed |= ieee80211_config_ht_tx(sdata, elems.ht_operation,
+ 						  bssid, true);
+ 
+@@ -3555,7 +3555,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
+ 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
+ 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104) {
+-			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++			ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+ 			netdev_info(sdata->dev,
+ 				    "disabling HT/VHT due to WEP/TKIP use\n");
+@@ -3563,7 +3563,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (req->flags & ASSOC_REQ_DISABLE_HT) {
+-		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+ 	}
+ 
+@@ -3571,7 +3571,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	sband = local->hw.wiphy->bands[req->bss->channel->band];
+ 	if (!sband->ht_cap.ht_supported ||
+ 	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used) {
+-		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
+ 		if (!bss->wmm_used)
+ 			netdev_info(sdata->dev,
+ 				    "disabling HT as WMM/QoS is not supported by the AP\n");
+@@ -3616,7 +3616,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		assoc_data->ap_ht_param =
+ 			((struct ieee80211_ht_operation *)(ht_ie + 2))->ht_param;
+ 	else
+-		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
+ 
+ 	if (bss->wmm_used && bss->uapsd_supported &&
+ 	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)) {
 -- 
 1.8.0
 
