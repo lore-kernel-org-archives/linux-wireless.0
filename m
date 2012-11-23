@@ -1,88 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:59660 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755656Ab2KVTRO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54200 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932147Ab2KWWqD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 14:17:14 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [PATCH 2/3] mac80211: refactor ieee80211_set_qos_hdr
-Date: Wed, 21 Nov 2012 18:40:31 -0800
-Message-Id: <1353552032-15600-3-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121122_201722_444193_8459EF3B)
-In-Reply-To: <1353552032-15600-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353552032-15600-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	Fri, 23 Nov 2012 17:46:03 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] iwlwifi: initialize rx_status
+Date: Fri, 23 Nov 2012 23:46:19 +0100
+Message-Id: <1353710779-7142-1-git-send-email-johannes@sipsolutions.net> (sfid-20121123_234642_526071_AA7F642B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return early if not a QoS Data frame.
-Give proper documentation.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+The vendor radiotap patch added a few fields to
+struct ieee80211_rx_status that need to be zero,
+initialize the struct instead of using whatever
+was left on the stack.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/wme.c |   40 +++++++++++++++++++++++-----------------
- 1 file changed, 23 insertions(+), 17 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index cea06e9..906f00c 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -160,31 +160,37 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
- 	return ieee80211_downgrade_queue(sdata, skb);
- }
- 
-+/**
-+ * ieee80211_set_qos_hdr - Fill in the QoS header if there is one.
-+ *
-+ * @sdata: local subif
-+ * @skb: packet to be updated
-+ */
- void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 			   struct sk_buff *skb)
+diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
+index 9a8d502..85b4763 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+@@ -899,7 +899,7 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
+ 			    struct iwl_device_cmd *cmd)
  {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	u8 *p;
-+	u8 ack_policy, tid;
- 
--	/* Fill in the QoS header if there is one. */
--	if (ieee80211_is_data_qos(hdr->frame_control)) {
--		u8 *p = ieee80211_get_qos_ctl(hdr);
--		u8 ack_policy, tid;
--
--		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
-+	if (!ieee80211_is_data_qos(hdr->frame_control))
-+		return;
- 
--		/* preserve EOSP bit */
--		ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
-+	p = ieee80211_get_qos_ctl(hdr);
-+	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
- 
--		if (is_multicast_ether_addr(hdr->addr1) ||
--		    sdata->noack_map & BIT(tid)) {
--			ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
--			info->flags |= IEEE80211_TX_CTL_NO_ACK;
--		}
-+	/* preserve EOSP bit */
-+	ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
- 
--		/* qos header is 2 bytes */
--		*p++ = ack_policy | tid;
--		*p = ieee80211_vif_is_mesh(&sdata->vif) ?
--			(IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT >> 8) : 0;
-+	if (is_multicast_ether_addr(hdr->addr1) ||
-+	    sdata->noack_map & BIT(tid)) {
-+		ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
-+		info->flags |= IEEE80211_TX_CTL_NO_ACK;
- 	}
-+
-+	/* qos header is 2 bytes */
-+	*p++ = ack_policy | tid;
-+	*p = ieee80211_vif_is_mesh(&sdata->vif) ?
-+		(IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT >> 8) : 0;
- }
+ 	struct ieee80211_hdr *header;
+-	struct ieee80211_rx_status rx_status;
++	struct ieee80211_rx_status rx_status = {};
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_rx_phy_res *phy_res;
+ 	__le32 rx_pkt_status;
 -- 
-1.7.9.5
+1.8.0
 
