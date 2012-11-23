@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47954 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992781Ab2K3TQc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51661 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932867Ab2KWHjS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 14:16:32 -0500
-Date: Fri, 30 Nov 2012 14:07:03 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-11-30
-Message-ID: <20121130190702.GC2355@tuxdriver.com> (sfid-20121130_201652_983613_2B563BEB)
-References: <20121130182459.GB2355@tuxdriver.com>
- <20121130.134018.1859855439413083920.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121130.134018.1859855439413083920.davem@davemloft.net>
+	Fri, 23 Nov 2012 02:39:18 -0500
+Message-ID: <1353656386.10197.2.camel@jlt4.sipsolutions.net> (sfid-20121123_083921_963196_DC549E51)
+Subject: Re: [PATCH v2] mac80211: support radiotap vendor namespace RX data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Nov 2012 08:39:46 +0100
+In-Reply-To: <50AF24EF.7080800@neratec.com>
+References: <1353061591-22284-1-git-send-email-johannes@sipsolutions.net>
+	  <87ehjtygci.fsf@purkki.adurom.net>
+	  <1353063966.9490.1.camel@jlt4.sipsolutions.net>
+	  <50ADE0E3.2020909@neratec.com>
+	  <1353573266.9806.14.camel@jlt4.sipsolutions.net>
+	 <1353573671.9806.15.camel@jlt4.sipsolutions.net>
+	 <50ADE504.3060508@neratec.com> <50AF24EF.7080800@neratec.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 30, 2012 at 01:40:18PM -0500, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Fri, 30 Nov 2012 13:25:00 -0500
-> 
-> > I have a couple of stragglers intended for 3.7...
-> > 
-> > The iwlwifi patch fixes a bug in CCK basic rate calculations.
-> > 
-> > The mac80211 patch removes an unnecessary function call that was
-> > generating a lot of log SPAM.
-> 
-> Pulled, thanks John.
-> 
-> I want to warn you ahead of time that these might not make it.
+On Fri, 2012-11-23 at 08:25 +0100, Wojciech Dubowik wrote:
+> On 11/22/2012 09:40 AM, Wojciech Dubowik wrote:
+> > On 11/22/2012 09:41 AM, Johannes Berg wrote:
+> >> On Thu, 2012-11-22 at 09:34 +0100, Johannes Berg wrote:
+> >>> On Thu, 2012-11-22 at 09:22 +0100, Wojciech Dubowik wrote:
+> >>>> Shouldn't all functions between ieee80211_rx
+> >>>> and remove_monitor_info map header with
+> >>>> (struct ieee80211_hdr *)(skb->data + status->vendor_radiotap_len) ?
+> >>>>
+> >>>> Otherwise function like should_drop_frame uses header mapped over
+> >>>> potential vendor data.
+> >>> Huh, yes, how did I miss that. It only applies to should_drop_frame()
+> >>> though, or do you see any other place?
+> >> So I think this is sufficient?
+> > I guess so. I will test it today.
+> > Wojtek
+> I have tested with ath9k vendor data and it doesn't seem to drop frames. 
+> I will post my patch as RFC
+> once I clean it up a bit. Just for reference.
 
-Yes, I suspect that might be the case -- but it won't make it if I
-don't send it... :-)
+Great, thanks. I'll send out the fix & merge it.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
