@@ -1,74 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47408 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071Ab2K2KsK (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52404 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756071Ab2KWUTK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 05:48:10 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3] cfg80211: fix cmp_hidden_bss
-Date: Thu, 29 Nov 2012 11:48:34 +0100
-Message-Id: <1354186114-29513-1-git-send-email-johannes@sipsolutions.net> (sfid-20121129_114814_190773_CE378E2B)
-In-Reply-To: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net>
-References: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 23 Nov 2012 15:19:10 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>
+Subject: [RFCv2 02/13] {cfg,nl}80211: mesh power mode config parameters
+Date: Fri, 23 Nov 2012 12:18:43 -0800
+Message-Id: <1353701934-12752-3-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_211917_115518_5862AEE1)
+In-Reply-To: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Add the nl80211_mesh_power_mode enumeration which holds possible values for
+the mesh power mode. These modes are unknown, active, light sleep and
+deep sleep.
 
-The cmp_bss() comparator function uses memcmp() to
-compare the SSID. This means that cmp_hidden_bss()
-needs to similarly return a number bigger than zero
-(use 1) instead of -1 when ie1 is bigger than ie2,
-which is the case if an ie2 byte is non-zero.
+Add power_mode entry to the mesh config structure to hold the user-configured
+default mesh power mode. This value will be used for new peer links. Make the
+default mesh power mode accessible to userspace as part of the mesh config.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
 ---
- net/wireless/scan.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ include/net/cfg80211.h       |    3 +++
+ include/uapi/linux/nl80211.h |   32 ++++++++++++++++++++++++++++++++
+ net/wireless/mesh.c          |    1 +
+ net/wireless/nl80211.c       |    8 +++++++-
+ 4 files changed, 43 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 9233910..834e0d1 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -450,10 +450,16 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
- 			       b->information_elements,
- 			       b->len_information_elements);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 91ce6234..cc61b4b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -878,6 +878,8 @@ struct bss_parameters {
+  * @dot11MeshHWMPconfirmationInterval: The minimum interval of time (in TUs)
+  *	during which a mesh STA can send only one Action frame containing
+  *	a PREQ element for root path confirmation.
++ * @power_mode: The default mesh power save mode which will be the initial
++ *	setting for new peer links.
+  */
+ struct mesh_config {
+ 	u16 dot11MeshRetryTimeout;
+@@ -905,6 +907,7 @@ struct mesh_config {
+ 	u32 dot11MeshHWMPactivePathToRootTimeout;
+ 	u16 dot11MeshHWMProotInterval;
+ 	u16 dot11MeshHWMPconfirmationInterval;
++	enum nl80211_mesh_power_mode power_mode;
+ };
  
--	/* Key comparator must use same algorithm in any rb-tree
-+	/*
-+	 * Key comparator must use same algorithm in any rb-tree
- 	 * search function (order is important), otherwise ordering
- 	 * of items in the tree is broken and search gives incorrect
--	 * results. This code uses same order as cmp_ies() does. */
-+	 * results. This code uses same order as cmp_ies() does.
-+	 *
-+	 * Note that due to the differring behaviour with hidden SSIDs
-+	 * this function only works when "b" is the tree element and
-+	 * "a" is the key we're looking for.
-+	 */
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 617d0fb..d0efa1e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2203,6 +2203,34 @@ enum nl80211_mntr_flags {
+ };
  
- 	/* sort missing IE before (left of) present IE */
- 	if (!ie1)
-@@ -469,10 +475,14 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
- 	if (ie1[1] != ie2[1])
- 		return ie2[1] - ie1[1];
+ /**
++ * enum nl80211_mesh_power_mode - mesh power save modes
++ *
++ * @NL80211_MESH_POWER_UNKNOWN: The mesh power mode of the mesh STA is
++ *	not known or has not been set yet.
++ * @NL80211_MESH_POWER_ACTIVE: Active mesh power mode. The mesh STA is
++ *	in Awake state all the time.
++ * @NL80211_MESH_POWER_LIGHT_SLEEP: Light sleep mode. The mesh STA will
++ *	alternate between Active and Doze states, but will wake up for
++ *	neighbor's beacons.
++ * @NL80211_MESH_POWER_DEEP_SLEEP: Deep sleep mode. The mesh STA will
++ *	alternate between Active and Doze states, but may not wake up
++ *	for neighbor's beacons.
++ *
++ * @__NL80211_MESH_POWER_AFTER_LAST - internal use
++ * @NL80211_MESH_POWER_MAX - highest possible power save level
++ */
++
++enum nl80211_mesh_power_mode {
++	NL80211_MESH_POWER_UNKNOWN,
++	NL80211_MESH_POWER_ACTIVE,
++	NL80211_MESH_POWER_LIGHT_SLEEP,
++	NL80211_MESH_POWER_DEEP_SLEEP,
++
++	__NL80211_MESH_POWER_AFTER_LAST,
++	NL80211_MESH_POWER_MAX = __NL80211_MESH_POWER_AFTER_LAST - 1
++};
++
++/**
+  * enum nl80211_meshconf_params - mesh configuration parameters
+  *
+  * Mesh configuration parameters. These can be changed while the mesh is
+@@ -2296,6 +2324,9 @@ enum nl80211_mntr_flags {
+  *	(in TUs) during which a mesh STA can send only one Action frame
+  *	containing a PREQ element for root path confirmation.
+  *
++ * @NL80211_MESHCONF_POWER_MODE: Default mesh power mode for new peer links.
++ *	type &enum nl80211_mesh_power_mode (u8)
++ *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+  */
+ enum nl80211_meshconf_params {
+@@ -2325,6 +2356,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
+ 	NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
+ 	NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
++	NL80211_MESHCONF_POWER_MODE,
  
--	/* zeroed SSID ie is another indication of a hidden bss */
-+	/*
-+	 * zeroed SSID ie is another indication of a hidden bss;
-+	 * if it isn't zeroed just return the regular sort value
-+	 * to find the next candidate
-+	 */
- 	for (i = 0; i < ie2[1]; i++)
- 		if (ie2[i + 2])
--			return -1;
-+			return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index c2060d4..21f668b 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -72,6 +72,7 @@ const struct mesh_config default_mesh_config = {
+ 	.dot11MeshHWMPactivePathToRootTimeout = MESH_PATH_TO_ROOT_TIMEOUT,
+ 	.dot11MeshHWMProotInterval = MESH_ROOT_INTERVAL,
+ 	.dot11MeshHWMPconfirmationInterval = MESH_ROOT_CONFIRMATION_INTERVAL,
++	.power_mode = NL80211_MESH_POWER_ACTIVE,
+ };
  
- 	return 0;
- }
+ const struct mesh_setup default_mesh_setup = {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e99a8ce..3e2aa63 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3770,7 +3770,9 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
+ 	    nla_put_u16(msg, NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
+ 			cur_params.dot11MeshHWMProotInterval) ||
+ 	    nla_put_u16(msg, NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
+-			cur_params.dot11MeshHWMPconfirmationInterval))
++			cur_params.dot11MeshHWMPconfirmationInterval) ||
++	    nla_put_u8(msg, NL80211_MESHCONF_POWER_MODE,
++		       cur_params.power_mode))
+ 		goto nla_put_failure;
+ 	nla_nest_end(msg, pinfoattr);
+ 	genlmsg_end(msg, hdr);
+@@ -3809,6 +3811,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
+ 	[NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT] = { .type = NLA_U32 },
+ 	[NL80211_MESHCONF_HWMP_ROOT_INTERVAL] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL] = { .type = NLA_U16 },
++	[NL80211_MESHCONF_POWER_MODE] = { .type = NLA_U8 },
+ };
+ 
+ static const struct nla_policy
+@@ -3927,6 +3930,9 @@ do {\
+ 				  dot11MeshHWMPconfirmationInterval, mask,
+ 				  NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
+ 				  nla_get_u16);
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, power_mode,
++				  mask, NL80211_MESHCONF_POWER_MODE,
++				  nla_get_u8);
+ 	if (mask_out)
+ 		*mask_out = mask;
+ 
 -- 
-1.8.0
+1.7.9.5
 
