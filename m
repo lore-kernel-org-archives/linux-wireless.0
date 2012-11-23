@@ -1,306 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55145 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752883Ab2KTXZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 18:25:22 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: john@phrozen.org, ralf@linux-mips.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 7/8] ssb: add GPIO driver
-Date: Wed, 21 Nov 2012 00:24:33 +0100
-Message-Id: <1353453874-523-8-git-send-email-hauke@hauke-m.de> (sfid-20121121_002528_236545_4389F11F)
-In-Reply-To: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
-References: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40023 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756065Ab2KWUTI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Nov 2012 15:19:08 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [RFCv2 01/13] {nl,cfg,mac}80211: set beacon interval and DTIM period on mesh join
+Date: Fri, 23 Nov 2012 12:18:42 -0800
+Message-Id: <1353701934-12752-2-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_211914_121792_77A804E4)
+In-Reply-To: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register a GPIO driver to access the GPIOs provided by the chip.
-The GPIOs of the SoC should always start at 0 and the other GPIOs could
-start at a random position. There is just one SoC in a system and when
-they start at 0 the number is predictable.
+Move the default mesh beacon interval and DTIM period to cfg80211 and
+make it accessible to nl80211. This enables setting both values when joining
+an MBSS.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+NOTE: In a mesh with links in PS mode it is not advised to use the default
+parameters 1000:4, as these cause excessive buffering delays that exceed
+various timeouts (e.g. HWMP path request).
+
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
 ---
- drivers/ssb/Kconfig       |    9 +++
- drivers/ssb/Makefile      |    1 +
- drivers/ssb/driver_gpio.c |  176 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/ssb/main.c        |    6 ++
- drivers/ssb/ssb_private.h |    9 +++
- include/linux/ssb/ssb.h   |    4 ++
- 6 files changed, 205 insertions(+)
- create mode 100644 drivers/ssb/driver_gpio.c
+ include/net/cfg80211.h |    4 ++++
+ net/mac80211/cfg.c     |    3 +++
+ net/mac80211/mesh.c    |    1 -
+ net/mac80211/mesh.h    |    2 --
+ net/wireless/mesh.c    |    5 +++++
+ net/wireless/nl80211.c |   14 ++++++++++++++
+ 6 files changed, 26 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-index 42cdaa9..ff3c8a2 100644
---- a/drivers/ssb/Kconfig
-+++ b/drivers/ssb/Kconfig
-@@ -160,4 +160,13 @@ config SSB_DRIVER_GIGE
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index c696457..91ce6234 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -921,6 +921,8 @@ struct mesh_config {
+  * @is_authenticated: this mesh requires authentication
+  * @is_secure: this mesh uses security
+  * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
++ * @beacon_interval: beacon interval to use
++ * @dtim_period: DTIM period to use
+  *
+  * These parameters are fixed when the mesh is created.
+  */
+@@ -937,6 +939,8 @@ struct mesh_setup {
+ 	bool is_authenticated;
+ 	bool is_secure;
+ 	int mcast_rate[IEEE80211_NUM_BANDS];
++	u16 beacon_interval;
++	u8 dtim_period;
+ };
  
- 	  If unsure, say N
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7669002..d0b7a7e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1568,6 +1568,9 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	memcpy(sdata->vif.bss_conf.mcast_rate, setup->mcast_rate,
+ 						sizeof(setup->mcast_rate));
  
-+config SSB_DRIVER_GPIO
-+	bool "SSB GPIO driver"
-+	depends on SSB
-+	select GPIOLIB
-+	help
-+	  Driver to provide access to the GPIO pins on the bus.
++	sdata->vif.bss_conf.beacon_int = setup->beacon_interval;
++	sdata->vif.bss_conf.dtim_period = setup->dtim_period;
 +
-+	  If unsure, say N
-+
- endmenu
-diff --git a/drivers/ssb/Makefile b/drivers/ssb/Makefile
-index 656e58b..9159ba7 100644
---- a/drivers/ssb/Makefile
-+++ b/drivers/ssb/Makefile
-@@ -15,6 +15,7 @@ ssb-$(CONFIG_SSB_DRIVER_MIPS)		+= driver_mipscore.o
- ssb-$(CONFIG_SSB_DRIVER_EXTIF)		+= driver_extif.o
- ssb-$(CONFIG_SSB_DRIVER_PCICORE)	+= driver_pcicore.o
- ssb-$(CONFIG_SSB_DRIVER_GIGE)		+= driver_gige.o
-+ssb-$(CONFIG_SSB_DRIVER_GPIO)		+= driver_gpio.o
- 
- # b43 pci-ssb-bridge driver
- # Not strictly a part of SSB, but kept here for convenience
-diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
-new file mode 100644
-index 0000000..97ac0a3
---- /dev/null
-+++ b/drivers/ssb/driver_gpio.c
-@@ -0,0 +1,176 @@
-+/*
-+ * Sonics Silicon Backplane
-+ * GPIO driver
-+ *
-+ * Copyright 2011, Broadcom Corporation
-+ * Copyright 2012, Hauke Mehrtens <hauke@hauke-m.de>
-+ *
-+ * Licensed under the GNU/GPL. See COPYING for details.
-+ */
-+
-+#include <linux/gpio.h>
-+#include <linux/export.h>
-+#include <linux/ssb/ssb.h>
-+
-+#include "ssb_private.h"
-+
-+static struct ssb_bus *ssb_gpio_get_bus(struct gpio_chip *chip)
-+{
-+	return container_of(chip, struct ssb_bus, gpio);
-+}
-+
-+static int ssb_gpio_chipco_get_value(struct gpio_chip *chip, unsigned gpio)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	return !!ssb_chipco_gpio_in(&bus->chipco, 1 << gpio);
-+}
-+
-+static void ssb_gpio_chipco_set_value(struct gpio_chip *chip, unsigned gpio,
-+				      int value)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	ssb_chipco_gpio_out(&bus->chipco, 1 << gpio, value ? 1 << gpio : 0);
-+}
-+
-+static int ssb_gpio_chipco_direction_input(struct gpio_chip *chip,
-+					   unsigned gpio)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	ssb_chipco_gpio_outen(&bus->chipco, 1 << gpio, 0);
-+	return 0;
-+}
-+
-+static int ssb_gpio_chipco_direction_output(struct gpio_chip *chip,
-+					    unsigned gpio, int value)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	ssb_chipco_gpio_outen(&bus->chipco, 1 << gpio, 1 << gpio);
-+	ssb_chipco_gpio_out(&bus->chipco, 1 << gpio, value ? 1 << gpio : 0);
-+	return 0;
-+}
-+
-+static int ssb_gpio_chipco_request(struct gpio_chip *chip, unsigned gpio)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	ssb_chipco_gpio_control(&bus->chipco, 1 << gpio, 0);
-+	/* clear pulldown */
-+	ssb_chipco_gpio_pulldown(&bus->chipco, 1 << gpio, 0);
-+	/* Set pullup */
-+	ssb_chipco_gpio_pullup(&bus->chipco, 1 << gpio, 1 << gpio);
-+
-+	return 0;
-+}
-+
-+static void ssb_gpio_chipco_free(struct gpio_chip *chip, unsigned gpio)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	/* clear pullup */
-+	ssb_chipco_gpio_pullup(&bus->chipco, 1 << gpio, 0);
-+}
-+
-+static int ssb_gpio_chipco_init(struct ssb_bus *bus)
-+{
-+	struct gpio_chip *chip = &bus->gpio;
-+
-+	chip->label		= "ssb_chipco_gpio";
-+	chip->owner		= THIS_MODULE;
-+	chip->request		= ssb_gpio_chipco_request;
-+	chip->free		= ssb_gpio_chipco_free;
-+	chip->get		= ssb_gpio_chipco_get_value;
-+	chip->set		= ssb_gpio_chipco_set_value;
-+	chip->direction_input	= ssb_gpio_chipco_direction_input;
-+	chip->direction_output	= ssb_gpio_chipco_direction_output;
-+	chip->ngpio		= 16;
-+	/* There is just one SoC in one device and its GPIO addresses should be
-+	 * deterministic to address them more easily. The other buses could get
-+	 * a random base number. */
-+	if (bus->bustype == SSB_BUSTYPE_SSB)
-+		chip->base		= 0;
-+	else
-+		chip->base		= -1;
-+
-+	return gpiochip_add(chip);
-+}
-+
-+#ifdef CONFIG_SSB_DRIVER_EXTIF
-+
-+static int ssb_gpio_extif_get_value(struct gpio_chip *chip, unsigned gpio)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	return !!ssb_extif_gpio_in(&bus->extif, 1 << gpio);
-+}
-+
-+static void ssb_gpio_extif_set_value(struct gpio_chip *chip, unsigned gpio,
-+				     int value)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	ssb_extif_gpio_out(&bus->extif, 1 << gpio, value ? 1 << gpio : 0);
-+}
-+
-+static int ssb_gpio_extif_direction_input(struct gpio_chip *chip,
-+					  unsigned gpio)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	ssb_extif_gpio_outen(&bus->extif, 1 << gpio, 0);
-+	return 0;
-+}
-+
-+static int ssb_gpio_extif_direction_output(struct gpio_chip *chip,
-+					   unsigned gpio, int value)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	ssb_extif_gpio_outen(&bus->extif, 1 << gpio, 1 << gpio);
-+	ssb_extif_gpio_out(&bus->extif, 1 << gpio, value ? 1 << gpio : 0);
-+	return 0;
-+}
-+
-+static int ssb_gpio_extif_init(struct ssb_bus *bus)
-+{
-+	struct gpio_chip *chip = &bus->gpio;
-+
-+	chip->label		= "ssb_extif_gpio";
-+	chip->owner		= THIS_MODULE;
-+	chip->get		= ssb_gpio_extif_get_value;
-+	chip->set		= ssb_gpio_extif_set_value;
-+	chip->direction_input	= ssb_gpio_extif_direction_input;
-+	chip->direction_output	= ssb_gpio_extif_direction_output;
-+	chip->ngpio		= 5;
-+	/* There is just one SoC in one device and its GPIO addresses should be
-+	 * deterministic to address them more easily. The other buses could get
-+	 * a random base number. */
-+	if (bus->bustype == SSB_BUSTYPE_SSB)
-+		chip->base		= 0;
-+	else
-+		chip->base		= -1;
-+
-+	return gpiochip_add(chip);
-+}
-+
-+#else
-+static int ssb_gpio_extif_init(struct ssb_bus *bus)
-+{
-+	return -ENOTSUPP;
-+}
-+#endif
-+
-+int ssb_gpio_init(struct ssb_bus *bus)
-+{
-+	if (ssb_chipco_available(&bus->chipco))
-+		return ssb_gpio_chipco_init(bus);
-+	else if (ssb_extif_available(&bus->extif))
-+		return ssb_gpio_extif_init(bus);
-+	else
-+		SSB_WARN_ON(1);
-+
-+	return -1;
-+}
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index 6fe2d10..87f0ddf 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -798,6 +798,12 @@ static int __devinit ssb_bus_register(struct ssb_bus *bus,
- 	ssb_chipcommon_init(&bus->chipco);
- 	ssb_extif_init(&bus->extif);
- 	ssb_mipscore_init(&bus->mipscore);
-+	err = ssb_gpio_init(bus);
-+	if (err == -ENOTSUPP)
-+		ssb_dprintk(KERN_DEBUG PFX "GPIO driver not activated\n");
-+	else if (err)
-+		ssb_dprintk(KERN_ERR PFX
-+			   "Error registering GPIO driver: %i\n", err);
- 	err = ssb_fetch_invariants(bus, get_invariants);
- 	if (err) {
- 		ssb_bus_may_powerdown(bus);
-diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
-index d6a1ba9..463b76a2 100644
---- a/drivers/ssb/ssb_private.h
-+++ b/drivers/ssb/ssb_private.h
-@@ -219,4 +219,13 @@ static inline void ssb_extif_init(struct ssb_extif *extif)
+ 	return 0;
  }
- #endif
  
-+#ifdef CONFIG_SSB_DRIVER_GPIO
-+extern int ssb_gpio_init(struct ssb_bus *bus);
-+#else /* CONFIG_SSB_DRIVER_GPIO */
-+static inline int ssb_gpio_init(struct ssb_bus *bus)
-+{
-+	return -ENOTSUPP;
-+}
-+#endif /* CONFIG_SSB_DRIVER_GPIO */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index a350cab..5f3ef91 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -630,7 +630,6 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_queue_work(&local->hw, &sdata->work);
+ 	sdata->vif.bss_conf.ht_operation_mode =
+ 				ifmsh->mshcfg.ht_opmode;
+-	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
+ 	sdata->vif.bss_conf.basic_rates =
+ 		ieee80211_mandatory_rates(sdata->local,
+ 					  ieee80211_get_sdata_band(sdata));
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 7c9215f..7f3a78f 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -191,8 +191,6 @@ struct mesh_rmc {
+ #define IEEE80211_MESH_PEER_INACTIVITY_LIMIT (1800 * HZ)
+ #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
+ 
+-#define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
+-
+ #define MESH_PATH_EXPIRE (600 * HZ)
+ 
+ /* Default maximum number of plinks per interface */
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 966cfc4..c2060d4 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -44,6 +44,9 @@
+ 
+ #define MESH_SYNC_NEIGHBOR_OFFSET_MAX 50
+ 
++#define MESH_DEFAULT_BEACON_INTERVAL	1000 	/* in 1024 us units (=TUs) */
++#define MESH_DEFAULT_DTIM_PERIOD	4
 +
- #endif /* LINUX_SSB_PRIVATE_H_ */
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index bb674c0..3862a5b 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -6,6 +6,7 @@
- #include <linux/types.h>
- #include <linux/spinlock.h>
- #include <linux/pci.h>
-+#include <linux/gpio.h>
- #include <linux/mod_devicetable.h>
- #include <linux/dma-mapping.h>
+ const struct mesh_config default_mesh_config = {
+ 	.dot11MeshRetryTimeout = MESH_RET_T,
+ 	.dot11MeshConfirmTimeout = MESH_CONF_T,
+@@ -81,6 +84,8 @@ const struct mesh_setup default_mesh_setup = {
+ 	.ie = NULL,
+ 	.ie_len = 0,
+ 	.is_secure = false,
++	.beacon_interval = MESH_DEFAULT_BEACON_INTERVAL,
++	.dtim_period = MESH_DEFAULT_DTIM_PERIOD,
+ };
  
-@@ -433,6 +434,9 @@ struct ssb_bus {
- 	/* Lock for GPIO register access. */
- 	spinlock_t gpio_lock;
- #endif /* EMBEDDED */
-+#ifdef CONFIG_SSB_DRIVER_GPIO
-+	struct gpio_chip gpio;
-+#endif /* DRIVER_GPIO */
+ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8c08578..e99a8ce 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6511,6 +6511,20 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 			    nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
+ 			return -EINVAL;
  
- 	/* Internal-only stuff follows. Do not touch. */
- 	struct list_head list;
++	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
++			setup.beacon_interval =
++				nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
++			if (setup.beacon_interval < 1 || setup.beacon_interval > 10000)
++				return -EINVAL;
++	}
++
++	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
++			setup.dtim_period =
++				nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
++			if (setup.dtim_period < 1 || setup.dtim_period > 100)
++				return -EINVAL;
++	}
++
+ 	if (info->attrs[NL80211_ATTR_MESH_SETUP]) {
+ 		/* parse additional setup parameters if given */
+ 		err = nl80211_parse_mesh_setup(info, &setup);
 -- 
-1.7.10.4
+1.7.9.5
 
