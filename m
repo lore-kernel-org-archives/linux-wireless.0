@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-3.exch022.serverdata.net ([206.225.164.186]:46935
-	"EHLO HUB022-nj-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750890Ab2K0GDc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 01:03:32 -0500
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Unable to clone mac80211-next
-Date: Tue, 27 Nov 2012 06:03:31 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FD27514@mbx022-e1-nj-10.exch022.domain.local> (sfid-20121127_070335_610063_7191D114)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:37850 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758814Ab2KWCJr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Nov 2012 21:09:47 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so3202568pad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 18:09:47 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: Fix macro definitions in Mesh
+Date: Fri, 23 Nov 2012 09:59:18 +0800
+Message-Id: <1353635958-12298-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20121123_030950_972359_65C3EA2C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Macro definitions should be static inlines.
 
-I am getting below error when trying to clone mac80211-next git tree.
+Reported by: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/mesh_hwmp.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-/work/tmp# git clone http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git
-Cloning into mac80211-next...
-fatal: http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git/info/refs not found: did you run git update-server-info on the server?
-/work/tmp#
-
-Thanks,
-Mahesh
-
-
-
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 47aeee2..5d3e965 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -88,9 +88,9 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
+ 	(msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPpreqMinInterval))
+ #define max_preq_retries(s) (s->u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries)
+ #define disc_timeout_jiff(s) \
+-	msecs_to_jiffies(sdata->u.mesh.mshcfg.min_discovery_timeout)
++	msecs_to_jiffies(s->u.mesh.mshcfg.min_discovery_timeout)
+ #define root_path_confirmation_jiffies(s) \
+-	msecs_to_jiffies(sdata->u.mesh.mshcfg.dot11MeshHWMPconfirmationInterval)
++	msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPconfirmationInterval)
+ 
+ enum mpath_frame_type {
+ 	MPATH_PREQ = 0,
+-- 
+1.7.0.4
 
