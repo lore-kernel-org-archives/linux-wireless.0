@@ -1,39 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758058Ab2K3MCW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 07:02:22 -0500
-Message-ID: <1354276964.10035.14.camel@jlt4.sipsolutions.net> (sfid-20121130_130225_630962_A84A41ED)
-Subject: Re: [RFCv2 05/13] mac80211: track neighbor STA power modes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, thomas@cozybit.com,
-	linux-wireless@vger.kernel.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Date: Fri, 30 Nov 2012 13:02:44 +0100
-In-Reply-To: <1353701934-12752-6-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353701934-12752-6-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36386 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752389Ab2KXWZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2012 17:25:09 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wim@iguana.be,
+	linux-watchdog@vger.kernel.org, castet.matthieu@free.fr,
+	biblbroks@sezampro.rs, m@bues.ch, zajec5@gmail.com,
+	linux-mips@linux-mips.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 04/15] watchdog: bcm47xx_wdt.c: rename wdt_timeout to timeout
+Date: Sat, 24 Nov 2012 23:24:04 +0100
+Message-Id: <1353795855-22236-5-git-send-email-hauke@hauke-m.de> (sfid-20121124_232515_704826_0FDB8194)
+In-Reply-To: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
+References: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-23 at 12:18 -0800, Marco Porsch wrote:
+Rename rename wdt_timeout to timeout to name it like the other watchdog
+driver do it.
 
-> +/**
-> + * ieee80211_has_qos_pm - check Power Save Level in QoS control
-> + * @qc - QoS control bytes in little-endian byteorder
-> + */
-> +static inline bool ieee80211_has_qos_pm(__le16 qc)
-> +{
-> +	return (qc & cpu_to_le16(IEEE80211_QOS_CTL_MESH_PS_LEVEL)) != 0;
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/watchdog/bcm47xx_wdt.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-I think this is confusing. Why not call it "has_qos_mesh_ps" or
-something?
-
-johannes
+diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
+index 66f2d2b..b6a8c49 100644
+--- a/drivers/watchdog/bcm47xx_wdt.c
++++ b/drivers/watchdog/bcm47xx_wdt.c
+@@ -30,13 +30,13 @@
+ #define DRV_NAME		"bcm47xx_wdt"
+ 
+ #define WDT_DEFAULT_TIME	30	/* seconds */
+-#define WDT_MAX_TIME		255	/* seconds */
++#define WDT_SOFTTIMER_MAX	3600	/* seconds */
+ 
+-static int wdt_time = WDT_DEFAULT_TIME;
++static int timeout = WDT_DEFAULT_TIME;
+ static bool nowayout = WATCHDOG_NOWAYOUT;
+ 
+-module_param(wdt_time, int, 0);
+-MODULE_PARM_DESC(wdt_time, "Watchdog time in seconds. (default="
++module_param(timeout, int, 0);
++MODULE_PARM_DESC(timeout, "Watchdog time in seconds. (default="
+ 				__MODULE_STRING(WDT_DEFAULT_TIME) ")");
+ 
+ module_param(nowayout, bool, 0);
+@@ -94,9 +94,9 @@ static int bcm47xx_wdt_soft_stop(struct watchdog_device *wdd)
+ static int bcm47xx_wdt_soft_set_timeout(struct watchdog_device *wdd,
+ 					unsigned int new_time)
+ {
+-	if (new_time < 1 || new_time > WDT_MAX_TIME) {
++	if (new_time < 1 || new_time > WDT_SOFTTIMER_MAX) {
+ 		pr_warn("timeout value must be 1<=x<=%d, using %d\n",
+-			WDT_MAX_TIME, new_time);
++			WDT_SOFTTIMER_MAX, new_time);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -160,7 +160,7 @@ static int __devinit bcm47xx_wdt_probe(struct platform_device *pdev)
+ 		goto err_notifier;
+ 
+ 	pr_info("BCM47xx Watchdog Timer enabled (%d seconds%s)\n",
+-		wdt_time, nowayout ? ", nowayout" : "");
++		timeout, nowayout ? ", nowayout" : "");
+ 	return 0;
+ 
+ err_notifier:
+-- 
+1.7.10.4
 
