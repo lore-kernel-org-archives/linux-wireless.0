@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:33419 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754882Ab2K2VDy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 16:03:54 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Williams <dcbw@redhat.com>,
-	Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-CC: "Shen, Jackey" <Jackey.Shen@amd.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 29 Nov 2012 13:03:49 -0800
-Subject: RE: Marvell Avastar 88W8797 firmware
-Message-ID: <477F20668A386D41ADCC57781B1F70430D1367D14A@SC-VEXCH1.marvell.com> (sfid-20121129_220357_664152_5CB8881D)
-References: <0C8FBB70FF40A94D98BE847F9C171A98033D23B0@SCYBEXDAG02.amd.com>
-	 <477F20668A386D41ADCC57781B1F7043083BBD6CA7@SC-VEXCH1.marvell.com>
-	 <CAMXE1-rrkh9qm5Hu7vwj3iTrkAg0uXQcU8ySMMBg5++ojJ==Ng@mail.gmail.com>
-	 <477F20668A386D41ADCC57781B1F70430D1367C9ED@SC-VEXCH1.marvell.com>
-	 <CAMXE1-qnix7STbjZtD69kzSTWGyv4LopM3Vc57hLyTLm0zsV9Q@mail.gmail.com>
- <1354208333.3698.4.camel@dcbw.foobar.com>
-In-Reply-To: <1354208333.3698.4.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36424 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752429Ab2KXWZS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2012 17:25:18 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wim@iguana.be,
+	linux-watchdog@vger.kernel.org, castet.matthieu@free.fr,
+	biblbroks@sezampro.rs, m@bues.ch, zajec5@gmail.com,
+	linux-mips@linux-mips.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 06/15] bcma: add bcma_chipco_alp_clock
+Date: Sat, 24 Nov 2012 23:24:06 +0100
+Message-Id: <1353795855-22236-7-git-send-email-hauke@hauke-m.de> (sfid-20121124_232522_397110_28B787C7)
+In-Reply-To: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
+References: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRGFuLCBBbmRyZWksIGFuZCBKYWNrZXksDQoNCj4gPiBUaGFua3MgZm9yIHRoZSBpbmZvLiBC
-dXQgZG8gSSB1bmRlcnN0YW5kIHRoaXMgcmlnaHQgdGhhdCBmaXJtd2FyZSBpcw0KPiA+IG5vdCB5
-ZXQgYXZhaWxhYmxlPw0KPiANCj4gSWYgbmVlZGVkLCBJIGNhbiBzdWJtaXQgaXQgdG8gdGhlIGxp
-bnV4LWZpcm13YXJlIGdpdCB0cmVlLCBhcyBJIGhhdmUNCj4gYWNjZXNzIHRvIHRoZSBNYXJ2ZWxs
-IEV4dHJhbmV0LCBJIGhhdmUgYWNjZXNzIHRvIDg3eDcgZmlybXdhcmUgZnJvbSB0aGUNCj4gRXh0
-cmFuZXQsIGFuZCB0aGUgZmlybXdhcmUgbGljZW5zZSBhbGxvd3Mgc3VibWlzc2lvbiB0byBsaW51
-eC1maXJtd2FyZQ0KPiBsaWtlIHdlJ3ZlIGRvbmUgd2l0aCBhIGxvdCBvZiBvdGhlciBNYXJ2ZWxs
-IGZpcm13YXJlLiAgSG93ZXZlciwgaXQgd291bGQNCj4gYmUgYmVzdCBpZiBlaXRoZXIgQmluZyBj
-b3VsZCBkbyB0aGlzLCBvciBpZiBCaW5nIGNvdWxkIGluZGljYXRlIHdoaWNoDQo+IGV4YWN0IGZp
-cm13YXJlIHZlcnNpb24gc2hvdWxkIGJlIHN1Ym1pdHRlZCB0byBsaW51eC1maXJtd2FyZS4NCj4g
-DQo+IEZvciBleGFtcGxlLCBJIGhhdmUgYWNjZXNzIHRvIHRoZXNlIDg3OTcgZmlybXdhcmUgdmVy
-c2lvbnM6DQo+IA0KPiBVU0IvU0RJTzogMTQuNjkuMTEucDE0Mg0KPiBVU0ItVUFSVDogMTQuNjku
-MTEucDk3DQoNCkkgd2lsbCBzdWJtaXQgdGhlIGxhdGVzdCB2ZXJzaW9uIDE0LjY5LjExLnAxNzkg
-Zm9yIDg3OTcgd2l0aCBVU0ItVVNCIGludGVyZmFjZSAoYm90aCBXTEFOIGFuZCBCbHVldG9vdGgg
-YXJlIFVTQikuDQoNClRoYW5rcywNCkJpbmcNCg0K
+For devices without a PMU the alp clock is always 20000000.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_chipcommon.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index ffd74e5..ef68553 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -4,6 +4,7 @@
+  *
+  * Copyright 2005, Broadcom Corporation
+  * Copyright 2006, 2007, Michael Buesch <m@bues.ch>
++ * Copyright 2012, Hauke Mehrtens <hauke@hauke-m.de>
+  *
+  * Licensed under the GNU/GPL. See COPYING for details.
+  */
+@@ -22,6 +23,14 @@ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
+ 	return value;
+ }
+ 
++static u32 bcma_chipco_alp_clock(struct bcma_drv_cc *cc)
++{
++	if (cc->capabilities & BCMA_CC_CAP_PMU)
++		return bcma_pmu_alp_clock(cc);
++
++	return 20000000;
++}
++
+ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
+ {
+ 	if (cc->early_setup_done)
+@@ -131,8 +140,7 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
+ 	struct bcma_serial_port *ports = cc->serial_ports;
+ 
+ 	if (ccrev >= 11 && ccrev != 15) {
+-		/* Fixed ALP clock */
+-		baud_base = bcma_pmu_alp_clock(cc);
++		baud_base = bcma_chipco_alp_clock(cc);
+ 		if (ccrev >= 21) {
+ 			/* Turn off UART clock before switching clocksource. */
+ 			bcma_cc_write32(cc, BCMA_CC_CORECTL,
+-- 
+1.7.10.4
+
