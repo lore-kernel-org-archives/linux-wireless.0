@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33579 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754690Ab2K3W4Y (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:40550 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790Ab2KXNbj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 17:56:24 -0500
-Date: Fri, 30 Nov 2012 14:56:19 -0800
-From: Tejun Heo <tj@kernel.org>
-To: Anders Kaseorg <andersk@MIT.EDU>
-Cc: Herbert Xu <herbert@gondor.hengli.com.au>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Wireless regression in workqueue: use mod_delayed_work() instead
- of __cancel + queue
-Message-ID: <20121130225619.GD6021@htj.dyndns.org> (sfid-20121130_235644_828663_EC14192C)
-References: <alpine.DEB.2.00.1211280953350.26602@dr-wily.mit.edu>
- <alpine.DEB.2.00.1211281016320.26602@dr-wily.mit.edu>
- <20121130211435.GJ3873@htj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121130211435.GJ3873@htj.dyndns.org>
+	Sat, 24 Nov 2012 08:31:39 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so3776243eek.19
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2012 05:31:38 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 24 Nov 2012 14:23:25 +0100
+Subject: [PATCH] p54: improve TSF timestamp precision
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Message-Id: <E1TcFpW-00056n-QB@debian64.localnet> (sfid-20121124_143155_900305_79B9F2F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey, again.
+The LMAC API states that the TSF clock value of
+every rx'ed frame is a "usec accurate timestamp
+of the hardware clock at the end of frame
+(before OFDM SIFS EOF padding)".
 
-Can you please test whether the following patch makes any difference?
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/p54/txrx.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Thanks!
-
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 042d221..26368ef 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -1477,7 +1477,10 @@ bool mod_delayed_work_on(int cpu, struct workqueue_struct *wq,
- 	} while (unlikely(ret == -EAGAIN));
+diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
+index 8ae982b..12f0a34 100644
+--- a/drivers/net/wireless/p54/txrx.c
++++ b/drivers/net/wireless/p54/txrx.c
+@@ -369,7 +369,11 @@ static int p54_rx_data(struct p54_common *priv, struct sk_buff *skb)
+ 	rx_status->mactime = ((u64)priv->tsf_high32) << 32 | tsf32;
+ 	priv->tsf_low32 = tsf32;
  
- 	if (likely(ret >= 0)) {
--		__queue_delayed_work(cpu, wq, dwork, delay);
-+		if (!delay)
-+			__queue_work(cpu, wq, &dwork->work);
-+		else
-+			__queue_delayed_work(cpu, wq, dwork, delay);
- 		local_irq_restore(flags);
- 	}
+-	rx_status->flag |= RX_FLAG_MACTIME_START;
++	/* LMAC API Page 10/29 - s_lm_data_in - clock
++	 * "usec accurate timestamp of hardware clock
++	 * at end of frame (before OFDM SIFS EOF padding"
++	 */
++	rx_status->flag |= RX_FLAG_MACTIME_END;
  
+ 	if (hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN))
+ 		header_len += hdr->align[0];
+-- 
+1.7.10.4
+
