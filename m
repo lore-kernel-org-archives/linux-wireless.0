@@ -1,58 +1,835 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:52540 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751915Ab2KUJ4t (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:51942 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227Ab2KXOlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 04:56:49 -0500
-Message-ID: <50ACA55F.5050406@monom.org> (sfid-20121121_105655_702445_94B78936)
-Date: Wed, 21 Nov 2012 10:56:47 +0100
-From: Daniel Wagner <wagi@monom.org>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
- support
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com> <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org> <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org> <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org> <50AC07F2.8000400@monom.org> <50ACA28F.9010800@broadcom.com>
-In-Reply-To: <50ACA28F.9010800@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 24 Nov 2012 09:41:04 -0500
+Received: by mail-we0-f174.google.com with SMTP id d7so2787804wer.19
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2012 06:41:03 -0800 (PST)
+Message-ID: <1353768057.2318.6.camel@user64-MCP7A> (sfid-20121124_154111_886090_F41ECDB7)
+Subject: [PATCH 05/10] staging: vt6656: dead code remove ioctl.c/h
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 24 Nov 2012 14:40:57 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21.11.2012 10:44, Arend van Spriel wrote:
-> On 11/20/2012 11:45 PM, Daniel Wagner wrote:
->>>
->>> I am currently not able to reproduce a complete loss of connectivity.
->>
->> I fear it is a heisenbug. After turning the tracing off I was able to
->> reproduce it very easily.
-> 
-> That is too bad. I always wondered about the tracing overhead affecting 
-> reproducibility. So the trace that you uploaded was not showing the 
-> issue of connection loss you are having?
 
-The trace does only show that the throughput goes considerable down and the 
-download might even stop shortly but overall the system recovers again.
 
-Well, to add some random observation here, I think I see the same pattern
-when using MacOS (yeah, sorry, dual boot). With MacOS the link is usable but
-the throughput sometimes really goes down and recovers then. Obviously, this
-could also be something else, I tried it with an pretty old AP which only
-support 11g. Using the 11g AP didn't show this behavior.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/Makefile   |    1 -
+ drivers/staging/vt6656/ioctl.c    |  648 -------------------------------------
+ drivers/staging/vt6656/ioctl.h    |   54 ----
+ drivers/staging/vt6656/iwctl.c    |    5 -
+ drivers/staging/vt6656/main_usb.c |   24 --
+ 5 files changed, 732 deletions(-)
+ delete mode 100644 drivers/staging/vt6656/ioctl.c
+ delete mode 100644 drivers/staging/vt6656/ioctl.h
 
-My 'test' setup is following: I downloaded a larger file and let a youtube 
-video play. With tracing enabled the download and the playback did work nicely.
+diff --git a/drivers/staging/vt6656/Makefile b/drivers/staging/vt6656/Makefile
+index 41ed06b..c998547 100644
+--- a/drivers/staging/vt6656/Makefile
++++ b/drivers/staging/vt6656/Makefile
+@@ -20,7 +20,6 @@ vt6656_stage-y +=	main_usb.o \
+ 			rc4.o \
+ 			tether.o \
+ 			tcrc.o \
+-			ioctl.o \
+ 			hostap.o \
+ 			wpa.o \
+ 			key.o \
+diff --git a/drivers/staging/vt6656/ioctl.c b/drivers/staging/vt6656/ioctl.c
+deleted file mode 100644
+index b6af5f6..0000000
+--- a/drivers/staging/vt6656/ioctl.c
++++ /dev/null
+@@ -1,648 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: ioctl.c
+- *
+- * Purpose:  private ioctl functions
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: Auguest 20, 2003
+- *
+- * Functions:
+- *
+- * Revision History:
+- *
+- */
+-
+-#include "ioctl.h"
+-#include "iocmd.h"
+-#include "mac.h"
+-#include "card.h"
+-#include "hostap.h"
+-#include "wpactl.h"
+-#include "control.h"
+-#include "rndis.h"
+-#include "rf.h"
+-
+-SWPAResult wpa_Result;
+-static int msglevel = MSG_LEVEL_INFO;
+-
+-int private_ioctl(PSDevice pDevice, struct ifreq *rq)
+-{
+-
+-	PSCmdRequest	pReq = (PSCmdRequest)rq;
+-	PSMgmtObject	pMgmt = &(pDevice->sMgmtObj);
+-	int		result = 0;
+-	PWLAN_IE_SSID	pItemSSID;
+-	SCmdBSSJoin	sJoinCmd;
+-	SCmdZoneTypeSet	sZoneTypeCmd;
+-	SCmdScan	sScanCmd;
+-	SCmdStartAP	sStartAPCmd;
+-	SCmdSetWEP	sWEPCmd;
+-	SCmdValue	sValue;
+-	SBSSIDList	sList;
+-	SNodeList	sNodeList;
+-	PSBSSIDList	pList;
+-	PSNodeList	pNodeList;
+-	unsigned int	cbListCount;
+-	PKnownBSS	pBSS;
+-	PKnownNodeDB	pNode;
+-	unsigned int	ii, jj;
+-	SCmdLinkStatus	sLinkStatus;
+-	BYTE		abySuppRates[] = {WLAN_EID_SUPP_RATES, 4, 0x02, 0x04, 0x0B, 0x16};
+-	BYTE		abyNullAddr[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+-	DWORD		dwKeyIndex = 0;
+-	BYTE		abyScanSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
+-	signed long	ldBm;
+-
+-	pReq->wResult = 0;
+-
+-	switch (pReq->wCmdCode) {
+-	case WLAN_CMD_BSS_SCAN:
+-		if (copy_from_user(&sScanCmd, pReq->data, sizeof(SCmdScan))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-
+-		pItemSSID = (PWLAN_IE_SSID)sScanCmd.ssid;
+-		if (pItemSSID->len > WLAN_SSID_MAXLEN + 1)
+-			return -EINVAL;
+-		if (pItemSSID->len != 0) {
+-			memset(abyScanSSID, 0, WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1);
+-			memcpy(abyScanSSID, pItemSSID, pItemSSID->len + WLAN_IEHDR_LEN);
+-		}
+-		spin_lock_irq(&pDevice->lock);
+-
+-		if (memcmp(pMgmt->abyCurrBSSID, &abyNullAddr[0], 6) == 0)
+-			BSSvClearBSSList(pDevice, FALSE);
+-		else
+-			BSSvClearBSSList(pDevice, pDevice->bLinkPass);
+-
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_BSS_SCAN..begin\n");
+-
+-		if (pItemSSID->len != 0)
+-			bScheduleCommand(pDevice, WLAN_CMD_BSSID_SCAN,
+-					 abyScanSSID);
+-		else
+-			bScheduleCommand(pDevice, WLAN_CMD_BSSID_SCAN, NULL);
+-
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-
+-	case WLAN_CMD_ZONETYPE_SET:
+-		result = -EOPNOTSUPP;
+-		break;
+-
+-		if (copy_from_user(&sZoneTypeCmd, pReq->data, sizeof(SCmdZoneTypeSet))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-
+-		if (sZoneTypeCmd.bWrite == TRUE) {
+-			/* write zonetype */
+-			if (sZoneTypeCmd.ZoneType == ZoneType_USA) {
+-				/* set to USA */
+-				printk("set_ZoneType:USA\n");
+-			} else if (sZoneTypeCmd.ZoneType == ZoneType_Japan) {
+-				/* set to Japan */
+-				printk("set_ZoneType:Japan\n");
+-			} else if (sZoneTypeCmd.ZoneType == ZoneType_Europe) {
+-				/* set to Europe */
+-				printk("set_ZoneType:Europe\n");
+-			}
+-		} else {
+-			/* read zonetype */
+-			BYTE zonetype = 0;
+-
+-			if (zonetype == 0x00) {        /* USA */
+-				sZoneTypeCmd.ZoneType = ZoneType_USA;
+-			} else if (zonetype == 0x01) { /* Japan */
+-				sZoneTypeCmd.ZoneType = ZoneType_Japan;
+-			} else if (zonetype == 0x02) { /* Europe */
+-				sZoneTypeCmd.ZoneType = ZoneType_Europe;
+-			} else {                       /* Unknown ZoneType */
+-				printk("Error:ZoneType[%x] Unknown ???\n", zonetype);
+-				result = -EFAULT;
+-				break;
+-			}
+-
+-			if (copy_to_user(pReq->data, &sZoneTypeCmd,
+-						sizeof(SCmdZoneTypeSet))) {
+-				result = -EFAULT;
+-				break;
+-			}
+-		}
+-		break;
+-
+-	case WLAN_CMD_BSS_JOIN:
+-		if (copy_from_user(&sJoinCmd, pReq->data, sizeof(SCmdBSSJoin))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-
+-		pItemSSID = (PWLAN_IE_SSID)sJoinCmd.ssid;
+-		if (pItemSSID->len > WLAN_SSID_MAXLEN + 1)
+-			return -EINVAL;
+-		memset(pMgmt->abyDesireSSID, 0, WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1);
+-		memcpy(pMgmt->abyDesireSSID, pItemSSID, pItemSSID->len + WLAN_IEHDR_LEN);
+-		if (sJoinCmd.wBSSType == ADHOC) {
+-			pMgmt->eConfigMode = WMAC_CONFIG_IBSS_STA;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "ioct set to adhoc mode\n");
+-		} else {
+-			pMgmt->eConfigMode = WMAC_CONFIG_ESS_STA;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "ioct set to STA mode\n");
+-		}
+-		if (sJoinCmd.bPSEnable == TRUE) {
+-			pDevice->ePSMode = WMAC_POWER_FAST;
+-			pMgmt->wListenInterval = 2;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Power Saving On\n");
+-		} else {
+-			pDevice->ePSMode = WMAC_POWER_CAM;
+-			pMgmt->wListenInterval = 1;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Power Saving Off\n");
+-		}
+-
+-		if (sJoinCmd.bShareKeyAuth == TRUE) {
+-			pMgmt->bShareKeyAlgorithm = TRUE;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Share Key\n");
+-		} else {
+-			pMgmt->bShareKeyAlgorithm = FALSE;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Open System\n");
+-		}
+-
+-		pDevice->uChannel = sJoinCmd.uChannel;
+-		netif_stop_queue(pDevice->dev);
+-		spin_lock_irq(&pDevice->lock);
+-		pMgmt->eCurrState = WMAC_STATE_IDLE;
+-		bScheduleCommand(pDevice, WLAN_CMD_BSSID_SCAN,
+-				 pMgmt->abyDesireSSID);
+-		bScheduleCommand(pDevice, WLAN_CMD_SSID, NULL);
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-
+-	case WLAN_CMD_SET_WEP:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_SET_WEP Key.\n");
+-		memset(&sWEPCmd, 0, sizeof(SCmdSetWEP));
+-		if (copy_from_user(&sWEPCmd, pReq->data, sizeof(SCmdSetWEP))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		if (sWEPCmd.bEnableWep != TRUE) {
+-			int uu;
+-
+-			pDevice->bEncryptionEnable = FALSE;
+-			pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
+-			spin_lock_irq(&pDevice->lock);
+-			for (uu = 0; uu < MAX_KEY_TABLE; uu++)
+-				MACvDisableKeyEntry(pDevice, uu);
+-			spin_unlock_irq(&pDevice->lock);
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WEP function disable.\n");
+-			break;
+-		}
+-
+-		for (ii = 0; ii < WLAN_WEP_NKEYS; ii++) {
+-			if (sWEPCmd.bWepKeyAvailable[ii]) {
+-				if (ii == sWEPCmd.byKeyIndex)
+-					dwKeyIndex = ii | (1 << 31);
+-				else
+-					dwKeyIndex = ii;
+-				spin_lock_irq(&pDevice->lock);
+-				KeybSetDefaultKey(pDevice, &(pDevice->sKey),
+-						  dwKeyIndex,
+-						  sWEPCmd.auWepKeyLength[ii],
+-						  NULL,
+-						  (PBYTE)&sWEPCmd.abyWepKey[ii][0],
+-						  KEY_CTL_WEP);
+-				spin_unlock_irq(&pDevice->lock);
+-			}
+-		}
+-		pDevice->byKeyIndex = sWEPCmd.byKeyIndex;
+-		pDevice->bTransmitKey = TRUE;
+-		pDevice->bEncryptionEnable = TRUE;
+-		pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
+-		break;
+-
+-	case WLAN_CMD_GET_LINK:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_GET_LINK status.\n");
+-
+-		memset(sLinkStatus.abySSID, 0, WLAN_SSID_MAXLEN + 1);
+-
+-		if (pMgmt->eCurrMode == WMAC_MODE_IBSS_STA)
+-			sLinkStatus.wBSSType = ADHOC;
+-		else
+-			sLinkStatus.wBSSType = INFRA;
+-
+-		if (pMgmt->eCurrState == WMAC_STATE_JOINTED)
+-			sLinkStatus.byState = ADHOC_JOINTED;
+-		else
+-			sLinkStatus.byState = ADHOC_STARTED;
+-
+-		sLinkStatus.uChannel = pMgmt->uCurrChannel;
+-		if (pDevice->bLinkPass == TRUE) {
+-			sLinkStatus.bLink = TRUE;
+-			pItemSSID = (PWLAN_IE_SSID)pMgmt->abyCurrSSID;
+-			memcpy(sLinkStatus.abySSID, pItemSSID->abySSID, pItemSSID->len);
+-			memcpy(sLinkStatus.abyBSSID, pMgmt->abyCurrBSSID, WLAN_BSSID_LEN);
+-			sLinkStatus.uLinkRate = pMgmt->sNodeDBTable[0].wTxDataRate;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Link Success!\n");
+-		} else {
+-			sLinkStatus.bLink = FALSE;
+-			sLinkStatus.uLinkRate = 0;
+-		}
+-		if (copy_to_user(pReq->data, &sLinkStatus,
+-					sizeof(SCmdLinkStatus))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		break;
+-
+-	case WLAN_CMD_GET_LISTLEN:
+-		cbListCount = 0;
+-		pBSS = &(pMgmt->sBSSList[0]);
+-		for (ii = 0; ii < MAX_BSS_NUM; ii++) {
+-			pBSS = &(pMgmt->sBSSList[ii]);
+-			if (!pBSS->bActive)
+-				continue;
+-			cbListCount++;
+-		}
+-		sList.uItem = cbListCount;
+-		if (copy_to_user(pReq->data, &sList, sizeof(SBSSIDList))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		pReq->wResult = 0;
+-		break;
+-
+-	case WLAN_CMD_GET_LIST:
+-		if (copy_from_user(&sList, pReq->data, sizeof(SBSSIDList))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		if (sList.uItem > (ULONG_MAX - sizeof(SBSSIDList)) / sizeof(SBSSIDItem)) {
+-			result = -EINVAL;
+-			break;
+-		}
+-		pList = kmalloc(sizeof(SBSSIDList) + (sList.uItem * sizeof(SBSSIDItem)), GFP_ATOMIC);
+-		if (pList == NULL) {
+-			result = -ENOMEM;
+-			break;
+-		}
+-		pList->uItem = sList.uItem;
+-		pBSS = &(pMgmt->sBSSList[0]);
+-		for (ii = 0, jj = 0; jj < MAX_BSS_NUM ; jj++) {
+-			pBSS = &(pMgmt->sBSSList[jj]);
+-			if (pBSS->bActive) {
+-				pList->sBSSIDList[ii].uChannel = pBSS->uChannel;
+-				pList->sBSSIDList[ii].wBeaconInterval = pBSS->wBeaconInterval;
+-				pList->sBSSIDList[ii].wCapInfo = pBSS->wCapInfo;
+-				RFvRSSITodBm(pDevice, (BYTE)(pBSS->uRSSI), &ldBm);
+-				pList->sBSSIDList[ii].uRSSI = (unsigned int)ldBm;
+-				/* pList->sBSSIDList[ii].uRSSI = pBSS->uRSSI; */
+-				memcpy(pList->sBSSIDList[ii].abyBSSID, pBSS->abyBSSID, WLAN_BSSID_LEN);
+-				pItemSSID = (PWLAN_IE_SSID)pBSS->abySSID;
+-				memset(pList->sBSSIDList[ii].abySSID, 0, WLAN_SSID_MAXLEN + 1);
+-				memcpy(pList->sBSSIDList[ii].abySSID, pItemSSID->abySSID, pItemSSID->len);
+-				if (WLAN_GET_CAP_INFO_ESS(pBSS->wCapInfo)) {
+-					pList->sBSSIDList[ii].byNetType = INFRA;
+-				} else {
+-					pList->sBSSIDList[ii].byNetType = ADHOC;
+-				}
+-				if (WLAN_GET_CAP_INFO_PRIVACY(pBSS->wCapInfo)) {
+-					pList->sBSSIDList[ii].bWEPOn = TRUE;
+-				} else {
+-					pList->sBSSIDList[ii].bWEPOn = FALSE;
+-				}
+-				ii++;
+-				if (ii >= pList->uItem)
+-					break;
+-			}
+-		}
+-
+-		if (copy_to_user(pReq->data, pList, sizeof(SBSSIDList) + (sList.uItem * sizeof(SBSSIDItem)))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		kfree(pList);
+-		pReq->wResult = 0;
+-		break;
+-
+-	case WLAN_CMD_GET_MIB:
+-		if (copy_to_user(pReq->data, &(pDevice->s802_11Counter), sizeof(SDot11MIBCount))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		break;
+-
+-	case WLAN_CMD_GET_STAT:
+-		if (copy_to_user(pReq->data, &(pDevice->scStatistic), sizeof(SStatCounter))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		break;
+-
+-	case WLAN_CMD_STOP_MAC:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_STOP_MAC\n");
+-		/* Todo xxxxxx */
+-		netif_stop_queue(pDevice->dev);
+-		spin_lock_irq(&pDevice->lock);
+-		if (pDevice->bRadioOff == FALSE) {
+-			CARDbRadioPowerOff(pDevice);
+-		}
+-		pDevice->bLinkPass = FALSE;
+-		ControlvMaskByte(pDevice, MESSAGE_REQUEST_MACREG, MAC_REG_PAPEDELAY, LEDSTS_STS, LEDSTS_SLOW);
+-		memset(pMgmt->abyCurrBSSID, 0, 6);
+-		pMgmt->eCurrState = WMAC_STATE_IDLE;
+-		/* del_timer(&pDevice->sTimerCommand); */
+-		/* del_timer(&pMgmt->sTimerSecondCallback); */
+-		pDevice->bCmdRunning = FALSE;
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-
+-	case WLAN_CMD_START_MAC:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_START_MAC\n");
+-		/* Todo xxxxxxx */
+-		if (pDevice->bRadioOff == TRUE)
+-			CARDbRadioPowerOn(pDevice);
+-		break;
+-
+-	case WLAN_CMD_SET_HOSTAPD:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_SET_HOSTAPD\n");
+-
+-		if (copy_from_user(&sValue, pReq->data, sizeof(SCmdValue))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		if (sValue.dwValue == 1) {
+-			if (vt6656_hostap_set_hostapd(pDevice, 1, 1) == 0) {
+-				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Enable HOSTAP\n");
+-			} else {
+-				result = -EFAULT;
+-				break;
+-			}
+-		} else {
+-			vt6656_hostap_set_hostapd(pDevice, 0, 1);
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Disable HOSTAP\n");
+-		}
+-		break;
+-
+-	case WLAN_CMD_SET_HOSTAPD_STA:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_SET_HOSTAPD_STA\n");
+-		break;
+-
+-	case WLAN_CMD_SET_802_1X:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_SET_802_1X\n");
+-		if (copy_from_user(&sValue, pReq->data, sizeof(SCmdValue))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-
+-		if (sValue.dwValue == 1) {
+-			pDevice->bEnable8021x = TRUE;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Enable 802.1x\n");
+-		} else {
+-			pDevice->bEnable8021x = FALSE;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Disable 802.1x\n");
+-		}
+-		break;
+-
+-	case WLAN_CMD_SET_HOST_WEP:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_SET_HOST_WEP\n");
+-		if (copy_from_user(&sValue, pReq->data, sizeof(SCmdValue))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-
+-		if (sValue.dwValue == 1) {
+-			pDevice->bEnableHostWEP = TRUE;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Enable HostWEP\n");
+-		} else {
+-			pDevice->bEnableHostWEP = FALSE;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Disable HostWEP\n");
+-		}
+-		break;
+-
+-	case WLAN_CMD_SET_WPA:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_SET_WPA\n");
+-
+-		if (copy_from_user(&sValue, pReq->data, sizeof(SCmdValue))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		if (sValue.dwValue == 1) {
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "up wpadev\n");
+-			memcpy(pDevice->wpadev->dev_addr, pDevice->dev->dev_addr,
+-			       ETH_ALEN);
+-			pDevice->bWPADEVUp = TRUE;
+-		} else {
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "close wpadev\n");
+-			pDevice->bWPADEVUp = FALSE;
+-		}
+-		break;
+-
+-	case WLAN_CMD_AP_START:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "WLAN_CMD_AP_START\n");
+-		if (pDevice->bRadioOff == TRUE) {
+-			CARDbRadioPowerOn(pDevice);
+-			add_timer(&pMgmt->sTimerSecondCallback);
+-		}
+-		if (copy_from_user(&sStartAPCmd, pReq->data, sizeof(SCmdStartAP))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-
+-		if (sStartAPCmd.wBSSType == AP) {
+-			pMgmt->eConfigMode = WMAC_CONFIG_AP;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "ioct set to AP mode\n");
+-		} else {
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "ioct BSS type not set to AP mode\n");
+-			result = -EFAULT;
+-			break;
+-		}
+-
+-		if (sStartAPCmd.wBBPType == PHY80211g) {
+-			pMgmt->byAPBBType = PHY_TYPE_11G;
+-		} else if (sStartAPCmd.wBBPType == PHY80211a) {
+-			pMgmt->byAPBBType = PHY_TYPE_11A;
+-		} else {
+-			pMgmt->byAPBBType = PHY_TYPE_11B;
+-		}
+-
+-		pItemSSID = (PWLAN_IE_SSID)sStartAPCmd.ssid;
+-		if (pItemSSID->len > WLAN_SSID_MAXLEN + 1)
+-			return -EINVAL;
+-		memset(pMgmt->abyDesireSSID, 0, WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1);
+-		memcpy(pMgmt->abyDesireSSID, pItemSSID, pItemSSID->len + WLAN_IEHDR_LEN);
+-
+-		if ((sStartAPCmd.uChannel > 0) && (sStartAPCmd.uChannel <= 14))
+-			pDevice->uChannel = sStartAPCmd.uChannel;
+-
+-		if ((sStartAPCmd.uBeaconInt >= 20) && (sStartAPCmd.uBeaconInt <= 1000))
+-			pMgmt->wIBSSBeaconPeriod = sStartAPCmd.uBeaconInt;
+-		else
+-			pMgmt->wIBSSBeaconPeriod = 100;
+-
+-		if (sStartAPCmd.bShareKeyAuth == TRUE) {
+-			pMgmt->bShareKeyAlgorithm = TRUE;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Share Key\n");
+-		} else {
+-			pMgmt->bShareKeyAlgorithm = FALSE;
+-			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Open System\n");
+-		}
+-		memcpy(pMgmt->abyIBSSSuppRates, abySuppRates, 6);
+-
+-		if (sStartAPCmd.byBasicRate & BIT3) {
+-			pMgmt->abyIBSSSuppRates[2] |= BIT7;
+-			pMgmt->abyIBSSSuppRates[3] |= BIT7;
+-			pMgmt->abyIBSSSuppRates[4] |= BIT7;
+-			pMgmt->abyIBSSSuppRates[5] |= BIT7;
+-		} else if (sStartAPCmd.byBasicRate & BIT2) {
+-			pMgmt->abyIBSSSuppRates[2] |= BIT7;
+-			pMgmt->abyIBSSSuppRates[3] |= BIT7;
+-			pMgmt->abyIBSSSuppRates[4] |= BIT7;
+-		} else if (sStartAPCmd.byBasicRate & BIT1) {
+-			pMgmt->abyIBSSSuppRates[2] |= BIT7;
+-			pMgmt->abyIBSSSuppRates[3] |= BIT7;
+-		} else if (sStartAPCmd.byBasicRate & BIT1) {
+-			pMgmt->abyIBSSSuppRates[2] |= BIT7;
+-		} else {
+-			/* default 1,2M */
+-			pMgmt->abyIBSSSuppRates[2] |= BIT7;
+-			pMgmt->abyIBSSSuppRates[3] |= BIT7;
+-		}
+-
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Support Rate= %*ph\n",
+-			4, pMgmt->abyIBSSSuppRates + 2);
+-
+-		netif_stop_queue(pDevice->dev);
+-		spin_lock_irq(&pDevice->lock);
+-		bScheduleCommand(pDevice, WLAN_CMD_RUN_AP, NULL);
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-
+-	case WLAN_CMD_GET_NODE_CNT:
+-		cbListCount = 0;
+-		pNode = &(pMgmt->sNodeDBTable[0]);
+-		for (ii = 0; ii < (MAX_NODE_NUM + 1); ii++) {
+-			pNode = &(pMgmt->sNodeDBTable[ii]);
+-			if (!pNode->bActive)
+-				continue;
+-			cbListCount++;
+-		}
+-
+-		sNodeList.uItem = cbListCount;
+-		if (copy_to_user(pReq->data, &sNodeList, sizeof(SNodeList))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		pReq->wResult = 0;
+-		break;
+-
+-	case WLAN_CMD_GET_NODE_LIST:
+-		if (copy_from_user(&sNodeList, pReq->data, sizeof(SNodeList))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		if (sNodeList.uItem > (ULONG_MAX - sizeof(SNodeList)) / sizeof(SNodeItem)) {
+-			result = -ENOMEM;
+-			break;
+-		}
+-		pNodeList = kmalloc(sizeof(SNodeList) + (sNodeList.uItem * sizeof(SNodeItem)), GFP_ATOMIC);
+-		if (pNodeList == NULL) {
+-			result = -ENOMEM;
+-			break;
+-		}
+-		pNodeList->uItem = sNodeList.uItem;
+-		pNode = &(pMgmt->sNodeDBTable[0]);
+-		for (ii = 0, jj = 0; ii < (MAX_NODE_NUM + 1); ii++) {
+-			pNode = &(pMgmt->sNodeDBTable[ii]);
+-			if (pNode->bActive) {
+-				pNodeList->sNodeList[jj].wAID = pNode->wAID;
+-				memcpy(pNodeList->sNodeList[jj].abyMACAddr, pNode->abyMACAddr, WLAN_ADDR_LEN);
+-				pNodeList->sNodeList[jj].wTxDataRate = pNode->wTxDataRate;
+-				pNodeList->sNodeList[jj].wInActiveCount = (WORD)pNode->uInActiveCount;
+-				pNodeList->sNodeList[jj].wEnQueueCnt = (WORD)pNode->wEnQueueCnt;
+-				pNodeList->sNodeList[jj].wFlags = (WORD)pNode->dwFlags;
+-				pNodeList->sNodeList[jj].bPWBitOn = pNode->bPSEnable;
+-				pNodeList->sNodeList[jj].byKeyIndex = pNode->byKeyIndex;
+-				pNodeList->sNodeList[jj].wWepKeyLength = pNode->uWepKeyLength;
+-				memcpy(&(pNodeList->sNodeList[jj].abyWepKey[0]), &(pNode->abyWepKey[0]), WEP_KEYMAXLEN);
+-				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "key= %2.2X:%2.2X:%2.2X:%2.2X:%2.2X\n",
+-					pNodeList->sNodeList[jj].abyWepKey[0],
+-					pNodeList->sNodeList[jj].abyWepKey[1],
+-					pNodeList->sNodeList[jj].abyWepKey[2],
+-					pNodeList->sNodeList[jj].abyWepKey[3],
+-					pNodeList->sNodeList[jj].abyWepKey[4]);
+-				pNodeList->sNodeList[jj].bIsInFallback = pNode->bIsInFallback;
+-				pNodeList->sNodeList[jj].uTxFailures = pNode->uTxFailures;
+-				pNodeList->sNodeList[jj].uTxAttempts = pNode->uTxAttempts;
+-				pNodeList->sNodeList[jj].wFailureRatio = (WORD)pNode->uFailureRatio;
+-				jj++;
+-				if (jj >= pNodeList->uItem)
+-					break;
+-			}
+-		}
+-		if (copy_to_user(pReq->data, pNodeList, sizeof(SNodeList) + (sNodeList.uItem * sizeof(SNodeItem)))) {
+-			kfree(pNodeList);
+-			result = -EFAULT;
+-			break;
+-		}
+-		kfree(pNodeList);
+-		pReq->wResult = 0;
+-		break;
+-
+-	case 0xFF:
+-		memset(wpa_Result.ifname, 0, sizeof(wpa_Result.ifname));
+-		wpa_Result.proto = 0;
+-		wpa_Result.key_mgmt = 0;
+-		wpa_Result.eap_type = 0;
+-		wpa_Result.authenticated = FALSE;
+-		pDevice->fWPA_Authened = FALSE;
+-		if (copy_from_user(&wpa_Result, pReq->data, sizeof(wpa_Result))) {
+-			result = -EFAULT;
+-			break;
+-		}
+-		/* for some AP's maybe a good authentication */
+-		if (wpa_Result.key_mgmt == 0x20)
+-			pMgmt->Cisco_cckm = 1;
+-		else
+-			pMgmt->Cisco_cckm = 0;
+-
+-		if (wpa_Result.authenticated == TRUE) {
+-			{
+-				union iwreq_data wrqu;
+-
+-				pItemSSID = (PWLAN_IE_SSID)pMgmt->abyCurrSSID;
+-				memset(&wrqu, 0, sizeof(wrqu));
+-				wrqu.data.flags = RT_WPACONNECTED_EVENT_FLAG;
+-				wrqu.data.length = pItemSSID->len;
+-				wireless_send_event(pDevice->dev, IWEVCUSTOM, &wrqu, pItemSSID->abySSID);
+-			}
+-
+-			pDevice->fWPA_Authened = TRUE; /* is successful peer to wpa_Result.authenticated? */
+-		}
+-
+-		pReq->wResult = 0;
+-		break;
+-
+-	default:
+-		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "Private command not supported..\n");
+-	}
+-
+-	return result;
+-}
+diff --git a/drivers/staging/vt6656/ioctl.h b/drivers/staging/vt6656/ioctl.h
+deleted file mode 100644
+index caa4ac9..0000000
+--- a/drivers/staging/vt6656/ioctl.h
++++ /dev/null
+@@ -1,54 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: hostap.h
+- *
+- * Purpose:
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: May 21, 2003
+- *
+- */
+-
+-#ifndef __IOCTL_H__
+-#define __IOCTL_H__
+-
+-#include "device.h"
+-
+-/*---------------------  Export Definitions -------------------------*/
+-
+-
+-/*---------------------  Export Classes  ----------------------------*/
+-
+-/*---------------------  Export Variables  --------------------------*/
+-
+-/*---------------------  Export Functions  --------------------------*/
+-
+-int private_ioctl(PSDevice pDevice, struct ifreq *rq);
+-
+-/*
+-void vConfigWEPKey (
+-     PSDevice pDevice,
+-     DWORD    dwKeyIndex,
+-     PBYTE    pbyKey,
+-     unsigned long    uKeyLength
+-    );
+-*/
+-
+-#endif /* __IOCTL_H__ */
+diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
+index 11d2903..f344b55 100644
+--- a/drivers/staging/vt6656/iwctl.c
++++ b/drivers/staging/vt6656/iwctl.c
+@@ -32,7 +32,6 @@
+ 
+ #include "device.h"
+ #include "iwctl.h"
+-#include "iocmd.h"
+ #include "mac.h"
+ #include "card.h"
+ #include "hostap.h"
+@@ -1826,10 +1825,6 @@ static const iw_handler iwctl_private_handler[] = {
+ 	NULL, // SIOCIWFIRSTPRIV
+ };
+ 
+-const struct iw_priv_args iwctl_private_args[] = {
+-	{ IOCTL_CMD_SET, IW_PRIV_TYPE_CHAR | 1024, 0, "set" },
+-};
+-
+ const struct iw_handler_def iwctl_handler_def = {
+ 	.get_wireless_stats	= &iwctl_get_wireless_stats,
+ 	.num_standard		= ARRAY_SIZE(iwctl_handler),
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 5e55752..a667e39 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -61,7 +61,6 @@
+ #include "bssdb.h"
+ #include "hostap.h"
+ #include "wpactl.h"
+-#include "ioctl.h"
+ #include "iwctl.h"
+ #include "dpc.h"
+ #include "datarate.h"
+@@ -956,12 +955,6 @@ BOOL device_alloc_frag_buf(PSDevice pDevice, PSDeFragControlBlock pDeF) {
+ static int  device_open(struct net_device *dev) {
+     PSDevice    pDevice=(PSDevice) netdev_priv(dev);
+ 
+-     extern SWPAResult wpa_Result;
+-     memset(wpa_Result.ifname,0,sizeof(wpa_Result.ifname));
+-     wpa_Result.proto = 0;
+-     wpa_Result.key_mgmt = 0;
+-     wpa_Result.eap_type = 0;
+-     wpa_Result.authenticated = FALSE;
+      pDevice->fWPA_Authened = FALSE;
+ 
+     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO " device_open...\n");
+@@ -1550,23 +1543,6 @@ static int  device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd) {
+       //	 pReq->wResult = MAGIC_CODE+1;    //disconnect status:0x3143
+         break;
+ 
+-    case IOCTL_CMD_SET:
+-		if (!(pDevice->flags & DEVICE_FLAGS_OPENED) &&
+-		       (((PSCmdRequest)rq)->wCmdCode !=WLAN_CMD_SET_WPA))
+-		{
+-		    rc = -EFAULT;
+-		    break;
+-		} else {
+-		    rc = 0;
+-		}
+-
+-	    if (test_and_set_bit( 0, (void*)&(pMgmt->uCmdBusy))) {
+-		    return -EBUSY;
+-	    }
+-        rc = private_ioctl(pDevice, rq);
+-        clear_bit( 0, (void*)&(pMgmt->uCmdBusy));
+-        break;
+-
+     case IOCTL_CMD_HOSTAPD:
+ 
+ 		if (!(pDevice->flags & DEVICE_FLAGS_OPENED)) {
+-- 
+1.7.10.4
 
-Without tracing enabled playing back only a youtube video was 'triggering' 
-the problem. It downloads a few seconds of content in a burst and then the playback
-starts. Under normal conditions, the app will continue downloading the video at a 
-lower rate. But this normally doesn't happen right now. Often it will just stop
-working and often the connection is completely blocked, e.g. pinging a host
-wont work.
 
 
