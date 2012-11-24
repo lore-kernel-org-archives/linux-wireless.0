@@ -1,75 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2353 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752073Ab2KRSa1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2012 13:30:27 -0500
-Message-ID: <50A92935.5070802@broadcom.com> (sfid-20121118_193125_756391_ED21334F)
-Date: Sun, 18 Nov 2012 19:30:13 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:38645 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187Ab2KXNSS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2012 08:18:18 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so9559901oag.19
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Nov 2012 05:18:18 -0800 (PST)
 MIME-Version: 1.0
-To: "Mark Ellis" <m@rkellis.com>
-cc: linux-kernel@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>
-Subject: Re: PROBLEM: REGRESSION in drivers/platform/x86/dell-laptop.c
-References: <50A8BCA6.7080102@rkellis.com>
-In-Reply-To: <50A8BCA6.7080102@rkellis.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <87ehjjwiia.fsf@purkki.adurom.net>
+References: <1353710779-7142-1-git-send-email-johannes@sipsolutions.net>
+	<87ehjjwiia.fsf@purkki.adurom.net>
+Date: Sat, 24 Nov 2012 18:48:17 +0530
+Message-ID: <CAD2nsn2rqdixfRSyVbxX=+9F7MBbcrdcGy587ansDO==odD+8A@mail.gmail.com> (sfid-20121124_141822_756253_D5C5D186)
+Subject: Re: [PATCH] iwlwifi: initialize rx_status
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2012 11:47 AM, Mark Ellis wrote:
-> 1. rfkill code removal causes hang
+On Sat, Nov 24, 2012 at 1:16 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
 >
-> 2. the rfkill code was removed from this driver in commit
-> 53039f222c548bfc119eea6df4dca2b57550e271 this results in my computer
-> hanging (dell n5050) if booting with the wireless (hardware) disabled.
-> downgrading this module to the version prior to this commit fixes the
-> issue.
+>> From: Johannes Berg <johannes.berg@intel.com>
+>>
+>> The vendor radiotap patch added a few fields to
+>> struct ieee80211_rx_status that need to be zero,
+>> initialize the struct instead of using whatever
+>> was left on the stack.
+>>
+>> Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>
+> Just to confirm: latest wireless-testing was crashing for me during
+> boot. It was something iwlwifi related, but I didn't manage to see the
+> whole stack trace. Applying this patch on top of a1055e1 fixed the issue
+> for me.
 
-The commit you mention does not touch dell-laptop.c. The commit before 
-that one doe, but it is only adding code. Digging the tree I found this 
-one between kernel v3.4 and v3.5-rc1:
+works for me too, addresses the crash seen for iwlwifi when my machine
+boots up with latest wireless-testing.
 
-commit a6c2390cd6d2083d27a2359658e08f2d3df375ac
-Author: Matthew Garrett <mjg@redhat.com>
-Date:   Fri Jun 1 12:46:56 2012 -0400
+>
+> Tested-by: Kalle Valo <kvalo@adurom.com>
+>
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-     dell-laptop: Remove rfkill code
 
-     The interface just doesn't work on some machines, and Dell haven't been
-     able to tell us either which machines those are or what we should be
-     doing instead. This would be fine, except it results in userspace 
-ending
-     up confused and general sadness. So let's just rip it out for now.
 
-     Signed-off-by: Matthew Garrett <mjg@redhat.com>
-
-Actually, the behavior you describe and given you have a BCM4313 running 
-with brcmsmac I may point out that this driver has an issue coming up 
-with wireless disabled. This has been fixed in 3.7 kernel so you may 
-want to try:
-
-commit 82d8eba358badb466a4e988ecabf0668a8d92e9c
-Author: Piotr Haber <phaber@broadcom.com>
-Date:   Wed Sep 19 22:21:15 2012 +0200
-
-     brcmsmac: don't start device when RfKill is engaged
-
-     This patch fixes a bug when device is being started
-     while RfKill switch is engaged, leading to hang
-     due to partial initialization of hardware.
-
-     Tested-by: <dragonn@op.pl>
-     Reviewed-by: Arend van Spriel <arend@broadcom.com>
-     Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-     Signed-off-by: Piotr Haber <phaber@broadcom.com>
-     Signed-off-by: Arend van Spriel <arend@broadcom.com>
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Maybe I should resubmit it to stable. Now there is an idea.
-
-Gr. AvS
-
+-- 
+thanks,
+shafi
