@@ -1,55 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4439 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751733Ab2KFAWo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 19:22:44 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36488 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752477Ab2KXWZj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2012 17:25:39 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
 To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/24] brcmfmac: restrict error condition in
- brcmf_inform_bss()
-Date: Mon, 5 Nov 2012 16:22:11 -0800
-Message-ID: <1352161352-30405-4-git-send-email-frankyl@broadcom.com> (sfid-20121106_012308_615629_91569CA2)
-In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-wireless@vger.kernel.org, wim@iguana.be,
+	linux-watchdog@vger.kernel.org, castet.matthieu@free.fr,
+	biblbroks@sezampro.rs, m@bues.ch, zajec5@gmail.com,
+	linux-mips@linux-mips.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 11/15] ssb: set the pmu watchdog if available
+Date: Sat, 24 Nov 2012 23:24:11 +0100
+Message-Id: <1353795855-22236-12-git-send-email-hauke@hauke-m.de> (sfid-20121124_232544_055229_CCCEFC08)
+In-Reply-To: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
+References: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Some all ssb based devices have a PMU and the PMU watchdog should be
+used and not the old one in chip common in this case. This patch also
+calculates the maximal number the watchdog could be set to.
 
-The function brcmf_inform_bss() validates the version received
-from the device, before processing the individual bss entries.
-This error condition is only applicable when the list contains
-entries. A specific scan, ie. for a specific ssid, can result
-in a scan completion without finding any bss entries. No need
-to flag it as an error in the log when this happens.
-
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ssb/driver_chipcommon.c |   38 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 36 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index f05ab77..c979ce1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2345,7 +2345,8 @@ static s32 brcmf_inform_bss(struct brcmf_cfg80211_info *cfg)
- 	int i;
+diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
+index 7789f42..5631640 100644
+--- a/drivers/ssb/driver_chipcommon.c
++++ b/drivers/ssb/driver_chipcommon.c
+@@ -288,6 +288,24 @@ static u32 ssb_chipco_alp_clock(struct ssb_chipcommon *cc)
+ 	return 20000000;
+ }
  
- 	bss_list = cfg->bss_list;
--	if (bss_list->version != BRCMF_BSS_INFO_VERSION) {
-+	if (bss_list->count != 0 &&
-+	    bss_list->version != BRCMF_BSS_INFO_VERSION) {
- 		WL_ERR("Version %d != WL_BSS_INFO_VERSION\n",
- 		       bss_list->version);
- 		return -EOPNOTSUPP;
++static u32 ssb_chipco_watchdog_get_max_timer(struct ssb_chipcommon *cc)
++{
++	u32 nb;
++
++	if (cc->capabilities & SSB_CHIPCO_CAP_PMU) {
++		if (cc->dev->id.revision < 26)
++			nb = 16;
++		else
++			nb = (cc->dev->id.revision >= 37) ? 32 : 24;
++	} else {
++		nb = 28;
++	}
++	if (nb == 32)
++		return 0xffffffff;
++	else
++		return (1 << nb) - 1;
++}
++
+ void ssb_chipcommon_init(struct ssb_chipcommon *cc)
+ {
+ 	if (!cc->dev)
+@@ -405,8 +423,24 @@ void ssb_chipco_timing_init(struct ssb_chipcommon *cc,
+ /* Set chip watchdog reset timer to fire in 'ticks' backplane cycles */
+ void ssb_chipco_watchdog_timer_set(struct ssb_chipcommon *cc, u32 ticks)
+ {
+-	/* instant NMI */
+-	chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
++	u32 maxt;
++	enum ssb_clkmode clkmode;
++
++	maxt = ssb_chipco_watchdog_get_max_timer(cc);
++	if (cc->capabilities & SSB_CHIPCO_CAP_PMU) {
++		if (ticks == 1)
++			ticks = 2;
++		else if (ticks > maxt)
++			ticks = maxt;
++		chipco_write32(cc, SSB_CHIPCO_PMU_WATCHDOG, ticks);
++	} else {
++		clkmode = ticks ? SSB_CLKMODE_FAST : SSB_CLKMODE_DYNAMIC;
++		ssb_chipco_set_clockmode(cc, clkmode);
++		if (ticks > maxt)
++			ticks = maxt;
++		/* instant NMI */
++		chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
++	}
+ }
+ 
+ void ssb_chipco_irq_mask(struct ssb_chipcommon *cc, u32 mask, u32 value)
 -- 
-1.7.9.5
-
+1.7.10.4
 
