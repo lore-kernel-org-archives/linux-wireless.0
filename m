@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3853 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1768435Ab2KOTrp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2012 14:47:45 -0500
-Message-ID: <50A546D0.3000701@broadcom.com> (sfid-20121115_204748_412709_9C5218A8)
-Date: Thu, 15 Nov 2012 20:47:28 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:37469 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646Ab2KXXOs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2012 18:14:48 -0500
+Date: Sat, 24 Nov 2012 15:14:38 -0800
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: stable@vger.kernel.org
+Cc: Arend van Spriel <arend@broadcom.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	"Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded
- debug/trace support
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	Touko Korpela <touko.korpela@iki.fi>,
+	linux-wireless@vger.kernel.org
+Subject: [3.2.y] Re: [PATCH 2/2] brcm80211: smac: only print block-ack
+ timeout message at trace level
+Message-ID: <20121124231438.GA26176@elie.Belkin> (sfid-20121125_001458_795608_7D45F7FA)
+References: <1330018703-2472-1-git-send-email-arend@broadcom.com>
+ <1330018703-2472-3-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1330018703-2472-3-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2012 03:07 PM, Seth Forshee wrote:
-> Hi Arend,
->
-> As promised, here's the updated patch series for brcmsmac to remove the
-> tx packet queue, add flow control, and add enhanced debug trace support.
-> I've broken up the tx rework into multiple patches as you requested.
-> Most notably I've split out the AMPDU session support into a separate
-> patch, which should make it easier to review that change. I've done
-> basic testing of each of the new commits to try and verify that no
-> obvious regressions are introduced by any of them.
+Hi Ben,
 
-Great. I already noticed the increase in the number of patches. Thanks 
-for breaking up the tx path patch. We will review the changes and put it 
-in nightly regression test rig.
+Please consider
+
+  2b0a53d51b5f brcm80211: smac: only print block-ack timeout message
+               at trace level
+
+for application to the 3.2.y tree.
+
+It just lowers the priority of a distracting repeated message about a
+normal condition:
+
+  ieee80211 phy0: AMPDU status: BA Timeout, seq 152, in_transit 0
+
+See <http://bugs.debian.org/674430> for context.
+
+The patch was applied upstream during the 3.3-rc7 cycle.  Applying it
+should make debugging other problems easier.  Thoughts of all kinds
+welcome, as always.
 
 Regards,
-Arend
-
+Jonathan
