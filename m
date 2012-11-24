@@ -1,157 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:48687 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752389Ab2KQGst (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 01:48:49 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>
-Subject: [RFC 08/14] {cfg,nl}80211: get local and peer mesh power modes
-Date: Fri, 16 Nov 2012 22:48:00 -0800
-Message-Id: <1353134886-13256-9-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_074859_359068_3D2CCB22)
-In-Reply-To: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36370 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752389Ab2KXWZE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Nov 2012 17:25:04 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wim@iguana.be,
+	linux-watchdog@vger.kernel.org, castet.matthieu@free.fr,
+	biblbroks@sezampro.rs, m@bues.ch, zajec5@gmail.com,
+	linux-mips@linux-mips.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 03/15] watchdog: bcm47xx_wdt.c: rename ops methods
+Date: Sat, 24 Nov 2012 23:24:03 +0100
+Message-Id: <1353795855-22236-4-git-send-email-hauke@hauke-m.de> (sfid-20121124_232515_051688_301CFFA0)
+In-Reply-To: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
+References: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit adds the possibility of getting the local link-specific
-power mode and the tracked link-specific and non-peer power mode of
-the peer.
+Rename the methods registered to struct watchdog_ops in order to add an
+other struct watchdog_ops using different ops in the next patch.
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- include/net/cfg80211.h       |   12 ++++++++++++
- include/uapi/linux/nl80211.h |    9 +++++++++
- net/mac80211/cfg.c           |    8 +++++++-
- net/wireless/nl80211.c       |   12 ++++++++++++
- 4 files changed, 40 insertions(+), 1 deletion(-)
+ drivers/watchdog/bcm47xx_wdt.c |   30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index efec888..ad6fabe 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -553,6 +553,9 @@ struct station_parameters {
-  * @STATION_INFO_STA_FLAGS: @sta_flags filled
-  * @STATION_INFO_BEACON_LOSS_COUNT: @beacon_loss_count filled
-  * @STATION_INFO_T_OFFSET: @t_offset filled
-+ * @STATION_INFO_LOCAL_MESH_PS_MODE: @local_ps_mode filled
-+ * @STATION_INFO_PEER_MESH_PS_MODE: @peer_ps_mode filled
-+ * @STATION_INFO_NONPEER_MESH_PS_MODE: @nonpeer_ps_mode filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -576,6 +579,9 @@ enum station_info_flags {
- 	STATION_INFO_STA_FLAGS		= 1<<18,
- 	STATION_INFO_BEACON_LOSS_COUNT	= 1<<19,
- 	STATION_INFO_T_OFFSET		= 1<<20,
-+	STATION_INFO_LOCAL_MESH_PS_MODE = 1<<21,
-+	STATION_INFO_PEER_MESH_PS_MODE  = 1<<22,
-+	STATION_INFO_NONPEER_MESH_PS_MODE  = 1<<23,
+diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
+index cf1191b..66f2d2b 100644
+--- a/drivers/watchdog/bcm47xx_wdt.c
++++ b/drivers/watchdog/bcm47xx_wdt.c
+@@ -49,7 +49,7 @@ static inline struct bcm47xx_wdt *bcm47xx_wdt_get(struct watchdog_device *wdd)
+ 	return container_of(wdd, struct bcm47xx_wdt, wdd);
+ }
+ 
+-static void bcm47xx_timer_tick(unsigned long data)
++static void bcm47xx_wdt_soft_timer_tick(unsigned long data)
+ {
+ 	struct bcm47xx_wdt *wdt = (struct bcm47xx_wdt *)data;
+ 	u32 next_tick = min(wdt->wdd.timeout * 1000, wdt->max_timer_ms);
+@@ -62,7 +62,7 @@ static void bcm47xx_timer_tick(unsigned long data)
+ 	}
+ }
+ 
+-static int bcm47xx_wdt_keepalive(struct watchdog_device *wdd)
++static int bcm47xx_wdt_soft_keepalive(struct watchdog_device *wdd)
+ {
+ 	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
+ 
+@@ -71,17 +71,17 @@ static int bcm47xx_wdt_keepalive(struct watchdog_device *wdd)
+ 	return 0;
+ }
+ 
+-static int bcm47xx_wdt_start(struct watchdog_device *wdd)
++static int bcm47xx_wdt_soft_start(struct watchdog_device *wdd)
+ {
+ 	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
+ 
+-	bcm47xx_wdt_keepalive(wdd);
+-	bcm47xx_timer_tick((unsigned long)wdt);
++	bcm47xx_wdt_soft_keepalive(wdd);
++	bcm47xx_wdt_soft_timer_tick((unsigned long)wdt);
+ 
+ 	return 0;
+ }
+ 
+-static int bcm47xx_wdt_stop(struct watchdog_device *wdd)
++static int bcm47xx_wdt_soft_stop(struct watchdog_device *wdd)
+ {
+ 	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
+ 
+@@ -91,8 +91,8 @@ static int bcm47xx_wdt_stop(struct watchdog_device *wdd)
+ 	return 0;
+ }
+ 
+-static int bcm47xx_wdt_set_timeout(struct watchdog_device *wdd,
+-				   unsigned int new_time)
++static int bcm47xx_wdt_soft_set_timeout(struct watchdog_device *wdd,
++					unsigned int new_time)
+ {
+ 	if (new_time < 1 || new_time > WDT_MAX_TIME) {
+ 		pr_warn("timeout value must be 1<=x<=%d, using %d\n",
+@@ -122,12 +122,12 @@ static int bcm47xx_wdt_notify_sys(struct notifier_block *this,
+ 	return NOTIFY_DONE;
+ }
+ 
+-static struct watchdog_ops bcm47xx_wdt_ops = {
++static struct watchdog_ops bcm47xx_wdt_soft_ops = {
+ 	.owner		= THIS_MODULE,
+-	.start		= bcm47xx_wdt_start,
+-	.stop		= bcm47xx_wdt_stop,
+-	.ping		= bcm47xx_wdt_keepalive,
+-	.set_timeout	= bcm47xx_wdt_set_timeout,
++	.start		= bcm47xx_wdt_soft_start,
++	.stop		= bcm47xx_wdt_soft_stop,
++	.ping		= bcm47xx_wdt_soft_keepalive,
++	.set_timeout	= bcm47xx_wdt_soft_set_timeout,
  };
  
- /**
-@@ -679,6 +685,9 @@ struct sta_bss_parameters {
-  * @sta_flags: station flags mask & values
-  * @beacon_loss_count: Number of times beacon loss event has triggered.
-  * @t_offset: Time offset of the station relative to this host.
-+ * @local_ps_mode: local mesh STA power save mode
-+ * @peer_ps_mode: peer mesh STA power save mode
-+ * @nonpeer_ps_mode: non-peer mesh STA power save mode
-  */
- struct station_info {
- 	u32 filled;
-@@ -708,6 +717,9 @@ struct station_info {
+ static int __devinit bcm47xx_wdt_probe(struct platform_device *pdev)
+@@ -138,10 +138,10 @@ static int __devinit bcm47xx_wdt_probe(struct platform_device *pdev)
+ 	if (!wdt)
+ 		return -ENXIO;
  
- 	u32 beacon_loss_count;
- 	s64 t_offset;
-+	enum nl80211_mesh_power_mode local_ps_mode;
-+	enum nl80211_mesh_power_mode peer_ps_mode;
-+	enum nl80211_mesh_power_mode nonpeer_ps_mode;
+-	setup_timer(&wdt->soft_timer, bcm47xx_timer_tick,
++	setup_timer(&wdt->soft_timer, bcm47xx_wdt_soft_timer_tick,
+ 		    (long unsigned int)wdt);
  
- 	/*
- 	 * Note: Add a new enum station_info_flags value for each new field and
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 0e7528f..baac4e5 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1793,6 +1793,12 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update.
-  * @NL80211_STA_INFO_BEACON_LOSS: count of times beacon loss was detected (u32)
-  * @NL80211_STA_INFO_T_OFFSET: timing offset with respect to this STA (s64)
-+ * @NL80211_STA_INFO_LOCAL_MESH_PS_MODE: local mesh STA link-specific power
-+ * 	save mode
-+ * @NL80211_STA_INFO_PEER_MESH_PS_MODE: peer mesh STA link-specific power
-+ * 	save mode
-+ * @NL80211_STA_INFO_NONPEER_MESH_PS_MODE: neighbor mesh STA power save mode
-+ * 	towards non-peer STA
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -1817,6 +1823,9 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_STA_FLAGS,
- 	NL80211_STA_INFO_BEACON_LOSS,
- 	NL80211_STA_INFO_T_OFFSET,
-+	NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
-+	NL80211_STA_INFO_PEER_MESH_PS_MODE,
-+	NL80211_STA_INFO_NONPEER_MESH_PS_MODE,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d0f936d..32a1dbf 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -456,7 +456,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- #ifdef CONFIG_MAC80211_MESH
- 		sinfo->filled |= STATION_INFO_LLID |
- 				 STATION_INFO_PLID |
--				 STATION_INFO_PLINK_STATE;
-+				 STATION_INFO_PLINK_STATE |
-+				 STATION_INFO_LOCAL_MESH_PS_MODE |
-+				 STATION_INFO_PEER_MESH_PS_MODE |
-+				 STATION_INFO_NONPEER_MESH_PS_MODE;
- 
- 		sinfo->llid = le16_to_cpu(sta->llid);
- 		sinfo->plid = le16_to_cpu(sta->plid);
-@@ -465,6 +468,9 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 			sinfo->filled |= STATION_INFO_T_OFFSET;
- 			sinfo->t_offset = sta->t_offset;
- 		}
-+		sinfo->local_ps_mode = sta->local_ps_mode;
-+		sinfo->peer_ps_mode = sta->peer_ps_mode;
-+		sinfo->nonpeer_ps_mode = sta->nonpeer_ps_mode;
- #endif
- 	}
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d3ebdc6..dca2aac 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2891,6 +2891,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
- 	    nla_put_u32(msg, NL80211_STA_INFO_BEACON_LOSS,
- 			sinfo->beacon_loss_count))
- 		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_LOCAL_MESH_PS_MODE) &&
-+	    nla_put_u8(msg, NL80211_STA_INFO_LOCAL_MESH_PS_MODE,
-+			sinfo->local_ps_mode))
-+		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_PEER_MESH_PS_MODE) &&
-+	    nla_put_u8(msg, NL80211_STA_INFO_PEER_MESH_PS_MODE,
-+			sinfo->peer_ps_mode))
-+		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_NONPEER_MESH_PS_MODE) &&
-+	    nla_put_u8(msg, NL80211_STA_INFO_NONPEER_MESH_PS_MODE,
-+			sinfo->nonpeer_ps_mode))
-+		goto nla_put_failure;
- 	if (sinfo->filled & STATION_INFO_BSS_PARAM) {
- 		bss_param = nla_nest_start(msg, NL80211_STA_INFO_BSS_PARAM);
- 		if (!bss_param)
+-	wdt->wdd.ops = &bcm47xx_wdt_ops;
++	wdt->wdd.ops = &bcm47xx_wdt_soft_ops;
+ 	wdt->wdd.info = &bcm47xx_wdt_info;
+ 	wdt->wdd.timeout = WDT_DEFAULT_TIME;
+ 	ret = wdt->wdd.ops->set_timeout(&wdt->wdd, timeout);
 -- 
-1.7.9.5
+1.7.10.4
 
