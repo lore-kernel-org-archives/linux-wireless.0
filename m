@@ -1,176 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37285 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932437Ab2KEOkK (ORCPT
+Received: from ibawizard.net ([82.208.49.253]:43219 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753546Ab2KYW3q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 09:40:10 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] wireless: add utility function to get P2P attribute
-Date: Mon,  5 Nov 2012 15:40:44 +0100
-Message-Id: <1352126445-25088-2-git-send-email-johannes@sipsolutions.net> (sfid-20121105_154023_337411_E2CE4A41)
-In-Reply-To: <1352126445-25088-1-git-send-email-johannes@sipsolutions.net>
-References: <1352126445-25088-1-git-send-email-johannes@sipsolutions.net>
+	Sun, 25 Nov 2012 17:29:46 -0500
+Date: Sun, 25 Nov 2012 23:29:40 +0100
+From: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: Multi-bss operation issue with rt2x00 and hostapd on rt305x
+	platform
+Message-ID: <20121125222940.GA16095@ibawizard.net> (sfid-20121125_232950_642421_345CA429)
+Reply-To: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
+References: <20121125190019.GQ8292@ibawizard.net> <50B29159.20209@googlemail.com> <CAGXE3d_Wgk5Eo5Y2k-9jr3ULuOeZydmWA_pJVd8ARnKHwSGtgQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGXE3d_Wgk5Eo5Y2k-9jr3ULuOeZydmWA_pJVd8ARnKHwSGtgQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Helmut Schaa <helmut.schaa@googlemail.com> [2012-11-25 22:53:00]:
 
-Parsing the P2P attributes can be tricky as their
-contents can be split across multiple (vendor) IEs.
-Thus, it's not possible to parse them like IEs (by
-returning a pointer to the data.) Instead, provide
-a function that copies the attribute data into a
-caller-provided buffer and returns the size needed
-(useful in case the buffer was too small.)
+> > Mind to use different MAC addresses? The rt2800 hw can only be programmed
+> > with a MAC address mask that spans the last 3 bits. In your config this
+> > would be
+> 
+> Ooops, seems I messed up my mailclient :)
+> 
+> You're using the following MAC addresses for the virtual APs:
+> 
+> bssid=c4:93:00:11:01:88
+> bssid=c6:93:00:11:01:89
+> bssid=c6:93:00:11:01:8a
+> 
+> rt2800 hw can only be configured to mask the last three bits of the
+> programmed MAC addresses. In your case the first MAC differs from the
+> other in the first byte. Please try if it works when using the same
+> first byte.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h | 19 ++++++++++
- net/wireless/util.c    | 99 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 118 insertions(+)
+Indeed, it was quite suspicious to me also, so I did tried that with the
+following MACs:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 83a2c82..ae6d5e5 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3623,6 +3623,25 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate);
-  */
- void cfg80211_unregister_wdev(struct wireless_dev *wdev);
- 
-+/**
-+ * cfg80211_get_p2p_attr - find and copy a P2P attribute from IE buffer
-+ * @ies: the input IE buffer
-+ * @len: the input length
-+ * @attr: the attribute ID to find
-+ * @buf: output buffer, can be %NULL if the data isn't needed, e.g.
-+ *	if the function is only called to get the needed buffer size
-+ * @bufsize: size of the output buffer
-+ *
-+ * The function finds a given P2P attribute in the (vendor) IEs and
-+ * copies its contents to the given buffer.
-+ *
-+ * The return value is a negative error code (-%EILSEQ or -%ENOENT) if
-+ * the data is malformed or the attribute can't be found (respectively),
-+ * or the length of the found attribute (which can be zero).
-+ */
-+unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
-+				   u8 attr, u8 *buf, unsigned int bufsize);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index cf11239..2964223 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -980,6 +980,105 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- }
- EXPORT_SYMBOL(cfg80211_calculate_bitrate);
- 
-+unsigned int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
-+				   u8 attr, u8 *buf, unsigned int bufsize)
-+{
-+	u8 *out = buf;
-+	u16 attr_remaining = 0;
-+	bool desired_attr = false;
-+	u16 desired_len = 0;
-+
-+	while (len > 0) {
-+		unsigned int iedatalen;
-+		unsigned int copy;
-+		const u8 *iedata;
-+
-+		if (len < 2)
-+			return -EILSEQ;
-+		iedatalen = ies[1];
-+		if (iedatalen + 2 > len)
-+			return -EILSEQ;
-+
-+		if (ies[0] != WLAN_EID_VENDOR_SPECIFIC)
-+			goto cont;
-+
-+		if (iedatalen < 4)
-+			goto cont;
-+
-+		iedata = ies + 2;
-+
-+		/* check WFA OUI, P2P subtype */
-+		if (iedata[0] != 0x50 || iedata[1] != 0x6f ||
-+		    iedata[2] != 0x9a || iedata[3] != 0x09)
-+			goto cont;
-+
-+		iedatalen -= 4;
-+		iedata += 4;
-+
-+		/* check attribute continuation into this IE */
-+		copy = min_t(unsigned int, attr_remaining, iedatalen);
-+		if (copy && desired_attr) {
-+			desired_len += copy;
-+			if (out) {
-+				memcpy(out, iedata, min(bufsize, copy));
-+				out += min(bufsize, copy);
-+				bufsize -= min(bufsize, copy);
-+			}
-+
-+
-+			if (copy == attr_remaining)
-+				return desired_len;
-+		}
-+
-+		attr_remaining -= copy;
-+		if (attr_remaining)
-+			goto cont;
-+
-+		iedatalen -= copy;
-+		iedata += copy;
-+
-+		while (iedatalen > 0) {
-+			u16 attr_len;
-+
-+			/* P2P attribute ID & size must fit */
-+			if (iedatalen < 3)
-+				return -EILSEQ;
-+			desired_attr = iedata[0] == attr;
-+			attr_len = get_unaligned_le16(iedata + 1);
-+			iedatalen -= 3;
-+			iedata += 3;
-+
-+			copy = min_t(unsigned int, attr_len, iedatalen);
-+
-+			if (desired_attr) {
-+				desired_len += copy;
-+				if (out) {
-+					memcpy(out, iedata, min(bufsize, copy));
-+					out += min(bufsize, copy);
-+					bufsize -= min(bufsize, copy);
-+				}
-+
-+				if (copy == attr_len)
-+					return desired_len;
-+			}
-+
-+			iedata += copy;
-+			iedatalen -= copy;
-+			attr_remaining = attr_len - copy;
-+		}
-+
-+ cont:
-+		len -= ies[1] + 2;
-+		ies += ies[1] + 2;
-+	}
-+
-+	if (attr_remaining && desired_attr)
-+		return -EILSEQ;
-+
-+	return -ENOENT;
-+}
-+EXPORT_SYMBOL(cfg80211_get_p2p_attr);
-+
- bool ieee80211_operating_class_to_band(u8 operating_class,
- 				       enum ieee80211_band *band)
- {
--- 
-1.8.0
+	bssid=c4:93:00:11:01:88
+	bssid=c4:93:00:11:01:89
+	bssid=c4:93:00:11:01:90
 
+and it wasn't working for the first two, but now I did what you've suggested
+and voilà, it works for all three! :) So the working setup is following:
+
+	bssid=c4:93:00:11:01:88
+	bssid=c4:93:00:11:01:89
+	bssid=c4:93:00:11:01:8a
+
+I don't see a pattern here, why it didn't worked with :88, :89, :90? Just the
+last one :90 was working and :88, :89, :8a works fine. There need to be some
+hole/spacing? Thanks a lot!
+
+-- ynezz
