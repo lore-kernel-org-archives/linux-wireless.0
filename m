@@ -1,63 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:35127 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754033Ab2KZQF4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 11:05:56 -0500
-Received: by mail-we0-f174.google.com with SMTP id d7so3507268wer.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 08:05:55 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 00/11] wlcore fixes for 3.8 (part1)
-Date: Mon, 26 Nov 2012 18:05:39 +0200
-Message-Id: <1353945950-3899-1-git-send-email-arik@wizery.com> (sfid-20121126_170600_820665_59DDDF6F)
+Received: from mta-out.inet.fi ([195.156.147.13]:58107 "EHLO kirsi1.inet.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753277Ab2KYTK4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Nov 2012 14:10:56 -0500
+Subject: Re: Atheros AR3012 problem in Ubuntu 12.04LTS
+From: Jukka Kivari <jukka.kivari@pohjolantietotekniikka.fi>
+Reply-To: jukka.kivari@pohjolantietotekniikka.fi
+To: Kalle Valo <kvalo@adurom.com>
+Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
+In-Reply-To: <87a9u5wraw.fsf@purkki.adurom.net>
+References: <1353859765.3743.14.camel@EDAnovaSRV1>
+	 <87a9u5wraw.fsf@purkki.adurom.net>
+Content-Type: text/plain
+Date: Sun, 25 Nov 2012 21:10:47 +0200
+Message-Id: <1353870648.2973.9.camel@EDAnovaSRV1> (sfid-20121125_201058_358765_746C0401)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Various fixes for wlcore, to be applied on top of
-Eliad's 18xx API update series.
+Hi,
 
-There are more patches pending - the splitting into smaller
-series is meant to ease review.
+Thanks for quick response.
 
-Arik Nemtsov (2):
-  wlcore: use new set bandwidth command to adjusting channel BW
-  wlcore/wl18xx/wl12xx: separate channel count between chips
+We are using standard Ubuntu release. We don't have access to Dell
+pre-installed version (yet) as it's not available/supported in Finland.
+I have asked it from Dell but let's see if we get it or not.
 
-Eliad Peller (7):
-  wlcore: configure dwell times according to scan type
-  wlcore: don't stop fwlog if dbgpins are used
-  wlcore/wl18xx: allow TX BA on all TIDs
-  wlcore: use sta_state-based ROCs for AP mode
-  wlcore: mask out CCK rates when starting GO
-  wlcore: move ps change handling to .bss_info_changed()
-  wlcore: don't allow access to FW mem when chip is off
+BT isn't working on standard 11.10 Ubuntu either, nor in 12.10.
 
-Luciano Coelho (1):
-  wlcore: gather information about firmware stability
+We haven't tried manual binding yet. We'll check it.
 
-Yair Shapira (1):
-  wlcore/wl18xx/wl12xx: add recovery settings to conf
-
- drivers/net/wireless/ti/wl12xx/main.c     |   11 +-
- drivers/net/wireless/ti/wl12xx/scan.c     |    7 +-
- drivers/net/wireless/ti/wl18xx/acx.c      |   31 ++++++
- drivers/net/wireless/ti/wl18xx/acx.h      |   14 +++
- drivers/net/wireless/ti/wl18xx/main.c     |   49 ++++++++-
- drivers/net/wireless/ti/wl18xx/scan.c     |    6 +-
- drivers/net/wireless/ti/wl18xx/scan.h     |    7 --
- drivers/net/wireless/ti/wlcore/cmd.c      |    3 +
- drivers/net/wireless/ti/wlcore/conf.h     |   30 +++---
- drivers/net/wireless/ti/wlcore/debugfs.c  |    5 +-
- drivers/net/wireless/ti/wlcore/hw_ops.h   |    8 ++
- drivers/net/wireless/ti/wlcore/main.c     |  162 ++++++++++++++++++++---------
- drivers/net/wireless/ti/wlcore/scan.c     |   57 ++++++----
- drivers/net/wireless/ti/wlcore/scan.h     |    9 +-
- drivers/net/wireless/ti/wlcore/wlcore.h   |    7 ++
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    6 ++
- 16 files changed, 308 insertions(+), 104 deletions(-)
 
 -- 
-1.7.9.5
+
+-Jukka
+
+
+****************
+Powered by Linux
+****************
+
+
+
+
+-----Original Message-----
+From: Kalle Valo <kvalo@adurom.com>
+To: jukka.kivari@pohjolantietotekniikka.fi
+Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: Atheros AR3012 problem in Ubuntu 12.04LTS
+Date: Sun, 25 Nov 2012 19:00:55 +0200
+
+Moro,
+
+Jukka Kivari <jukka.kivari@pohjolantietotekniikka.fi> writes:
+
+> We have found out the Device is AR3012, VID/PID 0cf3:a003. It seems Dell
+> has some special driver for this in pre-installed Ubuntu
+> 11.10 
+
+So the driver works with the pre-installed version?
+
+Are the sources for this pre-installed Ubuntu publically available
+somewhere or is it just a stock Ubuntu release? Being able to see kernel
+sources from that release would help.
+
+> My current analysis of the problem is:
+>
+> 1) BT device is recognized correctly (PID=e003)
+> 2) Ubuntu 12.04 has all drivers and firmaware available
+
+I didn't quite get this 2) part. How do you know that all drivers and
+firmware are available? Earlier you mentioned about some special driver.
+
+> 3) driver/firmaware loading fails, there is no PID e003 in btusb.c or
+> ath3k.c
+
+Have you tried to manually bind the device to those drivers? With very
+good luck it might work (but I doubt it).
+
+http://lwn.net/Articles/143397/
+
+Also did you file a bug to Ubuntu? If the driver works in 11.10 but not
+in 12.04 that's a regression.
+
 
