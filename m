@@ -1,358 +1,430 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3412 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933271Ab2KOCqi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 21:46:38 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/19] brcmfmac: fix for multiple netdevice interface
- support
-Date: Wed, 14 Nov 2012 18:46:09 -0800
-Message-ID: <1352947583-25341-6-git-send-email-frankyl@broadcom.com> (sfid-20121115_041526_669413_D5F22580)
-In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
-References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:58575 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753187Ab2KYQ1H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Nov 2012 11:27:07 -0500
+Received: by mail-wi0-f170.google.com with SMTP id hq7so2336059wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Nov 2012 08:27:05 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Victor Goldenshtein <victorg@ti.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3] wlcore: add new reg-domain configuration command
+Date: Sun, 25 Nov 2012 18:26:59 +0200
+Message-Id: <1353860819-10417-1-git-send-email-arik@wizery.com> (sfid-20121125_172718_714818_AFC193E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Victor Goldenshtein <victorg@ti.com>
 
-virtual netdevice interface like P2P client and GO need
-different callbacks for .open and .down. This patch adds
-those.
+In 18xx the calibration process of the PHY Cortex domain
+requires to perform an active calibration of the channel
+before it can be used for transmission. To fulfill world
+wide regulatory restrictions, fw should be always
+synchronized/updated with current CRDA configuration.
+Add a new "CMD_DFS_CHANNEL_CONFIG" command to update the
+fw with current reg-domain, this command passes a bit map
+of channels that are allowed to be used for transmission.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+The driver shall update the fw during initialization and
+after each change in the current reg-domain
+configuration. The driver will save the channel number of
+incoming beacons during the scan process, as they might
+be a result of the passive scan on
+"IEEE80211_CHAN_PASSIVE_SCAN" channel and will update the
+fw accordingly once the scan is finished, the purpose of
+this is to be ready in case of the authentication request
+on one of these disabled (uncalibrated) channels.
+
+The new command requires to wait for the fw completion
+event "DFS_CHANNELS_CONFIG_COMPLETE_EVENT".
+
+No scan commands (including the sched scan) can be
+executed concurrently with the "CMD_DFS_CHANNEL_CONFIG",
+wl->mutex ensures that.
+
+[Arik - move reset of reg_ch_conf_last to safe place inside
+op_stop_locked]
+[Eliad - adjust to new event waiting api]
+
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    4 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  101 ++++++++++----------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   25 ++---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    4 +-
- 4 files changed, 67 insertions(+), 67 deletions(-)
+v3: remove chip_family_event_mask since the event mask
+of each chip family is now separate.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index a41e1c6..499c5c2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -513,8 +513,6 @@ struct brcmf_pub {
- 	struct mutex proto_block;
- 	unsigned char proto_buf[BRCMF_DCMD_MAXLEN];
+ drivers/net/wireless/ti/wl18xx/event.c  |    4 +
+ drivers/net/wireless/ti/wl18xx/main.c   |    4 +-
+ drivers/net/wireless/ti/wlcore/cmd.c    |  125 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wlcore/cmd.h    |   10 +++
+ drivers/net/wireless/ti/wlcore/event.h  |    1 +
+ drivers/net/wireless/ti/wlcore/init.c   |    4 +
+ drivers/net/wireless/ti/wlcore/main.c   |   34 +++++++++
+ drivers/net/wireless/ti/wlcore/rx.c     |    4 +
+ drivers/net/wireless/ti/wlcore/scan.c   |    2 +
+ drivers/net/wireless/ti/wlcore/wlcore.h |   10 +++
+ 10 files changed, 197 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
+index bf4233c..02ef5aa 100644
+--- a/drivers/net/wireless/ti/wl18xx/event.c
++++ b/drivers/net/wireless/ti/wl18xx/event.c
+@@ -34,6 +34,10 @@ int wl18xx_wait_for_event(struct wl1271 *wl, enum wlcore_wait_event event,
+ 		local_event = PEER_REMOVE_COMPLETE_EVENT_ID;
+ 		break;
  
--	struct work_struct setmacaddr_work;
--	struct work_struct multicast_work;
- 	u8 macvalue[ETH_ALEN];
- 	atomic_t pend_8021x_cnt;
- 	wait_queue_head_t pend_8021x_wait;
-@@ -556,6 +554,8 @@ struct brcmf_if {
- 	struct brcmf_cfg80211_vif *vif;
- 	struct net_device *ndev;
- 	struct net_device_stats stats;
-+	struct work_struct setmacaddr_work;
-+	struct work_struct multicast_work;
- 	int idx;
- 	s32 bssidx;
- 	u8 mac_addr[ETH_ALEN];
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index f102034..32b7355 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -105,12 +105,10 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 	char *buf, *bufp;
- 	u32 buflen;
- 	s32 err;
--	struct brcmf_pub *drvr = container_of(work, struct brcmf_pub,
--						    multicast_work);
- 
- 	brcmf_dbg(TRACE, "enter\n");
- 
--	ifp = drvr->iflist[0];
-+	ifp = container_of(work, struct brcmf_if, multicast_work);
- 	ndev = ifp->ndev;
- 
- 	/* Determine initial value of allmulti flag */
-@@ -165,45 +163,37 @@ static void
- _brcmf_set_mac_address(struct work_struct *work)
- {
- 	struct brcmf_if *ifp;
--	struct net_device *ndev;
- 	s32 err;
- 
--	struct brcmf_pub *drvr = container_of(work, struct brcmf_pub,
--						    setmacaddr_work);
--
- 	brcmf_dbg(TRACE, "enter\n");
- 
--	ifp = drvr->iflist[0];
--	ndev = ifp->ndev;
--
--	err = brcmf_fil_iovar_data_set(ifp, "cur_etheraddr", drvr->macvalue,
-+	ifp = container_of(work, struct brcmf_if, setmacaddr_work);
-+	err = brcmf_fil_iovar_data_set(ifp, "cur_etheraddr", ifp->mac_addr,
- 				       ETH_ALEN);
- 	if (err < 0) {
- 		brcmf_dbg(ERROR, "Setting cur_etheraddr failed, %d\n", err);
- 	} else {
- 		brcmf_dbg(TRACE, "MAC address updated to %pM\n",
--			  drvr->macvalue);
--		memcpy(ndev->dev_addr, drvr->macvalue, ETH_ALEN);
-+			  ifp->mac_addr);
-+		memcpy(ifp->ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
- 	}
- }
- 
- static int brcmf_netdev_set_mac_address(struct net_device *ndev, void *addr)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
--	struct brcmf_pub *drvr = ifp->drvr;
- 	struct sockaddr *sa = (struct sockaddr *)addr;
- 
--	memcpy(&drvr->macvalue, sa->sa_data, ETH_ALEN);
--	schedule_work(&drvr->setmacaddr_work);
-+	memcpy(&ifp->mac_addr, sa->sa_data, ETH_ALEN);
-+	schedule_work(&ifp->setmacaddr_work);
- 	return 0;
- }
- 
- static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
--	struct brcmf_pub *drvr = ifp->drvr;
- 
--	schedule_work(&drvr->multicast_work);
-+	schedule_work(&ifp->multicast_work);
- }
- 
- static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
-@@ -582,7 +572,7 @@ static int brcmf_netdev_stop(struct net_device *ndev)
- 	if (drvr->bus_if->drvr_up == 0)
++	case WLCORE_EVENT_DFS_CONFIG_COMPLETE:
++		local_event = DFS_CHANNELS_CONFIG_COMPLETE_EVENT;
++		break;
++
+ 	default:
+ 		/* event not implemented */
  		return 0;
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 0895ffa..f1eaf9a 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -616,6 +616,7 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
+ 			      WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN |
+ 			      WLCORE_QUIRK_NO_SCHED_SCAN_WHILE_CONN |
+ 			      WLCORE_QUIRK_TX_PAD_LAST_FRAME |
++			      WLCORE_QUIRK_REGDOMAIN_CONF |
+ 			      WLCORE_QUIRK_DUAL_PROBE_TMPL;
  
--	brcmf_cfg80211_down(drvr->config);
-+	brcmf_cfg80211_down(ndev);
+ 		wlcore_set_min_fw_ver(wl, WL18XX_CHIP_VER, WL18XX_IFTYPE_VER,
+@@ -862,7 +863,8 @@ static int wl18xx_boot(struct wl1271 *wl)
+ 		REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID |
+ 		INACTIVE_STA_EVENT_ID |
+ 		MAX_TX_FAILURE_EVENT_ID |
+-		CHANNEL_SWITCH_COMPLETE_EVENT_ID;
++		CHANNEL_SWITCH_COMPLETE_EVENT_ID |
++		DFS_CHANNELS_CONFIG_COMPLETE_EVENT;
  
- 	/* Set state and stop OS transmissions */
- 	drvr->bus_if->drvr_up = false;
-@@ -601,26 +591,24 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 	ret = wlcore_boot_run_firmware(wl);
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 1735a53..599c006 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -1503,6 +1503,131 @@ out:
+ 	return ret;
+ }
  
- 	brcmf_dbg(TRACE, "ifidx %d\n", ifp->idx);
- 
--	if (ifp->idx == 0) {	/* do it only for primary eth0 */
--		/* If bus is not ready, can't continue */
--		if (bus_if->state != BRCMF_BUS_DATA) {
--			brcmf_dbg(ERROR, "failed bus is not ready\n");
--			return -EAGAIN;
--		}
-+	/* If bus is not ready, can't continue */
-+	if (bus_if->state != BRCMF_BUS_DATA) {
-+		brcmf_dbg(ERROR, "failed bus is not ready\n");
-+		return -EAGAIN;
++static int wlcore_get_reg_conf_ch_idx(enum ieee80211_band band, u16 ch)
++{
++	int idx = -1;
++
++	switch (band) {
++	case IEEE80211_BAND_5GHZ:
++		if (ch >= 8 && ch <= 16)
++			idx = ((ch-8)/4 + 18);
++		else if (ch >= 34 && ch <= 64)
++			idx = ((ch-34)/2 + 3 + 18);
++		else if (ch >= 100 && ch <= 140)
++			idx = ((ch-100)/4 + 15 + 18);
++		else if (ch >= 149 && ch <= 165)
++			idx = ((ch-149)/4 + 26 + 18);
++		else
++			idx = -1;
++		break;
++	case IEEE80211_BAND_2GHZ:
++		if (ch >= 1 && ch <= 14)
++			idx = ch - 1;
++		else
++			idx = -1;
++		break;
++	default:
++		wl1271_error("get reg conf ch idx - unknown band: %d",
++			     (int)band);
 +	}
- 
--		atomic_set(&drvr->pend_8021x_cnt, 0);
-+	atomic_set(&drvr->pend_8021x_cnt, 0);
- 
--		memcpy(ndev->dev_addr, drvr->mac, ETH_ALEN);
-+	memcpy(ndev->dev_addr, drvr->mac, ETH_ALEN);
- 
--		/* Get current TOE mode from dongle */
--		if (brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_ol) >= 0
--		    && (toe_ol & TOE_TX_CSUM_OL) != 0)
--			drvr->iflist[ifp->idx]->ndev->features |=
--				NETIF_F_IP_CSUM;
--		else
--			drvr->iflist[ifp->idx]->ndev->features &=
--				~NETIF_F_IP_CSUM;
--	}
-+	/* Get current TOE mode from dongle */
-+	if (brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_ol) >= 0
-+	    && (toe_ol & TOE_TX_CSUM_OL) != 0)
-+		drvr->iflist[ifp->idx]->ndev->features |=
-+			NETIF_F_IP_CSUM;
-+	else
-+		drvr->iflist[ifp->idx]->ndev->features &=
-+			~NETIF_F_IP_CSUM;
- 
- 	/* make sure RF is ready for work */
- 	brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 0);
-@@ -628,7 +616,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 	/* Allow transmit calls */
- 	netif_start_queue(ndev);
- 	drvr->bus_if->drvr_up = true;
--	if (brcmf_cfg80211_up(drvr->config)) {
-+	if (brcmf_cfg80211_up(ndev)) {
- 		brcmf_dbg(ERROR, "failed to bring up cfg80211\n");
- 		return -1;
- 	}
-@@ -646,16 +634,30 @@ static const struct net_device_ops brcmf_netdev_ops_pri = {
- 	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
++
++	return idx;
++}
++
++void wlcore_set_pending_regdomain_ch(struct wl1271 *wl, u16 channel,
++				     enum ieee80211_band band)
++{
++	int ch_bit_idx = 0;
++
++	if (!(wl->quirks & WLCORE_QUIRK_REGDOMAIN_CONF))
++		return;
++
++	ch_bit_idx = wlcore_get_reg_conf_ch_idx(band, channel);
++
++	if (ch_bit_idx > 0 && ch_bit_idx <= WL1271_MAX_CHANNELS)
++		set_bit(ch_bit_idx, (long *)wl->reg_ch_conf_pending);
++}
++
++int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl)
++{
++	struct wl12xx_cmd_regdomain_dfs_config *cmd = NULL;
++	int ret = 0, i, b, ch_bit_idx;
++	struct ieee80211_channel *channel;
++	u32 tmp_ch_bitmap[2];
++	u16 ch;
++	struct wiphy *wiphy = wl->hw->wiphy;
++	struct ieee80211_supported_band *band;
++	bool timeout = false;
++
++	if (!(wl->quirks & WLCORE_QUIRK_REGDOMAIN_CONF))
++		return 0;
++
++	wl1271_debug(DEBUG_CMD, "cmd reg domain config");
++
++	memset(tmp_ch_bitmap, 0, sizeof(tmp_ch_bitmap));
++
++	for (b = IEEE80211_BAND_2GHZ; b <= IEEE80211_BAND_5GHZ; b++) {
++		band = wiphy->bands[b];
++		for (i = 0; i < band->n_channels; i++) {
++			channel = &band->channels[i];
++			ch = channel->hw_value;
++
++			if (channel->flags & (IEEE80211_CHAN_DISABLED |
++					      IEEE80211_CHAN_RADAR |
++					      IEEE80211_CHAN_PASSIVE_SCAN))
++				continue;
++
++			ch_bit_idx = wlcore_get_reg_conf_ch_idx(b, ch);
++			if (ch_bit_idx < 0)
++				continue;
++
++			set_bit(ch_bit_idx, (long *)tmp_ch_bitmap);
++		}
++	}
++
++	tmp_ch_bitmap[0] |= wl->reg_ch_conf_pending[0];
++	tmp_ch_bitmap[1] |= wl->reg_ch_conf_pending[1];
++
++	if (!memcmp(tmp_ch_bitmap, wl->reg_ch_conf_last, sizeof(tmp_ch_bitmap)))
++		goto out;
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	cmd->ch_bit_map1 = cpu_to_le32(tmp_ch_bitmap[0]);
++	cmd->ch_bit_map2 = cpu_to_le32(tmp_ch_bitmap[1]);
++
++	wl1271_debug(DEBUG_CMD,
++		     "cmd reg domain bitmap1: 0x%08x, bitmap2: 0x%08x",
++		     cmd->ch_bit_map1, cmd->ch_bit_map2);
++
++	ret = wl1271_cmd_send(wl, CMD_DFS_CHANNEL_CONFIG, cmd, sizeof(*cmd), 0);
++	if (ret < 0) {
++		wl1271_error("failed to send reg domain dfs config");
++		goto out;
++	}
++
++	ret = wl->ops->wait_for_event(wl,
++				      WLCORE_EVENT_DFS_CONFIG_COMPLETE,
++				      &timeout);
++	if (ret < 0 || timeout) {
++		wl1271_error("reg domain conf %serror",
++			     timeout ? "completion " : "");
++		ret = timeout ? -ETIMEDOUT : ret;
++		goto out;
++	}
++
++	memcpy(wl->reg_ch_conf_last, tmp_ch_bitmap, sizeof(tmp_ch_bitmap));
++	memset(wl->reg_ch_conf_pending, 0, sizeof(wl->reg_ch_conf_pending));
++
++out:
++	kfree(cmd);
++	return ret;
++}
++
+ int wl12xx_cmd_config_fwlog(struct wl1271 *wl)
+ {
+ 	struct wl12xx_cmd_config_fwlog *cmd;
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index c9f8268..7f378b7 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -84,6 +84,9 @@ int wl12xx_croc(struct wl1271 *wl, u8 role_id);
+ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			struct ieee80211_sta *sta, u8 hlid);
+ int wl12xx_cmd_remove_peer(struct wl1271 *wl, u8 hlid);
++void wlcore_set_pending_regdomain_ch(struct wl1271 *wl, u16 channel,
++				     enum ieee80211_band band);
++int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl);
+ int wl12xx_cmd_config_fwlog(struct wl1271 *wl);
+ int wl12xx_cmd_start_fwlog(struct wl1271 *wl);
+ int wl12xx_cmd_stop_fwlog(struct wl1271 *wl);
+@@ -623,6 +626,13 @@ enum wl12xx_fwlogger_output {
+ 	WL12XX_FWLOG_OUTPUT_HOST,
  };
  
-+static const struct net_device_ops brcmf_netdev_ops_virt = {
-+	.ndo_open = brcmf_cfg80211_up,
-+	.ndo_stop = brcmf_cfg80211_down,
-+	.ndo_get_stats = brcmf_netdev_get_stats,
-+	.ndo_do_ioctl = brcmf_netdev_ioctl_entry,
-+	.ndo_start_xmit = brcmf_netdev_start_xmit,
-+	.ndo_set_mac_address = brcmf_netdev_set_mac_address,
-+	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
-+};
++struct wl12xx_cmd_regdomain_dfs_config {
++	struct wl1271_cmd_header header;
 +
- int brcmf_net_attach(struct brcmf_if *ifp)
- {
- 	struct brcmf_pub *drvr = ifp->drvr;
- 	struct net_device *ndev;
- 	u8 temp_addr[ETH_ALEN];
- 
--	brcmf_dbg(TRACE, "ifidx %d\n", ifp->idx);
-+	brcmf_dbg(TRACE, "ifidx %d mac %pM\n", ifp->idx, ifp->mac_addr);
-+	ndev = ifp->ndev;
- 
--	ndev = drvr->iflist[ifp->idx]->ndev;
--	ndev->netdev_ops = &brcmf_netdev_ops_pri;
-+	/* set appropriate operations */
-+	if (!ifp->idx)
-+		ndev->netdev_ops = &brcmf_netdev_ops_pri;
-+	else
-+		ndev->netdev_ops = &brcmf_netdev_ops_virt;
- 
- 	/*
- 	 * determine mac address to use
-@@ -665,13 +667,6 @@ int brcmf_net_attach(struct brcmf_if *ifp)
- 	else
- 		memcpy(temp_addr, drvr->mac, ETH_ALEN);
- 
--	if (ifp->idx == 1) {
--		brcmf_dbg(TRACE, "ACCESS POINT MAC:\n");
--		/*  ACCESSPOINT INTERFACE CASE */
--		temp_addr[0] |= 0X02;	/* set bit 2 ,
--			 - Locally Administered address  */
--
--	}
- 	ndev->hard_header_len = ETH_HLEN + drvr->hdrlen;
- 	ndev->ethtool_ops = &brcmf_ethtool_ops;
- 
-@@ -729,6 +724,10 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, int ifidx, s32 bssidx,
- 	drvr->iflist[ifidx] = ifp;
- 	ifp->idx = ifidx;
- 	ifp->bssidx = bssidx;
++	__le32 ch_bit_map1;
++	__le32 ch_bit_map2;
++} __packed;
 +
-+	INIT_WORK(&ifp->setmacaddr_work, _brcmf_set_mac_address);
-+	INIT_WORK(&ifp->multicast_work, _brcmf_set_multicast_list);
+ struct wl12xx_cmd_config_fwlog {
+ 	struct wl1271_cmd_header header;
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/event.h b/drivers/net/wireless/ti/wlcore/event.h
+index 766b02f..b4353be 100644
+--- a/drivers/net/wireless/ti/wlcore/event.h
++++ b/drivers/net/wireless/ti/wlcore/event.h
+@@ -54,6 +54,7 @@ enum {
+ enum wlcore_wait_event {
+ 	WLCORE_EVENT_ROLE_STOP_COMPLETE,
+ 	WLCORE_EVENT_PEER_REMOVE_COMPLETE,
++	WLCORE_EVENT_DFS_CONFIG_COMPLETE
+ };
+ 
+ enum {
+diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
+index 06e1bf9..68828b4 100644
+--- a/drivers/net/wireless/ti/wlcore/init.c
++++ b/drivers/net/wireless/ti/wlcore/init.c
+@@ -681,6 +681,10 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	ret = wlcore_cmd_regdomain_config_locked(wl);
++	if (ret < 0)
++		return ret;
 +
- 	if (mac_addr != NULL)
- 		memcpy(&ifp->mac_addr, mac_addr, ETH_ALEN);
+ 	/* Bluetooth WLAN coexistence */
+ 	ret = wl1271_init_pta(wl);
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 9237f4b..d9f0442 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -93,6 +93,8 @@ static int wl1271_reg_notify(struct wiphy *wiphy,
+ 	struct ieee80211_supported_band *band;
+ 	struct ieee80211_channel *ch;
+ 	int i;
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct wl1271 *wl = hw->priv;
  
-@@ -760,6 +759,9 @@ void brcmf_del_if(struct brcmf_pub *drvr, int ifidx)
- 			netif_stop_queue(ifp->ndev);
- 		}
+ 	band = wiphy->bands[IEEE80211_BAND_5GHZ];
+ 	for (i = 0; i < band->n_channels; i++) {
+@@ -106,6 +108,9 @@ static int wl1271_reg_notify(struct wiphy *wiphy,
  
-+		cancel_work_sync(&ifp->setmacaddr_work);
-+		cancel_work_sync(&ifp->multicast_work);
-+
- 		unregister_netdev(ifp->ndev);
- 		drvr->iflist[ifidx] = NULL;
- 		if (ifidx == 0)
-@@ -801,9 +803,6 @@ int brcmf_attach(uint bus_hdrlen, struct device *dev)
- 	/* attach firmware event handler */
- 	brcmf_fweh_attach(drvr);
- 
--	INIT_WORK(&drvr->setmacaddr_work, _brcmf_set_mac_address);
--	INIT_WORK(&drvr->multicast_work, _brcmf_set_multicast_list);
--
- 	INIT_LIST_HEAD(&drvr->bus_if->dcmd_list);
- 
- 	init_waitqueue_head(&drvr->pend_8021x_wait);
-@@ -904,8 +903,6 @@ void brcmf_detach(struct device *dev)
- 	brcmf_bus_detach(drvr);
- 
- 	if (drvr->prot) {
--		cancel_work_sync(&drvr->setmacaddr_work);
--		cancel_work_sync(&drvr->multicast_work);
- 		brcmf_proto_detach(drvr);
  	}
  
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index b836722..be45893 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4524,19 +4524,18 @@ default_conf_out:
- 
- }
- 
--static s32 __brcmf_cfg80211_up(struct brcmf_cfg80211_info *cfg)
-+static s32 __brcmf_cfg80211_up(struct brcmf_if *ifp)
- {
--	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
--
- 	set_bit(BRCMF_VIF_STATUS_READY, &ifp->vif->sme_state);
-+	if (ifp->idx)
-+		return 0;
- 
--	return brcmf_config_dongle(cfg);
-+	return brcmf_config_dongle(ifp->drvr->config);
- }
- 
--static s32 __brcmf_cfg80211_down(struct brcmf_cfg80211_info *cfg)
-+static s32 __brcmf_cfg80211_down(struct brcmf_if *ifp)
- {
--	struct net_device *ndev = cfg_to_ndev(cfg);
--	struct brcmf_if *ifp = netdev_priv(ndev);
-+	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
- 
- 	/*
- 	 * While going down, if associated with AP disassociate
-@@ -4561,23 +4560,27 @@ static s32 __brcmf_cfg80211_down(struct brcmf_cfg80211_info *cfg)
++	if (likely(wl->state == WLCORE_STATE_ON))
++		wlcore_regdomain_config(wl);
++
  	return 0;
  }
  
--s32 brcmf_cfg80211_up(struct brcmf_cfg80211_info *cfg)
-+s32 brcmf_cfg80211_up(struct net_device *ndev)
- {
-+	struct brcmf_if *ifp = netdev_priv(ndev);
-+	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
- 	s32 err = 0;
- 
- 	mutex_lock(&cfg->usr_sync);
--	err = __brcmf_cfg80211_up(cfg);
-+	err = __brcmf_cfg80211_up(ifp);
- 	mutex_unlock(&cfg->usr_sync);
- 
- 	return err;
+@@ -1900,6 +1905,12 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
+ 	wl->tx_res_if = NULL;
+ 	kfree(wl->target_mem_map);
+ 	wl->target_mem_map = NULL;
++
++	/*
++	 * FW channels must be re-calibrated after recovery,
++	 * clear the last Reg-Domain channel configuration.
++	 */
++	memset(wl->reg_ch_conf_last, 0, sizeof(wl->reg_ch_conf_last));
  }
  
--s32 brcmf_cfg80211_down(struct brcmf_cfg80211_info *cfg)
-+s32 brcmf_cfg80211_down(struct net_device *ndev)
- {
-+	struct brcmf_if *ifp = netdev_priv(ndev);
-+	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
- 	s32 err = 0;
+ static void wlcore_op_stop(struct ieee80211_hw *hw)
+@@ -3284,6 +3295,29 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+ }
+ EXPORT_SYMBOL_GPL(wlcore_set_key);
  
- 	mutex_lock(&cfg->usr_sync);
--	err = __brcmf_cfg80211_down(cfg);
-+	err = __brcmf_cfg80211_down(ifp);
- 	mutex_unlock(&cfg->usr_sync);
++void wlcore_regdomain_config(struct wl1271 *wl)
++{
++	int ret;
++
++	if (!(wl->quirks & WLCORE_QUIRK_REGDOMAIN_CONF))
++		return;
++
++	mutex_lock(&wl->mutex);
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	ret = wlcore_cmd_regdomain_config_locked(wl);
++	if (ret < 0) {
++		wl12xx_queue_recovery_work(wl);
++		goto out;
++	}
++
++	wl1271_ps_elp_sleep(wl);
++out:
++	mutex_unlock(&wl->mutex);
++}
++
+ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct cfg80211_scan_request *req)
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 9ee0ec6..4665b96 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -97,6 +97,10 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 			wl1271_warning("Michael MIC error");
+ 		}
+ 	}
++
++	if (beacon)
++		wlcore_set_pending_regdomain_ch(wl, (u16)desc->channel,
++						status->band);
+ }
  
- 	return err;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index 80ba2ea..e2ef851 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -455,7 +455,7 @@ brcmf_cfg80211_connect_info *cfg_to_conn(struct brcmf_cfg80211_info *cfg)
+ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index eeb6188..c913700 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -80,6 +80,8 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 		wl12xx_queue_recovery_work(wl);
+ 	}
  
- struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr);
- void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg);
--s32 brcmf_cfg80211_up(struct brcmf_cfg80211_info *cfg);
--s32 brcmf_cfg80211_down(struct brcmf_cfg80211_info *cfg);
-+s32 brcmf_cfg80211_up(struct net_device *ndev);
-+s32 brcmf_cfg80211_down(struct net_device *ndev);
++	wlcore_cmd_regdomain_config_locked(wl);
++
+ 	ieee80211_scan_completed(wl->hw, false);
  
- #endif				/* _wl_cfg80211_h_ */
+ out:
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index e9254b7..d3818ef 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -284,6 +284,11 @@ struct wl1271 {
+ 	struct work_struct recovery_work;
+ 	bool watchdog_recovery;
+ 
++	/* Reg domain last configuration */
++	u32 reg_ch_conf_last[2];
++	/* Reg domain pending configuration */
++	u32 reg_ch_conf_pending[2];
++
+ 	/* Pointer that holds DMA-friendly block for the mailbox */
+ 	void *mbox;
+ 
+@@ -445,6 +450,7 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+ 		   struct ieee80211_vif *vif,
+ 		   struct ieee80211_sta *sta,
+ 		   struct ieee80211_key_conf *key_conf);
++void wlcore_regdomain_config(struct wl1271 *wl);
+ 
+ static inline void
+ wlcore_set_ht_cap(struct wl1271 *wl, enum ieee80211_band band,
+@@ -503,6 +509,10 @@ wlcore_set_min_fw_ver(struct wl1271 *wl, unsigned int chip,
+ /* separate probe response templates for one-shot and sched scans */
+ #define WLCORE_QUIRK_DUAL_PROBE_TMPL		BIT(10)
+ 
++/* Firmware requires reg domain configuration for active calibration */
++#define WLCORE_QUIRK_REGDOMAIN_CONF		BIT(11)
++
++
+ /* TODO: move to the lower drivers when all usages are abstracted */
+ #define CHIP_ID_1271_PG10              (0x4030101)
+ #define CHIP_ID_1271_PG20              (0x4030111)
 -- 
 1.7.9.5
-
 
