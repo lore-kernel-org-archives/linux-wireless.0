@@ -1,51 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3028 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751932Ab2KPO6x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 09:58:53 -0500
-Message-ID: <50A65443.2000101@broadcom.com> (sfid-20121116_155857_776532_135CFE5B)
-Date: Fri, 16 Nov 2012 15:57:07 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Mahesh Palivela" <maheshp@posedge.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: VHT support, take 2
-References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
- (sfid-20121109_211702_930840_209B43F6)
- <1352492493.28302.7.camel@jlt4.sipsolutions.net>
- <50A4DB80.2020209@posedge.com>
- <1353072509.9490.7.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353072509.9490.7.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:35482 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752765Ab2KZLoY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 06:44:24 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: support P2P GO powersave configuration
+Date: Mon, 26 Nov 2012 12:44:49 +0100
+Message-Id: <1353930289-2710-3-git-send-email-johannes@sipsolutions.net> (sfid-20121126_124429_345320_69BD38C6)
+In-Reply-To: <1353930289-2710-1-git-send-email-johannes@sipsolutions.net>
+References: <1353930289-2710-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/16/2012 02:28 PM, Johannes Berg wrote:
-> On Thu, 2012-11-15 at 17:39 +0530, Mahesh Palivela wrote:
->
->> vht regulatory code already posted long back. After went through several
->> back n forth emails from Luis Rodriguez, accepted the patch.
->> But not commited anywhere.
->> Now I have to change that to match to new structs like chan_def etc from
->> the vht channel work patches you posted 5 days back.
->>
->> Also helper funcs to replace chan->flags bit checking to dynamically
->> check channel through regulatory
->
-> Yeah, actually I'm not sure it's that easy. We'll also need per
-> bandwidth TX power restrictions, raise the 40 MHz bandwidth restriction
-> to 160 MHz (or get rid of it entirely), etc. That seems to require a new
-> regulatory database format?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Luis discussed the regulatory framework during the wireless summit in 
-Barcelona last week. My (possibly limited) recollection was that the 
-current regulatory code can accommodate VHT limits as well. I assume 
-that also includes the regulatory database format.
+If the low-level driver wants to support P2P GO
+powersave configuration, it must set the cfg80211
+flags and mac80211 will pass the parameters to it.
 
-Gr. AvS
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5d30e5f..97cf615 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -893,7 +893,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	u32 changed = BSS_CHANGED_BEACON_INT |
+ 		      BSS_CHANGED_BEACON_ENABLED |
+ 		      BSS_CHANGED_BEACON |
+-		      BSS_CHANGED_SSID;
++		      BSS_CHANGED_SSID |
++		      BSS_CHANGED_P2P_PS;
+ 	int err;
+ 
+ 	old = rtnl_dereference(sdata->u.ap.beacon);
+@@ -932,6 +933,9 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->vif.bss_conf.hidden_ssid =
+ 		(params->hidden_ssid != NL80211_HIDDEN_SSID_NOT_IN_USE);
+ 
++	sdata->vif.bss_conf.p2p_ctwindow = params->p2p_ctwindow;
++	sdata->vif.bss_conf.p2p_oppps = params->p2p_opp_ps;
++
+ 	err = ieee80211_assign_beacon(sdata, &params->beacon);
+ 	if (err < 0)
+ 		return err;
+@@ -1807,6 +1811,16 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
+ 		changed |= BSS_CHANGED_HT;
+ 	}
+ 
++	if (params->p2p_ctwindow >= 0) {
++		sdata->vif.bss_conf.p2p_ctwindow = params->p2p_ctwindow;
++		changed |= BSS_CHANGED_P2P_PS;
++	}
++
++	if (params->p2p_opp_ps >= 0) {
++		sdata->vif.bss_conf.p2p_oppps = params->p2p_opp_ps;
++		changed |= BSS_CHANGED_P2P_PS;
++	}
++
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	return 0;
+-- 
+1.8.0
 
