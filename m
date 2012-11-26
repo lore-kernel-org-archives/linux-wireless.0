@@ -1,46 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42542 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756312Ab2KUUQU (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:51368 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753110Ab2KZMRk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 15:16:20 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rtl8723ae: fix build break from "mac80211: support RX_FLAG_MACTIME_END"
-Date: Wed, 21 Nov 2012 15:05:55 -0500
-Message-Id: <1353528355-14132-1-git-send-email-linville@tuxdriver.com> (sfid-20121121_211625_744062_5F0636BD)
+	Mon, 26 Nov 2012 07:17:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 26 Nov 2012 04:17:40 -0800
+From: saravanad@posedge.com
+To: <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [RFC] mac80211: re-organize the rx rate calculation logic
+Message-ID: <d4c0566bd33c1afdcc0f7b820024d19f@posedge.com> (sfid-20121126_131744_235348_42BFE476)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
+Mac80211: currently the logic to calculate the rx rate is accessible 
+only in the cfg.c as the rate_idx_to_bitrate() is static function.
+The rx rate calculation might be needed by other files(modules) of 
+mac80211(possibly debugfs). So grouping the rx rate calculation logic to
+a separate function which can be accessed from other files. This change 
+will make the rx rate calculation implementation similar to tx rate.
 
-  CC      drivers/net/wireless/rtlwifi/rtl8723ae/trx.o
-drivers/net/wireless/rtlwifi/rtl8723ae/trx.c: In function ‘rtl8723ae_rx_query_desc’:
-drivers/net/wireless/rtlwifi/rtl8723ae/trx.c:324:21: error: ‘RX_FLAG_MACTIME_MPDU’ undeclared (first use in this function)
-drivers/net/wireless/rtlwifi/rtl8723ae/trx.c:324:21: note: each undeclared identifier is reported only once for each function it appears in
-make[3]: *** [drivers/net/wireless/rtlwifi/rtl8723ae/trx.o] Error 1
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Saravana <saravanad@posedge.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The diff file is generated from wireless-testing git tree.
+  net/mac80211/cfg.c      |   21 +++++++++++++--------
+  net/mac80211/sta_info.h |    2 ++
+  2 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-index 9719d54..87331d8 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-@@ -321,7 +321,7 @@ bool rtl8723ae_rx_query_desc(struct ieee80211_hw *hw,
- 	if (status->is_ht)
- 		rx_status->flag |= RX_FLAG_HT;
- 
--	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
-+	rx_status->flag |= RX_FLAG_MACTIME_START;
- 
- 	/* hw will set status->decrypted true, if it finds the
- 	 * frame is open data frame or mgmt frame.
--- 
-1.7.11.7
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6733b374..0999547 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -396,6 +396,18 @@ void sta_set_rate_info_tx(struct sta_info *sta,
+  	rate_idx_to_bitrate(rinfo, sta, rate->idx);
+  }
+
++void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info 
+*rinfo)
++{
++	rinfo->flags = 0;
++	if (sta->last_rx_rate_flag & RX_FLAG_HT)
++		rinfo->flags |= RATE_INFO_FLAGS_MCS;
++	if (sta->last_rx_rate_flag & RX_FLAG_40MHZ)
++		rinfo->flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (sta->last_rx_rate_flag & RX_FLAG_SHORT_GI)
++		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
++	rate_idx_to_bitrate(rinfo, sta, sta->last_rx_rate_idx);
++
++}
+  static void sta_set_sinfo(struct sta_info *sta, struct station_info 
+*sinfo)
+  {
+  	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -443,14 +455,7 @@ static void sta_set_sinfo(struct sta_info *sta, 
+struct station_info *sinfo)
+
+  	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &sinfo->txrate);
+
+-	sinfo->rxrate.flags = 0;
+-	if (sta->last_rx_rate_flag & RX_FLAG_HT)
+-		sinfo->rxrate.flags |= RATE_INFO_FLAGS_MCS;
+-	if (sta->last_rx_rate_flag & RX_FLAG_40MHZ)
+-		sinfo->rxrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+-	if (sta->last_rx_rate_flag & RX_FLAG_SHORT_GI)
+-		sinfo->rxrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+-	rate_idx_to_bitrate(&sinfo->rxrate, sta, sta->last_rx_rate_idx);
++	sta_set_rate_info_rx(sta, &sinfo->rxrate);
+
+  	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+  #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 776f3d0..122d853 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -550,6 +550,8 @@ int sta_info_flush(struct ieee80211_local *local,
+  void sta_set_rate_info_tx(struct sta_info *sta,
+  			  const struct ieee80211_tx_rate *rate,
+  			  struct rate_info *rinfo);
++void sta_set_rate_info_rx(struct sta_info *sta,
++			struct rate_info *rinfo);
+  void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
+  			  unsigned long exp_time);
 
