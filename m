@@ -1,89 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:55628 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752257Ab2KVSoS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:44:18 -0500
-Message-ID: <1353593475.27848.58.camel@cumari.coelho.fi> (sfid-20121122_194430_781596_50DD372E)
-Subject: Re: [PATCH 04/13] wlcore: split 18xx and 12xx scan mechanism
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Nov 2012 16:11:15 +0200
-In-Reply-To: <1353585928-28666-5-git-send-email-eliad@wizery.com>
-References: <1353585928-28666-1-git-send-email-eliad@wizery.com>
-	 <1353585928-28666-5-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:39058 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754149Ab2KZQGS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 11:06:18 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hm9so3611509wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 08:06:17 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 10/11] wlcore: gather information about firmware stability
+Date: Mon, 26 Nov 2012 18:05:49 +0200
+Message-Id: <1353945950-3899-11-git-send-email-arik@wizery.com> (sfid-20121126_170630_740900_80A2C53F)
+In-Reply-To: <1353945950-3899-1-git-send-email-arik@wizery.com>
+References: <1353945950-3899-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-22 at 14:05 +0200, Eliad Peller wrote:
-> The scan APIs of 12xx and 18xx are totally different.
-> Use some common functions as much as possible (e.g.
-> for setting scan channels), but split scan.c into
-> chip-specific scan.c files, each implementing its
-> own scan mechanism.
-> 
-> (in other words - move most of the current wlcore's
-> scan.c into wl12xx, and implement a similar mechanism
-> in 18xx, according to the new api)
-> 
-> New wlcore ops are introduced in order to call the
-> chip-specific scan functions.
-> 
-> The template indices used for each scan (regular/scheduled)
-> are also different between the chips, so set the correct
-> indices used for each scan type after identifying the chip.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+From: Luciano Coelho <coelho@ti.com>
 
-[...]
+It's sometimes useful to gather information about the firmware
+stability in long test runs, especially to see if problems are
+recurring frequently or not.  With this commit we count the number of
+times a hardware recovery was issued and print it out during recovery
+and in the driver_state in debugfs.
 
-> +/* probe request rate */
-> +enum
-> +{
-> +	WLCORE_SCAN_RATE_1	= 0,
-> +	WLCORE_SCAN_RATE_5_5	= 1,
-> +	WLCORE_SCAN_RATE_6	= 2,
-> +};
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/debugfs.c |    1 +
+ drivers/net/wireless/ti/wlcore/main.c    |    4 +++-
+ drivers/net/wireless/ti/wlcore/wlcore.h  |    2 ++
+ 3 files changed, 6 insertions(+), 1 deletion(-)
 
-WL18XX_SCAN_RATE_* instead?
-
-
-> +
-> +struct wl1271_cmd_scan_params {
-
-wl18xx_cmd_scan_params is better.
-
-[...]
-
-> +struct wl12xx_cmd_scan_stop {
-
-wl18xx_cmd_scan_stop instead?
-
-[...]
-
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index ff9437a..77479cb 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-
-[...]
-
-> @@ -3820,10 +3817,8 @@ static int wlcore_set_bssid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
->  						wlvif->band);
->  
->  	/* we only support sched_scan while not connected */
-> -	if (wl->sched_scanning) {
-> -		wl1271_scan_sched_scan_stop(wl, wlvif);
-> -		ieee80211_sched_scan_stopped(wl->hw);
-> -	}
-> +	if (wl->sched_scanning)
-> +		wl->ops->sched_scan_stop(wl, wlvif);
-
-What happened with the ieee80211_sched_scan_stopped()? 
-
---
-Luca.
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index 7fbab3c..78d2eb3 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -490,6 +490,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 	DRIVER_STATE_PRINT_HEX(chip.id);
+ 	DRIVER_STATE_PRINT_STR(chip.fw_ver_str);
+ 	DRIVER_STATE_PRINT_STR(chip.phy_fw_ver_str);
++	DRIVER_STATE_PRINT_INT(recovery_count);
+ 
+ #undef DRIVER_STATE_PRINT_INT
+ #undef DRIVER_STATE_PRINT_LONG
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index a6283df..a48a36c 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -879,7 +879,8 @@ static void wlcore_print_recovery(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return;
+ 
+-	wl1271_info("pc: 0x%x, hint_sts: 0x%08x", pc, hint_sts);
++	wl1271_info("pc: 0x%x, hint_sts: 0x%08x count: %d",
++				pc, hint_sts, ++wl->recovery_count);
+ 
+ 	wlcore_set_partition(wl, &wl->ptable[PART_WORK]);
+ }
+@@ -5685,6 +5686,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
+ 	wl->flags = 0;
+ 	wl->sg_enabled = true;
+ 	wl->sleep_auth = WL1271_PSM_ILLEGAL;
++	wl->recovery_count = 0;
+ 	wl->hw_pg_ver = -1;
+ 	wl->ap_ps_map = 0;
+ 	wl->ap_fw_ps_map = 0;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 5f580e5..4d5c69e 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -337,6 +337,8 @@ struct wl1271 {
+ 
+ 	bool enable_11a;
+ 
++	int recovery_count;
++
+ 	/* Most recently reported noise in dBm */
+ 	s8 noise;
+ 
+-- 
+1.7.9.5
 
