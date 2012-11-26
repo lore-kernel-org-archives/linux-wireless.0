@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1935 "EHLO mms3.broadcom.com"
+Received: from plane.gmane.org ([80.91.229.3]:32922 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751470Ab2KSUj0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 15:39:26 -0500
-Message-ID: <50AA98F1.8070501@broadcom.com> (sfid-20121119_213931_047639_AC0FF45C)
-Date: Mon, 19 Nov 2012 21:39:13 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	"Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 18/22] brcmsmac: Add brcms_dbg_ht() debug macro
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-19-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1352988492-21340-19-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1753684Ab2KZGkN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 01:40:13 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TcsMX-0007bj-MK
+	for linux-wireless@vger.kernel.org; Mon, 26 Nov 2012 07:40:18 +0100
+Received: from ice.139.client237.youtele.com ([ice.139.client237.youtele.com])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 07:40:13 +0100
+Received: from charvi.mehta by ice.139.client237.youtele.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 07:40:13 +0100
+To: linux-wireless@vger.kernel.org
+From: Charvi <charvi.mehta@einfochips.com>
+Subject: Re: Access Point Mode for Ralink RT5370? - Success
+Date: Mon, 26 Nov 2012 06:39:51 +0000 (UTC)
+Message-ID: <loom.20121126T073219-553@post.gmane.org> (sfid-20121126_074020_523240_D964F3B7)
+References: <20120719133452.2fb375ae@emcraft.com> <CAOZOX0V=npQuQ03kur0mo7PtkdGVYiFO5B3OKhB7CMibLk50Ew@mail.gmail.com> <20120807190140.4796a045@emcraft.com> <CAOZOX0V1_zA3iTXhz7J4_t-BxNQ6k6V_-A_jky2B=fpbya-Lqg@mail.gmail.com> <20120816192839.1e595e4b@emcraft.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2012 03:08 PM, Seth Forshee wrote:
-> Also convert relevant messages to use this macro.
+Sergei Poselenov <sposelenov@...> writes:
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |   35 ++++++++++++-----------
->   drivers/net/wireless/brcm80211/brcmsmac/debug.h |    1 +
->   drivers/net/wireless/brcm80211/brcmsmac/stf.c   |    8 ++++--
->   drivers/net/wireless/brcm80211/include/defs.h   |    1 +
->   4 files changed, 25 insertions(+), 20 deletions(-)
+> 
+> Hello Ivo, all,
+> 
+> I just want to report that we successfully built and configured DWA-140
+> (rev B3, RT5370 chip) USB-WiFi in access point mode. For this, we built
+> vcompat-wireless modules and hostapd and lbnl (required by hostapd).
+> 
+> Our target is the LPC1788 (ARM Cortex-M3 SOC) running Linux 2.6.33,
+> with USB support.
+> 
+> Our toolchain combo is CodeSourcery arm-2010q1, with uClibc modified to
+> support clone() and linuxthreads.
+> 
+> Thank you for your comments.
+> 
+> Regards,
+> Sergei Poselenov, Emcraft Systems
+ 
+Hi Sergei,
 
+   I am also using a USB stick with RT5370 and want to configure it in AP mode.
+I am new to the compat wireless drivers and modules but when I build them I do
+not get any module like "rt5370.ko". Which module from compat wireless package
+do I need to install for RT5370. I am using the latest compat wireless package
+from
+http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless.tar.bz2.
 
+Thanks,
+Charvi.
 
