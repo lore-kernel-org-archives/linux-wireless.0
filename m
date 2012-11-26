@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3376 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933250Ab2KOCqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 21:46:35 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Hante Meuleman" <meuleman@broadcom.com>
-Subject: [PATCH 09/19] brcmfmac: fix NULL pointer access in
- brcmf_fweh_detach()
-Date: Wed, 14 Nov 2012 18:46:13 -0800
-Message-ID: <1352947583-25341-10-git-send-email-frankyl@broadcom.com> (sfid-20121115_034654_871807_FAC0869F)
-In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
-References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42390 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757290Ab2KZXaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 18:30:21 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, zajec5@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] bcma: handle return value of pci_assign_resource
+Date: Tue, 27 Nov 2012 00:30:04 +0100
+Message-Id: <1353972604-28254-1-git-send-email-hauke@hauke-m.de> (sfid-20121127_003024_878873_017CA384)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+This fixes the following warning:
 
-brcmf_fweh_detach can be called while ifp is already NULL, due to
-init error. Fix NULL pointer access by checking ifp.
+  CC      drivers/bcma/driver_pci_host.o
+drivers/bcma/driver_pci_host.c: In function 'bcma_core_pci_fixup_addresses':
+drivers/bcma/driver_pci_host.c:555:23: error: ignoring return value of
+'pci_assign_resource', declared with attribute warn_unused_result
+[-Werror=unused-result]
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reported-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/bcma/driver_pci_host.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-index e1521af..283acee 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-@@ -374,11 +374,13 @@ void brcmf_fweh_detach(struct brcmf_pub *drvr)
- 	struct brcmf_if *ifp = drvr->iflist[0];
- 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index e564495..e6b5c89 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -538,7 +538,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, bcma_core_pci_fixup_pcibridge);
+ static void bcma_core_pci_fixup_addresses(struct pci_dev *dev)
+ {
+ 	struct resource *res;
+-	int pos;
++	int pos, err;
  
--	/* clear all events */
--	memset(eventmask, 0, BRCMF_EVENTING_MASK_LEN);
--	(void)brcmf_fil_iovar_data_set(ifp, "event_msgs",
--				       eventmask, BRCMF_EVENTING_MASK_LEN);
--
-+	if (ifp) {
-+		/* clear all events */
-+		memset(eventmask, 0, BRCMF_EVENTING_MASK_LEN);
-+		(void)brcmf_fil_iovar_data_set(ifp, "event_msgs",
-+					       eventmask,
-+					       BRCMF_EVENTING_MASK_LEN);
-+	}
- 	/* cancel the worker */
- 	cancel_work_sync(&fweh->event_work);
- 	WARN_ON(!list_empty(&fweh->event_q));
+ 	if (dev->bus->ops->read != bcma_core_pci_hostmode_read_config) {
+ 		/* This is not a device on the PCI-core bridge. */
+@@ -551,8 +551,12 @@ static void bcma_core_pci_fixup_addresses(struct pci_dev *dev)
+ 
+ 	for (pos = 0; pos < 6; pos++) {
+ 		res = &dev->resource[pos];
+-		if (res->flags & (IORESOURCE_IO | IORESOURCE_MEM))
+-			pci_assign_resource(dev, pos);
++		if (res->flags & (IORESOURCE_IO | IORESOURCE_MEM)) {
++			err = pci_assign_resource(dev, pos);
++			if (err)
++				pr_err("PCI: Problem fixing up the addresses on %s\n",
++				       pci_name(dev));
++		}
+ 	}
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, bcma_core_pci_fixup_addresses);
 -- 
-1.7.9.5
-
+1.7.10.4
 
