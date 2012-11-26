@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38515 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754259Ab2KNRNe (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:38810 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349Ab2KZM7Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 12:13:34 -0500
-Message-ID: <50A3D138.7010906@candelatech.com> (sfid-20121114_181337_703775_34445992)
-Date: Wed, 14 Nov 2012 09:13:28 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 26 Nov 2012 07:59:24 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so10678975oag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 04:59:24 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1353930289-2710-3-git-send-email-johannes@sipsolutions.net>
+References: <1353930289-2710-1-git-send-email-johannes@sipsolutions.net>
+	<1353930289-2710-3-git-send-email-johannes@sipsolutions.net>
+Date: Mon, 26 Nov 2012 14:59:23 +0200
+Message-ID: <CAB3XZEdRa2=_eq9q0Bt07SA=qasnpA6cm1r8YiLZ-qkiQAg5JA@mail.gmail.com> (sfid-20121126_135927_596690_FB0ACA7F)
+Subject: Re: [PATCH 2/2] mac80211: support P2P GO powersave configuration
+From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 'ip' blocking for long time trying to down station
-References: <5091ADDD.4050407@candelatech.com>  (sfid-20121101_000206_244719_62ADC7A2) <1352884491.9510.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1352884491.9510.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/14/2012 01:14 AM, Johannes Berg wrote:
-> Hi Ben,
+On Mon, Nov 26, 2012 at 1:44 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> Sorry for the late reply.
+> If the low-level driver wants to support P2P GO
+> powersave configuration, it must set the cfg80211
+> flags and mac80211 will pass the parameters to it.
 >
->> This is on the 400 station test machine.  No more crashes, but I'm seeing long
->> pauses (10+ seconds) when trying to down station interfaces (and sometimes other
->> commands as well).  The system cannot stabilize (my user-space app times out
->> after a while due to blocking on system() calls such as the one below,
->> and gives up, causing endless loops of up/down, associate, dhcp, etc)
->> I'm going to tweak the user-space code more to try to bring up stations
->> in smaller batches, but it still seems like there is room for improvement
->> in the OS.
->>
->> Using sysrq, I got this trace of the command.  I'm not sure it was blocked
->> in the same place the whole time, but it seems likely.  Any ideas for how
->> to speed this sort of thing up?
->>
->> ./local/sbin/ip link set sta140 down
->>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/mac80211/cfg.c | 16 +++++++++++++++-
+>  1 file changed, 15 insertions(+), 1 deletion(-)
 >
->>    [<ffffffff81070e2e>] flush_work+0x2b/0x34
->>    [<ffffffff8106f857>] ? cwq_dec_nr_in_flight+0x76/0x76
->>    [<ffffffffa026a673>] ieee80211_do_stop+0x379/0x544 [mac80211]
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 5d30e5f..97cf615 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -893,7 +893,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+>         u32 changed = BSS_CHANGED_BEACON_INT |
+>                       BSS_CHANGED_BEACON_ENABLED |
+>                       BSS_CHANGED_BEACON |
+> -                     BSS_CHANGED_SSID;
+> +                     BSS_CHANGED_SSID |
+> +                     BSS_CHANGED_P2P_PS;
+>         int err;
 >
-> I'm guessing that the other interfaces are actually re-scheduling work
-> items while this is trying to flush ... I'm not really sure how to
-> improve this behaviour though.
+you'd probably want to add it to ieee80211_reconfig as well.
 
-That seems very likely, as other stations would be trying to associate
-in this scenario....
-
-Can we just purge all of this interface's work items from the list w/out flushing
-everyone else's work?
-
-Thanks,
-Ben
-
->
-> johannes
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Eliad.
