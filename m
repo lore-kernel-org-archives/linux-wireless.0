@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4325 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751413Ab2KMVwl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 16:52:41 -0500
-Message-ID: <50A2C119.3050503@broadcom.com> (sfid-20121113_225245_962047_1A0C9870)
-Date: Tue, 13 Nov 2012 22:52:25 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from hotel311.server4you.de ([85.25.146.15]:58295 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755442Ab2KZVU6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 16:20:58 -0500
+Message-ID: <50B3DD38.5060808@monom.org> (sfid-20121126_222101_264869_73726C64)
+Date: Mon, 26 Nov 2012 22:20:56 +0100
+From: Daniel Wagner <wagi@monom.org>
 MIME-Version: 1.0
-To: "Randy Dunlap" <rdunlap@infradead.org>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Stephen Rothwell" <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH -next] wireless: brcmfmac: fix printk format warning
-References: <20121101163622.129b59967d2ee76e6946874a@canb.auug.org.au>
- <5092B4BE.4080803@infradead.org> <5092B900.2090801@broadcom.com> (
- sfid-20121101_190234_358746_9918835B)
- <1351798279.17469.0.camel@jlt4.sipsolutions.net>
- <50A26D66.4060603@infradead.org>
-In-Reply-To: <50A26D66.4060603@infradead.org>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
+ support
+References: <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org> <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org> <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org> <50AC07F2.8000400@monom.org> <50ACA28F.9010800@broadcom.com> <50ACA55F.5050406@monom.org> <20121121143528.GC23606@thinkpad-t410> <20121126193655.GF4556@thinkpad-t410>
+In-Reply-To: <20121126193655.GF4556@thinkpad-t410>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/13/2012 04:55 PM, Randy Dunlap wrote:
-> On 11/01/2012 12:31 PM, Johannes Berg wrote:
->
->> On Thu, 2012-11-01 at 19:01 +0100, Arend van Spriel wrote:
->>> On 11/01/2012 06:43 PM, Randy Dunlap wrote:
->>>> From: Randy Dunlap <rdunlap@infradead.org>
->>>>
->>>> Fix printk format warning for ssid_len, which is a size_t:
->>>>
->>>> drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:3941:2: warning: format '%d' expects type 'int', but argument 4 has type 'size_t'
->>>>
->>>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
->>>> Cc:	brcm80211-dev-list@broadcom.com
+On 26.11.2012 20:36, Seth Forshee wrote:
+> On Wed, Nov 21, 2012 at 08:35:28AM -0600, Seth Forshee wrote:
+>>> My 'test' setup is following: I downloaded a larger file and let a youtube
+>>> video play. With tracing enabled the download and the playback did work nicely.
 >>>
->>>
->>> We actually have a patch ready for that with credit to people who
->>> reported it. We can add you to that list ;-)
+>>> Without tracing enabled playing back only a youtube video was 'triggering'
+>>> the problem. It downloads a few seconds of content in a burst and then the playback
+>>> starts. Under normal conditions, the app will continue downloading the video at a
+>>> lower rate. But this normally doesn't happen right now. Often it will just stop
+>>> working and often the connection is completely blocked, e.g. pinging a host
+>>> wont work.
 >>
->> Which you've been sitting on for WAY too long already :)
+>> I'll see if I can reproduce, but if it's specific to the AP then I may
+>> not have any luck. Don't expect to hear much from me until next week
+>> though; I'm on holiday starting today and will be visiting family.
 >
-> ping Arend.
-> Please have your patch included in linux-next builds.  thanks.
->
+> It seems I'm unable to reproduce the problem with any of the APs
+> available to me, unfortunately.
 
-It has been posted to John on November 6th. The wireless summit in 
-Barcelona probably gave some delay.
+I tried it again with disabled the TX trace but I can't reproduce it 
+either. Well, I am sick of this AP and I might just get a better one 
+(which should be fairly simple).
 
-It is on the wireless list named "[PATCH 19/24] brcmfmac: fix build 
-regression".
+Thanks for looking into this.
 
-Gr. AvS
+cheers,
+daniel
 
