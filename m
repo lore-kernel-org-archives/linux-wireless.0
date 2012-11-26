@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36914 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752955Ab2KSQXD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 11:23:03 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: sujith@msujith.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix channel context warning on suspend
-Date: Mon, 19 Nov 2012 17:23:31 +0100
-Message-Id: <1353342211-21473-1-git-send-email-johannes@sipsolutions.net> (sfid-20121119_172307_851080_E363FEF2)
+Received: from mail.neratec.com ([80.75.119.105]:46943 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755204Ab2KZMXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 07:23:55 -0500
+Message-ID: <50B35E31.3080507@neratec.com> (sfid-20121126_132411_569777_525FD109)
+Date: Mon, 26 Nov 2012 13:18:57 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/1] ath9k: Add radiotap vendor specific data example
+References: <1353667565-4212-1-git-send-email-Wojciech.Dubowik@neratec.com>  (sfid-20121123_115242_843402_5FE9C369) <1353764695.9789.4.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1353764695.9789.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 11/24/2012 02:44 PM, Johannes Berg wrote:
+> On Fri, 2012-11-23 at 11:46 +0100, Wojciech Dubowik wrote:
+>
+>> +			rxs->vendor_radiotap_bitmap = 0x00000001;
+> I would recommend adding multiple fields so that it's extensible in the
+> future or some things can be left out:
+>
+> field 0 (0x1):
+> 	4 x u8, alignment 1 - RSSI data
+> field 1 (0x2):
+> 	4 x u32 + 1 x u16, alignment ? - evm data
+I will try to add fields which could be switched on/off through sysfs
+with bitmask.
 
-If suspending with an idle interface that isn't
-actually operating, the channel context warning
-in ieee80211_vif_release_channel() triggers. Fix
-this by modifying the warning, it should only be
-warning if we're not suspending and get here.
-
-Reported-by: Sujith Manoharan <sujith@msujith.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/chan.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index a2b06d4..58220eb 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -376,7 +376,8 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- {
--	WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
-+	WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev) &&
-+		!sdata->local->quiescing);
- 
- 	mutex_lock(&sdata->local->chanctx_mtx);
- 	__ieee80211_vif_release_channel(sdata);
--- 
-1.8.0
+Wojtek
+>
+>
+> Also:
+> Ness, STBC are going to be standardised.
+> noise floor is already standardised I think
+>
+> johannes
+>
 
