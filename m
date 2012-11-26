@@ -1,38 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.legal.de ([46.38.240.131]:60289 "EHLO mail.legal.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932238Ab2K1PV0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 10:21:26 -0500
-Message-ID: <50B62BEB.6020109@schwarze-allianz.de> (sfid-20121128_162131_467038_243B4005)
-Date: Wed, 28 Nov 2012 16:21:15 +0100
-From: Jens Kapitza <j.kapitza@schwarze-allianz.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi hibernate / suspend issue
-References: <50B61C71.6060007@schwarze-allianz.de> (sfid-20121128_152227_935873_AFE02FFF) <1354113010.9345.27.camel@jlt4.sipsolutions.net> <50B62254.9070700@schwarze-allianz.de> <1354113722.9345.28.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1354113722.9345.28.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:35475 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752765Ab2KZLoY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 06:44:24 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Tcx6s-0001Om-HM
+	for linux-wireless@vger.kernel.org; Mon, 26 Nov 2012 12:44:22 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/2] P2P GO powersave configuration
+Date: Mon, 26 Nov 2012 12:44:47 +0100
+Message-Id: <1353930289-2710-1-git-send-email-johannes@sipsolutions.net> (sfid-20121126_124427_368430_F2DFAD94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I'm planning to merge this, having the extra feature flags
+is actually useful.
 
-> just enter "dmesg" and pastebin the result somewhere
->
-> johannes
->
-this line seems to be wrong
+johannes
 
-  [ 4650.687346] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
-
-
-working iwlwifi dmesg
-
-http://pastebin.com/S9GwEMpg
-
-
-after suspend
-
-http://pastebin.com/ZB1BLwkc
-
-jens
