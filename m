@@ -1,60 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36562 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752478Ab2KXW0E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2012 17:26:04 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wim@iguana.be,
-	linux-watchdog@vger.kernel.org, castet.matthieu@free.fr,
-	biblbroks@sezampro.rs, m@bues.ch, zajec5@gmail.com,
-	linux-mips@linux-mips.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 13/15] ssb: extif: add check for max value in watchdog
-Date: Sat, 24 Nov 2012 23:24:13 +0100
-Message-Id: <1353795855-22236-14-git-send-email-hauke@hauke-m.de> (sfid-20121124_233122_514589_4EC5CE61)
-In-Reply-To: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
-References: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:35193 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504Ab2KZKcc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 05:32:32 -0500
+Message-ID: <1353925978.9488.11.camel@jlt4.sipsolutions.net> (sfid-20121126_113236_518914_F040F53B)
+Subject: Re: [PATCH] mac80211: in ADHOC print debug message for every Auth
+ message
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@open-mesh.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 26 Nov 2012 11:32:58 +0100
+In-Reply-To: <1353882267-27576-1-git-send-email-antonio@open-mesh.com>
+References: <1353882267-27576-1-git-send-email-antonio@open-mesh.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prevent the watchdog register ion the extif core to be set to a too
-high value.
+On Sun, 2012-11-25 at 23:24 +0100, Antonio Quartulli wrote:
+> The debug message has to be printed also for an Auth message with
+> auth_sequence != 1. This helps understanding whether the two Auth
+> messages are exchanged correctly or not.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/driver_extif.c           |    5 +++--
- include/linux/ssb/ssb_driver_extif.h |    1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
+Applied.
 
-diff --git a/drivers/ssb/driver_extif.c b/drivers/ssb/driver_extif.c
-index dc47f30..0aa4c2a 100644
---- a/drivers/ssb/driver_extif.c
-+++ b/drivers/ssb/driver_extif.c
-@@ -112,9 +112,10 @@ void ssb_extif_get_clockcontrol(struct ssb_extif *extif,
- 	*m = extif_read32(extif, SSB_EXTIF_CLOCK_SB);
- }
- 
--void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
--				  u32 ticks)
-+void ssb_extif_watchdog_timer_set(struct ssb_extif *extif, u32 ticks)
- {
-+	if (ticks > SSB_EXTIF_WATCHDOG_MAX_TIMER)
-+		ticks = SSB_EXTIF_WATCHDOG_MAX_TIMER;
- 	extif_write32(extif, SSB_EXTIF_WATCHDOG, ticks);
- }
- 
-diff --git a/include/linux/ssb/ssb_driver_extif.h b/include/linux/ssb/ssb_driver_extif.h
-index 91161f0..34072f5 100644
---- a/include/linux/ssb/ssb_driver_extif.h
-+++ b/include/linux/ssb/ssb_driver_extif.h
-@@ -152,6 +152,7 @@
- /* watchdog */
- #define SSB_EXTIF_WATCHDOG_CLK		48000000	/* Hz */
- 
-+#define SSB_EXTIF_WATCHDOG_MAX_TIMER	((1 << 28) - 1)
- 
- 
- #ifdef CONFIG_SSB_DRIVER_EXTIF
--- 
-1.7.10.4
+johannes
 
