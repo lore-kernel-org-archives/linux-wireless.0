@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61294 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754501Ab2K1QuA convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34918 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754003Ab2KZQBb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 11:50:00 -0500
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"mathias.kretschmer@fokus.fraunhofer.de"
-	<mathias.kretschmer@fokus.fraunhofer.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>
-Subject: Re: [ath9k-devel] [RFC 1/3] nl80211: add spec scan flag
-Date: Wed, 28 Nov 2012 16:49:58 +0000
-Message-ID: <8887AA04B7EC49479420AE48C5F94A930172CDA2@NASANEXD02D.na.qualcomm.com> (sfid-20121128_175013_167478_C81B77EF)
-In-Reply-To: <20121128161219.GA6642@pandem0nium>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 26 Nov 2012 11:01:31 -0500
+Date: Mon, 26 Nov 2012 10:54:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmsmac tx patches for 3.7
+Message-ID: <20121126155455.GB27232@tuxdriver.com> (sfid-20121126_170135_306266_43668E1E)
+References: <50AE8BD3.8040902@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50AE8BD3.8040902@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Nov 22, 2012 at 09:32:19PM +0100, Arend van Spriel wrote:
 
+> When Seth posted his rework on brcmsmac transmit, we had a number of
+> patches ready in the same area albeit less rigorous. With Seth's patches
+> lined up in wireless-next for 3.8, I am wondering what to do here.
+> Should I send our patches against the wireless tree? These patches will
+> definitely result in conflicts when merging to wireless-next, which you
+> typically do. Actually, we do not want these patches in wireless-next as
+> rework from Seth makes them irrelevant.
+> 
+> Any advice on this?
 
-On 11/28/12 8:12 AM, "Simon Wunderlich"
-<simon.wunderlich@s2003.tu-chemnitz.de> wrote:
+If they are fixes, then they should be small and obvious -- hopefully
+that makes the merging relatively easy?  You might try applying
+them to a local wireless tree and pulling that into a local copy of
+wireless-next, then resolving the conflicts locally so that you can
+give me some idea of any tricky merges?
 
->Hmm, that would be possible as well ... Using the scan function is very
->convenient as I don't have to think about cycling, channel lists, etc.
->But putting more control to userspace is also possible, if we can ask the
->driver to just have a "quick spectral peek" on another channel.
-
-Well, you may not need to think about channel cycling etc. for scan
-operations, but you won't get much control over the timing or dwell
-duration for that matter. Remain-on-channel gives you that.
-
->Anyway, you'd suggest to use the NL80211 remain on channel command for
->that?
-
-Yes.
-
->Or add a new "spectral scan" nl80211 command to do a spectral scan on this
->(or multiple) channels, and use the various functions from
->mac80211/offchannel.c?
-
-I would rather add a flag to the existing r-o-c command to indicate that
-spectral scan functionality is to be enabled (well, assuming Johannes is
-fine with this).
-
->BTW, is there any limitation to remain on channel commands, like will they
->work on AP ifaces, Ad-Hoc ifaces, MultiSSID in general, etc?
-
-I hope not. There may be some practical issues with not all drivers
-supporting this, but remain-on-channel is the mechanism we use for
-supporting concurrent operations (e.g., P2P negotiations or GAS/ANQP) and
-making this work in all combinations would be important regardless.
-
-- Jouni
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
