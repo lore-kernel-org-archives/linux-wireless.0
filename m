@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:54033 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753488Ab2KMRvq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36546 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756930Ab2KZRtI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 12:51:46 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k13so11119181iea.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:51:46 -0800 (PST)
-Message-ID: <50A288AD.2060704@lwfinger.net> (sfid-20121113_185150_243898_407A5B38)
-Date: Tue, 13 Nov 2012 11:51:41 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Maxim Mikityanskiy <maxtram95@gmail.com>
-CC: Greg Kroah-Hartman <greg@kroah.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/17] RTL8187SE driver cleanups
-References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com> <50A17A2B.6060301@lwfinger.net> <CAKErNvpCD+HXy10PRJ6CEfZpw6Z8n6yBPwjdYjDv4QW1zUX_xg@mail.gmail.com>
-In-Reply-To: <CAKErNvpCD+HXy10PRJ6CEfZpw6Z8n6yBPwjdYjDv4QW1zUX_xg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 26 Nov 2012 12:49:08 -0500
+Message-ID: <1353952160.2800.8.camel@jlt4.sipsolutions.net> (sfid-20121126_184918_475433_6F6C715B)
+Subject: Re: Kernel splat from 3.5.7+ (tainted)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 26 Nov 2012 18:49:20 +0100
+In-Reply-To: <50B3A275.3010302@candelatech.com> (sfid-20121126_184257_410312_9D3ECF7B)
+References: <50B3A275.3010302@candelatech.com>
+	 (sfid-20121126_184257_410312_9D3ECF7B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/13/2012 11:18 AM, Maxim Mikityanskiy wrote:
->
-> I'm sorry, I'll remake patches with correct base and resend them.
-> Really, you could use "cd drivers/staging/rtl8187se" instead of sed,
-> it might be easier for you.
+On Mon, 2012-11-26 at 09:10 -0800, Ben Greear wrote:
+> This looks like some sort of locking bug...the warning comes from the code
+> in softirq.c (below).
+...
+> Nov 21 19:33:17 localhost kernel: WARNING: at /home/greearb/git/linux-3.5.dev.y/kernel/softirq.c:159 _local_bh_enable_ip+0x41/0x9f()
+> Nov 21 19:33:17 localhost kernel: Hardware name: To be filled by O.E.M.
+...
+> Nov 21 19:33:17 localhost kernel: Pid: 5905, comm: kworker/u:0 Tainted: P           O 3.5.7+ #27
+> Nov 21 19:33:17 localhost kernel: Call Trace:
+> Nov 21 19:33:17 localhost kernel: <IRQ>  [<ffffffff8105c5cc>] warn_slowpath_common+0x80/0x98
+> Nov 21 19:33:17 localhost kernel: [<ffffffff8105c5f9>] warn_slowpath_null+0x15/0x17
+> Nov 21 19:33:17 localhost kernel: [<ffffffff81062dfa>] _local_bh_enable_ip+0x41/0x9f
+> Nov 21 19:33:17 localhost kernel: [<ffffffff81062e61>] local_bh_enable_ip+0x9/0xb
+> Nov 21 19:33:17 localhost kernel: [<ffffffff814e31a6>] _raw_spin_unlock_bh+0x1c/0x1e
+> Nov 21 19:33:17 localhost kernel: [<ffffffff8144fee4>] destroy_conntrack+0xbd/0xfc
+> Nov 21 19:33:17 localhost kernel: [<ffffffff8144da47>] nf_conntrack_destroy+0x27/0x2e
+> Nov 21 19:33:17 localhost kernel: [<ffffffff81422934>] skb_release_head_state+0x9a/0xdc
+> Nov 21 19:33:17 localhost kernel: [<ffffffff81422b77>] __kfree_skb+0x11/0x7d
+> Nov 21 19:33:17 localhost kernel: [<ffffffff81422c2c>] consume_skb+0x28/0x2a
+> Nov 21 19:33:17 localhost kernel: [<ffffffffa01fa2f9>] __ieee80211_tx+0x1f9/0x31a [mac80211]
 
-Actually, that would be more trouble as I always use quilt to handle patches 
-like this, and having the patches directory in more than one place would be a 
-hassle.
 
-Larry
+I think the problem is the dev_kfree_skb(), it should be
+dev_kfree_skb_any() in line 1299 in tx.c because ieee80211_tx() calls
+__ieee80211_tx() with RCU lock held. It has pretty much done that
+forever though, so it's surprising this shows up now? Was that some sort
+of special frame?
 
+Note that this is actually fixed in wireless-next.
+
+johannes
 
