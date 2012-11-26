@@ -1,197 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:33149 "EHLO
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:54416 "EHLO
 	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753304Ab2K2Wqy (ORCPT
+	with ESMTP id S1754121Ab2KZQGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 17:46:54 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so4537612wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2012 14:46:53 -0800 (PST)
+	Mon, 26 Nov 2012 11:06:10 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so2233462wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 08:06:10 -0800 (PST)
 From: Arik Nemtsov <arik@wizery.com>
 To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2] wl18xx: set last Tx rate from FW status
-Date: Fri, 30 Nov 2012 00:46:48 +0200
-Message-Id: <1354229208-7810-1-git-send-email-arik@wizery.com> (sfid-20121129_234711_708571_F1DE7C67)
+Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 07/11] wlcore: mask out CCK rates when starting GO
+Date: Mon, 26 Nov 2012 18:05:46 +0200
+Message-Id: <1353945950-3899-8-git-send-email-arik@wizery.com> (sfid-20121126_170616_238612_3318BEAE)
+In-Reply-To: <1353945950-3899-1-git-send-email-arik@wizery.com>
+References: <1353945950-3899-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Obtain the last Tx rate from the FW status and translate it to
-the mac80211 rate+flag format before sending it up via the Tx status.
+From: Eliad Peller <eliad@wizery.com>
 
+mask out CCK rates from the AP's local rates
+when the interace is p2p interface (GO).
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
-v2: passed entire tx_rate pointer to function, so we can set
-the bitwise fields within.
+ drivers/net/wireless/ti/wlcore/cmd.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
- drivers/net/wireless/ti/wl18xx/tx.c       |   54 ++++++++++++++++++++++++---
- drivers/net/wireless/ti/wlcore/conf.h     |   57 ++++++++++++++++++++++-------
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    5 ++-
- 3 files changed, 96 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/tx.c b/drivers/net/wireless/ti/wl18xx/tx.c
-index 5b1fb10..57c6943 100644
---- a/drivers/net/wireless/ti/wl18xx/tx.c
-+++ b/drivers/net/wireless/ti/wl18xx/tx.c
-@@ -28,6 +28,49 @@
- #include "wl18xx.h"
- #include "tx.h"
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 65f071d..fc508ee 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -591,6 +591,8 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
  
-+static
-+void wl18xx_get_last_tx_rate(struct wl1271 *wl, struct ieee80211_vif *vif,
-+			     struct ieee80211_tx_rate *rate)
-+{
-+	u8 fw_rate = wl->fw_status_2->counters.tx_last_rate;
-+
-+	if (fw_rate > CONF_HW_RATE_INDEX_MAX) {
-+		wl1271_error("last Tx rate invalid: %d", fw_rate);
-+		rate->idx = 0;
-+		rate->flags = 0;
-+		return;
-+	}
-+
-+	if (fw_rate <= CONF_HW_RATE_INDEX_54MBPS) {
-+		rate->idx = fw_rate;
-+		rate->flags = 0;
-+	} else {
-+		rate->flags = IEEE80211_TX_RC_MCS;
-+		rate->idx = fw_rate - CONF_HW_RATE_INDEX_MCS0;
-+
-+		/* SGI modifier is counted as a separate rate */
-+		if (fw_rate >= CONF_HW_RATE_INDEX_MCS7_SGI)
-+			(rate->idx)--;
-+		if (fw_rate == CONF_HW_RATE_INDEX_MCS15_SGI)
-+			(rate->idx)--;
-+
-+		/* this also covers the 40Mhz SGI case (= MCS15) */
-+		if (fw_rate == CONF_HW_RATE_INDEX_MCS7_SGI ||
-+		    fw_rate == CONF_HW_RATE_INDEX_MCS15_SGI)
-+			rate->flags |= IEEE80211_TX_RC_SHORT_GI;
-+
-+		if (fw_rate > CONF_HW_RATE_INDEX_MCS7_SGI && vif) {
-+			struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+			if (wlvif->channel_type == NL80211_CHAN_HT40MINUS ||
-+			    wlvif->channel_type == NL80211_CHAN_HT40PLUS) {
-+				/* adjustment needed for range 0-7 */
-+				rate->idx -= 8;
-+				rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
-+			}
-+		}
-+	}
-+}
-+
- static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
- {
- 	struct ieee80211_tx_info *info;
-@@ -44,7 +87,6 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
- 	/* a zero bit indicates Tx success */
- 	tx_success = !(tx_stat_byte & BIT(WL18XX_TX_STATUS_STAT_BIT_IDX));
+ 	supported_rates = CONF_TX_ENABLED_RATES | CONF_TX_MCS_RATES |
+ 		wlcore_hw_ap_get_mimo_wide_rate_mask(wl, wlvif);
++	if (wlvif->p2p)
++		supported_rates &= ~CONF_TX_CCK_RATES;
  
--
- 	skb = wl->tx_frames[id];
- 	info = IEEE80211_SKB_CB(skb);
- 
-@@ -56,11 +98,13 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
- 	/* update the TX status info */
- 	if (tx_success && !(info->flags & IEEE80211_TX_CTL_NO_ACK))
- 		info->flags |= IEEE80211_TX_STAT_ACK;
-+	/*
-+	 * first pass info->control.vif while it's valid, and then fill out
-+	 * the info->status structures
-+	 */
-+	wl18xx_get_last_tx_rate(wl, info->control.vif, &info->status.rates[0]);
- 
--	/* no real data about Tx completion */
--	info->status.rates[0].idx = -1;
--	info->status.rates[0].count = 0;
--	info->status.rates[0].flags = 0;
-+	info->status.rates[0].count = 1; /* no data about retries */
- 	info->status.ack_signal = -1;
- 
- 	if (!tx_success)
-diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
-index e07d74d..ad15cae 100644
---- a/drivers/net/wireless/ti/wlcore/conf.h
-+++ b/drivers/net/wireless/ti/wlcore/conf.h
-@@ -57,20 +57,49 @@ enum {
- };
- 
- enum {
--	CONF_HW_RATE_INDEX_1MBPS   = 0,
--	CONF_HW_RATE_INDEX_2MBPS   = 1,
--	CONF_HW_RATE_INDEX_5_5MBPS = 2,
--	CONF_HW_RATE_INDEX_6MBPS   = 3,
--	CONF_HW_RATE_INDEX_9MBPS   = 4,
--	CONF_HW_RATE_INDEX_11MBPS  = 5,
--	CONF_HW_RATE_INDEX_12MBPS  = 6,
--	CONF_HW_RATE_INDEX_18MBPS  = 7,
--	CONF_HW_RATE_INDEX_22MBPS  = 8,
--	CONF_HW_RATE_INDEX_24MBPS  = 9,
--	CONF_HW_RATE_INDEX_36MBPS  = 10,
--	CONF_HW_RATE_INDEX_48MBPS  = 11,
--	CONF_HW_RATE_INDEX_54MBPS  = 12,
--	CONF_HW_RATE_INDEX_MAX     = CONF_HW_RATE_INDEX_54MBPS,
-+	CONF_HW_RATE_INDEX_1MBPS      = 0,
-+	CONF_HW_RATE_INDEX_2MBPS      = 1,
-+	CONF_HW_RATE_INDEX_5_5MBPS    = 2,
-+	CONF_HW_RATE_INDEX_11MBPS     = 3,
-+	CONF_HW_RATE_INDEX_6MBPS      = 4,
-+	CONF_HW_RATE_INDEX_9MBPS      = 5,
-+	CONF_HW_RATE_INDEX_12MBPS     = 6,
-+	CONF_HW_RATE_INDEX_18MBPS     = 7,
-+	CONF_HW_RATE_INDEX_24MBPS     = 8,
-+	CONF_HW_RATE_INDEX_36MBPS     = 9,
-+	CONF_HW_RATE_INDEX_48MBPS     = 10,
-+	CONF_HW_RATE_INDEX_54MBPS     = 11,
-+	CONF_HW_RATE_INDEX_MCS0       = 12,
-+	CONF_HW_RATE_INDEX_MCS1       = 13,
-+	CONF_HW_RATE_INDEX_MCS2       = 14,
-+	CONF_HW_RATE_INDEX_MCS3       = 15,
-+	CONF_HW_RATE_INDEX_MCS4       = 16,
-+	CONF_HW_RATE_INDEX_MCS5       = 17,
-+	CONF_HW_RATE_INDEX_MCS6       = 18,
-+	CONF_HW_RATE_INDEX_MCS7       = 19,
-+	CONF_HW_RATE_INDEX_MCS7_SGI   = 20,
-+	CONF_HW_RATE_INDEX_MCS0_40MHZ = 21,
-+	CONF_HW_RATE_INDEX_MCS1_40MHZ = 22,
-+	CONF_HW_RATE_INDEX_MCS2_40MHZ = 23,
-+	CONF_HW_RATE_INDEX_MCS3_40MHZ = 24,
-+	CONF_HW_RATE_INDEX_MCS4_40MHZ = 25,
-+	CONF_HW_RATE_INDEX_MCS5_40MHZ = 26,
-+	CONF_HW_RATE_INDEX_MCS6_40MHZ = 27,
-+	CONF_HW_RATE_INDEX_MCS7_40MHZ = 28,
-+	CONF_HW_RATE_INDEX_MCS7_40MHZ_SGI = 29,
-+
-+	/* MCS8+ rates overlap with 40Mhz rates */
-+	CONF_HW_RATE_INDEX_MCS8       = 21,
-+	CONF_HW_RATE_INDEX_MCS9       = 22,
-+	CONF_HW_RATE_INDEX_MCS10      = 23,
-+	CONF_HW_RATE_INDEX_MCS11      = 24,
-+	CONF_HW_RATE_INDEX_MCS12      = 25,
-+	CONF_HW_RATE_INDEX_MCS13      = 26,
-+	CONF_HW_RATE_INDEX_MCS14      = 27,
-+	CONF_HW_RATE_INDEX_MCS15      = 28,
-+	CONF_HW_RATE_INDEX_MCS15_SGI  = 29,
-+
-+	CONF_HW_RATE_INDEX_MAX        = CONF_HW_RATE_INDEX_MCS7_40MHZ_SGI,
- };
- 
- #define CONF_HW_RXTX_RATE_UNSUPPORTED 0xff
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 670d12f..0194f55 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -130,7 +130,10 @@ struct wl_fw_packet_counters {
- 	/* Cumulative counter of released Voice memory blocks */
- 	u8 tx_voice_released_blks;
- 
--	u8 padding[3];
-+	/* Tx rate of the last transmitted packet */
-+	u8 tx_last_rate;
-+
-+	u8 padding[2];
- } __packed;
- 
- /* FW status registers */
+ 	wl1271_debug(DEBUG_CMD, "cmd role start ap with supported_rates 0x%08x",
+ 		     supported_rates);
 -- 
 1.7.9.5
 
