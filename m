@@ -1,88 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42616 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932713Ab2K0A0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 19:26:31 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, wim@iguana.be
-Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 11/15] ssb: set the PMU watchdog if available
-Date: Tue, 27 Nov 2012 01:25:21 +0100
-Message-Id: <1353975925-32056-12-git-send-email-hauke@hauke-m.de> (sfid-20121127_014526_548177_14CEACF0)
-In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
-References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:55468 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754526Ab2KZNWE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 08:22:04 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 26 Nov 2012 05:22:03 -0800
+From: saravanad@posedge.com
+To: <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [RFC] mac80211: add debugfs file for current tx rate
+Message-ID: <3cce329ee6381f0ab4dd4d86ea76c2da@posedge.com> (sfid-20121126_142208_666910_D91EB2C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some ssb based devices have a PMU and the PMU watchdog register should
-be used instead of the register in the chip common part, if the device
-has a PMU. This patch also calculates the maximal number the watchdog
-could be set to.
+Add a debugfs file showing the current tx rate.
+The information available in the rc_stats file
+doesn't evidently provides us the current tx rate.
+This patch adds the support for the same.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Saravana <saravanad@posedge.com>
 ---
- drivers/ssb/driver_chipcommon.c |   38 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 36 insertions(+), 2 deletions(-)
+The diff file is generated from wireless-testing git tree.
+  net/mac80211/debugfs_sta.c |   16 ++++++++++++++++
+  1 files changed, 16 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
-index 603b630..6e080f6 100644
---- a/drivers/ssb/driver_chipcommon.c
-+++ b/drivers/ssb/driver_chipcommon.c
-@@ -288,6 +288,24 @@ static u32 ssb_chipco_alp_clock(struct ssb_chipcommon *cc)
- 	return 20000000;
- }
- 
-+static u32 ssb_chipco_watchdog_get_max_timer(struct ssb_chipcommon *cc)
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 89281d2..85d2279 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -321,6 +321,21 @@ static ssize_t sta_ht_capa_read(struct file *file, 
+char __user *userbuf,
+  }
+  STA_OPS(ht_capa);
+
++static ssize_t sta_current_tx_rate_read(struct file *file, char __user 
+*userbuf,
++				      size_t count, loff_t *ppos)
 +{
-+	u32 nb;
++	struct sta_info *sta = file->private_data;
++	struct rate_info rinfo;
++	u16 rate;
++	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
++	rate = cfg80211_calculate_bitrate(&rinfo);
 +
-+	if (cc->capabilities & SSB_CHIPCO_CAP_PMU) {
-+		if (cc->dev->id.revision < 26)
-+			nb = 16;
-+		else
-+			nb = (cc->dev->id.revision >= 37) ? 32 : 24;
-+	} else {
-+		nb = 28;
-+	}
-+	if (nb == 32)
-+		return 0xffffffff;
-+	else
-+		return (1 << nb) - 1;
++	return mac80211_format_buffer(userbuf, count, ppos, "%d.%d MBit/s\n",
++					rate/10, rate%10);
++
 +}
++STA_OPS(current_tx_rate);
 +
- void ssb_chipcommon_init(struct ssb_chipcommon *cc)
- {
- 	if (!cc->dev)
-@@ -405,8 +423,24 @@ void ssb_chipco_timing_init(struct ssb_chipcommon *cc,
- /* Set chip watchdog reset timer to fire in 'ticks' backplane cycles */
- void ssb_chipco_watchdog_timer_set(struct ssb_chipcommon *cc, u32 ticks)
- {
--	/* instant NMI */
--	chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
-+	u32 maxt;
-+	enum ssb_clkmode clkmode;
-+
-+	maxt = ssb_chipco_watchdog_get_max_timer(cc);
-+	if (cc->capabilities & SSB_CHIPCO_CAP_PMU) {
-+		if (ticks == 1)
-+			ticks = 2;
-+		else if (ticks > maxt)
-+			ticks = maxt;
-+		chipco_write32(cc, SSB_CHIPCO_PMU_WATCHDOG, ticks);
-+	} else {
-+		clkmode = ticks ? SSB_CLKMODE_FAST : SSB_CLKMODE_DYNAMIC;
-+		ssb_chipco_set_clockmode(cc, clkmode);
-+		if (ticks > maxt)
-+			ticks = maxt;
-+		/* instant NMI */
-+		chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
-+	}
- }
- 
- void ssb_chipco_irq_mask(struct ssb_chipcommon *cc, u32 mask, u32 value)
--- 
-1.7.10.4
+  #define DEBUGFS_ADD(name) \
+  	debugfs_create_file(#name, 0400, \
+  		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+@@ -369,6 +384,7 @@ void ieee80211_sta_debugfs_add(struct sta_info 
+*sta)
+  	DEBUGFS_ADD(dev);
+  	DEBUGFS_ADD(last_signal);
+  	DEBUGFS_ADD(ht_capa);
++	DEBUGFS_ADD(current_tx_rate);
 
+  	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
+  	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
