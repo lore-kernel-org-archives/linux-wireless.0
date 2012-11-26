@@ -1,88 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44228 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753733Ab2KPXfO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 18:35:14 -0500
-Message-ID: <50A6CDA0.2080904@hauke-m.de> (sfid-20121117_003518_149244_9EB5E751)
-Date: Sat, 17 Nov 2012 00:34:56 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:57828 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751588Ab2KZFUH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 00:20:07 -0500
+Message-ID: <50B2FC03.4050101@posedge.com> (sfid-20121126_062013_385056_61A6DD58)
+Date: Mon, 26 Nov 2012 10:50:03 +0530
+From: Saravana <saravanad@posedge.com>
 MIME-Version: 1.0
-To: Elliott Mitchell <ehem+outbound@m5p.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcm4716 and PCIe
-References: <20121116044429.GA73539@scollay.m5p.com> <50A67454.6000804@hauke-m.de> <20121116201705.GA75969@scollay.m5p.com>
-In-Reply-To: <20121116201705.GA75969@scollay.m5p.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: RFC[4/4] mac80211: add statistic to debugfs
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/16/2012 09:17 PM, Elliott Mitchell wrote:
-> On Fri, Nov 16, 2012 at 06:13:56PM +0100, Hauke Mehrtens wrote:
->> On 11/16/2012 05:44 AM, Elliott Mitchell wrote:
->>> I happened to be browsing the linux-mips git repository and noticed the
->>> commit at Tue, 10 Jul 2012 16:16:47.
->>
->> What commit are you talking about? Do you have a commit id?
-> 
-> Looking at: http://git.linux-mips.org/?p=ralf/linux.git;a=commitdiff;h=1dfef20a4cf82997d4c7520138ed8188a181241c
-> 
-> I'm guessing "1dfef20a4cf82997d4c7520138ed8188a181241c" is the commit id.
-> 
-> Subject is: "brcmsmac: remove PCI_FORCEHT() macro"
-> 
-> Description is:
-> The BCM4716 is a SoC and does not have a PCI client interface, so this
-> condition is never true.
-> 
-> Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> I'm guessing the piece of code is invoked on all flavors of bcm471[678],
-> so while it doesn't get invoked on most devices, some of them it
-> definitely can be.
+Provide additional statistic support to the debugfs.
 
-I have never seen a bcm4718 with a PCIe controller running in client
-mode and it does not make sense to me. PCIe client mode means it is
-connected to some other controller like in a Intel chipset in a desktop
-PC, but there you would use a normal PCIe card and not a SoC. The
-controller is normally running in host mode, so an other PCIe card like
-the BCM43224 could be connected to the PCIe controller in the SoC. I
-have a Netgear WNDR3400 with a BCM4718 and a BCM43224 connected to the
-PCIe host controller in the SoC.
+Last Rx Rate:
+  Currently there is no stats available in the debugfs for rx rate. This 
+statistics adds the rate of the last received packet from the station.
 
->>> The Broadcom 4716 *does* have an external PCI Express interface! Take a
->>> look at the images on http://wiki.openwrt.org/toh/asus/rt-n16  If you
->>> look at the image of the underside
->>> (http://wiki.openwrt.org/_media/inbox/rt-n16_back_hires.jpg) on the right
->>> side, CON3 and CON5 are the solder pads for mounting a mini-PCIe
->>> connector and bracket.  Apparently V11 is a voltage regulator needed for
->>> that to work, but on this an example of a Broadcom 4716 board that really
->>> does allow a useable PCIe interface (with some hardware hacking).
->>
->> Are you sure the Asus rt-n16 has a BCM4716 and not an BCM4718? Both have
->> the same chip id (0x4716), but a different revision number (BCM4716 =
->> rev 8, BCM4718 = rev 10). The BCM4716 and BCM4717 do not have a PCIe
->> controller, just the BCM4718 has one [0].
-> 
-> I'm not actually.  Currently exploring a device with ASUS's minimal shell
-> they give you.  According to /proc/cpuinfo, "system type: Broadcom
-> BCM4716 chip rev 1 pkg 10".  If I'm looking at the correct byte in
-> /sys/devices/[...]/config, it does in fact appear to be 0x0A (decimal
-> 10).
+Signed-off-by: Saravana <saravanad@posedge.com>
+---
+The diff file is generated from wireless-testing git tree.
 
-So it is a BCM4718 with a PCIe controller.
+net/mac80211/cfg.c         |   21 +++++++++++++--------
+  net/mac80211/debugfs_sta.c |   15 +++++++++++++++
+  net/mac80211/sta_info.h    |    2 ++
+  3 files changed, 30 insertions(+), 8 deletions(-)
 
-> I've seen photos of some people in Taiwan who soldered something at V11
-> (presumably a voltage regulator, it's all Chinese to me).  I'm guessing
-> they did in fact get a MiniPCIe card to work, but everything is in the
-> wrong language.   :-)   The crucial build photo of the regulator module
-> has disappeared, so it is more difficult to reconstruct.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6733b374..e45511a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -396,6 +396,18 @@ void sta_set_rate_info_tx(struct sta_info *sta,
+  	rate_idx_to_bitrate(rinfo, sta, rate->idx);
+  }
 
-Yes that could be possible and mainline linux would support such a
-setup. Be aware that the PCIe controller in the BCM4718 reorders some of
-the PCIe writes and reads, which causes some problems.
++void sta_set_rate_info_rx(struct sta_info *sta,struct rate_info *rinfo)
++{
++	rinfo->flags = 0;
++	if (sta->last_rx_rate_flag & RX_FLAG_HT)
++		rinfo->flags |= RATE_INFO_FLAGS_MCS;
++	if (sta->last_rx_rate_flag & RX_FLAG_40MHZ)
++		rinfo->flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (sta->last_rx_rate_flag & RX_FLAG_SHORT_GI)
++		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
++	rate_idx_to_bitrate(rinfo, sta, sta->last_rx_rate_idx);
++
++}
+  static void sta_set_sinfo(struct sta_info *sta, struct station_info 
+*sinfo)
+  {
+  	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -443,14 +455,7 @@ static void sta_set_sinfo(struct sta_info *sta, 
+struct station_info *sinfo)
 
-Hauke
+  	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &sinfo->txrate);
+
+-	sinfo->rxrate.flags = 0;
+-	if (sta->last_rx_rate_flag & RX_FLAG_HT)
+-		sinfo->rxrate.flags |= RATE_INFO_FLAGS_MCS;
+-	if (sta->last_rx_rate_flag & RX_FLAG_40MHZ)
+-		sinfo->rxrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+-	if (sta->last_rx_rate_flag & RX_FLAG_SHORT_GI)
+-		sinfo->rxrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+-	rate_idx_to_bitrate(&sinfo->rxrate, sta, sta->last_rx_rate_idx);
++	sta_set_rate_info_rx(sta,&sinfo->rxrate);
+
+  	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+  #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+old mode 100644
+new mode 100755
+index 89281d2..16e738e
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -321,6 +321,20 @@ static ssize_t sta_ht_capa_read(struct file *file, 
+char __user *userbuf,
+  }
+  STA_OPS(ht_capa);
+
++static ssize_t sta_last_rx_rate_read(struct file *file, char __user 
+*userbuf,
++				      size_t count, loff_t *ppos)
++{
++	struct sta_info *sta = file->private_data;
++	struct rate_info rinfo;
++	u16 rate;
++	
++	sta_set_rate_info_rx(sta,&rinfo);
++
++	rate = cfg80211_calculate_bitrate(&rinfo);
++
++	return mac80211_format_buffer(userbuf, count, ppos, "%d.%d 
+MBit/s\n",rate/10,rate%10);
++}
++STA_OPS(last_rx_rate);
+  #define DEBUGFS_ADD(name) \
+  	debugfs_create_file(#name, 0400, \
+  		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+@@ -369,6 +383,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+  	DEBUGFS_ADD(dev);
+  	DEBUGFS_ADD(last_signal);
+  	DEBUGFS_ADD(ht_capa);
++	DEBUGFS_ADD(last_rx_rate);
+
+  	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
+  	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 776f3d0..122d853 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -550,6 +550,8 @@ int sta_info_flush(struct ieee80211_local *local,
+  void sta_set_rate_info_tx(struct sta_info *sta,
+  			  const struct ieee80211_tx_rate *rate,
+  			  struct rate_info *rinfo);
++void sta_set_rate_info_rx(struct sta_info *sta,
++			struct rate_info *rinfo);
+  void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
+  			  unsigned long exp_time);
+
