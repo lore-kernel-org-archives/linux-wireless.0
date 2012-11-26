@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:48892 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752280Ab2K1JLy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 04:11:54 -0500
-Message-ID: <1354093873.25524.11.camel@cumari.coelho.fi> (sfid-20121128_101158_285793_18C8B0E9)
-Subject: Re: [PATCH 1/2] wlcore: print role_id on bss_info_changed
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 28 Nov 2012 11:11:13 +0200
-In-Reply-To: <1353338046-12625-1-git-send-email-eliad@wizery.com>
-References: <1353338046-12625-1-git-send-email-eliad@wizery.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:35191 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754266Ab2KZKb5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 05:31:57 -0500
+Message-ID: <1353925944.9488.10.camel@jlt4.sipsolutions.net> (sfid-20121126_113200_519168_5B0F7404)
+Subject: Re: [PATCH] mac80211: in ADHOC don't update last_rx if sta is not
+ authorized
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@open-mesh.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 26 Nov 2012 11:32:24 +0100
+In-Reply-To: <1353881622-9279-1-git-send-email-antonio@open-mesh.com>
+References: <1353881622-9279-1-git-send-email-antonio@open-mesh.com>
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-19 at 17:14 +0200, Eliad Peller wrote:
-> In multi-vif setup it's useful to know the role_id
-> being configured.
+On Sun, 2012-11-25 at 23:13 +0100, Antonio Quartulli wrote:
+> It does not make sense to keep a station alive if it is not authorised
+> at all. If IBSS/RSN is used it could also be the case that something
+> went wrong during the keys exchange and the stations ended up in a not
+> recoverable state.
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> By not updating last_rx we are giving the station a chance to be
+> deleted and to start the key exchange once again from scratch.
 
-Applied both patches, thanks!
+Applied.
 
---
-Luca.
+johannes
 
