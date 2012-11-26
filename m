@@ -1,127 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54753 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754633Ab2KIUHk (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28953 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755281Ab2KZM3n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2012 15:07:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/13] iwlwifi: check the SCD conf from ALIVE response
-Date: Fri,  9 Nov 2012 21:08:06 +0100
-Message-Id: <1352491692-28994-8-git-send-email-johannes@sipsolutions.net> (sfid-20121109_210754_245203_E1279889)
-In-Reply-To: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
-References: <1352491692-28994-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 26 Nov 2012 07:29:43 -0500
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <rodrigue@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <backports@vger.kernel.org>
+Subject: [PATCH 2/3] compat-drivers: Add next-pending patches.
+Date: Mon, 26 Nov 2012 17:59:56 +0530
+Message-ID: <1353932997-8051-3-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20121126_132948_090945_77DC3AD9)
+In-Reply-To: <1353932997-8051-1-git-send-email-bkamatch@qca.qualcomm.com>
+References: <1353932997-8051-1-git-send-email-bkamatch@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-The ALIVE response of new fw inclues the base address of
-the SCD in SRAM. Until we read it from a prph register,
-which was set by the fw. Since the fw might well stop
-updating the prph register, add a WARN when there is an
-inconsitency between the ALIVE response and the register
-to catch any change in the behavior.
-
-Reviewed-by: Gregory Greenman <gregory.greenman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/ucode.c  |  2 +-
- drivers/net/wireless/iwlwifi/iwl-trans.h  |  9 +++++----
- drivers/net/wireless/iwlwifi/pcie/trans.c | 10 +++++++---
- 3 files changed, 13 insertions(+), 8 deletions(-)
+ .../0002-ath9k-Fix-MCI-reset-in-BT-cal_req.patch   |   95 ++++++++++++++++++
+ ...mp-audio-profiles-on-weak-signal-strength.patch |  105 ++++++++++++++++++++
+ 2 files changed, 200 insertions(+), 0 deletions(-)
+ create mode 100644 linux-next-pending/0002-ath9k-Fix-MCI-reset-in-BT-cal_req.patch
+ create mode 100644 linux-next-pending/0003-ath9k-stomp-audio-profiles-on-weak-signal-strength.patch
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/ucode.c b/drivers/net/wireless/iwlwifi/dvm/ucode.c
-index 2cb1efb..95e6d33 100644
---- a/drivers/net/wireless/iwlwifi/dvm/ucode.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/ucode.c
-@@ -254,7 +254,7 @@ static int iwl_alive_notify(struct iwl_priv *priv)
- 	int ret;
- 	int i;
- 
--	iwl_trans_fw_alive(priv->trans);
-+	iwl_trans_fw_alive(priv->trans, 0);
- 
- 	if (priv->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN &&
- 	    priv->eeprom_data->sku & EEPROM_SKU_CAP_IPAN_ENABLE) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index b065d48..e378ea6d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -355,7 +355,8 @@ struct iwl_trans;
-  * @start_fw: allocates and inits all the resources for the transport
-  *	layer. Also kick a fw image.
-  *	May sleep
-- * @fw_alive: called when the fw sends alive notification
-+ * @fw_alive: called when the fw sends alive notification. If the fw provides
-+ *	the SCD base address in SRAM, then provide it here, or 0 otherwise.
-  *	May sleep
-  * @stop_device:stops the whole device (embedded CPU put to reset)
-  *	May sleep
-@@ -394,7 +395,7 @@ struct iwl_trans_ops {
- 	int (*start_hw)(struct iwl_trans *iwl_trans);
- 	void (*stop_hw)(struct iwl_trans *iwl_trans, bool op_mode_leaving);
- 	int (*start_fw)(struct iwl_trans *trans, const struct fw_img *fw);
--	void (*fw_alive)(struct iwl_trans *trans);
-+	void (*fw_alive)(struct iwl_trans *trans, u32 scd_addr);
- 	void (*stop_device)(struct iwl_trans *trans);
- 
- 	void (*wowlan_suspend)(struct iwl_trans *trans);
-@@ -514,13 +515,13 @@ static inline void iwl_trans_stop_hw(struct iwl_trans *trans,
- 	trans->state = IWL_TRANS_NO_FW;
- }
- 
--static inline void iwl_trans_fw_alive(struct iwl_trans *trans)
-+static inline void iwl_trans_fw_alive(struct iwl_trans *trans, u32 scd_addr)
- {
- 	might_sleep();
- 
- 	trans->state = IWL_TRANS_FW_ALIVE;
- 
--	trans->ops->fw_alive(trans);
-+	trans->ops->fw_alive(trans, scd_addr);
- }
- 
- static inline int iwl_trans_start_fw(struct iwl_trans *trans,
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 288d229..0703da8 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1079,7 +1079,7 @@ static void iwl_trans_txq_set_sched(struct iwl_trans *trans, u32 mask)
- 	iwl_write_prph(trans, SCD_TXFACT, mask);
- }
- 
--static void iwl_tx_start(struct iwl_trans *trans)
-+static void iwl_tx_start(struct iwl_trans *trans, u32 scd_base_addr)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 a;
-@@ -1092,6 +1092,10 @@ static void iwl_tx_start(struct iwl_trans *trans)
- 
- 	trans_pcie->scd_base_addr =
- 		iwl_read_prph(trans, SCD_SRAM_BASE_ADDR);
+diff --git a/linux-next-pending/0002-ath9k-Fix-MCI-reset-in-BT-cal_req.patch b/linux-next-pending/0002-ath9k-Fix-MCI-reset-in-BT-cal_req.patch
+new file mode 100644
+index 0000000..130fce8
+--- /dev/null
++++ b/linux-next-pending/0002-ath9k-Fix-MCI-reset-in-BT-cal_req.patch
+@@ -0,0 +1,95 @@
++From 21aac28c0e8a762395364bf99b939cba120f58e8 Mon Sep 17 00:00:00 2001
++From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
++Date: Fri, 16 Nov 2012 19:18:01 +0530
++Subject: [PATCH 1/2] ath9k: Fix MCI reset in BT cal_req
 +
-+	WARN_ON(scd_base_addr != 0 &&
-+		scd_base_addr != trans_pcie->scd_base_addr);
++This patch reverts the commit "ath9k_hw: Wait BT calibration to complete"
++and bail out from MCI interrupt routine for chip reset. The above commit
++stalls the WLAN TCP traffic while bringing up and down the BT interface
++iteratively. Fixing this properly by queueing up chip reset and bailing
++out properly from tasklet routine.
 +
- 	a = trans_pcie->scd_base_addr + SCD_CONTEXT_MEM_LOWER_BOUND;
- 	/* reset conext data memory */
- 	for (; a < trans_pcie->scd_base_addr + SCD_CONTEXT_MEM_UPPER_BOUND;
-@@ -1137,10 +1141,10 @@ static void iwl_tx_start(struct iwl_trans *trans)
- 			    APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
- }
- 
--static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans)
-+static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans, u32 scd_addr)
- {
- 	iwl_reset_ict(trans);
--	iwl_tx_start(trans);
-+	iwl_tx_start(trans, scd_addr);
- }
- 
- /**
++Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
++---
++ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  1 -
++ drivers/net/wireless/ath/ath9k/debug.c      |  3 +++
++ drivers/net/wireless/ath/ath9k/debug.h      |  1 +
++ drivers/net/wireless/ath/ath9k/mci.c        | 21 +++------------------
++ 4 files changed, 7 insertions(+), 19 deletions(-)
++
++--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++@@ -714,7 +714,6 @@ bool ar9003_mci_start_reset(struct ath_h
++ 
++ 	return true;
++ }
++-EXPORT_SYMBOL(ar9003_mci_start_reset);
++ 
++ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
++ 			 struct ath9k_hw_cal_data *caldata)
++--- a/drivers/net/wireless/ath/ath9k/debug.c
+++++ b/drivers/net/wireless/ath/ath9k/debug.c
++@@ -837,6 +837,9 @@ static ssize_t read_file_reset(struct fi
++ 	len += snprintf(buf + len, sizeof(buf) - len,
++ 			"%17s: %2d\n", "PLL RX Hang",
++ 			sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
+++	len += snprintf(buf + len, sizeof(buf) - len,
+++			"%17s: %2d\n", "MCI Reset",
+++			sc->debug.stats.reset[RESET_TYPE_MCI]);
++ 
++ 	if (len > sizeof(buf))
++ 		len = sizeof(buf);
++--- a/drivers/net/wireless/ath/ath9k/debug.h
+++++ b/drivers/net/wireless/ath/ath9k/debug.h
++@@ -41,6 +41,7 @@ enum ath_reset_type {
++ 	RESET_TYPE_PLL_HANG,
++ 	RESET_TYPE_MAC_HANG,
++ 	RESET_TYPE_BEACON_STUCK,
+++	RESET_TYPE_MCI,
++ 	__RESET_TYPE_MAX
++ };
++ 
++--- a/drivers/net/wireless/ath/ath9k/mci.c
+++++ b/drivers/net/wireless/ath/ath9k/mci.c
++@@ -207,23 +207,6 @@ skip_tuning:
++ 	ath9k_btcoex_timer_resume(sc);
++ }
++ 
++-static void ath_mci_wait_btcal_done(struct ath_softc *sc)
++-{
++-	struct ath_hw *ah = sc->sc_ah;
++-
++-	/* Stop tx & rx */
++-	ieee80211_stop_queues(sc->hw);
++-	ath_stoprecv(sc);
++-	ath_drain_all_txq(sc, false);
++-
++-	/* Wait for cal done */
++-	ar9003_mci_start_reset(ah, ah->curchan);
++-
++-	/* Resume tx & rx */
++-	ath_startrecv(sc);
++-	ieee80211_wake_queues(sc->hw);
++-}
++-
++ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
++ {
++ 	struct ath_hw *ah = sc->sc_ah;
++@@ -235,7 +218,7 @@ static void ath_mci_cal_msg(struct ath_s
++ 	case MCI_GPM_BT_CAL_REQ:
++ 		if (mci_hw->bt_state == MCI_BT_AWAKE) {
++ 			mci_hw->bt_state = MCI_BT_CAL_START;
++-			ath_mci_wait_btcal_done(sc);
+++			ath9k_queue_reset(sc, RESET_TYPE_MCI);
++ 		}
++ 		ath_dbg(common, MCI, "MCI State : %d\n", mci_hw->bt_state);
++ 		break;
++@@ -578,6 +561,8 @@ void ath_mci_intr(struct ath_softc *sc)
++ 		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_GPM;
++ 
++ 		while (more_data == MCI_GPM_MORE) {
+++			if (test_bit(SC_OP_HW_RESET, &sc->sc_flags))
+++				return;
++ 
++ 			pgpm = mci->gpm_buf.bf_addr;
++ 			offset = ar9003_mci_get_next_gpm_offset(ah, false,
+diff --git a/linux-next-pending/0003-ath9k-stomp-audio-profiles-on-weak-signal-strength.patch b/linux-next-pending/0003-ath9k-stomp-audio-profiles-on-weak-signal-strength.patch
+new file mode 100644
+index 0000000..9efbcee
+--- /dev/null
++++ b/linux-next-pending/0003-ath9k-stomp-audio-profiles-on-weak-signal-strength.patch
+@@ -0,0 +1,105 @@
++From 2b2a2ffa141e1b2d9d4f2699dffcf7e35081089a Mon Sep 17 00:00:00 2001
++From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
++Date: Mon, 19 Nov 2012 17:46:25 +0530
++Subject: [PATCH 2/2] ath9k: stomp audio profiles on weak signal strength
++
++On lower WLAN signal strength, WLAN downlink traffic might suffer
++from retransmissions. At the mean time, playing SCO/A2DP profiles
++is affecting WLAN stability. In such scenario, by stomping SCO/A2DP
++BT traffic completely for a BTCOEX period, gives WLAN traffic an
++oppertunity to recover PHY rate. It also improves WLAN stability at
++lower RSSI without sacificing BT traffic.
++
++Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
++---
++ drivers/net/wireless/ath/ath9k/ath9k.h  |  1 +
++ drivers/net/wireless/ath/ath9k/btcoex.c |  1 +
++ drivers/net/wireless/ath/ath9k/btcoex.h |  1 +
++ drivers/net/wireless/ath/ath9k/gpio.c   |  5 ++++-
++ drivers/net/wireless/ath/ath9k/mci.c    | 18 ++++++++++++++++++
++ 5 files changed, 25 insertions(+), 1 deletion(-)
++
++--- a/drivers/net/wireless/ath/ath9k/ath9k.h
+++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
++@@ -482,6 +482,7 @@ struct ath_btcoex {
++ 	int rssi_count;
++ 	struct ath_gen_timer *no_stomp_timer; /* Timer for no BT stomping */
++ 	struct ath_mci_profile mci;
+++	u8 stomp_audio;
++ };
++ 
++ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
++--- a/drivers/net/wireless/ath/ath9k/btcoex.c
+++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
++@@ -49,6 +49,7 @@ static const u32 mci_wlan_weights[ATH_BT
++ 	{ 0x01017d01, 0x3b3b3b01, 0x3b3b3b01, 0x3b3b3b3b }, /* STOMP_LOW */
++ 	{ 0x01017d01, 0x01010101, 0x01010101, 0x01010101 }, /* STOMP_NONE */
++ 	{ 0x01017d01, 0x013b0101, 0x3b3b0101, 0x3b3b013b }, /* STOMP_LOW_FTP */
+++	{ 0xffffff01, 0xffffffff, 0xffffff01, 0xffffffff }, /* STOMP_AUDIO */
++ };
++ 
++ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
++--- a/drivers/net/wireless/ath/ath9k/btcoex.h
+++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
++@@ -50,6 +50,7 @@ enum ath_stomp_type {
++ 	ATH_BTCOEX_STOMP_LOW,
++ 	ATH_BTCOEX_STOMP_NONE,
++ 	ATH_BTCOEX_STOMP_LOW_FTP,
+++	ATH_BTCOEX_STOMP_AUDIO,
++ 	ATH_BTCOEX_STOMP_MAX
++ };
++ 
++--- a/drivers/net/wireless/ath/ath9k/gpio.c
+++++ b/drivers/net/wireless/ath/ath9k/gpio.c
++@@ -247,6 +247,9 @@ static void ath_btcoex_period_timer(unsi
++ 			stomp_type = ATH_BTCOEX_STOMP_ALL;
++ 			timer_period = btcoex->btscan_no_stomp;
++ 		}
+++	} else if (btcoex->stomp_audio >= 5) {
+++		stomp_type = ATH_BTCOEX_STOMP_AUDIO;
+++		btcoex->stomp_audio = 0;
++ 	}
++ 
++ 	ath9k_hw_btcoex_bt_stomp(ah, stomp_type);
++@@ -295,7 +298,7 @@ static void ath_btcoex_no_stomp_timer(vo
++ 	    (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI) &&
++ 	     test_bit(BT_OP_SCAN, &btcoex->op_flags)))
++ 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
++-	 else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
+++	else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
++ 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_LOW);
++ 
++ 	ath9k_hw_btcoex_enable(ah);
++--- a/drivers/net/wireless/ath/ath9k/mci.c
+++++ b/drivers/net/wireless/ath/ath9k/mci.c
++@@ -729,12 +729,30 @@ void ath9k_mci_set_txpower(struct ath_so
++ 		ath9k_hw_set_txpowerlimit(ah, sc->config.txpowlimit, false);
++ }
++ 
+++static void ath9k_mci_stomp_audio(struct ath_softc *sc)
+++{
+++	struct ath_hw *ah = sc->sc_ah;
+++	struct ath_btcoex *btcoex = &sc->btcoex;
+++	struct ath_mci_profile *mci = &btcoex->mci;
+++
+++	if (!mci->num_sco && !mci->num_a2dp)
+++		return;
+++
+++	if (ah->stats.avgbrssi > 25) {
+++		btcoex->stomp_audio = 0;
+++		return;
+++	}
+++
+++	btcoex->stomp_audio++;
+++}
++ void ath9k_mci_update_rssi(struct ath_softc *sc)
++ {
++ 	struct ath_hw *ah = sc->sc_ah;
++ 	struct ath_btcoex *btcoex = &sc->btcoex;
++ 	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
++ 
+++	ath9k_mci_stomp_audio(sc);
+++
++ 	if (!(mci_hw->config & ATH_MCI_CONFIG_CONCUR_TX))
++ 		return;
++ 
 -- 
-1.8.0
+1.7.4.1
 
