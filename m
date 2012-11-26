@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:60777 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754072Ab2KZQGD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35259 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752359Ab2KZKpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 11:06:03 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hm6so3516168wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 08:06:01 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 03/11] wlcore: don't stop fwlog if dbgpins are used
-Date: Mon, 26 Nov 2012 18:05:42 +0200
-Message-Id: <1353945950-3899-4-git-send-email-arik@wizery.com> (sfid-20121126_170636_905581_0A310BB2)
-In-Reply-To: <1353945950-3899-1-git-send-email-arik@wizery.com>
-References: <1353945950-3899-1-git-send-email-arik@wizery.com>
+	Mon, 26 Nov 2012 05:45:24 -0500
+Message-ID: <1353926751.9488.19.camel@jlt4.sipsolutions.net> (sfid-20121126_114527_404136_768F5A27)
+Subject: Re: [RFC 14/14] mac80211: mesh PS individually-addressed frame
+ release
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, linux-wireless@vger.kernel.org
+Date: Mon, 26 Nov 2012 11:45:51 +0100
+In-Reply-To: <50ABC7D0.2030303@etit.tu-chemnitz.de>
+References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	  <1353134886-13256-15-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1353145246.9543.39.camel@jlt4.sipsolutions.net>
+	 <50ABC7D0.2030303@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Tue, 2012-11-20 at 10:11 -0800, Marco Porsch wrote:
 
-Due to a bug, the fw asserts on fw log stop when dbg-pins are used.
-Don't stop the fw log in this case.
+> > This is ... strange? Can a single station really own *two* num_psp
+> > refcounts?
+> 
+> Yes it can. A station can be both owner and recipient. And it would just 
+> be overhead to distinguish between num_psp_owner and num_psp_recipient, 
+> when in the end we only want to know if there is  any PSP ongoing at all.
+> 
+> I'll change the comment to:
+> 	/* number of active PSPs (owner and recipient counted independently) */
+> 	atomic_t num_psp;
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Ok.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 475d0cd..49ff7ee 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -805,11 +805,13 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
- 
- 	/*
- 	 * Make sure the chip is awake and the logger isn't active.
--	 * Do not send a stop fwlog command if the fw is hanged.
-+	 * Do not send a stop fwlog command if the fw is hanged or if
-+	 * dbgpins are used (due to some fw bug).
- 	 */
- 	if (wl1271_ps_elp_wakeup(wl))
- 		goto out;
--	if (!wl->watchdog_recovery)
-+	if (!wl->watchdog_recovery &&
-+	    wl->conf.fwlog.output != WL12XX_FWLOG_OUTPUT_DBG_PINS)
- 		wl12xx_cmd_stop_fwlog(wl);
- 
- 	/* Read the first memory block address */
--- 
-1.7.9.5
+> >> +	nullfunc = (struct ieee80211_hdr *) skb->data;
+> >> +	if (!eosp)
+> >> +		nullfunc->frame_control |=
+> >> +				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+> >
+> > This seems wrong -- EOSP and moredata are orthogonal (with the
+> > restriction that "!EOSP => moredata") -- but if you just have that in
+> > the code the moredata bit won't always be set correctly.
+> 
+> Imho, in the context of PSP trigger frames it does.
+> Sending a trigger frame to a mesh PS STA with no EOSP implies the start 
+> of a PSP with the sender as owner -> following data. The other two 
+> combinations imply that there is no more data following in that direction.
+
+The EOSP bit in a trigger frame should always be 0 unless the frame is
+also a PSP response, no?
+
+What you seem to be missing though is the case when there _is_ more
+data, but the service period has to end nonetheless, say because it was
+limited to a few packets? Nothing here seems to indicate that an MPSP
+ends only after all queued packets are transmitted, which would be a
+requirement if this was supposed to be correct.
+
+(Btw, maybe it would be worthwhile to call all of this "MPSP" like the
+spec, not just "PSP"?)
+
+> But now that you mention it... is there any interest in having that 
+> function used for uAPSD? Because ieee80211_sta_ps_deliver_response sets 
+> the EOSP flag during uAPSD, but does not enforce a QoS Data frame to 
+> carry it. But maybe uAPSD just permits transmitting anything else than 
+> QoS Data frames...
+
+Well, not really, but non-QoS frames won't happen in that case, because
+the peer will have QoS enabled. Similarly here I think, why would there
+ever be a non-QoS frame? But maybe this can happen with forwarding,
+which can't happen in the non-mesh case.
+
+> >
+> >> +		ieee80211_sta_ps_deliver_response(sta, 1, 0,
+> >> +				IEEE80211_FRAME_RELEASE_UAPSD);
+> >
+> > uAPSD?
+> >
+> > The standard *explicitly* states that ASPD is *not* supported in mesh.
+> 
+> Absolutely correct. The PSP mechanism is just very similar to uAPSD, 
+> though. So once the PSP is set up, the mechanisms are the same actually. 
+> What do you advise? Renaming the release reason? Creating a different 
+> one that is handled equally?
+
+Well so far the more-data bit seems to be handled different, although I
+argue above that you're actually not doing that correctly ;-)
+
+But I think doing different reasons could be helpful, if only to
+understand the code better.
+
+johannes
 
