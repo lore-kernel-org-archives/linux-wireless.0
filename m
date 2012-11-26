@@ -1,121 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:19106 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753199Ab2KTNAG (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55608 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755626Ab2KZThr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 08:00:06 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/3] ath9k: Fix MCI reset in BT cal_req
-Date: Tue, 20 Nov 2012 18:30:00 +0530
-Message-ID: <1353416401-5328-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20121120_140021_952130_E4AD2A77)
-In-Reply-To: <1353416401-5328-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1353416401-5328-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Mon, 26 Nov 2012 14:37:47 -0500
+Message-ID: <50B3C505.3090407@candelatech.com> (sfid-20121126_203749_718668_14BA1EE4)
+Date: Mon, 26 Nov 2012 11:37:41 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel splat from 3.5.7+ (tainted)
+References: <50B3A275.3010302@candelatech.com>  <50B3AAEB.3070709@candelatech.com> (sfid-20121126_184631_765629_DC554BCF) <1353952597.2800.12.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1353952597.2800.12.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch reverts the commit "ath9k_hw: Wait BT calibration to complete"
-and bail out from MCI interrupt routine for chip reset. The above commit
-stalls the WLAN TCP traffic while bringing up and down the BT interface
-iteratively. Fixing this properly by queueing up chip reset and bailing
-out properly from tasklet routine.
+On 11/26/2012 09:56 AM, Johannes Berg wrote:
+> On Mon, 2012-11-26 at 09:46 -0800, Ben Greear wrote:
+>
+>> 0x182f9 is in __ieee80211_tx (/home/greearb/git/linux-3.5.dev.y/net/mac80211/tx.c:1256).
+>> 1251					skb_queue_splice_init(skbs, &local->pending[q]);
+>> 1252				} else {
+>> 1253					u32 len = skb_queue_len(&local->pending[q]);
+>> 1254					if (len >= max_pending_qsize) {
+>> 1255						__skb_unlink(skb, skbs);
+>> 1256						dev_kfree_skb(skb);
+>> 1257						/* TODO:  Add counter for this */
+>> 1258					} else {
+>
+> Wait .. this appears to be a local patch you have, it doesn't exist.
+> That explains why, the bug doesn't exist upstream (all freeing there is
+> outside the queue lock)
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |  1 -
- drivers/net/wireless/ath/ath9k/debug.c      |  3 +++
- drivers/net/wireless/ath/ath9k/debug.h      |  1 +
- drivers/net/wireless/ath/ath9k/mci.c        | 21 +++------------------
- 4 files changed, 7 insertions(+), 19 deletions(-)
+Ahh, sorry about that..it is entirely my bug it seems.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 42b4412..8dd0692 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -714,7 +714,6 @@ bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan)
- 
- 	return true;
- }
--EXPORT_SYMBOL(ar9003_mci_start_reset);
- 
- int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 			 struct ath9k_hw_cal_data *caldata)
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 585aee4..eed0b9a 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -837,6 +837,9 @@ static ssize_t read_file_reset(struct file *file, char __user *user_buf,
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%17s: %2d\n", "PLL RX Hang",
- 			sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"%17s: %2d\n", "MCI Reset",
-+			sc->debug.stats.reset[RESET_TYPE_MCI]);
- 
- 	if (len > sizeof(buf))
- 		len = sizeof(buf);
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 2ed9785..61341cd 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -41,6 +41,7 @@ enum ath_reset_type {
- 	RESET_TYPE_PLL_HANG,
- 	RESET_TYPE_MAC_HANG,
- 	RESET_TYPE_BEACON_STUCK,
-+	RESET_TYPE_MCI,
- 	__RESET_TYPE_MAX
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 0dd2cbb..ece192d 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -207,23 +207,6 @@ skip_tuning:
- 	ath9k_btcoex_timer_resume(sc);
- }
- 
--static void ath_mci_wait_btcal_done(struct ath_softc *sc)
--{
--	struct ath_hw *ah = sc->sc_ah;
+I added a patch to keep from queing too many skbs since it can
+OOM my system (for instance, when using pktgen to generate traffic,
+if I recall correctly).
+
+Probably this bug isn't normally hit even in my code because
+we rarely over-drive it like this, and upstream probably never
+hits the OOM bug for similar reasons.
+
+In case you are still feeling generous of your time, do you think just
+changing the call to dev_kfree_skb_any() and moving it outside
+the spin-lock would be a proper fix?
+
+commit 4887df3f5409798f633881df7be6cf7168f78e93
+Author: Ben Greear <greearb@candelatech.com>
+Date:   Mon Jun 4 17:34:08 2012 -0700
+
+     mac80211: Limit number of pending skbs.
+
+     Current code will allow any number of pending skbs, and
+     this can OOM the system when used with something like
+     the pktgen tool (which may not back off properly if
+     queue is stopped).
+
+     Possibly this is just a bug in our version of pktgen,
+     but either way, it seems reasonable to add a limit
+     so that it is not possible to go OOM in this manner.
+
+     Signed-off-by: Ben Greear <greearb@candelatech.com>
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d84727a..c5c3b8e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -33,6 +33,17 @@
+  #include "wpa.h"
+  #include "wme.h"
+  #include "rate.h"
++#include <linux/moduleparam.h>
++
++/*
++ * Maximum number of skbs that may be queued in a pending
++ * queue.  After that, packets will just be dropped.
++ */
++static int max_pending_qsize = 1000;
++module_param(max_pending_qsize, int, 0644);
++MODULE_PARM_DESC(max_pending_qsize,
++                "Maximum number of skbs that may be queued in a pending queue.");
++
+
+  /* misc utils */
+
+@@ -1236,12 +1247,19 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+                          * transmission from the tx-pending tasklet when the
+                          * queue is woken again.
+                          */
+-                       if (txpending)
++                       if (txpending) {
+                                 skb_queue_splice_init(skbs, &local->pending[q]);
+-                       else
+-                               skb_queue_splice_tail_init(skbs,
+-                                                          &local->pending[q]);
 -
--	/* Stop tx & rx */
--	ieee80211_stop_queues(sc->hw);
--	ath_stoprecv(sc);
--	ath_drain_all_txq(sc, false);
--
--	/* Wait for cal done */
--	ar9003_mci_start_reset(ah, ah->curchan);
--
--	/* Resume tx & rx */
--	ath_startrecv(sc);
--	ieee80211_wake_queues(sc->hw);
--}
--
- static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -235,7 +218,7 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
- 	case MCI_GPM_BT_CAL_REQ:
- 		if (mci_hw->bt_state == MCI_BT_AWAKE) {
- 			mci_hw->bt_state = MCI_BT_CAL_START;
--			ath_mci_wait_btcal_done(sc);
-+			ath9k_queue_reset(sc, RESET_TYPE_MCI);
- 		}
- 		ath_dbg(common, MCI, "MCI State : %d\n", mci_hw->bt_state);
- 		break;
-@@ -578,6 +561,8 @@ void ath_mci_intr(struct ath_softc *sc)
- 		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_GPM;
- 
- 		while (more_data == MCI_GPM_MORE) {
-+			if (test_bit(SC_OP_HW_RESET, &sc->sc_flags))
-+				return;
- 
- 			pgpm = mci->gpm_buf.bf_addr;
- 			offset = ar9003_mci_get_next_gpm_offset(ah, false,
++                       } else {
++                               u32 len = skb_queue_len(&local->pending[q]);
++                               if (len >= max_pending_qsize) {
++                                       __skb_unlink(skb, skbs);
++                                       dev_kfree_skb(skb);
++                                       /* TODO:  Add counter for this */
++                               } else {
++                                       skb_queue_splice_tail_init(skbs,
++                                                                  &local->pending[q]);
++                               }
++                       }
+                         spin_unlock_irqrestore(&local->queue_stop_reason_lock,
+                                                flags);
+                         return false;
+
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
 -- 
-1.8.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
