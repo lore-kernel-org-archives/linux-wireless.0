@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:58488 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753640Ab2KWKvG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 05:51:06 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail.neratec.com (Postfix) with ESMTP id 8E7E88B757E
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Nov 2012 11:50:55 +0100 (CET)
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [RFC 1/1] ath9k: Add radiotap vendor specific data example
-Date: Fri, 23 Nov 2012 11:46:05 +0100
-Message-Id: <1353667565-4212-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20121123_115242_843402_5FE9C369)
+Received: from devils.ext.ti.com ([198.47.26.153]:36180 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754146Ab2K0Nwr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 08:52:47 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id qARDqkT8010559
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 07:52:46 -0600
+Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id qARDqkpH014304
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 07:52:46 -0600
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>
+Subject: [PATCH 4/6] wl12xx: ignore some of the firmware version fields
+Date: Tue, 27 Nov 2012 15:51:59 +0200
+Message-ID: <1354024321-20635-5-git-send-email-coelho@ti.com> (sfid-20121127_145251_266864_DB4BD1D0)
+In-Reply-To: <1354024321-20635-1-git-send-email-coelho@ti.com>
+References: <1354024321-20635-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As an exmaple of vendor specific data we can extract rssi
-and evm values for all the chains so one can see them on
-per packet basis. More can be added depending on the needs i.e.
-noise floor, Ness, STBC, key miss, etc.
-AtheorsC OUI is used in this example but it should be replaced
-by own when in use.
+The firmware type and the project number fields in the firmware
+version number, cannot be checked as if they increase sequentially,
+because the former is the firmware type and the latter is an internal
+project number.  There's no guarantee that these numbers will remain
+incremental, so use WLCORE_FW_VER_IGNORE.
 
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ drivers/net/wireless/ti/wl12xx/wl12xx.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6aafbb7..02c36c4 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1246,6 +1246,39 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
- 			ath_ant_comb_scan(sc, &rs);
+diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+index 634ad00..310df52 100644
+--- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+@@ -32,16 +32,16 @@
  
-+#if 0
-+		/*TODO: Replace oui and vendor sub namespace with valid data
-+		 * and add/remove fields below
-+		 */
-+		if( skb_headroom(skb) >  22 ) {
-+			int8_t* vendor_data;
-+
-+			vendor_data = skb_push(skb, 22);
-+
-+			rxs->vendor_radiotap_len = 22;
-+			rxs->vendor_radiotap_align = 4;
-+			rxs->vendor_radiotap_oui[0] = 0x0;
-+			rxs->vendor_radiotap_oui[1] = 0x3;
-+			rxs->vendor_radiotap_oui[2] = 0x7f;
-+			rxs->vendor_radiotap_subns = 0;
-+			rxs->vendor_radiotap_bitmap = 0x00000001;
-+
-+			/* count bytes below and put it as the length*/
-+			*vendor_data++ = rs.rs_rssi;
-+			*vendor_data++ = rs.rs_rssi_ctl0;
-+			*vendor_data++ = rs.rs_rssi_ctl1;
-+			*vendor_data++ = rs.rs_rssi_ctl2;
-+			put_unaligned_le32(rs.evm0, vendor_data);
-+			vendor_data += 4;
-+			put_unaligned_le32(rs.evm1, vendor_data);
-+			vendor_data += 4;
-+			put_unaligned_le32(rs.evm2, vendor_data);
-+			vendor_data += 4;
-+			put_unaligned_le32(rs.evm3, vendor_data);
-+			vendor_data += 4;
-+			put_unaligned_le16(rs.evm4, vendor_data);
-+		}
-+#endif
- 		ieee80211_rx(hw, skb);
+ /* minimum FW required for driver for wl127x */
+ #define WL127X_CHIP_VER		6
+-#define WL127X_IFTYPE_VER	3
++#define WL127X_IFTYPE_VER	WLCORE_FW_VER_IGNORE
+ #define WL127X_MAJOR_VER	10
+-#define WL127X_SUBTYPE_VER	2
++#define WL127X_SUBTYPE_VER	WLCORE_FW_VER_IGNORE
+ #define WL127X_MINOR_VER	115
  
- requeue_drop_frag:
+ /* minimum FW required for driver for wl128x */
+ #define WL128X_CHIP_VER		7
+-#define WL128X_IFTYPE_VER	3
++#define WL128X_IFTYPE_VER	WLCORE_FW_VER_IGNORE
+ #define WL128X_MAJOR_VER	10
+-#define WL128X_SUBTYPE_VER	2
++#define WL128X_SUBTYPE_VER	WLCORE_FW_VER_IGNORE
+ #define WL128X_MINOR_VER	115
+ 
+ #define WL12XX_AGGR_BUFFER_SIZE	(4 * PAGE_SIZE)
 -- 
 1.7.10.4
 
