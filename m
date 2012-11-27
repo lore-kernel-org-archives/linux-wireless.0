@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42390 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757290Ab2KZXaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 18:30:21 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, zajec5@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] bcma: handle return value of pci_assign_resource
-Date: Tue, 27 Nov 2012 00:30:04 +0100
-Message-Id: <1353972604-28254-1-git-send-email-hauke@hauke-m.de> (sfid-20121127_003024_878873_017CA384)
+Received: from arroyo.ext.ti.com ([192.94.94.40]:54824 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752164Ab2K0Myk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 07:54:40 -0500
+Message-ID: <1354020840.950.89.camel@cumari.coelho.fi> (sfid-20121127_135443_574499_7991E80B)
+Subject: Re: [PATCH 09/20] wlcore: fwlog dynamic mem_block control
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>, Ido Reis <idor@ti.com>
+Date: Tue, 27 Nov 2012 14:54:00 +0200
+In-Reply-To: <1353998701-18171-10-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+	 <1353998701-18171-10-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the following warning:
+On Tue, 2012-11-27 at 08:44 +0200, Arik Nemtsov wrote:
+> From: Ido Reis <idor@ti.com>
+> 
+> number of fwlog mem_blocks can be configured using module param.
+> this is a fw debug feature: in case a large fw log data is busrted during
+> a short period of time, the memory get filled and data is lost.
+> this allows us to dynamicly set the fw log mem_block usage, although
+> configuring more mem_block for logger comes at the expense of TP.
+> 
+> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+> Signed-off-by: Ido Reis <idor@ti.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-  CC      drivers/bcma/driver_pci_host.o
-drivers/bcma/driver_pci_host.c: In function 'bcma_core_pci_fixup_addresses':
-drivers/bcma/driver_pci_host.c:555:23: error: ignoring return value of
-'pci_assign_resource', declared with attribute warn_unused_result
-[-Werror=unused-result]
+Who's the original author of this patch? Yair's sob is above Ido's, so
+apparently he was the one who created it.  But the From says the author
+is Ido...
 
-Reported-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_pci_host.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index e564495..e6b5c89 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -538,7 +538,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, bcma_core_pci_fixup_pcibridge);
- static void bcma_core_pci_fixup_addresses(struct pci_dev *dev)
- {
- 	struct resource *res;
--	int pos;
-+	int pos, err;
- 
- 	if (dev->bus->ops->read != bcma_core_pci_hostmode_read_config) {
- 		/* This is not a device on the PCI-core bridge. */
-@@ -551,8 +551,12 @@ static void bcma_core_pci_fixup_addresses(struct pci_dev *dev)
- 
- 	for (pos = 0; pos < 6; pos++) {
- 		res = &dev->resource[pos];
--		if (res->flags & (IORESOURCE_IO | IORESOURCE_MEM))
--			pci_assign_resource(dev, pos);
-+		if (res->flags & (IORESOURCE_IO | IORESOURCE_MEM)) {
-+			err = pci_assign_resource(dev, pos);
-+			if (err)
-+				pr_err("PCI: Problem fixing up the addresses on %s\n",
-+				       pci_name(dev));
-+		}
- 	}
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, bcma_core_pci_fixup_addresses);
--- 
-1.7.10.4
+--
+Luca.
 
