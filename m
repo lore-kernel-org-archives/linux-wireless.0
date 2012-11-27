@@ -1,92 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:33211 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754788Ab2K0Vce (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:41488 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755698Ab2K0P5S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 16:32:34 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hm6so4788189wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 13:32:33 -0800 (PST)
+	Tue, 27 Nov 2012 10:57:18 -0500
+Message-ID: <50B4E2CA.6060508@oracle.com> (sfid-20121127_165736_903009_9A882AE7)
+Date: Tue, 27 Nov 2012 09:56:58 -0600
+From: Dave Kleikamp <dave.kleikamp@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <1354023406.950.109.camel@cumari.coelho.fi>
-References: <1353998701-18171-1-git-send-email-arik@wizery.com>
- <1353998701-18171-15-git-send-email-arik@wizery.com> <1354023406.950.109.camel@cumari.coelho.fi>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 27 Nov 2012 23:32:17 +0200
-Message-ID: <CA+XVXfeeo9kPmKyo=qtn_bAnj5gveiKa6PiMq8hV-5P9P4oyhw@mail.gmail.com> (sfid-20121127_223238_619439_36D4393F)
-Subject: Re: [PATCH 14/20] wlcore: restore default channel configuration
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org,
-	Victor Goldenshtein <victorg@ti.com>
+To: Nico Schottelius <nico-kernel20120920@schottelius.org>,
+	Valdis.Kletnieks@vt.edu, David Rientjes <rientjes@google.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	jfs-discussion@lists.sourceforge.net
+Subject: Re: [Jfs-discussion] Out of memory on 3.5 kernels
+References: <505B1FA0.6030100@broadcom.com> <20120921194931.GA732@schottelius.org> <alpine.DEB.2.00.1209241538310.6356@chino.kir.corp.google.com> <20120926060653.GD16575@schottelius.org> <20120926085708.GA7839@schottelius.org> <20120927055208.GA25252@schottelius.org> <20121003212311.GA14018@schottelius.org> <22962.1349452084@turing-police.cc.vt.edu> <20121005175139.GC831@schottelius.org> <20121030103535.GA10526@schottelius.org> <50AD5791.5010702@oracle.com>
+In-Reply-To: <50AD5791.5010702@oracle.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 27, 2012 at 3:36 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2012-11-27 at 08:44 +0200, Arik Nemtsov wrote:
->> From: Victor Goldenshtein <victorg@ti.com>
+On 11/21/2012 04:37 PM, Dave Kleikamp wrote:
+> On 10/30/2012 05:35 AM, Nico Schottelius wrote:
+>> Good morning,
 >>
->> wlcore allocates two static structs wl1271_band_2ghz & wl1271_band_5ghz
->> which are used/modified by Reg-Domain e.g. some channel might be marked
->> as passive at some point. Make sure we don't keep stale settings around
->> if the HW is unregistered/registered during operation.
+>> update: this problem still exists on 3.6.2-1-ARCH and it got worse:
 >>
->> [Arik - use Tx-power constant and tweak commit message]
+>> I reformatted the external disk to use xfs, but as the my
+>> root filesystem is still jfs, it still appears:
 >>
->> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->
-> [...]
->
->> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
->> index e68cd3f..3ced59b 100644
->> --- a/drivers/net/wireless/ti/wlcore/main.c
->> +++ b/drivers/net/wireless/ti/wlcore/main.c
->
-> [...]
->
->> @@ -5537,6 +5537,7 @@ wlcore_iface_combinations[] = {
+>>  Active / Total Objects (% used)    : 642732 / 692268 (92.8%)
+>>  Active / Total Slabs (% used)      : 24801 / 24801 (100.0%)
+>>  Active / Total Caches (% used)     : 79 / 111 (71.2%)
+>>  Active / Total Size (% used)       : 603522.30K / 622612.05K (96.9%)
+>>  Minimum / Average / Maximum Object : 0.01K / 0.90K / 15.25K
 >>
->>  static int wl1271_init_ieee80211(struct wl1271 *wl)
->>  {
->> +     int i;
->>       static const u32 cipher_suites[] = {
->>               WLAN_CIPHER_SUITE_WEP40,
->>               WLAN_CIPHER_SUITE_WEP104,
->> @@ -5599,6 +5600,22 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
->>                    ARRAY_SIZE(wl1271_channels_5ghz) >
->>                    WL1271_MAX_CHANNELS);
->>       /*
->> +     * clear channel flags from the previous usage
->> +     * and restore max_power & max_antenna_gain values.
->> +     */
->> +     for (i = 0; i < ARRAY_SIZE(wl1271_channels); i++) {
->> +             wl1271_band_2ghz.channels[i].flags = 0;
->> +             wl1271_band_2ghz.channels[i].max_power = WLCORE_MAX_TXPWR;
->> +             wl1271_band_2ghz.channels[i].max_antenna_gain = 0;
->> +     }
->> +
->> +     for (i = 0; i < ARRAY_SIZE(wl1271_channels_5ghz); i++) {
->> +             wl1271_band_5ghz.channels[i].flags = 0;
->> +             wl1271_band_5ghz.channels[i].max_power = WLCORE_MAX_TXPWR;
->> +             wl1271_band_5ghz.channels[i].max_antenna_gain = 0;
->> +     }
->> +
->> +     /*
->
-> This looks a bit hacky, because you must know what values are being
-> modified by cfg80211.  What if in the future there are more values in
-> the channel structure that are being modified?
->
-> The best would be to have a copy of the struct to pass to cfg80211 when
-> the hardware is registered and realloc it when we unregister.  That
-> would be safer and more future-proof, but would use a bit more memory
-> though.
+>>   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+>> 475548 467649  98%    1.21K  18722       26    599104K jfs_ip
 
-Yea a new struct wasn't used because of the memory requirement. I
-agree a copy is cleaner.
-Let's start with this one to solve the actual bug and make a TODO for later?
+...
 
-I'm also not sure that having cfg80211 change a structure allocated
-and owned by the driver is the cleanest solution for the regulatory
-stuff.
+>>
+>> I am wondering if anyone is feeling responsible for this bug or if the mid-term
+>> solution is to move away from jfs?
+> 
+> Sorry, I haven't taken too close a look at this, but I did notice
+> another conversation that may be related:
+> 
+> https://lkml.org/lkml/2012/11/17/26
+> 
+> The commit in question first showed up in 3.5-rc1, which coincides with
+> your problem.
+
+I believe this commit will fix the problem:
+http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4eff96d
+
+It is targeted for the stable kernels.
