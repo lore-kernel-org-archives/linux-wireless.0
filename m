@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:46419
-	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751821Ab2KSMSO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 07:18:14 -0500
-Message-ID: <50AA237F.4090102@posedge.com> (sfid-20121119_131821_937996_138D751F)
-Date: Mon, 19 Nov 2012 17:48:07 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:58554 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758390Ab2K0JIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 04:08:13 -0500
+Message-ID: <1354007253.950.53.camel@cumari.coelho.fi> (sfid-20121127_100818_399936_D2B81F4D)
+Subject: Re: [PATCH 01/11] wlcore: configure dwell times according to scan
+ type
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
+Date: Tue, 27 Nov 2012 11:07:33 +0200
+In-Reply-To: <1354006493.950.52.camel@cumari.coelho.fi>
+References: <1353945950-3899-1-git-send-email-arik@wizery.com>
+	 <1353945950-3899-2-git-send-email-arik@wizery.com>
+	 <1354006493.950.52.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [RFC v2 4/8] nl80211/cfg80211: support VHT channel configuration
-References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net> <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/2012 01:47 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> +bool cfg80211_chan_def_valid(const struct cfg80211_chan_def *chandef)
-> +{
-> +	u32 control_freq;
-> +
-> +	if (!chandef->chan)
-> +		return false;
-> +
-> +	control_freq = chandef->chan->center_freq;
-> +
-> +	switch (chandef->width) {
-> +	case NL80211_CHAN_WIDTH_20:
-> +	case NL80211_CHAN_WIDTH_20_NOHT:
-> +		if (chandef->center_freq1 != control_freq)
-> +			return false;
-> +		if (chandef->center_freq2)
-> +			return false;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_40:
-> +		if (chandef->center_freq1 != control_freq + 10 &&
-> +		    chandef->center_freq1 != control_freq - 10)
-> +			return false;
-> +		if (chandef->center_freq2)
-> +			return false;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_80P80:
-> +		if (chandef->center_freq1 != control_freq + 30 &&
-> +		    chandef->center_freq1 != control_freq + 10 &&
-> +		    chandef->center_freq1 != control_freq - 10 &&
-> +		    chandef->center_freq1 != control_freq - 30)
-> +			return false;
-> +		if (!chandef->center_freq2)
-> +			return false;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_80:
-> +		if (chandef->center_freq1 != control_freq + 30 &&
-> +		    chandef->center_freq1 != control_freq + 10 &&
-> +		    chandef->center_freq1 != control_freq - 10 &&
-> +		    chandef->center_freq1 != control_freq - 30)
-> +			return false;
-> +		if (chandef->center_freq2)
-> +			return false;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_160:
-> +		if (chandef->center_freq1 != control_freq + 70 &&
-> +		    chandef->center_freq1 != control_freq + 50 &&
-> +		    chandef->center_freq1 != control_freq + 30 &&
-> +		    chandef->center_freq1 != control_freq + 10 &&
-> +		    chandef->center_freq1 != control_freq - 10 &&
-> +		    chandef->center_freq1 != control_freq - 30 &&
-> +		    chandef->center_freq1 != control_freq - 50 &&
-> +		    chandef->center_freq1 != control_freq - 70)
-> +			return false;
+On Tue, 2012-11-27 at 10:54 +0200, Luciano Coelho wrote:
+> On Mon, 2012-11-26 at 18:05 +0200, Arik Nemtsov wrote:
+> > From: Eliad Peller <eliad@wizery.com>
+> > 
+> > Allow configuring different dwell times to the different
+> > scan types (regular and scheduled).
+> > 
+> > Add new configuration entry (dwell_time_dfs) to
+> > conf_scan_settings, in order to allow setting
+> > different values for normal scan and scheduled scan.
+> > 
+> > Signed-off-by: Eliad Peller <eliad@wizery.com>
+> > Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> > ---
+> 
+> This patch changes the semantics of two values in the middle of the conf
+> struct, so WLCORE_CONF_VERSION should be increased.  Also, the wlconf
+> tool should be updated.
 
-Should we create a macro instead of +70 to -70 to take care of all 3 
-cases 80, 80p80 and 160?
+Oops! Ignore this comment.  For some reason I missed the change in the
+WLCORE_CONF_VERSION in this patch.  Now I see it has changed from 2 to
+3.
 
-> +		if (chandef->center_freq2)
-
+--
+Luca.
 
