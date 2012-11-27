@@ -1,32 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:43073 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752240Ab2KTBaH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 20:30:07 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so1467915lbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 17:30:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1352874524-1180-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1352874524-1180-1-git-send-email-rmanohar@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 19 Nov 2012 17:29:45 -0800
-Message-ID: <CAB=NE6XgcKnB=XnSjz_wLzjj9Qe+8qd8KYn=HP45UsqhTZHeQg@mail.gmail.com> (sfid-20121120_023010_622639_8AD187D4)
-Subject: Re: [PATCH 1/2] qca-swiss-army-knife: refresh 9462 initvals
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42573 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757506Ab2K0A0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 19:26:19 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 06/15] bcma: add bcma_chipco_alp_clock
+Date: Tue, 27 Nov 2012 01:25:16 +0100
+Message-Id: <1353975925-32056-7-git-send-email-hauke@hauke-m.de> (sfid-20121127_012623_571762_CC2BD56B)
+In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 13, 2012 at 10:28 PM, Rajkumar Manoharan
-<rmanohar@qca.qualcomm.com> wrote:
-> * update dac_async_fifo
-> * use peak detection for 5GHz
-> * Fix wrong peak detector DC offset
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+For devices without a PMU the alp clock is always 20000000.
 
-Applied and pushed, thanks!
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_chipcommon.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index ffd74e5..ef68553 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -4,6 +4,7 @@
+  *
+  * Copyright 2005, Broadcom Corporation
+  * Copyright 2006, 2007, Michael Buesch <m@bues.ch>
++ * Copyright 2012, Hauke Mehrtens <hauke@hauke-m.de>
+  *
+  * Licensed under the GNU/GPL. See COPYING for details.
+  */
+@@ -22,6 +23,14 @@ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
+ 	return value;
+ }
+ 
++static u32 bcma_chipco_alp_clock(struct bcma_drv_cc *cc)
++{
++	if (cc->capabilities & BCMA_CC_CAP_PMU)
++		return bcma_pmu_alp_clock(cc);
++
++	return 20000000;
++}
++
+ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
+ {
+ 	if (cc->early_setup_done)
+@@ -131,8 +140,7 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
+ 	struct bcma_serial_port *ports = cc->serial_ports;
+ 
+ 	if (ccrev >= 11 && ccrev != 15) {
+-		/* Fixed ALP clock */
+-		baud_base = bcma_pmu_alp_clock(cc);
++		baud_base = bcma_chipco_alp_clock(cc);
+ 		if (ccrev >= 21) {
+ 			/* Turn off UART clock before switching clocksource. */
+ 			bcma_cc_write32(cc, BCMA_CC_CORECTL,
+-- 
+1.7.10.4
+
