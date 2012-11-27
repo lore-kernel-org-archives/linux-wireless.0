@@ -1,65 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:47535 "EHLO mga03.intel.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:50044 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752729Ab2KUG7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 01:59:42 -0500
-Date: Wed, 21 Nov 2012 14:59:19 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [wireless-next:master 196/214]
- drivers/net/wireless/brcm80211/brcmsmac/main.c:308:10: sparse: symbol
- 'wlc_prio2prec_map' was not declared. Should it be static?
-Message-ID: <50ac7bc7.tSErItiXQxTyHiGi%fengguang.wu@intel.com> (sfid-20121121_075948_463272_FA7A07E0)
+	id S1758478Ab2K0JNy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 04:13:54 -0500
+Message-ID: <1354007594.950.56.camel@cumari.coelho.fi> (sfid-20121127_101359_538936_54F4C6FB)
+Subject: Re: [PATCH 11/11] wlcore/wl18xx/wl12xx: add recovery settings to
+ conf
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Yair Shapira <yair.shapira@ti.com>
+Date: Tue, 27 Nov 2012 11:13:14 +0200
+In-Reply-To: <1353945950-3899-12-git-send-email-arik@wizery.com>
+References: <1353945950-3899-1-git-send-email-arik@wizery.com>
+	 <1353945950-3899-12-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="=_50ac7bc7.0XJsaaoV1v96ubTZGTTtXclor548SqIncR6xmXsUAkb7mowH"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On Mon, 2012-11-26 at 18:05 +0200, Arik Nemtsov wrote:
+> From: Yair Shapira <yair.shapira@ti.com>
+> 
+> add support for recovery settings including bug_on_recovery and
+> no_recovery options.
+> 
+> These options can now be set using wl18xx-conf.bin file and wlconf
+> tool.
+> 
+> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
---=_50ac7bc7.0XJsaaoV1v96ubTZGTTtXclor548SqIncR6xmXsUAkb7mowH
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+[...]
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
-head:   e2ff0498409af6f2023f91aba07b281e5e87ee15
-commit: e041f65d5f00011049c7d6af0e31ce69ce9e2655 [196/214] brcmsmac: Remove internal tx queue
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index a48a36c..56f20d6 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+[...]
+> @@ -306,6 +306,8 @@ out:
+>  static void wlcore_adjust_conf(struct wl1271 *wl)
+>  {
+>  	/* Adjust settings according to optional module parameters */
+> +
+> +	/* Firmware Log Settings */
 
+This comment is useless and doesn't follow the coding style.  I'll
+remove it when applying.
 
-sparse warnings:
+> @@ -321,6 +323,13 @@ static void wlcore_adjust_conf(struct wl1271 *wl)
+>  			wl1271_error("Unknown fwlog parameter %s", fwlog_param);
+>  		}
+>  	}
+> +
+> +	/* Recovery Settings */
 
-+ drivers/net/wireless/brcm80211/brcmsmac/main.c:308:10: sparse: symbol 'wlc_prio2prec_map' was not declared. Should it be static?
-drivers/net/wireless/brcm80211/brcmsmac/main.c:6500:43:   also defined here
+Same here.
 
-Please consider folding the attached diff :-)
+--
+Luca.
 
----
-0-DAY kernel build testing backend         Open Source Technology Center
-Fengguang Wu, Yuanhan Liu                              Intel Corporation
-
---=_50ac7bc7.0XJsaaoV1v96ubTZGTTtXclor548SqIncR6xmXsUAkb7mowH
-Content-Type: text/x-diff;
- charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="make-it-static-e041f65.diff"
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 5710dc0..1984b96 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -305,7 +305,7 @@ static const u8 wme_ac2fifo[] = {
- };
- 
- /* 802.1D Priority to precedence queue mapping */
--const u8 wlc_prio2prec_map[] = {
-+static const u8 wlc_prio2prec_map[] = {
- 	_BRCMS_PREC_BE,		/* 0 BE - Best-effort */
- 	_BRCMS_PREC_BK,		/* 1 BK - Background */
- 	_BRCMS_PREC_NONE,		/* 2 None = - */
-
---=_50ac7bc7.0XJsaaoV1v96ubTZGTTtXclor548SqIncR6xmXsUAkb7mowH--
