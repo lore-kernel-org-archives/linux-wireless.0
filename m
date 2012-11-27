@@ -1,88 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:58899 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767951Ab2KOOIi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Nov 2012 09:08:38 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	Daniel Wagner <wagi@monom.org>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v2 11/22] brcmsmac: Add module parameter for setting the debug level
-Date: Thu, 15 Nov 2012 08:08:01 -0600
-Message-Id: <1352988492-21340-12-git-send-email-seth.forshee@canonical.com> (sfid-20121115_151525_979279_801BF2EB)
-In-Reply-To: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42583 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757512Ab2K0A0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 19:26:20 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 07/15] bcma: set the pmu watchdog if available
+Date: Tue, 27 Nov 2012 01:25:17 +0100
+Message-Id: <1353975925-32056-8-git-send-email-hauke@hauke-m.de> (sfid-20121127_012625_901401_1B6DC243)
+In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The debug level can be set by passing debug=... to brcmsmac whenever
-CONFIG_BRCMDBG is enabled.
+Mostly all bcma based devices have a PMU and the PMU watchdog should be
+used and not the old one in chip common. This patch also calculates the
+maximal number the watchdog could be set to.
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   16 ++++++++--------
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |    7 +------
- 2 files changed, 9 insertions(+), 14 deletions(-)
+ drivers/bcma/driver_chipcommon.c |   42 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 40 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index a744ea5..37b9966 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -98,10 +98,14 @@ static struct bcma_device_id brcms_coreid_table[] = {
- };
- MODULE_DEVICE_TABLE(bcma, brcms_coreid_table);
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index ef68553..7c132e5 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -31,6 +31,28 @@ static u32 bcma_chipco_alp_clock(struct bcma_drv_cc *cc)
+ 	return 20000000;
+ }
  
--#ifdef DEBUG
--static int msglevel = 0xdeadbeef;
--module_param(msglevel, int, 0);
--#endif				/* DEBUG */
-+#if defined(CONFIG_BRCMDBG)
-+/*
-+ * Module parameter for setting the debug message level. Available
-+ * flags are specified by the BRCM_DL_* macros in
-+ * drivers/net/wireless/brcm80211/include/defs.h.
-+ */
-+module_param_named(debug, brcm_msg_level, uint, S_IRUGO | S_IWUSR);
-+#endif
- 
- static struct ieee80211_channel brcms_2ghz_chantable[] = {
- 	CHAN2GHZ(1, 2412, IEEE80211_CHAN_NO_HT40MINUS),
-@@ -1184,10 +1188,6 @@ static DECLARE_WORK(brcms_driver_work, brcms_driver_init);
- 
- static int __init brcms_module_init(void)
++static u32 bcma_chipco_watchdog_get_max_timer(struct bcma_drv_cc *cc)
++{
++	struct bcma_bus *bus = cc->core->bus;
++	u32 nb;
++
++	if (cc->capabilities & BCMA_CC_CAP_PMU) {
++		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
++			nb = 32;
++		else if (cc->core->id.rev < 26)
++			nb = 16;
++		else
++			nb = (cc->core->id.rev >= 37) ? 32 : 24;
++	} else {
++		nb = 28;
++	}
++	if (nb == 32)
++		return 0xffffffff;
++	else
++		return (1 << nb) - 1;
++}
++
++
+ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
  {
--#ifdef DEBUG
--	if (msglevel != 0xdeadbeef)
--		brcm_msg_level = msglevel;
--#endif
- 	if (!schedule_work(&brcms_driver_work))
- 		return -EBUSY;
+ 	if (cc->early_setup_done)
+@@ -85,8 +107,24 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
+ /* Set chip watchdog reset timer to fire in 'ticks' backplane cycles */
+ void bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
+ {
+-	/* instant NMI */
+-	bcma_cc_write32(cc, BCMA_CC_WATCHDOG, ticks);
++	u32 maxt;
++	enum bcma_clkmode clkmode;
++
++	maxt = bcma_chipco_watchdog_get_max_timer(cc);
++	if (cc->capabilities & BCMA_CC_CAP_PMU) {
++		if (ticks == 1)
++			ticks = 2;
++		else if (ticks > maxt)
++			ticks = maxt;
++		bcma_cc_write32(cc, BCMA_CC_PMU_WATCHDOG, ticks);
++	} else {
++		clkmode = ticks ? BCMA_CLKMODE_FAST : BCMA_CLKMODE_DYNAMIC;
++		bcma_core_set_clockmode(cc->core, clkmode);
++		if (ticks > maxt)
++			ticks = maxt;
++		/* instant NMI */
++		bcma_cc_write32(cc, BCMA_CC_WATCHDOG, ticks);
++	}
+ }
  
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index a5bf3b6..bde36e5 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -279,12 +279,7 @@ struct edcf_acparam {
- } __packed;
- 
- /* debug/trace */
--uint brcm_msg_level =
--#if defined(DEBUG)
--	BRCM_DL_INFO;
--#else
--	0;
--#endif				/* DEBUG */
-+uint brcm_msg_level;
- 
- /* TX FIFO number to WME/802.1E Access Category */
- static const u8 wme_fifo2ac[] = {
+ void bcma_chipco_irq_mask(struct bcma_drv_cc *cc, u32 mask, u32 value)
 -- 
-1.7.9.5
+1.7.10.4
 
