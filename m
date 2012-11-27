@@ -1,104 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:35594 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753638Ab2K2Nvh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 08:51:37 -0500
-Date: Thu, 29 Nov 2012 07:51:20 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Fengguang Wu <fengguang.wu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: kbuild@01.org, Julia Lawall <julia.lawall@lip6.fr>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [wireless-next:master 207/237]
- drivers/net/wireless/brcm80211/brcmsmac/dma.c:352:20-24: ERROR: di is NULL
- but dereferenced.
-Message-ID: <20121129135120.GA29726@thinkpad-t410> (sfid-20121129_145142_869088_47D32A77)
-References: <50b6477a.KNKuUJi++FBSGGYg%fengguang.wu@intel.com>
- <20121129011337.GA5785@localhost>
+Received: from bear.ext.ti.com ([192.94.94.41]:33131 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750771Ab2K0Nh0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 08:37:26 -0500
+Message-ID: <1354023406.950.109.camel@cumari.coelho.fi> (sfid-20121127_143729_514687_18A42AC9)
+Subject: Re: [PATCH 14/20] wlcore: restore default channel configuration
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Victor Goldenshtein <victorg@ti.com>
+Date: Tue, 27 Nov 2012 15:36:46 +0200
+In-Reply-To: <1353998701-18171-15-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+	 <1353998701-18171-15-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121129011337.GA5785@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 29, 2012 at 09:13:37AM +0800, Fengguang Wu wrote:
-> Hi Seth,
+On Tue, 2012-11-27 at 08:44 +0200, Arik Nemtsov wrote:
+> From: Victor Goldenshtein <victorg@ti.com>
 > 
-> FYI, there are coccinelle warnings in
+> wlcore allocates two static structs wl1271_band_2ghz & wl1271_band_5ghz
+> which are used/modified by Reg-Domain e.g. some channel might be marked
+> as passive at some point. Make sure we don't keep stale settings around
+> if the HW is unregistered/registered during operation.
 > 
-> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
-> head:   0751f8654602e4255f0b9c17784d8100d5896010
-> commit: 90123e045cac4ce8ec13e266f030c618fa674554 [207/237] brcmsmac: Add brcms_dbg_dma() debug macro
+> [Arik - use Tx-power constant and tweak commit message]
 > 
-> + drivers/net/wireless/brcm80211/brcmsmac/dma.c:352:20-24: ERROR: di is NULL but dereferenced.
-> 
-> vim +352 drivers/net/wireless/brcm80211/brcmsmac/dma.c
-> 
-> 5b435de0 Arend van Spriel 2011-10-05  336  
-> 5b435de0 Arend van Spriel 2011-10-05  337  static uint ntxdactive(struct dma_info *di, uint h, uint t)
-> 5b435de0 Arend van Spriel 2011-10-05  338  {
-> 5b435de0 Arend van Spriel 2011-10-05  339  	return txd(di, t-h);
-> 5b435de0 Arend van Spriel 2011-10-05  340  }
-> 5b435de0 Arend van Spriel 2011-10-05  341  
-> 5b435de0 Arend van Spriel 2011-10-05  342  static uint nrxdactive(struct dma_info *di, uint h, uint t)
-> 5b435de0 Arend van Spriel 2011-10-05  343  {
-> 5b435de0 Arend van Spriel 2011-10-05  344  	return rxd(di, t-h);
-> 5b435de0 Arend van Spriel 2011-10-05  345  }
-> 5b435de0 Arend van Spriel 2011-10-05  346  
-> 5b435de0 Arend van Spriel 2011-10-05  347  static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
-> 5b435de0 Arend van Spriel 2011-10-05  348  {
-> ae8e4672 Arend van Spriel 2011-10-29  349  	uint dmactrlflags;
-> 5b435de0 Arend van Spriel 2011-10-05  350  
-> 5b435de0 Arend van Spriel 2011-10-05  351  	if (di == NULL) {
-> 90123e04 Seth Forshee     2012-11-15 @352  		brcms_dbg_dma(di->core, "NULL dma handle\n");
-> 5b435de0 Arend van Spriel 2011-10-05  353  		return 0;
-> 5b435de0 Arend van Spriel 2011-10-05  354  	}
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-Hi Fengguang,
+[...]
 
-Yep, that's obviously wrong. Thanks for the bug report.
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index e68cd3f..3ced59b 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
 
-John, here's a fix. There's no way to have a debug message if di is
-NULL, so I've just removed it. Obviously I've never hitting that
-condition anyway.
+[...]
 
-Seth
+> @@ -5537,6 +5537,7 @@ wlcore_iface_combinations[] = {
+>  
+>  static int wl1271_init_ieee80211(struct wl1271 *wl)
+>  {
+> +	int i;
+>  	static const u32 cipher_suites[] = {
+>  		WLAN_CIPHER_SUITE_WEP40,
+>  		WLAN_CIPHER_SUITE_WEP104,
+> @@ -5599,6 +5600,22 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+>  		     ARRAY_SIZE(wl1271_channels_5ghz) >
+>  		     WL1271_MAX_CHANNELS);
+>  	/*
+> +	* clear channel flags from the previous usage
+> +	* and restore max_power & max_antenna_gain values.
+> +	*/
+> +	for (i = 0; i < ARRAY_SIZE(wl1271_channels); i++) {
+> +		wl1271_band_2ghz.channels[i].flags = 0;
+> +		wl1271_band_2ghz.channels[i].max_power = WLCORE_MAX_TXPWR;
+> +		wl1271_band_2ghz.channels[i].max_antenna_gain = 0;
+> +	}
+> +
+> +	for (i = 0; i < ARRAY_SIZE(wl1271_channels_5ghz); i++) {
+> +		wl1271_band_5ghz.channels[i].flags = 0;
+> +		wl1271_band_5ghz.channels[i].max_power = WLCORE_MAX_TXPWR;
+> +		wl1271_band_5ghz.channels[i].max_antenna_gain = 0;
+> +	}
+> +
+> +	/*
 
+This looks a bit hacky, because you must know what values are being
+modified by cfg80211.  What if in the future there are more values in
+the channel structure that are being modified?
 
->From b0d7b62345e5b32b4022278f238296f5bdf06e8a Mon Sep 17 00:00:00 2001
-From: Seth Forshee <seth.forshee@canonical.com>
-Date: Thu, 29 Nov 2012 07:36:00 -0600
-Subject: [PATCH] brcmsmac: Fix possible NULL pointer dereference in
- _dma_ctrlflags()
+The best would be to have a copy of the struct to pass to cfg80211 when
+the hardware is registered and realloc it when we unregister.  That
+would be safer and more future-proof, but would use a bit more memory
+though.
 
-There's a debug message to warn if this function is passed a NULL
-pointer, but in order to print the message we have to dereference the
-pointer. Obviously this isn't a good idea, so remove the message.
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/dma.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 511e457..1860c57 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -349,10 +349,8 @@ static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
- {
- 	uint dmactrlflags;
- 
--	if (di == NULL) {
--		brcms_dbg_dma(di->core, "NULL dma handle\n");
-+	if (di == NULL)
- 		return 0;
--	}
- 
- 	dmactrlflags = di->dma.dmactrlflags;
- 	dmactrlflags &= ~mask;
--- 
-1.7.9.5
+--
+Luca.
 
