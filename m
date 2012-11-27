@@ -1,24 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932083Ab2K1NIX (ORCPT
+Received: from hub022-nj-3.exch022.serverdata.net ([206.225.164.186]:4331 "EHLO
+	HUB022-nj-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754842Ab2K0MMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 08:08:23 -0500
-Message-ID: <1354108126.9345.24.camel@jlt4.sipsolutions.net> (sfid-20121128_140825_173237_9BA280B0)
-Subject: Re: [RFCv2 00/13] mesh powersave - basics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, thomas@cozybit.com,
-	linux-wireless@vger.kernel.org
-Date: Wed, 28 Nov 2012 14:08:46 +0100
-In-Reply-To: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-Content-Type: text/plain
-Mime-Version: 1.0
+	Tue, 27 Nov 2012 07:12:31 -0500
+Message-ID: <50B4AE29.3040600@posedge.com> (sfid-20121127_131234_827655_5A13CB34)
+Date: Tue, 27 Nov 2012 17:42:25 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 2/3] mac80211: support VHT association
+References: <1353939915-25121-1-git-send-email-johannes@sipsolutions.net> <1353939915-25121-3-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1353939915-25121-3-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ping mesh folks, any comments?
+On 11/26/2012 07:55 PM, Johannes Berg wrote:
+> +static u8 ieee80211_ht_vht_rx_chains(struct ieee80211_sub_if_data *sdata,
+> +				     struct cfg80211_bss *cbss)
+> +{
+> +	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> +	const u8 *ht_cap_ie, *vht_cap_ie;
+> +	const struct ieee80211_ht_cap *ht_cap;
+> +	const struct ieee80211_vht_cap *vht_cap;
+> +	u8 chains = 1;
+> +
+> +	if (ifmgd->flags & IEEE80211_STA_DISABLE_HT)
+> +		return chains;
+> +
+> +	ht_cap_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY,
+> +				     cbss->information_elements,
+> +				     cbss->len_information_elements);
+> +	if (ht_cap_ie && ht_cap_ie[1] >= sizeof(*ht_cap)) {
+> +		ht_cap = (void *)(ht_cap_ie + 2);
+> +		chains = ieee80211_mcs_to_chains(&ht_cap->mcs);
+> +		/*
+> +		 * TODO: use "Tx Maximum Number Spatial Streams Supported" and
+> +		 *	 "Tx Unequal Modulation Supported" fields.
+> +		 */
+> +		
+> +	}
+> +
+> +	if (ifmgd->flags & IEEE80211_STA_DISABLE_VHT)
+> +		return chains;
+> +
+> +
+> +	vht_cap_ie = cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY,
+> +				      cbss->information_elements,
+> +				      cbss->len_information_elements);
+> +	if (vht_cap_ie && vht_cap_ie[1] >= sizeof(*vht_cap)) {
+> +		u8 nss;
+> +		u16 tx_mcs_map;
+> +
+> +		vht_cap = (void *)(vht_cap_ie + 2);
+> +		tx_mcs_map = le16_to_cpu(vht_cap->supp_mcs.tx_mcs_map);
 
-johannes
+Guess we should take rx_mcs_map as we are determining vht_rx_chains?
 
+Thanks,
+Mahesh
