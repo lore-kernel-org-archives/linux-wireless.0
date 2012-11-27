@@ -1,80 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:49626 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753996Ab2KSSvE (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:42408 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755779Ab2K0GpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:51:04 -0500
-Message-ID: <50AA7F89.1020504@pengutronix.de> (sfid-20121119_195108_800720_2B4531F9)
-Date: Mon, 19 Nov 2012 19:50:49 +0100
-From: Marc Kleine-Budde <mkl@pengutronix.de>
-MIME-Version: 1.0
-To: Bill Pemberton <wfp5p@virginia.edu>
-CC: gregkh@linuxfoundation.org,
-	Wolfgang Grandegger <wg@grandegger.com>,
-	"Maciej W. Rozycki" <macro@linux-mips.org>,
-	Jes Sorensen <jes@trained-monkey.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-can@vger.kernel.org, netdev@vger.kernel.org,
-	linux-hippi@sunsite.dk, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 333/493] net: remove use of __devinitdata
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu> <1353349642-3677-333-git-send-email-wfp5p@virginia.edu>
-In-Reply-To: <1353349642-3677-333-git-send-email-wfp5p@virginia.edu>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigE7DB2B6D387D3DC5400C6E07"
+	Tue, 27 Nov 2012 01:45:09 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hm6so4054043wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:08 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Ido Reis <idor@ti.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 01/20] wl18xx: update default mac/phy parameters
+Date: Tue, 27 Nov 2012 08:44:42 +0200
+Message-Id: <1353998701-18171-2-git-send-email-arik@wizery.com> (sfid-20121127_074517_986831_641BABD5)
+In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigE7DB2B6D387D3DC5400C6E07
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Ido Reis <idor@ti.com>
 
-On 11/19/2012 07:24 PM, Bill Pemberton wrote:
-> CONFIG_HOTPLUG is going away as an option so __devinitdata is no
-> longer needed.
->=20
-> Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-> Cc: Wolfgang Grandegger <wg@grandegger.com>=20
-> Cc: Marc Kleine-Budde <mkl@pengutronix.de>=20
-> Cc: "Maciej W. Rozycki" <macro@linux-mips.org>=20
-> Cc: Jes Sorensen <jes@trained-monkey.org>=20
-> Cc: "John W. Linville" <linville@tuxdriver.com>=20
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>=20
-> Cc: Chaoming Li <chaoming_li@realsil.com.cn>=20
-> Cc: linux-can@vger.kernel.org=20
-> Cc: netdev@vger.kernel.org=20
-> Cc: linux-hippi@sunsite.dk=20
-> Cc: linux-wireless@vger.kernel.org=20
+Update mac/phy paramters according to the default HP SISO boards.
 
-You've missed (mainlined via net-next/master):
-> ./sja1000/plx_pci.c:229:static struct plx_pci_card_info plx_pci_card_in=
-fo_cti __devinitdata =3D {
+Signed-off-by: Ido Reis <idor@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/conf.h |   17 +++++++++++------
+ drivers/net/wireless/ti/wl18xx/main.c |    7 ++++---
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
-Otherwise...
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de> (for the CAN part)
+diff --git a/drivers/net/wireless/ti/wl18xx/conf.h b/drivers/net/wireless/ti/wl18xx/conf.h
+index 4d426cc..f020c1c 100644
+--- a/drivers/net/wireless/ti/wl18xx/conf.h
++++ b/drivers/net/wireless/ti/wl18xx/conf.h
+@@ -23,20 +23,21 @@
+ #define __WL18XX_CONF_H__
+ 
+ #define WL18XX_CONF_MAGIC	0x10e100ca
+-#define WL18XX_CONF_VERSION	(WLCORE_CONF_VERSION | 0x0003)
++#define WL18XX_CONF_VERSION	(WLCORE_CONF_VERSION | 0x0004)
+ #define WL18XX_CONF_MASK	0x0000ffff
+ #define WL18XX_CONF_SIZE	(WLCORE_CONF_SIZE + \
+ 				 sizeof(struct wl18xx_priv_conf))
+ 
+ #define NUM_OF_CHANNELS_11_ABG 150
+ #define NUM_OF_CHANNELS_11_P 7
+-#define WL18XX_NUM_OF_SUB_BANDS 9
+ #define SRF_TABLE_LEN 16
+ #define PIN_MUXING_SIZE 2
++#define NUM_OF_TRACE_LOSS_GAPS_TX 10
++#define NUM_OF_TRACE_LOSS_GAPS_RX 18
+ 
+ struct wl18xx_mac_and_phy_params {
+ 	u8 phy_standalone;
+-	u8 rdl;
++	u8 spare0;
+ 	u8 enable_clpc;
+ 	u8 enable_tx_low_pwr_on_siso_rdl;
+ 	u8 auto_detect;
+@@ -69,8 +70,8 @@ struct wl18xx_mac_and_phy_params {
+ 	u8 pwr_limit_reference_11_abg;
+ 	u8 per_chan_pwr_limit_arr_11p[NUM_OF_CHANNELS_11_P];
+ 	u8 pwr_limit_reference_11p;
+-	u8 per_sub_band_tx_trace_loss[WL18XX_NUM_OF_SUB_BANDS];
+-	u8 per_sub_band_rx_trace_loss[WL18XX_NUM_OF_SUB_BANDS];
++	u8 spare1[9];
++	u8 spare2[9];
+ 	u8 primary_clock_setting_time;
+ 	u8 clock_valid_on_wake_up;
+ 	u8 secondary_clock_setting_time;
+@@ -81,7 +82,11 @@ struct wl18xx_mac_and_phy_params {
+ 	s8 low_power_val;
+ 	s8 med_power_val;
+ 	s8 high_power_val;
+-	u8 padding[1];
++	s8 per_sub_band_tx_trace_loss[NUM_OF_TRACE_LOSS_GAPS_TX];
++	s8 per_sub_band_rx_trace_loss[NUM_OF_TRACE_LOSS_GAPS_RX];
++	u8 tx_rf_margin;
++
++	u8 padding[4];
+ } __packed;
+ 
+ enum wl18xx_ht_mode {
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index e71e2cf..30222cb 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -508,7 +508,6 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
+ 		.clock_valid_on_wake_up		= 0x00,
+ 		.secondary_clock_setting_time	= 0x05,
+ 		.board_type 			= BOARD_TYPE_HDK_18XX,
+-		.rdl				= 0x01,
+ 		.auto_detect			= 0x00,
+ 		.dedicated_fem			= FEM_NONE,
+ 		.low_band_component		= COMPONENT_3_WAY_SWITCH,
+@@ -525,13 +524,15 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
+ 		.enable_tx_low_pwr_on_siso_rdl	= 0x00,
+ 		.rx_profile			= 0x00,
+ 		.pwr_limit_reference_11_abg	= 0xc8,
++		.pwr_limit_reference_11p	= 0xc8,
+ 		.psat				= 0,
+ 		.low_power_val			= 0x00,
+-		.med_power_val			= 0x0a,
+-		.high_power_val			= 0x1e,
++		.med_power_val			= 0x0A,
++		.high_power_val			= 0x11,
+ 		.external_pa_dc2dc		= 0,
+ 		.number_of_assembled_ant2_4	= 1,
+ 		.number_of_assembled_ant5	= 1,
++		.tx_rf_margin			= 1,
+ 	},
+ };
+ 
+-- 
+1.7.9.5
 
---=20
-Pengutronix e.K.                  | Marc Kleine-Budde           |
-Industrial Linux Solutions        | Phone: +49-231-2826-924     |
-Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
-Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
-
-
---------------enigE7DB2B6D387D3DC5400C6E07
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
-
-iEYEARECAAYFAlCqf4kACgkQjTAFq1RaXHPGvACdG0eLBLrkna9F93jnuxcADGQB
-u6YAnjaWLnG+qswOL22ZSiaRWz3mVRob
-=77FE
------END PGP SIGNATURE-----
-
---------------enigE7DB2B6D387D3DC5400C6E07--
