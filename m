@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2509 "EHLO mms2.broadcom.com"
+Received: from plane.gmane.org ([80.91.229.3]:58409 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751454Ab2KFKVH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 05:21:07 -0500
-Message-ID: <5098E488.5020206@broadcom.com> (sfid-20121106_112120_016697_C417B134)
-Date: Tue, 6 Nov 2012 11:20:56 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Daniel Wagner" <wagi@monom.org>
-cc: "Seth Forshee" <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
- support
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
- <5098B858.7090802@monom.org> <5098C7FF.2060308@monom.org>
-In-Reply-To: <5098C7FF.2060308@monom.org>
-Content-Type: text/plain;
- charset=iso-8859-1
+	id S1753665Ab2K0TQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 14:16:50 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TdQeS-0004XD-25
+	for linux-wireless@vger.kernel.org; Tue, 27 Nov 2012 20:17:00 +0100
+Received: from g231079119.adsl.alicedsl.de ([92.231.79.119])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 20:17:00 +0100
+Received: from drahemmaps by g231079119.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 20:17:00 +0100
+To: linux-wireless@vger.kernel.org
+From: Martin Schleier <drahemmaps@gmx.net>
+Subject: Re: [RFC 0/3] Add spectral scan support for Atheros AR92xx/AR93xx
+Date: Tue, 27 Nov 2012 19:16:38 +0000 (UTC)
+Message-ID: <loom.20121127T201036-82@post.gmane.org> (sfid-20121127_201654_183265_CA7D13D9)
+References: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/06/2012 09:19 AM, Daniel Wagner wrote:
-> On 06.11.2012 08:12, Daniel Wagner wrote:
->> Hi Seth,
->>
->> I am owner of a MBA 2012 and the mainline driver is kind of 'not fun'
->> (read broken). Since a few days I am using it and the situation improved
-> 
-> it = your patch set on top of 3.7-rc3
-> 
-> (/me should not write emails right after getting up)
-> 
-> 
+Simon Wunderlich <simon.wunderlich@...> writes:
 
-Just looked at the screen shots. Only could read the last one. It seems
-to indicate a problem in the receive path.
+> This patchset is a first request for comments for the upcoming spectral
+> scan feature. It adds a new attribute to nl80211 to ask for a spectral
+> scan while scanning, because we cycle through the channels anyway at
+> this time. If enabled by the driver, spectral scan results will be
+> collected. This feature has been enabled for AR92xx and AR93xx based
+> chipsets. As the FFT samples are very hardware dependent, they are only
+> provided via a debugfs file for further evaluation.
+> 
+> [3] http://www.wehavemorefun.de/fritzbox/Ath_spectral.ko#Symbole
 
-Gr. AvS
+Erm. Just a quick question, since you mentioned this fritzbox ath_spectral.ko
+module... Is your "work" based or related to it, i.e.: did you peek at the
+assembler listings of it, or did someone else write a spec. and you just
+implemented it? 
+
 
