@@ -1,188 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:41791 "EHLO
-	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756345Ab2K0BJj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 20:09:39 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Tim Shepard <shep@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 26 Nov 2012 17:09:31 -0800
-Subject: RE: [PATCH] mwifiex: add support for SDIO card reset
-Message-ID: <477F20668A386D41ADCC57781B1F70430D1367C74B@SC-VEXCH1.marvell.com> (sfid-20121127_020942_940112_3E1B82E3)
-References: <1351820654-24433-1-git-send-email-bzhao@marvell.com>
- <CAMXE1-ptP5hEK_Bn4wU5jykcXxcpKf9uj4tR8gz5Cfp873iHvQ@mail.gmail.com>
-In-Reply-To: <CAMXE1-ptP5hEK_Bn4wU5jykcXxcpKf9uj4tR8gz5Cfp873iHvQ@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42605 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932792Ab2K0A01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 19:26:27 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 09/15] bcma: register watchdog driver
+Date: Tue, 27 Nov 2012 01:25:19 +0100
+Message-Id: <1353975925-32056-10-git-send-email-hauke@hauke-m.de> (sfid-20121127_012631_180059_1084C384)
+In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrei,
+Register the watchdog driver to the system if this is a SoC. Using the
+watchdog on a non SoC device, like a PCIe card, will make the PCIe
+card die when the timeout expired, but starting it again is not
+supported by bcma.
 
-> Hi all,
-> 
-> On Fri, Nov 2, 2012 at 3:44 AM, Bing Zhao <bzhao@marvell.com> wrote:
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> >
-> > When command timeout happens due to a bug in firmware/hardware,
-> > the timeout handler just prints some debug information. User is
-> > unable to reload the driver in this case.
-> >
-> > Inspired by 9a821f5 "libertas: add sd8686 reset_card support",
-> > this patch adds card reset support for SDIO interface when
-> > command timeout happens. If the SDIO host contoller supports
-> > MMC_POWER_OFF|UP|ON operations, the chip will be reset and the
-> > firmware will be re-downloaded.
-> 
-> After this patch my board started to reset itself frequently. Before I have seen
-> warnings but it was working (somehow).
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/bcma_private.h                 |    2 ++
+ drivers/bcma/driver_chipcommon.c            |   22 ++++++++++++++++++++++
+ drivers/bcma/main.c                         |    8 ++++++++
+ include/linux/bcma/bcma_driver_chipcommon.h |    3 +++
+ 4 files changed, 35 insertions(+)
 
-Are the command timeout warnings the same with and without this patch applied?
-Could you please revert this patch and generate a log with the warnings shown but still working?
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 169fc58..bcb830e 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -84,6 +84,8 @@ extern void __exit bcma_host_pci_exit(void);
+ /* driver_pci.c */
+ u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
+ 
++extern int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc);
++
+ #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
+ bool __devinit bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc);
+ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 1172226..d017f25 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -12,6 +12,7 @@
+ #include "bcma_private.h"
+ #include <linux/bcm47xx_wdt.h>
+ #include <linux/export.h>
++#include <linux/platform_device.h>
+ #include <linux/bcma/bcma.h>
+ 
+ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
+@@ -87,6 +88,27 @@ static int bcma_chipco_watchdog_ticks_per_ms(struct bcma_drv_cc *cc)
+ 	}
+ }
+ 
++int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc)
++{
++	struct bcm47xx_wdt wdt = {};
++	struct platform_device *pdev;
++
++	wdt.driver_data = cc;
++	wdt.timer_set = bcma_chipco_watchdog_timer_set_wdt;
++	wdt.timer_set_ms = bcma_chipco_watchdog_timer_set_ms_wdt;
++	wdt.max_timer_ms = bcma_chipco_watchdog_get_max_timer(cc) / cc->ticks_per_ms;
++
++	pdev = platform_device_register_data(NULL, "bcm47xx-wdt",
++					     cc->core->bus->num, &wdt,
++					     sizeof(wdt));
++	if (IS_ERR(pdev))
++		return PTR_ERR(pdev);
++
++	cc->watchdog = pdev;
++
++	return 0;
++}
++
+ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
+ {
+ 	if (cc->early_setup_done)
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index a971889..debd4f1 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -165,6 +165,12 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 	}
+ #endif
+ 
++	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
++		err = bcma_chipco_watchdog_register(&bus->drv_cc);
++		if (err)
++			bcma_err(bus, "Error registering watchdog driver\n");
++	}
++
+ 	return 0;
+ }
+ 
+@@ -177,6 +183,8 @@ static void bcma_unregister_cores(struct bcma_bus *bus)
+ 		if (core->dev_registered)
+ 			device_unregister(&core->dev);
+ 	}
++	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
++		platform_device_unregister(bus->drv_cc.watchdog);
+ }
+ 
+ int __devinit bcma_bus_register(struct bcma_bus *bus)
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 2f9b014..e513591 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -1,6 +1,8 @@
+ #ifndef LINUX_BCMA_DRIVER_CC_H_
+ #define LINUX_BCMA_DRIVER_CC_H_
+ 
++#include <linux/platform_device.h>
++
+ /** ChipCommon core registers. **/
+ #define BCMA_CC_ID			0x0000
+ #define  BCMA_CC_ID_ID			0x0000FFFF
+@@ -571,6 +573,7 @@ struct bcma_drv_cc {
+ 	struct bcma_serial_port serial_ports[4];
+ #endif /* CONFIG_BCMA_DRIVER_MIPS */
+ 	u32 ticks_per_ms;
++	struct platform_device *watchdog;
+ };
+ 
+ /* Register access */
+-- 
+1.7.10.4
 
-> 
-> See logs below:
-> 
-> [ 7402.431601] ieee80211 phy12: uap0: changing to 2 not supported
-> [ 7402.432234] Bluetooth: Skip incorrect packet: hdrlen 3077 buffer 64
-> [ 7412.436879] Bluetooth: hci1 command tx timeout
-> [ 7412.468830] Bluetooth: hci0 command tx timeout
-
-Here the Bluetooth driver btmrvl timed out before WLAN driver got the timeout.
-Since the patch takes effect only after mwifiex times out, I assume that btmrvl timeout also happens without this patch.
-
-I only tested the patch with the timeout triggered by mwifiex driver. I will try to reproduce the btmrvl driver timeout on my setup. If you have a way to recreate btmrvl timeout quickly please let me know.
-
-Thanks,
-Bing
-
-> [ 7412.468842] mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func:
-> Timeout cmd id (1353927138.543839) = 0x10c, act = 0x1
-> [ 7412.468852] mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
-> [ 7412.468857] mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
-> [ 7412.468863] mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
-> [ 7412.468868] mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
-> [ 7412.468873] mwifiex_sdio mmc0:0001:1: last_cmd_index = 0
-> [ 7412.468879] mwifiex_sdio mmc0:0001:1: last_cmd_id: 0c 01 28 00 28
-> 00 e4 00 0c 01
-> [ 7412.468885] mwifiex_sdio mmc0:0001:1: last_cmd_act: 01 00 13 01 13
-> 01 ff 00 01 00
-> [ 7412.468890] mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 4
-> [ 7412.468896] mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 0c 81 28 80
-> 28 80 e4 80 0c 81
-> [ 7412.468901] mwifiex_sdio mmc0:0001:1: last_event_index = 0
-> [ 7412.468907] mwifiex_sdio mmc0:0001:1: last_event: 00 00 00 00 00 00
-> 00 00 00 00
-> [ 7412.468913] mwifiex_sdio mmc0:0001:1: data_sent=0 cmd_sent=1
-> [ 7412.468921] mwifiex_sdio mmc0:0001:1: ps_mode=1 ps_state=0
-> [ 7412.469014] mwifiex_sdio: Resetting card...
-> [ 7412.469452] mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0,
-> cmd_pending=-1
-> [ 7412.589781] mmc0:0001:1: pending IRQ with no handler
-> [ 7477.264586] kmemleak: 2 new suspected memory leaks (see
-> /sys/kernel/debug/kmemleak)
-> [ 7558.642494] INFO: task kworker/3:0:32056 blocked for more than 120 seconds.
-> [ 7558.642505] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> disables this message.
-> [ 7558.642511] kworker/3:0     D 00000000     0 32056      2 0x00000000
-> [ 7558.642523]  e68f9cf0 00000086 f0e19694 00000000 00000004 f53ceae0
-> e0de9b71 000006bd
-> [ 7558.642544]  c19cb680 c19cb680 00008194 c1ed9f28 f55c9680 f0e191d0
-> c10a7f4d e68f9d1c
-> [ 7558.642563]  c10a7f4d f0e191d0 0ca6209c 00000004 0066850d 00008194
-> 00598194 c1ecff58
-> [ 7558.642584] Call Trace:
-> [ 7558.642603]  [<c10a7f4d>] ? __lock_acquire+0x3ad/0x1770
-> [ 7558.642612]  [<c10a7f4d>] ? __lock_acquire+0x3ad/0x1770
-> [ 7558.642628]  [<c15fc2c3>] schedule+0x23/0x60
-> [ 7558.642639]  [<c15fa005>] schedule_timeout+0x135/0x1f0
-> [ 7558.642651]  [<c10a6c65>] ? mark_held_locks+0x85/0xe0
-> [ 7558.642660]  [<c15fd6d7>] ? _raw_spin_unlock_irq+0x27/0x40
-> [ 7558.642671]  [<c15fc172>] wait_for_common+0xd2/0x120
-> [ 7558.642682]  [<c107f330>] ? try_to_wake_up+0x290/0x290
-> [ 7558.642692]  [<c15fc297>] wait_for_completion+0x17/0x20
-> [ 7558.642703]  [<c106d587>] kthread_stop+0x47/0xf0
-> [ 7558.642717]  [<f8502ad6>] btmrvl_remove_card+0x36/0x80 [btmrvl]
-> [ 7558.642727]  [<f852f6d2>] btmrvl_sdio_remove+0x42/0x80 [btmrvl_sdio]
-> [ 7558.642737]  [<c14e1fc2>] sdio_bus_remove+0x32/0x100
-> [ 7558.642747]  [<c13cd841>] ? __pm_runtime_idle+0x61/0xa0
-> [ 7558.642760]  [<c13c2cb4>] __device_release_driver+0x64/0xc0
-> [ 7558.642769]  [<c13c2f96>] device_release_driver+0x26/0x40
-> [ 7558.642779]  [<c13c27f6>] bus_remove_device+0xb6/0x110
-> [ 7558.642789]  [<c13bfb2a>] ? device_remove_attrs+0x2a/0x60
-> [ 7558.642797]  [<c13c01b5>] device_del+0xe5/0x150
-> [ 7558.642806]  [<c14e21dc>] sdio_remove_func+0x1c/0x30
-> [ 7558.642814]  [<c14e0fbc>] mmc_sdio_remove+0x3c/0x80
-> [ 7558.642824]  [<c14da1f1>] mmc_stop_host+0x71/0x110
-> [ 7558.642835]  [<c14daa6d>] mmc_remove_host+0x1d/0x40
-> [ 7558.642845]  [<f8861877>] sdio_card_reset_worker+0x27/0x50 [mwifiex_sdio]
-> [ 7558.642856]  [<c106670b>] process_one_work+0x18b/0x4c0
-> [ 7558.642865]  [<c1066694>] ? process_one_work+0x114/0x4c0
-> [ 7558.642875]  [<f8861850>] ? mwifiex_register_dev+0x120/0x120 [mwifiex_sdio]
-> [ 7558.642886]  [<c1067e49>] worker_thread+0x119/0x3a0
-> [ 7558.642896]  [<c1067d30>] ? __next_gcwq_cpu+0x60/0x60
-> [ 7558.642904]  [<c106d52f>] kthread+0x9f/0xb0
-> [ 7558.642915]  [<c1604e37>] ret_from_kernel_thread+0x1b/0x28
-> [ 7558.642924]  [<c106d490>] ? kthread_create_on_node+0xe0/0xe0
-> [ 7558.642931] 3 locks held by kworker/3:0/32056:
-> [ 7558.642935]  #0:  (events){.+.+.+}, at: [<c1066694>]
-> process_one_work+0x114/0x4c0
-> [ 7558.642953]  #1:  (card_reset_work){+.+.+.}, at: [<c1066694>]
-> process_one_work+0x114/0x4c0
-> [ 7558.642970]  #2:  (&__lockdep_no_validate__){......}, at:
-> [<c13c2f8f>] device_release_driver+0x1f/0x40
-> [ 7678.604370] INFO: task kworker/3:0:32056 blocked for more than 120 seconds.
-> [ 7678.604381] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> disables this message.
-> [ 7678.604387] kworker/3:0     D 00000000     0 32056      2 0x00000000
-> [ 7678.604400]  e68f9cf0 00000086 f0e19694 00000000 00000004 f53ceae0
-> e0de9b71 000006bd
-> [ 7678.604421]  c19cb680 c19cb680 00008194 c1ed9f28 f55c9680 f0e191d0
-> c10a7f4d e68f9d1c
-> [ 7678.604440]  c10a7f4d f0e191d0 0ca6209c 00000004 0066850d 00008194
-> 00598194 c1ecff58
-> [ 7678.604461] Call Trace:
-> [ 7678.604479]  [<c10a7f4d>] ? __lock_acquire+0x3ad/0x1770
-> [ 7678.604487]  [<c10a7f4d>] ? __lock_acquire+0x3ad/0x1770
-> [ 7678.604503]  [<c15fc2c3>] schedule+0x23/0x60
-> [ 7678.604513]  [<c15fa005>] schedule_timeout+0x135/0x1f0
-> [ 7678.604526]  [<c10a6c65>] ? mark_held_locks+0x85/0xe0
-> [ 7678.604535]  [<c15fd6d7>] ? _raw_spin_unlock_irq+0x27/0x40
-> [ 7678.604546]  [<c15fc172>] wait_for_common+0xd2/0x120
-> [ 7678.604557]  [<c107f330>] ? try_to_wake_up+0x290/0x290
-> [ 7678.604568]  [<c15fc297>] wait_for_completion+0x17/0x20
-> [ 7678.604578]  [<c106d587>] kthread_stop+0x47/0xf0
-> [ 7678.604592]  [<f8502ad6>] btmrvl_remove_card+0x36/0x80 [btmrvl]
-> [ 7678.604602]  [<f852f6d2>] btmrvl_sdio_remove+0x42/0x80 [btmrvl_sdio]
-> [ 7678.604612]  [<c14e1fc2>] sdio_bus_remove+0x32/0x100
-> [ 7678.604622]  [<c13cd841>] ? __pm_runtime_idle+0x61/0xa0
-> [ 7678.604634]  [<c13c2cb4>] __device_release_driver+0x64/0xc0
-> [ 7678.604644]  [<c13c2f96>] device_release_driver+0x26/0x40
-> [ 7678.604653]  [<c13c27f6>] bus_remove_device+0xb6/0x110
-> [ 7678.604663]  [<c13bfb2a>] ? device_remove_attrs+0x2a/0x60
-> [ 7678.604671]  [<c13c01b5>] device_del+0xe5/0x150
-> [ 7678.604680]  [<c14e21dc>] sdio_remove_func+0x1c/0x30
-> [ 7678.604688]  [<c14e0fbc>] mmc_sdio_remove+0x3c/0x80
-> [ 7678.604698]  [<c14da1f1>] mmc_stop_host+0x71/0x110
-> [ 7678.604709]  [<c14daa6d>] mmc_remove_host+0x1d/0x40
-> [ 7678.604718]  [<f8861877>] sdio_card_reset_worker+0x27/0x50 [mwifiex_sdio]
-> [ 7678.604731]  [<c106670b>] process_one_work+0x18b/0x4c0
-> [ 7678.604741]  [<c1066694>] ? process_one_work+0x114/0x4c0
-> [ 7678.604750]  [<f8861850>] ? mwifiex_register_dev+0x120/0x120 [mwifiex_sdio]
-> [ 7678.604761]  [<c1067e49>] worker_thread+0x119/0x3a0
-> [ 7678.604771]  [<c1067d30>] ? __next_gcwq_cpu+0x60/0x60
-> [ 7678.604779]  [<c106d52f>] kthread+0x9f/0xb0
-> [ 7678.604790]  [<c1604e37>] ret_from_kernel_thread+0x1b/0x28
-> [ 7678.604799]  [<c106d490>] ? kthread_create_on_node+0xe0/0xe0
-> 
-> < skipped>
-> 
-> Regards,
-> Andrei
