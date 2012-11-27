@@ -1,30 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21545 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754698Ab2K1NvM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38904 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753313Ab2K0I14 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 08:51:12 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: wireless-regdb: How to specify Tx power for Japan
-Date: Wed, 28 Nov 2012 15:51:08 +0200
-Message-ID: <2274062.Nz7FkqmJnV@lx-vladimir> (sfid-20121128_145116_227430_0D69E5E3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 27 Nov 2012 03:27:56 -0500
+Message-ID: <1354004901.9576.4.camel@jlt4.sipsolutions.net> (sfid-20121127_092800_741246_3EE9785C)
+Subject: Re: A weird rfkill problem after rebooting the system
+From: Johannes Berg <johannes@sipsolutions.net>
+To: AceLan Kao <acelan.kao@canonical.com>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Corentin Chary <corentin.chary@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	acpi4asus-user@lists.sourceforge.net
+Date: Tue, 27 Nov 2012 09:28:21 +0100
+In-Reply-To: <CAMz9Wg8y3JaJiEhsOz94viqpC4XXhQeE-eruBUGkXdY78-G=4A@mail.gmail.com> (sfid-20121127_073525_960060_6A8BC0D2)
+References: <CAMz9Wg8y3JaJiEhsOz94viqpC4XXhQeE-eruBUGkXdY78-G=4A@mail.gmail.com>
+	 (sfid-20121127_073525_960060_6A8BC0D2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, 2012-11-27 at 14:35 +0800, AceLan Kao wrote:
+> Hi,
+> 
+> I encountered a strange rfkill problem on the ASUS laptop.
+> But it's more like an rfkill issue to me, so I mail to the
+> linux-wireless mailing list and
+> CC'd to the maintainer of the asus-wmi driver.
 
-I have document (WiGig spec for 60g band), where, in the annex with regulatory data,
-it specifies power for Japan on per-element basis, not EIRP.
+This totally sounds like a platform driver issue, adding that mailing
+list (left full text intact below). Nothing I can help you with.
 
-Typical antenna for 60g would have 16 elements.
+johannes
 
-What should I put in the power rule for wireless-regdb?
+> I attached 2 rfkill event log files.
+> 1. The first one(rfkill.0.log) is the driver we use currently,
+> you can see that I can soft block/unblock the devices by hitting the hotkey.
+> But the behavior is abnormal if I reboot the system with the devices blocked.
+> They are blocked after reboot is as expected.
+> But while I'm trying to unblock them, the phy0(the one keeps changing
+> its index) will become blocked.
+> So, there is no way to unblock the bt device by hitting hotkey.
+> 
+> 2. The second log file is I try to remove the line from asus-wmi.c
+>    rfkill_init_sw_state(*rfkill, !result);
+> Then, it works after rebooting.
+> I suspect the problem comes from the line in rfkill_init_sw_state() function
+>    rfkill->persistent = true;
+> While calling rfkill_register() with persistent is false, then it'll
+> call rfkill_sync_work()
+> to set device block state, so that it prevents this issue.
+> But I'm not sure if my guess is correct and have no idea why it
+> doesn't need to this if persistent is true.
+> The persistent value seems doesn't affect the rfkill state that much
+> after reboot, the rfkill state is correct all the time.
+> 
+> BTW, the BIOS of this ASUS machine doesn't set the rfkill state while
+> we hit the hotkey.
+> 
+> Best regards,
+> AceLan Kao.
+> 
 
-Power stated is 10dBm; should I say 10 + 10log16, i.e. about 22dBm ?
 
-Thanks, Vladimir
