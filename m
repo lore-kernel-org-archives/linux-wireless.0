@@ -1,49 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45855 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932073Ab2KNR1t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 12:27:49 -0500
-Message-ID: <1352914094.9510.38.camel@jlt4.sipsolutions.net> (sfid-20121114_182752_296607_EDF819E3)
-Subject: Re: 'ip' blocking for long time trying to down station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 14 Nov 2012 18:28:14 +0100
-In-Reply-To: <50A3D138.7010906@candelatech.com>
-References: <5091ADDD.4050407@candelatech.com>
-	  (sfid-20121101_000206_244719_62ADC7A2) <1352884491.9510.2.camel@jlt4.sipsolutions.net>
-	 <50A3D138.7010906@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42628 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932713Ab2K0A0d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 19:26:33 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 10/15] ssb: get alp clock from devices with PMU
+Date: Tue, 27 Nov 2012 01:25:20 +0100
+Message-Id: <1353975925-32056-11-git-send-email-hauke@hauke-m.de> (sfid-20121127_014526_828540_A7643289)
+In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-14 at 09:13 -0800, Ben Greear wrote:
+If there is a PMU in the device, get the alp clock from that part and
+do not assume 20000000.
 
-> > I'm guessing that the other interfaces are actually re-scheduling work
-> > items while this is trying to flush ... I'm not really sure how to
-> > improve this behaviour though.
-> 
-> That seems very likely, as other stations would be trying to associate
-> in this scenario....
-> 
-> Can we just purge all of this interface's work items from the list w/out flushing
-> everyone else's work?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/ssb/driver_chipcommon.c     |   15 +++++++++------
+ drivers/ssb/driver_chipcommon_pmu.c |   27 +++++++++++++++++++++++++++
+ drivers/ssb/ssb_private.h           |    1 +
+ 3 files changed, 37 insertions(+), 6 deletions(-)
 
-Actually, what I said doesn't quite make sense. We evidently use
-flush_work() which doesn't care about *new* items, so I suppose it just
-has to wait so long because there are other items already that are
-taking a long time.
-
-However, it seems that doing flush_work() is completely pointless,
-cancel_work_sync() would be just as effective -- the work exits right
-away if the interface is no longer marked running, and it is marked
-not-running before we even do the flush_work(). So using
-cancel_work_sync() should be safe here and would avoid the long delay
-you're seeing.
-
-Could you try this? The flush_work() is in iface.c:ieee80211_do_stop()
-
-johannes
+diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
+index e9d2ca1..603b630 100644
+--- a/drivers/ssb/driver_chipcommon.c
++++ b/drivers/ssb/driver_chipcommon.c
+@@ -280,6 +280,14 @@ static void calc_fast_powerup_delay(struct ssb_chipcommon *cc)
+ 	cc->fast_pwrup_delay = tmp;
+ }
+ 
++static u32 ssb_chipco_alp_clock(struct ssb_chipcommon *cc)
++{
++	if (cc->capabilities & SSB_CHIPCO_CAP_PMU)
++		return ssb_pmu_get_alp_clock(cc);
++
++	return 20000000;
++}
++
+ void ssb_chipcommon_init(struct ssb_chipcommon *cc)
+ {
+ 	if (!cc->dev)
+@@ -473,12 +481,7 @@ int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
+ 				       chipco_read32(cc, SSB_CHIPCO_CORECTL)
+ 				       | SSB_CHIPCO_CORECTL_UARTCLK0);
+ 		} else if ((ccrev >= 11) && (ccrev != 15)) {
+-			/* Fixed ALP clock */
+-			baud_base = 20000000;
+-			if (cc->capabilities & SSB_CHIPCO_CAP_PMU) {
+-				/* FIXME: baud_base is different for devices with a PMU */
+-				SSB_WARN_ON(1);
+-			}
++			baud_base = ssb_chipco_alp_clock(cc);
+ 			div = 1;
+ 			if (ccrev >= 21) {
+ 				/* Turn off UART clock before switching clocksource. */
+diff --git a/drivers/ssb/driver_chipcommon_pmu.c b/drivers/ssb/driver_chipcommon_pmu.c
+index d7d5804..a43415a 100644
+--- a/drivers/ssb/driver_chipcommon_pmu.c
++++ b/drivers/ssb/driver_chipcommon_pmu.c
+@@ -618,6 +618,33 @@ void ssb_pmu_set_ldo_paref(struct ssb_chipcommon *cc, bool on)
+ EXPORT_SYMBOL(ssb_pmu_set_ldo_voltage);
+ EXPORT_SYMBOL(ssb_pmu_set_ldo_paref);
+ 
++static u32 ssb_pmu_get_alp_clock_clk0(struct ssb_chipcommon *cc)
++{
++	u32 crystalfreq;
++	const struct pmu0_plltab_entry *e = NULL;
++
++	crystalfreq = chipco_read32(cc, SSB_CHIPCO_PMU_CTL) &
++		      SSB_CHIPCO_PMU_CTL_XTALFREQ >> SSB_CHIPCO_PMU_CTL_XTALFREQ_SHIFT;
++	e = pmu0_plltab_find_entry(crystalfreq);
++	BUG_ON(!e);
++	return e->freq * 1000;
++}
++
++u32 ssb_pmu_get_alp_clock(struct ssb_chipcommon *cc)
++{
++	struct ssb_bus *bus = cc->dev->bus;
++
++	switch (bus->chip_id) {
++	case 0x5354:
++		ssb_pmu_get_alp_clock_clk0(cc);
++	default:
++		ssb_printk(KERN_ERR PFX
++			   "ERROR: PMU alp clock unknown for device %04X\n",
++			   bus->chip_id);
++		return 0;
++	}
++}
++
+ u32 ssb_pmu_get_cpu_clock(struct ssb_chipcommon *cc)
+ {
+ 	struct ssb_bus *bus = cc->dev->bus;
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index a305550..98b2915 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -210,5 +210,6 @@ static inline void b43_pci_ssb_bridge_exit(void)
+ /* driver_chipcommon_pmu.c */
+ extern u32 ssb_pmu_get_cpu_clock(struct ssb_chipcommon *cc);
+ extern u32 ssb_pmu_get_controlclock(struct ssb_chipcommon *cc);
++extern u32 ssb_pmu_get_alp_clock(struct ssb_chipcommon *cc);
+ 
+ #endif /* LINUX_SSB_PRIVATE_H_ */
+-- 
+1.7.10.4
 
