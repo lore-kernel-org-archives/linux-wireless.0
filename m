@@ -1,200 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:39131 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753442Ab2KKQPM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 11:15:12 -0500
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [PATCH v5 1/2] wireless: Driver for 60GHz card wil6210
-Date: Sun, 11 Nov 2012 18:15:05 +0200
-Message-ID: <1647271.ZFHae4zFan@lx-vladimir> (sfid-20121111_171518_389765_6A5A4EEC)
-In-Reply-To: <20121108193010.GC3354@lenteja.do-not-panic.com>
-References: <20121108193010.GC3354@lenteja.do-not-panic.com>
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:41791 "EHLO
+	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756345Ab2K0BJj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 20:09:39 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Tim Shepard <shep@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 26 Nov 2012 17:09:31 -0800
+Subject: RE: [PATCH] mwifiex: add support for SDIO card reset
+Message-ID: <477F20668A386D41ADCC57781B1F70430D1367C74B@SC-VEXCH1.marvell.com> (sfid-20121127_020942_940112_3E1B82E3)
+References: <1351820654-24433-1-git-send-email-bzhao@marvell.com>
+ <CAMXE1-ptP5hEK_Bn4wU5jykcXxcpKf9uj4tR8gz5Cfp873iHvQ@mail.gmail.com>
+In-Reply-To: <CAMXE1-ptP5hEK_Bn4wU5jykcXxcpKf9uj4tR8gz5Cfp873iHvQ@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis,
+Hi Andrei,
 
-Thanks for review, I appreciate time you spent doing this!
+> Hi all,
+> 
+> On Fri, Nov 2, 2012 at 3:44 AM, Bing Zhao <bzhao@marvell.com> wrote:
+> > From: Amitkumar Karwar <akarwar@marvell.com>
+> >
+> > When command timeout happens due to a bug in firmware/hardware,
+> > the timeout handler just prints some debug information. User is
+> > unable to reload the driver in this case.
+> >
+> > Inspired by 9a821f5 "libertas: add sd8686 reset_card support",
+> > this patch adds card reset support for SDIO interface when
+> > command timeout happens. If the SDIO host contoller supports
+> > MMC_POWER_OFF|UP|ON operations, the chip will be reset and the
+> > firmware will be re-downloaded.
+> 
+> After this patch my board started to reset itself frequently. Before I have seen
+> warnings but it was working (somehow).
 
-On Thursday, November 08, 2012 08:29:43 PM Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> 
-> You asked... so I'll review... I'll start reviewing more functional
-> aspects now.
-> 
-> On Wed, Oct 31, 2012 at 06:36:56PM +0200, Vladimir Kondratiev wrote:
-> > diff --git a/drivers/net/wireless/ath/wil6210/Kconfig
-> > b/drivers/net/wireless/ath/wil6210/Kconfig new file mode 100644
-> > index 0000000..b927adc
-> > --- /dev/null
-> > +++ b/drivers/net/wireless/ath/wil6210/Kconfig
-> > +	depends on EXPERIMENTAL
-> 
-> CONFIG_EXPERIMENTAL means nothing today and its usage should
-> be avoided moving further. Please remove this line. And yes
-> if you see other drivers using it please destroy that line
-> too.
-
-Will do
+Are the command timeout warnings the same with and without this patch applied?
+Could you please revert this patch and generate a log with the warnings shown but still working?
 
 > 
-> > +config WIL6210_DEBUG_TXRX
+> See logs below:
 > 
-> You add this here and then you kill it in the next patch.
-> Don't add it then.
+> [ 7402.431601] ieee80211 phy12: uap0: changing to 2 not supported
+> [ 7402.432234] Bluetooth: Skip incorrect packet: hdrlen 3077 buffer 64
+> [ 7412.436879] Bluetooth: hci1 command tx timeout
+> [ 7412.468830] Bluetooth: hci0 command tx timeout
+
+Here the Bluetooth driver btmrvl timed out before WLAN driver got the timeout.
+Since the patch takes effect only after mwifiex times out, I assume that btmrvl timeout also happens without this patch.
+
+I only tested the patch with the timeout triggered by mwifiex driver. I will try to reproduce the btmrvl driver timeout on my setup. If you have a way to recreate btmrvl timeout quickly please let me know.
+
+Thanks,
+Bing
+
+> [ 7412.468842] mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func:
+> Timeout cmd id (1353927138.543839) = 0x10c, act = 0x1
+> [ 7412.468852] mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
+> [ 7412.468857] mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
+> [ 7412.468863] mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
+> [ 7412.468868] mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
+> [ 7412.468873] mwifiex_sdio mmc0:0001:1: last_cmd_index = 0
+> [ 7412.468879] mwifiex_sdio mmc0:0001:1: last_cmd_id: 0c 01 28 00 28
+> 00 e4 00 0c 01
+> [ 7412.468885] mwifiex_sdio mmc0:0001:1: last_cmd_act: 01 00 13 01 13
+> 01 ff 00 01 00
+> [ 7412.468890] mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 4
+> [ 7412.468896] mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 0c 81 28 80
+> 28 80 e4 80 0c 81
+> [ 7412.468901] mwifiex_sdio mmc0:0001:1: last_event_index = 0
+> [ 7412.468907] mwifiex_sdio mmc0:0001:1: last_event: 00 00 00 00 00 00
+> 00 00 00 00
+> [ 7412.468913] mwifiex_sdio mmc0:0001:1: data_sent=0 cmd_sent=1
+> [ 7412.468921] mwifiex_sdio mmc0:0001:1: ps_mode=1 ps_state=0
+> [ 7412.469014] mwifiex_sdio: Resetting card...
+> [ 7412.469452] mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0,
+> cmd_pending=-1
+> [ 7412.589781] mmc0:0001:1: pending IRQ with no handler
+> [ 7477.264586] kmemleak: 2 new suspected memory leaks (see
+> /sys/kernel/debug/kmemleak)
+> [ 7558.642494] INFO: task kworker/3:0:32056 blocked for more than 120 seconds.
+> [ 7558.642505] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [ 7558.642511] kworker/3:0     D 00000000     0 32056      2 0x00000000
+> [ 7558.642523]  e68f9cf0 00000086 f0e19694 00000000 00000004 f53ceae0
+> e0de9b71 000006bd
+> [ 7558.642544]  c19cb680 c19cb680 00008194 c1ed9f28 f55c9680 f0e191d0
+> c10a7f4d e68f9d1c
+> [ 7558.642563]  c10a7f4d f0e191d0 0ca6209c 00000004 0066850d 00008194
+> 00598194 c1ecff58
+> [ 7558.642584] Call Trace:
+> [ 7558.642603]  [<c10a7f4d>] ? __lock_acquire+0x3ad/0x1770
+> [ 7558.642612]  [<c10a7f4d>] ? __lock_acquire+0x3ad/0x1770
+> [ 7558.642628]  [<c15fc2c3>] schedule+0x23/0x60
+> [ 7558.642639]  [<c15fa005>] schedule_timeout+0x135/0x1f0
+> [ 7558.642651]  [<c10a6c65>] ? mark_held_locks+0x85/0xe0
+> [ 7558.642660]  [<c15fd6d7>] ? _raw_spin_unlock_irq+0x27/0x40
+> [ 7558.642671]  [<c15fc172>] wait_for_common+0xd2/0x120
+> [ 7558.642682]  [<c107f330>] ? try_to_wake_up+0x290/0x290
+> [ 7558.642692]  [<c15fc297>] wait_for_completion+0x17/0x20
+> [ 7558.642703]  [<c106d587>] kthread_stop+0x47/0xf0
+> [ 7558.642717]  [<f8502ad6>] btmrvl_remove_card+0x36/0x80 [btmrvl]
+> [ 7558.642727]  [<f852f6d2>] btmrvl_sdio_remove+0x42/0x80 [btmrvl_sdio]
+> [ 7558.642737]  [<c14e1fc2>] sdio_bus_remove+0x32/0x100
+> [ 7558.642747]  [<c13cd841>] ? __pm_runtime_idle+0x61/0xa0
+> [ 7558.642760]  [<c13c2cb4>] __device_release_driver+0x64/0xc0
+> [ 7558.642769]  [<c13c2f96>] device_release_driver+0x26/0x40
+> [ 7558.642779]  [<c13c27f6>] bus_remove_device+0xb6/0x110
+> [ 7558.642789]  [<c13bfb2a>] ? device_remove_attrs+0x2a/0x60
+> [ 7558.642797]  [<c13c01b5>] device_del+0xe5/0x150
+> [ 7558.642806]  [<c14e21dc>] sdio_remove_func+0x1c/0x30
+> [ 7558.642814]  [<c14e0fbc>] mmc_sdio_remove+0x3c/0x80
+> [ 7558.642824]  [<c14da1f1>] mmc_stop_host+0x71/0x110
+> [ 7558.642835]  [<c14daa6d>] mmc_remove_host+0x1d/0x40
+> [ 7558.642845]  [<f8861877>] sdio_card_reset_worker+0x27/0x50 [mwifiex_sdio]
+> [ 7558.642856]  [<c106670b>] process_one_work+0x18b/0x4c0
+> [ 7558.642865]  [<c1066694>] ? process_one_work+0x114/0x4c0
+> [ 7558.642875]  [<f8861850>] ? mwifiex_register_dev+0x120/0x120 [mwifiex_sdio]
+> [ 7558.642886]  [<c1067e49>] worker_thread+0x119/0x3a0
+> [ 7558.642896]  [<c1067d30>] ? __next_gcwq_cpu+0x60/0x60
+> [ 7558.642904]  [<c106d52f>] kthread+0x9f/0xb0
+> [ 7558.642915]  [<c1604e37>] ret_from_kernel_thread+0x1b/0x28
+> [ 7558.642924]  [<c106d490>] ? kthread_create_on_node+0xe0/0xe0
+> [ 7558.642931] 3 locks held by kworker/3:0/32056:
+> [ 7558.642935]  #0:  (events){.+.+.+}, at: [<c1066694>]
+> process_one_work+0x114/0x4c0
+> [ 7558.642953]  #1:  (card_reset_work){+.+.+.}, at: [<c1066694>]
+> process_one_work+0x114/0x4c0
+> [ 7558.642970]  #2:  (&__lockdep_no_validate__){......}, at:
+> [<c13c2f8f>] device_release_driver+0x1f/0x40
+> [ 7678.604370] INFO: task kworker/3:0:32056 blocked for more than 120 seconds.
+> [ 7678.604381] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [ 7678.604387] kworker/3:0     D 00000000     0 32056      2 0x00000000
+> [ 7678.604400]  e68f9cf0 00000086 f0e19694 00000000 00000004 f53ceae0
+> e0de9b71 000006bd
+> [ 7678.604421]  c19cb680 c19cb680 00008194 c1ed9f28 f55c9680 f0e191d0
+> c10a7f4d e68f9d1c
+> [ 7678.604440]  c10a7f4d f0e191d0 0ca6209c 00000004 0066850d 00008194
+> 00598194 c1ecff58
+> [ 7678.604461] Call Trace:
+> [ 7678.604479]  [<c10a7f4d>] ? __lock_acquire+0x3ad/0x1770
+> [ 7678.604487]  [<c10a7f4d>] ? __lock_acquire+0x3ad/0x1770
+> [ 7678.604503]  [<c15fc2c3>] schedule+0x23/0x60
+> [ 7678.604513]  [<c15fa005>] schedule_timeout+0x135/0x1f0
+> [ 7678.604526]  [<c10a6c65>] ? mark_held_locks+0x85/0xe0
+> [ 7678.604535]  [<c15fd6d7>] ? _raw_spin_unlock_irq+0x27/0x40
+> [ 7678.604546]  [<c15fc172>] wait_for_common+0xd2/0x120
+> [ 7678.604557]  [<c107f330>] ? try_to_wake_up+0x290/0x290
+> [ 7678.604568]  [<c15fc297>] wait_for_completion+0x17/0x20
+> [ 7678.604578]  [<c106d587>] kthread_stop+0x47/0xf0
+> [ 7678.604592]  [<f8502ad6>] btmrvl_remove_card+0x36/0x80 [btmrvl]
+> [ 7678.604602]  [<f852f6d2>] btmrvl_sdio_remove+0x42/0x80 [btmrvl_sdio]
+> [ 7678.604612]  [<c14e1fc2>] sdio_bus_remove+0x32/0x100
+> [ 7678.604622]  [<c13cd841>] ? __pm_runtime_idle+0x61/0xa0
+> [ 7678.604634]  [<c13c2cb4>] __device_release_driver+0x64/0xc0
+> [ 7678.604644]  [<c13c2f96>] device_release_driver+0x26/0x40
+> [ 7678.604653]  [<c13c27f6>] bus_remove_device+0xb6/0x110
+> [ 7678.604663]  [<c13bfb2a>] ? device_remove_attrs+0x2a/0x60
+> [ 7678.604671]  [<c13c01b5>] device_del+0xe5/0x150
+> [ 7678.604680]  [<c14e21dc>] sdio_remove_func+0x1c/0x30
+> [ 7678.604688]  [<c14e0fbc>] mmc_sdio_remove+0x3c/0x80
+> [ 7678.604698]  [<c14da1f1>] mmc_stop_host+0x71/0x110
+> [ 7678.604709]  [<c14daa6d>] mmc_remove_host+0x1d/0x40
+> [ 7678.604718]  [<f8861877>] sdio_card_reset_worker+0x27/0x50 [mwifiex_sdio]
+> [ 7678.604731]  [<c106670b>] process_one_work+0x18b/0x4c0
+> [ 7678.604741]  [<c1066694>] ? process_one_work+0x114/0x4c0
+> [ 7678.604750]  [<f8861850>] ? mwifiex_register_dev+0x120/0x120 [mwifiex_sdio]
+> [ 7678.604761]  [<c1067e49>] worker_thread+0x119/0x3a0
+> [ 7678.604771]  [<c1067d30>] ? __next_gcwq_cpu+0x60/0x60
+> [ 7678.604779]  [<c106d52f>] kthread+0x9f/0xb0
+> [ 7678.604790]  [<c1604e37>] ret_from_kernel_thread+0x1b/0x28
+> [ 7678.604799]  [<c106d490>] ? kthread_create_on_node+0xe0/0xe0
 > 
-> > +
-> > +config WIL6210_DEBUG_IRQ
+> < skipped>
 > 
-> Same for this guy.
-
-Sure, my mistake.
-
-> 
-> > diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c
-> > b/drivers/net/wireless/ath/wil6210/cfg80211.c +static void
-> > wil_print_channels(struct wil6210_priv *wil)
-> > +{
-> > +	struct wiphy *wiphy = wil_to_wiphy(wil);
-> > +	int i;
-> 
-> Please use unsigned int for any loop variable. Please change all
-> code to do this. For reasoning behind this see:
-
-Will do
-
-> But then again why the hell even have wil_print_channels() it seems
-> like good debug code to have upon bringup but pretty useless for
-> driver code. Please kill this useless routine.
-
-Will do
-
-> Is the hardware little endian or big endian?
-
-Little endian
-
-> Please see
-> ath6kl's struct wmi_begin_scan_cmd on wmi.h for an example
-> of how to specify endianess to ensure that you can use this
-> driver on big or little endian. So although its great you
-> managed to successfully use sparse with -D__CHECK_ENDIAN__
-> endianess may be broken on this command and all over your
-> wmi.h. I won't even review that file then.
-
-I know about __le16 etc., but I have no big endian host to check it with. 
-Thus, I'd prefer to mention that code is not ready for big endian platform 
-rather then submit untested code. If there is a way to check endiannes without 
-having big endian host, I'd be happy to know.
-Also, is there a good way to check in Kconfig we are on Little endian?
-
-> 
-> > +	wil_info(wil, "%s(%pM)\n", __func__, mac);
-> 
-> Please kill all of these.
-
-Will do
-
-> 
-> > +	if (memcmp(mac, wil->dst_addr[0], ETH_ALEN))
-> > +		return -ENOENT;
-> 
-> Add empty new line.
-
-Sure
-
-> 
-> > +	rc = wmi_call(wil, WMI_NOTIFY_REQ_CMDID, &cmd, sizeof(cmd),
-> > +		      WMI_NOTIFY_REQ_DONE_EVENTID, NULL, 0, 20);
-> > +	if (rc)
-> > +		return rc;
-> > +
-> > +	sinfo->filled |= STATION_INFO_TX_BITRATE;
-> > +	sinfo->txrate.flags = RATE_INFO_FLAGS_MCS | RATE_INFO_FLAGS_60G;
-> > +	sinfo->txrate.mcs = wil->stats.bf_mcs;
-> > +	sinfo->filled |= STATION_INFO_RX_BITRATE;
-> > +	sinfo->rxrate.flags = RATE_INFO_FLAGS_MCS | RATE_INFO_FLAGS_60G;
-> > +	sinfo->rxrate.mcs = wil->stats.last_mcs_rx;
-> > +
-> > +	if (test_bit(wil_status_fwconnected, &wil->status)) {
-> > +		sinfo->filled |= STATION_INFO_SIGNAL;
-> > +		sinfo->signal = 12; /* TODO: provide real value */
-> > +	}
-> > +
-> > +	return 0;
-> 
-> So what did we do here exactlly? Poke firmware and not use anything?
-
-Query current Tx MCS. Used to print "link speed". For debug, Tx/Rx sectors 
-used to target peer printed to dmesg.
-
-> 
-> > +static int wil_cfg80211_change_iface(struct wiphy *wiphy,
-> > +				     struct net_device *ndev,
-> > +				     enum nl80211_iftype type, u32 *flags,
-> > +				     struct vif_params *params)
-> > +{
-> > +	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-> > +	struct wireless_dev *wdev = wil->wdev;
-> > +	wil_info(wil, "%s()\n", __func__);
-> 
-> Kill these single print lines.
-
-Will do
-
-> 
-> > +
-> > +	switch (type) {
-> > +	case NL80211_IFTYPE_STATION:
-> > +		wil_info(wil, "type: STATION\n");
-> 
-> These too. Just leave out the prints. We have better ways
-> to be debugging what cfg80211 is telling us to do that
-> should not require every single driver to add their own
-> prints.
-
-Will do. "better ways" is trace?
-
-> 
-> > +		break;
-> > +	case NL80211_IFTYPE_AP:
-> > +		wil_info(wil, "type: AP\n");
-> > +		break;
-> > +	case NL80211_IFTYPE_P2P_CLIENT:
-> > +		wil_info(wil, "type: P2P_CLIENT\n");
-> > +		break;
-> > +	case NL80211_IFTYPE_P2P_GO:
-> > +		wil_info(wil, "type: P2P_GO\n");
-> > +		break;
-> > +	case NL80211_IFTYPE_MONITOR:
-> > +		wil_info(wil, "type: Monitor\n");
-> > +		if (flags) {
-> > +			wil_info(wil, "Monitor flags: 0x%08x\n", *flags);
-> > +			wil->monitor_flags = *flags;
-> > +		} else {
-> > +			wil->monitor_flags = 0;
-> 
-> This else can just be without a brace.
-
-No, it can't (unless 'if' branch reduced to one line). Quote 
-Documentation/CodingStyle:
-
-This does not apply if only one branch of a conditional statement is a single
-statement; in the latter case use braces in both branches:
-
-if (condition) {
-	do_this();
-	do_that();
-} else {
-	otherwise();
-}
-
-Sending patch v6...
-
-Thanks, Vladimir
+> Regards,
+> Andrei
