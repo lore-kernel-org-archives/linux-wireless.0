@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56936 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754620Ab2KUOfd (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:42408 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756884Ab2K0GpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 09:35:33 -0500
-Date: Wed, 21 Nov 2012 08:35:28 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Daniel Wagner <wagi@monom.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
- support
-Message-ID: <20121121143528.GC23606@thinkpad-t410> (sfid-20121121_153537_304423_F80C1372)
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <50AA845C.2050809@monom.org>
- <50AB3182.5040505@monom.org>
- <20121120142822.GA26602@thinkpad-t410>
- <50ABC168.8080904@monom.org>
- <20121120205418.GB26602@thinkpad-t410>
- <50AC05A5.3090706@monom.org>
- <50AC07F2.8000400@monom.org>
- <50ACA28F.9010800@broadcom.com>
- <50ACA55F.5050406@monom.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50ACA55F.5050406@monom.org>
+	Tue, 27 Nov 2012 01:45:16 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hm6so4054043wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:15 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 05/20] wlcore: allow ACX_BA_SESSION_RX_SETUP to fail
+Date: Tue, 27 Nov 2012 08:44:46 +0200
+Message-Id: <1353998701-18171-6-git-send-email-arik@wizery.com> (sfid-20121127_074614_741014_509D95E1)
+In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 21, 2012 at 10:56:47AM +0100, Daniel Wagner wrote:
-> On 21.11.2012 10:44, Arend van Spriel wrote:
-> > On 11/20/2012 11:45 PM, Daniel Wagner wrote:
-> >>>
-> >>> I am currently not able to reproduce a complete loss of connectivity.
-> >>
-> >> I fear it is a heisenbug. After turning the tracing off I was able to
-> >> reproduce it very easily.
+From: Eliad Peller <eliad@wizery.com>
 
-Just to clarify, you see the issue using the same kernel but without
-trace-cmd running? If so you might try disabling the brcmsmac_tx
-tracepoing, which probably adds the most overhead, and see if you can
-reproduce the problem. It obviously won't give as much information but
-maybe it will still provide some clues.
+Under some circumstances, that fw might be asked to
+remove a rx ba sessions it doesn't know about. In
+this case, instead of triggering a recovery, accept
+the error code (CMD_STATUS_NO_RX_BA_SESSION) and
+ignore it.
 
-> > That is too bad. I always wondered about the tracing overhead affecting 
-> > reproducibility. So the trace that you uploaded was not showing the 
-> > issue of connection loss you are having?
-> 
-> The trace does only show that the throughput goes considerable down and the 
-> download might even stop shortly but overall the system recovers again.
-> 
-> Well, to add some random observation here, I think I see the same pattern
-> when using MacOS (yeah, sorry, dual boot). With MacOS the link is usable but
-> the throughput sometimes really goes down and recovers then. Obviously, this
-> could also be something else, I tried it with an pretty old AP which only
-> support 11g. Using the 11g AP didn't show this behavior.
-> 
-> My 'test' setup is following: I downloaded a larger file and let a youtube 
-> video play. With tracing enabled the download and the playback did work nicely.
-> 
-> Without tracing enabled playing back only a youtube video was 'triggering' 
-> the problem. It downloads a few seconds of content in a burst and then the playback
-> starts. Under normal conditions, the app will continue downloading the video at a 
-> lower rate. But this normally doesn't happen right now. Often it will just stop
-> working and often the connection is completely blocked, e.g. pinging a host
-> wont work.
+[Arik - indicate failure up when the BA session cannot be setup]
 
-I'll see if I can reproduce, but if it's specific to the AP then I may
-not have any luck. Don't expect to hear much from me until next week
-though; I'm on holiday starting today and will be visiting family.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/acx.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-Seth
+diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+index ce108a7..9c32f0c 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.c
++++ b/drivers/net/wireless/ti/wlcore/acx.c
+@@ -1433,13 +1433,22 @@ int wl12xx_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+ 	acx->win_size = wl->conf.ht.rx_ba_win_size;
+ 	acx->ssn = ssn;
+ 
+-	ret = wl1271_cmd_configure(wl, ACX_BA_SESSION_RX_SETUP, acx,
+-				   sizeof(*acx));
++	ret = wlcore_cmd_configure_failsafe(wl, ACX_BA_SESSION_RX_SETUP, acx,
++					    sizeof(*acx),
++					    BIT(CMD_STATUS_NO_RX_BA_SESSION));
+ 	if (ret < 0) {
+ 		wl1271_warning("acx ba receiver session failed: %d", ret);
+ 		goto out;
+ 	}
+ 
++	/* sometimes we can't start the session */
++	if (ret == CMD_STATUS_NO_RX_BA_SESSION) {
++		wl1271_warning("no fw rx ba on tid %d", tid_index);
++		ret = -EBUSY;
++		goto out;
++	}
++
++	ret = 0;
+ out:
+ 	kfree(acx);
+ 	return ret;
+-- 
+1.7.9.5
+
