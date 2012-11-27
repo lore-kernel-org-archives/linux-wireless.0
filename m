@@ -1,30 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36058 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753719Ab2KZPJ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 10:09:28 -0500
-Message-ID: <1353942595.2800.2.camel@jlt4.sipsolutions.net> (sfid-20121126_160935_216697_3E558961)
-Subject: Re: [RFC] mac80211: add debugfs file for current tx rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: saravanad@posedge.com
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 26 Nov 2012 16:09:55 +0100
-In-Reply-To: <3cce329ee6381f0ab4dd4d86ea76c2da@posedge.com>
-References: <3cce329ee6381f0ab4dd4d86ea76c2da@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42662 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757416Ab2K0A0k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 19:26:40 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 14/15] ssb: extif: add methods for watchdog driver
+Date: Tue, 27 Nov 2012 01:25:24 +0100
+Message-Id: <1353975925-32056-15-git-send-email-hauke@hauke-m.de> (sfid-20121127_014527_114361_AB04C2E6)
+In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 05:22 -0800, saravanad@posedge.com wrote:
-> Add a debugfs file showing the current tx rate.
-> The information available in the rc_stats file
-> doesn't evidently provides us the current tx rate.
-> This patch adds the support for the same.
+The watchdog driver wants to set the watchdog timeout in ms and not in
+ticks, add a method converting ms to ticks before setting the watchdog
+register. Return the ticks or millisecond the timer was set to in case
+the provided value was bigger than the max allowed value.
 
-I don't see any value in this, you can just do "iw station dump" to get
-the information.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/ssb/driver_extif.c           |   21 ++++++++++++++++++++-
+ drivers/ssb/ssb_private.h            |   15 +++++++++++++++
+ include/linux/ssb/ssb_driver_extif.h |    9 +++++----
+ 3 files changed, 40 insertions(+), 5 deletions(-)
 
-johannes
+diff --git a/drivers/ssb/driver_extif.c b/drivers/ssb/driver_extif.c
+index 0aa4c2a..553227a 100644
+--- a/drivers/ssb/driver_extif.c
++++ b/drivers/ssb/driver_extif.c
+@@ -112,11 +112,30 @@ void ssb_extif_get_clockcontrol(struct ssb_extif *extif,
+ 	*m = extif_read32(extif, SSB_EXTIF_CLOCK_SB);
+ }
+ 
+-void ssb_extif_watchdog_timer_set(struct ssb_extif *extif, u32 ticks)
++u32 ssb_extif_watchdog_timer_set_wdt(struct bcm47xx_wdt *wdt, u32 ticks)
++{
++	struct ssb_extif *extif = bcm47xx_wdt_get_drvdata(wdt);
++
++	return ssb_extif_watchdog_timer_set(extif, ticks);
++}
++
++u32 ssb_extif_watchdog_timer_set_ms(struct bcm47xx_wdt *wdt, u32 ms)
++{
++	struct ssb_extif *extif = bcm47xx_wdt_get_drvdata(wdt);
++	u32 ticks = (SSB_EXTIF_WATCHDOG_CLK / 1000) * ms;
++
++	ticks = ssb_extif_watchdog_timer_set(extif, ticks);
++
++	return (ticks * 1000) / SSB_EXTIF_WATCHDOG_CLK;
++}
++
++u32 ssb_extif_watchdog_timer_set(struct ssb_extif *extif, u32 ticks)
+ {
+ 	if (ticks > SSB_EXTIF_WATCHDOG_MAX_TIMER)
+ 		ticks = SSB_EXTIF_WATCHDOG_MAX_TIMER;
+ 	extif_write32(extif, SSB_EXTIF_WATCHDOG, ticks);
++
++	return ticks;
+ }
+ 
+ u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask)
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index 03cc40a..50ea028 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -217,4 +217,19 @@ extern u32 ssb_chipco_watchdog_timer_set_wdt(struct bcm47xx_wdt *wdt,
+ 					     u32 ticks);
+ extern u32 ssb_chipco_watchdog_timer_set_ms(struct bcm47xx_wdt *wdt, u32 ms);
+ 
++#ifdef CONFIG_SSB_DRIVER_EXTIF
++extern u32 ssb_extif_watchdog_timer_set_wdt(struct bcm47xx_wdt *wdt, u32 ticks);
++extern u32 ssb_extif_watchdog_timer_set_ms(struct bcm47xx_wdt *wdt, u32 ms);
++#else
++static inline u32 ssb_extif_watchdog_timer_set_wdt(struct bcm47xx_wdt *wdt,
++						   u32 ticks)
++{
++	return 0;
++}
++static inline u32 ssb_extif_watchdog_timer_set_ms(struct bcm47xx_wdt *wdt,
++						  u32 ms)
++{
++	return 0;
++}
++#endif
+ #endif /* LINUX_SSB_PRIVATE_H_ */
+diff --git a/include/linux/ssb/ssb_driver_extif.h b/include/linux/ssb/ssb_driver_extif.h
+index b618188..99511d0 100644
+--- a/include/linux/ssb/ssb_driver_extif.h
++++ b/include/linux/ssb/ssb_driver_extif.h
+@@ -153,6 +153,8 @@
+ #define SSB_EXTIF_WATCHDOG_CLK		48000000	/* Hz */
+ 
+ #define SSB_EXTIF_WATCHDOG_MAX_TIMER	((1 << 28) - 1)
++#define SSB_EXTIF_WATCHDOG_MAX_TIMER_MS	(SSB_EXTIF_WATCHDOG_MAX_TIMER \
++					 / (SSB_EXTIF_WATCHDOG_CLK / 1000))
+ 
+ 
+ #ifdef CONFIG_SSB_DRIVER_EXTIF
+@@ -172,8 +174,7 @@ extern void ssb_extif_get_clockcontrol(struct ssb_extif *extif,
+ extern void ssb_extif_timing_init(struct ssb_extif *extif,
+ 				  unsigned long ns);
+ 
+-extern void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
+-					 u32 ticks);
++extern u32 ssb_extif_watchdog_timer_set(struct ssb_extif *extif, u32 ticks);
+ 
+ /* Extif GPIO pin access */
+ u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask);
+@@ -211,9 +212,9 @@ void ssb_extif_timing_init(struct ssb_extif *extif, unsigned long ns)
+ }
+ 
+ static inline
+-void ssb_extif_watchdog_timer_set(struct ssb_extif *extif,
+-				  u32 ticks)
++u32 ssb_extif_watchdog_timer_set(struct ssb_extif *extif, u32 ticks)
+ {
++	return 0;
+ }
+ 
+ static inline u32 ssb_extif_gpio_in(struct ssb_extif *extif, u32 mask)
+-- 
+1.7.10.4
 
