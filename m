@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:49587 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753237Ab2KYRA5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Nov 2012 12:00:57 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: jukka.kivari@pohjolantietotekniikka.fi
-Cc: mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: Atheros AR3012 problem in Ubuntu 12.04LTS
-References: <1353859765.3743.14.camel@EDAnovaSRV1>
-Date: Sun, 25 Nov 2012 19:00:55 +0200
-In-Reply-To: <1353859765.3743.14.camel@EDAnovaSRV1> (Jukka Kivari's message of
-	"Sun, 25 Nov 2012 18:09:25 +0200")
-Message-ID: <87a9u5wraw.fsf@purkki.adurom.net> (sfid-20121125_180104_997013_91F4F654)
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:43383 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756398Ab2K0RA3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 12:00:29 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so3018683wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 09:00:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOZOX0XN+pd7k-WQ0U1Vs=+21wyUmEDMJVJHekAj2NvmZfaJTg@mail.gmail.com>
+References: <1354031236-8191-1-git-send-email-helmut.schaa@googlemail.com>
+	<CAOZOX0XN+pd7k-WQ0U1Vs=+21wyUmEDMJVJHekAj2NvmZfaJTg@mail.gmail.com>
+Date: Tue, 27 Nov 2012 18:00:27 +0100
+Message-ID: <CAGXE3d_+Pp_p2uWW52Q4q_D3enkgUtrJrUNivjf6wqvh8RYfKA@mail.gmail.com> (sfid-20121127_180038_995695_2D264A45)
+Subject: Re: [PATCH] rt2x00: Use addr_mask to catch invalid MAC addresses
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moro,
+Hi Ivo,
 
-Jukka Kivari <jukka.kivari@pohjolantietotekniikka.fi> writes:
-
-> We have found out the Device is AR3012, VID/PID 0cf3:a003. It seems Dell
-> has some special driver for this in pre-installed Ubuntu
-> 11.10 
-
-So the driver works with the pre-installed version?
-
-Are the sources for this pre-installed Ubuntu publically available
-somewhere or is it just a stock Ubuntu release? Being able to see kernel
-sources from that release would help.
-
-> My current analysis of the problem is:
+On Tue, Nov 27, 2012 at 4:56 PM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> Hi,
 >
-> 1) BT device is recognized correctly (PID=e003)
-> 2) Ubuntu 12.04 has all drivers and firmaware available
+>> This ensures that a user cannot accidentally set up a virtual interface
+>> with a MAC address the rt2800 hw cannot handle.
+>>
+>> Reported-by: Petr Stetiar <ynezz@true.cz>
+>> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2800lib.c |    3 +++
+>>  1 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index c0441a7..7f0df12 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -5108,6 +5108,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev
+>> *rt2x00dev)
+>>                                 rt2x00_eeprom_addr(rt2x00dev,
+>>                                                    EEPROM_MAC_ADDR_0));
+>>
+>> +       /* Only the last three bits are variable in rt2800 devices. */
+>> +       rt2x00dev->hw->wiphy->addr_mask[ETH_ALEN - 1] = 0x7;
+>
+>
+> Shouldn't this be added for rt61pci and rt73usb as well?
 
-I didn't quite get this 2) part. How do you know that all drivers and
-firmware are available? Earlier you mentioned about some special driver.
+I'm not 100% sure if the same is true in rt61pci and rt73usb. Are they
+also using an
+address mask?
 
-> 3) driver/firmaware loading fails, there is no PID e003 in btusb.c or
-> ath3k.c
-
-Have you tried to manually bind the device to those drivers? With very
-good luck it might work (but I doubt it).
-
-http://lwn.net/Articles/143397/
-
-Also did you file a bug to Ubuntu? If the driver works in 11.10 but not
-in 12.04 that's a regression.
-
--- 
-Kalle Valo
+Thanks,
+Helmut
