@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37278 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932365Ab2KEOgo (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:40536 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112Ab2K0LyY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 09:36:44 -0500
-Message-ID: <1352126240.9466.15.camel@jlt4.sipsolutions.net> (sfid-20121105_153656_734357_A7ED5760)
-Subject: Re: [PATCH] wireless: add peer-to-peer related definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Mon, 05 Nov 2012 15:37:20 +0100
-In-Reply-To: <1352125749-4500-1-git-send-email-arend@broadcom.com>
-References: <1352125749-4500-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 27 Nov 2012 06:54:24 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k11so8014771iea.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Nov 2012 03:54:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354008888.950.62.camel@cumari.coelho.fi>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+ <1353998701-18171-4-git-send-email-arik@wizery.com> <1354008888.950.62.camel@cumari.coelho.fi>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 27 Nov 2012 13:54:08 +0200
+Message-ID: <CA+XVXfexJew14BSu79JC2OPnQMiEaw6--bOwwbDDCkr=wQMy4w@mail.gmail.com> (sfid-20121127_125427_989434_88B2DB83)
+Subject: Re: [PATCH 03/20] wlcore: Allow memory access when the FW crashes
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-05 at 15:29 +0100, Arend van Spriel wrote:
-> The Peer-to-Peer IE is vendor-specific IE identified by WiFi Alliance
-> OUI and specific P2P OUI type. The payload of this IE consists of
-> so-called P2P attributes. This patch adds definitions for processing
-> these attributes.
-> 
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Hi Johannes,
-> 
-> I reworked the patch adding only the enumeration.
+On Tue, Nov 27, 2012 at 11:34 AM, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2012-11-27 at 08:44 +0200, Arik Nemtsov wrote:
+>> From: Ido Yariv <ido@wizery.com>
+>>
+>> When the no_recovery flag is used, the recovery work will not restart
+>> the FW and the state will not be set to 'on'. To enable post-mortem
+>> analysis, allow memory access in the 'restarting' state.
+>>
+>> Also, since the FW might not be operational, don't fail the read/write
+>> operations if elp_wakeup fails.
+>>
+>> Reported-by: Arkady Miasnikov <a-miasnikov@ti.com>
+>> Signed-off-by: Ido Yariv <ido@wizery.com>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>> ---
+>
+> This is weird.  This patch is already in (d5560238) and the one here is
+> actually just part of it and probably won't apply.
 
-Thanks, applied.
+Heh. It seems Eliad and I are to blame (all the rebases can really
+mess with the mind).
 
-johannes
+There's a patch by Eliad to reverse the patch you just mentioned:
 
+commit fd8e73af670e6b57708eafe927f5d0364018b4e5
+Author: Eliad Peller <eliad@wizery.com>
+Date:   Wed Nov 14 02:28:26 2012 +0200
+
+    wlcore: don't allow access to FW mem when chip is off
+
+(which I submitted earlier in my part 1 series)
+
+And the current patch simply cancels it out. So please ignore the
+previous patch as well as this one. Good catch :)
+
+Arik
