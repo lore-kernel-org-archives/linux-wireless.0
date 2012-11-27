@@ -1,79 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:40885 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754919Ab2KWGjb (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:36531 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756493Ab2K0Gf0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 01:39:31 -0500
-Message-ID: <50AF1A1E.8090704@posedge.com> (sfid-20121123_073937_910352_1A596F7A)
-Date: Fri, 23 Nov 2012 12:09:26 +0530
-From: Saravana <saravanad@posedge.com>
+	Tue, 27 Nov 2012 01:35:26 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so6360337lbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:35:24 -0800 (PST)
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
+Date: Tue, 27 Nov 2012 14:35:23 +0800
+Message-ID: <CAMz9Wg8y3JaJiEhsOz94viqpC4XXhQeE-eruBUGkXdY78-G=4A@mail.gmail.com> (sfid-20121127_073533_760644_2D1CD117)
+Subject: A weird rfkill problem after rebooting the system
+From: AceLan Kao <acelan.kao@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Corentin Chary <corentin.chary@gmail.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: RFC[1/2]mac80211: Add Statistic to debugfs
-References: <50AF0E91.30709@posedge.com> <CAGRGNgW1x0O26SxytoDQLYXFqWcmfaCGE=Q_pxGg31mW0HyRtw@mail.gmail.com>
-In-Reply-To: <CAGRGNgW1x0O26SxytoDQLYXFqWcmfaCGE=Q_pxGg31mW0HyRtw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/mixed; boundary=f46d0407139d39e60204cf7441a8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+--f46d0407139d39e60204cf7441a8
+Content-Type: text/plain; charset=ISO-8859-1
 
-Thanks for the comments. I will post individual statistics as individual 
-patch.
-Please find my comments inline.
+Hi,
 
-On 11/23/2012 11:28 AM, Julian Calaby wrote:
-> Hi Saravana,
->
-> On Fri, Nov 23, 2012 at 4:50 PM, Saravana <saravanad@posedge.com> wrote:
->> Provide additional statistic support to the debugfs.
->>
-> Also, as you're adding new statistics which are only used when debugfs
-> is enabled, you might want to wrap them in #ifdefs so that they're
-> only compiled when debugfs support is compiled.
->
+I encountered a strange rfkill problem on the ASUS laptop.
+But it's more like an rfkill issue to me, so I mail to the
+linux-wireless mailing list and
+CC'd to the maintainer of the asus-wmi driver.
 
-The function ieee80211_sta_debugfs_add(struct sta_info *sta) which adds 
-the debugfs will try to create the directory first.This 
-debugfs_create_dir(mac, stations_dir) will be return a valid dentry only 
-when CONFIG_DEBUG_FS is defined.if CONFIG_DEBUG_FS is not defined then 
-dentry will be invalid and hence the ieee80211_sta_debugfs_add() will 
-return without adding the files.
-Hence we don't need to wrap this up in #ifdef as it is already taken 
-care during the directory creation.
->>   ---
->> The diff file is generated from wireless-testing git tree.
->>
->> net/mac80211/debugfs_sta.c |    3 +++
->>   net/mac80211/sta_info.h    |    4 ++++
->>   net/mac80211/status.c      |    2 ++
->>   net/mac80211/wpa.c         |    1 +
->>   4 files changed, 10 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
->> index ab63237..19baafc 100644
->> --- a/net/mac80211/status.c
->> +++ b/net/mac80211/status.c
->> @@ -539,6 +539,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw,
->> struct sk_buff *skb)
->>                                  sta->lost_packets = 0;
->>                          }
->>                  }
->> +               if(acked)
->> +               sta->last_ack_signal=info->status.ack_signal;
->
-> Either the indentation here is wrong or your mailer mangled the patch.
-> Either way it should get fixed up when you resubmit.
->
-+		if (acked)
-+			sta->last_ack_signal=info->status.ack_signal;	
-Please find the corrected indentation.
->>          }
->>
->>          rcu_read_unlock();
->
-> Thanks,
->
+I attached 2 rfkill event log files.
+1. The first one(rfkill.0.log) is the driver we use currently,
+you can see that I can soft block/unblock the devices by hitting the hotkey.
+But the behavior is abnormal if I reboot the system with the devices blocked.
+They are blocked after reboot is as expected.
+But while I'm trying to unblock them, the phy0(the one keeps changing
+its index) will become blocked.
+So, there is no way to unblock the bt device by hitting hotkey.
 
+2. The second log file is I try to remove the line from asus-wmi.c
+   rfkill_init_sw_state(*rfkill, !result);
+Then, it works after rebooting.
+I suspect the problem comes from the line in rfkill_init_sw_state() function
+   rfkill->persistent = true;
+While calling rfkill_register() with persistent is false, then it'll
+call rfkill_sync_work()
+to set device block state, so that it prevents this issue.
+But I'm not sure if my guess is correct and have no idea why it
+doesn't need to this if persistent is true.
+The persistent value seems doesn't affect the rfkill state that much
+after reboot, the rfkill state is correct all the time.
+
+BTW, the BIOS of this ASUS machine doesn't set the rfkill state while
+we hit the hotkey.
+
+Best regards,
+AceLan Kao.
+
+-- 
+Chia-Lin Kao(AceLan)
+http://blog.acelan.idv.tw/
+E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+
+--f46d0407139d39e60204cf7441a8
+Content-Type: application/octet-stream; name="rfkill.0.log"
+Content-Disposition: attachment; filename="rfkill.0.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ha0moxkc0
+
+KHJ1biByZmtpbGwgZXZlbnQpCjEzNTM5OTU3NzUuNzUzNTU1OiBpZHggMSB0eXBlIDEgb3AgMCBz
+b2Z0IDAgaGFyZCAwCjEzNTM5OTU3NzUuNzUzNjI1OiBpZHggMiB0eXBlIDEgb3AgMCBzb2Z0IDAg
+aGFyZCAwCjEzNTM5OTU3NzUuNzUzNjMzOiBpZHggMyB0eXBlIDIgb3AgMCBzb2Z0IDAgaGFyZCAw
+CjEzNTM5OTU3NzUuNzUzNjM3OiBpZHggNCB0eXBlIDIgb3AgMCBzb2Z0IDAgaGFyZCAwCihoaXQg
+aG90a2V5KQoxMzUzOTk1Nzc4LjkwNDgwMDogaWR4IDIgdHlwZSAxIG9wIDIgc29mdCAxIGhhcmQg
+MAoxMzUzOTk1Nzc4LjkwNjU2MzogaWR4IDMgdHlwZSAyIG9wIDIgc29mdCAxIGhhcmQgMAoxMzUz
+OTk1NzgxLjI4MDAyMzogaWR4IDQgdHlwZSAyIG9wIDEgc29mdCAwIGhhcmQgMAooaGl0IGhvdGtl
+eSkKMTM1Mzk5NTc4Mi42MDAxMDA6IGlkeCAyIHR5cGUgMSBvcCAyIHNvZnQgMCBoYXJkIDAKMTM1
+Mzk5NTc4Mi42MDYwOTA6IGlkeCAzIHR5cGUgMiBvcCAyIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NTc4
+NC45Mjk0NDY6IGlkeCA1IHR5cGUgMiBvcCAwIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NTc4NC45Mjk0
+Njk6IGlkeCA1IHR5cGUgMiBvcCAyIHNvZnQgMCBoYXJkIDAKKGhpdCBob3RrZXkpCjEzNTM5OTU3
+ODcuODIwMjY2OiBpZHggMiB0eXBlIDEgb3AgMiBzb2Z0IDEgaGFyZCAwCjEzNTM5OTU3ODcuODIw
+OTA1OiBpZHggMyB0eXBlIDIgb3AgMiBzb2Z0IDEgaGFyZCAwCjEzNTM5OTU3OTAuMjM2MDU1OiBp
+ZHggNSB0eXBlIDIgb3AgMSBzb2Z0IDAgaGFyZCAwCihyZWJvb3QpCihydW4gcmZraWxsIGV2ZW50
+KQoxMzUzOTk1OTI2LjgwMDM3MzogaWR4IDEgdHlwZSAxIG9wIDAgc29mdCAwIGhhcmQgMAoxMzUz
+OTk1OTI2LjgwMDQwNTogaWR4IDIgdHlwZSAxIG9wIDAgc29mdCAxIGhhcmQgMAoxMzUzOTk1OTI2
+LjgwMDQwODogaWR4IDMgdHlwZSAyIG9wIDAgc29mdCAxIGhhcmQgMAooaGl0IGhvdGtleSkKMTM1
+Mzk5NTkzMy4xNzQ5NTg6IGlkeCAyIHR5cGUgMSBvcCAyIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NTkz
+My4xODA2NDg6IGlkeCAzIHR5cGUgMiBvcCAyIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NTkzNS40OTE3
+MjU6IGlkeCA0IHR5cGUgMiBvcCAwIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NTkzNS40OTE3MzQ6IGlk
+eCA0IHR5cGUgMiBvcCAyIHNvZnQgMSBoYXJkIDAKKGhpdCBob3RrZXkpCjEzNTM5OTYwMzguMTI2
+ODUzOiBpZHggMiB0eXBlIDEgb3AgMiBzb2Z0IDEgaGFyZCAwCjEzNTM5OTYwMzguMTI4MzcxOiBp
+ZHggMyB0eXBlIDIgb3AgMiBzb2Z0IDEgaGFyZCAwCjEzNTM5OTYwNDAuMzY4NzExOiBpZHggNCB0
+eXBlIDIgb3AgMSBzb2Z0IDEgaGFyZCAwCihoaXQgaG90a2V5KQoxMzUzOTk2MDQ3LjM3NDU0OTog
+aWR4IDIgdHlwZSAxIG9wIDIgc29mdCAwIGhhcmQgMAoxMzUzOTk2MDQ3LjM4NzAwMTogaWR4IDMg
+dHlwZSAyIG9wIDIgc29mdCAwIGhhcmQgMAoxMzUzOTk2MDQ5LjY5NzA0NTogaWR4IDUgdHlwZSAy
+IG9wIDAgc29mdCAwIGhhcmQgMAoxMzUzOTk2MDQ5LjY5NzA2NjogaWR4IDUgdHlwZSAyIG9wIDIg
+c29mdCAxIGhhcmQgMAooaGl0IGhvdGtleSkKMTM1Mzk5NjA1OS40Mjc5Nzk6IGlkeCAyIHR5cGUg
+MSBvcCAyIHNvZnQgMSBoYXJkIDAKMTM1Mzk5NjA1OS40Mjk4OTM6IGlkeCAzIHR5cGUgMiBvcCAy
+IHNvZnQgMSBoYXJkIDAKMTM1Mzk5NjA2MS41ODQwNDA6IGlkeCA1IHR5cGUgMiBvcCAxIHNvZnQg
+MSBoYXJkIDAKKGhpdCBob3RrZXkpCjEzNTM5OTYwNjQuNzc2ODY1OiBpZHggMiB0eXBlIDEgb3Ag
+MiBzb2Z0IDAgaGFyZCAwCjEzNTM5OTYwNjQuNzgyMzUxOiBpZHggMyB0eXBlIDIgb3AgMiBzb2Z0
+IDAgaGFyZCAwCjEzNTM5OTYwNjcuMTE4MDYyOiBpZHggNiB0eXBlIDIgb3AgMCBzb2Z0IDAgaGFy
+ZCAwCjEzNTM5OTYwNjcuMTE4MTE0OiBpZHggNiB0eXBlIDIgb3AgMiBzb2Z0IDEgaGFyZCAwCg==
+--f46d0407139d39e60204cf7441a8
+Content-Type: application/octet-stream; name="rfkill.1.log"
+Content-Disposition: attachment; filename="rfkill.1.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ha0mp17p1
+
+KHJ1biByZmtpbGwgZXZlbnQpCjEzNTM5OTYyNzUuNjExNzIxOiBpZHggMCB0eXBlIDIgb3AgMCBz
+b2Z0IDAgaGFyZCAwCjEzNTM5OTYyNzUuNjExODU5OiBpZHggMSB0eXBlIDEgb3AgMCBzb2Z0IDAg
+aGFyZCAwCjEzNTM5OTYyNzUuNjExODY3OiBpZHggMiB0eXBlIDEgb3AgMCBzb2Z0IDAgaGFyZCAw
+CjEzNTM5OTYyNzUuNjExODcyOiBpZHggMyB0eXBlIDIgb3AgMCBzb2Z0IDAgaGFyZCAwCihoaXQg
+aG90a2V5KQoxMzUzOTk2Mjg4Ljg5NjA1MjogaWR4IDIgdHlwZSAxIG9wIDIgc29mdCAxIGhhcmQg
+MAoxMzUzOTk2Mjg4LjkwMjM3ODogaWR4IDMgdHlwZSAyIG9wIDIgc29mdCAxIGhhcmQgMAoxMzUz
+OTk2MjkxLjIzMjA2MDogaWR4IDAgdHlwZSAyIG9wIDEgc29mdCAwIGhhcmQgMAooaGl0IGhvdGtl
+eSkKMTM1Mzk5NjI5Ni4wMjczMDA6IGlkeCAyIHR5cGUgMSBvcCAyIHNvZnQgMCBoYXJkIDAKMTM1
+Mzk5NjI5Ni4wMzI2MjA6IGlkeCAzIHR5cGUgMiBvcCAyIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NjI5
+OC4zNDQyMDg6IGlkeCA0IHR5cGUgMiBvcCAwIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NjI5OC4zNDQ2
+NDc6IGlkeCA0IHR5cGUgMiBvcCAyIHNvZnQgMCBoYXJkIDAKKGhpdCBob3RrZXkpCjEzNTM5OTYz
+MDQuNzQwNTUwOiBpZHggMiB0eXBlIDEgb3AgMiBzb2Z0IDEgaGFyZCAwCjEzNTM5OTYzMDQuNzQy
+MzA0OiBpZHggMyB0eXBlIDIgb3AgMiBzb2Z0IDEgaGFyZCAwCjEzNTM5OTYzMDcuMDQ3OTIyOiBp
+ZHggNCB0eXBlIDIgb3AgMSBzb2Z0IDAgaGFyZCAwCihyZWJvb3QpCihydW4gcmZraWxsIGV2ZW50
+KQoxMzUzOTk2NDY4Ljc0NDgwOTogaWR4IDEgdHlwZSAxIG9wIDAgc29mdCAwIGhhcmQgMAoxMzUz
+OTk2NDY4Ljc0NDg0MDogaWR4IDIgdHlwZSAxIG9wIDAgc29mdCAxIGhhcmQgMAoxMzUzOTk2NDY4
+Ljc0NDg0MjogaWR4IDMgdHlwZSAyIG9wIDAgc29mdCAxIGhhcmQgMAooaGl0IGhvdGtleSkKMTM1
+Mzk5NjQ3OC4yMzEyNzA6IGlkeCAyIHR5cGUgMSBvcCAyIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NjQ3
+OC4yMzc5NzA6IGlkeCAzIHR5cGUgMiBvcCAyIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NjQ4MC41NDgz
+NjI6IGlkeCA0IHR5cGUgMiBvcCAwIHNvZnQgMCBoYXJkIDAKMTM1Mzk5NjQ4MC41NDgzNzk6IGlk
+eCA0IHR5cGUgMiBvcCAyIHNvZnQgMCBoYXJkIDAKKGhpdCBob3RrZXkpCjEzNTM5OTY0ODQuNzI1
+MTg3OiBpZHggMiB0eXBlIDEgb3AgMiBzb2Z0IDEgaGFyZCAwCjEzNTM5OTY0ODQuNzI1ODgxOiBp
+ZHggMyB0eXBlIDIgb3AgMiBzb2Z0IDEgaGFyZCAwCjEzNTM5OTY0ODcuMTc5OTIxOiBpZHggNCB0
+eXBlIDIgb3AgMSBzb2Z0IDAgaGFyZCAwCihoaXQgaG90a2V5KQoxMzUzOTk2NDg5LjUyNTg1NTog
+aWR4IDIgdHlwZSAxIG9wIDIgc29mdCAwIGhhcmQgMAoxMzUzOTk2NDg5LjUzNTQ1MDogaWR4IDMg
+dHlwZSAyIG9wIDIgc29mdCAwIGhhcmQgMAoxMzUzOTk2NDkyLjM2MzQ3MzogaWR4IDUgdHlwZSAy
+IG9wIDAgc29mdCAwIGhhcmQgMAoxMzUzOTk2NDkyLjM2MzQ4MTogaWR4IDUgdHlwZSAyIG9wIDIg
+c29mdCAwIGhhcmQgMAooaGl0IGhvdGtleSkKMTM1Mzk5NjQ5NS45NzU4Mzg6IGlkeCAyIHR5cGUg
+MSBvcCAyIHNvZnQgMSBoYXJkIDAKMTM1Mzk5NjQ5NS45Nzc3MzU6IGlkeCAzIHR5cGUgMiBvcCAy
+IHNvZnQgMSBoYXJkIDAKMTM1Mzk5NjQ5OC40NjA5OTA6IGlkeCA1IHR5cGUgMiBvcCAxIHNvZnQg
+MCBoYXJkIDAKKGhpdCBob3RrZXkpCjEzNTM5OTY0OTkuMjM0MDU3OiBpZHggMiB0eXBlIDEgb3Ag
+MiBzb2Z0IDAgaGFyZCAwCjEzNTM5OTY0OTkuMjM0Njg1OiBpZHggMyB0eXBlIDIgb3AgMiBzb2Z0
+IDAgaGFyZCAwCjEzNTM5OTY1MDEuNTYyNTI2OiBpZHggNiB0eXBlIDIgb3AgMCBzb2Z0IDAgaGFy
+ZCAwCjEzNTM5OTY1MDEuNTYyNTg1OiBpZHggNiB0eXBlIDIgb3AgMiBzb2Z0IDAgaGFyZCAwCg==
+--f46d0407139d39e60204cf7441a8--
