@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49161 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755599Ab2KHNII (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 08:08:08 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't send null data packet when not associated
-Date: Thu,  8 Nov 2012 14:08:42 +0100
-Message-Id: <1352380122-18384-1-git-send-email-johannes@sipsolutions.net> (sfid-20121108_140826_775231_430ADDB3)
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:60382 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756365Ab2K0UXt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 15:23:49 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
+CC: "Shen, Jackey" <Jackey.Shen@amd.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 27 Nov 2012 12:23:45 -0800
+Subject: RE: Marvell Avastar 88W8797 firmware
+Message-ID: <477F20668A386D41ADCC57781B1F70430D1367C9ED@SC-VEXCH1.marvell.com> (sfid-20121127_212352_614835_CAEFAE95)
+References: <0C8FBB70FF40A94D98BE847F9C171A98033D23B0@SCYBEXDAG02.amd.com>
+	<477F20668A386D41ADCC57781B1F7043083BBD6CA7@SC-VEXCH1.marvell.com>
+ <CAMXE1-rrkh9qm5Hu7vwj3iTrkAg0uXQcU8ySMMBg5++ojJ==Ng@mail.gmail.com>
+In-Reply-To: <CAMXE1-rrkh9qm5Hu7vwj3iTrkAg0uXQcU8ySMMBg5++ojJ==Ng@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Andrei,
 
-On resume or firmware recovery, mac80211 sends a null
-data packet to see if the AP is still around and hasn't
-disconnected us. However, it always does this even if
-it wasn't even connected before, leading to a warning
-in the new channel context code. Fix this by checking
-that it's associated.
+> Do you mean here that 8797 might be connected via USB (currently I use
+> 8787 via SDIO).
 
-Change-Id: I8b77a0b3d3ece9ed509b688711c43aeb5be74348
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/util.c | 2 ++
- 1 file changed, 2 insertions(+)
+For 8797, yes, you can connect it via USB interface.
+If you have a reference adapter board from Marvell you can change some jumper settings to select either SDIO or USB.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 527364f..ba601a8 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1550,6 +1550,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		list_for_each_entry(sdata, &local->interfaces, list) {
- 			if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 				continue;
-+			if (!sdata->u.mgd.associated)
-+				continue;
- 
- 			ieee80211_send_nullfunc(local, sdata, 0);
- 		}
--- 
-1.8.0
+8787 doesn't support USB interface.
 
+Regards,
+Bing
