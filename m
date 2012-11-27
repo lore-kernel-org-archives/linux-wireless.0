@@ -1,102 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:47827 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921Ab2KTSLc (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:38812 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756493Ab2K0GpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 13:11:32 -0500
-Message-ID: <50ABC7D0.2030303@etit.tu-chemnitz.de> (sfid-20121120_191140_875156_DC34227A)
-Date: Tue, 20 Nov 2012 10:11:28 -0800
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: javier@cozybit.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 14/14] mac80211: mesh PS individually-addressed frame release
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>  <1353134886-13256-15-git-send-email-marco.porsch@etit.tu-chemnitz.de> <1353145246.9543.39.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353145246.9543.39.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 27 Nov 2012 01:45:11 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so2666942wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:10 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Yair Shapira <yair.shapira@ti.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 02/20] wl18xx: support 2nd set of mac/phy tx-power params
+Date: Tue, 27 Nov 2012 08:44:43 +0200
+Message-Id: <1353998701-18171-3-git-send-email-arik@wizery.com> (sfid-20121127_074610_220651_1D6A727E)
+In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2012 01:40 AM, Johannes Berg wrote:
-> On Fri, 2012-11-16 at 22:48 -0800, Marco Porsch wrote:
->
->> +static inline bool test_and_set_psp_flag(struct sta_info *sta,
->> +					 enum ieee80211_sta_info_flags flag)
->> +{
->> +	if (!test_and_set_sta_flag(sta, flag)) {
->> +		atomic_inc(&sta->sdata->u.mesh.num_psp);
->
-> This is ... strange? Can a single station really own *two* num_psp
-> refcounts?
+From: Yair Shapira <yair.shapira@ti.com>
 
-Yes it can. A station can be both owner and recipient. And it would just 
-be overhead to distinguish between num_psp_owner and num_psp_recipient, 
-when in the end we only want to know if there is  any PSP ongoing at all.
+First set (low, medium and high TX power values) is used
+for STA-HP background role. The 2nd set is used for other roles.
 
-I'll change the comment to:
-	/* number of active PSPs (owner and recipient counted independently) */
-	atomic_t num_psp;
+Update other mac/phy parameters according to new FW.
 
->
->> +	nullfunc = (struct ieee80211_hdr *) skb->data;
->> +	if (!eosp)
->> +		nullfunc->frame_control |=
->> +				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
->
-> This seems wrong -- EOSP and moredata are orthogonal (with the
-> restriction that "!EOSP => moredata") -- but if you just have that in
-> the code the moredata bit won't always be set correctly.
+Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/conf.h |   10 +++++++---
+ drivers/net/wireless/ti/wl18xx/main.c |   35 +++++++++++++++++++++++++++------
+ 2 files changed, 36 insertions(+), 9 deletions(-)
 
-Imho, in the context of PSP trigger frames it does.
-Sending a trigger frame to a mesh PS STA with no EOSP implies the start 
-of a PSP with the sender as owner -> following data. The other two 
-combinations imply that there is no more data following in that direction.
-
->
->> +	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
->> +	drv_allow_buffered_frames(sdata->local, sta, BIT(7), 1,
->> +				  IEEE80211_FRAME_RELEASE_UAPSD, !eosp);
->
-> ditto, passing !eosp definitely seems wrong
->
->> +/**
->> + * ieee80211_qos_null_append - append QoS Null as PSP trigger (if necessary)
->
-> append? where? why not static?
-
-Append to the skb queue given to the function. - I'll clarify the 
-comment for that.
-Not static because called from sta_info.c. I can move it there if you 
-like, but I valued keeping all the mesh PS stuff in one place.
-
-But now that you mention it... is there any interest in having that 
-function used for uAPSD? Because ieee80211_sta_ps_deliver_response sets 
-the EOSP flag during uAPSD, but does not enforce a QoS Data frame to 
-carry it. But maybe uAPSD just permits transmitting anything else than 
-QoS Data frames...
-
->
->> +		ieee80211_sta_ps_deliver_response(sta, 1, 0,
->> +				IEEE80211_FRAME_RELEASE_UAPSD);
->
-> uAPSD?
->
-> The standard *explicitly* states that ASPD is *not* supported in mesh.
-
-Absolutely correct. The PSP mechanism is just very similar to uAPSD, 
-though. So once the PSP is set up, the mechanisms are the same actually. 
-What do you advise? Renaming the release reason? Creating a different 
-one that is handled equally?
-
->
-> Ok I don't really get this, need more time I guess .. also it seems
-> really hacked together.
-
-Of course it is. You should have seen it before numerous cleanup 
-iterations =)
-
->
-> johannes
->
->
+diff --git a/drivers/net/wireless/ti/wl18xx/conf.h b/drivers/net/wireless/ti/wl18xx/conf.h
+index f020c1c..4e1313b 100644
+--- a/drivers/net/wireless/ti/wl18xx/conf.h
++++ b/drivers/net/wireless/ti/wl18xx/conf.h
+@@ -23,7 +23,7 @@
+ #define __WL18XX_CONF_H__
+ 
+ #define WL18XX_CONF_MAGIC	0x10e100ca
+-#define WL18XX_CONF_VERSION	(WLCORE_CONF_VERSION | 0x0004)
++#define WL18XX_CONF_VERSION	(WLCORE_CONF_VERSION | 0x0005)
+ #define WL18XX_CONF_MASK	0x0000ffff
+ #define WL18XX_CONF_SIZE	(WLCORE_CONF_SIZE + \
+ 				 sizeof(struct wl18xx_priv_conf))
+@@ -78,15 +78,19 @@ struct wl18xx_mac_and_phy_params {
+ 	u8 board_type;
+ 	/* enable point saturation */
+ 	u8 psat;
+-	/* low/medium/high Tx power in dBm */
++	/* low/medium/high Tx power in dBm for STA-HP BG */
+ 	s8 low_power_val;
+ 	s8 med_power_val;
+ 	s8 high_power_val;
+ 	s8 per_sub_band_tx_trace_loss[NUM_OF_TRACE_LOSS_GAPS_TX];
+ 	s8 per_sub_band_rx_trace_loss[NUM_OF_TRACE_LOSS_GAPS_RX];
+ 	u8 tx_rf_margin;
++	/* low/medium/high Tx power in dBm for other role */
++	s8 low_power_val_2nd;
++	s8 med_power_val_2nd;
++	s8 high_power_val_2nd;
+ 
+-	u8 padding[4];
++	u8 padding[1];
+ } __packed;
+ 
+ enum wl18xx_ht_mode {
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 30222cb..617e8d1 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -523,14 +523,37 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
+ 		.enable_clpc			= 0x00,
+ 		.enable_tx_low_pwr_on_siso_rdl	= 0x00,
+ 		.rx_profile			= 0x00,
+-		.pwr_limit_reference_11_abg	= 0xc8,
+-		.pwr_limit_reference_11p	= 0xc8,
++		.pwr_limit_reference_11_abg	= 0x64,
++		.per_chan_pwr_limit_arr_11abg	= {
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			0xff, 0xff, 0xff, 0xff, 0xff, 0xff },
++		.pwr_limit_reference_11p	= 0x64,
++		.per_chan_pwr_limit_arr_11p	= { 0xff, 0xff, 0xff, 0xff,
++						    0xff, 0xff, 0xff },
+ 		.psat				= 0,
+-		.low_power_val			= 0x00,
+-		.med_power_val			= 0x0A,
+-		.high_power_val			= 0x11,
++		.low_power_val			= 0x08,
++		.med_power_val			= 0x12,
++		.high_power_val			= 0x18,
++		.low_power_val_2nd		= 0x05,
++		.med_power_val_2nd		= 0x0A,
++		.high_power_val_2nd		= 0x14,
+ 		.external_pa_dc2dc		= 0,
+-		.number_of_assembled_ant2_4	= 1,
++		.number_of_assembled_ant2_4	= 2,
+ 		.number_of_assembled_ant5	= 1,
+ 		.tx_rf_margin			= 1,
+ 	},
+-- 
+1.7.9.5
 
