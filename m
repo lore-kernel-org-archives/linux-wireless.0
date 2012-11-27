@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63057 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753767Ab2KSQj4 (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:40538 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752356Ab2K0GLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 11:39:56 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so1209547eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:56 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 13/15] wlcore: reconfigure rate policy on association
-Date: Mon, 19 Nov 2012 18:39:28 +0200
-Message-Id: <1353343170-26516-14-git-send-email-eliad@wizery.com> (sfid-20121119_174527_961650_3D08F054)
-In-Reply-To: <1353343170-26516-1-git-send-email-eliad@wizery.com>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	Tue, 27 Nov 2012 01:11:17 -0500
+Message-ID: <50B45980.3040703@posedge.com> (sfid-20121127_071120_654711_7F9A8B6C)
+Date: Tue, 27 Nov 2012 11:41:12 +0530
+From: Saravana <saravanad@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: add debugfs file for last rx rate
+References: <1d88d390652318a8561e107f4254a920@posedge.com> <1353942634.2800.3.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1353942634.2800.3.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When first configuring the rate policy, before auth,
-we still don't have the correct rates that were
-agreed during association.
-
-Reconfigure the rate policy on association in order
-to update them.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 0dd0ec1..a1ad326 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3771,7 +3771,8 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 		wlvif->rssi_thold = bss_conf->cqm_rssi_thold;
- 	}
- 
--	if (changed & (BSS_CHANGED_BSSID | BSS_CHANGED_HT)) {
-+	if (changed & (BSS_CHANGED_BSSID | BSS_CHANGED_HT |
-+		       BSS_CHANGED_ASSOC)) {
- 		rcu_read_lock();
- 		sta = ieee80211_find_sta(vif, bss_conf->bssid);
- 		if (!sta)
-@@ -3958,6 +3959,17 @@ sta_not_found:
- 		if (ret < 0)
- 			goto out;
- 
-+		if (sta_rate_set) {
-+			wlvif->rate_set =
-+				wl1271_tx_enabled_rates_get(wl,
-+							    sta_rate_set,
-+							    wlvif->band);
-+
-+			ret = wl1271_acx_sta_rate_policies(wl, wlvif);
-+			if (ret < 0)
-+				goto out;
-+		}
-+
- 		if (test_bit(WLVIF_FLAG_STA_AUTHORIZED, &wlvif->flags))
- 			wl12xx_set_authorized(wl, wlvif);
- 	}
--- 
-1.7.6.401.g6a319
+On 11/26/2012 08:40 PM, Johannes Berg wrote:
+> On Mon, 2012-11-26 at 05:42 -0800, saravanad@posedge.com wrote:
+>> Add a debugfs file showing the rate at which
+>> the last packet is received.
+>
+> Same here, no need for a debugfs file.
+>
+As many of the statistics like rx/tx bytes/packet, tx retries, power etc
+are available in debugfs,for completeness and uniformity, thought of 
+adding this to debugfs.
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
