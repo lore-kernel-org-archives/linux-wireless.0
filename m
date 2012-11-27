@@ -1,76 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55081 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751953Ab2KTXYz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 18:24:55 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: john@phrozen.org, ralf@linux-mips.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 0/8] bcma/ssb/BCM47XX: add GPIO driver to ssb/bcma
-Date: Wed, 21 Nov 2012 00:24:26 +0100
-Message-Id: <1353453874-523-1-git-send-email-hauke@hauke-m.de> (sfid-20121121_002457_611282_A740D1C5)
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:54532 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756379Ab2K0GpP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 01:45:15 -0500
+Received: by mail-wi0-f170.google.com with SMTP id hq7so3551054wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:14 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 04/20] wlcore: allow fw commands to fail
+Date: Tue, 27 Nov 2012 08:44:45 +0200
+Message-Id: <1353998701-18171-5-git-send-email-arik@wizery.com> (sfid-20121127_074524_267986_A5A61B36)
+In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a complete rewrote of the original patch "MIPS: BCM47xx: use 
-gpiolib"
-Instead of providing the GPIO driver in the arch code it is now moved 
-into ssb and bcma and could also be used by other systems. The GPIO 
-functions in drivers/ssb/embedded.c are still used by arch/mips/bcm47xx
-/wgt634u.c, but I am planing to write some code for baord detection and 
-a driver for LED and the buttons, after that wgt634u.c could be removed.
+From: Eliad Peller <eliad@wizery.com>
 
-This is based on mips/master tree.
+Currently, each fw command/acx that return a status code
+different than CMD_STATUS_SUCCESS will trigger a recovery
+in the driver.
 
-v3:
- * make BCMA_DRIVER_GPIO and SSB_DRIVER_GPIO selectable in Kconfig
- * return -ENOTSUPP if the gpio driver is not activated
- * handle error -ENOTSUPP with debug message
- * do not lock *_gpio_in()
- * add comment above chip->base = 0
+However, it is a valid for some fw commands to fail (e.g.
+due to temporary lack of resources), so add new functions
+that allow passing bitmap of valid error return values.
 
-v2:
- * fix compile problem in ssb: add GPIO driver
+(make the current wl1271_cmd_send/wl1271_cmd_configure
+wrappers around the new functions, in order to avoid
+changing the whole driver)
 
-Hauke Mehrtens (8):
-  bcma: add locking around GPIO register accesses
-  bcma: add bcma_chipco_gpio_pull{up,down}
-  bcma: add comment to bcma_chipco_gpio_control
-  bcma: add GPIO driver
-  ssb: add ssb_chipco_gpio_pull{up,down}
-  ssb: add locking around gpio register accesses
-  ssb: add GPIO driver
-  MIPS: BCM47XX: remove GPIO driver
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/cmd.c |   85 +++++++++++++++++++++++++++-------
+ drivers/net/wireless/ti/wlcore/cmd.h |    7 ++-
+ 2 files changed, 73 insertions(+), 19 deletions(-)
 
- arch/mips/Kconfig                           |    2 +-
- arch/mips/bcm47xx/Kconfig                   |    2 +
- arch/mips/bcm47xx/Makefile                  |    2 +-
- arch/mips/bcm47xx/gpio.c                    |  102 ----------------
- arch/mips/include/asm/mach-bcm47xx/gpio.h   |  154 ++---------------------
- drivers/bcma/Kconfig                        |    9 ++
- drivers/bcma/Makefile                       |    1 +
- drivers/bcma/bcma_private.h                 |   10 ++
- drivers/bcma/driver_chipcommon.c            |   81 +++++++++++-
- drivers/bcma/driver_gpio.c                  |   98 +++++++++++++++
- drivers/bcma/main.c                         |    5 +
- drivers/ssb/Kconfig                         |    9 ++
- drivers/ssb/Makefile                        |    1 +
- drivers/ssb/driver_chipcommon.c             |   78 +++++++++++-
- drivers/ssb/driver_extif.c                  |   43 ++++++-
- drivers/ssb/driver_gpio.c                   |  176 +++++++++++++++++++++++++++
- drivers/ssb/main.c                          |    7 ++
- drivers/ssb/ssb_private.h                   |   17 +++
- include/linux/bcma/bcma_driver_chipcommon.h |   10 ++
- include/linux/ssb/ssb.h                     |    4 +
- include/linux/ssb/ssb_driver_chipcommon.h   |    3 +
- include/linux/ssb/ssb_driver_extif.h        |    1 +
- 22 files changed, 551 insertions(+), 264 deletions(-)
- delete mode 100644 arch/mips/bcm47xx/gpio.c
- create mode 100644 drivers/bcma/driver_gpio.c
- create mode 100644 drivers/ssb/driver_gpio.c
-
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index fc508ee..ead19c9 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -48,14 +48,15 @@
+  * @id: command id
+  * @buf: buffer containing the command, must work with dma
+  * @len: length of the buffer
++ * return the cmd status code on success.
+  */
+-int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+-		    size_t res_len)
++static int __wlcore_cmd_send(struct wl1271 *wl, u16 id, void *buf,
++			     size_t len, size_t res_len)
+ {
+ 	struct wl1271_cmd_header *cmd;
+ 	unsigned long timeout;
+ 	u32 intr;
+-	int ret = 0;
++	int ret;
+ 	u16 status;
+ 	u16 poll_count = 0;
+ 
+@@ -71,7 +72,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 
+ 	ret = wlcore_write(wl, wl->cmd_box_addr, buf, len, false);
+ 	if (ret < 0)
+-		goto fail;
++		return ret;
+ 
+ 	/*
+ 	 * TODO: we just need this because one bit is in a different
+@@ -79,19 +80,18 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 	 */
+ 	ret = wl->ops->trigger_cmd(wl, wl->cmd_box_addr, buf, len);
+ 	if (ret < 0)
+-		goto fail;
++		return ret;
+ 
+ 	timeout = jiffies + msecs_to_jiffies(WL1271_COMMAND_TIMEOUT);
+ 
+ 	ret = wlcore_read_reg(wl, REG_INTERRUPT_NO_CLEAR, &intr);
+ 	if (ret < 0)
+-		goto fail;
++		return ret;
+ 
+ 	while (!(intr & WL1271_ACX_INTR_CMD_COMPLETE)) {
+ 		if (time_after(jiffies, timeout)) {
+ 			wl1271_error("command complete timeout");
+-			ret = -ETIMEDOUT;
+-			goto fail;
++			return -ETIMEDOUT;
+ 		}
+ 
+ 		poll_count++;
+@@ -102,7 +102,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 
+ 		ret = wlcore_read_reg(wl, REG_INTERRUPT_NO_CLEAR, &intr);
+ 		if (ret < 0)
+-			goto fail;
++			return ret;
+ 	}
+ 
+ 	/* read back the status code of the command */
+@@ -111,22 +111,40 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 
+ 	ret = wlcore_read(wl, wl->cmd_box_addr, cmd, res_len, false);
+ 	if (ret < 0)
+-		goto fail;
++		return ret;
+ 
+ 	status = le16_to_cpu(cmd->status);
+-	if (status != CMD_STATUS_SUCCESS) {
+-		wl1271_error("command execute failure %d", status);
+-		ret = -EIO;
+-		goto fail;
+-	}
+ 
+ 	ret = wlcore_write_reg(wl, REG_INTERRUPT_ACK,
+ 			       WL1271_ACX_INTR_CMD_COMPLETE);
+ 	if (ret < 0)
++		return ret;
++
++	return status;
++}
++
++/*
++ * send command to fw and return cmd status on success
++ * valid_rets contains a bitmap of allowed error codes
++ */
++int wlcore_cmd_send_failsafe(struct wl1271 *wl, u16 id, void *buf, size_t len,
++			     size_t res_len, unsigned long valid_rets)
++{
++	int ret = __wlcore_cmd_send(wl, id, buf, len, res_len);
++
++	if (ret < 0)
+ 		goto fail;
+ 
+-	return 0;
++	/* success is always a valid status */
++	valid_rets |= BIT(CMD_STATUS_SUCCESS);
+ 
++	if (ret >= MAX_COMMAND_STATUS ||
++	    !test_bit(ret, &valid_rets)) {
++		wl1271_error("command execute failure %d", ret);
++		ret = -EIO;
++		goto fail;
++	}
++	return ret;
+ fail:
+ 	wl12xx_queue_recovery_work(wl);
+ 	return ret;
+@@ -134,6 +152,20 @@ fail:
+ EXPORT_SYMBOL_GPL(wl1271_cmd_send);
+ 
+ /*
++ * wrapper for wlcore_cmd_send that accept only CMD_STATUS_SUCCESS
++ * return 0 on success.
++ */
++int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
++		    size_t res_len)
++{
++	int ret = wlcore_cmd_send_failsafe(wl, id, buf, len, res_len, 0);
++
++	if (ret < 0)
++		return ret;
++	return 0;
++}
++
++/*
+  * Poll the mailbox event field until any of the bits in the mask is set or a
+  * timeout occurs (WL1271_EVENT_TIMEOUT in msecs)
+  */
+@@ -791,8 +823,11 @@ int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len)
+  * @id: acx id
+  * @buf: buffer containing acx, including all headers, must work with dma
+  * @len: length of buf
++ * @valid_rets: bitmap of valid cmd status codes (i.e. return values).
++ * return the cmd status on success.
+  */
+-int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len)
++int wlcore_cmd_configure_failsafe(struct wl1271 *wl, u16 id, void *buf,
++				  size_t len, unsigned long valid_rets)
+ {
+ 	struct acx_header *acx = buf;
+ 	int ret;
+@@ -804,12 +839,26 @@ int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len)
+ 	/* payload length, does not include any headers */
+ 	acx->len = cpu_to_le16(len - sizeof(*acx));
+ 
+-	ret = wl1271_cmd_send(wl, CMD_CONFIGURE, acx, len, 0);
++	ret = wlcore_cmd_send_failsafe(wl, CMD_CONFIGURE, acx, len, 0,
++				       valid_rets);
+ 	if (ret < 0) {
+ 		wl1271_warning("CONFIGURE command NOK");
+ 		return ret;
+ 	}
+ 
++	return ret;
++}
++
++/*
++ * wrapper for wlcore_cmd_configure that accepts only success status.
++ * return 0 on success
++ */
++int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len)
++{
++	int ret = wlcore_cmd_configure_failsafe(wl, id, buf, len, 0);
++
++	if (ret < 0)
++		return ret;
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(wl1271_cmd_configure);
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index 7f378b7..fd34123 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -31,6 +31,8 @@ struct acx_header;
+ 
+ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 		    size_t res_len);
++int wlcore_cmd_send_failsafe(struct wl1271 *wl, u16 id, void *buf, size_t len,
++			     size_t res_len, unsigned long valid_rets);
+ int wl12xx_cmd_role_enable(struct wl1271 *wl, u8 *addr, u8 role_type,
+ 			   u8 *role_id);
+ int wl12xx_cmd_role_disable(struct wl1271 *wl, u8 *role_id);
+@@ -45,6 +47,8 @@ int wl12xx_stop_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif);
+ int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
+ int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
+ int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len);
++int wlcore_cmd_configure_failsafe(struct wl1271 *wl, u16 id, void *buf,
++				  size_t len, unsigned long valid_rets);
+ int wl1271_cmd_data_path(struct wl1271 *wl, bool enable);
+ int wl1271_cmd_ps_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		       u8 ps_mode, u16 auto_ps_timeout);
+@@ -234,7 +238,8 @@ enum {
+ 	CMD_STATUS_FW_RESET		= 22, /* Driver internal use.*/
+ 	CMD_STATUS_TEMPLATE_OOM		= 23,
+ 	CMD_STATUS_NO_RX_BA_SESSION	= 24,
+-	MAX_COMMAND_STATUS		= 0xff
++
++	MAX_COMMAND_STATUS
+ };
+ 
+ #define CMDMBOX_HEADER_LEN 4
 -- 
-1.7.10.4
+1.7.9.5
 
