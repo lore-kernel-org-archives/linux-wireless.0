@@ -1,99 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:46086 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753374Ab2KMLdQ (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:33986 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752733Ab2K0TBv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 06:33:16 -0500
-Received: by mail-oa0-f46.google.com with SMTP id h16so7265077oag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 03:33:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20121113043226.GA4064@localhost>
-References: <1352746438-2404-1-git-send-email-thomas@cozybit.com>
-	<CAJ-Vmom4Q9ToOokeLf91tSDmmPDehcqfofuPu=wL+=Pf4fUr_g@mail.gmail.com>
-	<20121112192859.GB6842@localhost>
-	<CA+yqC4ZkeKgLKoPh18f1qDyLuOGf22GyL92+suca+gveoq7ZVw@mail.gmail.com>
-	<20121113043226.GA4064@localhost>
-Date: Tue, 13 Nov 2012 13:33:15 +0200
-Message-ID: <CAFtRNNz0edqOYDd5A18vGzo2y4R790htgvacQ5EKLgfk7Q-iKQ@mail.gmail.com> (sfid-20121113_123321_691728_FBD1F238)
-Subject: Re: [PATCH] ath5k: RX timestamp is reported at end of frame
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Sam Leffler <sleffler@google.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	ath5k-devel@lists.ath5k.org, jirislaby@gmail.com,
-	mcgrof@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 27 Nov 2012 14:01:51 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org,
+	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [RFC 2/3] mac80211: add spectral_scan function, hook it up in scanning
+Date: Tue, 27 Nov 2012 20:01:23 +0100
+Message-Id: <1354042885-32688-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121127_200201_261471_A0FC31CA)
+In-Reply-To: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/11/13 Bob Copeland <me@bobcopeland.com>:
-> On Mon, Nov 12, 2012 at 11:40:15AM -0800, Sam Leffler wrote:
->> > I'll do some testing tonight with whatever cards I have around here to
->> > see if we can at least get a better idea of which chipsets do what.
->>
->> >From my experience doing tdma on ath chipsets I know the timestamp is
->> a snapshot of the tsf recorded by the dma engine when it writes the
->> descriptor on dma completion.  This was only legacy frames; don't know
->> how things work for aggregate frames.
->
-> On dma completion, so that might be even a bit further beyond
-> end-of-frame?
->
-> For the record, I just tested this as follows: I set up a mesh
-> network between an ath5k and an ath9k card (the ath9k driver being
-> already patched similarly), with the mesh beacon having a few
-> information elements, and operating in 2.4 GHz band.
->
-> Then I watched toffset adjustments.  A more accurate timestamp
-> means the toffsets between the stations should be closer to each
-> other.
->
-> Here are some representative numbers:
->
-> ath5k: phy2: Atheros AR2413 chip found (MAC: 0x78, PHY: 0x45)
-> -------------------------------------------------------------
-> Without patch:
-> updated toffset for 00:80:48:63:a2:f8: 52987952
-> updated toffset for 00:03:7f:10:4d:d6: -52989071
-> (diff 1119 us)
->
-> With patch:
-> updated toffset for 00:80:48:63:a2:f8: -92733857
-> updated toffset for 00:03:7f:10:4d:d6: 92733496
-> (diff 361 us)
->
-> ath5k: phy0: Atheros 5414 chip found (MAC: 0xa3, PHY: 0x61)
-> -------------------------------------------------------------
-> Without patch:
-> updated toffset for 00:17:f2:43:be:3a: -2557256031
-> updated toffset for 00:03:7f:10:4d:d6: 2557254935
-> (diff 1096 us)
->
-> With patch:
-> updated toffset for 00:17:f2:43:be:3a: -2054754842
-> updated toffset for 00:03:7f:10:4d:d6: 2054755003
-> (diff 161 us)
->
-> Sorry, those are all the ath5k devices I have access to without
-> digging through some boxes, but in the absence of someone with
-> old old hardware showing up and saying this is worse for them,
-> I'd say ship it...
->
-> Thomas, feel free to add my:
->
-> Tested-by: Bob Copeland <me@bobcopeland.com>
->
-> --
-> Bob Copeland %% www.bobcopeland.com
+Add spectral_scan function to driver functions, and hook it up
+in the scanning code.
 
+Using the spectral scan from within the scan function has the charme
+that it already does all the channel surfing for us.
 
-and also my:
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ include/net/mac80211.h    |    6 ++++++
+ net/mac80211/driver-ops.h |   10 ++++++++++
+ net/mac80211/scan.c       |    3 +++
+ net/mac80211/trace.h      |    5 +++++
+ 4 files changed, 24 insertions(+)
 
-
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e1293c7..8104b7d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2428,6 +2428,10 @@ enum ieee80211_rate_control_changed {
+  * @restart_complete: Called after a call to ieee80211_restart_hw(), when the
+  *	reconfiguration has completed. This can help the driver implement the
+  *	reconfiguration step. This callback may sleep.
++ *
++ * @spectral_scan: Asks the driver to perform a spectral scan on the currently
++ *      selected channel. Results are stored in the drivers internal structures
++ *      currently.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -2602,6 +2606,8 @@ struct ieee80211_ops {
+ 				     struct ieee80211_chanctx_conf *ctx);
+ 
+ 	void (*restart_complete)(struct ieee80211_hw *hw);
++
++	void	(*spectral_scan)(struct ieee80211_hw *hw);
+ };
+ 
+ /**
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 68c27aa..df6d582 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1004,4 +1004,14 @@ static inline void drv_restart_complete(struct ieee80211_local *local)
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline void drv_spectral_scan(struct ieee80211_local *local)
++{
++	might_sleep();
++
++	trace_drv_spectral_scan(local);
++	if (local->ops->spectral_scan)
++		local->ops->spectral_scan(&local->hw);
++	trace_drv_return_void(local);
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 8e9bb168..cd8a17b 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -665,6 +665,9 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 		return;
+ 	}
+ 
++	if (local->scan_req->spec_scan && local->ops->spectral_scan)
++		drv_spectral_scan(local);
++
+ 	/*
+ 	 * Probe delay is used to update the NAV, cf. 11.1.3.2.2
+ 	 * (which unfortunately doesn't say _why_ step a) is done,
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index e9579b7..7efd325 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1421,6 +1421,11 @@ DEFINE_EVENT(local_only_evt, drv_restart_complete,
+ 	TP_ARGS(local)
+ );
+ 
++DEFINE_EVENT(local_only_evt, drv_spectral_scan,
++	TP_PROTO(struct ieee80211_local *local),
++	TP_ARGS(local)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
 -- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.10.4
+
