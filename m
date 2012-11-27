@@ -1,66 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42573 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757506Ab2K0A0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 19:26:19 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, wim@iguana.be
-Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 06/15] bcma: add bcma_chipco_alp_clock
-Date: Tue, 27 Nov 2012 01:25:16 +0100
-Message-Id: <1353975925-32056-7-git-send-email-hauke@hauke-m.de> (sfid-20121127_012623_571762_CC2BD56B)
-In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
-References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:42408 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757974Ab2K0Gpa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 01:45:30 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hm6so4054043wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:30 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 13/20] wlcore: consolidate free_link and always call it
+Date: Tue, 27 Nov 2012 08:44:54 +0200
+Message-Id: <1353998701-18171-14-git-send-email-arik@wizery.com> (sfid-20121127_074605_715737_6EEA7E91)
+In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For devices without a PMU the alp clock is always 20000000.
+Make sure free_link is always called when removing an interface. This
+ensures all skbs belonging to this interface are returned to mac80211.
+Otherwise these dangling skbs might crash the system on the next
+call to wl1271_tx_reset_link_queues(). This happens on recovery/stop or
+an unsuccessful Tx flush.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/bcma/driver_chipcommon.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ti/wlcore/cmd.c  |    5 +++++
+ drivers/net/wireless/ti/wlcore/main.c |    2 --
+ drivers/net/wireless/ti/wlcore/tx.c   |   11 ++++++-----
+ 3 files changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index ffd74e5..ef68553 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -4,6 +4,7 @@
-  *
-  * Copyright 2005, Broadcom Corporation
-  * Copyright 2006, 2007, Michael Buesch <m@bues.ch>
-+ * Copyright 2012, Hauke Mehrtens <hauke@hauke-m.de>
-  *
-  * Licensed under the GNU/GPL. See COPYING for details.
-  */
-@@ -22,6 +23,14 @@ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
- 	return value;
- }
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index ead19c9..38243aa 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -339,6 +339,11 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+ 	__clear_bit(*hlid, wlvif->links_map);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
  
-+static u32 bcma_chipco_alp_clock(struct bcma_drv_cc *cc)
-+{
-+	if (cc->capabilities & BCMA_CC_CAP_PMU)
-+		return bcma_pmu_alp_clock(cc);
++	wl->links[*hlid].allocated_pkts = 0;
++	wl->links[*hlid].prev_freed_pkts = 0;
++	wl->links[*hlid].ba_bitmap = 0;
++	memset(wl->links[*hlid].addr, 0, ETH_ALEN);
 +
-+	return 20000000;
-+}
-+
- void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
- {
- 	if (cc->early_setup_done)
-@@ -131,8 +140,7 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
- 	struct bcma_serial_port *ports = cc->serial_ports;
+ 	/*
+ 	 * At this point op_tx() will not add more packets to the queues. We
+ 	 * can purge them.
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 24d5458..e68cd3f 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4444,8 +4444,6 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
+ 		return;
  
- 	if (ccrev >= 11 && ccrev != 15) {
--		/* Fixed ALP clock */
--		baud_base = bcma_pmu_alp_clock(cc);
-+		baud_base = bcma_chipco_alp_clock(cc);
- 		if (ccrev >= 21) {
- 			/* Turn off UART clock before switching clocksource. */
- 			bcma_cc_write32(cc, BCMA_CC_CORECTL,
+ 	clear_bit(hlid, wlvif->ap.sta_hlid_map);
+-	memset(wl->links[hlid].addr, 0, ETH_ALEN);
+-	wl->links[hlid].ba_bitmap = 0;
+ 	__clear_bit(hlid, &wl->ap_ps_map);
+ 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ 	wl12xx_free_link(wl, wlvif, &hlid);
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 404a516..2e91a37 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -1004,13 +1004,14 @@ void wl12xx_tx_reset_wlvif(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 
+ 	/* TX failure */
+ 	for_each_set_bit(i, wlvif->links_map, WL12XX_MAX_LINKS) {
+-		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
++		if (wlvif->bss_type == BSS_TYPE_AP_BSS) {
++			/* this calls wl12xx_free_link */
+ 			wl1271_free_sta(wl, wlvif, i);
+-		else
++		} else {
++			u8 hlid = i;
+ 			wlvif->sta.ba_rx_bitmap = 0;
+-
+-		wl->links[i].allocated_pkts = 0;
+-		wl->links[i].prev_freed_pkts = 0;
++			wl12xx_free_link(wl, wlvif, &hlid);
++		}
+ 	}
+ 	wlvif->last_tx_hlid = 0;
+ 
 -- 
-1.7.10.4
+1.7.9.5
 
