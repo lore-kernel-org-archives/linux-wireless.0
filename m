@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:55468 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754526Ab2KZNWE (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:42408 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758047Ab2K0Gpg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 08:22:04 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 26 Nov 2012 05:22:03 -0800
-From: saravanad@posedge.com
-To: <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [RFC] mac80211: add debugfs file for current tx rate
-Message-ID: <3cce329ee6381f0ab4dd4d86ea76c2da@posedge.com> (sfid-20121126_142208_666910_D91EB2C4)
+	Tue, 27 Nov 2012 01:45:36 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hm6so4054043wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:35 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 16/20] wlcore: track wlvif inside per-link structure
+Date: Tue, 27 Nov 2012 08:44:57 +0200
+Message-Id: <1353998701-18171-17-git-send-email-arik@wizery.com> (sfid-20121127_074551_269931_D32AC5A2)
+In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a debugfs file showing the current tx rate.
-The information available in the rc_stats file
-doesn't evidently provides us the current tx rate.
-This patch adds the support for the same.
+This allows us to pass only the link as a parameter to various functions
+and deduce the wlvif. Note that this member will be NULL for global
+links.
 
-Signed-off-by: Saravana <saravanad@posedge.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
-The diff file is generated from wireless-testing git tree.
-  net/mac80211/debugfs_sta.c |   16 ++++++++++++++++
-  1 files changed, 16 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ti/wlcore/cmd.c      |    2 ++
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    5 +++++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 89281d2..85d2279 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -321,6 +321,21 @@ static ssize_t sta_ht_capa_read(struct file *file, 
-char __user *userbuf,
-  }
-  STA_OPS(ht_capa);
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index e00d64b..56432c8 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -326,6 +326,7 @@ int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+ 	/* take the last "freed packets" value from the current FW status */
+ 	wl->links[link].prev_freed_pkts =
+ 			wl->fw_status_2->counters.tx_lnk_free_pkts[link];
++	wl->links[link].wlvif = wlvif;
+ 	*hlid = link;
+ 	return 0;
+ }
+@@ -353,6 +354,7 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+ 	 * can purge them.
+ 	 */
+ 	wl1271_tx_reset_link_queues(wl, *hlid);
++	wl->links[*hlid].wlvif = NULL;
+ 
+ 	*hlid = WL12XX_INVALID_LINK_ID;
+ }
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 5a92cb2..f86c716 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -260,6 +260,8 @@ enum wl12xx_vif_flags {
+ 	WLVIF_FLAG_IN_USE,
+ };
+ 
++struct wl12xx_vif;
++
+ struct wl1271_link {
+ 	/* AP-mode - TX queue per AC in link */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
+@@ -272,6 +274,9 @@ struct wl1271_link {
+ 
+ 	/* bitmap of TIDs where RX BA sessions are active for this link */
+ 	u8 ba_bitmap;
++
++	/* The wlvif this link belongs to. Might be null for global links */
++	struct wl12xx_vif *wlvif;
+ };
+ 
+ #define WL1271_MAX_RX_FILTERS 5
+-- 
+1.7.9.5
 
-+static ssize_t sta_current_tx_rate_read(struct file *file, char __user 
-*userbuf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct sta_info *sta = file->private_data;
-+	struct rate_info rinfo;
-+	u16 rate;
-+	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
-+	rate = cfg80211_calculate_bitrate(&rinfo);
-+
-+	return mac80211_format_buffer(userbuf, count, ppos, "%d.%d MBit/s\n",
-+					rate/10, rate%10);
-+
-+}
-+STA_OPS(current_tx_rate);
-+
-  #define DEBUGFS_ADD(name) \
-  	debugfs_create_file(#name, 0400, \
-  		sta->debugfs.dir, sta, &sta_ ##name## _ops);
-@@ -369,6 +384,7 @@ void ieee80211_sta_debugfs_add(struct sta_info 
-*sta)
-  	DEBUGFS_ADD(dev);
-  	DEBUGFS_ADD(last_signal);
-  	DEBUGFS_ADD(ht_capa);
-+	DEBUGFS_ADD(current_tx_rate);
-
-  	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
-  	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
