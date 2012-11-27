@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55125 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752883Ab2KTXZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 18:25:15 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: john@phrozen.org, ralf@linux-mips.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 5/8] ssb: add ssb_chipco_gpio_pull{up,down}
-Date: Wed, 21 Nov 2012 00:24:31 +0100
-Message-Id: <1353453874-523-6-git-send-email-hauke@hauke-m.de> (sfid-20121121_002520_237528_438320B0)
-In-Reply-To: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
-References: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
+Received: from youngberry.canonical.com ([91.189.89.112]:53669 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755913Ab2K0QWq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 11:22:46 -0500
+Date: Tue, 27 Nov 2012 10:22:40 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
+	Daniel Wagner <wagi@monom.org>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH v2 09/22] brcm80211: Allow trace support to be enabled
+ separately from debug
+Message-ID: <20121127162240.GB21412@thinkpad-t410> (sfid-20121127_172250_011329_0817633E)
+References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
+ <1352988492-21340-10-git-send-email-seth.forshee@canonical.com>
+ <50AA9789.9070807@broadcom.com>
+ <20121119211511.GB20301@thinkpad-t410>
+ <50AAA275.5030609@broadcom.com>
+ <20121119213300.GC20301@thinkpad-t410>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121119213300.GC20301@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add functions to access the GPIO registers for pullup and pulldown.
-These are needed for handling gpio registration.
+On Mon, Nov 19, 2012 at 03:33:00PM -0600, Seth Forshee wrote:
+> > That seems reasonable. Have you any significant impact in throughput
+> > with tracing enabled?
+> 
+> I've really only tested with tracing enabled. Compared to before this
+> patch series the peak performance (as measured with iperf using a TCP
+> connection) is close enough that any differences would be lost in the
+> noise, and average performance is better due to the transfer rate being
+> more stable. I'll run some tests with and without tracing enabled to
+> compare the results. I may not get to it before next week though due to
+> the Thanksgiving holiday here in the US.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/driver_chipcommon.c           |   16 ++++++++++++++++
- include/linux/ssb/ssb_driver_chipcommon.h |    2 ++
- 2 files changed, 18 insertions(+)
+I've done some unscientific comparison between builds with and without
+BRCM_TRACING enabled. UDP iperf performance was identical, both send and
+receive. With TCP the difference in throughput was small, definitely
+within the range of noise for my small sample size. So as far as I can
+tell enabling tracing has a negligible impact on throughput.
 
-diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
-index e9d2ca1..4df4926 100644
---- a/drivers/ssb/driver_chipcommon.c
-+++ b/drivers/ssb/driver_chipcommon.c
-@@ -442,6 +442,22 @@ u32 ssb_chipco_gpio_polarity(struct ssb_chipcommon *cc, u32 mask, u32 value)
- 	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOPOL, mask, value);
- }
- 
-+u32 ssb_chipco_gpio_pullup(struct ssb_chipcommon *cc, u32 mask, u32 value)
-+{
-+	if (cc->dev->id.revision < 20)
-+		return 0xffffffff;
-+
-+	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOPULLUP, mask, value);
-+}
-+
-+u32 ssb_chipco_gpio_pulldown(struct ssb_chipcommon *cc, u32 mask, u32 value)
-+{
-+	if (cc->dev->id.revision < 20)
-+		return 0xffffffff;
-+
-+	return chipco_write32_masked(cc, SSB_CHIPCO_GPIOPULLDOWN, mask, value);
-+}
-+
- #ifdef CONFIG_SSB_SERIAL
- int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
- 			   struct ssb_serial_port *ports)
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index c2b02a5..c8d07c9 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -644,6 +644,8 @@ u32 ssb_chipco_gpio_outen(struct ssb_chipcommon *cc, u32 mask, u32 value);
- u32 ssb_chipco_gpio_control(struct ssb_chipcommon *cc, u32 mask, u32 value);
- u32 ssb_chipco_gpio_intmask(struct ssb_chipcommon *cc, u32 mask, u32 value);
- u32 ssb_chipco_gpio_polarity(struct ssb_chipcommon *cc, u32 mask, u32 value);
-+u32 ssb_chipco_gpio_pullup(struct ssb_chipcommon *cc, u32 mask, u32 value);
-+u32 ssb_chipco_gpio_pulldown(struct ssb_chipcommon *cc, u32 mask, u32 value);
- 
- #ifdef CONFIG_SSB_SERIAL
- extern int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
--- 
-1.7.10.4
+Seth
 
