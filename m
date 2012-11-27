@@ -1,43 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:42821 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753488Ab2KMR0H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 12:26:07 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k13so11075463iea.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 09:26:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <50A186BD.6060908@lwfinger.net>
-References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
- <1352757511-26957-16-git-send-email-maxtram95@gmail.com> <50A186BD.6060908@lwfinger.net>
-From: Maxim Mikityanskiy <maxtram95@gmail.com>
-Date: Tue, 13 Nov 2012 19:25:46 +0200
-Message-ID: <CAKErNvrxoc=QFaJ8Tkhm=gHQhLPVU3Mjf5h4rOF1oqOR-d+5fw@mail.gmail.com> (sfid-20121113_182611_988600_E7C3446E)
-Subject: Re: [PATCH 15/17] Removed unused fields in r8180_priv
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Greg Kroah-Hartman <greg@kroah.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42560 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757506Ab2K0A0Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Nov 2012 19:26:16 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 05/15] watchdog: bcm47xx_wdt.c: add hard timer
+Date: Tue, 27 Nov 2012 01:25:15 +0100
+Message-Id: <1353975925-32056-6-git-send-email-hauke@hauke-m.de> (sfid-20121127_012620_849731_D0A2B540)
+In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/11/13 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 11/12/2012 03:58 PM, Maxim Mikityanskiy wrote:
->>
->> Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
->> ---
->>   r8180.h       |   10 ----------
->>   r8180_core.c  |   49 +++----------------------------------------------
->>   r8185b_init.c |    6 ++----
->>   3 files changed, 5 insertions(+), 60 deletions(-)
->
->
-> This patch failed to apply, even after the directory level was fixed. A
-> wiggle run fixed it with no manual intervention, but there is some kind of
-> problem. My base system is the staging tree, with a pull today.
->
-> Larry
->
+The more recent devices have a watchdog timer which could be configured
+for over 2 hours and not just 2 seconds like the first generation
+devices. For those devices do not use the extra software timer, but
+directly program the time into the register. This will automatically be
+used if the timer supports more than a minute.
 
-Maybe, that's because I used linux-3.6.2 as base for my patches. I'll
-resend patches that should apply cleanly to today's tree.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/watchdog/bcm47xx_wdt.c |   69 ++++++++++++++++++++++++++++++++++++----
+ include/linux/bcm47xx_wdt.h    |    1 +
+ 2 files changed, 64 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
+index f188097..9cb69ad 100644
+--- a/drivers/watchdog/bcm47xx_wdt.c
++++ b/drivers/watchdog/bcm47xx_wdt.c
+@@ -31,6 +31,7 @@
+ 
+ #define WDT_DEFAULT_TIME	30	/* seconds */
+ #define WDT_SOFTTIMER_MAX	255	/* seconds */
++#define WDT_SOFTTIMER_THRESHOLD	60	/* seconds */
+ 
+ static int timeout = WDT_DEFAULT_TIME;
+ static bool nowayout = WATCHDOG_NOWAYOUT;
+@@ -49,6 +50,53 @@ static inline struct bcm47xx_wdt *bcm47xx_wdt_get(struct watchdog_device *wdd)
+ 	return container_of(wdd, struct bcm47xx_wdt, wdd);
+ }
+ 
++static int bcm47xx_wdt_hard_keepalive(struct watchdog_device *wdd)
++{
++	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
++
++	wdt->timer_set_ms(wdt, wdd->timeout * 1000);
++
++	return 0;
++}
++
++static int bcm47xx_wdt_hard_start(struct watchdog_device *wdd)
++{
++	return 0;
++}
++
++static int bcm47xx_wdt_hard_stop(struct watchdog_device *wdd)
++{
++	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
++
++	wdt->timer_set(wdt, 0);
++
++	return 0;
++}
++
++static int bcm47xx_wdt_hard_set_timeout(struct watchdog_device *wdd,
++					unsigned int new_time)
++{
++	struct bcm47xx_wdt *wdt = bcm47xx_wdt_get(wdd);
++	u32 max_timer = wdt->max_timer_ms;
++
++	if (new_time < 1 || new_time > max_timer / 1000) {
++		pr_warn("timeout value must be 1<=x<=%d, using %d\n",
++			max_timer / 1000, new_time);
++		return -EINVAL;
++	}
++
++	wdd->timeout = new_time;
++	return 0;
++}
++
++static struct watchdog_ops bcm47xx_wdt_hard_ops = {
++	.owner		= THIS_MODULE,
++	.start		= bcm47xx_wdt_hard_start,
++	.stop		= bcm47xx_wdt_hard_stop,
++	.ping		= bcm47xx_wdt_hard_keepalive,
++	.set_timeout	= bcm47xx_wdt_hard_set_timeout,
++};
++
+ static void bcm47xx_wdt_soft_timer_tick(unsigned long data)
+ {
+ 	struct bcm47xx_wdt *wdt = (struct bcm47xx_wdt *)data;
+@@ -133,15 +181,22 @@ static struct watchdog_ops bcm47xx_wdt_soft_ops = {
+ static int __devinit bcm47xx_wdt_probe(struct platform_device *pdev)
+ {
+ 	int ret;
++	bool soft;
+ 	struct bcm47xx_wdt *wdt = dev_get_platdata(&pdev->dev);
+ 
+ 	if (!wdt)
+ 		return -ENXIO;
+ 
+-	setup_timer(&wdt->soft_timer, bcm47xx_wdt_soft_timer_tick,
+-		    (long unsigned int)wdt);
++	soft = wdt->max_timer_ms < WDT_SOFTTIMER_THRESHOLD * 1000;
++
++	if (soft) {
++		wdt->wdd.ops = &bcm47xx_wdt_soft_ops;
++		setup_timer(&wdt->soft_timer, bcm47xx_wdt_soft_timer_tick,
++			    (long unsigned int)wdt);
++	} else {
++		wdt->wdd.ops = &bcm47xx_wdt_hard_ops;
++	}
+ 
+-	wdt->wdd.ops = &bcm47xx_wdt_soft_ops;
+ 	wdt->wdd.info = &bcm47xx_wdt_info;
+ 	wdt->wdd.timeout = WDT_DEFAULT_TIME;
+ 	ret = wdt->wdd.ops->set_timeout(&wdt->wdd, timeout);
+@@ -159,14 +214,16 @@ static int __devinit bcm47xx_wdt_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto err_notifier;
+ 
+-	pr_info("BCM47xx Watchdog Timer enabled (%d seconds%s)\n",
+-		timeout, nowayout ? ", nowayout" : "");
++	dev_info(&pdev->dev, "BCM47xx Watchdog Timer enabled (%d seconds%s%s)\n",
++		timeout, nowayout ? ", nowayout" : "",
++		soft ? ", Software Timer" : "");
+ 	return 0;
+ 
+ err_notifier:
+ 	unregister_reboot_notifier(&wdt->notifier);
+ err_timer:
+-	del_timer_sync(&wdt->soft_timer);
++	if (soft)
++		del_timer_sync(&wdt->soft_timer);
+ 
+ 	return ret;
+ }
+diff --git a/include/linux/bcm47xx_wdt.h b/include/linux/bcm47xx_wdt.h
+index b94ac0e..b708786 100644
+--- a/include/linux/bcm47xx_wdt.h
++++ b/include/linux/bcm47xx_wdt.h
+@@ -10,6 +10,7 @@
+ struct bcm47xx_wdt {
+ 	u32 (*timer_set)(struct bcm47xx_wdt *, u32);
+ 	u32 (*timer_set_ms)(struct bcm47xx_wdt *, u32);
++	u32 max_timer_ms;
+ 
+ 	void *driver_data;
+ 
+-- 
+1.7.10.4
+
