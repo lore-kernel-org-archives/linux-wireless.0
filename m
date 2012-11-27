@@ -1,35 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37009 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643Ab2KENUt (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:38359 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088Ab2K0Nes (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 08:20:49 -0500
-Message-ID: <1352121685.9466.7.camel@jlt4.sipsolutions.net> (sfid-20121105_142105_013613_132C01A8)
-Subject: Re: [PATCH] mac80211: sync acccess to tx_filtered/ps_tx_buf queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Date: Mon, 05 Nov 2012 14:21:25 +0100
-In-Reply-To: <1352104072-7199-1-git-send-email-arik@wizery.com> (sfid-20121105_092806_116083_BAE1FAF2)
-References: <1352104072-7199-1-git-send-email-arik@wizery.com>
-	 (sfid-20121105_092806_116083_BAE1FAF2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 27 Nov 2012 08:34:48 -0500
+Date: Tue, 27 Nov 2012 19:04:57 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+CC: <rodrigue@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<backports@vger.kernel.org>
+Subject: Re: [PATCH 3/3] compat-drivers: Add a crap patch for AR9565
+Message-ID: <20121127133455.GA3185@hemis.qca.qualcomm.com> (sfid-20121127_143452_048851_F87876AB)
+References: <1353932997-8051-1-git-send-email-bkamatch@qca.qualcomm.com>
+ <1353932997-8051-4-git-send-email-bkamatch@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1353932997-8051-4-git-send-email-bkamatch@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-05 at 10:27 +0200, Arik Nemtsov wrote:
-> These are accessed without a lock when ending STA PSM. If the
-> sta_cleanup timer accesses these lists at the same time, we might crash.
+On Mon, Nov 26, 2012 at 05:59:57PM +0530, Bala Shanmugam wrote:
+> This patch is required to improve BT throughput to
+> meet customer requirement.  This patch is a workaround
+> to put WLAN to sleep during BT cycle and cannot be
+> upstreamed.
 > 
-> This may fix some mysterious crashes we had during
-> ieee80211_sta_ps_deliver_wakeup.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> Signed-off-by: Ido Yariv <ido@wizery.com>
+> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+> ---
+>  ...9k-Improve-BT-PAN-FTP-profile-performance.patch |  140 ++++++++++++++++++++
+>  1 files changed, 140 insertions(+), 0 deletions(-)
+>  create mode 100644 crap/0005-ath9k-Improve-BT-PAN-FTP-profile-performance.patch
+>
+Luis,
 
-Applied, thanks!
+Can you please hold this patch? It needs some more testing.
 
-johannes
-
+-Rajkumar
