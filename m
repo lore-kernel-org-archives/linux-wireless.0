@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:35860 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751673Ab2KGJBq (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:41114 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758140Ab2K0HZk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2012 04:01:46 -0500
-Message-ID: <509A2374.4060601@posedge.com> (sfid-20121107_100201_287130_B8B50831)
-Date: Wed, 07 Nov 2012 14:31:40 +0530
-From: Saravana <saravanad@posedge.com>
+	Tue, 27 Nov 2012 02:25:40 -0500
+Date: Tue, 27 Nov 2012 10:25:32 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: ath6kl: move ath6kl_wmi_startscan_cmd()
+Message-ID: <20121127072531.GB8239@elgon.mountain> (sfid-20121127_082543_263952_B62F745F)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Clarification needed on Last Tx Rate statistic update
-References: <509A11F9.8050108@posedge.com> <1352275534.9854.6.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1352275534.9854.6.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hello Kalle Valo,
 
-Thanks for the clarification. So it seems the in the other case that you 
-had mentioned, we can confirm that last_tx_rate is updated with 
-inappropriate value.
-So probably we could add another variable for the highest 
-performing/probability rate and update it with the  txrc.reported rate 
-value.
-The Last_tx_rate update with the highest performing/probability rate can 
-be removed.
+The patch c8c72b74e289: "ath6kl: move ath6kl_wmi_startscan_cmd()" 
+from Jul 19, 2012, leads to the following warning:
+drivers/net/wireless/ath/ath6kl/wmi.c:2016 ath6kl_wmi_beginscan_cmd()
+	 error: buffer overflow 'sc->supp_rates' 2 <= 2
 
-As far as Last Tx Rate is concerned, should we need to check for the flag?
-I think the Last Tx Rate can be updated irrespective of the 
-IEEE80211_HW_HAS_RATE_CONTROL set or not.
+drivers/net/wireless/ath/ath6kl/wmi.c
 
-Please let me know your inputs on this.
+  2009          for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+                                      ^^^^^^^^^^^^^^^^^^^
+This is 3.
 
-Thanks,
-Saravana
-On 11/07/2012 01:35 PM, Johannes Berg wrote:
-> On Wed, 2012-11-07 at 13:17 +0530, Saravana wrote:
->
->> Could somebody clarify why the statistics update happens only when the
->> rate control is done by the hardware(flag IEEE80211_HW_HAS_RATE_CONTROL
->> is set)?
-> In the other case, it's set to txrc.reported_rate upon transmission, so
-> it's not the *last* rate, but more accurately the highest
-> performing/probability rate.
->
-> johannes
->
->
+  2010                  sband = ar->wiphy->bands[band];
+  2011  
+  2012                  if (!sband)
+  2013                          continue;
+  2014  
+  2015                  ratemask = rates[band];
+  2016                  supp_rates = sc->supp_rates[band].rates;
+
+->supp_rates has only ATH6KL_NUM_BANDS (2) elements so we are reading
+one element beyond the end.
+
+  2017                  num_rates = 0;
+
+regards,
+dan carpenter
 
