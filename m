@@ -1,48 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54114 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422641Ab2KNQGF (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:33987 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752223Ab2K0TBv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 11:06:05 -0500
-Date: Wed, 14 Nov 2012 10:05:59 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
- support
-Message-ID: <20121114160559.GA18738@thinkpad-t410> (sfid-20121114_170610_599655_3A60834B)
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
- <50955ADB.9020703@broadcom.com>
- <20121104202549.GB24905@ubuntu-mba51>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121104202549.GB24905@ubuntu-mba51>
+	Tue, 27 Nov 2012 14:01:51 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org,
+	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [RFC 0/3] Add spectral scan support for Atheros AR92xx/AR93xx
+Date: Tue, 27 Nov 2012 20:01:21 +0100
+Message-Id: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121127_200156_359902_9B519F2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+This patchset is a first request for comments for the upcoming spectral
+scan feature. It adds a new attribute to nl80211 to ask for a spectral
+scan while scanning, because we cycle through the channels anyway at
+this time. If enabled by the driver, spectral scan results will be
+collected. This feature has been enabled for AR92xx and AR93xx based
+chipsets. As the FFT samples are very hardware dependent, they are only
+provided via a debugfs file for further evaluation.
 
-I've got v2 patches prepped with your request changes, which I'll send
-as soon as I'm finished testing. I did have a question about one of your
-requests though.
+We've also written a visual evaluation program for these samples (see
+screenshot [1] and sourcecode [2]).
 
-On Sun, Nov 04, 2012 at 09:25:49PM +0100, Seth Forshee wrote:
-> On Sat, Nov 03, 2012 at 06:56:43PM +0100, Arend van Spriel wrote:
-> > >   brcmsmac: Add module parameter for setting the debug level
-> > 
-> > I would prefer doing this through debugfs.
+Many details are not known due to the fact that I don't have access to
+Atheros specifications and details. Many things are done by guessing
+and might be wrong. I'm therefore requesting help from Qualcomm/Atheros
+guys to confirm or correct my findings. Apart from that, after
+discussion I think we could integrate this patchset to allow other
+people to work on this as well, even if it is experimental now.
 
-I mentioned this to you at the wireless summit. If this is moved to
-debugfs it will not allow for setting the debug level at module load
-time. If we leave it a module parameter it can still be set at runtime
-via /sys/module/parameters/brcmsmac/debug, assuming BRCMDBG is enabled.
-I currently don't have this change in my v2 patches, but if you still
-want it changed to debugfs let me know and I'll take care of it.
+Questions from my end:
+ 1. There are many TODOs/Comments in the patches regarding details,
+    please answer if you can. :)
+ 2. The output format is very Atheros-dependent. If my finding that 
+    byte n-4 is some kind of offset/exponent, I'd integrate this in
+    the debugfs output as well
+ 3. The data length varies pretty much, there might be some false
+    positives/PHY errors which are not FFT data - what should be
+    the correct length?
+ 4. Is there any special handling for HT40? At least the proprietary
+    driver symbol names suggest so [3]
 
-Thanks,
-Seth
+(Possible) further work:
+ 1. Integrate this patchset, confirm/correct findings
+ 2. If anyone would like: Atheros proprietary driver seems to
+    support some kind of classification [3] (is this microwave? cordless
+    phone? whatever?)
+ 3. If other devices also offer spectral scan support: define a
+    common interface to use it (not debugfs).
+
+
+[1] http://packetmixer.de/sdl_spec_scan2.png
+[2] https://github.com/simonwunderlich/FFT_eval
+[3] http://www.wehavemorefun.de/fritzbox/Ath_spectral.ko#Symbole
+
+Simon Wunderlich (3):
+  nl80211: add spec scan flag
+  mac80211: add spectral_scan function, hook it up in scanning
+  ath9k: add spectral scan feature
+
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c |   37 +++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   37 +++++++++++++
+ drivers/net/wireless/ath/ath9k/ath9k.h      |   12 ++++
+ drivers/net/wireless/ath/ath9k/debug.c      |   79 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    4 ++
+ drivers/net/wireless/ath/ath9k/init.c       |   13 +++++
+ drivers/net/wireless/ath/ath9k/mac.h        |    7 ++-
+ drivers/net/wireless/ath/ath9k/main.c       |   29 ++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c       |   34 ++++++++++++
+ include/net/cfg80211.h                      |    2 +
+ include/net/mac80211.h                      |    6 ++
+ include/uapi/linux/nl80211.h                |    5 ++
+ net/mac80211/driver-ops.h                   |   10 ++++
+ net/mac80211/scan.c                         |    3 +
+ net/mac80211/trace.h                        |    5 ++
+ net/wireless/nl80211.c                      |    3 +
+ 16 files changed, 284 insertions(+), 2 deletions(-)
+
+-- 
+1.7.10.4
+
