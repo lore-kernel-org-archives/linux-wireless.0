@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:41523 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755802Ab2KMUui (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:51371 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758468Ab2K0ItX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 15:50:38 -0500
-Received: by mail-pa0-f46.google.com with SMTP id hz1so5291086pad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 12:50:38 -0800 (PST)
-Date: Tue, 13 Nov 2012 12:50:35 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 08/14] staging: vt6656: 64 bit fixes : correct all type
- sizes
-Message-ID: <20121113205035.GB27716@kroah.com> (sfid-20121113_215041_704074_833E37B7)
-References: <1352648485.6460.16.camel@canaries32-MCP7A>
+	Tue, 27 Nov 2012 03:49:23 -0500
+Date: Tue, 27 Nov 2012 11:49:08 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: ath9k: Add concurrent WLAN and BT tx support for MCI based chips
+Message-ID: <20121127084908.GS6186@mwanda> (sfid-20121127_094938_653465_2E119878)
+References: <20121126210337.GA27645@elgon.mountain>
+ <20121127082832.GA11602@hemis.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1352648485.6460.16.camel@canaries32-MCP7A>
+In-Reply-To: <20121127082832.GA11602@hemis.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 11, 2012 at 03:41:25PM +0000, Malcolm Priestley wrote:
->  /****** Common pointer types ***********************************************/
->  
-> -typedef unsigned long   ULONG_PTR;      // 32-bit
-> -typedef unsigned long   DWORD_PTR;      // 32-bit
-> +typedef u32 ULONG_PTR;
-> +typedef u32 DWORD_PTR;
+On Tue, Nov 27, 2012 at 01:58:35PM +0530, Rajkumar Manoharan wrote:
+> On Tue, Nov 27, 2012 at 12:03:37AM +0300, Dan Carpenter wrote:
+> > Hello Rajkumar Manoharan,
+> > 
+> > The patch db60428b1af1: "ath9k: Add concurrent WLAN and BT tx support
+> > for MCI based chips" from Oct 12, 2012, leads to the following
+> > warning:
+> > drivers/net/wireless/ath/ath9k/btcoex.c:414
+> > 	ath9k_hw_btcoex_set_concur_txprio()
+> > 		error: buffer overflow 'stomp_txprio' 4 <= 4
+> > 
+> Dan,
+> 
+> Thanks a lot. Is there a way to enable all checks while building smatch tool?
+> 
 
-A pointer does not fit in u32 on all arches, only unsigned long works
-here.
+This one requires the sqlite database to get the cross function
+info.  It's a two compile process, the first builds the db and the
+next does the test.  Replace the path names as appropriate:
 
-thanks,
+~/progs/smatch/devel/smatch_scripts/build_kernel_data.sh
+~/progs/smatch/devel/smatch_scripts/test_kernel.sh
 
-greg k-h
+regards,
+dan carpenter
+
