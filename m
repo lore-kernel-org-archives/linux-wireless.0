@@ -1,120 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40019 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756071Ab2KWUTH (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:42408 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757842Ab2K0GpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 15:19:07 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFCv2 00/13] mesh powersave - basics
-Date: Fri, 23 Nov 2012 12:18:41 -0800
-Message-Id: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_211913_448201_EDDB2126)
+	Tue, 27 Nov 2012 01:45:23 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hm6so4054043wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:22 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Ido Reis <idor@ti.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 09/20] wlcore: fwlog dynamic mem_block control
+Date: Tue, 27 Nov 2012 08:44:50 +0200
+Message-Id: <1353998701-18171-10-git-send-email-arik@wizery.com> (sfid-20121127_074618_453550_938AE3CE)
+In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following commits cover the basic subset of functions, that each mesh node
-must support to communicate in the presence of power saving nodes.
-The current patchset does not implement any actual power savings yet (no
-hardware configuration, no doze state).
+From: Ido Reis <idor@ti.com>
 
-Mesh powersave is different from client mode powersave in the sense that
-1) there is not just a singular power mode towards the access point, but a
-   link-specific power mode towards each peer instead
-2) peers also maintain a power mode towards us (the local STA)
-3) each node has to buffer frames towards power saving neighbors
+number of fwlog mem_blocks can be configured using module param.
+this is a fw debug feature: in case a large fw log data is busrted during
+a short period of time, the memory get filled and data is lost.
+this allows us to dynamicly set the fw log mem_block usage, although
+configuring more mem_block for logger comes at the expense of TP.
 
-With that said the different commits cover the following main topics:
-3:  maintaining a local power mode for each peer + one non-peer power mode
-4:  indicate the power mode towards the respective neighbors
-5:  track neighbors' power modes 
-9: buffer frames towards power saving neighbors
-13: release buffered frames in coordination with neighbor
+Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+Signed-off-by: Ido Reis <idor@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/conf.h |    5 ++++-
+ drivers/net/wireless/ti/wlcore/main.c |   16 ++++++++++++++++
+ 2 files changed, 20 insertions(+), 1 deletion(-)
 
-
-v2:
--active voice commit logs
--beacon interval and DTIM period set during mesh join (no change during mesh
- runtime anymore)
--power mode "unknown" instead of "invalid"
--merged mesh power mode parameters and set/get commits
--"mesh" and "sta" in function names where useful
--sdata check in list_for_each_entry_rcu(sta, &sdata->local->sta_list, list)
--sta timer setup in sta_info_alloc
--BUG_ON -> WARN_ON + return
--clarify comments
--kernel-doc style
--clear separation {cfg,nl}80211 & mac80211
--removed debug strings
--ieee80211_has_qos_pm int -> bool
--#IFDEF CONFIG_MESH around use of sta->plid
--move skb_queue_purge to stop_mesh
--move counter cleanup to stop_mesh
--no use of sta_ps_transition anymore - own routines instead
--no use of ieee80211_sta_ps_deliver_response anymore, no use of ambiguous
- UAPSD enum anymore - own function instead
--concentrate PS stuff in ieee80211_mesh_ps_rx_bcn
--less exposed functions in mesh.h
-
-not done:
-range checks and FILL_IN_MESH_PARAM_IF_SET - follows later in one cleanup
-
-Concerning the patch series ordering etc., everything *should* be safe.
-1-7 just adds lots of overhead to maintain a power mode and track neighbors
-without actually having any effects. Before any frames are buffered in 9,
-8 adds all the neccessary data structures. In that snapshot state buffered
-unicast frames would not be released, but would just time out. 10-12 add more
-overhead until 13 allows unicast frame release. Of course for the patch
-submission I can merge everything together, if that is helpful. The current
-splitted state helps to understand the semantics, though.
-
-
-Marco Porsch (13):
-  {nl,cfg,mac}80211: set beacon interval and DTIM period on mesh join
-  {cfg,nl}80211: mesh power mode config parameters
-  mac80211: local link-specific mesh power mode logic
-  mac80211: mesh power mode indication in transmitted frames
-  mac80211: track neighbor STA power modes
-  {cfg,nl}80211: allow userspace to set the local link-specific power
-    mode
-  {cfg,nl}80211: allow userspace to read the local and peer mesh power
-    modes
-  mac80211: add power save support structure to mesh interface
-  mac80211: enable frame buffering for PS STA
-  {cfg,nl}80211: add awake window to mesh config
-  mac80211: add awake window IE to mesh beacons
-  mac80211: add TIM IE to mesh beacons
-  mac80211: mesh PS individually-addressed frame release
-
- include/linux/ieee80211.h     |   17 ++
- include/net/cfg80211.h        |   24 ++
- include/uapi/linux/nl80211.h  |   49 ++++
- net/mac80211/Kconfig          |   11 +
- net/mac80211/Makefile         |    3 +-
- net/mac80211/cfg.c            |   24 +-
- net/mac80211/debug.h          |   10 +
- net/mac80211/debugfs_netdev.c |    6 +
- net/mac80211/debugfs_sta.c    |    5 +-
- net/mac80211/ieee80211_i.h    |    7 +
- net/mac80211/mesh.c           |   36 ++-
- net/mac80211/mesh.h           |   22 +-
- net/mac80211/mesh_hwmp.c      |   10 +
- net/mac80211/mesh_pathtbl.c   |    1 +
- net/mac80211/mesh_plink.c     |   22 ++
- net/mac80211/mesh_ps.c        |  632 +++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c             |   24 ++
- net/mac80211/sta_info.c       |   19 +-
- net/mac80211/sta_info.h       |   14 +
- net/mac80211/status.c         |    5 +
- net/mac80211/tx.c             |   59 +++-
- net/mac80211/util.c           |    4 +
- net/mac80211/wme.c            |   13 +-
- net/wireless/mesh.c           |    8 +
- net/wireless/nl80211.c        |   56 +++-
- 25 files changed, 1060 insertions(+), 21 deletions(-)
- create mode 100644 net/mac80211/mesh_ps.c
-
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index b64d6b5..b3894ef 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -1208,6 +1208,9 @@ struct conf_rx_streaming_settings {
+ 	u8 always;
+ } __packed;
+ 
++#define CONF_FWLOG_MIN_MEM_BLOCKS       2
++#define CONF_FWLOG_MAX_MEM_BLOCKS	16
++
+ struct conf_fwlog {
+ 	/* Continuous or on-demand */
+ 	u8 mode;
+@@ -1215,7 +1218,7 @@ struct conf_fwlog {
+ 	/*
+ 	 * Number of memory blocks dedicated for the FW logger
+ 	 *
+-	 * Range: 1-3, or 0 to disable the FW logger
++	 * Range: 2-16, or 0 to disable the FW logger
+ 	 */
+ 	u8 mem_blocks;
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index b659efd..8932cca 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -56,6 +56,7 @@
+ #define WL1271_BOOT_RETRIES 3
+ 
+ static char *fwlog_param;
++static int fwlog_mem_blocks = -1;
+ static int bug_on_recovery = -1;
+ static int no_recovery     = -1;
+ 
+@@ -307,6 +308,18 @@ static void wlcore_adjust_conf(struct wl1271 *wl)
+ {
+ 	/* Adjust settings according to optional module parameters */
+ 
++	/* Firmware Logger params */
++	if (fwlog_mem_blocks != -1) {
++		if (fwlog_mem_blocks >= CONF_FWLOG_MIN_MEM_BLOCKS &&
++		    fwlog_mem_blocks <= CONF_FWLOG_MAX_MEM_BLOCKS) {
++			wl->conf.fwlog.mem_blocks = fwlog_mem_blocks;
++		} else {
++			wl1271_error(
++				"Illegal fwlog_mem_blocks=%d using default %d",
++				fwlog_mem_blocks, wl->conf.fwlog.mem_blocks);
++		}
++	}
++
+ 	/* Firmware Log Settings */
+ 	if (fwlog_param) {
+ 		if (!strcmp(fwlog_param, "continuous")) {
+@@ -6024,6 +6037,9 @@ module_param_named(fwlog, fwlog_param, charp, 0);
+ MODULE_PARM_DESC(fwlog,
+ 		 "FW logger options: continuous, ondemand, dbgpins or disable");
+ 
++module_param(fwlog_mem_blocks, int, S_IRUSR | S_IWUSR);
++MODULE_PARM_DESC(fwlog_mem_blocks, "fwlog mem_blocks");
++
+ module_param(bug_on_recovery, int, S_IRUSR | S_IWUSR);
+ MODULE_PARM_DESC(bug_on_recovery, "BUG() on fw recovery");
+ 
 -- 
 1.7.9.5
 
