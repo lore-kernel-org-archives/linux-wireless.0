@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:52346 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753886Ab2KVTDW (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:43462 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755381Ab2K0Ucy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 14:03:22 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so3048333eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 11:03:21 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 07/14] wlcore: update acx enum
-Date: Thu, 22 Nov 2012 18:06:17 +0200
-Message-Id: <1353600384-32462-8-git-send-email-eliad@wizery.com> (sfid-20121122_200340_040974_B57EE521)
-In-Reply-To: <1353600384-32462-1-git-send-email-eliad@wizery.com>
-References: <1353600384-32462-1-git-send-email-eliad@wizery.com>
+	Tue, 27 Nov 2012 15:32:54 -0500
+Date: Tue, 27 Nov 2012 21:32:45 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: Martin Schleier <drahemmaps@gmx.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 0/3] Add spectral scan support for Atheros AR92xx/AR93xx
+Message-ID: <20121127203244.GA752@pandem0nium> (sfid-20121127_213305_460813_C37C2E36)
+References: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <loom.20121127T201036-82@post.gmane.org>
+ <20121127194952.GA530@pandem0nium>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7AUc2qLy4jB3hD7Z"
+In-Reply-To: <20121127194952.GA530@pandem0nium>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-update the acx enum to the new fw api.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: keep the 18xx-specific ACXs in wl18xx/acx.h (thanks Luca!)
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 
- drivers/net/wireless/ti/wl18xx/acx.c |    2 +-
- drivers/net/wireless/ti/wl18xx/acx.h |    8 +++++++-
- drivers/net/wireless/ti/wlcore/acx.h |    1 -
- 3 files changed, 8 insertions(+), 3 deletions(-)
+On Tue, Nov 27, 2012 at 08:49:52PM +0100, Simon Wunderlich wrote:
+> [...]
+>
+> The goal of this was to create the spectral scan feature based on public
+> information, so the results are probably not optimal yet, but I hope that
+> this will help to move Qualcomm/Atheros disclosing some information (this seems
+> to be planned anyway[2]). Otherwise, maybe other people can help
+> reverse-engineering this. :)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-index 72840e2..adff9cd 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.c
-+++ b/drivers/net/wireless/ti/wl18xx/acx.c
-@@ -75,7 +75,7 @@ int wl18xx_acx_set_checksum_state(struct wl1271 *wl)
- 
- 	acx->checksum_state = CHECKSUM_OFFLOAD_ENABLED;
- 
--	ret = wl1271_cmd_configure(wl, ACX_CHECKSUM_CONFIG, acx, sizeof(*acx));
-+	ret = wl1271_cmd_configure(wl, ACX_CSUM_CONFIG, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1271_warning("failed to set Tx checksum state: %d", ret);
- 		goto out;
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-index e2609a6..394d125 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.h
-+++ b/drivers/net/wireless/ti/wl18xx/acx.h
-@@ -26,7 +26,13 @@
- #include "../wlcore/acx.h"
- 
- enum {
--	ACX_CLEAR_STATISTICS		 = 0x0047,
-+	ACX_NS_IPV6_FILTER		 = 0x0050,
-+	ACX_PEER_HT_OPERATION_MODE_CFG	 = 0x0051,
-+	ACX_CSUM_CONFIG			 = 0x0052,
-+	ACX_SIM_CONFIG			 = 0x0053,
-+	ACX_CLEAR_STATISTICS		 = 0x0054,
-+	ACX_AUTO_RX_STREAMING		 = 0x0055,
-+	ACX_PEER_CAP			 = 0x0056
- };
- 
- /* numbers of bits the length field takes (add 1 for the actual number) */
-diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
-index d03215d..126536c 100644
---- a/drivers/net/wireless/ti/wlcore/acx.h
-+++ b/drivers/net/wireless/ti/wlcore/acx.h
-@@ -1025,7 +1025,6 @@ enum {
- 	ACX_CONFIG_HANGOVER              = 0x0042,
- 	ACX_FEATURE_CFG                  = 0x0043,
- 	ACX_PROTECTION_CFG               = 0x0044,
--	ACX_CHECKSUM_CONFIG              = 0x0045,
- };
- 
- 
--- 
-1.7.6.401.g6a319
+Just to clarify: I don't mean anyone should disassemble proprietary object files
+or use proprietary source code and re-use these findings without permission to
+create this feature - this would probably be illegal anyway.
 
+By reverse-engineering, I mean we can already dump data spectral scan data with
+this patchset, but the hard part is to interpret this data correctly - as you'll
+find in the patches, there are a lot of bits which we don't know what they
+mean, and maybe there is even more info hidden in these bits. I've uploaded
+some samples taken on my hardware to the github repo, so anyone can use my
+program, matlab, or just stare at these heaps of bytes to find some patterns and
+try to interpret it. Actually I was just staring at the bytes myself and wrote
+this visualizer to get a better idea what they could mean.
+
+Of course, if we can some docs or support from QCA officially, this would be even
+better. :)
+
+Cheers,
+	Simon
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlC1I2wACgkQrzg/fFk7axazSgCgonKBa6K9uiTrE2Cm0QdVX+S3
+roAAoKvISSw2ITi1FiEC2iponTZHCCtt
+=Dsd8
+-----END PGP SIGNATURE-----
+
+--7AUc2qLy4jB3hD7Z--
