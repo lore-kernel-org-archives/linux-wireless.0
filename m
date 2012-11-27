@@ -1,98 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:57714 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752278Ab2KTLU3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 06:20:29 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so1625946eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:20:28 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 10/11] wlcore: refactor CHANGED_HT handling
-Date: Tue, 20 Nov 2012 13:20:10 +0200
-Message-Id: <1353410411-18833-11-git-send-email-eliad@wizery.com> (sfid-20121120_122035_398070_DF821BD7)
-In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
-References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:59002 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750813Ab2K0MqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Nov 2012 07:46:00 -0500
+Message-ID: <1354020320.950.84.camel@cumari.coelho.fi> (sfid-20121127_134603_988498_18C73EFD)
+Subject: Re: [PATCH 03/20] wlcore: Allow memory access when the FW crashes
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>, Ido Yariv <ido@wizery.com>
+Date: Tue, 27 Nov 2012 14:45:20 +0200
+In-Reply-To: <CA+XVXfexJew14BSu79JC2OPnQMiEaw6--bOwwbDDCkr=wQMy4w@mail.gmail.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+	 <1353998701-18171-4-git-send-email-arik@wizery.com>
+	 <1354008888.950.62.camel@cumari.coelho.fi>
+	 <CA+XVXfexJew14BSu79JC2OPnQMiEaw6--bOwwbDDCkr=wQMy4w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass a variable indicating whether HT is enabled,
-instead of duplicating the function call with
-different arguments.
+On Tue, 2012-11-27 at 13:54 +0200, Arik Nemtsov wrote:
+> On Tue, Nov 27, 2012 at 11:34 AM, Luciano Coelho <coelho@ti.com> wrote:
+> > On Tue, 2012-11-27 at 08:44 +0200, Arik Nemtsov wrote:
+> >> From: Ido Yariv <ido@wizery.com>
+> >>
+> >> When the no_recovery flag is used, the recovery work will not restart
+> >> the FW and the state will not be set to 'on'. To enable post-mortem
+> >> analysis, allow memory access in the 'restarting' state.
+> >>
+> >> Also, since the FW might not be operational, don't fail the read/write
+> >> operations if elp_wakeup fails.
+> >>
+> >> Reported-by: Arkady Miasnikov <a-miasnikov@ti.com>
+> >> Signed-off-by: Ido Yariv <ido@wizery.com>
+> >> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> >> ---
+> >
+> > This is weird.  This patch is already in (d5560238) and the one here is
+> > actually just part of it and probably won't apply.
+> 
+> Heh. It seems Eliad and I are to blame (all the rebases can really
+> mess with the mind).
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   48 ++++++++++++--------------------
- 1 files changed, 18 insertions(+), 30 deletions(-)
+Yeah, all these internal rebases suck.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index ade206a..ff9437a 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4009,44 +4009,32 @@ sta_not_found:
- 	}
- 
- 	/* Handle new association with HT. Do this after join. */
--	if (sta_exists) {
--		if ((changed & BSS_CHANGED_HT) &&
--		    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
--			ret = wl1271_acx_set_ht_capabilities(wl,
--							     &sta_ht_cap,
--							     true,
--							     wlvif->sta.hlid);
--			if (ret < 0) {
--				wl1271_warning("Set ht cap true failed %d",
--					       ret);
--				goto out;
--			}
-+	if (sta_exists &&
-+	    (changed & BSS_CHANGED_HT)) {
-+		bool enabled =
-+			bss_conf->channel_type != NL80211_CHAN_NO_HT;
-+
-+		ret = wl1271_acx_set_ht_capabilities(wl,
-+						     &sta_ht_cap,
-+						     enabled,
-+						     wlvif->sta.hlid);
-+		if (ret < 0) {
-+			wl1271_warning("Set ht cap failed %d", ret);
-+			goto out;
-+
- 		}
--		/* handle new association without HT and disassociation */
--		else if (changed & BSS_CHANGED_ASSOC) {
--			ret = wl1271_acx_set_ht_capabilities(wl,
--							     &sta_ht_cap,
--							     false,
--							     wlvif->sta.hlid);
-+
-+		if (enabled) {
-+			ret = wl1271_acx_set_ht_information(wl, wlvif,
-+						bss_conf->ht_operation_mode);
- 			if (ret < 0) {
--				wl1271_warning("Set ht cap false failed %d",
-+				wl1271_warning("Set ht information failed %d",
- 					       ret);
- 				goto out;
- 			}
- 		}
- 	}
- 
--	/* Handle HT information change. Done after join. */
--	if ((changed & BSS_CHANGED_HT) &&
--	    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
--		ret = wl1271_acx_set_ht_information(wl, wlvif,
--					bss_conf->ht_operation_mode);
--		if (ret < 0) {
--			wl1271_warning("Set ht information failed %d", ret);
--			goto out;
--		}
--	}
--
- 	/* Handle arp filtering. Done after join. */
- 	if ((changed & BSS_CHANGED_ARP_FILTER) ||
- 	    (!is_ibss && (changed & BSS_CHANGED_QOS))) {
--- 
-1.7.6.401.g6a319
+
+> There's a patch by Eliad to reverse the patch you just mentioned:
+> 
+> commit fd8e73af670e6b57708eafe927f5d0364018b4e5
+> Author: Eliad Peller <eliad@wizery.com>
+> Date:   Wed Nov 14 02:28:26 2012 +0200
+> 
+>     wlcore: don't allow access to FW mem when chip is off
+> 
+> (which I submitted earlier in my part 1 series)
+> 
+> And the current patch simply cancels it out. So please ignore the
+> previous patch as well as this one. Good catch :)
+
+Okay, I'll ignore this one and Eliad's in the previous series.
+
+--
+Luca.
 
