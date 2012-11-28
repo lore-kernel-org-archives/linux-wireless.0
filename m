@@ -1,158 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:11882 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932073Ab2KNR1w (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:52264 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753895Ab2K1Jnf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 12:27:52 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jason Baron <jbaron@redhat.com>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-Date: Wed, 14 Nov 2012 19:27:47 +0200
-Message-ID: <29414886.frl7IkqOMP@lx-vladimir> (sfid-20121114_182809_489542_99CA75BE)
-In-Reply-To: <1352912932.9388.23.camel@joe-AO722>
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <4818336.JicdpLVKSo@lx-vladimir> <1352912932.9388.23.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 28 Nov 2012 04:43:35 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hm6so5186649wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:35 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Ido Yariv <ido@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 20/20] wlcore: Always pass DMA-able buffers to mmc functions
+Date: Wed, 28 Nov 2012 11:42:49 +0200
+Message-Id: <1354095769-8724-21-git-send-email-arik@wizery.com> (sfid-20121128_104349_273923_B270C788)
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, November 14, 2012 09:08:52 AM Joe Perches wrote:
-> On Wed, 2012-11-14 at 18:18 +0200, Vladimir Kondratiev wrote:
-> > And, here it goes (can I call it PATCH?):
-> Don't see why not.
-> 
-> > From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> 
-> []
-> 
-> > Introduce debug_hex_dump() that can be dynamically controlled, similar to
-> > pr_debug.
-> > 
-> > Also, make print_hex_dump_bytes() dynamically controlled
-> 
-> print_hex_dump_debug might be a better name than
-> debug_hex_dump because it's more similar to the other
-> print_hex_dump<_foo> names.
+From: Ido Yariv <ido@wizery.com>
 
-Well, let it be:
+Some of the mmc drivers initiate DMA transfers with buffers passed from
+higher layers. This means that the driver shouldn't ever pass non
+DMA-able buffers, such as ones that are unaligned, allocated on the
+stack or static.
 
->From 5c9a79ea32e300f9a228d659f325e30d450b57c1 Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Wed, 14 Nov 2012 19:24:51 +0200
-Subject: [PATCH] dynamic_debug: dynamic hex dump
+Fix a couple of calls to the mmc layer in which buffers which weren't
+necessarily DMA-able were passed.
 
-Introduce print_hex_dump_debug() that can be dynamically controlled, similar to
-pr_debug.
-
-Also, make print_hex_dump_bytes() dynamically controlled
-
-Implement only 'p' flag (_DPRINTK_FLAGS_PRINT) to keep it simple since hex dump prints
-multiple lines and long prefix would impact readability.
-To provide line/file etc. information, use pr_debug or similar
-before/after print_hex_dump_debug()
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- Documentation/dynamic-debug-howto.txt |   11 +++++++++--
- include/linux/dynamic_debug.h         |   10 ++++++++++
- include/linux/printk.h                |   17 +++++++++++++++++
- 3 files changed, 36 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c   |   31 +++++++++++++++++++++++++------
+ drivers/net/wireless/ti/wl12xx/wl12xx.h |    2 ++
+ drivers/net/wireless/ti/wlcore/io.h     |   10 ++++------
+ drivers/net/wireless/ti/wlcore/main.c   |   10 ++++++++++
+ drivers/net/wireless/ti/wlcore/wlcore.h |    2 +-
+ 5 files changed, 42 insertions(+), 13 deletions(-)
 
-diff --git a/Documentation/dynamic-debug-howto.txt b/Documentation/dynamic-debug-howto.txt
-index 6e16849..b39a771 100644
---- a/Documentation/dynamic-debug-howto.txt
-+++ b/Documentation/dynamic-debug-howto.txt
-@@ -6,8 +6,12 @@ This document describes how to use the dynamic debug (dyndbg) feature.
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index be26d35..be1b792 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -613,7 +613,7 @@ static int wl127x_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
  
- Dynamic debug is designed to allow you to dynamically enable/disable
- kernel code to obtain additional kernel information.  Currently, if
--CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() calls can
--be dynamically enabled per-callsite.
-+CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() and
-+print_hex_dump_debug()/print_hex_dump_bytes() calls can be dynamically
-+enabled per-callsite.
+ 	if (wl->chip.id != CHIP_ID_1283_PG20) {
+ 		struct wl1271_acx_mem_map *wl_mem_map = wl->target_mem_map;
+-		struct wl127x_rx_mem_pool_addr rx_mem_addr;
++		struct wl12xx_priv *priv = wl->priv;
+ 
+ 		/*
+ 		 * Choose the block we want to read
+@@ -622,13 +622,13 @@ static int wl127x_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
+ 		 */
+ 		u32 mem_block = rx_desc & RX_MEM_BLOCK_MASK;
+ 
+-		rx_mem_addr.addr = (mem_block << 8) +
++		priv->rx_mem_addr->addr = (mem_block << 8) +
+ 			le32_to_cpu(wl_mem_map->packet_memory_pool_start);
+ 
+-		rx_mem_addr.addr_extra = rx_mem_addr.addr + 4;
++		priv->rx_mem_addr->addr_extra = priv->rx_mem_addr->addr + 4;
+ 
+-		ret = wlcore_write(wl, WL1271_SLV_REG_DATA, &rx_mem_addr,
+-				   sizeof(rx_mem_addr), false);
++		ret = wlcore_write(wl, WL1271_SLV_REG_DATA, priv->rx_mem_addr,
++				   sizeof(*priv->rx_mem_addr), false);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+@@ -1778,6 +1778,10 @@ static int wl12xx_setup(struct wl1271 *wl)
+ 			wl1271_error("Invalid tcxo parameter %s", tcxo_param);
+ 	}
+ 
++	priv->rx_mem_addr = kmalloc(sizeof(*priv->rx_mem_addr), GFP_KERNEL);
++	if (!priv->rx_mem_addr)
++		return -ENOMEM;
 +
-+If CONFIG_DYNAMIC_DEBUG is not set, print_hex_dump_debug() is just
-+shortcut for print_hex_dump(KERN_DEBUG).
+ 	return 0;
+ }
  
- Dynamic debug has even more useful features:
+@@ -1811,6 +1815,21 @@ out:
+ 	return ret;
+ }
  
-@@ -202,6 +206,9 @@ The flags are:
-   t    Include thread ID in messages not generated from interrupt context
-   _    No flags are set. (Or'd with others on input)
- 
-+For print_hex_dump_debug() and print_hex_dump_bytes(), only 'p' flag
-+have meaning, other flags ignored.
++static int __devexit wl12xx_remove(struct platform_device *pdev)
++{
++	struct wl1271 *wl = platform_get_drvdata(pdev);
++	struct wl12xx_priv *priv;
 +
- For display, the flags are preceded by '='
- (mnemonic: what the flags are currently equal to).
- 
-diff --git a/include/linux/dynamic_debug.h b/include/linux/dynamic_debug.h
-index 6dd4787..17565ab 100644
---- a/include/linux/dynamic_debug.h
-+++ b/include/linux/dynamic_debug.h
-@@ -95,6 +95,16 @@ do {								\
- 				     ##__VA_ARGS__);		\
- } while (0)
- 
-+#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-+			 groupsize, buf, len, ascii)		\
-+do {								\
-+	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
-+	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
-+		print_hex_dump(KERN_DEBUG, prefix_str,		\
-+			       prefix_type, rowsize, groupsize,	\
-+			       buf, len, ascii);		\
-+} while (0)
++	if (!wl)
++		goto out;
++	priv = wl->priv;
 +
- #else
- 
- #include <linux/string.h>
-diff --git a/include/linux/printk.h b/include/linux/printk.h
-index 9afc01e..02c95cf 100644
---- a/include/linux/printk.h
-+++ b/include/linux/printk.h
-@@ -321,8 +321,13 @@ extern void hex_dump_to_buffer(const void *buf, size_t len,
- extern void print_hex_dump(const char *level, const char *prefix_str,
- 			   int prefix_type, int rowsize, int groupsize,
- 			   const void *buf, size_t len, bool ascii);
-+#if defined(CONFIG_DYNAMIC_DEBUG)
-+#define print_hex_dump_bytes(prefix_str, prefix_type, buf, len)	\
-+	dynamic_hex_dump(prefix_str, prefix_type, 16, 1, buf, len, true)
-+#else
- extern void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 				 const void *buf, size_t len);
-+#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
- #else
- static inline void print_hex_dump(const char *level, const char *prefix_str,
- 				  int prefix_type, int rowsize, int groupsize,
-@@ -336,4 +341,16 @@ static inline void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 
- #endif
- 
-+#if defined(CONFIG_DYNAMIC_DEBUG)
-+#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,	\
-+			     groupsize, buf, len, ascii)	\
-+	dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-+			 groupsize, buf, len, ascii)
-+#else
-+#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,		\
-+			     groupsize, buf, len, ascii)		\
-+	print_hex_dump(KERN_DEBUG, prefix_str, prefix_type, rowsize,	\
-+		       groupsize, buf, len, ascii)
-+#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
++	kfree(priv->rx_mem_addr);
 +
- #endif
++out:
++	return wlcore_remove(pdev);
++}
++
+ static const struct platform_device_id wl12xx_id_table[] __devinitconst = {
+ 	{ "wl12xx", 0 },
+ 	{  } /* Terminating Entry */
+@@ -1819,7 +1838,7 @@ MODULE_DEVICE_TABLE(platform, wl12xx_id_table);
+ 
+ static struct platform_driver wl12xx_driver = {
+ 	.probe		= wl12xx_probe,
+-	.remove		= __devexit_p(wlcore_remove),
++	.remove		= __devexit_p(wl12xx_remove),
+ 	.id_table	= wl12xx_id_table,
+ 	.driver = {
+ 		.name	= "wl12xx_driver",
+diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+index b542bfd..9bb60de 100644
+--- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+@@ -55,6 +55,8 @@ struct wl12xx_priv {
+ 
+ 	int ref_clock;
+ 	int tcxo_clock;
++
++	struct wl127x_rx_mem_pool_addr *rx_mem_addr;
+ };
+ 
+ #endif /* __WL12XX_PRIV_H__ */
+diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
+index 5897747..70f9bdc 100644
+--- a/drivers/net/wireless/ti/wlcore/io.h
++++ b/drivers/net/wireless/ti/wlcore/io.h
+@@ -105,13 +105,12 @@ static inline int __must_check wlcore_raw_read32(struct wl1271 *wl, int addr,
+ {
+ 	int ret;
+ 
+-	ret = wlcore_raw_read(wl, addr, &wl->buffer_32,
+-			      sizeof(wl->buffer_32), false);
++	ret = wlcore_raw_read(wl, addr, wl->buffer_32, sizeof(u32), false);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	if (val)
+-		*val = le32_to_cpu(wl->buffer_32);
++		*val = le32_to_cpu(*wl->buffer_32);
+ 
+ 	return 0;
+ }
+@@ -119,9 +118,8 @@ static inline int __must_check wlcore_raw_read32(struct wl1271 *wl, int addr,
+ static inline int __must_check wlcore_raw_write32(struct wl1271 *wl, int addr,
+ 						  u32 val)
+ {
+-	wl->buffer_32 = cpu_to_le32(val);
+-	return wlcore_raw_write(wl, addr, &wl->buffer_32,
+-				sizeof(wl->buffer_32), false);
++	*wl->buffer_32 = cpu_to_le32(val);
++	return wlcore_raw_write(wl, addr, wl->buffer_32, sizeof(u32), false);
+ }
+ 
+ static inline int __must_check wlcore_read(struct wl1271 *wl, int addr,
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 1793a82..e4ff66a 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5890,8 +5890,17 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
+ 		goto err_fwlog;
+ 	}
+ 
++	wl->buffer_32 = kmalloc(sizeof(u32), GFP_KERNEL);
++	if (!wl->buffer_32) {
++		ret = -ENOMEM;
++		goto err_mbox;
++	}
++
+ 	return hw;
+ 
++err_mbox:
++	kfree(wl->mbox);
++
+ err_fwlog:
+ 	free_page((unsigned long)wl->fwlog);
+ 
+@@ -5930,6 +5939,7 @@ int wlcore_free_hw(struct wl1271 *wl)
+ 	device_remove_file(wl->dev, &dev_attr_hw_pg_ver);
+ 
+ 	device_remove_file(wl->dev, &dev_attr_bt_coex_state);
++	kfree(wl->buffer_32);
+ 	kfree(wl->mbox);
+ 	free_page((unsigned long)wl->fwlog);
+ 	dev_kfree_skb(wl->dummy_packet);
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 8877d73..6e49105 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -341,7 +341,7 @@ struct wl1271 {
+ 
+ 	struct wl1271_stats stats;
+ 
+-	__le32 buffer_32;
++	__le32 *buffer_32;
+ 	u32 buffer_cmd;
+ 	u32 buffer_busyword[WL1271_BUSY_WORD_CNT];
+ 
 -- 
-1.7.10.4
-
+1.7.9.5
 
