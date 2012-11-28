@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:53167 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751692Ab2KFN5M (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43581 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754657Ab2K1MZu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 08:57:12 -0500
-Date: Tue, 6 Nov 2012 19:22:16 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwl8k: defining interface combinations
-Message-ID: <20121106135212.GA8439@markyou.marvell.com> (sfid-20121106_145727_849596_A3ED9FF6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 28 Nov 2012 07:25:50 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Tdgi4-0006cS-Uc
+	for linux-wireless@vger.kernel.org; Wed, 28 Nov 2012 13:25:49 +0100
+Message-ID: <1354105575.9345.3.camel@jlt4.sipsolutions.net> (sfid-20121128_132553_367681_A492EB7A)
+Subject: Re: [PATCH] nl80211: remove unnecessary checks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 28 Nov 2012 13:26:15 +0100
+In-Reply-To: <1353931105-10805-1-git-send-email-johannes@sipsolutions.net> (sfid-20121126_125802_517449_444EA480)
+References: <1353931105-10805-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121126_125802_517449_444EA480)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AP mode support upto 8 interfaces.
-Defining it using iface_combinations
+On Mon, 2012-11-26 at 12:58 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The CQM TX-error rate/interval can't be less than
+> zero since they're unsigned values, remove checks.
+> Also fix indentation of the function.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+Applied.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 5099e53..cb5594d 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -5617,6 +5617,18 @@ fail:
- 	return rc;
- }
- 
-+static const struct ieee80211_iface_limit ap_if_limits[] = {
-+	{ .max = 8,	.types = BIT(NL80211_IFTYPE_AP) },
-+};
-+
-+static const struct ieee80211_iface_combination ap_if_comb = {
-+	.limits = ap_if_limits,
-+	.n_limits = ARRAY_SIZE(ap_if_limits),
-+	.max_interfaces = 8,
-+	.num_different_channels = 1,
-+};
-+
-+
- static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
- {
- 	struct ieee80211_hw *hw = priv->hw;
-@@ -5696,8 +5708,13 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
- 		goto err_free_cookie;
- 
- 	hw->wiphy->interface_modes = 0;
--	if (priv->ap_macids_supported || priv->device_info->fw_image_ap)
-+
-+	if (priv->ap_macids_supported || priv->device_info->fw_image_ap) {
- 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP);
-+		hw->wiphy->iface_combinations = &ap_if_comb;
-+		hw->wiphy->n_iface_combinations = 1;
-+	}
-+
- 	if (priv->sta_macids_supported || priv->device_info->fw_image_sta)
- 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_STATION);
- 
--- 
-1.7.9.2
+johannes
 
