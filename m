@@ -1,62 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56436 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753882Ab2KQJOL (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753860Ab2K1Jn1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 04:14:11 -0500
-Message-ID: <1353143685.9543.22.camel@jlt4.sipsolutions.net> (sfid-20121117_101419_856334_C539CC8F)
-Subject: Re: [RFC 06/14] mac80211: track neighbor STA power modes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Date: Sat, 17 Nov 2012 10:14:45 +0100
-In-Reply-To: <1353134886-13256-7-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353134886-13256-7-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 28 Nov 2012 04:43:27 -0500
+Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:26 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 16/20] wlcore: consolidate Rx BA bitmap management to links struct
+Date: Wed, 28 Nov 2012 11:42:45 +0200
+Message-Id: <1354095769-8724-17-git-send-email-arik@wizery.com> (sfid-20121128_104333_246226_E7D5806A)
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-16 at 22:47 -0800, Marco Porsch wrote:
+Remove the STA specific ba_rx_bitmap field and use the common links
+structure. This simplifies code setting/checking the BA bitmap.
 
-> +/**
-> + * ieee80211_has_qos_pm - check Power Save Level in QoS control
-> + * @qc - QoS control bytes in little-endian byteorder
-> + */
-> +static inline int ieee80211_has_qos_pm(__le16 qc)
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/debugfs.c  |    1 -
+ drivers/net/wireless/ti/wlcore/event.c    |    5 +++--
+ drivers/net/wireless/ti/wlcore/main.c     |    4 ++--
+ drivers/net/wireless/ti/wlcore/tx.c       |    1 -
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    1 -
+ 5 files changed, 5 insertions(+), 7 deletions(-)
 
-bool
-
-> +/**
-> + * ieee80211_set_peer_ps_mode - track the neighbor mesh STA's peer-specific
-> + * power mode towards the local STA
-
-not valid kernel-doc.
-
-> +void ieee80211_set_nonpeer_ps_mode(struct sta_info *sta,
-> +				   struct ieee80211_hdr *hdr)
-> +{
-> +	enum nl80211_mesh_power_mode pm;
-> +	static const char *modes[] = {
-> +		[NL80211_MESH_POWER_ACTIVE] = "active",
-> +		[NL80211_MESH_POWER_DEEP_SLEEP] = "deep sleep",
-> +	};
-
-> +	mps_dbg(sta->sdata, "STA %pM sets non-peer mode to %s\n",
-> +		sta->sta.addr, modes[pm]);
-
-This will cause warnings if debug is disabled, can't you just print the
-numeric value? It's for your own debugging -- hardly seems necessary to
-have the strings.
-
-Same in the other function.
-
-And now that I've seen you haven't even compiled the code with the debug
-Kconfig turned off, I'll have to ask you to do that.
-
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index f115fba..e70a7c8 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -560,7 +560,6 @@ static ssize_t vifs_state_read(struct file *file, char __user *user_buf,
+ 		if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
+ 		    wlvif->bss_type == BSS_TYPE_IBSS) {
+ 			VIF_STATE_PRINT_INT(sta.hlid);
+-			VIF_STATE_PRINT_INT(sta.ba_rx_bitmap);
+ 			VIF_STATE_PRINT_INT(sta.basic_rate_idx);
+ 			VIF_STATE_PRINT_INT(sta.ap_rate_idx);
+ 			VIF_STATE_PRINT_INT(sta.p2p_rate_idx);
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index cb32c02..2776d95 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -58,9 +58,10 @@ static void wl1271_stop_ba_event(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
+ 
+ 	if (wlvif->bss_type != BSS_TYPE_AP_BSS) {
+-		if (!wlvif->sta.ba_rx_bitmap)
++		u8 hlid = wlvif->sta.hlid;
++		if (!wl->links[hlid].ba_bitmap)
+ 			return;
+-		ieee80211_stop_rx_ba_session(vif, wlvif->sta.ba_rx_bitmap,
++		ieee80211_stop_rx_ba_session(vif, wl->links[hlid].ba_bitmap,
+ 					     vif->bss_conf.bssid);
+ 	} else {
+ 		u8 hlid;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 3ffbba3..1793a82 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4793,18 +4793,18 @@ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
+ 
+ 	if (wlvif->bss_type == BSS_TYPE_STA_BSS) {
+ 		hlid = wlvif->sta.hlid;
+-		ba_bitmap = &wlvif->sta.ba_rx_bitmap;
+ 	} else if (wlvif->bss_type == BSS_TYPE_AP_BSS) {
+ 		struct wl1271_station *wl_sta;
+ 
+ 		wl_sta = (struct wl1271_station *)sta->drv_priv;
+ 		hlid = wl_sta->hlid;
+-		ba_bitmap = &wl->links[hlid].ba_bitmap;
+ 	} else {
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+ 
++	ba_bitmap = &wl->links[hlid].ba_bitmap;
++
+ 	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index bbfa14a..07bd1f4 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -1061,7 +1061,6 @@ void wl12xx_tx_reset_wlvif(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 			wl1271_free_sta(wl, wlvif, i);
+ 		} else {
+ 			u8 hlid = i;
+-			wlvif->sta.ba_rx_bitmap = 0;
+ 			wl12xx_free_link(wl, wlvif, &hlid);
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 99b19e2..d9313a3 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -342,7 +342,6 @@ struct wl12xx_vif {
+ 	union {
+ 		struct {
+ 			u8 hlid;
+-			u8 ba_rx_bitmap;
+ 
+ 			u8 basic_rate_idx;
+ 			u8 ap_rate_idx;
+-- 
+1.7.9.5
 
