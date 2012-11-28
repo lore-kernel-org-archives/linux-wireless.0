@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1945 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1674 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751462Ab2KTVvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 16:51:51 -0500
-Message-ID: <50ABFB6F.3040409@broadcom.com> (sfid-20121120_225154_378080_786AA958)
-Date: Tue, 20 Nov 2012 22:51:43 +0100
+	id S1755970Ab2K1Uo1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 15:44:27 -0500
 From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/11] brcm80211: bugfixes, cleanup, and bcm4313 iPA
+ support
+Date: Wed, 28 Nov 2012 21:44:03 +0100
+Message-ID: <1354135454-7035-1-git-send-email-arend@broadcom.com> (sfid-20121128_214440_046926_A05F4BD8)
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Daniel Wagner" <wagi@monom.org>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded
- debug/trace support
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org>
- <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org>
- <50ABF17A.6020604@broadcom.com> <20121120211647.GC26602@thinkpad-t410>
-In-Reply-To: <20121120211647.GC26602@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/20/2012 10:16 PM, Seth Forshee wrote:
-> On Tue, Nov 20, 2012 at 10:09:14PM +0100, Arend van Spriel wrote:
->>> I hope I got it right. Here are the requested logs:
->>>
->>> http://www.monom.org/misc/brcmsmac/traces/
->>
->> What channel is you AP on?
->
-> Based on the trace it looks like channel 13.
+This series contain a bugfix for brcmfmac and one for brcmsmac. Other cleanup
+changes are in preparation for vif support in brcmfmac and the isr code in
+brcmsmac needed cleanup as well. The other change involves support for internal
+PA variant of the bcm4313 chip.
 
-Think so too.
+This series is intended for v3.8 and applies to wireless-next repository.
 
-> If you want to take a look at the decoded trace data I've uploaded it to
-> http://people.canonical.com/~sforshee/brcms-trace/trace.log. I've got a
-> trace-cmd plugin for the tracepoints I added that makes it easier to
-> decipher.
->
-> Seth
->
+Arend van Spriel (3):
+  brcm80211: update the MAINTAINERS file
+  brcmfmac: get rid of struct brcmf_cfg80211_info::link_up attribute
+  brcmfmac: remove mode from struct brcmf_cfg80211_conf
 
-Nice :-D Are you sharing it?
+Hante Meuleman (2):
+  brcmfmac: fix bug in setting mgmt ie and parsing vndrs ie.
+  brcmfmac: change debug output for received event.
 
-Gr. AvS
+Piotr Haber (6):
+  brcmsmac: handle packet drop during transmit correctly
+  brcmsmac: cleanup in isr code
+  brcmsmac: fix bounds checking in tx/rx
+  brcmsmac: hardware info in debugfs
+  brcmsmac: move PHY functions
+  brcmsmac: support 4313iPA
+
+ MAINTAINERS                                        |    3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |    4 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  141 +++---
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    3 -
+ drivers/net/wireless/brcm80211/brcmsmac/debug.c    |  112 +++++
+ drivers/net/wireless/brcm80211/brcmsmac/debug.h    |   23 +
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   29 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   61 +--
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |  471 ++++++++++++--------
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |   64 +--
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    5 +-
+ 11 files changed, 567 insertions(+), 349 deletions(-)
+
+-- 
+1.7.10.4
+
 
