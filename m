@@ -1,115 +1,716 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43718 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932083Ab2K1NHc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 08:07:32 -0500
-Message-ID: <1354108076.9345.22.camel@jlt4.sipsolutions.net> (sfid-20121128_140737_015667_7DE78163)
-Subject: Re: [RFC 14/14] mac80211: mesh PS individually-addressed frame
- release
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, linux-wireless@vger.kernel.org
-Date: Wed, 28 Nov 2012 14:07:56 +0100
-In-Reply-To: <50B3B4A2.5000908@etit.tu-chemnitz.de>
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	   <1353134886-13256-15-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	  <1353145246.9543.39.camel@jlt4.sipsolutions.net>
-	  <50ABC7D0.2030303@etit.tu-chemnitz.de>
-	 <1353926751.9488.19.camel@jlt4.sipsolutions.net>
-	 <50B3B4A2.5000908@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1670 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932281Ab2K1Uoc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 15:44:32 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 07/11] brcmsmac: support 4313iPA
+Date: Wed, 28 Nov 2012 21:44:10 +0100
+Message-ID: <1354135454-7035-8-git-send-email-arend@broadcom.com> (sfid-20121128_214523_983533_DCB8C320)
+In-Reply-To: <1354135454-7035-1-git-send-email-arend@broadcom.com>
+References: <1354135454-7035-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 10:27 -0800, Marco Porsch wrote:
+From: Piotr Haber <phaber@broadcom.com>
 
-> >> Imho, in the context of PSP trigger frames it does.
-> >> Sending a trigger frame to a mesh PS STA with no EOSP implies the start
-> >> of a PSP with the sender as owner -> following data. The other two
-> >> combinations imply that there is no more data following in that direction.
-> >
-> > The EOSP bit in a trigger frame should always be 0 unless the frame is
-> > also a PSP response, no?
-> 
-> No. That is one weird thing about the standard: the combination 
-> RSPI:EOSP 0:0 is seen as a MPSP trigger frame when sent towards a 
-> station in PS mode towards the sender. So whenever a frame should be 
-> sent in a non-PSP context it has to set the EOSP flag.
-> Another situation that sets the EOSP flag is a kind of MPSP poll: if one 
-> STA indicates buffered frames, the other STA can poll it with RSPI:EOSP 1:1.
+Add support for 4313 iPA variant.
+It is a variant of already supported 4313 ePA
+and needs some PHY changes to work properly.
 
-What's RSPI?
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |  369 +++++++++++++-------
+ .../wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c   |   64 ++--
+ 2 files changed, 271 insertions(+), 162 deletions(-)
 
-> > What you seem to be missing though is the case when there _is_ more
-> > data, but the service period has to end nonetheless, say because it was
-> > limited to a few packets? Nothing here seems to indicate that an MPSP
-> > ends only after all queued packets are transmitted, which would be a
-> > requirement if this was supposed to be correct.
-> 
-> MPSPs themselves are not defined in length by the standard.
-> My current mechanism always sends all packets that are buffered at the 
-> start of the MPSP. At the time the MPSP starts, the last 
-> to-be-transmitted frame is the last buffered frame.
-> Of course, by the time the MPSP ends, new frames may have been buffered 
-> in the meantime, which are not taken into account here. That would 
-> require additional feedback from ieee80211_tx_status which always seems 
-> a bit racy to me.
-> (In an earlier version I had something like a feedback loop with 
-> ieee80211_tx_status, where the 'last' frame of a MPSP would always 
-> trigger a re-check of the PS buffers. That allowed to have infinite 
-> length MPSPs as long as data is enqueued for transmission. But that 
-> seemed to be overly complex when something like dynamic PS state 
-> switching is possible and advised by the standard.)
-> 
-> But I see one situation where the More Data flag is indeed not set 
-> correctly. That is the case where I only send a single frame to a PS STA 
-> in a non-MPSP context when no peering is established yet. I'll fix that.
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+index 18d3764..2bface3 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -1137,8 +1137,9 @@ wlc_lcnphy_set_rx_gain_by_distribution(struct brcms_phy *pi,
+ 	gain0_15 = ((biq1 & 0xf) << 12) |
+ 		   ((tia & 0xf) << 8) |
+ 		   ((lna2 & 0x3) << 6) |
+-		   ((lna2 &
+-		     0x3) << 4) | ((lna1 & 0x3) << 2) | ((lna1 & 0x3) << 0);
++		   ((lna2 & 0x3) << 4) |
++		   ((lna1 & 0x3) << 2) |
++		   ((lna1 & 0x3) << 0);
+ 
+ 	mod_phy_reg(pi, 0x4b6, (0xffff << 0), gain0_15 << 0);
+ 	mod_phy_reg(pi, 0x4b7, (0xf << 0), gain16_19 << 0);
+@@ -1156,6 +1157,8 @@ wlc_lcnphy_set_rx_gain_by_distribution(struct brcms_phy *pi,
+ 	}
+ 
+ 	mod_phy_reg(pi, 0x44d, (0x1 << 0), (!trsw) << 0);
++	mod_phy_reg(pi, 0x4b1, (0x3 << 11), lna1 << 11);
++	mod_phy_reg(pi, 0x4e6, (0x3 << 3), lna1 << 3);
+ 
+ }
+ 
+@@ -1328,6 +1331,43 @@ static u32 wlc_lcnphy_measure_digital_power(struct brcms_phy *pi, u16 nsamples)
+ 	return (iq_est.i_pwr + iq_est.q_pwr) / nsamples;
+ }
+ 
++static bool wlc_lcnphy_rx_iq_cal_gain(struct brcms_phy *pi, u16 biq1_gain,
++				      u16 tia_gain, u16 lna2_gain)
++{
++	u32 i_thresh_l, q_thresh_l;
++	u32 i_thresh_h, q_thresh_h;
++	struct lcnphy_iq_est iq_est_h, iq_est_l;
++
++	wlc_lcnphy_set_rx_gain_by_distribution(pi, 0, 0, 0, biq1_gain, tia_gain,
++					       lna2_gain, 0);
++
++	wlc_lcnphy_rx_gain_override_enable(pi, true);
++	wlc_lcnphy_start_tx_tone(pi, 2000, (40 >> 1), 0);
++	usleep_range(500);
++	write_radio_reg(pi, RADIO_2064_REG112, 0);
++	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_l))
++		return false;
++
++	wlc_lcnphy_start_tx_tone(pi, 2000, 40, 0);
++	usleep_range(500);
++	write_radio_reg(pi, RADIO_2064_REG112, 0);
++	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_h))
++		return false;
++
++	i_thresh_l = (iq_est_l.i_pwr << 1);
++	i_thresh_h = (iq_est_l.i_pwr << 2) + iq_est_l.i_pwr;
++
++	q_thresh_l = (iq_est_l.q_pwr << 1);
++	q_thresh_h = (iq_est_l.q_pwr << 2) + iq_est_l.q_pwr;
++	if ((iq_est_h.i_pwr > i_thresh_l) &&
++	    (iq_est_h.i_pwr < i_thresh_h) &&
++	    (iq_est_h.q_pwr > q_thresh_l) &&
++	    (iq_est_h.q_pwr < q_thresh_h))
++		return true;
++
++	return false;
++}
++
+ static bool
+ wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
+ 		     const struct lcnphy_rx_iqcomp *iqcomp,
+@@ -1342,8 +1382,8 @@ wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
+ 	    RFOverrideVal0_old, rfoverride2_old, rfoverride2val_old,
+ 	    rfoverride3_old, rfoverride3val_old, rfoverride4_old,
+ 	    rfoverride4val_old, afectrlovr_old, afectrlovrval_old;
+-	int tia_gain;
+-	u32 received_power, rx_pwr_threshold;
++	int tia_gain, lna2_gain, biq1_gain;
++	bool set_gain;
+ 	u16 old_sslpnCalibClkEnCtrl, old_sslpnRxFeClkEnCtrl;
+ 	u16 values_to_save[11];
+ 	s16 *ptr;
+@@ -1368,126 +1408,134 @@ wlc_lcnphy_rx_iq_cal(struct brcms_phy *pi,
+ 		goto cal_done;
+ 	}
+ 
+-	if (module == 1) {
++	WARN_ON(module != 1);
++	tx_pwr_ctrl = wlc_lcnphy_get_tx_pwr_ctrl(pi);
++	wlc_lcnphy_set_tx_pwr_ctrl(pi, LCNPHY_TX_PWR_CTRL_OFF);
+ 
+-		tx_pwr_ctrl = wlc_lcnphy_get_tx_pwr_ctrl(pi);
+-		wlc_lcnphy_set_tx_pwr_ctrl(pi, LCNPHY_TX_PWR_CTRL_OFF);
++	for (i = 0; i < 11; i++)
++		values_to_save[i] =
++			read_radio_reg(pi, rxiq_cal_rf_reg[i]);
++	Core1TxControl_old = read_phy_reg(pi, 0x631);
++
++	or_phy_reg(pi, 0x631, 0x0015);
++
++	RFOverride0_old = read_phy_reg(pi, 0x44c);
++	RFOverrideVal0_old = read_phy_reg(pi, 0x44d);
++	rfoverride2_old = read_phy_reg(pi, 0x4b0);
++	rfoverride2val_old = read_phy_reg(pi, 0x4b1);
++	rfoverride3_old = read_phy_reg(pi, 0x4f9);
++	rfoverride3val_old = read_phy_reg(pi, 0x4fa);
++	rfoverride4_old = read_phy_reg(pi, 0x938);
++	rfoverride4val_old = read_phy_reg(pi, 0x939);
++	afectrlovr_old = read_phy_reg(pi, 0x43b);
++	afectrlovrval_old = read_phy_reg(pi, 0x43c);
++	old_sslpnCalibClkEnCtrl = read_phy_reg(pi, 0x6da);
++	old_sslpnRxFeClkEnCtrl = read_phy_reg(pi, 0x6db);
+ 
+-		for (i = 0; i < 11; i++)
+-			values_to_save[i] =
+-				read_radio_reg(pi, rxiq_cal_rf_reg[i]);
+-		Core1TxControl_old = read_phy_reg(pi, 0x631);
+-
+-		or_phy_reg(pi, 0x631, 0x0015);
+-
+-		RFOverride0_old = read_phy_reg(pi, 0x44c);
+-		RFOverrideVal0_old = read_phy_reg(pi, 0x44d);
+-		rfoverride2_old = read_phy_reg(pi, 0x4b0);
+-		rfoverride2val_old = read_phy_reg(pi, 0x4b1);
+-		rfoverride3_old = read_phy_reg(pi, 0x4f9);
+-		rfoverride3val_old = read_phy_reg(pi, 0x4fa);
+-		rfoverride4_old = read_phy_reg(pi, 0x938);
+-		rfoverride4val_old = read_phy_reg(pi, 0x939);
+-		afectrlovr_old = read_phy_reg(pi, 0x43b);
+-		afectrlovrval_old = read_phy_reg(pi, 0x43c);
+-		old_sslpnCalibClkEnCtrl = read_phy_reg(pi, 0x6da);
+-		old_sslpnRxFeClkEnCtrl = read_phy_reg(pi, 0x6db);
+-
+-		tx_gain_override_old = wlc_lcnphy_tx_gain_override_enabled(pi);
+-		if (tx_gain_override_old) {
+-			wlc_lcnphy_get_tx_gain(pi, &old_gains);
+-			tx_gain_index_old = pi_lcn->lcnphy_current_index;
+-		}
++	tx_gain_override_old = wlc_lcnphy_tx_gain_override_enabled(pi);
++	if (tx_gain_override_old) {
++		wlc_lcnphy_get_tx_gain(pi, &old_gains);
++		tx_gain_index_old = pi_lcn->lcnphy_current_index;
++	}
+ 
+-		wlc_lcnphy_set_tx_pwr_by_index(pi, tx_gain_idx);
++	wlc_lcnphy_set_tx_pwr_by_index(pi, tx_gain_idx);
+ 
+-		mod_phy_reg(pi, 0x4f9, (0x1 << 0), 1 << 0);
+-		mod_phy_reg(pi, 0x4fa, (0x1 << 0), 0 << 0);
++	mod_phy_reg(pi, 0x4f9, (0x1 << 0), 1 << 0);
++	mod_phy_reg(pi, 0x4fa, (0x1 << 0), 0 << 0);
+ 
+-		mod_phy_reg(pi, 0x43b, (0x1 << 1), 1 << 1);
+-		mod_phy_reg(pi, 0x43c, (0x1 << 1), 0 << 1);
++	mod_phy_reg(pi, 0x43b, (0x1 << 1), 1 << 1);
++	mod_phy_reg(pi, 0x43c, (0x1 << 1), 0 << 1);
+ 
+-		write_radio_reg(pi, RADIO_2064_REG116, 0x06);
+-		write_radio_reg(pi, RADIO_2064_REG12C, 0x07);
+-		write_radio_reg(pi, RADIO_2064_REG06A, 0xd3);
+-		write_radio_reg(pi, RADIO_2064_REG098, 0x03);
+-		write_radio_reg(pi, RADIO_2064_REG00B, 0x7);
+-		mod_radio_reg(pi, RADIO_2064_REG113, 1 << 4, 1 << 4);
+-		write_radio_reg(pi, RADIO_2064_REG01D, 0x01);
+-		write_radio_reg(pi, RADIO_2064_REG114, 0x01);
+-		write_radio_reg(pi, RADIO_2064_REG02E, 0x10);
+-		write_radio_reg(pi, RADIO_2064_REG12A, 0x08);
+-
+-		mod_phy_reg(pi, 0x938, (0x1 << 0), 1 << 0);
+-		mod_phy_reg(pi, 0x939, (0x1 << 0), 0 << 0);
+-		mod_phy_reg(pi, 0x938, (0x1 << 1), 1 << 1);
+-		mod_phy_reg(pi, 0x939, (0x1 << 1), 1 << 1);
+-		mod_phy_reg(pi, 0x938, (0x1 << 2), 1 << 2);
+-		mod_phy_reg(pi, 0x939, (0x1 << 2), 1 << 2);
+-		mod_phy_reg(pi, 0x938, (0x1 << 3), 1 << 3);
+-		mod_phy_reg(pi, 0x939, (0x1 << 3), 1 << 3);
+-		mod_phy_reg(pi, 0x938, (0x1 << 5), 1 << 5);
+-		mod_phy_reg(pi, 0x939, (0x1 << 5), 0 << 5);
+-
+-		mod_phy_reg(pi, 0x43b, (0x1 << 0), 1 << 0);
+-		mod_phy_reg(pi, 0x43c, (0x1 << 0), 0 << 0);
+-
+-		wlc_lcnphy_start_tx_tone(pi, 2000, 120, 0);
+-		write_phy_reg(pi, 0x6da, 0xffff);
+-		or_phy_reg(pi, 0x6db, 0x3);
+-		wlc_lcnphy_set_trsw_override(pi, tx_switch, rx_switch);
+-		wlc_lcnphy_rx_gain_override_enable(pi, true);
+-
+-		tia_gain = 8;
+-		rx_pwr_threshold = 950;
+-		while (tia_gain > 0) {
+-			tia_gain -= 1;
+-			wlc_lcnphy_set_rx_gain_by_distribution(pi,
+-							       0, 0, 2, 2,
+-							       (u16)
+-							       tia_gain, 1, 0);
+-			udelay(500);
++	write_radio_reg(pi, RADIO_2064_REG116, 0x06);
++	write_radio_reg(pi, RADIO_2064_REG12C, 0x07);
++	write_radio_reg(pi, RADIO_2064_REG06A, 0xd3);
++	write_radio_reg(pi, RADIO_2064_REG098, 0x03);
++	write_radio_reg(pi, RADIO_2064_REG00B, 0x7);
++	mod_radio_reg(pi, RADIO_2064_REG113, 1 << 4, 1 << 4);
++	write_radio_reg(pi, RADIO_2064_REG01D, 0x01);
++	write_radio_reg(pi, RADIO_2064_REG114, 0x01);
++	write_radio_reg(pi, RADIO_2064_REG02E, 0x10);
++	write_radio_reg(pi, RADIO_2064_REG12A, 0x08);
++
++	mod_phy_reg(pi, 0x938, (0x1 << 0), 1 << 0);
++	mod_phy_reg(pi, 0x939, (0x1 << 0), 0 << 0);
++	mod_phy_reg(pi, 0x938, (0x1 << 1), 1 << 1);
++	mod_phy_reg(pi, 0x939, (0x1 << 1), 1 << 1);
++	mod_phy_reg(pi, 0x938, (0x1 << 2), 1 << 2);
++	mod_phy_reg(pi, 0x939, (0x1 << 2), 1 << 2);
++	mod_phy_reg(pi, 0x938, (0x1 << 3), 1 << 3);
++	mod_phy_reg(pi, 0x939, (0x1 << 3), 1 << 3);
++	mod_phy_reg(pi, 0x938, (0x1 << 5), 1 << 5);
++	mod_phy_reg(pi, 0x939, (0x1 << 5), 0 << 5);
+ 
+-			received_power =
+-				wlc_lcnphy_measure_digital_power(pi, 2000);
+-			if (received_power < rx_pwr_threshold)
+-				break;
++	mod_phy_reg(pi, 0x43b, (0x1 << 0), 1 << 0);
++	mod_phy_reg(pi, 0x43c, (0x1 << 0), 0 << 0);
++
++	write_phy_reg(pi, 0x6da, 0xffff);
++	or_phy_reg(pi, 0x6db, 0x3);
++
++	wlc_lcnphy_set_trsw_override(pi, tx_switch, rx_switch);
++	set_gain = false;
++
++	lna2_gain = 3;
++	while ((lna2_gain >= 0) && !set_gain) {
++		tia_gain = 4;
++
++		while ((tia_gain >= 0) && !set_gain) {
++			biq1_gain = 6;
++
++			while ((biq1_gain >= 0) && !set_gain) {
++				set_gain = wlc_lcnphy_rx_iq_cal_gain(pi,
++								     (u16)
++								     biq1_gain,
++								     (u16)
++								     tia_gain,
++								     (u16)
++								     lna2_gain);
++				biq1_gain -= 1;
++			}
++			tia_gain -= 1;
+ 		}
+-		result = wlc_lcnphy_calc_rx_iq_comp(pi, 0xffff);
++		lna2_gain -= 1;
++	}
+ 
+-		wlc_lcnphy_stop_tx_tone(pi);
++	if (set_gain)
++		result = wlc_lcnphy_calc_rx_iq_comp(pi, 1024);
++	else
++		result = false;
+ 
+-		write_phy_reg(pi, 0x631, Core1TxControl_old);
++	wlc_lcnphy_stop_tx_tone(pi);
+ 
+-		write_phy_reg(pi, 0x44c, RFOverrideVal0_old);
+-		write_phy_reg(pi, 0x44d, RFOverrideVal0_old);
+-		write_phy_reg(pi, 0x4b0, rfoverride2_old);
+-		write_phy_reg(pi, 0x4b1, rfoverride2val_old);
+-		write_phy_reg(pi, 0x4f9, rfoverride3_old);
+-		write_phy_reg(pi, 0x4fa, rfoverride3val_old);
+-		write_phy_reg(pi, 0x938, rfoverride4_old);
+-		write_phy_reg(pi, 0x939, rfoverride4val_old);
+-		write_phy_reg(pi, 0x43b, afectrlovr_old);
+-		write_phy_reg(pi, 0x43c, afectrlovrval_old);
+-		write_phy_reg(pi, 0x6da, old_sslpnCalibClkEnCtrl);
+-		write_phy_reg(pi, 0x6db, old_sslpnRxFeClkEnCtrl);
++	write_phy_reg(pi, 0x631, Core1TxControl_old);
++
++	write_phy_reg(pi, 0x44c, RFOverrideVal0_old);
++	write_phy_reg(pi, 0x44d, RFOverrideVal0_old);
++	write_phy_reg(pi, 0x4b0, rfoverride2_old);
++	write_phy_reg(pi, 0x4b1, rfoverride2val_old);
++	write_phy_reg(pi, 0x4f9, rfoverride3_old);
++	write_phy_reg(pi, 0x4fa, rfoverride3val_old);
++	write_phy_reg(pi, 0x938, rfoverride4_old);
++	write_phy_reg(pi, 0x939, rfoverride4val_old);
++	write_phy_reg(pi, 0x43b, afectrlovr_old);
++	write_phy_reg(pi, 0x43c, afectrlovrval_old);
++	write_phy_reg(pi, 0x6da, old_sslpnCalibClkEnCtrl);
++	write_phy_reg(pi, 0x6db, old_sslpnRxFeClkEnCtrl);
+ 
+-		wlc_lcnphy_clear_trsw_override(pi);
++	wlc_lcnphy_clear_trsw_override(pi);
+ 
+-		mod_phy_reg(pi, 0x44c, (0x1 << 2), 0 << 2);
++	mod_phy_reg(pi, 0x44c, (0x1 << 2), 0 << 2);
+ 
+-		for (i = 0; i < 11; i++)
+-			write_radio_reg(pi, rxiq_cal_rf_reg[i],
+-					values_to_save[i]);
++	for (i = 0; i < 11; i++)
++		write_radio_reg(pi, rxiq_cal_rf_reg[i],
++				values_to_save[i]);
+ 
+-		if (tx_gain_override_old)
+-			wlc_lcnphy_set_tx_pwr_by_index(pi, tx_gain_index_old);
+-		else
+-			wlc_lcnphy_disable_tx_gain_override(pi);
++	if (tx_gain_override_old)
++		wlc_lcnphy_set_tx_pwr_by_index(pi, tx_gain_index_old);
++	else
++		wlc_lcnphy_disable_tx_gain_override(pi);
+ 
+-		wlc_lcnphy_set_tx_pwr_ctrl(pi, tx_pwr_ctrl);
+-		wlc_lcnphy_rx_gain_override_enable(pi, false);
+-	}
++	wlc_lcnphy_set_tx_pwr_ctrl(pi, tx_pwr_ctrl);
++	wlc_lcnphy_rx_gain_override_enable(pi, false);
+ 
+ cal_done:
+ 	kfree(ptr);
+@@ -1781,6 +1829,17 @@ wlc_lcnphy_radio_2064_channel_tune_4313(struct brcms_phy *pi, u8 channel)
+ 		write_radio_reg(pi, RADIO_2064_REG038, 3);
+ 		write_radio_reg(pi, RADIO_2064_REG091, 7);
+ 	}
++
++	if (!(pi->sh->boardflags & BFL_FEM)) {
++		u8 reg038[14] = {0xd, 0xe, 0xd, 0xd, 0xd, 0xc,
++			0xa, 0xb, 0xb, 0x3, 0x3, 0x2, 0x0, 0x0};
++
++		write_radio_reg(pi, RADIO_2064_REG02A, 0xf);
++		write_radio_reg(pi, RADIO_2064_REG091, 0x3);
++		write_radio_reg(pi, RADIO_2064_REG038, 0x3);
++
++		write_radio_reg(pi, RADIO_2064_REG038, reg038[channel - 1]);
++	}
+ }
+ 
+ static int
+@@ -1975,6 +2034,16 @@ wlc_lcnphy_set_tssi_mux(struct brcms_phy *pi, enum lcnphy_tssi_mode pos)
+ 		} else {
+ 			mod_radio_reg(pi, RADIO_2064_REG03A, 1, 0x1);
+ 			mod_radio_reg(pi, RADIO_2064_REG11A, 0x8, 0x8);
++			mod_radio_reg(pi, RADIO_2064_REG028, 0x1, 0x0);
++			mod_radio_reg(pi, RADIO_2064_REG11A, 0x4, 1<<2);
++			mod_radio_reg(pi, RADIO_2064_REG036, 0x10, 0x0);
++			mod_radio_reg(pi, RADIO_2064_REG11A, 0x10, 1<<4);
++			mod_radio_reg(pi, RADIO_2064_REG036, 0x3, 0x0);
++			mod_radio_reg(pi, RADIO_2064_REG035, 0xff, 0x77);
++			mod_radio_reg(pi, RADIO_2064_REG028, 0x1e, 0xe<<1);
++			mod_radio_reg(pi, RADIO_2064_REG112, 0x80, 1<<7);
++			mod_radio_reg(pi, RADIO_2064_REG005, 0x7, 1<<1);
++			mod_radio_reg(pi, RADIO_2064_REG029, 0xf0, 0<<4);
+ 		}
+ 	} else {
+ 		mod_phy_reg(pi, 0x4d9, (0x1 << 2), (0x1) << 2);
+@@ -2061,12 +2130,14 @@ static void wlc_lcnphy_pwrctrl_rssiparams(struct brcms_phy *pi)
+ 		    (auxpga_vmid_temp << 0) | (auxpga_gain_temp << 12));
+ 
+ 	mod_radio_reg(pi, RADIO_2064_REG082, (1 << 5), (1 << 5));
++	mod_radio_reg(pi, RADIO_2064_REG07C, (1 << 0), (1 << 0));
+ }
+ 
+ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
+ {
+ 	struct phytbl_info tab;
+ 	u32 rfseq, ind;
++	u8 tssi_sel;
+ 
+ 	tab.tbl_id = LCNPHY_TBL_ID_TXPWRCTL;
+ 	tab.tbl_width = 32;
+@@ -2088,7 +2159,13 @@ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
+ 
+ 	mod_phy_reg(pi, 0x503, (0x1 << 4), (1) << 4);
+ 
+-	wlc_lcnphy_set_tssi_mux(pi, LCNPHY_TSSI_EXT);
++	if (pi->sh->boardflags & BFL_FEM) {
++		tssi_sel = 0x1;
++		wlc_lcnphy_set_tssi_mux(pi, LCNPHY_TSSI_EXT);
++	} else {
++		tssi_sel = 0xe;
++		wlc_lcnphy_set_tssi_mux(pi, LCNPHY_TSSI_POST_PA);
++	}
+ 	mod_phy_reg(pi, 0x4a4, (0x1 << 14), (0) << 14);
+ 
+ 	mod_phy_reg(pi, 0x4a4, (0x1 << 15), (1) << 15);
+@@ -2124,9 +2201,10 @@ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
+ 	mod_phy_reg(pi, 0x49a, (0x1ff << 0), (0xff) << 0);
+ 
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 2)) {
+-		mod_radio_reg(pi, RADIO_2064_REG028, 0xf, 0xe);
++		mod_radio_reg(pi, RADIO_2064_REG028, 0xf, tssi_sel);
+ 		mod_radio_reg(pi, RADIO_2064_REG086, 0x4, 0x4);
+ 	} else {
++		mod_radio_reg(pi, RADIO_2064_REG028, 0x1e, tssi_sel << 1);
+ 		mod_radio_reg(pi, RADIO_2064_REG03A, 0x1, 1);
+ 		mod_radio_reg(pi, RADIO_2064_REG11A, 0x8, 1 << 3);
+ 	}
+@@ -2173,6 +2251,10 @@ static void wlc_lcnphy_tssi_setup(struct brcms_phy *pi)
+ 
+ 	mod_phy_reg(pi, 0x4d7, (0xf << 8), (0) << 8);
+ 
++	mod_radio_reg(pi, RADIO_2064_REG035, 0xff, 0x0);
++	mod_radio_reg(pi, RADIO_2064_REG036, 0x3, 0x0);
++	mod_radio_reg(pi, RADIO_2064_REG11A, 0x8, 0x8);
++
+ 	wlc_lcnphy_pwrctrl_rssiparams(pi);
+ }
+ 
+@@ -2791,6 +2873,8 @@ static void wlc_lcnphy_idle_tssi_est(struct brcms_phy_pub *ppi)
+ 		read_radio_reg(pi, RADIO_2064_REG007) & 1;
+ 	u16 SAVE_jtag_auxpga = read_radio_reg(pi, RADIO_2064_REG0FF) & 0x10;
+ 	u16 SAVE_iqadc_aux_en = read_radio_reg(pi, RADIO_2064_REG11F) & 4;
++	u8 SAVE_bbmult = wlc_lcnphy_get_bbmult(pi);
++
+ 	idleTssi = read_phy_reg(pi, 0x4ab);
+ 	suspend = (0 == (bcma_read32(pi->d11core, D11REGOFFS(maccontrol)) &
+ 			 MCTL_EN_MAC));
+@@ -2808,6 +2892,12 @@ static void wlc_lcnphy_idle_tssi_est(struct brcms_phy_pub *ppi)
+ 	mod_radio_reg(pi, RADIO_2064_REG0FF, 0x10, 1 << 4);
+ 	mod_radio_reg(pi, RADIO_2064_REG11F, 0x4, 1 << 2);
+ 	wlc_lcnphy_tssi_setup(pi);
++
++	mod_phy_reg(pi, 0x4d7, (0x1 << 0), (1 << 0));
++	mod_phy_reg(pi, 0x4d7, (0x1 << 6), (1 << 6));
++
++	wlc_lcnphy_set_bbmult(pi, 0x0);
++
+ 	wlc_phy_do_dummy_tx(pi, true, OFF);
+ 	idleTssi = ((read_phy_reg(pi, 0x4ab) & (0x1ff << 0))
+ 		    >> 0);
+@@ -2829,6 +2919,7 @@ static void wlc_lcnphy_idle_tssi_est(struct brcms_phy_pub *ppi)
+ 
+ 	mod_phy_reg(pi, 0x44c, (0x1 << 12), (0) << 12);
+ 
++	wlc_lcnphy_set_bbmult(pi, SAVE_bbmult);
+ 	wlc_lcnphy_set_tx_gain_override(pi, tx_gain_override_old);
+ 	wlc_lcnphy_set_tx_gain(pi, &old_gains);
+ 	wlc_lcnphy_set_tx_pwr_ctrl(pi, SAVE_txpwrctrl);
+@@ -3042,6 +3133,11 @@ static void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi)
+ 			wlc_lcnphy_write_table(pi, &tab);
+ 			tab.tbl_offset++;
+ 		}
++		mod_phy_reg(pi, 0x4d0, (0x1 << 0), (0) << 0);
++		mod_phy_reg(pi, 0x4d3, (0xff << 0), (0) << 0);
++		mod_phy_reg(pi, 0x4d3, (0xff << 8), (0) << 8);
++		mod_phy_reg(pi, 0x4d0, (0x1 << 4), (0) << 4);
++		mod_phy_reg(pi, 0x4d0, (0x1 << 2), (0) << 2);
+ 
+ 		mod_phy_reg(pi, 0x410, (0x1 << 7), (0) << 7);
+ 
+@@ -3843,7 +3939,6 @@ static void wlc_lcnphy_txpwrtbl_iqlo_cal(struct brcms_phy *pi)
+ 	target_gains.pad_gain = 21;
+ 	target_gains.dac_gain = 0;
+ 	wlc_lcnphy_set_tx_gain(pi, &target_gains);
+-	wlc_lcnphy_set_tx_pwr_by_index(pi, 16);
+ 
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 1) || pi_lcn->lcnphy_hw_iqcal_en) {
+ 
+@@ -3854,6 +3949,7 @@ static void wlc_lcnphy_txpwrtbl_iqlo_cal(struct brcms_phy *pi)
+ 					lcnphy_recal ? LCNPHY_CAL_RECAL :
+ 					LCNPHY_CAL_FULL), false);
+ 	} else {
++		wlc_lcnphy_set_tx_pwr_by_index(pi, 16);
+ 		wlc_lcnphy_tx_iqlo_soft_cal_full(pi);
+ 	}
+ 
+@@ -4278,17 +4374,22 @@ wlc_lcnphy_load_tx_gain_table(struct brcms_phy *pi,
+ 	if (CHSPEC_IS5G(pi->radio_chanspec))
+ 		pa_gain = 0x70;
+ 	else
+-		pa_gain = 0x70;
++		pa_gain = 0x60;
+ 
+ 	if (pi->sh->boardflags & BFL_FEM)
+ 		pa_gain = 0x10;
++
+ 	tab.tbl_id = LCNPHY_TBL_ID_TXPWRCTL;
+ 	tab.tbl_width = 32;
+ 	tab.tbl_len = 1;
+ 	tab.tbl_ptr = &val;
+ 
+ 	for (j = 0; j < 128; j++) {
+-		gm_gain = gain_table[j].gm;
++		if (pi->sh->boardflags & BFL_FEM)
++			gm_gain = gain_table[j].gm;
++		else
++			gm_gain = 15;
++
+ 		val = (((u32) pa_gain << 24) |
+ 		       (gain_table[j].pad << 16) |
+ 		       (gain_table[j].pga << 8) | gm_gain);
+@@ -4499,7 +4600,10 @@ static void wlc_radio_2064_init(struct brcms_phy *pi)
+ 
+ 	write_phy_reg(pi, 0x4ea, 0x4688);
+ 
+-	mod_phy_reg(pi, 0x4eb, (0x7 << 0), 2 << 0);
++	if (pi->sh->boardflags & BFL_FEM)
++		mod_phy_reg(pi, 0x4eb, (0x7 << 0), 2 << 0);
++	else
++		mod_phy_reg(pi, 0x4eb, (0x7 << 0), 3 << 0);
+ 
+ 	mod_phy_reg(pi, 0x4eb, (0x7 << 6), 0 << 6);
+ 
+@@ -4510,6 +4614,13 @@ static void wlc_radio_2064_init(struct brcms_phy *pi)
+ 	wlc_lcnphy_rcal(pi);
+ 
+ 	wlc_lcnphy_rc_cal(pi);
++
++	if (!(pi->sh->boardflags & BFL_FEM)) {
++		write_radio_reg(pi, RADIO_2064_REG032, 0x6f);
++		write_radio_reg(pi, RADIO_2064_REG033, 0x19);
++		write_radio_reg(pi, RADIO_2064_REG039, 0xe);
++	}
++
+ }
+ 
+ static void wlc_lcnphy_radio_init(struct brcms_phy *pi)
+@@ -4539,22 +4650,20 @@ static void wlc_lcnphy_tbl_init(struct brcms_phy *pi)
+ 		wlc_lcnphy_write_table(pi, &tab);
+ 	}
+ 
+-	tab.tbl_id = LCNPHY_TBL_ID_RFSEQ;
+-	tab.tbl_width = 16;
+-	tab.tbl_ptr = &val;
+-	tab.tbl_len = 1;
+-
+-	val = 114;
+-	tab.tbl_offset = 0;
+-	wlc_lcnphy_write_table(pi, &tab);
++	if (!(pi->sh->boardflags & BFL_FEM)) {
++		tab.tbl_id = LCNPHY_TBL_ID_RFSEQ;
++		tab.tbl_width = 16;
++		tab.tbl_ptr = &val;
++		tab.tbl_len = 1;
+ 
+-	val = 130;
+-	tab.tbl_offset = 1;
+-	wlc_lcnphy_write_table(pi, &tab);
++		val = 150;
++		tab.tbl_offset = 0;
++		wlc_lcnphy_write_table(pi, &tab);
+ 
+-	val = 6;
+-	tab.tbl_offset = 8;
+-	wlc_lcnphy_write_table(pi, &tab);
++		val = 220;
++		tab.tbl_offset = 1;
++		wlc_lcnphy_write_table(pi, &tab);
++	}
+ 
+ 	if (CHSPEC_IS2G(pi->radio_chanspec)) {
+ 		if (pi->sh->boardflags & BFL_FEM)
+@@ -4946,6 +5055,7 @@ void wlc_phy_chanspec_set_lcnphy(struct brcms_phy *pi, u16 chanspec)
+ 		wlc_lcnphy_load_tx_iir_filter(pi, true, 3);
+ 
+ 	mod_phy_reg(pi, 0x4eb, (0x7 << 3), (1) << 3);
++	wlc_lcnphy_tssi_setup(pi);
+ }
+ 
+ void wlc_phy_detach_lcnphy(struct brcms_phy *pi)
+@@ -4984,8 +5094,7 @@ bool wlc_phy_attach_lcnphy(struct brcms_phy *pi)
+ 	if (!wlc_phy_txpwr_srom_read_lcnphy(pi))
+ 		return false;
+ 
+-	if ((pi->sh->boardflags & BFL_FEM) &&
+-	    (LCNREV_IS(pi->pubpi.phy_rev, 1))) {
++	if (LCNREV_IS(pi->pubpi.phy_rev, 1)) {
+ 		if (pi_lcn->lcnphy_tempsense_option == 3) {
+ 			pi->hwpwrctrl = true;
+ 			pi->hwpwrctrl_capable = true;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
+index 622c01c..b7e95ac 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phytbl_lcn.c
+@@ -1992,70 +1992,70 @@ static const u16 dot11lcn_sw_ctrl_tbl_4313_epa_rev0[] = {
+ };
+ 
+ static const u16 dot11lcn_sw_ctrl_tbl_4313_rev0[] = {
+-	0x000a,
+ 	0x0009,
+-	0x0006,
+-	0x0005,
+ 	0x000a,
+-	0x0009,
+-	0x0006,
+ 	0x0005,
+-	0x000a,
+-	0x0009,
+ 	0x0006,
+-	0x0005,
+-	0x000a,
+ 	0x0009,
+-	0x0006,
+-	0x0005,
+ 	0x000a,
+-	0x0009,
+-	0x0006,
+ 	0x0005,
+-	0x000a,
+-	0x0009,
+ 	0x0006,
+-	0x0005,
+-	0x000a,
+ 	0x0009,
+-	0x0006,
+-	0x0005,
+ 	0x000a,
+-	0x0009,
+-	0x0006,
+ 	0x0005,
+-	0x000a,
+-	0x0009,
+ 	0x0006,
+-	0x0005,
+-	0x000a,
+ 	0x0009,
+-	0x0006,
+-	0x0005,
+ 	0x000a,
+-	0x0009,
+-	0x0006,
+ 	0x0005,
+-	0x000a,
+-	0x0009,
+ 	0x0006,
+-	0x0005,
++	0x0009,
+ 	0x000a,
++	0x0005,
++	0x0006,
+ 	0x0009,
++	0x000a,
++	0x0005,
+ 	0x0006,
++	0x0009,
++	0x000a,
+ 	0x0005,
++	0x0006,
++	0x0009,
+ 	0x000a,
++	0x0005,
++	0x0006,
+ 	0x0009,
++	0x000a,
++	0x0005,
+ 	0x0006,
++	0x0009,
++	0x000a,
+ 	0x0005,
++	0x0006,
++	0x0009,
+ 	0x000a,
++	0x0005,
++	0x0006,
+ 	0x0009,
++	0x000a,
++	0x0005,
+ 	0x0006,
++	0x0009,
++	0x000a,
+ 	0x0005,
++	0x0006,
++	0x0009,
+ 	0x000a,
++	0x0005,
++	0x0006,
+ 	0x0009,
++	0x000a,
++	0x0005,
+ 	0x0006,
++	0x0009,
++	0x000a,
+ 	0x0005,
++	0x0006,
+ };
+ 
+ static const u16 dot11lcn_sw_ctrl_tbl_rev0[] = {
+-- 
+1.7.10.4
 
-Hmm, ok. I don't really follow all of that, but hey :)
-
-> > Well, not really, but non-QoS frames won't happen in that case, because
-> > the peer will have QoS enabled. Similarly here I think, why would there
-> > ever be a non-QoS frame? But maybe this can happen with forwarding,
-> > which can't happen in the non-mesh case.
-> 
-> For mesh also the HWMP routing (Management) frames are transmitted in 
-> MPSPs. So a valid PSP would look like that:
-> 1) QoS Null (RSPI:EOSP 0:0)
-> 2) Mgmt frame (e.g. HWMP Path Reply)
-> 3) QoS Null (RSPI:EOSP 0:1)
-> here the additional trailing Null is needed to end the MPSP. That 
-> scenario happens regularly when no path has been set up previously.
-
-I assume the packet flow is
-1 ->
-  <- 2
-  <- 3
-
-correct? But in any case, I hadn't considered management frames.
-Actually, those can be bufferable too without mesh, so that might be
-buggy here right now, not sure they can be released with uAPSD.
-
-> >> Absolutely correct. The PSP mechanism is just very similar to uAPSD,
-> >> though. So once the PSP is set up, the mechanisms are the same actually.
-> >> What do you advise? Renaming the release reason? Creating a different
-> >> one that is handled equally?
-> >
-> > Well so far the more-data bit seems to be handled different, although I
-> > argue above that you're actually not doing that correctly ;-)
-> >
-> > But I think doing different reasons could be helpful, if only to
-> > understand the code better.
-> 
-> In the last iteration of my RFC I created an own function similar to 
-> ieee80211_sta_ps_deliver_response. That spares adding even more 
-> complexity to ieee80211_sta_ps_deliver_response and allows me to keep 
-> the mesh PA code separated in mesh_ps.c. I don't seem to need the 
-> release reason then.
-
-Ok. Not for the driver maybe, if that has to release buffered frames,
-say with aggregation? But I don't know.
-
-johannes
 
