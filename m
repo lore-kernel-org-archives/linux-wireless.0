@@ -1,136 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40702 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752535Ab2KMMYH (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:58302 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753193Ab2K1JnJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 07:24:07 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v7 2/2] wireless: integrate wil6210 driver into build structure
-Date: Tue, 13 Nov 2012 14:23:47 +0200
-Message-ID: <1352809427-29682-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121113_132417_067872_74A44EC4)
-In-Reply-To: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 28 Nov 2012 04:43:09 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so3507300wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:09 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 07/20] wlcore: set 5Ghz probe-req template for DFS channels
+Date: Wed, 28 Nov 2012 11:42:36 +0200
+Message-Id: <1354095769-8724-8-git-send-email-arik@wizery.com> (sfid-20121128_104316_408194_3BAC8AE4)
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/Kconfig          |    8 ++++++--
- drivers/net/wireless/ath/Makefile         |    1 +
- drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
- drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
- drivers/net/wireless/ath/ath6kl/Kconfig   |    1 +
- drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
- drivers/net/wireless/ath/carl9170/Kconfig |    1 +
- 7 files changed, 12 insertions(+), 2 deletions(-)
+Even passive scans on DFS channels require us to send probe requests, so
+configure the probe-req in this case.
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index c25dcf1..2c02b4e 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -1,4 +1,7 @@
--menuconfig ATH_COMMON
-+config ATH_COMMON
-+	tristate
-+
-+menuconfig ATH_CARDS
- 	tristate "Atheros Wireless Cards"
- 	depends on CFG80211 && (!UML || BROKEN)
- 	---help---
-@@ -14,7 +17,7 @@ menuconfig ATH_COMMON
+Also use this opportunity to prevent the code from crashing in case no
+SSIDs are sent from above. This will likely happen in the DFS case
+introduced. Even a passive scan might need the probe request configured
+because of DFS channels.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/scan.c |   52 ++++++++++++++++-----------------
+ 1 file changed, 26 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/scan.c b/drivers/net/wireless/ti/wl18xx/scan.c
+index daaebad..1df88d5 100644
+--- a/drivers/net/wireless/ti/wl18xx/scan.c
++++ b/drivers/net/wireless/ti/wl18xx/scan.c
+@@ -108,27 +108,27 @@ static int wl18xx_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	if (cmd->active[0]) {
+ 		u8 band = IEEE80211_BAND_2GHZ;
+ 		ret = wl12xx_cmd_build_probe_req(wl, wlvif,
+-						 cmd->role_id, band,
+-						 req->ssids[0].ssid,
+-						 req->ssids[0].ssid_len,
+-						 req->ie,
+-						 req->ie_len,
+-						 false);
++				 cmd->role_id, band,
++				 req->ssids ? req->ssids[0].ssid : NULL,
++				 req->ssids ? req->ssids[0].ssid_len : 0,
++				 req->ie,
++				 req->ie_len,
++				 false);
+ 		if (ret < 0) {
+ 			wl1271_error("2.4GHz PROBE request template failed");
+ 			goto out;
+ 		}
+ 	}
  
- 	  http://wireless.kernel.org/en/users/Drivers/Atheros
+-	if (cmd->active[1]) {
++	if (cmd->active[1] || cmd->dfs) {
+ 		u8 band = IEEE80211_BAND_5GHZ;
+ 		ret = wl12xx_cmd_build_probe_req(wl, wlvif,
+-						 cmd->role_id, band,
+-						 req->ssids[0].ssid,
+-						 req->ssids[0].ssid_len,
+-						 req->ie,
+-						 req->ie_len,
+-						 false);
++				 cmd->role_id, band,
++				 req->ssids ? req->ssids[0].ssid : NULL,
++				 req->ssids ? req->ssids[0].ssid_len : 0,
++				 req->ie,
++				 req->ie_len,
++				 false);
+ 		if (ret < 0) {
+ 			wl1271_error("5GHz PROBE request template failed");
+ 			goto out;
+@@ -230,27 +230,27 @@ int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
+ 	if (cmd->active[0]) {
+ 		u8 band = IEEE80211_BAND_2GHZ;
+ 		ret = wl12xx_cmd_build_probe_req(wl, wlvif,
+-						 cmd->role_id, band,
+-						 req->ssids[0].ssid,
+-						 req->ssids[0].ssid_len,
+-						 ies->ie[band],
+-						 ies->len[band],
+-						 true);
++				 cmd->role_id, band,
++				 req->ssids ? req->ssids[0].ssid : NULL,
++				 req->ssids ? req->ssids[0].ssid_len : 0,
++				 ies->ie[band],
++				 ies->len[band],
++				 true);
+ 		if (ret < 0) {
+ 			wl1271_error("2.4GHz PROBE request template failed");
+ 			goto out;
+ 		}
+ 	}
  
--if ATH_COMMON
-+if ATH_CARDS
- 
- config ATH_DEBUG
- 	bool "Atheros wireless debugging"
-@@ -27,5 +30,6 @@ source "drivers/net/wireless/ath/ath9k/Kconfig"
- source "drivers/net/wireless/ath/carl9170/Kconfig"
- source "drivers/net/wireless/ath/ath6kl/Kconfig"
- source "drivers/net/wireless/ath/ar5523/Kconfig"
-+source "drivers/net/wireless/ath/wil6210/Kconfig"
- 
- endif
-diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-index 1e18621..97b964d 100644
---- a/drivers/net/wireless/ath/Makefile
-+++ b/drivers/net/wireless/ath/Makefile
-@@ -3,6 +3,7 @@ obj-$(CONFIG_ATH9K_HW)		+= ath9k/
- obj-$(CONFIG_CARL9170)		+= carl9170/
- obj-$(CONFIG_ATH6KL)		+= ath6kl/
- obj-$(CONFIG_AR5523)		+= ar5523/
-+obj-$(CONFIG_WIL6210)		+= wil6210/
- 
- obj-$(CONFIG_ATH_COMMON)	+= ath.o
- 
-diff --git a/drivers/net/wireless/ath/ar5523/Kconfig b/drivers/net/wireless/ath/ar5523/Kconfig
-index 11d99ee..0d320cc 100644
---- a/drivers/net/wireless/ath/ar5523/Kconfig
-+++ b/drivers/net/wireless/ath/ar5523/Kconfig
-@@ -1,6 +1,7 @@
- config AR5523
-        tristate "Atheros AR5523 wireless driver support"
-        depends on MAC80211 && USB
-+       select ATH_COMMON
-        select FW_LOADER
-        ---help---
-          This module add support for AR5523 based USB dongles such as D-Link
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index 338c5c4..c9f81a3 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,6 +1,7 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
-diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-index d755a5e..2a61989 100644
---- a/drivers/net/wireless/ath/ath6kl/Kconfig
-+++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-@@ -1,5 +1,6 @@
- config ATH6KL
- 	tristate "Atheros mobile chipsets support"
-+	select ATH_COMMON
- 
- config ATH6KL_SDIO
- 	tristate "Atheros ath6kl SDIO support"
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index c7aa664..5fc15bf 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on MAC80211
-+	select ATH_COMMON
- 	select ATH9K_HW
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
-diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
-index 267d5dc..13a2045 100644
---- a/drivers/net/wireless/ath/carl9170/Kconfig
-+++ b/drivers/net/wireless/ath/carl9170/Kconfig
-@@ -1,6 +1,7 @@
- config CARL9170
- 	tristate "Linux Community AR9170 802.11n USB support"
- 	depends on USB && MAC80211 && EXPERIMENTAL
-+	select ATH_COMMON
- 	select FW_LOADER
- 	select CRC32
- 	help
+-	if (cmd->active[1]) {
++	if (cmd->active[1] || cmd->dfs) {
+ 		u8 band = IEEE80211_BAND_5GHZ;
+ 		ret = wl12xx_cmd_build_probe_req(wl, wlvif,
+-						 cmd->role_id, band,
+-						 req->ssids[0].ssid,
+-						 req->ssids[0].ssid_len,
+-						 ies->ie[band],
+-						 ies->len[band],
+-						 true);
++				 cmd->role_id, band,
++				 req->ssids ? req->ssids[0].ssid : NULL,
++				 req->ssids ? req->ssids[0].ssid_len : 0,
++				 ies->ie[band],
++				 ies->len[band],
++				 true);
+ 		if (ret < 0) {
+ 			wl1271_error("5GHz PROBE request template failed");
+ 			goto out;
 -- 
-1.7.10.4
+1.7.9.5
 
