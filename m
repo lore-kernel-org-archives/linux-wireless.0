@@ -1,179 +1,437 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:9027 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755281Ab2KZM3u (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753855Ab2K1JnX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 07:29:50 -0500
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <rodrigue@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <backports@vger.kernel.org>
-Subject: [PATCH 3/3] compat-drivers: Add a crap patch for AR9565
-Date: Mon, 26 Nov 2012 17:59:57 +0530
-Message-ID: <1353932997-8051-4-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20121126_132953_715792_D2C8990A)
-In-Reply-To: <1353932997-8051-1-git-send-email-bkamatch@qca.qualcomm.com>
-References: <1353932997-8051-1-git-send-email-bkamatch@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 28 Nov 2012 04:43:23 -0500
+Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:23 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 14/20] wlcore: use separate HW queue for each AC in each vif
+Date: Wed, 28 Nov 2012 11:42:43 +0200
+Message-Id: <1354095769-8724-15-git-send-email-arik@wizery.com> (sfid-20121128_104336_530699_F522BC51)
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is required to improve BT throughput to
-meet customer requirement.  This patch is a workaround
-to put WLAN to sleep during BT cycle and cannot be
-upstreamed.
+Start using the new hw_queue mechanism in mac80211 and give each AC in
+each vif its own hw_queue number. This allows us to stop an AC in a vif
+independently from other vifs.
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Change the Tx watermark handling functions to count packets per AC in
+vif. From now on fast links should not be able to hurt the throughput
+of slow links on the same AC but on different vifs.
+
+Change internal queue mgmt functions to operate per vif, to support the
+new Tx watermark granularity. Make the global versions of the queue
+stop/start functions to use the global mac80211 API for queue mgmt. This
+helps in situations where the driver currently doesn't know all the vifs
+that reside in mac80211. Recovery is a good example for such a case.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- ...9k-Improve-BT-PAN-FTP-profile-performance.patch |  140 ++++++++++++++++++++
- 1 files changed, 140 insertions(+), 0 deletions(-)
- create mode 100644 crap/0005-ath9k-Improve-BT-PAN-FTP-profile-performance.patch
+ drivers/net/wireless/ti/wlcore/main.c     |  101 +++++++++++++++++++++++++--
+ drivers/net/wireless/ti/wlcore/tx.c       |  107 +++++++++++++++++------------
+ drivers/net/wireless/ti/wlcore/tx.h       |   15 ++--
+ drivers/net/wireless/ti/wlcore/wlcore.h   |    3 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    9 +++
+ 5 files changed, 175 insertions(+), 60 deletions(-)
 
-diff --git a/crap/0005-ath9k-Improve-BT-PAN-FTP-profile-performance.patch b/crap/0005-ath9k-Improve-BT-PAN-FTP-profile-performance.patch
-new file mode 100644
-index 0000000..a566351
---- /dev/null
-+++ b/crap/0005-ath9k-Improve-BT-PAN-FTP-profile-performance.patch
-@@ -0,0 +1,140 @@
-+From 6c4e8baa270c00e16a606bf0ad4a686bd5c0300c Mon Sep 17 00:00:00 2001
-+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-+Date: Fri, 23 Nov 2012 14:17:59 +0530
-+Subject: [PATCH] ath9k: Improve BT PAN/FTP profile performance
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index b0d0d6d..9d7f059 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1224,8 +1224,8 @@ static void wl1271_op_tx(struct ieee80211_hw *hw,
+ 	 */
+ 	if (hlid == WL12XX_INVALID_LINK_ID ||
+ 	    (!test_bit(hlid, wlvif->links_map)) ||
+-	     (wlcore_is_queue_stopped(wl, q) &&
+-	      !wlcore_is_queue_stopped_by_reason(wl, q,
++	     (wlcore_is_queue_stopped(wl, wlvif, q) &&
++	      !wlcore_is_queue_stopped_by_reason(wl, wlvif, q,
+ 			WLCORE_QUEUE_STOP_REASON_WATERMARK))) {
+ 		wl1271_debug(DEBUG_TX, "DROP skb hlid %d q %d", hlid, q);
+ 		ieee80211_free_txskb(hw, skb);
+@@ -1243,11 +1243,11 @@ static void wl1271_op_tx(struct ieee80211_hw *hw,
+ 	 * The workqueue is slow to process the tx_queue and we need stop
+ 	 * the queue here, otherwise the queue will get too long.
+ 	 */
+-	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK &&
+-	    !wlcore_is_queue_stopped_by_reason(wl, q,
++	if (wlvif->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK &&
++	    !wlcore_is_queue_stopped_by_reason(wl, wlvif, q,
+ 					WLCORE_QUEUE_STOP_REASON_WATERMARK)) {
+ 		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
+-		wlcore_stop_queue_locked(wl, q,
++		wlcore_stop_queue_locked(wl, wlvif, q,
+ 					 WLCORE_QUEUE_STOP_REASON_WATERMARK);
+ 	}
+ 
+@@ -2314,6 +2314,81 @@ static void wl12xx_force_active_psm(struct wl1271 *wl)
+ 	}
+ }
+ 
++struct wlcore_hw_queue_iter_data {
++	unsigned long hw_queue_map[BITS_TO_LONGS(WLCORE_NUM_MAC_ADDRESSES)];
++	/* current vif */
++	struct ieee80211_vif *vif;
++	/* is the current vif among those iterated */
++	bool cur_running;
++};
 +
-+As AR9565 shares LNA and antenna for both BT & WLAN, there
-+are some degrade in BT performance. In order to improve BT PAN/FTP
-+profile performance, this change puts WLAN into sleep state
-+whenever BT gets its slot during BTCOEX period. It improves
-+BT performance at the cost of WLAN throughout. Hence this change
-+is applied only for AR9565 and BT FTP/PAN profiles.
++static void wlcore_hw_queue_iter(void *data, u8 *mac,
++				 struct ieee80211_vif *vif)
++{
++	struct wlcore_hw_queue_iter_data *iter_data = data;
 +
-+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-+---
-+ drivers/net/wireless/ath/ath9k/btcoex.c | 13 +++++++++++++
-+ drivers/net/wireless/ath/ath9k/btcoex.h |  1 +
-+ drivers/net/wireless/ath/ath9k/gpio.c   |  5 ++++-
-+ drivers/net/wireless/ath/ath9k/mci.c    | 13 +++++++++++++
-+ drivers/net/wireless/ath/ath9k/mci.h    |  1 +
-+ drivers/net/wireless/ath/ath9k/reg.h    |  5 ++++-
-+ 6 files changed, 36 insertions(+), 2 deletions(-)
++	if (WARN_ON(vif->hw_queue[0] == IEEE80211_INVAL_HW_QUEUE))
++		return;
 +
-+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-+index 9963b0b..40a9761 100644
-+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
-++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-+@@ -414,3 +414,16 @@ void ath9k_hw_btcoex_set_concur_txprio(struct ath_hw *ah, u8 *stomp_txprio)
-+ 		btcoex->tx_prio[i] = stomp_txprio[i];
-+ }
-+ EXPORT_SYMBOL(ath9k_hw_btcoex_set_concur_txprio);
-++
-++void ath9k_hw_btcoex_set_sleep(struct ath_hw *ah, u8 state)
-++{
-++	REG_RMW_FIELD(ah, AR_PCU_MISC_MODE2,
-++		      AR_PCU_MISC_MODE2_PM_FIELD_FOR_DAT, state);
-++	REG_RMW_FIELD(ah, AR_PCU_MISC_MODE3,
-++		      AR_PCU_MISC_MODE3_PM_FIELD_FOR_MGT, state);
-++	if (state)
-++		REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
-++	else
-++		REG_CLR_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
-++}
-++EXPORT_SYMBOL(ath9k_hw_btcoex_set_sleep);
-+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-+index 6de26ea..5e82cca 100644
-+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
-++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-+@@ -120,5 +120,6 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah);
-+ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
-+ 			      enum ath_stomp_type stomp_type);
-+ void ath9k_hw_btcoex_set_concur_txprio(struct ath_hw *ah, u8 *stomp_txprio);
-++void ath9k_hw_btcoex_set_sleep(struct ath_hw *ah, u8 state);
-+ 
-+ #endif
-+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-+index 4b412aa..6599f76 100644
-+--- a/drivers/net/wireless/ath/ath9k/gpio.c
-++++ b/drivers/net/wireless/ath/ath9k/gpio.c
-+@@ -234,8 +234,10 @@ static void ath_btcoex_period_timer(unsigned long data)
-+ 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
-+ 		ath_detect_bt_priority(sc);
-+ 
-+-	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-++	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
-++		ath9k_mci_set_sleep(sc, 0);
-+ 		ath_mci_ftp_adjust(sc);
-++	}
-+ 
-+ 	spin_lock_bh(&btcoex->btcoex_lock);
-+ 
-+@@ -303,6 +305,7 @@ static void ath_btcoex_no_stomp_timer(void *arg)
-+ 
-+ 	ath9k_hw_btcoex_enable(ah);
-+ 	spin_unlock_bh(&btcoex->btcoex_lock);
-++	ath9k_mci_set_sleep(sc, 1);
-+ 	ath9k_ps_restore(sc);
-+ }
-+ 
-+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-+index 706378e..419c11f 100644
-+--- a/drivers/net/wireless/ath/ath9k/mci.c
-++++ b/drivers/net/wireless/ath/ath9k/mci.c
-+@@ -745,6 +745,7 @@ static void ath9k_mci_stomp_audio(struct ath_softc *sc)
-+ 
-+ 	btcoex->stomp_audio++;
-+ }
-++
-+ void ath9k_mci_update_rssi(struct ath_softc *sc)
-+ {
-+ 	struct ath_hw *ah = sc->sc_ah;
-+@@ -772,3 +773,15 @@ void ath9k_mci_update_rssi(struct ath_softc *sc)
-+ 		}
-+ 	}
-+ }
-++
-++void ath9k_mci_set_sleep(struct ath_softc *sc, u8 state)
-++{
-++	struct ath_mci_profile *mci = &sc->btcoex.mci;
-++
-++	if (!AR_SREV_9565(sc->sc_ah))
-++		return;
-++
-++	state = (state && (mci->num_pan || mci->num_other_acl)) ? 1 : 0;
-++
-++	ath9k_hw_btcoex_set_sleep(sc->sc_ah, state);
-++}
-+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-+index 0695883..4f39730 100644
-+--- a/drivers/net/wireless/ath/ath9k/mci.h
-++++ b/drivers/net/wireless/ath/ath9k/mci.h
-+@@ -155,6 +155,7 @@ int ath_mci_setup(struct ath_softc *sc);
-+ void ath_mci_cleanup(struct ath_softc *sc);
-+ void ath_mci_intr(struct ath_softc *sc);
-+ void ath9k_mci_update_rssi(struct ath_softc *sc);
-++void ath9k_mci_set_sleep(struct ath_softc *sc, u8 state);
-+ 
-+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+ void ath_mci_enable(struct ath_softc *sc);
-+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-+index ad3c82c..69277f2 100644
-+--- a/drivers/net/wireless/ath/ath9k/reg.h
-++++ b/drivers/net/wireless/ath/ath9k/reg.h
-+@@ -1897,10 +1897,13 @@ enum {
-+ #define AR_PCU_MISC_MODE2_ENABLE_AGGWEP                0x00020000
-+ #define AR_PCU_MISC_MODE2_HWWAR1                       0x00100000
-+ #define AR_PCU_MISC_MODE2_HWWAR2                       0x02000000
-++#define AR_PCU_MISC_MODE2_PM_FIELD_FOR_DAT             0x04000000
-++#define AR_PCU_MISC_MODE2_PM_FIELD_FOR_DAT_S           26
-+ #define AR_PCU_MISC_MODE2_RESERVED2                    0xFFFE0000
-+ 
-+ #define AR_PCU_MISC_MODE3			       0x83d0
-+-
-++#define AR_PCU_MISC_MODE3_PM_FIELD_FOR_MGT	       0x00400000
-++#define AR_PCU_MISC_MODE3_PM_FIELD_FOR_MGT_S	       22
-+ #define AR_MAC_PCU_ASYNC_FIFO_REG3			0x8358
-+ #define AR_MAC_PCU_ASYNC_FIFO_REG3_DATAPATH_SEL		0x00000400
-+ #define AR_MAC_PCU_ASYNC_FIFO_REG3_SOFT_RESET		0x80000000
-+-- 
-+1.8.0
++	if (iter_data->cur_running || vif == iter_data->vif) {
++		iter_data->cur_running = true;
++		return;
++	}
 +
++	__set_bit(vif->hw_queue[0] / NUM_TX_QUEUES, iter_data->hw_queue_map);
++}
++
++static int wlcore_allocate_hw_queue_base(struct wl1271 *wl,
++					 struct wl12xx_vif *wlvif)
++{
++	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
++	struct wlcore_hw_queue_iter_data iter_data = {};
++	int i, q_base;
++
++	iter_data.vif = vif;
++
++	/* mark all bits taken by active interfaces */
++	ieee80211_iterate_active_interfaces_atomic(wl->hw,
++						   wlcore_hw_queue_iter,
++						   &iter_data);
++
++	/* the current vif is already running in mac80211 (resume/recovery) */
++	if (iter_data.cur_running) {
++		wlvif->hw_queue_base = vif->hw_queue[0];
++		wl1271_debug(DEBUG_MAC80211,
++			     "using pre-allocated hw queue base %d",
++			     wlvif->hw_queue_base);
++
++		/* interface type might have changed type */
++		goto adjust_cab_queue;
++	}
++
++	q_base = find_first_zero_bit(iter_data.hw_queue_map,
++				     WLCORE_NUM_MAC_ADDRESSES);
++	if (q_base >= WLCORE_NUM_MAC_ADDRESSES)
++		return -EBUSY;
++
++	wlvif->hw_queue_base = q_base * NUM_TX_QUEUES;
++	wl1271_debug(DEBUG_MAC80211, "allocating hw queue base: %d",
++		     wlvif->hw_queue_base);
++
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		wl->queue_stop_reasons[wlvif->hw_queue_base + i] = 0;
++		/* register hw queues in mac80211 */
++		vif->hw_queue[i] = wlvif->hw_queue_base + i;
++	}
++
++adjust_cab_queue:
++	/* the last places are reserved for cab queues per interface */
++	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
++		vif->cab_queue = NUM_TX_QUEUES * WLCORE_NUM_MAC_ADDRESSES +
++				 wlvif->hw_queue_base / NUM_TX_QUEUES;
++	else
++		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
++
++	return 0;
++}
++
+ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif)
+ {
+@@ -2365,6 +2440,10 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
++	ret = wlcore_allocate_hw_queue_base(wl, wlvif);
++	if (ret < 0)
++		goto out;
++
+ 	if (wl12xx_need_fw_change(wl, vif_count, true)) {
+ 		wl12xx_force_active_psm(wl);
+ 		set_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags);
+@@ -5594,7 +5673,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_AP_LINK_PS |
+ 		IEEE80211_HW_AMPDU_AGGREGATION |
+ 		IEEE80211_HW_TX_AMPDU_SETUP_IN_HW |
+-		IEEE80211_HW_SCAN_WHILE_IDLE;
++		IEEE80211_HW_SCAN_WHILE_IDLE |
++		IEEE80211_HW_QUEUE_CONTROL;
+ 
+ 	wl->hw->wiphy->cipher_suites = cipher_suites;
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+@@ -5661,7 +5741,14 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 		&wl->bands[IEEE80211_BAND_5GHZ];
+ 
+-	wl->hw->queues = 4;
++	/*
++	 * allow 4 queues per mac address we support +
++	 * 1 cab queue per mac + one global offchannel Tx queue
++	 */
++	wl->hw->queues = (NUM_TX_QUEUES + 1) * WLCORE_NUM_MAC_ADDRESSES + 1;
++
++	/* the last queue is the offchannel queue */
++	wl->hw->offchannel_tx_hw_queue = wl->hw->queues - 1;
+ 	wl->hw->max_rates = 1;
+ 
+ 	wl->hw->wiphy->reg_notifier = wl1271_reg_notify;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index d799fc9..dbc1721 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -447,14 +447,17 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set,
+ void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
+ {
+ 	int i;
++	struct wl12xx_vif *wlvif;
+ 
+-	for (i = 0; i < NUM_TX_QUEUES; i++) {
+-		if (wlcore_is_queue_stopped_by_reason(wl, i,
+-			WLCORE_QUEUE_STOP_REASON_WATERMARK) &&
+-		    wl->tx_queue_count[i] <= WL1271_TX_QUEUE_LOW_WATERMARK) {
+-			/* firmware buffer has space, restart queues */
+-			wlcore_wake_queue(wl, i,
+-					  WLCORE_QUEUE_STOP_REASON_WATERMARK);
++	wl12xx_for_each_wlvif(wl, wlvif) {
++		for (i = 0; i < NUM_TX_QUEUES; i++) {
++			if (wlcore_is_queue_stopped_by_reason(wl, wlvif, i,
++					WLCORE_QUEUE_STOP_REASON_WATERMARK) &&
++			    wlvif->tx_queue_count[i] <=
++					WL1271_TX_QUEUE_LOW_WATERMARK)
++				/* firmware buffer has space, restart queues */
++				wlcore_wake_queue(wl, wlvif, i,
++					WLCORE_QUEUE_STOP_REASON_WATERMARK);
+ 		}
+ 	}
+ }
+@@ -1189,44 +1192,45 @@ u32 wl1271_tx_min_rate_get(struct wl1271 *wl, u32 rate_set)
+ }
+ EXPORT_SYMBOL_GPL(wl1271_tx_min_rate_get);
+ 
+-void wlcore_stop_queue_locked(struct wl1271 *wl, u8 queue,
+-			      enum wlcore_queue_stop_reason reason)
++void wlcore_stop_queue_locked(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++			      u8 queue, enum wlcore_queue_stop_reason reason)
+ {
+-	bool stopped = !!wl->queue_stop_reasons[queue];
++	int hwq = wlvif->hw_queue_base + wl1271_tx_get_mac80211_queue(queue);
++	bool stopped = !!wl->queue_stop_reasons[hwq];
+ 
+ 	/* queue should not be stopped for this reason */
+-	WARN_ON(test_and_set_bit(reason, &wl->queue_stop_reasons[queue]));
++	WARN_ON(test_and_set_bit(reason, &wl->queue_stop_reasons[hwq]));
+ 
+ 	if (stopped)
+ 		return;
+ 
+-	ieee80211_stop_queue(wl->hw, wl1271_tx_get_mac80211_queue(queue));
++	ieee80211_stop_queue(wl->hw, hwq);
+ }
+ 
+-void wlcore_stop_queue(struct wl1271 *wl, u8 queue,
++void wlcore_stop_queue(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 queue,
+ 		       enum wlcore_queue_stop_reason reason)
+ {
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+-	wlcore_stop_queue_locked(wl, queue, reason);
++	wlcore_stop_queue_locked(wl, wlvif, queue, reason);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ }
+ 
+-void wlcore_wake_queue(struct wl1271 *wl, u8 queue,
++void wlcore_wake_queue(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 queue,
+ 		       enum wlcore_queue_stop_reason reason)
+ {
+ 	unsigned long flags;
++	int hwq = wlvif->hw_queue_base + wl1271_tx_get_mac80211_queue(queue);
+ 
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+-
+ 	/* queue should not be clear for this reason */
+-	WARN_ON(!test_and_clear_bit(reason, &wl->queue_stop_reasons[queue]));
++	WARN_ON(!test_and_clear_bit(reason, &wl->queue_stop_reasons[hwq]));
+ 
+-	if (wl->queue_stop_reasons[queue])
++	if (wl->queue_stop_reasons[hwq])
+ 		goto out;
+ 
+-	ieee80211_wake_queue(wl->hw, wl1271_tx_get_mac80211_queue(queue));
++	ieee80211_wake_queue(wl->hw, hwq);
+ 
+ out:
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+@@ -1235,49 +1239,62 @@ out:
+ void wlcore_stop_queues(struct wl1271 *wl,
+ 			enum wlcore_queue_stop_reason reason)
+ {
+-	int i;
++	int i, q_base;
++	unsigned long flags;
+ 
+-	for (i = 0; i < NUM_TX_QUEUES; i++)
+-		wlcore_stop_queue(wl, i, reason);
+-}
+-EXPORT_SYMBOL_GPL(wlcore_stop_queues);
++	spin_lock_irqsave(&wl->wl_lock, flags);
+ 
+-void wlcore_wake_queues(struct wl1271 *wl,
+-			enum wlcore_queue_stop_reason reason)
+-{
+-	int i;
++	for (q_base = 0; q_base < WLCORE_NUM_MAC_ADDRESSES; q_base++)
++		for (i = 0; i < NUM_TX_QUEUES; i++) {
++			int h = q_base * NUM_TX_QUEUES + i;
++			WARN_ON(test_and_set_bit(reason,
++						 &wl->queue_stop_reasons[h]));
++		}
+ 
+-	for (i = 0; i < NUM_TX_QUEUES; i++)
+-		wlcore_wake_queue(wl, i, reason);
++	/*
++	 * use the global version to make sure all vifs in mac80211 we don't
++	 * know are stopped.
++	 */
++	ieee80211_stop_queues(wl->hw);
++
++	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ }
+-EXPORT_SYMBOL_GPL(wlcore_wake_queues);
+ 
+-void wlcore_reset_stopped_queues(struct wl1271 *wl)
++void wlcore_wake_queues(struct wl1271 *wl,
++			enum wlcore_queue_stop_reason reason)
+ {
+-	int i;
++	int i, q_base;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+ 
+-	for (i = 0; i < NUM_TX_QUEUES; i++) {
+-		if (!wl->queue_stop_reasons[i])
+-			continue;
++	for (q_base = 0; q_base < WLCORE_NUM_MAC_ADDRESSES; q_base++)
++		for (i = 0; i < NUM_TX_QUEUES; i++) {
++			int h = q_base * NUM_TX_QUEUES + i;
++			WARN_ON(!test_and_clear_bit(reason,
++						&wl->queue_stop_reasons[h]));
++		}
+ 
+-		wl->queue_stop_reasons[i] = 0;
+-		ieee80211_wake_queue(wl->hw,
+-				     wl1271_tx_get_mac80211_queue(i));
+-	}
++	/*
++	 * use the global version to make sure all vifs in mac80211 we don't
++	 * know are woken up.
++	 */
++	ieee80211_wake_queues(wl->hw);
+ 
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ }
+ 
+-bool wlcore_is_queue_stopped_by_reason(struct wl1271 *wl, u8 queue,
+-			     enum wlcore_queue_stop_reason reason)
++bool wlcore_is_queue_stopped_by_reason(struct wl1271 *wl,
++				       struct wl12xx_vif *wlvif, u8 queue,
++				       enum wlcore_queue_stop_reason reason)
+ {
+-	return test_bit(reason, &wl->queue_stop_reasons[queue]);
++	int hwq = wlvif->hw_queue_base + wl1271_tx_get_mac80211_queue(queue);
++	return test_bit(reason, &wl->queue_stop_reasons[hwq]);
+ }
+ 
+-bool wlcore_is_queue_stopped(struct wl1271 *wl, u8 queue)
++bool wlcore_is_queue_stopped(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++			     u8 queue)
+ {
+-	return !!wl->queue_stop_reasons[queue];
++	int hwq = wlvif->hw_queue_base + wl1271_tx_get_mac80211_queue(queue);
++	return !!wl->queue_stop_reasons[hwq];
+ }
+diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
+index 349520d..3d854e5 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.h
++++ b/drivers/net/wireless/ti/wlcore/tx.h
+@@ -252,20 +252,21 @@ void wl12xx_rearm_rx_streaming(struct wl1271 *wl, unsigned long *active_hlids);
+ unsigned int wlcore_calc_packet_alignment(struct wl1271 *wl,
+ 					  unsigned int packet_length);
+ void wl1271_free_tx_id(struct wl1271 *wl, int id);
+-void wlcore_stop_queue_locked(struct wl1271 *wl, u8 queue,
+-			      enum wlcore_queue_stop_reason reason);
+-void wlcore_stop_queue(struct wl1271 *wl, u8 queue,
++void wlcore_stop_queue_locked(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++			      u8 queue, enum wlcore_queue_stop_reason reason);
++void wlcore_stop_queue(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 queue,
+ 		       enum wlcore_queue_stop_reason reason);
+-void wlcore_wake_queue(struct wl1271 *wl, u8 queue,
++void wlcore_wake_queue(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 queue,
+ 		       enum wlcore_queue_stop_reason reason);
+ void wlcore_stop_queues(struct wl1271 *wl,
+ 			enum wlcore_queue_stop_reason reason);
+ void wlcore_wake_queues(struct wl1271 *wl,
+ 			enum wlcore_queue_stop_reason reason);
+-void wlcore_reset_stopped_queues(struct wl1271 *wl);
+-bool wlcore_is_queue_stopped_by_reason(struct wl1271 *wl, u8 queue,
++bool wlcore_is_queue_stopped_by_reason(struct wl1271 *wl,
++				       struct wl12xx_vif *wlvif, u8 queue,
+ 				       enum wlcore_queue_stop_reason reason);
+-bool wlcore_is_queue_stopped(struct wl1271 *wl, u8 queue);
++bool wlcore_is_queue_stopped(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++			     u8 queue);
+ 
+ /* from main.c */
+ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid);
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 81c14ce..8877d73 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -256,7 +256,8 @@ struct wl1271 {
+ 
+ 	/* Frames scheduled for transmission, not handled yet */
+ 	int tx_queue_count[NUM_TX_QUEUES];
+-	unsigned long queue_stop_reasons[NUM_TX_QUEUES];
++	unsigned long queue_stop_reasons[
++				NUM_TX_QUEUES * WLCORE_NUM_MAC_ADDRESSES];
+ 
+ 	/* Frames received, not handled yet by mac80211 */
+ 	struct sk_buff_head deferred_rx_queue;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 41a58ff..99b19e2 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -442,6 +442,15 @@ struct wl12xx_vif {
+ 	int inconn_count;
+ 
+ 	/*
++	 * This vif's queues are mapped to mac80211 HW queues as:
++	 * VO - hw_queue_base
++	 * VI - hw_queue_base + 1
++	 * BE - hw_queue_base + 2
++	 * BK - hw_queue_base + 3
++	 */
++	int hw_queue_base;
++
++	/*
+ 	 * This struct must be last!
+ 	 * data that has to be saved acrossed reconfigs (e.g. recovery)
+ 	 * should be declared in this struct.
 -- 
-1.7.4.1
+1.7.9.5
 
