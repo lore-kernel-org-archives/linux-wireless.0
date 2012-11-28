@@ -1,136 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22179 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752837Ab2KKQye (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:59194 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751397Ab2K1I5y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 11:54:34 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v6 2/2] wireless: integrate wil6210 driver into build structure
-Date: Sun, 11 Nov 2012 18:54:10 +0200
-Message-ID: <1352652850-19449-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121111_175448_155881_FB31E338)
-In-Reply-To: <1352652850-19449-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1352652850-19449-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 28 Nov 2012 03:57:54 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hm6so5150196wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 00:57:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAL1gcdNLhwECUiJo7c-J3A349ZKNTYjgro6TY564UF7qCQkCmQ@mail.gmail.com>
+References: <1354037225-30237-1-git-send-email-helmut.schaa@googlemail.com>
+	<CAL1gcdNLhwECUiJo7c-J3A349ZKNTYjgro6TY564UF7qCQkCmQ@mail.gmail.com>
+Date: Wed, 28 Nov 2012 09:57:51 +0100
+Message-ID: <CAGXE3d-KVfOXa4mvUu0rqj827Us_5ssCRu1GnnaavaxPn=ui9g@mail.gmail.com> (sfid-20121128_095757_454421_1F0EE87A)
+Subject: Re: [PATCH] rt2x00: Use addr_mask to catch invalid MAC addresses
+ (rt61pci, rt73usb)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	sgruszka@redhat.com, IvDoorn@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/Kconfig          |    8 ++++++--
- drivers/net/wireless/ath/Makefile         |    1 +
- drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
- drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
- drivers/net/wireless/ath/ath6kl/Kconfig   |    1 +
- drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
- drivers/net/wireless/ath/carl9170/Kconfig |    1 +
- 7 files changed, 12 insertions(+), 2 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index c25dcf1..2c02b4e 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -1,4 +1,7 @@
--menuconfig ATH_COMMON
-+config ATH_COMMON
-+	tristate
-+
-+menuconfig ATH_CARDS
- 	tristate "Atheros Wireless Cards"
- 	depends on CFG80211 && (!UML || BROKEN)
- 	---help---
-@@ -14,7 +17,7 @@ menuconfig ATH_COMMON
- 
- 	  http://wireless.kernel.org/en/users/Drivers/Atheros
- 
--if ATH_COMMON
-+if ATH_CARDS
- 
- config ATH_DEBUG
- 	bool "Atheros wireless debugging"
-@@ -27,5 +30,6 @@ source "drivers/net/wireless/ath/ath9k/Kconfig"
- source "drivers/net/wireless/ath/carl9170/Kconfig"
- source "drivers/net/wireless/ath/ath6kl/Kconfig"
- source "drivers/net/wireless/ath/ar5523/Kconfig"
-+source "drivers/net/wireless/ath/wil6210/Kconfig"
- 
- endif
-diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-index 1e18621..97b964d 100644
---- a/drivers/net/wireless/ath/Makefile
-+++ b/drivers/net/wireless/ath/Makefile
-@@ -3,6 +3,7 @@ obj-$(CONFIG_ATH9K_HW)		+= ath9k/
- obj-$(CONFIG_CARL9170)		+= carl9170/
- obj-$(CONFIG_ATH6KL)		+= ath6kl/
- obj-$(CONFIG_AR5523)		+= ar5523/
-+obj-$(CONFIG_WIL6210)		+= wil6210/
- 
- obj-$(CONFIG_ATH_COMMON)	+= ath.o
- 
-diff --git a/drivers/net/wireless/ath/ar5523/Kconfig b/drivers/net/wireless/ath/ar5523/Kconfig
-index 11d99ee..0d320cc 100644
---- a/drivers/net/wireless/ath/ar5523/Kconfig
-+++ b/drivers/net/wireless/ath/ar5523/Kconfig
-@@ -1,6 +1,7 @@
- config AR5523
-        tristate "Atheros AR5523 wireless driver support"
-        depends on MAC80211 && USB
-+       select ATH_COMMON
-        select FW_LOADER
-        ---help---
-          This module add support for AR5523 based USB dongles such as D-Link
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index 338c5c4..c9f81a3 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,6 +1,7 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
-diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-index d755a5e..2a61989 100644
---- a/drivers/net/wireless/ath/ath6kl/Kconfig
-+++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-@@ -1,5 +1,6 @@
- config ATH6KL
- 	tristate "Atheros mobile chipsets support"
-+	select ATH_COMMON
- 
- config ATH6KL_SDIO
- 	tristate "Atheros ath6kl SDIO support"
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index c7aa664..5fc15bf 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on MAC80211
-+	select ATH_COMMON
- 	select ATH9K_HW
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
-diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
-index 267d5dc..13a2045 100644
---- a/drivers/net/wireless/ath/carl9170/Kconfig
-+++ b/drivers/net/wireless/ath/carl9170/Kconfig
-@@ -1,6 +1,7 @@
- config CARL9170
- 	tristate "Linux Community AR9170 802.11n USB support"
- 	depends on USB && MAC80211 && EXPERIMENTAL
-+	select ATH_COMMON
- 	select FW_LOADER
- 	select CRC32
- 	help
--- 
-1.7.10.4
+On Wed, Nov 28, 2012 at 8:57 AM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> I think it is possible to collapse your rt2800 related patch and this
+> patch with a single patch only touching generic rt2x00 code.
+>
+> We could use the max_ap_intf field of the rt2x00_ops struct to
+> determine the mask in a generic manner.
+>
+> So, we could have the following statement in generic code (e.g. in
+> rt2x00lib_probe_dev):
+>
+>         rt2x00dev->hw->wiphy->addr_mask[ETH_ALEN - 1] =
+> (rt2x00dev->ops->max_ap_intf - 1);
 
+Good point. I'll change that accordingly.
+
+Thanks,
+Helmut
