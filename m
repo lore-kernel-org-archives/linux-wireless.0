@@ -1,52 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:42437 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753780Ab2KQAIH (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753389Ab2K1JnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 19:08:07 -0500
-Date: Fri, 16 Nov 2012 16:10:46 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Arend van Spriel <arend@broadcom.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Mahesh Palivela <maheshp@posedge.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: VHT support, take 2
-Message-ID: <20121117001046.GP3354@lenteja.do-not-panic.com> (sfid-20121117_010812_345955_92E68DD3)
-References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>
- <1352492493.28302.7.camel@jlt4.sipsolutions.net>
- <50A4DB80.2020209@posedge.com>
- <1353072509.9490.7.camel@jlt4.sipsolutions.net>
- <50A65443.2000101@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <50A65443.2000101@broadcom.com>
+	Wed, 28 Nov 2012 04:43:05 -0500
+Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:05 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Eyal Shapira <eyal@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 05/20] wlcore: increase scan dwell times if no activity
+Date: Wed, 28 Nov 2012 11:42:34 +0200
+Message-Id: <1354095769-8724-6-git-send-email-arik@wizery.com> (sfid-20121128_104311_399112_8FD2A35E)
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 16, 2012 at 03:57:07PM +0100, Arend van Spriel wrote:
-> On 11/16/2012 02:28 PM, Johannes Berg wrote:
-> >On Thu, 2012-11-15 at 17:39 +0530, Mahesh Palivela wrote:
-> >
-> >>vht regulatory code already posted long back. After went through several
-> >>back n forth emails from Luis Rodriguez, accepted the patch.
-> >>But not commited anywhere.
-> >>Now I have to change that to match to new structs like chan_def etc from
-> >>the vht channel work patches you posted 5 days back.
-> >>
-> >>Also helper funcs to replace chan->flags bit checking to dynamically
-> >>check channel through regulatory
-> >
-> >Yeah, actually I'm not sure it's that easy. We'll also need per
-> >bandwidth TX power restrictions, raise the 40 MHz bandwidth restriction
-> >to 160 MHz (or get rid of it entirely), etc. That seems to require a new
-> >regulatory database format?
-> 
-> Luis discussed the regulatory framework during the wireless summit
-> in Barcelona last week. My (possibly limited) recollection was that
-> the current regulatory code can accommodate VHT limits as well. I
-> assume that also includes the regulatory database format.
+From: Eyal Shapira <eyal@wizery.com>
 
-The only thing mentioned which I had not considered is the per bandwidth
-TX power restrictions. Where did these come from ?
+There's a limit on scan dwell times of max 30ms in order
+to avoid degrading voip traffic which could be going on
+while scanning. However these dwell times increase the
+chance of missing out on nearby APs leading to partial
+scan results. Allow configuration of longer dwell times
+in case there no active interface (i.e. no STA associated
+or AP up).
 
-  Luis
+[Arik - count started vifs using an in-driver function]
+
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl12xx/main.c |    6 ++++--
+ drivers/net/wireless/ti/wl18xx/main.c |    6 ++++--
+ drivers/net/wireless/ti/wlcore/conf.h |   20 +++++++++++++++++++-
+ drivers/net/wireless/ti/wlcore/scan.c |   29 +++++++++++++++++++++++++++--
+ 4 files changed, 54 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 5e3c808..a03a847 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -267,8 +267,10 @@ static struct wlcore_conf wl12xx_conf = {
+ 		.avg_weight_snr_data          = 10,
+ 	},
+ 	.scan = {
+-		.min_dwell_time_active        = 7500,
+-		.max_dwell_time_active        = 30000,
++		.min_dwell_time_active_conc   = 7500,
++		.max_dwell_time_active_conc   = 30000,
++		.min_dwell_time_active        = 25000,
++		.max_dwell_time_active        = 50000,
+ 		.dwell_time_passive           = 100000,
+ 		.dwell_time_dfs               = 150000,
+ 		.num_probe_reqs               = 2,
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index d806241..9685fc3 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -394,8 +394,10 @@ static struct wlcore_conf wl18xx_conf = {
+ 		.avg_weight_snr_data          = 10,
+ 	},
+ 	.scan = {
+-		.min_dwell_time_active        = 7500,
+-		.max_dwell_time_active        = 30000,
++		.min_dwell_time_active_conc   = 7500,
++		.max_dwell_time_active_conc   = 30000,
++		.min_dwell_time_active        = 25000,
++		.max_dwell_time_active        = 50000,
+ 		.dwell_time_passive           = 100000,
+ 		.dwell_time_dfs               = 150000,
+ 		.num_probe_reqs               = 2,
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index ad15cae..a4eb14c 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -1097,6 +1097,24 @@ struct conf_scan_settings {
+ 	 */
+ 	u32 max_dwell_time_active;
+ 
++	/*
++	 * The minimum time to wait on each channel for active scans
++	 * when there's a concurrent active interface. This should
++	 * lower than min_dwell_time_active usually in order to avoid
++	 * interfering with possible voip traffic on another interface.
++	 *
++	 * Range: u32 tu/1000
++	 */
++	u32 min_dwell_time_active_conc;
++
++	/*
++	 * The maximum time to wait on each channel for active scans
++	 * See explanation about min_dwell_time_active_conc
++	 *
++	 * Range: u32 tu/1000
++	 */
++	u32 max_dwell_time_active_conc;
++
+ 	/* time to wait on the channel for passive scans (in TU/1000) */
+ 	u32 dwell_time_passive;
+ 
+@@ -1322,7 +1340,7 @@ struct conf_recovery_settings {
+  * version, the two LSB are the lower driver's private conf
+  * version.
+  */
+-#define WLCORE_CONF_VERSION	(0x0005 << 16)
++#define WLCORE_CONF_VERSION	(0x0006 << 16)
+ #define WLCORE_CONF_MASK	0xffff0000
+ #define WLCORE_CONF_SIZE	(sizeof(struct wlcore_conf_header) +	\
+ 				 sizeof(struct wlcore_conf))
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index 7f42f8a..2cbd5e8 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -89,6 +89,25 @@ out:
+ 
+ }
+ 
++static void wlcore_started_vifs_iter(void *data, u8 *mac,
++				     struct ieee80211_vif *vif)
++{
++	int *count = (int *)data;
++
++	if (!vif->bss_conf.idle)
++		(*count)++;
++}
++
++static int wlcore_count_started_vifs(struct wl1271 *wl)
++{
++	int count = 0;
++
++	ieee80211_iterate_active_interfaces_atomic(wl->hw,
++						   wlcore_started_vifs_iter,
++						   &count);
++	return count;
++}
++
+ static int
+ wlcore_scan_get_channels(struct wl1271 *wl,
+ 			 struct ieee80211_channel *req_channels[],
+@@ -109,9 +128,15 @@ wlcore_scan_get_channels(struct wl1271 *wl,
+ 	/* configure dwell times according to scan type */
+ 	if (scan_type == SCAN_TYPE_SEARCH) {
+ 		struct conf_scan_settings *c = &wl->conf.scan;
++		bool active_vif_exists = !!wlcore_count_started_vifs(wl);
++
++		min_dwell_time_active = active_vif_exists ?
++			c->min_dwell_time_active_conc :
++			c->min_dwell_time_active;
++		max_dwell_time_active = active_vif_exists ?
++			c->max_dwell_time_active_conc :
++			c->max_dwell_time_active;
+ 
+-		min_dwell_time_active = c->min_dwell_time_active;
+-		max_dwell_time_active = c->max_dwell_time_active;
+ 		dwell_time_passive = c->dwell_time_passive;
+ 		dwell_time_dfs = c->dwell_time_dfs;
+ 	} else {
+-- 
+1.7.9.5
+
