@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:32922 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753684Ab2KZGkN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 01:40:13 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1TcsMX-0007bj-MK
-	for linux-wireless@vger.kernel.org; Mon, 26 Nov 2012 07:40:18 +0100
-Received: from ice.139.client237.youtele.com ([ice.139.client237.youtele.com])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 07:40:13 +0100
-Received: from charvi.mehta by ice.139.client237.youtele.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 07:40:13 +0100
-To: linux-wireless@vger.kernel.org
-From: Charvi <charvi.mehta@einfochips.com>
-Subject: Re: Access Point Mode for Ralink RT5370? - Success
-Date: Mon, 26 Nov 2012 06:39:51 +0000 (UTC)
-Message-ID: <loom.20121126T073219-553@post.gmane.org> (sfid-20121126_074020_523240_D964F3B7)
-References: <20120719133452.2fb375ae@emcraft.com> <CAOZOX0V=npQuQ03kur0mo7PtkdGVYiFO5B3OKhB7CMibLk50Ew@mail.gmail.com> <20120807190140.4796a045@emcraft.com> <CAOZOX0V1_zA3iTXhz7J4_t-BxNQ6k6V_-A_jky2B=fpbya-Lqg@mail.gmail.com> <20120816192839.1e595e4b@emcraft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:37846 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754674Ab2K1NXh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 08:23:37 -0500
+Message-ID: <50B61054.3090604@posedge.com> (sfid-20121128_142340_682764_9F204D1A)
+Date: Wed, 28 Nov 2012 18:53:32 +0530
+From: Saravana <saravanad@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: add debugfs file for current tx rate
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergei Poselenov <sposelenov@...> writes:
+Add a debugfs file showing the current tx rate.
+The information available in the rc_stats file
+doesn't evidently provides us the current tx rate.
+This patch adds the support for the same.
 
-> 
-> Hello Ivo, all,
-> 
-> I just want to report that we successfully built and configured DWA-140
-> (rev B3, RT5370 chip) USB-WiFi in access point mode. For this, we built
-> vcompat-wireless modules and hostapd and lbnl (required by hostapd).
-> 
-> Our target is the LPC1788 (ARM Cortex-M3 SOC) running Linux 2.6.33,
-> with USB support.
-> 
-> Our toolchain combo is CodeSourcery arm-2010q1, with uClibc modified to
-> support clone() and linuxthreads.
-> 
-> Thank you for your comments.
-> 
-> Regards,
-> Sergei Poselenov, Emcraft Systems
+Signed-off-by: Saravana <saravanad@posedge.com>
+---
+ net/mac80211/debugfs_sta.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 89281d2..b10ae46 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -321,6 +321,20 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+ }
+ STA_OPS(ht_capa);
  
-Hi Sergei,
-
-   I am also using a USB stick with RT5370 and want to configure it in AP mode.
-I am new to the compat wireless drivers and modules but when I build them I do
-not get any module like "rt5370.ko". Which module from compat wireless package
-do I need to install for RT5370. I am using the latest compat wireless package
-from
-http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless.tar.bz2.
-
-Thanks,
-Charvi.
-
++static ssize_t sta_current_tx_rate_read(struct file *file, char __user *userbuf,
++				      size_t count, loff_t *ppos)
++{
++	struct sta_info *sta = file->private_data;
++	struct rate_info rinfo;
++	u16 rate;
++	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
++	rate = cfg80211_calculate_bitrate(&rinfo);
++
++	return mac80211_format_buffer(userbuf, count, ppos, "%d.%d MBit/s\n",
++					rate/10, rate%10);
++}
++STA_OPS(current_tx_rate);
++
+ #define DEBUGFS_ADD(name) \
+ 	debugfs_create_file(#name, 0400, \
+ 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+@@ -369,6 +383,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(dev);
+ 	DEBUGFS_ADD(last_signal);
+ 	DEBUGFS_ADD(ht_capa);
++	DEBUGFS_ADD(current_tx_rate);
+ 
+ 	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
+ 	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
