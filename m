@@ -1,52 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 212.199.104.198.static.012.net.il ([212.199.104.198]:34851 "EHLO
-	qualcomm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752260Ab2KRPow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2012 10:44:52 -0500
-From: Vladimir Kondratiev <vkondrat@qti.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jason Baron <jbaron@redhat.com>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-Date: Sun, 18 Nov 2012 17:43:07 +0200
-Message-ID: <1380367.3QOKJVXxFC@lx-vladimir> (sfid-20121118_164514_258515_B5C1FE82)
-In-Reply-To: <1353249531.15959.10.camel@joe-AO722>
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <3304277.iqgq3GH3Yo@lx-vladimir> <1353249531.15959.10.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from he.sipsolutions.net ([78.46.109.217]:43708 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754597Ab2K1NDW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 08:03:22 -0500
+Message-ID: <1354107826.9345.18.camel@jlt4.sipsolutions.net> (sfid-20121128_140326_378555_CD4EC07E)
+Subject: Re: [PATCH] mac80211: Don't reinit rate control when mesh sta exists
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: javier@cozybit.com, linux-wireless@vger.kernel.org
+Date: Wed, 28 Nov 2012 14:03:46 +0100
+In-Reply-To: <1354035793-23498-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20121127_180332_904175_6845BF48)
+References: <1354035793-23498-1-git-send-email-helmut.schaa@googlemail.com>
+	 (sfid-20121127_180332_904175_6845BF48)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, November 18, 2012 06:38:51 AM Joe Perches wrote:
-> Another option could be testing __builtin_constant_p(prefix)
+On Tue, 2012-11-27 at 18:03 +0100, Helmut Schaa wrote:
+> This fixes some unintended resets of the rate control statistics
+> when minstrel_ht is used resulting in non-optimal throughput on mesh
+> links.
 
-You mean something like below? Yes, it will work as well.
+Applied.
 
-Pro: don't need to change existing code 
-(drop [PATCH 2/2] dynamic_debug: use constant format in print_hex_dump_bytes())
-
-Cons: format in dynamic metadata will be useless
-
-What looks better?
-
----
-#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-			 groupsize, buf, len, ascii)		\
-do {								\
-	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, 		\
-		__builtin_constant_p(prefix_str) ? prefix_str : "hexdump");\
-	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
-		print_hex_dump(KERN_DEBUG, prefix_str,		\
-			       prefix_type, rowsize, groupsize,	\
-			       buf, len, ascii);		\
-} while (0)
-
-
+johannes
 
