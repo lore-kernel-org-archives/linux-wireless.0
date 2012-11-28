@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:57952 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754625Ab2K2OYY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43626 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754275Ab2K1MnM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Nov 2012 09:24:24 -0500
-Message-ID: <50B77013.6040508@posedge.com> (sfid-20121129_152427_274417_AAE6BECC)
-Date: Thu, 29 Nov 2012 19:54:19 +0530
-From: Saravana <saravanad@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: add debugfs file for last rx rate
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 28 Nov 2012 07:43:12 -0500
+Message-ID: <1354106616.9345.13.camel@jlt4.sipsolutions.net> (sfid-20121128_134316_136924_969C54C1)
+Subject: Re: [RFC 1/3] nl80211: add spec scan flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org,
+	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 28 Nov 2012 13:43:36 +0100
+In-Reply-To: <1354106128.9345.6.camel@jlt4.sipsolutions.net> (sfid-20121128_133513_369326_2A721201)
+References: <1354042885-32688-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1354042885-32688-2-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1354106128.9345.6.camel@jlt4.sipsolutions.net>
+	 (sfid-20121128_133513_369326_2A721201)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a debugfs file showing the rate at which
-the last packet is received.
+On Wed, 2012-11-28 at 13:35 +0100, Johannes Berg wrote:
+> On Tue, 2012-11-27 at 20:01 +0100, Simon Wunderlich wrote:
+> > This flag indicates that a spectrum scan is requested, if supported.
+> 
+> That "if supported" here is pretty problematic. There's no way to know.
+> Feature flag maybe?
+> 
+> Also, there are scan flags now. However, I don't see that this should
+> (ab)use the scan function. It doesn't seem likely that you want to do
+> this while you're sending probe requests, etc. OTOH, it seems likely
+> you'd want identical dwell times on all channels to have comparable
+> values, which isn't the case here.
+> 
+> I really think you need to decouple the API for this from scanning.
 
-Signed-off-by: Saravana <saravanad@posedge.com>
----
- net/mac80211/debugfs_sta.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+And then you can also define APIs to get the data out. While I realize
+that the data is implementation-dependent, you could have an enum that
+indicates the data format and describes it:
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 1090c24..3173fed 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -336,6 +336,22 @@ static ssize_t sta_current_tx_rate_read(struct file *file, char __user *userbuf,
- }
- STA_OPS(current_tx_rate);
- 
-+static ssize_t sta_last_rx_rate_read(struct file *file, char __user *userbuf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct sta_info *sta = file->private_data;
-+	struct rate_info rinfo;
-+	u16 rate;
-+
-+	sta_set_rate_info_rx(sta, &rinfo);
-+
-+	rate = cfg80211_calculate_bitrate(&rinfo);
-+
-+	return mac80211_format_buffer(userbuf, count, ppos, "%d.%d MBit/s\n",
-+					rate/10, rate%10);
-+}
-+STA_OPS(last_rx_rate);
-+
- #define DEBUGFS_ADD(name) \
- 	debugfs_create_file(#name, 0400, \
- 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
-@@ -386,6 +402,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD(ht_capa);
- 	DEBUGFS_ADD(last_ack_signal);
- 	DEBUGFS_ADD(current_tx_rate);
-+	DEBUGFS_ADD(last_rx_rate);
- 
- 	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
- 	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
+@NL80211_SPECTRAL_DATA_ATHEROS: u8 rssi,ext_rssi,noise,fft_data[] ...
+
+enum nl80211_spectral_data {
+	NL80211_SPECTRAL_DATA_ATHEROS,
+	...
+};
+
+Then you can define a function to send the data to the userspace socket
+that asked for it (yes, if you have a separate command you can send it
+only to that app... wohoo! :P ) and don't even have to store it in the
+kernel...
+
+So bottom line is that I think there are two choices:
+1) for a proof of concept, implement it in debugfs only, in ath9k only,
+   with e.g. a debugfs file that sets a flag that then triggers the
+   spectral scan when you do a scan (using sw_scan_start, config hooks)
+   --> no need to modify nl80211 at all
+2) implement some well-defined API in nl80211, but don't tie it to
+   scanning or a debugfs implementation of getting the data out, with
+   versioning of the FFT data packets etc. so it can be updated later
+   without breaking everything
+
+This hybrid isn't a good approach at all.
+
+johannes
+
