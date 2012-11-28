@@ -1,49 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1673 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755996Ab2K1Uo1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 15:44:27 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/11] brcm80211: update the MAINTAINERS file
-Date: Wed, 28 Nov 2012 21:44:04 +0100
-Message-ID: <1354135454-7035-2-git-send-email-arend@broadcom.com> (sfid-20121128_214449_097872_CE978470)
-In-Reply-To: <1354135454-7035-1-git-send-email-arend@broadcom.com>
-References: <1354135454-7035-1-git-send-email-arend@broadcom.com>
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:46414 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751934Ab2K1IXy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 03:23:54 -0500
+Message-ID: <50B5CA15.2080407@posedge.com> (sfid-20121128_092358_174953_CC7852DA)
+Date: Wed, 28 Nov 2012 13:53:49 +0530
+From: Saravana <saravanad@posedge.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: add debugfs file for last ack signal
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Organizational changes need to be reflected in the MAINTAINERS file.
-The contact info on wireless.kernel.org has also been updated.
+Add a debugfs file showing the signal strength
+of the ack frame that is received for the
+currently sent tx packet
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Saravana <saravanad@posedge.com>
 ---
- MAINTAINERS |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ net/mac80211/debugfs_sta.c |    2 ++
+ net/mac80211/sta_info.h    |    2 ++
+ net/mac80211/status.c      |    2 ++
+ 3 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f3d9d62..ed91c27 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1674,10 +1674,9 @@ F:	drivers/net/ethernet/broadcom/tg3.*
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 89281d2..1566941 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -53,6 +53,7 @@ static const struct file_operations sta_ ##name## _ops = {		\
+ STA_FILE(aid, sta.aid, D);
+ STA_FILE(dev, sdata->name, S);
+ STA_FILE(last_signal, last_signal, D);
++STA_FILE(last_ack_signal, last_ack_signal, D);
  
- BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
- M:	Brett Rudley <brudley@broadcom.com>
--M:	Roland Vossen <rvossen@broadcom.com>
- M:	Arend van Spriel <arend@broadcom.com>
- M:	Franky (Zhenhui) Lin <frankyl@broadcom.com>
--M:	Kan Yan	<kanyan@broadcom.com>
-+M:	Hante Meuleman <meuleman@broadcom.com>
- L:	linux-wireless@vger.kernel.org
- L:	brcm80211-dev-list@broadcom.com
- S:	Supported
--- 
-1.7.10.4
-
-
+ static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
+ 			      size_t count, loff_t *ppos)
+@@ -369,6 +370,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(dev);
+ 	DEBUGFS_ADD(last_signal);
+ 	DEBUGFS_ADD(ht_capa);
++	DEBUGFS_ADD(last_ack_signal);
+ 
+ 	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
+ 	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 6835cea..dce7693 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -250,6 +250,7 @@ struct sta_ampdu_mlme {
+  * @rx_dropped: number of dropped MPDUs from this STA
+  * @last_signal: signal of last received frame from this STA
+  * @avg_signal: moving average of signal of received frames from this STA
++ * @last_ack_signal: signal of last received Ack frame from this STA
+  * @last_seq_ctrl: last received seq/frag number from this STA (per RX queue)
+  * @tx_filtered_count: number of frames the hardware filtered for this STA
+  * @tx_retry_failed: number of frames that failed retry
+@@ -329,6 +330,7 @@ struct sta_info {
+ 	unsigned long rx_dropped;
+ 	int last_signal;
+ 	struct ewma avg_signal;
++	int last_ack_signal;
+ 	/* Plus 1 for non-QoS frames */
+ 	__le16 last_seq_ctrl[IEEE80211_NUM_TIDS + 1];
+ 
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 2d931ad..64dda41 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -539,6 +539,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 				sta->lost_packets = 0;
+ 			}
+ 		}
++		if (acked)
++			sta->last_ack_signal = info->status.ack_signal;
+ 	}
+ 
+ 	rcu_read_unlock();
