@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44788 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161052Ab2KNLXV (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:61071 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753842Ab2K1Jn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 06:23:21 -0500
-Message-ID: <1352892233.9510.26.camel@jlt4.sipsolutions.net> (sfid-20121114_122324_825323_0E6564B7)
-Subject: Re: [PATCH v4 6/6] mac80211: add ap channel switch command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Date: Wed, 14 Nov 2012 12:23:53 +0100
-In-Reply-To: <50A2617B.3060807@ti.com>
-References: <1350226137-13704-1-git-send-email-victorg@ti.com>
-	    <1350226137-13704-7-git-send-email-victorg@ti.com>
-	   <1350414472.10177.17.camel@jlt4.sipsolutions.net>
-	  <50842563.4010201@ti.com> <1350910599.10166.4.camel@jlt4.sipsolutions.net>
-	  <50922AA9.4030509@ti.com> <1352128994.9466.19.camel@jlt4.sipsolutions.net>
-	 <50A2617B.3060807@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 28 Nov 2012 04:43:29 -0500
+Received: by mail-we0-f174.google.com with SMTP id d7so4384896wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:28 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 17/20] wl18xx: support MIMO only if HT mode is not forced to SISO
+Date: Wed, 28 Nov 2012 11:42:46 +0200
+Message-Id: <1354095769-8724-18-git-send-email-arik@wizery.com> (sfid-20121128_104342_876678_EDB458A8)
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-13 at 17:04 +0200, Victor Goldenshtein wrote:
+Don't use MIMO rates when HT mode is forced to SISO, even if we have
+multiple antennas.
 
-> > No ... channel contexts are in the kernel now, so you do have to think
-> > about it now.
-> 
-> Well thinking is one thing implementing is another ;)
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Well ... :)
-
-> This whole DFS implementation initially intended for a single channel 
-> mac. I don't might to deal with the channel context stuff but not sure 
-> how much available time I"ll have for it, so it might take awhile.
-> I know there are people waiting for this, so I'm thinking would you 
-> consider to go first with this single channel DFS support and later to 
-> extend it to work with channel context stuff ?
-
-Fair enough, but like I've been telling you, the current code doesn't
-even match the current APIs.
-
-Initially, I thought that for radar detection, you need to reserve the
-channel context (in mac80211), make sure it's the only channel context
-and prohibit other channel contexts from being added, until radar
-detection is done.
-
-However, then I realised that that still doesn't work -- once initial
-radar detection is done, it needs to continue while the AP is active. If
-the channel context was going to be relinquished, or even just the
-channel changed for a few seconds, it would be unsafe. So as a result,
-the radar detect operation has to somehow be coupled to the start AP
-operation and prohibit channel changes and additional channel contexts
-during the entire operation time.
-
-I definitely think this needs some work, because the APIs and cfg80211
-code have to be correct for multi-channel operation even if you don't
-support it.
-
-johannes
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index ada4616..ed44ba6 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1109,7 +1109,13 @@ static bool wl18xx_is_mimo_supported(struct wl1271 *wl)
+ {
+ 	struct wl18xx_priv *priv = wl->priv;
+ 
+-	return priv->conf.phy.number_of_assembled_ant2_4 >= 2;
++	/*
++	 * only support MIMO with multiple antennas, and when SISO
++	 * is not forced through config
++	 */
++	return (priv->conf.phy.number_of_assembled_ant2_4 >= 2) &&
++	       (priv->conf.ht.mode != HT_MODE_WIDE) &&
++	       (priv->conf.ht.mode != HT_MODE_SISO20);
+ }
+ 
+ /*
+-- 
+1.7.9.5
 
