@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nk11p00mm-asmtp009.mac.com ([17.158.161.8]:51013 "EHLO
-	nk11p00mm-asmtp009.mac.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755450Ab2KBAou (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45369 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755752Ab2K1Vob (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2012 20:44:50 -0400
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-2022-JP
-Received: from [10.20.200.174]
- (p3027-ipbf5206marunouchi.tokyo.ocn.ne.jp [118.8.142.27])
- by nk11p00mm-asmtp009.mac.com
- (Oracle Communications Messaging Server 7u4-26.01(7.0.4.26.0) 64bit (built Jul
- 13 2012)) with ESMTPSA id <0MCU00C594PXL160@nk11p00mm-asmtp009.mac.com> for
- linux-wireless@vger.kernel.org; Fri, 02 Nov 2012 00:44:23 +0000 (GMT)
-Message-id: <50931755.9070902@mac.com> (sfid-20121102_014505_595513_A7FFDF21)
-Date: Fri, 02 Nov 2012 09:44:05 +0900
-From: Akira Nonaka <nonaka@mac.com>
+	Wed, 28 Nov 2012 16:44:31 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: Re: rtl8723e disconnect problem on the kernel 3.4.9.
-References: <509200A2.9060300@mac.com> <50929F0C.5060501@lwfinger.net>
-In-reply-to: <50929F0C.5060501@lwfinger.net>
+Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: fix cmp_hidden_bss
+Date: Wed, 28 Nov 2012 22:44:55 +0100
+Message-Id: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net> (sfid-20121128_224434_557114_B5AB2119)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Larry,
+From: Johannes Berg <johannes.berg@intel.com>
 
-(2012/11/02 1:10), Larry Finger wrote:
+The cmp_bss() comparator function uses memcmp() to
+compare the SSID. This means that cmp_hidden_bss()
+needs to similarly return a number bigger than zero
+(use 1) instead of -1 when ie1 is bigger than ie2,
+which is the case if an ie2 byte is non-zero.
 
-> (1) What version of the vendor driver are you using?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I got the driver from below, where my PC vendor told me to go.
-
-http://www.liteon.com/UserFiles/driver/Module/Network/WLAN/RTL/rtl_92ce_92se_92de_8723ae_linux_mac80211_0007.0809.2012.tar.gz
-
-> (2) Are the memset errors fixed? There are a number of calls where args 2 and 3
-> are reversed.
-
-I will check the source code.
-
-> (3) Can you build your own kernel? If so, check
-> http://www'lwfinger.com/realtek_drivers/rtl8723ae_master_patch. That will patch
-> a 3.4 kernel to include the driver rtl8723ae that has been submitted for
-> inclusion in kernel 3.8.
-
-I will try this patch also and get back to you.
-
-Regards,
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 9233910..57855bc 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -472,7 +472,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
+ 	/* zeroed SSID ie is another indication of a hidden bss */
+ 	for (i = 0; i < ie2[1]; i++)
+ 		if (ie2[i + 2])
+-			return -1;
++			return 1;
+ 
+ 	return 0;
+ }
 -- 
-Akira Nonaka
+1.8.0
+
