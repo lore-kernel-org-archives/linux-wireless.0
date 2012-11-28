@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DMZ-MAILSEC-SCANNER-3.MIT.EDU ([18.9.25.14]:53533 "EHLO
-	dmz-mailsec-scanner-3.mit.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754935Ab2K1PWf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 10:22:35 -0500
-Date: Wed, 28 Nov 2012 10:17:28 -0500 (EST)
-From: Anders Kaseorg <andersk@MIT.EDU>
-To: Tejun Heo <tj@kernel.org>,
-	Herbert Xu <herbert@gondor.hengli.com.au>,
-	"John W. Linville" <linville@tuxdriver.com>
-cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Wireless regression in workqueue: use mod_delayed_work() instead
- of __cancel + queue
-In-Reply-To: <alpine.DEB.2.00.1211280953350.26602@dr-wily.mit.edu>
-Message-ID: <alpine.DEB.2.00.1211281016320.26602@dr-wily.mit.edu> (sfid-20121128_162238_788298_ED47B9DB)
-References: <alpine.DEB.2.00.1211280953350.26602@dr-wily.mit.edu>
+Received: from bear.ext.ti.com ([192.94.94.41]:58191 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753132Ab2K1JMg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 04:12:36 -0500
+Message-ID: <1354093916.25524.13.camel@cumari.coelho.fi> (sfid-20121128_101239_754687_172BE5DD)
+Subject: Re: [PATCH v2 00/11] wlcore: prepare to multi-channel
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 28 Nov 2012 11:11:56 +0200
+In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 28 Nov 2012, Anders Kaseorg wrote:
-> My Intel 6250 wireless card (iwldvm) can no longer associate with a 
-> WPA-Enterprise network (PEAP-MSCHAPv2).  To my surprise, I bisected this 
-> regression to commit e7c2f967445dd2041f0f8e3179cca22bb8bb7f79, 
-> workqueue: use mod_delayed_work() instead of __cancel + queue.
+On Tue, 2012-11-20 at 13:20 +0200, Eliad Peller wrote:
+> Make the connection flow simpler by using only the sta
+> role (i.e. no need for dev role).
 > 
-> A bunch of logs collected by Ubuntu apport are in this bug report: 
->   https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1083980
+> This is possible now, as we know the AP's BSSID even
+> before authentication.
 > 
-> How can I help to debug this?
+> This means we no longer start dev role when the device
+> is non-idle, so now we use the .remain_on_channel()
+> and start device role only then.
 > 
-> I see that someone else reported another regression with the same commit 
-> last week, although this looks unrelated at first glance: 
->   http://thread.gmane.org/gmane.linux.kernel/1395938
+> Finally, implement the chanctx callbacks in order to
+> have a clear per-vif channel (instead of the global
+> hw->channel)
 > 
-> Anders
+> (this patchset depends on
+> "mac80211: make remain_on_channel() op pass vif param")
+> 
+> v2: fix some issues pointed out by Arik/Luca (thanks!)
+>     squash some patches together (thanks Johannes and Julian!)
+> 
+> Eliad Peller (11):
+>   wlcore: start sta role on CHANGED_BSSID
+>   wlcore: workaround start_sta problem in wl12xx fw
+>   wlcore: implement .remain_on_channel() callback
+>   wlcore: get channel from bss_conf instead of hw->conf
+>   wlcore: add chanctx implementation
+>   wlcore: initiate ROC/CROC on sta state updates
+>   wlcore: set active psm on association
+>   wlcore: specify correct supported_rates
+>   wlcore: reconfigure rate policy on association
+>   wlcore: refactor CHANGED_HT handling
+>   wlcore: configure the remote rates with our own rates
 
-(Oops, re-sending to fix a typo in the LKML address.)
+Applied the whole series, thanks!
 
-Anders
+--
+Luca.
+
