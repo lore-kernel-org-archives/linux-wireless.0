@@ -1,84 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:48707 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752389Ab2KQGs5 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:48266 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754481Ab2K1Q5X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 01:48:57 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFC 13/14] mac80211: add TIM IE to mesh beacons
-Date: Fri, 16 Nov 2012 22:48:05 -0800
-Message-Id: <1353134886-13256-14-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121117_074903_443571_9FF73B96)
-In-Reply-To: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	Wed, 28 Nov 2012 11:57:23 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] wireless: allow Atheros card to not depend on ath.ko
+Date: Wed, 28 Nov 2012 18:57:19 +0200
+Message-ID: <1967408.WlU5HIbjCs@lx-vladimir> (sfid-20121128_175727_482230_3AD89F65)
+In-Reply-To: <20121128141319.GA9118@tuxdriver.com>
+References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1834420.jzvmO1yYKo@lx-vladimir> <20121128141319.GA9118@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a TIM IE similarly to AP mode and add it to mesh beacons.
-Use the peer's link ID instead of the access point's association ID.
 
-Since the TIM map only supports announcing buffered frames for
-IEEE80211_MAX_AID STA (2007), we mod down our mesh LLID/PLID to fit.
+There are 2 different things:
+- sub-menu for "Atheros Wireless cards" family
+- module ath.ko with common Atheros code
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
+Thus, being "Atheros card" and "depending on ath.ko" was the same.
+
+To allow module to belong to the
+"Atheros Wireless cards" family but not use ath.ko,
+2 conditions above need to be separated.
+
+So, this patch introduce new Kconfig variable ATH_CARDS for belonging
+to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
+variable to express dependency on common Atheros code in ath.ko. Modules
+that depend on this common code now express it by setting ATH_COMMON.
+
+Right now, ath6kl do not depend on common code and thus do not set ATH_COMMON.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- net/mac80211/tx.c |   27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ drivers/net/wireless/ath/Kconfig          |    7 +++++--
+ drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
+ drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
+ drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
+ drivers/net/wireless/ath/carl9170/Kconfig |    1 +
+ 5 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index a62deaf..bfcda52 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2333,6 +2333,31 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
- 	}
- }
+diff --git a/drivers/net/wireless/ath/Kconfig 
+b/drivers/net/wireless/ath/Kconfig
+index c25dcf1..1a67a4f 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -1,4 +1,7 @@
+-menuconfig ATH_COMMON
++config ATH_COMMON
++	tristate
++
++menuconfig ATH_CARDS
+ 	tristate "Atheros Wireless Cards"
+ 	depends on CFG80211 && (!UML || BROKEN)
+ 	---help---
+@@ -14,7 +17,7 @@ menuconfig ATH_COMMON
  
-+static int mesh_add_tim_ie(struct sk_buff *skb,
-+			   struct ieee80211_sub_if_data *sdata,
-+			   u16 *tim_offset, u16 *tim_length)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	u16 tmp = skb->len;
-+
-+	if (local->tim_in_locked_section) {
-+		ieee80211_beacon_add_tim(sdata, &sdata->u.mesh.ps, skb);
-+	} else {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&local->tim_lock, flags);
-+		ieee80211_beacon_add_tim(sdata, &sdata->u.mesh.ps, skb);
-+		spin_unlock_irqrestore(&local->tim_lock, flags);
-+	}
-+
-+	if (tim_offset)
-+		*tim_offset = tmp - local->hw.extra_tx_headroom;
-+	if (tim_length)
-+		*tim_length = skb->len - tmp;
-+
-+	return 0;
-+}
-+
- struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 					 struct ieee80211_vif *vif,
- 					 u16 *tim_offset, u16 *tim_length)
-@@ -2440,6 +2465,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 				    2 + /* NULL SSID */
- 				    2 + 8 + /* supported rates */
- 				    2 + 3 + /* DS params */
-+				    256 + /* TIM IE */
- 				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
- 				    2 + sizeof(struct ieee80211_ht_cap) +
- 				    2 + sizeof(struct ieee80211_ht_operation) +
-@@ -2473,6 +2499,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 	  http://wireless.kernel.org/en/users/Drivers/Atheros
  
- 		if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
- 		    mesh_add_ds_params_ie(skb, sdata) ||
-+		    mesh_add_tim_ie(skb, sdata, tim_offset, tim_length) ||
- 		    ieee80211_add_ext_srates_ie(sdata, skb, true, band) ||
- 		    mesh_add_rsn_ie(skb, sdata) ||
- 		    mesh_add_ht_cap_ie(skb, sdata) ||
+-if ATH_COMMON
++if ATH_CARDS
+ 
+ config ATH_DEBUG
+ 	bool "Atheros wireless debugging"
+diff --git a/drivers/net/wireless/ath/ar5523/Kconfig 
+b/drivers/net/wireless/ath/ar5523/Kconfig
+index 11d99ee..0d320cc 100644
+--- a/drivers/net/wireless/ath/ar5523/Kconfig
++++ b/drivers/net/wireless/ath/ar5523/Kconfig
+@@ -1,6 +1,7 @@
+ config AR5523
+        tristate "Atheros AR5523 wireless driver support"
+        depends on MAC80211 && USB
++       select ATH_COMMON
+        select FW_LOADER
+        ---help---
+          This module add support for AR5523 based USB dongles such as D-Link
+diff --git a/drivers/net/wireless/ath/ath5k/Kconfig 
+b/drivers/net/wireless/ath/ath5k/Kconfig
+index 338c5c4..c9f81a3 100644
+--- a/drivers/net/wireless/ath/ath5k/Kconfig
++++ b/drivers/net/wireless/ath/ath5k/Kconfig
+@@ -1,6 +1,7 @@
+ config ATH5K
+ 	tristate "Atheros 5xxx wireless cards support"
+ 	depends on (PCI || ATHEROS_AR231X) && MAC80211
++	select ATH_COMMON
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+ 	select NEW_LEDS
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig 
+b/drivers/net/wireless/ath/ath9k/Kconfig
+index c7aa664..5fc15bf 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
+ config ATH9K
+ 	tristate "Atheros 802.11n wireless cards support"
+ 	depends on MAC80211
++	select ATH_COMMON
+ 	select ATH9K_HW
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+diff --git a/drivers/net/wireless/ath/carl9170/Kconfig 
+b/drivers/net/wireless/ath/carl9170/Kconfig
+index 267d5dc..13a2045 100644
+--- a/drivers/net/wireless/ath/carl9170/Kconfig
++++ b/drivers/net/wireless/ath/carl9170/Kconfig
+@@ -1,6 +1,7 @@
+ config CARL9170
+ 	tristate "Linux Community AR9170 802.11n USB support"
+ 	depends on USB && MAC80211 && EXPERIMENTAL
++	select ATH_COMMON
+ 	select FW_LOADER
+ 	select CRC32
+ 	help
 -- 
-1.7.9.5
+1.7.10.4
+
 
