@@ -1,93 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:38812 "EHLO
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:58463 "EHLO
 	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756970Ab2K0GpS (ORCPT
+	with ESMTP id S1753876Ab2K1Jnd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 01:45:18 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so2666942wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Nov 2012 22:45:17 -0800 (PST)
+	Wed, 28 Nov 2012 04:43:33 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so3507315wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:32 -0800 (PST)
 From: Arik Nemtsov <arik@wizery.com>
 To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 06/20] wlcore: remove WLCORE_QUIRK_NO_ELP
-Date: Tue, 27 Nov 2012 08:44:47 +0200
-Message-Id: <1353998701-18171-7-git-send-email-arik@wizery.com> (sfid-20121127_074526_829850_625F054B)
-In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
-References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 19/20] wl18xx: count HW block spare based correctly on keys
+Date: Wed, 28 Nov 2012 11:42:48 +0200
+Message-Id: <1354095769-8724-20-git-send-email-arik@wizery.com> (sfid-20121128_104351_639874_84D3B99F)
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+We have no idea how many VIFs there are requiring a special spare, we
+know just about the number of keys set. Rename the counter appropriately
+and toggle it whenever a special key is added/removed.
+Previously this was only changed once, since it was toggled whenever
+the actual spare was changed.
 
-all the current firmwares support elp, so
-we can safely remove WLCORE_QUIRK_NO_ELP.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
 Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c   |    3 +--
- drivers/net/wireless/ti/wlcore/init.c   |    3 ---
- drivers/net/wireless/ti/wlcore/main.c   |    3 ---
- drivers/net/wireless/ti/wlcore/wlcore.h |    3 ---
- 4 files changed, 1 insertion(+), 11 deletions(-)
+ drivers/net/wireless/ti/wl18xx/main.c   |   56 +++++++++++++++++--------------
+ drivers/net/wireless/ti/wl18xx/wl18xx.h |    4 +--
+ 2 files changed, 33 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 617e8d1..635f8b7 100644
+index 5529c4b..e4fa3f9 100644
 --- a/drivers/net/wireless/ti/wl18xx/main.c
 +++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -639,8 +639,7 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
- 		wl->sr_fw_name = WL18XX_FW_NAME;
- 		/* wl18xx uses the same firmware for PLT */
- 		wl->plt_fw_name = WL18XX_FW_NAME;
--		wl->quirks |= WLCORE_QUIRK_NO_ELP |
--			      WLCORE_QUIRK_RX_BLOCKSIZE_ALIGN |
-+		wl->quirks |= WLCORE_QUIRK_RX_BLOCKSIZE_ALIGN |
- 			      WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN |
- 			      WLCORE_QUIRK_NO_SCHED_SCAN_WHILE_CONN |
- 			      WLCORE_QUIRK_TX_PAD_LAST_FRAME |
-diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
-index 68828b4..5c6f11e 100644
---- a/drivers/net/wireless/ti/wlcore/init.c
-+++ b/drivers/net/wireless/ti/wlcore/init.c
-@@ -577,9 +577,6 @@ int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
- 		/* Configure for power according to debugfs */
- 		if (sta_auth != WL1271_PSM_ILLEGAL)
- 			ret = wl1271_acx_sleep_auth(wl, sta_auth);
--		/* Configure for power always on */
--		else if (wl->quirks & WLCORE_QUIRK_NO_ELP)
--			ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
- 		/* Configure for ELP power saving */
- 		else
- 			ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 56f20d6..05ba72a 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2484,9 +2484,6 @@ deinit:
- 		/* Configure for power according to debugfs */
- 		if (sta_auth != WL1271_PSM_ILLEGAL)
- 			wl1271_acx_sleep_auth(wl, sta_auth);
--		/* Configure for power always on */
--		else if (wl->quirks & WLCORE_QUIRK_NO_ELP)
--			wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
- 		/* Configure for ELP power saving */
- 		else
- 			wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 4d5c69e..07898de 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -501,9 +501,6 @@ wlcore_set_min_fw_ver(struct wl1271 *wl, unsigned int chip,
- /* Older firmwares use an old NVS format */
- #define WLCORE_QUIRK_LEGACY_NVS			BIT(5)
+@@ -1052,7 +1052,7 @@ static int wl18xx_hw_init(struct wl1271 *wl)
  
--/* Some firmwares may not support ELP */
--#define WLCORE_QUIRK_NO_ELP			BIT(6)
+ 	/* (re)init private structures. Relevant on recovery as well. */
+ 	priv->last_fw_rls_idx = 0;
+-	priv->extra_spare_vif_count = 0;
++	priv->extra_spare_key_count = 0;
+ 
+ 	/* set the default amount of spare blocks in the bitmap */
+ 	ret = wl18xx_set_host_cfg_bitmap(wl, WL18XX_TX_HW_BLOCK_SPARE);
+@@ -1317,8 +1317,8 @@ static int wl18xx_get_spare_blocks(struct wl1271 *wl, bool is_gem)
+ {
+ 	struct wl18xx_priv *priv = wl->priv;
+ 
+-	/* If we have VIFs requiring extra spare, indulge them */
+-	if (priv->extra_spare_vif_count)
++	/* If we have keys requiring extra spare, indulge them */
++	if (priv->extra_spare_key_count)
+ 		return WL18XX_TX_HW_EXTRA_BLOCK_SPARE;
+ 
+ 	return WL18XX_TX_HW_BLOCK_SPARE;
+@@ -1330,42 +1330,48 @@ static int wl18xx_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+ 			  struct ieee80211_key_conf *key_conf)
+ {
+ 	struct wl18xx_priv *priv = wl->priv;
+-	bool change_spare = false;
++	bool change_spare = false, special_enc;
+ 	int ret;
+ 
++	wl1271_debug(DEBUG_CRYPT, "extra spare keys before: %d",
++		     priv->extra_spare_key_count);
++
++	special_enc = key_conf->cipher == WL1271_CIPHER_SUITE_GEM ||
++		      key_conf->cipher == WLAN_CIPHER_SUITE_TKIP;
++
++	ret = wlcore_set_key(wl, cmd, vif, sta, key_conf);
++	if (ret < 0)
++		goto out;
++
+ 	/*
+-	 * when adding the first or removing the last GEM/TKIP interface,
++	 * when adding the first or removing the last GEM/TKIP key,
+ 	 * we have to adjust the number of spare blocks.
+ 	 */
+-	change_spare = (key_conf->cipher == WL1271_CIPHER_SUITE_GEM ||
+-		key_conf->cipher == WLAN_CIPHER_SUITE_TKIP) &&
+-		((priv->extra_spare_vif_count == 0 && cmd == SET_KEY) ||
+-		 (priv->extra_spare_vif_count == 1 && cmd == DISABLE_KEY));
++	if (special_enc) {
++		if (cmd == SET_KEY) {
++			/* first key */
++			change_spare = (priv->extra_spare_key_count == 0);
++			priv->extra_spare_key_count++;
++		} else if (cmd == DISABLE_KEY) {
++			/* last key */
++			change_spare = (priv->extra_spare_key_count == 1);
++			priv->extra_spare_key_count--;
++		}
++	}
+ 
+-	/* no need to change spare - just regular set_key */
+-	if (!change_spare)
+-		return wlcore_set_key(wl, cmd, vif, sta, key_conf);
++	wl1271_debug(DEBUG_CRYPT, "extra spare keys after: %d",
++		     priv->extra_spare_key_count);
+ 
+-	ret = wlcore_set_key(wl, cmd, vif, sta, key_conf);
+-	if (ret < 0)
++	if (!change_spare)
+ 		goto out;
+ 
+ 	/* key is now set, change the spare blocks */
+-	if (cmd == SET_KEY) {
++	if (priv->extra_spare_key_count)
+ 		ret = wl18xx_set_host_cfg_bitmap(wl,
+ 					WL18XX_TX_HW_EXTRA_BLOCK_SPARE);
+-		if (ret < 0)
+-			goto out;
 -
- /* pad only the last frame in the aggregate buffer */
- #define WLCORE_QUIRK_TX_PAD_LAST_FRAME		BIT(7)
+-		priv->extra_spare_vif_count++;
+-	} else {
++	else
+ 		ret = wl18xx_set_host_cfg_bitmap(wl,
+ 					WL18XX_TX_HW_BLOCK_SPARE);
+-		if (ret < 0)
+-			goto out;
+-
+-		priv->extra_spare_vif_count--;
+-	}
  
+ out:
+ 	return ret;
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index 53bae22..a4c4374 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -49,8 +49,8 @@ struct wl18xx_priv {
+ 	/* Index of last released Tx desc in FW */
+ 	u8 last_fw_rls_idx;
+ 
+-	/* number of VIFs requiring extra spare mem-blocks */
+-	int extra_spare_vif_count;
++	/* number of keys requiring extra spare mem-blocks */
++	int extra_spare_key_count;
+ };
+ 
+ #define WL18XX_FW_MAX_TX_STATUS_DESC 33
 -- 
 1.7.9.5
 
