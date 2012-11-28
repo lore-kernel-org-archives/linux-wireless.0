@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:53989 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755406Ab2KHMVD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44706 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755738Ab2K1SH4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 07:21:03 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so1503414eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2012 04:21:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <9983E05C-2103-49C8-A675-4F5368F53FB5@mac.com>
-References: <509B73D5.5000206@mac.com> <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com>
- <9983E05C-2103-49C8-A675-4F5368F53FB5@mac.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 8 Nov 2012 23:20:40 +1100
-Message-ID: <CAGRGNgXj2rkiHw1D4HqRCyX6yJCDq75k1KtS0OR+t4En+wa_jA@mail.gmail.com> (sfid-20121108_132116_136649_7EC85475)
-Subject: Re: "mac80211.ko" and "cfg80211.ko" compatibility issue.
-To: Nonaka Akira <nonaka@mac.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 28 Nov 2012 13:07:56 -0500
+Message-ID: <1354126096.9345.45.camel@jlt4.sipsolutions.net> (sfid-20121128_190806_391589_CA5E5B57)
+Subject: Re: iwlwifi hibernate / suspend issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jens Kapitza <j.kapitza@schwarze-allianz.de>
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Wed, 28 Nov 2012 19:08:16 +0100
+In-Reply-To: <1354120982.9345.35.camel@jlt4.sipsolutions.net> (sfid-20121128_174246_886056_FD8C7512)
+References: <50B61C71.6060007@schwarze-allianz.de>
+	 (sfid-20121128_152227_935873_AFE02FFF) <1354113010.9345.27.camel@jlt4.sipsolutions.net>
+	 <50B62254.9070700@schwarze-allianz.de>
+	 <1354113722.9345.28.camel@jlt4.sipsolutions.net>
+	 <50B62BEB.6020109@schwarze-allianz.de>
+	 <1354120982.9345.35.camel@jlt4.sipsolutions.net>
+	 (sfid-20121128_174246_886056_FD8C7512)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nonaka,
+On Wed, 2012-11-28 at 17:43 +0100, Johannes Berg wrote:
+> On Wed, 2012-11-28 at 16:21 +0100, Jens Kapitza wrote:
+> > > just enter "dmesg" and pastebin the result somewhere
+> 
+> > this line seems to be wrong
+> > 
+> >   [ 4650.687346] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+> 
+> Well, it's not necessarily wrong, it indicates that the device read that
+> the rfkill line was pulled low ("rf should be off").
+> 
+> You said reloading the module fixes this
 
-On Thu, Nov 8, 2012 at 10:33 PM, Nonaka Akira <nonaka@mac.com> wrote:
-> Hi Julian,
->
-> Well, We consider the option of using the entire compat-wireless drivers. However, we are planning the minor update of our product toward the end of the year and I thought it will be nice if I can keep the change minimum.
+So it doesn't, and if you need to restart the computer that indicates a
+problem with the ACPI support code, but I don't know if you have that
+loaded at all.
 
-In general, the drivers in compat-wireless are more stable and have
-more features than the versions in older kernels. (it is a back-port
-of newer wireless drivers after all)
+So yeah, you were right when you said it's related to the BIOS, I just
+thought you said reloading the module fixed it which I thought was very
+strange. Since it doesn't, it's just the BIOS/whatever pulling the line
+low and there's nothing the wifi driver can do about that, we can't even
+ignore that.
 
-I would expect that you'll spend more time working out a solution to
-use it for a single driver than you'd spend testing it on the hardware
-you intend to support.
+johannes
 
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
