@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:39285 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750Ab2KVS0t (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37509 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062Ab2K1RGl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:26:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <1353541455.20173.10.camel@jlt4.sipsolutions.net>
-References: <1353541455.20173.10.camel@jlt4.sipsolutions.net>
-Date: Thu, 22 Nov 2012 20:40:31 +0900
-Message-ID: <CAC5umyibe0tb+HLxx3dbT7gF_nVAAHso1Y0Qb4Q_+y0KNrnvFg@mail.gmail.com> (sfid-20121123_000715_757962_4597716B)
-Subject: Re: [POC] recoverable fault injection
-From: Akinobu Mita <akinobu.mita@gmail.com>
+	Wed, 28 Nov 2012 12:06:41 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	"mathias.kretschmer@fokus.fraunhofer.de"
+	<mathias.kretschmer@fokus.fraunhofer.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>
+Subject: Re: [ath9k-devel] [RFC 1/3] nl80211: add spec scan flag
+Date: Wed, 28 Nov 2012 17:06:39 +0000
+Message-ID: <8887AA04B7EC49479420AE48C5F94A930172CE02@NASANEXD02D.na.qualcomm.com> (sfid-20121128_180645_280780_F6FFD9EF)
+In-Reply-To: <1354121848.9345.39.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/11/22 Johannes Berg <johannes@sipsolutions.net>:
-> This idea has been floating around in my head for a long time now ...
+
+
+On 11/28/12 8:57 AM, "Johannes Berg" <johannes@sipsolutions.net> wrote:
+
+>>>BTW, is there any limitation to remain on channel commands, like will
+>>>they
+>> >work on AP ifaces, Ad-Hoc ifaces, MultiSSID in general, etc?
+>> 
+>> I hope not. There may be some practical issues with not all drivers
+>> supporting this, but remain-on-channel is the mechanism we use for
+>> supporting concurrent operations (e.g., P2P negotiations or GAS/ANQP)
+>>and
+>> making this work in all combinations would be important regardless.
 >
-> I was thinking: what if we could do fault injection during regular
-> testing, at least on those code paths that are not supposed to have side
-> effects when they fail? Now obviously this isn't all code paths, and
-> many probably erroneously *do* have side effects even if they're not
-> supposed to, but it does apply to a number of code paths.
+>FWIW, right now our plan for iwlwifi is to only really support it with
+>the P2P Device wdev, but I'm not sure what implications that has in
+>terms of support for GAS/ANQP etc. We might have to revisit that.
 
-It sounds interesting. I have never thought of this idea.
+GAS/ANQP is pre-association if that makes any difference. Anyway, quite a
+few new things will start depending on off channel Action frames and
+everything I'm working on this area will most likely be using r-o-c..
 
-> So I decided to play with this, and the result it the patch below. It
-> adds a new knob "recoverable-only" to the slab and page_alloc fault
-> attributes. If enabled, then a single fault can be injected if the task
-> executing it is in a "recoverable section", this is implemented by some
-> new fields in struct task_struct and the (very ugly!) macro
-> FAULT_INJECT_CALL_RECOVERABLE_FUNCTION.
+>Maybe we should start advertising where it's supported so wpa_s/hostapd
+>can disable/enable features appropriately?
 
-I suggest introducing a pair of function like:
+Yeah, sounds reasonable. I guess you could also reject the r-o-c command,
+but it is cleaner if this can be determined beforehand.
 
-void fault_recoverable_enable(unsigned long fault_ids);
-void fault_recoverable_disable();
+- Jouni
 
-fault_recoverable_enable() sets current task's recoverable state to the
-value specified with the argument.  fault_recoverable_disable() resets
-the recoverable state.
-
-I think this can be more readable than FAULT_INJECT_CALL_RECOVERABLE_FUNCTION
-macro.  In case of nl80211_remain_on_channel(), you can just put
-them in exit and entrance:
-
-fault_recoverable_enable(FAULT_ATTR_SLAB | FAULT_ATTR_PAGE_ALLOC);
-...
-fault_recoverable_disable();
-
-return err;
