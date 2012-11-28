@@ -1,36 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56491 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803Ab2KQJ3g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Nov 2012 04:29:36 -0500
-Message-ID: <1353144610.9543.32.camel@jlt4.sipsolutions.net> (sfid-20121117_102940_323485_63788E0D)
-Subject: Re: [RFC 12/14] mac80211: add awake window IE to mesh beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>
-Date: Sat, 17 Nov 2012 10:30:10 +0100
-In-Reply-To: <1353134886-13256-13-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353134886-13256-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353134886-13256-13-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+Received: from comal.ext.ti.com ([198.47.26.152]:44143 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752607Ab2K1JoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 04:44:25 -0500
+Message-ID: <1354095824.25524.16.camel@cumari.coelho.fi> (sfid-20121128_104429_448129_2A533273)
+Subject: Re: [PATCH v3] wlcore: add new reg-domain configuration command
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Victor Goldenshtein <victorg@ti.com>
+Date: Wed, 28 Nov 2012 11:43:44 +0200
+In-Reply-To: <1353860819-10417-1-git-send-email-arik@wizery.com>
+References: <1353860819-10417-1-git-send-email-arik@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-16 at 22:48 -0800, Marco Porsch wrote:
-> The awake window value is announced in an IE in beacons if the local STA
-> is in light or deep sleep mode towards any peer or non-peer.
+On Sun, 2012-11-25 at 18:26 +0200, Arik Nemtsov wrote:
+> From: Victor Goldenshtein <victorg@ti.com>
+> 
+> In 18xx the calibration process of the PHY Cortex domain
+> requires to perform an active calibration of the channel
+> before it can be used for transmission. To fulfill world
+> wide regulatory restrictions, fw should be always
+> synchronized/updated with current CRDA configuration.
+> Add a new "CMD_DFS_CHANNEL_CONFIG" command to update the
+> fw with current reg-domain, this command passes a bit map
+> of channels that are allowed to be used for transmission.
+> 
+> The driver shall update the fw during initialization and
+> after each change in the current reg-domain
+> configuration. The driver will save the channel number of
+> incoming beacons during the scan process, as they might
+> be a result of the passive scan on
+> "IEEE80211_CHAN_PASSIVE_SCAN" channel and will update the
+> fw accordingly once the scan is finished, the purpose of
+> this is to be ready in case of the authentication request
+> on one of these disabled (uncalibrated) channels.
+> 
+> The new command requires to wait for the fw completion
+> event "DFS_CHANNELS_CONFIG_COMPLETE_EVENT".
+> 
+> No scan commands (including the sched scan) can be
+> executed concurrently with the "CMD_DFS_CHANNEL_CONFIG",
+> wl->mutex ensures that.
+> 
+> [Arik - move reset of reg_ch_conf_last to safe place inside
+> op_stop_locked]
+> [Eliad - adjust to new event waiting api]
+> 
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+> v3: remove chip_family_event_mask since the event mask
+> of each chip family is now separate.
 
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -1204,6 +1204,7 @@ struct ieee802_11_elems {
->  	struct ieee80211_meshconf_ie *mesh_config;
->  	u8 *mesh_id;
->  	u8 *peering;
-> +	u8 *awake_window;
+Replaced the v2 one in Eliad's series (12/14) with this one.
 
-You don't need to be able to parse it to add it?
-
-johannes
+--
+Luca.
 
