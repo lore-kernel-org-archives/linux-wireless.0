@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36032 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073Ab2KLIj7 (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:57002 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753470Ab2K1Ob0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 03:39:59 -0500
-Message-ID: <1352709631.9525.0.camel@jlt4.sipsolutions.net> (sfid-20121112_094003_847469_D0906891)
-Subject: Re: [PATCH 3.7] mac80211: call skb_dequeue/ieee80211_free_txskb
- instead of __skb_queue_purge
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 12 Nov 2012 09:40:31 +0100
-In-Reply-To: <1352515454-21067-1-git-send-email-nbd@openwrt.org>
-References: <1352515454-21067-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 28 Nov 2012 09:31:26 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k11so10137416iea.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 06:31:25 -0800 (PST)
+Date: Wed, 28 Nov 2012 09:31:02 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Erich Titl <erich.titl@think.ch>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: regulatory domain settings overwritten
+Message-ID: <20121128143102.GC23259@localhost> (sfid-20121128_153129_275957_9CADC81A)
+References: <50B470CE.8070402@think.ch>
+ <CAGRGNgVT-Yru2ti9CWgwS5H2cfW=RTeL144zsdAmSRCAsLwOsg@mail.gmail.com>
+ <50B4B7B6.7020205@think.ch>
+ <CAGRGNgXz9L+DBuxii7p+r0m2SEa0Xy1JgDZqGf2-8xWuHBYdfQ@mail.gmail.com>
+ <50B5B915.2030706@think.ch>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50B5B915.2030706@think.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-11-10 at 03:44 +0100, Felix Fietkau wrote:
-> Fixes more wifi status skb leaks, leading to hostapd/wpa_supplicant hangs.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Cc: stable@vger.kernel.org
+On Wed, Nov 28, 2012 at 08:11:17AM +0100, Erich Titl wrote:
+> Oh, I don't pretend the developers are short sighted, just that the
+> person writing the code sat possibly somewhere in the US midwest and his
+> perception of the world might be restricted to the county border, been
+> there, seen it. The driver IMHO should be written in a way that it can
+> meet the local regulatory law, and the default should not be US imposed
+> by the driver.
 
-Applied, thanks.
+For what it's worth, the ath5k author lives in Greece :P
 
-johannes
+(Well, actually this code came from ath9k which is pretty much from the
+horse's mouth...)
 
+-- 
+Bob Copeland %% www.bobcopeland.com
