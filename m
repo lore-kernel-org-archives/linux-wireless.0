@@ -1,61 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2347 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753455Ab2KUJiR convert rfc822-to-8bit (ORCPT
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:56849
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751409Ab2K1Jj0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Nov 2012 04:38:17 -0500
-Message-ID: <50ACA0B0.6090700@broadcom.com> (sfid-20121121_103827_171568_0D06B078)
-Date: Wed, 21 Nov 2012 10:36:48 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "George Nychis" <gnychis@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: what dictates p2p0 address?
-References: <CA+7oygeWvsbrNz3k8ypqK=J6LMg1Zx0dN8S+ee-ywGEgtvQxqQ@mail.gmail.com>
-In-Reply-To: <CA+7oygeWvsbrNz3k8ypqK=J6LMg1Zx0dN8S+ee-ywGEgtvQxqQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	Wed, 28 Nov 2012 04:39:26 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] ath9k: Replace WME_NUM_TID with IEEE80211_NUM_TIDS
+Date: Wed, 28 Nov 2012 15:08:53 +0530
+Message-Id: <1354095535-3564-2-git-send-email-sujith@msujith.org> (sfid-20121128_103931_894936_3A44E38F)
+In-Reply-To: <1354095535-3564-1-git-send-email-sujith@msujith.org>
+References: <1354095535-3564-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2012 09:40 AM, George Nychis wrote:
-> For an ad-hoc or Wifi-Direct interface, which usually seems to be
-> named p2p0, I'm finding that the MAC address mirrors the Wifi card's
-> MAC address for octets 2-6, but it seems as though octet 1 is dynamic.
->   So, for example:
->
-> Wifi: 7c:d1:c3:e0:a6:81
-> p2p0: 0e:d1:c3:e0:a6:81
->
-> This is true across a bunch of devices that I own, but I can't seem to
-> find a definitive answer to how octet 1 is mutated to choose the p2p0
-> address.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-First dealing with your opening sentence. Not sure if you truly mean 
-ad-hoc here. Do not use that term if you are actually talking about 
-wifi-direct because it is a totally different beast.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  | 2 +-
+ drivers/net/wireless/ath/ath9k/common.h | 1 -
+ drivers/net/wireless/ath/ath9k/xmit.c   | 8 ++++----
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-The definitive, but unambiguous, answer is in the WFA spec:
-
-"The P2P Device shall assign a P2P Interface Address, corresponding to 
-the format as described in §7.1.3.3.1 of IEEE Std 802.11‑2007 [1], which 
-is used to communicate with the P2P Group Owner or Clients within a P2P 
-Group. A P2P Interface Address is not required to be globally unique and 
-may be locally administered. A P2P Interface Address may be the same as 
-the P2P Device Address provided the requirements for P2P Interface 
-Address in this clause are satisfied."
-
-Actually, the MAC address details are in 802 spec (free IEEE download) 
-in paragraph 9.2. Your p2p0 address has locally administered bit set and 
-fiddle some more bits.
-
-> Is this something chosen randomly, or is it a function of some other
-> part of the address?
-
-Most likely, as you can see from the example, it is derived. This is 
-done in the device (or the driver) so there is no single rule or 
-implementation except the guidelines/requirements from the spec.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 80bab1b..60bf784 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -261,7 +261,7 @@ struct ath_atx_tid {
+ struct ath_node {
+ 	struct ieee80211_sta *sta; /* station struct we're part of */
+ 	struct ieee80211_vif *vif; /* interface with which we're associated */
+-	struct ath_atx_tid tid[WME_NUM_TID];
++	struct ath_atx_tid tid[IEEE80211_NUM_TIDS];
+ 	struct ath_atx_ac ac[IEEE80211_NUM_ACS];
+ 	int ps_key;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 76b5439..5f845be 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -23,7 +23,6 @@
+ 
+ /* Common header for Atheros 802.11n base driver cores */
+ 
+-#define WME_NUM_TID             16
+ #define WME_BA_BMP_SIZE         64
+ #define WME_MAX_BA              WME_BA_BMP_SIZE
+ #define ATH_TID_MAX_BUFS        (2 * WME_MAX_BA)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3413094..a0a3063 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1263,7 +1263,7 @@ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
+ 	int tidno;
+ 
+ 	for (tidno = 0, tid = &an->tid[tidno];
+-	     tidno < WME_NUM_TID; tidno++, tid++) {
++	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
+ 
+ 		if (!tid->sched)
+ 			continue;
+@@ -1297,7 +1297,7 @@ void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
+ 	int tidno;
+ 
+ 	for (tidno = 0, tid = &an->tid[tidno];
+-	     tidno < WME_NUM_TID; tidno++, tid++) {
++	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
+ 
+ 		ac = tid->ac;
+ 		txq = ac->txq;
+@@ -2448,7 +2448,7 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
+ 	int tidno, acno;
+ 
+ 	for (tidno = 0, tid = &an->tid[tidno];
+-	     tidno < WME_NUM_TID;
++	     tidno < IEEE80211_NUM_TIDS;
+ 	     tidno++, tid++) {
+ 		tid->an        = an;
+ 		tid->tidno     = tidno;
+@@ -2481,7 +2481,7 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
+ 	int tidno;
+ 
+ 	for (tidno = 0, tid = &an->tid[tidno];
+-	     tidno < WME_NUM_TID; tidno++, tid++) {
++	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
+ 
+ 		ac = tid->ac;
+ 		txq = ac->txq;
+-- 
+1.8.0.1
 
