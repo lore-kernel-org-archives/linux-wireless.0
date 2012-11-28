@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51427 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752834Ab2KSW6j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 17:58:39 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: john@phrozen.org, ralf@linux-mips.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/8] bcma: add comment to bcma_chipco_gpio_control
-Date: Mon, 19 Nov 2012 23:57:52 +0100
-Message-Id: <1353365877-11131-4-git-send-email-hauke@hauke-m.de> (sfid-20121119_235841_794812_F1B39B81)
-In-Reply-To: <1353365877-11131-1-git-send-email-hauke@hauke-m.de>
-References: <1353365877-11131-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:45215 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753629Ab2K1UxW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 15:53:22 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mwifiex: fix struct member mismatch
+Date: Wed, 28 Nov 2012 21:53:45 +0100
+Message-Id: <1354136025-21915-1-git-send-email-johannes@sipsolutions.net> (sfid-20121128_215325_599969_E5DEF234)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add description to the function.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Using bss->information_elements and treating
+bss->len_beacon_ies as its size is wrong, the
+real size is len_information_elements.
+
+Found while I was reviewing the use of this
+cfg80211 API (as it is actually potentially
+broken due to races.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/bcma/driver_chipcommon.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index f3c736a..67a1c6b 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -115,6 +115,10 @@ u32 bcma_chipco_gpio_outen(struct bcma_drv_cc *cc, u32 mask, u32 value)
- 	return res;
- }
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 24af6ba..f92047d 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -161,8 +161,9 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
+ 	int ret;
+ 	u8 *beacon_ie;
+ 	struct mwifiex_bss_priv *bss_priv = (void *)bss->priv;
++	size_t beacon_ie_len = bss->len_information_elements;
  
-+/*
-+ * If the bit is set to 0, chipcommon controlls this GPIO,
-+ * if the bit is set to 1, it is used by some part of the chip and not our code.
-+ */
- u32 bcma_chipco_gpio_control(struct bcma_drv_cc *cc, u32 mask, u32 value)
- {
- 	unsigned long flags;
+-	beacon_ie = kmemdup(bss->information_elements, bss->len_beacon_ies,
++	beacon_ie = kmemdup(bss->information_elements, beacon_ie_len,
+ 			    GFP_KERNEL);
+ 	if (!beacon_ie) {
+ 		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
+@@ -172,7 +173,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
+ 	memcpy(bss_desc->mac_address, bss->bssid, ETH_ALEN);
+ 	bss_desc->rssi = bss->signal;
+ 	bss_desc->beacon_buf = beacon_ie;
+-	bss_desc->beacon_buf_size = bss->len_beacon_ies;
++	bss_desc->beacon_buf_size = beacon_ie_len;
+ 	bss_desc->beacon_period = bss->beacon_interval;
+ 	bss_desc->cap_info_bitmap = bss->capability;
+ 	bss_desc->bss_band = bss_priv->band;
 -- 
-1.7.10.4
+1.8.0
 
