@@ -1,44 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:63212 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753750Ab2KSRQg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 12:16:36 -0500
-Received: by mail-oa0-f46.google.com with SMTP id h16so5033286oag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 09:16:35 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:1670 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754866Ab2K1Uo1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 15:44:27 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 02/11] brcmsmac: handle packet drop during transmit
+ correctly
+Date: Wed, 28 Nov 2012 21:44:05 +0100
+Message-ID: <1354135454-7035-3-git-send-email-arend@broadcom.com> (sfid-20121128_214432_468910_FAB27B8C)
+In-Reply-To: <1354135454-7035-1-git-send-email-arend@broadcom.com>
+References: <1354135454-7035-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1353344601.18299.31.camel@jlt4.sipsolutions.net>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
-	<1353343170-26516-9-git-send-email-eliad@wizery.com>
-	<1353344601.18299.31.camel@jlt4.sipsolutions.net>
-Date: Mon, 19 Nov 2012 19:16:35 +0200
-Message-ID: <CAB3XZEepFkTNZMAzB+Jy9R4wSzAyQuNVHdWcdHMoRN+FRe5=9A@mail.gmail.com> (sfid-20121119_181639_059585_1615A170)
-Subject: Re: [PATCH 08/15] wlcore: add chanctx implementation
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <coelho@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 19, 2012 at 7:03 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2012-11-19 at 18:39 +0200, Eliad Peller wrote:
->> Add some basic chanctx implementation.
->
-> This patch will leave the driver in a broken state, and in fact probably
-> crashing trying to use hw.conf.channel.
->
-you are right. i'm taking care of these in the following patches.
-i preferred splitting the patches for clarity instead of squashing
-them all into one big patch (removing hw.conf.channel references
-before implementing chanctx will break the driver as well).
-i guess i can squash them in this case, but i'm not sure it will
-really help, as other intermediate patches in this patchset might
-still break some functionality of the driver.
+From: Piotr Haber <phaber@broadcom.com>
 
-i don't mind either way. whatever Luca will prefer :)
-(maybe keeping it that way for review, and only squashing them on apply?)
+The .tx() callback function can drop packets when there is no
+space in the DMA fifo. Propagate that information to caller
+and make sure the freed sk_buff reference is not accessed.
 
-Eliad.
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 ++--
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |   13 ++++++++-----
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 +-
+ 3 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 1710ccb..f917d62 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -285,8 +285,8 @@ static void brcms_ops_tx(struct ieee80211_hw *hw,
+ 		kfree_skb(skb);
+ 		goto done;
+ 	}
+-	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
+-	tx_info->rate_driver_data[0] = control->sta;
++	if (brcms_c_sendpkt_mac80211(wl->wlc, skb, hw))
++		tx_info->rate_driver_data[0] = control->sta;
+  done:
+ 	spin_unlock_bh(&wl->lock);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 2a44593..54ab2f7 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -6928,17 +6928,20 @@ static int brcms_c_tx(struct brcms_c_info *wlc, struct sk_buff *skb)
+ 	return ret;
+ }
+ 
+-void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
++bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
+ 			      struct ieee80211_hw *hw)
+ {
+ 	uint fifo;
+ 	struct scb *scb = &wlc->pri_scb;
+ 
+ 	fifo = brcms_ac_to_fifo(skb_get_queue_mapping(sdu));
+-	if (brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0))
+-		return;
+-	if (brcms_c_tx(wlc, sdu))
+-		dev_kfree_skb_any(sdu);
++	brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0);
++	if (!brcms_c_tx(wlc, sdu))
++		return true;
++
++	/* packet discarded */
++	dev_kfree_skb_any(sdu);
++	return false;
+ }
+ 
+ int
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 0148dec..0d7af34 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -284,7 +284,7 @@ extern void brcms_c_intrsrestore(struct brcms_c_info *wlc, u32 macintmask);
+ extern bool brcms_c_intrsupd(struct brcms_c_info *wlc);
+ extern bool brcms_c_isr(struct brcms_c_info *wlc, bool *wantdpc);
+ extern bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded);
+-extern void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
++extern bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
+ 				     struct sk_buff *sdu,
+ 				     struct ieee80211_hw *hw);
+ extern bool brcms_c_aggregatable(struct brcms_c_info *wlc, u8 tid);
+-- 
+1.7.10.4
+
+
