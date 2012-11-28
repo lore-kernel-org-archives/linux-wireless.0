@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:50600
-	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750818Ab2KTGDs (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:41108 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752460Ab2K1HIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 01:03:48 -0500
-Message-ID: <50AB1D3E.4090808@posedge.com> (sfid-20121120_070351_459643_6582D73D)
-Date: Tue, 20 Nov 2012 11:33:42 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+	Wed, 28 Nov 2012 02:08:39 -0500
+Message-ID: <50B5B873.2060908@posedge.com> (sfid-20121128_080846_247007_680C376B)
+Date: Wed, 28 Nov 2012 12:38:35 +0530
+From: Saravana <saravanad@posedge.com>
 MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v2 4/8] nl80211/cfg80211: support VHT channel configuration
-References: <1352492254-29399-1-git-send-email-johannes@sipsolutions.net>  <1352492254-29399-5-git-send-email-johannes@sipsolutions.net>  <50AA237F.4090102@posedge.com> <1353334304.18299.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353334304.18299.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: add debugfs file for last ack signal
+References: <99ae2e3d5097457e6db0c0b34eeec950@posedge.com> <1353942954.2800.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1353942954.2800.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/2012 07:41 PM, Johannes Berg wrote:
-> On Mon, 2012-11-19 at 17:48 +0530, Mahesh Palivela wrote:
+On 11/26/2012 08:45 PM, Johannes Berg wrote:
+> On Mon, 2012-11-26 at 05:57 -0800, saravanad@posedge.com wrote:
+>> Add a debugfs file showing the signal strength
+>> of the ack frame that is received for the
+>> currently sent tx packet.
 >
->>> +	case NL80211_CHAN_WIDTH_160:
->>> +		if (chandef->center_freq1 != control_freq + 70 &&
->>> +		    chandef->center_freq1 != control_freq + 50 &&
->>> +		    chandef->center_freq1 != control_freq + 30 &&
->>> +		    chandef->center_freq1 != control_freq + 10 &&
->>> +		    chandef->center_freq1 != control_freq - 10 &&
->>> +		    chandef->center_freq1 != control_freq - 30 &&
->>> +		    chandef->center_freq1 != control_freq - 50 &&
->>> +		    chandef->center_freq1 != control_freq - 70)
->>> +			return false;
->>
->> Should we create a macro instead of +70 to -70 to take care of all 3
->> cases 80, 80p80 and 160?
+> This seems reasonable, but again line-wrapped.
 >
-> Not sure, I hope we won't duplicate this code anywhere else, so I don't
-> really think we need to?
+In my e-mail client i found that wrap long line settings was set to 
+default value true. I have disabled the same and will re-send the patch.
+The patch that i will be sending is based on mac80211-next tree.
+> johannes
+>
+>
 >
 
-you kind of used it in cfg80211_check_beacon_chans() in wireless/chan.c
-
-         for (freq = center_freq - bw/2 + 10;
-              freq <= center_freq + bw/2 - 10;
-              freq += 20)
-
-we can use in 3 switch cases, 80, 80p80 and 160.
