@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:53888 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753712Ab2KLV7I (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43722 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932083Ab2K1NIJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 16:59:08 -0500
-Received: by mail-ea0-f174.google.com with SMTP id o11so438703eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 13:59:07 -0800 (PST)
-From: Maxim Mikityanskiy <maxtram95@gmail.com>
-To: greg@kroah.com, linux-wireless@vger.kernel.org
-Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
-Subject: [PATCH 11/17] Removed non-existent function headers from r8180.h
-Date: Mon, 12 Nov 2012 23:58:25 +0200
-Message-Id: <1352757511-26957-12-git-send-email-maxtram95@gmail.com> (sfid-20121112_231526_790760_778F9173)
-In-Reply-To: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
-References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
+	Wed, 28 Nov 2012 08:08:09 -0500
+Message-ID: <1354108113.9345.23.camel@jlt4.sipsolutions.net> (sfid-20121128_140813_228134_854E0011)
+Subject: Re: [PATCH] mac80211: fix for mesh sync to indicate TBTT adjustment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, thomas@cozybit.com, ashok@cozybit.com,
+	linux-wireless@vger.kernel.org
+Date: Wed, 28 Nov 2012 14:08:33 +0100
+In-Reply-To: <1353702198-12865-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353702198-12865-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2012-11-23 at 12:23 -0800, Marco Porsch wrote:
+> Currently the mesh sync code checks, whether peers indicate TBTT adjustment,
+> but it never sets the corresponding flag itself.
+> 
+> By setting ifmsh->tbtt_adjusting to true, it will set the corresponding field
+> in the mesh configuration IE of own beacons.
+> This indication will be set in the current beacon. The TBTT adjustment will be
+> performed afterwards, affecting the next beacon. Thus, the first beacon with
+> stable TBTT will not indicate adjustment anymore and peers will continue
+> tracking the new offset.
 
-Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
----
- r8180.h |   13 -------------
- 1 file changed, 13 deletions(-)
+Ping mesh folks, does this look sane?
 
-diff --git a/r8180.h b/r8180.h
-index 2682afb..db7974a 100644
---- a/r8180.h
-+++ b/r8180.h
-@@ -667,35 +667,22 @@ void write_nic_dword(struct net_device *dev, int x,u32 y);
- void force_pci_posting(struct net_device *dev);
- 
- void rtl8180_rtx_disable(struct net_device *);
--void rtl8180_rx_enable(struct net_device *);
--void rtl8180_tx_enable(struct net_device *);
--void rtl8180_start_scanning(struct net_device *dev);
--void rtl8180_start_scanning_s(struct net_device *dev);
--void rtl8180_stop_scanning(struct net_device *dev);
--void rtl8180_disassociate(struct net_device *dev);
--//void fix_rx_fifo(struct net_device *dev);
- void rtl8180_set_anaparam(struct net_device *dev,u32 a);
- void rtl8185_set_anaparam2(struct net_device *dev,u32 a);
- void rtl8180_set_hw_wep(struct net_device *dev);
- void rtl8180_no_hw_wep(struct net_device *dev);
- void rtl8180_update_msr(struct net_device *dev);
--//void rtl8180_BSS_create(struct net_device *dev);
- void rtl8180_beacon_tx_disable(struct net_device *dev);
- void rtl8180_beacon_rx_disable(struct net_device *dev);
--void rtl8180_conttx_enable(struct net_device *dev);
--void rtl8180_conttx_disable(struct net_device *dev);
- int rtl8180_down(struct net_device *dev);
- int rtl8180_up(struct net_device *dev);
- void rtl8180_commit(struct net_device *dev);
- void rtl8180_set_chan(struct net_device *dev,short ch);
--void rtl8180_set_master_essid(struct net_device *dev,char *essid);
--void rtl8180_update_beacon_security(struct net_device *dev);
- void write_phy(struct net_device *dev, u8 adr, u8 data);
- void write_phy_cck(struct net_device *dev, u8 adr, u32 data);
- void write_phy_ofdm(struct net_device *dev, u8 adr, u32 data);
- void rtl8185_tx_antenna(struct net_device *dev, u8 ant);
- void rtl8185_rf_pins_enable(struct net_device *dev);
--void IBSS_randomize_cell(struct net_device *dev);
- void IPSEnter(struct net_device *dev);
- void IPSLeave(struct net_device *dev);
- int get_curr_tx_free_desc(struct net_device *dev, int priority);
--- 
-1.7.10.4
+johannes
 
