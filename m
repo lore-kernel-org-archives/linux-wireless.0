@@ -1,51 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57346 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752081Ab2KCLPW (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:39239 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752970Ab2K1Jmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Nov 2012 07:15:22 -0400
-Message-ID: <1351941357.21705.4.camel@jlt4.sipsolutions.net> (sfid-20121103_121525_487709_F9B05029)
-Subject: Re: [PATCH 00/18] brcmsmac: Tx rework and expanded debug/trace
- support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Date: Sat, 03 Nov 2012 12:15:57 +0100
-In-Reply-To: <20121102104935.GA12843@eleaks.org> (sfid-20121102_115001_243727_279E514E)
-References: <1351261413-20821-1-git-send-email-seth.forshee@canonical.com>
-	 <20121102104935.GA12843@eleaks.org> (sfid-20121102_115001_243727_279E514E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 28 Nov 2012 04:42:55 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hm9so5345542wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:42:54 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 00/20] wlcore fixes for 3.8 (part3)
+Date: Wed, 28 Nov 2012 11:42:29 +0200
+Message-Id: <1354095769-8724-1-git-send-email-arik@wizery.com> (sfid-20121128_104301_028508_CF9B39E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-02 at 11:49 +0100, Karl Beldan wrote:
+This series applies on top of part 2 sent a couple days ago.
 
-> > The patches also add flow control to stop incoming tx packets when the
-> > DMA ring is full. In practice I found that we will sometimes receive a
-> > single frame from mac80211 after stopping the queues, so some headroom
-> > is reserved when stopping the queues. I also reduced the number of tx
-> > descriptors per ring to 64 and fixed a bug that prevented having
-> > differing non-zero numbers of tx and rx descriptors for a given ring.
-> >
-> It is strange that you would get one frame after stopping the queues.
-> Apart from the iface up/down code which I did not look at, it seems the tx 
-> codepaths for queues stop/wake are all properly protected by spin_lock_bhs.
-> You mention a possible race in your code comments .. are you referring to 
-> mac80211 or the driver itself ?
+The main addition is support for mac80211 HW queues and further
+optimizations for Tx in the multi-channel case.
 
-It's generally a race between mac80211 and the driver, if the driver
-uses ieee80211_stop_queue() outside the TX path, the TX path can be
-handing it a packet at the exact same time, and therefore there can be
-one packet (on each queue!) that goes to the driver during the call to
-stop_queue().
+Arik Nemtsov (11):
+  wlcore: remove support for injected Tx
+  wlcore: improve handling for Rx errors
+  wlcore: set 5Ghz probe-req template for DFS channels
+  wlcore/wl18xx: change priority calculations for links
+  wl18xx: limit Tx for the AP single-STA-in-PSM case
+  wlcore: use link count for single-STA-PSM optimization
+  wlcore: use separate HW queue for each AC in each vif
+  wlcore: don't take mutex before stopping queues
+  wlcore: consolidate Rx BA bitmap management to links struct
+  wl18xx: support MIMO only if HT mode is not forced to SISO
+  wl18xx: count HW block spare based correctly on keys
 
-johannes
+Eliad Peller (1):
+  wlcore: add ACX_PEER_CAP command
+
+Eyal Shapira (2):
+  wlcore: increase scan dwell times if no activity
+  wlcore: support scan reports during periodic scan
+
+Ido Reis (1):
+  wl12xx/wl18xx: update default fw logger's settings
+
+Ido Yariv (1):
+  wlcore: Always pass DMA-able buffers to mmc functions
+
+Igal Chernobelsky (1):
+  wlcore/wl18xx/wl12xx: FW log params per chip arch
+
+Yair Shapira (3):
+  wlcore: add new plt power-mode: CHIP_AWAKE
+  wlcore: disable elp sleep while in plt mode
+  wl18xx: fix a bug in wl->num_rx_desc initialization
+
+ drivers/net/wireless/ti/wl12xx/event.c    |   10 +-
+ drivers/net/wireless/ti/wl12xx/main.c     |   82 +++++++++--
+ drivers/net/wireless/ti/wl12xx/wl12xx.h   |    2 +
+ drivers/net/wireless/ti/wl18xx/acx.c      |   54 ++++++++
+ drivers/net/wireless/ti/wl18xx/acx.h      |   33 +++++
+ drivers/net/wireless/ti/wl18xx/event.c    |    8 ++
+ drivers/net/wireless/ti/wl18xx/event.h    |    1 +
+ drivers/net/wireless/ti/wl18xx/main.c     |  138 ++++++++++++++-----
+ drivers/net/wireless/ti/wl18xx/scan.c     |   56 ++++----
+ drivers/net/wireless/ti/wl18xx/scan.h     |   20 ++-
+ drivers/net/wireless/ti/wl18xx/wl18xx.h   |   48 ++++++-
+ drivers/net/wireless/ti/wlcore/acx.c      |    2 +
+ drivers/net/wireless/ti/wlcore/cmd.c      |   11 +-
+ drivers/net/wireless/ti/wlcore/conf.h     |   20 ++-
+ drivers/net/wireless/ti/wlcore/debugfs.c  |    1 -
+ drivers/net/wireless/ti/wlcore/event.c    |   15 +-
+ drivers/net/wireless/ti/wlcore/event.h    |    2 -
+ drivers/net/wireless/ti/wlcore/hw_ops.h   |   41 ++++++
+ drivers/net/wireless/ti/wlcore/io.h       |   14 +-
+ drivers/net/wireless/ti/wlcore/main.c     |  212 ++++++++++++++++++++++-------
+ drivers/net/wireless/ti/wlcore/ps.c       |    4 +
+ drivers/net/wireless/ti/wlcore/rx.c       |   29 ++--
+ drivers/net/wireless/ti/wlcore/rx.h       |    3 +-
+ drivers/net/wireless/ti/wlcore/scan.c     |   32 ++++-
+ drivers/net/wireless/ti/wlcore/scan.h     |    2 +-
+ drivers/net/wireless/ti/wlcore/testmode.c |   13 +-
+ drivers/net/wireless/ti/wlcore/tx.c       |  158 +++++++++++----------
+ drivers/net/wireless/ti/wlcore/tx.h       |   20 ++-
+ drivers/net/wireless/ti/wlcore/wlcore.h   |   23 +++-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |   14 +-
+ 30 files changed, 811 insertions(+), 257 deletions(-)
+
+-- 
+1.7.9.5
 
