@@ -1,60 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:33397 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754492Ab2K1MG3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 07:06:29 -0500
-Date: Wed, 28 Nov 2012 13:06:18 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	sven@narfation.org, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCH] ath9k: apply coverage class on slottime too
-Message-ID: <20121128120618.GA5534@pandem0nium> (sfid-20121128_130632_665505_CE0D4DA9)
-References: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <508FCB77.9000303@openwrt.org>
- <508FCF5A.2080204@fokus.fraunhofer.de>
- <508FD505.4080404@openwrt.org>
+Received: from mail.legal.de ([46.38.240.131]:56144 "EHLO mail.legal.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755277Ab2K1OWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 09:22:24 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.legal.de (Postfix) with ESMTP id 6AE8C6060F3B
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 14:15:19 +0000 (UTC)
+Received: from mail.legal.de ([127.0.0.1])
+	by localhost (mail.legal.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Z5tf6R4+4DMf for <linux-wireless@vger.kernel.org>;
+	Wed, 28 Nov 2012 14:15:13 +0000 (UTC)
+Received: from [134.91.54.94] (unknown [134.91.54.94])
+	by mail.legal.de (Postfix) with ESMTPSA id C21346060F36
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 14:15:13 +0000 (UTC)
+Message-ID: <50B61C71.6060007@schwarze-allianz.de> (sfid-20121128_152227_935873_AFE02FFF)
+Date: Wed, 28 Nov 2012 15:15:13 +0100
+From: Jens Kapitza <j.kapitza@schwarze-allianz.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ReaqsoxgOBHFXBhH"
-In-Reply-To: <508FD505.4080404@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi hibernate / suspend issue
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+hi,
+i've a big problem with the iwlwifi driver.
 
---ReaqsoxgOBHFXBhH
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+the good think everythink works gerade as long as you do not suspend the 
+laptop
 
-On Tue, Oct 30, 2012 at 02:24:21PM +0100, Felix Fietkau wrote:
-> [...]
->
-> When I ran the test, the throughput degradation was so big that the
-> links became almost useless. It was a long time ago, so maybe this was
-> caused by another bug that has been fixed since. I will run another test
-> with this patch in a current version...
 
-Felix, did you have the chance to run another test on your link with this
-patch? Would be interesting to know if it makes any difference. :)
+the bad issue:
+~$ rfkill list
+0: hci0: Bluetooth
+     Soft blocked: no
+     Hard blocked: no
+1: phy0: Wireless LAN
+     Soft blocked: no
+     Hard blocked: no
 
-Thanks,
-	Simon
 
---ReaqsoxgOBHFXBhH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+after suspend phy0: tells Hard blocked: yes
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+but there is no switch on the laptop.
+(just a Fn-F2 key) softblocking the antenna [after reboot all works again]
 
-iEYEARECAAYFAlC1/joACgkQrzg/fFk7axbneQCgnBIG3OPFRP5KOlfOCHi/pkZv
-p8MAn15lRWsZRTanJ/2wO+CLfkvfS7YZ
-=YUWi
------END PGP SIGNATURE-----
+any starting points?  i've looked at the main.c of iwlwifi there is an 
+wakup call but
+can someone tell me how the driver works?
 
---ReaqsoxgOBHFXBhH--
+which call is done after suspend and why can i unload the driver and 
+reload it again
+root@jens-S4216:/home/jens# modprobe -r iwlwifi
+root@jens-S4216:/home/jens# modprobe  iwlwifi
+and everythink works?
+
+is it a firmware issue (is it possible to force a firmware reload after 
+suspend)
+
+
+
+i've wrote a sleep.d script in /etc/pm/...
+that unloads the driver but it seems to has somethink todo with the 
+internal (uefi/bios) on the card?
+it seems to be in a wrong state after wakeup
+
+
+hope my english is not a disaster and someone can give me a hint where 
+to start or is there a patch working at this issue current kernel 3.7 
+rc? [yesterday] have not solved the problem
+
+
+Jens Kapitza
