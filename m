@@ -1,41 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51785 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756630Ab2K3MoB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 07:44:01 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TePwm-0002eg-2q
-	for linux-wireless@vger.kernel.org; Fri, 30 Nov 2012 13:44:00 +0100
-Message-ID: <1354279464.10035.32.camel@jlt4.sipsolutions.net> (sfid-20121130_134404_627585_AF236BDC)
-Subject: Re: [PATCH] cfg80211: fix BSS struct IE access races
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 30 Nov 2012 13:44:24 +0100
-In-Reply-To: <1354197580-18507-1-git-send-email-johannes@sipsolutions.net> (sfid-20121129_145927_082692_30AD7B40)
-References: <1354148804-26678-1-git-send-email-johannes@sipsolutions.net>
-	 <1354197580-18507-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121129_145927_082692_30AD7B40)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1675 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754988Ab2K1Uo1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 15:44:27 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/11] brcmsmac: fix bounds checking in tx/rx
+Date: Wed, 28 Nov 2012 21:44:07 +0100
+Message-ID: <1354135454-7035-5-git-send-email-arend@broadcom.com> (sfid-20121128_214433_351014_490052A3)
+In-Reply-To: <1354135454-7035-1-git-send-email-arend@broadcom.com>
+References: <1354135454-7035-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-11-29 at 14:59 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When a BSS struct is updated, the IEs are currently
-> overwritten or freed. This can lead to races if some
-> other CPU is accessing the BSS struct and using the
-> IEs concurrently.
-> 
-> Fix this by always allocating the IEs in a new struct
-> that holds the data and length and protecting access
-> to this new struct with RCU.
+From: Piotr Haber <phaber@broadcom.com>
 
-Applied.
+brcms_b_txstatus and brcms_b_recv are off by one when
+doing bounds checking on number of packets to process
 
-johannes
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   30 ++++++++++++++----------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 054e1da..8fce687 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -1044,11 +1044,17 @@ brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
+ 	s1 = bcma_read32(core, D11REGOFFS(frmtxstatus));
+ 	while (!(*fatal)
+ 	       && (s1 & TXS_V)) {
++		/* !give others some time to run! */
++		if (n >= max_tx_num) {
++			morepending = true;
++			break;
++		}
+ 
+ 		if (s1 == 0xffffffff) {
+ 			brcms_err(core, "wl%d: %s: dead chip\n", wlc_hw->unit,
+ 				  __func__);
+-			return morepending;
++			*fatal = true;
++			return false;
+ 		}
+ 		s2 = bcma_read32(core, D11REGOFFS(frmtxstatus2));
+ 
+@@ -1060,17 +1066,12 @@ brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
+ 
+ 		*fatal = brcms_c_dotxstatus(wlc_hw->wlc, txs);
+ 
+-		/* !give others some time to run! */
+-		if (++n >= max_tx_num)
+-			break;
+ 		s1 = bcma_read32(core, D11REGOFFS(frmtxstatus));
++		n++;
+ 	}
+ 
+ 	if (*fatal)
+-		return 0;
+-
+-	if (n >= max_tx_num)
+-		morepending = true;
++		return false;
+ 
+ 	return morepending;
+ }
+@@ -7631,16 +7632,19 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 
+ 	uint n = 0;
+ 	uint bound_limit = bound ? RXBND : -1;
++	bool morepending;
+ 
+ 	skb_queue_head_init(&recv_frames);
+ 
+ 	/* gather received frames */
+-	while (dma_rx(wlc_hw->di[fifo], &recv_frames)) {
+-
++	do {
+ 		/* !give others some time to run! */
+-		if (++n >= bound_limit)
++		if (n >= bound_limit)
+ 			break;
+-	}
++
++		morepending = dma_rx(wlc_hw->di[fifo], &recv_frames);
++		n++;
++	} while (morepending);
+ 
+ 	/* post more rbufs */
+ 	dma_rxfill(wlc_hw->di[fifo]);
+@@ -7670,7 +7674,7 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 		brcms_c_recv(wlc_hw->wlc, p);
+ 	}
+ 
+-	return n >= bound_limit;
++	return morepending;
+ }
+ 
+ /* second-level interrupt processing
+-- 
+1.7.10.4
+
 
