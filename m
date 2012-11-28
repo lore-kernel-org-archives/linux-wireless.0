@@ -1,147 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52426 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755825Ab2KWUT2 (ORCPT
+Received: from fep12.mx.upcmail.net ([62.179.121.32]:36831 "EHLO
+	fep12.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126Ab2K1HLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 15:19:28 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFCv2 11/13] mac80211: add awake window IE to mesh beacons
-Date: Fri, 23 Nov 2012 12:18:52 -0800
-Message-Id: <1353701934-12752-12-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_214526_456178_C1054DD4)
-In-Reply-To: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	Wed, 28 Nov 2012 02:11:12 -0500
+Message-ID: <50B5B915.2030706@think.ch> (sfid-20121128_081115_961245_39A7E7CA)
+Date: Wed, 28 Nov 2012 08:11:17 +0100
+From: Erich Titl <erich.titl@think.ch>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: regulatory domain settings overwritten
+References: <50B470CE.8070402@think.ch> <CAGRGNgVT-Yru2ti9CWgwS5H2cfW=RTeL144zsdAmSRCAsLwOsg@mail.gmail.com> <50B4B7B6.7020205@think.ch> <CAGRGNgXz9L+DBuxii7p+r0m2SEa0Xy1JgDZqGf2-8xWuHBYdfQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgXz9L+DBuxii7p+r0m2SEa0Xy1JgDZqGf2-8xWuHBYdfQ@mail.gmail.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms050708040103050808090504"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The awake window value is announced in an IE in beacons if the local STA
-is in light or deep sleep mode towards any peer or non-peer. On receipt STA
-parse the IE.
+Dies ist eine kryptografisch unterzeichnete Nachricht im MIME-Format.
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
----
- net/mac80211/cfg.c         |    5 +++++
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mesh.c        |   23 +++++++++++++++++++++++
- net/mac80211/mesh.h        |    2 ++
- net/mac80211/tx.c          |    4 +++-
- net/mac80211/util.c        |    4 ++++
- 6 files changed, 38 insertions(+), 1 deletion(-)
+--------------ms050708040103050808090504
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index db27208..e49eb08 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1683,6 +1683,11 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		conf->power_mode = nconf->power_mode;
- 		ieee80211_mesh_local_ps_update(sdata);
- 	}
-+	if (_chg_mesh_attr(NL80211_MESHCONF_AWAKE_WINDOW, mask)) {
-+		conf->dot11MeshAwakeWindowDuration =
-+			nconf->dot11MeshAwakeWindowDuration;
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-+	}
- 	return 0;
- }
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index eec4aac..3d4c43f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1204,6 +1204,7 @@ struct ieee802_11_elems {
- 	struct ieee80211_meshconf_ie *mesh_config;
- 	u8 *mesh_id;
- 	u8 *peering;
-+	u8 *awake_window;
- 	u8 *preq;
- 	u8 *prep;
- 	u8 *perr;
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index c61bbc0..ad5dca7 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -301,6 +301,29 @@ mesh_add_meshid_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- }
- 
- int
-+mesh_add_awake_window_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	u8 *pos;
-+
-+	/* see IEEE802.11-2012 13.14.6 */
-+	if (ifmsh->ps_peers_light_sleep == 0 &&
-+	    ifmsh->ps_peers_deep_sleep == 0 &&
-+	    ifmsh->nonpeer_ps_mode == NL80211_MESH_POWER_ACTIVE)
-+		return 0;
-+
-+	if (skb_tailroom(skb) < 4)
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, 2 + 2);
-+	*pos++ = WLAN_EID_MESH_AWAKE_WINDOW;
-+	*pos++ = 2;
-+	put_unaligned_le16(ifmsh->mshcfg.dot11MeshAwakeWindowDuration, pos);
-+
-+	return 0;
-+}
-+
-+int
- mesh_add_vendor_ies(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 62ca646..f7bf9e3 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -222,6 +222,8 @@ int mesh_add_meshid_ie(struct sk_buff *skb,
- 		       struct ieee80211_sub_if_data *sdata);
- int mesh_add_rsn_ie(struct sk_buff *skb,
- 		    struct ieee80211_sub_if_data *sdata);
-+int mesh_add_awake_window_ie(struct sk_buff *skb,
-+			     struct ieee80211_sub_if_data *sdata);
- int mesh_add_vendor_ies(struct sk_buff *skb,
- 			struct ieee80211_sub_if_data *sdata);
- int mesh_add_ds_params_ie(struct sk_buff *skb,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 88994dc..1194020 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2444,7 +2444,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 				    2 + sizeof(struct ieee80211_ht_operation) +
- 				    2 + sdata->u.mesh.mesh_id_len +
- 				    2 + sizeof(struct ieee80211_meshconf_ie) +
--				    sdata->u.mesh.ie_len);
-+				    sdata->u.mesh.ie_len +
-+				    2 + sizeof(__le16)); /* awake window */
- 		if (!skb)
- 			goto out;
- 
-@@ -2477,6 +2478,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		    mesh_add_ht_oper_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata) ||
-+		    mesh_add_awake_window_ie(skb, sdata) ||
- 		    mesh_add_vendor_ies(skb, sdata)) {
- 			pr_err("o11s: couldn't add ies!\n");
- 			goto out;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index acbb8c9..390d1a6 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -795,6 +795,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			elems->peering = pos;
- 			elems->peering_len = elen;
- 			break;
-+		case WLAN_EID_MESH_AWAKE_WINDOW:
-+			if (elen >= 2)
-+				elems->awake_window = pos;
-+			break;
- 		case WLAN_EID_PREQ:
- 			elems->preq = pos;
- 			elems->preq_len = elen;
--- 
-1.7.9.5
+Hi Julian
 
+on 27.11.2012 23:55, Julian Calaby wrote:
+> Hi Erich,
+>=20
+> On Tue, Nov 27, 2012 at 11:53 PM, Erich Titl <erich.titl@think.ch> wrot=
+e:
+>> Hi Julian
+>>
+=2E..
+
+>=20
+> Sorry about that, the last time I explained this, it was for a Chinese
+> resident, and I got the codes mixed up.
+>=20
+> This "default" is part of the specification of how the hardware
+> operates. If it hasn't been configured otherwise, it defaults to US
+> operation. I'm sure that the Windows driver behaves in exactly the
+> same way - this isn't some feature of the Linux driver, it's how the
+> card is supposed to work.
+
+I understand that well, but how is the driver supposed to know what the
+default is?
+In my case I got a card imported by a local OEM which gets them from
+Taiwan directly.
+
+=2E.
+
+>=20
+> Laws say otherwise. Each country has a different set of regulations
+> for how they expect a WiFi card to operate. To make a card that is
+> fully compliant with all these sets of regulations would require it to
+> be tested against in a way which can prove that it complies with all
+> those regulations. In general, as I understand it, cards are usually
+> built for a particular market, and tested that they comply with that
+> market's regulations, usually then ignoring any other country's
+> regulations. Cheaper manufacturers may just use a reference design,
+> which is probably built to comply with US regulations, and then just
+> use the defaults.
+
+Yes, but in my case the card says 'OK, use the default' and then the
+default happens to be hard coded as US in he driver. In my book this is
+different from a card saying, 'OH, I believe I am a US card, so please
+behave US conformant'.
+
+>=20
+> The card is not "open", it's using the default configuration. The
+> default configuration is that it's configured for US operation.
+
+No, it is not, the card pretends nothing, the driver does.
+
+>=20
+>> So under the worst thinkable circumstances this code won't work for my=
+
+>> environment as, for example, the intersection of the world regdomain a=
+nd
+>> the US regdomain would AFAIK cut away channels 12 and 13, which are
+>> perfectly legal at my domicile and are used by some AP's.
+>=20
+> If you're using access points on channels 12 and 13, then yeah, using
+> a card that is configured for US operation won't work for you.
+
+Indeed and that is what I am ranting about.
+
+>=20
+>> I could (and will probably have to) recompile the driver using another=
+
+>> regdomain file, but this is not really satisfactory either. IMHO the
+>> regdomain should be chosen as seen fit and not imposed by hard coded
+>> limits in the driver.
+>=20
+> You could recompile the driver to use the Swiss country code as the
+> default, however then you'd be using the card in a way which is
+> outside of it's specification.
+>=20
+> It is possible that your particular card cannot work predictably
+> enough on channels 12 and 13 to comply with the Swiss regulations
+> which is why it's been left at the default configuration.=20
+
+The driver itself cannot be made responsible for the malfunction of the
+card. If the card was restricted in any way, the manufacturer can and
+IMHO _must_ use the EEPROM value to restrict it's use. This was _not_
+done here, as the manufacturer cannot know what the driver author thinks
+is the default.
+
+It's also
+> possible that it can comply with the regulations perfectly, but has
+> never been tested and had the EEPROM set to indicate that it can
+> comply with them.
+
+Yes of course, it could be that way, but my past experience in IT leads
+me to believe that manufacturers shy away from market specific hardware
+design. This is why the CM9 does not specify a country code, but a
+'default' setting.
+
+>=20
+> The simple fact of the matter is that the card is set to use the
+> default configuration. The default configuration is for US operation,
+> simple as that. This isn't short sighted Linux developers assuming
+> that everyone is in the US, this is a design decision by the company
+> that produced the card to give it a sensible default it can comply
+> with.
+
+Oh, I don't pretend the developers are short sighted, just that the
+person writing the code sat possibly somewhere in the US midwest and his
+perception of the world might be restricted to the county border, been
+there, seen it. The driver IMHO should be written in a way that it can
+meet the local regulatory law, and the default should not be US imposed
+by the driver.
+
+Nevertheless, I have patched the driver to do exactly that, if there is
+no regdom specified in the EEPROM then use the one specified in the
+cfg80211 options. The behaviour of the driver can be controlled right
+now by a compile time flag, I might even turn that into a flag passed as
+an option at load time.
+
+cheers
+
+Erich
+
+
+--------------ms050708040103050808090504
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Kryptografische Unterschrift
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIDjTCC
+A4kwggJxoAMCAQICAQIwDQYJKoZIhvcNAQELBQAwdTELMAkGA1UEBhMCQ0gxEjAQBgNVBAcT
+CVN0YWxsaWtvbjEOMAwGA1UEChMFVEhJTksxEzARBgNVBAsTCkNBIFNlY3Rpb24xETAPBgNV
+BAMTCFRoaW5rIENBMRowGAYJKoZIhvcNAQkBFgtjYUB0aGluay5jaDAeFw0xMDEyMDcxMDA1
+MTFaFw0xNTEyMDYxMDA1MTFaMH8xCzAJBgNVBAYTAkNIMRIwEAYDVQQHEwlTdGFsbGlrb24x
+DjAMBgNVBAoTBVRISU5LMRMwEQYDVQQLEwpDQSBTZWN0aW9uMRMwEQYDVQQDEwpFcmljaCBU
+aXRsMSIwIAYJKoZIhvcNAQkBFhNlcmljaC50aXRsQHRoaW5rLmNoMIIBIjANBgkqhkiG9w0B
+AQEFAAOCAQ8AMIIBCgKCAQEAzIkWAOGsN6MJyoPDiquf88muXKonJwQUE7wcf8SZ7tBZKHCy
+RMt+zdv28XI3Lvofgp3er67FvlSmJsTEUr2f/WX9hihspdsvVIoAkYiY57lHIGKBwxb2qRt5
+ve191qP4lo1MLCkDZeKIxTbNIcebwzuK7qsU3LH+als/JVnPViZs7pk3oXOOP8vAC9tU0o+t
+8WOMREMAQ0hlePxzc5RUjrv+UNuBGAt95r/ui9c8hvLaGzNMhKNQSaqJ71eOR4Urwt+IvYWH
+q6Lt3iqnvT3oN5kAOrFYzAaPiVa9VyYiky8tQkeBrzyP/OIlPQXLUMMlfhQtfZnIWCqlj4+s
+wBz1VwIDAQABoxowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkqhkiG9w0BAQsFAAOC
+AQEADxFUuWY9WMAvDxrxFfq2+D+bWvwjpXlls3KPUCuUL/yST/ttMdZ6SQf+WeTjLhcwYmnB
+Z21GOyrce4HvzQmgzhcrmAD9MOhKSi9ZpP10LXqt7j2qPmoTBJI9B5NOwK/yj+E40cU+lAEM
+8hHGvz8Z5LaiXowpmVH5TWv5oJeqlg36BrQuKoKcYlRuo35uJ/4DFR2u5KDnx+b4jKhO+fK6
+MMFgdZQBnKp5TXjd306ggx27Xg/67PMzwWdUMSGuuAZ6D99sI5b1Nkos37pXjsAYawXHE513
+m50kZX9pgDS/WXm9YYEips/Ujq1C49l+W8Lhc59JW4FVQxgX+6UkEIEmWDGCA4owggOGAgEB
+MHowdTELMAkGA1UEBhMCQ0gxEjAQBgNVBAcTCVN0YWxsaWtvbjEOMAwGA1UEChMFVEhJTksx
+EzARBgNVBAsTCkNBIFNlY3Rpb24xETAPBgNVBAMTCFRoaW5rIENBMRowGAYJKoZIhvcNAQkB
+FgtjYUB0aGluay5jaAIBAjAJBgUrDgMCGgUAoIIB5TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0xMjExMjgwNzExMTdaMCMGCSqGSIb3DQEJBDEWBBReh0fP
+dbs7gasLdx+OzDH/jqwFqjBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglghkgB
+ZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsO
+AwIHMA0GCCqGSIb3DQMCAgEoMIGJBgkrBgEEAYI3EAQxfDB6MHUxCzAJBgNVBAYTAkNIMRIw
+EAYDVQQHEwlTdGFsbGlrb24xDjAMBgNVBAoTBVRISU5LMRMwEQYDVQQLEwpDQSBTZWN0aW9u
+MREwDwYDVQQDEwhUaGluayBDQTEaMBgGCSqGSIb3DQEJARYLY2FAdGhpbmsuY2gCAQIwgYsG
+CyqGSIb3DQEJEAILMXygejB1MQswCQYDVQQGEwJDSDESMBAGA1UEBxMJU3RhbGxpa29uMQ4w
+DAYDVQQKEwVUSElOSzETMBEGA1UECxMKQ0EgU2VjdGlvbjERMA8GA1UEAxMIVGhpbmsgQ0Ex
+GjAYBgkqhkiG9w0BCQEWC2NhQHRoaW5rLmNoAgECMA0GCSqGSIb3DQEBAQUABIIBAL4ERRAq
+0NReBVhkOpEyC9zyJdZrsZ/vmIsheidHnpBQPtSPiZ7eTr7QedJSwgivQ+tK8/wvsBqlAWHy
+a5wgQlISi0HGhSSPx+5ZgRamhKyb2XdqzlkJNavEM1xjttXjN4KAPIiA+VWwwdZIDYqHaQ7W
+vIvLplEZAzaz3/BGVnjwCHXC+QXJofgv94u2mvElvWty1j44XWcb4bWD2UzLXQOY49bFfgDO
+NQiILLh2HdBgZi/SF3MMwtVddkhCuitnkzfls2i0IGaVr3kV2N1pWdn7hFiYJV6tzdwuFErs
+RG4h8yeTnMfa+z6HgNB9p+sVRti/16jBtxPoYXFg9qIcuVQAAAAAAAA=
+--------------ms050708040103050808090504--
