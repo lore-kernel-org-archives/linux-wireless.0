@@ -1,82 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45186 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432Ab2KGNYK (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:53774 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755990Ab2K1XFM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2012 08:24:10 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] mac80211: reassign channel contexts before stations
-Date: Wed,  7 Nov 2012 14:24:44 +0100
-Message-Id: <1352294684-19266-4-git-send-email-johannes@sipsolutions.net> (sfid-20121107_142423_191004_0A2B1513)
-In-Reply-To: <1352294684-19266-1-git-send-email-johannes@sipsolutions.net>
-References: <1352294684-19266-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 28 Nov 2012 18:05:12 -0500
+Date: Wed, 28 Nov 2012 18:05:11 -0500 (EST)
+Message-Id: <20121128.180511.2060174154854501513.davem@davemloft.net> (sfid-20121129_000523_409936_8A0C4EDB)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-11-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20121128192352.GB9118@tuxdriver.com>
+References: <20121128192352.GB9118@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 28 Nov 2012 14:23:52 -0500
 
-Since channel contexts are usually present before
-stations can be added to an interface, reassign
-before stations them in reconfiguration as well.
+> This pull request is intended for the 3.8 stream.  It is a bit large
+> -- I guess Thanksgiving got me off track!  At least the code got to
+> spend some time in linux-next... :-)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/util.c | 31 +++++++++++++++++--------------
- 1 file changed, 17 insertions(+), 14 deletions(-)
+Wow, that's a lot.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 690e474..e1dbf9c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1429,6 +1429,23 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		WARN_ON(drv_add_chanctx(local, ctx));
- 	mutex_unlock(&local->chanctx_mtx);
- 
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		struct ieee80211_chanctx_conf *ctx_conf;
-+
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+
-+		mutex_lock(&local->chanctx_mtx);
-+		ctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+				lockdep_is_held(&local->chanctx_mtx));
-+		if (ctx_conf) {
-+			ctx = container_of(ctx_conf, struct ieee80211_chanctx,
-+					   conf);
-+			drv_assign_vif_chanctx(local, sdata, ctx);
-+		}
-+		mutex_unlock(&local->chanctx_mtx);
-+	}
-+
- 	/* add STAs back */
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry(sta, &local->sta_list, list) {
-@@ -1469,22 +1486,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 
- 	/* Finally also reconfigure all the BSS information */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		struct ieee80211_chanctx_conf *ctx_conf;
- 		u32 changed;
- 
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--
--		mutex_lock(&local->chanctx_mtx);
--		ctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--				lockdep_is_held(&local->chanctx_mtx));
--		if (ctx_conf) {
--			ctx = container_of(ctx_conf, struct ieee80211_chanctx,
--					   conf);
--			drv_assign_vif_chanctx(local, sdata, ctx);
--		}
--		mutex_unlock(&local->chanctx_mtx);
--
- 		/* common change flags for all interface types */
- 		changed = BSS_CHANGED_ERP_CTS_PROT |
- 			  BSS_CHANGED_ERP_PREAMBLE |
--- 
-1.8.0
+Pulled, thanks.
+
+I'll push it out after I do a bunch of build tests.
+
+Thanks.
 
