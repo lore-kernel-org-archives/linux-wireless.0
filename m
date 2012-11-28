@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:48963 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936Ab2KVUQI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 15:16:08 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so3075339pad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 12:16:08 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: ath9k-devel@lists.ath9k.org
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v3 1/2] ath9k: RX timestamp is reported at end of frame
-Date: Wed, 21 Nov 2012 18:06:26 -0800
-Message-Id: <1353549987-24656-1-git-send-email-thomas@cozybit.com> (sfid-20121122_211620_150367_D4BADE8A)
+Received: from mail.legal.de ([46.38.240.131]:37074 "EHLO mail.legal.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754317Ab2K1SDb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 13:03:31 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Fwd: Re: iwlwifi hibernate / suspend issue
+From: Jens Kapitza <j.kapitza@schwarze-allianz.de>
+Date: Wed, 28 Nov 2012 19:04:11 +0100
+To: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Message-ID: <45226907-f8cf-4076-b458-122325a38eb7@email.android.com> (sfid-20121128_190334_573617_4BCFAC5C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Accurate RX timestamp reporting is important for proper IBSS merging,
-mesh synchronization, and MCCA scheduling. Namely, knowing where the TSF
-is recorded is needed to sync with the beacon timestamp field.
+forgot to cc the mailing list
 
-Tested with AR9280.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
+-------- Original-Nachricht --------
+Von: Jens Kapitza <j.kapitza@schwarze-allianz.de>
+Gesendet: Wed Nov 28 18:58:34 MEZ 2012
+An: Johannes Berg <johannes@sipsolutions.net>
+Betreff: Re: iwlwifi hibernate / suspend issue
 
-v2:
-	clarify commit log (Luis)
 
-v3:
-	rebase on wt
 
- drivers/net/wireless/ath/ath9k/recv.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6aafbb7..d4df98a 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -976,7 +976,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 	rx_status->freq = hw->conf.channel->center_freq;
- 	rx_status->signal = ah->noise + rx_stats->rs_rssi;
- 	rx_status->antenna = rx_stats->rs_antenna;
--	rx_status->flag |= RX_FLAG_MACTIME_START;
-+	rx_status->flag |= RX_FLAG_MACTIME_END;
- 	if (rx_stats->rs_moreaggr)
- 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
+
+Johannes Berg <johannes@sipsolutions.net> schrieb:
+
+>On Wed, 2012-11-28 at 16:21 +0100, Jens Kapitza wrote:
+>> > just enter "dmesg" and pastebin the result somewhere
+>
+>> this line seems to be wrong
+>> 
+>>   [ 4650.687346] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable
+>radio.
+>
+>Well, it's not necessarily wrong, it indicates that the device read
+>that
+>the rfkill line was pulled low ("rf should be off").
+ok but why not up again at resume
+>
+>You said reloading the module fixes this, which is interesting since
+
+no  i have to restart the computer 
+
+>the
+>device should be sending interrupts whenever the state changes, so even
+>if it was reading the wrong state at resume time (as it does now) it
+>should catch up later...
+>
+
+is there a chance to reset the interrupt or the state on resume
+>johannes
+jens
+
 -- 
-1.7.10.4
-
+Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
+-- 
+Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
