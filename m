@@ -1,99 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:60636 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933119Ab2KNWBt (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:36268 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753193Ab2K1JnT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 17:01:49 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gp3so826471lbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2012 14:01:47 -0800 (PST)
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH] net/wireless: ipw2x00: remove unreachable code
-Date: Thu, 15 Nov 2012 03:07:47 +0000
-Message-Id: <1352948867-548-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20121114_230153_173612_BBAA6D9F)
+	Wed, 28 Nov 2012 04:43:19 -0500
+Received: by mail-we0-f174.google.com with SMTP id d7so4384742wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 01:43:19 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 12/20] wl18xx: limit Tx for the AP single-STA-in-PSM case
+Date: Wed, 28 Nov 2012 11:42:41 +0200
+Message-Id: <1354095769-8724-13-git-send-email-arik@wizery.com> (sfid-20121128_104327_857965_2B7DBCB3)
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary if statements because libipw_set_geo always
-returns success.  Also change function's return value from int
-to void.
+Treat a single connected STA in PSM as a slow link and regulate Tx speed
+according to slow link priority/stop thresholds.
+This allows us to avoid flooding the FW, while delivering decent
+throughput to a peer in forced-PSM.
 
-Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ipw2x00/ipw2100.c    | 5 +----
- drivers/net/wireless/ipw2x00/ipw2200.c    | 5 +----
- drivers/net/wireless/ipw2x00/libipw.h     | 2 +-
- drivers/net/wireless/ipw2x00/libipw_geo.c | 3 +--
- 4 files changed, 4 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ti/wl18xx/main.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 29b8fa1..46938bc 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -1788,10 +1788,7 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
- 	}
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 3836dbd..ada4616 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1446,10 +1446,11 @@ static bool wl18xx_lnk_high_prio(struct wl1271 *wl, u8 hlid,
+ 		return false;
  
- 	/* Initialize the geo */
--	if (libipw_set_geo(priv->ieee, &ipw_geos[0])) {
--		printk(KERN_WARNING DRV_NAME "Could not set geo\n");
--		return 0;
--	}
-+	libipw_set_geo(priv->ieee, &ipw_geos[0]);
- 	priv->ieee->freq_band = LIBIPW_24GHZ_BAND;
+ 	/* the priority thresholds are taken from FW */
+-	if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map))
+-		thold = status_priv->tx_fast_link_prio_threshold;
+-	else
++	if (!test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) ||
++	    test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map))
+ 		thold = status_priv->tx_slow_link_prio_threshold;
++	else
++		thold = status_priv->tx_fast_link_prio_threshold;
  
- 	lock = LOCK_NONE;
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 768bf61..fea96b5 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11322,10 +11322,7 @@ static int ipw_up(struct ipw_priv *priv)
- 				    priv->eeprom[EEPROM_COUNTRY_CODE + 2]);
- 			j = 0;
- 		}
--		if (libipw_set_geo(priv->ieee, &ipw_geos[j])) {
--			IPW_WARNING("Could not set geography.");
--			return 0;
--		}
-+		libipw_set_geo(priv->ieee, &ipw_geos[j]);
- 
- 		if (priv->status & STATUS_RF_KILL_SW) {
- 			IPW_WARNING("Radio disabled by module parameter.\n");
-diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
-index 0b22fb4..6eede52 100644
---- a/drivers/net/wireless/ipw2x00/libipw.h
-+++ b/drivers/net/wireless/ipw2x00/libipw.h
-@@ -978,7 +978,7 @@ extern void libipw_network_reset(struct libipw_network *network);
- /* libipw_geo.c */
- extern const struct libipw_geo *libipw_get_geo(struct libipw_device
- 						     *ieee);
--extern int libipw_set_geo(struct libipw_device *ieee,
-+extern void libipw_set_geo(struct libipw_device *ieee,
- 			     const struct libipw_geo *geo);
- 
- extern int libipw_is_valid_channel(struct libipw_device *ieee,
-diff --git a/drivers/net/wireless/ipw2x00/libipw_geo.c b/drivers/net/wireless/ipw2x00/libipw_geo.c
-index c9fe3c9..218f2a3 100644
---- a/drivers/net/wireless/ipw2x00/libipw_geo.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_geo.c
-@@ -132,7 +132,7 @@ u8 libipw_freq_to_channel(struct libipw_device * ieee, u32 freq)
- 	return 0;
+ 	return lnk->allocated_pkts < thold;
  }
+@@ -1464,10 +1465,11 @@ static bool wl18xx_lnk_low_prio(struct wl1271 *wl, u8 hlid,
  
--int libipw_set_geo(struct libipw_device *ieee,
-+void libipw_set_geo(struct libipw_device *ieee,
- 		      const struct libipw_geo *geo)
- {
- 	memcpy(ieee->geo.name, geo->name, 3);
-@@ -143,7 +143,6 @@ int libipw_set_geo(struct libipw_device *ieee,
- 	       sizeof(struct libipw_channel));
- 	memcpy(ieee->geo.a, geo->a, ieee->geo.a_channels *
- 	       sizeof(struct libipw_channel));
--	return 0;
+ 	if (test_bit(hlid, (unsigned long *)&suspend_bitmap))
+ 		thold = status_priv->tx_suspend_threshold;
+-	else if (test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map))
+-		thold = status_priv->tx_fast_stop_threshold;
+-	else
++	else if (!test_bit(hlid, (unsigned long *)&wl->fw_fast_lnk_map) ||
++		 test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map))
+ 		thold = status_priv->tx_slow_stop_threshold;
++	else
++		thold = status_priv->tx_fast_stop_threshold;
+ 
+ 	return lnk->allocated_pkts < thold;
  }
- 
- const struct libipw_geo *libipw_get_geo(struct libipw_device *ieee)
 -- 
-1.7.11.7
+1.7.9.5
 
