@@ -1,84 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51637 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755949Ab2K3L6A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 06:58:00 -0500
-Message-ID: <1354276702.10035.12.camel@jlt4.sipsolutions.net> (sfid-20121130_125906_194586_0BA6F5F6)
-Subject: Re: [RFCv2 04/13] mac80211: mesh power mode indication in
- transmitted frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, thomas@cozybit.com,
-	linux-wireless@vger.kernel.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Date: Fri, 30 Nov 2012 12:58:22 +0100
-In-Reply-To: <1353701934-12752-5-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353701934-12752-5-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from 212.199.104.198.static.012.net.il ([212.199.104.198]:56147 "EHLO
+	qualcomm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754742Ab2K1PzJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 10:55:09 -0500
+From: Vladimir Kondratiev <vkondrat@qti.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wireless: allow Atheros card to not depend on ath.ko
+Date: Wed, 28 Nov 2012 17:53:18 +0200
+Message-ID: <1480359.ZVbZvOVayc@lx-vladimir> (sfid-20121128_165514_131820_F18079D0)
+In-Reply-To: <20121128141319.GA9118@tuxdriver.com>
+References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1834420.jzvmO1yYKo@lx-vladimir> <20121128141319.GA9118@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-23 at 12:18 -0800, Marco Porsch wrote:
 
-> For performance reasons, calls to the function setting the frame flags are
-> placed in HWMP routing routines, as there the STA pointer is already availible.
+There are 2 different things:
+- sub-menu for "Atheros Wireless cards" family
+- module ath.ko with common Atheros code
 
-typo: available
+Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
+Thus, being "Atheros card" and "depending on ath.ko" was the same.
 
-> +	/*
-> +	 * Nulls are only sent to direct peers for PS and
-> +	 * should already be addressed
-> +	 */
-> +	if (ieee80211_is_qos_nullfunc(hdr->frame_control))
-> +		return err;
+To allow module to belong to the
+"Atheros Wireless cards" family but not use ath.ko,
+2 conditions above need to be separated.
 
-return 0 would be easier ...
+So, this patch introduce new Kconfig variable ATH_CARDS for belonging
+to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
+variable to express dependency on common Atheros code in ath.ko. Modules
+that depend on this common code now express it by setting ATH_COMMON.
 
-> + * NOTE: sta must be given when an individually-addressed QoS frame header
-> + * is handed, for group-addressed and management frames it not used
+Right now, ath6kl do not depend on common code and thus do not set ATH_COMMON.
 
-typo: handled
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/Kconfig          |    7 +++++--
+ drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
+ drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
+ drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
+ drivers/net/wireless/ath/carl9170/Kconfig |    1 +
+ 5 files changed, 9 insertions(+), 2 deletions(-)
 
-> +	if (WARN_ON(is_unicast_ether_addr(hdr->addr1) &&
-> +	       ieee80211_is_data_qos(hdr->frame_control) &&
-> +	       !sta))
-> +		return;
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index c25dcf1..1a67a4f 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -1,4 +1,7 @@
+-menuconfig ATH_COMMON
++config ATH_COMMON
++	tristate
++
++menuconfig ATH_CARDS
+ 	tristate "Atheros Wireless Cards"
+ 	depends on CFG80211 && (!UML || BROKEN)
+ 	---help---
+@@ -14,7 +17,7 @@ menuconfig ATH_COMMON
+ 
+ 	  http://wireless.kernel.org/en/users/Drivers/Atheros
+ 
+-if ATH_COMMON
++if ATH_CARDS
+ 
+ config ATH_DEBUG
+ 	bool "Atheros wireless debugging"
+diff --git a/drivers/net/wireless/ath/ar5523/Kconfig b/drivers/net/wireless/ath/ar5523/Kconfig
+index 11d99ee..0d320cc 100644
+--- a/drivers/net/wireless/ath/ar5523/Kconfig
++++ b/drivers/net/wireless/ath/ar5523/Kconfig
+@@ -1,6 +1,7 @@
+ config AR5523
+        tristate "Atheros AR5523 wireless driver support"
+        depends on MAC80211 && USB
++       select ATH_COMMON
+        select FW_LOADER
+        ---help---
+          This module add support for AR5523 based USB dongles such as D-Link
+diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+index 338c5c4..c9f81a3 100644
+--- a/drivers/net/wireless/ath/ath5k/Kconfig
++++ b/drivers/net/wireless/ath/ath5k/Kconfig
+@@ -1,6 +1,7 @@
+ config ATH5K
+ 	tristate "Atheros 5xxx wireless cards support"
+ 	depends on (PCI || ATHEROS_AR231X) && MAC80211
++	select ATH_COMMON
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+ 	select NEW_LEDS
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index c7aa664..5fc15bf 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
+ config ATH9K
+ 	tristate "Atheros 802.11n wireless cards support"
+ 	depends on MAC80211
++	select ATH_COMMON
+ 	select ATH9K_HW
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
+index 267d5dc..13a2045 100644
+--- a/drivers/net/wireless/ath/carl9170/Kconfig
++++ b/drivers/net/wireless/ath/carl9170/Kconfig
+@@ -1,6 +1,7 @@
+ config CARL9170
+ 	tristate "Linux Community AR9170 802.11n USB support"
+ 	depends on USB && MAC80211 && EXPERIMENTAL
++	select ATH_COMMON
+ 	select FW_LOADER
+ 	select CRC32
+ 	help
+-- 
+1.7.10.4
 
-last time I'm commenting on whitespace/indentation issues
-
-
-> +		ieee80211_set_mesh_ps_flags(sdata, NULL,
-> +					    (struct ieee80211_hdr *) mgmt);
-
-if you just do (void *)mgmt it'll fit on one line
-
-> --- a/net/mac80211/wme.c
-> +++ b/net/mac80211/wme.c
-> @@ -191,6 +191,15 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
->  
->  	/* qos header is 2 bytes */
->  	*p++ = ack_policy | tid;
-> -	*p = ieee80211_vif_is_mesh(&sdata->vif) ?
-> -		(IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT >> 8) : 0;
-> +	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-> +		/* preserve RSPI and Mesh PS Level bit */
-> +		*p &= ((IEEE80211_QOS_CTL_RSPI |
-> +			IEEE80211_QOS_CTL_MESH_PS_LEVEL) >> 8);
-> +
-> +		/* Nulls don't have a mesh header (frame body) */
-> +		if (!ieee80211_is_qos_nullfunc(hdr->frame_control))
-> +			*p |= (IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT >> 8);
-> +	} else {
-> +		*p = 0;
-> +	}
->  }
-
-This looks so much better now :)
-
-johannes
 
