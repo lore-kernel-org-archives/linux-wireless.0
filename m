@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3393 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933255Ab2KOCqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 21:46:35 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Hante Meuleman" <meuleman@broadcom.com>
-Subject: [PATCH 13/19] brcmfmac: Any error should result in failure of
- probe.
-Date: Wed, 14 Nov 2012 18:46:17 -0800
-Message-ID: <1352947583-25341-14-git-send-email-frankyl@broadcom.com> (sfid-20121115_034653_498908_17F9F1E3)
-In-Reply-To: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
-References: <1352947583-25341-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:43730 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932083Ab2K1NKm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 08:10:42 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: simplify loop in minstrel_ht
+Date: Wed, 28 Nov 2012 14:11:07 +0100
+Message-Id: <1354108267-11261-1-git-send-email-johannes@sipsolutions.net> (sfid-20121128_141045_824725_FF122453)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In brcmf_sdbrcm_probe only error ELINK is seen as error. However
-brcmf_bus_start can return many more error codes and all should
-result in failed init of driver.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index ba339f7..e2351a7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3994,10 +3994,8 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 	/* if firmware path present try to download and bring up bus */
- 	ret = brcmf_bus_start(bus->sdiodev->dev);
- 	if (ret != 0) {
--		if (ret == -ENOLINK) {
--			brcmf_dbg(ERROR, "dongle is not responding\n");
--			goto fail;
--		}
-+		brcmf_dbg(ERROR, "dongle is not responding\n");
-+		goto fail;
- 	}
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index fb1d4aa6..9f9c453 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -389,9 +389,9 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ieee80211_tx_rate *ar = info->status.rates;
+ 	struct minstrel_rate_stats *rate, *rate2;
+ 	struct minstrel_priv *mp = priv;
+-	bool last = false;
++	bool last;
+ 	int group;
+-	int i = 0;
++	int i;
  
- 	return bus;
+ 	if (!msp->is_ht)
+ 		return mac80211_minstrel.tx_status(priv, sband, sta, &msp->legacy, skb);
+@@ -419,13 +419,11 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
+ 		mi->sample_packets += info->status.ampdu_len;
+ 
++	last = !minstrel_ht_txstat_valid(&ar[0]);
+ 	for (i = 0; !last; i++) {
+ 		last = (i == IEEE80211_TX_MAX_RATES - 1) ||
+ 		       !minstrel_ht_txstat_valid(&ar[i + 1]);
+ 
+-		if (!minstrel_ht_txstat_valid(&ar[i]))
+-			break;
+-
+ 		group = minstrel_ht_get_group_idx(&ar[i]);
+ 		rate = &mi->groups[group].rates[ar[i].idx % 8];
+ 
 -- 
-1.7.9.5
-
+1.8.0
 
