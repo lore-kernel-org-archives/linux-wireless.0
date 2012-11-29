@@ -1,368 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4511 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754096Ab2KFAWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Nov 2012 19:22:49 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52873 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751303Ab2K2W1f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2012 17:27:35 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
 To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 15/24] brcmfmac: decrease the range of SDIO access lock
-Date: Mon, 5 Nov 2012 16:22:23 -0800
-Message-ID: <1352161352-30405-16-git-send-email-frankyl@broadcom.com> (sfid-20121106_013117_505468_E5D3BCD4)
-In-Reply-To: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-References: <1352161352-30405-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	ath9k-devel@lists.ath9k.org, Larry.Finger@lwfinger.net,
+	chunkeey@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] ath9k: use SIMPLE_DEV_PM_OPS
+Date: Thu, 29 Nov 2012 23:27:15 +0100
+Message-Id: <1354228037-1700-2-git-send-email-hauke@hauke-m.de> (sfid-20121129_232739_470635_E3A13346)
+In-Reply-To: <1354228037-1700-1-git-send-email-hauke@hauke-m.de>
+References: <1354228037-1700-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Semaphore sdsem which protects consecutive SDIO bus access is used
-to lock down unnecessary wide range. Decrease the locking range
-provides the capability of parallel processing.
+ath9k does not provide any runtime pm callbacks, so support for
+PM_RUNTIME is not needed and we could go to PM_SLEEP.
+This also makes it possible to use SIMPLE_DEV_PM_OPS instead of
+manually filling struct dev_pm_ops.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   62 +++++++++++---------
- 1 file changed, 34 insertions(+), 28 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c |   15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 1d7a340..e328852 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1274,6 +1274,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 		 * read directly into the chained packet, or allocate a large
- 		 * packet and and copy into the chain.
- 		 */
-+		down(&bus->sdsem);
- 		if (usechain) {
- 			errcode = brcmf_sdcard_recv_chain(bus->sdiodev,
- 					bus->sdiodev->sbwad,
-@@ -1295,6 +1296,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 				  dlen);
- 			errcode = -1;
- 		}
-+		up(&bus->sdsem);
- 		bus->sdcnt.f2rxdata++;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 9553203..8e9b826 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -287,7 +287,7 @@ static void ath_pci_remove(struct pci_dev *pdev)
+ 	pci_release_region(pdev, 0);
+ }
  
- 		/* On failure, kill the superframe, allow a couple retries */
-@@ -1399,11 +1401,8 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 					   pfirst->prev);
- 		}
- 		/* sent any remaining packets up */
--		if (bus->glom.qlen) {
--			up(&bus->sdsem);
-+		if (bus->glom.qlen)
- 			brcmf_rx_frame(bus->sdiodev->dev, ifidx, &bus->glom);
--			down(&bus->sdsem);
--		}
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
  
- 		bus->sdcnt.rxglomframes++;
- 		bus->sdcnt.rxglompkts += bus->glom.qlen;
-@@ -1586,6 +1585,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 
- 		rd->len_left = rd->len;
- 		/* read header first for unknow frame length */
-+		down(&bus->sdsem);
- 		if (!rd->len) {
- 			sdret = brcmf_sdcard_recv_buf(bus->sdiodev,
- 						      bus->sdiodev->sbwad,
-@@ -1598,6 +1598,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 					  sdret);
- 				bus->sdcnt.rx_hdrfail++;
- 				brcmf_sdbrcm_rxfail(bus, true, true);
-+				up(&bus->sdsem);
- 				continue;
- 			}
- 
-@@ -1607,6 +1608,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 
- 			if (!brcmf_sdio_hdparser(bus, bus->rxhdr, rd,
- 						 BRCMF_SDIO_FT_NORMAL)) {
-+				up(&bus->sdsem);
- 				if (!bus->rxpending)
- 					break;
- 				else
-@@ -1622,6 +1624,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 				rd->len_nxtfrm = 0;
- 				/* treat all packet as event if we don't know */
- 				rd->channel = SDPCM_EVENT_CHANNEL;
-+				up(&bus->sdsem);
- 				continue;
- 			}
- 			rd->len_left = rd->len > BRCMF_FIRSTREAD ?
-@@ -1639,6 +1642,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 			bus->sdiodev->bus_if->dstats.rx_dropped++;
- 			brcmf_sdbrcm_rxfail(bus, false,
- 					    RETRYCHAN(rd->channel));
-+			up(&bus->sdsem);
- 			continue;
- 		}
- 		skb_pull(pkt, head_read);
-@@ -1647,6 +1651,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 		sdret = brcmf_sdcard_recv_pkt(bus->sdiodev, bus->sdiodev->sbwad,
- 					      SDIO_FUNC_2, F2SYNC, pkt);
- 		bus->sdcnt.f2rxdata++;
-+		up(&bus->sdsem);
- 
- 		if (sdret < 0) {
- 			brcmf_dbg(ERROR, "read %d bytes from channel %d failed: %d\n",
-@@ -1749,10 +1754,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 			continue;
- 		}
- 
--		/* Unlock during rx call */
--		up(&bus->sdsem);
- 		brcmf_rx_packet(bus->sdiodev->dev, ifidx, pkt);
--		down(&bus->sdsem);
- 	}
- 
- 	rxcount = maxframes - rxleft;
-@@ -1772,9 +1774,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- static void
- brcmf_sdbrcm_wait_for_event(struct brcmf_sdio *bus, bool *lockvar)
+ static int ath_pci_suspend(struct device *device)
  {
--	up(&bus->sdsem);
- 	wait_event_interruptible_timeout(bus->ctrl_wait, !*lockvar, HZ * 2);
--	down(&bus->sdsem);
- 	return;
+@@ -333,22 +333,15 @@ static int ath_pci_resume(struct device *device)
+ 	return 0;
  }
  
-@@ -1879,6 +1879,7 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_sdio *bus, struct sk_buff *pkt,
- 	if (len & (ALIGNMENT - 1))
- 			len = roundup(len, ALIGNMENT);
+-static const struct dev_pm_ops ath9k_pm_ops = {
+-	.suspend = ath_pci_suspend,
+-	.resume = ath_pci_resume,
+-	.freeze = ath_pci_suspend,
+-	.thaw = ath_pci_resume,
+-	.poweroff = ath_pci_suspend,
+-	.restore = ath_pci_resume,
+-};
++static SIMPLE_DEV_PM_OPS(ath9k_pm_ops, ath_pci_suspend, ath_pci_resume);
  
-+	down(&bus->sdsem);
- 	ret = brcmf_sdcard_send_pkt(bus->sdiodev, bus->sdiodev->sbwad,
- 				    SDIO_FUNC_2, F2SYNC, pkt);
- 	bus->sdcnt.f2txdata++;
-@@ -1906,15 +1907,14 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_sdio *bus, struct sk_buff *pkt,
- 		}
+ #define ATH9K_PM_OPS	(&ath9k_pm_ops)
  
- 	}
-+	up(&bus->sdsem);
- 	if (ret == 0)
- 		bus->tx_seq = (bus->tx_seq + 1) % SDPCM_SEQUENCE_WRAP;
+-#else /* !CONFIG_PM */
++#else /* !CONFIG_PM_SLEEP */
  
- done:
- 	/* restore pkt buffer pointer before calling tx complete routine */
- 	skb_pull(pkt, SDPCM_HDRLEN + pad);
--	up(&bus->sdsem);
- 	brcmf_txcomplete(bus->sdiodev->dev, pkt, ret != 0);
--	down(&bus->sdsem);
+ #define ATH9K_PM_OPS	NULL
  
- 	if (free_pkt)
- 		brcmu_pkt_buf_free_skb(pkt);
-@@ -1955,9 +1955,11 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		/* In poll mode, need to check for other events */
- 		if (!bus->intr && cnt) {
- 			/* Check device status, signal pending interrupt */
-+			down(&bus->sdsem);
- 			ret = r_sdreg32(bus, &intstatus,
- 					offsetof(struct sdpcmd_regs,
- 						 intstatus));
-+			up(&bus->sdsem);
- 			bus->sdcnt.f2txdata++;
- 			if (ret != 0)
- 				break;
-@@ -2028,6 +2030,7 @@ static void brcmf_sdbrcm_bus_stop(struct device *dev)
+-#endif /* !CONFIG_PM */
++#endif /* !CONFIG_PM_SLEEP */
  
- 	/* Turn off the backplane clock (only) */
- 	brcmf_sdbrcm_clkctl(bus, CLK_SDONLY, false);
-+	up(&bus->sdsem);
  
- 	/* Clear the data packet queues */
- 	brcmu_pktq_flush(&bus->txq, true, NULL, NULL);
-@@ -2046,8 +2049,6 @@ static void brcmf_sdbrcm_bus_stop(struct device *dev)
- 	/* Reset some F2 state stuff */
- 	bus->rxskip = false;
- 	bus->tx_seq = bus->rx_seq = 0;
--
--	up(&bus->sdsem);
- }
- 
- #ifdef CONFIG_BRCMFMAC_SDIO_OOB
-@@ -2216,6 +2217,8 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		intstatus |= brcmf_sdbrcm_hostmail(bus);
- 	}
- 
-+	up(&bus->sdsem);
-+
- 	/* Generally don't ask for these, can get CRC errors... */
- 	if (intstatus & I_WR_OOSYNC) {
- 		brcmf_dbg(ERROR, "Dongle reports WR_OOSYNC\n");
-@@ -2262,6 +2265,7 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		(bus->clkstate == CLK_AVAIL)) {
- 		int i;
- 
-+		down(&bus->sdsem);
- 		err = brcmf_sdcard_send_buf(bus->sdiodev, bus->sdiodev->sbwad,
- 			SDIO_FUNC_2, F2SYNC, bus->ctrl_frame_buf,
- 			(u32) bus->ctrl_frame_len);
-@@ -2295,6 +2299,7 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		} else {
- 			bus->tx_seq = (bus->tx_seq + 1) % SDPCM_SEQUENCE_WRAP;
- 		}
-+		up(&bus->sdsem);
- 		bus->ctrl_frame_stat = false;
- 		brcmf_sdbrcm_wait_event_wakeup(bus);
- 	}
-@@ -2326,8 +2331,6 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		bus->activity = false;
- 		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
- 	}
--
--	up(&bus->sdsem);
- }
- 
- static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
-@@ -2618,11 +2621,10 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 
- 	/* precondition: IS_ALIGNED((unsigned long)frame, 2) */
- 
--	/* Need to lock here to protect txseq and SDIO tx calls */
--	down(&bus->sdsem);
--
- 	/* Make sure backplane clock is on */
-+	down(&bus->sdsem);
- 	brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
-+	up(&bus->sdsem);
- 
- 	/* Hardware tag: 2 byte len followed by 2 byte ~len check (all LE) */
- 	*(__le16 *) frame = cpu_to_le16((u16) msglen);
-@@ -2664,7 +2666,9 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 				   frame, min_t(u16, len, 16), "TxHdr:\n");
- 
- 		do {
-+			down(&bus->sdsem);
- 			ret = brcmf_tx_frame(bus, frame, len);
-+			up(&bus->sdsem);
- 		} while (ret < 0 && retries++ < TXRETRIES);
- 	}
- 
-@@ -2674,13 +2678,13 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 		spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
- 
- 		bus->activity = false;
-+		down(&bus->sdsem);
- 		brcmf_sdbrcm_clkctl(bus, CLK_NONE, true);
-+		up(&bus->sdsem);
- 	} else {
- 		spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
- 	}
- 
--	up(&bus->sdsem);
--
- 	if (ret)
- 		bus->sdcnt.tx_ctlerrs++;
- 	else
-@@ -2710,8 +2714,10 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
- 	 * Read last word in socram to determine
- 	 * address of sdpcm_shared structure
- 	 */
-+	down(&bus->sdsem);
- 	rv = brcmf_sdbrcm_membytes(bus, false, shaddr,
- 				   (u8 *)&addr_le, 4);
-+	up(&bus->sdsem);
- 	if (rv < 0)
- 		return rv;
- 
-@@ -2834,12 +2840,14 @@ static int brcmf_sdio_trap_info(struct brcmf_sdio *bus, struct sdpcm_shared *sh,
- 	if ((sh->flags & SDPCM_SHARED_TRAP) == 0)
- 		return 0;
- 
-+	down(&bus->sdsem);
- 	error = brcmf_sdbrcm_membytes(bus, false, sh->trap_addr, (u8 *)&tr,
- 				      sizeof(struct brcmf_trap_info));
- 	if (error < 0)
- 		return error;
- 
- 	nbytes = brcmf_sdio_dump_console(bus, sh, data, count);
-+	up(&bus->sdsem);
- 	if (nbytes < 0)
- 		return nbytes;
- 
-@@ -2885,6 +2893,7 @@ static int brcmf_sdio_assert_info(struct brcmf_sdio *bus,
- 		return 0;
- 	}
- 
-+	down(&bus->sdsem);
- 	if (sh->assert_file_addr != 0) {
- 		error = brcmf_sdbrcm_membytes(bus, false, sh->assert_file_addr,
- 					      (u8 *)file, 80);
-@@ -2897,6 +2906,7 @@ static int brcmf_sdio_assert_info(struct brcmf_sdio *bus,
- 		if (error < 0)
- 			return error;
- 	}
-+	up(&bus->sdsem);
- 
- 	res = scnprintf(buf, sizeof(buf),
- 			"dongle assert: %s:%d: assert(%s)\n",
-@@ -2909,9 +2919,7 @@ static int brcmf_sdbrcm_checkdied(struct brcmf_sdio *bus)
- 	int error;
- 	struct sdpcm_shared sh;
- 
--	down(&bus->sdsem);
- 	error = brcmf_sdio_readshared(bus, &sh);
--	up(&bus->sdsem);
- 
- 	if (error < 0)
- 		return error;
-@@ -2938,7 +2946,6 @@ static int brcmf_sdbrcm_died_dump(struct brcmf_sdio *bus, char __user *data,
- 	if (pos != 0)
- 		return 0;
- 
--	down(&bus->sdsem);
- 	error = brcmf_sdio_readshared(bus, &sh);
- 	if (error < 0)
- 		goto done;
-@@ -2955,7 +2962,6 @@ static int brcmf_sdbrcm_died_dump(struct brcmf_sdio *bus, char __user *data,
- 	error += nbytes;
- 	*ppos += error;
- done:
--	up(&bus->sdsem);
- 	return error;
- }
- 
-@@ -3511,8 +3517,6 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
- 
- 	brcmf_dbg(TIMER, "Enter\n");
- 
--	down(&bus->sdsem);
--
- 	/* Poll period: check device if appropriate. */
- 	if (bus->poll && (++bus->polltick >= bus->pollrate)) {
- 		u32 intstatus = 0;
-@@ -3561,11 +3565,13 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
- 		bus->console.count += BRCMF_WD_POLL_MS;
- 		if (bus->console.count >= bus->console_interval) {
- 			bus->console.count -= bus->console_interval;
-+			down(&bus->sdsem);
- 			/* Make sure backplane clock is on */
- 			brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
- 			if (brcmf_sdbrcm_readconsole(bus) < 0)
- 				/* stop on error */
- 				bus->console_interval = 0;
-+			up(&bus->sdsem);
- 		}
- 	}
- #endif				/* DEBUG */
-@@ -3578,13 +3584,13 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
- 				bus->activity = false;
- 				brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
- 			} else {
-+				down(&bus->sdsem);
- 				brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
-+				up(&bus->sdsem);
- 			}
- 		}
- 	}
- 
--	up(&bus->sdsem);
--
- 	return (atomic_read(&bus->ipend) > 0);
- }
- 
+ MODULE_DEVICE_TABLE(pci, ath_pci_id_table);
 -- 
-1.7.9.5
-
+1.7.10.4
 
