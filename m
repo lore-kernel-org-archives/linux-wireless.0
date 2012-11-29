@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41650 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab2KFPxb (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:60641 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945912Ab2K2AHw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Nov 2012 10:53:31 -0500
-Message-ID: <1352217244.9440.16.camel@jlt4.sipsolutions.net> (sfid-20121106_165343_414402_7F00AE58)
-Subject: Re: Linux 3.6.5
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eddie Chapman <eddie@ehuk.net>
-Cc: stable@vger.kernel.org, florian@reitmeir.org,
-	linux-wireless@vger.kernel.org, j@w1.fi
-Date: Tue, 06 Nov 2012 16:54:04 +0100
-In-Reply-To: <50992E0E.3040606@ehuk.net>
-References: <20121031173811.GA12970@kroah.com> <509575F4.5020109@ehuk.net>
-	   <20121105081757.GA3730@kroah.com> <50979D38.6010002@ehuk.net>
-	   (sfid-20121105_121423_464154_72561532) <1352116868.9466.2.camel@jlt4.sipsolutions.net>
-	  <509838F4.4010301@ehuk.net>
-	 <1352188621.9440.4.camel@jlt4.sipsolutions.net> <50992E0E.3040606@ehuk.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 28 Nov 2012 19:07:52 -0500
+Received: by mail-vc0-f174.google.com with SMTP id m18so10799345vcm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2012 16:07:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354147227.9345.47.camel@jlt4.sipsolutions.net>
+References: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net>
+	<CAB3XZEeuZOv_gHD2q0-K3JUXhjgTFx3AgZ1vS0Rc-toOVf-kTA@mail.gmail.com>
+	<1354147227.9345.47.camel@jlt4.sipsolutions.net>
+Date: Thu, 29 Nov 2012 02:07:51 +0200
+Message-ID: <CAB3XZEcr_D6hKKcwtXxTbH3quQ4TT_ZjjnbWOvHWSnAP+=Mw2Q@mail.gmail.com> (sfid-20121129_010756_536737_D2A2D9BC)
+Subject: Re: [PATCH] cfg80211: fix cmp_hidden_bss
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eddie,
+On Thu, Nov 29, 2012 at 2:00 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-11-29 at 01:53 +0200, Eliad Peller wrote:
+>> On Wed, Nov 28, 2012 at 11:44 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > From: Johannes Berg <johannes.berg@intel.com>
+>> >
+>> > The cmp_bss() comparator function uses memcmp() to
+>> > compare the SSID. This means that cmp_hidden_bss()
+>> > needs to similarly return a number bigger than zero
+>> > (use 1) instead of -1 when ie1 is bigger than ie2,
+>> > which is the case if an ie2 byte is non-zero.
+>
+>> > +++ b/net/wireless/scan.c
+>> > @@ -472,7 +472,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
+>> >         /* zeroed SSID ie is another indication of a hidden bss */
+>> >         for (i = 0; i < ie2[1]; i++)
+>> >                 if (ie2[i + 2])
+>> > -                       return -1;
+>> > +                       return 1;
+>> >
+>> >         return 0;
+>> >  }
+>>
+>> maybe i'm misreading it, but there is still no comparison here at all,
+>> so it seems wrong as well :)
+>> (practically, i guess it doesn't really matter, because if there is
+>> some non-null char, this is not a hidden ssid anyway)
+>
+> Hmm yeah you're right, it should be
+>         return ie2[i + 1] - ie1[i + 1];
+>
+> (or the other way around? need to sleep on that first...)
+>
+that's also not enough, because you ignore the previous chars.
+("A" < "B" vs. "AA" > "\x00B")
 
-> The AP is a Netgear WNR2000v3 running DD-WRT v24-sp2 (03/19/12) std.
-> 
-> After sshing into it and playing around with the iw command, the phy is 
-> phy0 and the device is ath0.
-> 
-> "iw ath0 scan dump" returns nothing unfortunately.
+i think returning memcmp() is the easiest solution, but sleeping on
+that is definitely a good idea :)
 
-Yeah, sorry, I guess I confused you. I did want this info from the
-client, as you provided:
-
-> In case it helps, on the laptop (the client) I do get output from "iw 
-> wlan0 scan dump":
-> 
-> BSS 82:e1:fa:1a:65:00 (on wlan0) -- associated
-[...]
-> 	HT operation:
-> 		 * primary channel: 9
-> 		 * secondary channel offset: above
-
-As you can see, it's using HT40+ on channel 9 (2452 MHz). Your HT40
-allow (correctly) map showed:
-
-2452 HT40 -
-
-This is because HT40+ isn't actually allowed on channel 9 by the
-standard (cf. 802.11-2012 Table E-1 (US), E-2 (Europe), E-3 (Japan).
-
-I wonder, what is the oldest kernel you tried? I think the fact that we
-can connect here was introduced by some older patch, and then reverted
-by my patch, so older kernels should have been slower as well?
-
-The problem here is that some devices (notably iwlwifi) will not allow
-(by firmware) to connect to such an AP as HT40- if that is not allowed.
-So I prevented it generally, but we can make it device dependent. I
-don't like it much, but I suppose we can do it. Try this patch:
-
-http://p.sipsolutions.net/0129f39c7d882289.txt
-
-It will still prohibit this configuration when the driver said it's not
-allowed, but will allow it when there were other reasons to not allow
-it.
-
-johannes
-
+Eliad.
