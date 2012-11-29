@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:38209 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753875Ab2KSQjf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47117 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751155Ab2K2JGZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 11:39:35 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so2051752eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:34 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/15] wlcore: set ssid before starting station role
-Date: Mon, 19 Nov 2012 18:39:17 +0200
-Message-Id: <1353343170-26516-3-git-send-email-eliad@wizery.com> (sfid-20121119_173950_815589_8A5CDE7A)
-In-Reply-To: <1353343170-26516-1-git-send-email-eliad@wizery.com>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	Thu, 29 Nov 2012 04:06:25 -0500
+Message-ID: <1354180010.9557.2.camel@jlt4.sipsolutions.net> (sfid-20121129_100629_702452_EFE59F81)
+Subject: Re: [PATCH] cfg80211: Remove unused VHT chan code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 29 Nov 2012 10:06:50 +0100
+In-Reply-To: <1354179955.9557.1.camel@jlt4.sipsolutions.net> (sfid-20121129_100538_966311_BCCEF54F)
+References: <50B71FA3.7050304@posedge.com>
+	 <1354179167.9557.0.camel@jlt4.sipsolutions.net>
+	 <50B723CF.20903@posedge.com>
+	 <1354179955.9557.1.camel@jlt4.sipsolutions.net>
+	 (sfid-20121129_100538_966311_BCCEF54F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-start_role(station) takes the ssid as parameter, so set
-the correct ssid on BSS_CHANGED_BSSID (just before
-calling start_role(sta))
+On Thu, 2012-11-29 at 10:05 +0100, Johannes Berg wrote:
+> On Thu, 2012-11-29 at 14:28 +0530, Mahesh Palivela wrote:
+> > On 11/29/2012 02:22 PM, Johannes Berg wrote:
+> > > On Thu, 2012-11-29 at 14:11 +0530, Mahesh Palivela wrote:
+> > >> From: Mahesh Palivela <maheshp@posedge.com>
+> > >>
+> > >> Cleanup of unused VHT channel config related code.
+> > >
+> > > Huh, good catch, thanks. Applied.
+> > 
+> > Thanks. Even below also can be removed as cfg80211_chandef_usable() 
+> > checks this at the beginning.
+> > 
+> >         if (!cfg80211_chandef_valid(chandef))
+> >                 return -EINVAL;
+> 
+> Hmm good point I'll roll that in.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
+No actually it can't, cfg80211_chandef_usable() triggers a warning which
+we can't do if userspace just sends invalid information; however it's
+doing that for all other in-kernel users intentionally.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 41a8502..2cb978e 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3390,6 +3390,23 @@ static int wl1271_ssid_set(struct ieee80211_vif *vif, struct sk_buff *skb,
- 	return 0;
- }
- 
-+static int wlcore_set_ssid(struct wl1271 *wl, struct wl12xx_vif *wlvif)
-+{
-+	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
-+	struct sk_buff *skb;
-+	int ieoffset;
-+
-+	skb = ieee80211_ap_probereq_get(wl->hw, vif);
-+	if (!skb)
-+		return -EINVAL;
-+
-+	ieoffset = offsetof(struct ieee80211_mgmt,
-+			    u.probe_req.variable);
-+	wl1271_ssid_set(vif, skb, ieoffset);
-+	dev_kfree_skb(skb);
-+
-+	return 0;
-+}
- static void wl12xx_remove_ie(struct sk_buff *skb, u8 eid, int ieoffset)
- {
- 	int len;
-@@ -3875,6 +3892,8 @@ sta_not_found:
- 			if (ret < 0)
- 				goto out;
- 
-+			wlcore_set_ssid(wl, wlvif);
-+
- 			/* Need to update the BSSID (for filtering etc) */
- 			set_bit(WLVIF_FLAG_IN_USE, &wlvif->flags);
- 			do_join = true;
--- 
-1.7.6.401.g6a319
+johannes
 
