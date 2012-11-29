@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:35330 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755076Ab2KMXXt (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:63515 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975Ab2K2UpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 18:23:49 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so4314105eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Nov 2012 15:23:48 -0800 (PST)
+	Thu, 29 Nov 2012 15:45:17 -0500
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-kernel@vger.kernel.org, tglx@linutronix.de
+Cc: backports@vger.kernel.org, alexander.stein@systec-electronic.com,
+	brudley@broadcom.com, rvossen@broadcom.com, arend@broadcom.com,
+	frankyl@broadcom.com, kanyan@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kyungmin.park@samsung.com, s.nawrocki@samsung.com,
+	linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
+	daniel.vetter@ffwll.ch, intel-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org, srinidhi.kasagar@stericsson.com,
+	linus.walleij@linaro.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 0/6] drivers: convert struct spinlock to spinlock_t
+Date: Thu, 29 Nov 2012 12:45:04 -0800
+Message-Id: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20121129_214930_481254_30779A01)
 MIME-Version: 1.0
-In-Reply-To: <1352836486.9466.25.camel@jlt4.sipsolutions.net>
-References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1352809427-29682-3-git-send-email-qca_vkondrat@qca.qualcomm.com> <1352836486.9466.25.camel@jlt4.sipsolutions.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 14 Nov 2012 10:23:28 +1100
-Message-ID: <CAGRGNgXsGh1qLo8gq+L5Uedu=F=Eob_9j4x6jxrEg_=wPnOfWA@mail.gmail.com> (sfid-20121114_002353_089220_B7A5B013)
-Subject: Re: [PATCH v7 2/2] wireless: integrate wil6210 driver into build structure
-To: Vladimir Kondratiev <vkondrat_qca@qca.qualcomm.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vladimir,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-On Wed, Nov 14, 2012 at 6:54 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2012-11-13 at 14:23 +0200, Vladimir Kondratiev wrote:
->
->> +config ATH_COMMON
->> +     tristate
->
-> I think you should (in the changelog) explain this change and why you
-> touch all drivers.
+Turns out a few drivers have strayed away from using the
+spinlock_t typedef and decided to use struct spinlock
+directly. This series converts these drivers to use
+spinlock_t. Each change has been compile tested with
+allmodconfig and sparse checked. Driver developers
+may want to look at the compile error output / sparse
+error report supplied in each commit log, in particular
+brcmfmac and i915, there are quite a few things that
+are not related to this change that the developers
+can clean up / fix.
 
-It might be even better to split it out into a separate patch.
+Luis R. Rodriguez (6):
+  ux500: convert struct spinlock to spinlock_t
+  i915: convert struct spinlock to spinlock_t
+  s5p-fimc: convert struct spinlock to spinlock_t
+  s5p-jpeg: convert struct spinlock to spinlock_t
+  brcmfmac: convert struct spinlock to spinlock_t
+  ie6xx_wdt: convert struct spinlock to spinlock_t
 
-Thanks,
+ drivers/crypto/ux500/cryp/cryp.h               |    4 ++--
+ drivers/crypto/ux500/hash/hash_alg.h           |    4 ++--
+ drivers/gpu/drm/i915/i915_drv.h                |    4 ++--
+ drivers/media/platform/s5p-fimc/mipi-csis.c    |    2 +-
+ drivers/media/platform/s5p-jpeg/jpeg-core.h    |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h |    2 +-
+ drivers/watchdog/ie6xx_wdt.c                   |    2 +-
+ 7 files changed, 10 insertions(+), 10 deletions(-)
 
 -- 
-Julian Calaby
+1.7.10.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
