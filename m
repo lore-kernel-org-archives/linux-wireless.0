@@ -1,175 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:64886 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367Ab2KVSiy (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:36646 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754456Ab2K2QJm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:38:54 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so3310402eaa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 10:38:53 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 10/14] wlcore: pass wmm configuration to the fw
-Date: Thu, 22 Nov 2012 18:06:20 +0200
-Message-Id: <1353600384-32462-11-git-send-email-eliad@wizery.com> (sfid-20121122_193913_817454_BEE38F84)
-In-Reply-To: <1353600384-32462-1-git-send-email-eliad@wizery.com>
-References: <1353600384-32462-1-git-send-email-eliad@wizery.com>
+	Thu, 29 Nov 2012 11:09:42 -0500
+Received: by mail-bk0-f46.google.com with SMTP id q16so6355992bkw.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2012 08:09:41 -0800 (PST)
+From: Daniel Stamer <daniel@stamer.info>
+To: linville@tuxdriver.com
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Daniel Stamer <daniel@stamer.info>
+Subject: [PATCH V2] rtlwifi: rtl8192se: Fixed coding style issues in the driver
+Date: Thu, 29 Nov 2012 17:09:26 +0100
+Message-Id: <1354205366-22629-1-git-send-email-daniel@stamer.info> (sfid-20121129_170946_706294_F854CFF7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New fields were added to start_role(ap) and
-set_peer_state commands, so the fw will be
-able to know whether the sta/ap supports
-wmm (the fw uses it in order to choose the
-AC for some of its internally-generated frames)
+This patch fixes almost all coding issues in the rtl8192se driver. Only
+exception is putting trailing */ on separate lines.
 
-For sta, take this value right from bss_conf->qos.
-
-For ap, check for wmm support by looking for the
-WMM IE in the configured beacon.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Daniel Stamer <daniel@stamer.info>
 ---
- drivers/net/wireless/ti/wlcore/cmd.c      |    8 +++++++-
- drivers/net/wireless/ti/wlcore/cmd.h      |   20 +++++++++++++++++---
- drivers/net/wireless/ti/wlcore/main.c     |   11 +++++++++--
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    2 ++
- 4 files changed, 35 insertions(+), 6 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192se/def.h |  3 +--
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c  | 20 ++++++++++----------
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c  |  3 ++-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.h  |  2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c  |  9 +++------
+ 5 files changed, 17 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 63102f2..b2ebe39 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -570,6 +570,7 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	cmd->ap.beacon_expiry = WL1271_AP_DEF_BEACON_EXP;
- 	/* FIXME: Change when adding DFS */
- 	cmd->ap.reset_tsf = 1;  /* By default reset AP TSF */
-+	cmd->ap.wmm = wlvif->wmm_enabled;
- 	cmd->channel = wlvif->channel;
- 	cmd->channel_type = wlcore_get_native_channel_type(wlvif->channel_type);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/def.h b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
+index 20afec6..2d255e0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
+@@ -522,8 +522,7 @@ enum fwcmd_iotype {
+ 	FW_CMD_IQK_ENABLE = 30,
+ };
  
-@@ -1363,7 +1364,8 @@ out:
- 	return ret;
+-/*
+- * Driver info contain PHY status
++/* Driver info contain PHY status
+  * and other variabel size info
+  * PHY Status content as below
+  */
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.c b/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
+index bf79a52..e551fe5 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
+@@ -465,8 +465,8 @@ static void _rtl92s_dm_initial_gain_sta_beforeconnect(struct ieee80211_hw *hw)
+ 				digtable->cur_igvalue =
+ 						digtable->rx_gain_range_min;
+ 			else
+-				digtable->cur_igvalue = digtable->rssi_val + 10 -
+-						digtable->back_val;
++				digtable->cur_igvalue = digtable->rssi_val + 10
++					- digtable->back_val;
+ 
+ 			if (falsealm_cnt->cnt_all > 10000)
+ 				digtable->cur_igvalue =
+@@ -518,7 +518,7 @@ static void _rtl92s_dm_initial_gain_sta_beforeconnect(struct ieee80211_hw *hw)
+ static void _rtl92s_dm_ctrl_initgain_bytwoport(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct dig_t *digtable = &rtlpriv->dm_digtable;
++	struct dig_t *dig = &rtlpriv->dm_digtable;
+ 
+ 	if (rtlpriv->mac80211.act_scanning)
+ 		return;
+@@ -526,17 +526,17 @@ static void _rtl92s_dm_ctrl_initgain_bytwoport(struct ieee80211_hw *hw)
+ 	/* Decide the current status and if modify initial gain or not */
+ 	if (rtlpriv->mac80211.link_state >= MAC80211_LINKED ||
+ 	    rtlpriv->mac80211.opmode == NL80211_IFTYPE_ADHOC)
+-		digtable->cur_sta_cstate = DIG_STA_CONNECT;
++		dig->cur_sta_cstate = DIG_STA_CONNECT;
+ 	else
+-		digtable->cur_sta_cstate = DIG_STA_DISCONNECT;
++		dig->cur_sta_cstate = DIG_STA_DISCONNECT;
+ 
+-	digtable->rssi_val = rtlpriv->dm.undec_sm_pwdb;
++	dig->rssi_val = rtlpriv->dm.undec_sm_pwdb;
+ 
+ 	/* Change dig mode to rssi */
+-	if (digtable->cur_sta_cstate != DIG_STA_DISCONNECT) {
+-		if (digtable->dig_twoport_algorithm ==
++	if (dig->cur_sta_cstate != DIG_STA_DISCONNECT) {
++		if (dig->dig_twoport_algorithm ==
+ 		    DIG_TWO_PORT_ALGO_FALSE_ALARM) {
+-			digtable->dig_twoport_algorithm = DIG_TWO_PORT_ALGO_RSSI;
++			dig->dig_twoport_algorithm = DIG_TWO_PORT_ALGO_RSSI;
+ 			rtl92s_phy_set_fw_cmd(hw, FW_CMD_DIG_MODE_SS);
+ 		}
+ 	}
+@@ -544,7 +544,7 @@ static void _rtl92s_dm_ctrl_initgain_bytwoport(struct ieee80211_hw *hw)
+ 	_rtl92s_dm_false_alarm_counter_statistics(hw);
+ 	_rtl92s_dm_initial_gain_sta_beforeconnect(hw);
+ 
+-	digtable->pre_sta_cstate = digtable->cur_sta_cstate;
++	dig->pre_sta_cstate = dig->cur_sta_cstate;
  }
  
--int wl12xx_cmd_set_peer_state(struct wl1271 *wl, u8 hlid)
-+int wl12xx_cmd_set_peer_state(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			      u8 hlid)
+ static void _rtl92s_dm_ctrl_initgain_byrssi(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+index 1d72779..28526a7 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+@@ -1089,8 +1089,9 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
+ 	return err;
+ }
+ 
+-void rtl92se_set_mac_addr(struct rtl_io *io, const u8 * addr)
++void rtl92se_set_mac_addr(struct rtl_io *io, const u8 *addr)
  {
- 	struct wl12xx_cmd_set_peer_state *cmd;
- 	int ret = 0;
-@@ -1379,6 +1381,10 @@ int wl12xx_cmd_set_peer_state(struct wl1271 *wl, u8 hlid)
- 	cmd->hlid = hlid;
- 	cmd->state = WL1271_CMD_STA_STATE_CONNECTED;
++	/* This is a stub. */
+ }
  
-+	/* wmm param is valid only for station role */
-+	if (wlvif->bss_type == BSS_TYPE_STA_BSS)
-+		cmd->wmm = wlvif->wmm_enabled;
-+
- 	ret = wl1271_cmd_send(wl, CMD_SET_PEER_STATE, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
- 		wl1271_error("failed to send set peer state command");
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index 46513da..2070a10 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -76,7 +76,8 @@ int wl1271_cmd_set_ap_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			  u16 action, u8 id, u8 key_type,
- 			  u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
- 			  u16 tx_seq_16);
--int wl12xx_cmd_set_peer_state(struct wl1271 *wl, u8 hlid);
-+int wl12xx_cmd_set_peer_state(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+			      u8 hlid);
- int wl12xx_roc(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 role_id,
- 	       enum ieee80211_band band, u8 channel);
- int wl12xx_croc(struct wl1271 *wl, u8 role_id);
-@@ -355,7 +356,13 @@ struct wl12xx_cmd_role_start {
+ void rtl92se_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.h b/drivers/net/wireless/rtlwifi/rtl8192se/hw.h
+index 1886c26..a8e068c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.h
+@@ -54,7 +54,7 @@ void rtl92se_disable_interrupt(struct ieee80211_hw *hw);
+ int rtl92se_set_network_type(struct ieee80211_hw *hw,
+ 			     enum nl80211_iftype type);
+ void rtl92se_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid);
+-void rtl92se_set_mac_addr(struct rtl_io *io, const u8 * addr);
++void rtl92se_set_mac_addr(struct rtl_io *io, const u8 *addr);
+ void rtl92se_set_qos(struct ieee80211_hw *hw, int aci);
+ void rtl92se_set_beacon_related_registers(struct ieee80211_hw *hw);
+ void rtl92se_set_beacon_interval(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index ad4b480..c725133 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -50,8 +50,7 @@ static void rtl92s_init_aspm_vars(struct ieee80211_hw *hw)
+ 	/*close ASPM for AMD defaultly */
+ 	rtlpci->const_amdpci_aspm = 0;
  
- 			u8 reset_tsf;
+-	/*
+-	 * ASPM PS mode.
++	/* ASPM PS mode.
+ 	 * 0 - Disable ASPM,
+ 	 * 1 - Enable ASPM without Clock Req,
+ 	 * 2 - Enable ASPM with Clock Req,
+@@ -67,8 +66,7 @@ static void rtl92s_init_aspm_vars(struct ieee80211_hw *hw)
+ 	/*Setting for PCI-E bridge */
+ 	rtlpci->const_hostpci_aspm_setting = 0x02;
  
--			u8 padding_1[4];
-+			/*
-+			 * ap supports wmm (note that there is additional
-+			 * per-sta wmm configuration)
-+			 */
-+			u8 wmm;
-+
-+			u8 padding_1[3];
- 		} __packed ap;
- 	};
- } __packed;
-@@ -525,7 +532,14 @@ struct wl12xx_cmd_set_peer_state {
+-	/*
+-	 * In Hw/Sw Radio Off situation.
++	/* In Hw/Sw Radio Off situation.
+ 	 * 0 - Default,
+ 	 * 1 - From ASPM setting without low Mac Pwr,
+ 	 * 2 - From ASPM setting with low Mac Pwr,
+@@ -77,8 +75,7 @@ static void rtl92s_init_aspm_vars(struct ieee80211_hw *hw)
+ 	 */
+ 	rtlpci->const_hwsw_rfoff_d3 = 2;
  
- 	u8 hlid;
- 	u8 state;
--	u8 padding[2];
-+
-+	/*
-+	 * wmm is relevant for sta role only.
-+	 * ap role configures the per-sta wmm params in
-+	 * the add_peer command.
-+	 */
-+	u8 wmm;
-+	u8 padding[1];
- } __packed;
- 
- struct wl12xx_cmd_roc {
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 860d4af..1d106fd 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -79,7 +79,7 @@ static int wl12xx_set_authorized(struct wl1271 *wl,
- 	if (test_and_set_bit(WLVIF_FLAG_STA_STATE_SENT, &wlvif->flags))
- 		return 0;
- 
--	ret = wl12xx_cmd_set_peer_state(wl, wlvif->sta.hlid);
-+	ret = wl12xx_cmd_set_peer_state(wl, wlvif, wlvif->sta.hlid);
- 	if (ret < 0)
- 		return ret;
- 
-@@ -2630,6 +2630,7 @@ static int wlcore_set_assoc(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	wlvif->aid = bss_conf->aid;
- 	wlvif->channel_type = bss_conf->channel_type;
- 	wlvif->beacon_int = bss_conf->beacon_int;
-+	wlvif->wmm_enabled = bss_conf->qos;
- 
- 	set_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags);
- 
-@@ -3692,6 +3693,12 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
- 		goto out;
- 	}
- 
-+	wlvif->wmm_enabled =
-+		cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
-+					WLAN_OUI_TYPE_MICROSOFT_WMM,
-+					beacon->data + ieoffset,
-+					beacon->len - ieoffset);
-+
- 	/*
- 	 * In case we already have a probe-resp beacon set explicitly
- 	 * by usermode, don't use the beacon data.
-@@ -4478,7 +4485,7 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
- 	/* Authorize station (AP mode) */
- 	if (is_ap &&
- 	    new_state == IEEE80211_STA_AUTHORIZED) {
--		ret = wl12xx_cmd_set_peer_state(wl, hlid);
-+		ret = wl12xx_cmd_set_peer_state(wl, wlvif, hlid);
- 		if (ret < 0)
- 			return ret;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index bc3b5f4..8478bbc 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -416,6 +416,8 @@ struct wl12xx_vif {
- 	bool ba_support;
- 	bool ba_allowed;
- 
-+	bool wmm_enabled;
-+
- 	/* Rx Streaming */
- 	struct work_struct rx_streaming_enable_work;
- 	struct work_struct rx_streaming_disable_work;
+-	/*
+-	 * This setting works for those device with
++	/* This setting works for those device with
+ 	 * backdoor ASPM setting such as EPHY setting.
+ 	 * 0 - Not support ASPM,
+ 	 * 1 - Support ASPM,
 -- 
-1.7.6.401.g6a319
+1.8.0.1
 
