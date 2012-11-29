@@ -1,115 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:38209 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753767Ab2KSQjp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45721 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932576Ab2K2AAE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 11:39:45 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so2051752eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Nov 2012 08:39:45 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/15] wlcore: add chanctx implementation
-Date: Mon, 19 Nov 2012 18:39:23 +0200
-Message-Id: <1353343170-26516-9-git-send-email-eliad@wizery.com> (sfid-20121119_173952_507956_82E60242)
-In-Reply-To: <1353343170-26516-1-git-send-email-eliad@wizery.com>
-References: <1353343170-26516-1-git-send-email-eliad@wizery.com>
+	Wed, 28 Nov 2012 19:00:04 -0500
+Message-ID: <1354147227.9345.47.camel@jlt4.sipsolutions.net> (sfid-20121129_010009_593646_5C27B488)
+Subject: Re: [PATCH] cfg80211: fix cmp_hidden_bss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Date: Thu, 29 Nov 2012 01:00:27 +0100
+In-Reply-To: <CAB3XZEeuZOv_gHD2q0-K3JUXhjgTFx3AgZ1vS0Rc-toOVf-kTA@mail.gmail.com> (sfid-20121129_005346_428375_D8E90F07)
+References: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net>
+	 <CAB3XZEeuZOv_gHD2q0-K3JUXhjgTFx3AgZ1vS0Rc-toOVf-kTA@mail.gmail.com>
+	 (sfid-20121129_005346_428375_D8E90F07)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some basic chanctx implementation.
+On Thu, 2012-11-29 at 01:53 +0200, Eliad Peller wrote:
+> On Wed, Nov 28, 2012 at 11:44 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > The cmp_bss() comparator function uses memcmp() to
+> > compare the SSID. This means that cmp_hidden_bss()
+> > needs to similarly return a number bigger than zero
+> > (use 1) instead of -1 when ie1 is bigger than ie2,
+> > which is the case if an ie2 byte is non-zero.
 
-Only add debug prints, and save the vif's channel/band/type.
+> > +++ b/net/wireless/scan.c
+> > @@ -472,7 +472,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
+> >         /* zeroed SSID ie is another indication of a hidden bss */
+> >         for (i = 0; i < ie2[1]; i++)
+> >                 if (ie2[i + 2])
+> > -                       return -1;
+> > +                       return 1;
+> >
+> >         return 0;
+> >  }
+> 
+> maybe i'm misreading it, but there is still no comparison here at all,
+> so it seems wrong as well :)
+> (practically, i guess it doesn't really matter, because if there is
+> some non-null char, this is not a hidden ssid anyway)
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   66 +++++++++++++++++++++++++++++++++
- 1 files changed, 66 insertions(+), 0 deletions(-)
+Hmm yeah you're right, it should be
+	return ie2[i + 1] - ie1[i + 1];
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 4f4a9e5..caafd8c 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4150,6 +4150,67 @@ out:
- 	mutex_unlock(&wl->mutex);
- }
- 
-+static int wlcore_op_add_chanctx(struct ieee80211_hw *hw,
-+				 struct ieee80211_chanctx_conf *ctx)
-+{
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 add chanctx %d (type %d)",
-+		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-+		     ctx->channel_type);
-+	return 0;
-+}
-+
-+static void wlcore_op_remove_chanctx(struct ieee80211_hw *hw,
-+				     struct ieee80211_chanctx_conf *ctx)
-+{
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 remove chanctx %d (type %d)",
-+		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-+		     ctx->channel_type);
-+}
-+
-+static void wlcore_op_change_chanctx(struct ieee80211_hw *hw,
-+				     struct ieee80211_chanctx_conf *ctx,
-+				     u32 changed)
-+{
-+	wl1271_debug(DEBUG_MAC80211,
-+		     "mac80211 change chanctx %d (type %d) changed 0x%x",
-+		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-+		     ctx->channel_type, changed);
-+}
-+
-+static int wlcore_op_assign_vif_chanctx(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif,
-+					struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+	int channel = ieee80211_frequency_to_channel(
-+		ctx->channel->center_freq);
-+
-+	wl1271_debug(DEBUG_MAC80211,
-+		     "mac80211 assign chanctx (role %d) %d (type %d)",
-+		     wlvif->role_id, channel, ctx->channel_type);
-+
-+	wlcore_tx_work_locked(wl);
-+	wlvif->band = ctx->channel->band;
-+	wlvif->channel = channel;
-+	wlvif->channel_type = ctx->channel_type;
-+
-+	return 0;
-+}
-+
-+static void wlcore_op_unassign_vif_chanctx(struct ieee80211_hw *hw,
-+					   struct ieee80211_vif *vif,
-+					   struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+
-+	wl1271_debug(DEBUG_MAC80211,
-+		     "mac80211 unassign chanctx (role %d) %d (type %d)",
-+		     wlvif->role_id,
-+		     ieee80211_frequency_to_channel(ctx->channel->center_freq),
-+		     ctx->channel_type);
-+}
-+
- static int wl1271_op_conf_tx(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
-@@ -4972,6 +5033,11 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.flush = wlcore_op_flush,
- 	.remain_on_channel = wlcore_op_remain_on_channel,
- 	.cancel_remain_on_channel = wlcore_op_cancel_remain_on_channel,
-+	.add_chanctx = wlcore_op_add_chanctx,
-+	.remove_chanctx = wlcore_op_remove_chanctx,
-+	.change_chanctx = wlcore_op_change_chanctx,
-+	.assign_vif_chanctx = wlcore_op_assign_vif_chanctx,
-+	.unassign_vif_chanctx = wlcore_op_unassign_vif_chanctx,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
- 
--- 
-1.7.6.401.g6a319
+(or the other way around? need to sleep on that first...)
+
+johannes
 
