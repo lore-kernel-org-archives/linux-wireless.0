@@ -1,97 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:37073 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807Ab2KSB4k (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:63515 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975Ab2K2Up2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2012 20:56:40 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so822328eek.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Nov 2012 17:56:39 -0800 (PST)
-From: "Walter Robert Ditzler" <ditwal001@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-References: <!&!AAAAAAAAAAAYAAAAAAAAAOJK0u4CH31Kl5v1RPAzyrZCgQAAEAAAAPZ+jv3Bp7FBumOZuSWcpNUBAAAAAA==@gmail.com>
-In-Reply-To: <!&!AAAAAAAAAAAYAAAAAAAAAOJK0u4CH31Kl5v1RPAzyrZCgQAAEAAAAPZ+jv3Bp7FBumOZuSWcpNUBAAAAAA==@gmail.com>
-Subject: WLAN UB-5 AR5414 (5GHz)
-Date: Mon, 19 Nov 2012 02:56:36 +0100
-Message-ID: <!&!AAAAAAAAAAAYAAAAAAAAAOJK0u4CH31Kl5v1RPAzyrZCgQAAEAAAAPHUAOFX2ZxCslfE3J6mUdcBAAAAAA==@gmail.com> (sfid-20121119_025646_382633_F2A0176F)
+	Thu, 29 Nov 2012 15:45:28 -0500
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-kernel@vger.kernel.org, tglx@linutronix.de
+Cc: backports@vger.kernel.org, alexander.stein@systec-electronic.com,
+	brudley@broadcom.com, rvossen@broadcom.com, arend@broadcom.com,
+	frankyl@broadcom.com, kanyan@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kyungmin.park@samsung.com, s.nawrocki@samsung.com,
+	linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
+	daniel.vetter@ffwll.ch, intel-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org, srinidhi.kasagar@stericsson.com,
+	linus.walleij@linaro.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/6] i915: convert struct spinlock to spinlock_t
+Date: Thu, 29 Nov 2012 12:45:06 -0800
+Message-Id: <1354221910-22493-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20121129_214750_001352_DD35BF54)
+In-Reply-To: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-aGkgdGhlcmUsDQoNCmkgY2FuJ3QgZ2V0IHRoZSBXTEFOIFVCLTUgQVI1NDE0ICg1R0h6KSB0byBy
-dW4uIGkgdHJpZWQ6DQoNCioqKg0KaWZjb25maWcgd2xhbjAgZG93bg0KaXcgZGV2IHdsYW4wIGRl
-bA0KaXcgcGh5IHBoeTAgaW50ZXJmYWNlIGFkZCB3bGFuMCB0eXBlIGFkaG9jDQppd2NvbmZpZyB3
-bGFuMCBtb2RlIGFkLWhvYyBlc3NpZCB4eHhoIGFwIDAwOjAwOjAwOjc4OjlhOmJjIGNoYW5uZWwg
-NDgNCmlmY29uZmlnIG1lc2gwIDEwLjEwLjEwLjIgdXANCioqKg0KDQphbmQgaSB0cmllZCB3aXRo
-IGhvc3RhcGQNCg0KKioNCmludGVyZmFjZT13bGFuMA0KZHJpdmVyPW5sODAyMTENCnNzaWQ9eHh4
-DQpod19tb2RlPWENCmNoYW5uZWw9NDgNCioqKg0KDQpub3RoaW5nIGhhcHBlbmQuIGkgYWxzbyBj
-YW50IGdldCBhIGR1bXAgb2Z0IGhlIGNhcmQuIG15IGhhcmR3YXJlIGlzIGFsaXgyZDIsDQpkZWJp
-YW4gNi4wLjYsIGtlcm5lbCAzLjYuNSwgY2YgaW5zdGFsbCB3aXRoIGZsYXNoeWJyaWQuDQoNCnRo
-YW5rcyBhIGxvdCBmb3IgaGVscCwNCg0Kd2FsdGVyLg0KDQoNCg0KKioqIGl3Y29uZmlnDQpyb290
-QHNydi1sZGViLW1lc2gwMTp+IyBpd2NvbmZpZw0KaXBfdnRpMKCgIG5vIHdpcmVsZXNzIGV4dGVu
-c2lvbnMuDQoNCmdyZTCgoKCgoCBubyB3aXJlbGVzcyBleHRlbnNpb25zLg0KDQp3bGFuMKCgoCCg
-SUVFRSA4MDIuMTFhoCBNb2RlOk1hc3RlcqAgVHgtUG93ZXI9MCBkQm0NCqCgoKCgoKCgoCBSZXRy
-eaAgbG9uZyBsaW1pdDo3oKAgUlRTIHRocjpvZmagoCBGcmFnbWVudCB0aHI6b2ZmDQqgoKCgoKCg
-oKAgUG93ZXIgTWFuYWdlbWVudDpvbg0KDQpsb6CgoKCgoKAgbm8gd2lyZWxlc3MgZXh0ZW5zaW9u
-cy4NCg0KZXRoMKCgoKCgIG5vIHdpcmVsZXNzIGV4dGVuc2lvbnMuDQoNCmV0aDGgoKCgoCBubyB3
-aXJlbGVzcyBleHRlbnNpb25zLg0KDQp3bGFuMaCgoKAgSUVFRSA4MDIuMTFhYmduoCBNb2RlOk1h
-c3RlcqAgVHgtUG93ZXI9MjAgZEJtDQqgoKCgoKCgoKAgUmV0cnmgIGxvbmcgbGltaXQ6N6CgIFJU
-UyB0aHI6b2ZmoKAgRnJhZ21lbnQgdGhyOm9mZg0KoKCgoKCgoKCgIFBvd2VyIE1hbmFnZW1lbnQ6
-b24NCg0KdHVubDCgoKCgIG5vIHdpcmVsZXNzIGV4dGVuc2lvbnMuDQoqKioNCg0KKioqIGl3IGxp
-c3QNCnJvb3RAc3J2LWxkZWItbWVzaDAxOn4jIGl3IGxpc3QNCldpcGh5IHBoeTENCqCgoKCgoKAg
-QmFuZCAxOg0KoKCgoKCgoKCgoKCgoCCgoEZyZXF1ZW5jaWVzOg0KoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKAgKiA1MDQwIE1IeiBbOF0gKGRpc2FibGVkKQ0KoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAg
-KiA1MDYwIE1IeiBbMTJdIChkaXNhYmxlZCkNCqCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgICogNTA4
-MCBNSHogWzE2XSAoZGlzYWJsZWQpDQqgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCAqIDUxODAgTUh6
-IFszNl0gKDIwLjAgZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8NCklCU1MpDQqgoKCgoKCgoKAg
-oKCgoKCgoKCgoKCgoKAqIDUyMDAgTUh6IFs0MF0gKDIwLjAgZEJtKSAocGFzc2l2ZSBzY2Fubmlu
-Zywgbm8NCklCU1MpDQqgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCAqIDUyMjAgTUh6IFs0NF0gKDIw
-LjAgZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8NCklCU1MpDQqgoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoCAqIDUyNDAgTUh6IFs0OF0gKDIwLjAgZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8NCklC
-U1MpDQqgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCAqIDUyNjAgTUh6IFs1Ml0gKGRpc2FibGVkKQ0K
-oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiA1MjgwIE1IeiBbNTZdIChkaXNhYmxlZCkNCqCgoKCg
-oKCgoKCgoKCgoKCgoKCgoKCgICogNTMwMCBNSHogWzYwXSAoZGlzYWJsZWQpDQqgoKCgoKCgoKCg
-oKCgoKCgoKCgoKCgoCAqIDUzMjAgTUh6IFs2NF0gKGRpc2FibGVkKQ0KoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgoKAgKiA1NTAwIE1IeiBbMTAwXSAoZGlzYWJsZWQpDQqgoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoCAqIDU1MjAgTUh6IFsxMDRdIChkaXNhYmxlZCkNCqCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-ICogNTU0MCBNSHogWzEwOF0gKGRpc2FibGVkKQ0KoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiA1
-NTYwIE1IeiBbMTEyXSAoZGlzYWJsZWQpDQqgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCAqIDU1ODAg
-TUh6IFsxMTZdIChkaXNhYmxlZCkNCqCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgICogNTYwMCBNSHog
-WzEyMF0gKGRpc2FibGVkKQ0KoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiA1NjIwIE1IeiBbMTI0
-XSAoZGlzYWJsZWQpDQqgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCAqIDU2NDAgTUh6IFsxMjhdIChk
-aXNhYmxlZCkNCqCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgICogNTY2MCBNSHogWzEzMl0gKGRpc2Fi
-bGVkKQ0KoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiA1NjgwIE1IeiBbMTM2XSAoZGlzYWJsZWQp
-DQqgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCAqIDU3MDAgTUh6IFsxNDBdIChkaXNhYmxlZCkNCqCg
-oKCgoKCgoKCgoKCgoKCgoKCgoKCgICogNTc0NSBNSHogWzE0OV0gKDIwLjAgZEJtKSAocGFzc2l2
-ZSBzY2FubmluZywgbm8NCklCU1MpDQqgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCAqIDU3NjUgTUh6
-IFsxNTNdICgyMC4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vDQpJQlNTKQ0KoKCgoKCgoKCg
-oKCgoKCgoKCgoKCgoKAgKiA1Nzg1IE1IeiBbMTU3XSAoMjAuMCBkQm0pIChwYXNzaXZlIHNjYW5u
-aW5nLCBubw0KSUJTUykNCqCgoKCgoKCgoKCgIKCgoKCgoKCgoKCgoCogNTgwNSBNSHogWzE2MV0g
-KDIwLjAgZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8NCklCU1MpDQqgoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgoCAqIDU4MjUgTUh6IFsxNjVdICgyMC4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5v
-DQpJQlNTKQ0KoKCgoKCgoKCgoKCgoKCgIEJpdHJhdGVzIChub24tSFQpOg0KoKCgoKCgoKCgoKCg
-oKCgoKCgoKCgoKAgKiA2LjAgTWJwcw0KoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiA5LjAgTWJw
-cw0KoKAgoKCgoKCgoKCgoKCgoKCgoKCgoKCgKiAxMi4wIE1icHMNCioqKg0KDQoqKiogZG1lc2cg
-fGdyZXAgYXRoDQpyb290QHNydi1sZGViLW1lc2gwMTp+IyBkbWVzZyB8Z3JlcCBhdGgNClugoKAg
-NS40Mjk2NjZdIG9wZW52c3dpdGNoOiBPcGVuIHZTd2l0Y2ggc3dpdGNoaW5nIGRhdGFwYXRoDQpb
-oKAgMTQuNjE3MDMwXaAgWzxjMTA0ZTNmZj5dID8gd2Fybl9zbG93cGF0aF9jb21tb24rMHhmMi8w
-eDEzMg0KW6CgIDE0LjYxNzIxOF2gIFs8YzEwNGU1NjE+XSA/IHdhcm5fc2xvd3BhdGhfZm10KzB4
-NWQvMHg3ZA0KW6CgIDE3LjA0OTIyNV0gYXRoOiBFRVBST00gcmVnZG9tYWluOiAweDANClugoCAx
-Ny4wNDkyNTBdIGF0aDogRUVQUk9NIGluZGljYXRlcyBkZWZhdWx0IGNvdW50cnkgY29kZSBzaG91
-bGQgYmUgdXNlZA0KW6CgIDE3LjA0OTI2M10gYXRoOiBkb2luZyBFRVBST00gY291bnRyeS0+cmVn
-ZG1uIG1hcCBzZWFyY2gNClugoCAxNy4wNDkyODRdIGF0aDogY291bnRyeSBtYXBzIHRvIHJlZ2Rt
-biBjb2RlOiAweDNhDQpboKAgMTcuMDQ5Mjk5XSBhdGg6IENvdW50cnkgYWxwaGEyIGJlaW5nIHVz
-ZWQ6IFVTDQpboKAgMTcuMDQ5MzEzXSBhdGg6IFJlZ3BhaXIgdXNlZDogMHgzYQ0KW6CgIDE3LjE4
-NjQ4NF0gaWVlZTgwMjExIHBoeTA6IFNlbGVjdGVkIHJhdGUgY29udHJvbCBhbGdvcml0aG0NCidh
-dGg5a19yYXRlX2NvbnRyb2wnDQpboKAgMTcuMTg4ODQyXSBSZWdpc3RlcmVkIGxlZCBkZXZpY2U6
-IGF0aDlrLXBoeTANClugoCAxNy4yMzI0MThdIGF0aDVrIDAwMDA6MDA6MGUuMDogcmVnaXN0ZXJl
-ZCBhcyAncGh5MScNClugoCAxOC4wNDc3NDJdIGF0aDogRUVQUk9NIHJlZ2RvbWFpbjogMHgwDQpb
-oKAgMTguMDQ3NzY3XSBhdGg6IEVFUFJPTSBpbmRpY2F0ZXMgZGVmYXVsdCBjb3VudHJ5IGNvZGUg
-c2hvdWxkIGJlIHVzZWQNClugoCAxOC4wNDc3ODBdIGF0aDogZG9pbmcgRUVQUk9NIGNvdW50cnkt
-PnJlZ2RtbiBtYXAgc2VhcmNoDQpboKAgMTguMDQ3ODAxXSBhdGg6IGNvdW50cnkgbWFwcyB0byBy
-ZWdkbW4gY29kZTogMHgzYQ0KW6CgIDE4LjA0NzgxNl0gYXRoOiBDb3VudHJ5IGFscGhhMiBiZWlu
-ZyB1c2VkOiBVUw0KW6CgIDE4LjA0NzgzMF0gYXRoOiBSZWdwYWlyIHVzZWQ6IDB4M2ENClugoCAx
-OC4wNTE5MTZdIGF0aDVrOiBwaHkxOiBBdGhlcm9zIEFSNTQxNCBjaGlwIGZvdW5kIChNQUM6IDB4
-YTUsIFBIWTogMHg2MSkNCnJvb3RAc3J2LWxkZWItbWVzaDAxOn4jDQoqKioNCg==
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+
+spinlock_t should always be used.
+
+  LD      drivers/gpu/drm/i915/built-in.o
+  CHECK   drivers/gpu/drm/i915/i915_drv.c
+  CC [M]  drivers/gpu/drm/i915/i915_drv.o
+  CHECK   drivers/gpu/drm/i915/i915_dma.c
+  CC [M]  drivers/gpu/drm/i915/i915_dma.o
+  CHECK   drivers/gpu/drm/i915/i915_irq.c
+  CC [M]  drivers/gpu/drm/i915/i915_irq.o
+  CHECK   drivers/gpu/drm/i915/i915_debugfs.c
+drivers/gpu/drm/i915/i915_debugfs.c:558:31: warning: dereference of noderef expression
+drivers/gpu/drm/i915/i915_debugfs.c:558:39: warning: dereference of noderef expression
+drivers/gpu/drm/i915/i915_debugfs.c:558:51: warning: dereference of noderef expression
+drivers/gpu/drm/i915/i915_debugfs.c:558:63: warning: dereference of noderef expression
+  CC [M]  drivers/gpu/drm/i915/i915_debugfs.o
+  CHECK   drivers/gpu/drm/i915/i915_suspend.c
+  CC [M]  drivers/gpu/drm/i915/i915_suspend.o
+  CHECK   drivers/gpu/drm/i915/i915_gem.c
+drivers/gpu/drm/i915/i915_gem.c:3703:14: warning: incorrect type in assignment (different base types)
+drivers/gpu/drm/i915/i915_gem.c:3703:14:    expected unsigned int [unsigned] [usertype] mask
+drivers/gpu/drm/i915/i915_gem.c:3703:14:    got restricted gfp_t
+drivers/gpu/drm/i915/i915_gem.c:3706:22: warning: invalid assignment: &=
+drivers/gpu/drm/i915/i915_gem.c:3706:22:    left side has type unsigned int
+drivers/gpu/drm/i915/i915_gem.c:3706:22:    right side has type restricted gfp_t
+drivers/gpu/drm/i915/i915_gem.c:3707:22: warning: invalid assignment: |=
+drivers/gpu/drm/i915/i915_gem.c:3707:22:    left side has type unsigned int
+drivers/gpu/drm/i915/i915_gem.c:3707:22:    right side has type restricted gfp_t
+drivers/gpu/drm/i915/i915_gem.c:3711:39: warning: incorrect type in argument 2 (different base types)
+drivers/gpu/drm/i915/i915_gem.c:3711:39:    expected restricted gfp_t [usertype] mask
+drivers/gpu/drm/i915/i915_gem.c:3711:39:    got unsigned int [unsigned] [usertype] mask
+  CC [M]  drivers/gpu/drm/i915/i915_gem.o
+  CHECK   drivers/gpu/drm/i915/i915_gem_context.c
+  CC [M]  drivers/gpu/drm/i915/i915_gem_context.o
+  CHECK   drivers/gpu/drm/i915/i915_gem_debug.c
+  CC [M]  drivers/gpu/drm/i915/i915_gem_debug.o
+  CHECK   drivers/gpu/drm/i915/i915_gem_evict.c
+  CC [M]  drivers/gpu/drm/i915/i915_gem_evict.o
+  CHECK   drivers/gpu/drm/i915/i915_gem_execbuffer.c
+  CC [M]  drivers/gpu/drm/i915/i915_gem_execbuffer.o
+  CHECK   drivers/gpu/drm/i915/i915_gem_gtt.c
+  CC [M]  drivers/gpu/drm/i915/i915_gem_gtt.o
+  CHECK   drivers/gpu/drm/i915/i915_gem_stolen.c
+  CC [M]  drivers/gpu/drm/i915/i915_gem_stolen.o
+  CHECK   drivers/gpu/drm/i915/i915_gem_tiling.c
+  CC [M]  drivers/gpu/drm/i915/i915_gem_tiling.o
+  CHECK   drivers/gpu/drm/i915/i915_sysfs.c
+  CC [M]  drivers/gpu/drm/i915/i915_sysfs.o
+  CHECK   drivers/gpu/drm/i915/i915_trace_points.c
+  CC [M]  drivers/gpu/drm/i915/i915_trace_points.o
+  CHECK   drivers/gpu/drm/i915/intel_display.c
+drivers/gpu/drm/i915/intel_display.c:1736:9: warning: mixing different enum types
+drivers/gpu/drm/i915/intel_display.c:1736:9:     int enum transcoder  versus
+drivers/gpu/drm/i915/intel_display.c:1736:9:     int enum pipe
+drivers/gpu/drm/i915/intel_display.c:3659:48: warning: mixing different enum types
+drivers/gpu/drm/i915/intel_display.c:3659:48:     int enum pipe  versus
+drivers/gpu/drm/i915/intel_display.c:3659:48:     int enum transcoder
+  CC [M]  drivers/gpu/drm/i915/intel_display.o
+  CHECK   drivers/gpu/drm/i915/intel_crt.c
+  CC [M]  drivers/gpu/drm/i915/intel_crt.o
+  CHECK   drivers/gpu/drm/i915/intel_lvds.c
+  CC [M]  drivers/gpu/drm/i915/intel_lvds.o
+  CHECK   drivers/gpu/drm/i915/intel_bios.c
+drivers/gpu/drm/i915/intel_bios.c:706:60: warning: incorrect type in initializer (different address spaces)
+drivers/gpu/drm/i915/intel_bios.c:706:60:    expected struct vbt_header *vbt
+drivers/gpu/drm/i915/intel_bios.c:706:60:    got void [noderef] <asn:2>*vbt
+drivers/gpu/drm/i915/intel_bios.c:726:42: warning: incorrect type in argument 1 (different address spaces)
+drivers/gpu/drm/i915/intel_bios.c:726:42:    expected void const *<noident>
+drivers/gpu/drm/i915/intel_bios.c:726:42:    got unsigned char [noderef] [usertype] <asn:2>*
+drivers/gpu/drm/i915/intel_bios.c:727:40: warning: cast removes address space of expression
+drivers/gpu/drm/i915/intel_bios.c:738:24: warning: cast removes address space of expression
+  CC [M]  drivers/gpu/drm/i915/intel_bios.o
+  CHECK   drivers/gpu/drm/i915/intel_ddi.c
+drivers/gpu/drm/i915/intel_ddi.c:87:6: warning: symbol 'intel_prepare_ddi_buffers' was not declared. Should it be static?
+drivers/gpu/drm/i915/intel_ddi.c:1036:34: warning: mixing different enum types
+drivers/gpu/drm/i915/intel_ddi.c:1036:34:     int enum pipe  versus
+drivers/gpu/drm/i915/intel_ddi.c:1036:34:     int enum transcoder
+  CC [M]  drivers/gpu/drm/i915/intel_ddi.o
+drivers/gpu/drm/i915/intel_ddi.c: In function ‘intel_ddi_setup_hw_pll_state’:
+drivers/gpu/drm/i915/intel_ddi.c:1129:2: warning: ‘port’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+drivers/gpu/drm/i915/intel_ddi.c:1111:12: note: ‘port’ was declared here
+  CHECK   drivers/gpu/drm/i915/intel_dp.c
+  CC [M]  drivers/gpu/drm/i915/intel_dp.o
+  CHECK   drivers/gpu/drm/i915/intel_hdmi.c
+  CC [M]  drivers/gpu/drm/i915/intel_hdmi.o
+  CHECK   drivers/gpu/drm/i915/intel_sdvo.c
+  CC [M]  drivers/gpu/drm/i915/intel_sdvo.o
+  CHECK   drivers/gpu/drm/i915/intel_modes.c
+  CC [M]  drivers/gpu/drm/i915/intel_modes.o
+  CHECK   drivers/gpu/drm/i915/intel_panel.c
+  CC [M]  drivers/gpu/drm/i915/intel_panel.o
+  CHECK   drivers/gpu/drm/i915/intel_pm.c
+drivers/gpu/drm/i915/intel_pm.c:2173:1: warning: symbol 'mchdev_lock' was not declared. Should it be static?
+  CC [M]  drivers/gpu/drm/i915/intel_pm.o
+  CHECK   drivers/gpu/drm/i915/intel_i2c.c
+  CC [M]  drivers/gpu/drm/i915/intel_i2c.o
+  CHECK   drivers/gpu/drm/i915/intel_fb.c
+  CC [M]  drivers/gpu/drm/i915/intel_fb.o
+  CHECK   drivers/gpu/drm/i915/intel_tv.c
+  CC [M]  drivers/gpu/drm/i915/intel_tv.o
+  CHECK   drivers/gpu/drm/i915/intel_dvo.c
+  CC [M]  drivers/gpu/drm/i915/intel_dvo.o
+  CHECK   drivers/gpu/drm/i915/intel_ringbuffer.c
+  CC [M]  drivers/gpu/drm/i915/intel_ringbuffer.o
+  CHECK   drivers/gpu/drm/i915/intel_overlay.c
+  CC [M]  drivers/gpu/drm/i915/intel_overlay.o
+  CHECK   drivers/gpu/drm/i915/intel_sprite.c
+  CC [M]  drivers/gpu/drm/i915/intel_sprite.o
+  CHECK   drivers/gpu/drm/i915/intel_opregion.c
+  CC [M]  drivers/gpu/drm/i915/intel_opregion.o
+  CHECK   drivers/gpu/drm/i915/dvo_ch7xxx.c
+  CC [M]  drivers/gpu/drm/i915/dvo_ch7xxx.o
+  CHECK   drivers/gpu/drm/i915/dvo_ch7017.c
+  CC [M]  drivers/gpu/drm/i915/dvo_ch7017.o
+  CHECK   drivers/gpu/drm/i915/dvo_ivch.c
+  CC [M]  drivers/gpu/drm/i915/dvo_ivch.o
+  CHECK   drivers/gpu/drm/i915/dvo_tfp410.c
+  CC [M]  drivers/gpu/drm/i915/dvo_tfp410.o
+  CHECK   drivers/gpu/drm/i915/dvo_sil164.c
+  CC [M]  drivers/gpu/drm/i915/dvo_sil164.o
+  CHECK   drivers/gpu/drm/i915/dvo_ns2501.c
+  CC [M]  drivers/gpu/drm/i915/dvo_ns2501.o
+  CHECK   drivers/gpu/drm/i915/i915_gem_dmabuf.c
+  CC [M]  drivers/gpu/drm/i915/i915_gem_dmabuf.o
+  CHECK   drivers/gpu/drm/i915/i915_ioc32.c
+  CC [M]  drivers/gpu/drm/i915/i915_ioc32.o
+  CHECK   drivers/gpu/drm/i915/intel_acpi.c
+  CC [M]  drivers/gpu/drm/i915/intel_acpi.o
+  LD [M]  drivers/gpu/drm/i915/i915.o
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      drivers/gpu/drm/i915/i915.mod.o
+  LD [M]  drivers/gpu/drm/i915/i915.ko
+
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: intel-gfx@lists.freedesktop.org
+Cc: dri-devel@lists.freedesktop.org
+Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ drivers/gpu/drm/i915/i915_drv.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
+index 4b83e5f..ef5f33c 100644
+--- a/drivers/gpu/drm/i915/i915_drv.h
++++ b/drivers/gpu/drm/i915/i915_drv.h
+@@ -628,7 +628,7 @@ typedef struct drm_i915_private {
+ 	/** forcewake_count is protected by gt_lock */
+ 	unsigned forcewake_count;
+ 	/** gt_lock is also taken in irq contexts. */
+-	struct spinlock gt_lock;
++	spinlock_t gt_lock;
+ 
+ 	struct intel_gmbus gmbus[GMBUS_NUM_PORTS];
+ 
+@@ -1128,7 +1128,7 @@ struct drm_i915_gem_request {
+ 
+ struct drm_i915_file_private {
+ 	struct {
+-		struct spinlock lock;
++		spinlock_t lock;
+ 		struct list_head request_list;
+ 	} mm;
+ 	struct idr context_idr;
+-- 
+1.7.10.4
 
