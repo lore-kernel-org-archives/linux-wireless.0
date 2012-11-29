@@ -1,179 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:42082 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756149Ab2KWUx3 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:50270 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975Ab2K2UpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Nov 2012 15:53:29 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Subject: [RFCv2 3/4] iw: add support for link-specific mesh power modes
-Date: Fri, 23 Nov 2012 12:53:13 -0800
-Message-Id: <1353703994-13093-4-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121123_215339_702311_253EEF00)
-In-Reply-To: <1353703994-13093-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353703994-13093-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	Thu, 29 Nov 2012 15:45:23 -0500
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-kernel@vger.kernel.org, tglx@linutronix.de
+Cc: backports@vger.kernel.org, alexander.stein@systec-electronic.com,
+	brudley@broadcom.com, rvossen@broadcom.com, arend@broadcom.com,
+	frankyl@broadcom.com, kanyan@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kyungmin.park@samsung.com, s.nawrocki@samsung.com,
+	linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
+	daniel.vetter@ffwll.ch, intel-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org, srinidhi.kasagar@stericsson.com,
+	linus.walleij@linaro.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 1/6] ux500: convert struct spinlock to spinlock_t
+Date: Thu, 29 Nov 2012 12:45:05 -0800
+Message-Id: <1354221910-22493-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20121129_214547_104366_E20A606B)
+In-Reply-To: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The different power modes of links towards neighbor STA can be read using
-iw <dev> station get
--or-
-iw <dev> station dump
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-The different power modes shown are:
-- mesh local PS mode
-- mesh peer PS mode
-- mesh non-peer PS mode
-where the local PS mode is "our" mode towards the neighbor, the peer PS mode
-is the neighbor's mode towards us, and the non-peer PS mode is the neighbor's
-non-peer PS mode as indicated in beacons and management frames.
+spinlock_t should always be used.
 
-The local PS mode can be modified for each neighbor using
-iw <dev> station set <mac-addr> mesh_power_mode <active|light|deep>
+I was unable to build test with allmodconfig:
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+mcgrof@frijol ~/linux-next (git::(no branch))$ make C=1 M=drivers/crypto/ux500/
+
+  WARNING: Symbol version dump /home/mcgrof/linux-next/Module.symvers
+           is missing; modules will have no dependencies and modversions.
+
+  LD      drivers/crypto/ux500/built-in.o
+  Building modules, stage 2.
+  MODPOST 0 modules
+
+Cc: Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org
+Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- station.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 89 insertions(+)
+ drivers/crypto/ux500/cryp/cryp.h     |    4 ++--
+ drivers/crypto/ux500/hash/hash_alg.h |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/station.c b/station.c
-index 247f445..09ccb8f 100644
---- a/station.c
-+++ b/station.c
-@@ -29,6 +29,25 @@ enum plink_actions {
- 	PLINK_ACTION_BLOCK,
+diff --git a/drivers/crypto/ux500/cryp/cryp.h b/drivers/crypto/ux500/cryp/cryp.h
+index 14cfd05..ba324b2 100644
+--- a/drivers/crypto/ux500/cryp/cryp.h
++++ b/drivers/crypto/ux500/cryp/cryp.h
+@@ -236,12 +236,12 @@ struct cryp_device_data {
+ 	struct clk *clk;
+ 	struct regulator *pwr_regulator;
+ 	int power_status;
+-	struct spinlock ctx_lock;
++	spinlock_t ctx_lock;
+ 	struct cryp_ctx *current_ctx;
+ 	struct klist_node list_node;
+ 	struct cryp_dma dma;
+ 	bool power_state;
+-	struct spinlock power_state_spinlock;
++	spinlock_t power_state_spinlock;
+ 	bool restore_dev_ctx;
  };
  
-+static void print_power_mode(struct nlattr *a)
-+{
-+	enum nl80211_mesh_power_mode pm = nla_get_u8(a);
-+
-+	switch (pm) {
-+	case NL80211_MESH_POWER_ACTIVE:
-+		printf("ACTIVE");
-+		break;
-+	case NL80211_MESH_POWER_LIGHT_SLEEP:
-+		printf("LIGHT SLEEP");
-+		break;
-+	case NL80211_MESH_POWER_DEEP_SLEEP:
-+		printf("DEEP SLEEP");
-+		break;
-+	default:
-+		printf("UNKNOWN");
-+		break;
-+	}
-+}
- 
- static int print_sta_handler(struct nl_msg *msg, void *arg)
- {
-@@ -54,6 +73,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_TX_FAILED] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_STA_FLAGS] =
- 			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
-+		[NL80211_STA_INFO_LOCAL_MESH_PS_MODE] = { .type = NLA_U8},
-+		[NL80211_STA_INFO_PEER_MESH_PS_MODE] = { .type = NLA_U8},
-+		[NL80211_STA_INFO_NONPEER_MESH_PS_MODE] = { .type = NLA_U8},
- 	};
- 
- 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
-@@ -177,6 +199,18 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		}
- 		printf("\n\tmesh plink:\t%s", state_name);
- 	}
-+	if (sinfo[NL80211_STA_INFO_LOCAL_MESH_PS_MODE]) {
-+		printf("\n\tmesh local PS mode:\t");
-+		print_power_mode(sinfo[NL80211_STA_INFO_LOCAL_MESH_PS_MODE]);
-+	}
-+	if (sinfo[NL80211_STA_INFO_PEER_MESH_PS_MODE]) {
-+		printf("\n\tmesh peer PS mode:\t");
-+		print_power_mode(sinfo[NL80211_STA_INFO_PEER_MESH_PS_MODE]);
-+	}
-+	if (sinfo[NL80211_STA_INFO_NONPEER_MESH_PS_MODE]) {
-+		printf("\n\tmesh non-peer PS mode:\t");
-+		print_power_mode(sinfo[NL80211_STA_INFO_NONPEER_MESH_PS_MODE]);
-+	}
- 
- 	if (sinfo[NL80211_STA_INFO_STA_FLAGS]) {
- 		sta_flags = (struct nl80211_sta_flag_update *)
-@@ -274,6 +308,7 @@ COMMAND(station, del, "<MAC address>",
- 
- static const struct cmd *station_set_plink;
- static const struct cmd *station_set_vlan;
-+static const struct cmd *station_set_mesh_power_mode;
- 
- static const struct cmd *select_station_cmd(int argc, char **argv)
- {
-@@ -283,6 +318,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
- 		return station_set_plink;
- 	if (strcmp(argv[1], "vlan") == 0)
- 		return station_set_vlan;
-+	if (strcmp(argv[1], "mesh_power_mode") == 0)
-+		return station_set_mesh_power_mode;
- 	return NULL;
- }
- 
-@@ -384,6 +421,58 @@ COMMAND_ALIAS(station, set, "<MAC address> vlan <ifindex>",
- 	"Set an AP VLAN for this station.",
- 	select_station_cmd, station_set_vlan);
- 
-+static int handle_station_set_mesh_power_mode(struct nl80211_state *state,
-+					      struct nl_cb *cb,
-+					      struct nl_msg *msg,
-+					      int argc, char **argv,
-+					      enum id_input id)
-+{
-+	unsigned char mesh_power_mode;
-+	unsigned char mac_addr[ETH_ALEN];
-+
-+	if (argc < 3)
-+		return 1;
-+
-+	if (mac_addr_a2n(mac_addr, argv[0])) {
-+		fprintf(stderr, "invalid mac address\n");
-+		return 2;
-+	}
-+	argc--;
-+	argv++;
-+
-+	if (strcmp("mesh_power_mode", argv[0]) != 0)
-+		return 1;
-+	argc--;
-+	argv++;
-+
-+	if (strcmp("active", argv[0]) == 0)
-+		mesh_power_mode = NL80211_MESH_POWER_ACTIVE;
-+	else if (strcmp("light", argv[0]) == 0)
-+		mesh_power_mode = NL80211_MESH_POWER_LIGHT_SLEEP;
-+	else if (strcmp("deep", argv[0]) == 0)
-+		mesh_power_mode = NL80211_MESH_POWER_DEEP_SLEEP;
-+	else {
-+		fprintf(stderr, "unknown mesh power mode\n");
-+		return 2;
-+	}
-+	argc--;
-+	argv++;
-+
-+	if (argc)
-+		return 1;
-+
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+	NLA_PUT_U8(msg, NL80211_ATTR_LOCAL_MESH_POWER_MODE, mesh_power_mode);
-+
-+	return 0;
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
-+	"<active|light|deep>", NL80211_CMD_SET_STATION, 0, CIB_NETDEV,
-+	handle_station_set_mesh_power_mode,
-+	"Set link-specific mesh power mode for this station",
-+	select_station_cmd, station_set_mesh_power_mode);
- 
- static int handle_station_dump(struct nl80211_state *state,
- 			       struct nl_cb *cb,
+diff --git a/drivers/crypto/ux500/hash/hash_alg.h b/drivers/crypto/ux500/hash/hash_alg.h
+index cd9351c..0183f5e 100644
+--- a/drivers/crypto/ux500/hash/hash_alg.h
++++ b/drivers/crypto/ux500/hash/hash_alg.h
+@@ -363,10 +363,10 @@ struct hash_device_data {
+ 	struct hash_register __iomem	*base;
+ 	struct klist_node	list_node;
+ 	struct device		*dev;
+-	struct spinlock		ctx_lock;
++	spinlock_t		ctx_lock;
+ 	struct hash_ctx		*current_ctx;
+ 	bool			power_state;
+-	struct spinlock		power_state_lock;
++	spinlock_t		power_state_lock;
+ 	struct regulator	*regulator;
+ 	struct clk		*clk;
+ 	bool			restore_dev_state;
 -- 
-1.7.9.5
+1.7.10.4
 
