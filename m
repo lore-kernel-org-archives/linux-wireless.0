@@ -1,129 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:53888 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753712Ab2KLV7N (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47678 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754501Ab2K2MRN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Nov 2012 16:59:13 -0500
-Received: by mail-ea0-f174.google.com with SMTP id o11so438703eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2012 13:59:12 -0800 (PST)
-From: Maxim Mikityanskiy <maxtram95@gmail.com>
-To: greg@kroah.com, linux-wireless@vger.kernel.org
-Cc: Maxim Mikityanskiy <maxtram95@gmail.com>
-Subject: [PATCH 14/17] Removed unneeded reads from EEPROM
-Date: Mon, 12 Nov 2012 23:58:28 +0200
-Message-Id: <1352757511-26957-15-git-send-email-maxtram95@gmail.com> (sfid-20121112_231527_836460_75F0B71E)
-In-Reply-To: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
-References: <1352757511-26957-1-git-send-email-maxtram95@gmail.com>
+	Thu, 29 Nov 2012 07:17:13 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] mac80211: make ieee80211_build_preq_ies safer
+Date: Thu, 29 Nov 2012 13:17:35 +0100
+Message-Id: <1354191456-29577-2-git-send-email-johannes@sipsolutions.net> (sfid-20121129_131722_632015_D52FC155)
+In-Reply-To: <1354191456-29577-1-git-send-email-johannes@sipsolutions.net>
+References: <1354191456-29577-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Maxim Mikityanskiy <maxtram95@gmail.com>
+Instead of assuming 200 bytes are always enough for
+all the IEs we add, give the length of the buffer
+to the function and warn instead of overrunning.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- r8180.h      |    4 ----
- r8180_core.c |   36 +++++++++---------------------------
- 2 files changed, 9 insertions(+), 31 deletions(-)
+ net/mac80211/ieee80211_i.h |  3 ++-
+ net/mac80211/scan.c        | 21 ++++++++++++---------
+ net/mac80211/util.c        | 34 +++++++++++++++++++++++++++-------
+ 3 files changed, 41 insertions(+), 17 deletions(-)
 
-diff --git a/r8180.h b/r8180.h
-index db7974a..a819b01 100644
---- a/r8180.h
-+++ b/r8180.h
-@@ -365,8 +365,6 @@ typedef struct r8180_priv
- 	short digphy;
- 	short antb;
- 	short diversity;
--	u8 cs_treshold;
--	short rcr_csense;
- 	u32 key0[4];
- 	short (*rf_set_sens)(struct net_device *dev,short sens);
- 	void (*rf_set_chan)(struct net_device *dev,short ch);
-@@ -623,8 +621,6 @@ typedef struct r8180_priv
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e13697d..f148cfa 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1034,6 +1034,7 @@ struct ieee80211_local {
+ 	enum ieee80211_band hw_scan_band;
+ 	int scan_channel_idx;
+ 	int scan_ies_len;
++	int hw_scan_ies_bufsize;
  
- 	u8 PowerProfile;
- 	u32 CSMethod;
--	u8 cck_txpwr_base;
--	u8 ofdm_txpwr_base;
- 	u8 dma_poll_stop_mask;
+ 	struct work_struct sched_scan_stopped_work;
+ 	struct ieee80211_sub_if_data __rcu *sched_scan_sdata;
+@@ -1570,7 +1571,7 @@ void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ 				    const u8 *bssid, u16 stype, u16 reason,
+ 				    bool send_frame, u8 *frame_buf);
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+-			     const u8 *ie, size_t ie_len,
++			     size_t buffer_len, const u8 *ie, size_t ie_len,
+ 			     enum ieee80211_band band, u32 rate_mask,
+ 			     u8 channel);
+ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index ddd1a9a..d7c190b80 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -247,6 +247,7 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
+ 	local->hw_scan_req->n_channels = n_chans;
  
- 	//u8 RegThreeWireMode;
-diff --git a/r8180_core.c b/r8180_core.c
-index 4e872d9..70373e9 100644
---- a/r8180_core.c
-+++ b/r8180_core.c
-@@ -2376,8 +2376,7 @@ short rtl8180_init(struct net_device *dev)
+ 	ielen = ieee80211_build_preq_ies(local, (u8 *)local->hw_scan_req->ie,
++					 local->hw_scan_ies_bufsize,
+ 					 req->ie, req->ie_len, band,
+ 					 req->rates[band], 0);
+ 	local->hw_scan_req->ie_len = ielen;
+@@ -445,11 +446,13 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	if (local->ops->hw_scan) {
+ 		u8 *ies;
+ 
++		local->hw_scan_ies_bufsize = 2 + IEEE80211_MAX_SSID_LEN +
++					     local->scan_ies_len +
++					     req->ie_len;
+ 		local->hw_scan_req = kmalloc(
+ 				sizeof(*local->hw_scan_req) +
+ 				req->n_channels * sizeof(req->channels[0]) +
+-				2 + IEEE80211_MAX_SSID_LEN + local->scan_ies_len +
+-				req->ie_len, GFP_KERNEL);
++				local->hw_scan_ies_bufsize, GFP_KERNEL);
+ 		if (!local->hw_scan_req)
+ 			return -ENOMEM;
+ 
+@@ -928,7 +931,10 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
  {
- 	struct r8180_priv *priv = ieee80211_priv(dev);
- 	u16 word;
--	u16 version;
--	u32 usValue;
-+	u16 usValue;
- 	u16 tmpu16;
- 	int i, j;
- 	struct eeprom_93cx6 eeprom;
-@@ -2614,36 +2613,31 @@ short rtl8180_init(struct net_device *dev)
- 	/* just for sync 85 */
- 	priv->enable_gpio0 = 0;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_sched_scan_ies sched_scan_ies;
+-	int ret, i;
++	int ret, i, iebufsz;
++
++	iebufsz = 2 + IEEE80211_MAX_SSID_LEN +
++		  local->scan_ies_len + req->ie_len;
  
--	eeprom_93cx6_read(&eeprom, EEPROM_SW_REVD_OFFSET, &eeprom_val);
--	usValue = eeprom_val;
--	DMESG("usValue is 0x%x\n", usValue);
-+	eeprom_93cx6_read(&eeprom, EEPROM_SW_REVD_OFFSET, &usValue);
-+	DMESG("usValue is %#hx\n", usValue);
- 	/* 3Read AntennaDiversity */
+ 	mutex_lock(&local->mtx);
  
- 	/* SW Antenna Diversity. */
--	if ((usValue & EEPROM_SW_AD_MASK) != EEPROM_SW_AD_ENABLE)
--		priv->EEPROMSwAntennaDiversity = false;
--	else
--		priv->EEPROMSwAntennaDiversity = true;
-+	priv->EEPROMSwAntennaDiversity = (usValue & EEPROM_SW_AD_MASK) ==
-+		EEPROM_SW_AD_ENABLE;
+@@ -946,10 +952,7 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
+ 		if (!local->hw.wiphy->bands[i])
+ 			continue;
  
- 	/* Default Antenna to use. */
--	if ((usValue & EEPROM_DEF_ANT_MASK) != EEPROM_DEF_ANT_1)
--		priv->EEPROMDefaultAntenna1 = false;
--	else
--		priv->EEPROMDefaultAntenna1 = true;
-+	priv->EEPROMDefaultAntenna1 = (usValue & EEPROM_DEF_ANT_MASK) ==
-+		EEPROM_DEF_ANT_1;
+-		sched_scan_ies.ie[i] = kzalloc(2 + IEEE80211_MAX_SSID_LEN +
+-					       local->scan_ies_len +
+-					       req->ie_len,
+-					       GFP_KERNEL);
++		sched_scan_ies.ie[i] = kzalloc(iebufsz, GFP_KERNEL);
+ 		if (!sched_scan_ies.ie[i]) {
+ 			ret = -ENOMEM;
+ 			goto out_free;
+@@ -957,8 +960,8 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
  
- 	if (priv->RegSwAntennaDiversityMechanism == 0) /* Auto */
- 		/* 0: default from EEPROM. */
- 		priv->bSwAntennaDiverity = priv->EEPROMSwAntennaDiversity;
+ 		sched_scan_ies.len[i] =
+ 			ieee80211_build_preq_ies(local, sched_scan_ies.ie[i],
+-						 req->ie, req->ie_len, i,
+-						 (u32) -1, 0);
++						 iebufsz, req->ie, req->ie_len,
++						 i, (u32) -1, 0);
+ 	}
+ 
+ 	ret = drv_sched_scan_start(local, sdata, req, &sched_scan_ies);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 62a2158..602fc44 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1114,12 +1114,12 @@ void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+-			     const u8 *ie, size_t ie_len,
++			     size_t buffer_len, const u8 *ie, size_t ie_len,
+ 			     enum ieee80211_band band, u32 rate_mask,
+ 			     u8 channel)
+ {
+ 	struct ieee80211_supported_band *sband;
+-	u8 *pos;
++	u8 *pos = buffer, *end = buffer + buffer_len;
+ 	size_t offset = 0, noffset;
+ 	int supp_rates_len, i;
+ 	u8 rates[32];
+@@ -1130,8 +1130,6 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 	if (WARN_ON_ONCE(!sband))
+ 		return 0;
+ 
+-	pos = buffer;
+-
+ 	num_rates = 0;
+ 	for (i = 0; i < sband->n_bitrates; i++) {
+ 		if ((BIT(i) & rate_mask) == 0)
+@@ -1141,6 +1139,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 
+ 	supp_rates_len = min_t(int, num_rates, 8);
+ 
++	if (end - pos < 2 + supp_rates_len)
++		goto out_err;
+ 	*pos++ = WLAN_EID_SUPP_RATES;
+ 	*pos++ = supp_rates_len;
+ 	memcpy(pos, rates, supp_rates_len);
+@@ -1157,6 +1157,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 					     before_extrates,
+ 					     ARRAY_SIZE(before_extrates),
+ 					     offset);
++		if (end - pos < noffset - offset)
++			goto out_err;
+ 		memcpy(pos, ie + offset, noffset - offset);
+ 		pos += noffset - offset;
+ 		offset = noffset;
+@@ -1164,6 +1166,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 
+ 	ext_rates_len = num_rates - supp_rates_len;
+ 	if (ext_rates_len > 0) {
++		if (end - pos < 2 + ext_rates_len)
++			goto out_err;
+ 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
+ 		*pos++ = ext_rates_len;
+ 		memcpy(pos, rates + supp_rates_len, ext_rates_len);
+@@ -1171,6 +1175,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 	}
+ 
+ 	if (channel && sband->band == IEEE80211_BAND_2GHZ) {
++		if (end - pos < 3)
++			goto out_err;
+ 		*pos++ = WLAN_EID_DS_PARAMS;
+ 		*pos++ = 1;
+ 		*pos++ = channel;
+@@ -1189,14 +1195,19 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 		noffset = ieee80211_ie_split(ie, ie_len,
+ 					     before_ht, ARRAY_SIZE(before_ht),
+ 					     offset);
++		if (end - pos < noffset - offset)
++			goto out_err;
+ 		memcpy(pos, ie + offset, noffset - offset);
+ 		pos += noffset - offset;
+ 		offset = noffset;
+ 	}
+ 
+-	if (sband->ht_cap.ht_supported)
++	if (sband->ht_cap.ht_supported) {
++		if (end - pos < 2 + sizeof(struct ieee80211_ht_cap))
++			goto out_err;
+ 		pos = ieee80211_ie_build_ht_cap(pos, &sband->ht_cap,
+ 						sband->ht_cap.cap);
++	}
+ 
+ 	/*
+ 	 * If adding more here, adjust code in main.c
+@@ -1206,15 +1217,23 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 	/* add any remaining custom IEs */
+ 	if (ie && ie_len) {
+ 		noffset = ie_len;
++		if (end - pos < noffset - offset)
++			goto out_err;
+ 		memcpy(pos, ie + offset, noffset - offset);
+ 		pos += noffset - offset;
+ 	}
+ 
+-	if (sband->vht_cap.vht_supported)
++	if (sband->vht_cap.vht_supported) {
++		if (end - pos < 2 + sizeof(struct ieee80211_vht_cap))
++			goto out_err;
+ 		pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
+ 						 sband->vht_cap.cap);
++	}
+ 
+ 	return pos - buffer;
++ out_err:
++	WARN_ONCE(1, "not enough space for preq IEs\n");
++	return pos - buffer;
+ }
+ 
+ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+@@ -1246,7 +1265,8 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
  	else
- 		/* 1:disable antenna diversity, 2: enable antenna diversity. */
--		priv->bSwAntennaDiverity = ((priv->RegSwAntennaDiversityMechanism == 1) ? false : true);
-+		priv->bSwAntennaDiverity = priv->RegSwAntennaDiversityMechanism == 2;
+ 		chan_no = ieee80211_frequency_to_channel(chan->center_freq);
  
- 	if (priv->RegDefaultAntenna == 0)
- 		/* 0: default from EEPROM. */
- 		priv->bDefaultAntenna1 = priv->EEPROMDefaultAntenna1;
- 	else
- 		/* 1: main, 2: aux. */
--		priv->bDefaultAntenna1 = ((priv->RegDefaultAntenna == 2) ? true : false);
-+		priv->bDefaultAntenna1 = priv->RegDefaultAntenna == 2;
+-	buf_len = ieee80211_build_preq_ies(local, buf, ie, ie_len, chan->band,
++	buf_len = ieee80211_build_preq_ies(local, buf, 200 + ie_len,
++					   ie, ie_len, chan->band,
+ 					   ratemask, chan_no);
  
- 	/* rtl8185 can calc plcp len in HW. */
- 	priv->hw_plcp_len = 1;
-@@ -2683,18 +2677,6 @@ short rtl8180_init(struct net_device *dev)
- 	if ((tmpu16 & EEPROM_THERMAL_METER_ENABLE) >> 13)
- 		priv->bTxPowerTrack = true;
- 
--	eeprom_93cx6_read(&eeprom, EPROM_TXPW_BASE, &word);
--	priv->cck_txpwr_base = word & 0xf;
--	priv->ofdm_txpwr_base = (word>>4) & 0xf;
--
--	eeprom_93cx6_read(&eeprom, EPROM_VERSION, &version);
--	DMESG("EEPROM version %x", version);
--	priv->rcr_csense = 3;
--
--	eeprom_93cx6_read(&eeprom, ENERGY_TRESHOLD, &eeprom_val);
--	priv->cs_treshold = (eeprom_val & 0xff00) >> 8;
--
--	eeprom_93cx6_read(&eeprom, RFCHIPID, &eeprom_val);
- 	priv->rf_sleep = rtl8225z4_rf_sleep;
- 	priv->rf_wakeup = rtl8225z4_rf_wakeup;
- 	DMESGW("**PLEASE** REPORT SUCCESSFUL/UNSUCCESSFUL TO Realtek!");
+ 	skb = ieee80211_probereq_get(&local->hw, &sdata->vif,
 -- 
-1.7.10.4
+1.8.0
 
