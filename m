@@ -1,78 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm8-vm0.bullet.mail.ird.yahoo.com ([77.238.189.203]:22129 "EHLO
-	nm8-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755227Ab2KVVZn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 16:25:43 -0500
-Message-ID: <1353564820.51519.YahooMailClassic@web172303.mail.ir2.yahoo.com> (sfid-20121122_222550_007795_D69DA8A5)
-Date: Thu, 22 Nov 2012 06:13:40 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH 196/493] net/wireless: remove use of __devinit
-To: gregkh@linuxfoundation.org, Bill Pemberton <wfp5p@virginia.edu>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <1353349642-3677-196-git-send-email-wfp5p@virginia.edu>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:37508 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187Ab2K2Jm1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2012 04:42:27 -0500
+Received: by mail-oa0-f46.google.com with SMTP id h16so14285525oag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2012 01:42:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1354179660-11964-1-git-send-email-johannes@sipsolutions.net>
+References: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net>
+	<1354179660-11964-1-git-send-email-johannes@sipsolutions.net>
+Date: Thu, 29 Nov 2012 11:42:26 +0200
+Message-ID: <CAB3XZEd4pfJ+gRcDxK4DWhYW-s72g4-8gqoNYwz17nGTkpcsGg@mail.gmail.com> (sfid-20121129_104232_381042_BCCAA327)
+Subject: Re: [PATCH v2] cfg80211: fix cmp_hidden_bss
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
---- On Mon, 19/11/12, Bill Pemberton <wfp5p@virginia.edu> wrote:
-
-> From: Bill Pemberton <wfp5p@virginia.edu>
-> Subject: [PATCH 196/493] net/wireless: remove use of __devinit
-> To: gregkh@linuxfoundation.org
-> Cc: "John W. Linville" <linville@tuxdriver.com>, "Jiri Slaby" <jirislaby@gmail.com>, "Nick Kossifidis" <mickflemm@gmail.com>, "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>, "Simon Kelley" <simon@thekelleys.org.uk>, "Stefano Brivio" <stefano.brivio@polimi.it>, "Stanislav Yakovlev" <stas.yakovlev@gmail.com>, "Dan Williams" <dcbw@redhat.com>, "Christian Lamparter" <chunkeey@googlemail.com>, "Herton Ronaldo Krzesinski" <herton@canonical.com>, "Hin-Tak Leung" <htl10@users.sourceforge.net>, "Larry Finger" <Larry.Finger@lwfinger.net>, "Chaoming Li" <chaoming_li@realsil.com.cn>, "Luciano Coelho" <coelho@ti.com>, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, ath5k-devel@lists.ath5k.org, b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com, libertas-dev@lists.infradead.org
-> Date: Monday, 19 November, 2012, 18:22
-> CONFIG_HOTPLUG is going away as an
-> option so __devinit is no longer
-> needed.
-> 
-> Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> 
-> Cc: Jiri Slaby <jirislaby@gmail.com>
-> 
-> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> 
-> Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-> 
-> Cc: Simon Kelley <simon@thekelleys.org.uk>
-> 
-> Cc: Stefano Brivio <stefano.brivio@polimi.it>
-> 
-> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-> 
-> Cc: Dan Williams <dcbw@redhat.com>
-> 
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> 
-> Cc: Herton Ronaldo Krzesinski <herton@canonical.com>
-> 
-> Cc: Hin-Tak Leung <htl10@users.sourceforge.net>
-> 
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-> 
-> Cc: Luciano Coelho <coelho@ti.com> 
-> Cc: linux-wireless@vger.kernel.org
-> 
-> Cc: netdev@vger.kernel.org
-> 
-> Cc: ath5k-devel@lists.ath5k.org
-> 
-> Cc: b43-dev@lists.infradead.org
-> 
-> Cc: brcm80211-dev-list@broadcom.com
-> 
-> Cc: libertas-dev@lists.infradead.org
-> 
+On Thu, Nov 29, 2012 at 11:01 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> The cmp_bss() comparator function uses memcmp() to
+> compare the SSID. This means that cmp_hidden_bss()
+> needs to similarly return a number bigger than zero
+> (use 1) instead of -1 when ie1 is bigger than ie2,
+> which is the case if an ie2 byte is non-zero.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
+>  net/wireless/scan.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> index 9233910..456c342 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -469,10 +469,14 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
+>         if (ie1[1] != ie2[1])
+>                 return ie2[1] - ie1[1];
+>
+> -       /* zeroed SSID ie is another indication of a hidden bss */
+> +       /*
+> +        * zeroed SSID ie is another indication of a hidden bss;
+> +        * if it isn't zeroed just return the regular sort value
+> +        * to find the next candidate
+> +        */
+>         for (i = 0; i < ie2[1]; i++)
+>                 if (ie2[i + 2])
+> -                       return -1;
+> +                       return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
+>
+>         return 0;
+>  }
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+btw, it might be worth noting that this comparator works correctly
+only in one way (if hidden ssid is in "b")...
 
-The rtl818x parts.
-
+Eliad.
