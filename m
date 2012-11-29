@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:33333 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086Ab2K0Mqh (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:53601 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753766Ab2K2TeA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 07:46:37 -0500
-Message-ID: <1354020357.950.85.camel@cumari.coelho.fi> (sfid-20121127_134639_989409_9CB77BC3)
-Subject: Re: [PATCH 09/11] wlcore: don't allow access to FW mem when chip is
- off
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
-Date: Tue, 27 Nov 2012 14:45:57 +0200
-In-Reply-To: <1353945950-3899-10-git-send-email-arik@wizery.com>
-References: <1353945950-3899-1-git-send-email-arik@wizery.com>
-	 <1353945950-3899-10-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
+	Thu, 29 Nov 2012 14:34:00 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hm9so6700597wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2012 11:33:58 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1354108113.9345.23.camel@jlt4.sipsolutions.net>
+References: <1353702198-12865-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+ <1354108113.9345.23.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 29 Nov 2012 11:33:37 -0800
+Message-ID: <CAG6hwVNnfxJXQAh8=NZjqT2rU1akm_S1XY+qatHBfFE7k40e9w@mail.gmail.com> (sfid-20121129_203403_913502_5326398B)
+Subject: Re: [PATCH] mac80211: fix for mesh sync to indicate TBTT adjustment
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
+	javier@cozybit.com, ashok@cozybit.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 18:05 +0200, Arik Nemtsov wrote:
-> From: Eliad Peller <eliad@wizery.com>
-> 
-> Don't allow read/writes to FW memory when the FW is not powered on.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+On Wed, Nov 28, 2012 at 5:08 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2012-11-23 at 12:23 -0800, Marco Porsch wrote:
+>> Currently the mesh sync code checks, whether peers indicate TBTT adjustment,
+>> but it never sets the corresponding flag itself.
+>>
+>> By setting ifmsh->tbtt_adjusting to true, it will set the corresponding field
+>> in the mesh configuration IE of own beacons.
+>> This indication will be set in the current beacon. The TBTT adjustment will be
+>> performed afterwards, affecting the next beacon. Thus, the first beacon with
+>> stable TBTT will not indicate adjustment anymore and peers will continue
+>> tracking the new offset.
+>
+> Ping mesh folks, does this look sane?
 
-As discussed in the other thread, I'll ignore this patch.
+Looks fine. The only effect (as Marco mentioned) is that the
+"adjusting tbtt" bit is advertised correctly in the mesh config IE.
 
---
-Luca.
-
+Thomas
