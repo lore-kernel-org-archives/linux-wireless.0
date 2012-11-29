@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:38997 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754779Ab2KVSzk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 13:55:40 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so3315186eaa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 10:55:39 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 03/14] wl18xx: change fw name and temporarily fail loading
-Date: Thu, 22 Nov 2012 18:06:13 +0200
-Message-Id: <1353600384-32462-4-git-send-email-eliad@wizery.com> (sfid-20121122_195547_054344_2AA19623)
-In-Reply-To: <1353600384-32462-1-git-send-email-eliad@wizery.com>
-References: <1353600384-32462-1-git-send-email-eliad@wizery.com>
+Received: from mail.legal.de ([46.38.240.131]:60997 "EHLO mail.legal.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751348Ab2K2MdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2012 07:33:08 -0500
+Message-ID: <50B755FC.4030100@schwarze-allianz.de> (sfid-20121129_133313_542161_DBBD4600)
+Date: Thu, 29 Nov 2012 13:33:00 +0100
+From: Jens Kapitza <j.kapitza@schwarze-allianz.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Subject: Re: iwlwifi hibernate / suspend issue
+References: <50B61C71.6060007@schwarze-allianz.de> (sfid-20121128_152227_935873_AFE02FFF) <1354113010.9345.27.camel@jlt4.sipsolutions.net> <50B62254.9070700@schwarze-allianz.de> <1354113722.9345.28.camel@jlt4.sipsolutions.net> <50B62BEB.6020109@schwarze-allianz.de> <1354120982.9345.35.camel@jlt4.sipsolutions.net> (sfid-20121128_174246_886056_FD8C7512) <1354126096.9345.45.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1354126096.9345.45.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new fw (8.5.0.0.28) is not backward compatible
-with older drivers.
+Am 28.11.2012 19:08, schrieb Johannes Berg:
+> On Wed, 2012-11-28 at 17:43 +0100, Johannes Berg wrote:
+>> On Wed, 2012-11-28 at 16:21 +0100, Jens Kapitza wrote:
+>>>> just enter "dmesg" and pastebin the result somewhere
+>>> this line seems to be wrong
+>>>
+>>>    [ 4650.687346] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+>> Well, it's not necessarily wrong, it indicates that the device read that
+>> the rfkill line was pulled low ("rf should be off").
+>>
+>> You said reloading the module fixes this
+> So it doesn't, and if you need to restart the computer that indicates a
+> problem with the ACPI support code, but I don't know if you have that
+> loaded at all.
+I'll move to acpi list (will search it later)
+I'm using uefi and acpi is compied and loaded
+>
+> So yeah, you were right when you said it's related to the BIOS, I just
+> thought you said reloading the module fixed it which I thought was very
+> strange. Since it doesn't, it's just the BIOS/whatever pulling the line
+> low and there's nothing the wifi driver can do about that, we can't even
+> ignore that.
+>
+> johannes
+>
+thanks to clearify my problem
 
-Use a new fw name (along with bumping the min
-fw version), and add some code to fail
-any boot attempt during the fw api alignment
-patches (as the driver is not functional in
-these transitional patches).
-
-This code will be removed after the api alignment
-will be done.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c   |    6 +++++-
- drivers/net/wireless/ti/wl18xx/wl18xx.h |    4 ++--
- 2 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index a39682a..8ba1c93 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -595,7 +595,7 @@ static const struct wl18xx_clk_cfg wl18xx_clk_table[NUM_CLOCK_CONFIGS] = {
- };
- 
- /* TODO: maybe move to a new header file? */
--#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw.bin"
-+#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw-2.bin"
- 
- static int wl18xx_identify_chip(struct wl1271 *wl)
- {
-@@ -1385,6 +1385,10 @@ static int wl18xx_setup(struct wl1271 *wl)
- 	struct wl18xx_priv *priv = wl->priv;
- 	int ret;
- 
-+	wl1271_error("driver is in transitional commit (due to fw api"
-+		     "change) and can't be booted!");
-+	return -EINVAL;
-+
- 	wl->rtable = wl18xx_rtable;
- 	wl->num_tx_desc = WL18XX_NUM_TX_DESCRIPTORS;
- 	wl->num_rx_desc = WL18XX_NUM_TX_DESCRIPTORS;
-diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-index 96a1e43..4d295a5 100644
---- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-+++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-@@ -26,10 +26,10 @@
- 
- /* minimum FW required for driver */
- #define WL18XX_CHIP_VER		8
--#define WL18XX_IFTYPE_VER	2
-+#define WL18XX_IFTYPE_VER	5
- #define WL18XX_MAJOR_VER	0
- #define WL18XX_SUBTYPE_VER	0
--#define WL18XX_MINOR_VER	100
-+#define WL18XX_MINOR_VER	28
- 
- #define WL18XX_CMD_MAX_SIZE          740
- 
--- 
-1.7.6.401.g6a319
 
