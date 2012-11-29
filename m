@@ -1,91 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42583 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757512Ab2K0A0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 19:26:20 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, wim@iguana.be
-Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 07/15] bcma: set the pmu watchdog if available
-Date: Tue, 27 Nov 2012 01:25:17 +0100
-Message-Id: <1353975925-32056-8-git-send-email-hauke@hauke-m.de> (sfid-20121127_012625_901401_1B6DC243)
-In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
-References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+Received: from hub022-nj-3.exch022.serverdata.net ([206.225.164.186]:52925
+	"EHLO HUB022-nj-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751127Ab2K2I7B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2012 03:59:01 -0500
+Message-ID: <50B723CF.20903@posedge.com> (sfid-20121129_095905_535217_3AF229A4)
+Date: Thu, 29 Nov 2012 14:28:55 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: Remove unused VHT chan code
+References: <50B71FA3.7050304@posedge.com> <1354179167.9557.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1354179167.9557.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mostly all bcma based devices have a PMU and the PMU watchdog should be
-used and not the old one in chip common. This patch also calculates the
-maximal number the watchdog could be set to.
+On 11/29/2012 02:22 PM, Johannes Berg wrote:
+> On Thu, 2012-11-29 at 14:11 +0530, Mahesh Palivela wrote:
+>> From: Mahesh Palivela <maheshp@posedge.com>
+>>
+>> Cleanup of unused VHT channel config related code.
+>
+> Huh, good catch, thanks. Applied.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_chipcommon.c |   42 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 40 insertions(+), 2 deletions(-)
+Thanks. Even below also can be removed as cfg80211_chandef_usable() 
+checks this at the beginning.
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index ef68553..7c132e5 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -31,6 +31,28 @@ static u32 bcma_chipco_alp_clock(struct bcma_drv_cc *cc)
- 	return 20000000;
- }
- 
-+static u32 bcma_chipco_watchdog_get_max_timer(struct bcma_drv_cc *cc)
-+{
-+	struct bcma_bus *bus = cc->core->bus;
-+	u32 nb;
-+
-+	if (cc->capabilities & BCMA_CC_CAP_PMU) {
-+		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
-+			nb = 32;
-+		else if (cc->core->id.rev < 26)
-+			nb = 16;
-+		else
-+			nb = (cc->core->id.rev >= 37) ? 32 : 24;
-+	} else {
-+		nb = 28;
-+	}
-+	if (nb == 32)
-+		return 0xffffffff;
-+	else
-+		return (1 << nb) - 1;
-+}
-+
-+
- void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
- {
- 	if (cc->early_setup_done)
-@@ -85,8 +107,24 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
- /* Set chip watchdog reset timer to fire in 'ticks' backplane cycles */
- void bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
- {
--	/* instant NMI */
--	bcma_cc_write32(cc, BCMA_CC_WATCHDOG, ticks);
-+	u32 maxt;
-+	enum bcma_clkmode clkmode;
-+
-+	maxt = bcma_chipco_watchdog_get_max_timer(cc);
-+	if (cc->capabilities & BCMA_CC_CAP_PMU) {
-+		if (ticks == 1)
-+			ticks = 2;
-+		else if (ticks > maxt)
-+			ticks = maxt;
-+		bcma_cc_write32(cc, BCMA_CC_PMU_WATCHDOG, ticks);
-+	} else {
-+		clkmode = ticks ? BCMA_CLKMODE_FAST : BCMA_CLKMODE_DYNAMIC;
-+		bcma_core_set_clockmode(cc->core, clkmode);
-+		if (ticks > maxt)
-+			ticks = maxt;
-+		/* instant NMI */
-+		bcma_cc_write32(cc, BCMA_CC_WATCHDOG, ticks);
-+	}
- }
- 
- void bcma_chipco_irq_mask(struct bcma_drv_cc *cc, u32 mask, u32 value)
--- 
-1.7.10.4
+        if (!cfg80211_chandef_valid(chandef))
+                return -EINVAL;
 
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
