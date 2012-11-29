@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:37044 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150Ab2KKPcM (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:35893 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136Ab2K2Rhf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Nov 2012 10:32:12 -0500
-Received: by mail-we0-f174.google.com with SMTP id t9so2447617wey.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Nov 2012 07:32:11 -0800 (PST)
-Message-ID: <1352647925.6460.10.camel@canaries32-MCP7A> (sfid-20121111_163215_672515_298F089F)
-Subject: [PATCH 05/14] staging: vt6656: 64 bit fixes: use u32 for QWORD
- definition.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 11 Nov 2012 15:32:05 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 29 Nov 2012 12:37:35 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH] nl80211: Fix HT_IBSS feature check in ibss_join
+Date: Thu, 29 Nov 2012 18:37:22 +0100
+Message-Id: <1354210642-13355-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121129_183738_956058_12EE22D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Size of long issues replace with u32.
+There is a standalone if, seems to be a regression of commit
+"nl80211/cfg80211: add VHT MCS support".
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 ---
- drivers/staging/vt6656/ttype.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ net/wireless/nl80211.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/vt6656/ttype.h b/drivers/staging/vt6656/ttype.h
-index 8e9450e..0f70562c 100644
---- a/drivers/staging/vt6656/ttype.h
-+++ b/drivers/staging/vt6656/ttype.h
-@@ -29,6 +29,8 @@
- #ifndef __TTYPE_H__
- #define __TTYPE_H__
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d038fa4..275569d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5502,6 +5502,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 	if (ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
+ 	    !(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
++		return -EINVAL;
  
-+#include <linux/types.h>
-+
- /******* Common definitions and typedefs ***********************************/
- 
- typedef int             BOOL;
-@@ -51,8 +53,8 @@ typedef unsigned long   DWORD;          // 32-bit
- // which is NOT really a floating point number.
- typedef union tagUQuadWord {
-     struct {
--        DWORD   dwLowDword;
--        DWORD   dwHighDword;
-+	u32 dwLowDword;
-+	u32 dwHighDword;
-     } u;
-     double      DoNotUseThisField;
- } UQuadWord;
+ 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
+ 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
 -- 
-1.8.0
-
-
-
+1.7.10.4
 
