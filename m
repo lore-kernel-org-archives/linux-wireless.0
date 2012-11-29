@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:59813 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758496Ab2K0Jfd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 04:35:33 -0500
-Message-ID: <1354008888.950.62.camel@cumari.coelho.fi> (sfid-20121127_103538_971643_393602E7)
-Subject: Re: [PATCH 03/20] wlcore: Allow memory access when the FW crashes
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>, Ido Yariv <ido@wizery.com>
-Date: Tue, 27 Nov 2012 11:34:48 +0200
-In-Reply-To: <1353998701-18171-4-git-send-email-arik@wizery.com>
-References: <1353998701-18171-1-git-send-email-arik@wizery.com>
-	 <1353998701-18171-4-git-send-email-arik@wizery.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:47683 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754093Ab2K2MS1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2012 07:18:27 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Te34U-0006Ki-G8
+	for linux-wireless@vger.kernel.org; Thu, 29 Nov 2012 13:18:26 +0100
+Message-ID: <1354191531.9557.3.camel@jlt4.sipsolutions.net> (sfid-20121129_131830_987906_42A77BDC)
+Subject: Re: [RFC] cfg80211: fix BSS struct IE access races
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 29 Nov 2012 13:18:51 +0100
+In-Reply-To: <1354148804-26678-1-git-send-email-johannes@sipsolutions.net> (sfid-20121129_012627_328755_CFFDFE23)
+References: <1354148804-26678-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121129_012627_328755_CFFDFE23)
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-11-27 at 08:44 +0200, Arik Nemtsov wrote:
-> From: Ido Yariv <ido@wizery.com>
+On Thu, 2012-11-29 at 01:26 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> When the no_recovery flag is used, the recovery work will not restart
-> the FW and the state will not be set to 'on'. To enable post-mortem
-> analysis, allow memory access in the 'restarting' state.
+> When a BSS struct is updated, the IEs are currently
+> overwritten or freed. This can lead to races if some
+> other CPU is accessing the BSS struct and using the
+> IEs concurrently.
 > 
-> Also, since the FW might not be operational, don't fail the read/write
-> operations if elp_wakeup fails.
-> 
-> Reported-by: Arkady Miasnikov <a-miasnikov@ti.com>
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+> Fix this by always allocating the IEs in a new struct
+> that holds the data and length and protecting access
+> to this new struct with RCU.
 
-This is weird.  This patch is already in (d5560238) and the one here is
-actually just part of it and probably won't apply.
+Eliad pointed out to me that the mac80211 code will call
+kmalloc(GFP_KERNEL) inside the rcu critical section, which isn't
+allowed. So instead of changing that to GFP_ATOMIC or something, I just
+posted two patches to remove the allocation :-)
 
---
-Luca.
+johannes
 
