@@ -1,60 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51625 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45795 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753600Ab2K3LwO (ORCPT
+	with ESMTP id S1945979Ab2K2A1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 06:52:14 -0500
-Message-ID: <1354276356.10035.8.camel@jlt4.sipsolutions.net> (sfid-20121130_125217_572638_1844A541)
-Subject: Re: [RFCv2 03/13] mac80211: local link-specific mesh power mode
- logic
+	Wed, 28 Nov 2012 19:27:50 -0500
+Message-ID: <1354148894.26800.0.camel@jlt4.sipsolutions.net> (sfid-20121129_012752_674202_1D97C7B5)
+Subject: Re: [PATCH] cfg80211: fix cmp_hidden_bss
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: javier@cozybit.com, thomas@cozybit.com,
-	linux-wireless@vger.kernel.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Date: Fri, 30 Nov 2012 12:52:36 +0100
-In-Reply-To: <1353701934-12752-4-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-	 <1353701934-12752-4-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Date: Thu, 29 Nov 2012 01:28:14 +0100
+In-Reply-To: <CAB3XZEcr_D6hKKcwtXxTbH3quQ4TT_ZjjnbWOvHWSnAP+=Mw2Q@mail.gmail.com> (sfid-20121129_010753_910972_25A7443C)
+References: <1354139095-22937-1-git-send-email-johannes@sipsolutions.net>
+	 <CAB3XZEeuZOv_gHD2q0-K3JUXhjgTFx3AgZ1vS0Rc-toOVf-kTA@mail.gmail.com>
+	 <1354147227.9345.47.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEcr_D6hKKcwtXxTbH3quQ4TT_ZjjnbWOvHWSnAP+=Mw2Q@mail.gmail.com>
+	 (sfid-20121129_010753_910972_25A7443C)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-23 at 12:18 -0800, Marco Porsch wrote:
+On Thu, 2012-11-29 at 02:07 +0200, Eliad Peller wrote:
+> On Thu, Nov 29, 2012 at 2:00 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2012-11-29 at 01:53 +0200, Eliad Peller wrote:
+> >> On Wed, Nov 28, 2012 at 11:44 PM, Johannes Berg
+> >> <johannes@sipsolutions.net> wrote:
+> >> > From: Johannes Berg <johannes.berg@intel.com>
+> >> >
+> >> > The cmp_bss() comparator function uses memcmp() to
+> >> > compare the SSID. This means that cmp_hidden_bss()
+> >> > needs to similarly return a number bigger than zero
+> >> > (use 1) instead of -1 when ie1 is bigger than ie2,
+> >> > which is the case if an ie2 byte is non-zero.
+> >
+> >> > +++ b/net/wireless/scan.c
+> >> > @@ -472,7 +472,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
+> >> >         /* zeroed SSID ie is another indication of a hidden bss */
+> >> >         for (i = 0; i < ie2[1]; i++)
+> >> >                 if (ie2[i + 2])
+> >> > -                       return -1;
+> >> > +                       return 1;
+> >> >
+> >> >         return 0;
+> >> >  }
+> >>
+> >> maybe i'm misreading it, but there is still no comparison here at all,
+> >> so it seems wrong as well :)
+> >> (practically, i guess it doesn't really matter, because if there is
+> >> some non-null char, this is not a hidden ssid anyway)
+> >
+> > Hmm yeah you're right, it should be
+> >         return ie2[i + 1] - ie1[i + 1];
+> >
+> > (or the other way around? need to sleep on that first...)
+> >
+> that's also not enough, because you ignore the previous chars.
+> ("A" < "B" vs. "AA" > "\x00B")
+> 
+> i think returning memcmp() is the easiest solution, but sleeping on
+> that is definitely a good idea :)
 
-> +	/* mesh power save */
-> +	enum nl80211_mesh_power_mode nonpeer_ps_mode;
-> +	u8 ps_peers_light_sleep;
-> +	u8 ps_peers_deep_sleep;
-
-u8? really?
-
-
-> +			ieee80211_set_sta_mesh_local_ps_mode(sta,
-> +					mshcfg->power_mode, 100);
-
-Maybe this function needs some refactoring if the indentation is this
-deep? :)
-
-In any case that looks odd, I think you should either break all
-parameters or do the normal lined-up indentation.
-
-> +	u8 light_sleep_cnt = 0;
-> +	u8 deep_sleep_cnt = 0;
-
-Again, u8?
-
-Also in this function: you aren't bothered by the lack of locking at
-all, are you? Well I am :-P
-
-> +	setup_timer(&sta->local_ps_mode_timer,
-> +			ieee80211_sta_mesh_local_ps_mode_timer,
-> +			(unsigned long) sta);
-
-suggest you run checkpatch -- I'm not your whitespace nanny.
+Hmm, yeah, indeed. If we find a non-zero byte we should return memcmp().
+I'll fix it in the morning :)
 
 johannes
 
