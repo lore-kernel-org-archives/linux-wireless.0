@@ -1,69 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40144 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811Ab2KMID6 (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:39060 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752947Ab2K2Pdi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Nov 2012 03:03:58 -0500
-Message-ID: <1352793873.9466.3.camel@jlt4.sipsolutions.net> (sfid-20121113_090401_699122_89EA51D5)
-Subject: Re: [PATCH] mac80211: support RX_FLAG_MACTIME_END
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
+	Thu, 29 Nov 2012 10:33:38 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k11so12222645iea.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2012 07:33:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354193757.5254.7.camel@cumari.coelho.fi>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+ <1353998701-18171-21-git-send-email-arik@wizery.com> <1354193757.5254.7.camel@cumari.coelho.fi>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 29 Nov 2012 17:33:22 +0200
+Message-ID: <CA+XVXfd-AFWo0s1DTXN_F0WojRf57FKVmODAXm5fq-+jNQe7Vg@mail.gmail.com> (sfid-20121129_163340_539894_2FCFE4DC)
+Subject: Re: [PATCH 20/20] wl18xx: set last Tx rate from FW status
+To: Luciano Coelho <coelho@ti.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Nov 2012 09:04:33 +0100
-In-Reply-To: <CAG6hwVPwYX5Uw+_Y9enGeubeCkWi3OM-qs+qAvKDjwTrNhS0uw@mail.gmail.com> (sfid-20121112_225231_617028_4FC5CCFF)
-References: <1352745513-1265-1-git-send-email-thomas@cozybit.com>
-	 <1352752959.12957.2.camel@jlt4.sipsolutions.net>
-	 <CAG6hwVPwYX5Uw+_Y9enGeubeCkWi3OM-qs+qAvKDjwTrNhS0uw@mail.gmail.com>
-	 (sfid-20121112_225231_617028_4FC5CCFF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-12 at 13:52 -0800, Thomas Pedersen wrote:
-> On Mon, Nov 12, 2012 at 12:42 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Mon, 2012-11-12 at 10:38 -0800, Thomas Pedersen wrote:
-> >
-> >> +     if (ieee80211_have_rx_timestamp(rx_status))
-> >> +             /* time when timestamp field was received */
-> >> +             t_r = ieee80211_calculate_rx_timestamp(local, rx_status,
-> >> +                                                    24 + 12 +
-> >> +                                                    elems->total_len + 4,
-> >> +                                                    24);
-> >
-> > This doesn't seem quite right, the FCS isn't accounted for correctly?
-> 
-> That's what the +4 is for. Is this wrong?
+On Thu, Nov 29, 2012 at 2:55 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2012-11-27 at 08:45 +0200, Arik Nemtsov wrote:
+>> Obtain the last Tx rate from the FW status and translate it to
+>> the mac80211 rate+flag format before sending it up via the Tx status.
+>>
+>> Bump up the min FW version to the first FW that supports the rate byte.
+>
+> This part of the comment doesn't apply anymore, because we already
+> bumped and this change is not part of this rebased patch. ;)
 
-No, ok, I guess that's correct then. I didn't do the calculations to
-check. Why not use skb->len though, rather than 24+12+...?
+Ah thanks. I'll remove it.
 
-Btw, I think there's a define for FCS_LEN somewhere, that might be
-worthwhile to use just for documentation.
-
-> > I think it might be wortwhile to pass the SKB to the function instead of
-> > rx_status though, then it could get skb->len and check whether or not
-> > FCS was before the timestamp
-> 
-> How would you check this?
-
-Never mind, you can't know.
-
-> > (which, btw, you should mention in the documentation for the new flag!)
-> 
-> I'll make it clear MACTIME_END includes the FCS.
-
-Ok.
-
-> > And then I suspect the check for IEEE80211_HW_RX_INCLUDES_FCS is also
-> > incorrect -- even if the driver didn't report the FCS maybe the
-> > timestamping semantic was such that it was after the FCS?
-> 
-> Right, if the driver doesn't report the FCS, the radiotap code will
-> add an extra 4 bytes to account for this.
-
-Oh, yes, I misread the code, sorry.
-
-johannes
-
+Arik
