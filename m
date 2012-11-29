@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:57791 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773Ab2KPG5o (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:39060 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754211Ab2K2PdU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 01:57:44 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1734366pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2012 22:57:44 -0800 (PST)
-From: Tushar Behera <tushar.behera@linaro.org>
-To: linux-kernel@vger.kernel.org
-Cc: patches@linaro.org, Luciano Coelho <coelho@ti.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 14/14] wlcore: Remove redundant check on unsigned variable
-Date: Fri, 16 Nov 2012 12:20:46 +0530
-Message-Id: <1353048646-10935-15-git-send-email-tushar.behera@linaro.org> (sfid-20121116_075818_360204_8349EE55)
-In-Reply-To: <1353048646-10935-1-git-send-email-tushar.behera@linaro.org>
-References: <1353048646-10935-1-git-send-email-tushar.behera@linaro.org>
+	Thu, 29 Nov 2012 10:33:20 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k11so12222645iea.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2012 07:33:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354193471.5254.6.camel@cumari.coelho.fi>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+ <1353998701-18171-21-git-send-email-arik@wizery.com> <1354193471.5254.6.camel@cumari.coelho.fi>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 29 Nov 2012 17:33:04 +0200
+Message-ID: <CA+XVXfdsymv3bSp4SSTCCPCx8igKgE=ODoyT+vf-LRa48cX2xw@mail.gmail.com> (sfid-20121129_163324_241176_925A8E17)
+Subject: Re: [PATCH 20/20] wl18xx: set last Tx rate from FW status
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to check whether unsigned variable is less than 0.
+On Thu, Nov 29, 2012 at 2:51 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2012-11-27 at 08:45 +0200, Arik Nemtsov wrote:
+>> Obtain the last Tx rate from the FW status and translate it to
+>> the mac80211 rate+flag format before sending it up via the Tx status.
+>>
+>> Bump up the min FW version to the first FW that supports the rate byte.
+>>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>> ---
+>
+> [...]
+>
+>> +static
+>> +void wl18xx_get_last_tx_rate(struct wl1271 *wl, struct ieee80211_vif *vif,
+>> +                          u8 *tx_rate, u8 *tx_rate_flags)
+>
+> [...]
+>
+>> +     /*
+>> +      * first pass info->control.vif while it's valid, and then fill out
+>> +      * the info->status structures
+>> +      */
+>> +     wl18xx_get_last_tx_rate(wl, info->control.vif,
+>> +                             &info->status.rates[0].idx,
+>> +                             &info->status.rates[0].flags);
+>
+> This doesn't work anymore, because commit 8bc83c24 (mac80211: support
+> VHT rates in TX info) changed the struct like this:
+>
+> @@ -560,10 +568,32 @@ enum mac80211_rate_control_flags {
+>   */
+>  struct ieee80211_tx_rate {
+>         s8 idx;
+> -       u8 count;
+> -       u8 flags;
+> +       u16 count:5,
+> +           flags:11;
+>  } __packed;
+>
+> So you can't get the address of flags anymore.
+>
+> Do you mind respinning it?
 
-CC: Luciano Coelho <coelho@ti.com>
-CC: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
----
- drivers/net/wireless/ti/wlcore/debugfs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Technically you should do it, since your master branch was pointing to
+an older revision at the time. But I'm feeling generous.
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index c86bb00..93f801d 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -993,7 +993,7 @@ static ssize_t sleep_auth_write(struct file *file,
- 		return -EINVAL;
- 	}
- 
--	if (value < 0 || value > WL1271_PSM_MAX) {
-+	if (value > WL1271_PSM_MAX) {
- 		wl1271_warning("sleep_auth must be between 0 and %d",
- 			       WL1271_PSM_MAX);
- 		return -ERANGE;
--- 
-1.7.4.1
+I'll also rebase the part 3 series on top of the latest code to fix
+any breakage. So I'll at least re-spin the patches containing
+ieee80211_iterate_active_interfaces() (as the prototype was changed)
 
+Arik
