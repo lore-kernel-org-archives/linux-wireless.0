@@ -1,49 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23837 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508Ab2KPMvV (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:39447 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355Ab2K2TsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Nov 2012 07:51:21 -0500
-To: <ath6kl-devel@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	wei-jen jlin <jenlin@qca.qualcomm.com>
-Subject: [PATCH 1/8] ath6kl: Remove erroneous flag clearing
-Date: Fri, 16 Nov 2012 18:21:12 +0530
-Message-ID: <1353070272-5865-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20121116_135125_588392_5175D509)
+	Thu, 29 Nov 2012 14:48:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1354144069-28611-7-git-send-email-hauke@hauke-m.de>
+References: <1354144069-28611-1-git-send-email-hauke@hauke-m.de> <1354144069-28611-7-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 29 Nov 2012 11:47:50 -0800
+Message-ID: <CAB=NE6Ww8SVm51qph=iXNGS8BN1cWdsT-bvKWrDt4b9c7ea9sg@mail.gmail.com> (sfid-20121129_204830_512946_1FCAD099)
+Subject: Re: [PATCH 6/6] compat-drivers: do not use struct spinlock
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: backports@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Arend Van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	Sylwester Nawrocki <s.nawrocki@samsung.com>,
+	Alexander Stein <alexander.stein@systec-electronic.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, Nov 28, 2012 at 3:07 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> struct spinlock does not exists on kernel version <= 2.6.32, use
+> spinlock_t instead.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  patches/network/67-use_spinlock_t.patch |   11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>  create mode 100644 patches/network/67-use_spinlock_t.patch
+>
+> diff --git a/patches/network/67-use_spinlock_t.patch b/patches/network/67-use_spinlock_t.patch
+> new file mode 100644
+> index 0000000..4c9f315
+> --- /dev/null
+> +++ b/patches/network/67-use_spinlock_t.patch
+> @@ -0,0 +1,11 @@
+> +--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+> ++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+> +@@ -158,7 +158,7 @@ typedef int (*brcmf_fweh_handler_t)(stru
+> +  */
+> + struct brcmf_fweh_info {
+> +       struct work_struct event_work;
+> +-      struct spinlock evt_q_lock;
+> ++      spinlock_t evt_q_lock;
+> +       struct list_head event_q;
+> +       int (*evt_handler[BRCMF_E_LAST])(struct brcmf_if *ifp,
+> +                                        const struct brcmf_event_msg *evtmsg,
 
-WLAN_ENABLED is vif specific, not part of
-the driver's struct ath6kl. Proper clearing
-of this flag is already taken care in
-ath6kl_cleanup_vif.
+This should have still worked, I thought for a second based on your
+backport patch we ditched the spinlock_t or perhaps this was related
+to the realtime work Thomas has been doing but upon further inspection
+I see now this is simply a discrepancy on sloppy driver development.
 
-Cc: wei-jen jlin <jenlin@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+IMHO your patch should go upstream and a respective patch should be
+submitted as well as for these drivers:
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 424676e..4fddf12 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1798,8 +1798,6 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
- 		   "attempting to reset target on instance destroy\n");
- 	ath6kl_reset_device(ar, ar->target_type, true, true);
- 
--	clear_bit(WLAN_ENABLED, &ar->flag);
--
- 	up(&ar->sem);
- }
- EXPORT_SYMBOL(ath6kl_stop_txrx);
--- 
-1.7.0.4
+mcgrof@frijol ~/linux-next (git::master)$ git grep "struct spinlock" drivers/
+drivers/crypto/ux500/cryp/cryp.h:       struct spinlock ctx_lock;
+drivers/crypto/ux500/cryp/cryp.h:       struct spinlock power_state_spinlock;
+drivers/crypto/ux500/hash/hash_alg.h:   struct spinlock         ctx_lock;
+drivers/crypto/ux500/hash/hash_alg.h:   struct spinlock
+power_state_lock;
+drivers/gpu/drm/i915/i915_drv.h:        struct spinlock gt_lock;
+drivers/gpu/drm/i915/i915_drv.h:                struct spinlock lock;
+drivers/media/platform/s5p-fimc/mipi-csis.c:    struct spinlock slock;
+drivers/media/platform/s5p-jpeg/jpeg-core.h:    struct spinlock         slock;
+drivers/watchdog/ie6xx_wdt.c:   struct spinlock unlock_sequence;
 
+Alexander, please also add your driver to the MAINTAINERS file.
+
+  Luis
