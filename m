@@ -1,73 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36386 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752389Ab2KXWZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Nov 2012 17:25:09 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wim@iguana.be,
-	linux-watchdog@vger.kernel.org, castet.matthieu@free.fr,
-	biblbroks@sezampro.rs, m@bues.ch, zajec5@gmail.com,
-	linux-mips@linux-mips.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 04/15] watchdog: bcm47xx_wdt.c: rename wdt_timeout to timeout
-Date: Sat, 24 Nov 2012 23:24:04 +0100
-Message-Id: <1353795855-22236-5-git-send-email-hauke@hauke-m.de> (sfid-20121124_232515_704826_0FDB8194)
-In-Reply-To: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
-References: <1353795855-22236-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:43666 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753692Ab2K2WuL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2012 17:50:11 -0500
+Received: by mail-we0-f174.google.com with SMTP id d7so5137890wer.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2012 14:50:10 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] wlcore/wl12xx: make sure session id is always zero for AP
+Date: Fri, 30 Nov 2012 00:50:06 +0200
+Message-Id: <1354229406-7992-1-git-send-email-arik@wizery.com> (sfid-20121129_235016_077177_06765D18)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename rename wdt_timeout to timeout to name it like the other watchdog
-driver do it.
+The 12xx FW doesn't support non-zero session ids for AP-mode. Introduce
+an appropriate quirk to make sure the session id is always zero when
+needed.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/watchdog/bcm47xx_wdt.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+This fixes AP mode for 12xx. I've tested a branch based on
+Luca's git with part1+2+3 applied in addition to this patch.
+Both AP and STA work well on 12xx and 18xx.
 
-diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
-index 66f2d2b..b6a8c49 100644
---- a/drivers/watchdog/bcm47xx_wdt.c
-+++ b/drivers/watchdog/bcm47xx_wdt.c
-@@ -30,13 +30,13 @@
- #define DRV_NAME		"bcm47xx_wdt"
+ drivers/net/wireless/ti/wl12xx/main.c   |    9 ++++++---
+ drivers/net/wireless/ti/wlcore/tx.c     |    9 +++++++--
+ drivers/net/wireless/ti/wlcore/wlcore.h |    2 ++
+ 3 files changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 6953888..3ef9bd5 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -648,7 +648,8 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+ 		wl->quirks |= WLCORE_QUIRK_LEGACY_NVS |
+ 			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
+ 			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
+-			      WLCORE_QUIRK_START_STA_FAILS;
++			      WLCORE_QUIRK_START_STA_FAILS |
++			      WLCORE_QUIRK_AP_ZERO_SESSION_ID;
+ 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
+ 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
+ 		memcpy(&wl->conf.mem, &wl12xx_default_priv_conf.mem_wl127x,
+@@ -671,7 +672,8 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+ 		wl->quirks |= WLCORE_QUIRK_LEGACY_NVS |
+ 			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
+ 			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
+-			      WLCORE_QUIRK_START_STA_FAILS;
++			      WLCORE_QUIRK_START_STA_FAILS |
++			      WLCORE_QUIRK_AP_ZERO_SESSION_ID;
+ 		wl->plt_fw_name = WL127X_PLT_FW_NAME;
+ 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
+ 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
+@@ -699,7 +701,8 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+ 		wl->quirks |= WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN |
+ 			      WLCORE_QUIRK_DUAL_PROBE_TMPL |
+ 			      WLCORE_QUIRK_TKIP_HEADER_SPACE |
+-			      WLCORE_QUIRK_START_STA_FAILS;
++			      WLCORE_QUIRK_START_STA_FAILS |
++			      WLCORE_QUIRK_AP_ZERO_SESSION_ID;
  
- #define WDT_DEFAULT_TIME	30	/* seconds */
--#define WDT_MAX_TIME		255	/* seconds */
-+#define WDT_SOFTTIMER_MAX	3600	/* seconds */
+ 		wlcore_set_min_fw_ver(wl, WL128X_CHIP_VER,
+ 			      WL128X_IFTYPE_SR_VER,  WL128X_MAJOR_SR_VER,
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 07bd1f4..60ee1b0 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -288,9 +288,14 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
  
--static int wdt_time = WDT_DEFAULT_TIME;
-+static int timeout = WDT_DEFAULT_TIME;
- static bool nowayout = WATCHDOG_NOWAYOUT;
- 
--module_param(wdt_time, int, 0);
--MODULE_PARM_DESC(wdt_time, "Watchdog time in seconds. (default="
-+module_param(timeout, int, 0);
-+MODULE_PARM_DESC(timeout, "Watchdog time in seconds. (default="
- 				__MODULE_STRING(WDT_DEFAULT_TIME) ")");
- 
- module_param(nowayout, bool, 0);
-@@ -94,9 +94,9 @@ static int bcm47xx_wdt_soft_stop(struct watchdog_device *wdd)
- static int bcm47xx_wdt_soft_set_timeout(struct watchdog_device *wdd,
- 					unsigned int new_time)
- {
--	if (new_time < 1 || new_time > WDT_MAX_TIME) {
-+	if (new_time < 1 || new_time > WDT_SOFTTIMER_MAX) {
- 		pr_warn("timeout value must be 1<=x<=%d, using %d\n",
--			WDT_MAX_TIME, new_time);
-+			WDT_SOFTTIMER_MAX, new_time);
- 		return -EINVAL;
+ 		tx_attr |= TX_HW_ATTR_TX_DUMMY_REQ;
+ 	} else if (wlvif) {
++		u8 session_id = wl->session_ids[hlid];
++
++		if ((wl->quirks & WLCORE_QUIRK_AP_ZERO_SESSION_ID) &&
++		    (wlvif->bss_type == BSS_TYPE_AP_BSS))
++			session_id = 0;
++
+ 		/* configure the tx attributes */
+-		tx_attr = wl->session_ids[hlid] <<
+-			  TX_HW_ATTR_OFST_SESSION_COUNTER;
++		tx_attr = session_id << TX_HW_ATTR_OFST_SESSION_COUNTER;
  	}
  
-@@ -160,7 +160,7 @@ static int __devinit bcm47xx_wdt_probe(struct platform_device *pdev)
- 		goto err_notifier;
+ 	desc->hlid = hlid;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index cd57f10..fac3299 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -555,6 +555,8 @@ wlcore_set_min_fw_ver(struct wl1271 *wl, unsigned int chip,
+ /* Firmware requires reg domain configuration for active calibration */
+ #define WLCORE_QUIRK_REGDOMAIN_CONF		BIT(11)
  
- 	pr_info("BCM47xx Watchdog Timer enabled (%d seconds%s)\n",
--		wdt_time, nowayout ? ", nowayout" : "");
-+		timeout, nowayout ? ", nowayout" : "");
- 	return 0;
++/* The FW only support a zero session id for AP */
++#define WLCORE_QUIRK_AP_ZERO_SESSION_ID		BIT(12)
  
- err_notifier:
+ /* TODO: move all these common registers and values elsewhere */
+ #define HW_ACCESS_ELP_CTRL_REG		0x1FFFC
 -- 
-1.7.10.4
+1.7.9.5
 
