@@ -1,127 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55073 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751462Ab2KTXYv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 18:24:51 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: john@phrozen.org, ralf@linux-mips.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, zajec5@gmail.com, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 1/8] bcma: add locking around GPIO register accesses
-Date: Wed, 21 Nov 2012 00:24:27 +0100
-Message-Id: <1353453874-523-2-git-send-email-hauke@hauke-m.de> (sfid-20121121_002454_679148_77BE63D7)
-In-Reply-To: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
-References: <1353453874-523-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:33149 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753304Ab2K2Wqy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2012 17:46:54 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so4537612wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Nov 2012 14:46:53 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2] wl18xx: set last Tx rate from FW status
+Date: Fri, 30 Nov 2012 00:46:48 +0200
+Message-Id: <1354229208-7810-1-git-send-email-arik@wizery.com> (sfid-20121129_234711_708571_F1DE7C67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The GPIOs are access through some registers in the chip common core.
-We need locking around these GPIO accesses, all GPIOs are accessed
-through the same registers and parallel writes will cause problems.
+Obtain the last Tx rate from the FW status and translate it to
+the mac80211 rate+flag format before sending it up via the Tx status.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/bcma/driver_chipcommon.c            |   47 ++++++++++++++++++++++++---
- include/linux/bcma/bcma_driver_chipcommon.h |    3 ++
- 2 files changed, 45 insertions(+), 5 deletions(-)
+v2: passed entire tx_rate pointer to function, so we can set
+the bitwise fields within.
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index a4c3ebc..c9b63d9 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -30,6 +30,8 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
- 	if (cc->setup_done)
- 		return;
+ drivers/net/wireless/ti/wl18xx/tx.c       |   54 ++++++++++++++++++++++++---
+ drivers/net/wireless/ti/wlcore/conf.h     |   57 ++++++++++++++++++++++-------
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    5 ++-
+ 3 files changed, 96 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/tx.c b/drivers/net/wireless/ti/wl18xx/tx.c
+index 5b1fb10..57c6943 100644
+--- a/drivers/net/wireless/ti/wl18xx/tx.c
++++ b/drivers/net/wireless/ti/wl18xx/tx.c
+@@ -28,6 +28,49 @@
+ #include "wl18xx.h"
+ #include "tx.h"
  
-+	spin_lock_init(&cc->gpio_lock);
++static
++void wl18xx_get_last_tx_rate(struct wl1271 *wl, struct ieee80211_vif *vif,
++			     struct ieee80211_tx_rate *rate)
++{
++	u8 fw_rate = wl->fw_status_2->counters.tx_last_rate;
 +
- 	if (cc->core->id.rev >= 11)
- 		cc->status = bcma_cc_read32(cc, BCMA_CC_CHIPSTAT);
- 	cc->capabilities = bcma_cc_read32(cc, BCMA_CC_CAP);
-@@ -84,28 +86,63 @@ u32 bcma_chipco_gpio_in(struct bcma_drv_cc *cc, u32 mask)
- 
- u32 bcma_chipco_gpio_out(struct bcma_drv_cc *cc, u32 mask, u32 value)
++	if (fw_rate > CONF_HW_RATE_INDEX_MAX) {
++		wl1271_error("last Tx rate invalid: %d", fw_rate);
++		rate->idx = 0;
++		rate->flags = 0;
++		return;
++	}
++
++	if (fw_rate <= CONF_HW_RATE_INDEX_54MBPS) {
++		rate->idx = fw_rate;
++		rate->flags = 0;
++	} else {
++		rate->flags = IEEE80211_TX_RC_MCS;
++		rate->idx = fw_rate - CONF_HW_RATE_INDEX_MCS0;
++
++		/* SGI modifier is counted as a separate rate */
++		if (fw_rate >= CONF_HW_RATE_INDEX_MCS7_SGI)
++			(rate->idx)--;
++		if (fw_rate == CONF_HW_RATE_INDEX_MCS15_SGI)
++			(rate->idx)--;
++
++		/* this also covers the 40Mhz SGI case (= MCS15) */
++		if (fw_rate == CONF_HW_RATE_INDEX_MCS7_SGI ||
++		    fw_rate == CONF_HW_RATE_INDEX_MCS15_SGI)
++			rate->flags |= IEEE80211_TX_RC_SHORT_GI;
++
++		if (fw_rate > CONF_HW_RATE_INDEX_MCS7_SGI && vif) {
++			struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
++			if (wlvif->channel_type == NL80211_CHAN_HT40MINUS ||
++			    wlvif->channel_type == NL80211_CHAN_HT40PLUS) {
++				/* adjustment needed for range 0-7 */
++				rate->idx -= 8;
++				rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
++			}
++		}
++	}
++}
++
+ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
  {
--	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOOUT, mask, value);
-+	unsigned long flags;
-+	u32 res;
-+
-+	spin_lock_irqsave(&cc->gpio_lock, flags);
-+	res = bcma_cc_write32_masked(cc, BCMA_CC_GPIOOUT, mask, value);
-+	spin_unlock_irqrestore(&cc->gpio_lock, flags);
-+
-+	return res;
- }
+ 	struct ieee80211_tx_info *info;
+@@ -44,7 +87,6 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
+ 	/* a zero bit indicates Tx success */
+ 	tx_success = !(tx_stat_byte & BIT(WL18XX_TX_STATUS_STAT_BIT_IDX));
  
- u32 bcma_chipco_gpio_outen(struct bcma_drv_cc *cc, u32 mask, u32 value)
- {
--	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOOUTEN, mask, value);
-+	unsigned long flags;
-+	u32 res;
-+
-+	spin_lock_irqsave(&cc->gpio_lock, flags);
-+	res = bcma_cc_write32_masked(cc, BCMA_CC_GPIOOUTEN, mask, value);
-+	spin_unlock_irqrestore(&cc->gpio_lock, flags);
-+
-+	return res;
- }
+-
+ 	skb = wl->tx_frames[id];
+ 	info = IEEE80211_SKB_CB(skb);
  
- u32 bcma_chipco_gpio_control(struct bcma_drv_cc *cc, u32 mask, u32 value)
- {
--	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOCTL, mask, value);
-+	unsigned long flags;
-+	u32 res;
-+
-+	spin_lock_irqsave(&cc->gpio_lock, flags);
-+	res = bcma_cc_write32_masked(cc, BCMA_CC_GPIOCTL, mask, value);
-+	spin_unlock_irqrestore(&cc->gpio_lock, flags);
-+
-+	return res;
- }
- EXPORT_SYMBOL_GPL(bcma_chipco_gpio_control);
+@@ -56,11 +98,13 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
+ 	/* update the TX status info */
+ 	if (tx_success && !(info->flags & IEEE80211_TX_CTL_NO_ACK))
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
++	/*
++	 * first pass info->control.vif while it's valid, and then fill out
++	 * the info->status structures
++	 */
++	wl18xx_get_last_tx_rate(wl, info->control.vif, &info->status.rates[0]);
  
- u32 bcma_chipco_gpio_intmask(struct bcma_drv_cc *cc, u32 mask, u32 value)
- {
--	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOIRQ, mask, value);
-+	unsigned long flags;
-+	u32 res;
-+
-+	spin_lock_irqsave(&cc->gpio_lock, flags);
-+	res = bcma_cc_write32_masked(cc, BCMA_CC_GPIOIRQ, mask, value);
-+	spin_unlock_irqrestore(&cc->gpio_lock, flags);
-+
-+	return res;
- }
+-	/* no real data about Tx completion */
+-	info->status.rates[0].idx = -1;
+-	info->status.rates[0].count = 0;
+-	info->status.rates[0].flags = 0;
++	info->status.rates[0].count = 1; /* no data about retries */
+ 	info->status.ack_signal = -1;
  
- u32 bcma_chipco_gpio_polarity(struct bcma_drv_cc *cc, u32 mask, u32 value)
- {
--	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOPOL, mask, value);
-+	unsigned long flags;
-+	u32 res;
-+
-+	spin_lock_irqsave(&cc->gpio_lock, flags);
-+	res = bcma_cc_write32_masked(cc, BCMA_CC_GPIOPOL, mask, value);
-+	spin_unlock_irqrestore(&cc->gpio_lock, flags);
-+
-+	return res;
- }
- 
- #ifdef CONFIG_BCMA_DRIVER_MIPS
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 1cf1749..a085d98 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -567,6 +567,9 @@ struct bcma_drv_cc {
- 	int nr_serial_ports;
- 	struct bcma_serial_port serial_ports[4];
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
-+
-+	/* Lock for GPIO register access. */
-+	spinlock_t gpio_lock;
+ 	if (!tx_success)
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index e07d74d..ad15cae 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -57,20 +57,49 @@ enum {
  };
  
- /* Register access */
+ enum {
+-	CONF_HW_RATE_INDEX_1MBPS   = 0,
+-	CONF_HW_RATE_INDEX_2MBPS   = 1,
+-	CONF_HW_RATE_INDEX_5_5MBPS = 2,
+-	CONF_HW_RATE_INDEX_6MBPS   = 3,
+-	CONF_HW_RATE_INDEX_9MBPS   = 4,
+-	CONF_HW_RATE_INDEX_11MBPS  = 5,
+-	CONF_HW_RATE_INDEX_12MBPS  = 6,
+-	CONF_HW_RATE_INDEX_18MBPS  = 7,
+-	CONF_HW_RATE_INDEX_22MBPS  = 8,
+-	CONF_HW_RATE_INDEX_24MBPS  = 9,
+-	CONF_HW_RATE_INDEX_36MBPS  = 10,
+-	CONF_HW_RATE_INDEX_48MBPS  = 11,
+-	CONF_HW_RATE_INDEX_54MBPS  = 12,
+-	CONF_HW_RATE_INDEX_MAX     = CONF_HW_RATE_INDEX_54MBPS,
++	CONF_HW_RATE_INDEX_1MBPS      = 0,
++	CONF_HW_RATE_INDEX_2MBPS      = 1,
++	CONF_HW_RATE_INDEX_5_5MBPS    = 2,
++	CONF_HW_RATE_INDEX_11MBPS     = 3,
++	CONF_HW_RATE_INDEX_6MBPS      = 4,
++	CONF_HW_RATE_INDEX_9MBPS      = 5,
++	CONF_HW_RATE_INDEX_12MBPS     = 6,
++	CONF_HW_RATE_INDEX_18MBPS     = 7,
++	CONF_HW_RATE_INDEX_24MBPS     = 8,
++	CONF_HW_RATE_INDEX_36MBPS     = 9,
++	CONF_HW_RATE_INDEX_48MBPS     = 10,
++	CONF_HW_RATE_INDEX_54MBPS     = 11,
++	CONF_HW_RATE_INDEX_MCS0       = 12,
++	CONF_HW_RATE_INDEX_MCS1       = 13,
++	CONF_HW_RATE_INDEX_MCS2       = 14,
++	CONF_HW_RATE_INDEX_MCS3       = 15,
++	CONF_HW_RATE_INDEX_MCS4       = 16,
++	CONF_HW_RATE_INDEX_MCS5       = 17,
++	CONF_HW_RATE_INDEX_MCS6       = 18,
++	CONF_HW_RATE_INDEX_MCS7       = 19,
++	CONF_HW_RATE_INDEX_MCS7_SGI   = 20,
++	CONF_HW_RATE_INDEX_MCS0_40MHZ = 21,
++	CONF_HW_RATE_INDEX_MCS1_40MHZ = 22,
++	CONF_HW_RATE_INDEX_MCS2_40MHZ = 23,
++	CONF_HW_RATE_INDEX_MCS3_40MHZ = 24,
++	CONF_HW_RATE_INDEX_MCS4_40MHZ = 25,
++	CONF_HW_RATE_INDEX_MCS5_40MHZ = 26,
++	CONF_HW_RATE_INDEX_MCS6_40MHZ = 27,
++	CONF_HW_RATE_INDEX_MCS7_40MHZ = 28,
++	CONF_HW_RATE_INDEX_MCS7_40MHZ_SGI = 29,
++
++	/* MCS8+ rates overlap with 40Mhz rates */
++	CONF_HW_RATE_INDEX_MCS8       = 21,
++	CONF_HW_RATE_INDEX_MCS9       = 22,
++	CONF_HW_RATE_INDEX_MCS10      = 23,
++	CONF_HW_RATE_INDEX_MCS11      = 24,
++	CONF_HW_RATE_INDEX_MCS12      = 25,
++	CONF_HW_RATE_INDEX_MCS13      = 26,
++	CONF_HW_RATE_INDEX_MCS14      = 27,
++	CONF_HW_RATE_INDEX_MCS15      = 28,
++	CONF_HW_RATE_INDEX_MCS15_SGI  = 29,
++
++	CONF_HW_RATE_INDEX_MAX        = CONF_HW_RATE_INDEX_MCS7_40MHZ_SGI,
+ };
+ 
+ #define CONF_HW_RXTX_RATE_UNSUPPORTED 0xff
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 670d12f..0194f55 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -130,7 +130,10 @@ struct wl_fw_packet_counters {
+ 	/* Cumulative counter of released Voice memory blocks */
+ 	u8 tx_voice_released_blks;
+ 
+-	u8 padding[3];
++	/* Tx rate of the last transmitted packet */
++	u8 tx_last_rate;
++
++	u8 padding[2];
+ } __packed;
+ 
+ /* FW status registers */
 -- 
-1.7.10.4
+1.7.9.5
 
