@@ -1,157 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 212.199.104.198.static.012.net.il ([212.199.104.198]:26123 "EHLO
-	qualcomm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751900Ab2KRN7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Nov 2012 08:59:35 -0500
-From: Vladimir Kondratiev <vkondrat@qti.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jason Baron <jbaron@redhat.com>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH 1/2] dynamic_debug: dynamic hex dump
-Date: Sun, 18 Nov 2012 15:57:26 +0200
-Message-ID: <1765751.MA4eoSHVRZ@lx-vladimir> (sfid-20121118_145950_416626_A286E6D1)
-In-Reply-To: <1367870.EsNpLZfRqp@lx-vladimir>
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <3304277.iqgq3GH3Yo@lx-vladimir> <1367870.EsNpLZfRqp@lx-vladimir>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52898 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752545Ab2K2W1l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Nov 2012 17:27:41 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	ath9k-devel@lists.ath9k.org, Larry.Finger@lwfinger.net,
+	chunkeey@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] rtlwifi: use SIMPLE_DEV_PM_OPS
+Date: Thu, 29 Nov 2012 23:27:17 +0100
+Message-Id: <1354228037-1700-4-git-send-email-hauke@hauke-m.de> (sfid-20121129_232744_055143_F933854B)
+In-Reply-To: <1354228037-1700-1-git-send-email-hauke@hauke-m.de>
+References: <1354228037-1700-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 26bb3835fe438622d108716420c3cc191f2e881b Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Sun, 18 Nov 2012 15:37:20 +0200
-Subject: [PATCH 1/2] dynamic_debug: dynamic hex dump
+rtlwifi only provides pm callbacks for functions covered by pm sleep
+and they are also just called if CONFIG_PM_SLEEP is set.
 
-Introduce print_hex_dump_debug() that can be dynamically controlled, similar to
-pr_debug.
+Only add functions rtl_pci_suspend and rtl_pci_resume if
+CONFIG_PM_SLEEP is set and use SIMPLE_DEV_PM_OPS instead of
+manually filling struct dev_pm_ops.
 
-Also, make print_hex_dump_bytes() dynamically controlled
-
-Implement only 'p' flag (_DPRINTK_FLAGS_PRINT) to keep it simple since hex dump prints
-multiple lines and long prefix would impact readability.
-To provide line/file etc. information, use pr_debug or similar
-before/after print_hex_dump_debug()
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- Documentation/dynamic-debug-howto.txt |   11 +++++++++--
- include/linux/dynamic_debug.h         |   10 ++++++++++
- include/linux/printk.h                |   17 +++++++++++++++++
- lib/hexdump.c                         |    4 +++-
- 4 files changed, 39 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rtlwifi/pci.c          |    2 ++
+ drivers/net/wireless/rtlwifi/pci.h          |    2 ++
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c |    9 +--------
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c |    9 +--------
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    9 +--------
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c |    9 +--------
+ 6 files changed, 8 insertions(+), 32 deletions(-)
 
-diff --git a/Documentation/dynamic-debug-howto.txt b/Documentation/dynamic-debug-howto.txt
-index 6e16849..b39a771 100644
---- a/Documentation/dynamic-debug-howto.txt
-+++ b/Documentation/dynamic-debug-howto.txt
-@@ -6,8 +6,12 @@ This document describes how to use the dynamic debug (dyndbg) feature.
- 
- Dynamic debug is designed to allow you to dynamically enable/disable
- kernel code to obtain additional kernel information.  Currently, if
--CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() calls can
--be dynamically enabled per-callsite.
-+CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_dbg() and
-+print_hex_dump_debug()/print_hex_dump_bytes() calls can be dynamically
-+enabled per-callsite.
-+
-+If CONFIG_DYNAMIC_DEBUG is not set, print_hex_dump_debug() is just
-+shortcut for print_hex_dump(KERN_DEBUG).
- 
- Dynamic debug has even more useful features:
- 
-@@ -202,6 +206,9 @@ The flags are:
-   t    Include thread ID in messages not generated from interrupt context
-   _    No flags are set. (Or'd with others on input)
- 
-+For print_hex_dump_debug() and print_hex_dump_bytes(), only 'p' flag
-+have meaning, other flags ignored.
-+
- For display, the flags are preceded by '='
- (mnemonic: what the flags are currently equal to).
- 
-diff --git a/include/linux/dynamic_debug.h b/include/linux/dynamic_debug.h
-index 6dd4787..17565ab 100644
---- a/include/linux/dynamic_debug.h
-+++ b/include/linux/dynamic_debug.h
-@@ -95,6 +95,16 @@ do {								\
- 				     ##__VA_ARGS__);		\
- } while (0)
- 
-+#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-+			 groupsize, buf, len, ascii)		\
-+do {								\
-+	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);	\
-+	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
-+		print_hex_dump(KERN_DEBUG, prefix_str,		\
-+			       prefix_type, rowsize, groupsize,	\
-+			       buf, len, ascii);		\
-+} while (0)
-+
- #else
- 
- #include <linux/string.h>
-diff --git a/include/linux/printk.h b/include/linux/printk.h
-index 9afc01e..02c95cf 100644
---- a/include/linux/printk.h
-+++ b/include/linux/printk.h
-@@ -321,8 +321,13 @@ extern void hex_dump_to_buffer(const void *buf, size_t len,
- extern void print_hex_dump(const char *level, const char *prefix_str,
- 			   int prefix_type, int rowsize, int groupsize,
- 			   const void *buf, size_t len, bool ascii);
-+#if defined(CONFIG_DYNAMIC_DEBUG)
-+#define print_hex_dump_bytes(prefix_str, prefix_type, buf, len)	\
-+	dynamic_hex_dump(prefix_str, prefix_type, 16, 1, buf, len, true)
-+#else
- extern void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 				 const void *buf, size_t len);
-+#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
- #else
- static inline void print_hex_dump(const char *level, const char *prefix_str,
- 				  int prefix_type, int rowsize, int groupsize,
-@@ -336,4 +341,16 @@ static inline void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 
- #endif
- 
-+#if defined(CONFIG_DYNAMIC_DEBUG)
-+#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,	\
-+			     groupsize, buf, len, ascii)	\
-+	dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-+			 groupsize, buf, len, ascii)
-+#else
-+#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,		\
-+			     groupsize, buf, len, ascii)		\
-+	print_hex_dump(KERN_DEBUG, prefix_str, prefix_type, rowsize,	\
-+		       groupsize, buf, len, ascii)
-+#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
-+
- #endif
-diff --git a/lib/hexdump.c b/lib/hexdump.c
-index 6540d65..3f0494c 100644
---- a/lib/hexdump.c
-+++ b/lib/hexdump.c
-@@ -227,6 +227,7 @@ void print_hex_dump(const char *level, const char *prefix_str, int prefix_type,
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index f38e30a..086140c 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1982,6 +1982,7 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
  }
- EXPORT_SYMBOL(print_hex_dump);
+ EXPORT_SYMBOL(rtl_pci_disconnect);
  
-+#if !defined(CONFIG_DYNAMIC_DEBUG)
- /**
-  * print_hex_dump_bytes - shorthand form of print_hex_dump() with default params
-  * @prefix_str: string to prefix each line with;
-@@ -246,4 +247,5 @@ void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 		       buf, len, true);
++#ifdef CONFIG_PM_SLEEP
+ /***************************************
+ kernel pci power state define:
+ PCI_D0         ((pci_power_t __force) 0)
+@@ -2021,6 +2022,7 @@ int rtl_pci_resume(struct device *dev)
+ 	return 0;
  }
- EXPORT_SYMBOL(print_hex_dump_bytes);
--#endif
-+#endif /* !defined(CONFIG_DYNAMIC_DEBUG) */
-+#endif /* defined(CONFIG_PRINTK) */
+ EXPORT_SYMBOL(rtl_pci_resume);
++#endif /* CONFIG_PM_SLEEP */
+ 
+ struct rtl_intf_ops rtl_pci_ops = {
+ 	.read_efuse_byte = read_efuse_byte,
+diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
+index f71b12a..7ea50a3 100644
+--- a/drivers/net/wireless/rtlwifi/pci.h
++++ b/drivers/net/wireless/rtlwifi/pci.h
+@@ -239,8 +239,10 @@ extern struct rtl_intf_ops rtl_pci_ops;
+ int __devinit rtl_pci_probe(struct pci_dev *pdev,
+ 			    const struct pci_device_id *id);
+ void rtl_pci_disconnect(struct pci_dev *pdev);
++#ifdef CONFIG_PM_SLEEP
+ int rtl_pci_suspend(struct device *dev);
+ int rtl_pci_resume(struct device *dev);
++#endif /* CONFIG_PM_SLEEP */
+ static inline u8 pci_read8_sync(struct rtl_priv *rtlpriv, u32 addr)
+ {
+ 	return readb((u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+index 60451ee..49f663b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -372,14 +372,7 @@ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
+-static const struct dev_pm_ops rtlwifi_pm_ops = {
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-	.freeze = rtl_pci_suspend,
+-	.thaw = rtl_pci_resume,
+-	.poweroff = rtl_pci_suspend,
+-	.restore = rtl_pci_resume,
+-};
++static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
+ 
+ static struct pci_driver rtl92ce_driver = {
+ 	.name = KBUILD_MODNAME,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+index 480862c..e17f670 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -378,14 +378,7 @@ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
+-static const struct dev_pm_ops rtlwifi_pm_ops = {
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-	.freeze = rtl_pci_suspend,
+-	.thaw = rtl_pci_resume,
+-	.poweroff = rtl_pci_suspend,
+-	.restore = rtl_pci_resume,
+-};
++static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
+ 
+ static struct pci_driver rtl92de_driver = {
+ 	.name = KBUILD_MODNAME,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index ad4b480..940034f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -432,14 +432,7 @@ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
+-static const struct dev_pm_ops rtlwifi_pm_ops = {
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-	.freeze = rtl_pci_suspend,
+-	.thaw = rtl_pci_resume,
+-	.poweroff = rtl_pci_suspend,
+-	.restore = rtl_pci_resume,
+-};
++static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
+ 
+ static struct pci_driver rtl92se_driver = {
+ 	.name = KBUILD_MODNAME,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
+index 0afdc24..18b0bc5 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/sw.c
+@@ -367,14 +367,7 @@ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+ MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ 
+-static const struct dev_pm_ops rtlwifi_pm_ops = {
+-	.suspend = rtl_pci_suspend,
+-	.resume = rtl_pci_resume,
+-	.freeze = rtl_pci_suspend,
+-	.thaw = rtl_pci_resume,
+-	.poweroff = rtl_pci_suspend,
+-	.restore = rtl_pci_resume,
+-};
++static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
+ 
+ static struct pci_driver rtl8723ae_driver = {
+ 	.name = KBUILD_MODNAME,
 -- 
 1.7.10.4
-
 
