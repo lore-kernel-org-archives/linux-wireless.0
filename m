@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from st11p02mm-asmtp002.mac.com ([17.172.220.237]:47078 "EHLO
-	st11p02mm-asmtp002.mac.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755350Ab2KHMeH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Nov 2012 07:34:07 -0500
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII
-Received: from [192.168.1.3]
- (pd284a7bb.kngwnt01.ap.so-net.ne.jp [210.132.167.187])
- by st11p02mm-asmtp002.mac.com
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Jan
-  3 2012)) with ESMTPSA id <0MD6000V42SN9C90@st11p02mm-asmtp002.mac.com> for
- linux-wireless@vger.kernel.org; Thu, 08 Nov 2012 11:34:03 +0000 (GMT)
-Subject: Re: "mac80211.ko" and "cfg80211.ko" compatibility issue.
-From: Nonaka Akira <nonaka@mac.com>
-In-reply-to: <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com>
-Date: Thu, 08 Nov 2012 20:33:58 +0900
-Message-id: <9983E05C-2103-49C8-A675-4F5368F53FB5@mac.com> (sfid-20121108_133420_491963_9D90FBDE)
-References: <509B73D5.5000206@mac.com>
- <CAGRGNgUB_7NZTnC2k2_f0_bAP0yu4cXTqk3_QpxpKZHqw__+hw@mail.gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:12025 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755673Ab2K2BOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Nov 2012 20:14:02 -0500
+Date: Thu, 29 Nov 2012 09:13:37 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: kbuild@01.org, Julia Lawall <julia.lawall@lip6.fr>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [wireless-next:master 207/237]
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c:352:20-24: ERROR: di is NULL
+ but dereferenced.
+Message-ID: <20121129011337.GA5785@localhost> (sfid-20121129_021406_884902_92F7C410)
+References: <50b6477a.KNKuUJi++FBSGGYg%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50b6477a.KNKuUJi++FBSGGYg%fengguang.wu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+Hi Seth,
 
-Well, We consider the option of using the entire compat-wireless drivers. However, we are planning the minor update of our product toward the end of the year and I thought it will be nice if I can keep the change minimum.
+FYI, there are coccinelle warnings in
 
---
-Nonaka Akira
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+head:   0751f8654602e4255f0b9c17784d8100d5896010
+commit: 90123e045cac4ce8ec13e266f030c618fa674554 [207/237] brcmsmac: Add brcms_dbg_dma() debug macro
 
-On 2012/11/08, at 20:16, Julian Calaby wrote:
++ drivers/net/wireless/brcm80211/brcmsmac/dma.c:352:20-24: ERROR: di is NULL but dereferenced.
 
-> Hi,
-> 
-> On Thu, Nov 8, 2012 at 7:56 PM, Akira Nonaka <nonaka@mac.com> wrote:
->> Hi all,
->> 
->> I have a problem with the compat-wireless. It seems "mac80211.ko" and
->> "cfg80211.ko" are not compatible with the ones in main line kernel. In
->> my case, it is kernel 3.4.9(Fedora 16).
-> 
-> This is expected and pretty much by design.
-> 
->> I want to use  compat-wireless version of "mac80211.ko" and
->> "cfg80211.ko" for Realtek rtl8723ae but for other wireless cards, I want
->> to use main line kernel version of "mac80211.ko" and "cfg80211.ko".
-> 
-> Why? Are the drivers for these other cards not available in compat-wireless?
-> 
-> Thanks,
-> 
-> -- 
-> Julian Calaby
-> 
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
+vim +352 drivers/net/wireless/brcm80211/brcmsmac/dma.c
 
+5b435de0 Arend van Spriel 2011-10-05  336  
+5b435de0 Arend van Spriel 2011-10-05  337  static uint ntxdactive(struct dma_info *di, uint h, uint t)
+5b435de0 Arend van Spriel 2011-10-05  338  {
+5b435de0 Arend van Spriel 2011-10-05  339  	return txd(di, t-h);
+5b435de0 Arend van Spriel 2011-10-05  340  }
+5b435de0 Arend van Spriel 2011-10-05  341  
+5b435de0 Arend van Spriel 2011-10-05  342  static uint nrxdactive(struct dma_info *di, uint h, uint t)
+5b435de0 Arend van Spriel 2011-10-05  343  {
+5b435de0 Arend van Spriel 2011-10-05  344  	return rxd(di, t-h);
+5b435de0 Arend van Spriel 2011-10-05  345  }
+5b435de0 Arend van Spriel 2011-10-05  346  
+5b435de0 Arend van Spriel 2011-10-05  347  static uint _dma_ctrlflags(struct dma_info *di, uint mask, uint flags)
+5b435de0 Arend van Spriel 2011-10-05  348  {
+ae8e4672 Arend van Spriel 2011-10-29  349  	uint dmactrlflags;
+5b435de0 Arend van Spriel 2011-10-05  350  
+5b435de0 Arend van Spriel 2011-10-05  351  	if (di == NULL) {
+90123e04 Seth Forshee     2012-11-15 @352  		brcms_dbg_dma(di->core, "NULL dma handle\n");
+5b435de0 Arend van Spriel 2011-10-05  353  		return 0;
+5b435de0 Arend van Spriel 2011-10-05  354  	}
+5b435de0 Arend van Spriel 2011-10-05  355  
+ae8e4672 Arend van Spriel 2011-10-29  356  	dmactrlflags = di->dma.dmactrlflags;
+5b435de0 Arend van Spriel 2011-10-05  357  	dmactrlflags &= ~mask;
+5b435de0 Arend van Spriel 2011-10-05  358  	dmactrlflags |= flags;
+5b435de0 Arend van Spriel 2011-10-05  359  
+5b435de0 Arend van Spriel 2011-10-05  360  	/* If trying to enable parity, check if parity is actually supported */
+
+---
+0-DAY kernel build testing backend         Open Source Technology Center
+Fengguang Wu, Yuanhan Liu                              Intel Corporation
