@@ -1,44 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:41350 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755779Ab2K0GU4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51687 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752489Ab2K3MLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Nov 2012 01:20:56 -0500
-Message-ID: <50B45BC2.3070406@posedge.com> (sfid-20121127_072059_333995_A1EDD246)
-Date: Tue, 27 Nov 2012 11:50:50 +0530
-From: Saravana <saravanad@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: re-organize the rx rate calculation logic
-References: <d4c0566bd33c1afdcc0f7b820024d19f@posedge.com> <1353942490.2800.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1353942490.2800.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 30 Nov 2012 07:11:51 -0500
+Message-ID: <1354277533.10035.21.camel@jlt4.sipsolutions.net> (sfid-20121130_131154_156401_9D371136)
+Subject: Re: [RFCv2 10/13] {cfg,nl}80211: add awake window to mesh config
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, thomas@cozybit.com,
+	linux-wireless@vger.kernel.org
+Date: Fri, 30 Nov 2012 13:12:13 +0100
+In-Reply-To: <1353701934-12752-11-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1353701934-12752-11-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/26/2012 08:38 PM, Johannes Berg wrote:
-> Generally, this seems fine. Your patches are line-wrapped though.
->
-I reviewed all the patches and unable to find the line-wrapped :(
-Could you help me by pointing out which line is exactly getting wrapped?
-So that i will figure out where exactly i am missing and will correct 
-the same.
->> Signed-off-by: Saravana <saravanad@posedge.com>
->> ---
->> The diff file is generated from wireless-testing git tree.
->
-> I just changed this code in mac80211-next and would appreciate if you
-> would rebase onto that.
->
-I am also facing the same problem in cloning the mac80211-next. once 
-that is resolved, will use the mac80211-next as base and then send 
-patches on top of that.
-> That blank line is in the wrong spot, it should be after the closing
-> bracket :)
->
-will add the blank line after the closing bracket.
-> johannes
->
->
+On Fri, 2012-11-23 at 12:18 -0800, Marco Porsch wrote:
+> This commit adds the dot11MeshAwakeWindowDuration value to the mesh config.
+> The awake window is a duration in TU describing how long the STA will stay
+> awake after transmitting its beacon in PS mode.
+> The value can be changed during mesh runtime.
+> 
+
+again missing range checks?
 
