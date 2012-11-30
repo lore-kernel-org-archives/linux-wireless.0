@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45862 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678Ab2KGRAz (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:49593 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751291Ab2K3MqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Nov 2012 12:00:55 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TW8zl-00074P-Ut
-	for linux-wireless@vger.kernel.org; Wed, 07 Nov 2012 18:00:54 +0100
-Message-ID: <1352307691.9854.11.camel@jlt4.sipsolutions.net> (sfid-20121107_180057_204276_DC07B064)
-Subject: Re: [PATCH] mac80211: use kstrtoull return value
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 07 Nov 2012 18:01:31 +0100
-In-Reply-To: <1352143887-30654-1-git-send-email-johannes@sipsolutions.net> (sfid-20121105_203102_312615_D3ED23D4)
-References: <1352143887-30654-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121105_203102_312615_D3ED23D4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 30 Nov 2012 07:46:09 -0500
+Message-ID: <50B8AA8C.9020508@posedge.com> (sfid-20121130_134615_412297_C6D30E51)
+Date: Fri, 30 Nov 2012 18:16:04 +0530
+From: Saravana <saravanad@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add debugfs file for mic failure
+References: <50B86A28.9090509@posedge.com> <1354275686.10035.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1354275686.10035.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-05 at 20:31 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 11/30/2012 05:11 PM, Johannes Berg wrote:
+> On Fri, 2012-11-30 at 13:41 +0530, Saravana wrote:
+>> Add a debugfs file showing the number of dropped
+>> rx packet due to mic failures. currently the
+>> number of rx packet dropped is counted in general and
+>> not with respect to a specific reason. This patch
+>> counts the number of packet drop due to mic failure.
 > 
-> If kstrtoull() returns an error code (a value
-> smaller than zero), use it since it can be an
-> error other than -EINVAL.
-
-Applied.
-
-johannes
+> It would make more sense to count them per *key*, not per station, and
+> counting them per station like this can crash anyway if sta is NULL.
+> 
+I agree with you. I will prepare the patch per key instead of per station.
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
