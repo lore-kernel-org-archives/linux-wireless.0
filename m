@@ -1,167 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:10686 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422925Ab2KNNsm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Nov 2012 08:48:42 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	Vladimir Kondratiev <vkondrat_qca@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v7 2/2] wireless: integrate wil6210 driver into build structure
-Date: Wed, 14 Nov 2012 15:48:38 +0200
-Message-ID: <1711919.ybo0v2O7lR@lx-vladimir> (sfid-20121114_144849_158043_97F90A33)
-In-Reply-To: <1352885539.9510.17.camel@jlt4.sipsolutions.net>
-References: <1352809427-29682-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <4652801.Xt8tN7pgs4@lx-vladimir> <1352885539.9510.17.camel@jlt4.sipsolutions.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:2304 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751645Ab2K3VVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Nov 2012 16:21:44 -0500
+Message-ID: <50B9235D.7050309@broadcom.com> (sfid-20121130_222205_129004_33AC9E74)
+Date: Fri, 30 Nov 2012 22:21:33 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	backports@vger.kernel.org, alexander.stein@systec-electronic.com,
+	brudley@broadcom.com, rvossen@broadcom.com, frankyl@broadcom.com,
+	kanyan@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, kyungmin.park@samsung.com,
+	s.nawrocki@samsung.com, linux-arm-kernel@lists.infradead.org,
+	linux-media@vger.kernel.org, daniel.vetter@ffwll.ch,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	srinidhi.kasagar@stericsson.com, linus.walleij@linaro.org,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 0/6] drivers: convert struct spinlock to spinlock_t
+References: <1354221910-22493-1-git-send-email-mcgrof@do-not-panic.com>
+ <50B87082.3020604@broadcom.com>
+ <CAB=NE6UO8jPYOktteaLeihVqLp251-Q=jv5z_OThXoR+JtRKeg@mail.gmail.com>
+ <CAB=NE6UVA1As_07HOvCbi4oK+CgbNNeeNMfz8agB-00ZRP973w@mail.gmail.com>
+In-Reply-To: <CAB=NE6UVA1As_07HOvCbi4oK+CgbNNeeNMfz8agB-00ZRP973w@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, November 14, 2012 10:32:19 AM Johannes Berg wrote:
-> [btw, you seem to have started to send HTML email that almost looks like
-> plain text for some reason]
-
-My bad, will double check. 
-
-> > > It might be even better to split it out into a separate patch.
-> > 
-> > Sure I can do this. One patch for change regarding ATH_COMMON, another
-> > one that introduces wil6210 module.
-> > 
-> > Anyone else have opinion what is better - keep one patch or split it?
-> > Johannes, what would you say?
+On 11/30/2012 09:25 PM, Luis R. Rodriguez wrote:
+> On Fri, Nov 30, 2012 at 11:18 AM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+>> On Fri, Nov 30, 2012 at 12:38 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> So what is the rationale here. During mainlining our drivers we had to
+>>> remove all uses of 'typedef struct foo foo_t;'. The Linux CodingStyle
+>>> (chapter 5 Typedefs) is spending a number of lines explaining why.
+>>>
+>>> So is spinlock_t an exception to this rule simply because the kernel
+>>> uses spinlock_t all over the place.
+>>
+>> Yes.
 > 
-> I guess it woulod make sense, that patch could go in right away without
-> any further discussion, so it also reduces the code that's still being
-> discussed?
-> 
-> johannes
+> Let me provide a better explanation. In practice drivers should not be
+> creating their own typedefs given that generally the reasons to create
+> them do not exist for drivers. The kernel may provide their own though
+> for reasons explained in CodingStyle and in such cases the drivers
+> should use these supplied typedefs.
 
-Here it goes:
+Ok. Fine by me. It just looked like a case of saying a and doing b.
+Thanks for taking time giving the better explanation :-)
 
-
->From f5c881741b2115b2cf978fc5fa4255ee1b125090 Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Wed, 14 Nov 2012 15:38:13 +0200
-Subject: [PATCH] wireless: allow Atheros card to not depend on ath.ko
-To: John W. Linville <linville@tuxdriver.com>,
-    Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-    Luis R. Rodriguez <mcgrof@qca.qualcomm.com>,
-    Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-
-There are 2 different things:
-- sub-menu for "Atheros Wireless cards" family
-- module ath.ko with common Atheros code
-
-Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
-Thus, being "Atheros card" and "depending on ath.ko" was the same.
-
-To allow module to belong to the
-"Atheros Wireless cards" family but not use ath.ko,
-2 conditions above need to be separated.
-
-So, this patch introduce new Kconfig variable ATH_CARDS for belonging
-to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
-variable to express dependency on common Atheros code in ath.ko. Modules
-that depend on this common code now express it by setting ATH_COMMON.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/Kconfig          |    7 +++++--
- drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
- drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
- drivers/net/wireless/ath/ath6kl/Kconfig   |    1 +
- drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
- drivers/net/wireless/ath/carl9170/Kconfig |    1 +
- 6 files changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index c25dcf1..1a67a4f 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -1,4 +1,7 @@
--menuconfig ATH_COMMON
-+config ATH_COMMON
-+	tristate
-+
-+menuconfig ATH_CARDS
- 	tristate "Atheros Wireless Cards"
- 	depends on CFG80211 && (!UML || BROKEN)
- 	---help---
-@@ -14,7 +17,7 @@ menuconfig ATH_COMMON
- 
- 	  http://wireless.kernel.org/en/users/Drivers/Atheros
- 
--if ATH_COMMON
-+if ATH_CARDS
- 
- config ATH_DEBUG
- 	bool "Atheros wireless debugging"
-diff --git a/drivers/net/wireless/ath/ar5523/Kconfig b/drivers/net/wireless/ath/ar5523/Kconfig
-index 11d99ee..0d320cc 100644
---- a/drivers/net/wireless/ath/ar5523/Kconfig
-+++ b/drivers/net/wireless/ath/ar5523/Kconfig
-@@ -1,6 +1,7 @@
- config AR5523
-        tristate "Atheros AR5523 wireless driver support"
-        depends on MAC80211 && USB
-+       select ATH_COMMON
-        select FW_LOADER
-        ---help---
-          This module add support for AR5523 based USB dongles such as D-Link
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index 338c5c4..c9f81a3 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,6 +1,7 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
-diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-index d755a5e..2a61989 100644
---- a/drivers/net/wireless/ath/ath6kl/Kconfig
-+++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-@@ -1,5 +1,6 @@
- config ATH6KL
- 	tristate "Atheros mobile chipsets support"
-+	select ATH_COMMON
- 
- config ATH6KL_SDIO
- 	tristate "Atheros ath6kl SDIO support"
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index c7aa664..5fc15bf 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on MAC80211
-+	select ATH_COMMON
- 	select ATH9K_HW
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
-diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
-index 267d5dc..13a2045 100644
---- a/drivers/net/wireless/ath/carl9170/Kconfig
-+++ b/drivers/net/wireless/ath/carl9170/Kconfig
-@@ -1,6 +1,7 @@
- config CARL9170
- 	tristate "Linux Community AR9170 802.11n USB support"
- 	depends on USB && MAC80211 && EXPERIMENTAL
-+	select ATH_COMMON
- 	select FW_LOADER
- 	select CRC32
- 	help
--- 
-1.7.10.4
+Gr. AvS
 
 
