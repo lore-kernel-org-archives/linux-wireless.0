@@ -1,81 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:37704 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754678Ab2KIRGN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51625 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753600Ab2K3LwO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Nov 2012 12:06:13 -0500
-Received: by mail-ee0-f46.google.com with SMTP id b15so2295900eek.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2012 09:06:12 -0800 (PST)
-From: Bernhard Urban <lewurm@gmail.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	c_manoha@qca.qualcomm.com, Sujith.Manoharan@atheros.com,
-	linville@tuxdriver.com
-Cc: markus@indoo.rs, lewurm@gmail.com
-Subject: [PATCH] ath9k_htc: update RSSI values only when the device is associated
-Date: Fri,  9 Nov 2012 18:09:26 +0100
-Message-Id: <1352480966-17462-1-git-send-email-lewurm@gmail.com> (sfid-20121109_180617_690815_9769C15B)
+	Fri, 30 Nov 2012 06:52:14 -0500
+Message-ID: <1354276356.10035.8.camel@jlt4.sipsolutions.net> (sfid-20121130_125217_572638_1844A541)
+Subject: Re: [RFCv2 03/13] mac80211: local link-specific mesh power mode
+ logic
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, thomas@cozybit.com,
+	linux-wireless@vger.kernel.org,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>,
+	Max Filippov <jcmvbkbc@gmail.com>
+Date: Fri, 30 Nov 2012 12:52:36 +0100
+In-Reply-To: <1353701934-12752-4-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1353701934-12752-4-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add an if-guard, otherwise iw(8) reports weird signal strengths.
+On Fri, 2012-11-23 at 12:18 -0800, Marco Porsch wrote:
 
-The behaviour was fine before this commit:
-7c277349ecbd66e19fad3d949fa6ef6c131a3b62
-This patch is therefore a partially revert of it.
+> +	/* mesh power save */
+> +	enum nl80211_mesh_power_mode nonpeer_ps_mode;
+> +	u8 ps_peers_light_sleep;
+> +	u8 ps_peers_deep_sleep;
 
-Tested with "TP-Link TL-WN722N"
+u8? really?
 
-Thanks to indoo.rs http://indoo.rs/ for sponsoring
 
-Reported-by: Markus Krainz <markus@indoo.rs>
-Tested-by: Markus Krainz <markus@indoo.rs>
-Signed-off-by: Bernhard Urban <lewurm@gmail.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   27 ++++++++++++++-----------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+> +			ieee80211_set_sta_mesh_local_ps_mode(sta,
+> +					mshcfg->power_mode, 100);
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 47e61d0..d0d329c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -1060,22 +1060,25 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
- 			   rxbuf->rxstatus.rs_flags);
- 
--	if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
--	    !rxbuf->rxstatus.rs_moreaggr)
--		ATH_RSSI_LPF(priv->rx.last_rssi,
--			     rxbuf->rxstatus.rs_rssi);
-+	if (priv->num_sta_assoc_vif != 0) {
-+		if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
-+		    !rxbuf->rxstatus.rs_moreaggr)
-+			ATH_RSSI_LPF(priv->rx.last_rssi,
-+				     rxbuf->rxstatus.rs_rssi);
- 
--	last_rssi = priv->rx.last_rssi;
-+		last_rssi = priv->rx.last_rssi;
- 
--	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
--						     ATH_RSSI_EP_MULTIPLIER);
-+		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER)) {
-+			s8 rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
-+			rxbuf->rxstatus.rs_rssi = rssi;
-+		}
- 
--	if (rxbuf->rxstatus.rs_rssi < 0)
--		rxbuf->rxstatus.rs_rssi = 0;
-+		if (rxbuf->rxstatus.rs_rssi < 0)
-+			rxbuf->rxstatus.rs_rssi = 0;
- 
--	if (ieee80211_is_beacon(fc))
--		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
-+		if (ieee80211_is_beacon(fc))
-+			priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
-+	}
- 
- 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
--- 
-1.7.9.5
+Maybe this function needs some refactoring if the indentation is this
+deep? :)
+
+In any case that looks odd, I think you should either break all
+parameters or do the normal lined-up indentation.
+
+> +	u8 light_sleep_cnt = 0;
+> +	u8 deep_sleep_cnt = 0;
+
+Again, u8?
+
+Also in this function: you aren't bothered by the lack of locking at
+all, are you? Well I am :-P
+
+> +	setup_timer(&sta->local_ps_mode_timer,
+> +			ieee80211_sta_mesh_local_ps_mode_timer,
+> +			(unsigned long) sta);
+
+suggest you run checkpatch -- I'm not your whitespace nanny.
+
+johannes
 
