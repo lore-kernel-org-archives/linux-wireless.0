@@ -1,36 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:34148 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759588Ab2KBBpi (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:42566 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756623Ab2K3NnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Nov 2012 21:45:38 -0400
-Received: by mail-ia0-f174.google.com with SMTP id y32so2356658iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Nov 2012 18:45:37 -0700 (PDT)
-Message-ID: <509325BA.2060807@lwfinger.net> (sfid-20121102_024552_526143_70C0BE6C)
-Date: Thu, 01 Nov 2012 20:45:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 30 Nov 2012 08:43:22 -0500
+Date: Fri, 30 Nov 2012 14:43:11 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from
+ outside
+Message-ID: <20121130134311.GA19037@pandem0nium> (sfid-20121130_144326_668177_C2684689)
+References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1354042232-32428-2-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1354111295.9345.25.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Akira Nonaka <nonaka@mac.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8723e disconnect problem on the kernel 3.4.9.
-References: <509200A2.9060300@mac.com> <50929F0C.5060501@lwfinger.net> <50931EEC.9040606@mac.com>
-In-Reply-To: <50931EEC.9040606@mac.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
+In-Reply-To: <1354111295.9345.25.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/01/2012 08:16 PM, Akira Nonaka wrote:
-> Larry,
-> 
->> (2) Are the memset errors fixed? There are a number of calls where args 2 and 3
->> are reversed.
-> 
-> Yes, I found there are a few wrong memset() call in the efuse.c.
 
-Those are all fixed in my patch. The driver that you are using was my starting
-point for the one that will be included in the kernel. My experience is that the
-connections that I get are extremely stable, particularly for a new driver.
+--82I3+IH0IqGh5yIs
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Wed, Nov 28, 2012 at 03:01:35PM +0100, Johannes Berg wrote:
+> On Tue, 2012-11-27 at 19:50 +0100, Simon Wunderlich wrote:
+> > It can be useful to set own WMM parameters from outside, otherwise there
+> > is no way to change this in Ad-Hoc networks.
+>=20
+> Having proper WMM support for IBSS doesn't seem this simple.
+>=20
+> What about IBSS merging? What about adding WMM IEs? etc.
 
+I couldn't find anything on this in the IEEE standard - it only talks
+about infrastructure mode, and that EDCA Parameter IEs should be adopted.=
+=20
+(Although I doubt that's a good idea).
 
+All we want here is to locally change the parameters. Seems we are not the
+first ones who want to do that [1]. The WMM specification only says that no
+WMM IEs is in the beacon and distribution of parameters is missing, and
+therefore defaults are to be used.
+
+Therefore, I'd like to go for the local changes only and skip WMM IEs, adop=
+tion,
+etc.
+
+You have a point regarding IBSS merging - with this change, we would lose t=
+he
+local configuration with the merge. This could be changed for mac80211,
+not sure about other drivers (or if anyone actually cares).
+
+Cheers,
+	Simon
+
+[1] http://www.uniroma2.it/didattica/TPI2/deposito/wmm.pdf [page 7, bottom]
+
+--82I3+IH0IqGh5yIs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlC4t+8ACgkQrzg/fFk7axZcCgCgkVblXOzzgFYaYcM/2giObuBD
+8c8AoLQEgOy2C7K+CvbaA1hTC22tK/iw
+=cfXA
+-----END PGP SIGNATURE-----
+
+--82I3+IH0IqGh5yIs--
