@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4812 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751377Ab2KSUud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 15:50:33 -0500
-Message-ID: <50AA9B8F.6000905@broadcom.com> (sfid-20121119_215036_892005_CF443857)
-Date: Mon, 19 Nov 2012 21:50:23 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:56915 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1769356Ab2K3TbC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Nov 2012 14:31:02 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Masanari Iida <standby24x7@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"trivial@kernel.org" <trivial@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Date: Fri, 30 Nov 2012 11:30:58 -0800
+Subject: RE: [PATCH] [trivial] wireless: mwifiex: Fix typo in
+ wireless/mwifiex driver
+Message-ID: <477F20668A386D41ADCC57781B1F70430D13A09128@SC-VEXCH1.marvell.com> (sfid-20121130_203131_251147_771BE27F)
+References: <1354280911-4866-1-git-send-email-standby24x7@gmail.com>
+In-Reply-To: <1354280911-4866-1-git-send-email-standby24x7@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	"Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 05/22] brcmsmac: Use IEEE 802.11 AC levels for
- pktq precedence levels
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-6-git-send-email-seth.forshee@canonical.com>
- <50AA7D7C.8020208@broadcom.com> <20121119191625.GA20301@thinkpad-t410>
-In-Reply-To: <20121119191625.GA20301@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/2012 08:16 PM, Seth Forshee wrote:
->> True. I believe the statement actually applies to any retry include
->> >non-AMPDU.
-> I don't see that non-AMPDU frames are ever requeued after failed tx. Am
-> I overlooking soemthing?
+Hi Masanari,
 
-Ah, you are right. non-ampdu frame retries are handled in hardware.
+Thanks for your patch.
 
-Gr. AvS
+> Subject: [PATCH] [trivial] wireless: mwifiex: Fix typo in wireless/mwifiex driver
+> 
+> Correct spelling typo in wireless/mwifiex driver.
+> 
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Regards,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/sta_ioctl.c | 2 +-
+>  drivers/net/wireless/mwifiex/usb.c       | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> index 552d72e..21035e6 100644
+> --- a/drivers/net/wireless/mwifiex/sta_ioctl.c
+> +++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> @@ -463,7 +463,7 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+>  	}
+> 
+>  	if (adapter->hs_activated) {
+> -		dev_dbg(adapter->dev, "cmd: HS Already actived\n");
+> +		dev_dbg(adapter->dev, "cmd: HS Already activated\n");
+>  		return true;
+>  	}
+> 
+> diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+> index 22a5916..5eb3b33 100644
+> --- a/drivers/net/wireless/mwifiex/usb.c
+> +++ b/drivers/net/wireless/mwifiex/usb.c
+> @@ -351,7 +351,7 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+>  	card->udev = udev;
+>  	card->intf = intf;
+> 
+> -	pr_debug("info: bcdUSB=%#x Device Class=%#x SubClass=%#x Protocl=%#x\n",
+> +	pr_debug("info: bcdUSB=%#x Device Class=%#x SubClass=%#x Protocol=%#x\n",
+>  		 udev->descriptor.bcdUSB, udev->descriptor.bDeviceClass,
+>  		 udev->descriptor.bDeviceSubClass,
+>  		 udev->descriptor.bDeviceProtocol);
+> --
+> 1.8.0.1.347.gf94c325
 
