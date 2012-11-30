@@ -1,35 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34929 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51775 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754376Ab2KZJKZ (ORCPT
+	with ESMTP id S1751214Ab2K3Mmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Nov 2012 04:10:25 -0500
-Message-ID: <1353921049.9488.0.camel@jlt4.sipsolutions.net> (sfid-20121126_101029_595292_0897FA3A)
-Subject: Re: RFC[4/4] mac80211: add statistic to debugfs
+	Fri, 30 Nov 2012 07:42:52 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TePvf-0002cN-N6
+	for linux-wireless@vger.kernel.org; Fri, 30 Nov 2012 13:42:51 +0100
+Message-ID: <1354279396.10035.29.camel@jlt4.sipsolutions.net> (sfid-20121130_134255_178773_294EC385)
+Subject: Re: [PATCH] cfg80211: fix whitespace in scan handling
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Saravana <saravanad@posedge.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 26 Nov 2012 10:10:49 +0100
-In-Reply-To: <50B2FC03.4050101@posedge.com>
-References: <50B2FC03.4050101@posedge.com>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 30 Nov 2012 13:43:16 +0100
+In-Reply-To: <1354138807-22761-1-git-send-email-johannes@sipsolutions.net> (sfid-20121128_223946_720275_59EF73D9)
+References: <1354138807-22761-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121128_223946_720275_59EF73D9)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-11-26 at 10:50 +0530, Saravana wrote:
-> Provide additional statistic support to the debugfs.
-
-Please don't send four patches with the same subject. ALso, your
-description here (debugfs) is obviously wrong:
-
-
-> +++ b/net/mac80211/cfg.c
-> @@ -396,6 +396,18 @@ void sta_set_rate_info_tx(struct sta_info *sta,
->   	rate_idx_to_bitrate(rinfo, sta, rate->idx);
->   }
+On Wed, 2012-11-28 at 22:40 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> +void sta_set_rate_info_rx(struct sta_info *sta,struct rate_info *rinfo)
+> Fix a number of indentation and similar issues.
+
+applied.
 
 johannes
 
