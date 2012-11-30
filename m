@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64050 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270Ab2K1Pj7 convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33579 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754690Ab2K3W4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Nov 2012 10:39:59 -0500
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "mathias.kretschmer@fokus.fraunhofer.de"
-	<mathias.kretschmer@fokus.fraunhofer.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Giori, Kathy" <kgiori@qca.qualcomm.com>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>
-Subject: Re: [ath9k-devel] [RFC 1/3] nl80211: add spec scan flag
-Date: Wed, 28 Nov 2012 15:29:36 +0000
-Message-ID: <8887AA04B7EC49479420AE48C5F94A930172CD48@NASANEXD02D.na.qualcomm.com> (sfid-20121128_164006_602554_96C0B9E3)
-In-Reply-To: <20121128151916.GA6175@pandem0nium>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 30 Nov 2012 17:56:24 -0500
+Date: Fri, 30 Nov 2012 14:56:19 -0800
+From: Tejun Heo <tj@kernel.org>
+To: Anders Kaseorg <andersk@MIT.EDU>
+Cc: Herbert Xu <herbert@gondor.hengli.com.au>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Wireless regression in workqueue: use mod_delayed_work() instead
+ of __cancel + queue
+Message-ID: <20121130225619.GD6021@htj.dyndns.org> (sfid-20121130_235644_828663_EC14192C)
+References: <alpine.DEB.2.00.1211280953350.26602@dr-wily.mit.edu>
+ <alpine.DEB.2.00.1211281016320.26602@dr-wily.mit.edu>
+ <20121130211435.GJ3873@htj.dyndns.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121130211435.GJ3873@htj.dyndns.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hey, again.
 
+Can you please test whether the following patch makes any difference?
 
-On 11/28/12 7:19 AM, "Simon Wunderlich"
-<simon.wunderlich@s2003.tu-chemnitz.de> wrote:
+Thanks!
 
->The main reason why I wanted to use this function is that it can be used
->while operation, that is sending power save, forbidding payload tx, etc.
-
-Have you looked at the remain-on-channel commands?
-
->It seems there is no way to trigger a scan from within ath9k/debugfs,
->right?
-
-I don't think there is nor that there should be.. Do you really need scan
-operating for this? I would use remain-on-channel commands from a user
-space app to go through the channels you want to analyze.
-
->I could also cycle channels within ath9k, but the main problem I see is
->that
->I can't turn off TX/go into power save mode from the driver, or would you
->see
->anything feasible?
-
-Remain-on-channel should take care of that, but yes, that would not be
-triggered from ath9k, but from user space.
-
-- Jouni
-
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 042d221..26368ef 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -1477,7 +1477,10 @@ bool mod_delayed_work_on(int cpu, struct workqueue_struct *wq,
+ 	} while (unlikely(ret == -EAGAIN));
+ 
+ 	if (likely(ret >= 0)) {
+-		__queue_delayed_work(cpu, wq, dwork, delay);
++		if (!delay)
++			__queue_work(cpu, wq, &dwork->work);
++		else
++			__queue_delayed_work(cpu, wq, dwork, delay);
+ 		local_irq_restore(flags);
+ 	}
+ 
