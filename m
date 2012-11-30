@@ -1,48 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:57714 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816Ab2KTLUX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51729 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644Ab2K3MOx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Nov 2012 06:20:23 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so1625946eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2012 03:20:23 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 07/11] wlcore: set active psm on association
-Date: Tue, 20 Nov 2012 13:20:07 +0200
-Message-Id: <1353410411-18833-8-git-send-email-eliad@wizery.com> (sfid-20121120_122028_589779_AAD264CF)
-In-Reply-To: <1353410411-18833-1-git-send-email-eliad@wizery.com>
-References: <1353410411-18833-1-git-send-email-eliad@wizery.com>
+	Fri, 30 Nov 2012 07:14:53 -0500
+Message-ID: <1354277716.10035.23.camel@jlt4.sipsolutions.net> (sfid-20121130_131457_199941_324E0937)
+Subject: Re: [RFCv2 12/13] mac80211: add TIM IE to mesh beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, thomas@cozybit.com,
+	linux-wireless@vger.kernel.org
+Date: Fri, 30 Nov 2012 13:15:16 +0100
+In-Reply-To: <1353701934-12752-13-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1353701934-12752-13-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The default ps mode of the fw is auto, while the default
-ps mode of mac80211 is active (ps off).
-In order to sync them, configure active ps on association.
+On Fri, 2012-11-23 at 12:18 -0800, Marco Porsch wrote:
+> Create a TIM IE similarly to AP mode and add it to mesh beacons.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+This just duplicates the code, please unify.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 55dce4a..e393cea 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2614,6 +2614,12 @@ static int wlcore_set_assoc(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	if (ret < 0)
- 		return ret;
- 
-+	/*
-+	 * The default fw psm configuration is AUTO, while mac80211 default
-+	 * setting is off (ACTIVE), so sync the fw with the correct value.
-+	 */
-+	ret = wl1271_ps_set_mode(wl, wlvif, STATION_ACTIVE_MODE);
-+
- 	return ret;
- }
- 
--- 
-1.7.6.401.g6a319
+johannes
 
