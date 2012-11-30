@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3572 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754337Ab2KSSfu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Nov 2012 13:35:50 -0500
-Message-ID: <50AA7BF7.5000200@broadcom.com> (sfid-20121119_193556_417818_19945895)
-Date: Mon, 19 Nov 2012 19:35:35 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47954 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992781Ab2K3TQc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Nov 2012 14:16:32 -0500
+Date: Fri, 30 Nov 2012 14:07:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-11-30
+Message-ID: <20121130190702.GC2355@tuxdriver.com> (sfid-20121130_201652_983613_2B563BEB)
+References: <20121130182459.GB2355@tuxdriver.com>
+ <20121130.134018.1859855439413083920.davem@davemloft.net>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com,
-	"Daniel Wagner" <wagi@monom.org>
-Subject: Re: [PATCH v2 04/22] brcmsmac: Remove unimplemented flow
- control functions
-References: <1352988492-21340-1-git-send-email-seth.forshee@canonical.com>
- <1352988492-21340-5-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1352988492-21340-5-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121130.134018.1859855439413083920.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2012 03:07 PM, Seth Forshee wrote:
-> Functions for flow control exist but remain unimplemented. Remove these
-> in advance of adding real flow control.
+On Fri, Nov 30, 2012 at 01:40:18PM -0500, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Fri, 30 Nov 2012 13:25:00 -0500
+> 
+> > I have a couple of stragglers intended for 3.7...
+> > 
+> > The iwlwifi patch fixes a bug in CCK basic rate calculations.
+> > 
+> > The mac80211 patch removes an unnecessary function call that was
+> > generating a lot of log SPAM.
+> 
+> Pulled, thanks John.
+> 
+> I want to warn you ahead of time that these might not make it.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/main.c |   31 ------------------------
->   1 file changed, 31 deletions(-)
+Yes, I suspect that might be the case -- but it won't make it if I
+don't send it... :-)
 
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
