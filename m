@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:37531 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757365Ab2KWCnD (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:33750 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751226Ab2K3H5k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Nov 2012 21:43:03 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so312489wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Nov 2012 18:43:01 -0800 (PST)
+	Fri, 30 Nov 2012 02:57:40 -0500
+Message-ID: <50B866E9.20406@posedge.com> (sfid-20121130_085743_501234_D738ACF3)
+Date: Fri, 30 Nov 2012 13:27:29 +0530
+From: Saravana <saravanad@posedge.com>
 MIME-Version: 1.0
-In-Reply-To: <1353635958-12298-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1353635958-12298-1-git-send-email-yeohchunyeow@gmail.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 22 Nov 2012 18:42:41 -0800
-Message-ID: <CAG6hwVPxVsR2JCEiHSBCho1fwe4igd1q6o9BL_-ei=K8RHXa5g@mail.gmail.com> (sfid-20121123_034307_798319_81818648)
-Subject: Re: [PATCH] mac80211: Fix macro definitions in Mesh
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add debugfs file for last rx rate
+References: <50B77013.6040508@posedge.com> <1354199652.879.2.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1354199652.879.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 22, 2012 at 5:59 PM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
-> Macro definitions should be static inlines.
+On 11/29/2012 08:04 PM, Johannes Berg wrote:
+> On Thu, 2012-11-29 at 19:54 +0530, Saravana wrote:
+>> Add a debugfs file showing the rate at which
+>> the last packet is received.
+> 
+> Applied, but:
+> 
+>> +static ssize_t sta_last_rx_rate_read(struct file *file, char __user *userbuf,
+>> +				      size_t count, loff_t *ppos)
+> 
+> fixed indentation here
+> 
+> 
+>> +	return mac80211_format_buffer(userbuf, count, ppos, "%d.%d MBit/s\n",
+>> +					rate/10, rate%10);
+> 
+> and here
+> 
+> (and also a bunch of whitespace changes in the other patches)
+> 
 
-Then maybe this patch should do that as well? :)
+Thanks Johannes for taking care of modifications. Will take care of indentation and the whitespace issues in future.
+> johannes
+> 
+> 
 
-> Reported by: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
->  net/mac80211/mesh_hwmp.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> index 47aeee2..5d3e965 100644
-> --- a/net/mac80211/mesh_hwmp.c
-> +++ b/net/mac80211/mesh_hwmp.c
-> @@ -88,9 +88,9 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
->         (msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPpreqMinInterval))
->  #define max_preq_retries(s) (s->u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries)
->  #define disc_timeout_jiff(s) \
-> -       msecs_to_jiffies(sdata->u.mesh.mshcfg.min_discovery_timeout)
-> +       msecs_to_jiffies(s->u.mesh.mshcfg.min_discovery_timeout)
->  #define root_path_confirmation_jiffies(s) \
-> -       msecs_to_jiffies(sdata->u.mesh.mshcfg.dot11MeshHWMPconfirmationInterval)
-> +       msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPconfirmationInterval)
->
->  enum mpath_frame_type {
->         MPATH_PREQ = 0,
-> --
-> 1.7.0.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
