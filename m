@@ -1,25 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40967 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755743Ab2LCRmt (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:48491 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910Ab2LACaU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 12:42:49 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Tfa2a-0006rI-4H
-	for linux-wireless@vger.kernel.org; Mon, 03 Dec 2012 18:42:48 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/8] regulatory cleanups
-Date: Mon,  3 Dec 2012 18:43:05 +0100
-Message-Id: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184252_696159_3F67F6A4)
+	Fri, 30 Nov 2012 21:30:20 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [RFC] cfg80211: fix channel error on mesh join
+Date: Fri, 30 Nov 2012 18:30:09 -0800
+Message-Id: <1354329009-25513-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121201_033033_391590_53C8E9A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since new regulatory code doesn't seem to be forthcoming,
-I've started to clean up the code as a first step towards
-making it actually understandable.
+Fix an error on mesh join when no channel has been explicitly set beforehand.
 
-johannes
+Previously a WARN_ON was hit in cfg80211_reg_can_beacon because center_freq1
+was not set.
+
+Also fix double semicolon.
+
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ net/wireless/mesh.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index f7b2da6..989b6ce 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -145,6 +145,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 						   IEEE80211_CHAN_RADAR))
+ 					continue;
+ 				setup->chandef.chan = chan;
++				setup->chandef.center_freq1 = chan->center_freq;
+ 				break;
+ 			}
+ 
+@@ -156,7 +157,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 		if (!setup->chandef.chan)
+ 			return -EINVAL;
+ 
+-		setup->chandef.width = NL80211_CHAN_WIDTH_20_NOHT;;
++		setup->chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
+ 	}
+ 
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef))
+-- 
+1.7.9.5
 
