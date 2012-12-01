@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53585 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755452Ab2LMS13 (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:44379 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027Ab2LAObb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:27:29 -0500
-Message-ID: <1355423271.9463.11.camel@jlt4.sipsolutions.net> (sfid-20121213_192745_389892_F9637F1C)
-Subject: Re: Add a new work-queue for destructing stations?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Eliad Peller <eliad@wizery.com>
-Date: Thu, 13 Dec 2012 19:27:51 +0100
-In-Reply-To: <1355423047.9463.9.camel@jlt4.sipsolutions.net> (sfid-20121213_192352_293430_50F585FD)
-References: <50CA1470.4030107@candelatech.com>
-	 (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>
-	 <50CA1C44.5030300@candelatech.com>
-	 <1355423047.9463.9.camel@jlt4.sipsolutions.net>
-	 (sfid-20121213_192352_293430_50F585FD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 1 Dec 2012 09:31:31 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so570015eaa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Dec 2012 06:31:29 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Subject: Re: ath9k_htc test release: please test
+Date: Sat, 1 Dec 2012 15:31:25 +0100
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel" <ath9k-devel@lists.ath9k.org>
+References: <CAJ-VmomxqY4FbzRSXtXTgUbVJOSwTJJAF953UO0xN275pPTJLg@mail.gmail.com>
+In-Reply-To: <CAJ-VmomxqY4FbzRSXtXTgUbVJOSwTJJAF953UO0xN275pPTJLg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201212011531.25832.chunkeey@googlemail.com> (sfid-20121201_153134_801160_905B11F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-13 at 19:24 +0100, Johannes Berg wrote:
-> On Thu, 2012-12-13 at 10:19 -0800, Ben Greear wrote:
+On Thursday 29 November 2012 00:50:59 Adrian Chadd wrote:
+> Hi all,
 > 
-> > > I don't think that's easy, but you're welcome to try. The
-> > > free_sta_work() function references the sdata so it absolutely must run
-> > > at this point.
+> I've done an updated build of the ath9k_htc firmware images. I don't
+> currently have a HTC setup working so this is just a recompilation of
+> the current firmware.
 > 
-> > So, cancel_work_sync(&sdata->work) would appear to remove
-> > all pending sdata->work items from the work-queue.  As long as
-> > there are no other different work items that reference
-> > sdata (and maybe there are..I haven't looked at all of them),
-> > then we should be safe to execute the free_sta_work()
-> > on a different work-queue safely, I think....
+> http://dev.qca.qualcomm.com/~adrian/htc/20121128/
 > 
-> Sorry, I don't get it. free_sta_work() *itself* has to be executed
-> before the sdata is destroyed. cancel_work_sync(&sdata->work) has
-> nothing to do with free_sta_work.
+> Please let me know if it works or doesn't work for you.
 
-In fact, this is already buggy now, and I should probably revert
-b22cfcfca, because the work item might run after the AP is stopped and
-then we call into the driver anyway, and on teardown things are probably
-messed up. I'll poke at it tomorrow.
+Thanks! It seems to work/hold.
 
-johannes
+Can you please bump the version
 
+old:
+[   26.106713] ath9k_htc 1-10:1.0: ath9k_htc: FW Version: 1.3
+new:
+[16308.270828] ath9k_htc 1-10:1.0: ath9k_htc: FW Version: 1.3
+
+> The specific two changes from Sujith's last release:
+> * Update the embedded runtime OS code to the latest from Tensilica, in
+> preparation for open sourcing it;
+Hey, I like to hear more about that. :)
+
+Regards,
+	Chr
