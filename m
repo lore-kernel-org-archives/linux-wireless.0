@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:60508 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753442Ab2LKUak (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41455 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910Ab2LABiA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 15:30:40 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so3232835lag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 12:30:39 -0800 (PST)
+	Fri, 30 Nov 2012 20:38:00 -0500
+Message-ID: <50B95F76.4040205@candelatech.com> (sfid-20121201_023814_397831_7463DFFA)
+Date: Fri, 30 Nov 2012 17:37:58 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1355107806-32675-1-git-send-email-sujith@msujith.org>
-References: <1355107806-32675-1-git-send-email-sujith@msujith.org>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Tue, 11 Dec 2012 12:30:18 -0800
-Message-ID: <CAB=NE6XTL5fyvNSdTm9Pa6wpaVKvv-X9Th9ZQi7zHT-OgSaUDw@mail.gmail.com> (sfid-20121211_213043_537161_053A8F5B)
-Subject: Re: [PATCH] qca-swiss-army-knife: Update initvals for AR9340
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: paul@foresight-mands.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RF Attenuator project v1.0 is complete.
+References: <50B93FC6.8000604@candelatech.com> <008101cdcf63$a4f58c40$eee0a4c0$@com>
+In-Reply-To: <008101cdcf63$a4f58c40$eee0a4c0$@com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 9, 2012 at 6:50 PM, Sujith Manoharan <sujith@msujith.org> wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> The SLP32_MODE/INC registers have to be programmed with
-> values based on the ref. clock, which could be either 25MHz
-> or 40MHz. Incorrect values in these registers results in
-> TSF drift.
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 11/30/2012 05:31 PM, Paul Stoaks wrote:
+> Excellent!  I was wondering if there was anything like this being worked on.
+> The ones I've worked with have been very expensive, out of reach for small
+> companies or researchers.
 
-Applied and pushed!
+If you make it from parts, the cost is $1700 or so, with the bulk of the
+cost being the 3 attenuator modules.  You can actually do this with just
+the Arduino MEGA..our shield just makes it a heck of a lot easier to
+cable everything up properly.
 
-  Luis
+> Will Candela be selling these as completed units?
+
+Yes, but I will send you some details off the list.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
