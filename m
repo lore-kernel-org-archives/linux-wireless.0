@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51463 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956Ab2LTLMU (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:60519 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448Ab2LBPwG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 06:12:20 -0500
-Message-ID: <1356001957.10029.0.camel@jlt4.sipsolutions.net> (sfid-20121220_121234_725402_71BEDE57)
-Subject: Re: [PATCH 0/5] mac80211: fix station cleanup/destruction
-From: Johannes Berg <johannes@sipsolutions.net>
+	Sun, 2 Dec 2012 10:52:06 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so840198eaa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Dec 2012 07:52:04 -0800 (PST)
+Subject: [PATCH] carl9170: fix signal strength reporting issues
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Eliad Peller <eliad@wizery.com>
-Date: Thu, 20 Dec 2012 12:12:37 +0100
-In-Reply-To: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net> (sfid-20121213_235922_790374_BA80AD0B)
-References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121213_235922_790374_BA80AD0B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: linville@tuxdriver.com
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 2 Dec 2012 16:52:00 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201212021652.00954.chunkeey@googlemail.com> (sfid-20121202_165226_427781_38B4D327)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-13 at 23:59 +0100, Johannes Berg wrote:
-> Turns out that not only was flush_workqueue() slow as reported
-> by Ben, it was also broken because this is way too late to
-> finish the station destruction in AP mode.
-> 
-> Fixing this with keeping the roaming semantics (no RCU barrier
-> or synchronize in there) is a bit tricky so the first patch just
-> fixes the problem, and the last patch puts back the optimisation.
+On A-MPDU frames, the hardware only reports valid
+signal strength data for the last subframe.
 
-Applied all.
+This patch fixes it by flagging everything but the
+last subframe in an A-MPDU to tell mac80211 to
+ignore the signal strength entirely. Otherwise
+the empty value (= 0 dbm) will distort the
+average quite badly.
 
-johannes
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/carl9170/rx.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+index 6d22382..876a773 100644
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -814,6 +814,8 @@ static void carl9170_rx_untie_data(struct ar9170 *ar, u8 *buf, int len)
+ 
+ 	if (phy)
+ 		carl9170_rx_phy_status(ar, phy, &status);
++	else
++		status.flag |= RX_FLAG_NO_SIGNAL_VAL;
+ 
+ 	if (carl9170_handle_mpdu(ar, buf, mpdu_len, &status))
+ 		goto drop;
+-- 
+1.7.10.4
 
