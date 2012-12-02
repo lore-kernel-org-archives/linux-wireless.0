@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:60783 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174Ab2LWFuU (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:34399 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753292Ab2LBKmt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 00:50:20 -0500
-Message-ID: <1356241795.5620.47.camel@marge.simpson.net> (sfid-20121223_065121_934377_24D0973D)
-Subject: Re: dire state of rtl driver in 3.7
-From: Mike Galbraith <bitbucket@online.de>
-To: Norbert Preining <preining@logic.at>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Sun, 23 Dec 2012 06:49:55 +0100
-In-Reply-To: <20121222150909.GA3979@gamma.logic.tuwien.ac.at>
-References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 2 Dec 2012 05:42:49 -0500
+Date: Sun, 2 Dec 2012 13:42:38 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] carl9170: remove unneeded NULL check
+Message-ID: <20121202104238.GB16078@elgon.mountain> (sfid-20121202_114253_888155_3E54C982)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-12-23 at 00:09 +0900, Norbert Preining wrote:
+The "sta" variable is not checked for NULL consistently and it makes the
+static checkers complain.  I asked Christian Lamparter about this and
+it turns out the check is not needed.  "In fact, in order to set up a
+ampdu session, the stack would call the driver's op_ampdu_action
+callback which always needs a station."
 
-> Network card is built in into a Lenovo Thinkpad Edge
+I have removed the check.
 
-Toshiba Satellite.
-> # lspci -nnv -s  03:00.0
-> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB
-> Wireless LAN Controller [10ec:8172] (rev 10)
->         Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:e020]
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-[10ec:8181] here.
-
-> Effects:
-> - either does not associate at all with the AP
-> - or the kernel believes it is associated and packages ping to the router
->   get stuck for up to 50+ seconds!!!
-> - the kernel believes everything is fine but actually nothing gets out
->   (Destination unreachable)
-> - wild ping time up-down:
-> 64 bytes from 192.168.0.1: icmp_req=73 ttl=255 time=3.05 ms
-> 64 bytes from 192.168.0.1: icmp_req=74 ttl=255 time=6.42 ms
-> 64 bytes from 192.168.0.1: icmp_req=75 ttl=255 time=1.21 ms
-> 64 bytes from 192.168.0.1: icmp_req=76 ttl=255 time=6808 ms
-> 64 bytes from 192.168.0.1: icmp_req=77 ttl=255 time=5800 ms
-> 64 bytes from 192.168.0.1: icmp_req=78 ttl=255 time=4792 ms
-
-...
-
-Looks a lot like my driver experience with older kernels, I had to use
-the external driver in the rare event that I needed wireless to work.
-The in tree driver works peachy these days (needed it recently, was
-pleasantly surprised when it _just worked_, not even a hiccup), so
-somebody cared, gave at least the 10ec:8181 bits some serious love.
-
--Mike
-
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index 84377cf..23d33c3 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -1463,6 +1463,7 @@ void carl9170_op_tx(struct ieee80211_hw *hw,
+ 	struct ar9170 *ar = hw->priv;
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_sta *sta = control->sta;
++	struct carl9170_sta_info *stai;
+ 	bool run;
+ 
+ 	if (unlikely(!IS_STARTED(ar)))
+@@ -1479,10 +1480,8 @@ void carl9170_op_tx(struct ieee80211_hw *hw,
+ 	 * all ressouces which are associated with the frame.
+ 	 */
+ 
+-	if (sta) {
+-		struct carl9170_sta_info *stai = (void *) sta->drv_priv;
+-		atomic_inc(&stai->pending_frames);
+-	}
++	stai = (void *) sta->drv_priv;
++	atomic_inc(&stai->pending_frames);
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+ 		run = carl9170_tx_ampdu_queue(ar, sta, skb);
