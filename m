@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49360 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752644Ab2L0MMp (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:22619 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673Ab2LBQwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 07:12:45 -0500
-Message-ID: <1356610386.15149.6.camel@jlt4.sipsolutions.net> (sfid-20121227_131249_993995_25A74003)
-Subject: Re: [PATCH 2/7] ath6kl: add tracing points for sdio transfers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Date: Thu, 27 Dec 2012 13:13:06 +0100
-In-Reply-To: <20121227114430.27069.9849.stgit@localhost6.localdomain6> (sfid-20121227_125304_397419_424F7D8C)
-References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
-	 <20121227114430.27069.9849.stgit@localhost6.localdomain6>
-	 (sfid-20121227_125304_397419_424F7D8C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 2 Dec 2012 11:52:18 -0500
+Date: Sun, 2 Dec 2012 19:51:53 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] carl9170: remove unneeded NULL check
+Message-ID: <20121202165153.GC6517@mwanda> (sfid-20121202_175223_987725_A82E0FAA)
+References: <20121202104238.GB16078@elgon.mountain>
+ <201212021449.21267.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201212021449.21267.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-27 at 13:44 +0200, Kalle Valo wrote:
+On Sun, Dec 02, 2012 at 02:49:20PM +0100, Christian Lamparter wrote:
+> On Sunday 02 December 2012 11:42:38 Dan Carpenter wrote:
+> > The "sta" variable is not checked for NULL consistently and it makes the
+> > static checkers complain.  I asked Christian Lamparter about this and
+> > it turns out the check is not needed.  "In fact, in order to set up a
+> > ampdu session, the stack would call the driver's op_ampdu_action
+> > callback which always needs a station."
+> 
+> that would be from the thread:
+> <http://www.spinics.net/lists/linux-wireless/msg94526.html>
+>  
+> > I have removed the check.
+> I think this will bug for multicast and injected frames.
+>  
+> It is not possible for the sta(tion) pointer to be NULL if
+> the frame has the IEEE80211_TX_CTL_AMPDU flag set. So the
+> sta == NULL check can be avoided when calling 
+> carl9170_tx_ampdu_queue. This is because mac80211 tracks
+> all aggregation sessions within the station struct.
+> Of course, this is something that the checker tool can't
+> possibly deduce, but it has a point and we can add a check
+> like this [see attached draft patch]:
+> 
+> What do you think [or more to the point: what does the
+> checker say?]
+> 
 
-> +	if (request & HIF_WRITE)
-> +		trace_ath6kl_sdio_wr(addr, request, buf, len);
-> +	else
-> +		trace_ath6kl_sdio_rd(addr, request, buf, len);
+So we wouldn't apply my patch, we would apply that one instead?
 
-It would be more efficient to use a single tracepoint and have a
-"direction" field or so -- then the if doesn't have to be executed when
-tracing is disabled.
+I think that's great.  My static checker doesn't understand bit
+flags yet so it would complain but it would be obvious to a human
+reader.
 
+Could you just resend that patch with a signed-off-by?
 
-> +	for (i = 0; i < scat_req->scat_entries; i++) {
-> +		if (scat_req->req & HIF_WRITE)
-> +			trace_ath6kl_sdio_wr(scat_req->addr,
-> +					     scat_req->req,
-> +					     scat_req->scat_list[i].buf,
-> +					     scat_req->scat_list[i].len);
-> +		else
-> +			trace_ath6kl_sdio_rd(scat_req->addr,
-> +					     scat_req->req,
-> +					     scat_req->scat_list[i].buf,
-> +					     scat_req->scat_list[i].len);
-> +	}
-
-Same here, although it would be even better to move the loop into the
-tracepoint ... is there a small upper bound on "scat_entries"? If yes,
-you could do something like here:
-
-http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-next.git;a=blob;f=drivers/net/wireless/iwlwifi/iwl-devtrace.h;hb=HEAD#l325
-
-where I put a function call into the __entry to figure out how much
-space is needed.
-
-johannes
+regards,
+dan carpenter
 
