@@ -1,174 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:45774 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751587Ab2LEKXl (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:52408 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752068Ab2LBW3n convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 05:23:41 -0500
-Message-ID: <1354702978.6234.29.camel@cumari.coelho.fi> (sfid-20121205_112344_503509_EC757028)
-Subject: Re: [PATCH 02/20] wlcore: add ACX_PEER_CAP command
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: Arik Nemtsov <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 5 Dec 2012 12:22:58 +0200
-In-Reply-To: <CAB3XZEc+OPP4fZjJDXL2ijg-zwDMOm96T3PFnjEim6ZnCDRAUw@mail.gmail.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-3-git-send-email-arik@wizery.com>
-	 <1354700103.6234.16.camel@cumari.coelho.fi>
-	 <CAB3XZEc+OPP4fZjJDXL2ijg-zwDMOm96T3PFnjEim6ZnCDRAUw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	Sun, 2 Dec 2012 17:29:43 -0500
+Received: by mail-we0-f174.google.com with SMTP id x10so822756wey.19
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Dec 2012 14:29:42 -0800 (PST)
+References: <1354460009-28449-1-git-send-email-juhosg@openwrt.org> <1354460009-28449-3-git-send-email-juhosg@openwrt.org>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <1354460009-28449-3-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <6761253E-7A63-46C3-8DCA-F7A9BDA52F65@gmail.com> (sfid-20121202_232946_195670_1CF4E6D8)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 2/2] rt2x00: rt2800lib: fix indentation in rt2800_init_rfcsr
+Date: Sun, 2 Dec 2012 22:29:41 +0000
+To: Gabor Juhos <juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-12-05 at 12:17 +0200, Eliad Peller wrote:
-> On Wed, Dec 5, 2012 at 11:35 AM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
-> >> From: Eliad Peller <eliad@wizery.com>
-> >>
-> >> ACX_PEER_CAP command is just ACX_PEER_HT_CAP, but allows
-> >> configuring the peer's support rates as well.
-> >>
-> >> this is needed because we start the station role when
-> >> the remote rates are not known yet.
-> >>
-> >> the two commands should be unified in future fw versions,
-> >> but for now add a new set_peer_cap per-hw op, that will
-> >> use ACX_PEER_CAP for 18xx, and ACX_PEER_HT_CAP for 12xx.
-> >>
-> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> >> ---
-> >
-> > [...]
-> >
-> >> diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-> >> index 0218edd..951b88c 100644
-> >> --- a/drivers/net/wireless/ti/wl12xx/main.c
-> >> +++ b/drivers/net/wireless/ti/wl12xx/main.c
-> >> @@ -1623,6 +1623,15 @@ static int wl12xx_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
-> >>       return wlcore_set_key(wl, cmd, vif, sta, key_conf);
-> >>  }
-> >>
-> >> +static int wl12xx_set_peer_cap(struct wl1271 *wl,
-> >> +                            struct ieee80211_sta_ht_cap *ht_cap,
-> >> +                            bool allow_ht_operation,
-> >> +                            u32 rate_set, u8 hlid)
-> >> +{
-> >> +     return wl1271_acx_set_ht_capabilities(wl, ht_cap, allow_ht_operation,
-> >> +                                           hlid);
-> >> +}
-> >> +
-> >
-> > This is quite ugly, because you're just calling wlcore back to perform
-> > this op.
-> >
-> right. but that's how it's been done in other places as well (e.g.
-> wl12xx_set_key).
-
-Ugliness doesn't justify more ugliness. :P
 
 
-> >> diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-> >> index 801d8af..a169bb5 100644
-> >> --- a/drivers/net/wireless/ti/wl18xx/acx.c
-> >> +++ b/drivers/net/wireless/ti/wl18xx/acx.c
-> >> @@ -140,3 +140,57 @@ out:
-> >>       return ret;
-> >>
-> >>  }
-> >> +
-> >> +/*
-> >> + * this command is basically the same as wl1271_acx_ht_capabilities,
-> >> + * with the addition of supported rates. they should be unified in
-> >> + * the next fw api change
-> >> + */
-> >
-> > Has this been already unified? What's the status or plan for this new
-> > API change? I guess we're only waiting for the change in the wl12xx
-> > firmware to catch up with wl18xx, right?
-> >
-> it hasn't been unified yet.
-> i don't know what is the future plan...
+Sent from my iPad
 
-Too bad... probably will never happen.
+On 2 dec. 2012, at 14:53, Gabor Juhos <juhosg@openwrt.org> wrote:
 
+> The patch contains no functional changes.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-> >> diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-> >> index b57e348..0e636de 100644
-> >> --- a/drivers/net/wireless/ti/wl18xx/acx.h
-> >> +++ b/drivers/net/wireless/ti/wl18xx/acx.h
-> >> @@ -297,11 +297,44 @@ struct wlcore_peer_ht_operation_mode {
-> >>       u8 padding[2];
-> >>  };
-> >>
-> >> +/*
-> >> + * ACX_PEER_CAP
-> >> + * this struct is very similar to wl1271_acx_ht_capabilities, with the
-> >> + * addition of supported rates
-> >> + */
-> >> +struct wlcore_acx_peer_cap {
-> >> +     struct acx_header header;
-> >> +
-> >> +     /* bitmask of capability bits supported by the peer */
-> >> +     __le32 ht_capabilites;
-> >> +
-> >> +     /* rates supported by the remote peer */
-> >> +     __le32 supported_rates;
-> >> +
-> >> +     /* Indicates to which link these capabilities apply. */
-> >> +     u8 hlid;
-> >> +
-> >> +     /*
-> >> +      * This the maximum A-MPDU length supported by the AP. The FW may not
-> >> +      * exceed this length when sending A-MPDUs
-> >> +      */
-> >> +     u8 ampdu_max_length;
-> >> +
-> >> +     /* This is the minimal spacing required when sending A-MPDUs to the AP*/
-> >> +     u8 ampdu_min_spacing;
-> >> +
-> >> +     u8 padding;
-> >> +} __packed;
-> >
-> > If we're sure this will be also changed in the wl12xx firmware, maybe
-> > this could already be in the wlcore acx.h? Otherwise we'll just be
-> > moving this around...
-> >
-> unfortunately, we can't really be sure about it :/
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-As usual. :(
-
-
-> >> diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-> >> index 71137aa..ecdd5e6 100644
-> >> --- a/drivers/net/wireless/ti/wlcore/wlcore.h
-> >> +++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-> >> @@ -106,6 +106,11 @@ struct wlcore_ops {
-> >>       u32 (*pre_pkt_send)(struct wl1271 *wl, u32 buf_offset, u32 last_len);
-> >>       void (*sta_rc_update)(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-> >>                             struct ieee80211_sta *sta, u32 changed);
-> >> +     int (*set_peer_cap)(struct wl1271 *wl,
-> >> +                         struct ieee80211_sta_ht_cap *ht_cap,
-> >> +                         bool allow_ht_operation,
-> >> +                         u32 rate_set, u8 hlid);
-> >> +
-> >
-> > I think it would be much nicer to do all this with a quirk instead.
-> > Then we don't need to add ops that will have to be removed later and
-> > make all this ping-pong of calls between the modules.
-> >
-> i'm not sure what do you mean by using a quirk here.
-> currently, this is 18xx-specific command, so we need this op.
-
-I meant that the new ACX could be fully implemented in wlcore (because
-the expectation was that it would also become available in wl12xx in the
-future) and we would have a quirk to tell wlcore not to use the new ACX
-for wl12xx until it becomes available (when we would disable the quirk).
-
-With the quirk, we could even continue supporting older wl12xx firmware
-versions quite easily.
-
---
-Luca.
-
+> ---
+> drivers/net/wireless/rt2x00/rt2800lib.c |  120 +++++++++++++++----------------
+> 1 file changed, 60 insertions(+), 60 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 3d7b74e..1cc6599 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -4220,66 +4220,66 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>            rt2800_rfcsr_write(rt2x00dev, 61, 0xdd);
+>        rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
+>        rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
+> -    }    else if (rt2x00_rt(rt2x00dev, RT5392)) {
+> -            rt2800_rfcsr_write(rt2x00dev, 1, 0x17);
+> -            rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
+> -            rt2800_rfcsr_write(rt2x00dev, 3, 0x88);
+> -            rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
+> -            rt2800_rfcsr_write(rt2x00dev, 6, 0xe0);
+> -            rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
+> -            rt2800_rfcsr_write(rt2x00dev, 10, 0x53);
+> -            rt2800_rfcsr_write(rt2x00dev, 11, 0x4a);
+> -            rt2800_rfcsr_write(rt2x00dev, 12, 0x46);
+> -            rt2800_rfcsr_write(rt2x00dev, 13, 0x9f);
+> -            rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
+> -            rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
+> -            rt2800_rfcsr_write(rt2x00dev, 16, 0x00);
+> -            rt2800_rfcsr_write(rt2x00dev, 18, 0x03);
+> -            rt2800_rfcsr_write(rt2x00dev, 19, 0x4d);
+> -            rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
+> -            rt2800_rfcsr_write(rt2x00dev, 21, 0x8d);
+> -            rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
+> -            rt2800_rfcsr_write(rt2x00dev, 23, 0x0b);
+> -            rt2800_rfcsr_write(rt2x00dev, 24, 0x44);
+> -            rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
+> -            rt2800_rfcsr_write(rt2x00dev, 26, 0x82);
+> -            rt2800_rfcsr_write(rt2x00dev, 27, 0x09);
+> -            rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
+> -            rt2800_rfcsr_write(rt2x00dev, 29, 0x10);
+> -            rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
+> -            rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
+> -            rt2800_rfcsr_write(rt2x00dev, 32, 0x20);
+> -            rt2800_rfcsr_write(rt2x00dev, 33, 0xC0);
+> -            rt2800_rfcsr_write(rt2x00dev, 34, 0x07);
+> -            rt2800_rfcsr_write(rt2x00dev, 35, 0x12);
+> -            rt2800_rfcsr_write(rt2x00dev, 36, 0x00);
+> -            rt2800_rfcsr_write(rt2x00dev, 37, 0x08);
+> -            rt2800_rfcsr_write(rt2x00dev, 38, 0x89);
+> -            rt2800_rfcsr_write(rt2x00dev, 39, 0x1b);
+> -            rt2800_rfcsr_write(rt2x00dev, 40, 0x0f);
+> -            rt2800_rfcsr_write(rt2x00dev, 41, 0xbb);
+> -            rt2800_rfcsr_write(rt2x00dev, 42, 0xd5);
+> -            rt2800_rfcsr_write(rt2x00dev, 43, 0x9b);
+> -            rt2800_rfcsr_write(rt2x00dev, 44, 0x0e);
+> -            rt2800_rfcsr_write(rt2x00dev, 45, 0xa2);
+> -            rt2800_rfcsr_write(rt2x00dev, 46, 0x73);
+> -            rt2800_rfcsr_write(rt2x00dev, 47, 0x0c);
+> -            rt2800_rfcsr_write(rt2x00dev, 48, 0x10);
+> -            rt2800_rfcsr_write(rt2x00dev, 49, 0x94);
+> -            rt2800_rfcsr_write(rt2x00dev, 50, 0x94);
+> -            rt2800_rfcsr_write(rt2x00dev, 51, 0x3a);
+> -            rt2800_rfcsr_write(rt2x00dev, 52, 0x48);
+> -            rt2800_rfcsr_write(rt2x00dev, 53, 0x44);
+> -            rt2800_rfcsr_write(rt2x00dev, 54, 0x38);
+> -            rt2800_rfcsr_write(rt2x00dev, 55, 0x43);
+> -            rt2800_rfcsr_write(rt2x00dev, 56, 0xa1);
+> -            rt2800_rfcsr_write(rt2x00dev, 57, 0x00);
+> -            rt2800_rfcsr_write(rt2x00dev, 58, 0x39);
+> -            rt2800_rfcsr_write(rt2x00dev, 59, 0x07);
+> -            rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
+> -            rt2800_rfcsr_write(rt2x00dev, 61, 0x91);
+> -            rt2800_rfcsr_write(rt2x00dev, 62, 0x39);
+> -            rt2800_rfcsr_write(rt2x00dev, 63, 0x07);
+> +    } else if (rt2x00_rt(rt2x00dev, RT5392)) {
+> +        rt2800_rfcsr_write(rt2x00dev, 1, 0x17);
+> +        rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
+> +        rt2800_rfcsr_write(rt2x00dev, 3, 0x88);
+> +        rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
+> +        rt2800_rfcsr_write(rt2x00dev, 6, 0xe0);
+> +        rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
+> +        rt2800_rfcsr_write(rt2x00dev, 10, 0x53);
+> +        rt2800_rfcsr_write(rt2x00dev, 11, 0x4a);
+> +        rt2800_rfcsr_write(rt2x00dev, 12, 0x46);
+> +        rt2800_rfcsr_write(rt2x00dev, 13, 0x9f);
+> +        rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
+> +        rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
+> +        rt2800_rfcsr_write(rt2x00dev, 16, 0x00);
+> +        rt2800_rfcsr_write(rt2x00dev, 18, 0x03);
+> +        rt2800_rfcsr_write(rt2x00dev, 19, 0x4d);
+> +        rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
+> +        rt2800_rfcsr_write(rt2x00dev, 21, 0x8d);
+> +        rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
+> +        rt2800_rfcsr_write(rt2x00dev, 23, 0x0b);
+> +        rt2800_rfcsr_write(rt2x00dev, 24, 0x44);
+> +        rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
+> +        rt2800_rfcsr_write(rt2x00dev, 26, 0x82);
+> +        rt2800_rfcsr_write(rt2x00dev, 27, 0x09);
+> +        rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
+> +        rt2800_rfcsr_write(rt2x00dev, 29, 0x10);
+> +        rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
+> +        rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
+> +        rt2800_rfcsr_write(rt2x00dev, 32, 0x20);
+> +        rt2800_rfcsr_write(rt2x00dev, 33, 0xC0);
+> +        rt2800_rfcsr_write(rt2x00dev, 34, 0x07);
+> +        rt2800_rfcsr_write(rt2x00dev, 35, 0x12);
+> +        rt2800_rfcsr_write(rt2x00dev, 36, 0x00);
+> +        rt2800_rfcsr_write(rt2x00dev, 37, 0x08);
+> +        rt2800_rfcsr_write(rt2x00dev, 38, 0x89);
+> +        rt2800_rfcsr_write(rt2x00dev, 39, 0x1b);
+> +        rt2800_rfcsr_write(rt2x00dev, 40, 0x0f);
+> +        rt2800_rfcsr_write(rt2x00dev, 41, 0xbb);
+> +        rt2800_rfcsr_write(rt2x00dev, 42, 0xd5);
+> +        rt2800_rfcsr_write(rt2x00dev, 43, 0x9b);
+> +        rt2800_rfcsr_write(rt2x00dev, 44, 0x0e);
+> +        rt2800_rfcsr_write(rt2x00dev, 45, 0xa2);
+> +        rt2800_rfcsr_write(rt2x00dev, 46, 0x73);
+> +        rt2800_rfcsr_write(rt2x00dev, 47, 0x0c);
+> +        rt2800_rfcsr_write(rt2x00dev, 48, 0x10);
+> +        rt2800_rfcsr_write(rt2x00dev, 49, 0x94);
+> +        rt2800_rfcsr_write(rt2x00dev, 50, 0x94);
+> +        rt2800_rfcsr_write(rt2x00dev, 51, 0x3a);
+> +        rt2800_rfcsr_write(rt2x00dev, 52, 0x48);
+> +        rt2800_rfcsr_write(rt2x00dev, 53, 0x44);
+> +        rt2800_rfcsr_write(rt2x00dev, 54, 0x38);
+> +        rt2800_rfcsr_write(rt2x00dev, 55, 0x43);
+> +        rt2800_rfcsr_write(rt2x00dev, 56, 0xa1);
+> +        rt2800_rfcsr_write(rt2x00dev, 57, 0x00);
+> +        rt2800_rfcsr_write(rt2x00dev, 58, 0x39);
+> +        rt2800_rfcsr_write(rt2x00dev, 59, 0x07);
+> +        rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
+> +        rt2800_rfcsr_write(rt2x00dev, 61, 0x91);
+> +        rt2800_rfcsr_write(rt2x00dev, 62, 0x39);
+> +        rt2800_rfcsr_write(rt2x00dev, 63, 0x07);
+>    }
+> 
+>    if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
+> -- 
+> 1.7.10
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
