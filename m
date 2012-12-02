@@ -1,209 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58397 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424688Ab2LGWOk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 17:14:40 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so648555pbc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 14:14:40 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>
-Subject: [RFCv3 2/5] cfg80211: mesh power mode primitives
-Date: Fri,  7 Dec 2012 14:14:00 -0800
-Message-Id: <1354918443-3076-3-git-send-email-marco@cozybit.com> (sfid-20121207_231455_262179_53C8D0D6)
-In-Reply-To: <1354918443-3076-1-git-send-email-marco@cozybit.com>
-References: <1354918443-3076-1-git-send-email-marco@cozybit.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58894 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751113Ab2LBBgf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Dec 2012 20:36:35 -0500
+Message-ID: <50BAB095.2070103@hauke-m.de> (sfid-20121202_023640_200915_66F79BDA)
+Date: Sun, 02 Dec 2012 02:36:21 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Subject: brcmsmac: Data bus error in reading tsf_random
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the nl80211_mesh_power_mode enumeration which holds possible values for
-the mesh power mode. These modes are unknown, active, light sleep and
-deep sleep.
+Hi Arend,
 
-Add power_mode entry to the mesh config structure to hold the user-configured
-default mesh power mode. This value will be used for new peer links.
+I am getting a Data bus error when brcmsmac tries to read tsf_random in
+brcms_c_wme_setparams. This does not happen when I add a printk
+somewhere near that read of tsf_random or when I replace the read with a
+constant. In b43 this code works, without this error for me, see
+b43_qos_params_upload(). With the BCM4716 I do not have this problem. It
+could be that this is caused by the broken PCIe controller in the BCM4716.
 
-Add the dot11MeshAwakeWindowDuration value to the mesh config. The awake window
-is a duration in TU describing how long the STA will stay awake after
-transmitting its beacon in PS mode.
+I am using brcmsmac from compat-wireless 2012-09-07, but I have also
+tried the most recent brcmsmac code from wireless-testing. brcmsmac uses
+the normal firmware from linux-firmware and I have also tried the new
+firmware posted some days ago with the same result.
 
-Add the station parameters and flags for future userspace access.
+I am using a BCM43224 connected to the PCIe controller of the BCM4716.
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Signed-off-by: Mike Krinkin <krinkin.m.u@gmail.com>
----
- include/net/cfg80211.h       |   21 +++++++++++++++++++++
- include/uapi/linux/nl80211.h |   35 +++++++++++++++++++++++++++++++++++
- net/wireless/mesh.c          |    3 +++
- 3 files changed, 59 insertions(+)
+Are there any special requirements for reading tsf_random under mips?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a31e893..d6e5c0a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -586,6 +586,8 @@ enum station_parameters_apply_mask {
-  * @sta_modify_mask: bitmap indicating which parameters changed
-  *	(for those that don't have a natural "no change" value),
-  *	see &enum station_parameters_apply_mask
-+ * @local_pm: local link-specific mesh power save mode (no change when set
-+ *	to unknown)
-  */
- struct station_parameters {
- 	u8 *supported_rates;
-@@ -601,6 +603,7 @@ struct station_parameters {
- 	struct ieee80211_vht_cap *vht_capa;
- 	u8 uapsd_queues;
- 	u8 max_sp;
-+	enum nl80211_mesh_power_mode local_pm;
- };
- 
- /**
-@@ -631,6 +634,9 @@ struct station_parameters {
-  * @STATION_INFO_STA_FLAGS: @sta_flags filled
-  * @STATION_INFO_BEACON_LOSS_COUNT: @beacon_loss_count filled
-  * @STATION_INFO_T_OFFSET: @t_offset filled
-+ * @STATION_INFO_LOCAL_PM: @local_pm filled
-+ * @STATION_INFO_PEER_PM: @peer_pm filled
-+ * @STATION_INFO_NONPEER_PM: @nonpeer_pm filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -654,6 +660,9 @@ enum station_info_flags {
- 	STATION_INFO_STA_FLAGS		= 1<<18,
- 	STATION_INFO_BEACON_LOSS_COUNT	= 1<<19,
- 	STATION_INFO_T_OFFSET		= 1<<20,
-+	STATION_INFO_LOCAL_PM		= 1<<21,
-+	STATION_INFO_PEER_PM		= 1<<22,
-+	STATION_INFO_NONPEER_PM		= 1<<23,
- };
- 
- /**
-@@ -767,6 +776,9 @@ struct sta_bss_parameters {
-  * @sta_flags: station flags mask & values
-  * @beacon_loss_count: Number of times beacon loss event has triggered.
-  * @t_offset: Time offset of the station relative to this host.
-+ * @local_pm: local mesh STA power save mode
-+ * @peer_pm: peer mesh STA power save mode
-+ * @nonpeer_pm: non-peer mesh STA power save mode
-  */
- struct station_info {
- 	u32 filled;
-@@ -796,6 +808,9 @@ struct station_info {
- 
- 	u32 beacon_loss_count;
- 	s64 t_offset;
-+	enum nl80211_mesh_power_mode local_pm;
-+	enum nl80211_mesh_power_mode peer_pm;
-+	enum nl80211_mesh_power_mode nonpeer_pm;
- 
- 	/*
- 	 * Note: Add a new enum station_info_flags value for each new field and
-@@ -968,6 +983,10 @@ struct bss_parameters {
-  * @dot11MeshHWMPconfirmationInterval: The minimum interval of time (in TUs)
-  *	during which a mesh STA can send only one Action frame containing
-  *	a PREQ element for root path confirmation.
-+ * @power_mode: The default mesh power save mode which will be the initial
-+ *	setting for new peer links.
-+ * @dot11MeshAwakeWindowDuration: The duration in TUs the STA will remain awake
-+ *	after transmitting its beacon.
-  */
- struct mesh_config {
- 	u16 dot11MeshRetryTimeout;
-@@ -995,6 +1014,8 @@ struct mesh_config {
- 	u32 dot11MeshHWMPactivePathToRootTimeout;
- 	u16 dot11MeshHWMProotInterval;
- 	u16 dot11MeshHWMPconfirmationInterval;
-+	enum nl80211_mesh_power_mode power_mode;
-+	u16 dot11MeshAwakeWindowDuration;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 33a4174..78e37ad 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2239,6 +2239,34 @@ enum nl80211_mntr_flags {
- };
- 
- /**
-+ * enum nl80211_mesh_power_mode - mesh power save modes
-+ *
-+ * @NL80211_MESH_POWER_UNKNOWN: The mesh power mode of the mesh STA is
-+ *	not known or has not been set yet.
-+ * @NL80211_MESH_POWER_ACTIVE: Active mesh power mode. The mesh STA is
-+ *	in Awake state all the time.
-+ * @NL80211_MESH_POWER_LIGHT_SLEEP: Light sleep mode. The mesh STA will
-+ *	alternate between Active and Doze states, but will wake up for
-+ *	neighbor's beacons.
-+ * @NL80211_MESH_POWER_DEEP_SLEEP: Deep sleep mode. The mesh STA will
-+ *	alternate between Active and Doze states, but may not wake up
-+ *	for neighbor's beacons.
-+ *
-+ * @__NL80211_MESH_POWER_AFTER_LAST - internal use
-+ * @NL80211_MESH_POWER_MAX - highest possible power save level
-+ */
-+
-+enum nl80211_mesh_power_mode {
-+	NL80211_MESH_POWER_UNKNOWN,
-+	NL80211_MESH_POWER_ACTIVE,
-+	NL80211_MESH_POWER_LIGHT_SLEEP,
-+	NL80211_MESH_POWER_DEEP_SLEEP,
-+
-+	__NL80211_MESH_POWER_AFTER_LAST,
-+	NL80211_MESH_POWER_MAX = __NL80211_MESH_POWER_AFTER_LAST - 1
-+};
-+
-+/**
-  * enum nl80211_meshconf_params - mesh configuration parameters
-  *
-  * Mesh configuration parameters. These can be changed while the mesh is
-@@ -2332,6 +2360,11 @@ enum nl80211_mntr_flags {
-  *	(in TUs) during which a mesh STA can send only one Action frame
-  *	containing a PREQ element for root path confirmation.
-  *
-+ * @NL80211_MESHCONF_POWER_MODE: Default mesh power mode for new peer links.
-+ *	type &enum nl80211_mesh_power_mode (u8)
-+ *
-+ * @NL80211_MESHCONF_AWAKE_WINDOW: awake window duration (in TUs)
-+ *
-  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
-  */
- enum nl80211_meshconf_params {
-@@ -2361,6 +2394,8 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
- 	NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
- 	NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
-+	NL80211_MESHCONF_POWER_MODE,
-+	NL80211_MESHCONF_AWAKE_WINDOW,
- 
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 6d8ce90..8e27534 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -46,6 +46,7 @@
- 
- #define MESH_DEFAULT_BEACON_INTERVAL	1000 	/* in 1024 us units (=TUs) */
- #define MESH_DEFAULT_DTIM_PERIOD	1
-+#define MESH_DEFAULT_AWAKE_WINDOW	10	/* in 1024 us units (=TUs) */
- 
- const struct mesh_config default_mesh_config = {
- 	.dot11MeshRetryTimeout = MESH_RET_T,
-@@ -72,6 +73,8 @@ const struct mesh_config default_mesh_config = {
- 	.dot11MeshHWMPactivePathToRootTimeout = MESH_PATH_TO_ROOT_TIMEOUT,
- 	.dot11MeshHWMProotInterval = MESH_ROOT_INTERVAL,
- 	.dot11MeshHWMPconfirmationInterval = MESH_ROOT_CONFIRMATION_INTERVAL,
-+	.power_mode = NL80211_MESH_POWER_ACTIVE,
-+	.dot11MeshAwakeWindowDuration = MESH_DEFAULT_AWAKE_WINDOW,
- };
- 
- const struct mesh_setup default_mesh_setup = {
--- 
-1.7.9.5
+To make my BCM43224 work I use this patch [0], the "printk("dummy\n");"
+is a hack to workaround the problem I am describing here.
 
+Hauke
+
+[0]:
+https://dev.openwrt.org/browser/trunk/package/mac80211/patches/850-brcmsmac-add-support-for-BCM43224.patch
+
+
+root@OpenWrt:/# iw phy phy0 interface add wlan0 type managed
+root@OpenWrt:/# ifconfig wlan0 up
+[   34.828000] Data bus error, epc == 8014a890, ra == 801ba3c4
+[   34.828000] Oops[#1]:
+[   34.828000] Cpu 0
+[   34.828000] $ 0   : 00000000 1100cc00 00000001 83994800
+[   34.828000] $ 4   : a800065a 00000820 00000000 00000002
+[   34.828000] $ 8   : 00000020 801392f0 24189612 6c604830
+[   34.828000] $12   : 00000000 00000001 00000000 ffffff00
+[   34.828000] $16   : 83992e80 0000065a 00000003 00000020
+[   34.828000] $20   : 00000000 83992e80 82e3a0e4 82e5b458
+[   34.828000] $24   : 00000000 801ba2e8
+[   34.828000] $28   : 82e98000 82e99c10 83992e90 801ba3c4
+[   34.828000] Hi    : 00004000
+[   34.828000] Lo    : 00000000
+[   34.828000] epc   : 8014a890 ioread16+0x4/0xc
+[   34.828000]     Tainted: G           O
+[   34.828000] ra    : 801ba3c4 bcma_host_pci_read16+0x34/0x4c
+[   34.828000] Status: 1100cc03    KERNEL EXL IE
+[   34.828000] Cause : 8080001c
+[   34.828000] PrId  : 00019740 (MIPS 74Kc)
+[   34.828000] Modules linked in: nf_nat_irc nf_nat_ftp nf_conntrack_irc
+nf_conntrack_ftp ipt_MASQUERADE iptable_nat nf_nat pppoe xt_conntrack
+xt_CT xt_NOTRACK iptable_raw xt_state nf_conntrack_ipv4 nf_defrag_ipv4
+nf_conntrack pppox ipt_REJECT xt_TCPMSS xt_comment xt_multiport xt_mac
+xt_limit iptable_mangle iptable_filter ip_tables xt_tcpudp x_tables
+brcmsmac(O) ppp_async ppp_generic slhc brcmutil(O) mac80211(O)
+switch_core(O) crc8 crc_ccitt cordic cfg80211(O) compat(O) arc4
+aes_generic crypto_blkcipher cryptomgr aead crypto_hash crypto_algapi
+[last unloaded: switch_core]
+[   34.828000] Process ifconfig (pid: 853, threadinfo=82e98000,
+task=83904d30, tls=77a8e440)
+[   34.828000] Stack : 0000000c 82e07d80 83992e80 801ba2c0 82dfd400
+82dfd400 00000000 82e08e68
+        0000000c 0c8b8482 24189612 6c604830 000305e0 00030007 00000002
+00000000
+        00000000 00000000 00000000 00000000 82e39bf0 82dfd400 00000001
+82e39bf0
+        00000002 82e0de5c 00000001 82e38874 82e99cb0 82e5a894 0000007f
+00000001
+        0003002f 00620007 00050011 0000000c 0c8b8482 24189612 6c604830
+82e60000
+        ...
+[   34.828000] Call Trace:
+[   34.828000] [<8014a890>] ioread16+0x4/0xc
+[   34.828000] [<801ba3c4>] bcma_host_pci_read16+0x34/0x4c
+[   34.828000] [<82e08e68>] brcms_c_wme_setparams+0x134/0x1d4 [brcmsmac]
+[   34.828000] [<82e0de5c>] brcms_c_init+0xdac/0xe88 [brcmsmac]
+[   34.828000] [<82e0bfe4>] brcms_c_up+0x35c/0x478 [brcmsmac]
+[   34.828000] [<82e01e00>] brcms_rfkill_set_hw_state+0xec/0x144 [brcmsmac]
+[   34.828000] [<82d910ac>] ieee80211_do_open+0x138/0xaf8 [mac80211]
+[   34.828000] [<801d4a04>] __dev_open+0x144/0x228
+[   34.828000] [<801d4d40>] __dev_change_flags+0xc0/0x160
+[   34.828000] [<801d4e88>] dev_change_flags+0x20/0x6c
+[   34.828000] [<8022df64>] devinet_ioctl+0x2ac/0x7f8
+[   34.828000] [<801bbd80>] sock_ioctl+0x294/0x2f4
+[   34.828000] [<800ab1f4>] do_vfs_ioctl+0x5a4/0x5f8
+[   34.828000] [<800ab298>] sys_ioctl+0x50/0x98
+[   34.828000] [<8000e1d0>] stack_done+0x20/0x40
+[   34.828000]
+[   34.828000]
+Code: 03e00008  304200ff  94820000 <03e00008> 3042ffff  94830000
+3063ffff  00031200  00031a02
+[   35.104000] ---[ end trace ef9d9b193b014ece ]---
+
+
+(gdb) l *(brcms_c_wme_setparams+0x134)
+0x8e68 is in brcms_c_wme_setparams
+(/home/hauke/openwrt/git/build_dir/linux-brcm47xx_uClibc-0.9.33.2/compat-wireless-2012-09-07/drivers/net/wireless/brcm80211/brcmsmac/main.c:4087).
+4082				  "aifs %d\n", wlc->pub->unit, acp_shm.aifs);
+4083		} else {
+4084			acp_shm.cwmin = params->cw_min;
+4085			acp_shm.cwmax = params->cw_max;
+4086			acp_shm.cwcur = acp_shm.cwmin;
+4087			acp_shm.bslots =
+4088				bcma_read16(wlc->hw->d11core, D11REGOFFS(tsf_random)) &
+4089				acp_shm.cwcur;
+4090			acp_shm.reggap = acp_shm.bslots + acp_shm.aifs;
+4091			/* Indicate the new params to the ucode */
