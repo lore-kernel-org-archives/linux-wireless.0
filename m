@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43958 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755378Ab2LLWP3 (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:54182 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275Ab2LBNt1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 17:15:29 -0500
-Message-ID: <50C901FC.3040306@candelatech.com> (sfid-20121212_231532_284872_0E0E68CB)
-Date: Wed, 12 Dec 2012 14:15:24 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 2 Dec 2012 08:49:27 -0500
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [patch] carl9170: remove unneeded NULL check
+Date: Sun, 2 Dec 2012 14:49:20 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <20121202104238.GB16078@elgon.mountain>
+In-Reply-To: <20121202104238.GB16078@elgon.mountain>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/6] wifi: Don't spam logs with 'Found new beacon' messages.
-References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>  <1355349295-30960-2-git-send-email-greearb@candelatech.com>  (sfid-20121212_225535_981449_212B81FE) <1355350115.9708.21.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355350115.9708.21.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201212021449.21267.chunkeey@googlemail.com> (sfid-20121202_144933_267265_7B30969D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2012 02:08 PM, Johannes Berg wrote:
-> On Wed, 2012-12-12 at 13:54 -0800, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> We saw logs fill with this (at very high speeds):
->>
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>   net/wireless/reg.c |   11 ++++++-----
->>   1 files changed, 6 insertions(+), 5 deletions(-)
->>
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index 6e53089..8aa7867 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -2067,11 +2067,12 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
->>   	if (!reg_beacon)
->>   		return -ENOMEM;
->>
->> -	REG_DBG_PRINT("Found new beacon on "
->
-> Why not just disable the config option for it if you don't care?
+On Sunday 02 December 2012 11:42:38 Dan Carpenter wrote:
+> The "sta" variable is not checked for NULL consistently and it makes the
+> static checkers complain.  I asked Christian Lamparter about this and
+> it turns out the check is not needed.  "In fact, in order to set up a
+> ampdu session, the stack would call the driver's op_ampdu_action
+> callback which always needs a station."
 
-I don't mind seeing it, just don't want thousands of them in my logs
-in a very short amount of time.  Maybe I was just hitting some
-other bug, and there is no valid reason for this to ever spam?
+that would be from the thread:
+<http://www.spinics.net/lists/linux-wireless/msg94526.html>
+ 
+> I have removed the check.
+I think this will bug for multicast and injected frames.
+ 
+It is not possible for the sta(tion) pointer to be NULL if
+the frame has the IEEE80211_TX_CTL_AMPDU flag set. So the
+sta == NULL check can be avoided when calling 
+carl9170_tx_ampdu_queue. This is because mac80211 tracks
+all aggregation sessions within the station struct.
+Of course, this is something that the checker tool can't
+possibly deduce, but it has a point and we can add a check
+like this [see attached draft patch]:
 
-Thanks,
-Ben
+What do you think [or more to the point: what does the
+checker say?]
 
->
-> johannes
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Regards,
+	Chr
+---
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index 84377cf..e09d293 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -1470,6 +1470,9 @@ void carl9170_op_tx(struct ieee80211_hw *hw,
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+ 
++	if ((info->flags & IEEE80211_TX_CTL_AMPDU) && WARN_ON_ONCE(!sta))
++		goto err_free;
++
+ 	if (unlikely(carl9170_tx_prepare(ar, sta, skb)))
+ 		goto err_free;
+ 
 
