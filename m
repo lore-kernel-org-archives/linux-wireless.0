@@ -1,126 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:44428 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068Ab2LBW2f convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40976 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755875Ab2LCRmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 17:28:35 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm9so924523wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Dec 2012 14:28:34 -0800 (PST)
-References: <1354460009-28449-1-git-send-email-juhosg@openwrt.org> <1354460009-28449-2-git-send-email-juhosg@openwrt.org>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1354460009-28449-2-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <2BDB70BF-6B6F-41CC-90C8-FA962784B573@gmail.com> (sfid-20121202_232839_045808_A8190E06)
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 1/2] rt2x00: rt2800lib: fix indentation of some rt2x00_rt calls
-Date: Sun, 2 Dec 2012 22:28:33 +0000
-To: Gabor Juhos <juhosg@openwrt.org>
+	Mon, 3 Dec 2012 12:42:52 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 5/8] regulatory: remove useless locking on exit
+Date: Mon,  3 Dec 2012 18:43:10 +0100
+Message-Id: <1354556593-2363-6-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184310_178462_76876D08)
+In-Reply-To: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
+References: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+It would be a major problem if anything were to run
+concurrently while the module is being unloaded so
+remove the locking that doesn't help anything.
 
-Sent from my iPad
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-On 2 dec. 2012, at 14:53, Gabor Juhos <juhosg@openwrt.org> wrote:
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6cece2d..9de3360 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2406,34 +2406,24 @@ void regulatory_exit(void)
+ 	cancel_work_sync(&reg_work);
+ 	cancel_delayed_work_sync(&reg_timeout);
+ 
+-	mutex_lock(&cfg80211_mutex);
+-	mutex_lock(&reg_mutex);
+-
+ 	reset_regdomains(true);
+ 
+ 	dev_set_uevent_suppress(&reg_pdev->dev, true);
+ 
+ 	platform_device_unregister(reg_pdev);
+ 
+-	spin_lock_bh(&reg_pending_beacons_lock);
+ 	list_for_each_entry_safe(reg_beacon, btmp, &reg_pending_beacons, list) {
+ 		list_del(&reg_beacon->list);
+ 		kfree(reg_beacon);
+ 	}
+-	spin_unlock_bh(&reg_pending_beacons_lock);
+ 
+ 	list_for_each_entry_safe(reg_beacon, btmp, &reg_beacon_list, list) {
+ 		list_del(&reg_beacon->list);
+ 		kfree(reg_beacon);
+ 	}
+ 
+-	spin_lock(&reg_requests_lock);
+ 	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
+ 		list_del(&reg_request->list);
+ 		kfree(reg_request);
+ 	}
+-	spin_unlock(&reg_requests_lock);
+-
+-	mutex_unlock(&reg_mutex);
+-	mutex_unlock(&cfg80211_mutex);
+ }
+-- 
+1.8.0
 
-> The patch contains no functional changes.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
-> drivers/net/wireless/rt2x00/rt2800lib.c |   18 +++++++++---------
-> 1 file changed, 9 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index c0441a7..3d7b74e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2173,7 +2173,7 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
->                rt2800_rfcsr_write(rt2x00dev, 59,
->                           r59_nonbt_rev[idx]);
->            } else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> -                       rt2x00_rt(rt2x00dev, RT5392)) {
-> +                   rt2x00_rt(rt2x00dev, RT5392)) {
->                static const char r59_non_bt[] = {0x8f, 0x8f,
->                    0x8f, 0x8f, 0x8f, 0x8f, 0x8f, 0x8d,
->                    0x8a, 0x88, 0x88, 0x87, 0x87, 0x86};
-> @@ -2264,7 +2264,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
-> 
->    if (rf->channel <= 14) {
->        if (!rt2x00_rt(rt2x00dev, RT5390) &&
-> -            !rt2x00_rt(rt2x00dev, RT5392)) {
-> +            !rt2x00_rt(rt2x00dev, RT5392)) {
->            if (test_bit(CAPABILITY_EXTERNAL_LNA_BG,
->                     &rt2x00dev->cap_flags)) {
->                rt2800_bbp_write(rt2x00dev, 82, 0x62);
-> @@ -3592,8 +3592,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->    if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860D))
->        rt2800_bbp_write(rt2x00dev, 84, 0x19);
->    else if (rt2x00_rt(rt2x00dev, RT3290) ||
-> -             rt2x00_rt(rt2x00dev, RT5390) ||
-> -             rt2x00_rt(rt2x00dev, RT5392))
-> +         rt2x00_rt(rt2x00dev, RT5390) ||
-> +         rt2x00_rt(rt2x00dev, RT5392))
->        rt2800_bbp_write(rt2x00dev, 84, 0x9a);
->    else
->        rt2800_bbp_write(rt2x00dev, 84, 0x99);
-> @@ -3652,7 +3652,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->    else if (rt2x00_rt(rt2x00dev, RT3352))
->        rt2800_bbp_write(rt2x00dev, 105, 0x34);
->    else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> -             rt2x00_rt(rt2x00dev, RT5392))
-> +         rt2x00_rt(rt2x00dev, RT5392))
->        rt2800_bbp_write(rt2x00dev, 105, 0x3c);
->    else
->        rt2800_bbp_write(rt2x00dev, 105, 0x05);
-> @@ -3746,7 +3746,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->    }
-> 
->    if (rt2x00_rt(rt2x00dev, RT5390) ||
-> -        rt2x00_rt(rt2x00dev, RT5392)) {
-> +        rt2x00_rt(rt2x00dev, RT5392)) {
->        int ant, div_mode;
-> 
->        rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
-> @@ -4356,7 +4356,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->    rt2800_bbp_read(rt2x00dev, 26, &drv_data->bbp26);
-> 
->    if (!rt2x00_rt(rt2x00dev, RT5390) &&
-> -        !rt2x00_rt(rt2x00dev, RT5392)) {
-> +        !rt2x00_rt(rt2x00dev, RT5392)) {
->        /*
->         * Set back to initial state
->         */
-> @@ -4385,7 +4385,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->    rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
-> 
->    if (!rt2x00_rt(rt2x00dev, RT5390) &&
-> -        !rt2x00_rt(rt2x00dev, RT5392)) {
-> +        !rt2x00_rt(rt2x00dev, RT5392)) {
->        rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
->        rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
->        if (rt2x00_rt(rt2x00dev, RT3070) ||
-> @@ -4457,7 +4457,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->    }
-> 
->    if (rt2x00_rt(rt2x00dev, RT5390) ||
-> -        rt2x00_rt(rt2x00dev, RT5392)) {
-> +        rt2x00_rt(rt2x00dev, RT5392)) {
->        rt2800_rfcsr_read(rt2x00dev, 38, &rfcsr);
->        rt2x00_set_field8(&rfcsr, RFCSR38_RX_LO1_EN, 0);
->        rt2800_rfcsr_write(rt2x00dev, 38, rfcsr);
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
