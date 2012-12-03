@@ -1,27 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:49990 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751710Ab2LEJ22 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49685 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751339Ab2LCTBi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 04:28:28 -0500
-Message-ID: <50BF13B1.8010507@posedge.com> (sfid-20121205_102832_455127_6834CFA1)
-Date: Wed, 05 Dec 2012 14:58:17 +0530
-From: Saravana <saravanad@posedge.com>
+	Mon, 3 Dec 2012 14:01:38 -0500
+Date: Mon, 3 Dec 2012 13:59:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@adurom.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Piotr Haber <phaber@broadcom.com>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH V2 v3.7] brcmsmac: handle packet drop on enqueuing
+ correctly
+Message-ID: <20121203185914.GH26027@tuxdriver.com> (sfid-20121203_200142_346412_0FDDF991)
+References: <1353961396-7061-1-git-send-email-arend@broadcom.com>
+ <50BC63E5.9020101@broadcom.com>
+ <871uf7w6w0.fsf@purkki.adurom.net>
+ <20121203183912.GE26027@tuxdriver.com>
+ <50BCF57E.8020204@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: add debug file for mic failure
-References: <50BE0606.3000103@posedge.com>   <1354633038.9608.3.camel@jlt4.sipsolutions.net>   (sfid-20121204_155658_509490_E48BCD66) <1354648076.9608.16.camel@jlt4.sipsolutions.net>  <50BEEFA2.8000400@posedge.com> <1354697061.9972.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1354697061.9972.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50BCF57E.8020204@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Dec 03, 2012 at 07:54:54PM +0100, Arend van Spriel wrote:
+> On 12/03/2012 07:39 PM, John W. Linville wrote:
+> > On Mon, Dec 03, 2012 at 04:24:31PM +0200, Kalle Valo wrote:
+> >> Hi Arend,
+> >>
+> >> "Arend van Spriel" <arend@broadcom.com> writes:
+> >>
+> >>> What is keeping you from picking up this patch? Anything I should do?
+> >>> This V2 removed the no-op changes in ampdu.c that Seth indicated so...
+> >>
+> >> Most likely it's too late. Dave already told that that John's previous
+> >> pull request might not make it to 3.7.
+> > 
+> > Yes, that.  Also, given the merge difficulties this creates and the
+> > fact that Seth's patch is already queued for 3.8, maybe you should
+> > consider sending this for the 3.7 stable series when it opens?
+> > 
+> > John
+> > 
 > 
-> Anyway ... I've fixed it up for you now.
+> That was my plan when it would not get in for 3.7.0. I wanted it to go
+> to stable anyway as the fix is also needed for 3.6.x stable. Just wanted
+> to get it upstream fixed first.
 > 
-Thank you for fixing the patch..:)
-> johannes
-> 
-> 
+> For 3.8 the fix has been reworked on top of Seth patches and is in
+> wireless-next (c4dea35e brcmsmac: handle packet drop during transmit
+> correctly). Should I refer to that commit when submitting to stable
+> (although it is a slightly different patch).
 
+Yes, I think the stable team will appreciate that.
+
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
