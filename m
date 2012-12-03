@@ -1,161 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34368 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492Ab2L0Vob (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:59471 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752450Ab2LCU3O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 16:44:31 -0500
-Received: by mail-pa0-f53.google.com with SMTP id hz1so5662804pad.26
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2012 13:44:31 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linville@tuxdriver.org
-Cc: j@w1.fi, linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 2/4] mac80211_hwsim: hrtimer beacon
-Date: Thu, 27 Dec 2012 13:43:54 -0800
-Message-Id: <1356644636-5309-2-git-send-email-thomas@cozybit.com> (sfid-20121227_224434_395344_20A3F86C)
-In-Reply-To: <1356644636-5309-1-git-send-email-thomas@cozybit.com>
-References: <1356644636-5309-1-git-send-email-thomas@cozybit.com>
+	Mon, 3 Dec 2012 15:29:14 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so2264010pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 12:29:13 -0800 (PST)
+Date: Mon, 3 Dec 2012 12:29:10 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org, Bill Pemberton <wfp5p@virginia.edu>
+Subject: [GIT PULL] Remove __dev* markings from the networking drivers
+Message-ID: <20121203202910.GB29451@kroah.com> (sfid-20121203_212920_289705_312928B6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For testing various timing-sensitive protocols (power
-save, MBCA, etc.), a beacon accuracy of jiffies is not
-sufficient. A tasklet_hrtimer is used for the beacon since
-it runs the callback in soft-IRQ context with hrtimer
-resolution.
+Hi John,
 
-Also handle BSS_CHANGED_BEACON_ENABLED for hwsim.
+Here's a pull request for all of Bill's __dev* removal patches for the
+wireless networking drivers, based on net-next.  If you want this
+rebased on a different tree, or sent as patches (it's only 18 of them),
+please let me know.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- drivers/net/wireless/mac80211_hwsim.c |   69 ++++++++++++++++++++++-----------
- 1 file changed, 47 insertions(+), 22 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 59761fb..f353d5e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -333,11 +333,11 @@ struct mac80211_hwsim_data {
- 	int scan_chan_idx;
- 
- 	struct ieee80211_channel *channel;
--	unsigned long beacon_int; /* in jiffies unit */
-+	u64 beacon_int	/* beacon interval in us */;
- 	unsigned int rx_filter;
- 	bool started, idle, scanning;
- 	struct mutex mutex;
--	struct timer_list beacon_timer;
-+	struct tasklet_hrtimer beacon_timer;
- 	enum ps_mode {
- 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
- 	} ps;
-@@ -897,7 +897,7 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	data->started = false;
--	del_timer(&data->beacon_timer);
-+	tasklet_hrtimer_cancel(&data->beacon_timer);
- 	wiphy_debug(hw->wiphy, "%s\n", __func__);
- }
- 
-@@ -981,21 +981,32 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 				rcu_dereference(vif->chanctx_conf)->def.chan);
- }
- 
--
--static void mac80211_hwsim_beacon(unsigned long arg)
-+static enum hrtimer_restart
-+mac80211_hwsim_beacon(struct hrtimer *timer)
- {
--	struct ieee80211_hw *hw = (struct ieee80211_hw *) arg;
--	struct mac80211_hwsim_data *data = hw->priv;
-+	struct tasklet_hrtimer *ttimer = container_of(timer,
-+						      struct tasklet_hrtimer,
-+						      timer);
-+	struct mac80211_hwsim_data *data = container_of(ttimer,
-+						struct mac80211_hwsim_data,
-+						beacon_timer);
-+	struct ieee80211_hw *hw = data->hw;
-+	u64 bcn_int = data->beacon_int;
-+	ktime_t next_bcn;
- 
- 	if (!data->started)
--		return;
-+		goto out;
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 		hw, IEEE80211_IFACE_ITER_NORMAL,
--		mac80211_hwsim_beacon_tx, hw);
-+		mac80211_hwsim_beacon_tx, data);
-+
- 
--	data->beacon_timer.expires = jiffies + data->beacon_int;
--	add_timer(&data->beacon_timer);
-+	next_bcn = ktime_add(hrtimer_get_expires(timer),
-+			     ns_to_ktime(bcn_int * 1000));
-+	tasklet_hrtimer_start(ttimer, next_bcn, HRTIMER_MODE_ABS);
-+out:
-+	return HRTIMER_NORESTART;
- }
- 
- static const char *hwsim_chantypes[] = {
-@@ -1033,9 +1044,12 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	data->power_level = conf->power_level;
- 	if (!data->started || !data->beacon_int)
--		del_timer(&data->beacon_timer);
--	else
--		mod_timer(&data->beacon_timer, jiffies + data->beacon_int);
-+		tasklet_hrtimer_cancel(&data->beacon_timer);
-+	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
-+		tasklet_hrtimer_start(&data->beacon_timer,
-+				      ns_to_ktime(data->beacon_int * 1000),
-+				      HRTIMER_MODE_REL);
-+	}
- 
- 	return 0;
- }
-@@ -1085,12 +1099,22 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 
- 	if (changed & BSS_CHANGED_BEACON_INT) {
- 		wiphy_debug(hw->wiphy, "  BCNINT: %d\n", info->beacon_int);
--		data->beacon_int = 1024 * info->beacon_int / 1000 * HZ / 1000;
--		if (WARN_ON(!data->beacon_int))
--			data->beacon_int = 1;
--		if (data->started)
--			mod_timer(&data->beacon_timer,
--				  jiffies + data->beacon_int);
-+		data->beacon_int = info->beacon_int * 1024;
-+	}
-+
-+	if (changed & BSS_CHANGED_BEACON_ENABLED) {
-+		wiphy_debug(hw->wiphy, "  BCN EN: %d\n", info->enable_beacon);
-+		if (data->started &&
-+		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
-+		    info->enable_beacon) {
-+			if (WARN_ON(!data->beacon_int))
-+				data->beacon_int = 1000 * 1024;
-+			tasklet_hrtimer_start(&data->beacon_timer,
-+					      ns_to_ktime(data->beacon_int *
-+							  1000),
-+					      HRTIMER_MODE_REL);
-+		} else if (!info->enable_beacon)
-+			tasklet_hrtimer_cancel(&data->beacon_timer);
- 	}
- 
- 	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
-@@ -2371,8 +2395,9 @@ static int __init init_mac80211_hwsim(void)
- 							data->debugfs, data,
- 							&hwsim_fops_group);
- 
--		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
--			    (unsigned long) hw);
-+		tasklet_hrtimer_init(&data->beacon_timer,
-+				     mac80211_hwsim_beacon,
-+				     CLOCK_REALTIME, HRTIMER_MODE_ABS);
- 
- 		list_add_tail(&data->list, &hwsim_radios);
- 	}
--- 
-1.7.10.4
+greg k-h
 
+-------------
+
+The following changes since commit 60e476d02129acb1f863a9b4932358678ee6a355:
+
+  bna: remove useless calls to memset(). (2012-12-02 20:32:56 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/net-next.git tags/dev_removal_wireless
+
+for you to fetch changes up to 40ccc6ab03053a2ad1f52c8b3f4d3ee828b7c013:
+
+  rtlwifi: remove __dev* attributes (2012-12-03 11:47:38 -0800)
+
+----------------------------------------------------------------
+Wireless:  Remove __dev* markings from the wireless drivers
+
+This is a series of patches that remove the dev* attributes for all
+wireless drivers.
+
+Use of __devinit, __devexit_p, __devinitdata, __devinitconst, and
+__devexit are no longer needed since CONFIG_HOTPLUG is being removed as
+an option.
+
+Note, there are some devinit compiler section mismatch warnings due to
+this series, but they are fixed up when merged with my driver-next
+branch, which fixes the PCI device id warnings, and removes the modpost
+detection, as it's no longer needed.
+
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+----------------------------------------------------------------
+Bill Pemberton (18):
+      rfkill: remove __dev* attributes
+      wireless: remove __dev* attributes
+      ath5k: remove __dev* attributes
+      atmel: remove __dev* attributes
+      b43: remove __dev* attributes
+      brcm80211: remove __dev* attributes
+      ipw2x00: remove __dev* attributes
+      iwlegacy: remove __dev* attributes
+      iwlwifi: remove __dev* attributes
+      libertas: remove __dev* attributes
+      mwl8k: remove __dev* attributes
+      orinoco: remove __dev* attributes
+      p54: remove __dev* attributes
+      rt2x00: remove __dev* attributes
+      rtl8187: remove __dev* attributes
+      rtl8187: remove __dev* attributes
+      wlcore/wl18xx/wl12xx: remove __dev* attributes
+      rtlwifi: remove __dev* attributes
+
+ drivers/net/wireless/adm8211.c                        |  6 +++---
+ drivers/net/wireless/airo.c                           |  6 +++---
+ drivers/net/wireless/ath/ath5k/base.c                 |  4 ++--
+ drivers/net/wireless/ath/ath5k/led.c                  |  2 +-
+ drivers/net/wireless/ath/ath5k/pci.c                  |  6 +++---
+ drivers/net/wireless/atmel_pci.c                      |  6 +++---
+ drivers/net/wireless/b43/pcmcia.c                     |  6 +++---
+ drivers/net/wireless/b43/sdio.c                       |  6 +++---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |  4 ++--
+ drivers/net/wireless/ipw2x00/ipw2100.c                |  4 ++--
+ drivers/net/wireless/ipw2x00/ipw2200.c                |  8 ++++----
+ drivers/net/wireless/iwlegacy/3945-mac.c              |  4 ++--
+ drivers/net/wireless/iwlegacy/4965-mac.c              |  4 ++--
+ drivers/net/wireless/iwlwifi/pcie/drv.c               |  4 ++--
+ drivers/net/wireless/libertas/if_spi.c                |  6 +++---
+ drivers/net/wireless/mwl8k.c                          | 12 ++++++------
+ drivers/net/wireless/orinoco/orinoco_nortel.c         |  4 ++--
+ drivers/net/wireless/orinoco/orinoco_pci.c            |  4 ++--
+ drivers/net/wireless/orinoco/orinoco_plx.c            |  4 ++--
+ drivers/net/wireless/orinoco/orinoco_tmd.c            |  4 ++--
+ drivers/net/wireless/p54/p54pci.c                     |  6 +++---
+ drivers/net/wireless/p54/p54spi.c                     |  6 +++---
+ drivers/net/wireless/p54/p54usb.c                     |  6 +++---
+ drivers/net/wireless/rt2x00/rt2400pci.c               |  2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c               |  2 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c               |  4 ++--
+ drivers/net/wireless/rt2x00/rt61pci.c                 |  2 +-
+ drivers/net/wireless/rtl818x/rtl8180/dev.c            |  6 +++---
+ drivers/net/wireless/rtl818x/rtl8187/dev.c            |  6 +++---
+ drivers/net/wireless/rtlwifi/pci.c                    |  2 +-
+ drivers/net/wireless/rtlwifi/pci.h                    |  2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c           |  2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c           |  2 +-
+ drivers/net/wireless/rtlwifi/usb.c                    |  2 +-
+ drivers/net/wireless/rtlwifi/usb.h                    |  2 +-
+ drivers/net/wireless/ti/wl1251/sdio.c                 |  4 ++--
+ drivers/net/wireless/ti/wl1251/spi.c                  |  6 +++---
+ drivers/net/wireless/ti/wl12xx/main.c                 |  6 +++---
+ drivers/net/wireless/ti/wl18xx/main.c                 |  6 +++---
+ drivers/net/wireless/ti/wlcore/main.c                 |  4 ++--
+ drivers/net/wireless/ti/wlcore/sdio.c                 |  8 ++++----
+ drivers/net/wireless/ti/wlcore/spi.c                  |  6 +++---
+ drivers/net/wireless/ti/wlcore/wlcore.h               |  4 ++--
+ net/rfkill/rfkill-gpio.c                              |  2 +-
+ net/rfkill/rfkill-regulator.c                         |  6 +++---
+ 45 files changed, 104 insertions(+), 104 deletions(-)
