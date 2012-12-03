@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58802 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39808 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209Ab2LGV4K (ORCPT
+	with ESMTP id S1754314Ab2LCLDx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 16:56:10 -0500
-Message-ID: <1354917388.9124.24.camel@jlt4.sipsolutions.net> (sfid-20121207_225614_323257_820F556A)
-Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
+	Mon, 3 Dec 2012 06:03:53 -0500
+Message-ID: <1354532654.9717.2.camel@jlt4.sipsolutions.net> (sfid-20121203_120356_608615_632125CB)
+Subject: Re: [RFCv2 08/13] mac80211: add power save support structure to
+ mesh interface
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Leblond <eric@regit.org>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Fri, 07 Dec 2012 22:56:28 +0100
-In-Reply-To: <1354916768.4530.18.camel@tiger2>
-References: <1354906561-4695-1-git-send-email-eric@regit.org>
-	 <20121207.153134.25835204617509469.davem@davemloft.net>
-	 <1354915824.9124.11.camel@jlt4.sipsolutions.net>
-	 <1354916768.4530.18.camel@tiger2>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: javier@cozybit.com, thomas@cozybit.com,
+	linux-wireless@vger.kernel.org
+Date: Mon, 03 Dec 2012 12:04:14 +0100
+In-Reply-To: <50B8E787.2090903@etit.tu-chemnitz.de>
+References: <1353701934-12752-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	  <1353701934-12752-9-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+	 <1354277360.10035.20.camel@jlt4.sipsolutions.net>
+	 <50B8E787.2090903@etit.tu-chemnitz.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HI,
-
-> > That's interesting. A single one seems odd. I might have expected two,
-> > but not one. Well, since you removed the crash ... I guess I'll have to
-> > believe that there's just one and the second one doesn't show up because
-> > we crashed before :-)
+On Fri, 2012-11-30 at 09:06 -0800, Marco Porsch wrote:
+> Thanks again for all your comments!
 > 
-> It was the case with initial code but I've suppressed the BUG() call and
-> replaced it with a return ;)
+> On 11/30/2012 04:09 AM, Johannes Berg wrote:
+> > On Fri, 2012-11-23 at 12:18 -0800, Marco Porsch wrote:
+> >
+> >> +++ b/net/mac80211/mesh.c
+> >> @@ -657,10 +657,16 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+> >>   	ifmsh->mesh_id_len = 0;
+> >>   	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
+> >>
+> >> +	/* free all potentially still buffered group-addressed frames */
+> >> +	local->total_ps_buffered -= skb_queue_len(&ifmsh->ps.bc_buf);
+> >> +	skb_queue_purge(&ifmsh->ps.bc_buf);
+> >> +
+> >>   	/* flush STAs and mpaths on this iface */
+> >>   	sta_info_flush(sdata->local, sdata);
+> >>   	mesh_path_flush_by_iface(sdata);
+> >
+> > the queue purge would seem to be in the wrong spot
+> 
+> Where would you recommend to put it then?
+> My idea was that after the (DTIM) beacon is disabled these buffered 
+> broadcasts are stuck either way, so they can be purged.
 
-Right. Well, does it actually still work then? I wonder if then you
-don't see a second packet because the first one doesn't make it
-through ... I'm thinking that this is just an internal af_packet problem
-with multiple listeners.
-
-
-> I've no simple code available to test it. I've add the problem when
-> running suricata. Maybe you could use it. It is packaged in most
-> distribution now.
-> To enable packet fanout. Modify default /etc/suricata/suricata.yaml to
-> have something like:
-> af-packet:
->   - interface: wlan0
->     # Number of receive threads (>1 will enable experimental flow pinned
->     # runmode)
->     threads: 3
-
-That'll should do, thanks.
+But if the stations aren't all deleted yet, new frames might be added.
 
 johannes
 
