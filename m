@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:46624 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217Ab2LEFNj (ORCPT
+Received: from mail.ultra-3eti.com ([173.13.207.162]:45084 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755958Ab2LCO4Y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 00:13:39 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFC] mac80211: dont drop mesh Peering Open frames from unknown STA
-Date: Tue,  4 Dec 2012 21:13:30 -0800
-Message-Id: <1354684410-31170-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121205_061342_789683_448C9739)
+	Mon, 3 Dec 2012 09:56:24 -0500
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+Date: Mon, 3 Dec 2012 14:56:20 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1259A@RockMX01.rock.corp> (sfid-20121203_155653_819619_87627223)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
+ <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
+In-Reply-To: <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are valid mesh peering frames. The STA entry will then be created in
-mesh_peer_init.
-The problem was previously worked around, since both STA receive the beacons
-of one another, which create the STA entry. This may not be the case when
-either node is in PS mode.
+CL>For experiment, I changed ath9k driver to disable 802.11n packet aggregation. The network becomes much better.
+CL>It's as stable as running 802.11a only mode.
+CL>So it seems that the aggregation plays a big role in in-stability of 802.11s network with 802.11n.
+CL>Any one has any idea why?
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
----
- net/mac80211/rx.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Can you post a patch? i want test this too.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8d267ec..89bfbbb 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2319,7 +2319,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 	if (len < IEEE80211_MIN_ACTION_SIZE)
- 		return RX_DROP_UNUSABLE;
- 
--	if (!rx->sta && mgmt->u.action.category != WLAN_CATEGORY_PUBLIC)
-+	if (!rx->sta && mgmt->u.action.category != WLAN_CATEGORY_PUBLIC &&
-+	    mgmt->u.action.category != WLAN_CATEGORY_SELF_PROTECTED)
- 		return RX_DROP_UNUSABLE;
- 
- 	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
--- 
-1.7.9.5
+The change is easy
+In ath9k/init.c
+Function ath9k_set_hw_capab()
+Replace below
+    if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+         hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+with
+	hw->flags &= ~IEEE80211_HW_AMPDU_AGGREGATION; 
 
