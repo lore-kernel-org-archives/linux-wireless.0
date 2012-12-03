@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eazy.amigager.de ([213.239.192.238]:53415 "EHLO
-	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113Ab2LZTBj (ORCPT
+Received: from vmail02-lax.tokbox.com ([72.51.46.97]:42516 "EHLO
+	ns.stoaks-software.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794Ab2LCSV7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 14:01:39 -0500
-Received: from x61.home (p4FDDDC1A.dip.t-dialin.net [79.221.220.26])
-	by eazy.amigager.de (Postfix) with ESMTPA id 4BA44F48026
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2012 19:54:31 +0100 (CET)
-Date: Wed, 26 Dec 2012 19:54:25 +0100
-From: Tino Keitel <tino.keitel@tikei.de>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Power saving features for iwl4965
-Message-ID: <20121226185425.GA12627@x61.home> (sfid-20121226_200145_036593_8E57594A)
-References: <20120418203543.GA16000@x61.home>
- <20120425122554.GD2466@redhat.com>
- <20120503182853.GA12461@mac.home>
+	Mon, 3 Dec 2012 13:21:59 -0500
+Reply-To: <paul@foresight-mands.com>
+From: "Paul Stoaks" <paul@foresight-mands.com>
+To: "'Georgiewskiy Yuriy'" <bottleman@icf.org.ru>,
+	"'Chaoxing Lin'" <Chaoxing.Lin@ultra-3eti.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp> <alpine.DEB.2.02.1212031842350.27546@icf.org.ru> <BD54DDEB2546894FAB0731EA7B0EDF8D07C1259A@RockMX01.rock.corp> <alpine.DEB.2.02.1212031938250.7349@icf.org.ru>
+In-Reply-To: <alpine.DEB.2.02.1212031938250.7349@icf.org.ru>
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+Date: Mon, 3 Dec 2012 10:21:56 -0800
+Message-ID: <005601cdd183$14666bf0$3d3343d0$@com> (sfid-20121203_192203_296077_96868BC7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120503182853.GA12461@mac.home>
+Content-Type: text/plain;
+	charset="KOI8-R"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 03, 2012 at 20:28:53 +0200, Tino Keitel wrote:
-> On Wed, Apr 25, 2012 at 14:25:55 +0200, Stanislaw Gruszka wrote:
-> > On Wed, Apr 18, 2012 at 10:35:43PM +0200, Tino Keitel wrote:
-> > > up to 2.6.38, the iwl4965 driver was able to use power saving features
-> > > by invoking "iwconfig <interface> power on", at least when unsetting
-> > > the broken_powersave variable.
-> > > 
-> > > 2.6.39 introduced a new iwlegacy driver for iwl4965 hardware, which was
-> > > missing power saving.  I was able to port the 2.6.38 driver up to
-> > > kernel 3.1, but it got too complicated for me with 3.2. 
-> > > 
-> > > Are there any plans to fix this power usage regression at some point in
-> > > the iwlegacy driver? I think there are still a lot of iwl4965 users out
-> > > there.
-> > Yes, adding PS support is on my iwlegacy TODO list.
-> 
-> Thanks, I'd be glad if I could help, testing etc.
+What kind of traffic are you pushing through (packet sizes?)  Are they fixed
+size, fixed rate, or ...?
 
-Hi Stanislaw,
+Paul
 
-is there any progress regarding this? If not, I could try to implement
-it in the current kernel.  However, I don't have any knowlegde about
-hardware related features.  If you have, maybe I could use your
-knowledge to do it myself.
 
-Regards,
-Tino
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org
+[mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Georgiewskiy
+Yuriy
+Sent: Monday, December 03, 2012 7:44 AM
+To: Chaoxing Lin
+Cc: linux-wireless@vger.kernel.org
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+
+On 2012-12-03 14:56 -0000, Chaoxing Lin wrote Georgiewskiy Yuriy:
+
+CL>CL>For experiment, I changed ath9k driver to disable 802.11n packet
+aggregation. The network becomes much better.
+CL>CL>It's as stable as running 802.11a only mode.
+CL>CL>So it seems that the aggregation plays a big role in in-stability of
+802.11s network with 802.11n.
+CL>CL>Any one has any idea why?
+CL>
+CL>Can you post a patch? i want test this too.
+CL>
+CL>The change is easy
+CL>In ath9k/init.c
+CL>Function ath9k_set_hw_capab()
+CL>Replace below
+CL>    if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+CL>         hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION; with
+CL>	hw->flags &= ~IEEE80211_HW_AMPDU_AGGREGATION;
+
+On first look in my case disabled aggregation reduces packet loss, link is
+more reliable, but it's also drop throughput to 15-20 Mbits/sec from about
+~50 with aggregation enabled.
+
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
 
