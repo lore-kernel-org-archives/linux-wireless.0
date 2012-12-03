@@ -1,227 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45735 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753006Ab2LKTRx (ORCPT
+Received: from mail.ultra-3eti.com ([173.13.207.162]:34511 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754000Ab2LCQde convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 14:17:53 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac82011: use frame control to differentiate probe resp/beacon
-Date: Tue, 11 Dec 2012 20:18:14 +0100
-Message-Id: <1355253494-23118-1-git-send-email-johannes@sipsolutions.net> (sfid-20121211_201757_296159_60A776B2)
+	Mon, 3 Dec 2012 11:33:34 -0500
+Received: from webmail.3eti.com (rockmx01.rock.corp [192.168.200.4]) by mail.ultra-3eti.com with ESMTP id EHQ0cLFiHf7a6x2p (version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 11:33:32 -0500 (EST)
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+Date: Mon, 3 Dec 2012 16:33:30 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C125E7@RockMX01.rock.corp> (sfid-20121203_173347_011221_629431EC)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+A 4th problem is AES-CCM pairwise key complains about "packet replay". 
+All keys are good, mpaths are good. But ping does not reply and counter in /debugfs/ieee80211/phy0/keys/[key-num]/replays keeps going up.
 
-The probe response/beacon management frame RX code passes a
-bool parameter to differentiate beacons and probe responses.
-This is useless since we have the frame and can thus use its
-frame control field. Moreover it is buggy since there is one
-call to ieee80211_rx_bss_info with a beacon frame that is
-indicated as a probe response, which is also fixed by using
-the frame control field, so do that.
+I have seen such problem many times when running 802.11s traffic. 
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c        | 50 ++++++++++++++++------------------------------
- net/mac80211/ieee80211_i.h |  3 +--
- net/mac80211/mlme.c        | 13 +++++-------
- net/mac80211/scan.c        |  9 ++++-----
- 4 files changed, 27 insertions(+), 48 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 700d0ed..e84db1b 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -425,11 +425,9 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
- }
- 
- static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
--				  struct ieee80211_mgmt *mgmt,
--				  size_t len,
-+				  struct ieee80211_mgmt *mgmt, size_t len,
- 				  struct ieee80211_rx_status *rx_status,
--				  struct ieee802_11_elems *elems,
--				  bool beacon)
-+				  struct ieee802_11_elems *elems)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	int freq;
-@@ -530,7 +528,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	bss = ieee80211_bss_info_update(local, rx_status, mgmt, len, elems,
--					channel, beacon);
-+					channel);
- 	if (!bss)
- 		return;
- 
-@@ -878,14 +876,21 @@ static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_tx_skb(sdata, skb);
- }
- 
--static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
--					 struct ieee80211_mgmt *mgmt,
--					 size_t len,
--					 struct ieee80211_rx_status *rx_status)
-+static
-+void ieee80211_rx_mgmt_probe_beacon(struct ieee80211_sub_if_data *sdata,
-+				    struct ieee80211_mgmt *mgmt, size_t len,
-+				    struct ieee80211_rx_status *rx_status)
- {
- 	size_t baselen;
- 	struct ieee802_11_elems elems;
- 
-+	BUILD_BUG_ON(offsetof(typeof(mgmt->u.probe_resp), variable) !=
-+		     offsetof(typeof(mgmt->u.beacon), variable));
-+
-+	/*
-+	 * either beacon or probe_resp but the variable field is at the
-+	 * same offset
-+	 */
- 	baselen = (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
- 	if (baselen > len)
- 		return;
-@@ -893,25 +898,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	ieee802_11_parse_elems(mgmt->u.probe_resp.variable, len - baselen,
- 				&elems);
- 
--	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, false);
--}
--
--static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
--				     struct ieee80211_mgmt *mgmt,
--				     size_t len,
--				     struct ieee80211_rx_status *rx_status)
--{
--	size_t baselen;
--	struct ieee802_11_elems elems;
--
--	/* Process beacon from the current BSS */
--	baselen = (u8 *) mgmt->u.beacon.variable - (u8 *) mgmt;
--	if (baselen > len)
--		return;
--
--	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen, &elems);
--
--	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, true);
-+	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- }
- 
- void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
-@@ -935,12 +922,9 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_rx_mgmt_probe_req(sdata, skb);
- 		break;
- 	case IEEE80211_STYPE_PROBE_RESP:
--		ieee80211_rx_mgmt_probe_resp(sdata, mgmt, skb->len,
--					     rx_status);
--		break;
- 	case IEEE80211_STYPE_BEACON:
--		ieee80211_rx_mgmt_beacon(sdata, mgmt, skb->len,
--					 rx_status);
-+		ieee80211_rx_mgmt_probe_beacon(sdata, mgmt, skb->len,
-+					       rx_status);
- 		break;
- 	case IEEE80211_STYPE_AUTH:
- 		ieee80211_rx_mgmt_auth_ibss(sdata, mgmt, skb->len);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6f36ab7..185973d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1344,8 +1344,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 			  struct ieee80211_mgmt *mgmt,
- 			  size_t len,
- 			  struct ieee802_11_elems *elems,
--			  struct ieee80211_channel *channel,
--			  bool beacon);
-+			  struct ieee80211_channel *channel);
- void ieee80211_rx_bss_put(struct ieee80211_local *local,
- 			  struct ieee80211_bss *bss);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 082d43e..a5a89ac 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2402,8 +2402,7 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 				  struct ieee80211_mgmt *mgmt, size_t len,
- 				  struct ieee80211_rx_status *rx_status,
--				  struct ieee802_11_elems *elems,
--				  bool beacon)
-+				  struct ieee802_11_elems *elems)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-@@ -2434,7 +2433,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	bss = ieee80211_bss_info_update(local, rx_status, mgmt, len, elems,
--					channel, beacon);
-+					channel);
- 	if (bss)
- 		ieee80211_rx_bss_put(local, bss);
- 
-@@ -2497,7 +2496,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	ieee802_11_parse_elems(mgmt->u.probe_resp.variable, len - baselen,
- 				&elems);
- 
--	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, false);
-+	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- 
- 	if (ifmgd->associated &&
- 	    ether_addr_equal(mgmt->bssid, ifmgd->associated->bssid))
-@@ -2578,8 +2577,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		ieee802_11_parse_elems(mgmt->u.beacon.variable,
- 				       len - baselen, &elems);
- 
--		ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems,
--				      false);
-+		ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- 		ifmgd->assoc_data->have_beacon = true;
- 		ifmgd->assoc_data->sent_assoc = false;
- 		/* continue assoc process */
-@@ -2732,8 +2730,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	ifmgd->beacon_crc = ncrc;
- 	ifmgd->beacon_crc_valid = true;
- 
--	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems,
--			      true);
-+	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- 
- 	if (ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
- 				     elems.wmm_param_len))
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index cb3df39..f0b8072 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -65,12 +65,11 @@ static bool is_uapsd_supported(struct ieee802_11_elems *elems)
- struct ieee80211_bss *
- ieee80211_bss_info_update(struct ieee80211_local *local,
- 			  struct ieee80211_rx_status *rx_status,
--			  struct ieee80211_mgmt *mgmt,
--			  size_t len,
-+			  struct ieee80211_mgmt *mgmt, size_t len,
- 			  struct ieee802_11_elems *elems,
--			  struct ieee80211_channel *channel,
--			  bool beacon)
-+			  struct ieee80211_channel *channel)
- {
-+	bool beacon = ieee80211_is_beacon(mgmt->frame_control);
- 	struct cfg80211_bss *cbss;
- 	struct ieee80211_bss *bss;
- 	int clen, srlen;
-@@ -215,7 +214,7 @@ void ieee80211_scan_rx(struct ieee80211_local *local, struct sk_buff *skb)
- 
- 	bss = ieee80211_bss_info_update(local, rx_status,
- 					mgmt, skb->len, &elems,
--					channel, beacon);
-+					channel);
- 	if (bss)
- 		ieee80211_rx_bss_put(local, bss);
- }
--- 
-1.8.0
+-----Original Message-----
+From: Chaoxing Lin 
+Sent: Monday, December 03, 2012 9:38 AM
+To: 'linux-wireless@vger.kernel.org'
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
 
+After a lot of experiments, here are various problems observed.
+
+1. The "Fail to stop Tx DMA" related issue plays a role. But not the major part. It accounts for about 3% of packet loss in my testbed.
+Is anyone looking at this issue? This issue is now very easy to recreate.
+
+2. Security Key for peer link and mesh path messed up
+
+For example, in one case,
+Device A cannot ping device B but it can ping device C. And it is seen that telnet from device A to device C and from device C it can ping device B.
+This means device A actually can reach device B. But user has to do it manually (through a third device)
+
+Below is a "reachable graph" in one of the real scenario.
+
+147 ----> 115
+    ----> 111 ------>103
+              ------>104
+              ------>113
+              ------>115
+
+Device 147 can only ping 115 and 111, although its mpath table says it has direct mpath to every node. 
+But a telnet session from 147 to 111 can ping the rest devices 103, 104, 113, 115.
+
+Further analysis peer link between 147 and 104 reveals below.
+
+147 has peer link to 104 in "ESTAB" and has all 3 keys (CCM pairwise, CMAC group key, CCM group key) installed for peer 104.
+But 104 has peer link to 147 in "LISTEN" and it does not have any keys installed for 147.
+That is to say, the peer link between 147 and 104 is bad. The worse thing is the mpath table on 147 keep saying the path to 104 is active. So all packets to 104 are sent to this peer link, but could not be decrypted on the other end.
+
+I run meshd-nl80211 compiled from auth-sae for the encryption. Does anyone know what's the problem here? Is this a protocol defect, e.g. failure to cover certain error condition? Or is it auth-sae/kernel implementation bug?
+
+
+3. 802.11n packet aggregation plays a big role in 802.11s mesh network in-stability
+
+For experiment, I changed ath9k driver to disable 802.11n packet aggregation. The network becomes much better.
+It's as stable as running 802.11a only mode.
+So it seems that the aggregation plays a big role in in-stability of 802.11s network with 802.11n.
+Any one has any idea why?
+
+
+
+
+-----Original Message-----
+From: Chaoxing Lin
+Sent: Friday, November 16, 2012 12:41 PM
+To: 'linux-wireless@vger.kernel.org'
+Subject: help: 802.11s bad performance with 802.11n enabled
+
+I set up a 7 node 802.11s mesh network and try to evaluate network performance.
+
+My first test is to evaluate packet loss.
+My test utility is very simple. Do a continuous ping to all 7 nodes. And count the ping replies. The ping rate is about 10 ping requests per second to each node.
+
+802.11a channel 40. Clean RF environment, nobody else is on this channel
+
+When 802.11n is NOT enabled, the ping loss rate is very good. Only a few packets are lost during an overnight test.
+
+However, when 802.11n (HT40+ or HT20) is enabled, the network is crazily unstable. The ping loss is about 30% or more to each node. 
+
+FYI, The 802.11n itself seems to work well with 802.11s when there are only 2 nodes (standalone). I say so because I did throughput test on a 2 node mesh with channel 40 HT40+. The throughput was good. IPERF TCP throughput is about 170Mbps out of 300Mbps (2 streams).
+
+
+Does anyone know what's going on?
+Or anyone did 802.11s performance test and can share the test data/setup, etc?
+
+
+Thanks,
+
+Chaoxing
