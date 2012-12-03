@@ -1,142 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:61796 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753405Ab2L2XIZ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40969 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567Ab2LCRmu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Dec 2012 18:08:25 -0500
-Received: by mail-ee0-f44.google.com with SMTP id b47so5615530eek.17
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Dec 2012 15:08:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <50DF4166.9080000@hauke-m.de>
-References: <1351183169-13392-1-git-send-email-hauke@hauke-m.de>
-	<CACna6rwYraTcddRHUh-5a_cQ4QkLiUKrLO5FYvnMneTtWpYEwg@mail.gmail.com>
-	<50896EA9.2090607@hauke-m.de>
-	<CADGCtVSQEthQCkcqChs1FDfoCDrJh7UOj+y6z-N+PXQATr+mkw@mail.gmail.com>
-	<CAHCALez2m+o3BfOrAy3v4M0V0c9bU+gxxjYRFxLq61m7h-zM=Q@mail.gmail.com>
-	<50DF4166.9080000@hauke-m.de>
-Date: Sun, 30 Dec 2012 03:02:58 +0400
-Message-ID: <CAHCALewma-33OBD-fpFgy_XjZ0DHQHFZhCpRRXO-awwf2nOnTw@mail.gmail.com> (sfid-20121230_000843_577978_A3A1C897)
-Subject: Re: [PATCH 1/2] ssb: add PCI ID 0x4350
-From: spameden <spameden@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Aitor Cuartango <aitor.cuartango@gmail.com>,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, m@bues.ch
-Content-Type: text/plain; charset=UTF-8
+	Mon, 3 Dec 2012 12:42:50 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/8] regulatory: clean up reg_copy_regd()
+Date: Mon,  3 Dec 2012 18:43:06 +0100
+Message-Id: <1354556593-2363-2-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184257_742431_02862755)
+In-Reply-To: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
+References: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/12/29 Hauke Mehrtens <hauke@hauke-m.de>:
-> Please stop top posting
->
-> A: Because we read from top to bottom, left to right.
-> Q: Why should I start my reply below the quoted text?
->
-> A: Because it messes up the order in which people normally read text.
-> Q: Why is top-posting such a bad thing?
->
-> A: The lost context.
-> Q: What makes top-posted replies harder to read than bottom-posted?
->
-> A: Yes.
-> Q: Should I trim down the quoted part of an email to which I'm replying?
->
-> http://www.idallen.com/topposting.html
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm sorry If I did it wrong.
+Use ERR_PTR/IS_ERR to return the result or errors
+and fix the allocation to not allocate too much.
 
->
->
-> On 12/27/2012 07:26 AM, spameden wrote:
->> Hi guys I have the same device.
->>
->> I'm wondering if it's fully supported or not by b43 driver.
->>
->> Here
->> http://linuxwireless.org/en/users/Drivers/b43?highlight=%2814e4%29#Supported_devices
->> I can see it's listed as supported in N-phy, but as Aitor said on
->> OpenWRT only b/g mode supported for some reason..
->
-> n-phy is the name of the phy, the hardware supports ieee80211n, but b43
-> does not support ieee80211n at all.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 51 +++++++++++++++++++++++++--------------------------
+ 1 file changed, 25 insertions(+), 26 deletions(-)
 
-thanks for clarification!
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b6c7ea6..e71055b 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -312,19 +312,20 @@ static bool is_user_regdom_saved(void)
+ 	return true;
+ }
+ 
+-static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+-			 const struct ieee80211_regdomain *src_regd)
++static const struct ieee80211_regdomain *
++reg_copy_regd(const struct ieee80211_regdomain *src_regd)
+ {
+ 	struct ieee80211_regdomain *regd;
+-	int size_of_regd = 0;
++	int size_of_regd;
+ 	unsigned int i;
+ 
+-	size_of_regd = sizeof(struct ieee80211_regdomain) +
+-	  ((src_regd->n_reg_rules + 1) * sizeof(struct ieee80211_reg_rule));
++	size_of_regd =
++		sizeof(struct ieee80211_regdomain) +
++		(src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule));
+ 
+ 	regd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!regd)
+-		return -ENOMEM;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
+ 
+@@ -332,8 +333,7 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+ 		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
+ 			sizeof(struct ieee80211_reg_rule));
+ 
+-	*dst_regd = regd;
+-	return 0;
++	return regd;
+ }
+ 
+ #ifdef CONFIG_CFG80211_INTERNAL_REGDB
+@@ -348,9 +348,8 @@ static DEFINE_MUTEX(reg_regdb_search_mutex);
+ static void reg_regdb_search(struct work_struct *work)
+ {
+ 	struct reg_regdb_search_request *request;
+-	const struct ieee80211_regdomain *curdom, *regdom;
++	const struct ieee80211_regdomain *curdom, *regdom = NULL;
+ 	int i, r;
+-	bool set_reg = false;
+ 
+ 	mutex_lock(&cfg80211_mutex);
+ 
+@@ -365,10 +364,7 @@ static void reg_regdb_search(struct work_struct *work)
+ 			curdom = reg_regdb[i];
+ 
+ 			if (!memcmp(request->alpha2, curdom->alpha2, 2)) {
+-				r = reg_copy_regd(&regdom, curdom);
+-				if (r)
+-					break;
+-				set_reg = true;
++				regdom = reg_copy_regd(curdom);
+ 				break;
+ 			}
+ 		}
+@@ -377,7 +373,7 @@ static void reg_regdb_search(struct work_struct *work)
+ 	}
+ 	mutex_unlock(&reg_regdb_search_mutex);
+ 
+-	if (set_reg)
++	if (!IS_ERR_OR_NULL(regdom))
+ 		set_regdom(regdom);
+ 
+ 	mutex_unlock(&cfg80211_mutex);
+@@ -1517,6 +1513,7 @@ static void reg_set_request_processed(void)
+ static int __regulatory_hint(struct wiphy *wiphy,
+ 			     struct regulatory_request *pending_request)
+ {
++	const struct ieee80211_regdomain *regd;
+ 	bool intersect = false;
+ 	int r = 0;
+ 
+@@ -1527,11 +1524,12 @@ static int __regulatory_hint(struct wiphy *wiphy,
+ 	if (r == REG_INTERSECT) {
+ 		if (pending_request->initiator ==
+ 		    NL80211_REGDOM_SET_BY_DRIVER) {
+-			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
+-			if (r) {
++			regd = reg_copy_regd(cfg80211_regdomain);
++			if (IS_ERR(regd)) {
+ 				kfree(pending_request);
+-				return r;
++				return PTR_ERR(regd);
+ 			}
++			wiphy->regd = regd;
+ 		}
+ 		intersect = true;
+ 	} else if (r) {
+@@ -1543,12 +1541,13 @@ static int __regulatory_hint(struct wiphy *wiphy,
+ 		if (r == -EALREADY &&
+ 		    pending_request->initiator ==
+ 		    NL80211_REGDOM_SET_BY_DRIVER) {
+-			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
+-			if (r) {
++			regd = reg_copy_regd(cfg80211_regdomain);
++			if (IS_ERR(regd)) {
+ 				kfree(pending_request);
+-				return r;
++				return PTR_ERR(regd);
+ 			}
+ 			r = -EALREADY;
++			wiphy->regd = regd;
+ 			goto new_request;
+ 		}
+ 		kfree(pending_request);
+@@ -2208,6 +2207,7 @@ static void print_regdomain_info(const struct ieee80211_regdomain *rd)
+ /* Takes ownership of rd only if it doesn't fail */
+ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ {
++	const struct ieee80211_regdomain *regd;
+ 	const struct ieee80211_regdomain *intersected_rd = NULL;
+ 	struct wiphy *request_wiphy;
+ 	/* Some basic sanity checks first */
+@@ -2265,8 +2265,6 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	}
+ 
+ 	if (!last_request->intersect) {
+-		int r;
+-
+ 		if (last_request->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
+ 			reset_regdomains(false);
+ 			cfg80211_regdomain = rd;
+@@ -2285,10 +2283,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		if (request_wiphy->regd)
+ 			return -EALREADY;
+ 
+-		r = reg_copy_regd(&request_wiphy->regd, rd);
+-		if (r)
+-			return r;
++		regd = reg_copy_regd(rd);
++		if (IS_ERR(regd))
++			return PTR_ERR(regd);
+ 
++		request_wiphy->regd = regd;
+ 		reset_regdomains(false);
+ 		cfg80211_regdomain = rd;
+ 		return 0;
+-- 
+1.8.0
 
->
->> I can provide all needed info for this device, I have it in my old ASUS
->> WL-500gP v1.
->>
->> On the other note there is a leaked broadcom source of wl driver from
->> Belkin F7D4401 v1.00.39 (it was posted online), I hope it helps:
->
-> We already have a spec for this phy and the n specific stuff should also
-> be in the phy code b43 uses, someone has just to add support for
-> ieee80211n to b43 in general.
-
-ok I'm gonna wait for the retail support I guess..
-
-
->
->> http://uploadmirrors.com/download/XLVMMGAJ/Belkin-F7D4401-v1.00.39.tar.7z
->> http://www.mirrorcreator.com/files/1DJEOCRJ/Belkin-F7D4401-v1.00.39.tar.7z_links
->> http://www.digzip.com/files/1L27MJRC/Belkin-F7D4401-v1.00.39.tar.7z
->> http://www.multiupload.nl/P6B0GK9U6R
->>
->> hopefully it'd help.
->>
->> 2012/10/27 Aitor Cuartango <aitor.cuartango@gmail.com
->> <mailto:aitor.cuartango@gmail.com>>
->>
->>     If you need more information about the device let me know.
->>
->>     With the last openwrt's trunk i can create a wifi network but only
->>     in b/g mode.
->>
->>     I've test editing manually /etc/config/wireless  and change :
->>             option hwmode '11g'
->>     with
->>             option hwmode '11ng'
->>
->>     but it does not starts, perhaps i need to do more changes in this
->>     file...
->>
->>
->>     Thanks all!
->>     aitor
->>
->>
->>     2012/10/25 Hauke Mehrtens <hauke@hauke-m.de <mailto:hauke@hauke-m.de>>:
->>     > On 10/25/2012 06:47 PM, Rafał Miłecki wrote:
->>     >> 2012/10/25 Hauke Mehrtens <hauke@hauke-m.de
->>     <mailto:hauke@hauke-m.de>>:
->>     >>> 14e4:4350 is found on a Broadcom BCM43222.
->>     >>
->>     >> Huh, I expected BCM43222 to be BCMA based, interesting. Could you
->>     >> provide ssb log for scanning (cores listing) and PHY&RADIO info?
->>     >>
->>     >
->>     > It is not my device, but Aitor found it, here are the details:
->>     > http://comments.gmane.org/gmane.comp.embedded.openwrt.user/2031
->>     >
->>     > Here is the log you requested, without the patches:
->>     > ...
->>     > b43-pci-bridge 0000:00:02.0: setting latency timer to 64
->>     > ssb: Found chip with id 0xA8D6, rev 0x00 and package 0x08
->>     > ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x1E, vendor 0x4243)
->>     > ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x10, vendor 0x4243)
->>     > ssb: Core 2 found: PCI (cc 0x804, rev 0x0E, vendor 0x4243)
->>     > ssb: chipcommon status is 0x40040
->>     > ssb: Found rev 2 PMU (capabilities 0x044C3002)
->>     > ssb: ERROR: PLL init unknown for device A8D6
->>     > ssb: ERROR: PMU resource config unknown for device A8D6
->>     > ssb: SPROM offset is 0x1000
->>     > ssb: SPROM revision 8 detected.
->>     > b43-phy0: Broadcom 43222 WLAN found (core revision 16)
->>     > ssb: Sonics Silicon Backplane found on PCI device 0000:00:02.0
->>     > ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
->>     > ...
->>     >
->>     > Hauke
->
->
