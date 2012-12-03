@@ -1,28 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:37788 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751536Ab2LQLLn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40967 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755743Ab2LCRmt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 06:11:43 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAHdPZaPQNQ1WS5Qkb4FpmmOX7mXL10HsdaXf5dctp2hd2T0Sow@mail.gmail.com>
-References: <20686.63778.840426.61474@pilspetsen.it.uu.se>
-	<CAHdPZaPQNQ1WS5Qkb4FpmmOX7mXL10HsdaXf5dctp2hd2T0Sow@mail.gmail.com>
-Date: Mon, 17 Dec 2012 06:11:42 -0500
-Message-ID: <CAHdPZaO5FjE0oRKtmfkmjJMPYgUxwoOpN-5gzW8-LqznzqVocw@mail.gmail.com> (sfid-20121217_121158_490157_897F9FD7)
-Subject: Re: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to
- initialize hw
-From: "devendra.aaru" <devendra.aaru@gmail.com>
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 3 Dec 2012 12:42:49 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Tfa2a-0006rI-4H
+	for linux-wireless@vger.kernel.org; Mon, 03 Dec 2012 18:42:48 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/8] regulatory cleanups
+Date: Mon,  3 Dec 2012 18:43:05 +0100
+Message-Id: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184252_696159_3F67F6A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I am seeing this line actually when i do vim +389 net/wireless/core.c.
->
->                 u16 all_iftypes = 0;
->
-> its good if you tell us the top sha1 of yours?
+Since new regulatory code doesn't seem to be forthcoming,
+I've started to clean up the code as a first step towards
+making it actually understandable.
 
-i am sorry, btw mine's at a4f1de176614f634c367e5994a7bcc428c940df0.
+johannes
+
