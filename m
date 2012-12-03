@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51236 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2998 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751744Ab2LTNcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 08:32:06 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+	id S1751142Ab2LCSz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2012 13:55:29 -0500
+Message-ID: <50BCF57E.8020204@broadcom.com> (sfid-20121203_195534_168277_8D1F13C1)
+Date: Mon, 3 Dec 2012 19:54:54 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3/3] iwlegacy: allow to enable PS
-Date: Thu, 20 Dec 2012 14:31:53 +0100
-Message-Id: <1356010313-9782-3-git-send-email-sgruszka@redhat.com> (sfid-20121220_143210_445837_A9EE4AA0)
-In-Reply-To: <1356010313-9782-1-git-send-email-sgruszka@redhat.com>
-References: <1356010313-9782-1-git-send-email-sgruszka@redhat.com>
+cc: "Kalle Valo" <kvalo@adurom.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Seth Forshee" <seth.forshee@canonical.com>
+Subject: Re: [PATCH V2 v3.7] brcmsmac: handle packet drop on enqueuing
+ correctly
+References: <1353961396-7061-1-git-send-email-arend@broadcom.com>
+ <50BC63E5.9020101@broadcom.com> <871uf7w6w0.fsf@purkki.adurom.net>
+ <20121203183912.GE26027@tuxdriver.com>
+In-Reply-To: <20121203183912.GE26027@tuxdriver.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Power save support was removed from iwlegacy due to possible firmware
-crashes problems it cause. I use to plan first inspect code to find
-reason of problems, fix them and then allow to enable PS. But
-realistically - code inspection will not happen, so let's do it, and
-wait for eventual bug reports.
+On 12/03/2012 07:39 PM, John W. Linville wrote:
+> On Mon, Dec 03, 2012 at 04:24:31PM +0200, Kalle Valo wrote:
+>> Hi Arend,
+>>
+>> "Arend van Spriel" <arend@broadcom.com> writes:
+>>
+>>> What is keeping you from picking up this patch? Anything I should do?
+>>> This V2 removed the no-op changes in ampdu.c that Seth indicated so...
+>>
+>> Most likely it's too late. Dave already told that that John's previous
+>> pull request might not make it to 3.7.
+> 
+> Yes, that.  Also, given the merge difficulties this creates and the
+> fact that Seth's patch is already queued for 3.8, maybe you should
+> consider sending this for the 3.7 stable series when it opens?
+> 
+> John
+> 
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    5 ++++-
- drivers/net/wireless/iwlegacy/4965-mac.c |    4 ++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+That was my plan when it would not get in for 3.7.0. I wanted it to go
+to stable anyway as the fix is also needed for 3.6.x stable. Just wanted
+to get it upstream fixed first.
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 7a6ce09..5e3ac6c 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3551,7 +3551,8 @@ il3945_setup_mac(struct il_priv *il)
- 	hw->vif_data_size = sizeof(struct il_vif_priv);
- 
- 	/* Tell mac80211 our characteristics */
--	hw->flags = IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_SPECTRUM_MGMT;
-+	hw->flags = IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_SPECTRUM_MGMT |
-+		    IEEE80211_HW_SUPPORTS_PS | IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
- 
- 	hw->wiphy->interface_modes =
- 	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
-@@ -3560,6 +3561,8 @@ il3945_setup_mac(struct il_priv *il)
- 	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS |
- 	    WIPHY_FLAG_IBSS_RSN;
- 
-+	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-+
- 	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX_3945;
- 	/* we create the 802.11 header and a zero-length SSID element */
- 	hw->wiphy->max_scan_ie_len = IL3945_MAX_PROBE_REQUEST - 24 - 2;
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index eb68c83..820f748 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -5712,8 +5712,8 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
- 	hw->flags =
- 	    IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_AMPDU_AGGREGATION |
- 	    IEEE80211_HW_NEED_DTIM_PERIOD | IEEE80211_HW_SPECTRUM_MGMT |
--	    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
--
-+	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | IEEE80211_HW_SUPPORTS_PS |
-+	    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
- 	if (il->cfg->sku & IL_SKU_N)
- 		hw->flags |=
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
--- 
-1.7.1
+For 3.8 the fix has been reworked on top of Seth patches and is in
+wireless-next (c4dea35e brcmsmac: handle packet drop during transmit
+correctly). Should I refer to that commit when submitting to stable
+(although it is a slightly different patch).
+
+Gr. AvS
 
