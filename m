@@ -1,64 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37793 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756079Ab2LNN5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 08:57:53 -0500
-Message-ID: <50CB3058.6020206@hauke-m.de> (sfid-20121214_145818_558259_E95A362D)
-Date: Fri, 14 Dec 2012 14:57:44 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Kevin McCready <kevin1mccready@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Problem in FAQ
-References: <CAKoT1EZh=u3bA6Jcftmsj8cNbGEctVfm_Boi7umzHe1T4EZuTw@mail.gmail.com> <50CB1D7D.2030301@hauke-m.de> <CAKoT1EYRi9pCc9A9mGs3OKGhgrNOL6OJFm87qfmp+hSRaNhZjA@mail.gmail.com>
-In-Reply-To: <CAKoT1EYRi9pCc9A9mGs3OKGhgrNOL6OJFm87qfmp+hSRaNhZjA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44180 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755554Ab2LCOtL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2012 09:49:11 -0500
+Message-ID: <1354546148.17107.5.camel@deadeye.wl.decadent.org.uk> (sfid-20121203_154919_592318_6D01C190)
+Subject: Re: [PATCH] linux-firmware: add Marvell USB8797-B0 firmware image
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>,
+	Jackey Shen <Jackey.Shen@amd.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 03 Dec 2012 14:49:08 +0000
+In-Reply-To: <1354229289-28989-1-git-send-email-bzhao@marvell.com>
+References: <1354229289-28989-1-git-send-email-bzhao@marvell.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-Kp0yWjjtVsqZ3Z9g49BC"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/14/2012 01:50 PM, Kevin McCready wrote:
-> It seems the output of lspci -nn and lspci are the same in this case.
-> I don't know how to extract the pci ID from the output.
 
-No lspci -nn has a different output, it also prints the pci id of the
-devices.
+--=-Kp0yWjjtVsqZ3Z9g49BC
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Please do not remove the mailing list from cc and stop top posting.
+On Thu, 2012-11-29 at 14:48 -0800, Bing Zhao wrote:
+> Version 14.69.11.p179
+>=20
+> This is for Marvell Avastar 88W8797 Rev B0 combo chip with USB
+> interfaces for both WLAN and Bluetooth.
+>=20
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> Signed-off-by: Frank Huang <frankh@marvell.com>
+[...]
 
-Hauke
-> 
-> On Sat, Dec 15, 2012 at 1:37 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> On 12/14/2012 09:35 AM, Kevin McCready wrote:
->>>
->>> FAQ says: Forget about XXX, what really matters is PCI or USB
->>> (depending on the bus your device uses) ID pair: VID:PID. So to find
->>> out if your device is supported, use lspci -nn or lsusb to learn the
->>> ID pair.
->>>
->>> I have no idea what this means.
->>>
->>> I did lspci and got
->>> k@k-Presario-CQ57-Notebook-PC:
->>> ~$ lspci
->> ...
->>> 02:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
->>> 802.11b/g/n WiFi Adapter (rev 01)
->> ...
->>
->> You have a Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
->> Adapter and it should be supported by Linux since 2.6.38. If you are
->> using such a kernel version or a more recent one and this device is
->> still not recognized by Linux, please run "lspci -nn" like the FAQ says
->> to get the pci id.
->>
->>>
->>> I have no idea whether my wireless problem is a usb or pci problem.
->>> I have no idea what the pair is.
->>>
->>> I would be grateful for a better FAQ to help me.
->>
-> 
-> 
-> 
+Applied, thanks.
 
+Ben.
+
+--=20
+Ben Hutchings
+Always try to do things in chronological order;
+it's less confusing that way.
+
+--=-Kp0yWjjtVsqZ3Z9g49BC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAULy75Oe/yOyVhhEJAQpxCQ/8Cjb4O4MVJQqwhqnsvfXlrhzysz4DpGlF
+adEC2KDyEFn+sKVxZMB/J0QS+WZUsfmRHvNT5O6xJ6XrY4ZTBjxTJ9Qee9/Cnv2m
+CNDZr4D+OteQDWe10XHLvJic9HP/df0WsXUnwbId9/QP+ycoTssW+SgiSL5Z4CuY
+ho33hVpRvec4abYPIGANmVguk4sWSS5RUzn8FaS+ns1TdPRhbe/GwofDO8V/AUNc
+xk0MiavzfPFBr+EoHx3dTjs9eeu3F8PJPNWOUKijHn806yzCY0qf/43hNOg393Lv
+k2cQkyz5ZubeMt9oHstgsxvyzi9ba8uQTALQTvh75D6+rPP7yks21rC1wMITho0i
++ldCjsmq1yFEEkVVomSAv2jhOG0uZVBePddCgwhmUfAjxPjIn8PStobKBw0eJIgg
+8XSuLuNyemkcrO5fEnT/Y2iLh/hCBHMcFhrh0Df1BLDr16ioWtmk+xVsIqu7BY90
+xSrumwbNIbYZTAhfsn5I4Ixi6bbuZlHeJqYEeJYY4+OspYWTFK5897JaJl56KpJ/
+3EPmivooekDbsbiWtjyXMELy6Ke1sWDixMWfRPSisw9YUcIqWUFNnuRSz42+fJLq
+PVGJ7pFGID/c6aLk9RzOJrW1vhVEPyW9KrDouG0pqYQML1mMQla4DqBibN7Yj+tR
+mXaOFCz/yRs=
+=3M0v
+-----END PGP SIGNATURE-----
+
+--=-Kp0yWjjtVsqZ3Z9g49BC--
