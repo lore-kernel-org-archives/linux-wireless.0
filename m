@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59031 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932795Ab2LGQKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 11:10:11 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] brcmsmac: add support for BCM43224 with PCI id of 14e4:a8d8
-Date: Fri,  7 Dec 2012 17:10:03 +0100
-Message-Id: <1354896603-5803-1-git-send-email-hauke@hauke-m.de> (sfid-20121207_171024_430190_27B0A687)
+Received: from hotel311.server4you.de ([85.25.146.15]:37221 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371Ab2LCIXb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2012 03:23:31 -0500
+Message-ID: <50BC6181.8080307@monom.org> (sfid-20121203_092334_779667_BAC03FC2)
+Date: Mon, 03 Dec 2012 09:23:29 +0100
+From: Daniel Wagner <wagi@monom.org>
+MIME-Version: 1.0
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
+ support
+References: <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org> <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org> <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org> <50AC07F2.8000400@monom.org> <50ACA28F.9010800@broadcom.com> <50ACA55F.5050406@monom.org> <20121121143528.GC23606@thinkpad-t410> <20121126193655.GF4556@thinkpad-t410> <50B3DD38.5060808@monom.org>
+In-Reply-To: <50B3DD38.5060808@monom.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This device can be found on some embedded devices connected to a
-Broadcom SoC like the BCM4718.
-I tested this with my Netgear WNDR3400 v1.
+Hi Seth,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+On 26.11.2012 22:20, Daniel Wagner wrote:
+> On 26.11.2012 20:36, Seth Forshee wrote:
+>> On Wed, Nov 21, 2012 at 08:35:28AM -0600, Seth Forshee wrote:
+>>>> My 'test' setup is following: I downloaded a larger file and let a
+>>>> youtube
+>>>> video play. With tracing enabled the download and the playback did
+>>>> work nicely.
+>>>>
+>>>> Without tracing enabled playing back only a youtube video was
+>>>> 'triggering'
+>>>> the problem. It downloads a few seconds of content in a burst and
+>>>> then the playback
+>>>> starts. Under normal conditions, the app will continue downloading
+>>>> the video at a
+>>>> lower rate. But this normally doesn't happen right now. Often it
+>>>> will just stop
+>>>> working and often the connection is completely blocked, e.g. pinging
+>>>> a host
+>>>> wont work.
+>>>
+>>> I'll see if I can reproduce, but if it's specific to the AP then I may
+>>> not have any luck. Don't expect to hear much from me until next week
+>>> though; I'm on holiday starting today and will be visiting family.
+>>
+>> It seems I'm unable to reproduce the problem with any of the APs
+>> available to me, unfortunately.
+>
+> I tried it again with disabled the TX trace but I can't reproduce it
+> either. Well, I am sick of this AP and I might just get a better one
+> (which should be fairly simple).
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 2599cd0..17594de 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4500,7 +4500,8 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 
- 	/* check device id(srom, nvram etc.) to set bands */
- 	if (wlc_hw->deviceid == BCM43224_D11N_ID ||
--	    wlc_hw->deviceid == BCM43224_D11N_ID_VEN1)
-+	    wlc_hw->deviceid == BCM43224_D11N_ID_VEN1 ||
-+	    wlc_hw->deviceid == BCM43224_CHIP_ID)
- 		/* Dualband boards */
- 		wlc_hw->_nbands = 2;
- 	else
-@@ -5653,7 +5654,7 @@ static bool brcms_c_chipmatch_pci(struct bcma_device *core)
- 		return false;
- 	}
- 
--	if (device == BCM43224_D11N_ID_VEN1)
-+	if (device == BCM43224_D11N_ID_VEN1 || device == BCM43224_CHIP_ID)
- 		return true;
- 	if ((device == BCM43224_D11N_ID) || (device == BCM43225_D11N2G_ID))
- 		return true;
--- 
-1.7.10.4
+FYI, I got my old Netgear 11g AP out and I get a very 'smooth' wifi 
+experience.
 
+If you like you can add Tested-by tag :)
+
+cheers,
+daniel
