@@ -1,100 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:44122 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751487Ab2LJRH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 12:07:29 -0500
-Message-ID: <1355159205.3738.63.camel@cumari.coelho.fi> (sfid-20121210_180735_323165_68646BA4)
-Subject: Re: [PATCH 20/20] wlcore: Always pass DMA-able buffers to mmc
- functions
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>, Ido Yariv <ido@wizery.com>
-Date: Mon, 10 Dec 2012 19:06:45 +0200
-In-Reply-To: <1354095769-8724-21-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-21-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:45191 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750828Ab2LCSxI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2012 13:53:08 -0500
+Received: by mail-wi0-f170.google.com with SMTP id hq7so33692wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 10:53:07 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <201212031611.57351.s.L-H@gmx.de>
+References: <201212031611.57351.s.L-H@gmx.de>
+Date: Mon, 3 Dec 2012 19:53:06 +0100
+Message-ID: <CAGXE3d-xwQArEMM030ht04JDJueHTX3YJp+O6Mmt+LVaPpp1Cg@mail.gmail.com> (sfid-20121203_195316_293660_8445BF89)
+Subject: Re: rt2500usb/ kernel 3.7+: WARNING: at net/wireless/core.c:389
+ wiphy_register+0x3fd/0x431 [cfg80211]()
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
-> From: Ido Yariv <ido@wizery.com>
-> 
-> Some of the mmc drivers initiate DMA transfers with buffers passed from
-> higher layers. This means that the driver shouldn't ever pass non
-> DMA-able buffers, such as ones that are unaligned, allocated on the
-> stack or static.
-> 
-> Fix a couple of calls to the mmc layer in which buffers which weren't
-> necessarily DMA-able were passed.
-> 
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+On Mon, Dec 3, 2012 at 4:11 PM, Stefan Lippers-Hollmann <s.L-H@gmx.de> wrote:
+> Using kernel v3.7-rc7-176-g7e5530a (current mainline HEAD), I notice
+> the following WARN_ON() triggering with rt2500usb and no wireless
+> interface appears.
 
-[...]
+Mind to try the patch below?
 
-> diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
-> index 5897747..70f9bdc 100644
-> --- a/drivers/net/wireless/ti/wlcore/io.h
-> +++ b/drivers/net/wireless/ti/wlcore/io.h
-> @@ -105,13 +105,12 @@ static inline int __must_check wlcore_raw_read32(struct wl1271 *wl, int addr,
->  {
->  	int ret;
->  
-> -	ret = wlcore_raw_read(wl, addr, &wl->buffer_32,
-> -			      sizeof(wl->buffer_32), false);
-> +	ret = wlcore_raw_read(wl, addr, wl->buffer_32, sizeof(u32), false);
->  	if (ret < 0)
->  		return ret;
->  
->  	if (val)
-> -		*val = le32_to_cpu(wl->buffer_32);
-> +		*val = le32_to_cpu(*wl->buffer_32);
->  
->  	return 0;
->  }
-> @@ -119,9 +118,8 @@ static inline int __must_check wlcore_raw_read32(struct wl1271 *wl, int addr,
->  static inline int __must_check wlcore_raw_write32(struct wl1271 *wl, int addr,
->  						  u32 val)
->  {
-> -	wl->buffer_32 = cpu_to_le32(val);
-> -	return wlcore_raw_write(wl, addr, &wl->buffer_32,
-> -				sizeof(wl->buffer_32), false);
-> +	*wl->buffer_32 = cpu_to_le32(val);
-> +	return wlcore_raw_write(wl, addr, wl->buffer_32, sizeof(u32), false);
->  }
->  
->  static inline int __must_check wlcore_read(struct wl1271 *wl, int addr,
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index 1793a82..e4ff66a 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -5890,8 +5890,17 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
->  		goto err_fwlog;
->  	}
->  
-> +	wl->buffer_32 = kmalloc(sizeof(u32), GFP_KERNEL);
-> +	if (!wl->buffer_32) {
-> +		ret = -ENOMEM;
-> +		goto err_mbox;
-> +	}
-> +
->  	return hw;
->  
-> +err_mbox:
-> +	kfree(wl->mbox);
-> +
->  err_fwlog:
->  	free_page((unsigned long)wl->fwlog);
+Thanks,
+Helmut
 
 
-Can't we change sizeof(u32) to sizeof(__le32) or sizeof(*wl->buffer_32)
-just for consistency?
 
-I'll change it to the latter if you agree.
+>From 4e4223674e2e76ca7a8e449fccd1e0a2d326fc7b Mon Sep 17 00:00:00 2001
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Date: Mon, 3 Dec 2012 19:45:42 +0100
+Subject: [PATCH] rt2x00: Only specify interface combinations if more then one
+ interface is possible
 
---
-Luca.
+Otherwise this triggers a warning in cfg80211, from net/wireless/core.c:
 
+	/* Combinations with just one interface aren't real */
+	if (WARN_ON(c->max_interfaces < 2))
+
+This was introduced in commit 55d2e9da744ba11eae900b4bfc2da72eace3c1e1:
+rt2x00: Replace open coded interface checking with interface combinations.
+
+Reported-by: Stefan Lippers-Hollmann <s.L-H@gmx.de>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c
+b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 69097d1..dafb448 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1123,6 +1123,9 @@ static inline void
+rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
+ 	struct ieee80211_iface_limit *if_limit;
+ 	struct ieee80211_iface_combination *if_combination;
+
++	if (rt2x00dev->ops->max_ap_intf < 2)
++		return;
++
+ 	/*
+ 	 * Build up AP interface limits structure.
+ 	 */
+-- 
+1.8.0
