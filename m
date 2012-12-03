@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:51515 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753793Ab2LEVDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 16:03:41 -0500
-Message-ID: <1354741378.6234.88.camel@cumari.coelho.fi> (sfid-20121205_220344_785382_7BCF6041)
-Subject: Re: [PATCH 05/20] wlcore: increase scan dwell times if no activity
-From: Luciano Coelho <coelho@ti.com>
-To: Eyal Shapira <eyal@wizery.com>
-CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
-Date: Wed, 5 Dec 2012 23:02:58 +0200
-In-Reply-To: <CAF8O4-xizhg8T4eQ13BGLR=ZDYz95+6zEWjW8HchW7CfUrfQMQ@mail.gmail.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-6-git-send-email-arik@wizery.com>
-	 <1354706476.6234.50.camel@cumari.coelho.fi>
-	 <CAF8O4-xizhg8T4eQ13BGLR=ZDYz95+6zEWjW8HchW7CfUrfQMQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:40680 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751130Ab2LCGTE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2012 01:19:04 -0500
+Message-ID: <50BC4453.2070705@posedge.com> (sfid-20121203_071908_749727_37C8158C)
+Date: Mon, 03 Dec 2012 11:48:59 +0530
+From: Saravana <saravanad@posedge.com>
 MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add debugfs file for last rx rate
+References: <50B77013.6040508@posedge.com> <50BB4BC5.1010806@openwrt.org>
+In-Reply-To: <50BB4BC5.1010806@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-12-05 at 14:19 +0200, Eyal Shapira wrote:
-> On 5 December 2012 13:21, Luciano Coelho <coelho@ti.com> wrote:
-> >
-> >
-> > IMO it would have been nicer to keep the existing ones as they are and
-> > not change the semantics.  Then add the new ones with another name.
-> > Maybe something like "max_dwell_time_active_long", which is more
-> > generic.
-> >
-> > It is possible that we will find more scenarios where this long scans
-> > could be used (eg. if it would be possible to identify whether there are
-> > any low latency TIDs running or not).
-> >
+On 12/02/2012 06:08 PM, Felix Fietkau wrote:
+> On 2012-11-29 3:24 PM, Saravana wrote:
+>> Add a debugfs file showing the rate at which
+>> the last packet is received.
+>>
+>> Signed-off-by: Saravana <saravanad@posedge.com>
+> What's the point of adding debugfs files for data which is already
+> available via nl80211?
 > 
-> Sure. I'll respin it.
-
-BTW, please take Arik's v2 which was sent to the list on Nov 30th before
-you make your updates.  It has a mac80211 API change taken into account.
-
---
-Luca.
+The debugfs is a repository of statistics. Many of the statistics like
+tx/rx bytes/packets, retries, signal,power etc which are available via nl80211(iw)
+are already available in debugfs. For the sake of completeness and to maintain
+uniformity the last rx rate is added to debugfs.
+> - Felix
+> 
 
