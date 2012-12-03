@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:42918 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553Ab2LBQ0h (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40972 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755844Ab2LCRmv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 11:26:37 -0500
-Received: by mail-vc0-f174.google.com with SMTP id d16so1095186vcd.19
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Dec 2012 08:26:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1354465442-1028-1-git-send-email-juhosg@openwrt.org>
-References: <1354465442-1028-1-git-send-email-juhosg@openwrt.org>
-Date: Sun, 2 Dec 2012 17:26:36 +0100
-Message-ID: <CAOZOX0VN4fs1uWQOJPkJ1CXvkrgEHDCcKq0rPRTsMCBCd8u7kw@mail.gmail.com> (sfid-20121202_172641_535266_032A0AF6)
-Subject: Re: [PATCH] rt2x00: rt2800lib: remove trailing semicolons from
- RFCSR3_* defines
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 3 Dec 2012 12:42:51 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/8] regulatory: simplify regulatory_hint_11d
+Date: Mon,  3 Dec 2012 18:43:08 +0100
+Message-Id: <1354556593-2363-4-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184301_618707_75E0FE1A)
+In-Reply-To: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
+References: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 2, 2012 at 5:24 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+There's no need to unlock before calling
+queue_regulatory_request(), so simplify
+the function.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800.h |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index 6d67c3e..1157b06 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -1993,8 +1993,8 @@ struct mac_iveiv_entry {
->   */
->  #define RFCSR3_K                       FIELD8(0x0f)
->  /* Bits [7-4] for RF3320 (RT3370/RT3390), on other chipsets reserved */
-> -#define RFCSR3_PA1_BIAS_CCK            FIELD8(0x70);
-> -#define RFCSR3_PA2_CASCODE_BIAS_CCKK   FIELD8(0x80);
-> +#define RFCSR3_PA1_BIAS_CCK            FIELD8(0x70)
-> +#define RFCSR3_PA2_CASCODE_BIAS_CCKK   FIELD8(0x80)
->
->  /*
->   * FRCSR 5:
-> --
-> 1.7.10
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3da03ab..877ff5d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1843,12 +1843,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	request->initiator = NL80211_REGDOM_SET_BY_COUNTRY_IE;
+ 	request->country_ie_env = env;
+ 
+-	mutex_unlock(&reg_mutex);
+-
+ 	queue_regulatory_request(request);
+-
+-	return;
+-
+ out:
+ 	mutex_unlock(&reg_mutex);
+ }
+-- 
+1.8.0
+
