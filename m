@@ -1,80 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f202.google.com ([209.85.217.202]:47100 "EHLO
-	mail-lb0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753858Ab2LEVFd (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:49630 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049Ab2LCUVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 16:05:33 -0500
-Received: by mail-lb0-f202.google.com with SMTP id s4so224474lbc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2012 13:05:31 -0800 (PST)
-Subject: [PATCH 09/12] iwlegacy: collapse wrapper for
-	pcie_capability_read_word()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 05 Dec 2012 13:58:06 -0700
-Message-ID: <20121205205806.13851.18014.stgit@bhelgaas.mtv.corp.google.com> (sfid-20121205_220535_883851_40AD5528)
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+	Mon, 3 Dec 2012 15:21:39 -0500
+Received: by mail-wg0-f46.google.com with SMTP id dr13so1841262wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 12:21:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <50BD03EF.3010504@01019freenet.de>
+References: <20121203115632.GA2490@redhat.com>
+	<50BCB3A3.4090708@01019freenet.de>
+	<201212031629.16806.chunkeey@googlemail.com>
+	<50BD03EF.3010504@01019freenet.de>
+Date: Mon, 3 Dec 2012 21:21:38 +0100
+Message-ID: <CAGXE3d-MFLsQr1xdWqk0bVdFj2VR+Bspffazaka3NzvWPusLUg@mail.gmail.com> (sfid-20121203_212143_050069_7FCBBDDA)
+Subject: Re: [PATCH 1/2] mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Francisco Pina Martins <f.pinamartins@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-il_pcie_link_ctl() has only one call site and no longer provides any useful
-abstraction, so collapse it into the caller.
+Hi,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: "John W. Linville" <linville@tuxdriver.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless@vger.kernel.org
----
- drivers/net/wireless/iwlegacy/common.c |    5 +++--
- drivers/net/wireless/iwlegacy/common.h |    8 --------
- 2 files changed, 3 insertions(+), 10 deletions(-)
+On Mon, Dec 3, 2012 at 8:56 PM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> Christian Lamparter wrote:
+>> On Monday, December 03, 2012 03:13:55 PM Andreas Hartmann wrote:
+>>> Stanislaw Gruszka wrote:
+>>>> Commit f0425beda4d404a6e751439b562100b902ba9c98 "mac80211: retry sending
+>>>> failed BAR frames later instead of tearing down aggr" caused regression
+>>>> on rt2x00 hardware (connection hangs).
+>>>
+>>> This patch caused a problem, too, with carl9170
+>>> (http://thread.gmane.org/gmane.linux.kernel.wireless.general/92203/focus=92376).
+>>> How did they fix it (the thread unfortunately ends without any solution
+>>> / patch).
+>>
+>> This was fixed by: carl9170: fix HT peer BA session corruption
+>> (c9122c0d63a50 in wireless-testing). The issue here is that the
+>> hardware does not set the tx success bit when it receives a
+>> BA for a sent BAR [looks like it is expecting a legacy ACK?!
+>> but who knows - the original vendor driver [otus] didn't really
+>> deal with BARs anyway].
+>
+> If I got Helmut correctly here
+> (http://news.gmane.org/find-root.php?group=gmane.linux.kernel.wireless.general&article=83762),
+> rt2x00pci could have a related problem (probably missing tx status).
+>
+> Wouldn't it be an idea to try a similar approach?
+>
+> https://kernel.googlesource.com/pub/scm/linux/kernel/git/linville/wireless-testing/+/c9122c0d63a50bab0a97dc936a38c0f921b6930e^!/
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 318ed3c..1811507 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -1183,8 +1183,9 @@ EXPORT_SYMBOL(il_power_update_mode);
- void
- il_power_initialize(struct il_priv *il)
- {
--	u16 lctl = il_pcie_link_ctl(il);
-+	u16 lctl;
- 
-+	pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
- 	il->power_data.pci_pm = !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
- 
- 	il->power_data.debug_sleep_level_override = -1;
-@@ -4233,7 +4234,7 @@ il_apm_init(struct il_priv *il)
- 	 *    power savings, even without L1.
- 	 */
- 	if (il->cfg->set_l0s) {
--		lctl = il_pcie_link_ctl(il);
-+		pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
- 		if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
- 		    PCI_CFG_LINK_CTRL_VAL_L1_EN) {
- 			/* L1-ASPM enabled; disable(!) L0S  */
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index b4bb813..c9a5022 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1829,14 +1829,6 @@ int il_enqueue_hcmd(struct il_priv *il, struct il_host_cmd *cmd);
-  * PCI						     *
-  *****************************************************/
- 
--static inline u16
--il_pcie_link_ctl(struct il_priv *il)
--{
--	u16 pci_lnk_ctl;
--	pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &pci_lnk_ctl);
--	return pci_lnk_ctl;
--}
--
- void il_bg_watchdog(unsigned long data);
- u32 il_usecs_to_beacons(struct il_priv *il, u32 usec, u32 beacon_interval);
- __le32 il_add_beacon_time(struct il_priv *il, u32 base, u32 addon,
+Yep, this makes definitely sense! And since we can copy big parts of
+the carl9170 patch :D this shouldn't be too much work hopefully ...
 
+Helmut
