@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:43118 "EHLO arrakis.dune.hu"
+Received: from mms2.broadcom.com ([216.31.210.18]:3367 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752766Ab2LLTMG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 14:12:06 -0500
-Message-ID: <50C8D705.3090304@openwrt.org> (sfid-20121212_201211_847324_A0445057)
-Date: Wed, 12 Dec 2012 20:12:05 +0100
-From: Gabor Juhos <juhosg@openwrt.org>
+	id S1751165Ab2LCUk0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2012 15:40:26 -0500
+Message-ID: <50BD0E35.8030807@broadcom.com> (sfid-20121203_214029_946261_9ECD60EB)
+Date: Mon, 3 Dec 2012 21:40:21 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Daniel Golle <dgolle@allnet.de>, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com, helmut.schaa@googlemail.com,
-	gwingerde@gmail.com, john@phrozen.org
-Subject: Re: [PATCH 1/3] rt2x00: allow overriding eeprom through platform_data
-References: <20121211100350.GA7813@earthship.arig> <20121212073627.GB2253@redhat.com>
-In-Reply-To: <20121212073627.GB2253@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: brcmsmac: Data bus error in reading tsf_random
+References: <50BAB095.2070103@hauke-m.de>
+In-Reply-To: <50BAB095.2070103@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012.12.12. 8:36 keltezéssel, Stanislaw Gruszka írta:
-> Hi 
+On 12/02/2012 02:36 AM, Hauke Mehrtens wrote:
+> Hi Arend,
 > 
-> I have one additional question:
+> I am getting a Data bus error when brcmsmac tries to read tsf_random in
+> brcms_c_wme_setparams. This does not happen when I add a printk
+> somewhere near that read of tsf_random or when I replace the read with a
+> constant. In b43 this code works, without this error for me, see
+> b43_qos_params_upload(). With the BCM4716 I do not have this problem. It
+> could be that this is caused by the broken PCIe controller in the BCM4716.
+
+I can look for known workarounds but I am afraid you know way more about
+the BCM4716 than I do.
+
+> I am using brcmsmac from compat-wireless 2012-09-07, but I have also
+> tried the most recent brcmsmac code from wireless-testing. brcmsmac uses
+> the normal firmware from linux-firmware and I have also tried the new
+> firmware posted some days ago with the same result.
 > 
-> On Tue, Dec 11, 2012 at 12:03:53PM +0200, Daniel Golle wrote:
->> +	if (rt2x00_is_soc(rt2x00dev) ||
->> +	    test_bit(REQUIRE_EEPROM_FILE, &rt2x00dev->cap_flags))
->> +		rt2800pci_read_eeprom_file(rt2x00dev);
-> Is || correct here ?
+> I am using a BCM43224 connected to the PCIe controller of the BCM4716.
+> 
+> Are there any special requirements for reading tsf_random under mips?
 
-There are various embedded boards where a Ralink WiFi chip is soldered directly
-onto the PCB and that does not have a separate EEPROM. The EEPROM data is stored
-in the main flash of the board. The '||' allows to load the EEPROM data via
-firmware API for such PCI devices as well.
+Not that I recall.
 
-However, the condition can be simplified. The REQUIRE_EEPROM_FILE bit is always
-set for SoC devices, so the 'rt2x00_is_soc(rt2x00dev) ||' part is superfluous.
+> To make my BCM43224 work I use this patch [0], the "printk("dummy\n");"
+> is a hack to workaround the problem I am describing here.
 
-Given the fact that the patch must be reworked, this part will go away anyway
-probably.
+That kind of hacks always make me suspicious about the compiler. I guess
+you checked that both brcmsmac and b43 read the same register offset to
+get tsf_random, right?
 
--Gabor
+Regards,
+Arend
+
