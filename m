@@ -1,76 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58574 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424190Ab2LGUbh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 15:31:37 -0500
-Date: Fri, 07 Dec 2012 15:31:34 -0500 (EST)
-Message-Id: <20121207.153134.25835204617509469.davem@davemloft.net> (sfid-20121207_213148_274637_7EF24452)
-To: eric@regit.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1354906561-4695-1-git-send-email-eric@regit.org>
-References: <1354906561-4695-1-git-send-email-eric@regit.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mms2.broadcom.com ([216.31.210.18]:2241 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755562Ab2LCRkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Dec 2012 12:40:46 -0500
+Message-ID: <50BCE3FF.6020603@broadcom.com> (sfid-20121203_184049_701137_95DEB70C)
+Date: Mon, 3 Dec 2012 18:40:15 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Daniel Wagner" <wagi@monom.org>
+cc: "Seth Forshee" <seth.forshee@canonical.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded
+ debug/trace support
+References: <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org>
+ <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org>
+ <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org>
+ <50AC07F2.8000400@monom.org> <50ACA28F.9010800@broadcom.com>
+ <50ACA55F.5050406@monom.org> <20121121143528.GC23606@thinkpad-t410>
+ <20121126193655.GF4556@thinkpad-t410> <50B3DD38.5060808@monom.org>
+ <50BC6181.8080307@monom.org> <50BC64C4.9040001@broadcom.com>
+ <50BC7BC8.8030003@monom.org>
+In-Reply-To: <50BC7BC8.8030003@monom.org>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Leblond <eric@regit.org>
-Date: Fri,  7 Dec 2012 19:56:01 +0100
-
-Wireless folks, please take a look.  The issue is that,
-under the circumstances listed below, we get SKBs in
-the AF_PACKET input path that are shared.
-
-Given the logic present in ieee80211_deliver_skb() I think
-the mac80211 code doesn't expect this either.
-
-More commentary from me below:
-
-> This patch is adding a check on skb before trying to defrag the
-> packet for the hash computation in fanout mode. The goal of this
-> patch is to avoid an kernel crash in pskb_expand_head.
-> It appears that under some specific condition there is a shared
-> skb reaching the defrag code and this lead to a crash due to the
-> following code:
+On 12/03/2012 11:15 AM, Daniel Wagner wrote:
+> Hi Arend,
 > 
-> 	if (skb_shared(skb))
-> 		BUG();
+> On 03.12.2012 09:37, Arend van Spriel wrote:
+>>> On 26.11.2012 22:20, Daniel Wagner wrote:
+>>>> On 26.11.2012 20:36, Seth Forshee wrote:
+>>>>> On Wed, Nov 21, 2012 at 08:35:28AM -0600, Seth Forshee wrote:
+>>>>>>> My 'test' setup is following: I downloaded a larger file and let a
+>>>>>>> youtube
+>>>>>>> video play. With tracing enabled the download and the playback did
+>>>>>>> work nicely.
+>>>>>>>
+>>>>>>> Without tracing enabled playing back only a youtube video was
+>>>>>>> 'triggering'
+>>>>>>> the problem. It downloads a few seconds of content in a burst and
+>>>>>>> then the playback
+>>>>>>> starts. Under normal conditions, the app will continue downloading
+>>>>>>> the video at a
+>>>>>>> lower rate. But this normally doesn't happen right now. Often it
+>>>>>>> will just stop
+>>>>>>> working and often the connection is completely blocked, e.g. pinging
+>>>>>>> a host
+>>>>>>> wont work.
+>>>>>>
+>>>>>> I'll see if I can reproduce, but if it's specific to the AP then I
+>>>>>> may
+>>>>>> not have any luck. Don't expect to hear much from me until next week
+>>>>>> though; I'm on holiday starting today and will be visiting family.
+>>>>>
+>>>>> It seems I'm unable to reproduce the problem with any of the APs
+>>>>> available to me, unfortunately.
+>>>>
+>>>> I tried it again with disabled the TX trace but I can't reproduce it
+>>>> either. Well, I am sick of this AP and I might just get a better one
+>>>> (which should be fairly simple).
+>>>
+>>> FYI, I got my old Netgear 11g AP out and I get a very 'smooth' wifi
+>>> experience.
+>>>
+>>> If you like you can add Tested-by tag :)
+>>
+>> You basically tested 11g operation is ok. Still interesting to know,
+>> because it may indicate that problems start happening when doing 11n
+>> rates and/or A-MPDU sessions.
 > 
-> I've observed this crash under the following condition:
->  1. a program is listening to an wifi interface (let say wlan0)
->  2. it is using fanout capture in flow load balancing mode
->  3. defrag option is on on the fanout socket
->  4. the interface disconnect (radio down for example)
->  5. the interface reconnect (radio switched up)
->  6. once reconnected a single packet is seen with skb->users=2
->  7. the kernel crash in pskb_expand_head at skbuff.c:1035
+> A friend of mine have the same 11n AP and for them it also behaves
+> pretty shitty for him (Windows even worse then Linux...).
 > 
-> [BBB55:744364] [<ffffffff812a2761>] ? __pskb_pull_tail+0x43x0x26f
-> [BB8S5.744395] [<ffffffff812d29Tb>] ? ip_check_defrag+ox3a/0x14a
-> [BBB55.744422] [<ffffffffB1344459>] ? packet_rcv_fanout+ox5e/oxf9
-> [BBBS5.7444S0] [<ffffffffB12aaS9b>] ? __netif_receive_skb+ox444/ox4f9
-> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? netif_receive_skb+ox6d/0x?3
-> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_deliver_skb+0xbd/0xfa [mac80211]
-> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_rx_h_data+0x1e0/0x21a [mac80211]
-> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_rx_handlers+0x3d5/0x480 [mac80211]
-> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? __wake_up
-> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? evdev_eventr+0xc0/0xcf [evdev]
+> I don't know if it is worth to continue to debug with this this
+> particular 11n AP.
 > 
-> Signed-off-by: Eric Leblond <eric@regit.org>
+> I had a good performance during LinuxCon which indicates that it is
+> really only my home AP. What I could do is to test with 11n APs at my
+> workplace and see if the it is really only my home 11n AP.
+> 
 
-So if we look at ieee80211_deliver_skb(), it has code to deal with unaligned
-packet headers, wherein it memoves() the data into a better aligned location.
+So what exactly is the brand and model of your home 11n AP. With a bit
+of luck we may have it over here.
 
-But if these SKBs really are skb_shared(), this packet data
-modification is illegal.
+Gr. AvS
 
-I suspect that the assumptions built into this unaligned data handling
-code, and AF_PACKET, are correct.  Meaning that we should never see
-skb_shared() packets here.  We just have a missing skb_copy()
-somewhere in mac80211, Johannes can you please take a look?
 
-Thanks.
