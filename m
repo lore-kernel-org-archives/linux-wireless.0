@@ -1,133 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:32975 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755226Ab2LMSwK (ORCPT
+Received: from mail.ultra-3eti.com ([173.13.207.162]:50938 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670Ab2LCTCR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:52:10 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1756226pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 10:52:09 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCH 2/6] mac80211: update mesh peer link counter during userspace peering
-Date: Thu, 13 Dec 2012 10:51:54 -0800
-Message-Id: <1355424718-2982-3-git-send-email-marco@cozybit.com> (sfid-20121213_195216_591070_687B17E3)
-In-Reply-To: <1355424718-2982-1-git-send-email-marco@cozybit.com>
-References: <1355424718-2982-1-git-send-email-marco@cozybit.com>
+	Mon, 3 Dec 2012 14:02:17 -0500
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: "paul@foresight-mands.com" <paul@foresight-mands.com>,
+	"'Georgiewskiy Yuriy'" <bottleman@icf.org.ru>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+Date: Mon, 3 Dec 2012 19:02:13 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1263C@RockMX01.rock.corp> (sfid-20121203_200220_819537_1806C97D)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
+ <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
+ <BD54DDEB2546894FAB0731EA7B0EDF8D07C1259A@RockMX01.rock.corp>
+ <alpine.DEB.2.02.1212031938250.7349@icf.org.ru>
+ <005601cdd183$14666bf0$3d3343d0$@com>
+In-Reply-To: <005601cdd183$14666bf0$3d3343d0$@com>
+Content-Type: text/plain; charset="koi8-r"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The established peer link count is indicated in mesh beacons and used for
-other internal tasks. Previously it was not updated when authenticated peering
-is performed in userspace.
+My test is very simple.
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
----
- net/mac80211/cfg.c        |   22 +++++++++++++++++++---
- net/mac80211/mesh.h       |   14 ++++++++++++++
- net/mac80211/mesh_plink.c |   14 --------------
- 3 files changed, 33 insertions(+), 17 deletions(-)
+Continuous ping at about 10 ping per node per second.
+Ping size 64 bytes
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5c61677..281533e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1209,18 +1209,33 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
--		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
-+		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED) {
-+			u32 changed = 0;
-+
- 			switch (params->plink_state) {
--			case NL80211_PLINK_LISTEN:
- 			case NL80211_PLINK_ESTAB:
-+				if (sta->plink_state != NL80211_PLINK_ESTAB)
-+					changed = mesh_plink_inc_estab_count(
-+							sdata);
-+				sta->plink_state = params->plink_state;
-+				break;
-+			case NL80211_PLINK_LISTEN:
- 			case NL80211_PLINK_BLOCKED:
-+			case NL80211_PLINK_OPN_SNT:
-+			case NL80211_PLINK_OPN_RCVD:
-+			case NL80211_PLINK_CNF_RCVD:
-+			case NL80211_PLINK_HOLDING:
-+				if (sta->plink_state == NL80211_PLINK_ESTAB)
-+					changed = mesh_plink_dec_estab_count(
-+							sdata);
- 				sta->plink_state = params->plink_state;
- 				break;
- 			default:
- 				/*  nothing  */
- 				break;
- 			}
--		else
-+			ieee80211_bss_info_change_notify(sdata, changed);
-+		} else {
- 			switch (params->plink_action) {
- 			case PLINK_ACTION_OPEN:
- 				mesh_plink_open(sta);
-@@ -1229,6 +1244,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 				mesh_plink_block(sta);
- 				break;
- 			}
-+		}
- #endif
- 	}
- 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 7c9215f..39897e0 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -307,6 +307,20 @@ extern int mesh_paths_generation;
- #ifdef CONFIG_MAC80211_MESH
- extern int mesh_allocated;
- 
-+static inline
-+u32 mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
-+{
-+	atomic_inc(&sdata->u.mesh.estab_plinks);
-+	return mesh_accept_plinks_update(sdata);
-+}
-+
-+static inline
-+u32 mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
-+{
-+	atomic_dec(&sdata->u.mesh.estab_plinks);
-+	return mesh_accept_plinks_update(sdata);
-+}
-+
- static inline int mesh_plink_free_count(struct ieee80211_sub_if_data *sdata)
- {
- 	return sdata->u.mesh.mshcfg.dot11MeshMaxPeerLinks -
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4b274e9..9e04166 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -41,20 +41,6 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		enum ieee80211_self_protected_actioncode action,
- 		u8 *da, __le16 llid, __le16 plid, __le16 reason);
- 
--static inline
--u32 mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
--{
--	atomic_inc(&sdata->u.mesh.estab_plinks);
--	return mesh_accept_plinks_update(sdata);
--}
--
--static inline
--u32 mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
--{
--	atomic_dec(&sdata->u.mesh.estab_plinks);
--	return mesh_accept_plinks_update(sdata);
--}
--
- /**
-  * mesh_plink_fsm_restart - restart a mesh peer link finite state machine
-  *
--- 
-1.7.9.5
+
+-----Original Message-----
+From: Paul Stoaks [mailto:paul@foresight-mands.com] 
+Sent: Monday, December 03, 2012 1:22 PM
+To: 'Georgiewskiy Yuriy'; Chaoxing Lin
+Cc: linux-wireless@vger.kernel.org
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+
+What kind of traffic are you pushing through (packet sizes?)  Are they fixed size, fixed rate, or ...?
+
+Paul
+
+
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org
+[mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Georgiewskiy Yuriy
+Sent: Monday, December 03, 2012 7:44 AM
+To: Chaoxing Lin
+Cc: linux-wireless@vger.kernel.org
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+
+On 2012-12-03 14:56 -0000, Chaoxing Lin wrote Georgiewskiy Yuriy:
+
+CL>CL>For experiment, I changed ath9k driver to disable 802.11n packet
+aggregation. The network becomes much better.
+CL>CL>It's as stable as running 802.11a only mode.
+CL>CL>So it seems that the aggregation plays a big role in in-stability 
+CL>CL>of
+802.11s network with 802.11n.
+CL>CL>Any one has any idea why?
+CL>
+CL>Can you post a patch? i want test this too.
+CL>
+CL>The change is easy
+CL>In ath9k/init.c
+CL>Function ath9k_set_hw_capab()
+CL>Replace below
+CL>    if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+CL>         hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION; with
+CL>	hw->flags &= ~IEEE80211_HW_AMPDU_AGGREGATION;
+
+On first look in my case disabled aggregation reduces packet loss, link is more reliable, but it's also drop throughput to 15-20 Mbits/sec from about
+~50 with aggregation enabled.
+
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
 
