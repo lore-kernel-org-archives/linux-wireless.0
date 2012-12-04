@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58960 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754461Ab2LNSKl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44558 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753794Ab2LDOsi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 13:10:41 -0500
-Message-ID: <50CB6B9B.7020508@candelatech.com> (sfid-20121214_191044_206501_77BED70D)
-Date: Fri, 14 Dec 2012 10:10:35 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFT 0/3] cfg80211: beacon hint improvements
-References: <1355430534-7881-1-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1355430534-7881-1-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 4 Dec 2012 09:48:38 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 01/18] regulatory: don't allocate too much memory
+Date: Tue,  4 Dec 2012 15:48:43 +0100
+Message-Id: <1354632540-21207-2-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154910_750887_E33C3A02)
+In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2012 12:28 PM, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
->
-> Just a few improvements for beacon hint processing due to
-> scheduling considerations and discovered by Ben with a lot of
-> stations. For details see:
+From: Johannes Berg <johannes.berg@intel.com>
 
-I added this and Johannes' station cleanup patches to 3.7 and the
-600-station tests are running well so far.  I see a few beacon
-messages, but no spammage.  (I also backed out my rate-limit
-patch on the beacon messages, so if they *were* inclined to spam,
-I should have seen it).
+There's no need to allocate one reg rule more
+than will be used, reduce the allocations. The
+allocation in nl80211 already doesn't allocate
+too much space.
 
-So:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Tested-by:  Ben Greear <greearb@candelatech.com>
-
-Thanks,
-Ben
-
->
-> http://article.gmane.org/gmane.linux.kernel.wireless.general/101482
->
-> Luis R. Rodriguez (3):
->    cfg80211: do not process beacon hints if one is already queued
->    cfg80211: move reg_is_world_roaming()
->    cfg80211: move world roaming check for beacon hints
->
->   net/wireless/reg.c |   48 ++++++++++++++++++++++++++++++++++--------------
->   1 file changed, 34 insertions(+), 14 deletions(-)
->
-
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b6c7ea6..dc0c2ba 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -319,8 +319,9 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+ 	int size_of_regd = 0;
+ 	unsigned int i;
+ 
+-	size_of_regd = sizeof(struct ieee80211_regdomain) +
+-	  ((src_regd->n_reg_rules + 1) * sizeof(struct ieee80211_reg_rule));
++	size_of_regd =
++		sizeof(struct ieee80211_regdomain) +
++		src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule);
+ 
+ 	regd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!regd)
+@@ -642,7 +643,7 @@ static struct ieee80211_regdomain *regdom_intersect(
+ 		return NULL;
+ 
+ 	size_of_regd = sizeof(struct ieee80211_regdomain) +
+-		((num_rules + 1) * sizeof(struct ieee80211_reg_rule));
++		       num_rules * sizeof(struct ieee80211_reg_rule);
+ 
+ 	rd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!rd)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.0
 
