@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:60519 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448Ab2LBPwG (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:44758 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984Ab2LDOxl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 10:52:06 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so840198eaa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Dec 2012 07:52:04 -0800 (PST)
-Subject: [PATCH] carl9170: fix signal strength reporting issues
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 2 Dec 2012 16:52:00 +0100
+	Tue, 4 Dec 2012 09:53:41 -0500
+Message-ID: <1354632778.6234.3.camel@cumari.coelho.fi> (sfid-20121204_155344_838078_C70C72A2)
+Subject: Re: [PATCH 04/11] wlcore/wl18xx: allow TX BA on all TIDs
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
+Date: Tue, 4 Dec 2012 16:52:58 +0200
+In-Reply-To: <1353945950-3899-5-git-send-email-arik@wizery.com>
+References: <1353945950-3899-1-git-send-email-arik@wizery.com>
+	 <1353945950-3899-5-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201212021652.00954.chunkeey@googlemail.com> (sfid-20121202_165226_427781_38B4D327)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On A-MPDU frames, the hardware only reports valid
-signal strength data for the last subframe.
+On Mon, 2012-11-26 at 18:05 +0200, Arik Nemtsov wrote:
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> In 12xx cards a FW limitation prevents us from from starting TX BA
+> sessions on TIDs 6/7. This restriction does not exist for 18xx cards.
+> Enable TX BA on all TIDs for them
+> 
+> [Arik - split Tx BA parameter between chip families. Don't change this
+> setting for 12xx]
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-This patch fixes it by flagging everything but the
-last subframe in an A-MPDU to tell mac80211 to
-ignore the signal strength entirely. Otherwise
-the empty value (= 0 dbm) will distort the
-average quite badly.
+I have dropped this patch.  After some internal discussions, we decided
+that it doesn't make sense to use BA on TIDs that require low latency.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/rx.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
-index 6d22382..876a773 100644
---- a/drivers/net/wireless/ath/carl9170/rx.c
-+++ b/drivers/net/wireless/ath/carl9170/rx.c
-@@ -814,6 +814,8 @@ static void carl9170_rx_untie_data(struct ar9170 *ar, u8 *buf, int len)
- 
- 	if (phy)
- 		carl9170_rx_phy_status(ar, phy, &status);
-+	else
-+		status.flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
- 	if (carl9170_handle_mpdu(ar, buf, mpdu_len, &status))
- 		goto drop;
--- 
-1.7.10.4
+--
+Luca.
 
