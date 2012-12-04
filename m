@@ -1,64 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.uu.se ([130.238.7.54]:57763 "EHLO smtp1.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751703Ab2LQLC2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 06:02:28 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20686.63778.840426.61474@pilspetsen.it.uu.se> (sfid-20121217_120233_427914_71C7B797)
-Date: Mon, 17 Dec 2012 11:51:14 +0100
-From: Mikael Pettersson <mikpe@it.uu.se>
+Received: from he.sipsolutions.net ([78.46.109.217]:44581 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732Ab2LDOtK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2012 09:49:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to initialize hw
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 18/18] regulatory: allow arbitrary channel widths
+Date: Tue,  4 Dec 2012 15:49:00 +0100
+Message-Id: <1354632540-21207-19-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154915_471388_649524BB)
+In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just updated an old 1st gen AMD64 laptop from kernel 3.6.0 to 3.7.0,
-Fedora 15 user-space, and was greeted by the following kernel warning:
+From: Johannes Berg <johannes.berg@intel.com>
 
-WARNING: at net/wireless/core.c:389 wiphy_register+0x5c3/0x600 [cfg80211]()
-Hardware name: SAM#451B
-Modules linked in: rt2500pci(+) snd_mpu401_uart rt2x00pci snd_rawmidi rt2x00lib sg snd_seq_device mac80211 cfg80211 amd64_agp agpgart snd eeprom_93cx6 soundcore via_rhine mii evdev ipv6 ehci_hcd uhci_hcd sr_mod cdrom usbcore usb_common
-Pid: 378, comm: modprobe Not tainted 3.7.0 #1
-Call Trace:
- [<ffffffff810260b9>] ? warn_slowpath_common+0x79/0xc0
- [<ffffffffa0115773>] ? wiphy_register+0x5c3/0x600 [cfg80211]
- [<ffffffff810c5b3f>] ? __kmalloc+0xef/0x170
- [<ffffffffa013ac97>] ? ieee80211_register_hw+0x347/0x6d0 [mac80211]
- [<ffffffffa00f92ed>] ? rt2x00lib_probe_dev+0x53d/0x720 [rt2x00lib]
- [<ffffffffa0060888>] ? rt2x00pci_probe+0x168/0x2e4 [rt2x00pci]
- [<ffffffff81194cd0>] ? pci_device_probe+0xd0/0x170
- [<ffffffff811f2934>] ? driver_probe_device+0x64/0x210
- [<ffffffff811f2b73>] ? __driver_attach+0x93/0xa0
- [<ffffffff811f2ae0>] ? driver_probe_device+0x210/0x210
- [<ffffffff811f0f95>] ? bus_for_each_dev+0x45/0x80
- [<ffffffff811f20d8>] ? bus_add_driver+0x178/0x250
- [<ffffffff811f314e>] ? driver_register+0x6e/0x170
- [<ffffffff81048a14>] ? notifier_call_chain+0x44/0x60
- [<ffffffffa0196000>] ? 0xffffffffa0195fff
- [<ffffffff810002ca>] ? do_one_initcall+0x11a/0x160
- [<ffffffff81069786>] ? sys_init_module+0x76/0x1c0
- [<ffffffff812c15d0>] ? system_call_fastpath+0x16/0x1b
----[ end trace f8413f27de31929d ]---
-phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
-rt2500pci: probe of 0000:00:0c.0 failed with error -22
+There aren't any channel width restrictions in the
+2.4 GHz band (except the natural ones by the (sub)band
+boundaries), nor do default restrictions in the 5 GHz
+band make sense when limited to passive scan/no IBSS
+etc.
 
-Rebooting into 3.6.0 shows no such error, booting 3.7.0 again shows the error,
-so it's completely reproducible.
+Allow passing NL80211_NO_REG_BANDWIDTH_LIMIT as the
+max_bandwidth_khz and make that mean no restrictions.
+Use it for the default world roaming regdomain.
 
-lspci -v for the device in question:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/regulatory.h     |  5 ++-
+ include/uapi/linux/nl80211.h |  4 ++-
+ net/wireless/reg.c           | 77 +++++++++++++++++++++++---------------------
+ 3 files changed, 48 insertions(+), 38 deletions(-)
 
-00:0c.0 Network controller: Ralink corp. RT2500 802.11g (rev 01)
-	Subsystem: Micro-Star International Co., Ltd. Unknown 802.11g mini-PCI Adapter
-	Flags: bus master, slow devsel, latency 64, IRQ 18
-	Memory at d0000000 (32-bit, non-prefetchable) [size=8K]
-	Capabilities: [40] Power Management version 2
-	Kernel driver in use: rt2500pci
-	Kernel modules: rt2500pci
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index 7dcaa27..9414a8f 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -118,7 +118,10 @@ struct ieee80211_regdomain {
+ {							\
+ 	.freq_range.start_freq_khz = MHZ_TO_KHZ(start),	\
+ 	.freq_range.end_freq_khz = MHZ_TO_KHZ(end),	\
+-	.freq_range.max_bandwidth_khz = MHZ_TO_KHZ(bw),	\
++	.freq_range.max_bandwidth_khz =			\
++		(bw) == NL80211_NO_REG_BANDWIDTH_LIMIT ?\
++			NL80211_NO_REG_BANDWIDTH_LIMIT :\
++			MHZ_TO_KHZ(bw),			\
+ 	.power_rule.max_antenna_gain = DBI_TO_MBI(gain),\
+ 	.power_rule.max_eirp = DBM_TO_MBM(eirp),	\
+ 	.flags = reg_flags,				\
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5470171..331cfb3 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2070,7 +2070,7 @@ enum nl80211_reg_type {
+  * 	in KHz. This is not a center a frequency but an actual regulatory
+  * 	band edge.
+  * @NL80211_ATTR_FREQ_RANGE_MAX_BW: maximum allowed bandwidth for this
+- * 	frequency range, in KHz.
++ * 	frequency range, in KHz, or %NL80211_NO_REG_BANDWIDTH_LIMIT.
+  * @NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN: the maximum allowed antenna gain
+  * 	for a given frequency range. The value is in mBi (100 * dBi).
+  * 	If you don't have one then don't send this.
+@@ -2096,6 +2096,8 @@ enum nl80211_reg_rule_attr {
+ 	NL80211_REG_RULE_ATTR_MAX = __NL80211_REG_RULE_ATTR_AFTER_LAST - 1
+ };
+ 
++#define NL80211_NO_REG_BANDWIDTH_LIMIT	0xffffffff
++
+ /**
+  * enum nl80211_sched_scan_match_attr - scheduled scan match attributes
+  * @__NL80211_SCHED_SCAN_MATCH_ATTR_INVALID: attribute number 0 is reserved
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4e0ccad..5deb60c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -146,29 +146,29 @@ static const struct ieee80211_regdomain world_regdom = {
+ 	.alpha2 =  "00",
+ 	.reg_rules = {
+ 		/* IEEE 802.11b/g, channels 1..11 */
+-		REG_RULE(2412-10, 2462+10, 40, 6, 20, 0),
+-		/* IEEE 802.11b/g, channels 12..13. No HT40
+-		 * channel fits here. */
+-		REG_RULE(2467-10, 2472+10, 20, 6, 20,
+-			NL80211_RRF_PASSIVE_SCAN |
+-			NL80211_RRF_NO_IBSS),
++		REG_RULE(2412-10, 2462+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
++			 6, 20, 0),
++		/* IEEE 802.11b/g, channels 12..13. */
++		REG_RULE(2467-10, 2472+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
++			 6, 20, NL80211_RRF_PASSIVE_SCAN |
++				NL80211_RRF_NO_IBSS),
+ 		/* IEEE 802.11 channel 14 - Only JP enables
+ 		 * this and for 802.11b only */
+-		REG_RULE(2484-10, 2484+10, 20, 6, 20,
+-			NL80211_RRF_PASSIVE_SCAN |
+-			NL80211_RRF_NO_IBSS |
+-			NL80211_RRF_NO_OFDM),
++		REG_RULE(2484-10, 2484+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
++			 6, 20, NL80211_RRF_PASSIVE_SCAN |
++				NL80211_RRF_NO_IBSS |
++				NL80211_RRF_NO_OFDM),
+ 		/* IEEE 802.11a, channel 36..48 */
+-		REG_RULE(5180-10, 5240+10, 40, 6, 20,
+-                        NL80211_RRF_PASSIVE_SCAN |
+-                        NL80211_RRF_NO_IBSS),
++		REG_RULE(5180-10, 5240+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
++			 6, 20, NL80211_RRF_PASSIVE_SCAN |
++				NL80211_RRF_NO_IBSS),
+ 
+ 		/* NB: 5260 MHz - 5700 MHz requies DFS */
+ 
+ 		/* IEEE 802.11a, channel 149..165 */
+-		REG_RULE(5745-10, 5825+10, 40, 6, 20,
+-			NL80211_RRF_PASSIVE_SCAN |
+-			NL80211_RRF_NO_IBSS),
++		REG_RULE(5745-10, 5825+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
++			 6, 20, NL80211_RRF_PASSIVE_SCAN |
++				NL80211_RRF_NO_IBSS),
+ 
+ 		/* IEEE 802.11ad (60gHz), channels 1..3 */
+ 		REG_RULE(56160+2160*1-1080, 56160+2160*3+1080, 2160, 0, 0, 0),
+@@ -453,8 +453,13 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
+ 
+ 	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
+ 
+-	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
+-	    freq_range->max_bandwidth_khz > freq_diff)
++	if (freq_range->end_freq_khz <= freq_range->start_freq_khz)
++		return false;
++
++	if (freq_range->max_bandwidth_khz == NL80211_NO_REG_BANDWIDTH_LIMIT)
++		return true;
++
++	if (freq_range->max_bandwidth_khz > freq_diff)
+ 		return false;
+ 
+ 	return true;
+@@ -559,7 +564,8 @@ static int reg_rules_intersect(const struct ieee80211_reg_rule *rule1,
+ 					    freq_range2->max_bandwidth_khz);
+ 
+ 	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
+-	if (freq_range->max_bandwidth_khz > freq_diff)
++	if (freq_range->max_bandwidth_khz != NL80211_NO_REG_BANDWIDTH_LIMIT &&
++	    freq_range->max_bandwidth_khz > freq_diff)
+ 		freq_range->max_bandwidth_khz = freq_diff;
+ 
+ 	power_rule->max_eirp = min(power_rule1->max_eirp,
+@@ -789,7 +795,7 @@ static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
+ 	REG_DBG_PRINT("Updating information on frequency %d MHz with regulatory rule:\n",
+ 		      chan->center_freq);
+ 
+-	REG_DBG_PRINT("%d KHz - %d KHz @ %d KHz), (%s mBi, %d mBm)\n",
++	REG_DBG_PRINT("%d KHz - %d KHz @ %u KHz), (%s mBi, %d mBm)\n",
+ 		      freq_range->start_freq_khz, freq_range->end_freq_khz,
+ 		      freq_range->max_bandwidth_khz, max_antenna_gain,
+ 		      power_rule->max_eirp);
+@@ -1950,27 +1956,26 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
+ 	pr_info("  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)\n");
+ 
+ 	for (i = 0; i < rd->n_reg_rules; i++) {
++		char bandwidth[20] = "";
++		char max_ag[20] = "N/A";
++
+ 		reg_rule = &rd->reg_rules[i];
+ 		freq_range = &reg_rule->freq_range;
+ 		power_rule = &reg_rule->power_rule;
+ 
+-		/*
+-		 * There may not be documentation for max antenna gain
+-		 * in certain regions
+-		 */
++		if (freq_range->max_bandwidth_khz != NL80211_NO_REG_BANDWIDTH_LIMIT)
++			snprintf(bandwidth, sizeof(bandwidth),
++				 " @ %u KHz", freq_range->max_bandwidth_khz);
++
+ 		if (power_rule->max_antenna_gain)
+-			pr_info("  (%d KHz - %d KHz @ %d KHz), (%d mBi, %d mBm)\n",
+-				freq_range->start_freq_khz,
+-				freq_range->end_freq_khz,
+-				freq_range->max_bandwidth_khz,
+-				power_rule->max_antenna_gain,
+-				power_rule->max_eirp);
+-		else
+-			pr_info("  (%d KHz - %d KHz @ %d KHz), (N/A, %d mBm)\n",
+-				freq_range->start_freq_khz,
+-				freq_range->end_freq_khz,
+-				freq_range->max_bandwidth_khz,
+-				power_rule->max_eirp);
++			snprintf(max_ag, sizeof(max_ag),
++				 "%u mBi", power_rule->max_antenna_gain);
++
++		pr_info("  (%d KHz - %d KHz%s), (%s, %d mBm)\n",
++			freq_range->start_freq_khz,
++			freq_range->end_freq_khz,
++			bandwidth, max_ag,
++			power_rule->max_eirp);
+ 	}
+ }
+ 
+-- 
+1.8.0
 
-I've never actually used or configured this device (the laptop is always
-on wired ethernet), but thought you should know about this possible driver
-regression.
-
-/Mikael
