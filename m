@@ -1,60 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:35681 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108Ab2LTJCu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44568 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753990Ab2LDOsk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 04:02:50 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hn3so1789288wib.11
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 01:02:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1355881021-7071-1-git-send-email-thomas@cozybit.com>
-References: <1355881021-7071-1-git-send-email-thomas@cozybit.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 20 Dec 2012 00:37:53 -0800
-Message-ID: <CAG6hwVM=xBtZ9OEHo_77DvOKkiRLrT8epgMNRyrWLuY7svXNLw@mail.gmail.com> (sfid-20121220_100255_563119_03238F28)
-Subject: Re: [PATCH 1/3] mac80211_hwsim: use hrtimer for beacon timers
-To: linville@tuxdriver.com
-Cc: j@wl.fi, jlopex@cozybit.com, linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 4 Dec 2012 09:48:40 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 06/18] regulatory: remove useless locking on exit
+Date: Tue,  4 Dec 2012 15:48:48 +0100
+Message-Id: <1354632540-21207-7-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154904_902731_478227B9)
+In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 18, 2012 at 5:36 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> For testing various timing-sensitive protocols (power
-> save, etc.), a beacon accuracy of jiffies is not
-> sufficient.
->
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> ---
->  drivers/net/wireless/mac80211_hwsim.c |   63 ++++++++++++++++++++-------------
->  1 file changed, 39 insertions(+), 24 deletions(-)
->
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> index ff90855..0a8f37e 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -333,11 +333,11 @@ struct mac80211_hwsim_data {
->         int scan_chan_idx;
->
->         struct ieee80211_channel *channel;
-> -       unsigned long beacon_int; /* in jiffies unit */
-> +       ktime_t beacon_int;
->         unsigned int rx_filter;
->         bool started, idle, scanning;
->         struct mutex mutex;
-> -       struct timer_list beacon_timer;
-> +       struct hrtimer beacon_timer;
->         enum ps_mode {
->                 PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
->         } ps;
-> @@ -358,6 +358,7 @@ struct mac80211_hwsim_data {
->
->         /* difference between this hw's clock and the real clock, in usecs */
->         u64 tsf_offset;
-> +       struct tasklet_struct bcn_tasklet;
+From: Johannes Berg <johannes.berg@intel.com>
 
-oops  We need to stop the hrtimer and tasklet on teardown. Will submit
-a v2 reflecting this.
+It would be a major problem if anything were to run
+concurrently while the module is being unloaded so
+remove the locking that doesn't help anything.
 
-Thomas
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 10ba185..be6b00c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2391,34 +2391,29 @@ void regulatory_exit(void)
+ 	cancel_work_sync(&reg_work);
+ 	cancel_delayed_work_sync(&reg_timeout);
+ 
++	/* Lock to suppress warnings */
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
+-
+ 	reset_regdomains(true);
++	mutex_unlock(&cfg80211_mutex);
++	mutex_unlock(&reg_mutex);
+ 
+ 	dev_set_uevent_suppress(&reg_pdev->dev, true);
+ 
+ 	platform_device_unregister(reg_pdev);
+ 
+-	spin_lock_bh(&reg_pending_beacons_lock);
+ 	list_for_each_entry_safe(reg_beacon, btmp, &reg_pending_beacons, list) {
+ 		list_del(&reg_beacon->list);
+ 		kfree(reg_beacon);
+ 	}
+-	spin_unlock_bh(&reg_pending_beacons_lock);
+ 
+ 	list_for_each_entry_safe(reg_beacon, btmp, &reg_beacon_list, list) {
+ 		list_del(&reg_beacon->list);
+ 		kfree(reg_beacon);
+ 	}
+ 
+-	spin_lock(&reg_requests_lock);
+ 	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
+ 		list_del(&reg_request->list);
+ 		kfree(reg_request);
+ 	}
+-	spin_unlock(&reg_requests_lock);
+-
+-	mutex_unlock(&reg_mutex);
+-	mutex_unlock(&cfg80211_mutex);
+ }
+-- 
+1.8.0
+
