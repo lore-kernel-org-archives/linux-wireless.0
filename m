@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58745 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932126Ab2LGVlV (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:59700 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751350Ab2LDAWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 16:41:21 -0500
-Message-ID: <1354916502.9124.18.camel@jlt4.sipsolutions.net> (sfid-20121207_224129_500056_6617D80D)
-Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: eric@regit.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Fri, 07 Dec 2012 22:41:42 +0100
-In-Reply-To: <1354915824.9124.11.camel@jlt4.sipsolutions.net> (sfid-20121207_223020_561049_DB965D43)
-References: <1354906561-4695-1-git-send-email-eric@regit.org>
-	 <20121207.153134.25835204617509469.davem@davemloft.net>
-	 <1354915824.9124.11.camel@jlt4.sipsolutions.net>
-	 (sfid-20121207_223020_561049_DB965D43)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 3 Dec 2012 19:22:52 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hm9so262501wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 16:22:51 -0800 (PST)
+Message-ID: <50BD4257.1080302@gmail.com> (sfid-20121204_012256_234264_E71CB64B)
+Date: Tue, 04 Dec 2012 01:22:47 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	greearb@candelatech.com
+Subject: change reg domain in EEPROM was Re: Allow over-riding regdomain in
+ NIC when CFG80211_CERTIFICATION_ONUS is enabled?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-07 at 22:30 +0100, Johannes Berg wrote:
+Ben Greear wrote:
 
-> The only other theory I can come up with right now is that the skb_get()
-> happens in deliver_skb via __netif_receive_skb. Keeping in mind that
-> wpa_supplicant might have another packet socket open for authentication
-> packets, that seems like a possibility. I'll test it once I figure out
-> how to do this "defrag" option you speak of :)
+> There are out-of-tree patches for ath9k (at least) that allow overriding the
+> eeprom reg domain via a module option.
+>
+> Any chance something like that could make it upstream if it were dependent
+> on CFG80211_CERTIFICATION_ONUS?
+>
+> (We recently got a batch of wpea-127n NICs with country-code of TW, which
+> reminded me of this problem).
 
-Hmm now I'm venturing into the unknown (for me) and realm of
-speculation...
+To modify the EEPROM-reg_domain you can use:
 
-wpa_supplicant opens a packet socket for ETH_P_EAPOL, which indirectly
-eventually calls dev_add_pack(). But if you do the same for another
-socket, you'll get the same again, and then deliver_skb() will deliver
-only a refcounted packet to the prot_hook->func().
-
-This seems like it could very well cause the problem?
-
-johannes
-
+- ath_info for ath5k devices: 
+http://madwifi-project.org/wiki/UserDocs/AthInfo
+- iwleeprom for ath and iwl devices: http://code.google.com/p/iwleeprom/
