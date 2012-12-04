@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49510 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752046Ab2L0NH7 (ORCPT
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:46050 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826Ab2LDGDN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 08:07:59 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1ToDBl-00059R-UH
-	for linux-wireless@vger.kernel.org; Thu, 27 Dec 2012 14:07:58 +0100
-Message-ID: <1356613701.15149.12.camel@jlt4.sipsolutions.net> (sfid-20121227_140803_018085_7A405F6A)
-Subject: Re: [PATCH] mac80211: restrict assoc request VHT capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 27 Dec 2012 14:08:21 +0100
-In-Reply-To: <1356003626-23425-1-git-send-email-johannes@sipsolutions.net> (sfid-20121220_124010_941702_1EA3B5DA)
-References: <1356003626-23425-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121220_124010_941702_1EA3B5DA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 4 Dec 2012 01:03:13 -0500
+Received: by mail-qa0-f53.google.com with SMTP id a19so452006qad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 22:03:13 -0800 (PST)
+MIME-Version: 1.0
+Date: Tue, 4 Dec 2012 01:03:12 -0500
+Message-ID: <CAPgLHd-k+RY5m804tBg4uzbWsUhS16coW9cQ62R7mPCjKjGffg@mail.gmail.com> (sfid-20121204_070325_725473_43050791)
+Subject: [PATCH -next] ipw2200: return error code on error in ipw_wx_get_auth()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: stas.yakovlev@gmail.com, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-20 at 12:40 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In interoperability testing some APs showed bad behaviour
-> if some of the VHT capabilities of the station are better
-> than their own. Restrict the assoc request parameters
->  - beamformee capabable,
->  - RX STBC and
->  - RX MCS set
-> to the subset that the AP can support.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Applied.
+We have assinged error code to 'ret' when get auth from some
+option is not supported but never used it, but we'd better return
+the error code.
 
-johannes
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 482f505..1ad72d5 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -6812,7 +6812,6 @@ static int ipw_wx_get_auth(struct net_device *dev,
+ 	struct libipw_device *ieee = priv->ieee;
+ 	struct lib80211_crypt_data *crypt;
+ 	struct iw_param *param = &wrqu->param;
+-	int ret = 0;
+ 
+ 	switch (param->flags & IW_AUTH_INDEX) {
+ 	case IW_AUTH_WPA_VERSION:
+@@ -6822,7 +6821,7 @@ static int ipw_wx_get_auth(struct net_device *dev,
+ 		/*
+ 		 * wpa_supplicant will control these internally
+ 		 */
+-		ret = -EOPNOTSUPP;
++		return -EOPNOTSUPP;
+ 		break;
+ 
+ 	case IW_AUTH_TKIP_COUNTERMEASURES:
+
 
