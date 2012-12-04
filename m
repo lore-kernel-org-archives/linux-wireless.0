@@ -1,44 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:42408
-	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755131Ab2LGO4H (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44557 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753771Ab2LDOsh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 09:56:07 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: [PATCH] ath9k: Fix regression in 'xmit' debugfs file
-Date: Fri,  7 Dec 2012 20:25:30 +0530
-Message-Id: <1354892130-11965-1-git-send-email-sujith@msujith.org> (sfid-20121207_155611_676621_4F7CBFE7)
+	Tue, 4 Dec 2012 09:48:37 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TftnY-0001js-38
+	for linux-wireless@vger.kernel.org; Tue, 04 Dec 2012 15:48:36 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: regulatory cleanups & fixes
+Date: Tue,  4 Dec 2012 15:48:42 +0100
+Message-Id: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154923_597192_AF1553BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+So I started looking at the regulatory code for VHT, and while
+I'm not sure I will finish this right now here are a few (hah)
+cleanups that I made while at it. Also a few fixes and the last
+patch is a feature to not restrict the usable bandwidth.
 
-Commit "ath9k: Fix the 'xmit' debugfs file" changed the
-the array size of ath_stats.txstats to IEEE80211_NUM_ACS,
-which is wrong because the HW queue number is used to
-update the statistics. Revert back to using ATH9K_NUM_TX_QUEUES.
-
-Reported-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 72d4893..375c3b4 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -242,7 +242,7 @@ struct ath_rx_stats {
- 
- struct ath_stats {
- 	struct ath_interrupt_stats istats;
--	struct ath_tx_stats txstats[IEEE80211_NUM_ACS];
-+	struct ath_tx_stats txstats[ATH9K_NUM_TX_QUEUES];
- 	struct ath_rx_stats rxstats;
- 	struct ath_dfs_stats dfs_stats;
- 	u32 reset[__RESET_TYPE_MAX];
--- 
-1.8.0.1
+johannes
 
