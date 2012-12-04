@@ -1,94 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:44110
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751402Ab2LJBxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2012 20:53:23 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/8] ath9k_hw: Various trivial fixes for PAPRD
-Date: Mon, 10 Dec 2012 07:22:35 +0530
-Message-Id: <1355104358-30062-5-git-send-email-sujith@msujith.org> (sfid-20121210_025335_750817_29078429)
-In-Reply-To: <1355104358-30062-1-git-send-email-sujith@msujith.org>
-References: <1355104358-30062-1-git-send-email-sujith@msujith.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:44576 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732Ab2LDOtD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2012 09:49:03 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 11/18] regulatory: remove redundant isalpha() check
+Date: Tue,  4 Dec 2012 15:48:53 +0100
+Message-Id: <1354632540-21207-12-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154907_708111_EA7CF888)
+In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-* Remove unneeded memset.
+toupper() only modifies lower-case letters, so
+the isalpha() check is redundant; remove it.
 
-  All the values in the PAPRD gain table are filled, so there
-  is no need to zero out the arrays.
-
-* Use GFP_KERNEL in ar9003_paprd_create_curve
-
-  This is called from the PAPRD work, so the atomic variant
-  is not needed.
-
-* Change return type of ar9003_paprd_setup_gain_table
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c | 9 ++-------
- drivers/net/wireless/ath/ath9k/hw.h           | 2 +-
- 2 files changed, 3 insertions(+), 8 deletions(-)
+ net/wireless/reg.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 4945fdf..b28565e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -287,9 +287,6 @@ static void ar9003_paprd_get_gain_table(struct ath_hw *ah)
- 	u32 reg = AR_PHY_TXGAIN_TABLE;
- 	int i;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index bc8b3d1..26eff64 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1623,10 +1623,8 @@ static void reg_todo(struct work_struct *work)
  
--	memset(entry, 0, sizeof(ah->paprd_gain_table_entries));
--	memset(index, 0, sizeof(ah->paprd_gain_table_index));
--
- 	for (i = 0; i < PAPRD_GAIN_TABLE_ENTRIES; i++) {
- 		entry[i] = REG_READ(ah, reg);
- 		index[i] = (entry[i] >> 24) & 0xff;
-@@ -788,7 +785,7 @@ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- }
- EXPORT_SYMBOL(ar9003_paprd_populate_single_table);
- 
--int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
-+void ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
+ static void queue_regulatory_request(struct regulatory_request *request)
  {
- 	unsigned int i, desired_gain, gain_index;
- 	unsigned int train_power = ah->paprd_training_power;
-@@ -806,8 +803,6 @@ int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
+-	if (isalpha(request->alpha2[0]))
+-		request->alpha2[0] = toupper(request->alpha2[0]);
+-	if (isalpha(request->alpha2[1]))
+-		request->alpha2[1] = toupper(request->alpha2[1]);
++	request->alpha2[0] = toupper(request->alpha2[0]);
++	request->alpha2[1] = toupper(request->alpha2[1]);
  
- 	REG_CLR_BIT(ah, AR_PHY_PAPRD_TRAINER_STAT1,
- 			AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_DONE);
--
--	return 0;
- }
- EXPORT_SYMBOL(ar9003_paprd_setup_gain_table);
- 
-@@ -919,7 +914,7 @@ int ar9003_paprd_create_curve(struct ath_hw *ah,
- 
- 	memset(caldata->pa_table[chain], 0, sizeof(caldata->pa_table[chain]));
- 
--	buf = kmalloc(2 * 48 * sizeof(u32), GFP_ATOMIC);
-+	buf = kmalloc(2 * 48 * sizeof(u32), GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 3636dab..fe87d0e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1058,7 +1058,7 @@ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- 					int chain);
- int ar9003_paprd_create_curve(struct ath_hw *ah,
- 			      struct ath9k_hw_cal_data *caldata, int chain);
--int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain);
-+void ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain);
- int ar9003_paprd_init_table(struct ath_hw *ah);
- bool ar9003_paprd_is_done(struct ath_hw *ah);
- 
+ 	spin_lock(&reg_requests_lock);
+ 	list_add_tail(&request->list, &reg_requests_list);
 -- 
-1.8.0.1
+1.8.0
 
