@@ -1,203 +1,298 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:43530 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144Ab2LVOxm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751479Ab2LDOsl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 09:53:42 -0500
-Received: by mail-wg0-f49.google.com with SMTP id 15so2675581wgd.16
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 06:53:41 -0800 (PST)
-Message-Id: <cb7272cf1a47b747467aec3c907fff99dae012e4.1356186145.git.chunkeey@googlemail.com> (sfid-20121222_155345_018866_D34F4EEA)
-In-Reply-To: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
-References: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 22 Dec 2012 15:05:26 +0100
-Subject: [PATCH 8/8] carl9170: refactor carl9170_update_beacon
+	Tue, 4 Dec 2012 09:48:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 09/18] regulatory: remove BUG_ON
+Date: Tue,  4 Dec 2012 15:48:51 +0100
+Message-Id: <1354632540-21207-10-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154902_645500_A6D0D542)
+In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves parts of carl9170_update_beacon
-into separate subroutines, so the parts become
-more manageable.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+This code is a bit too BUG_ON happy, remove all
+instances and while doing so make some code a bit
+smarter by passing the right pointer instead of
+indices into arrays.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/carl9170/tx.c |  133 +++++++++++++++++++-------------
- 1 file changed, 80 insertions(+), 53 deletions(-)
+ net/wireless/nl80211.c |  2 --
+ net/wireless/reg.c     | 95 ++++++++++++++++++++------------------------------
+ 2 files changed, 37 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index ef4ec0d..9c0b150 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -1520,35 +1520,92 @@ void carl9170_tx_scheduler(struct ar9170 *ar)
- 		carl9170_tx(ar);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fb81208..260b5d8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4333,8 +4333,6 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
+-	BUG_ON(rule_idx != num_rules);
+-
+ 	r = set_regdom(rd);
+ 	rd = NULL;
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a934914..c5cec28 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -214,7 +214,7 @@ static void reset_regdomains(bool full_reset)
+  */
+ static void update_world_regdomain(const struct ieee80211_regdomain *rd)
+ {
+-	BUG_ON(!last_request);
++	WARN_ON(!last_request);
+ 
+ 	reset_regdomains(false);
+ 
+@@ -813,8 +813,7 @@ static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
+  */
+ static void handle_channel(struct wiphy *wiphy,
+ 			   enum nl80211_reg_initiator initiator,
+-			   enum ieee80211_band band,
+-			   unsigned int chan_idx)
++			   struct ieee80211_channel *chan)
+ {
+ 	int r;
+ 	u32 flags, bw_flags = 0;
+@@ -822,18 +821,12 @@ static void handle_channel(struct wiphy *wiphy,
+ 	const struct ieee80211_reg_rule *reg_rule = NULL;
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+ 	const struct ieee80211_freq_range *freq_range = NULL;
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *chan;
+ 	struct wiphy *request_wiphy = NULL;
+ 
+ 	assert_cfg80211_lock();
+ 
+ 	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+ 
+-	sband = wiphy->bands[band];
+-	BUG_ON(chan_idx >= sband->n_channels);
+-	chan = &sband->channels[chan_idx];
+-
+ 	flags = chan->orig_flags;
+ 
+ 	r = freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq),
+@@ -906,17 +899,17 @@ static void handle_channel(struct wiphy *wiphy,
+ 		chan->max_power = chan->max_reg_power;
  }
  
--int carl9170_update_beacon(struct ar9170 *ar, const bool submit)
-+/* caller has to take rcu_read_lock */
-+static struct carl9170_vif_info *carl9170_pick_beaconing_vif(struct ar9170 *ar)
+-static void handle_band(struct wiphy *wiphy, enum ieee80211_band band,
+-			enum nl80211_reg_initiator initiator)
++static void handle_band(struct wiphy *wiphy,
++			enum nl80211_reg_initiator initiator,
++			struct ieee80211_supported_band *sband)
  {
--	struct sk_buff *skb = NULL;
- 	struct carl9170_vif_info *cvif;
-+	int i = 1;
-+
-+	/* The AR9170 hardware has no fancy beacon queue or some
-+	 * other scheduling mechanism. So, the driver has to make
-+	 * due by setting the two beacon timers (pretbtt and tbtt)
-+	 * once and then swapping the beacon address in the HW's
-+	 * register file each time the pretbtt fires.
-+	 */
-+
-+	cvif = rcu_dereference(ar->beacon_iter);
-+	if (ar->vifs > 0 && cvif) {
-+		do {
-+			list_for_each_entry_continue_rcu(cvif, &ar->vif_list,
-+							 list) {
-+				if (cvif->active && cvif->enable_beacon)
-+					goto out;
-+			}
-+		} while (ar->beacon_enabled && i--);
-+	}
-+
-+out:
-+	rcu_assign_pointer(ar->beacon_iter, cvif);
-+	return cvif;
-+}
-+
-+static bool carl9170_tx_beacon_physet(struct ar9170 *ar, struct sk_buff *skb,
-+				      u32 *ht1, u32 *plcp)
-+{
- 	struct ieee80211_tx_info *txinfo;
- 	struct ieee80211_tx_rate *rate;
--	__le32 *data, *old = NULL;
--	unsigned int plcp, power, chains;
--	u32 word, ht1, off, addr, len;
--	int i = 0, err = 0;
-+	unsigned int power, chains;
-+	bool ht_rate;
+ 	unsigned int i;
+-	struct ieee80211_supported_band *sband;
  
--	rcu_read_lock();
--	cvif = rcu_dereference(ar->beacon_iter);
--retry:
--	if (ar->vifs == 0 || !cvif)
--		goto out_unlock;
-+	txinfo = IEEE80211_SKB_CB(skb);
-+	rate = &txinfo->control.rates[0];
-+	ht_rate = !!(txinfo->control.rates[0].flags & IEEE80211_TX_RC_MCS);
-+	carl9170_tx_rate_tpc_chains(ar, txinfo, rate, plcp, &power, &chains);
+-	BUG_ON(!wiphy->bands[band]);
+-	sband = wiphy->bands[band];
++	if (!sband)
++		return;
  
--	list_for_each_entry_continue_rcu(cvif, &ar->vif_list, list) {
--		if (cvif->active && cvif->enable_beacon)
--			goto found;
-+	*ht1 = AR9170_MAC_BCN_HT1_TX_ANT0;
-+	if (chains == AR9170_TX_PHY_TXCHAIN_2)
-+		*ht1 |= AR9170_MAC_BCN_HT1_TX_ANT1;
-+	SET_VAL(AR9170_MAC_BCN_HT1_PWR_CTRL, *ht1, 7);
-+	SET_VAL(AR9170_MAC_BCN_HT1_TPC, *ht1, power);
-+	SET_VAL(AR9170_MAC_BCN_HT1_CHAIN_MASK, *ht1, chains);
-+
-+	if (ht_rate) {
-+		*ht1 |= AR9170_MAC_BCN_HT1_HT_EN;
-+		if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
-+			*plcp |= AR9170_MAC_BCN_HT2_SGI;
-+
-+		if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
-+			*ht1 |= AR9170_MAC_BCN_HT1_BWC_40M_SHARED;
-+			*plcp |= AR9170_MAC_BCN_HT2_BW40;
-+		} else if (rate->flags & IEEE80211_TX_RC_DUP_DATA) {
-+			*ht1 |= AR9170_MAC_BCN_HT1_BWC_40M_DUP;
-+			*plcp |= AR9170_MAC_BCN_HT2_BW40;
-+		}
-+
-+		SET_VAL(AR9170_MAC_BCN_HT2_LEN, *plcp, skb->len + FCS_LEN);
-+	} else {
-+		if (*plcp <= AR9170_TX_PHY_RATE_CCK_11M)
-+			*plcp |= ((skb->len + FCS_LEN) << (3 + 16)) + 0x0400;
-+		else
-+			*plcp |= ((skb->len + FCS_LEN) << 16) + 0x0010;
- 	}
+ 	for (i = 0; i < sband->n_channels; i++)
+-		handle_channel(wiphy, initiator, band, i);
++		handle_channel(wiphy, initiator, &sband->channels[i]);
+ }
  
--	if (!ar->beacon_enabled || i++)
--		goto out_unlock;
-+	return ht_rate;
-+}
+ static bool reg_request_cell_base(struct regulatory_request *request)
+@@ -1125,20 +1118,14 @@ static bool is_ht40_allowed(struct ieee80211_channel *chan)
+ }
  
--	goto retry;
-+int carl9170_update_beacon(struct ar9170 *ar, const bool submit)
-+{
-+	struct sk_buff *skb = NULL;
-+	struct carl9170_vif_info *cvif;
-+	__le32 *data, *old = NULL;
-+	u32 word, ht1, plcp, off, addr, len;
-+	int i = 0, err = 0;
-+	bool ht_rate;
+ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+-					 enum ieee80211_band band,
+-					 unsigned int chan_idx)
++					 struct ieee80211_channel *channel)
+ {
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *channel;
++	struct ieee80211_supported_band *sband = wiphy->bands[channel->band];
+ 	struct ieee80211_channel *channel_before = NULL, *channel_after = NULL;
+ 	unsigned int i;
  
--found:
--	rcu_assign_pointer(ar->beacon_iter, cvif);
-+	rcu_read_lock();
-+	cvif = carl9170_pick_beaconing_vif(ar);
-+	if (!cvif)
-+		goto out_unlock;
+ 	assert_cfg80211_lock();
  
- 	skb = ieee80211_beacon_get_tim(ar->hw, carl9170_get_vif(cvif),
- 		NULL, NULL);
-@@ -1558,7 +1615,6 @@ found:
- 		goto err_free;
- 	}
- 
--	txinfo = IEEE80211_SKB_CB(skb);
- 	spin_lock_bh(&ar->beacon_lock);
- 	data = (__le32 *)skb->data;
- 	if (cvif->beacon)
-@@ -1588,43 +1644,14 @@ found:
- 		goto err_unlock;
- 	}
- 
--	ht1 = AR9170_MAC_BCN_HT1_TX_ANT0;
--	rate = &txinfo->control.rates[0];
--	carl9170_tx_rate_tpc_chains(ar, txinfo, rate, &plcp, &power, &chains);
--	if (!(txinfo->control.rates[0].flags & IEEE80211_TX_RC_MCS)) {
--		if (plcp <= AR9170_TX_PHY_RATE_CCK_11M)
--			plcp |= ((skb->len + FCS_LEN) << (3 + 16)) + 0x0400;
--		else
--			plcp |= ((skb->len + FCS_LEN) << 16) + 0x0010;
--	} else {
--		ht1 |= AR9170_MAC_BCN_HT1_HT_EN;
--		if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
--			plcp |= AR9170_MAC_BCN_HT2_SGI;
+-	sband = wiphy->bands[band];
+-	BUG_ON(chan_idx >= sband->n_channels);
+-	channel = &sband->channels[chan_idx];
 -
--		if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
--			ht1 |= AR9170_MAC_BCN_HT1_BWC_40M_SHARED;
--			plcp |= AR9170_MAC_BCN_HT2_BW40;
--		}
--		if (rate->flags & IEEE80211_TX_RC_DUP_DATA) {
--			ht1 |= AR9170_MAC_BCN_HT1_BWC_40M_DUP;
--			plcp |= AR9170_MAC_BCN_HT2_BW40;
--		}
--
--		SET_VAL(AR9170_MAC_BCN_HT2_LEN, plcp, skb->len + FCS_LEN);
+ 	if (!is_ht40_allowed(channel)) {
+ 		channel->flags |= IEEE80211_CHAN_NO_HT40;
+ 		return;
+@@ -1174,16 +1161,15 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ }
+ 
+ static void reg_process_ht_flags_band(struct wiphy *wiphy,
+-				      enum ieee80211_band band)
++				      struct ieee80211_supported_band *sband)
+ {
+ 	unsigned int i;
+-	struct ieee80211_supported_band *sband;
+ 
+-	BUG_ON(!wiphy->bands[band]);
+-	sband = wiphy->bands[band];
++	if (!sband)
++		return;
+ 
+ 	for (i = 0; i < sband->n_channels; i++)
+-		reg_process_ht_flags_channel(wiphy, band, i);
++		reg_process_ht_flags_channel(wiphy, &sband->channels[i]);
+ }
+ 
+ static void reg_process_ht_flags(struct wiphy *wiphy)
+@@ -1193,11 +1179,8 @@ static void reg_process_ht_flags(struct wiphy *wiphy)
+ 	if (!wiphy)
+ 		return;
+ 
+-	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+-		if (wiphy->bands[band])
+-			reg_process_ht_flags_band(wiphy, band);
 -	}
 -
--	SET_VAL(AR9170_MAC_BCN_HT1_PWR_CTRL, ht1, 7);
--	SET_VAL(AR9170_MAC_BCN_HT1_TPC, ht1, power);
--	SET_VAL(AR9170_MAC_BCN_HT1_CHAIN_MASK, ht1, chains);
--	if (chains == AR9170_TX_PHY_TXCHAIN_2)
--		ht1 |= AR9170_MAC_BCN_HT1_TX_ANT1;
-+	ht_rate = carl9170_tx_beacon_physet(ar, skb, &ht1, &plcp);
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++)
++		reg_process_ht_flags_band(wiphy, wiphy->bands[band]);
+ }
  
- 	carl9170_async_regwrite_begin(ar);
- 	carl9170_async_regwrite(AR9170_MAC_REG_BCN_HT1, ht1);
--	if (!(txinfo->control.rates[0].flags & IEEE80211_TX_RC_MCS))
--		carl9170_async_regwrite(AR9170_MAC_REG_BCN_PLCP, plcp);
--	else
-+	if (ht_rate)
- 		carl9170_async_regwrite(AR9170_MAC_REG_BCN_HT2, plcp);
-+	else
-+		carl9170_async_regwrite(AR9170_MAC_REG_BCN_PLCP, plcp);
+ static void wiphy_update_regulatory(struct wiphy *wiphy,
+@@ -1212,10 +1195,8 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
  
- 	for (i = 0; i < DIV_ROUND_UP(skb->len, 4); i++) {
- 		/*
+ 	last_request->dfs_region = cfg80211_regdomain->dfs_region;
+ 
+-	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+-		if (wiphy->bands[band])
+-			handle_band(wiphy, band, initiator);
+-	}
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++)
++		handle_band(wiphy, initiator, wiphy->bands[band]);
+ 
+ 	reg_process_beacons(wiphy);
+ 	reg_process_ht_flags(wiphy);
+@@ -1245,8 +1226,7 @@ static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
+ }
+ 
+ static void handle_channel_custom(struct wiphy *wiphy,
+-				  enum ieee80211_band band,
+-				  unsigned int chan_idx,
++				  struct ieee80211_channel *chan,
+ 				  const struct ieee80211_regdomain *regd)
+ {
+ 	int r;
+@@ -1255,15 +1235,9 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	const struct ieee80211_reg_rule *reg_rule = NULL;
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+ 	const struct ieee80211_freq_range *freq_range = NULL;
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *chan;
+ 
+ 	assert_reg_lock();
+ 
+-	sband = wiphy->bands[band];
+-	BUG_ON(chan_idx >= sband->n_channels);
+-	chan = &sband->channels[chan_idx];
+-
+ 	r = freq_reg_info_regd(wiphy, MHZ_TO_KHZ(chan->center_freq),
+ 			       desired_bw_khz, &reg_rule, regd);
+ 
+@@ -1288,17 +1262,17 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 		(int) MBM_TO_DBM(power_rule->max_eirp);
+ }
+ 
+-static void handle_band_custom(struct wiphy *wiphy, enum ieee80211_band band,
++static void handle_band_custom(struct wiphy *wiphy,
++			       struct ieee80211_supported_band *sband,
+ 			       const struct ieee80211_regdomain *regd)
+ {
+ 	unsigned int i;
+-	struct ieee80211_supported_band *sband;
+ 
+-	BUG_ON(!wiphy->bands[band]);
+-	sband = wiphy->bands[band];
++	if (!sband)
++		return;
+ 
+ 	for (i = 0; i < sband->n_channels; i++)
+-		handle_channel_custom(wiphy, band, i, regd);
++		handle_channel_custom(wiphy, &sband->channels[i], regd);
+ }
+ 
+ /* Used by drivers prior to wiphy registration */
+@@ -1312,7 +1286,7 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (!wiphy->bands[band])
+ 			continue;
+-		handle_band_custom(wiphy, band, regd);
++		handle_band_custom(wiphy, wiphy->bands[band], regd);
+ 		bands_set++;
+ 	}
+ 	mutex_unlock(&reg_mutex);
+@@ -1546,7 +1520,8 @@ static void reg_process_hint(struct regulatory_request *reg_request,
+ {
+ 	struct wiphy *wiphy = NULL;
+ 
+-	BUG_ON(!reg_request->alpha2);
++	if (WARN_ON(!reg_request->alpha2))
++		return;
+ 
+ 	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
+ 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
+@@ -1687,7 +1662,8 @@ int regulatory_hint_user(const char *alpha2,
+ {
+ 	struct regulatory_request *request;
+ 
+-	BUG_ON(!alpha2);
++	if (WARN_ON(!alpha2))
++		return -EINVAL;
+ 
+ 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
+ 	if (!request)
+@@ -1709,8 +1685,8 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+ 	struct regulatory_request *request;
+ 
+-	BUG_ON(!alpha2);
+-	BUG_ON(!wiphy);
++	if (WARN_ON(!alpha2 || !wiphy))
++		return -EINVAL;
+ 
+ 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
+ 	if (!request)
+@@ -2248,12 +2224,14 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 			reg_set_request_processed();
+ 
+ 		kfree(rd);
+-		mutex_unlock(&reg_mutex);
+-		return r;
++		goto out;
+ 	}
+ 
+ 	/* This would make this whole thing pointless */
+-	BUG_ON(!last_request->intersect && rd != cfg80211_regdomain);
++	if (WARN_ON(!last_request->intersect && rd != cfg80211_regdomain)) {
++		r = -EINVAL;
++		goto out;
++	}
+ 
+ 	/* update all wiphys now with the new established regulatory domain */
+ 	update_all_wiphy_regulatory(last_request->initiator);
+@@ -2264,6 +2242,7 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 
+ 	reg_set_request_processed();
+ 
++ out:
+ 	mutex_unlock(&reg_mutex);
+ 
+ 	return r;
 -- 
-1.7.10.4
+1.8.0
 
