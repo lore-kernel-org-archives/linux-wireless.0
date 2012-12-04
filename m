@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40194 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752547Ab2LJK6k (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:53861 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418Ab2LDElY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 05:58:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: allow testing paged RX
-Date: Mon, 10 Dec 2012 11:59:02 +0100
-Message-Id: <1355137142-21292-1-git-send-email-johannes@sipsolutions.net> (sfid-20121210_115844_109015_C979B5D8)
+	Mon, 3 Dec 2012 23:41:24 -0500
+Received: by mail-we0-f174.google.com with SMTP id x10so1370930wey.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 20:41:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 3 Dec 2012 20:35:41 -0800
+Message-ID: <CAG6hwVO8wcTUEqc5QxNxBiGE52wo9sDw4+3X84uc-ZRf+7hC_A@mail.gmail.com> (sfid-20121204_054134_431172_7365A32D)
+Subject: Re: help: 802.11s bad performance with 802.11n enabled
+To: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Chaoxing,
 
-Paged RX, i.e. SKBs with (some of) the data in pages instead
-of the SKB header data (skb->data) can behave differently in
-the stack and cause other bugs. To make debugging easier add
-an option to hwsim to test with such SKBs.
+On Mon, Dec 3, 2012 at 6:37 AM, Chaoxing Lin
+<Chaoxing.Lin@ultra-3eti.com> wrote:
+> After a lot of experiments, here are various problems observed.
+>
+> 1. The "Fail to stop Tx DMA" related issue plays a role. But not the major part. It accounts for about 3% of packet loss in my testbed.
+> Is anyone looking at this issue? This issue is now very easy to recreate.
+>
+> 2. Security Key for peer link and mesh path messed up
+>
+> For example, in one case,
+> Device A cannot ping device B but it can ping device C. And it is seen that telnet
+> from device A to device C and from device C it can ping device B.
+> This means device A actually can reach device B. But user has to do it manually
+> (through a third device)
+>
+> Below is a "reachable graph" in one of the real scenario.
+>
+> 147 ----> 115
+>     ----> 111 ------>103
+>               ------>104
+>               ------>113
+>               ------>115
+>
+> Device 147 can only ping 115 and 111, although its mpath table says it has direct mpath to every node.
+> But a telnet session from 147 to 111 can ping the rest devices 103, 104, 113, 115.
+>
+> Further analysis peer link between 147 and 104 reveals below.
+>
+> 147 has peer link to 104 in "ESTAB" and has all 3 keys (CCM pairwise, CMAC group key, CCM group key) installed for peer 104.
+> But 104 has peer link to 147 in "LISTEN" and it does not have any keys installed for 147.
+> That is to say, the peer link between 147 and 104 is bad. The worse thing is the mpath table on 147 keep saying the path to 104 is active. So all packets to 104 are sent to this peer link, but could not be decrypted on the other end.
+>
+> I run meshd-nl80211 compiled from auth-sae for the encryption. Does anyone know what's the problem here? Is this a protocol defect, e.g. failure to cover certain error condition? Or is it auth-sae/kernel implementation bug?
+>
+>
+> 3. 802.11n packet aggregation plays a big role in 802.11s mesh network in-stability
+>
+> For experiment, I changed ath9k driver to disable 802.11n packet aggregation. The network becomes much better.
+> It's as stable as running 802.11a only mode.
+> So it seems that the aggregation plays a big role in in-stability of 802.11s network with 802.11n.
+> Any one has any idea why?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 26 +++++++++++++++++++++++---
- 1 file changed, 23 insertions(+), 3 deletions(-)
+I just learned BA and BAR frames only have a 16 bit field for
+"starting sequence number", while mesh uses 32-bit "mesh sequence
+numbers". Try to investigate whether these two counters interact
+properly.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ff90855..145498f 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -48,6 +48,10 @@ static int channels = 1;
- module_param(channels, int, 0444);
- MODULE_PARM_DESC(channels, "Number of concurrent channels");
- 
-+static bool paged_rx = false;
-+module_param(paged_rx, bool, 0644);
-+MODULE_PARM_DESC(paged_rx, "Use paged SKBs for RX instead of linear ones");
-+
- /**
-  * enum hwsim_regtest - the type of regulatory tests we offer
-  *
-@@ -755,9 +759,25 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 		 * reserve some space for our vendor and the normal
- 		 * radiotap header, since we're copying anyway
- 		 */
--		nskb = skb_copy_expand(skb, 64, 0, GFP_ATOMIC);
--		if (nskb == NULL)
--			continue;
-+		if (skb->len < PAGE_SIZE && paged_rx) {
-+			struct page *page = alloc_page(GFP_ATOMIC);
-+
-+			if (!page)
-+				continue;
-+
-+			nskb = dev_alloc_skb(128);
-+			if (!nskb) {
-+				__free_page(page);
-+				continue;
-+			}
-+
-+			memcpy(page_address(page), skb->data, skb->len);
-+			skb_add_rx_frag(nskb, 0, page, 0, skb->len, skb->len);
-+		} else {
-+			nskb = skb_copy(skb, GFP_ATOMIC);
-+			if (!nskb)
-+				continue;
-+		}
- 
- 		if (mac80211_hwsim_addr_match(data2, hdr->addr1))
- 			ack = true;
--- 
-1.8.0
-
+Thomas
