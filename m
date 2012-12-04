@@ -1,45 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42220 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781Ab2LJVs7 (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:48315 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753176Ab2LDNTm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 16:48:59 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/10] iwlwifi: reset_ict in stop_hw
-Date: Mon, 10 Dec 2012 22:49:14 +0100
-Message-Id: <1355176158-24675-6-git-send-email-johannes@sipsolutions.net> (sfid-20121210_224907_131809_F91C8F50)
-In-Reply-To: <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
-References: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
- <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 4 Dec 2012 08:19:42 -0500
+Message-ID: <50BDF869.5030702@posedge.com> (sfid-20121204_141951_391118_A2548221)
+Date: Tue, 04 Dec 2012 18:49:37 +0530
+From: Saravana <saravanad@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: add debugfs file for mic failure
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+The mic failure count will provide the number of mic failure that 
+have happened without a countermeasure being started. Once the 
+countermeasure is started, the counter will be reset to 0.
+This count will be helpful when the consecutive 
+mic failure occur at intervals greater than 60 seconds regularly(frequently).
 
-Since the device is taken down in stop_hw, call reset_ict
-from there too.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Saravana <saravanad@posedge.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/trans.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/debugfs_key.c |   20 ++++++++++++++++++++
+ net/mac80211/key.h         |    3 +++
+ net/mac80211/wpa.c         |    2 ++
+ 3 files changed, 25 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 09d2ed1..39d6219 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -635,6 +635,8 @@ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans,
- 	iwl_disable_interrupts(trans);
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 2d42354..1cc262e 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -199,6 +199,25 @@ static ssize_t key_icverrors_read(struct file *file, char __user *userbuf,
+ }
+ KEY_OPS(icverrors);
  
-+	iwl_pcie_disable_ict(trans);
++static ssize_t key_mic_failures_read(struct file *file, char __user *userbuf,
++				  size_t count, loff_t *ppos)
++{
++	struct ieee80211_key *key = file->private_data;
++	char buf[20];
++	int len;
 +
- 	if (!op_mode_leaving) {
- 		/*
- 		 * Even if we stop the HW, we still want the RF kill
--- 
-1.8.0
-
++	switch (key->conf.cipher) {
++	case WLAN_CIPHER_SUITE_TKIP:
++		len = scnprintf(buf, sizeof(buf), "%u\n",
++				key->u.tkip.mic_failures);
++		break;
++	default:
++		return 0;
++	}
++	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
++}
++KEY_OPS(mic_failures);
++
+ static ssize_t key_key_read(struct file *file, char __user *userbuf,
+ 			    size_t count, loff_t *ppos)
+ {
+@@ -260,6 +279,7 @@ void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+ 	DEBUGFS_ADD(rx_spec);
+ 	DEBUGFS_ADD(replays);
+ 	DEBUGFS_ADD(icverrors);
++	DEBUGFS_ADD(mic_failures);
+ 	DEBUGFS_ADD(key);
+ 	DEBUGFS_ADD(ifindex);
+ };
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index 7cff0d3..382dc44 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -81,6 +81,9 @@ struct ieee80211_key {
+ 
+ 			/* last received RSC */
+ 			struct tkip_ctx rx[IEEE80211_NUM_TIDS];
++
++			/* number of mic failures */
++			u32 mic_failures;
+ 		} tkip;
+ 		struct {
+ 			atomic64_t tx_pn;
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 8bd2f5c..aad79f3 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -161,6 +161,8 @@ update_iv:
+ 	return RX_CONTINUE;
+ 
+ mic_fail:
++
++	rx->key->u.tkip.mic_failures++;
+ 	/*
+ 	 * In some cases the key can be unset - e.g. a multicast packet, in
+ 	 * a driver that supports HW encryption. Send up the key idx only if
