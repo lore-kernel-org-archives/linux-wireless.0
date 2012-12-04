@@ -1,96 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53085 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45378 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752746Ab2L1L0b (ORCPT
+	with ESMTP id S1751308Ab2LDTHc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Dec 2012 06:26:31 -0500
+	Tue, 4 Dec 2012 14:07:32 -0500
+Message-ID: <1354648076.9608.16.camel@jlt4.sipsolutions.net> (sfid-20121204_200736_394665_F50A4BB0)
+Subject: Re: [PATCH v2] mac80211: add debug file for mic failure
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] wireless: use __aligned
-Date: Fri, 28 Dec 2012 12:26:52 +0100
-Message-Id: <1356694012-25695-1-git-send-email-johannes@sipsolutions.net> (sfid-20121228_122635_360904_AEB4C87D)
+To: Saravana <saravanad@posedge.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 04 Dec 2012 20:07:56 +0100
+In-Reply-To: <1354633038.9608.3.camel@jlt4.sipsolutions.net> (sfid-20121204_155658_509490_E48BCD66)
+References: <50BE0606.3000103@posedge.com>
+	 <1354633038.9608.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20121204_155658_509490_E48BCD66)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2012-12-04 at 15:57 +0100, Johannes Berg wrote:
+> On Tue, 2012-12-04 at 19:47 +0530, Saravana wrote:
+> > The mic failure count will provide the number of mic failure that 
+> > have happened without a countermeasure being started. Once the 
+> > countermeasure is started, the counter will be reset to 0.
+> > This count will be helpful when the consecutive 
+> > mic failure occur at intervals greater than 60 seconds regularly(frequently).
+> 
+> Applied.
 
-Use __aligned(...) instead of __attribute__((aligned(...)))
-in mac80211 and cfg80211.
+Never mind, dropped. It has a null pointer issue and still has
+whitespace issues. Please figure out how to actually indent
+parameters ...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h | 4 ++--
- include/net/mac80211.h | 6 +++---
- net/wireless/core.h    | 2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+Also, signed-off-by should be your full name, is that really just
+"Saravana"? Your email seems to indicate there's something else
+("saravanad")
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b6942a6..48a0bb4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1268,7 +1268,7 @@ struct cfg80211_bss {
- 
- 	u8 bssid[ETH_ALEN];
- 
--	u8 priv[0] __attribute__((__aligned__(sizeof(void *))));
-+	u8 priv[0] __aligned(sizeof(void *));
- };
- 
- /**
-@@ -2404,7 +2404,7 @@ struct wiphy {
- 	const struct iw_handler_def *wext;
- #endif
- 
--	char priv[0] __attribute__((__aligned__(NETDEV_ALIGN)));
-+	char priv[0] __aligned(NETDEV_ALIGN);
- };
- 
- static inline struct net *wiphy_net(struct wiphy *wiphy)
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6ee0650..9107d49 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -173,7 +173,7 @@ struct ieee80211_chanctx_conf {
- 
- 	u8 rx_chains_static, rx_chains_dynamic;
- 
--	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
-+	u8 drv_priv[0] __aligned(sizeof(void *));
- };
- 
- /**
-@@ -1059,7 +1059,7 @@ struct ieee80211_vif {
- 	u32 driver_flags;
- 
- 	/* must be last */
--	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
-+	u8 drv_priv[0] __aligned(sizeof(void *));
- };
- 
- static inline bool ieee80211_vif_is_mesh(struct ieee80211_vif *vif)
-@@ -1214,7 +1214,7 @@ struct ieee80211_sta {
- 	u8 rx_nss;
- 
- 	/* must be last */
--	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
-+	u8 drv_priv[0] __aligned(sizeof(void *));
- };
- 
- /**
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index b8f4630..f342267 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -89,7 +89,7 @@ struct cfg80211_registered_device {
- 
- 	/* must be last because of the way we do wiphy_priv(),
- 	 * and it should at least be aligned to NETDEV_ALIGN */
--	struct wiphy wiphy __attribute__((__aligned__(NETDEV_ALIGN)));
-+	struct wiphy wiphy __aligned(NETDEV_ALIGN);
- };
- 
- static inline
--- 
-1.8.0
+johannes
 
