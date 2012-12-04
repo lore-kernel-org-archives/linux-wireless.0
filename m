@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:34693
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+Received: from mx1.redhat.com ([209.132.183.28]:10284 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754912Ab2LGKCl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 05:02:41 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 0/8] PAPRD for ath9k
-Date: Fri,  7 Dec 2012 15:31:53 +0530
-Message-Id: <1354874521-4138-1-git-send-email-sujith@msujith.org> (sfid-20121207_110246_021382_E0CAF86C)
+	id S1752171Ab2LDJ7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Dec 2012 04:59:24 -0500
+Date: Tue, 4 Dec 2012 10:59:07 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Francisco Pina Martins <f.pinamartins@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH 1/2] mac80211: introduce
+ IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
+Message-ID: <20121204095905.GA3021@redhat.com> (sfid-20121204_105928_331851_1CFAEF7B)
+References: <20121203115632.GA2490@redhat.com>
+ <50BCB3A3.4090708@01019freenet.de>
+ <201212031629.16806.chunkeey@googlemail.com>
+ <50BD03EF.3010504@01019freenet.de>
+ <CAGXE3d-MFLsQr1xdWqk0bVdFj2VR+Bspffazaka3NzvWPusLUg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d-MFLsQr1xdWqk0bVdFj2VR+Bspffazaka3NzvWPusLUg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Dec 03, 2012 at 09:21:38PM +0100, Helmut Schaa wrote:
+> Yep, this makes definitely sense! And since we can copy big parts of
+> the carl9170 patch :D this shouldn't be too much work hopefully ...
 
-This patch series enables PAPRD functionality for AR9485,
-AR9462 and AR9565. Please review !
+But still something that will need to go -next rather than -stable, so
+let's apply those patches, and remove them in -next when better patch
+will come in.
 
-Sujith Manoharan (8):
-  ath9k_hw: Fix PAPRD registers for AR9485
-  ath9k_hw: Fix PAPRD training
-  ath9k: Add a few debug messages for PAPRD
-  ath9k: Fix redundant PS wrappers
-  ath9k_hw: Various trivial fixes for PAPRD
-  ath9k_hw: Fix PAPRD retraining for AR9485
-  ath9k_hw: Calculate the correct training power for PAPRD
-  ath9k_hw: Enable PAPRD for AR9485, AR9462 and AR9565
-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 49 +++++++++------
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  | 87 +++++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    | 29 +++++----
- drivers/net/wireless/ath/ath9k/hw.c            | 11 ++++
- drivers/net/wireless/ath/ath9k/hw.h            |  4 +-
- drivers/net/wireless/ath/ath9k/link.c          | 22 ++++---
- 6 files changed, 137 insertions(+), 65 deletions(-)
-
--- 
-1.8.0.1
-
+Stanislaw
