@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58404 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803Ab2LJSlt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44585 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753883Ab2LDOtS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 13:41:49 -0500
-Date: Mon, 10 Dec 2012 13:41:46 -0500 (EST)
-Message-Id: <20121210.134146.1583909966821253233.davem@davemloft.net> (sfid-20121210_194158_339635_DCDE5E9A)
-To: johannes@sipsolutions.net
-Cc: eric@regit.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	eric.dumazet@gmail.com
-Subject: Re: [PATCH] ipv4: ip_check_defrag must not modify skb before
- unsharing
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1355132466.9857.6.camel@jlt4.sipsolutions.net>
-References: <1354919017.9124.33.camel@jlt4.sipsolutions.net>
-	<1355131788.9857.1.camel@jlt4.sipsolutions.net>
-	<1355132466.9857.6.camel@jlt4.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 4 Dec 2012 09:49:18 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 15/18] regulatory: remove locking from wiphy_apply_custom_regulatory
+Date: Tue,  4 Dec 2012 15:48:57 +0100
+Message-Id: <1354632540-21207-16-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154924_258860_E18C30F4)
+In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 10 Dec 2012 10:41:06 +0100
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> ip_check_defrag() might be called from af_packet within the
-> RX path where shared SKBs are used, so it must not modify
-> the input SKB before it has unshared it for defragmentation.
-> Use skb_copy_bits() to get the IP header and only pull in
-> everything later.
-> 
-> The same is true for the other caller in macvlan as it is
-> called from dev->rx_handler which can also get a shared SKB.
-> 
-> Reported-by: Eric Leblond <eric@regit.org>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> For some versions of the kernel, this code goes into af_packet.c
+wiphy_apply_custom_regulatory() doesn't have to hold
+the regulatory mutex as it only modifies the given
+wiphy with the given regulatory domain, it doesn't
+access any global regulatory data.
 
-So the bug is that ip_check_defrag() has a precondition which is met
-properly by all callers except AF_PACKET.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-If this is the case, remind me why are we changing ip_check_defrag()
-rather than the violator of the precondition?
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index e0a7312..958f164 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1234,8 +1234,6 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+ 	const struct ieee80211_freq_range *freq_range = NULL;
+ 
+-	assert_reg_lock();
+-
+ 	r = freq_reg_info_regd(wiphy, MHZ_TO_KHZ(chan->center_freq),
+ 			       desired_bw_khz, &reg_rule, regd);
+ 
+@@ -1280,14 +1278,12 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+ 	enum ieee80211_band band;
+ 	unsigned int bands_set = 0;
+ 
+-	mutex_lock(&reg_mutex);
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (!wiphy->bands[band])
+ 			continue;
+ 		handle_band_custom(wiphy, wiphy->bands[band], regd);
+ 		bands_set++;
+ 	}
+-	mutex_unlock(&reg_mutex);
+ 
+ 	/*
+ 	 * no point in calling this if it won't have any effect
+-- 
+1.8.0
+
