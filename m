@@ -1,175 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f45.google.com ([209.85.210.45]:42408 "EHLO
-	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496Ab2LTS6Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 13:58:25 -0500
-Received: by mail-da0-f45.google.com with SMTP id w4so1652801dam.4
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 10:58:24 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linville@tuxdriver.org
-Cc: linux-wireless@vger.kernel.org, jlopex@gmail.com, j@wl.fi,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 3/3] mac80211_hwsim: emulate proper beaconing
-Date: Thu, 20 Dec 2012 10:57:51 -0800
-Message-Id: <1356029871-17794-3-git-send-email-thomas@cozybit.com> (sfid-20121220_195829_246974_F8E94B71)
-In-Reply-To: <1356029871-17794-1-git-send-email-thomas@cozybit.com>
-References: <1356029871-17794-1-git-send-email-thomas@cozybit.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:46617 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753294Ab2LEMY5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 07:24:57 -0500
+Message-ID: <50BF3E26.1080801@ti.com> (sfid-20121205_132500_635797_A9E79233)
+Date: Wed, 5 Dec 2012 14:29:26 +0200
+From: Igal Chernobelsky <igalc@ti.com>
+MIME-Version: 1.0
+To: Luciano Coelho <coelho@ti.com>
+CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 03/20] wlcore/wl18xx/wl12xx: FW log params per chip arch
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>	 <1354095769-8724-4-git-send-email-arik@wizery.com> <1354704935.6234.44.camel@cumari.coelho.fi>
+In-Reply-To: <1354704935.6234.44.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What this means:
+Hi Luca,
 
-1) Fill in beacon timestamp for the monitor interface, and
-   don't make the timestamp adjustment so contrived.
-2) Change beacon time in response to TSF adjustment. This
-   means hwsim PHYs can now be told to beacon offset
-   (Toffset) from each other in time by adjusting the TSF.
-3) PHY TSF offset adjustments are cumulative. i.e. +1000,
-   then -1000 should not result in a TSF with offset -1000.
+On 12/05/2012 12:55 PM, Luciano Coelho wrote:
+> On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
+>> From: Igal Chernobelsky<igalc@ti.com>
+>>
+>> FW memory block size and FW log end marker parameters
+>> are added to wl structure and are initialized per
+>> chip architecture. convert_hwaddr hw operation is added
+>> to convert chip dependent FW internal address.
+>> Copy from FW log is also simplified to copy the entire
+>> memory block as FW logger utility is repsponsible
+>> for parsing of FW log content.
+>>
+>> Signed-off-by: Igal Chernobelsky<igalc@ti.com>
+>> Signed-off-by: Arik Nemtsov<arik@wizery.com>
+>> ---
+> This commit log explains what has been done, which can quite easily be
+> see in the patch itself.  That's okay, but what I'm missing here is the
+> explanation *why* this needs to be done.
 
-Per-station Toffset tracking has been tested, and beacons
-are transmitted shortly after TBTT as shown in the
-timestamp.
+I can add to commit that FW logger is supported by wlcore but
+has different parameters per chip (actually written in commit header).
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- drivers/net/wireless/mac80211_hwsim.c |   50 ++++++++++++++++++++-------------
- 1 file changed, 30 insertions(+), 20 deletions(-)
+>
+>> diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+>> index 951b88c..5e3c808 100644
+>> --- a/drivers/net/wireless/ti/wl12xx/main.c
+>> +++ b/drivers/net/wireless/ti/wl12xx/main.c
+>> @@ -706,6 +706,9 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+>>   		goto out;
+>>   	}
+>>
+>> +	wl->fw_mem_block_size = 256;
+>> +	wl->fwlog_end = 0x2000000;
+> This value used to be in a macro before (WLCORE_FW_LOG_END), why kill
+> it? It should just be renamed to WL12XX_FW_LOG_END and a new one be
+> created for WL18XX.
+These values are used only in one place during initialization and
+are assigned to variables with self explanation name.
+Do you still prefer defines?
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 0b38600..94257f9 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -357,7 +357,8 @@ struct mac80211_hwsim_data {
- 	int power_level;
- 
- 	/* difference between this hw's clock and the real clock, in usecs */
--	u64 tsf_offset;
-+	s64 tsf_offset;
-+	s64 bcn_delta;
- 	struct tasklet_struct bcn_tasklet;
- };
- 
-@@ -408,8 +409,7 @@ static netdev_tx_t hwsim_mon_xmit(struct sk_buff *skb,
- 
- static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
- {
--	struct timeval tv = ktime_to_timeval(ktime_get_real());
--	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
-+	u64 now = ktime_to_ns(hrtimer_cb_get_time(&data->beacon_timer)) / 1000;
- 	return cpu_to_le64(now + data->tsf_offset);
- }
- 
-@@ -424,9 +424,12 @@ static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
- 		struct ieee80211_vif *vif, u64 tsf)
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
--	struct timeval tv = ktime_to_timeval(ktime_get_real());
--	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
--	data->tsf_offset = tsf - now;
-+	u64 now = __mac80211_hwsim_get_tsf(data);
-+	s32 delta = tsf - now;
-+
-+	data->tsf_offset += delta;
-+	/* adjust after beaconing with new timestamp at old TBTT */
-+	data->bcn_delta = delta;
- }
- 
- static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
-@@ -697,7 +700,6 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_rx_status rx_status;
--	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
- 
- 	memset(&rx_status, 0, sizeof(rx_status));
- 	rx_status.flag |= RX_FLAG_MACTIME_START;
-@@ -727,7 +729,6 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	spin_lock(&hwsim_radio_lock);
- 	list_for_each_entry(data2, &hwsim_radios, list) {
- 		struct sk_buff *nskb;
--		struct ieee80211_mgmt *mgmt;
- 		struct tx_iter_data tx_iter_data = {
- 			.receive = false,
- 			.channel = chan,
-@@ -763,17 +764,8 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 		if (mac80211_hwsim_addr_match(data2, hdr->addr1))
- 			ack = true;
- 
--		/* set bcn timestamp relative to receiver mactime */
- 		rx_status.mactime =
- 				le64_to_cpu(__mac80211_hwsim_get_tsf(data2));
--		mgmt = (struct ieee80211_mgmt *) nskb->data;
--		if (ieee80211_is_beacon(mgmt->frame_control) ||
--		    ieee80211_is_probe_resp(mgmt->frame_control))
--			mgmt->u.beacon.timestamp = cpu_to_le64(
--				rx_status.mactime +
--				(data->tsf_offset - data2->tsf_offset) +
--				24 * 8 * 10 / txrate->bitrate);
--
- #if 0
- 		/*
- 		 * Don't enable this code by default as the OUI 00:00:00
-@@ -964,7 +956,11 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
- static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 				     struct ieee80211_vif *vif)
- {
--	struct ieee80211_hw *hw = arg;
-+	struct mac80211_hwsim_data *data = arg;
-+	struct ieee80211_hw *hw = data->hw;
-+	struct ieee80211_tx_info *info;
-+	struct ieee80211_rate *txrate;
-+	struct ieee80211_mgmt *mgmt;
- 	struct sk_buff *skb;
- 
- 	hwsim_check_magic(vif);
-@@ -977,6 +973,13 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 	skb = ieee80211_beacon_get(hw, vif);
- 	if (skb == NULL)
- 		return;
-+	info = IEEE80211_SKB_CB(skb);
-+	txrate = ieee80211_get_tx_rate(hw, info);
-+
-+	mgmt = (struct ieee80211_mgmt *) skb->data;
-+	/* fake header transmission time */
-+	mgmt->u.beacon.timestamp = cpu_to_le64(__mac80211_hwsim_get_tsf(data) +
-+					       24 * 8 * 10 / txrate->bitrate);
- 
- 	mac80211_hwsim_tx_frame(hw, skb,
- 				rcu_dereference(vif->chanctx_conf)->def.chan);
-@@ -989,7 +992,7 @@ static void mac80211_hwsim_bcn_tasklet(unsigned long d)
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 		hw, IEEE80211_IFACE_ITER_NORMAL,
--		mac80211_hwsim_beacon_tx, hw);
-+		mac80211_hwsim_beacon_tx, data);
- }
- 
- static enum hrtimer_restart
-@@ -997,6 +1000,7 @@ mac80211_hwsim_beacon(struct hrtimer *timer)
- {
- 	struct mac80211_hwsim_data *data =
- 		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
-+	u64 bcn_int = ktime_to_ns(data->beacon_int) / 1000;
- 
- 	if (!data->started)
- 		return HRTIMER_NORESTART;
-@@ -1004,7 +1008,13 @@ mac80211_hwsim_beacon(struct hrtimer *timer)
- 	/* must defer here since hrtimers are run in hard-IRQ */
- 	tasklet_schedule(&data->bcn_tasklet);
- 
--	hrtimer_forward(timer, hrtimer_get_expires(timer), data->beacon_int);
-+	/* beacon at new TBTT + beacon interval */
-+	if (data->bcn_delta) {
-+		bcn_int -= data->bcn_delta;
-+		data->bcn_delta = 0;
-+	}
-+	hrtimer_forward(timer, hrtimer_get_expires(timer),
-+			ns_to_ktime(bcn_int * 1000));
- 	return HRTIMER_RESTART;
- }
- 
+>> @@ -1632,6 +1635,11 @@ static int wl12xx_set_peer_cap(struct wl1271 *wl,
+>>   					      hlid);
+>>   }
+>>
+>> +static u32 wl12xx_convert_hwaddr(struct wl1271 *wl, u32 hwaddr)
+>> +{
+>> +	return hwaddr<<  5;
+>> +}
+> There was a good comment about this calculation before, it should be
+> moved here instead of deleted.
+Sorry, I will restore the comment for wl12xx:
+/* Addresses are stored internally as addresses to 32 bytes blocks */
+
+>
+>> @@ -1669,6 +1677,7 @@ static struct wlcore_ops wl12xx_ops = {
+>>   	.channel_switch		= wl12xx_cmd_channel_switch,
+>>   	.pre_pkt_send		= NULL,
+>>   	.set_peer_cap		= wl12xx_set_peer_cap,
+>> +	.convert_hwaddr = wl12xx_convert_hwaddr,
+> No need to break the alignment here.
+I will fix it.
+>
+>>   static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
+>> diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+>> index df8de71..d806241 100644
+>> --- a/drivers/net/wireless/ti/wl18xx/main.c
+>> +++ b/drivers/net/wireless/ti/wl18xx/main.c
+>> @@ -667,6 +667,9 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
+>>   		goto out;
+>>   	}
+>>
+>> +	wl->fw_mem_block_size = 272;
+>> +	wl->fwlog_end = 0x40000000;
+> Again, the magic number here can be avoided.
+The same as for wl12xx.
+
+>> @@ -1423,6 +1426,11 @@ static int wl18xx_set_peer_cap(struct wl1271 *wl,
+>>   				       rate_set, hlid);
+>>   }
+>>
+>> +static u32 wl18xx_convert_hwaddr(struct wl1271 *wl, u32 hwaddr)
+>> +{
+>> +	return hwaddr&  ~0x80000000;
+>> +}
+> A small explanation here would be nice.
+That is formula to convert from HW address ...
+
+> [...]
+>
+>
+>
+>>   	/* Traverse the memory blocks linked list */
+>>   	do {
+>> -		memset(block, 0, WL12XX_HW_BLOCK_SIZE);
+>> -		ret = wlcore_read_hwaddr(wl, addr, block, WL12XX_HW_BLOCK_SIZE,
+>> -					 false);
+>> +		part.mem.start = wlcore_hw_convert_hwaddr(wl, addr);
+>> +		part.mem.size  = PAGE_SIZE;
+>> +
+>> +		ret = wlcore_set_partition(wl,&part);
+>> +		if (ret<  0) {
+>> +			wl1271_error("%s: set_partition start=0x%X size=%d",
+>> +				__func__, part.mem.start, part.mem.size);
+> This could probably be a bit more descriptive, like saying that the
+> fwlog seems to be corrupt because the address in the linked list can't
+> be used for setting the partition.
+Ok, will add the comment.
+>
+>> diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
+>> index f48530f..5897747 100644
+>> --- a/drivers/net/wireless/ti/wlcore/io.h
+>> +++ b/drivers/net/wireless/ti/wlcore/io.h
+>> @@ -165,8 +165,8 @@ static inline int __must_check wlcore_read_hwaddr(struct wl1271 *wl, int hwaddr,
+>>          int physical;
+>>          int addr;
+>>
+>> -       /* Addresses are stored internally as addresses to 32 bytes blocks */
+>> -       addr = hwaddr<<  5;
+>> +       /* Convert from FW internal address which is chip arch dependent */
+>> +       addr = wl->ops->convert_hwaddr(wl, hwaddr);
+> This could be more descriptive.  As I understand, this is converting an
+> internal representation of pointers in the hardware to an address that
+> can be used to set the partitions.
+>
+Ok, will add more comment: convert to address used for setting partition 
+and reading over SDIO
+>
+>> diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+>> index a664662..a8647bd 100644
+>> --- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
+>> +++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+>> @@ -523,6 +523,4 @@ void wl1271_rx_filter_flatten_fields(struct wl12xx_rx_filter *filter,
+>>   #define HW_HT_RATES_OFFSET	16
+>>   #define HW_MIMO_RATES_OFFSET	24
+>>
+>> -#define WL12XX_HW_BLOCK_SIZE	256
+> I think this should also be created separately for wl12xx and wl18xx
+> instead of deleting the macro and hardcoding the values.
+
+See above comment for defines.
+
+> --
+> Luca.
+>
+
 -- 
-1.7.10.4
+Best regards
+Igal
 
