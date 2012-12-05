@@ -1,113 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56696 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391Ab2LNL7K (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:59737 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932073Ab2LEW2T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 06:59:10 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] mac80211: clean up ieee80211_quiesce
-Date: Fri, 14 Dec 2012 12:59:26 +0100
-Message-Id: <1355486368-14563-2-git-send-email-johannes@sipsolutions.net> (sfid-20121214_125916_372837_03FF856E)
-In-Reply-To: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net>
-References: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 5 Dec 2012 17:28:19 -0500
+Received: by mail-we0-f174.google.com with SMTP id x10so2271708wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2012 14:28:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAOpc7mF5yW=UtzYDASkbHbNo4QHOmKuWjNK+eqF36OZjY6SUFg@mail.gmail.com>
+References: <1354393301-11051-1-git-send-email-lewurm@gmail.com>
+ <CAAr_hs53SddPbUUAdaqBFjc8fx-sqDPVjqkq645cMptQqsaQOw@mail.gmail.com>
+ <CAD2nsn1WUzo0jBv=zJ4Bw+A_4=zr9YszCzP+X4ujXFfGwKAk8w@mail.gmail.com> <CAOpc7mF5yW=UtzYDASkbHbNo4QHOmKuWjNK+eqF36OZjY6SUFg@mail.gmail.com>
+From: Bernhard Urban <lewurm@gmail.com>
+Date: Wed, 5 Dec 2012 23:27:38 +0100
+Message-ID: <CAAr_hs7AwmSKFhf3y-2nqXAR=GQGyen_trAh8ppJkb5i-mrckA@mail.gmail.com> (sfid-20121205_232823_026034_7AF3215C)
+Subject: Re: [ath9k-devel] [PATCH] ath9k_htc: update RSSI values only when the
+ device is associated
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>, m.sujith@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, c_manoha@qca.qualcomm.com,
+	markus@indoo.rs, Sujith.Manoharan@atheros.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Dec 4, 2012 at 6:02 PM, Holger Schurig <holgerschurig@gmail.com> wrote:
+> And I think the commercial for your sponsor should be after the "---"
+> line, not inside the commit description ...
 
-It's a bit odd that there's a return value that only
-depends on the iftype, move that logic out of the
-function into the only caller that needs it.
-
-Also, since the quiescing could stop timers that
-trigger the sdata work, move the sdata work cancel
-into the function and after the actual quiesce.
-
-Finally, there's no need to call it on interfaces
-that are down, so don't.
-
-Change-Id: I1632d46d21ba3558ea713d035184f1939905f2f1
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/pm.c | 36 +++++++++++++++++++-----------------
- 1 file changed, 19 insertions(+), 17 deletions(-)
-
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 79a48f3..f321783 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -7,25 +7,23 @@
- #include "led.h"
- 
- /* return value indicates whether the driver should be further notified */
--static bool ieee80211_quiesce(struct ieee80211_sub_if_data *sdata)
-+static void ieee80211_quiesce(struct ieee80211_sub_if_data *sdata)
- {
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
- 		ieee80211_sta_quiesce(sdata);
--		return true;
-+		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		ieee80211_ibss_quiesce(sdata);
--		return true;
-+		break;
- 	case NL80211_IFTYPE_MESH_POINT:
- 		ieee80211_mesh_quiesce(sdata);
--		return true;
--	case NL80211_IFTYPE_AP_VLAN:
--	case NL80211_IFTYPE_MONITOR:
--		/* don't tell driver about this */
--		return false;
-+		break;
- 	default:
--		return true;
-+		break;
- 	}
-+
-+	cancel_work_sync(&sdata->work);
- }
- 
- int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
-@@ -94,10 +92,9 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 			WARN_ON(err != 1);
- 			local->wowlan = false;
- 		} else {
--			list_for_each_entry(sdata, &local->interfaces, list) {
--				cancel_work_sync(&sdata->work);
--				ieee80211_quiesce(sdata);
--			}
-+			list_for_each_entry(sdata, &local->interfaces, list)
-+				if (ieee80211_sdata_running(sdata))
-+					ieee80211_quiesce(sdata);
- 			goto suspend;
- 		}
- 	}
-@@ -124,13 +121,18 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 
- 	/* remove all interfaces */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		cancel_work_sync(&sdata->work);
--
--		if (!ieee80211_quiesce(sdata))
-+		if (!ieee80211_sdata_running(sdata))
- 			continue;
- 
--		if (!ieee80211_sdata_running(sdata))
-+		switch (sdata->vif.type) {
-+		case NL80211_IFTYPE_AP_VLAN:
-+		case NL80211_IFTYPE_MONITOR:
-+			/* skip these */
- 			continue;
-+		default:
-+			ieee80211_quiesce(sdata);
-+			break;
-+		}
- 
- 		/* disable beaconing */
- 		ieee80211_bss_info_change_notify(sdata,
--- 
-1.8.0
-
+well, try `git log | grep -i sponsor' in the git tree. I don't find
+something in the docs though.
