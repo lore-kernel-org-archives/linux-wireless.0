@@ -1,114 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35596 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755917Ab2LMXEP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 18:04:15 -0500
-Message-ID: <50CA5EE9.30606@openwrt.org> (sfid-20121214_000426_921064_B031612F)
-Date: Fri, 14 Dec 2012 00:04:09 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, jonbither@gmail.com, jouni@qca.qualcomm.com,
-	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
-References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de> <20121213140753.GA26868@pandem0nium> <50CA0F8B.3060905@openwrt.org> <20121213220651.GA30855@pandem0nium>
-In-Reply-To: <20121213220651.GA30855@pandem0nium>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47329 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752450Ab2LERrw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 12:47:52 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3 03/11] bcma: set the pmu watchdog if available
+Date: Wed,  5 Dec 2012 18:46:00 +0100
+Message-Id: <1354729568-19993-4-git-send-email-hauke@hauke-m.de> (sfid-20121205_184803_720171_18442AC3)
+In-Reply-To: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
+References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-12-13 11:06 PM, Simon Wunderlich wrote:
-> Hey Felix,
-> 
-> thanks, this looks like exactly what I was hoping for!
-> 
->> >>  2. The output format is very Atheros-dependent. If my finding that 
->> >>     byte n-4 is some kind of offset/exponent, I'd integrate this in
->> >>     the debugfs output as well
->> Here's my understanding of the data format:
->> 
->> HT20:
->> 56 bytes bin magnitude data (8 bits per bin)
->> 3 bytes bin maximum values (see below)
->> 1 byte exponent:
->> 	[3:0] - number of bits to shift the magnitude data
->> 
-> 
-> Now that is exactly what I was looking for! So shifting the data makes it some
-> kind of exponent, so I wasn't so wrong. :D
-> 
-> BTW, does the 56 byte ever change, or may it happen that there is something in front
-> of the FFT bins? or in the middle? I still see different data lengths, and the
-> format looks pretty fixed to me. In theory:
->  * 56 bytes FFT bins
->  * 3 bytes maximum values
->  * 1 byte exponent
->  * 3 byte radar trailer (with bwinfo etc)
-> 
-> Thoughts? I'll check my data again, too.
-I don't know about the data length, I haven't run any tests myself.
+Mostly all bcma based devices have a PMU and the PMU watchdog should be
+used and not the old one in chip common. This patch also calculates the
+maximal number the watchdog could be set to.
 
->> HT40:
->> 128 bytes bin magnitude data (64 lower bins, 64 upper bins)
->> 3 bytes lower bin maximum values (see below)
->> 3 bytes upper bin maximum values (see below)
->> 1 byte exponent (like HT20)
-> 
-> I have not experimented in HT40 mode yet, but we should add that too. :)
->> 
->> Bin maximum values:
->> Byte 1: [1:0] - max_magnitude[1:0]
->>         [7:2] - bitmap_weight[5:0]
->> Byte 2: [7:0] - max_magnitude[9:2]
->> Byte 3: [5:0] - max_index[5:0]
->>         [7:6] - max_magnitude[11:10]
->> 
-> 
-> OK - not sure what "weight" means, max_magnitude might be the highest of the
-> FFT bins? What "index" is max_index? 
-No idea.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_chipcommon.c |   42 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 40 insertions(+), 2 deletions(-)
 
-> BTW, the FFT bins/magnitude values, are these absolute values or logarithmic
-> values? I'd guess it's absolute from the look of it (applying log() makes it
-> "look better" in the visualization), but not sure.
-I also think it's probably absolute.
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index ef68553..7c132e5 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -31,6 +31,28 @@ static u32 bcma_chipco_alp_clock(struct bcma_drv_cc *cc)
+ 	return 20000000;
+ }
+ 
++static u32 bcma_chipco_watchdog_get_max_timer(struct bcma_drv_cc *cc)
++{
++	struct bcma_bus *bus = cc->core->bus;
++	u32 nb;
++
++	if (cc->capabilities & BCMA_CC_CAP_PMU) {
++		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
++			nb = 32;
++		else if (cc->core->id.rev < 26)
++			nb = 16;
++		else
++			nb = (cc->core->id.rev >= 37) ? 32 : 24;
++	} else {
++		nb = 28;
++	}
++	if (nb == 32)
++		return 0xffffffff;
++	else
++		return (1 << nb) - 1;
++}
++
++
+ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
+ {
+ 	if (cc->early_setup_done)
+@@ -85,8 +107,24 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
+ /* Set chip watchdog reset timer to fire in 'ticks' backplane cycles */
+ void bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
+ {
+-	/* instant NMI */
+-	bcma_cc_write32(cc, BCMA_CC_WATCHDOG, ticks);
++	u32 maxt;
++	enum bcma_clkmode clkmode;
++
++	maxt = bcma_chipco_watchdog_get_max_timer(cc);
++	if (cc->capabilities & BCMA_CC_CAP_PMU) {
++		if (ticks == 1)
++			ticks = 2;
++		else if (ticks > maxt)
++			ticks = maxt;
++		bcma_cc_write32(cc, BCMA_CC_PMU_WATCHDOG, ticks);
++	} else {
++		clkmode = ticks ? BCMA_CLKMODE_FAST : BCMA_CLKMODE_DYNAMIC;
++		bcma_core_set_clockmode(cc->core, clkmode);
++		if (ticks > maxt)
++			ticks = maxt;
++		/* instant NMI */
++		bcma_cc_write32(cc, BCMA_CC_WATCHDOG, ticks);
++	}
+ }
+ 
+ void bcma_chipco_irq_mask(struct bcma_drv_cc *cc, u32 mask, u32 value)
+-- 
+1.7.10.4
 
->> >>  3. If other devices also offer spectral scan support: define a
->> >>     common interface to use it (not debugfs).
->> Makes sense. The data should be in an extensible binary format that can
->> also cover vendor specific extra information. One suggestion would be to
->> prefix the FFT message data with a netlink-style TLV header describing
->> the message format (using an enum for data types and an enum for fields,
->> both of which we can extend if we need to add more data).
->> That way userspace can use the header to figure out the message size and
->> can ignore any fields that it does not support.
-> 
-> Yeah, sounds good. Although I'm still not sure how we could compose the
-> userspace interface. We might want to configure things like:
->  * count, interval, endless mode?
->  * trigger for a scan
->  * listen for samples (endlessly?) ...
-> 
-> The recent patch contains a control file and a listen file - maybe we could
-> have similar commands for iw?
-Let's come up with a proper prototype using the intended data format via
-debugfs in the driver before we add support to nl80211 and iw.
-
-> Also I'm not sure if the performance is very good for the case that we want
-> to stream a lot of samples. About the data format, keeping it somewhat flexible
-> for adding fields in the future is a good idea IMHO.
-I think the TLV header struct description + fixed length messages is
-good for performance. The header only has to be sent once at the
-beginning of the stream, and the conversion to the struct format + the
-relay can be quite fast.
-
-> Also as the exponent seems to be confirmed now, I'd directly apply it to the FFT
-> values when giving it to userspace, like FFT_bin[i] << exponent (if this is the
-> correct form)
-Yes, userspace shouldn't have to deal with that.
-
-- Felix
