@@ -1,33 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48182 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561Ab2LLKpr (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:43307 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752579Ab2LER51 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 05:45:47 -0500
-Message-ID: <1355309167.9708.0.camel@jlt4.sipsolutions.net> (sfid-20121212_114552_037402_DC9A041B)
-Subject: Re: [PATCH] mac80211: modify max_nullfunc parameter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Chen, Chien-Chia" <machen@suse.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	users@rt2x00.serialmonkey.com
-Date: Wed, 12 Dec 2012 11:46:07 +0100
-In-Reply-To: <1355308099-18193-1-git-send-email-machen@suse.com> (sfid-20121212_112818_604239_5BEF48FB)
-References: <1355308099-18193-1-git-send-email-machen@suse.com>
-	 (sfid-20121212_112818_604239_5BEF48FB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Dec 2012 12:57:27 -0500
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
+References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
+Date: Wed, 05 Dec 2012 18:57:21 +0100
+In-Reply-To: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
+	(greearb-my8's message of "Wed, 5 Dec 2012 09:39:52 -0800")
+Message-ID: <87a9ts4c1q.fsf@nemi.mork.no> (sfid-20121205_185731_303939_703F3387)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-12-12 at 18:28 +0800, Chen, Chien-Chia wrote:
-> From: Chen, Chien-Chia <matt680209@gmail.com>
-> 
-> This parameter default is 2. But it is easy to cause my station 
-> losing the connection with AP. After I tune it to 20. It improves 
-> much when using rt2x00 and Linksys WRT160N V3 AP router.
+Ben Greear <greearb@candelatech.com> writes:
 
-I'm not very keen on taking a driver specific change into mac80211 ...
-maybe the driver shouldn't lose so many frames instead?
+> net/core/dev.c now assigns a default ethtool ops, so
+> the net/wireless/core.c check for existing ops is always true
+> so the wireless ops would never be assigned.
+>
+> Simply remove the check for existing ops and always assign
+> the wireless ops.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  net/wireless/core.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 4e6fe62..6309699 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -863,8 +863,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+>  		/* allow mac80211 to determine the timeout */
+>  		wdev->ps_timeout = -1;
+>  
+> -		if (!dev->ethtool_ops)
+> -			dev->ethtool_ops = &cfg80211_ethtool_ops;
+> +		dev->ethtool_ops = &cfg80211_ethtool_ops;
+>  
+>  		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+>  		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
 
-johannes
 
+Won't this break drivers which for some reason have their own
+ethtool_ops?
+
+bjorn@nemi:/usr/local/src/git/linux$ git grep -- "->ethtool_ops" drivers/net/wireless/
+drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c:    ndev->ethtool_ops = &brcmf_ethtool_ops;
+drivers/net/wireless/ipw2x00/ipw2100.c: dev->ethtool_ops = &ipw2100_ethtool_ops;
+drivers/net/wireless/ipw2x00/ipw2200.c: net_dev->ethtool_ops = &ipw_ethtool_ops;
+drivers/net/wireless/libertas/main.c:   dev->ethtool_ops = &lbs_ethtool_ops;
+drivers/net/wireless/libertas/mesh.c:   mesh_dev->ethtool_ops = &lbs_ethtool_ops;
+drivers/net/wireless/prism54/islpci_dev.c:      ndev->ethtool_ops = &islpci_ethtool_ops;
+
+
+
+Bjørn
