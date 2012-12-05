@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:61271 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752781Ab2LKPV6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47695 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710Ab2LEJFa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 10:21:58 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so2955546lbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 07:21:57 -0800 (PST)
-Message-ID: <50C74F90.401@gmail.com> (sfid-20121211_162202_739159_33BD2CE9)
-Date: Tue, 11 Dec 2012 16:21:52 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: Maia Kozheva <sikon@ubuntu.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH v2] Add support for 2001:3c1e (D-Link DWA-125 rev B1)
- USB Wi-Fi adapter
-References: <50C6974B.5000206@gmail.com> <50C6B8E0.4080801@ubuntu.com>
-In-Reply-To: <50C6B8E0.4080801@ubuntu.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 5 Dec 2012 04:05:30 -0500
+Message-ID: <1354698356.9972.5.camel@jlt4.sipsolutions.net> (sfid-20121205_100537_084930_A4A93909)
+Subject: Re: [PATCH] mac80211: Moving Zero Len subframe reporting under
+ driver capability check.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 05 Dec 2012 10:05:56 +0100
+In-Reply-To: <1354698297.9972.4.camel@jlt4.sipsolutions.net> (sfid-20121205_100438_778981_61CC2184)
+References: <CABPxzYKvtgdoxU-dFS2F0tz_1F6cz02uvVgy5qfMPCEbLOZZ=A@mail.gmail.com>
+	 (sfid-20121205_063839_781806_ABA3EF11) <1354698297.9972.4.camel@jlt4.sipsolutions.net>
+	 (sfid-20121205_100438_778981_61CC2184)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/11/2012 05:38 AM, Maia Kozheva wrote:
-> Someone who physically disassembled the device confirms that its chipset is Ralink RT5370n.
->
-> Fixed the patch.
->
-> Signed-off-by: Maia Kozheva <sikon@ubuntu.com>
-> diff -uprN a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c	2012-11-28 04:21:31.000000000 +0700
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c	2012-12-11 11:34:35.889131671 +0700
-> @@ -1169,6 +1169,7 @@ static struct usb_device_id rt2800usb_de
->   	{ USB_DEVICE(0x2001, 0x3c19) },
->   	{ USB_DEVICE(0x2001, 0x3c1c) },
->   	{ USB_DEVICE(0x2001, 0x3c1d) },
-> +	{ USB_DEVICE(0x2001, 0x3c1e) },
->   	/* LG innotek */
->   	{ USB_DEVICE(0x043e, 0x7a22) },
->   	/* Panasonic */
->
->
+On Wed, 2012-12-05 at 10:04 +0100, Johannes Berg wrote:
+> On Wed, 2012-12-05 at 11:08 +0530, Krishna Chaitanya wrote:
+> > Zero Len subframe makes sense only when driver supports the reporting
+> > of zero len subframes.
+> 
+> Yes, but if the driver is stupid enough to set RX_FLAG_AMPDU_IS_ZEROLEN
+> without setting RX_FLAG_AMPDU_REPORT_ZEROLEN I'm not sure we care?
 
-Reviewed-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Plus your patch doesn't apply anyway.
+
+johannes
+
