@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58669 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751766Ab2LJTKG (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:53042 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217Ab2LEFih (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 14:10:06 -0500
-Date: Mon, 10 Dec 2012 14:10:02 -0500 (EST)
-Message-Id: <20121210.141002.450030380391247897.davem@davemloft.net> (sfid-20121210_201055_129734_A4C0F07D)
-To: abhi.c.pawar@gmail.com
-Cc: pablo@netfilter.org, kaber@trash.net, kuznet@ms2.inr.ac.ru,
-	jmorris@namei.org, yoshfuji@linux-ipv6.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, amwang@redhat.com, edumazet@google.com,
-	nhorman@tuxdriver.com, joe@perches.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	netfilter@vger.kernel.org, coreteam@netfilter.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RESEND] net: remove obsolete simple_strto<foo>
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com>
-References: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 5 Dec 2012 00:38:37 -0500
+Received: by mail-ie0-f174.google.com with SMTP id c11so7525352ieb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Dec 2012 21:38:36 -0800 (PST)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 5 Dec 2012 11:08:16 +0530
+Message-ID: <CABPxzYKvtgdoxU-dFS2F0tz_1F6cz02uvVgy5qfMPCEbLOZZ=A@mail.gmail.com> (sfid-20121205_063853_141170_E3643839)
+Subject: [PATCH] mac80211: Moving Zero Len subframe reporting under driver
+ capability check.
+To: johannes@sipsolutions.net
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijit Pawar <abhi.c.pawar@gmail.com>
-Date: Mon, 10 Dec 2012 14:42:28 +0530
+Zero Len subframe makes sense only when driver supports the reporting
+of zero len subframes.
 
-> This patch replace the obsolete simple_strto<foo> with kstrto<foo>
-> 
-> Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
+Signed-off-by: Chaitanya T K<chaitanya.mgit@gmail.com>
+---
 
-Applied.
+ net/mac80211/rx.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index db343fa..3f1443b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -281,10 +281,11 @@ ieee80211_add_rx_radiotap_header(struct
+ieee80211_local *local,
+                        cpu_to_le32(1 << IEEE80211_RADIOTAP_AMPDU_STATUS);
+                put_unaligned_le32(status->ampdu_reference, pos);
+                pos += 4;
+-               if (status->flag & RX_FLAG_AMPDU_REPORT_ZEROLEN)
++               if (status->flag & RX_FLAG_AMPDU_REPORT_ZEROLEN) {
+                        flags |= IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN;
+-               if (status->flag & RX_FLAG_AMPDU_IS_ZEROLEN)
+-                       flags |= IEEE80211_RADIOTAP_AMPDU_IS_ZEROLEN;
++                        if (status->flag & RX_FLAG_AMPDU_IS_ZEROLEN)
++                             flags |= IEEE80211_RADIOTAP_AMPDU_IS_ZEROLEN;
++                }
+                if (status->flag & RX_FLAG_AMPDU_LAST_KNOWN)
+                        flags |= IEEE80211_RADIOTAP_AMPDU_LAST_KNOWN;
+                if (status->flag & RX_FLAG_AMPDU_IS_LAST)
