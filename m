@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22619 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673Ab2LBQwS (ORCPT
+Received: from mail-yh0-f74.google.com ([209.85.213.74]:41419 "EHLO
+	mail-yh0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754250Ab2LEU6W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 11:52:18 -0500
-Date: Sun, 2 Dec 2012 19:51:53 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] carl9170: remove unneeded NULL check
-Message-ID: <20121202165153.GC6517@mwanda> (sfid-20121202_175223_987725_A82E0FAA)
-References: <20121202104238.GB16078@elgon.mountain>
- <201212021449.21267.chunkeey@googlemail.com>
+	Wed, 5 Dec 2012 15:58:22 -0500
+Received: by mail-yh0-f74.google.com with SMTP id 10so560893yhl.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2012 12:58:22 -0800 (PST)
+Subject: [PATCH 12/12] iwlwifi: Use standard #defines for PCIe Capability ASPM
+	fields
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date: Wed, 05 Dec 2012 13:58:21 -0700
+Message-ID: <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com> (sfid-20121205_215831_436859_0EDF2BD3)
+In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201212021449.21267.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 02, 2012 at 02:49:20PM +0100, Christian Lamparter wrote:
-> On Sunday 02 December 2012 11:42:38 Dan Carpenter wrote:
-> > The "sta" variable is not checked for NULL consistently and it makes the
-> > static checkers complain.  I asked Christian Lamparter about this and
-> > it turns out the check is not needed.  "In fact, in order to set up a
-> > ampdu session, the stack would call the driver's op_ampdu_action
-> > callback which always needs a station."
-> 
-> that would be from the thread:
-> <http://www.spinics.net/lists/linux-wireless/msg94526.html>
->  
-> > I have removed the check.
-> I think this will bug for multicast and injected frames.
->  
-> It is not possible for the sta(tion) pointer to be NULL if
-> the frame has the IEEE80211_TX_CTL_AMPDU flag set. So the
-> sta == NULL check can be avoided when calling 
-> carl9170_tx_ampdu_queue. This is because mac80211 tracks
-> all aggregation sessions within the station struct.
-> Of course, this is something that the checker tool can't
-> possibly deduce, but it has a point and we can add a check
-> like this [see attached draft patch]:
-> 
-> What do you think [or more to the point: what does the
-> checker say?]
-> 
+Use the standard #defines rather than creating local definitions for
+PCIe Capability ASPM fields.
 
-So we wouldn't apply my patch, we would apply that one instead?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: "John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes.berg@intel.com>
+CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+CC: Intel Linux Wireless <ilw@linux.intel.com>
+CC: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-I think that's great.  My static checker doesn't understand bit
-flags yet so it would complain but it would be obvious to a human
-reader.
-
-Could you just resend that patch with a signed-off-by?
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 5cd06b3..1dfa6be 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -670,8 +670,6 @@ static void iwl_set_pwr_vmain(struct iwl_trans *trans)
+ 
+ /* PCI registers */
+ #define PCI_CFG_RETRY_TIMEOUT	0x041
+-#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
+-#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
+ 
+ static void iwl_apm_config(struct iwl_trans *trans)
+ {
+@@ -688,8 +686,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
+ 	 */
+ 
+ 	pcie_capability_read_word(trans_pcie->pci_dev, PCI_EXP_LNKCTL, &lctl);
+-	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
+-				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
++	if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
+ 		/* L1-ASPM enabled; disable(!) L0S */
+ 		iwl_set_bit(trans, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
+ 		dev_printk(KERN_INFO, trans->dev,
+@@ -700,7 +697,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
+ 		dev_printk(KERN_INFO, trans->dev,
+ 			   "L1 Disabled; Enabling L0S\n");
+ 	}
+-	trans->pm_support = !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
++	trans->pm_support = !(lctl & PCI_EXP_LNKCTL_ASPM_L0S);
+ }
+ 
+ /*
 
