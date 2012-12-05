@@ -1,104 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:49634 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048Ab2LCSWQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 13:22:16 -0500
-Date: Mon, 3 Dec 2012 16:22:08 -0200
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2012-12-03
-Message-ID: <20121203182208.GB2930@joana> (sfid-20121203_192232_416198_F907ACE2)
+Received: from mms2.broadcom.com ([216.31.210.18]:2433 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754057Ab2LEO0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 09:26:25 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 03/11] brcmfmac: use one list of event defintions
+Date: Wed, 5 Dec 2012 15:25:56 +0100
+Message-ID: <1354717564-7183-4-git-send-email-arend@broadcom.com> (sfid-20121205_152634_641170_53C4A181)
+In-Reply-To: <1354717564-7183-1-git-send-email-arend@broadcom.com>
+References: <1354717564-7183-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OXfL5xGRrasGEqWY"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, adding a new event requires modification in two source
+files. Use macro definition to have one place and have better
+maintainability.
 
---OXfL5xGRrasGEqWY
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi John,
-
-A few more patches to 3.8, I hope they can still make it to mainline!
-The most important ones are the socket option for the SCO protocol to allow
-accept/refuse new connections from userspace. Other than that I added some
-fixes and Andrei did more AMP work.
-
-Please pull, or let me know any concerns you have. Thanks!
-
-	Gustavo
-
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-The following changes since commit 2b2fec4d08a0aabe20d2e749cb7978f04217af65:
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c |   72 +-----------
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h |  142 +++++++++++++-----------
+ 2 files changed, 80 insertions(+), 134 deletions(-)
 
-  Bluetooth: Remove OOB data if device was discovered in band (2012-11-20 1=
-6:03:15 -0200)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index 7a00c46..c26493f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -95,76 +95,14 @@ struct brcmf_fweh_event_name {
+ };
+ 
+ #ifdef DEBUG
++#define BRCMF_ENUM_DEF(id, val) \
++	{ val, #id },
++
+ /* array for mapping code to event name */
+ static struct brcmf_fweh_event_name fweh_event_names[] = {
+-	{ BRCMF_E_SET_SSID, "SET_SSID" },
+-	{ BRCMF_E_JOIN, "JOIN" },
+-	{ BRCMF_E_START, "START" },
+-	{ BRCMF_E_AUTH, "AUTH" },
+-	{ BRCMF_E_AUTH_IND, "AUTH_IND" },
+-	{ BRCMF_E_DEAUTH, "DEAUTH" },
+-	{ BRCMF_E_DEAUTH_IND, "DEAUTH_IND" },
+-	{ BRCMF_E_ASSOC, "ASSOC" },
+-	{ BRCMF_E_ASSOC_IND, "ASSOC_IND" },
+-	{ BRCMF_E_REASSOC, "REASSOC" },
+-	{ BRCMF_E_REASSOC_IND, "REASSOC_IND" },
+-	{ BRCMF_E_DISASSOC, "DISASSOC" },
+-	{ BRCMF_E_DISASSOC_IND, "DISASSOC_IND" },
+-	{ BRCMF_E_QUIET_START, "START_QUIET" },
+-	{ BRCMF_E_QUIET_END, "END_QUIET" },
+-	{ BRCMF_E_BEACON_RX, "BEACON_RX" },
+-	{ BRCMF_E_LINK, "LINK" },
+-	{ BRCMF_E_MIC_ERROR, "MIC_ERROR" },
+-	{ BRCMF_E_NDIS_LINK, "NDIS_LINK" },
+-	{ BRCMF_E_ROAM, "ROAM" },
+-	{ BRCMF_E_TXFAIL, "TXFAIL" },
+-	{ BRCMF_E_PMKID_CACHE, "PMKID_CACHE" },
+-	{ BRCMF_E_RETROGRADE_TSF, "RETROGRADE_TSF" },
+-	{ BRCMF_E_PRUNE, "PRUNE" },
+-	{ BRCMF_E_AUTOAUTH, "AUTOAUTH" },
+-	{ BRCMF_E_EAPOL_MSG, "EAPOL_MSG" },
+-	{ BRCMF_E_SCAN_COMPLETE, "SCAN_COMPLETE" },
+-	{ BRCMF_E_ADDTS_IND, "ADDTS_IND" },
+-	{ BRCMF_E_DELTS_IND, "DELTS_IND" },
+-	{ BRCMF_E_BCNSENT_IND, "BCNSENT_IND" },
+-	{ BRCMF_E_BCNRX_MSG, "BCNRX_MSG" },
+-	{ BRCMF_E_BCNLOST_MSG, "BCNLOST_MSG" },
+-	{ BRCMF_E_ROAM_PREP, "ROAM_PREP" },
+-	{ BRCMF_E_PFN_NET_FOUND, "PNO_NET_FOUND" },
+-	{ BRCMF_E_PFN_NET_LOST, "PNO_NET_LOST" },
+-	{ BRCMF_E_RESET_COMPLETE, "RESET_COMPLETE" },
+-	{ BRCMF_E_JOIN_START, "JOIN_START" },
+-	{ BRCMF_E_ROAM_START, "ROAM_START" },
+-	{ BRCMF_E_ASSOC_START, "ASSOC_START" },
+-	{ BRCMF_E_IBSS_ASSOC, "IBSS_ASSOC" },
+-	{ BRCMF_E_RADIO, "RADIO" },
+-	{ BRCMF_E_PSM_WATCHDOG, "PSM_WATCHDOG" },
+-	{ BRCMF_E_PROBREQ_MSG, "PROBREQ_MSG" },
+-	{ BRCMF_E_SCAN_CONFIRM_IND, "SCAN_CONFIRM_IND" },
+-	{ BRCMF_E_PSK_SUP, "PSK_SUP" },
+-	{ BRCMF_E_COUNTRY_CODE_CHANGED, "COUNTRY_CODE_CHANGED" },
+-	{ BRCMF_E_EXCEEDED_MEDIUM_TIME, "EXCEEDED_MEDIUM_TIME" },
+-	{ BRCMF_E_ICV_ERROR, "ICV_ERROR" },
+-	{ BRCMF_E_UNICAST_DECODE_ERROR, "UNICAST_DECODE_ERROR" },
+-	{ BRCMF_E_MULTICAST_DECODE_ERROR, "MULTICAST_DECODE_ERROR" },
+-	{ BRCMF_E_TRACE, "TRACE" },
+-	{ BRCMF_E_IF, "IF" },
+-	{ BRCMF_E_RSSI, "RSSI" },
+-	{ BRCMF_E_PFN_SCAN_COMPLETE, "PFN_SCAN_COMPLETE" },
+-	{ BRCMF_E_EXTLOG_MSG, "EXTLOG_MSG" },
+-	{ BRCMF_E_ACTION_FRAME, "ACTION_FRAME" },
+-	{ BRCMF_E_ACTION_FRAME_COMPLETE, "ACTION_FRAME_COMPLETE" },
+-	{ BRCMF_E_PRE_ASSOC_IND, "PRE_ASSOC_IND" },
+-	{ BRCMF_E_PRE_REASSOC_IND, "PRE_REASSOC_IND" },
+-	{ BRCMF_E_CHANNEL_ADOPTED, "CHANNEL_ADOPTED" },
+-	{ BRCMF_E_AP_STARTED, "AP_STARTED" },
+-	{ BRCMF_E_DFS_AP_STOP, "DFS_AP_STOP" },
+-	{ BRCMF_E_DFS_AP_RESUME, "DFS_AP_RESUME" },
+-	{ BRCMF_E_ESCAN_RESULT, "ESCAN_RESULT" },
+-	{ BRCMF_E_ACTION_FRAME_OFF_CHAN_COMPLETE, "ACTION_FRM_OFF_CHAN_CMPLT" },
+-	{ BRCMF_E_DCS_REQUEST, "DCS_REQUEST" },
+-	{ BRCMF_E_FIFO_CREDIT_MAP, "FIFO_CREDIT_MAP"}
++	BRCMF_FWEH_EVENT_ENUM_DEFLIST
+ };
++#undef BRCMF_ENUM_DEF
+ 
+ /**
+  * brcmf_fweh_event_name() - returns name for given event code.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+index b39246a..81aa0992 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+@@ -29,77 +29,85 @@ struct brcmf_if;
+ struct brcmf_cfg80211_info;
+ struct brcmf_event;
+ 
++/* list of firmware events */
++#define BRCMF_FWEH_EVENT_ENUM_DEFLIST \
++	BRCMF_ENUM_DEF(SET_SSID, 0) \
++	BRCMF_ENUM_DEF(JOIN, 1) \
++	BRCMF_ENUM_DEF(START, 2) \
++	BRCMF_ENUM_DEF(AUTH, 3) \
++	BRCMF_ENUM_DEF(AUTH_IND, 4) \
++	BRCMF_ENUM_DEF(DEAUTH, 5) \
++	BRCMF_ENUM_DEF(DEAUTH_IND, 6) \
++	BRCMF_ENUM_DEF(ASSOC, 7) \
++	BRCMF_ENUM_DEF(ASSOC_IND, 8) \
++	BRCMF_ENUM_DEF(REASSOC, 9) \
++	BRCMF_ENUM_DEF(REASSOC_IND, 10) \
++	BRCMF_ENUM_DEF(DISASSOC, 11) \
++	BRCMF_ENUM_DEF(DISASSOC_IND, 12) \
++	BRCMF_ENUM_DEF(QUIET_START, 13) \
++	BRCMF_ENUM_DEF(QUIET_END, 14) \
++	BRCMF_ENUM_DEF(BEACON_RX, 15) \
++	BRCMF_ENUM_DEF(LINK, 16) \
++	BRCMF_ENUM_DEF(MIC_ERROR, 17) \
++	BRCMF_ENUM_DEF(NDIS_LINK, 18) \
++	BRCMF_ENUM_DEF(ROAM, 19) \
++	BRCMF_ENUM_DEF(TXFAIL, 20) \
++	BRCMF_ENUM_DEF(PMKID_CACHE, 21) \
++	BRCMF_ENUM_DEF(RETROGRADE_TSF, 22) \
++	BRCMF_ENUM_DEF(PRUNE, 23) \
++	BRCMF_ENUM_DEF(AUTOAUTH, 24) \
++	BRCMF_ENUM_DEF(EAPOL_MSG, 25) \
++	BRCMF_ENUM_DEF(SCAN_COMPLETE, 26) \
++	BRCMF_ENUM_DEF(ADDTS_IND, 27) \
++	BRCMF_ENUM_DEF(DELTS_IND, 28) \
++	BRCMF_ENUM_DEF(BCNSENT_IND, 29) \
++	BRCMF_ENUM_DEF(BCNRX_MSG, 30) \
++	BRCMF_ENUM_DEF(BCNLOST_MSG, 31) \
++	BRCMF_ENUM_DEF(ROAM_PREP, 32) \
++	BRCMF_ENUM_DEF(PFN_NET_FOUND, 33) \
++	BRCMF_ENUM_DEF(PFN_NET_LOST, 34) \
++	BRCMF_ENUM_DEF(RESET_COMPLETE, 35) \
++	BRCMF_ENUM_DEF(JOIN_START, 36) \
++	BRCMF_ENUM_DEF(ROAM_START, 37) \
++	BRCMF_ENUM_DEF(ASSOC_START, 38) \
++	BRCMF_ENUM_DEF(IBSS_ASSOC, 39) \
++	BRCMF_ENUM_DEF(RADIO, 40) \
++	BRCMF_ENUM_DEF(PSM_WATCHDOG, 41) \
++	BRCMF_ENUM_DEF(PROBREQ_MSG, 44) \
++	BRCMF_ENUM_DEF(SCAN_CONFIRM_IND, 45) \
++	BRCMF_ENUM_DEF(PSK_SUP, 46) \
++	BRCMF_ENUM_DEF(COUNTRY_CODE_CHANGED, 47) \
++	BRCMF_ENUM_DEF(EXCEEDED_MEDIUM_TIME, 48) \
++	BRCMF_ENUM_DEF(ICV_ERROR, 49) \
++	BRCMF_ENUM_DEF(UNICAST_DECODE_ERROR, 50) \
++	BRCMF_ENUM_DEF(MULTICAST_DECODE_ERROR, 51) \
++	BRCMF_ENUM_DEF(TRACE, 52) \
++	BRCMF_ENUM_DEF(IF, 54) \
++	BRCMF_ENUM_DEF(RSSI, 56) \
++	BRCMF_ENUM_DEF(PFN_SCAN_COMPLETE, 57) \
++	BRCMF_ENUM_DEF(EXTLOG_MSG, 58) \
++	BRCMF_ENUM_DEF(ACTION_FRAME, 59) \
++	BRCMF_ENUM_DEF(ACTION_FRAME_COMPLETE, 60) \
++	BRCMF_ENUM_DEF(PRE_ASSOC_IND, 61) \
++	BRCMF_ENUM_DEF(PRE_REASSOC_IND, 62) \
++	BRCMF_ENUM_DEF(CHANNEL_ADOPTED, 63) \
++	BRCMF_ENUM_DEF(AP_STARTED, 64) \
++	BRCMF_ENUM_DEF(DFS_AP_STOP, 65) \
++	BRCMF_ENUM_DEF(DFS_AP_RESUME, 66) \
++	BRCMF_ENUM_DEF(ESCAN_RESULT, 69) \
++	BRCMF_ENUM_DEF(ACTION_FRAME_OFF_CHAN_COMPLETE, 70) \
++	BRCMF_ENUM_DEF(DCS_REQUEST, 73) \
++	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74)
++
++#define BRCMF_ENUM_DEF(id, val) \
++	BRCMF_E_##id = (val),
++
+ /* firmware event codes sent by the dongle */
+ enum brcmf_fweh_event_code {
+-	BRCMF_E_SET_SSID		= 0,
+-	BRCMF_E_JOIN			= 1,
+-	BRCMF_E_START			= 2,
+-	BRCMF_E_AUTH			= 3,
+-	BRCMF_E_AUTH_IND		= 4,
+-	BRCMF_E_DEAUTH			= 5,
+-	BRCMF_E_DEAUTH_IND		= 6,
+-	BRCMF_E_ASSOC			= 7,
+-	BRCMF_E_ASSOC_IND		= 8,
+-	BRCMF_E_REASSOC			= 9,
+-	BRCMF_E_REASSOC_IND		= 10,
+-	BRCMF_E_DISASSOC		= 11,
+-	BRCMF_E_DISASSOC_IND		= 12,
+-	BRCMF_E_QUIET_START		= 13,
+-	BRCMF_E_QUIET_END		= 14,
+-	BRCMF_E_BEACON_RX		= 15,
+-	BRCMF_E_LINK			= 16,
+-	BRCMF_E_MIC_ERROR		= 17,
+-	BRCMF_E_NDIS_LINK		= 18,
+-	BRCMF_E_ROAM			= 19,
+-	BRCMF_E_TXFAIL			= 20,
+-	BRCMF_E_PMKID_CACHE		= 21,
+-	BRCMF_E_RETROGRADE_TSF		= 22,
+-	BRCMF_E_PRUNE			= 23,
+-	BRCMF_E_AUTOAUTH		= 24,
+-	BRCMF_E_EAPOL_MSG		= 25,
+-	BRCMF_E_SCAN_COMPLETE		= 26,
+-	BRCMF_E_ADDTS_IND		= 27,
+-	BRCMF_E_DELTS_IND		= 28,
+-	BRCMF_E_BCNSENT_IND		= 29,
+-	BRCMF_E_BCNRX_MSG		= 30,
+-	BRCMF_E_BCNLOST_MSG		= 31,
+-	BRCMF_E_ROAM_PREP		= 32,
+-	BRCMF_E_PFN_NET_FOUND		= 33,
+-	BRCMF_E_PFN_NET_LOST		= 34,
+-	BRCMF_E_RESET_COMPLETE		= 35,
+-	BRCMF_E_JOIN_START		= 36,
+-	BRCMF_E_ROAM_START		= 37,
+-	BRCMF_E_ASSOC_START		= 38,
+-	BRCMF_E_IBSS_ASSOC		= 39,
+-	BRCMF_E_RADIO			= 40,
+-	BRCMF_E_PSM_WATCHDOG		= 41,
+-	BRCMF_E_PROBREQ_MSG		= 44,
+-	BRCMF_E_SCAN_CONFIRM_IND	= 45,
+-	BRCMF_E_PSK_SUP			= 46,
+-	BRCMF_E_COUNTRY_CODE_CHANGED	= 47,
+-	BRCMF_E_EXCEEDED_MEDIUM_TIME	= 48,
+-	BRCMF_E_ICV_ERROR		= 49,
+-	BRCMF_E_UNICAST_DECODE_ERROR	= 50,
+-	BRCMF_E_MULTICAST_DECODE_ERROR	= 51,
+-	BRCMF_E_TRACE			= 52,
+-	BRCMF_E_IF			= 54,
+-	BRCMF_E_RSSI			= 56,
+-	BRCMF_E_PFN_SCAN_COMPLETE	= 57,
+-	BRCMF_E_EXTLOG_MSG		= 58,
+-	BRCMF_E_ACTION_FRAME		= 59,
+-	BRCMF_E_ACTION_FRAME_COMPLETE	= 60,
+-	BRCMF_E_PRE_ASSOC_IND		= 61,
+-	BRCMF_E_PRE_REASSOC_IND		= 62,
+-	BRCMF_E_CHANNEL_ADOPTED		= 63,
+-	BRCMF_E_AP_STARTED		= 64,
+-	BRCMF_E_DFS_AP_STOP		= 65,
+-	BRCMF_E_DFS_AP_RESUME		= 66,
+-	BRCMF_E_ESCAN_RESULT		= 69,
+-	BRCMF_E_ACTION_FRAME_OFF_CHAN_COMPLETE	= 70,
+-	BRCMF_E_DCS_REQUEST		= 73,
+-	BRCMF_E_FIFO_CREDIT_MAP		= 74,
++	BRCMF_FWEH_EVENT_ENUM_DEFLIST
+ 	BRCMF_E_LAST
+ };
++#undef BRCMF_ENUM_DEF
+ 
+ /* flags field values in struct brcmf_event_msg */
+ #define BRCMF_EVENT_MSG_LINK		0x01
+-- 
+1.7.9.5
 
-are available in the git repository at:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next fo=
-r-upstream
-
-for you to fetch changes up to 0b27a4b97cb1874503c78453c0903df53c0c86b2:
-
-  Revert "Bluetooth: Fix possible deadlock in SCO code" (2012-12-03 16:00:0=
-4 -0200)
-
-----------------------------------------------------------------
-Andrei Emeltchenko (6):
-      Bluetooth: Refactor l2cap_send_disconn_req
-      Bluetooth: AMP: Mark controller radio powered down after HCIDEVDOWN
-      Bluetooth: AMP: Check that AMP is present and active
-      Bluetooth: Fix missing L2CAP EWS Conf parameter
-      Bluetooth: Process receiving FCS_NONE in L2CAP Conf Rsp
-      Bluetooth: trivial: Change NO_FCS_RECV to RECV_NO_FCS
-
-Fr=E9d=E9ric Dalleau (2):
-      Bluetooth: Add BT_DEFER_SETUP option to sco socket
-      Bluetooth: Implement deferred sco socket setup
-
-Gustavo Padovan (4):
-      Bluetooth: Add missing lock nesting notation
-      Bluetooth: cancel power_on work when unregistering the device
-      Bluetooth: Move double negation to macros
-      Revert "Bluetooth: Fix possible deadlock in SCO code"
-
- include/net/bluetooth/hci_core.h |  31 ++++++++++---
- include/net/bluetooth/l2cap.h    |   2 +-
- net/bluetooth/hci_core.c         |   5 +++
- net/bluetooth/hci_event.c        |  56 ++++++++++++++++++++---
- net/bluetooth/l2cap_core.c       | 100 +++++++++++++++++++++--------------=
-------
- net/bluetooth/mgmt.c             |  10 ++---
- net/bluetooth/rfcomm/sock.c      |   4 +-
- net/bluetooth/sco.c              |  86 ++++++++++++++++++++++++++++++-----
- 8 files changed, 213 insertions(+), 81 deletions(-)
-
---OXfL5xGRrasGEqWY
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQvO3PAAoJEPs3PUX4s20oGJwQAJx59z01ELd99HkIoCDEKXvS
-rm8QvTn6PJdSJCkH6PyXkYPTC4XTV66TLxYJkBfqgZZFe/nYEHkjdpljZqfrVbYx
-hBHqFa0wDHyvPEXDmUe1iOycMlK5GqS+RLlOnft5vOREbofo0zGlEUtFKOYMOROW
-0dCl61kcl+pbcXvhLktOdov3WD/7SG67vEqaNxC/aIyhXhy2j331d842JBC0e+WK
-JceK2VfvrDC/w+A7mA5qmpMvW+LGpWH0wS1FOtGS2xNTAdx1qPSenLNjljXVKZxR
-mCVmBWrajFMypmckRv8j4lfaaHK1jjzBmGU8/MuOw72z4ZvAVLTsZ3cBo8sdRV6W
-eF7I7dCCu8mnF0OAmvndoJDRT62f6n+ivSLCE+BUw7KM+GO7y7+WBcxfI7+Gc2Xy
-WxkLaeTQDZDtqJshNYnOIB2y8sI+IKdeIs3AvaI13NWwFJUa7Hks5GEz+wk3jtuf
-3GgYHhsTqGNdO6igWFTfWAAoo8ysHe1zuF6JJ6wXCiuW6cKBxwT/dGx7qL3uy5kl
-nYJQfT26yXheUtI5k6Zl4jV67MXK4cmm4ZrSZ8wgohEjbUQwP5NDWUGEvTxmZSO3
-0SUWgmzJydh6a85CRF1d2LMRnbpK4tC4CVFaQhpNkiJLk5ssF/1oLsHFbI6WvWFS
-g8WY3G6/RVhXrArboRRW
-=fW/r
------END PGP SIGNATURE-----
-
---OXfL5xGRrasGEqWY--
