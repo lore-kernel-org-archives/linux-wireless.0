@@ -1,29 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:48602 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753376Ab2LMNTV (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59253 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752516Ab2LERkS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 08:19:21 -0500
-Message-ID: <50C9D5D6.3060808@posedge.com> (sfid-20121213_141925_365311_C894459C)
-Date: Thu, 13 Dec 2012 18:49:18 +0530
-From: Chaitanya <chaitanyatk@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [Query] Operation Mode Change on the Fly (AP-STA/STA-AP)
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 Dec 2012 12:40:18 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] wireless:  Fix ethtool stats and other ops.
+Date: Wed,  5 Dec 2012 09:39:52 -0800
+Message-Id: <1354729192-22945-1-git-send-email-greearb@candelatech.com> (sfid-20121205_184022_116114_5736073D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ben Greear <greearb@candelatech.com>
 
-While trying to run hostapd in ubuntu i am seeing a error with regards "an operation already in progress" while registering mgmt_frame (208-action).
-After some debugging found that the same action frame is registered by the STA (wpa_supplicant service was running by default) causing the AP mode to fail?
+net/core/dev.c now assigns a default ethtool ops, so
+the net/wireless/core.c check for existing ops is always true
+so the wireless ops would never be assigned.
 
-Is this expected behavior? (or) in order to support on the fly mode change, do we need purge the old state when starting a new mode and continue.
-For Eg. in case of AP mode from hostapd, do we need to purge all entries registered by STA (from wpa_supplicant)?
+Simply remove the check for existing ops and always assign
+the wireless ops.
 
-For now disabled the wpa_supplicant service, but curious to know the design here.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/wireless/core.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Regards,
-Chaitanya T K.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 4e6fe62..6309699 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -863,8 +863,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		/* allow mac80211 to determine the timeout */
+ 		wdev->ps_timeout = -1;
+ 
+-		if (!dev->ethtool_ops)
+-			dev->ethtool_ops = &cfg80211_ethtool_ops;
++		dev->ethtool_ops = &cfg80211_ethtool_ops;
+ 
+ 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+ 		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+-- 
+1.7.3.4
+
