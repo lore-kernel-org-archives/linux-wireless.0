@@ -1,122 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58310 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753651Ab2LBBME (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:43543 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670Ab2LEEMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Dec 2012 20:12:04 -0500
-Date: Sat, 1 Dec 2012 17:11:57 -0800
-From: Tejun Heo <tj@kernel.org>
-To: Anders Kaseorg <andersk@MIT.EDU>
-Cc: Herbert Xu <herbert@gondor.hengli.com.au>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Zlatko Calusic <zlatko.calusic@iskon.hr>,
-	Joonsoo Kim <js1304@gmail.com>
-Subject: [PATCH] workqueue: mod_delayed_work_on() shouldn't queue timer on 0
- delay
-Message-ID: <20121202011157.GE2685@htj.dyndns.org> (sfid-20121202_021231_337297_72B52AEE)
-References: <alpine.DEB.2.00.1211280953350.26602@dr-wily.mit.edu>
- <alpine.DEB.2.00.1211281016320.26602@dr-wily.mit.edu>
- <20121130211435.GJ3873@htj.dyndns.org>
- <20121130225619.GD6021@htj.dyndns.org>
- <alpine.DEB.2.00.1211302234410.25064@dr-wily.mit.edu>
- <20121201143926.GB2685@htj.dyndns.org>
- <alpine.DEB.2.00.1212011852100.25064@dr-wily.mit.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.1212011852100.25064@dr-wily.mit.edu>
+	Tue, 4 Dec 2012 23:12:50 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [RFC] mac80211_hwsim: dont modify TBTT if beacon is already enabled
+Date: Tue,  4 Dec 2012 20:12:41 -0800
+Message-Id: <1354680761-32703-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121205_051300_029187_A9EA1871)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 8852aac25e79e38cc6529f20298eed154f60b574 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Sat, 1 Dec 2012 16:23:42 -0800
+If the beacon is already enabled, do not modify the beacon timer. This causes
+a hard TBTT adjustment and may cause mischief for powersave or synchronization.
 
-8376fe22c7 ("workqueue: implement mod_delayed_work[_on]()")
-implemented mod_delayed_work[_on]() using the improved
-try_to_grab_pending().  The function is later used, among others, to
-replace [__]candel_delayed_work() + queue_delayed_work() combinations.
-
-Unfortunately, a delayed_work item w/ zero @delay is handled slightly
-differently by mod_delayed_work_on() compared to
-queue_delayed_work_on().  The latter skips timer altogether and
-directly queues it using queue_work_on() while the former schedules
-timer which will expire on the closest tick.  This means, when @delay
-is zero, that [__]cancel_delayed_work() + queue_delayed_work_on()
-makes the target item immediately executable while
-mod_delayed_work_on() may induce delay of upto a full tick.
-
-This somewhat subtle difference breaks some of the converted users.
-e.g. block queue plugging uses delayed_work for deferred processing
-and uses mod_delayed_work_on() when the queue needs to be immediately
-unplugged.  The above problem manifested as noticeably higher number
-of context switches under certain circumstances.
-
-The difference in behavior was caused by missing special case handling
-for 0 delay in mod_delayed_work_on() compared to
-queue_delayed_work_on().  Joonsoo Kim posted a patch to add it -
-("workqueue: optimize mod_delayed_work_on() when @delay == 0")[1].
-The patch was queued for 3.8 but it was described as optimization and
-I missed that it was a correctness issue.
-
-As both queue_delayed_work_on() and mod_delayed_work_on() use
-__queue_delayed_work() for queueing, it seems that the better approach
-is to move the 0 delay special handling to the function instead of
-duplicating it in mod_delayed_work_on().
-
-Fix the problem by moving 0 delay special case handling from
-queue_delayed_work_on() to __queue_delayed_work().  This replaces
-Joonsoo's patch.
-
-[1] http://thread.gmane.org/gmane.linux.kernel/1379011/focus=1379012
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-and-tested-by: Anders Kaseorg <andersk@MIT.EDU>
-Reported-and-tested-by: Zlatko Calusic <zlatko.calusic@iskon.hr>
-LKML-Reference: <alpine.DEB.2.00.1211280953350.26602@dr-wily.mit.edu>
-LKML-Reference: <50A78AA9.5040904@iskon.hr>
-Cc: Joonsoo Kim <js1304@gmail.com>
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
 ---
-Applied to wq/for-3.7-fixes.  Pull request sent.
+ drivers/net/wireless/mac80211_hwsim.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks!
-
- kernel/workqueue.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index ac25db1..084aa47 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -1364,6 +1364,17 @@ static void __queue_delayed_work(int cpu, struct workqueue_struct *wq,
- 	BUG_ON(timer_pending(timer));
- 	BUG_ON(!list_empty(&work->entry));
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index bc763d2..abfa7e6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1174,7 +1174,7 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 	data->power_level = conf->power_level;
+ 	if (!data->started || !data->beacon_int)
+ 		del_timer(&data->beacon_timer);
+-	else
++	else if (!timer_pending(&data->beacon_timer))
+ 		mod_timer(&data->beacon_timer, jiffies + data->beacon_int);
  
-+	/*
-+	 * If @delay is 0, queue @dwork->work immediately.  This is for
-+	 * both optimization and correctness.  The earliest @timer can
-+	 * expire is on the closest next tick and delayed_work users depend
-+	 * on that there's no such delay when @delay is 0.
-+	 */
-+	if (!delay) {
-+		__queue_work(cpu, wq, &dwork->work);
-+		return;
-+	}
-+
- 	timer_stats_timer_set_start_info(&dwork->timer);
- 
- 	/*
-@@ -1417,9 +1428,6 @@ bool queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
- 	bool ret = false;
- 	unsigned long flags;
- 
--	if (!delay)
--		return queue_work_on(cpu, wq, &dwork->work);
--
- 	/* read the comment in __queue_work() */
- 	local_irq_save(flags);
- 
+ 	return 0;
 -- 
-1.7.11.7
+1.7.9.5
 
