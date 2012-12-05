@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42729 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754232Ab2LZK75 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 05:59:57 -0500
-Message-ID: <50DAD8A6.8050405@hauke-m.de> (sfid-20121226_120000_250120_4FC93244)
-Date: Wed, 26 Dec 2012 11:59:50 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC][PATCH] ssb: add place for serial flash driver
-References: <1356459816-2214-1-git-send-email-zajec5@gmail.com> <50DAD374.1090305@hauke-m.de> <CACna6rw00D+pVHPoYPgN9OoiQpHGumTw7oCXSmj+ECsqTVzR9Q@mail.gmail.com>
-In-Reply-To: <CACna6rw00D+pVHPoYPgN9OoiQpHGumTw7oCXSmj+ECsqTVzR9Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:48360 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752604Ab2LEMaT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 07:30:19 -0500
+Message-ID: <1354710644.9972.11.camel@jlt4.sipsolutions.net> (sfid-20121205_133023_864184_5176EE7F)
+Subject: Re: [PATCH] mac80211: fix the multiple warnings for budding
+ chipsets without ampdu_action defined
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chaitanya <chaitanyatk@posedge.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 05 Dec 2012 13:30:44 +0100
+In-Reply-To: <50BF3DBB.90000@posedge.com>
+References: <50BF3DBB.90000@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/26/2012 11:46 AM, Rafał Miłecki wrote:
-> 2012/12/26 Hauke Mehrtens <hauke@hauke-m.de>:
->> On 12/25/2012 07:23 PM, Rafał Miłecki wrote:
->>> +#ifdef CONFIG_SSB_SFLASH
->>> +struct ssb_sflash {
->>> +     bool present;
->>> +};
->>> +#endif
->>
->> I assume you want to share some of the code for the serial flash driver
->> between bcma and ssb. You should create a file with the structure in
->> include/linux/platform_data/ and share that between bcma and ssb.
-> 
-> It's a small struct having about 5 trivial fields. We don't share
-> sturcts for any other drivers (chipcommon/mips/pcie) so I think they
-> should stay separated here as well.
+On Wed, 2012-12-05 at 17:57 +0530, Chaitanya wrote:
 
-When this structure is just used in ssb or bcma and in the nvram code of
-arch/mips/bcm47x I would also prefer two structures one for bcma and one
-for ssb.
+> --- a/net/mac80211/agg-tx.c
+> +++ b/net/mac80211/agg-tx.c
+> @@ -445,7 +445,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+>  
+>      trace_api_start_tx_ba_session(pubsta, tid);
+>  
+> -    if (WARN_ON(!local->ops->ampdu_action))
+> +    if (WARN_ON_ONCE(!local->ops->ampdu_action))
+>          return -EINVAL;
 
-> Plus the mtd driver will have to implement bus abstraction anyway.
+Hm, no tabs it seems, so this doesn't apply either.
 
-If you have a structure describing the needs of the serial flash driver
-in drivers/mtd/ you could write the flash driver without any ifdef
-BCMA_* or SSB_* and if does not have to include linux/ssb/ssb.h or
-linu/bcma/bcma.h, like I did this with the watchdog driver
-include/linux/bcm47xx_wdt.h
+I'd just fix it myself for this simple a thing, but you'll probably
+eventually want to submit more complicated patches ...
 
-Hauke
+johannes
+
