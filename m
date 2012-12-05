@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:54015 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751883Ab2L1CTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 21:19:52 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ToPYK-00026b-1i
-	for linux-wireless@vger.kernel.org; Fri, 28 Dec 2012 03:20:04 +0100
-Received: from pool-72-79-128-100.sctnpa.east.verizon.net ([72.79.128.100])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Dec 2012 03:20:04 +0100
-Received: from pagea by pool-72-79-128-100.sctnpa.east.verizon.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Dec 2012 03:20:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Alden Page <pagea@allegheny.edu>
-Subject: Re: bugreport Connectivity problems with rtl8192cu
-Date: Fri, 28 Dec 2012 02:18:53 +0000 (UTC)
-Message-ID: <loom.20121228T030252-692@post.gmane.org> (sfid-20121228_031956_076750_74927515)
-References: <CABLZTyB12FX3e_yAoH7XOfhhA-pcv4GqzpfkBDNi64jdh5eCXA@mail.gmail.com> <50DCE1F3.806@lwfinger.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:48964 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990Ab2LEPzP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 10:55:15 -0500
+Message-ID: <1354722937.24513.2.camel@jlt4.sipsolutions.net> (sfid-20121205_165519_083368_3587CF83)
+Subject: Re: [PATCH] mac80211: Skip radiotap space calculation if no monitor
+ exists
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 05 Dec 2012 16:55:37 +0100
+In-Reply-To: <1354714572-26995-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20121205_143626_644904_42C126D6)
+References: <1354714572-26995-1-git-send-email-helmut.schaa@googlemail.com>
+	 (sfid-20121205_143626_644904_42C126D6)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2012-12-05 at 14:36 +0100, Helmut Schaa wrote:
+> The radiotap header length "needed_headroom" is only required if we're
+> sending the skb to a monitor interface. Hence, move the calculation a
+> bit later so the calculation can be skipped if no monitor interface is
+> present.
 
-Larry Finger <Larry.Finger@...> writes:
+Applied. If we didn't need "local" we could mark the function __pure and
+the compiler would do this optimisation for us ;-))
 
-> What is this doing here? You need to have either the in-kernel
- driver available, or the vendor driver. This bit shows you
-> have both.
-
-Since I was having a lot of trouble with the in-kernel driver,
-I tried the vendor driver. I went to some lengths to get it to
-compile and install in thenew kernel. Unfortunately, this was 
-before I referred to the documentation and read that it supports
-x86 only.
-
-Apparently I didn't uninstall the broken vendor driver entirely
-as I thought I did. I will try to clean it out. Still, the
-problems that I described were present before I installed it.
+johannes
 
