@@ -1,45 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:52704 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826Ab2LJWsX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 17:48:23 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so2372855pad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 14:48:23 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 1/3] ath9k: RX timestamp is reported at end of frame
-Date: Mon, 10 Dec 2012 14:48:01 -0800
-Message-Id: <1355179683-24846-1-git-send-email-thomas@cozybit.com> (sfid-20121210_234827_651314_B60CBB17)
+Received: from bear.ext.ti.com ([192.94.94.41]:43321 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752124Ab2LEJfr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 04:35:47 -0500
+Message-ID: <1354700103.6234.16.camel@cumari.coelho.fi> (sfid-20121205_103552_857442_D345A3D8)
+Subject: Re: [PATCH 02/20] wlcore: add ACX_PEER_CAP command
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
+Date: Wed, 5 Dec 2012 11:35:03 +0200
+In-Reply-To: <1354095769-8724-3-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-3-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Accurate RX timestamp reporting is important for proper IBSS merging,
-mesh synchronization, and MCCA scheduling. Namely, knowing where the TSF
-is recorded is needed to sync with the beacon timestamp field.
+On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> ACX_PEER_CAP command is just ACX_PEER_HT_CAP, but allows
+> configuring the peer's support rates as well.
+> 
+> this is needed because we start the station role when
+> the remote rates are not known yet.
+> 
+> the two commands should be unified in future fw versions,
+> but for now add a new set_peer_cap per-hw op, that will
+> use ACX_PEER_CAP for 18xx, and ACX_PEER_HT_CAP for 12xx.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-Tested with AR9280.
+[...]
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+> index 0218edd..951b88c 100644
+> --- a/drivers/net/wireless/ti/wl12xx/main.c
+> +++ b/drivers/net/wireless/ti/wl12xx/main.c
+> @@ -1623,6 +1623,15 @@ static int wl12xx_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+>  	return wlcore_set_key(wl, cmd, vif, sta, key_conf);
+>  }
+>  
+> +static int wl12xx_set_peer_cap(struct wl1271 *wl,
+> +			       struct ieee80211_sta_ht_cap *ht_cap,
+> +			       bool allow_ht_operation,
+> +			       u32 rate_set, u8 hlid)
+> +{
+> +	return wl1271_acx_set_ht_capabilities(wl, ht_cap, allow_ht_operation,
+> +					      hlid);
+> +}
+> +
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6aafbb7..d4df98a 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -976,7 +976,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 	rx_status->freq = hw->conf.channel->center_freq;
- 	rx_status->signal = ah->noise + rx_stats->rs_rssi;
- 	rx_status->antenna = rx_stats->rs_antenna;
--	rx_status->flag |= RX_FLAG_MACTIME_START;
-+	rx_status->flag |= RX_FLAG_MACTIME_END;
- 	if (rx_stats->rs_moreaggr)
- 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
--- 
-1.7.10.4
+This is quite ugly, because you're just calling wlcore back to perform
+this op.
+
+
+> diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
+> index 801d8af..a169bb5 100644
+> --- a/drivers/net/wireless/ti/wl18xx/acx.c
+> +++ b/drivers/net/wireless/ti/wl18xx/acx.c
+> @@ -140,3 +140,57 @@ out:
+>  	return ret;
+>  
+>  }
+> +
+> +/*
+> + * this command is basically the same as wl1271_acx_ht_capabilities,
+> + * with the addition of supported rates. they should be unified in
+> + * the next fw api change
+> + */
+
+Has this been already unified? What's the status or plan for this new
+API change? I guess we're only waiting for the change in the wl12xx
+firmware to catch up with wl18xx, right?
+
+
+> diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+> index b57e348..0e636de 100644
+> --- a/drivers/net/wireless/ti/wl18xx/acx.h
+> +++ b/drivers/net/wireless/ti/wl18xx/acx.h
+> @@ -297,11 +297,44 @@ struct wlcore_peer_ht_operation_mode {
+>  	u8 padding[2];
+>  };
+>  
+> +/*
+> + * ACX_PEER_CAP
+> + * this struct is very similar to wl1271_acx_ht_capabilities, with the
+> + * addition of supported rates
+> + */
+> +struct wlcore_acx_peer_cap {
+> +	struct acx_header header;
+> +
+> +	/* bitmask of capability bits supported by the peer */
+> +	__le32 ht_capabilites;
+> +
+> +	/* rates supported by the remote peer */
+> +	__le32 supported_rates;
+> +
+> +	/* Indicates to which link these capabilities apply. */
+> +	u8 hlid;
+> +
+> +	/*
+> +	 * This the maximum A-MPDU length supported by the AP. The FW may not
+> +	 * exceed this length when sending A-MPDUs
+> +	 */
+> +	u8 ampdu_max_length;
+> +
+> +	/* This is the minimal spacing required when sending A-MPDUs to the AP*/
+> +	u8 ampdu_min_spacing;
+> +
+> +	u8 padding;
+> +} __packed;
+
+If we're sure this will be also changed in the wl12xx firmware, maybe
+this could already be in the wlcore acx.h? Otherwise we'll just be
+moving this around...
+
+
+> diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+> index 71137aa..ecdd5e6 100644
+> --- a/drivers/net/wireless/ti/wlcore/wlcore.h
+> +++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+> @@ -106,6 +106,11 @@ struct wlcore_ops {
+>  	u32 (*pre_pkt_send)(struct wl1271 *wl, u32 buf_offset, u32 last_len);
+>  	void (*sta_rc_update)(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>  			      struct ieee80211_sta *sta, u32 changed);
+> +	int (*set_peer_cap)(struct wl1271 *wl,
+> +			    struct ieee80211_sta_ht_cap *ht_cap,
+> +			    bool allow_ht_operation,
+> +			    u32 rate_set, u8 hlid);
+> +
+
+I think it would be much nicer to do all this with a quirk instead.
+Then we don't need to add ops that will have to be removed later and
+make all this ping-pong of calls between the modules.
+
+--
+Luca.
 
