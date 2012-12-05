@@ -1,59 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:60184 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957Ab2LPIzw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2012 03:55:52 -0500
-Received: by mail-ie0-f174.google.com with SMTP id c11so7933789ieb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Dec 2012 00:55:51 -0800 (PST)
+Received: from bear.ext.ti.com ([192.94.94.41]:51515 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753793Ab2LEVDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 16:03:41 -0500
+Message-ID: <1354741378.6234.88.camel@cumari.coelho.fi> (sfid-20121205_220344_785382_7BCF6041)
+Subject: Re: [PATCH 05/20] wlcore: increase scan dwell times if no activity
+From: Luciano Coelho <coelho@ti.com>
+To: Eyal Shapira <eyal@wizery.com>
+CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
+Date: Wed, 5 Dec 2012 23:02:58 +0200
+In-Reply-To: <CAF8O4-xizhg8T4eQ13BGLR=ZDYz95+6zEWjW8HchW7CfUrfQMQ@mail.gmail.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-6-git-send-email-arik@wizery.com>
+	 <1354706476.6234.50.camel@cumari.coelho.fi>
+	 <CAF8O4-xizhg8T4eQ13BGLR=ZDYz95+6zEWjW8HchW7CfUrfQMQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <1355486368-14563-3-git-send-email-johannes@sipsolutions.net>
-References: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net>
-	<1355486368-14563-3-git-send-email-johannes@sipsolutions.net>
-Date: Sun, 16 Dec 2012 10:55:51 +0200
-Message-ID: <CAB3XZEeGABu9B-Cd27rjrTgtArf3gvV=2KejW+MctSWyGAL4CA@mail.gmail.com> (sfid-20121216_095556_135553_3BA8D335)
-Subject: Re: [PATCH 2/3] mac80211: clean up association better in suspend
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 14, 2012 at 1:59 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When suspending, bss_info_changed() is called to
-> disable beacons, but managed mode interfaces are
-> simply removed (bss_info_changed() is called with
-> "no change" only). This can lead to problems.
->
-> To fix this and copy the BSS configuration, clear
-> it during suspend and restore it on resume.
->
-> Change-Id: Ie1b7f6343fe59dfbff886b9720e4c15686d7fda7
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
+On Wed, 2012-12-05 at 14:19 +0200, Eyal Shapira wrote:
+> On 5 December 2012 13:21, Luciano Coelho <coelho@ti.com> wrote:
+> >
+> >
+> > IMO it would have been nicer to keep the existing ones as they are and
+> > not change the semantics.  Then add the new ones with another name.
+> > Maybe something like "max_dwell_time_active_long", which is more
+> > generic.
+> >
+> > It is possible that we will find more scenarios where this long scans
+> > could be used (eg. if it would be possible to identify whether there are
+> > any low latency TIDs running or not).
+> >
+> 
+> Sure. I'll respin it.
 
-> @@ -121,6 +121,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
-> @@ -129,14 +131,19 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
->                 case NL80211_IFTYPE_MONITOR:
->                         /* skip these */
->                         continue;
-> +               case NL80211_IFTYPE_STATION:
-> +                       changed = BSS_CHANGED_ASSOC;
+BTW, please take Arik's v2 which was sent to the list on Nov 30th before
+you make your updates.  It has a mac80211 API change taken into account.
 
-maybe set it only if associated?
-also, is there really a point in notifying BSS_CHANGED_ASSOC without
-notifying CHANGED_BSSID (and maybe CHANGED_IDLE)?
+--
+Luca.
 
-> -               /* disable beaconing */
-> -               ieee80211_bss_info_change_notify(sdata,
-> -                       BSS_CHANGED_BEACON_ENABLED);
-> +               sdata->suspend_bss_conf = sdata->vif.bss_conf;
-> +               memset(&sdata->vif.bss_conf, 0, sizeof(sdata->vif.bss_conf));
-
-it probably doesn't matter much (as you don't notify CHANGED_IDLE),
-but setting vif.idle=0 is probably not your intention here.
