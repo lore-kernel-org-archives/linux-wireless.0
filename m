@@ -1,97 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44583 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49839 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732Ab2LDOtM (ORCPT
+	with ESMTP id S1753290Ab2LEVE1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 09:49:12 -0500
+	Wed, 5 Dec 2012 16:04:27 -0500
+Message-ID: <1354741486.24513.3.camel@jlt4.sipsolutions.net> (sfid-20121205_220431_147402_AE1F168F)
+Subject: Re: [PATCH 12/12] iwlwifi: Use standard #defines for PCIe
+ Capability ASPM fields
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 13/18] regulatory: simplify freq_reg_info_regd
-Date: Tue,  4 Dec 2012 15:48:55 +0100
-Message-Id: <1354632540-21207-14-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154916_771407_9E5D9308)
-In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
-References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date: Wed, 05 Dec 2012 22:04:46 +0100
+In-Reply-To: <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com> (sfid-20121205_215831_436859_0EDF2BD3)
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+	 <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com>
+	 (sfid-20121205_215831_436859_0EDF2BD3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-12-05 at 13:58 -0700, Bjorn Helgaas wrote:
+> Use the standard #defines rather than creating local definitions for
+> PCIe Capability ASPM fields.
 
-The function itself has dual-purpose: it can
-retrieve from a given regdomain or from the
-globally installed one. Change it to have a
-single purpose only: to look up from a given
-regdomain. Pass the correct regdomain in the
-freq_reg_info() function instead.
+I'll pick up the iwlwifi ones if you want, or do you want to merge them
+somewhere centrally instead?
 
-This also changes the locking rules for it,
-no locking is required any more.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 999b379..1dc94da 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -687,28 +687,15 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- 			      u32 center_freq,
- 			      u32 desired_bw_khz,
- 			      const struct ieee80211_reg_rule **reg_rule,
--			      const struct ieee80211_regdomain *custom_regd)
-+			      const struct ieee80211_regdomain *regd)
- {
- 	int i;
- 	bool band_rule_found = false;
--	const struct ieee80211_regdomain *regd;
- 	bool bw_fits = false;
- 
- 	if (!desired_bw_khz)
- 		desired_bw_khz = MHZ_TO_KHZ(20);
- 
--	regd = custom_regd ? custom_regd : cfg80211_regdomain;
--
--	/*
--	 * Follow the driver's regulatory domain, if present, unless a country
--	 * IE has been processed or a user wants to help complaince further
--	 */
--	if (!custom_regd &&
--	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--	    last_request->initiator != NL80211_REGDOM_SET_BY_USER &&
--	    wiphy->regd)
--		regd = wiphy->regd;
--
- 	if (!regd)
- 		return -EINVAL;
- 
-@@ -744,10 +731,24 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 desired_bw_khz,
- 		  const struct ieee80211_reg_rule **reg_rule)
- {
-+	const struct ieee80211_regdomain *regd;
-+
-+	assert_reg_lock();
- 	assert_cfg80211_lock();
- 
-+	/*
-+	 * Follow the driver's regulatory domain, if present, unless a country
-+	 * IE has been processed or a user wants to help complaince further
-+	 */
-+	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	    last_request->initiator != NL80211_REGDOM_SET_BY_USER &&
-+	    wiphy->regd)
-+		regd = wiphy->regd;
-+	else
-+		regd = cfg80211_regdomain;
-+
- 	return freq_reg_info_regd(wiphy, center_freq, desired_bw_khz,
--				  reg_rule, NULL);
-+				  reg_rule, regd);
- }
- EXPORT_SYMBOL(freq_reg_info);
- 
--- 
-1.8.0
+johannes
 
