@@ -1,52 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:48491 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910Ab2LACaU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 21:30:20 -0500
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [RFC] cfg80211: fix channel error on mesh join
-Date: Fri, 30 Nov 2012 18:30:09 -0800
-Message-Id: <1354329009-25513-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121201_033033_391590_53C8E9A2)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47405 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753222Ab2LERsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 12:48:24 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3 11/11] ssb: register watchdog driver
+Date: Wed,  5 Dec 2012 18:46:08 +0100
+Message-Id: <1354729568-19993-12-git-send-email-hauke@hauke-m.de> (sfid-20121205_184827_198370_4E312814)
+In-Reply-To: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
+References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix an error on mesh join when no channel has been explicitly set beforehand.
+Register the watchdog driver to the system if it is a SoC. Using the
+watchdog on a non SoC device, like a PCI card, will make the PCI
+card die when the timeout expired, but starting it again is not
+supported by ssb.
 
-Previously a WARN_ON was hit in cfg80211_reg_can_beacon because center_freq1
-was not set.
-
-Also fix double semicolon.
-
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/wireless/mesh.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ssb/embedded.c    |   35 +++++++++++++++++++++++++++++++++++
+ drivers/ssb/main.c        |    8 ++++++++
+ drivers/ssb/ssb_private.h |   10 ++++++++++
+ include/linux/ssb/ssb.h   |    2 ++
+ 4 files changed, 55 insertions(+)
 
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index f7b2da6..989b6ce 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -145,6 +145,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 						   IEEE80211_CHAN_RADAR))
- 					continue;
- 				setup->chandef.chan = chan;
-+				setup->chandef.center_freq1 = chan->center_freq;
- 				break;
- 			}
+diff --git a/drivers/ssb/embedded.c b/drivers/ssb/embedded.c
+index 9ef124f..bb18d76 100644
+--- a/drivers/ssb/embedded.c
++++ b/drivers/ssb/embedded.c
+@@ -4,11 +4,13 @@
+  *
+  * Copyright 2005-2008, Broadcom Corporation
+  * Copyright 2006-2008, Michael Buesch <m@bues.ch>
++ * Copyright 2012, Hauke Mehrtens <hauke@hauke-m.de>
+  *
+  * Licensed under the GNU/GPL. See COPYING for details.
+  */
  
-@@ -156,7 +157,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 		if (!setup->chandef.chan)
- 			return -EINVAL;
+ #include <linux/export.h>
++#include <linux/platform_device.h>
+ #include <linux/ssb/ssb.h>
+ #include <linux/ssb/ssb_embedded.h>
+ #include <linux/ssb/ssb_driver_pci.h>
+@@ -32,6 +34,39 @@ int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks)
+ }
+ EXPORT_SYMBOL(ssb_watchdog_timer_set);
  
--		setup->chandef.width = NL80211_CHAN_WIDTH_20_NOHT;;
-+		setup->chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
++int ssb_watchdog_register(struct ssb_bus *bus)
++{
++	struct bcm47xx_wdt wdt = {};
++	struct platform_device *pdev;
++
++	if (ssb_chipco_available(&bus->chipco)) {
++		wdt.driver_data = &bus->chipco;
++		wdt.timer_set = ssb_chipco_watchdog_timer_set_wdt;
++		wdt.timer_set_ms = ssb_chipco_watchdog_timer_set_ms;
++		wdt.max_timer_ms = bus->chipco.max_timer_ms;
++	} else if (ssb_extif_available(&bus->extif)) {
++		wdt.driver_data = &bus->extif;
++		wdt.timer_set = ssb_extif_watchdog_timer_set_wdt;
++		wdt.timer_set_ms = ssb_extif_watchdog_timer_set_ms;
++		wdt.max_timer_ms = SSB_EXTIF_WATCHDOG_MAX_TIMER_MS;
++	} else {
++		return -ENODEV;
++	}
++
++	pdev = platform_device_register_data(NULL, "bcm47xx-wdt",
++					     bus->busnumber, &wdt,
++					     sizeof(wdt));
++	if (IS_ERR(pdev)) {
++		ssb_dprintk(KERN_INFO PFX
++			    "can not register watchdog device, err: %li\n",
++			    PTR_ERR(pdev));
++		return PTR_ERR(pdev);
++	}
++
++	bus->watchdog = pdev;
++	return 0;
++}
++
+ u32 ssb_gpio_in(struct ssb_bus *bus, u32 mask)
+ {
+ 	unsigned long flags;
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index df0f145..58c7da2 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -13,6 +13,7 @@
+ #include <linux/delay.h>
+ #include <linux/io.h>
+ #include <linux/module.h>
++#include <linux/platform_device.h>
+ #include <linux/ssb/ssb.h>
+ #include <linux/ssb/ssb_regs.h>
+ #include <linux/ssb/ssb_driver_gige.h>
+@@ -433,6 +434,11 @@ static void ssb_devices_unregister(struct ssb_bus *bus)
+ 		if (sdev->dev)
+ 			device_unregister(sdev->dev);
  	}
++
++#ifdef CONFIG_SSB_EMBEDDED
++	if (bus->bustype == SSB_BUSTYPE_SSB)
++		platform_device_unregister(bus->watchdog);
++#endif
+ }
  
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef))
+ void ssb_bus_unregister(struct ssb_bus *bus)
+@@ -561,6 +567,8 @@ static int __devinit ssb_attach_queued_buses(void)
+ 		if (err)
+ 			goto error;
+ 		ssb_pcicore_init(&bus->pcicore);
++		if (bus->bustype == SSB_BUSTYPE_SSB)
++			ssb_watchdog_register(bus);
+ 		ssb_bus_may_powerdown(bus);
+ 
+ 		err = ssb_devices_register(bus);
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index 50ea028..8942db1 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -232,4 +232,14 @@ static inline u32 ssb_extif_watchdog_timer_set_ms(struct bcm47xx_wdt *wdt,
+ 	return 0;
+ }
+ #endif
++
++#ifdef CONFIG_SSB_EMBEDDED
++extern int ssb_watchdog_register(struct ssb_bus *bus);
++#else /* CONFIG_SSB_EMBEDDED */
++static inline int ssb_watchdog_register(struct ssb_bus *bus)
++{
++	return 0;
++}
++#endif /* CONFIG_SSB_EMBEDDED */
++
+ #endif /* LINUX_SSB_PRIVATE_H_ */
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index bb674c0..1f64e3f 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -8,6 +8,7 @@
+ #include <linux/pci.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/dma-mapping.h>
++#include <linux/platform_device.h>
+ 
+ #include <linux/ssb/ssb_regs.h>
+ 
+@@ -432,6 +433,7 @@ struct ssb_bus {
+ #ifdef CONFIG_SSB_EMBEDDED
+ 	/* Lock for GPIO register access. */
+ 	spinlock_t gpio_lock;
++	struct platform_device *watchdog;
+ #endif /* EMBEDDED */
+ 
+ 	/* Internal-only stuff follows. Do not touch. */
 -- 
-1.7.9.5
+1.7.10.4
 
