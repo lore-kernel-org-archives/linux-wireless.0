@@ -1,47 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42212 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:47690 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455Ab2LJVs5 (ORCPT
+	with ESMTP id S1751710Ab2LEJEc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 16:48:57 -0500
+	Wed, 5 Dec 2012 04:04:32 -0500
+Message-ID: <1354698297.9972.4.camel@jlt4.sipsolutions.net> (sfid-20121205_100438_778981_61CC2184)
+Subject: Re: [PATCH] mac80211: Moving Zero Len subframe reporting under
+ driver capability check.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/10] iwlwifi: read the Rx write pointer only once
-Date: Mon, 10 Dec 2012 22:49:09 +0100
-Message-Id: <1355176158-24675-1-git-send-email-johannes@sipsolutions.net> (sfid-20121210_224900_482256_E108B542)
-In-Reply-To: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
-References: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 05 Dec 2012 10:04:57 +0100
+In-Reply-To: <CABPxzYKvtgdoxU-dFS2F0tz_1F6cz02uvVgy5qfMPCEbLOZZ=A@mail.gmail.com> (sfid-20121205_063839_781806_ABA3EF11)
+References: <CABPxzYKvtgdoxU-dFS2F0tz_1F6cz02uvVgy5qfMPCEbLOZZ=A@mail.gmail.com>
+	 (sfid-20121205_063839_781806_ABA3EF11)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, 2012-12-05 at 11:08 +0530, Krishna Chaitanya wrote:
+> Zero Len subframe makes sense only when driver supports the reporting
+> of zero len subframes.
 
-The FH (DMA engine) tells the driver the index of the last
-ready (closed) Rx buffer. This data is in closed_rb_num.
-If we read this data several times we may get inconsistencies
-between the code and the debug prints which can make it
-harder to debug issues here.
+Yes, but if the driver is stupid enough to set RX_FLAG_AMPDU_IS_ZEROLEN
+without setting RX_FLAG_AMPDU_REPORT_ZEROLEN I'm not sure we care?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/rx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+johannes
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index c81b978..787b9ca 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -698,7 +698,7 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans)
- 
- 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
- 	 * buffer that the driver may process (last buffer filled by ucode). */
--	r = le16_to_cpu(rxq->rb_stts->closed_rb_num) &  0x0FFF;
-+	r = le16_to_cpu(ACCESS_ONCE(rxq->rb_stts->closed_rb_num)) & 0x0FFF;
- 	i = rxq->read;
- 
- 	/* Rx interrupt, but nothing sent from uCode */
--- 
-1.8.0
 
