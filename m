@@ -1,103 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:58397 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424713Ab2LGWOl (ORCPT
+Received: from mail-vb0-f74.google.com ([209.85.212.74]:36649 "EHLO
+	mail-vb0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754119Ab2LEU6C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 17:14:41 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so648555pbc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 14:14:41 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [RFCv3 3/5] mac80211: move add_tim to subfunction
-Date: Fri,  7 Dec 2012 14:14:01 -0800
-Message-Id: <1354918443-3076-4-git-send-email-marco@cozybit.com> (sfid-20121207_231457_276003_609F3849)
-In-Reply-To: <1354918443-3076-1-git-send-email-marco@cozybit.com>
-References: <1354918443-3076-1-git-send-email-marco@cozybit.com>
+	Wed, 5 Dec 2012 15:58:02 -0500
+Received: by mail-vb0-f74.google.com with SMTP id s24so556247vbi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2012 12:58:01 -0800 (PST)
+Subject: [PATCH 08/12] ath9k: Use standard #defines for PCIe Capability ASPM
+	fields
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Date: Wed, 05 Dec 2012 13:58:01 -0700
+Message-ID: <20121205205801.13851.35427.stgit@bhelgaas.mtv.corp.google.com> (sfid-20121205_215811_874399_666C1E6B)
+In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This functions will be used for mesh beacons, too.
+Use the standard #defines for PCIe Capability ASPM fields.
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
+Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1 directly, but
+these are defined for the Linux ASPM interfaces, e.g.,
+pci_disable_link_state(), and only coincidentally match the actual register
+bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not match
+the register bit.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: "John W. Linville" <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
 ---
- net/mac80211/tx.c |   48 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 29 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d287a4f..7155199 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2261,9 +2261,9 @@ void ieee80211_tx_pending(unsigned long data)
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index f088f4b..71d8207 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -125,23 +125,23 @@ static void ath_pci_aspm_init(struct ath_common *common)
  
- /* functions for drivers to get certain frames */
+ 	if ((ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) &&
+ 	    (AR_SREV_9285(ah))) {
+-		/* Bluetooth coexistance requires disabling ASPM. */
++		/* Bluetooth coexistence requires disabling ASPM. */
+ 		pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL,
+-			PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
++			PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1);
  
--static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
--				     struct ps_data *ps,
--				     struct sk_buff *skb)
-+static void __ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
-+				       struct ps_data *ps,
-+				       struct sk_buff *skb)
- {
- 	u8 *pos, *tim;
- 	int aid0 = 0;
-@@ -2325,6 +2325,31 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 		/*
+ 		 * Both upstream and downstream PCIe components should
+ 		 * have the same ASPM settings.
+ 		 */
+ 		pcie_capability_clear_word(parent, PCI_EXP_LNKCTL,
+-			PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
++			PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1);
+ 
+ 		ath_info(common, "Disabling ASPM since BTCOEX is enabled\n");
+ 		return;
  	}
- }
  
-+static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
-+				    struct ps_data *ps,
-+				    struct sk_buff *skb)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+
-+	/* Not very nice, but we want to allow the driver to call
-+	 * ieee80211_beacon_get() as a response to the set_tim() callback.
-+	 * That, however, is already invoked under the sta_lock to guarantee
-+	 * consistent and race-free update of the tim bitmap in mac80211 and
-+	 * the driver.
-+	 */
-+	if (local->tim_in_locked_section) {
-+		__ieee80211_beacon_add_tim(sdata, ps, skb);
-+	} else {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&local->tim_lock, flags);
-+		__ieee80211_beacon_add_tim(sdata, ps, skb);
-+		spin_unlock_irqrestore(&local->tim_lock, flags);
-+	}
-+
-+	return 0;
-+}
-+
- struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 					 struct ieee80211_vif *vif,
- 					 u16 *tim_offset, u16 *tim_length)
-@@ -2369,22 +2394,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 			memcpy(skb_put(skb, beacon->head_len), beacon->head,
- 			       beacon->head_len);
- 
--			/*
--			 * Not very nice, but we want to allow the driver to call
--			 * ieee80211_beacon_get() as a response to the set_tim()
--			 * callback. That, however, is already invoked under the
--			 * sta_lock to guarantee consistent and race-free update
--			 * of the tim bitmap in mac80211 and the driver.
--			 */
--			if (local->tim_in_locked_section) {
--				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
--			} else {
--				unsigned long flags;
--
--				spin_lock_irqsave(&local->tim_lock, flags);
--				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
--				spin_unlock_irqrestore(&local->tim_lock, flags);
--			}
-+			ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
- 
- 			if (tim_offset)
- 				*tim_offset = beacon->head_len;
--- 
-1.7.9.5
+ 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &aspm);
+-	if (aspm & (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1)) {
++	if (aspm & (PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1)) {
+ 		ah->aspm_enabled = true;
+ 		/* Initialize PCIe PM and SERDES registers. */
+ 		ath9k_hw_configpcipowersave(ah, false);
 
