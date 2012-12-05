@@ -1,186 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28230 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751744Ab2LTNcC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 08:32:02 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/3] iwl3945: disable 11a support
-Date: Thu, 20 Dec 2012 14:31:52 +0100
-Message-Id: <1356010313-9782-2-git-send-email-sgruszka@redhat.com> (sfid-20121220_143208_346303_FEE45543)
-In-Reply-To: <1356010313-9782-1-git-send-email-sgruszka@redhat.com>
-References: <1356010313-9782-1-git-send-email-sgruszka@redhat.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:53324 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751599Ab2LEN0R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 08:26:17 -0500
+Message-ID: <1354713933.6234.64.camel@cumari.coelho.fi> (sfid-20121205_142620_906695_59AF00EE)
+Subject: Re: [PATCH 03/20] wlcore/wl18xx/wl12xx: FW log params per chip arch
+From: Luciano Coelho <coelho@ti.com>
+To: Igal Chernobelsky <igalc@ti.com>
+CC: Arik Nemtsov <arik@wizery.com>, <linux-wireless@vger.kernel.org>
+Date: Wed, 5 Dec 2012 15:25:33 +0200
+In-Reply-To: <50BF3E26.1080801@ti.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+		 <1354095769-8724-4-git-send-email-arik@wizery.com>
+	 <1354704935.6234.44.camel@cumari.coelho.fi> <50BF3E26.1080801@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't believe if there still are users using 11a mode. If they are,
-they should probably update their network to something that was
-designed in current century, but I also left module option for them.
+On Wed, 2012-12-05 at 14:29 +0200, Igal Chernobelsky wrote:
+> Hi Luca,
+> 
+> On 12/05/2012 12:55 PM, Luciano Coelho wrote:
+> > On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
+> >> From: Igal Chernobelsky<igalc@ti.com>
+> >>
+> >> FW memory block size and FW log end marker parameters
+> >> are added to wl structure and are initialized per
+> >> chip architecture. convert_hwaddr hw operation is added
+> >> to convert chip dependent FW internal address.
+> >> Copy from FW log is also simplified to copy the entire
+> >> memory block as FW logger utility is repsponsible
+> >> for parsing of FW log content.
+> >>
+> >> Signed-off-by: Igal Chernobelsky<igalc@ti.com>
+> >> Signed-off-by: Arik Nemtsov<arik@wizery.com>
+> >> ---
+> > This commit log explains what has been done, which can quite easily be
+> > see in the patch itself.  That's okay, but what I'm missing here is the
+> > explanation *why* this needs to be done.
+> 
+> I can add to commit that FW logger is supported by wlcore but
+> has different parameters per chip (actually written in commit header).
 
-Having 11a (5GHz band) enabled on 3945 cause non-necessary scan delays.
+Yeah, could be something like "The FW log data format is slightly
+different in the different chips.  They use a different format in the
+linked list to point to the address of the next block."  Not necessary
+exactly like this, but this kind of information is more important than
+describing how it is done (because the latter can be seen in the commit
+diff anyway).
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    6 ++++-
- drivers/net/wireless/iwlegacy/4965-mac.c |    2 +-
- drivers/net/wireless/iwlegacy/common.c   |   36 ++++++++++++++++++-----------
- drivers/net/wireless/iwlegacy/common.h   |    3 +-
- 4 files changed, 30 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 962400a..7a6ce09 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -88,6 +88,7 @@ struct il_mod_params il3945_mod_params = {
- 	.sw_crypto = 1,
- 	.restart_fw = 1,
- 	.disable_hw_scan = 1,
-+	.disable_11a = 1,
- 	/* the rest are 0 by default */
- };
- 
-@@ -3509,7 +3510,8 @@ il3945_init_drv(struct il_priv *il)
- 		ret = -EINVAL;
- 		goto err;
- 	}
--	ret = il_init_channel_map(il);
-+
-+	ret = il_init_channel_map(il, il3945_mod_params.disable_11a);
- 	if (ret) {
- 		IL_ERR("initializing regulatory failed: %d\n", ret);
- 		goto err;
-@@ -3938,6 +3940,8 @@ MODULE_PARM_DESC(debug, "debug output mask");
- #endif
- module_param_named(fw_restart, il3945_mod_params.restart_fw, int, S_IRUGO);
- MODULE_PARM_DESC(fw_restart, "restart firmware in case of error");
-+module_param_named(disable_11a, il3945_mod_params.disable_11a, bool, S_IRUGO);
-+MODULE_PARM_DESC(disable_11a, "disable 11a support (default true)");
- 
- module_exit(il3945_exit);
- module_init(il3945_init);
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 7d462d8..eb68c83 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6338,7 +6338,7 @@ il4965_init_drv(struct il_priv *il)
- 
- 	il_init_scan_params(il);
- 
--	ret = il_init_channel_map(il);
-+	ret = il_init_channel_map(il, false);
- 	if (ret) {
- 		IL_ERR("initializing regulatory failed: %d\n", ret);
- 		goto err;
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 56b8021..12f5655 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -899,16 +899,18 @@ il_mod_ht40_chan_info(struct il_priv *il, enum ieee80211_band band, u16 channel,
- 			    ? # x " " : "")
- 
- /**
-- * il_init_channel_map - Set up driver's info for all possible channels
-+ * il_init_channel_map - Set up driver's info for all possible channels,
-+ *			 disable 5GHz channels if requested.
-  */
- int
--il_init_channel_map(struct il_priv *il)
-+il_init_channel_map(struct il_priv *il, bool disable_5ghz)
- {
- 	int eeprom_ch_count = 0;
- 	const u8 *eeprom_ch_idx = NULL;
- 	const struct il_eeprom_channel *eeprom_ch_info = NULL;
- 	int band, ch;
- 	struct il_channel_info *ch_info;
-+	enum ieee80211_band ieeeband;
- 
- 	if (il->channel_count) {
- 		D_EEPROM("Channel map already initialized.\n");
-@@ -917,10 +919,11 @@ il_init_channel_map(struct il_priv *il)
- 
- 	D_EEPROM("Initializing regulatory info from EEPROM\n");
- 
--	il->channel_count =
--	    ARRAY_SIZE(il_eeprom_band_1) + ARRAY_SIZE(il_eeprom_band_2) +
--	    ARRAY_SIZE(il_eeprom_band_3) + ARRAY_SIZE(il_eeprom_band_4) +
--	    ARRAY_SIZE(il_eeprom_band_5);
-+	il->channel_count = ARRAY_SIZE(il_eeprom_band_1);
-+	if (!disable_5ghz)
-+		il->channel_count +=
-+		    ARRAY_SIZE(il_eeprom_band_2) + ARRAY_SIZE(il_eeprom_band_3) +
-+		    ARRAY_SIZE(il_eeprom_band_4) + ARRAY_SIZE(il_eeprom_band_5);
- 
- 	D_EEPROM("Parsing data for %d channels.\n", il->channel_count);
- 
-@@ -939,6 +942,12 @@ il_init_channel_map(struct il_priv *il)
- 	 * channel map we maintain (that contains additional information than
- 	 * what just in the EEPROM) */
- 	for (band = 1; band <= 5; band++) {
-+		if (band == 1)
-+			ieeeband = IEEE80211_BAND_2GHZ;
-+		else if (disable_5ghz)
-+			break;
-+		else
-+			ieeeband = IEEE80211_BAND_5GHZ;
- 
- 		il_init_band_reference(il, band, &eeprom_ch_count,
- 				       &eeprom_ch_info, &eeprom_ch_idx);
-@@ -946,9 +955,7 @@ il_init_channel_map(struct il_priv *il)
- 		/* Loop through each band adding each of the channels */
- 		for (ch = 0; ch < eeprom_ch_count; ch++) {
- 			ch_info->channel = eeprom_ch_idx[ch];
--			ch_info->band =
--			    (band ==
--			     1) ? IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
-+			ch_info->band = ieeeband;
- 
- 			/* permanently store EEPROM's channel regulatory flags
- 			 *   and max power in channel info database. */
-@@ -1006,15 +1013,16 @@ il_init_channel_map(struct il_priv *il)
- 
- 	/* Two additional EEPROM bands for 2.4 and 5 GHz HT40 channels */
- 	for (band = 6; band <= 7; band++) {
--		enum ieee80211_band ieeeband;
-+		if (band == 6)
-+			ieeeband = IEEE80211_BAND_2GHZ;
-+		else if (disable_5ghz)
-+			break;
-+		else
-+			ieeeband = IEEE80211_BAND_5GHZ;
- 
- 		il_init_band_reference(il, band, &eeprom_ch_count,
- 				       &eeprom_ch_info, &eeprom_ch_idx);
- 
--		/* EEPROM band 6 is 2.4, band 7 is 5 GHz */
--		ieeeband =
--		    (band == 6) ? IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
--
- 		/* Loop through each band adding each of the channels */
- 		for (ch = 0; ch < eeprom_ch_count; ch++) {
- 			/* Set up driver's info for lower half */
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 37fe553..0ab8757 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -429,7 +429,7 @@ int il_eeprom_init(struct il_priv *il);
- void il_eeprom_free(struct il_priv *il);
- const u8 *il_eeprom_query_addr(const struct il_priv *il, size_t offset);
- u16 il_eeprom_query16(const struct il_priv *il, size_t offset);
--int il_init_channel_map(struct il_priv *il);
-+int il_init_channel_map(struct il_priv *il, bool disable_5ghz);
- void il_free_channel_map(struct il_priv *il);
- const struct il_channel_info *il_get_channel_info(const struct il_priv *il,
- 						  enum ieee80211_band band,
-@@ -1601,6 +1601,7 @@ struct il_mod_params {
- 	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
- 	int antenna;		/* def: 0 = both antennas (use diversity) */
- 	int restart_fw;		/* def: 1 = restart firmware */
-+	bool disable_11a;	/* def: true = 11a disabled (3945 only) */
- };
- 
- #define IL_LED_SOLID 11
--- 
-1.7.1
+> >
+> >> diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+> >> index 951b88c..5e3c808 100644
+> >> --- a/drivers/net/wireless/ti/wl12xx/main.c
+> >> +++ b/drivers/net/wireless/ti/wl12xx/main.c
+> >> @@ -706,6 +706,9 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+> >>   		goto out;
+> >>   	}
+> >>
+> >> +	wl->fw_mem_block_size = 256;
+> >> +	wl->fwlog_end = 0x2000000;
+> > This value used to be in a macro before (WLCORE_FW_LOG_END), why kill
+> > it? It should just be renamed to WL12XX_FW_LOG_END and a new one be
+> > created for WL18XX.
+> These values are used only in one place during initialization and
+> are assigned to variables with self explanation name.
+> Do you still prefer defines?
+
+Yes, I prefer defines.  I think they would be better placed in the reg.h
+file, for instance.  Then you have a single place where you can look up
+everything about the hardware memory configuration, instead of having to
+look everywhere around the code.
+
+Also, I just noticed that you have added this to the identify_chip
+function.  This doesn't change between different chipsets of the same
+family.  So it should be set in the setup operation (eg. wl12xx_setup)
+instead.
+
+
+> >> @@ -1632,6 +1635,11 @@ static int wl12xx_set_peer_cap(struct wl1271 *wl,
+> >>   					      hlid);
+> >>   }
+> >>
+> >> +static u32 wl12xx_convert_hwaddr(struct wl1271 *wl, u32 hwaddr)
+> >> +{
+> >> +	return hwaddr<<  5;
+> >> +}
+> > There was a good comment about this calculation before, it should be
+> > moved here instead of deleted.
+> Sorry, I will restore the comment for wl12xx:
+> /* Addresses are stored internally as addresses to 32 bytes blocks */
+> 
+> >
+> >> @@ -1669,6 +1677,7 @@ static struct wlcore_ops wl12xx_ops = {
+> >>   	.channel_switch		= wl12xx_cmd_channel_switch,
+> >>   	.pre_pkt_send		= NULL,
+> >>   	.set_peer_cap		= wl12xx_set_peer_cap,
+> >> +	.convert_hwaddr = wl12xx_convert_hwaddr,
+> > No need to break the alignment here.
+> I will fix it.
+> >
+> >>   static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
+> >> diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+> >> index df8de71..d806241 100644
+> >> --- a/drivers/net/wireless/ti/wl18xx/main.c
+> >> +++ b/drivers/net/wireless/ti/wl18xx/main.c
+> >> @@ -667,6 +667,9 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
+> >>   		goto out;
+> >>   	}
+> >>
+> >> +	wl->fw_mem_block_size = 272;
+> >> +	wl->fwlog_end = 0x40000000;
+> > Again, the magic number here can be avoided.
+> The same as for wl12xx.
+
+Same as my answer above. :)
+
+
+> >> @@ -1423,6 +1426,11 @@ static int wl18xx_set_peer_cap(struct wl1271 *wl,
+> >>   				       rate_set, hlid);
+> >>   }
+> >>
+> >> +static u32 wl18xx_convert_hwaddr(struct wl1271 *wl, u32 hwaddr)
+> >> +{
+> >> +	return hwaddr&  ~0x80000000;
+> >> +}
+> > A small explanation here would be nice.
+> That is formula to convert from HW address ...
+
+What I mean is that, in practice, what you're doing here is masking out
+bit 31.  Do we know what they use that bit for?
+
+
+
+> >>   	/* Traverse the memory blocks linked list */
+> >>   	do {
+> >> -		memset(block, 0, WL12XX_HW_BLOCK_SIZE);
+> >> -		ret = wlcore_read_hwaddr(wl, addr, block, WL12XX_HW_BLOCK_SIZE,
+> >> -					 false);
+> >> +		part.mem.start = wlcore_hw_convert_hwaddr(wl, addr);
+> >> +		part.mem.size  = PAGE_SIZE;
+> >> +
+> >> +		ret = wlcore_set_partition(wl,&part);
+> >> +		if (ret<  0) {
+> >> +			wl1271_error("%s: set_partition start=0x%X size=%d",
+> >> +				__func__, part.mem.start, part.mem.size);
+> > This could probably be a bit more descriptive, like saying that the
+> > fwlog seems to be corrupt because the address in the linked list can't
+> > be used for setting the partition.
+> Ok, will add the comment.
+
+Maybe you could add something in the debug message itself? That way it
+would be clear in the log and in the code at the same time. ;)
+
+
+> >> diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
+> >> index f48530f..5897747 100644
+> >> --- a/drivers/net/wireless/ti/wlcore/io.h
+> >> +++ b/drivers/net/wireless/ti/wlcore/io.h
+> >> @@ -165,8 +165,8 @@ static inline int __must_check wlcore_read_hwaddr(struct wl1271 *wl, int hwaddr,
+> >>          int physical;
+> >>          int addr;
+> >>
+> >> -       /* Addresses are stored internally as addresses to 32 bytes blocks */
+> >> -       addr = hwaddr<<  5;
+> >> +       /* Convert from FW internal address which is chip arch dependent */
+> >> +       addr = wl->ops->convert_hwaddr(wl, hwaddr);
+> > This could be more descriptive.  As I understand, this is converting an
+> > internal representation of pointers in the hardware to an address that
+> > can be used to set the partitions.
+> >
+> Ok, will add more comment: convert to address used for setting partition 
+> and reading over SDIO
+
+Yes, that would be nice, thanks!
+
+--
+Luca.
 
