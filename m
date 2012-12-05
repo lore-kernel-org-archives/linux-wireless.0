@@ -1,53 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45060 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752823Ab2LKPYn (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:40378 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753262Ab2LEWGZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 10:24:43 -0500
-Message-ID: <1355239503.9819.1.camel@jlt4.sipsolutions.net> (sfid-20121211_162447_361019_EEF95137)
-Subject: Re: [PATCH 3/3] p54: zero-out rx_status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Gabor Juhos <juhosg@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Date: Tue, 11 Dec 2012 16:25:03 +0100
-In-Reply-To: <201212111608.43293.chunkeey@googlemail.com> (sfid-20121211_160907_576808_50E80D43)
-References: <1355234105-12013-1-git-send-email-juhosg@openwrt.org>
-	 <1355234105-12013-3-git-send-email-juhosg@openwrt.org>
-	 <201212111608.43293.chunkeey@googlemail.com>
-	 (sfid-20121211_160907_576808_50E80D43)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 5 Dec 2012 17:06:25 -0500
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [PATCH] {nl,cfg,mac}80211: set beacon interval and DTIM period on mesh join
+Date: Wed,  5 Dec 2012 14:06:14 -0800
+Message-Id: <1354745174-2941-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20121205_230630_316525_B124B049)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-11 at 16:08 +0100, Christian Lamparter wrote:
-> On Tuesday, December 11, 2012 02:55:05 PM Gabor Juhos wrote:
-> > In commit 'mac80211: support radiotap vendor namespace RX data'
-> > new fields were added to 'struct ieee80211_rx_status'.
-> > The ath5k driver does not initializes those fields and
->       ^^^^^ p54?!
-> 
-> > this can cause unexpected behaviour. The patch ensures
-> > that each field gets initialized with zeroes.
-> 
-> Actually, when the skb is alloced/initialized by
-> __alloc_skb, the skb->cb is already zeroed (which
-> is where the ieee80211_rx_status will be stored).
-> 
-> And while p54 recycles command response skbs, the 
-> driver does not touch the skb->cb of 802.11 skbs,
-> until the frame is destined for ieee80211_rx_irqsave.
-> 
-> If this issue just popped up now, I suspect that 
-> something else is silently corrupting our SKBs 
-> [or can anybody see how rt2x00 hit this issue?]
+Move the default mesh beacon interval and DTIM period to cfg80211 and
+make it accessible to nl80211. This enables setting both values when joining
+an MBSS.
 
-When I reviewed the drivers, I didn't think there was a problem in any
-of them but iwlwifi & iwlegacy which I fixed, for the reasons you
-mention above. So I'm just as confused as you are, I guess :)
+NOTE: In a mesh with links in PS mode it is not advised to use the default
+parameters 1000:4, as these cause excessive buffering delays that exceed
+various timeouts (e.g. HWMP path request).
 
-johannes
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ include/net/cfg80211.h |    4 ++++
+ net/mac80211/cfg.c     |    3 +++
+ net/mac80211/mesh.c    |    1 -
+ net/mac80211/mesh.h    |    2 --
+ net/wireless/mesh.c    |    5 +++++
+ net/wireless/nl80211.c |   14 ++++++++++++++
+ 6 files changed, 26 insertions(+), 3 deletions(-)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e78db2c..a31e893 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1009,6 +1009,8 @@ struct mesh_config {
+  * @ie_len: length of vendor information elements
+  * @is_authenticated: this mesh requires authentication
+  * @is_secure: this mesh uses security
++ * @dtim_period: DTIM period to use
++ * @beacon_interval: beacon interval to use
+  * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
+  *
+  * These parameters are fixed when the mesh is created.
+@@ -1024,6 +1026,8 @@ struct mesh_setup {
+ 	u8 ie_len;
+ 	bool is_authenticated;
+ 	bool is_secure;
++	u8 dtim_period;
++	u16 beacon_interval;
+ 	int mcast_rate[IEEE80211_NUM_BANDS];
+ };
+ 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 4965aa6..7227477 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1604,6 +1604,9 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	memcpy(sdata->vif.bss_conf.mcast_rate, setup->mcast_rate,
+ 						sizeof(setup->mcast_rate));
+ 
++	sdata->vif.bss_conf.beacon_int = setup->beacon_interval;
++	sdata->vif.bss_conf.dtim_period = setup->dtim_period;
++
+ 	return 0;
+ }
+ 
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 1bf03f9..a4b332c 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -624,7 +624,6 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_queue_work(&local->hw, &sdata->work);
+ 	sdata->vif.bss_conf.ht_operation_mode =
+ 				ifmsh->mshcfg.ht_opmode;
+-	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
+ 	sdata->vif.bss_conf.basic_rates =
+ 		ieee80211_mandatory_rates(sdata->local,
+ 					  ieee80211_get_sdata_band(sdata));
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 7c9215f..7f3a78f 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -191,8 +191,6 @@ struct mesh_rmc {
+ #define IEEE80211_MESH_PEER_INACTIVITY_LIMIT (1800 * HZ)
+ #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
+ 
+-#define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
+-
+ #define MESH_PATH_EXPIRE (600 * HZ)
+ 
+ /* Default maximum number of plinks per interface */
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 3ee5a72..38f3073 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -44,6 +44,9 @@
+ 
+ #define MESH_SYNC_NEIGHBOR_OFFSET_MAX 50
+ 
++#define MESH_DEFAULT_BEACON_INTERVAL	1000 	/* in 1024 us units (=TUs) */
++#define MESH_DEFAULT_DTIM_PERIOD	4
++
+ const struct mesh_config default_mesh_config = {
+ 	.dot11MeshRetryTimeout = MESH_RET_T,
+ 	.dot11MeshConfirmTimeout = MESH_CONF_T,
+@@ -79,6 +82,8 @@ const struct mesh_setup default_mesh_setup = {
+ 	.ie = NULL,
+ 	.ie_len = 0,
+ 	.is_secure = false,
++	.beacon_interval = MESH_DEFAULT_BEACON_INTERVAL,
++	.dtim_period = MESH_DEFAULT_DTIM_PERIOD,
+ };
+ 
+ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d038fa4..00068a4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6643,6 +6643,20 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 			    nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
+ 			return -EINVAL;
+ 
++	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
++			setup.beacon_interval =
++				nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
++			if (setup.beacon_interval < 10 || setup.beacon_interval > 10000)
++				return -EINVAL;
++	}
++
++	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
++			setup.dtim_period =
++				nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
++			if (setup.dtim_period < 1 || setup.dtim_period > 100)
++				return -EINVAL;
++	}
++
+ 	if (info->attrs[NL80211_ATTR_MESH_SETUP]) {
+ 		/* parse additional setup parameters if given */
+ 		err = nl80211_parse_mesh_setup(info, &setup);
+-- 
+1.7.9.5
 
