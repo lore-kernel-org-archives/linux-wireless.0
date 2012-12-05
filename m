@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36496 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932147Ab2LMTAS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 14:00:18 -0500
-Message-ID: <50CA25B1.3080901@candelatech.com> (sfid-20121213_200022_181487_2E19B9A0)
-Date: Thu, 13 Dec 2012 11:00:01 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Add a new work-queue for destructing stations?
-References: <50CA1470.4030107@candelatech.com>  (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>  <50CA1C44.5030300@candelatech.com>  <1355423047.9463.9.camel@jlt4.sipsolutions.net>  <50CA1EB6.9030903@candelatech.com>  <1355423836.9463.14.camel@jlt4.sipsolutions.net>  <50CA20D4.90707@candelatech.com>  <1355424117.9463.16.camel@jlt4.sipsolutions.net>  <50CA22BC.7090008@candelatech.com>  <1355424597.9463.17.camel@jlt4.sipsolutions.net>  (sfid-20121213_194937_732132_61453C42) <1355424835.9463.18.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355424835.9463.18.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47279 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751820Ab2LERqu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Dec 2012 12:46:50 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, wim@iguana.be
+Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	zajec5@gmail.com, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3 01/11] ssb/bcma: add common header for watchdog
+Date: Wed,  5 Dec 2012 18:45:58 +0100
+Message-Id: <1354729568-19993-2-git-send-email-hauke@hauke-m.de> (sfid-20121205_184654_624089_1244185B)
+In-Reply-To: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
+References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2012 10:53 AM, Johannes Berg wrote:
-> On Thu, 2012-12-13 at 19:49 +0100, Johannes Berg wrote:
->
->>>> Well the concern there is that we expose the workqueue to the driver,
->>>> and it might even put sdata-referencing work items on it and expect them
->>>> to be flushed out before stop_interface() is called?
->
-> Wait actually, that isn't a concern. The flush_workqueue() was new in
-> commit b22cfcfca, before that drivers couldn't rely on it. It seems very
-> unlikely that in the meantime drivers have come to rely on it and we
-> didn't document this, so ... with the proposed change to sta_free_wk we
-> should be fine.
+This adds a common header for watchdog functions, so a watchdog driver
+just needs to use this and could provide watchdog functionality for ssb
+and bcma based SoCs. Patches for a watchdog driver using this interface
+will be send later.
 
-We still need to cancel the other mac80211 work items though, right?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/bcm47xx_wdt.h |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 include/linux/bcm47xx_wdt.h
 
-I didn't understand your proposal for the sta_free_wk changes,
-but I can at least work on tracking down the mac80211 work items
-if that helps...
-
->
-> johannes
->
-
-
+diff --git a/include/linux/bcm47xx_wdt.h b/include/linux/bcm47xx_wdt.h
+new file mode 100644
+index 0000000..e5dfc25
+--- /dev/null
++++ b/include/linux/bcm47xx_wdt.h
+@@ -0,0 +1,19 @@
++#ifndef LINUX_BCM47XX_WDT_H_
++#define LINUX_BCM47XX_WDT_H_
++
++#include <linux/types.h>
++
++
++struct bcm47xx_wdt {
++	u32 (*timer_set)(struct bcm47xx_wdt *, u32);
++	u32 (*timer_set_ms)(struct bcm47xx_wdt *, u32);
++	u32 max_timer_ms;
++
++	void *driver_data;
++};
++
++static inline void *bcm47xx_wdt_get_drvdata(struct bcm47xx_wdt *wdt)
++{
++	return wdt->driver_data;
++}
++#endif /* LINUX_BCM47XX_WDT_H_ */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
