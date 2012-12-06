@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:54305
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752129Ab2LTDIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 22:08:49 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Fengguang Wu <fengguang.wu@intel.com>
-Subject: [PATCH] ath9k: Fix compilation breakage
-Date: Thu, 20 Dec 2012 08:38:00 +0530
-Message-Id: <1355972880-30671-1-git-send-email-sujith@msujith.org> (sfid-20121220_040852_959332_2BD12BF8)
+Received: from he.sipsolutions.net ([78.46.109.217]:53208 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945964Ab2LFQr3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 11:47:29 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 06/24] regulatory: simplify regulatory_hint_11d
+Date: Thu,  6 Dec 2012 17:47:30 +0100
+Message-Id: <1354812468-15709-7-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174802_359344_694A789F)
+In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Since ath9k makes use of mac80211's debugfs hooks to
-maintain station statistics, make ATH9K_DEBUGFS
-select MAC80211_DEBUGFS. This fixes the issue reported by
-Fengguang Wu:
+There's no need to unlock before calling
+queue_regulatory_request(), so simplify
+the function.
 
-drivers/net/wireless/ath/ath9k/debug.c: In function 'ath9k_sta_add_debugfs':
-drivers/net/wireless/ath/ath9k/debug.c:1589:4: error: 'struct ath_node' has no member named 'node_stat'
-drivers/net/wireless/ath/ath9k/debug.c: In function 'ath9k_sta_remove_debugfs':
-drivers/net/wireless/ath/ath9k/debug.c:1599:19: error: 'struct ath_node' has no member named 'node_stat'
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/wireless/reg.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 5fc15bf..581913e 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -56,7 +56,8 @@ config ATH9K_AHB
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 333a921..902e138 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1826,12 +1826,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	request->initiator = NL80211_REGDOM_SET_BY_COUNTRY_IE;
+ 	request->country_ie_env = env;
  
- config ATH9K_DEBUGFS
- 	bool "Atheros ath9k debugging"
--	depends on ATH9K && DEBUG_FS
-+	depends on ATH9K
-+	select MAC80211_DEBUGFS
- 	---help---
- 	  Say Y, if you need access to ath9k's statistics for
- 	  interrupts, rate control, etc.
+-	mutex_unlock(&reg_mutex);
+-
+ 	queue_regulatory_request(request);
+-
+-	return;
+-
+ out:
+ 	mutex_unlock(&reg_mutex);
+ }
 -- 
-1.8.0.2
+1.8.0
 
