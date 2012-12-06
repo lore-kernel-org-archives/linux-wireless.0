@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:49757 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441Ab2LBNzD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53220 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945996Ab2LFQrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 08:55:03 -0500
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] p54: potential signedness issue in p54_parse_rssical()
-Date: Sun, 2 Dec 2012 14:54:56 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <20121202103609.GA16078@elgon.mountain>
-In-Reply-To: <20121202103609.GA16078@elgon.mountain>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201212021454.57147.chunkeey@googlemail.com> (sfid-20121202_145538_355371_AEBC445F)
+	Thu, 6 Dec 2012 11:47:48 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 12/24] regulatory: simplify restore_regulatory_settings
+Date: Thu,  6 Dec 2012 17:47:36 +0100
+Message-Id: <1354812468-15709-13-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174824_730224_B4FB235B)
+In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 02 December 2012 11:36:09 Dan Carpenter wrote:
-> "entries" is unsigned here, so it is never less than zero.  In theory,
-> len could be less than offset so I have added a check for that.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-> diff --git a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/p54/eeprom.c
-> index 1ef1bfe..d43e374 100644
-> --- a/drivers/net/wireless/p54/eeprom.c
-> +++ b/drivers/net/wireless/p54/eeprom.c
-> @@ -541,8 +541,9 @@ static int p54_parse_rssical(struct ieee80211_hw *dev,
->  		entries = (len - offset) /
->  			sizeof(struct pda_rssi_cal_ext_entry);
->  
-> -		if ((len - offset) % sizeof(struct pda_rssi_cal_ext_entry) ||
-> -		    entries <= 0) {
-> +		if (len < offset ||
-> +		    (len - offset) % sizeof(struct pda_rssi_cal_ext_entry) ||
-> +		    entries == 0) {
->  			wiphy_err(dev->wiphy, "invalid rssi database.\n");
->  			goto err_data;
->  		}
-> 
+Use list_splice_tail_init() and also simplify the locking.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f40e90b..1c19d70 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1879,9 +1879,6 @@ static void restore_regulatory_settings(bool reset_user)
+ 			restore_custom_reg_settings(&rdev->wiphy);
+ 	}
+ 
+-	mutex_unlock(&reg_mutex);
+-	mutex_unlock(&cfg80211_mutex);
+-
+ 	regulatory_hint_core(world_alpha2);
+ 
+ 	/*
+@@ -1892,18 +1889,8 @@ static void restore_regulatory_settings(bool reset_user)
+ 	if (is_an_alpha2(alpha2))
+ 		regulatory_hint_user(user_alpha2, NL80211_USER_REG_HINT_USER);
+ 
+-	if (list_empty(&tmp_reg_req_list))
+-		return;
+-
+-	mutex_lock(&cfg80211_mutex);
+-	mutex_lock(&reg_mutex);
+-
+ 	spin_lock(&reg_requests_lock);
+-	list_for_each_entry_safe(reg_request, tmp, &tmp_reg_req_list, list) {
+-		REG_DBG_PRINT("Adding request for country %c%c back into the queue\n",
+-			      reg_request->alpha2[0], reg_request->alpha2[1]);
+-		list_move_tail(&reg_request->list, &reg_requests_list);
+-	}
++	list_splice_tail_init(&tmp_reg_req_list, &reg_requests_list);
+ 	spin_unlock(&reg_requests_lock);
+ 
+ 	mutex_unlock(&reg_mutex);
+-- 
+1.8.0
+
