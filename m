@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:8831 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422660Ab2LGQ1r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 11:27:47 -0500
-Message-ID: <1354897663.2707.14.camel@bwh-desktop.uk.solarflarecom.com> (sfid-20121207_172758_436136_931C44B2)
-Subject: Re: [RFC] wireless: check against default_ethtool_ops
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Eric Dumazet <edumazet@google.com>, <netdev@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	<linux-wireless@vger.kernel.org>,
-	=?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Date: Fri, 7 Dec 2012 16:27:43 +0000
-In-Reply-To: <20121207121617.GA4356@redhat.com>
-References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
-	 <87a9ts4c1q.fsf@nemi.mork.no> <50BF8C18.9060504@candelatech.com>
-	 <20121206122528.GG2502@redhat.com> <50C0FCE0.2090507@candelatech.com>
-	 <20121207095012.GB11933@redhat.com> <87zk1q3xrv.fsf@nemi.mork.no>
-	 <20121207121617.GA4356@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:37205 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946513Ab2LFSRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 13:17:33 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 06/13] qca-swiss-army-knife: fix string length for ar9340
+Date: Thu,  6 Dec 2012 19:17:20 +0100
+Message-Id: <1354817847-23440-7-git-send-email-juhosg@openwrt.org> (sfid-20121206_191739_341386_08DA2257)
+In-Reply-To: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
+References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-07 at 13:16 +0100, Stanislaw Gruszka wrote:
-> Since:
-> 
-> commit 2c60db037034d27f8c636403355d52872da92f81
-> Author: Eric Dumazet <edumazet@google.com>
-> Date:   Sun Sep 16 09:17:26 2012 +0000
-> 
->     net: provide a default dev->ethtool_ops
-> 
-> wireless core does not correctly assign ethtool_ops. In order to fix
-> the problem, and avoid assigning ethtool_ops on each individual cfg80211
-> driver, we check against default_ethool_ops pointer instead of NULL in
-> wireless core.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-[...]
-Acked-by: Ben Hutchings <bhutchings@solarflare.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ tools/initvals/initvals.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ideally you could do this assignment unconditionally in the setup
-function for the device, but it doesn't seem like there's a common
-allocation path that you could do that in.
-
-Ben.
-
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index cb0bbbf..cff2c4e 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -838,7 +838,7 @@ static void print_initvals_family(char *family, bool check)
+ 		ar9330_1p2_hw_print_initvals(check);
+ 		if (!check)
+ 			printf("#endif /* INITVALS_9330_1P2_H */\n");
+-	} else if (strncmp(family, "ar9340", 10) == 0) {
++	} else if (strncmp(family, "ar9340", 6) == 0) {
+ 		if (!check) {
+ 			printf("#ifndef INITVALS_9340_H\n");
+ 			printf("#define INITVALS_9340_H\n");
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+1.7.10
 
