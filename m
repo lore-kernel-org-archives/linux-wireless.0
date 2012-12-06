@@ -1,64 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:47980 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750947Ab2LWNVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 08:21:39 -0500
-Date: Sun, 23 Dec 2012 14:21:34 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Mike Galbraith <bitbucket@online.de>
-Cc: Norbert Preining <preining@logic.at>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: dire state of rtl driver in 3.7
-Message-ID: <20121223132134.GA8190@liondog.tnic> (sfid-20121223_142155_695721_A4D1716D)
-References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at>
- <1356241795.5620.47.camel@marge.simpson.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1356241795.5620.47.camel@marge.simpson.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:53234 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946007Ab2LFQsI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 11:48:08 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 18/24] regulatory: fix reg_is_valid_request handling
+Date: Thu,  6 Dec 2012 17:47:42 +0100
+Message-Id: <1354812468-15709-19-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174856_467409_500EEA32)
+In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 23, 2012 at 06:49:55AM +0100, Mike Galbraith wrote:
-> Looks a lot like my driver experience with older kernels, I had to use
-> the external driver in the rare event that I needed wireless to work.
-> The in tree driver works peachy these days (needed it recently, was
-> pleasantly surprised when it _just worked_, not even a hiccup), so
-> somebody cared, gave at least the 10ec:8181 bits some serious love.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Good for you.
+There's a bug with the world regulatory domain, it
+can be updated any time which is different from all
+other regdomains that can only be updated once after
+a request for them. Fix this by adding a check for
+"processed" to the reg_is_valid_request() function
+and clear that when doing a request.
 
-I have a [10ec:8176] in my laptop and while I don't have the issues
-Norbert is reporting, I can't say the thing just worked.
+While looking at this I also found another locking
+bug, last_request is protected by the reg_mutex not
+the cfg80211_mutex so the code in nl80211 is racy.
+Remove that code as it only tries to prevent an
+allocation in an error case, which isn't necessary.
+Then the function can also become static and locking
+in nl80211 can have a smaller scope.
 
-I had to use the wireless recently in a bunch of networks and what it
-would do, is associate properly, connection gets established and traffic
-is fine for a minute or so. Then, after a minute traffic would cease and
-I'd need to re-associate. And it worked sporadically, sometimes fine,
-sometimes with constant connection interruptions. And this observation
-was the case with almost all wireless networks I'd use.
+Also change __set_regdom() to do the checks earlier
+and not different for world/other regdomains.
 
-FWIW, the wifi adapter is:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |  9 ++-------
+ net/wireless/reg.c     | 21 +++++++++++----------
+ net/wireless/reg.h     |  1 -
+ 3 files changed, 13 insertions(+), 18 deletions(-)
 
-01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-        Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8195]
-        Flags: fast devsel, IRQ 17
-        I/O ports at 3000 [size=256]
-        Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
-        Capabilities: [40] Power Management version 3
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-        Capabilities: [70] Express Endpoint, MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [140] Virtual Channel
-        Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
-
-using rtl8192ce.
-
-Hmm.
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 260b5d8..370cd31 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4289,13 +4289,6 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
+-	mutex_lock(&cfg80211_mutex);
+-
+-	if (!reg_is_valid_request(alpha2)) {
+-		r = -EINVAL;
+-		goto bad_reg;
+-	}
+-
+ 	size_of_regd = sizeof(struct ieee80211_regdomain) +
+ 		       num_rules * sizeof(struct ieee80211_reg_rule);
+ 
+@@ -4333,6 +4326,8 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
++	mutex_lock(&cfg80211_mutex);
++
+ 	r = set_regdom(rd);
+ 	rd = NULL;
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index dfab71b..10d8edb 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -426,12 +426,16 @@ static int call_crda(const char *alpha2)
+ 	return kobject_uevent(&reg_pdev->dev.kobj, KOBJ_CHANGE);
+ }
+ 
+-/* Used by nl80211 before kmalloc'ing our regulatory domain */
+-bool reg_is_valid_request(const char *alpha2)
++static bool reg_is_valid_request(const char *alpha2)
+ {
++	assert_reg_lock();
++
+ 	if (!last_request)
+ 		return false;
+ 
++	if (last_request->processed)
++		return false;
++
+ 	return alpha2_equal(last_request->alpha2, alpha2);
+ }
+ 
+@@ -1471,6 +1475,7 @@ new_request:
+ 
+ 	last_request = pending_request;
+ 	last_request->intersect = intersect;
++	last_request->processed = false;
+ 
+ 	pending_request = NULL;
+ 
+@@ -2061,11 +2066,13 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	const struct ieee80211_regdomain *regd;
+ 	const struct ieee80211_regdomain *intersected_rd = NULL;
+ 	struct wiphy *request_wiphy;
++
+ 	/* Some basic sanity checks first */
+ 
++	if (!reg_is_valid_request(rd->alpha2))
++		return -EINVAL;
++
+ 	if (is_world_regdom(rd->alpha2)) {
+-		if (WARN_ON(!reg_is_valid_request(rd->alpha2)))
+-			return -EINVAL;
+ 		update_world_regdomain(rd);
+ 		return 0;
+ 	}
+@@ -2074,9 +2081,6 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	    !is_unknown_alpha2(rd->alpha2))
+ 		return -EINVAL;
+ 
+-	if (!last_request)
+-		return -EINVAL;
+-
+ 	/*
+ 	 * Lets only bother proceeding on the same alpha2 if the current
+ 	 * rd is non static (it means CRDA was present and was used last)
+@@ -2098,9 +2102,6 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	 * internal EEPROM data
+ 	 */
+ 
+-	if (WARN_ON(!reg_is_valid_request(rd->alpha2)))
+-		return -EINVAL;
+-
+ 	if (!is_valid_rd(rd)) {
+ 		pr_err("Invalid regulatory domain detected:\n");
+ 		print_regdomain_info(rd);
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 37891e8..d391b50 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -19,7 +19,6 @@
+ extern const struct ieee80211_regdomain *cfg80211_regdomain;
+ 
+ bool is_world_regdom(const char *alpha2);
+-bool reg_is_valid_request(const char *alpha2);
+ bool reg_supported_dfs_region(u8 dfs_region);
+ 
+ int regulatory_hint_user(const char *alpha2,
 -- 
-Regards/Gruss,
-    Boris.
+1.8.0
 
-Sent from a fat crate under my desk. Formatting is fine.
---
