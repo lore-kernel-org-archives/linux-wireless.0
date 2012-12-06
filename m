@@ -1,83 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:47920 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752580Ab2L0Lw6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53202 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945964Ab2LFQr1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 06:52:58 -0500
-Subject: [PATCH 3/7] ath6kl: add tracing point for hif irqs
+	Thu, 6 Dec 2012 11:47:27 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com
-Date: Thu, 27 Dec 2012 13:44:35 +0200
-Message-ID: <20121227114435.27069.96674.stgit@localhost6.localdomain6> (sfid-20121227_125314_525194_B86557CA)
-In-Reply-To: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
-References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/24] regulatory: don't allocate too much memory
+Date: Thu,  6 Dec 2012 17:47:26 +0100
+Message-Id: <1354812468-15709-3-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174757_115371_C54D5F1F)
+In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a tracing point for hif irq and dump the register content to user space.
-This is in hif.c as we could use the same code also with SPI but, as ath6kl
-doesn't SPI and most likely never will be, this is used just by SDIO so
-name the trace point as ath6kl_sdio_irq to make it easier to manage filters.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+There's no need to allocate one reg rule more
+than will be used, reduce the allocations. The
+allocation in nl80211 already doesn't allocate
+too much space.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/hif.c   |    3 +++
- drivers/net/wireless/ath/ath6kl/trace.h |   20 ++++++++++++++++++++
- 2 files changed, 23 insertions(+), 0 deletions(-)
+ net/wireless/reg.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index a6b6144..fea7709 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -22,6 +22,7 @@
- #include "target.h"
- #include "hif-ops.h"
- #include "debug.h"
-+#include "trace.h"
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4197359..70255c9 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -319,8 +319,9 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+ 	int size_of_regd = 0;
+ 	unsigned int i;
  
- #define MAILBOX_FOR_BLOCK_SIZE          1
+-	size_of_regd = sizeof(struct ieee80211_regdomain) +
+-	  ((src_regd->n_reg_rules + 1) * sizeof(struct ieee80211_reg_rule));
++	size_of_regd =
++		sizeof(struct ieee80211_regdomain) +
++		src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule);
  
-@@ -436,6 +437,8 @@ static int proc_pending_irqs(struct ath6kl_device *dev, bool *done)
+ 	regd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!regd)
+@@ -642,7 +643,7 @@ static struct ieee80211_regdomain *regdom_intersect(
+ 		return NULL;
  
- 		ath6kl_dump_registers(dev, &dev->irq_proc_reg,
- 				      &dev->irq_en_reg);
-+		trace_ath6kl_sdio_irq(&dev->irq_en_reg,
-+				      sizeof(dev->irq_en_reg));
+ 	size_of_regd = sizeof(struct ieee80211_regdomain) +
+-		((num_rules + 1) * sizeof(struct ieee80211_reg_rule));
++		       num_rules * sizeof(struct ieee80211_reg_rule);
  
- 		/* Update only those registers that are enabled */
- 		host_int_status = dev->irq_proc_reg.host_int_status &
-diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
-index be2e4e2..6553dc1 100644
---- a/drivers/net/wireless/ath/ath6kl/trace.h
-+++ b/drivers/net/wireless/ath/ath6kl/trace.h
-@@ -116,6 +116,26 @@ DEFINE_EVENT(ath6kl_sdio_transaction, ath6kl_sdio_rd,
- 	TP_ARGS(addr, flags, buf, buf_len)
- );
- 
-+TRACE_EVENT(ath6kl_sdio_irq,
-+	TP_PROTO(void *buf, size_t buf_len),
-+
-+	TP_ARGS(buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"irq len %d\n", __entry->buf_len
-+	)
-+);
-+
- #endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
+ 	rd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!rd)
+-- 
+1.8.0
 
