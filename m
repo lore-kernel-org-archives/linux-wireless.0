@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:48303 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754294Ab2LMNNV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 08:13:21 -0500
-Message-ID: <50C9D469.8010809@posedge.com> (sfid-20121213_141324_757275_7A9C2FA8)
-Date: Thu, 13 Dec 2012 18:43:13 +0530
-From: Chaitanya <chaitanyatk@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	viro@parcelfarce.linux.theplanet.co.uk
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: apparmor: Strlen oops in 3.7.0-rc1 (mac80211-next)
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from arrakis.dune.hu ([78.24.191.176]:37209 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751625Ab2LFSRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 13:17:36 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 13/13] qca-swiss-army-knife: allow to verify AR955X initvals
+Date: Thu,  6 Dec 2012 19:17:27 +0100
+Message-Id: <1354817847-23440-14-git-send-email-juhosg@openwrt.org> (sfid-20121206_191750_591286_BA921AB1)
+In-Reply-To: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
+References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes/Al Viro,
-
-Can you submit the below patch?
-
-When moved to mac80211-next kernel was facing the crash related to strlen failure in the audit module.
-After some searching found a fix from Al Viro (http://lkml.indiana.edu/hypermail/linux/kernel/1210.2/01060.html) .
-
-This is recurrent.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- security/apparmor/Makefile |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ tools/initvals/Makefile            |    1 +
+ tools/initvals/verify_checksums.sh |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/security/apparmor/Makefile b/security/apparmor/Makefile
-index 7b3021c..5706b74 100644
---- a/security/apparmor/Makefile
-+++ b/security/apparmor/Makefile
-@@ -57,7 +57,7 @@ cmd_make-rlim = echo "static const char *const rlim_names[RLIM_NLIMITS] = {" \
+diff --git a/tools/initvals/Makefile b/tools/initvals/Makefile
+index 010b68c..884eeeb 100644
+--- a/tools/initvals/Makefile
++++ b/tools/initvals/Makefile
+@@ -35,6 +35,7 @@ ATH9K_HEADERS = \
+ 	ar9330-1p2:ar9330_1p2_initvals.h	\
+ 	ar9340:ar9340_initvals.h	\
+ 	ar9485:ar9485_initvals.h		\
++	ar955x-1p0:ar955x_1p0_initvals.h	\
+ 	ar9580-1p0:ar9580_1p0_initvals.h \
+ 	ar9462-2p0:ar9462_2p0_initvals.h	\
+ 	ar9565-1p0:ar9565_1p0_initvals.h
+diff --git a/tools/initvals/verify_checksums.sh b/tools/initvals/verify_checksums.sh
+index 46fff90..fcc6db6 100755
+--- a/tools/initvals/verify_checksums.sh
++++ b/tools/initvals/verify_checksums.sh
+@@ -31,7 +31,7 @@ verify_family_checksum()
+ }
+ 
+ FAMILIES="$@"
+-[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9340 ar9462-1p0 ar9485 ar9565-1p0 ar9580-1p0"
++[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9340 ar9462-1p0 ar9485 ar955x-1p0 ar9565-1p0 ar9580-1p0"
+ 
+ mkdir -p "$CSUM_DIR"
+ for family in $FAMILIES; do
+-- 
+1.7.10
 
- $(obj)/capability.o : $(obj)/capability_names.h
- $(obj)/resource.o : $(obj)/rlim_names.h
--$(obj)/capability_names.h : $(srctree)/include/linux/capability.h \
-+$(obj)/capability_names.h : $(srctree)/include/uapi/linux/capability.h \
-                            $(src)/Makefile
-        $(call cmd,make-caps)
- $(obj)/rlim_names.h : $(srctree)/include/uapi/asm-generic/resource.h \
-
-Regards,
-Chaitanya T K.
