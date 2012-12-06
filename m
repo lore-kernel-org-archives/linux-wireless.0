@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:47162 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab2LQCad (ORCPT
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:58101
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S964770Ab2LFCzm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2012 21:30:33 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so2933256eek.19
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Dec 2012 18:30:32 -0800 (PST)
+	Wed, 5 Dec 2012 21:55:42 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <CANa_0w2mShPgK4VwSzAFh+BSsxU5xYmWxogTcz_ZpVdj1seKgg@mail.gmail.com>
-References: <CANa_0w2mShPgK4VwSzAFh+BSsxU5xYmWxogTcz_ZpVdj1seKgg@mail.gmail.com>
-Date: Sun, 16 Dec 2012 21:30:32 -0500
-Message-ID: <CANa_0w1YusGWqpgTRZ5Xxq0dzKVuZJUKTFccv6zPLekfG+NntA@mail.gmail.com> (sfid-20121217_033037_695556_7A31D3FA)
-Subject: Re: txpower anything you make db.txt say ?
-From: Jason Mclaughlin <mcjason@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20672.2314.800969.75984@gargle.gargle.HOWL> (sfid-20121206_035549_502667_CD6462D6)
+Date: Thu, 6 Dec 2012 08:25:06 +0530
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	rodrigue@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] qca-swiss-army-knife: Add support to dump AR9003 chips EEPROM
+In-Reply-To: <CAJ-VmonMu=98Viwk1qvR-NGrO-qBx2KYT551xaO1KjHEz4Kt3A@mail.gmail.com>
+References: <1354612418-6644-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<CAJ-VmonMu=98Viwk1qvR-NGrO-qBx2KYT551xaO1KjHEz4Kt3A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-to better word myself... what i meant was, with the ath9k driver....
-you're tx power seems to go as high as you say your limit is in db.txt
+Adrian Chadd wrote:
+> Just a general comment - wouldn't it be cleaner to have the PCI IDs
+> and the EEPROM definitions pulled from the ath9k driver source or a
+> separate header file, so you don't run the risk of having definitions
+> "drift" slightly?
+> 
+> I doubt that anyone is going to change the cal data format or the
+> default templates very often (or at all!), but .. just having those
+> definitions duplicated feels wrong to me.
 
-On Sat, Dec 15, 2012 at 10:29 PM, Jason Mclaughlin <mcjason@gmail.com> wrote:
->  was wondering... with a AEUS036NHA wireless adapater (ath9k), why
-> does it seem like I can set the power arbitrarily higher if I make my
-> own regulatory.bin
-> from the crda package. I doubt for real that's the power since the
-> adapater is rated at 1000mw afaik.
->
-> I wanted to test if it was really having more power than 20db when I
-> found out how to do that, but I suspiciously though it was just saying
-> it's as high
-> as you make db.txt say. This seems true at a whopping 48db (I never
-> did anything like connect to someone, just rebooted at turned it back
-> to 30).
->
-> Also wanted to know, does it really do 30db? I noticed between two
-> adapaters a mild improvement when setting it higher than 20 but it's
-> hard to tell.
->
->
-> root@debian:/home/jason# iwconfig
-> wlan2     IEEE 802.11bgn  ESSID:off/any
->           Mode:Managed  Access Point: Not-Associated   Tx-Power=48 dBm
->           Retry  long limit:7   RTS thr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:off
->
-> eth0      no wireless extensions.
->
-> lo        no wireless extensions.
->
-> wlan0     IEEE 802.11bgn  ESSID:off/any
->           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->           Retry  long limit:7   RTS thr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:off
+Yes, this would be neat, we should probably be in sync with the
+headers in the driver source.
+
+Sujith
