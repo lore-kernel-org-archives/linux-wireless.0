@@ -1,35 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51507 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956Ab2LTLQU (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:41562 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754791Ab2LGAAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 06:16:20 -0500
-Message-ID: <1356002202.10029.3.camel@jlt4.sipsolutions.net> (sfid-20121220_121622_829833_D4014D42)
-Subject: Re: [PATCH] mac80211: optimise AP stop RCU handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Eliad Peller <eliad@wizery.com>
-Date: Thu, 20 Dec 2012 12:16:42 +0100
-In-Reply-To: <1355493476-2927-1-git-send-email-johannes@sipsolutions.net> (sfid-20121214_145817_787355_201B178C)
-References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
-	 <1355493476-2927-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121214_145817_787355_201B178C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 6 Dec 2012 19:00:20 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so17102lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 16:00:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354812468-15709-5-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-5-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 6 Dec 2012 15:59:58 -0800
+Message-ID: <CAB=NE6UkvumzbFpN2+xH-rLq7sdf0+Z0=edXeneNNws2xETEuw@mail.gmail.com> (sfid-20121207_010025_300965_3209EB07)
+Subject: Re: [PATCH 04/24] regulatory: clean up reg_copy_regd()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-14 at 14:57 +0100, Johannes Berg wrote:
+On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
 > From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If there are VLANs, stopping an AP is inefficient as it
-> calls rcu_barrier() once for each interface (the VLANs
-> and the AP itself). Optimise this by moving rcu_barrier()
-> out of the station cleanups and calling it only once for
-> all interfaces combined.
+>
+> Use ERR_PTR/IS_ERR to return the result or errors,
+> also do some code cleanups.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Applied.
+Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 
-johannes
-
+  Luis
