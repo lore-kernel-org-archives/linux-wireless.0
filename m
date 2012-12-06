@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:36618 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754192Ab2L1Vmz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53200 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1945963Ab2LFQr1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Dec 2012 16:42:55 -0500
-Date: Fri, 28 Dec 2012 16:42:45 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/25] rfkill: don't use [delayed_]work_pending()
-Message-ID: <20121228214245.GH3062@mtj.dyndns.org> (sfid-20121228_224313_603851_343D6599)
-References: <1356141435-17340-1-git-send-email-tj@kernel.org>
- <1356141435-17340-15-git-send-email-tj@kernel.org>
- <1356207733.10280.1.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1356207733.10280.1.camel@jlt4.sipsolutions.net>
+	Thu, 6 Dec 2012 11:47:27 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 03/24] regulatory: clean up regdom_intersect
+Date: Thu,  6 Dec 2012 17:47:27 +0100
+Message-Id: <1354812468-15709-4-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174758_687657_F3325805)
+In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 22, 2012 at 09:22:13PM +0100, Johannes Berg wrote:
-> On Fri, 2012-12-21 at 17:57 -0800, Tejun Heo wrote:
-> > There's no need to test whether a (delayed) work item in pending
-> > before queueing, flushing or cancelling it.  Most uses are unnecessary
-> > and quite a few of them are buggy.
-> > 
-> > Remove unnecessary pending tests from rfkill.  Only compile
-> > tested.
-> 
-> Looks fine to me, feel free to route through your tree -- nobody changes
-> rfkill much (famous last words...) :-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied to wq/for-3.9-cleanups w/ your Acked-by added.  Thanks.
+As the dummy_rule (also renamed from irule) is only
+used for output by the reg_rules_intersect() function
+there's no need to clear it at all, remove that.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 70255c9..0f25a1a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -609,12 +609,7 @@ static struct ieee80211_regdomain *regdom_intersect(
+ 	struct ieee80211_reg_rule *intersected_rule;
+ 	struct ieee80211_regdomain *rd;
+ 	/* This is just a dummy holder to help us count */
+-	struct ieee80211_reg_rule irule;
+-
+-	/* Uses the stack temporarily for counter arithmetic */
+-	intersected_rule = &irule;
+-
+-	memset(intersected_rule, 0, sizeof(struct ieee80211_reg_rule));
++	struct ieee80211_reg_rule dummy_rule;
+ 
+ 	if (!rd1 || !rd2)
+ 		return NULL;
+@@ -631,11 +626,8 @@ static struct ieee80211_regdomain *regdom_intersect(
+ 		rule1 = &rd1->reg_rules[x];
+ 		for (y = 0; y < rd2->n_reg_rules; y++) {
+ 			rule2 = &rd2->reg_rules[y];
+-			if (!reg_rules_intersect(rule1, rule2,
+-					intersected_rule))
++			if (!reg_rules_intersect(rule1, rule2, &dummy_rule))
+ 				num_rules++;
+-			memset(intersected_rule, 0,
+-					sizeof(struct ieee80211_reg_rule));
+ 		}
+ 	}
+ 
 -- 
-tejun
+1.8.0
+
