@@ -1,159 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:65027 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916Ab2LVB6C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2012 20:58:02 -0500
-From: Tejun Heo <tj@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 04/25] ipw2x00: simplify scan_event handling
-Date: Fri, 21 Dec 2012 17:56:54 -0800
-Message-Id: <1356141435-17340-5-git-send-email-tj@kernel.org> (sfid-20121222_030344_161930_0CFBCFF4)
-In-Reply-To: <1356141435-17340-1-git-send-email-tj@kernel.org>
-References: <1356141435-17340-1-git-send-email-tj@kernel.org>
+Received: from arrakis.dune.hu ([78.24.191.176]:37209 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946511Ab2LFSRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 13:17:33 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 04/13] qca-swiss-army-knife: fix comment in ar9340_initvals.h
+Date: Thu,  6 Dec 2012 19:17:18 +0100
+Message-Id: <1354817847-23440-5-git-send-email-juhosg@openwrt.org> (sfid-20121206_192412_486474_90CF173C)
+In-Reply-To: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
+References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Drop unnesssary delayd_work_pending() tests.
+The comment at the end of the 'ar9340_initvals.h'
+header does not match with defined constant. Fix it.
 
-* Unify scan_event_{now|later} by using mod_delayed_work() w/ 0 delay
-  for scan_event_now.
-
-* Make ipw2200 scan_event handling match ipw2100 - use
-  mod_delayed_work() w/ 0 delay for immediate scanning.
-
-Only compile tested.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
-Please let me know how this patch should be routed.  I can take it
-through the workqueue tree if necessary.
+ tools/initvals/ar9340_initvals.h |    2 +-
+ tools/initvals/initvals.c        |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks.
-
- drivers/net/wireless/ipw2x00/ipw2100.c | 31 ++++++++-----------------------
- drivers/net/wireless/ipw2x00/ipw2100.h |  3 +--
- drivers/net/wireless/ipw2x00/ipw2200.c | 13 +++----------
- 3 files changed, 12 insertions(+), 35 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index d92b21a..b3ab7b7 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -2181,9 +2181,10 @@ static void isr_indicate_rf_kill(struct ipw2100_priv *priv, u32 status)
- 	mod_delayed_work(system_wq, &priv->rf_kill, round_jiffies_relative(HZ));
- }
+diff --git a/tools/initvals/ar9340_initvals.h b/tools/initvals/ar9340_initvals.h
+index dfc202e..1d8235e 100644
+--- a/tools/initvals/ar9340_initvals.h
++++ b/tools/initvals/ar9340_initvals.h
+@@ -1345,4 +1345,4 @@ static const u32 ar9340_1p0_soc_preamble[][2] = {
+ 	{0x00007038, 0x000004c2},
+ };
  
--static void send_scan_event(void *data)
-+static void ipw2100_scan_event(struct work_struct *work)
- {
--	struct ipw2100_priv *priv = data;
-+	struct ipw2100_priv *priv = container_of(work, struct ipw2100_priv,
-+						 scan_event.work);
- 	union iwreq_data wrqu;
- 
- 	wrqu.data.length = 0;
-@@ -2191,18 +2192,6 @@ static void send_scan_event(void *data)
- 	wireless_send_event(priv->net_dev, SIOCGIWSCAN, &wrqu, NULL);
- }
- 
--static void ipw2100_scan_event_later(struct work_struct *work)
--{
--	send_scan_event(container_of(work, struct ipw2100_priv,
--					scan_event_later.work));
--}
--
--static void ipw2100_scan_event_now(struct work_struct *work)
--{
--	send_scan_event(container_of(work, struct ipw2100_priv,
--					scan_event_now));
--}
--
- static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
- {
- 	IPW_DEBUG_SCAN("scan complete\n");
-@@ -2212,13 +2201,11 @@ static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
- 
- 	/* Only userspace-requested scan completion events go out immediately */
- 	if (!priv->user_requested_scan) {
--		if (!delayed_work_pending(&priv->scan_event_later))
--			schedule_delayed_work(&priv->scan_event_later,
--					      round_jiffies_relative(msecs_to_jiffies(4000)));
-+		schedule_delayed_work(&priv->scan_event,
-+				      round_jiffies_relative(msecs_to_jiffies(4000)));
- 	} else {
- 		priv->user_requested_scan = 0;
--		cancel_delayed_work(&priv->scan_event_later);
--		schedule_work(&priv->scan_event_now);
-+		mod_delayed_work(system_wq, &priv->scan_event, 0);
- 	}
- }
- 
-@@ -4459,8 +4446,7 @@ static void ipw2100_kill_works(struct ipw2100_priv *priv)
- 	cancel_delayed_work_sync(&priv->wx_event_work);
- 	cancel_delayed_work_sync(&priv->hang_check);
- 	cancel_delayed_work_sync(&priv->rf_kill);
--	cancel_work_sync(&priv->scan_event_now);
--	cancel_delayed_work_sync(&priv->scan_event_later);
-+	cancel_delayed_work_sync(&priv->scan_event);
- }
- 
- static int ipw2100_tx_allocate(struct ipw2100_priv *priv)
-@@ -6195,8 +6181,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
- 	INIT_DELAYED_WORK(&priv->wx_event_work, ipw2100_wx_event_work);
- 	INIT_DELAYED_WORK(&priv->hang_check, ipw2100_hang_check);
- 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
--	INIT_WORK(&priv->scan_event_now, ipw2100_scan_event_now);
--	INIT_DELAYED_WORK(&priv->scan_event_later, ipw2100_scan_event_later);
-+	INIT_DELAYED_WORK(&priv->scan_event, ipw2100_scan_event);
- 
- 	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
- 		     ipw2100_irq_tasklet, (unsigned long)priv);
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
-index 5fe17cb..c6d7879 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.h
-@@ -577,8 +577,7 @@ struct ipw2100_priv {
- 	struct delayed_work wx_event_work;
- 	struct delayed_work hang_check;
- 	struct delayed_work rf_kill;
--	struct work_struct scan_event_now;
--	struct delayed_work scan_event_later;
-+	struct delayed_work scan_event;
- 
- 	int user_requested_scan;
- 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 844f201..2c2d6db 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -4480,18 +4480,11 @@ static void handle_scan_event(struct ipw_priv *priv)
- {
- 	/* Only userspace-requested scan completion events go out immediately */
- 	if (!priv->user_requested_scan) {
--		if (!delayed_work_pending(&priv->scan_event))
--			schedule_delayed_work(&priv->scan_event,
--					      round_jiffies_relative(msecs_to_jiffies(4000)));
-+		schedule_delayed_work(&priv->scan_event,
-+				      round_jiffies_relative(msecs_to_jiffies(4000)));
- 	} else {
--		union iwreq_data wrqu;
--
- 		priv->user_requested_scan = 0;
--		cancel_delayed_work(&priv->scan_event);
--
--		wrqu.data.length = 0;
--		wrqu.data.flags = 0;
--		wireless_send_event(priv->net_dev, SIOCGIWSCAN, &wrqu, NULL);
-+		mod_delayed_work(system_wq, &priv->scan_event, 0);
- 	}
- }
- 
+-#endif /* INITVALS_9340_1P0_H */
++#endif /* INITVALS_9340_H */
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index c93a3d1..cb0bbbf 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -846,7 +846,7 @@ static void print_initvals_family(char *family, bool check)
+ 		}
+ 		ar9340_hw_print_initvals(check);
+ 		if (!check)
+-			printf("#endif /* INITVALS_9340_1P0_H */\n");
++			printf("#endif /* INITVALS_9340_H */\n");
+ 	} else if (strncmp(family, "ar9485", 6) == 0) {
+ 		if (!check) {
+ 			printf("#ifndef INITVALS_9485_H\n");
 -- 
-1.8.0.2
+1.7.10
 
