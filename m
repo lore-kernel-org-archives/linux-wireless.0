@@ -1,132 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47320 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752496Ab2LERru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 12:47:50 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, wim@iguana.be
-Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 04/11] bcma: add methods for watchdog driver
-Date: Wed,  5 Dec 2012 18:46:01 +0100
-Message-Id: <1354729568-19993-5-git-send-email-hauke@hauke-m.de> (sfid-20121205_184803_001558_2BC5DBE0)
-In-Reply-To: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
-References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:42524 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752301Ab2LFXCz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 18:02:55 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so5705704lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 15:02:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354817847-23440-11-git-send-email-juhosg@openwrt.org>
+References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org> <1354817847-23440-11-git-send-email-juhosg@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Thu, 6 Dec 2012 15:02:33 -0800
+Message-ID: <CAB=NE6WwuwKzLkLxsggvAGhF5TKcDjWbaw3vkst4gnLFEYjP7Q@mail.gmail.com> (sfid-20121207_000259_223886_53AF934A)
+Subject: Re: [PATCH v2 10/13] qca-swiss-army-knife: allow to print initvals
+ with more than 5 columns
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The watchdog driver wants to set the watchdog timeout in ms and not in
-ticks, which is depending on the SoC type and the clock.
-Calculate the number of ticks per millisecond and provide two functions
-for the watchdog driver. Also return the ticks or millisecond the timer
-was set to in case the provided value was bigger than the max allowed
-value.
+On Thu, Dec 6, 2012 at 10:17 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> @@ -416,19 +423,26 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+>         return val;
+>  }
+>
+> -static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
+> +static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+> +                                  u32 columns, bool onedim, bool wide)
+>  {
+> -       u32 p_columns = columns > 5 ? 5 : columns;
+> +       u32 p_columns;
+>         u32 col, row;
+>
+> -       /*
+> -        * This checksum stuff is designed for columns <= 8),
+> -        * and spreads the checksum over 64 bits but since currently
+> -        * the initval max column size is 6 we only use the first 48
+> -        * bits.
+> -        */
+> -       if (columns > 6)
+> -               return;
+> +       if (wide) {
+> +               p_columns = columns;
+> +       } else {
+> +               p_columns = columns > 5 ? 5 : columns;
+> +
+> +               /*
+> +               * This checksum stuff is designed for columns <= 8),
+> +               * and spreads the checksum over 64 bits but since currently
+> +               * the initval max column size is 6 we only use the first 48
+> +               * bits.
+> +               */
+> +               if (columns > 6)
+> +                       return;
+> +       }
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_chipcommon.c            |   38 ++++++++++++++++++++++++++-
- include/linux/bcma/bcma_driver_chipcommon.h |    4 +--
- 2 files changed, 39 insertions(+), 3 deletions(-)
+The comment here was for the case that we were using the old nasty
+checksum thingy I invented, prior to you adding SHA1 checksum support.
+The column limitation therefore seems artificial here ?
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index 7c132e5..1172226 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -10,6 +10,7 @@
-  */
- 
- #include "bcma_private.h"
-+#include <linux/bcm47xx_wdt.h>
- #include <linux/export.h>
- #include <linux/bcma/bcma.h>
- 
-@@ -52,6 +53,39 @@ static u32 bcma_chipco_watchdog_get_max_timer(struct bcma_drv_cc *cc)
- 		return (1 << nb) - 1;
- }
- 
-+static u32 bcma_chipco_watchdog_timer_set_wdt(struct bcm47xx_wdt *wdt,
-+					      u32 ticks)
-+{
-+	struct bcma_drv_cc *cc = bcm47xx_wdt_get_drvdata(wdt);
-+
-+	return bcma_chipco_watchdog_timer_set(cc, ticks);
-+}
-+
-+static u32 bcma_chipco_watchdog_timer_set_ms_wdt(struct bcm47xx_wdt *wdt,
-+						 u32 ms)
-+{
-+	struct bcma_drv_cc *cc = bcm47xx_wdt_get_drvdata(wdt);
-+	u32 ticks;
-+
-+	ticks = bcma_chipco_watchdog_timer_set(cc, cc->ticks_per_ms * ms);
-+	return ticks / cc->ticks_per_ms;
-+}
-+
-+static int bcma_chipco_watchdog_ticks_per_ms(struct bcma_drv_cc *cc)
-+{
-+	struct bcma_bus *bus = cc->core->bus;
-+
-+	if (cc->capabilities & BCMA_CC_CAP_PMU) {
-+		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
-+			/* 4706 CC and PMU watchdogs are clocked at 1/4 of ALP clock */
-+			return bcma_chipco_alp_clock(cc) / 4000;
-+		else
-+			/* based on 32KHz ILP clock */
-+			return 32;
-+	} else {
-+		return bcma_chipco_alp_clock(cc) / 1000;
-+	}
-+}
- 
- void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
- {
-@@ -100,12 +134,13 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
- 			((leddc_on << BCMA_CC_GPIOTIMER_ONTIME_SHIFT) |
- 			 (leddc_off << BCMA_CC_GPIOTIMER_OFFTIME_SHIFT)));
- 	}
-+	cc->ticks_per_ms = bcma_chipco_watchdog_ticks_per_ms(cc);
- 
- 	cc->setup_done = true;
- }
- 
- /* Set chip watchdog reset timer to fire in 'ticks' backplane cycles */
--void bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
-+u32 bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
- {
- 	u32 maxt;
- 	enum bcma_clkmode clkmode;
-@@ -125,6 +160,7 @@ void bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
- 		/* instant NMI */
- 		bcma_cc_write32(cc, BCMA_CC_WATCHDOG, ticks);
- 	}
-+	return ticks;
- }
- 
- void bcma_chipco_irq_mask(struct bcma_drv_cc *cc, u32 mask, u32 value)
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 145f3c5..2f9b014 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -570,6 +570,7 @@ struct bcma_drv_cc {
- 	int nr_serial_ports;
- 	struct bcma_serial_port serial_ports[4];
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
-+	u32 ticks_per_ms;
- };
- 
- /* Register access */
-@@ -593,8 +594,7 @@ extern void bcma_chipco_resume(struct bcma_drv_cc *cc);
- 
- void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable);
- 
--extern void bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc,
--					  u32 ticks);
-+extern u32 bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks);
- 
- void bcma_chipco_irq_mask(struct bcma_drv_cc *cc, u32 mask, u32 value);
- 
--- 
-1.7.10.4
+Also, as per Adrian's advice on the eeprom dump tool, perhaps we can
+remove clutter from the initvals tool by allowing us to copy to the
+local directory the initval files from a linux-next tag.
 
+git show next-20121204:drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+> path/ar9002_initvals.h
+
+For example. But this would mean requiring us to get diffs by using a
+kernel git tree, separate from where we are. Not sure if there are
+gains with this strategy. Its unclear.
+
+  Luis
