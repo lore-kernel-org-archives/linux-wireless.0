@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19328 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754106Ab2LLPsP (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:51874 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946556Ab2LFTfe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 10:48:15 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Joe Perches <joe@perches.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v10 0/3] wireless: Driver for 60GHz card wil6210
-Date: Wed, 12 Dec 2012 17:47:55 +0200
-Message-ID: <1355327278-12965-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121212_164819_077273_8AAC73EA)
+	Thu, 6 Dec 2012 14:35:34 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hj13so820841wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 11:35:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1354815611-7220-1-git-send-email-nbd@openwrt.org>
+References: <1354815611-7220-1-git-send-email-nbd@openwrt.org>
+Date: Thu, 6 Dec 2012 11:35:33 -0800
+Message-ID: <CAJ-Vmonvo9tq4ZF8WosnXNQq=ArqoDuKtz5y8UnFoWfYAikMxQ@mail.gmail.com> (sfid-20121206_203538_116399_9C37BFBB)
+Subject: Re: [PATCH] Revert "ath9k_hw: Update AR9003 high_power tx gain table"
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please see patches containing driver for 60g card 'wil6210'
+On 6 December 2012 09:40, Felix Fietkau <nbd@openwrt.org> wrote:
+> This reverts commit f74b9d365ddd33a375802b064f96a5d0e99af7c0.
+>
+> Turns out reverting commit a240dc7b3c7463bd60cf0a9b2a90f52f78aae0fd
+> "ath9k_hw: Updated AR9003 tx gain table for 5GHz" was not enough to
+> bring the tx power back to normal levels on devices like the
+> Buffalo WZR-HP-G450H, this one needs to be reverted as well.
+>
+> This revert improves tx power by ~10 db on that device
 
-Following recommendations from Joe Perches and Luis R. Rodriguez,
-I do not wait for 'dynamic hexdump' to merge - Greg KH says it
-will not make to 3.8 - too late. Instead, I did patch that compensate
-this functionality. It is submitted as separate one, to be easily
-un-done when 'dynamic hexdump' patch merge.
+Did anyone figure out why this was happening?
 
-There is some other work integrated since previous iteration:
+Maybe we should look at the HAL commits around the same time to see if
+someone changed the programming - eg, assuming TPC is always on, or
+the 2 stream / 3 stream reduction PHY register, or such.
 
-- AP mode fixes
-- IRQ code optimizations
-- wmi.h that defines driver/firmware API, is now shared with the FW team
-- experimental support for 3 MSI mode
-- documentation included
 
-Can it be finally merged this time? I't be happy to see it in 3.8.
 
-Vladimir Kondratiev (3):
-  wireless: Driver for 60GHz card wil6210
-  wil6210: Local compensation for dynamic hexdump
-  wireless: integrate wil6210 driver into build
-
- Documentation/networking/wil6210.txt           |  292 +++++++
- drivers/net/wireless/ath/Kconfig               |    1 +
- drivers/net/wireless/ath/Makefile              |    1 +
- drivers/net/wireless/ath/wil6210/Kconfig       |   30 +
- drivers/net/wireless/ath/wil6210/Makefile      |   14 +
- drivers/net/wireless/ath/wil6210/cfg80211.c    |  565 ++++++++++++
- drivers/net/wireless/ath/wil6210/dbg_hexdump.h |   32 +
- drivers/net/wireless/ath/wil6210/debugfs.c     |  603 +++++++++++++
- drivers/net/wireless/ath/wil6210/interrupt.c   |  471 ++++++++++
- drivers/net/wireless/ath/wil6210/main.c        |  407 +++++++++
- drivers/net/wireless/ath/wil6210/netdev.c      |  157 ++++
- drivers/net/wireless/ath/wil6210/pcie_bus.c    |  223 +++++
- drivers/net/wireless/ath/wil6210/txrx.c        |  892 +++++++++++++++++++
- drivers/net/wireless/ath/wil6210/txrx.h        |  362 ++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h     |  363 ++++++++
- drivers/net/wireless/ath/wil6210/wmi.c         |  989 +++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/wmi.h         | 1116 ++++++++++++++++++++++++
- 17 files changed, 6518 insertions(+)
- create mode 100644 Documentation/networking/wil6210.txt
- create mode 100644 drivers/net/wireless/ath/wil6210/Kconfig
- create mode 100644 drivers/net/wireless/ath/wil6210/Makefile
- create mode 100644 drivers/net/wireless/ath/wil6210/cfg80211.c
- create mode 100644 drivers/net/wireless/ath/wil6210/dbg_hexdump.h
- create mode 100644 drivers/net/wireless/ath/wil6210/debugfs.c
- create mode 100644 drivers/net/wireless/ath/wil6210/interrupt.c
- create mode 100644 drivers/net/wireless/ath/wil6210/main.c
- create mode 100644 drivers/net/wireless/ath/wil6210/netdev.c
- create mode 100644 drivers/net/wireless/ath/wil6210/pcie_bus.c
- create mode 100644 drivers/net/wireless/ath/wil6210/txrx.c
- create mode 100644 drivers/net/wireless/ath/wil6210/txrx.h
- create mode 100644 drivers/net/wireless/ath/wil6210/wil6210.h
- create mode 100644 drivers/net/wireless/ath/wil6210/wmi.c
- create mode 100644 drivers/net/wireless/ath/wil6210/wmi.h
-
--- 
-1.7.10.4
-
+Adrian
