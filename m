@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51478 "EHLO mx2.suse.de"
+Received: from arrakis.dune.hu ([78.24.191.176]:37214 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750800Ab2LUMAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2012 07:00:19 -0500
-From: Oliver Neukum <oneukum@suse.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	Champion Chen <champion_chen@realsil.com.cn>
-Subject: Re: [RFC/RFT] rtk_btusb: Bluetooth driver for Realtek RTL8723AE combo device
-Date: Fri, 21 Dec 2012 13:00:44 +0100
-Message-ID: <4349156.F5bN2NJJsz@linux-lqwf.site> (sfid-20121221_130025_884813_7ADEBA41)
-In-Reply-To: <1356058371-17152-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1356058371-17152-1-git-send-email-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	id S1946515Ab2LFSRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 13:17:33 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 05/13] qca-swiss-army-knife: add missing families to verify_checksums.sh
+Date: Thu,  6 Dec 2012 19:17:19 +0100
+Message-Id: <1354817847-23440-6-git-send-email-juhosg@openwrt.org> (sfid-20121206_191737_792928_38DE8375)
+In-Reply-To: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
+References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 December 2012 20:52:51 Larry Finger wrote:
-> This new driver works with the RTL8723AE wireless/BT combo device. The
-> corresponding firmware has been submitted to linux-firmware.
+Add the missing ar9340, ar9462-1p0, ar9565-1p0
+families to the 'verify_checksums.sh' script.
 
-Very well. However, you cannot simply duplicate the whole code
-of btusb without very good reason. The patch as is is absolutely
-inacceptable.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ tools/initvals/verify_checksums.sh |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	Regards
-		Oliver
+diff --git a/tools/initvals/verify_checksums.sh b/tools/initvals/verify_checksums.sh
+index 6878ca5..46fff90 100755
+--- a/tools/initvals/verify_checksums.sh
++++ b/tools/initvals/verify_checksums.sh
+@@ -31,7 +31,7 @@ verify_family_checksum()
+ }
+ 
+ FAMILIES="$@"
+-[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9485 ar9580-1p0"
++[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9340 ar9462-1p0 ar9485 ar9565-1p0 ar9580-1p0"
+ 
+ mkdir -p "$CSUM_DIR"
+ for family in $FAMILIES; do
+-- 
+1.7.10
 
