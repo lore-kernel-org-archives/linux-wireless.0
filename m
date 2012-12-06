@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:42201 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083Ab2L3Om4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52469 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755010Ab2LFNAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Dec 2012 09:42:56 -0500
-Received: by mail-ie0-f171.google.com with SMTP id 17so14493636iea.30
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Dec 2012 06:42:56 -0800 (PST)
-MIME-Version: 1.0
-From: HariHara Sudhan <hari@emo2.com>
-Date: Sun, 30 Dec 2012 06:42:56 -0800
-Message-ID: <-1211637985816790459@unknownmsgid> (sfid-20121230_154300_945464_7552B0A8)
-Subject: RE: ar3012 bluetooth nor working
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 Dec 2012 08:00:39 -0500
+Message-ID: <1354798860.10150.2.camel@jlt4.sipsolutions.net> (sfid-20121206_140043_828526_DE522F4F)
+Subject: Re: [PATCH] mac80211: dont drop mesh peering frames from unknown STA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Thu, 06 Dec 2012 14:01:00 +0100
+In-Reply-To: <1354748666-16123-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <CAG6hwVN3F+KY=LkrG0j8WfFczBJawTD5J4kbbsnPfSAGrX5dXA@mail.gmail.com>
+	 <1354748666-16123-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Solved the problem by enabling wext_priv . Since kernel 3.5.4 doesn't
-have direct option to enable wext_priv. I had to enable IEEE 802.11
-host ap to enable wext_priv.
+On Wed, 2012-12-05 at 15:04 -0800, Marco Porsch wrote:
+> Previously, mesh peering frames from a STA without a station entry were being
+> dropped.
+> 
+> Mesh Peering Open and Co. frames (WLAN_CATEGORY_SELF_PROTECTED) although from
+> a yet unknown STA are valid mesh peering frames. The STA entry will followingly
+> be created in mesh_peer_init.
+> The problem was previously worked around since both STA receive the beacons
+> of one another which create the STA entry. Yet, this creates an unnecessary
+> delay and beacons may not be received if either node is in PS mode.
 
-Sent from my Windows Phone
-From: Mohammed Shafi
-Sent: 12/30/2012 7:51 PM
-To: HariHara Sudhan
-Cc: linux-wireless@vger.kernel.org; Mohammed Shafi Shajakhan
-Subject: Re: ar3012 bluetooth nor working
-On Sat, Dec 8, 2012 at 4:17 PM, HariHara Sudhan <hari@emo2.com> wrote:
-> I've a ar9485 +ar3012 combo card and using .
->  Wifi is working fine with ath9k drivers.
-> But for bluetooth i've enabled BT_ATH3k use in kernel. And it loaded btusb ,
-> bnep, rfcomm modules. ath3k wasn't comming up, and hcitool scan
-> results gave me nothing.
-> rfkill shows both wwifi and bluetooth devices are not blocked.
->
-> so it is told in ath3k drivers guide from your website . i've added
-> the id's in ath3k support list and btusb blacklist.
-> Now ath3k is loaded when i checked lsmod, and btusb is also loaded .
-> But now rfkill is not showing bluetooth device and hcitool scan says
-> "Device Not abailable".
-> What could be the reason.
-> BTW blacklist driverinfo i gave was "BTUSB_IGNORE
->
-> --
-> Regards
->
-> HariHaraSudhan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Applied.
 
-you can give us the vid, PID. we can come up with a patch and see if
-works for you.
+johannes
 
-
--- 
-thanks,
-shafi
