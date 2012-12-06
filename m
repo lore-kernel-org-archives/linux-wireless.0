@@ -1,278 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2433 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:31206 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754057Ab2LEO0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 09:26:25 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/11] brcmfmac: use one list of event defintions
-Date: Wed, 5 Dec 2012 15:25:56 +0100
-Message-ID: <1354717564-7183-4-git-send-email-arend@broadcom.com> (sfid-20121205_152634_641170_53C4A181)
-In-Reply-To: <1354717564-7183-1-git-send-email-arend@broadcom.com>
-References: <1354717564-7183-1-git-send-email-arend@broadcom.com>
+	id S932079Ab2LFMZl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 07:25:41 -0500
+Date: Thu, 6 Dec 2012 13:25:29 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
+Message-ID: <20121206122528.GG2502@redhat.com> (sfid-20121206_132545_618137_5ACA193A)
+References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
+ <87a9ts4c1q.fsf@nemi.mork.no>
+ <50BF8C18.9060504@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <50BF8C18.9060504@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, adding a new event requires modification in two source
-files. Use macro definition to have one place and have better
-maintainability.
+On Wed, Dec 05, 2012 at 10:02:00AM -0800, Ben Greear wrote:
+> On 12/05/2012 09:57 AM, Bjørn Mork wrote:
+> >Ben Greear <greearb@candelatech.com> writes:
+> >
+> >>net/core/dev.c now assigns a default ethtool ops, so
+> >>the net/wireless/core.c check for existing ops is always true
+> >>so the wireless ops would never be assigned.
+> >>
+> >>Simply remove the check for existing ops and always assign
+> >>the wireless ops.
+> >>
+> >>Signed-off-by: Ben Greear <greearb@candelatech.com>
+> >>---
+> >>  net/wireless/core.c |    3 +--
+> >>  1 files changed, 1 insertions(+), 2 deletions(-)
+> >>
+> >>diff --git a/net/wireless/core.c b/net/wireless/core.c
+> >>index 4e6fe62..6309699 100644
+> >>--- a/net/wireless/core.c
+> >>+++ b/net/wireless/core.c
+> >>@@ -863,8 +863,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+> >>  		/* allow mac80211 to determine the timeout */
+> >>  		wdev->ps_timeout = -1;
+> >>
+> >>-		if (!dev->ethtool_ops)
+> >>-			dev->ethtool_ops = &cfg80211_ethtool_ops;
+> >>+		dev->ethtool_ops = &cfg80211_ethtool_ops;
+> >>
+> >>  		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+> >>  		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+> >
+> >
+> >Won't this break drivers which for some reason have their own
+> >ethtool_ops?
+> 
+> I guess it will.  What a mess.
+> 
+> Maybe we could assign individual method pointers in the ethtool_ops
+> struct if it already exists (and if those pointers are NULL)?
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c |   72 +-----------
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h |  142 +++++++++++++-----------
- 2 files changed, 80 insertions(+), 134 deletions(-)
+We should probably assing ethtool_ops before wireless core will
+call alloc_netdev.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-index 7a00c46..c26493f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-@@ -95,76 +95,14 @@ struct brcmf_fweh_event_name {
- };
- 
- #ifdef DEBUG
-+#define BRCMF_ENUM_DEF(id, val) \
-+	{ val, #id },
-+
- /* array for mapping code to event name */
- static struct brcmf_fweh_event_name fweh_event_names[] = {
--	{ BRCMF_E_SET_SSID, "SET_SSID" },
--	{ BRCMF_E_JOIN, "JOIN" },
--	{ BRCMF_E_START, "START" },
--	{ BRCMF_E_AUTH, "AUTH" },
--	{ BRCMF_E_AUTH_IND, "AUTH_IND" },
--	{ BRCMF_E_DEAUTH, "DEAUTH" },
--	{ BRCMF_E_DEAUTH_IND, "DEAUTH_IND" },
--	{ BRCMF_E_ASSOC, "ASSOC" },
--	{ BRCMF_E_ASSOC_IND, "ASSOC_IND" },
--	{ BRCMF_E_REASSOC, "REASSOC" },
--	{ BRCMF_E_REASSOC_IND, "REASSOC_IND" },
--	{ BRCMF_E_DISASSOC, "DISASSOC" },
--	{ BRCMF_E_DISASSOC_IND, "DISASSOC_IND" },
--	{ BRCMF_E_QUIET_START, "START_QUIET" },
--	{ BRCMF_E_QUIET_END, "END_QUIET" },
--	{ BRCMF_E_BEACON_RX, "BEACON_RX" },
--	{ BRCMF_E_LINK, "LINK" },
--	{ BRCMF_E_MIC_ERROR, "MIC_ERROR" },
--	{ BRCMF_E_NDIS_LINK, "NDIS_LINK" },
--	{ BRCMF_E_ROAM, "ROAM" },
--	{ BRCMF_E_TXFAIL, "TXFAIL" },
--	{ BRCMF_E_PMKID_CACHE, "PMKID_CACHE" },
--	{ BRCMF_E_RETROGRADE_TSF, "RETROGRADE_TSF" },
--	{ BRCMF_E_PRUNE, "PRUNE" },
--	{ BRCMF_E_AUTOAUTH, "AUTOAUTH" },
--	{ BRCMF_E_EAPOL_MSG, "EAPOL_MSG" },
--	{ BRCMF_E_SCAN_COMPLETE, "SCAN_COMPLETE" },
--	{ BRCMF_E_ADDTS_IND, "ADDTS_IND" },
--	{ BRCMF_E_DELTS_IND, "DELTS_IND" },
--	{ BRCMF_E_BCNSENT_IND, "BCNSENT_IND" },
--	{ BRCMF_E_BCNRX_MSG, "BCNRX_MSG" },
--	{ BRCMF_E_BCNLOST_MSG, "BCNLOST_MSG" },
--	{ BRCMF_E_ROAM_PREP, "ROAM_PREP" },
--	{ BRCMF_E_PFN_NET_FOUND, "PNO_NET_FOUND" },
--	{ BRCMF_E_PFN_NET_LOST, "PNO_NET_LOST" },
--	{ BRCMF_E_RESET_COMPLETE, "RESET_COMPLETE" },
--	{ BRCMF_E_JOIN_START, "JOIN_START" },
--	{ BRCMF_E_ROAM_START, "ROAM_START" },
--	{ BRCMF_E_ASSOC_START, "ASSOC_START" },
--	{ BRCMF_E_IBSS_ASSOC, "IBSS_ASSOC" },
--	{ BRCMF_E_RADIO, "RADIO" },
--	{ BRCMF_E_PSM_WATCHDOG, "PSM_WATCHDOG" },
--	{ BRCMF_E_PROBREQ_MSG, "PROBREQ_MSG" },
--	{ BRCMF_E_SCAN_CONFIRM_IND, "SCAN_CONFIRM_IND" },
--	{ BRCMF_E_PSK_SUP, "PSK_SUP" },
--	{ BRCMF_E_COUNTRY_CODE_CHANGED, "COUNTRY_CODE_CHANGED" },
--	{ BRCMF_E_EXCEEDED_MEDIUM_TIME, "EXCEEDED_MEDIUM_TIME" },
--	{ BRCMF_E_ICV_ERROR, "ICV_ERROR" },
--	{ BRCMF_E_UNICAST_DECODE_ERROR, "UNICAST_DECODE_ERROR" },
--	{ BRCMF_E_MULTICAST_DECODE_ERROR, "MULTICAST_DECODE_ERROR" },
--	{ BRCMF_E_TRACE, "TRACE" },
--	{ BRCMF_E_IF, "IF" },
--	{ BRCMF_E_RSSI, "RSSI" },
--	{ BRCMF_E_PFN_SCAN_COMPLETE, "PFN_SCAN_COMPLETE" },
--	{ BRCMF_E_EXTLOG_MSG, "EXTLOG_MSG" },
--	{ BRCMF_E_ACTION_FRAME, "ACTION_FRAME" },
--	{ BRCMF_E_ACTION_FRAME_COMPLETE, "ACTION_FRAME_COMPLETE" },
--	{ BRCMF_E_PRE_ASSOC_IND, "PRE_ASSOC_IND" },
--	{ BRCMF_E_PRE_REASSOC_IND, "PRE_REASSOC_IND" },
--	{ BRCMF_E_CHANNEL_ADOPTED, "CHANNEL_ADOPTED" },
--	{ BRCMF_E_AP_STARTED, "AP_STARTED" },
--	{ BRCMF_E_DFS_AP_STOP, "DFS_AP_STOP" },
--	{ BRCMF_E_DFS_AP_RESUME, "DFS_AP_RESUME" },
--	{ BRCMF_E_ESCAN_RESULT, "ESCAN_RESULT" },
--	{ BRCMF_E_ACTION_FRAME_OFF_CHAN_COMPLETE, "ACTION_FRM_OFF_CHAN_CMPLT" },
--	{ BRCMF_E_DCS_REQUEST, "DCS_REQUEST" },
--	{ BRCMF_E_FIFO_CREDIT_MAP, "FIFO_CREDIT_MAP"}
-+	BRCMF_FWEH_EVENT_ENUM_DEFLIST
- };
-+#undef BRCMF_ENUM_DEF
- 
- /**
-  * brcmf_fweh_event_name() - returns name for given event code.
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-index b39246a..81aa0992 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-@@ -29,77 +29,85 @@ struct brcmf_if;
- struct brcmf_cfg80211_info;
- struct brcmf_event;
- 
-+/* list of firmware events */
-+#define BRCMF_FWEH_EVENT_ENUM_DEFLIST \
-+	BRCMF_ENUM_DEF(SET_SSID, 0) \
-+	BRCMF_ENUM_DEF(JOIN, 1) \
-+	BRCMF_ENUM_DEF(START, 2) \
-+	BRCMF_ENUM_DEF(AUTH, 3) \
-+	BRCMF_ENUM_DEF(AUTH_IND, 4) \
-+	BRCMF_ENUM_DEF(DEAUTH, 5) \
-+	BRCMF_ENUM_DEF(DEAUTH_IND, 6) \
-+	BRCMF_ENUM_DEF(ASSOC, 7) \
-+	BRCMF_ENUM_DEF(ASSOC_IND, 8) \
-+	BRCMF_ENUM_DEF(REASSOC, 9) \
-+	BRCMF_ENUM_DEF(REASSOC_IND, 10) \
-+	BRCMF_ENUM_DEF(DISASSOC, 11) \
-+	BRCMF_ENUM_DEF(DISASSOC_IND, 12) \
-+	BRCMF_ENUM_DEF(QUIET_START, 13) \
-+	BRCMF_ENUM_DEF(QUIET_END, 14) \
-+	BRCMF_ENUM_DEF(BEACON_RX, 15) \
-+	BRCMF_ENUM_DEF(LINK, 16) \
-+	BRCMF_ENUM_DEF(MIC_ERROR, 17) \
-+	BRCMF_ENUM_DEF(NDIS_LINK, 18) \
-+	BRCMF_ENUM_DEF(ROAM, 19) \
-+	BRCMF_ENUM_DEF(TXFAIL, 20) \
-+	BRCMF_ENUM_DEF(PMKID_CACHE, 21) \
-+	BRCMF_ENUM_DEF(RETROGRADE_TSF, 22) \
-+	BRCMF_ENUM_DEF(PRUNE, 23) \
-+	BRCMF_ENUM_DEF(AUTOAUTH, 24) \
-+	BRCMF_ENUM_DEF(EAPOL_MSG, 25) \
-+	BRCMF_ENUM_DEF(SCAN_COMPLETE, 26) \
-+	BRCMF_ENUM_DEF(ADDTS_IND, 27) \
-+	BRCMF_ENUM_DEF(DELTS_IND, 28) \
-+	BRCMF_ENUM_DEF(BCNSENT_IND, 29) \
-+	BRCMF_ENUM_DEF(BCNRX_MSG, 30) \
-+	BRCMF_ENUM_DEF(BCNLOST_MSG, 31) \
-+	BRCMF_ENUM_DEF(ROAM_PREP, 32) \
-+	BRCMF_ENUM_DEF(PFN_NET_FOUND, 33) \
-+	BRCMF_ENUM_DEF(PFN_NET_LOST, 34) \
-+	BRCMF_ENUM_DEF(RESET_COMPLETE, 35) \
-+	BRCMF_ENUM_DEF(JOIN_START, 36) \
-+	BRCMF_ENUM_DEF(ROAM_START, 37) \
-+	BRCMF_ENUM_DEF(ASSOC_START, 38) \
-+	BRCMF_ENUM_DEF(IBSS_ASSOC, 39) \
-+	BRCMF_ENUM_DEF(RADIO, 40) \
-+	BRCMF_ENUM_DEF(PSM_WATCHDOG, 41) \
-+	BRCMF_ENUM_DEF(PROBREQ_MSG, 44) \
-+	BRCMF_ENUM_DEF(SCAN_CONFIRM_IND, 45) \
-+	BRCMF_ENUM_DEF(PSK_SUP, 46) \
-+	BRCMF_ENUM_DEF(COUNTRY_CODE_CHANGED, 47) \
-+	BRCMF_ENUM_DEF(EXCEEDED_MEDIUM_TIME, 48) \
-+	BRCMF_ENUM_DEF(ICV_ERROR, 49) \
-+	BRCMF_ENUM_DEF(UNICAST_DECODE_ERROR, 50) \
-+	BRCMF_ENUM_DEF(MULTICAST_DECODE_ERROR, 51) \
-+	BRCMF_ENUM_DEF(TRACE, 52) \
-+	BRCMF_ENUM_DEF(IF, 54) \
-+	BRCMF_ENUM_DEF(RSSI, 56) \
-+	BRCMF_ENUM_DEF(PFN_SCAN_COMPLETE, 57) \
-+	BRCMF_ENUM_DEF(EXTLOG_MSG, 58) \
-+	BRCMF_ENUM_DEF(ACTION_FRAME, 59) \
-+	BRCMF_ENUM_DEF(ACTION_FRAME_COMPLETE, 60) \
-+	BRCMF_ENUM_DEF(PRE_ASSOC_IND, 61) \
-+	BRCMF_ENUM_DEF(PRE_REASSOC_IND, 62) \
-+	BRCMF_ENUM_DEF(CHANNEL_ADOPTED, 63) \
-+	BRCMF_ENUM_DEF(AP_STARTED, 64) \
-+	BRCMF_ENUM_DEF(DFS_AP_STOP, 65) \
-+	BRCMF_ENUM_DEF(DFS_AP_RESUME, 66) \
-+	BRCMF_ENUM_DEF(ESCAN_RESULT, 69) \
-+	BRCMF_ENUM_DEF(ACTION_FRAME_OFF_CHAN_COMPLETE, 70) \
-+	BRCMF_ENUM_DEF(DCS_REQUEST, 73) \
-+	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74)
-+
-+#define BRCMF_ENUM_DEF(id, val) \
-+	BRCMF_E_##id = (val),
-+
- /* firmware event codes sent by the dongle */
- enum brcmf_fweh_event_code {
--	BRCMF_E_SET_SSID		= 0,
--	BRCMF_E_JOIN			= 1,
--	BRCMF_E_START			= 2,
--	BRCMF_E_AUTH			= 3,
--	BRCMF_E_AUTH_IND		= 4,
--	BRCMF_E_DEAUTH			= 5,
--	BRCMF_E_DEAUTH_IND		= 6,
--	BRCMF_E_ASSOC			= 7,
--	BRCMF_E_ASSOC_IND		= 8,
--	BRCMF_E_REASSOC			= 9,
--	BRCMF_E_REASSOC_IND		= 10,
--	BRCMF_E_DISASSOC		= 11,
--	BRCMF_E_DISASSOC_IND		= 12,
--	BRCMF_E_QUIET_START		= 13,
--	BRCMF_E_QUIET_END		= 14,
--	BRCMF_E_BEACON_RX		= 15,
--	BRCMF_E_LINK			= 16,
--	BRCMF_E_MIC_ERROR		= 17,
--	BRCMF_E_NDIS_LINK		= 18,
--	BRCMF_E_ROAM			= 19,
--	BRCMF_E_TXFAIL			= 20,
--	BRCMF_E_PMKID_CACHE		= 21,
--	BRCMF_E_RETROGRADE_TSF		= 22,
--	BRCMF_E_PRUNE			= 23,
--	BRCMF_E_AUTOAUTH		= 24,
--	BRCMF_E_EAPOL_MSG		= 25,
--	BRCMF_E_SCAN_COMPLETE		= 26,
--	BRCMF_E_ADDTS_IND		= 27,
--	BRCMF_E_DELTS_IND		= 28,
--	BRCMF_E_BCNSENT_IND		= 29,
--	BRCMF_E_BCNRX_MSG		= 30,
--	BRCMF_E_BCNLOST_MSG		= 31,
--	BRCMF_E_ROAM_PREP		= 32,
--	BRCMF_E_PFN_NET_FOUND		= 33,
--	BRCMF_E_PFN_NET_LOST		= 34,
--	BRCMF_E_RESET_COMPLETE		= 35,
--	BRCMF_E_JOIN_START		= 36,
--	BRCMF_E_ROAM_START		= 37,
--	BRCMF_E_ASSOC_START		= 38,
--	BRCMF_E_IBSS_ASSOC		= 39,
--	BRCMF_E_RADIO			= 40,
--	BRCMF_E_PSM_WATCHDOG		= 41,
--	BRCMF_E_PROBREQ_MSG		= 44,
--	BRCMF_E_SCAN_CONFIRM_IND	= 45,
--	BRCMF_E_PSK_SUP			= 46,
--	BRCMF_E_COUNTRY_CODE_CHANGED	= 47,
--	BRCMF_E_EXCEEDED_MEDIUM_TIME	= 48,
--	BRCMF_E_ICV_ERROR		= 49,
--	BRCMF_E_UNICAST_DECODE_ERROR	= 50,
--	BRCMF_E_MULTICAST_DECODE_ERROR	= 51,
--	BRCMF_E_TRACE			= 52,
--	BRCMF_E_IF			= 54,
--	BRCMF_E_RSSI			= 56,
--	BRCMF_E_PFN_SCAN_COMPLETE	= 57,
--	BRCMF_E_EXTLOG_MSG		= 58,
--	BRCMF_E_ACTION_FRAME		= 59,
--	BRCMF_E_ACTION_FRAME_COMPLETE	= 60,
--	BRCMF_E_PRE_ASSOC_IND		= 61,
--	BRCMF_E_PRE_REASSOC_IND		= 62,
--	BRCMF_E_CHANNEL_ADOPTED		= 63,
--	BRCMF_E_AP_STARTED		= 64,
--	BRCMF_E_DFS_AP_STOP		= 65,
--	BRCMF_E_DFS_AP_RESUME		= 66,
--	BRCMF_E_ESCAN_RESULT		= 69,
--	BRCMF_E_ACTION_FRAME_OFF_CHAN_COMPLETE	= 70,
--	BRCMF_E_DCS_REQUEST		= 73,
--	BRCMF_E_FIFO_CREDIT_MAP		= 74,
-+	BRCMF_FWEH_EVENT_ENUM_DEFLIST
- 	BRCMF_E_LAST
- };
-+#undef BRCMF_ENUM_DEF
- 
- /* flags field values in struct brcmf_event_msg */
- #define BRCMF_EVENT_MSG_LINK		0x01
--- 
-1.7.9.5
-
-
+Stanislaw
