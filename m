@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44585 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753883Ab2LDOtS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 09:49:18 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 15/18] regulatory: remove locking from wiphy_apply_custom_regulatory
-Date: Tue,  4 Dec 2012 15:48:57 +0100
-Message-Id: <1354632540-21207-16-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154924_258860_E18C30F4)
-In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
-References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail.tpi.com ([70.99.223.143]:4851 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755492Ab2LFUtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 15:49:05 -0500
+From: Tim Gardner <tim.gardner@canonical.com>
+To: linux-kernel@vger.kernel.org
+Cc: Tim Gardner <tim.gardner@canonical.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Don Fry <donald.h.fry@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH wireless-next] iwlwifi: iwlagn_request_scan: Fix check for NULL priv->scan_request
+Date: Thu,  6 Dec 2012 13:24:05 -0700
+Message-Id: <1354825445-79551-1-git-send-email-tim.gardner@canonical.com> (sfid-20121206_214912_422543_9C67DD48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The WARN_ON_ONCE() check for scan_request will not correctly detect
+a NULL pointer for scan_type == IWL_SCAN_NORMAL. Make it explicit
+that the check only applies to normal scans.
 
-wiphy_apply_custom_regulatory() doesn't have to hold
-the regulatory mutex as it only modifies the given
-wiphy with the given regulatory domain, it doesn't
-access any global regulatory data.
+Convert WARN_ON_ONCE to WARN_ON since priv->scan_request really _can't_
+be NULL for normal scans. If it is then we should emit frequent warnings.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This smatch warning led to scrutiny of iwlagn_request_scan():
+
+drivers/net/wireless/iwlwifi/dvm/scan.c:894 iwlagn_request_scan() error: we previously assumed 'priv->scan_request' could be null (see line 792)
+
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Don Fry <donald.h.fry@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
 ---
- net/wireless/reg.c | 4 ----
- 1 file changed, 4 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e0a7312..958f164 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1234,8 +1234,6 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 	const struct ieee80211_power_rule *power_rule = NULL;
- 	const struct ieee80211_freq_range *freq_range = NULL;
+This patch does apply to 3.6.y, but it doesn't fix an existing
+bug so I don't think it qualifies. This patch simply makes
+the driver more robust for future development.
+
+ drivers/net/wireless/iwlwifi/dvm/scan.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/scan.c b/drivers/net/wireless/iwlwifi/dvm/scan.c
+index bb9f625..e5cbcca 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/dvm/scan.c
+@@ -673,8 +673,9 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	const u8 *ssid = NULL;
+ 	u8 ssid_len = 0;
  
--	assert_reg_lock();
--
- 	r = freq_reg_info_regd(wiphy, MHZ_TO_KHZ(chan->center_freq),
- 			       desired_bw_khz, &reg_rule, regd);
+-	if (WARN_ON_ONCE(priv->scan_request &&
+-			 priv->scan_request->n_channels > MAX_SCAN_CHANNEL))
++	if (WARN_ON(priv->scan_type == IWL_SCAN_NORMAL &&
++		(!priv->scan_request ||
++		priv->scan_request->n_channels > MAX_SCAN_CHANNEL)))
+ 		return -EINVAL;
  
-@@ -1280,14 +1278,12 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- 	enum ieee80211_band band;
- 	unsigned int bands_set = 0;
- 
--	mutex_lock(&reg_mutex);
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (!wiphy->bands[band])
- 			continue;
- 		handle_band_custom(wiphy, wiphy->bands[band], regd);
- 		bands_set++;
- 	}
--	mutex_unlock(&reg_mutex);
- 
- 	/*
- 	 * no point in calling this if it won't have any effect
+ 	lockdep_assert_held(&priv->mutex);
 -- 
-1.8.0
+1.7.9.5
 
