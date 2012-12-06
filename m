@@ -1,187 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44572 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005Ab2LDOsl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 09:48:41 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 08/18] cfg80211: remove wiphy_idx_valid
-Date: Tue,  4 Dec 2012 15:48:50 +0100
-Message-Id: <1354632540-21207-9-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154903_532995_85985D4C)
-In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
-References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:3979 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754752Ab2LFIrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 03:47:25 -0500
+Message-ID: <50C05B64.5050702@broadcom.com> (sfid-20121206_094728_701199_9403053C)
+Date: Thu, 6 Dec 2012 09:46:28 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Joe Perches" <joe@perches.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 05/11] brcmfmac: error messages should not be
+ suppressed
+References: <1354717564-7183-6-git-send-email-arend@broadcom.com>
+ <1354742910-8822-1-git-send-email-arend@broadcom.com>
+ <1354775578.8320.26.camel@joe-AO722>
+In-Reply-To: <1354775578.8320.26.camel@joe-AO722>
+Content-Type: multipart/mixed;
+ boundary=------------010606040201010003070001
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-This is pretty much useless since get_wiphy_idx()
-always returns true since it's always called with
-a valid wiphy pointer.
+--------------010606040201010003070001
+Content-Type: text/plain;
+ charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c    | 14 +++-----------
- net/wireless/core.h    | 16 +++-------------
- net/wireless/nl80211.c |  2 +-
- net/wireless/reg.c     | 14 +++++---------
- 4 files changed, 12 insertions(+), 34 deletions(-)
+On 12/06/2012 07:32 AM, Joe Perches wrote:
+> On Wed, 2012-12-05 at 22:28 +0100, Arend van Spriel wrote:
+>> The call to brcmf_dbg(ERROR, ...) only resulted in a log message
+>> when compiled with -DDEBUG. Error messages are valuable for resolving
+>> issues so this patch replaces it with brcmf_err(...) so they always
+>> end up in the log.
+> []
+>> Reviewed-by: Joe Perches <joe@perches.com>
+> 
+> Don't add signatures unless the person actually gives one.
+> I didn't.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 14d9904..747dd93 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -57,9 +57,6 @@ struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx)
- {
- 	struct cfg80211_registered_device *result = NULL, *rdev;
- 
--	if (!wiphy_idx_valid(wiphy_idx))
--		return NULL;
--
- 	assert_cfg80211_lock();
- 
- 	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-@@ -74,10 +71,8 @@ struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx)
- 
- int get_wiphy_idx(struct wiphy *wiphy)
- {
--	struct cfg80211_registered_device *rdev;
--	if (!wiphy)
--		return WIPHY_IDX_STALE;
--	rdev = wiphy_to_dev(wiphy);
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
- 	return rdev->wiphy_idx;
- }
- 
-@@ -86,9 +81,6 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx)
- {
- 	struct cfg80211_registered_device *rdev;
- 
--	if (!wiphy_idx_valid(wiphy_idx))
--		return NULL;
--
- 	assert_cfg80211_lock();
- 
- 	rdev = cfg80211_rdev_by_wiphy_idx(wiphy_idx);
-@@ -309,7 +301,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	rdev->wiphy_idx = wiphy_counter++;
- 
--	if (unlikely(!wiphy_idx_valid(rdev->wiphy_idx))) {
-+	if (unlikely(rdev->wiphy_idx < 0)) {
- 		wiphy_counter--;
- 		mutex_unlock(&cfg80211_mutex);
- 		/* ugh, wrapped! */
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3563097..b8f4630 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -18,6 +18,9 @@
- #include <net/cfg80211.h>
- #include "reg.h"
- 
-+
-+#define WIPHY_IDX_INVALID	-1
-+
- struct cfg80211_registered_device {
- 	const struct cfg80211_ops *ops;
- 	struct list_head list;
-@@ -96,13 +99,6 @@ struct cfg80211_registered_device *wiphy_to_dev(struct wiphy *wiphy)
- 	return container_of(wiphy, struct cfg80211_registered_device, wiphy);
- }
- 
--/* Note 0 is valid, hence phy0 */
--static inline
--bool wiphy_idx_valid(int wiphy_idx)
--{
--	return wiphy_idx >= 0;
--}
--
- static inline void
- cfg80211_rdev_free_wowlan(struct cfg80211_registered_device *rdev)
- {
-@@ -126,12 +122,6 @@ static inline void assert_cfg80211_lock(void)
- 	lockdep_assert_held(&cfg80211_mutex);
- }
- 
--/*
-- * You can use this to mark a wiphy_idx as not having an associated wiphy.
-- * It guarantees cfg80211_rdev_by_wiphy_idx(wiphy_idx) will return NULL
-- */
--#define WIPHY_IDX_STALE -1
--
- struct cfg80211_internal_bss {
- 	struct list_head list;
- 	struct rb_node rbn;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e5c2988..fb81208 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8072,7 +8072,7 @@ void nl80211_send_reg_change_event(struct regulatory_request *request)
- 			goto nla_put_failure;
- 	}
- 
--	if (wiphy_idx_valid(request->wiphy_idx) &&
-+	if (request->wiphy_idx != WIPHY_IDX_INVALID &&
- 	    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
- 		goto nla_put_failure;
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index dc0ddca..a934914 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1548,7 +1548,7 @@ static void reg_process_hint(struct regulatory_request *reg_request,
- 
- 	BUG_ON(!reg_request->alpha2);
- 
--	if (wiphy_idx_valid(reg_request->wiphy_idx))
-+	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
- 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
- 
- 	if (reg_initiator == NL80211_REGDOM_SET_BY_DRIVER && !wiphy) {
-@@ -1693,7 +1693,7 @@ int regulatory_hint_user(const char *alpha2,
- 	if (!request)
- 		return -ENOMEM;
- 
--	request->wiphy_idx = WIPHY_IDX_STALE;
-+	request->wiphy_idx = WIPHY_IDX_INVALID;
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
- 	request->initiator = NL80211_REGDOM_SET_BY_USER;
-@@ -1718,9 +1718,6 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- 
- 	request->wiphy_idx = get_wiphy_idx(wiphy);
- 
--	/* Must have registered wiphy first */
--	BUG_ON(!wiphy_idx_valid(request->wiphy_idx));
--
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
- 	request->initiator = NL80211_REGDOM_SET_BY_DRIVER;
-@@ -1767,9 +1764,8 @@ void regulatory_hint_11d(struct wiphy *wiphy, enum ieee80211_band band,
- 	 * We leave conflict resolution to the workqueue, where can hold
- 	 * cfg80211_mutex.
- 	 */
--	if (likely(last_request->initiator ==
--		   NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--		   wiphy_idx_valid(last_request->wiphy_idx)))
-+	if (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	    last_request->wiphy_idx != WIPHY_IDX_INVALID)
- 		goto out;
- 
- 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-@@ -2326,7 +2322,7 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
- 	if (!request_wiphy || request_wiphy != wiphy)
- 		goto out;
- 
--	last_request->wiphy_idx = WIPHY_IDX_STALE;
-+	last_request->wiphy_idx = WIPHY_IDX_INVALID;
- 	last_request->country_ie_env = ENVIRON_ANY;
- out:
- 	mutex_unlock(&reg_mutex);
--- 
-1.8.0
+Sorry about that.
+
+> []
+> 
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
+> []
+>> @@ -35,20 +34,11 @@
+>>  
+>>  #if defined(DEBUG)
+>>  
+>> -#define brcmf_dbg(level, fmt, ...)					\
+>> -do {									\
+>> -	if (BRCMF_ERROR_VAL == BRCMF_##level##_VAL) {			\
+>> -		if (brcmf_msg_level & BRCMF_##level##_VAL) {		\
+>> -			if (net_ratelimit())				\
+>> -				pr_debug("%s: " fmt,			\
+>> -					 __func__, ##__VA_ARGS__);	\
+>> -		}							\
+>> -	} else {							\
+>> -		if (brcmf_msg_level & BRCMF_##level##_VAL) {		\
+>> -			pr_debug("%s: " fmt,				\
+>> -				 __func__, ##__VA_ARGS__);		\
+>> -		}							\
+>> -	}								\
+>> +#define brcmf_err(fmt, ...)	pr_err("%s: " fmt, __func__, ##__VA_ARGS__)
+> 
+> You still lost the net_ratelimit() for the DEBUG case.
+> 
+> This brcmf_err macro should probably be in dhd.h,
+> not in a debug header and not guarded by DEBUG at all.
+
+I thought I explained why in my email response to you, but now I don't
+see that one on the mailing list archives (attached now). When we are
+debugging we do not want error messages to be filtered.
+
+Gr. AvS
+
+--------------010606040201010003070001
+Content-Type: application/x-extension-eml;
+ name="Re: [PATCH 05_11] brcmfmac: error messages should not be suppressed.eml"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename*0="Re: [PATCH 05_11] brcmfmac: error messages should not be sup";
+ filename*1=pressed.eml
+
+TWVzc2FnZS1JRDogPDUwQkY4NDRDLjgwNjAwMDZAYnJvYWRjb20uY29tPg0KRGF0ZTogV2Vk
+LCAwNSBEZWMgMjAxMiAxODoyODo0NCArMDEwMA0KRnJvbTogQXJlbmQgdmFuIFNwcmllbCA8
+YXJlbmRAYnJvYWRjb20uY29tPg0KVXNlci1BZ2VudDogTW96aWxsYS81LjAgKFgxMTsgTGlu
+dXggaTY4NjsgcnY6MTYuMCkgR2Vja28vMjAxMjEwMjggVGh1bmRlcmJpcmQvMTYuMC4yDQpN
+SU1FLVZlcnNpb246IDEuMA0KVG86IEpvZSBQZXJjaGVzIDxqb2VAcGVyY2hlcy5jb20+DQpD
+QzogIkpvaG4gVy4gTGludmlsbGUiIDxsaW52aWxsZUB0dXhkcml2ZXIuY29tPiwgDQogTGlu
+dXggV2lyZWxlc3MgTGlzdCA8bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPg0KU3Vi
+amVjdDogUmU6IFtQQVRDSCAwNS8xMV0gYnJjbWZtYWM6IGVycm9yIG1lc3NhZ2VzIHNob3Vs
+ZCBub3QgYmUgc3VwcHJlc3NlZA0KUmVmZXJlbmNlczogPDEzNTQ3MTc1NjQtNzE4My0xLWdp
+dC1zZW5kLWVtYWlsLWFyZW5kQGJyb2FkY29tLmNvbT4gPDEzNTQ3MTc1NjQtNzE4My02LWdp
+dC1zZW5kLWVtYWlsLWFyZW5kQGJyb2FkY29tLmNvbT4gPDEzNTQ3MTg0ODkuODMyMC4xLmNh
+bWVsQGpvZS1BTzcyMj4NCkluLVJlcGx5LVRvOiA8MTM1NDcxODQ4OS44MzIwLjEuY2FtZWxA
+am9lLUFPNzIyPg0KWC1FbmlnbWFpbC1WZXJzaW9uOiAxLjQuNQ0KQ29udGVudC1UeXBlOiB0
+ZXh0L3BsYWluOyBjaGFyc2V0PUlTTy04ODU5LTENCkNvbnRlbnQtVHJhbnNmZXItRW5jb2Rp
+bmc6IDdiaXQNCg0KT24gMTIvMDUvMjAxMiAwMzo0MSBQTSwgSm9lIFBlcmNoZXMgd3JvdGU6
+DQo+IE9uIFdlZCwgMjAxMi0xMi0wNSBhdCAxNToyNSArMDEwMCwgQXJlbmQgdmFuIFNwcmll
+bCB3cm90ZToNCj4+IFRoZSBjYWxsIHRvIGJyY21mX2RiZyhFUlJPUiwgLi4uKSBvbmx5IHJl
+c3VsdGVkIGluIGEgbG9nIG1lc3NhZ2UNCj4+IHdoZW4gY29tcGlsZWQgd2l0aCAtRERFQlVH
+LiBFcnJvciBtZXNzYWdlcyBhcmUgdmFsdWFibGUgZm9yIHJlc29sdmluZw0KPj4gaXNzdWVz
+IHNvIHRoaXMgcGF0Y2ggcmVwbGFjZXMgaXQgd2l0aCBicmNtZl9lcnIoLi4uKSBzbyB0aGV5
+IGFsd2F5cw0KPj4gZW5kIHVwIGluIHRoZSBsb2cuDQo+IA0KPiBTZWVtcyBsaWtlIGEgZ29v
+ZCBpZGVhIGJ1dCB5b3UgYWxzbw0KPiByZW1vdmVkIHRoZSBuZXRfcmF0ZWxpbWl0KCkgd2hp
+Y2ggZG9lc24ndC4NCg0KVGhhbmtzLCBKb2UNCg0KSSBkaWQgYXMgaXQgd2FzIG5hZ2dpbmcg
+dXMgd2hlbiBkZWJ1Z2dpbmcuIEhvdyBhYm91dCB1c2luZw0KbmV0X3JhdGVsaW1pdCgpIGlm
+IERFQlVHIGlzIG5vdCBkZWZpbmVkIHNvOg0KDQojaWYgIWRlZmluZWQoREVCVUcpDQojZGVm
+aW5lIGJyY21mX2VycihmbXQsIC4uLikgXA0KCWRvIHsgXA0KCQlpZiAobmV0cmF0ZV9saW1p
+dCgpKSBcDQoJCQlwcl9lcnIoIiVzOiAiIGZtdCwgX19mdW5jX18sICMjX19WQV9BUkdTX18p
+OyBcDQoJd2hpbGUgKDApDQojZWxzZQ0KI2RlZmluZSBicmNtZl9lcnIoZm10LCAuLi4pIHBy
+X2VycigiJXM6ICIgZm10LCBfX2Z1bmNfXywgIyNfX1ZBX0FSR1NfXykNCiA6DQojZW5kaWYN
+Cg0KR3IuIEF2Uw0K
+--------------010606040201010003070001--
 
