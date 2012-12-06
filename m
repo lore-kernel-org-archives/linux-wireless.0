@@ -1,132 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:53049 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752293Ab2L0Lw5 (ORCPT
+Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:21234
+	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753057Ab2LFVLH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 06:52:57 -0500
-Subject: [PATCH 6/7] ath6kl: add tracing support to log functions
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com
-Date: Thu, 27 Dec 2012 13:44:52 +0200
-Message-ID: <20121227114452.27069.55695.stgit@localhost6.localdomain6> (sfid-20121227_125306_413366_4D4277A9)
-In-Reply-To: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
-References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 6 Dec 2012 16:11:07 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: kernel-janitors@vger.kernel.org,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers/nfc/nfcwilink.c: use devm_kzalloc
+Date: Thu,  6 Dec 2012 23:10:40 +0100
+Message-Id: <1354831840-21623-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20121206_221127_592860_A5FCAAE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All log messages are now sent through tracing interface as well if
-ATH6KL_TRACING is enabled.
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+devm_kzalloc allocates memory that is released when a driver detaches.
+This patch uses devm_kzalloc for data that is allocated in the probe
+function of a platform device and is only freed in the remove function.
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
- drivers/net/wireless/ath/ath6kl/debug.h |    4 +++
- drivers/net/wireless/ath/ath6kl/trace.c |    3 +++
- drivers/net/wireless/ath/ath6kl/trace.h |   37 +++++++++++++++++++++++++++++++
- 3 files changed, 44 insertions(+), 0 deletions(-)
+ drivers/nfc/nfcwilink.c |    9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index 06f47f5..b6c7ff1 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -19,6 +19,7 @@
- #define DEBUG_H
+diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+index 50b1ee4..c7c182d 100644
+--- a/drivers/nfc/nfcwilink.c
++++ b/drivers/nfc/nfcwilink.c
+@@ -526,7 +526,7 @@ static int nfcwilink_probe(struct platform_device *pdev)
  
- #include "hif.h"
-+#include "trace.h"
+ 	nfc_dev_dbg(&pdev->dev, "probe entry");
  
- enum ATH6K_DEBUG_MASK {
- 	ATH6KL_DBG_CREDIT	= BIT(0),
-@@ -63,6 +64,7 @@ static inline __printf(1,2) int ath6kl_info(const char *fmt, ...)
- 	va_start(args, fmt);
- 	vaf.va = &args;
- 	ret = ath6kl_printk(KERN_INFO, "%pV", &vaf);
-+	trace_ath6kl_log_info(&vaf);
- 	va_end(args);
+-	drv = kzalloc(sizeof(struct nfcwilink), GFP_KERNEL);
++	drv = devm_kzalloc(&pdev->dev, sizeof(struct nfcwilink), GFP_KERNEL);
+ 	if (!drv) {
+ 		rc = -ENOMEM;
+ 		goto exit;
+@@ -547,7 +547,7 @@ static int nfcwilink_probe(struct platform_device *pdev)
+ 	if (!drv->ndev) {
+ 		nfc_dev_err(&pdev->dev, "nci_allocate_device failed");
+ 		rc = -ENOMEM;
+-		goto free_exit;
++		goto exit;
+ 	}
  
- 	return ret;
-@@ -79,6 +81,7 @@ static inline __printf(1,2) int ath6kl_err(const char *fmt, ...)
- 	va_start(args, fmt);
- 	vaf.va = &args;
- 	ret = ath6kl_printk(KERN_ERR, "%pV", &vaf);
-+	trace_ath6kl_log_err(&vaf);
- 	va_end(args);
+ 	nci_set_parent_dev(drv->ndev, &pdev->dev);
+@@ -566,9 +566,6 @@ static int nfcwilink_probe(struct platform_device *pdev)
+ free_dev_exit:
+ 	nci_free_device(drv->ndev);
  
- 	return ret;
-@@ -95,6 +98,7 @@ static inline __printf(1,2) int ath6kl_warn(const char *fmt, ...)
- 	va_start(args, fmt);
- 	vaf.va = &args;
- 	ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
-+	trace_ath6kl_log_warn(&vaf);
- 	va_end(args);
+-free_exit:
+-	kfree(drv);
+-
+ exit:
+ 	return rc;
+ }
+@@ -588,8 +585,6 @@ static int nfcwilink_remove(struct platform_device *pdev)
+ 	nci_unregister_device(ndev);
+ 	nci_free_device(ndev);
  
- 	return ret;
-diff --git a/drivers/net/wireless/ath/ath6kl/trace.c b/drivers/net/wireless/ath/ath6kl/trace.c
-index adc74a0..68eece7 100644
---- a/drivers/net/wireless/ath/ath6kl/trace.c
-+++ b/drivers/net/wireless/ath/ath6kl/trace.c
-@@ -21,3 +21,6 @@
+-	kfree(drv);
+-
+ 	dev_set_drvdata(&pdev->dev, NULL);
  
- EXPORT_TRACEPOINT_SYMBOL(ath6kl_sdio_wr);
- EXPORT_TRACEPOINT_SYMBOL(ath6kl_sdio_rd);
-+EXPORT_TRACEPOINT_SYMBOL(ath6kl_log_info);
-+EXPORT_TRACEPOINT_SYMBOL(ath6kl_log_warn);
-+EXPORT_TRACEPOINT_SYMBOL(ath6kl_log_err);
-diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
-index f5838e0..8278143 100644
---- a/drivers/net/wireless/ath/ath6kl/trace.h
-+++ b/drivers/net/wireless/ath/ath6kl/trace.h
-@@ -24,6 +24,11 @@ static inline unsigned int ath6kl_get_wmi_id(void *buf, size_t buf_len)
- #undef TRACE_EVENT
- #define TRACE_EVENT(name, proto, ...) \
- static inline void trace_ ## name(proto) {}
-+#undef DECLARE_EVENT_CLASS
-+#define DECLARE_EVENT_CLASS(...)
-+#undef DEFINE_EVENT
-+#define DEFINE_EVENT(evt_class, name, proto, ...) \
-+static inline void trace_ ## name(proto) {}
- #endif /* !CONFIG_ATH6KL_TRACING || __CHECKER__ */
- 
- #undef TRACE_SYSTEM
-@@ -192,6 +197,38 @@ TRACE_EVENT(ath6kl_htc_tx,
- 	)
- );
- 
-+#define ATH6KL_MSG_MAX 200
-+
-+DECLARE_EVENT_CLASS(ath6kl_log_event,
-+	TP_PROTO(struct va_format *vaf),
-+	TP_ARGS(vaf),
-+	TP_STRUCT__entry(
-+		__dynamic_array(char, msg, ATH6KL_MSG_MAX)
-+	),
-+	TP_fast_assign(
-+		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-+				       ATH6KL_MSG_MAX,
-+				       vaf->fmt,
-+				       *vaf->va) >= ATH6KL_MSG_MAX);
-+	),
-+	TP_printk("%s", __get_str(msg))
-+);
-+
-+DEFINE_EVENT(ath6kl_log_event, ath6kl_log_err,
-+	     TP_PROTO(struct va_format *vaf),
-+	     TP_ARGS(vaf)
-+);
-+
-+DEFINE_EVENT(ath6kl_log_event, ath6kl_log_warn,
-+	     TP_PROTO(struct va_format *vaf),
-+	     TP_ARGS(vaf)
-+);
-+
-+DEFINE_EVENT(ath6kl_log_event, ath6kl_log_info,
-+	     TP_PROTO(struct va_format *vaf),
-+	     TP_ARGS(vaf)
-+);
-+
- #endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
+ 	return 0;
 
