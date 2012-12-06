@@ -1,111 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:17883
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750838Ab2LTO0R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 09:26:17 -0500
-From: Alberto Garau <Alberto.Garau@inpeco.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
-	Adriano Melis <ADRIANO.MELIS@inpeco.com>,
-	Luca Fresi <luca.fresi@bithiatec.com>
-Subject: RE: wl12xx over spi with no scan results
-Date: Thu, 20 Dec 2012 14:25:57 +0000
-Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0CD0C3CD@AMSPRD0510MB350.eurprd05.prod.outlook.com> (sfid-20121220_152620_939239_5B360629)
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-21-git-send-email-arik@wizery.com>
-	 <1355159205.3738.63.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355161791.3738.67.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355218436.3738.122.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355223079.3738.128.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355229286.3738.137.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360949@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355301922.21129.8.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360984@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355307404.21129.15.camel@cumari.coelho.fi>
-	  <0294E4ABF3EF28409B75AAF7EAC3D41A0C361686@DB3PRD0510MB381.eurprd05.prod.outlook.com>
- <1355743109.21129.89.camel@cumari.coelho.fi>
-In-Reply-To: <1355743109.21129.89.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:41611 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030197Ab2LFJEy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 04:04:54 -0500
+Date: Thu, 6 Dec 2012 10:04:44 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Mykyta Iziumtsev <mykyta.iziumtsev@gmail.com>
+Cc: wireless-regdb@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Pavel Chernyshev <pchernyshev@gmail.com>,
+	Andrew Bordunov <andrew.bordunov@gmail.com>
+Subject: Re: [PATCH v2] wireless-regdb: Update regulations for Ukraine
+Message-ID: <20121206090443.GD2502@redhat.com> (sfid-20121206_100500_088540_8819E7C4)
+References: <CAHc5FiWpUBUDh=8tDaaLRh9fHXT-k3EBj+KdoOGoR=BhYhzrVQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAHc5FiWpUBUDh=8tDaaLRh9fHXT-k3EBj+KdoOGoR=BhYhzrVQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVjYSwNCg0KSSd2ZSB0cmllZCB3aXRoIGRpZmZlcmVudCBhbnRlbm5hcyB3aGljaCBpbXBy
-b3ZlZCB0aGUgbGV2ZWwgb2YgdGhlIHNpZ25hbCB0byAtNDUgZEJtIHNvbWV0aW1lIGJ1dCBJJ20g
-c3RpbGwgZmFjaW5nIHRoZSBSRiBwcm9ibGVtLg0KIA0KTGV0IG1lIGRlc2NyaWJlIGJldHRlciB0
-aGUgc2NlbmFyaW86DQoNCmEpIEFQIGNsb3NlICgxMGNtIG5vdCAxMG0pIHRvIHRoZSBjaGlwIHdp
-dGggYW50ZW5uYQ0KDQpUaGUgc2lnbmFsIGlzIHZlcnkgZ29vZCwgSSBjYW4gY29ubmVjdCB0byB0
-aGUgQVAgb24gYSB1bnByb3RlY3RlZCBuZXR3b3JrIG9yIFdQQS1BRVMgcHJvdGVjdGVkIG9uZS4N
-ClRoZW4gSSBjYW4gcGluZyB0aGUgZ2F0ZXdheSBzdGVhZGlseSB3aXRob3V0IGFueSBwcm9ibGVt
-DQoNCmIpIEFQIGZhciAoNW0pIGZyb20gdGhlIGNoaXAgd2l0aCBhbnRlbm5hDQoNCkluIHRoaXMg
-Y2FzZSBpZiBJIHJ1bjoNCg0KLi9pdyBkZXYgd2xhbjAgc2Nhbg0KDQpJdCBjYW4gaGFwcGVuIHRo
-YXQgZm9yIDE1IG9yIDIwIHRpbWVzIEkgY2FuJ3QgcmV0cmlldmUgYW55IG5ldHdvcmsgYWx3YXlz
-IGV4ZWN1dGluZyB0aGUgc2FtZSBjb21tYW5kLiBBZnRlciB0aGF0LCANCml0IGNhbiBoYXBwZW4g
-dGhhdCBmb3IgMTUgb3IgMjAgdGltZXMgSSBjYW4gc2VlIG9uZSBvciBib3RoIHRoZSBuZXR3b3Jr
-cyBhdmFpbGFibGUgZnJvbSB0aGUgQVAgd2hlcmUgdGhlIHNpZ25hbCBjb3VsZCBiZSBhbHNvIC00
-NSBkQm0uDQpUaGVuIGl0IGNhbiBoYXBwZW4gYWdhaW4gdGhhdCBmb3IgMTUgb3IgMjAgdGltZXMg
-SSBjYW4ndCByZXRyaWV2ZSBhbnkgbmV0d29yayB3aGVuIHNjYW5uaW5nIGFnYWluLiANCg0KSWYg
-SSB0cnkgdG8gY29ubmVjdCB0byB0aGUgbmV0d29yayAodW5wcm90ZWN0ZWQpIHdoZW4gdGhleSBh
-cmUgYXZhaWxhYmxlIEkgY2FuJ3QgYW5kIEkgb2J0YWluOg0KDQpyb290QChub25lKTp+IyAuL2l3
-IHdsYW4wIGNvbm5lY3QgLXcgSW5wZWNvLXRlc3QNCndsYW4wIChwaHkgIzApOiBmYWlsZWQgdG8g
-Y29ubmVjdCwgc3RhdHVzOiAxOiBVbnNwZWNpZmllZCBmYWlsdXJlDQoNCldoZXJlIHdvdWxkIHlv
-dSBzdWdnZXN0IHVzIHRvIGxvb2sgaW4gb3JkZXIgdG8gb3ZlcmNvbWUgdGhpcyBwcm9ibGVtIHdl
-IGFyZSBmaWdodGluZyBhZ2FpbnN0ID8NCg0KVGhhbmtzIGluIGFkdmFuY2UuDQoNCkFsYmVydG8N
-Cg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogTHVjaWFubyBDb2VsaG8gW21h
-aWx0bzpjb2VsaG9AdGkuY29tXSANClNlbnQ6IGx1bmVkw6wgMTcgZGljZW1icmUgMjAxMiAxMjox
-OA0KVG86IEFsYmVydG8gR2FyYXUNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7
-IElkbyBZYXJpdjsgQXJpayBOZW10c292OyBBZHJpYW5vIE1lbGlzOyBMdWNhIEZyZXNpDQpTdWJq
-ZWN0OiBSZTogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8gc2NhbiByZXN1bHRzDQoNCk9uIE1vbiwg
-MjAxMi0xMi0xNyBhdCAwOTozOCArMDAwMCwgQWxiZXJ0byBHYXJhdSB3cm90ZToNCj4gSGkgTHVj
-YSwNCg0KSGkgQWxiZXJ0bywNCg0KDQo+IHdlIGhhdmUgYmVlbiBhYmxlIHRvIHN1Y2Nlc3NmdWxs
-eSBydW4gdGhlIGRyaXZlciBidXQ6DQo+IA0KPiBXZSBoYXZlIHRoZSBkZXZpY2UgcnVubmluZyBp
-biBTUEkgYW5kIHdlIGFyZSBvYnNlcnZpbmcgYSBzdHJhbmdlIHNjZW5hcmlvLiBXaGVuIHRoZSBB
-UCBpcyBwbGFjZWQgMTAgbWV0ZXJzIGZhciBmcm9tIHRoZSBkZXZpY2UgKC01N2RiKSBpdCdzIHZl
-cnkgZGlmZmljdWx0IHNjYW5uaW5nIHRoZSBFU1NJRHMgYW5kIGltcG9zc2libGUgdG8gY29ubmVj
-dCB0byB0aGVtLCB0aGUgc2FtZSBiZWhhdmlvdXIgZG9lc24ndCBoYXBwZW4gd2hlbiBJIG1vdmUg
-dGhlIEFQIGNsb3NlICgxMCBjbSkgdG8gdGhlIGRldmljZS4gSW4gdGhhdCBjYXNlIEkgY2FuIHNj
-YW4gdGhlIEVTU0lEcyBhbmQgSSBjYW4gY29ubmVjdCB0byB0aGVtIGVhc2lseS4NCg0KVGhpcyBk
-ZWZpbml0ZWx5IHNvdW5kcyBsaWtlIGFuIFJGIHByb2JsZW0uICBBcmUgeW91IHN1cmUgZXZlcnl0
-aGluZyBpcyBjb3JyZWN0IHdpdGggeW91ciBhbnRlbm5hPyAxMCBtZXRlcnMgcmVhY2ggc291bmRz
-IGxpa2Ugd2hhdCBoYXBwZW5zIGlmIHRoZXJlJ3Mgbm8gYW50ZW5uYSBjb25uZWN0ZWQuIDspDQoN
-CklmIHlvdSB1c2VkIHRoZSBjb3JyZWN0IElOSSBmaWxlLCBldmVuIHdpdGhvdXQgcHJvcGVyIHR1
-bmluZyBvZiB0aGUgc2V0dGluZ3MsIHRoZSBSRiBzaG91bGRuJ3QgYmUgdGhhdCBiYWQuICBJbiBn
-ZW5lcmFsLCBpZiB5b3UgdXNlIHRoZSBhcHByb3ByaWF0ZSBJTkkgc2V0dGluZ3MgZm9yIHlvdXIg
-RkVNLCB5b3Ugc2hvdWxkIGdldCByZWxhdGl2ZWx5IGdvb2QgY29ubmVjdGl2aXR5Lg0KDQoNCj4g
-VGhlIGNhbGlicmF0aW9uIHdlIGhhdmUgcGVyZm9ybWVkIGlzIHRoZSBGaXJzdCBDYWxpYnJhdGlv
-biBsaXN0ZWQgb24gdGhhdCB3ZWIgc2l0ZSBhbmQgd2UgaGF2ZSBtb3JlIHF1ZXN0aW9uczoNCj4g
-DQo+IDEpIGlzIHRoZXJlIGFueSBkb2N1bWVudCBleHBsYWluaW5nIGluIGRlcHRoIGFsbCB0aGUg
-cGFyYW1ldGVycyBvZiB0aGUgDQo+IGluaSBmaWxlIFRRU19TXzIuNi5pbmkNCg0KWW91IHNob3Vs
-ZCBnZXQgdGhpcyBmcm9tIHlvdXIgb2ZmaWNpYWwgVEkgY29udGFjdC4gIERvIHlvdSBoYXZlIGFu
-eSBzdXBwb3J0IGNoYW5uZWw/DQoNCg0KPiAyKSB3ZSB1c2VkICIuL2NhbGlicmF0b3IgcGx0IGNh
-bGlicmF0ZSIsIHdoYXQgcGx0IG1lYW5zID8NCg0KUExUIG1lYW5zIFByb2R1Y3Rpb24gTGluZSBU
-ZXN0cyAoY2FsaWJyYXRpb24gaXMgdXN1YWxseSBkb25lIGF0IHRoZSBwcm9kdWN0aW9uIGxpbmUs
-IHNvIGl0J3MgaW5jbHVkZWQgd2l0aCB0aGUgcmVzdCBvZiB0aGUgUExUIHRlc3RzKS4NCg0KDQo+
-IDMpIGlmIHdlIHdhbnQgdG8gdXNlIHRoZSBleHBlcnQgbW9kZSwgd2Ugd291bGQgaGF2ZSB0byBw
-cm92aWRlIDx2b2x0YWdlPiw8cG93ZXI+LDxzdWJiYW5kPiBhbmQgdGhlbiB0eF9iaXAgcGFyYW1l
-dGVycywgd2hlcmUgd2UgY2FuIGZvdW5kIGluZGljYXRpb24vZG9jdW1lbnRhdGlvbiBhYm91dCB0
-aGF0ID8NCg0KVGhpcyBpcyB1c2VkIGlmIHlvdSB3YW50IHRvIGZpbmUgdHVuZSB0aGUgUkYgcGF0
-aC4gIFRvIHVzZSBpdCB5b3UgbmVlZCBzcGVjaWFsIGVxdWlwbWVudCB0byB0ZXN0IGFuZCBtZWFz
-dXJlIHRoZSBvdXRwdXQgYW5kIGlucHV0Lg0KDQoNCj4gNCkgaXMgdGhlcmUgYW55IGF1dG8gY2Fs
-aWJyYXRpb24gPw0KDQpZZXMsIHRoZSBjYWxpYnJhdGlvbiB0b29sIGhhcyB0aGUgYXV0by1jYWxp
-YnJhdGlvbiBmZWF0dXJlLg0KDQoNCj4gNSkgQ291bGQgeW91IHBsZWFzZSBkZWZpbmUgdGhlIG1l
-YW5pbmcgb2YgdGhlICJUeEJpcCBwcm9jZWR1cmUiIGFuZCB3aGVuIHNob3VsZCBiZSB1c2VkID8N
-Cg0KVGhpcyBpcyB0aGUgcHJvY2VkdXJlIHVzZWQgdG8gY2FsaWJyYXRlIHRoZSBkZXZpY2UgYW5k
-IGdlbmVyYXRlIHNvbWUgcGFyYW1ldGVycyB0aGF0IGdvIGludG8gdGhlIE5WUyBmaWxlLg0KDQoN
-Cj4gNikgQ291bGQgeW91IHBsZWFzZSBkZWZpbmUgdGhlIG1lYW5pbmcgb2YgdGhlICJUeCBDb250
-IFByb2NlZHVyZSIgIGFuZCB3aGVuIHNob3VsZCBiZSB1c2VkID8NCg0KVGhpcyBpcyB1c2VkIGlu
-IFImRCBhbmQgaW4gdGhlIHByb2R1Y3Rpb24gbGluZS4gIEl0IGlzIHVzZWQgdG8gdHJhbnNtaXQg
-cGFja2V0cyBjb250aW51b3VzbHkgdXNpbmcgdGhlIHBhcmFtZXRlcnMgc3BlY2lmaWVkLg0KDQoN
-Cj4gNykgQ291bGQgeW91IHBsZWFzZSBkZWZpbmUgdGhlIG1lYW5pbmcgb2YgdGhlICJSeCBTdGF0
-IHByb2NlZHVyZSIgYW5kIHdoZW4gc2hvdWxkIGJlIHVzZWQgID8NCg0KVGhpcyBjb21tYW5kIGlz
-IHVzZWQgdG8gZ2V0IHN0YXRpc3RpY3MgYWJvdXQgdGhlIHJlY2VpdmVkIHBhY2tldHMuICBJdCBj
-YW4gYmUgdXNlZCB0byBjaGVjayB3aGV0aGVyIHRoZSBkZXZpY2UgaXMgcmVjZWl2aW5nIHBhY2tl
-dHMgYXMgaXQgc2hvdWxkLiAgR2VuZXJhbGx5IHVzZWQgaW4gUiZEIGFuZCBpbiB0aGUgcHJvZHVj
-dGlvbiBsaW5lLg0KDQpJIGhvcGUgdGhpcyBoZWxwcy4NCg0KLS0NCkx1Y2EuDQoNCg0K
+On Tue, Dec 04, 2012 at 11:27:55PM +0100, Mykyta Iziumtsev wrote:
+> Add 5GHz band and mark 2.4GHz and 5GHz as NO-OUTDOOR according to
+> "Рішення про затвердження Переліку радіоелектронних засобів
+> та випромінювальних пристроїв, для експлуатації яких не потрібні
+> дозволи на експлуатацію" from 27 May 2010.
+> 
+> Ref:
+> * #914 / 06 Sep 2007: http://www.ucrf.gov.ua/uk/doc/nkrz/1196068874
+> * #1174 / 23 Oct 2008: http://www.nkrz.gov.ua/uk/activities/ruling/1225269361
+> (appendix 8)
 
+Since regulatory maintainer does not understand Ukrainian,
+there is little chance to get this patch applied.
+
+IMHO this can be solved by:
+
+* having official English translation of those document on gov.ua site
+* provide patch by wlan chip vendor, confirmed by legal deparament of
+  the vendor
+* provide patch by some known Ukrainian kernel developer, someone
+  who is know by regulatory maintainer and can be trust
+
+Stanislaw
