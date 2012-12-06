@@ -1,73 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:39821 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932835Ab2LHDhW convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37108 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab2LFUPn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 22:37:22 -0500
-Received: by mail-wi0-f180.google.com with SMTP id hj13so71916wib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 19:37:21 -0800 (PST)
+	Thu, 6 Dec 2012 15:15:43 -0500
+Message-ID: <50C0FCE0.2090507@candelatech.com> (sfid-20121206_211546_676714_FDC98399)
+Date: Thu, 06 Dec 2012 12:15:28 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1212080721070.8165@icf.org.ru>
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
- <alpine.DEB.2.02.1212031842350.27546@icf.org.ru> <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
- <alpine.DEB.2.02.1212080721070.8165@icf.org.ru>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Fri, 7 Dec 2012 19:37:00 -0800
-Message-ID: <CAG6hwVO8c9ypYS4S0sDUf37eJJuK_5hrgCwCNKwqGLt2BWOtYA@mail.gmail.com> (sfid-20121208_043728_923113_BEE7F1E0)
-Subject: Re: help: 802.11s bad performance with 802.11n enabled
-To: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-Cc: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	open11s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=KOI8-R
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: =?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
+References: <1354729192-22945-1-git-send-email-greearb@candelatech.com> <87a9ts4c1q.fsf@nemi.mork.no> <50BF8C18.9060504@candelatech.com> <20121206122528.GG2502@redhat.com>
+In-Reply-To: <20121206122528.GG2502@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 7, 2012 at 7:23 PM, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
-> On 2012-12-07 19:17 -0800, Thomas Pedersen wrote Georgiewskiy Yuriy:
->
-> ок, i try this and report results, can you also test on 2.4 Ggz? as i
-> understand ch 149 is 802.11a? or this make no sense here?
+On 12/06/2012 04:25 AM, Stanislaw Gruszka wrote:
 
-Yes I get similar results on the 2.4Ghz band, and no it shouldn't make
-a difference here :)
-
-> TP>Hi Chaoxing and Georgiewsky,
-> TP>
-> TP>On Mon, Dec 3, 2012 at 6:45 AM, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
-> TP>> On 2012-12-03 14:37 -0000, Chaoxing Lin wrote linux-wireless@vger.kernel.org:
-> TP>>
-> TP>> CL>After a lot of experiments, here are various problems observed.
-> TP>> CL>
-> TP>> CL>1. The "Fail to stop Tx DMA" related issue plays a role. But not the major part. It accounts for about 3% of packet loss in my testbed.
-> TP>> CL>Is anyone looking at this issue? This issue is now very easy to recreate.
-> TP>>
-> TP>> In my case it much more than 3%.
-> TP>
-> TP>With wireless-testing HEAD (671c924) I made the following observations
-> TP>with 3 nodes in a mesh using ch. 149 HT20 on AR9280.
-> TP>
-> TP>1. ping -i0.1 does not cause aggregation to take place, and losses are 0%
-> TP>2. a UDP iperf test with two nodes generating traffic shows losses
-> TP>around 1%. We can observe aggregation taking place in this case.
-> TP>
-> TP>Can either of you guys reproduce this with the latest
-> TP>wireless-testing? Also please CC devel@lists.open80211s.org on any
-> TP>mesh bugs in the future.
-> TP>
-> TP>Thanks!
-> TP>Thomas
-> TP>--
-> TP>To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> TP>the body of a message to majordomo@vger.kernel.org
-> TP>More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> TP>
+>>> Won't this break drivers which for some reason have their own
+>>> ethtool_ops?
+>>
+>> I guess it will.  What a mess.
+>>
+>> Maybe we could assign individual method pointers in the ethtool_ops
+>> struct if it already exists (and if those pointers are NULL)?
 >
-> C уважением                       With Best Regards
-> Георгиевский Юрий.                Georgiewskiy Yuriy
-> +7 4872 711666                    +7 4872 711666
-> факс +7 4872 711143               fax +7 4872 711143
-> Компания ООО "Ай Ти Сервис"       IT Service Ltd
-> http://nkoort.ru                  http://nkoort.ru
-> JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-> YG129-RIPE                        YG129-RIPE
+> We should probably assing ethtool_ops before wireless core will
+> call alloc_netdev.
+>
+> Stanislaw
+>
+
+I don't have time to work on this today...maybe not tomorrow either.
+
+So, if someone else feels like fixing it, please feel free.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
