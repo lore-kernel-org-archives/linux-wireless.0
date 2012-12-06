@@ -1,141 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56461 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933053Ab2LGMIa (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:43337 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491Ab2LFXzi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 07:08:30 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC] mac80211: restrict assoc request VHT capabilities
-Date: Fri,  7 Dec 2012 13:08:51 +0100
-Message-Id: <1354882131-1538-1-git-send-email-johannes@sipsolutions.net> (sfid-20121207_130833_842267_2AFBC1B4)
+	Thu, 6 Dec 2012 18:55:38 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so15097lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 15:55:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354812468-15709-4-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-4-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 6 Dec 2012 15:55:16 -0800
+Message-ID: <CAB=NE6V-Szo6SSHdTBA3Ww+=W24avx1AFuu_-m97xSyo8uQ3mg@mail.gmail.com> (sfid-20121207_005542_272142_8B9BD045)
+Subject: Re: [PATCH 03/24] regulatory: clean up regdom_intersect
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> As the dummy_rule (also renamed from irule) is only
+> used for output by the reg_rules_intersect() function
+> there's no need to clear it at all, remove that.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-In interoperability testing some APs showed bad behaviour
-if some of the VHT capabilities of the station are better
-than their own. Restrict the assoc request parameters
- - beamformee capabable,
- - RX STBC and
- - RX MCS set
-to the subset that the AP can support.
+Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/mlme.c        | 51 +++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 50 insertions(+), 3 deletions(-)
+The removal of the pointer is fine but the removal of the memset() is
+not trivial but given that reg_rules_intersect() does indeed re-set
+all elements of the struct this works OK. If reg_rules_intersect()
+ever branches though we may need to re-add a memset() back, but its
+fine like this. The issue I was trying to avoid was if you do not
+memset you potentially piggy backed data set from the previous
+intersect and this could potentially reduce the number of possible
+valid rules.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f148cfa..6f36ab7 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -409,6 +409,8 @@ struct ieee80211_mgd_assoc_data {
- 
- 	u8 ap_ht_param;
- 
-+	struct ieee80211_vht_cap ap_vht_cap;
-+
- 	size_t ie_len;
- 	u8 ie[];
- };
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 22e98de..508fa25 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -341,11 +341,13 @@ static void ieee80211_add_ht_ie(struct ieee80211_sub_if_data *sdata,
- 
- static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
- 				 struct sk_buff *skb,
--				 struct ieee80211_supported_band *sband)
-+				 struct ieee80211_supported_band *sband,
-+				 struct ieee80211_vht_cap *ap_vht_cap)
- {
- 	u8 *pos;
- 	u32 cap;
- 	struct ieee80211_sta_vht_cap vht_cap;
-+	int i;
- 
- 	BUILD_BUG_ON(sizeof(vht_cap) != sizeof(sband->vht_cap));
- 
-@@ -364,6 +366,42 @@ static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
- 		cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
- 	}
- 
-+	/*
-+	 * Some APs apparently get confused if our capabilities are better
-+	 * than theirs, so restrict what we advertise in the assoc request.
-+	 */
-+	if (!(ap_vht_cap->vht_cap_info &
-+			cpu_to_le32(IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)))
-+		cap &= ~IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE;
-+
-+	if (!(ap_vht_cap->vht_cap_info &
-+			cpu_to_le32(IEEE80211_VHT_CAP_TXSTBC)))
-+		cap &= ~(IEEE80211_VHT_CAP_RXSTBC_1 |
-+			 IEEE80211_VHT_CAP_RXSTBC_3 |
-+			 IEEE80211_VHT_CAP_RXSTBC_4);
-+
-+	for (i = 0; i < 8; i++) {
-+		int shift = i * 2;
-+		u16 mask = IEEE80211_VHT_MCS_NOT_SUPPORTED << shift;
-+		u16 ap_mcs, our_mcs;
-+
-+		ap_mcs = (le16_to_cpu(ap_vht_cap->supp_mcs.tx_mcs_map) &
-+								mask) >> shift;
-+		our_mcs = (le16_to_cpu(vht_cap.vht_mcs.rx_mcs_map) &
-+								mask) >> shift;
-+
-+		switch (ap_mcs) {
-+		default:
-+			if (our_mcs <= ap_mcs)
-+				break;
-+			/* fall through */
-+		case IEEE80211_VHT_MCS_NOT_SUPPORTED:
-+			vht_cap.vht_mcs.rx_mcs_map &= cpu_to_le16(~mask);
-+			vht_cap.vht_mcs.rx_mcs_map |=
-+				cpu_to_le16(ap_mcs << shift);
-+		}
-+	}
-+
- 	/* reserve and fill IE */
- 	pos = skb_put(skb, sizeof(struct ieee80211_vht_cap) + 2);
- 	ieee80211_ie_build_vht_cap(pos, &vht_cap, cap);
-@@ -562,7 +600,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 				    sband, chan, sdata->smps_mode);
- 
- 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
--		ieee80211_add_vht_ie(sdata, skb, sband);
-+		ieee80211_add_vht_ie(sdata, skb, sband,
-+				     &assoc_data->ap_vht_cap);
- 
- 	/* if present, add any custom non-vendor IEs that go after HT */
- 	if (assoc_data->ie_len && assoc_data->ie) {
-@@ -3770,7 +3809,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_bss *bss = (void *)req->bss->priv;
- 	struct ieee80211_mgd_assoc_data *assoc_data;
- 	struct ieee80211_supported_band *sband;
--	const u8 *ssidie, *ht_ie;
-+	const u8 *ssidie, *ht_ie, *vht_ie;
- 	int i, err;
- 
- 	assoc_data = kzalloc(sizeof(*assoc_data) + req->ie_len, GFP_KERNEL);
-@@ -3889,6 +3928,12 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 			((struct ieee80211_ht_operation *)(ht_ie + 2))->ht_param;
- 	else
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
-+	vht_ie = ieee80211_bss_get_ie(req->bss, WLAN_EID_VHT_CAPABILITY);
-+	if (vht_ie && vht_ie[1] >= sizeof(struct ieee80211_vht_cap))
-+		memcpy(&assoc_data->ap_vht_cap, vht_ie + 2,
-+		       sizeof(struct ieee80211_vht_cap));
-+	else
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
- 	rcu_read_unlock();
- 
- 	if (bss->wmm_used && bss->uapsd_supported &&
--- 
-1.8.0
-
+  Luis
