@@ -1,54 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59163 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755884Ab2LMSa1 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58726 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271Ab2LGVaE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:30:27 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so1277720bkw.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 10:30:26 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Richard =?utf-8?q?R=C3=B6jfors?= <richard.rojfors@gmail.com>
-Subject: Re: rtl8192cu in AP mode.
-Date: Thu, 13 Dec 2012 19:30:20 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <1355355956.2744.26.camel@asus>
-In-Reply-To: <1355355956.2744.26.camel@asus>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201212131930.21029.chunkeey@googlemail.com> (sfid-20121213_193045_921386_05C8D2D9)
+	Fri, 7 Dec 2012 16:30:04 -0500
+Message-ID: <1354915824.9124.11.camel@jlt4.sipsolutions.net> (sfid-20121207_223020_561049_DB965D43)
+Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: eric@regit.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Fri, 07 Dec 2012 22:30:24 +0100
+In-Reply-To: <20121207.153134.25835204617509469.davem@davemloft.net>
+References: <1354906561-4695-1-git-send-email-eric@regit.org>
+	 <20121207.153134.25835204617509469.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, December 13, 2012 12:45:56 AM Richard Röjfors wrote:
-> I've been playing with an rtl8192 the last days, I want it to act as an
-> access point. It's connected to an ARM9 box.
-> 
-> I'm using the latest compat-wireless, with some additional patches for
-> beacon support.
-> 
-> My hostapd conf looks like this:
-> interface=wlan0
-> ssid=Test
-> driver=nl80211
-> hw_mode=b
-> channel=6
-> dtim_period=1
-> 
-> It almost works. Running hostapd and the networks shows up for my other
-> machine, which can connect to the network.
-> 
-> I also get dhcp-requests through and corresponding dhcp responses. But
-> then the oddness starts. ARP requests sent from the client is received
-> on the AP side, the IP stack returns an ARP response, and I see it
-> beeing sent by _rtl_submit_tx_urb and usb_submit_urb returns 0. But
-> nothing is received on the other end.
-> Sometimes, very rarely a response can get through, maybe 1 of 100 or so,
-> or even less.
 
-What's your client? Does it switch to power save mode after DHCP response
-and is it an 11n client as well [same device? different device/driver -
-yes I know you haven't enabled 11n, but still.]?
 
-Regards,
-	Chr
+> Wireless folks, please take a look.  The issue is that,
+> under the circumstances listed below, we get SKBs in
+> the AF_PACKET input path that are shared.
+
+Ok so I took a look, but I can't see where the wireless stack is going
+wrong.
+
+> Given the logic present in ieee80211_deliver_skb() I think
+> the mac80211 code doesn't expect this either.
+
+This is correct, but the driver should never give us a shared skb. From
+the other mail it seems Eric is using iwlwifi, which is definitely not
+creating shared SKBs. Nothing in mac80211 creates them either.
+
+> > I've observed this crash under the following condition:
+> >  1. a program is listening to an wifi interface (let say wlan0)
+> >  2. it is using fanout capture in flow load balancing mode
+> >  3. defrag option is on on the fanout socket
+
+How do you set this up, and what does it do? I'd like to try to
+reproduce this.
+
+> >  4. the interface disconnect (radio down for example)
+> >  5. the interface reconnect (radio switched up)
+> >  6. once reconnected a single packet is seen with skb->users=2
+
+That's interesting. A single one seems odd. I might have expected two,
+but not one. Well, since you removed the crash ... I guess I'll have to
+believe that there's just one and the second one doesn't show up because
+we crashed before :-)
+
+> So if we look at ieee80211_deliver_skb(), it has code to deal with unaligned
+> packet headers, wherein it memoves() the data into a better aligned location.
+> 
+> But if these SKBs really are skb_shared(), this packet data
+> modification is illegal.
+> 
+> I suspect that the assumptions built into this unaligned data handling
+> code, and AF_PACKET, are correct.  Meaning that we should never see
+> skb_shared() packets here.  We just have a missing skb_copy()
+> somewhere in mac80211, Johannes can you please take a look?
+
+My first theory was related to multiple virtual interfaces, but Eric
+didn't say he was running that, but we use skb_copy() for that in
+ieee80211_prepare_and_rx_handle(). That's not necessarily the most
+efficient (another reason for drivers to use paged RX here) but clearly
+not causing the issue.
+
+The only other theory I can come up with right now is that the skb_get()
+happens in deliver_skb via __netif_receive_skb. Keeping in mind that
+wpa_supplicant might have another packet socket open for authentication
+packets, that seems like a possibility. I'll test it once I figure out
+how to do this "defrag" option you speak of :)
+
+johannes
+
+
