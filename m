@@ -1,42 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:56678 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755486Ab2LGWlx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 17:41:53 -0500
-Received: by mail-ie0-f181.google.com with SMTP id 16so2775229iea.12
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 14:41:53 -0800 (PST)
-Date: Fri, 7 Dec 2012 17:33:43 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: devel@lists.open80211s.org
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFCv3 1/5] {nl, cfg, mac}80211: set beacon interval and DTIM
- period on mesh join
-Message-ID: <20121207223343.GD535@localhost> (sfid-20121207_234158_425083_ECB402D2)
-References: <1354918443-3076-1-git-send-email-marco@cozybit.com>
- <1354918443-3076-2-git-send-email-marco@cozybit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46867 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933768Ab2LGMQ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 07:16:27 -0500
+Date: Fri, 7 Dec 2012 13:16:19 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Subject: [RFC] wireless: check against default_ethtool_ops
+Message-ID: <20121207121617.GA4356@redhat.com> (sfid-20121207_131638_466248_3218F0B6)
+References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
+ <87a9ts4c1q.fsf@nemi.mork.no>
+ <50BF8C18.9060504@candelatech.com>
+ <20121206122528.GG2502@redhat.com>
+ <50C0FCE0.2090507@candelatech.com>
+ <20121207095012.GB11933@redhat.com>
+ <87zk1q3xrv.fsf@nemi.mork.no>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1354918443-3076-2-git-send-email-marco@cozybit.com>
+In-Reply-To: <87zk1q3xrv.fsf@nemi.mork.no>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 07, 2012 at 02:13:59PM -0800, Marco Porsch wrote:
-> +	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
-> +			setup.beacon_interval =
-> +				nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
-> +			if (setup.beacon_interval < 10 || setup.beacon_interval > 10000)
-> +				return -EINVAL;
-> +	}
-> +
-> +	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
-> +			setup.dtim_period =
-> +				nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
-> +			if (setup.dtim_period < 1 || setup.dtim_period > 100)
-> +				return -EINVAL;
-> +	}
+Since:
 
-Indentation looks kind of messed up there, two tabs instead of one?
+commit 2c60db037034d27f8c636403355d52872da92f81
+Author: Eric Dumazet <edumazet@google.com>
+Date:   Sun Sep 16 09:17:26 2012 +0000
 
+    net: provide a default dev->ethtool_ops
+
+wireless core does not correctly assign ethtool_ops. In order to fix
+the problem, and avoid assigning ethtool_ops on each individual cfg80211
+driver, we check against default_ethool_ops pointer instead of NULL in
+wireless core.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ include/linux/netdevice.h |    2 ++
+ net/core/dev.c            |    3 ++-
+ net/wireless/core.c       |    2 +-
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index f8eda02..c98e1c3 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -60,6 +60,8 @@ struct wireless_dev;
+ #define SET_ETHTOOL_OPS(netdev,ops) \
+ 	( (netdev)->ethtool_ops = (ops) )
+ 
++extern const struct ethtool_ops default_ethtool_ops;
++
+ /* hardware address assignment types */
+ #define NET_ADDR_PERM		0	/* address is permanent (default) */
+ #define NET_ADDR_RANDOM		1	/* address is generated randomly */
+diff --git a/net/core/dev.c b/net/core/dev.c
+index c0946cb..4cd2168 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -6008,7 +6008,8 @@ struct netdev_queue *dev_ingress_queue_create(struct net_device *dev)
+ 	return queue;
+ }
+ 
+-static const struct ethtool_ops default_ethtool_ops;
++const struct ethtool_ops default_ethtool_ops;
++EXPORT_SYMBOL_GPL(default_ethtool_ops);
+ 
+ /**
+  *	alloc_netdev_mqs - allocate network device
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 14d9904..90915d4 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -866,7 +866,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		/* allow mac80211 to determine the timeout */
+ 		wdev->ps_timeout = -1;
+ 
+-		if (!dev->ethtool_ops)
++		if (dev->ethtool_ops == &default_ethtool_ops)
+ 			dev->ethtool_ops = &cfg80211_ethtool_ops;
+ 
+ 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.1
+
