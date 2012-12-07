@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:43851 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751735Ab2LJOjL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 09:39:11 -0500
-Received: by mail-we0-f174.google.com with SMTP id x10so1202109wey.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 06:39:10 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 10 Dec 2012 15:39:09 +0100
-Message-ID: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com> (sfid-20121210_153915_388007_73D913E2)
-Subject: ath6kl: AR6004 failed to start on computer boot
-From: Julien Massot <jmassot@aldebaran-robotics.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath6kl-devel@qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58975 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030765Ab2LGQE2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 11:04:28 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	nlhintz@hotmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] brcmsmac: do a read after the write of the objmem on broken PCIe controllers
+Date: Fri,  7 Dec 2012 17:04:13 +0100
+Message-Id: <1354896253-5702-1-git-send-email-hauke@hauke-m.de> (sfid-20121207_170438_317493_D7C9E3F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+As described in the documentation of bcma_wflush16 in drivers/net
+/wireless/brcm80211/brcmsmac/types.h some PCIe controllers of Broadcom
+SoCs are broken. The PCIe controller on these SoCs are mostly used to
+connect some additional wifi device to the SoC and some of these wifi
+devices are supported by brcmsmac.
+For my BCM43224 connected to the broken PCIe controller of the BCM4718 I
+need an extra read after write in brcms_b_write_objmem() to prevent a
+Data bus error. This fixes the problem reading tsf_random later.
 
-I have some problem with the AR6004 (hw 1.3) initialisation.
-I'm using the compat wireless 3.6.6-1 package, with the ath6kl driver from
- https://github.com/kvalo/ath6kl.git. (master branch)
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The device seems not to respond after the firmware upload.
-"ath6kl: htc_wait_recv_ctrl_message: Timeout!"
-Increasing the timeout doesn't help.
-Here is the log at startup.
-http://pastebin.com/DsivqdDP
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index cb48fc4..2599cd0 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2920,7 +2920,7 @@ brcms_b_write_objmem(struct brcms_hardware *wlc_hw, uint offset, u16 v,
+ 	if (offset & 2)
+ 		objoff += 2;
+ 
+-	bcma_write16(core, objoff, v);
++	bcma_wflush16(core, objoff, v);
+ }
+ 
+ /*
+-- 
+1.7.10.4
 
-If I unplug and re-plug the adapter, every thing is going well.
-http://pastebin.com/BTz0w5QL.
-
-Any Idea on how to fix or workaround this issue ?
-
-(I've also tried the recovery options recovery_enable=1 heart_beat_poll=200)
-
-Regards,
-Julien
