@@ -1,126 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:42540 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752216Ab2L0Lw5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 06:52:57 -0500
-Subject: [PATCH 7/7] ath6kl: add tracing support to debug message macros
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com
-Date: Thu, 27 Dec 2012 13:44:58 +0200
-Message-ID: <20121227114458.27069.96579.stgit@localhost6.localdomain6> (sfid-20121227_125305_036529_672FE8EA)
-In-Reply-To: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
-References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+Received: from mx1.redhat.com ([209.132.183.28]:60731 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752099Ab2LGLky (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 06:40:54 -0500
+Date: Fri, 7 Dec 2012 12:40:46 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
+Message-ID: <20121207114045.GC11933@redhat.com> (sfid-20121207_124058_468002_716543F0)
+References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
+ <87a9ts4c1q.fsf@nemi.mork.no>
+ <50BF8C18.9060504@candelatech.com>
+ <20121206122528.GG2502@redhat.com>
+ <50C0FCE0.2090507@candelatech.com>
+ <20121207095012.GB11933@redhat.com>
+ <87zk1q3xrv.fsf@nemi.mork.no>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <87zk1q3xrv.fsf@nemi.mork.no>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now all log messages are sent through the tracing infrastruture as well.
-Tracing point doesn't follow debug_mask module parameter, instead it sends
-all debug messages, so once you enable ath6kl_log_dbg tracing point you will
-get a lot of messages. Needs to be discussed if this is sensible or not.
-The overhead should be small enough and we anyway include debug level as
-well so it's easy to filter in user space.
+On Fri, Dec 07, 2012 at 12:30:12PM +0100, Bjørn Mork wrote:
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+> > On Thu, Dec 06, 2012 at 12:15:28PM -0800, Ben Greear wrote:
+> >> I don't have time to work on this today...maybe not tomorrow either.
+> >> 
+> >> So, if someone else feels like fixing it, please feel free.
+> >
+> > Ok, I'll try to fix that. However this could require modification
+> > of all cfg80211 drivers, so could not be fast.
+> 
+> I wonder if that strategy isn't just adding unnecessary complexity?  How
+> about using something like the (completely untested) patch below instead?
 
-I wasn't really sure what to do with ath6kl_dbg_dump() and for now decided
-that it also sends the buffer to user space. But most likely in the future
-ath6kl_dbg_dump() should go away in favor of using proper tracing points but
-we will see.
+Yeah, I wrote very similar patch and I'm testing it locally. Plan to
+post RFC to net folks ...
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |   12 ++++++---
- drivers/net/wireless/ath/ath6kl/trace.h |   42 +++++++++++++++++++++++++++++++
- 2 files changed, 50 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 15cfe30..2620910 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -63,15 +63,15 @@ void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
- 	struct va_format vaf;
- 	va_list args;
- 
--	if (!(debug_mask & mask))
--		return;
--
- 	va_start(args, fmt);
- 
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
-+	if (debug_mask & mask)
-+		ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
-+
-+	trace_ath6kl_log_dbg(mask, &vaf);
- 
- 	va_end(args);
- }
-@@ -87,6 +87,10 @@ void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
- 
- 		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
- 	}
-+
-+	/* tracing code doesn't like null strings :/ */
-+	trace_ath6kl_log_dbg_dump(msg ? msg : "", prefix ? prefix : "",
-+				  buf, len);
- }
- EXPORT_SYMBOL(ath6kl_dbg_dump);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
-index 8278143..0676ef0 100644
---- a/drivers/net/wireless/ath/ath6kl/trace.h
-+++ b/drivers/net/wireless/ath/ath6kl/trace.h
-@@ -229,6 +229,48 @@ DEFINE_EVENT(ath6kl_log_event, ath6kl_log_info,
- 	     TP_ARGS(vaf)
- );
- 
-+TRACE_EVENT(ath6kl_log_dbg,
-+	TP_PROTO(unsigned int level, struct va_format *vaf),
-+	TP_ARGS(level, vaf),
-+	TP_STRUCT__entry(
-+		__field(unsigned int, level)
-+		__dynamic_array(char, msg, ATH6KL_MSG_MAX)
-+	),
-+	TP_fast_assign(
-+		__entry->level = level;
-+		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-+				       ATH6KL_MSG_MAX,
-+				       vaf->fmt,
-+				       *vaf->va) >= ATH6KL_MSG_MAX);
-+	),
-+	TP_printk("%s", __get_str(msg))
-+);
-+
-+TRACE_EVENT(ath6kl_log_dbg_dump,
-+	TP_PROTO(const char *msg, const char *prefix,
-+		 const void *buf, size_t buf_len),
-+
-+	TP_ARGS(msg, prefix, buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__string(msg, msg)
-+		__string(prefix, prefix)
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(msg, msg);
-+		__assign_str(prefix, prefix);
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"%s/%s\n", __get_str(prefix), __get_str(msg)
-+	)
-+);
-+
- #endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
-
+Stanislaw
