@@ -1,32 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:53825 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752808Ab2LDMYx (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:41711 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964792Ab2LGAL7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 07:24:53 -0500
-Received: by mail-ob0-f174.google.com with SMTP id ta14so3641653obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Dec 2012 04:24:52 -0800 (PST)
+	Thu, 6 Dec 2012 19:11:59 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so5739333lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 16:11:58 -0800 (PST)
 MIME-Version: 1.0
-Date: Tue, 4 Dec 2012 13:24:52 +0100
-Message-ID: <CABaTyLtgVtnOrwpNuZB07hwb6FdU+jqGeLkUc+RwZB10u1c9kQ@mail.gmail.com> (sfid-20121204_132457_418706_5D1449E0)
-Subject: ZD1211
-From: Carlo Greco <carlogreco93@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1354812468-15709-8-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-8-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 6 Dec 2012 16:11:37 -0800
+Message-ID: <CAB=NE6WtxyNL6ni45XJaW8-j7sH6fb13GvAOhjOgRkg=3PEL7A@mail.gmail.com> (sfid-20121207_011202_444723_6D8FB47F)
+Subject: Re: [PATCH 07/24] regulatory: code cleanup
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-i have zydas zd1211 wireless card (embedded in my laptop, connected
-via usb); lsusb says:
+On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Clean up various things like indentation, extra
+> parentheses, too many/few line breaks, etc.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Bus 001 Device 003: ID 0b05:170c ASUSTek Computer, Inc. WL-159g 802.11bg
+Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 
-Your firmware recognized my card well, but signal strength is low and
-the connection is slow or it doesn't connect at all.
-
-What can i do?
-I tried ndiswrapper but it causes kernel panic :(
-
-I hope in your help.
-Bye, Carlo.
+  Luis
