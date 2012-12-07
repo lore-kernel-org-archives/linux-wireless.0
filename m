@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59851 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754183Ab2LLV4j (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58745 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932126Ab2LGVlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 16:56:39 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 4/6] mac80211: Allow disabling SGI-20.
-Date: Wed, 12 Dec 2012 13:54:53 -0800
-Message-Id: <1355349295-30960-4-git-send-email-greearb@candelatech.com> (sfid-20121212_225648_739548_AE867F17)
-In-Reply-To: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
-References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
+	Fri, 7 Dec 2012 16:41:21 -0500
+Message-ID: <1354916502.9124.18.camel@jlt4.sipsolutions.net> (sfid-20121207_224129_500056_6617D80D)
+Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: eric@regit.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Fri, 07 Dec 2012 22:41:42 +0100
+In-Reply-To: <1354915824.9124.11.camel@jlt4.sipsolutions.net> (sfid-20121207_223020_561049_DB965D43)
+References: <1354906561-4695-1-git-send-email-eric@regit.org>
+	 <20121207.153134.25835204617509469.davem@davemloft.net>
+	 <1354915824.9124.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_223020_561049_DB965D43)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, 2012-12-07 at 22:30 +0100, Johannes Berg wrote:
 
-This allows user-space (wpa_supplicant) to disable
-short guard interval (SGI) for 20Mhz.  The SGI-40
-disable option is already handled.
+> The only other theory I can come up with right now is that the skb_get()
+> happens in deliver_skb via __netif_receive_skb. Keeping in mind that
+> wpa_supplicant might have another packet socket open for authentication
+> packets, that seems like a possibility. I'll test it once I figure out
+> how to do this "defrag" option you speak of :)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- net/mac80211/ht.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Hmm now I'm venturing into the unknown (for me) and realm of
+speculation...
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index a71d891..8a6d68f 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -62,6 +62,9 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SUP_WIDTH_20_40);
- 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_40);
- 
-+	/* Allow user to disable SGI-20 (SGI-40 is handled above) */
-+	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_20);
-+
- 	/* Allow user to disable the max-AMSDU bit. */
- 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_MAX_AMSDU);
- 
--- 
-1.7.3.4
+wpa_supplicant opens a packet socket for ETH_P_EAPOL, which indirectly
+eventually calls dev_add_pack(). But if you do the same for another
+socket, you'll get the same again, and then deliver_skb() will deliver
+only a refcounted packet to the prot_hook->func().
+
+This seems like it could very well cause the problem?
+
+johannes
 
