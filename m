@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42639 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754232Ab2LZKkW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 05:40:22 -0500
-Message-ID: <50DAD40E.7040000@hauke-m.de> (sfid-20121226_114029_327706_E40F833E)
-Date: Wed, 26 Dec 2012 11:40:14 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH][3.8?] bcma: correct M25P32 serial flash ID
-References: <1356471262-9242-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1356471262-9242-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from shards.monkeyblade.net ([149.20.54.216]:58574 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424190Ab2LGUbh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 15:31:37 -0500
+Date: Fri, 07 Dec 2012 15:31:34 -0500 (EST)
+Message-Id: <20121207.153134.25835204617509469.davem@davemloft.net> (sfid-20121207_213148_274637_7EF24452)
+To: eric@regit.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1354906561-4695-1-git-send-email-eric@regit.org>
+References: <1354906561-4695-1-git-send-email-eric@regit.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/25/2012 10:34 PM, Rafał Miłecki wrote:
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+From: Eric Leblond <eric@regit.org>
+Date: Fri,  7 Dec 2012 19:56:01 +0100
 
-I already saw a bug report on the OpenWrt mailing list because of this
-problem:
-http://permalink.gmane.org/gmane.comp.embedded.openwrt.devel/16944
+Wireless folks, please take a look.  The issue is that,
+under the circumstances listed below, we get SKBs in
+the AF_PACKET input path that are shared.
 
-> ---
-> John: it's trivial, you may want to take it for fixes (3.8).
-> I leave it up to you. Noticed it while working on ssb.
-> ---
->  drivers/bcma/driver_chipcommon_sflash.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/bcma/driver_chipcommon_sflash.c b/drivers/bcma/driver_chipcommon_sflash.c
-> index 63e6883..1e694db 100644
-> --- a/drivers/bcma/driver_chipcommon_sflash.c
-> +++ b/drivers/bcma/driver_chipcommon_sflash.c
-> @@ -35,7 +35,7 @@ static struct bcma_sflash_tbl_e bcma_sflash_st_tbl[] = {
->  	{ "M25P40", 0x12, 0x10000, 8, },
->  
->  	{ "M25P16", 0x14, 0x10000, 32, },
-> -	{ "M25P32", 0x14, 0x10000, 64, },
-> +	{ "M25P32", 0x15, 0x10000, 64, },
->  	{ "M25P64", 0x16, 0x10000, 128, },
->  	{ "M25FL128", 0x17, 0x10000, 256, },
->  	{ 0 },
-> 
+Given the logic present in ieee80211_deliver_skb() I think
+the mac80211 code doesn't expect this either.
 
+More commentary from me below:
+
+> This patch is adding a check on skb before trying to defrag the
+> packet for the hash computation in fanout mode. The goal of this
+> patch is to avoid an kernel crash in pskb_expand_head.
+> It appears that under some specific condition there is a shared
+> skb reaching the defrag code and this lead to a crash due to the
+> following code:
+> 
+> 	if (skb_shared(skb))
+> 		BUG();
+> 
+> I've observed this crash under the following condition:
+>  1. a program is listening to an wifi interface (let say wlan0)
+>  2. it is using fanout capture in flow load balancing mode
+>  3. defrag option is on on the fanout socket
+>  4. the interface disconnect (radio down for example)
+>  5. the interface reconnect (radio switched up)
+>  6. once reconnected a single packet is seen with skb->users=2
+>  7. the kernel crash in pskb_expand_head at skbuff.c:1035
+> 
+> [BBB55:744364] [<ffffffff812a2761>] ? __pskb_pull_tail+0x43x0x26f
+> [BB8S5.744395] [<ffffffff812d29Tb>] ? ip_check_defrag+ox3a/0x14a
+> [BBB55.744422] [<ffffffffB1344459>] ? packet_rcv_fanout+ox5e/oxf9
+> [BBBS5.7444S0] [<ffffffffB12aaS9b>] ? __netif_receive_skb+ox444/ox4f9
+> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? netif_receive_skb+ox6d/0x?3
+> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_deliver_skb+0xbd/0xfa [mac80211]
+> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_rx_h_data+0x1e0/0x21a [mac80211]
+> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_rx_handlers+0x3d5/0x480 [mac80211]
+> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? __wake_up
+> [BBB55.T4447B] [<ffffffffB12aa?e1>] ? evdev_eventr+0xc0/0xcf [evdev]
+> 
+> Signed-off-by: Eric Leblond <eric@regit.org>
+
+So if we look at ieee80211_deliver_skb(), it has code to deal with unaligned
+packet headers, wherein it memoves() the data into a better aligned location.
+
+But if these SKBs really are skb_shared(), this packet data
+modification is illegal.
+
+I suspect that the assumptions built into this unaligned data handling
+code, and AF_PACKET, are correct.  Meaning that we should never see
+skb_shared() packets here.  We just have a missing skb_copy()
+somewhere in mac80211, Johannes can you please take a look?
+
+Thanks.
