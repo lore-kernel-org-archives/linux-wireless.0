@@ -1,69 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4851 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755492Ab2LFUtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 15:49:05 -0500
-From: Tim Gardner <tim.gardner@canonical.com>
-To: linux-kernel@vger.kernel.org
-Cc: Tim Gardner <tim.gardner@canonical.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Don Fry <donald.h.fry@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH wireless-next] iwlwifi: iwlagn_request_scan: Fix check for NULL priv->scan_request
-Date: Thu,  6 Dec 2012 13:24:05 -0700
-Message-Id: <1354825445-79551-1-git-send-email-tim.gardner@canonical.com> (sfid-20121206_214912_422543_9C67DD48)
+Received: from mail-da0-f46.google.com ([209.85.210.46]:53620 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423501Ab2LGRoK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 12:44:10 -0500
+Received: by mail-da0-f46.google.com with SMTP id p5so289091dak.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 09:44:09 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [RFC] nl80211: add range checks to mesh parameters
+Date: Fri,  7 Dec 2012 09:44:01 -0800
+Message-Id: <1354902241-18326-1-git-send-email-marco@cozybit.com> (sfid-20121207_184433_075612_3AC66C17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The WARN_ON_ONCE() check for scan_request will not correctly detect
-a NULL pointer for scan_type == IWL_SCAN_NORMAL. Make it explicit
-that the check only applies to normal scans.
+Ranges are taken from IEEE 802.11-2012, common sense or current implementation
+requirements.
 
-Convert WARN_ON_ONCE to WARN_ON since priv->scan_request really _can't_
-be NULL for normal scans. If it is then we should emit frequent warnings.
-
-This smatch warning led to scrutiny of iwlagn_request_scan():
-
-drivers/net/wireless/iwlwifi/dvm/scan.c:894 iwlagn_request_scan() error: we previously assumed 'priv->scan_request' could be null (see line 792)
-
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Don Fry <donald.h.fry@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: Marco Porsch <marco@cozybit.com>
 ---
+ net/wireless/nl80211.c |   75 +++++++++++++++++++++++++++---------------------
+ 1 file changed, 42 insertions(+), 33 deletions(-)
 
-This patch does apply to 3.6.y, but it doesn't fix an existing
-bug so I don't think it qualifies. This patch simply makes
-the driver more robust for future development.
-
- drivers/net/wireless/iwlwifi/dvm/scan.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/scan.c b/drivers/net/wireless/iwlwifi/dvm/scan.c
-index bb9f625..e5cbcca 100644
---- a/drivers/net/wireless/iwlwifi/dvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/scan.c
-@@ -673,8 +673,9 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	const u8 *ssid = NULL;
- 	u8 ssid_len = 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d038fa4..2d08d9d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3967,11 +3967,13 @@ static int nl80211_parse_mesh_config(struct genl_info *info,
+ 	struct nlattr *tb[NL80211_MESHCONF_ATTR_MAX + 1];
+ 	u32 mask = 0;
  
--	if (WARN_ON_ONCE(priv->scan_request &&
--			 priv->scan_request->n_channels > MAX_SCAN_CHANNEL))
-+	if (WARN_ON(priv->scan_type == IWL_SCAN_NORMAL &&
-+		(!priv->scan_request ||
-+		priv->scan_request->n_channels > MAX_SCAN_CHANNEL)))
- 		return -EINVAL;
+-#define FILL_IN_MESH_PARAM_IF_SET(table, cfg, param, mask, attr_num, nla_fn) \
+-do {\
+-	if (table[attr_num]) {\
+-		cfg->param = nla_fn(table[attr_num]); \
+-		mask |= (1 << (attr_num - 1)); \
++#define FILL_IN_MESH_PARAM_IF_SET(tb, cfg, param, min, max, mask, attr, fn) \
++do { \
++	if (tb[attr]) { \
++		if (fn(tb[attr]) < min || fn(tb[attr]) > max) \
++			return -EINVAL; \
++		cfg->param = fn(tb[attr]); \
++		mask |= (1 << (attr - 1)); \
+ 	} \
+ } while (0);\
  
- 	lockdep_assert_held(&priv->mutex);
+@@ -3988,81 +3990,88 @@ do {\
+ 	BUILD_BUG_ON(NL80211_MESHCONF_ATTR_MAX > 32);
+ 
+ 	/* Fill in the params struct */
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout, 1, 255,
+ 				  mask, NL80211_MESHCONF_RETRY_TIMEOUT,
+ 				  nla_get_u16);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConfirmTimeout,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConfirmTimeout, 1, 255,
+ 				  mask, NL80211_MESHCONF_CONFIRM_TIMEOUT,
+ 				  nla_get_u16);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHoldingTimeout,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHoldingTimeout, 1, 255,
+ 				  mask, NL80211_MESHCONF_HOLDING_TIMEOUT,
+ 				  nla_get_u16);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxPeerLinks,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxPeerLinks, 0, 255,
+ 				  mask, NL80211_MESHCONF_MAX_PEER_LINKS,
+ 				  nla_get_u16);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxRetries,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxRetries, 0, 16,
+ 				  mask, NL80211_MESHCONF_MAX_RETRIES,
+ 				  nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshTTL,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshTTL, 1, 255,
+ 				  mask, NL80211_MESHCONF_TTL, nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, element_ttl,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, element_ttl, 1, 255,
+ 				  mask, NL80211_MESHCONF_ELEMENT_TTL,
+ 				  nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, auto_open_plinks,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, auto_open_plinks, 0, 1,
+ 				  mask, NL80211_MESHCONF_AUTO_OPEN_PLINKS,
+ 				  nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshNbrOffsetMaxNeighbor, mask,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshNbrOffsetMaxNeighbor, 1, 255,
++				  mask,
+ 				  NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR,
+ 				  nla_get_u32);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPmaxPREQretries,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPmaxPREQretries, 0, 255,
+ 				  mask, NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES,
+ 				  nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, path_refresh_time,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, path_refresh_time, 1, 65535,
+ 				  mask, NL80211_MESHCONF_PATH_REFRESH_TIME,
+ 				  nla_get_u32);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, min_discovery_timeout,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, min_discovery_timeout, 1, 65535,
+ 				  mask, NL80211_MESHCONF_MIN_DISCOVERY_TIMEOUT,
+ 				  nla_get_u16);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathTimeout, mask,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathTimeout,
++				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_ACTIVE_PATH_TIMEOUT,
+ 				  nla_get_u32);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPpreqMinInterval,
+-				  mask, NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL,
++				  1, 65535, mask,
++				  NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL,
+ 				  nla_get_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPperrMinInterval,
+-				  mask, NL80211_MESHCONF_HWMP_PERR_MIN_INTERVAL,
++				  1, 65535, mask,
++				  NL80211_MESHCONF_HWMP_PERR_MIN_INTERVAL,
+ 				  nla_get_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
+-				  dot11MeshHWMPnetDiameterTraversalTime, mask,
++				  dot11MeshHWMPnetDiameterTraversalTime,
++				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
+ 				  nla_get_u16);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRootMode, mask,
+-				  NL80211_MESHCONF_HWMP_ROOTMODE, nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRannInterval, mask,
+-				  NL80211_MESHCONF_HWMP_RANN_INTERVAL,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRootMode, 0, 4,
++				  mask, NL80211_MESHCONF_HWMP_ROOTMODE,
++				  nla_get_u8);
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRannInterval, 1, 65535,
++				  mask, NL80211_MESHCONF_HWMP_RANN_INTERVAL,
+ 				  nla_get_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
+-				  dot11MeshGateAnnouncementProtocol, mask,
+-				  NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
++				  dot11MeshGateAnnouncementProtocol, 0, 1,
++				  mask, NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 				  nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding, 0, 1,
+ 				  mask, NL80211_MESHCONF_FORWARDING,
+ 				  nla_get_u8);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, 1, 255,
+ 				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
+ 				  nla_get_u32);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
+ 				  mask, NL80211_MESHCONF_HT_OPMODE,
+ 				  nla_get_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
+-				  mask,
++				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
+ 				  nla_get_u32);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMProotInterval,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMProotInterval, 1, 65535,
+ 				  mask, NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
+ 				  nla_get_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
+-				  dot11MeshHWMPconfirmationInterval, mask,
++				  dot11MeshHWMPconfirmationInterval,
++				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
+ 				  nla_get_u16);
+ 	if (mask_out)
 -- 
 1.7.9.5
 
