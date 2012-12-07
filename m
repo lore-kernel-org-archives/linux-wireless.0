@@ -1,69 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f181.google.com ([209.85.220.181]:62060 "EHLO
-	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119Ab2LTK7l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 05:59:41 -0500
-Received: by mail-vc0-f181.google.com with SMTP id gb30so3508359vcb.40
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 02:59:40 -0800 (PST)
+Received: from arrakis.dune.hu ([78.24.191.176]:46667 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422727Ab2LGQXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 11:23:08 -0500
+Message-ID: <50C217EB.3070808@openwrt.org> (sfid-20121207_172314_234517_96708B23)
+Date: Fri, 07 Dec 2012 17:23:07 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <loom.20121220T112036-707@post.gmane.org>
-References: <loom.20121219T172801-213@post.gmane.org> <loom.20121220T112036-707@post.gmane.org>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 20 Dec 2012 11:28:15 +0100
-Message-ID: <CA+XFjir7D5eCMrS+4FTDJdon3RZh4UXRmgzJY7NmRS3Z6RZetg@mail.gmail.com> (sfid-20121220_115950_602072_B95DC720)
-Subject: Re: Incoherency in iw (or mac80211 or drivers) behavior -- possible
- BUG in iwl4965
-To: Danilo <dantard@unizar.es>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 10/13] qca-swiss-army-knife: allow to print initvals
+ with more than 5 columns
+References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org> <1354817847-23440-11-git-send-email-juhosg@openwrt.org> <CAB=NE6WwuwKzLkLxsggvAGhF5TKcDjWbaw3vkst4gnLFEYjP7Q@mail.gmail.com>
+In-Reply-To: <CAB=NE6WwuwKzLkLxsggvAGhF5TKcDjWbaw3vkst4gnLFEYjP7Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 20, 2012 at 11:25 AM, Danilo <dantard@unizar.es> wrote:
-> Danilo <dantard@...> writes:
->
+2012.12.07. 0:02 keltezéssel, Luis R. Rodriguez írta:
+> On Thu, Dec 6, 2012 at 10:17 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>> @@ -416,19 +423,26 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+>>         return val;
+>>  }
 >>
->> Hello,
->> I figured out that the command:
+>> -static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
+>> +static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+>> +                                  u32 columns, bool onedim, bool wide)
+>>  {
+>> -       u32 p_columns = columns > 5 ? 5 : columns;
+>> +       u32 p_columns;
+>>         u32 col, row;
 >>
->> iw dev wlan0 set bitrates legacy-5 24
->>
->> has different behaviors in different devices.
->>
->> With iwl3945 wireless cards, it fixes the rate at 24Mbps ALSO for multicast
->> frames while in iwl4965 cards, it doesn't.
->>
->> In both cases I tried with ubuntu linux 12.04 and kernel-3.2.0-32-generic
-> using
->> iwl4965/iwl_legacy driver for 4965 and iwl3945/iwl_legacy driver for 3945.
->>
->> I've also tried with compat-wireless-3.6, same result.
->>
->> What's the expected behavior?
->>
->> Thanks in advance,
->>  D. Tardioli
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@...
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
-> Hello,
-> I answer myself:
-> I've tried with ath5k-compatible card and it behaves like iwl3945.
-> It means that when fixed the bitrates with a single value, the card always use
-> that bitrate ALSO for broadcast frames.
->
-> The iwl4965 doesn't behave this way.
-> Any suggestion on how to solve the problem?
+>> -       /*
+>> -        * This checksum stuff is designed for columns <= 8),
+>> -        * and spreads the checksum over 64 bits but since currently
+>> -        * the initval max column size is 6 we only use the first 48
+>> -        * bits.
+>> -        */
+>> -       if (columns > 6)
+>> -               return;
+>> +       if (wide) {
+>> +               p_columns = columns;
+>> +       } else {
+>> +               p_columns = columns > 5 ? 5 : columns;
+>> +
+>> +               /*
+>> +               * This checksum stuff is designed for columns <= 8),
+>> +               * and spreads the checksum over 64 bits but since currently
+>> +               * the initval max column size is 6 we only use the first 48
+>> +               * bits.
+>> +               */
+>> +               if (columns > 6)
+>> +                       return;
+>> +       }
+> 
+> The comment here was for the case that we were using the old nasty
+> checksum thingy I invented, prior to you adding SHA1 checksum support.
+> The column limitation therefore seems artificial here ?
 
-IIRC iwl4965 uses its own rate control algorithm (a while ago, it was
-called "iwl-agn-rs", before the iwlegacy split). I think you should
-look for the problem there.
+Well, the comment and the 'if (columns > 6)' block can be removed.
+However, the
+	p_columns = columns > 5 ? 5 : columns;
+line ensures that we don't print the values for 'Turbo' modes. Although it can
+be removed (along with the 'wide' argument) but that needs more changes.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> Also, as per Adrian's advice on the eeprom dump tool, perhaps we can
+> remove clutter from the initvals tool by allowing us to copy to the
+> local directory the initval files from a linux-next tag.
+> 
+> git show next-20121204:drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+>> path/ar9002_initvals.h
+> 
+> For example. But this would mean requiring us to get diffs by using a
+> kernel git tree, separate from where we are. Not sure if there are
+> gains with this strategy. Its unclear.
+
+Copying the initval headers from a git tree would add unnecessary complexity
+IMHO. If we want to check the validity of the initval headers in a given kernel
+tree, that can be achieved in a simpler way. The path which contains the ath9k
+specific initval headers can be defined as an include dir while compiling the
+initval tool.
+
+-Gabor
+
