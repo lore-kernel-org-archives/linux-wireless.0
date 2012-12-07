@@ -1,221 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54386 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755257Ab2LMW7U (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58397 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424713Ab2LGWOl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 17:59:20 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/5] mac80211: remove final sta_info_flush()
-Date: Thu, 13 Dec 2012 23:59:31 +0100
-Message-Id: <1355439573-13206-4-git-send-email-johannes@sipsolutions.net> (sfid-20121213_235930_404393_23399751)
-In-Reply-To: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
-References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 7 Dec 2012 17:14:41 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so648555pbc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 14:14:41 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [RFCv3 3/5] mac80211: move add_tim to subfunction
+Date: Fri,  7 Dec 2012 14:14:01 -0800
+Message-Id: <1354918443-3076-4-git-send-email-marco@cozybit.com> (sfid-20121207_231457_276003_609F3849)
+In-Reply-To: <1354918443-3076-1-git-send-email-marco@cozybit.com>
+References: <1354918443-3076-1-git-send-email-marco@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This functions will be used for mesh beacons, too.
 
-When all interfaces have been removed, there can't
-be any stations left over, so there's no need to
-flush again. Remove this, and all code associated
-with it, which also simplifies the function.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Marco Porsch <marco@cozybit.com>
 ---
- net/mac80211/cfg.c      |  7 +++----
- net/mac80211/ibss.c     |  4 ++--
- net/mac80211/iface.c    |  5 ++---
- net/mac80211/mesh.c     |  2 +-
- net/mac80211/mlme.c     |  2 +-
- net/mac80211/sta_info.c | 23 ++++++-----------------
- net/mac80211/sta_info.h |  3 +--
- 7 files changed, 16 insertions(+), 30 deletions(-)
+ net/mac80211/tx.c |   48 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 29 insertions(+), 19 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a813735..58a4362 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1010,8 +1010,8 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		kfree_rcu(old_probe_resp, rcu_head);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d287a4f..7155199 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2261,9 +2261,9 @@ void ieee80211_tx_pending(unsigned long data)
  
- 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
--		sta_info_flush(local, vlan);
--	sta_info_flush(local, sdata);
-+		sta_info_flush(vlan);
-+	sta_info_flush(sdata);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
+ /* functions for drivers to get certain frames */
  
- 	drv_stop_ap(sdata->local, sdata);
-@@ -1301,7 +1301,6 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *mac)
+-static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+-				     struct ps_data *ps,
+-				     struct sk_buff *skb)
++static void __ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
++				       struct ps_data *ps,
++				       struct sk_buff *skb)
  {
--	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -1309,7 +1308,7 @@ static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (mac)
- 		return sta_info_destroy_addr_bss(sdata, mac);
- 
--	sta_info_flush(local, sdata);
-+	sta_info_flush(sdata);
- 	return 0;
- }
- 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 5e54c15..6cd6979 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -67,7 +67,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	skb_reserve(skb, sdata->local->hw.extra_tx_headroom);
- 
- 	if (!ether_addr_equal(ifibss->bssid, bssid))
--		sta_info_flush(sdata->local, sdata);
-+		sta_info_flush(sdata);
- 
- 	/* if merging, indicate to driver that we leave the old IBSS */
- 	if (sdata->vif.bss_conf.ibss_joined) {
-@@ -1182,7 +1182,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 		}
+ 	u8 *pos, *tim;
+ 	int aid0 = 0;
+@@ -2325,6 +2325,31 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
  	}
- 
--	sta_info_flush(sdata->local, sdata);
-+	sta_info_flush(sdata);
- 
- 	spin_lock_bh(&ifibss->incomplete_lock);
- 	while (!list_empty(&ifibss->incomplete_stations)) {
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0f2a9f9..36109eb 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -785,7 +785,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	 * all other modes we've already removed all stations when
- 	 * disconnecting etc.
- 	 */
--	sta_info_flush(local, sdata);
-+	sta_info_flush(sdata);
- 
- 	/*
- 	 * Don't count this interface for promisc/allmulti while it
-@@ -970,7 +970,6 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
-  */
- static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_local *local = sdata->local;
- 	int flushed;
- 	int i;
- 
-@@ -986,7 +985,7 @@ static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		mesh_rmc_free(sdata);
- 
--	flushed = sta_info_flush(local, sdata);
-+	flushed = sta_info_flush(sdata);
- 	WARN_ON(flushed);
  }
  
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 9b00c2c..f5f01e0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -656,7 +656,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
- 
- 	/* flush STAs and mpaths on this iface */
--	sta_info_flush(sdata->local, sdata);
-+	sta_info_flush(sdata);
- 	mesh_path_flush_by_iface(sdata);
- 
- 	del_timer_sync(&sdata->u.mesh.housekeeping_timer);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7753a9c..7cbb4cb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1518,7 +1518,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	memset(ifmgd->bssid, 0, ETH_ALEN);
- 
- 	/* remove AP and TDLS peers */
--	sta_info_flush(local, sdata);
-+	sta_info_flush(sdata);
- 
- 	/* finally reset all BSS / config parameters */
- 	changed |= ieee80211_reset_erp_info(sdata);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 527453d..1a84a52 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -885,7 +885,6 @@ void sta_info_init(struct ieee80211_local *local)
- void sta_info_stop(struct ieee80211_local *local)
- {
- 	del_timer_sync(&local->sta_cleanup);
--	sta_info_flush(local, NULL);
- }
- 
- /**
-@@ -893,12 +892,11 @@ void sta_info_stop(struct ieee80211_local *local)
-  *
-  * Returns the number of removed STA entries.
-  *
-- * @local: local interface data
-- * @sdata: matching rule for the net device (sta->dev) or %NULL to match all STAs
-+ * @sdata: sdata to remove all stations from
-  */
--int sta_info_flush(struct ieee80211_local *local,
--		   struct ieee80211_sub_if_data *sdata)
-+int sta_info_flush(struct ieee80211_sub_if_data *sdata)
- {
++static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
++				    struct ps_data *ps,
++				    struct sk_buff *skb)
++{
 +	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta, *tmp;
- 	int ret = 0;
++
++	/* Not very nice, but we want to allow the driver to call
++	 * ieee80211_beacon_get() as a response to the set_tim() callback.
++	 * That, however, is already invoked under the sta_lock to guarantee
++	 * consistent and race-free update of the tim bitmap in mac80211 and
++	 * the driver.
++	 */
++	if (local->tim_in_locked_section) {
++		__ieee80211_beacon_add_tim(sdata, ps, skb);
++	} else {
++		unsigned long flags;
++
++		spin_lock_irqsave(&local->tim_lock, flags);
++		__ieee80211_beacon_add_tim(sdata, ps, skb);
++		spin_unlock_irqrestore(&local->tim_lock, flags);
++	}
++
++	return 0;
++}
++
+ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 					 struct ieee80211_vif *vif,
+ 					 u16 *tim_offset, u16 *tim_length)
+@@ -2369,22 +2394,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 			memcpy(skb_put(skb, beacon->head_len), beacon->head,
+ 			       beacon->head_len);
  
-@@ -906,7 +904,7 @@ int sta_info_flush(struct ieee80211_local *local,
+-			/*
+-			 * Not very nice, but we want to allow the driver to call
+-			 * ieee80211_beacon_get() as a response to the set_tim()
+-			 * callback. That, however, is already invoked under the
+-			 * sta_lock to guarantee consistent and race-free update
+-			 * of the tim bitmap in mac80211 and the driver.
+-			 */
+-			if (local->tim_in_locked_section) {
+-				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
+-			} else {
+-				unsigned long flags;
+-
+-				spin_lock_irqsave(&local->tim_lock, flags);
+-				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
+-				spin_unlock_irqrestore(&local->tim_lock, flags);
+-			}
++			ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
  
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
--		if (!sdata || sdata == sta->sdata) {
-+		if (sdata == sta->sdata) {
- 			WARN_ON(__sta_info_destroy(sta));
- 			ret++;
- 		}
-@@ -915,17 +913,8 @@ int sta_info_flush(struct ieee80211_local *local,
- 
- 	rcu_barrier();
- 
--	if (sdata) {
--		ieee80211_cleanup_sdata_stas(sdata);
--		cancel_work_sync(&sdata->cleanup_stations_wk);
--	} else {
--		mutex_lock(&local->iflist_mtx);
--		list_for_each_entry(sdata, &local->interfaces, list) {
--			ieee80211_cleanup_sdata_stas(sdata);
--			cancel_work_sync(&sdata->cleanup_stations_wk);
--		}
--		mutex_unlock(&local->iflist_mtx);
--	}
-+	ieee80211_cleanup_sdata_stas(sdata);
-+	cancel_work_sync(&sdata->cleanup_stations_wk);
- 
- 	return ret;
- }
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 37c1889..13698da 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -548,8 +548,7 @@ void sta_info_recalc_tim(struct sta_info *sta);
- 
- void sta_info_init(struct ieee80211_local *local);
- void sta_info_stop(struct ieee80211_local *local);
--int sta_info_flush(struct ieee80211_local *local,
--		   struct ieee80211_sub_if_data *sdata);
-+int sta_info_flush(struct ieee80211_sub_if_data *sdata);
- void sta_set_rate_info_tx(struct sta_info *sta,
- 			  const struct ieee80211_tx_rate *rate,
- 			  struct rate_info *rinfo);
+ 			if (tim_offset)
+ 				*tim_offset = beacon->head_len;
 -- 
-1.8.0
+1.7.9.5
 
