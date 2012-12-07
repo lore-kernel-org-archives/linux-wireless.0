@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52790 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59031 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756144Ab2LMODw (ORCPT
+	with ESMTP id S1754701Ab2LGXPy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 09:03:52 -0500
-Message-ID: <1355407454.9463.5.camel@jlt4.sipsolutions.net> (sfid-20121213_160117_692009_EE090D5B)
-Subject: Re: [PATCH] mac80211: Allow disabling SGI-20.
+	Fri, 7 Dec 2012 18:15:54 -0500
+Message-ID: <1354922175.9124.34.camel@jlt4.sipsolutions.net> (sfid-20121208_001556_957920_FA07AD69)
+Subject: Re: [PATCH 16/24] regulatory: clarify locking rules and assertions
 From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Thu, 13 Dec 2012 15:04:14 +0100
-In-Reply-To: <1355360180-19295-1-git-send-email-greearb@candelatech.com> (sfid-20121213_015637_703359_E9A35183)
-References: <1355360180-19295-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20121213_015637_703359_E9A35183)
+Date: Sat, 08 Dec 2012 00:16:15 +0100
+In-Reply-To: <CAB=NE6VmfjfYeDirc-L-cPMmE6b4f_4iAK+nuDUs1-XUeLCO7w@mail.gmail.com> (sfid-20121208_001212_101049_8080CCCD)
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+	 <1354812468-15709-17-git-send-email-johannes@sipsolutions.net>
+	 <CAB=NE6VmfjfYeDirc-L-cPMmE6b4f_4iAK+nuDUs1-XUeLCO7w@mail.gmail.com>
+	 (sfid-20121208_001212_101049_8080CCCD)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-12-12 at 16:56 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On Fri, 2012-12-07 at 15:11 -0800, Luis R. Rodriguez wrote:
+
+> > The reason for this is that nl80211 uses the regdom
+> > without being able to hold reg_mutex.
 > 
-> This allows user-space (wpa_supplicant) to disable
-> short guard interval (SGI) for 20Mhz.  The SGI-40
-> disable option is already handled.
+> Hm, do we want to do this or add a caller to reg.c that gets nl80211
+> to copy over the current regdomain over for it to parse and then send?
+> In that case we'd only need the cfg80211_mutex for
+> update_all_wiphy_regulatory(). Thoughts?
 
-Applied.
-
-Caveat as before, I'm going to have to rebase my trees once the merge
-window concludes.
+I think you should look at the later patches :)
 
 johannes
 
