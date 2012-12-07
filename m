@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49459 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874Ab2LCSql (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45499 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751265Ab2LGFxR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 13:46:41 -0500
-Date: Mon, 3 Dec 2012 13:39:13 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Piotr Haber <phaber@broadcom.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH V2 v3.7] brcmsmac: handle packet drop on enqueuing
- correctly
-Message-ID: <20121203183912.GE26027@tuxdriver.com> (sfid-20121203_194645_085120_C8B962DD)
-References: <1353961396-7061-1-git-send-email-arend@broadcom.com>
- <50BC63E5.9020101@broadcom.com>
- <871uf7w6w0.fsf@purkki.adurom.net>
+	Fri, 7 Dec 2012 00:53:17 -0500
+Cc: Felix Fietkau <nbd@openwrt.org>, <linux-wireless@vger.kernel.org>,
+	<linville@tuxdriver.com>, <rodrigue@qca.qualcomm.com>
+Date: Fri, 7 Dec 2012 11:23:26 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Subject: Re: [PATCH] Revert "ath9k_hw: Update AR9003 high_power tx gain table"
+Message-ID: <20121207055322.GA27229@hemis.qca.qualcomm.com> (sfid-20121207_065321_547543_CBD7319E)
+References: <1354815611-7220-1-git-send-email-nbd@openwrt.org>
+ <CAJ-Vmonvo9tq4ZF8WosnXNQq=ArqoDuKtz5y8UnFoWfYAikMxQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <871uf7w6w0.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAJ-Vmonvo9tq4ZF8WosnXNQq=ArqoDuKtz5y8UnFoWfYAikMxQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 03, 2012 at 04:24:31PM +0200, Kalle Valo wrote:
-> Hi Arend,
+On Thu, Dec 06, 2012 at 11:35:33AM -0800, Adrian Chadd wrote:
+> On 6 December 2012 09:40, Felix Fietkau <nbd@openwrt.org> wrote:
+> > This reverts commit f74b9d365ddd33a375802b064f96a5d0e99af7c0.
+> >
+> > Turns out reverting commit a240dc7b3c7463bd60cf0a9b2a90f52f78aae0fd
+> > "ath9k_hw: Updated AR9003 tx gain table for 5GHz" was not enough to
+> > bring the tx power back to normal levels on devices like the
+> > Buffalo WZR-HP-G450H, this one needs to be reverted as well.
+> >
+> > This revert improves tx power by ~10 db on that device
 > 
-> "Arend van Spriel" <arend@broadcom.com> writes:
+> Did anyone figure out why this was happening?
 > 
-> > What is keeping you from picking up this patch? Anything I should do?
-> > This V2 removed the no-op changes in ampdu.c that Seth indicated so...
+> Maybe we should look at the HAL commits around the same time to see if
+> someone changed the programming - eg, assuming TPC is always on, or
+> the 2 stream / 3 stream reduction PHY register, or such.
 > 
-> Most likely it's too late. Dave already told that that John's previous
-> pull request might not make it to 3.7.
+Generally we update initval taken from Systems team. We might have missed to
+program the some registers while updating initvals. I prefer to fix the missing
+portion rather than reverting ini tables. Otherwise we end up with using
+older initvals and hard to debug hw related issues.
 
-Yes, that.  Also, given the merge difficulties this creates and the
-fact that Seth's patch is already queued for 3.8, maybe you should
-consider sending this for the 3.7 stable series when it opens?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+-Rajkumar
