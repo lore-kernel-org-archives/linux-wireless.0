@@ -1,56 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:42409 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060Ab2LTVkx (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:57701 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754887Ab2LGJ3l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 16:40:53 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq7so1518841wib.3
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 13:40:51 -0800 (PST)
+	Fri, 7 Dec 2012 04:29:41 -0500
+Message-ID: <50C1B702.1030601@posedge.com> (sfid-20121207_102957_140293_B6C63647)
+Date: Fri, 07 Dec 2012 14:59:38 +0530
+From: Chaitanya <chaitanyatk@posedge.com>
 MIME-Version: 1.0
-In-Reply-To: <3148461.C4k1rIvhbp@bentobox>
-References: <1355936604-13568-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	<87hanhumxb.fsf@purkki.adurom.net>
-	<3148461.C4k1rIvhbp@bentobox>
-Date: Thu, 20 Dec 2012 13:40:51 -0800
-Message-ID: <CAJ-VmomC0JF=X_yhPGH7Ogt4dN=jwh59CmbQ+CdGM79NSfap8w@mail.gmail.com> (sfid-20121220_224056_754464_07390534)
-Subject: Re: [RFCv3] ath9k: add spectral scan feature
-From: Adrian Chadd <adrian@freebsd.org>
-To: Sven Eckelmann <sven@narfation.org>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	nbd@openwrt.org, tobias.steinicke@net.t-labs.tu-berlin.de,
-	jonbither@gmail.com, kgiori@qca.qualcomm.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix the multiple warnings for budding chipsets
+ without ampdu_action defined
+References: <201212070645.qB76jSjN013395@chaitanya-desktop>  <50C1917E.2010407@posedge.com> <1354868041.9552.7.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1354868041.9552.7.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Great to hear that johannes.
+Finally after exhausting all options used the sendmail and it worked :-)
 
-I'm getting bounces back from ath9k-devel@lists.ath9k.org.
-
-Is this happening to everyone?
-
-
-
-adrian
-
-
-On 20 December 2012 10:11, Sven Eckelmann <sven@narfation.org> wrote:
-> On Thursday 20 December 2012 10:50:56 Kalle Valo wrote:
->> Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de> writes:
->> > Sample program for viewing the data is updated and available here:
->> >
->> > https://github.com/simonwunderlich/FFT_eval/
+On Friday 07 December 2012 01:44 PM, Johannes Berg wrote:
+> On Fri, 2012-12-07 at 12:19 +0530, Chaitanya wrote:
+>> Warn once should suffice.
 >>
->> But no screenshots? :)
+>> Eg: our driver doesn't support the ampdu_action yet, so
+>> seeing a lot of warnings, hence the check for any
+> Yay, this worked. Applied with a changed commit log.
 >
-> There is one here: https://github.com/simonwunderlich/FFT_eval/wiki
+> johannes
 >
-> But this screenshot was also shown the last two times.
->
-> Kind regards,
->         Sven
+
