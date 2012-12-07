@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55390 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751657Ab2LWJox (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:33583 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755962Ab2LGKmA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 04:44:53 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless-regdb: add regulatory rule for US on 60gHz band
-Date: Sun, 23 Dec 2012 11:36:03 +0200
-Message-ID: <42386442.bUoSgr792i@lx-vladimir> (sfid-20121223_104534_134909_8D1135BA)
-In-Reply-To: <8774585.BvFN3Opv12@lx-vladimir>
-References: <8774585.BvFN3Opv12@lx-vladimir>
+	Fri, 7 Dec 2012 05:42:00 -0500
+Message-ID: <50C1C7F5.6010808@posedge.com> (sfid-20121207_114205_064989_33269E22)
+Date: Fri, 07 Dec 2012 16:11:57 +0530
+From: Chaitanya <chaitanyatk@posedge.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Checking for zero Len subframe's only when driver
+ supports the reporting of zero len subframes.
+References: <201212071036.qB7Aas8o001865@chaitanya-desktop>
+In-Reply-To: <201212071036.qB7Aas8o001865@chaitanya-desktop>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, December 09, 2012 04:16:21 PM Vladimir Kondratiev wrote:
-> Subject: [PATCH] wireless-regdb: add regulatory rule for US on 60gHz band
-> 
-> There is coming 802.11ad standard that defines WiFi operations on the new band 60g.
-> 
-> In the US, reference document is:
-> 
-> http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
-> 
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> 
 
-Hi John,
 
-Any comments? Can you please merge this patch?
+Zero Len subframe makes sense only when driver supports the reporting
+of zero len subframes.(to handle buggy drivers)
 
-Same about 2 more, with 60g for Europe and China. Titled as:
+Signed-off-by: T Krushna Chaitanya <chaitanyatk@posedge.com>
+--- 
+ net/mac80211/rx.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-[PATCH] wireless-regdb: add regulatory rule for ETSI members on
- 60gHz band
-[PATCH] wireless-regdb: add regulatory rule for China on 60GHz band
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index db343fa..654c22f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -281,10 +281,11 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 			cpu_to_le32(1 << IEEE80211_RADIOTAP_AMPDU_STATUS);
+ 		put_unaligned_le32(status->ampdu_reference, pos);
+ 		pos += 4;
+-		if (status->flag & RX_FLAG_AMPDU_REPORT_ZEROLEN)
++		if (status->flag & RX_FLAG_AMPDU_REPORT_ZEROLEN) {
+ 			flags |= IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN;
+-		if (status->flag & RX_FLAG_AMPDU_IS_ZEROLEN)
+-			flags |= IEEE80211_RADIOTAP_AMPDU_IS_ZEROLEN;
++			if (status->flag & RX_FLAG_AMPDU_IS_ZEROLEN)
++				flags |= IEEE80211_RADIOTAP_AMPDU_IS_ZEROLEN;
++		}
+ 		if (status->flag & RX_FLAG_AMPDU_LAST_KNOWN)
+ 			flags |= IEEE80211_RADIOTAP_AMPDU_LAST_KNOWN;
+ 		if (status->flag & RX_FLAG_AMPDU_IS_LAST)
 
-Thanks, Vladimir.
+
+
+
