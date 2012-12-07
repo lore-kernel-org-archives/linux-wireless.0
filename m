@@ -1,46 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59854 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754183Ab2LLV4r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 16:56:47 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 6/6] ath9k: Allow using ath9k-rate-control without forcing it.
-Date: Wed, 12 Dec 2012 13:54:55 -0800
-Message-Id: <1355349295-30960-6-git-send-email-greearb@candelatech.com> (sfid-20121212_225651_541173_9A11561A)
-In-Reply-To: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
-References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
+Received: from mail.tpi.com ([70.99.223.143]:1813 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030293Ab2LGN2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 08:28:55 -0500
+From: Tim Gardner <tim.gardner@canonical.com>
+To: linux-kernel@vger.kernel.org
+Cc: Tim Gardner <tim.gardner@canonical.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Don Fry <donald.h.fry@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH V2 wireless-next] iwlwifi: iwlagn_request_scan: Fix check for priv->scan_request
+Date: Fri,  7 Dec 2012 06:28:34 -0700
+Message-Id: <1354886914-7822-1-git-send-email-tim.gardner@canonical.com> (sfid-20121207_142923_134753_FC85E705)
+In-Reply-To: <1354830114.18211.4.camel@jlt4.sipsolutions.net>
+References: <1354830114.18211.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+The WARN_ON_ONCE() check for scan_request will not correctly detect
+a NULL pointer for scan_type == IWL_SCAN_NORMAL. Make it explicit
+that the check only applies to normal scans.
 
-Let user still pick the rate control method by setting the
-mac80211 module option, ie:
+Convert WARN_ON_ONCE to WARN_ON since priv->scan_request really _can't_
+be NULL for normal scans. If it is then we should emit frequent warnings.
 
-# cat /etc/modprobe.d/mac80211.conf
-options mac80211 ieee80211_default_rc_algo=ath9k_rate_control
+This smatch warning led to scrutiny of iwlagn_request_scan():
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+drivers/net/wireless/iwlwifi/dvm/scan.c:894 iwlagn_request_scan() error: we previously assumed 'priv->scan_request' could be null (see line 792)
+
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Don Fry <donald.h.fry@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index f69ef5d..772b69f 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -818,7 +818,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	sc->ant_tx = hw->wiphy->available_antennas_tx;
+This patch does apply to 3.6.y, but it doesn't fix an existing
+bug so I don't think it qualifies. This patch simply makes
+the driver more robust for future development.
+
+V2 - corrected indentation more like the rest of the source
+in this file.
+
+ drivers/net/wireless/iwlwifi/dvm/scan.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/scan.c b/drivers/net/wireless/iwlwifi/dvm/scan.c
+index bb9f625..fe91c5a 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/dvm/scan.c
+@@ -673,8 +673,9 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	const u8 *ssid = NULL;
+ 	u8 ssid_len = 0;
  
- #ifdef CONFIG_ATH9K_RATE_CONTROL
--	hw->rate_control_algorithm = "ath9k_rate_control";
-+	/* hw->rate_control_algorithm = "ath9k_rate_control"; */
- #endif
+-	if (WARN_ON_ONCE(priv->scan_request &&
+-			 priv->scan_request->n_channels > MAX_SCAN_CHANNEL))
++	if (WARN_ON(priv->scan_type == IWL_SCAN_NORMAL &&
++		    (!priv->scan_request ||
++		    priv->scan_request->n_channels > MAX_SCAN_CHANNEL)))
+ 		return -EINVAL;
  
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+ 	lockdep_assert_held(&priv->mutex);
 -- 
-1.7.3.4
+1.7.9.5
 
