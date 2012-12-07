@@ -1,65 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:59776 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423664Ab2LGSNb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 13:13:31 -0500
-Received: by mail-qa0-f46.google.com with SMTP id r4so2166613qaq.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 10:13:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1354872204.6234.92.camel@cumari.coelho.fi>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
- <1354095769-8724-12-git-send-email-arik@wizery.com> <1354872204.6234.92.camel@cumari.coelho.fi>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Fri, 7 Dec 2012 20:13:15 +0200
-Message-ID: <CA+XVXfdQfKtfoVvfmiv2m=Qk5nNB+_O+Z-SLbk3_kam8b=RLWQ@mail.gmail.com> (sfid-20121207_191346_520196_86F32B0B)
-Subject: Re: [PATCH 11/20] wlcore/wl18xx: change priority calculations for links
-To: Luciano Coelho <coelho@ti.com>
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:45126
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754992Ab2LGKCn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 05:02:43 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [RFC 3/8] ath9k: Add a few debug messages for PAPRD
+Date: Fri,  7 Dec 2012 15:31:56 +0530
+Message-Id: <1354874521-4138-4-git-send-email-sujith@msujith.org> (sfid-20121207_110249_115602_1DF05B76)
+In-Reply-To: <1354874521-4138-1-git-send-email-sujith@msujith.org>
+References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 7, 2012 at 11:23 AM, Luciano Coelho <coelho@ti.com> wrote:
-> On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
->> Update the 18xx FW status private part to include Tx related link
->> priorities. Introduce new HW ops to determine link priority per chip
->> family.
->>
->> For 18xx the changes are:
->> - Suspended links are at most low priority and Tx for them is stopped
->>   beyond the suspend threshold.
->> - Active links now get their thresholds directly from FW
->> - There's a new "stop" threshold for active links, at which point a link
->>   stops receiving new packets.
->>
->> Update the min 18xx FW version required to make sure suspended links
->> bitmap is advertised by the FW.
->
-> This doesn't apply anymore, I'll remove it.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Sounds good. Thanks.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |  3 +++
+ drivers/net/wireless/ath/ath9k/link.c         | 10 ++++++++--
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
->
->
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->
-> Otherwise this patch looks good!
->
-> Just to understand better, why is the firmware deciding on the
-> thresholds? Does it make some internal magic itself to know the number
-> of links (including multi-channel) and adjust the thresholds
-> accordingly? Isn't this something we could (or should?) do in the kernel
-> side?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 2cd23e5..b11a166 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -169,6 +169,9 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK,
+ 		      ah->paprd_ratemask_ht40);
+ 
++	ath_dbg(common, CALIBRATE, "PAPRD HT20 mask: 0x%x, HT40 mask: 0x%x\n",
++		ah->paprd_ratemask, ah->paprd_ratemask_ht40);
++
+ 	for (i = 0; i < ah->caps.max_txchains; i++) {
+ 		REG_RMW_FIELD(ah, ctrl0[i],
+ 			      AR_PHY_PAPRD_CTRL0_USE_SINGLE_TABLE_MASK, 1);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index fc6b075..3c996ff 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -179,11 +179,14 @@ void ath_rx_poll(unsigned long data)
+ static void ath_paprd_activate(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	int chain;
+ 
+-	if (!caldata || !caldata->paprd_done)
++	if (!caldata || !caldata->paprd_done) {
++		ath_dbg(common, CALIBRATE, "Failed to activate PAPRD\n");
+ 		return;
++	}
+ 
+ 	ath9k_ps_wakeup(sc);
+ 	ar9003_paprd_enable(ah, false);
+@@ -194,6 +197,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
+ 		ar9003_paprd_populate_single_table(ah, caldata, chain);
+ 	}
+ 
++	ath_dbg(common, CALIBRATE, "Activating PAPRD\n");
+ 	ar9003_paprd_enable(ah, true);
+ 	ath9k_ps_restore(sc);
+ }
+@@ -253,8 +257,10 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	int len = 1800;
+ 	int ret;
+ 
+-	if (!caldata || !caldata->paprd_packet_sent || caldata->paprd_done)
++	if (!caldata || !caldata->paprd_packet_sent || caldata->paprd_done) {
++		ath_dbg(common, CALIBRATE, "Skipping PAPRD calibration\n");
+ 		return;
++	}
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
+-- 
+1.8.0.1
 
-Yes the FW decides on the thresholds based on the multi-channel state.
-Basically links are suspended and resumed all the time.
-
-The FW knows some stuff we don't know, for instance the real speed of
-the link and if a BA session is ongoing. Makes it easy for them to
-tweak these values.
-Of course they could export all the information, but I don't think it
-really matters one way or the other. It works well this way.
-
-Arik
