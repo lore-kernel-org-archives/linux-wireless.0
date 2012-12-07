@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:39043 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753104Ab2LKUgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 15:36:15 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/3] qca-swiss-army-knife: remove the artificial column size limitation
-Date: Tue, 11 Dec 2012 21:36:10 +0100
-Message-Id: <1355258172-6938-1-git-send-email-juhosg@openwrt.org> (sfid-20121211_213620_337755_99A9A21C)
+Received: from perches-mx.perches.com ([206.117.179.246]:46972 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1424281Ab2LGFi4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 00:38:56 -0500
+Message-ID: <1354858735.22463.31.camel@joe-AO722> (sfid-20121207_063922_600678_E7195284)
+Subject: Re: [RFC V3 1/2] I'dcfg80211: Move the definition of struct
+ mac_address up
+From: Joe Perches <joe@perches.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Date: Thu, 06 Dec 2012 21:38:55 -0800
+In-Reply-To: <1354853850-10537-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1354853850-10537-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is obsolete since the SHA1 checksums are used.
+On Fri, 2012-12-07 at 09:47 +0530, Vasanthakumar Thiagarajan wrote:
+> struct mac_address will be used by ACL related configuration ops.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- tools/initvals/initvals.c |   14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+I'd prefer that any new code _not_ use struct mac_address
+but use u8 addr[ETH_ALEN] instead.
 
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index 6522de6..4413e04 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -449,21 +449,11 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
- 	u32 p_columns;
- 	u32 col, row;
- 
--	if (wide) {
-+	if (wide)
- 		p_columns = columns;
--	} else {
-+	else
- 		p_columns = columns > 5 ? 5 : columns;
- 
--		/*
--		* This checksum stuff is designed for columns <= 8),
--		* and spreads the checksum over 64 bits but since currently
--		* the initval max column size is 6 we only use the first 48
--		* bits.
--		*/
--		if (columns > 6)
--			return;
--	}
--
- 	if (onedim)
- 		printf("static const u32 %s[] = {\n", name);
- 	else
--- 
-1.7.10
+That's the most common style in the kernel.
+
+$ git grep -E "\bu8\s+\w+\s*\[\s*ETH_ALEN\s*\]" | wc -l
+749
+$ git grep -E "\bstruct\s+mac_address\b" | wc -l
+13
+
+There are also uses of char and unsigned char
+
+$ git grep -E "\bchar\s+\w+\s*\[\s*ETH_ALEN\s*\]" | wc -l
+121
+
+Some of those are ancient, but it'd be good to
+be consistent throughout the kernel.
 
