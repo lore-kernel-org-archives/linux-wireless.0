@@ -1,51 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:37209 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946511Ab2LFSRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 13:17:33 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 04/13] qca-swiss-army-knife: fix comment in ar9340_initvals.h
-Date: Thu,  6 Dec 2012 19:17:18 +0100
-Message-Id: <1354817847-23440-5-git-send-email-juhosg@openwrt.org> (sfid-20121206_192412_486474_90CF173C)
-In-Reply-To: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
-References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:37438 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422674Ab2LGAUj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Dec 2012 19:20:39 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so5742122lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 16:20:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354812468-15709-10-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-10-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 6 Dec 2012 16:20:17 -0800
+Message-ID: <CAB=NE6UY6Y7c=sTAoMasY5bgc-q5LfrbT-Tg3xXwtJdtnvU=MQ@mail.gmail.com> (sfid-20121207_012045_650189_1E4D6AE3)
+Subject: Re: [PATCH 09/24] regulatory: use proper enum for return values
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The comment at the end of the 'ar9340_initvals.h'
-header does not match with defined constant. Fix it.
+On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Instead of treating special error codes specially,
+> like -EALREADY, introduce a real enum for all the
+> needed possibilities and use it.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- tools/initvals/ar9340_initvals.h |    2 +-
- tools/initvals/initvals.c        |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 
-diff --git a/tools/initvals/ar9340_initvals.h b/tools/initvals/ar9340_initvals.h
-index dfc202e..1d8235e 100644
---- a/tools/initvals/ar9340_initvals.h
-+++ b/tools/initvals/ar9340_initvals.h
-@@ -1345,4 +1345,4 @@ static const u32 ar9340_1p0_soc_preamble[][2] = {
- 	{0x00007038, 0x000004c2},
- };
- 
--#endif /* INITVALS_9340_1P0_H */
-+#endif /* INITVALS_9340_H */
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index c93a3d1..cb0bbbf 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -846,7 +846,7 @@ static void print_initvals_family(char *family, bool check)
- 		}
- 		ar9340_hw_print_initvals(check);
- 		if (!check)
--			printf("#endif /* INITVALS_9340_1P0_H */\n");
-+			printf("#endif /* INITVALS_9340_H */\n");
- 	} else if (strncmp(family, "ar9485", 6) == 0) {
- 		if (!check) {
- 			printf("#ifndef INITVALS_9485_H\n");
--- 
-1.7.10
-
+  Luis
