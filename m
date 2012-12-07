@@ -1,46 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:49666 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411Ab2LVXSv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 18:18:51 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 17/17] cw1200: v2: add to drivers/staging
-Date: Sat, 22 Dec 2012 18:18:32 -0500
-Message-Id: <1356218312-13616-18-git-send-email-pizza@shaftnet.org> (sfid-20121223_002321_137239_415B5A72)
-In-Reply-To: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
-References: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:33912
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932385Ab2LGKCx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 05:02:53 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 8/8] ath9k_hw: Enable PAPRD for AR9485, AR9462 and AR9565
+Date: Fri,  7 Dec 2012 15:32:01 +0530
+Message-Id: <1354874521-4138-9-git-send-email-sujith@msujith.org> (sfid-20121207_110301_155241_CB5F2125)
+In-Reply-To: <1354874521-4138-1-git-send-email-sujith@msujith.org>
+References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/staging/Kconfig  | 2 ++
- drivers/staging/Makefile | 1 +
- 2 files changed, 3 insertions(+)
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
-index 329bdb4..ca8b790 100644
---- a/drivers/staging/Kconfig
-+++ b/drivers/staging/Kconfig
-@@ -142,4 +142,6 @@ source "drivers/staging/sb105x/Kconfig"
+Add a HW capability to indicate whether PAPRD is enabled
+for the card, since PAPRD could be enabled in the EEPROM, but
+disabled in the driver. This makes things clearer.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  8 ++------
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |  9 +++++++++
+ drivers/net/wireless/ath/ath9k/hw.c            | 11 +++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h            |  2 ++
+ drivers/net/wireless/ath/ath9k/link.c          |  2 +-
+ 5 files changed, 25 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 0f38895..11082b4 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2987,10 +2987,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 	case EEP_RX_MASK:
+ 		return pBase->txrxMask & 0xf;
+ 	case EEP_PAPRD:
+-		if (AR_SREV_9462(ah))
+-			return false;
+-		if (!ah->config.enable_paprd)
+-			return false;
+ 		return !!(pBase->featureEnable & BIT(5));
+ 	case EEP_CHAIN_MASK_REDUCE:
+ 		return (pBase->miscConfiguration >> 0x3) & 0x1;
+@@ -5124,7 +5120,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 	 */
+ 	ar9003_hw_get_target_power_eeprom(ah, chan, targetPowerValT2);
  
- source "drivers/staging/fwserial/Kconfig"
+-	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD)) {
++	if (ar9003_is_paprd_enabled(ah)) {
+ 		if (IS_CHAN_2GHZ(chan))
+ 			modal_hdr = &eep->modalHeader2G;
+ 		else
+@@ -5165,7 +5161,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 					   twiceAntennaReduction,
+ 					   powerLimit);
  
-+source "drivers/staging/cw1200/Kconfig"
+-	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD)) {
++	if (ar9003_is_paprd_enabled(ah)) {
+ 		for (i = 0; i < ar9300RateSize; i++) {
+ 			if ((ah->paprd_ratemask & (1 << i)) &&
+ 			    (abs(targetPowerValT2[i] -
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 548b451..1255b6a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -999,3 +999,12 @@ exit:
+ 	return !!paprd_done;
+ }
+ EXPORT_SYMBOL(ar9003_paprd_is_done);
 +
- endif # STAGING
-diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
-index c7ec486..58b56c6 100644
---- a/drivers/staging/Makefile
-+++ b/drivers/staging/Makefile
-@@ -63,3 +63,4 @@ obj-$(CONFIG_DRM_IMX)		+= imx-drm/
- obj-$(CONFIG_DGRP)		+= dgrp/
- obj-$(CONFIG_SB105X)		+= sb105x/
- obj-$(CONFIG_FIREWIRE_SERIAL)	+= fwserial/
-+obj-#(CONFIG_CW1200)		+= cw1200/
++bool ar9003_is_paprd_enabled(struct ath_hw *ah)
++{
++	if ((ah->caps.hw_caps & ATH9K_HW_CAP_PAPRD) && ah->config.enable_paprd)
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL(ar9003_is_paprd_enabled);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e06bcec..6af86ad 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2599,6 +2599,17 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			pCap->hw_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
+ 	}
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah) &&
++	    ah->eep_ops->get_eeprom(ah, EEP_PAPRD)) {
++			pCap->hw_caps |= ATH9K_HW_CAP_PAPRD;
++
++			/* Enable PAPRD for these chips. */
++			if (AR_SREV_9485(ah) ||
++			    AR_SREV_9462(ah) ||
++			    AR_SREV_9565(ah))
++				ah->config.enable_paprd = 1;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index fe87d0e..eff6759 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -247,6 +247,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
+ 	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(18),
+ 	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(19),
++	ATH9K_HW_CAP_PAPRD			= BIT(20),
+ };
+ 
+ /*
+@@ -1061,6 +1062,7 @@ int ar9003_paprd_create_curve(struct ath_hw *ah,
+ void ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain);
+ int ar9003_paprd_init_table(struct ath_hw *ah);
+ bool ar9003_paprd_is_done(struct ath_hw *ah);
++bool ar9003_is_paprd_enabled(struct ath_hw *ah);
+ 
+ /* Hardware family op attach helpers */
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index c70b31a..ade3afb 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -435,7 +435,7 @@ set_timer:
+ 
+ 	mod_timer(&common->ani.timer, jiffies + msecs_to_jiffies(cal_interval));
+ 
+-	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD) && ah->caldata) {
++	if (ar9003_is_paprd_enabled(ah) && ah->caldata) {
+ 		if (!ah->caldata->paprd_done) {
+ 			ieee80211_queue_work(sc->hw, &sc->paprd_work);
+ 		} else if (!ah->paprd_table_write_done) {
 -- 
-1.7.11.7
+1.8.0.1
 
