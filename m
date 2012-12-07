@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:45099 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755624Ab2LMUd2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 15:33:28 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so2173876lag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 12:33:26 -0800 (PST)
+Received: from comal.ext.ti.com ([198.47.26.152]:54878 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933768Ab2LGMUB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 07:20:01 -0500
+Message-ID: <1354882758.31150.7.camel@cumari.coelho.fi> (sfid-20121207_132008_047324_9B083B26)
+Subject: Re: [PATCH 13/20] wlcore: use link count for single-STA-PSM
+ optimization
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 7 Dec 2012 14:19:18 +0200
+In-Reply-To: <1354095769-8724-14-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-14-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <7DDF37406E10F0438561DBB78326DF390391C15265@SC-VEXCH1.marvell.com>
-References: <20121123081444.GA6028@markyou.marvell.com> <20121211194249.GT15974@pogo>
- <50C9F3FA.6000906@gmail.com> <7DDF37406E10F0438561DBB78326DF390391C15265@SC-VEXCH1.marvell.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 13 Dec 2012 12:33:06 -0800
-Message-ID: <CAB=NE6WYYzgOWeG=2UHccp74=-qp2Cvv=SZGY75+5jN4-y0orA@mail.gmail.com> (sfid-20121213_213331_551476_417CAFB8)
-Subject: Re: ACS and Hostapd
-To: Yogesh Powar <yogeshp@marvell.com>
-Cc: Jonathan Bither <jonbither@gmail.com>, "j@w1.fi" <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	Matt Smith <smithm@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 10:54 AM, Yogesh Powar <yogeshp@marvell.com> wrote:
-> Hi Jouni/Luis,
->
-> It seems that, we have some resources that can be utilized to test this
-> feature of ACS for hostapd.
->
-> Before we begin on this work of Luis and optimize/enhance it further, would you
-> like to recommend some immediate changes from the last test results?
+On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
+> Only allow a PSM STA to congest FW memory when it is the single active
+> link. Being a single STA doesn't imply a single link - there might be
+> other links on other roles.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-By my part:
+[...]
 
-The algorithm I wrote was pretty complex and although I did review it
-with some folks who liked it and it made sense the algorithm can be
-simplified by taking the input elements and using a multiplier for
-each one and letting the user configure the multiplier. In other words
-all the log stuff I did and linearizing it some way was not all that
-necessary except for mental masturbation.
+> diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+> index 1fbee0d..28a3027 100644
+> --- a/drivers/net/wireless/ti/wlcore/cmd.c
+> +++ b/drivers/net/wireless/ti/wlcore/cmd.c
+> @@ -328,6 +328,8 @@ int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+>  			wl->fw_status_2->counters.tx_lnk_free_pkts[link];
+>  	wl->links[link].wlvif = wlvif;
+>  	*hlid = link;
+> +
+> +	wl->active_link_count++;
+>  	return 0;
+>  }
+>  
+> @@ -357,6 +359,8 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+>  	wl->links[*hlid].wlvif = NULL;
+>  
+>  	*hlid = WL12XX_INVALID_LINK_ID;
+> +	wl->active_link_count--;
+> +	WARN_ON(wl->active_link_count < 0);
 
-Apart from that its just a matter of testing and proving it works.
+This could be WARN_ON_ONCE().  If we hit this once, it's highly likely
+that we will keep hitting it later on, unless we have another bug that
+would cancel this one out. ;)
 
-  Luis
+I can convert this myself if you agree.
+
+--
+Luca.
+
