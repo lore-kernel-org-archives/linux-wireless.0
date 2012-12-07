@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f172.google.com ([209.85.210.172]:51770 "EHLO
-	mail-ia0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303Ab2LVB6O (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:8831 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422660Ab2LGQ1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2012 20:58:14 -0500
-From: Tejun Heo <tj@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Luciano Coelho <coelho@ti.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 09/25] wl1251: don't use [delayed_]work_pending()
-Date: Fri, 21 Dec 2012 17:56:59 -0800
-Message-Id: <1356141435-17340-10-git-send-email-tj@kernel.org> (sfid-20121222_030310_446995_A607E941)
-In-Reply-To: <1356141435-17340-1-git-send-email-tj@kernel.org>
-References: <1356141435-17340-1-git-send-email-tj@kernel.org>
+	Fri, 7 Dec 2012 11:27:47 -0500
+Message-ID: <1354897663.2707.14.camel@bwh-desktop.uk.solarflarecom.com> (sfid-20121207_172758_436136_931C44B2)
+Subject: Re: [RFC] wireless: check against default_ethtool_ops
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Eric Dumazet <edumazet@google.com>, <netdev@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>,
+	=?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Date: Fri, 7 Dec 2012 16:27:43 +0000
+In-Reply-To: <20121207121617.GA4356@redhat.com>
+References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
+	 <87a9ts4c1q.fsf@nemi.mork.no> <50BF8C18.9060504@candelatech.com>
+	 <20121206122528.GG2502@redhat.com> <50C0FCE0.2090507@candelatech.com>
+	 <20121207095012.GB11933@redhat.com> <87zk1q3xrv.fsf@nemi.mork.no>
+	 <20121207121617.GA4356@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no need to test whether a (delayed) work item in pending
-before queueing, flushing or cancelling it.  Most uses are unnecessary
-and quite a few of them are buggy.
+On Fri, 2012-12-07 at 13:16 +0100, Stanislaw Gruszka wrote:
+> Since:
+> 
+> commit 2c60db037034d27f8c636403355d52872da92f81
+> Author: Eric Dumazet <edumazet@google.com>
+> Date:   Sun Sep 16 09:17:26 2012 +0000
+> 
+>     net: provide a default dev->ethtool_ops
+> 
+> wireless core does not correctly assign ethtool_ops. In order to fix
+> the problem, and avoid assigning ethtool_ops on each individual cfg80211
+> driver, we check against default_ethool_ops pointer instead of NULL in
+> wireless core.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+[...]
+Acked-by: Ben Hutchings <bhutchings@solarflare.com>
 
-Remove unnecessary pending tests from wl1251.  Only compile tested.
+Ideally you could do this assignment unconditionally in the setup
+function for the device, but it doesn't seem like there's a common
+allocation path that you could do that in.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
----
-Please let me know how this patch should be routed.  I can take it
-through the workqueue tree if necessary.
+Ben.
 
-Thanks.
-
- drivers/net/wireless/ti/wl1251/ps.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl1251/ps.c b/drivers/net/wireless/ti/wl1251/ps.c
-index db719f7..b9e27b9 100644
---- a/drivers/net/wireless/ti/wl1251/ps.c
-+++ b/drivers/net/wireless/ti/wl1251/ps.c
-@@ -68,8 +68,7 @@ int wl1251_ps_elp_wakeup(struct wl1251 *wl)
- 	unsigned long timeout, start;
- 	u32 elp_reg;
- 
--	if (delayed_work_pending(&wl->elp_work))
--		cancel_delayed_work(&wl->elp_work);
-+	cancel_delayed_work(&wl->elp_work);
- 
- 	if (!wl->elp)
- 		return 0;
 -- 
-1.8.0.2
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
