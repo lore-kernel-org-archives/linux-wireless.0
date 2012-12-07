@@ -1,98 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:47679 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751033Ab2LUTGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2012 14:06:16 -0500
-From: "Zigman, Eran" <eranz@ti.com>
-To: "Coelho, Luciano" <coelho@ti.com>, Girish Bn <Girish.BN@lnties.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: wl12xx (ol_R5.SP3.05) drivers + firmware (ol_R5.SP3.05) doesn't
- work on WL1271 (HW PG 2.0)
-Date: Fri, 21 Dec 2012 19:06:08 +0000
-Message-ID: <58098F92B10CE64E898E9D20B13AA4830B58C497@DNCE05.ent.ti.com> (sfid-20121221_200620_373456_27D2F818)
-References: <45566970CF58C74CB52107862E0541CD1D1CB484@POCITMSEXMB02.LntUniverse.com>
- <1355945507.5373.2.camel@cumari.coelho.fi>
-In-Reply-To: <1355945507.5373.2.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:56461 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933053Ab2LGMIa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 07:08:30 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] mac80211: restrict assoc request VHT capabilities
+Date: Fri,  7 Dec 2012 13:08:51 +0100
+Message-Id: <1354882131-1538-1-git-send-email-johannes@sipsolutions.net> (sfid-20121207_130833_842267_2AFBC1B4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-THVjYSwNCldlIGhhdmUgdGVzdGVkIHRoZSBiZWxvdyByZWxlYXNlIFI1LlNQMyBvbiBBTTMzNXgg
-YW5kIFdMMTI3MUwgKEhXIFBHIDMueCkgb24gTGludXggYnV0IG5vdCBvbiBQRyAyLjAuDQpJIGFt
-IG5vdCBzdXJlIGlmIHRoZSBSNS5TUDMgZHJpdmVyL2Zpcm13YXJlIHdvdWxkIGhhdmUgYW55IGxp
-bWl0YXRpb25zIG9mIG9sZCB2ZXJzaW9uIFBHMi4wLg0KV2Ugd2lsbCBydW4gdGhlIGV4YWN0IHNj
-ZW5hcmlvcyB0aGF0IHlvdSBtZW50aW9uZWQgZm9yIFdMNiAoUEczLngpIGFuZCB1cGRhdGUuDQoN
-Cg0KQ2FuIHlvdSBwbGVhc2Ugc2hlZCBzb21lIGxpZ2h0IG9uIHRoaXMgYWN0aXZpdHksIGN1c3Rv
-bWVyLi4uIA0KDQpUaGFua3MgYW5kIFJlZ2FyZHMsDQoNCkVyYW4gWmlnbWFuDQpUZXhhcyBJbnN0
-cnVtZW50cyBJbmMNCkVDUyBBcHBsaWNhdGlvbiANCkNlbGw6IDQwOC02ODA5NzM0LCBPZmZpY2U6
-IDcyMTM3MjYNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQ29lbGhvLCBM
-dWNpYW5vIA0KU2VudDogV2VkbmVzZGF5LCBEZWNlbWJlciAxOSwgMjAxMiAxMTozMiBBTQ0KVG86
-IFppZ21hbiwgRXJhbjsgR2lyaXNoIEJuDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
-b3JnDQpTdWJqZWN0OiBSZTogd2wxMnh4IChvbF9SNS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJtd2Fy
-ZSAob2xfUjUuU1AzLjA1KSBkb2Vzbid0IHdvcmsgb24gV0wxMjcxIChIVyBQRyAyLjApDQoNCkhp
-IEVyYW4sDQoNCkNhbiB5b3UgcGxlYXNlIGNoZWNrIEdpcmlzaCdzIGVtYWlsIGJlbG93IGFuZCBo
-ZWxwIGhpbSB3aXRoIHRoaXM/DQoNClRoYW5rcyENCg0KLS0NCkx1Y2EuDQoNCk9uIFdlZCwgMjAx
-Mi0xMi0xOSBhdCAxNDo0MSArMDAwMCwgR2lyaXNoIEJuIHdyb3RlOg0KPiBIaSwNCj4gDQo+IFdl
-IGFyZSBjbGllbnQgaXMgdXNpbmcgdGhlIEpvcmppbiBXRzczMTAtMDAgV0xBTi9CVC9GTSBNb2R1
-bGUgZm9yIG9uZSBvZiB0aGUgV0xBTiBzZXJ2ZXIgbW9kdWxlLg0KPiBXZSBhcmUgcG9ydGluZyB0
-aGUgTGludXggb3BlbiBzb3VyY2UgZHJpdmVycyB0byBXTDEyNzEgYmFzZWQgSm9yamluIG1vZHVs
-ZS4gT3VyIGtlcm5lbCB2ZXJzaW9uIGlzIDIuNi4yOC4yIGFuZCBwcm9jZXNzb3IgaXMgTFBDMzEz
-MC4gVGhlIFBHIHZlciBvZiBXbDEyNzEgaXMgMi4NCj4gUmVjZW50bHkgd2UgaGF2ZSBiYWNrIHBv
-cnRlZCB0aGUgd2wxMnh4IGRyaXZlcnMgZnJvbSB0aGUgVEktT3BlbkxpbmsgDQo+IHNpdGUgV2Ug
-aGF2ZSB0YWtlbiB0aGUgd2wxMnh4IGRyaXZlcnMgZnJvbSANCj4gaHR0cHM6Ly9naXRodWIuY29t
-L1RJLU9wZW5MaW5rL3dsMTJ4eCBhbmQgYnJhbmNoIHI1X2piIGFuZCB0YWcgDQo+IG9sX1I1LlNQ
-My4wNSBBbHNvIHdlIGhhZCB0YWtlbiB0aGUgZmlybXdhcmUgZnJvbSANCj4gaHR0cHM6Ly9naXRo
-dWIuY29tL1RJLU9wZW5MaW5rL3RpLXV0aWxzIGFuZCBicmFuY2ggcjVfamIgYW5kIHRhZyANCj4g
-b2xfUjUuU1AzLjA1IFRoZSBzdXBwbGljYW50IGFsc28gd2FzIHRha2VuIGZyb20gDQo+IGh0dHBz
-Oi8vZ2l0aHViLmNvbS9USS1PcGVuTGluay9ob3N0YXAgYW5kIGJyYW5jaCByNV9qYiBhbmQgdGFn
-IA0KPiBvbF9SNS5TUDMuMDUNCj4gDQo+IFdlIHVzaW5nIHRoZSBtdWx0aS1yb2xlIGZlYXR1cmUg
-b2YgdGhlIGRyaXZlci4NCj4gV2UgaGFkIHNwZWNpZmljYWxseSB0YWtlbiBhYm92ZSBwYWNrYWdl
-IGFzIHdlIHdhbnRlZCB0aGUgQVAgY2hhbm5lbCBzd2l0Y2ggZnVuY3Rpb25hbGl0eS4gVGhpcyBm
-ZWF0dXJlIGhhbmRsZXMgYSBwYXJ0aWN1bGFyIGNhc2UgbGlrZSBpZiB5b3Ugc3RhcnRlZCB0aGUg
-U1RBIG9uIENoYW5uZWwgWCBhbmQgYWxzbyB5b3Ugd2lsbCBzdGFydCBBUCAoUDJQIEdyb3VwIE93
-bmVyKSBvbiB0aGUgc2FtZSBjaGFubmVsIChDaGFubmVsIFgpLiBOb3cgaWYgeW91IGNoYW5nZSB0
-aGUgY2hhbm5lbCBvZiBTdGF0aW9uIHRvIENoYW5uZWwoWSksIHRoZSBkcml2ZXIgYXV0b21hdGlj
-YWxseSB3aWxsIHRha2UgY2FyZSBvZiByZXN0YXJ0aW5nIHRoZSBBUChQMlAgR08pIG9uIHRoZSBz
-YW1lIGNoYW5uZWwoQ2hhbm5lbCBZKS4NCj4gDQo+IFdlIGFyZSBmYWNpbmcgaXNzdWUgd2l0aCB0
-aGlzIHBhY2thZ2UgYW5kIHRoZSBkcml2ZXJzIHdvbid0IHdvcmsgcHJvcGVybHkgZm9yIHVzLg0K
-PiBUaGUgbWFqb3IgaXNzdWVzIHNlZW4gd2l0aCB0aGlzIHBhY2thZ2UgYXJlIDEuIFdlIGFibGUg
-dG8gZG8gdGhlIHNjYW4gDQo+IGFuZCBjb25uZWN0IHRvIGFuIGVuY3J5cHRlZCBuZXR3b3JrLiAg
-QnV0IHdoZW4gd2UgcnVuIERIQ1AgY2xpZW50IG9uIHdsYW4wIHRvIGdldCB0aGUgSVAgYWRkcmVz
-cyBmcm9tIHRoZSBBY2Nlc3MgUG9pbnQsIHRoZSBkcml2ZXIgdGhyb3dzICJ3bDEyeHg6IEJlYWNv
-biBsb3NzIGRldGVjdGVkIiBtZXNzYWdlIGFuZCB0aGUgY29ubmVjdGlvbiBicmVha3MgYW5kIHRo
-ZSBkcml2ZXIgZ2V0cyBpbnRvIFNDQU4gbW9kZSBhbmQgd2lsbCB0cnkgdG8gcmVjb25uZWN0IHRv
-IHRoZSBBY2Nlc3MgUG9pbnQuIEV2ZW50dWFsbHkgd2UgZG9uJ3QgcmVjZWl2ZSB0aGUgSVAgYWRk
-cmVzcyBmcm9tIHRoZSBBY2Nlc3MgUG9pbnQuDQo+IDIuIEkgd2FzIGFibGUgdG8gc3RhcnQgdGhl
-IFN0YXRpb24gYW5kIEFQIHJvbGUgb24gdGhlIHNhbWUgY2hhbm5lbC4gQnV0IHRoZSBhZnRlciBz
-dGF0aW5nIHRoZSBBUCByb2xlLCBzdGF0aW9uIHJvbGUgd2lsbCBiZSBkaXNjb25uZWN0ZWQgYXV0
-b21hdGljYWxseSBhbmQgSSB3b24ndCBiZSBhYmxlIHRvIGRvIHNjYW4gYW5kIGNvbm5lY3Rpb24g
-b24gU1RBLg0KPiAzLiBBbHNvIGNhbm5vdCBjb25uZWN0IHRvIG15IFN5c3RlbSB3aGljaCBpcyBh
-Y3RpbmcgYXMgUDJQIEdyb3VwIE93bmVyKEFQKSBmcm9tIGFueSBvdGhlciBXaS1GaSBkZXZpY2Ug
-bGlrZSBpUGhvbmUvTGFwdG9wIG9yIGFueSBvdGhlci4gVGhlIGlzc3VlIGlzIHNlZW4gd2hlbiBT
-eXN0ZW0gaXMgc2V0IHRvIFAyUCBHTyBlaXRoZXIgdXNpbmcgU2luZ2xlIFJvbGUgZmlybXdhcmUg
-b25seSBvciB1c2luZyBNdWx0aS1yb2xlIGZpcm13YXJlLg0KPiANCj4gV2Ugc3VzcGVjdCB0aGUg
-aXNzdWUgd2l0aCB0aGUgYWJvdmUgdmVyc2lvbnMgb2YgKG9sX1I1LlNQMy4wNSkgd2wxMjd4IA0K
-PiBmaXJtd2FyZSBhbmQgc3VycHJpc2luZ2x5IGFsbCB0aGUgYWJvdmUgdGhyZWUgaXNzdWVzIGFy
-ZSBOT1Qgc2VlbiB3aGVuIA0KPiBJIHVzZSB0aGUgYmVsb3cgZmlybXdhcmUgdmVyc2lvbnMgKHdo
-aWNoIGlzIHF1aXRlIG9sZCkgU2luZ2xlIFJvbGUgDQo+IChTUik6ICBSZXYgNi4zLjcuMC4xMDUN
-Cj4gTXVsdGktUm9sZShNUik6IFJldiA2LjUuNS4wLjIxDQo+IA0KPiANCj4gVGhlIGZpcm13YXJl
-IHZlcnNpb25zIHRha2VuIGZyb20gDQo+IGh0dHBzOi8vZ2l0aHViLmNvbS9USS1PcGVuTGluay90
-aS11dGlscyBhbmQgYnJhbmNoIHI1X2piIGFuZCB0YWcgDQo+IG9sX1I1LlNQMy4wNSBhcmUgU2lu
-Z2xlIFJvbGUgKFNSKTogIFJldiA2LjMuMTAuMC4xMzIgTXVsdGktUm9sZSAoTVIpOiANCj4gUmV2
-IDYuNS43LjAuNDINCj4gDQo+IENhbiB5b3UgbGV0IHVzIGtub3cgd2hldGhlciBXbDEyNzEgaHcg
-UEcgVmVyIDIuMCBjYW4gcnVuIHRoZSBvbF9SNS5TUDMuMDUgZmlybXdhcmUgc3VjY2Vzc2Z1bGx5
-IG9yIGFueSBoYXJkd2FyZSBsaW1pdGF0aW9ucyB3aXRoIFdsMTI3MT8NCj4gQW55IHN1Z2dlc3Rp
-b25zIG9uIHRoZSBhYm92ZSBpc3N1ZXMgd2lsbCBiZSBncmVhdGx5IGhlbHBmdWwNCj4gDQo+IA0K
-PiBUaGFua3MgJiBSZWdhcmRzLA0KPiBHaXJpc2gNCj4gTCZUIElFUywNCj4gS0lBREIgSW5kdXN0
-cmlhbCBBcmVhLA0KPiBIZWJiYWwtSG9vdGFnYWxsaSwgTXlzb3JlIC0gNTcwIDAxOA0KPiBUZWxl
-cGhvbmUgOiAgRElEKzkxLTgyMS0yNDA1NTUyDQo+IE1vYmlsZTogKzkxLTk3NDEyMDY0MDINCj4g
-RS1tYWlsIElEIDpHaXJpc2guQk5AbG50aWVzLmNvbQ0KPiB3d3cubG50aWVzLmNvbQ0KPiANCj4g
-VGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KPiAoICApIEwmVCBJRVMgUHJvcHJpZXRhcnkN
-Cj4gKCAgKSBMJlQgSUVTIENvbmZpZGVudGlhbA0KPiAoWCkgTCZUIElFUyBJbnRlcm5hbCBVc2UN
-Cj4gKCApIEwmVCBJRVMgR2VuZXJhbCBCdXNpbmVzcw0KPiANCj4gTGFyc2VuICYgVG91YnJvIExp
-bWl0ZWQNCj4gDQo+IHd3dy5sYXJzZW50b3Vicm8uY29tDQo+IA0KPiBUaGlzIEVtYWlsIG1heSBj
-b250YWluIGNvbmZpZGVudGlhbCBvciBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIGZvciB0aGUgaW50
-ZW5kZWQgcmVjaXBpZW50IChzKS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVu
-dCwgcGxlYXNlIGRvIG5vdCB1c2Ugb3IgZGlzc2VtaW5hdGUgdGhlIGluZm9ybWF0aW9uLCBub3Rp
-ZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGl0IGZyb20geW91ciBzeXN0ZW0uDQoNCg==
+From: Johannes Berg <johannes.berg@intel.com>
+
+In interoperability testing some APs showed bad behaviour
+if some of the VHT capabilities of the station are better
+than their own. Restrict the assoc request parameters
+ - beamformee capabable,
+ - RX STBC and
+ - RX MCS set
+to the subset that the AP can support.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/mlme.c        | 51 +++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 50 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f148cfa..6f36ab7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -409,6 +409,8 @@ struct ieee80211_mgd_assoc_data {
+ 
+ 	u8 ap_ht_param;
+ 
++	struct ieee80211_vht_cap ap_vht_cap;
++
+ 	size_t ie_len;
+ 	u8 ie[];
+ };
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 22e98de..508fa25 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -341,11 +341,13 @@ static void ieee80211_add_ht_ie(struct ieee80211_sub_if_data *sdata,
+ 
+ static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
+ 				 struct sk_buff *skb,
+-				 struct ieee80211_supported_band *sband)
++				 struct ieee80211_supported_band *sband,
++				 struct ieee80211_vht_cap *ap_vht_cap)
+ {
+ 	u8 *pos;
+ 	u32 cap;
+ 	struct ieee80211_sta_vht_cap vht_cap;
++	int i;
+ 
+ 	BUILD_BUG_ON(sizeof(vht_cap) != sizeof(sband->vht_cap));
+ 
+@@ -364,6 +366,42 @@ static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
+ 		cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
+ 	}
+ 
++	/*
++	 * Some APs apparently get confused if our capabilities are better
++	 * than theirs, so restrict what we advertise in the assoc request.
++	 */
++	if (!(ap_vht_cap->vht_cap_info &
++			cpu_to_le32(IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)))
++		cap &= ~IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE;
++
++	if (!(ap_vht_cap->vht_cap_info &
++			cpu_to_le32(IEEE80211_VHT_CAP_TXSTBC)))
++		cap &= ~(IEEE80211_VHT_CAP_RXSTBC_1 |
++			 IEEE80211_VHT_CAP_RXSTBC_3 |
++			 IEEE80211_VHT_CAP_RXSTBC_4);
++
++	for (i = 0; i < 8; i++) {
++		int shift = i * 2;
++		u16 mask = IEEE80211_VHT_MCS_NOT_SUPPORTED << shift;
++		u16 ap_mcs, our_mcs;
++
++		ap_mcs = (le16_to_cpu(ap_vht_cap->supp_mcs.tx_mcs_map) &
++								mask) >> shift;
++		our_mcs = (le16_to_cpu(vht_cap.vht_mcs.rx_mcs_map) &
++								mask) >> shift;
++
++		switch (ap_mcs) {
++		default:
++			if (our_mcs <= ap_mcs)
++				break;
++			/* fall through */
++		case IEEE80211_VHT_MCS_NOT_SUPPORTED:
++			vht_cap.vht_mcs.rx_mcs_map &= cpu_to_le16(~mask);
++			vht_cap.vht_mcs.rx_mcs_map |=
++				cpu_to_le16(ap_mcs << shift);
++		}
++	}
++
+ 	/* reserve and fill IE */
+ 	pos = skb_put(skb, sizeof(struct ieee80211_vht_cap) + 2);
+ 	ieee80211_ie_build_vht_cap(pos, &vht_cap, cap);
+@@ -562,7 +600,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 				    sband, chan, sdata->smps_mode);
+ 
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
+-		ieee80211_add_vht_ie(sdata, skb, sband);
++		ieee80211_add_vht_ie(sdata, skb, sband,
++				     &assoc_data->ap_vht_cap);
+ 
+ 	/* if present, add any custom non-vendor IEs that go after HT */
+ 	if (assoc_data->ie_len && assoc_data->ie) {
+@@ -3770,7 +3809,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_bss *bss = (void *)req->bss->priv;
+ 	struct ieee80211_mgd_assoc_data *assoc_data;
+ 	struct ieee80211_supported_band *sband;
+-	const u8 *ssidie, *ht_ie;
++	const u8 *ssidie, *ht_ie, *vht_ie;
+ 	int i, err;
+ 
+ 	assoc_data = kzalloc(sizeof(*assoc_data) + req->ie_len, GFP_KERNEL);
+@@ -3889,6 +3928,12 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 			((struct ieee80211_ht_operation *)(ht_ie + 2))->ht_param;
+ 	else
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
++	vht_ie = ieee80211_bss_get_ie(req->bss, WLAN_EID_VHT_CAPABILITY);
++	if (vht_ie && vht_ie[1] >= sizeof(struct ieee80211_vht_cap))
++		memcpy(&assoc_data->ap_vht_cap, vht_ie + 2,
++		       sizeof(struct ieee80211_vht_cap));
++	else
++		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+ 	rcu_read_unlock();
+ 
+ 	if (bss->wmm_used && bss->uapsd_supported &&
+-- 
+1.8.0
+
