@@ -1,30 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:38375 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756631Ab2LMUtg (ORCPT
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:54968
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756318Ab2LGPAl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 15:49:36 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so2186663lag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 12:49:35 -0800 (PST)
+	Fri, 7 Dec 2012 10:00:41 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <1355424107-31412-1-git-send-email-juhosg@openwrt.org>
-References: <1355424107-31412-1-git-send-email-juhosg@openwrt.org>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 13 Dec 2012 12:49:15 -0800
-Message-ID: <CAB=NE6Unx+p8k--efOG9+nqD-1orQdtgEMGwfVgVQF0uwsiz0w@mail.gmail.com> (sfid-20121213_214939_950073_F27AD7E3)
-Subject: Re: [PATCH] qca-swiss-army-knife: update checksums.txt
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20674.1145.341426.66436@gargle.gargle.HOWL> (sfid-20121207_160044_383147_4FCB0D99)
+Date: Fri, 7 Dec 2012 20:30:09 +0530
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/8] ath9k_hw: Fix PAPRD training
+In-Reply-To: <20121207102826.GB3145@hemis.qca.qualcomm.com>
+References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
+	<1354874521-4138-3-git-send-email-sujith@msujith.org>
+	<20121207102826.GB3145@hemis.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 10:41 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
-> Due to the recent changes in AR9340 initvals,
-> checksums.txt needs to be updated.
->
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Rajkumar Manoharan wrote:
+> > +
+> > +	if (AR_SREV_9485(ah)) {
+> > +		val = 148;
+> > +	} else {
+> > +		if (IS_CHAN_2GHZ(ah->curchan)) {
+> > +			if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+> > +				val = 0x91;
+> Please change the hex to decimal for the sake of uniformity
 
-Applied and pushed, thanks!
+Ok. :)
 
-  Luis
+Sujith
