@@ -1,66 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59962 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753323Ab2LKPI7 (ORCPT
+Received: from ks28632.kimsufi.com ([91.121.96.152]:43976 "EHLO
+	ks28632.kimsufi.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537Ab2LGVdT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 10:08:59 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so1665321bkw.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 07:08:57 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH 3/3] p54: zero-out rx_status
-Date: Tue, 11 Dec 2012 16:08:43 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1355234105-12013-1-git-send-email-juhosg@openwrt.org> <1355234105-12013-3-git-send-email-juhosg@openwrt.org>
-In-Reply-To: <1355234105-12013-3-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201212111608.43293.chunkeey@googlemail.com> (sfid-20121211_160907_576808_50E80D43)
+	Fri, 7 Dec 2012 16:33:19 -0500
+Message-ID: <1354913667.4530.9.camel@tiger2> (sfid-20121207_223324_059443_254813B2)
+Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
+From: Eric Leblond <eric@regit.org>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Date: Fri, 07 Dec 2012 21:54:27 +0100
+In-Reply-To: <20121207.153134.25835204617509469.davem@davemloft.net>
+References: <1354906561-4695-1-git-send-email-eric@regit.org>
+	 <20121207.153134.25835204617509469.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, December 11, 2012 02:55:05 PM Gabor Juhos wrote:
-> In commit 'mac80211: support radiotap vendor namespace RX data'
-> new fields were added to 'struct ieee80211_rx_status'.
-> The ath5k driver does not initializes those fields and
-      ^^^^^ p54?!
+Hi,
 
-> this can cause unexpected behaviour. The patch ensures
-> that each field gets initialized with zeroes.
-
-Actually, when the skb is alloced/initialized by
-__alloc_skb, the skb->cb is already zeroed (which
-is where the ieee80211_rx_status will be stored).
-
-And while p54 recycles command response skbs, the 
-driver does not touch the skb->cb of 802.11 skbs,
-until the frame is destined for ieee80211_rx_irqsave.
-
-If this issue just popped up now, I suspect that 
-something else is silently corrupting our SKBs 
-[or can anybody see how rt2x00 hit this issue?]
-
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> ---
-> Compile tested only.
-> ---
->  drivers/net/wireless/p54/txrx.c |    2 ++
->  1 file changed, 2 insertions(+)
+On Fri, 2012-12-07 at 15:31 -0500, David Miller wrote:
+> From: Eric Leblond <eric@regit.org>
+> Date: Fri,  7 Dec 2012 19:56:01 +0100
 > 
-> diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-> index 12f0a34..be2552e 100644
-> --- a/drivers/net/wireless/p54/txrx.c
-> +++ b/drivers/net/wireless/p54/txrx.c
-> @@ -345,6 +345,8 @@ static int p54_rx_data(struct p54_common *priv, struct sk_buff *skb)
->  	if (!(hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_IN_FCS_GOOD)))
->  		return 0;
->  
-> + 	memset(rx_status, 0, sizeof(*rx_status));
-> +
->  	if (hdr->decrypt_status == P54_DECRYPT_OK)
->  		rx_status->flag |= RX_FLAG_DECRYPTED;
->  	if ((hdr->decrypt_status == P54_DECRYPT_FAIL_MICHAEL) ||
+> Wireless folks, please take a look.  The issue is that,
+> under the circumstances listed below, we get SKBs in
+> the AF_PACKET input path that are shared.
 > 
+> Given the logic present in ieee80211_deliver_skb() I think
+> the mac80211 code doesn't expect this either.
+> 
+> More commentary from me below:
+> 
+> > This patch is adding a check on skb before trying to defrag the
+> > packet for the hash computation in fanout mode. The goal of this
+> > patch is to avoid an kernel crash in pskb_expand_head.
+> > It appears that under some specific condition there is a shared
+> > skb reaching the defrag code and this lead to a crash due to the
+> > following code:
+> > 
+> > 	if (skb_shared(skb))
+> > 		BUG();
+> > 
+> > I've observed this crash under the following condition:
+> >  1. a program is listening to an wifi interface (let say wlan0)
+> >  2. it is using fanout capture in flow load balancing mode
+> >  3. defrag option is on on the fanout socket
+> >  4. the interface disconnect (radio down for example)
+> >  5. the interface reconnect (radio switched up)
+> >  6. once reconnected a single packet is seen with skb->users=2
+> >  7. the kernel crash in pskb_expand_head at skbuff.c:1035
+> > 
+> > [BBB55:744364] [<ffffffff812a2761>] ? __pskb_pull_tail+0x43x0x26f
+> > [BB8S5.744395] [<ffffffff812d29Tb>] ? ip_check_defrag+ox3a/0x14a
+> > [BBB55.744422] [<ffffffffB1344459>] ? packet_rcv_fanout+ox5e/oxf9
+> > [BBBS5.7444S0] [<ffffffffB12aaS9b>] ? __netif_receive_skb+ox444/ox4f9
+> > [BBB55.T4447B] [<ffffffffB12aa?e1>] ? netif_receive_skb+ox6d/0x?3
+> > [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_deliver_skb+0xbd/0xfa [mac80211]
+> > [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_rx_h_data+0x1e0/0x21a [mac80211]
+> > [BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_rx_handlers+0x3d5/0x480 [mac80211]
+> > [BBB55.T4447B] [<ffffffffB12aa?e1>] ? __wake_up
+> > [BBB55.T4447B] [<ffffffffB12aa?e1>] ? evdev_eventr+0xc0/0xcf [evdev]
+> > 
+> > Signed-off-by: Eric Leblond <eric@regit.org>
+> 
+> So if we look at ieee80211_deliver_skb(), it has code to deal with unaligned
+> packet headers, wherein it memoves() the data into a better aligned location.
+> 
+> But if these SKBs really are skb_shared(), this packet data
+> modification is illegal.
+> 
+> I suspect that the assumptions built into this unaligned data handling
+> code, and AF_PACKET, are correct.  Meaning that we should never see
+> skb_shared() packets here.  We just have a missing skb_copy()
+> somewhere in mac80211, Johannes can you please take a look?
+
+Here's some more info that may help people knowing the code. During my
+test, I've removed the BUG() and replaced with a printk to have a living
+kernel. Only one single shared skb was seen for each up event.
+
+I've also add another oops in the same code:
+[BBB55:744364] [<ffffffff812a2761>] ? __pskb_pull_tail+0x43x0x26f
+[BB8S5.744395] [<ffffffff812d29Tb>] ? ip_check_defrag+ox3a/0x14a
+[BBB55.744422] [<ffffffffB1344459>] ? packet_rcv_fanout+ox5e/oxf9
+[BBBS5.7444S0] [<ffffffffB12aaS9b>] ? __netif_receive_skb+ox444/ox4f9
+[BBB55.T4447B] [<ffffffffB12aa?e1>] ? netif_receive_skb+ox6d/0x?3
+[BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_deliver_skb+0xbd/0xfa [mac80211]
+[BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_rx_h_data+0x1e0/0x21a [mac80211]
+[BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_rx_handlers+0x3d5/0x480 [mac80211]
+[BBB55.T4447B] [<ffffffffB12aa?e1>] ? _raw_spin_lock_irqsave+0x14/0x35
+[BBB55.T4447B] [<ffffffffB12aa?e1>] ? ieee80211_prepare_and_rx_handle+0x5a3/0x5db [mac80211]
+...
+[BBB55.T4447B] [<ffffffffB12aa?e1>] ? ttwu_dowakeup+0x2d
+
+Picture of the oops available here:
+	http://home.regit.org/~regit/wireless-oops.jpg
+
+BR,
+-- 
+Eric Leblond <eric@regit.org>
+Blog: https://home.regit.org/
+
