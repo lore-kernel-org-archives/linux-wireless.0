@@ -1,57 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42210 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633Ab2LJVs5 (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56980 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755134Ab2LGR5P convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 16:48:57 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/10] iwlwifi: clear trans->op_mode pointer when it is leaving
-Date: Mon, 10 Dec 2012 22:49:10 +0100
-Message-Id: <1355176158-24675-2-git-send-email-johannes@sipsolutions.net> (sfid-20121210_224903_424653_36BD119D)
-In-Reply-To: <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
-References: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
- <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 7 Dec 2012 12:57:15 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so601586lbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 09:57:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <50C217EB.3070808@openwrt.org>
+References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
+ <1354817847-23440-11-git-send-email-juhosg@openwrt.org> <CAB=NE6WwuwKzLkLxsggvAGhF5TKcDjWbaw3vkst4gnLFEYjP7Q@mail.gmail.com>
+ <50C217EB.3070808@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Fri, 7 Dec 2012 09:56:53 -0800
+Message-ID: <CAB=NE6XM2PpgN3mqwPbKDneoB76jAfUaLvhm7-CDMVTEeSkuVQ@mail.gmail.com> (sfid-20121207_185720_141276_29E1765A)
+Subject: Re: [PATCH v2 10/13] qca-swiss-army-knife: allow to print initvals
+ with more than 5 columns
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, Dec 7, 2012 at 8:23 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> 2012.12.07. 0:02 keltezéssel, Luis R. Rodriguez írta:
+>> On Thu, Dec 6, 2012 at 10:17 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>>> @@ -416,19 +423,26 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+>>>         return val;
+>>>  }
+>>>
+>>> -static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
+>>> +static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+>>> +                                  u32 columns, bool onedim, bool wide)
+>>>  {
+>>> -       u32 p_columns = columns > 5 ? 5 : columns;
+>>> +       u32 p_columns;
+>>>         u32 col, row;
+>>>
+>>> -       /*
+>>> -        * This checksum stuff is designed for columns <= 8),
+>>> -        * and spreads the checksum over 64 bits but since currently
+>>> -        * the initval max column size is 6 we only use the first 48
+>>> -        * bits.
+>>> -        */
+>>> -       if (columns > 6)
+>>> -               return;
+>>> +       if (wide) {
+>>> +               p_columns = columns;
+>>> +       } else {
+>>> +               p_columns = columns > 5 ? 5 : columns;
+>>> +
+>>> +               /*
+>>> +               * This checksum stuff is designed for columns <= 8),
+>>> +               * and spreads the checksum over 64 bits but since currently
+>>> +               * the initval max column size is 6 we only use the first 48
+>>> +               * bits.
+>>> +               */
+>>> +               if (columns > 6)
+>>> +                       return;
+>>> +       }
+>>
+>> The comment here was for the case that we were using the old nasty
+>> checksum thingy I invented, prior to you adding SHA1 checksum support.
+>> The column limitation therefore seems artificial here ?
+>
+> Well, the comment and the 'if (columns > 6)' block can be removed.
+> However, the
+>         p_columns = columns > 5 ? 5 : columns;
+> line ensures that we don't print the values for 'Turbo' modes. Although it can
+> be removed (along with the 'wide' argument) but that needs more changes.
 
-Since the op_mode is leaving, the transport should set
-its pointer to it to NULL to not point to freed memory.
+Sure.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+>> Also, as per Adrian's advice on the eeprom dump tool, perhaps we can
+>> remove clutter from the initvals tool by allowing us to copy to the
+>> local directory the initval files from a linux-next tag.
+>>
+>> git show next-20121204:drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+>>> path/ar9002_initvals.h
+>>
+>> For example. But this would mean requiring us to get diffs by using a
+>> kernel git tree, separate from where we are. Not sure if there are
+>> gains with this strategy. Its unclear.
+>
+> Copying the initval headers from a git tree would add unnecessary complexity
+> IMHO. If we want to check the validity of the initval headers in a given kernel
+> tree, that can be achieved in a simpler way. The path which contains the ath9k
+> specific initval headers can be defined as an include dir while compiling the
+> initval tool.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index e378ea6d..98072c2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -489,10 +489,6 @@ struct iwl_trans {
- static inline void iwl_trans_configure(struct iwl_trans *trans,
- 				       const struct iwl_trans_config *trans_cfg)
- {
--	/*
--	 * only set the op_mode for the moment. Later on, this function will do
--	 * more
--	 */
- 	trans->op_mode = trans_cfg->op_mode;
- 
- 	trans->ops->configure(trans, trans_cfg);
-@@ -512,6 +508,9 @@ static inline void iwl_trans_stop_hw(struct iwl_trans *trans,
- 
- 	trans->ops->stop_hw(trans, op_mode_leaving);
- 
-+	if (op_mode_leaving)
-+		trans->op_mode = NULL;
-+
- 	trans->state = IWL_TRANS_NO_FW;
- }
- 
--- 
-1.8.0
+Makes sense.
 
+  Luis
