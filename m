@@ -1,73 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44303 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751903Ab2LDNYD (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:41688 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752568Ab2LGAC1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 08:24:03 -0500
-Message-ID: <1354627464.9608.0.camel@jlt4.sipsolutions.net> (sfid-20121204_142407_503413_8E8E7003)
-Subject: Re: [RFC] mac80211: add debugfs file for mic failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Saravana <saravanad@posedge.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 04 Dec 2012 14:24:24 +0100
-In-Reply-To: <50BDF869.5030702@posedge.com>
-References: <50BDF869.5030702@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 6 Dec 2012 19:02:27 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so18082lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 16:02:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354812468-15709-6-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-6-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 6 Dec 2012 16:02:05 -0800
+Message-ID: <CAB=NE6Xea8PWs+cSRe39zL5g8U2RUt8g7fbVHmrM+1MYM9286Q@mail.gmail.com> (sfid-20121207_010229_890848_495E7656)
+Subject: Re: [PATCH 05/24] regulatory: don't test list before iterating
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-04 at 18:49 +0530, Saravana wrote:
-> The mic failure count will provide the number of mic failure that 
-> have happened without a countermeasure being started. Once the 
-> countermeasure is started, the counter will be reset to 0.
-> This count will be helpful when the consecutive 
-> mic failure occur at intervals greater than 60 seconds regularly(frequently).
-> 
-> Signed-off-by: Saravana <saravanad@posedge.com>
-> ---
->  net/mac80211/debugfs_key.c |   20 ++++++++++++++++++++
->  net/mac80211/key.h         |    3 +++
->  net/mac80211/wpa.c         |    2 ++
->  3 files changed, 25 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
-> index 2d42354..1cc262e 100644
-> --- a/net/mac80211/debugfs_key.c
-> +++ b/net/mac80211/debugfs_key.c
-> @@ -199,6 +199,25 @@ static ssize_t key_icverrors_read(struct file *file, char __user *userbuf,
->  }
->  KEY_OPS(icverrors);
->  
-> +static ssize_t key_mic_failures_read(struct file *file, char __user *userbuf,
-> +				  size_t count, loff_t *ppos)
+On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> There's no need to test whether a list is
+> empty or not before iterating.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-please fix indentation
+Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 
-> +{
-> +	struct ieee80211_key *key = file->private_data;
-> +	char buf[20];
-> +	int len;
-> +
-> +	switch (key->conf.cipher) {
-> +	case WLAN_CIPHER_SUITE_TKIP:
-> +		len = scnprintf(buf, sizeof(buf), "%u\n",
-> +				key->u.tkip.mic_failures);
-> +		break;
-> +	default:
-> +		return 0;
-> +	}
+I had also ran into issues without the checks, but glad you have
+verified things are kosher.
 
-I think this should just be
-
-if (key->conf.cipher != TKIP)
-	return -EINVAL;
-
-len = scnprintf(...)
-
-> +	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
-
-Other than that looks fine.
-
-johannes
-
+  Luis
