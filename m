@@ -1,177 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44589 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753975Ab2LDOtY (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58397 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424708Ab2LGWOi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 09:49:24 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 14/18] regulatory: clarify locking rules and assertions
-Date: Tue,  4 Dec 2012 15:48:56 +0100
-Message-Id: <1354632540-21207-15-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154928_618062_C567160A)
-In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
-References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 7 Dec 2012 17:14:38 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so648555pbc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 14:14:38 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [RFCv3 1/5] {nl,cfg,mac}80211: set beacon interval and DTIM period on mesh join
+Date: Fri,  7 Dec 2012 14:13:59 -0800
+Message-Id: <1354918443-3076-2-git-send-email-marco@cozybit.com> (sfid-20121207_231453_767368_C902B1E5)
+In-Reply-To: <1354918443-3076-1-git-send-email-marco@cozybit.com>
+References: <1354918443-3076-1-git-send-email-marco@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Move the default mesh beacon interval and DTIM period to cfg80211 and
+make it accessible to nl80211. This enables setting both values when joining
+an MBSS.
+Previously the DTIM parameter was not set by mac80211 so the driver's default
+value was used.
 
-Many places that currently check that cfg80211_
-The function needs to hold the cfg80211_mutex as
-it uses the global cfg80211_regdomain variable, so
-add the lock assertion to it and fix one of the
-callers that doesn't hold that mutex.
-
-Also remove a whole bunch of pointless assertions
-for the mutex that are in functions that don't use
-anything protected by it but add some others where
-they actually make sense.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Marco Porsch <marco@cozybit.com>
 ---
- net/wireless/reg.c | 31 +++++++++++--------------------
- 1 file changed, 11 insertions(+), 20 deletions(-)
+ include/net/cfg80211.h |    4 ++++
+ net/mac80211/cfg.c     |    3 +++
+ net/mac80211/mesh.c    |    1 -
+ net/mac80211/mesh.h    |    2 --
+ net/wireless/mesh.c    |    5 +++++
+ net/wireless/nl80211.c |   14 ++++++++++++++
+ 6 files changed, 26 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1dc94da..e0a7312 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -94,14 +94,14 @@ static struct device_type reg_device_type = {
- /*
-  * Central wireless core regulatory domains, we only need two,
-  * the current one and a world regulatory domain in case we have no
-- * information to give us an alpha2
-+ * information to give us an alpha2.
-+ * Protected by the cfg80211_mutex.
-  */
- const struct ieee80211_regdomain *cfg80211_regdomain;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e78db2c..a31e893 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1009,6 +1009,8 @@ struct mesh_config {
+  * @ie_len: length of vendor information elements
+  * @is_authenticated: this mesh requires authentication
+  * @is_secure: this mesh uses security
++ * @dtim_period: DTIM period to use
++ * @beacon_interval: beacon interval to use
+  * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
+  *
+  * These parameters are fixed when the mesh is created.
+@@ -1024,6 +1026,8 @@ struct mesh_setup {
+ 	u8 ie_len;
+ 	bool is_authenticated;
+ 	bool is_secure;
++	u8 dtim_period;
++	u16 beacon_interval;
+ 	int mcast_rate[IEEE80211_NUM_BANDS];
+ };
  
- /*
-  * Protects static reg.c components:
-  *     - cfg80211_world_regdom
-- *     - cfg80211_regdom
-  *     - last_request
-  *     - reg_num_devs_support_basehint
-  */
-@@ -186,6 +186,9 @@ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 4965aa6..7227477 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1604,6 +1604,9 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	memcpy(sdata->vif.bss_conf.mcast_rate, setup->mcast_rate,
+ 						sizeof(setup->mcast_rate));
  
- static void reset_regdomains(bool full_reset)
- {
-+	assert_cfg80211_lock();
-+	assert_reg_lock();
++	sdata->vif.bss_conf.beacon_int = setup->beacon_interval;
++	sdata->vif.bss_conf.dtim_period = setup->dtim_period;
 +
- 	/* avoid freeing static information or freeing something twice */
- 	if (cfg80211_regdomain == cfg80211_world_regdom)
- 		cfg80211_regdomain = NULL;
-@@ -216,6 +219,9 @@ static void update_world_regdomain(const struct ieee80211_regdomain *rd)
- {
- 	WARN_ON(!last_request);
+ 	return 0;
+ }
  
-+	assert_cfg80211_lock();
-+	assert_reg_lock();
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 1bf03f9..a4b332c 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -624,7 +624,6 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_queue_work(&local->hw, &sdata->work);
+ 	sdata->vif.bss_conf.ht_operation_mode =
+ 				ifmsh->mshcfg.ht_opmode;
+-	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
+ 	sdata->vif.bss_conf.basic_rates =
+ 		ieee80211_mandatory_rates(sdata->local,
+ 					  ieee80211_get_sdata_band(sdata));
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 7c9215f..7f3a78f 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -191,8 +191,6 @@ struct mesh_rmc {
+ #define IEEE80211_MESH_PEER_INACTIVITY_LIMIT (1800 * HZ)
+ #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
+ 
+-#define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
+-
+ #define MESH_PATH_EXPIRE (600 * HZ)
+ 
+ /* Default maximum number of plinks per interface */
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 3ee5a72..6d8ce90 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -44,6 +44,9 @@
+ 
+ #define MESH_SYNC_NEIGHBOR_OFFSET_MAX 50
+ 
++#define MESH_DEFAULT_BEACON_INTERVAL	1000 	/* in 1024 us units (=TUs) */
++#define MESH_DEFAULT_DTIM_PERIOD	1
 +
- 	reset_regdomains(false);
+ const struct mesh_config default_mesh_config = {
+ 	.dot11MeshRetryTimeout = MESH_RET_T,
+ 	.dot11MeshConfirmTimeout = MESH_CONF_T,
+@@ -79,6 +82,8 @@ const struct mesh_setup default_mesh_setup = {
+ 	.ie = NULL,
+ 	.ie_len = 0,
+ 	.is_secure = false,
++	.beacon_interval = MESH_DEFAULT_BEACON_INTERVAL,
++	.dtim_period = MESH_DEFAULT_DTIM_PERIOD,
+ };
  
- 	cfg80211_world_regdom = rd;
-@@ -423,8 +429,6 @@ static int call_crda(const char *alpha2)
- /* Used by nl80211 before kmalloc'ing our regulatory domain */
- bool reg_is_valid_request(const char *alpha2)
- {
--	assert_cfg80211_lock();
--
- 	if (!last_request)
- 		return false;
+ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2d08d9d..dd179ad 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6652,6 +6652,20 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 			    nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
+ 			return -EINVAL;
  
-@@ -924,8 +928,6 @@ bool reg_last_request_cell_base(void)
- {
- 	bool val;
- 
--	assert_cfg80211_lock();
--
- 	mutex_lock(&reg_mutex);
- 	val = reg_request_cell_base(last_request);
- 	mutex_unlock(&reg_mutex);
-@@ -1008,8 +1010,6 @@ static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
- 	bool channel_changed = false;
- 	struct ieee80211_channel chan_before;
- 
--	assert_cfg80211_lock();
--
- 	sband = wiphy->bands[reg_beacon->chan.band];
- 	chan = &sband->channels[chan_idx];
- 
-@@ -1051,8 +1051,6 @@ static void wiphy_update_new_beacon(struct wiphy *wiphy,
- 	unsigned int i;
- 	struct ieee80211_supported_band *sband;
- 
--	assert_cfg80211_lock();
--
- 	if (!wiphy->bands[reg_beacon->chan.band])
- 		return;
- 
-@@ -1071,8 +1069,6 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
- 	struct ieee80211_supported_band *sband;
- 	struct reg_beacon *reg_beacon;
- 
--	assert_cfg80211_lock();
--
- 	list_for_each_entry(reg_beacon, &reg_beacon_list, list) {
- 		if (!wiphy->bands[reg_beacon->chan.band])
- 			continue;
-@@ -1084,6 +1080,8 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
- 
- static bool reg_is_world_roaming(struct wiphy *wiphy)
- {
-+	assert_cfg80211_lock();
++	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
++			setup.beacon_interval =
++				nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
++			if (setup.beacon_interval < 10 || setup.beacon_interval > 10000)
++				return -EINVAL;
++	}
 +
- 	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
- 	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
- 		return true;
-@@ -1125,8 +1123,6 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- 	struct ieee80211_channel *channel_before = NULL, *channel_after = NULL;
- 	unsigned int i;
- 
--	assert_cfg80211_lock();
--
- 	if (!is_ht40_allowed(channel)) {
- 		channel->flags |= IEEE80211_CHAN_NO_HT40;
- 		return;
-@@ -1189,6 +1185,7 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
- {
- 	enum ieee80211_band band;
- 
-+	assert_cfg80211_lock();
- 	assert_reg_lock();
- 
- 	if (ignore_reg_update(wiphy, initiator))
-@@ -1308,8 +1305,6 @@ get_reg_request_treatment(struct wiphy *wiphy,
- {
- 	struct wiphy *last_wiphy = NULL;
- 
--	assert_cfg80211_lock();
--
- 	/* All initial requests are respected */
- 	if (!last_request)
- 		return REG_REQ_OK;
-@@ -2255,8 +2250,6 @@ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
- 
- void wiphy_regulatory_register(struct wiphy *wiphy)
- {
--	assert_cfg80211_lock();
--
- 	mutex_lock(&reg_mutex);
- 
- 	if (!reg_dev_ignore_cell_hint(wiphy))
-@@ -2272,8 +2265,6 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
- {
- 	struct wiphy *request_wiphy = NULL;
- 
--	assert_cfg80211_lock();
--
- 	mutex_lock(&reg_mutex);
- 
- 	if (!reg_dev_ignore_cell_hint(wiphy))
++	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
++			setup.dtim_period =
++				nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
++			if (setup.dtim_period < 1 || setup.dtim_period > 100)
++				return -EINVAL;
++	}
++
+ 	if (info->attrs[NL80211_ATTR_MESH_SETUP]) {
+ 		/* parse additional setup parameters if given */
+ 		err = nl80211_parse_mesh_setup(info, &setup);
 -- 
-1.8.0
+1.7.9.5
 
