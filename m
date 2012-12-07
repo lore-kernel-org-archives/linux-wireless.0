@@ -1,67 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44186 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754379Ab2LCOtb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58835 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932331Ab2LGWMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 09:49:31 -0500
-Message-ID: <1354546169.17107.6.camel@deadeye.wl.decadent.org.uk> (sfid-20121203_154938_022861_A2B5DB12)
-Subject: Re: [PATCH] brcm: new firmware version for brcmsmac
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Piotr Haber <phaber@broadcom.com>
-Date: Mon, 03 Dec 2012 14:49:29 +0000
-In-Reply-To: <1354310317-8776-1-git-send-email-arend@broadcom.com>
-References: <1354310317-8776-1-git-send-email-arend@broadcom.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-kmO74OheXdD6HqzCELsY"
+	Fri, 7 Dec 2012 17:12:23 -0500
+Message-ID: <1354918363.9124.29.camel@jlt4.sipsolutions.net> (sfid-20121207_231231_221604_E7B34625)
+Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: eric@regit.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Date: Fri, 07 Dec 2012 23:12:43 +0100
+In-Reply-To: <1354916502.9124.18.camel@jlt4.sipsolutions.net> (sfid-20121207_224129_500056_6617D80D)
+References: <1354906561-4695-1-git-send-email-eric@regit.org>
+	 <20121207.153134.25835204617509469.davem@davemloft.net>
+	 <1354915824.9124.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_223020_561049_DB965D43) <1354916502.9124.18.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_224129_500056_6617D80D)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2012-12-07 at 22:41 +0100, Johannes Berg wrote:
 
---=-kmO74OheXdD6HqzCELsY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> wpa_supplicant opens a packet socket for ETH_P_EAPOL, which indirectly
+> eventually calls dev_add_pack(). But if you do the same for another
+> socket, you'll get the same again, and then deliver_skb() will deliver
+> only a refcounted packet to the prot_hook->func().
+> 
+> This seems like it could very well cause the problem?
 
-On Fri, 2012-11-30 at 22:18 +0100, Arend van Spriel wrote:
-> From: Piotr Haber <phaber@broadcom.com>
->=20
-> This version adds ucode support for bcm4313 iPA variant.
->=20
-> Signed-off-by: Piotr Haber <phaber@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-[...]
+Ok I couldn't reproduce it because suricata didn't work this way, but I
+did try using tcpdump (without the fanout) and deliver_skb() *is* called
+twice for each packet as I thought. It thus seems the problem is
+entirely in af_packet itself. It was changed a bit by Eric Dumazet in
+bc416d9768 but the original code goes back to the original defrag
+support in 7736d33f4, as far as I can tell. aec27311c changed the code
+to not do skb_clone(), but it seems the skb_share_check() should be
+before the pskb_pull().
 
-Applied, thanks.
+Well, it seems ip_check_defrag() should simply not modify the SKB before
+it unshares it ... like this maybe:
 
-Ben.
+diff --git a/net/ipv4/ip_fragment.c b/net/ipv4/ip_fragment.c
+index 448e685..8d5cc75 100644
+--- a/net/ipv4/ip_fragment.c
++++ b/net/ipv4/ip_fragment.c
+@@ -707,28 +707,27 @@ EXPORT_SYMBOL(ip_defrag);
+ 
+ struct sk_buff *ip_check_defrag(struct sk_buff *skb, u32 user)
+ {
+-	const struct iphdr *iph;
++	struct iphdr iph;
+ 	u32 len;
+ 
+ 	if (skb->protocol != htons(ETH_P_IP))
+ 		return skb;
+ 
+-	if (!pskb_may_pull(skb, sizeof(struct iphdr)))
++	if (!skb_copy_bits(skb, 0, &iph, sizeof(iph)))
+ 		return skb;
+ 
+-	iph = ip_hdr(skb);
+-	if (iph->ihl < 5 || iph->version != 4)
++	if (iph.ihl < 5 || iph.version != 4)
+ 		return skb;
+-	if (!pskb_may_pull(skb, iph->ihl*4))
+-		return skb;
+-	iph = ip_hdr(skb);
+-	len = ntohs(iph->tot_len);
+-	if (skb->len < len || len < (iph->ihl * 4))
++
++	len = ntohs(iph.tot_len);
++	if (skb->len < len || len < (iph.ihl * 4))
+ 		return skb;
+ 
+-	if (ip_is_fragment(ip_hdr(skb))) {
++	if (ip_is_fragment(&iph)) {
+ 		skb = skb_share_check(skb, GFP_ATOMIC);
+ 		if (skb) {
++			if (!pskb_may_pull(skb, iph.ihl*4))
++				return skb;
+ 			if (pskb_trim_rcsum(skb, len))
+ 				return skb;
+ 			memset(IPCB(skb), 0, sizeof(struct inet_skb_parm));
 
---=20
-Ben Hutchings
-Always try to do things in chronological order;
-it's less confusing that way.
+johannes
 
---=-kmO74OheXdD6HqzCELsY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAULy7+ee/yOyVhhEJAQpToQ//TOafjhkFlUj/cBjjFAyhHw2wV9TxOCUS
-/qo/Nqkn++84DIj7ATERsJTQr+ZZbykb7MlAMlky2r4Aj+pmBqGhcN3g38HyZ7sn
-e4tLmhHtgU+pC3ATlimcpEHHCUmL+fhSPKqPaV78Svf8uDrLqh7a4lKDxOJGJ0C7
-aLqTCfCtQlitKv7wr9q30ODZdIlWlnzWvy8kXxoAc8UaX1lO/fD2nxyD/kFpVMGP
-mfnvESQoePAmVGrpg+MCXPfQzyDSko4pysKbjEpgqhIr/yHWGg5hGqPHGZ4zf1Aa
-YrbbBuQN00/K6WuWYyLvNWq9CO/Wzkk3ZWrnBAtiXvklRSYZ6sGWyl8ViotW01wM
-kcsUXncdzgzOGNU+b1oi8GgQD+dVIvhPzM9J3s2DfRhqlHZFyZyGFlO1ILsX7I17
-wSAM9fqYSC6rfsAzRthKE6JdLlaK9T3GEG5EbYW188GWN5nCPuf9eeAJC9cjZ0Qo
-8ic1K2nVIaaUa8xPFacjbotg+2ZfIo3A7x3RiTxdod6/lw6tVWWeW6C2k/syKhbC
-GLTvHtXVQ1rEswrQCPuvVe0L/uSVSTrWps9eKBTximRmou9aYXJPVVojtedSJIoV
-qLrnVrtIIfwk93uBYpC0sxzCpLr97jU9SIwEb/WV12mkSvh6K8MMDNGcS8We8Gke
-kG2RKK636Y4=
-=Lovz
------END PGP SIGNATURE-----
-
---=-kmO74OheXdD6HqzCELsY--
