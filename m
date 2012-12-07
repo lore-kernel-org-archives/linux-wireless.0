@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht1.myhostedexchange.com ([69.50.2.37]:25800 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751846Ab2LBRJ3 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19559 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623Ab2LGG4V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 12:09:29 -0500
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>,
-	Antonio Quartulli <antonio@openmesh.com>
-Subject: [PATCH 1/2] cfg80211: allow user to specify short_preamble on ibss join
-Date: Sun, 2 Dec 2012 18:08:26 +0100
-Message-ID: <1354468107-27430-1-git-send-email-antonio@open-mesh.com> (sfid-20121202_180942_879896_A41AA30B)
+	Fri, 7 Dec 2012 01:56:21 -0500
+Message-ID: <50C19303.5060608@qca.qualcomm.com> (sfid-20121207_075633_159031_13784203)
+Date: Fri, 7 Dec 2012 12:26:03 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Joe Perches <joe@perches.com>
+CC: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, netdev <netdev@vger.kernel.org>
+Subject: Re: [RFC V3 1/2] I'dcfg80211: Move the definition of struct mac_address
+ up
+References: <1354853850-10537-1-git-send-email-vthiagar@qca.qualcomm.com> <1354858735.22463.31.camel@joe-AO722>
+In-Reply-To: <1354858735.22463.31.camel@joe-AO722>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Short preamble can be used to improve wireless performance
-on devices different from lagacy-802.11. This patch
-enabled the user to specify such capability on IBSS join.
 
-Signed-off-by: Antonio Quartulli <antonio@openmesh.com>
----
- include/net/cfg80211.h | 1 +
- net/wireless/nl80211.c | 4 ++++
- 2 files changed, 5 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8e6a6b7..c93955c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1416,6 +1416,7 @@ struct cfg80211_ibss_params {
- 	bool privacy;
- 	bool control_port;
- 	int mcast_rate[IEEE80211_NUM_BANDS];
-+	bool use_short_preamble;
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f45706a..e82c51a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5459,6 +5459,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	struct wiphy *wiphy;
- 	struct cfg80211_cached_keys *connkeys = NULL;
- 	int err;
-+	bool sp;
- 
- 	memset(&ibss, 0, sizeof(ibss));
- 
-@@ -5554,6 +5555,9 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	ibss.control_port =
- 		nla_get_flag(info->attrs[NL80211_ATTR_CONTROL_PORT]);
- 
-+	sp = nla_get_flags(info->attr[NL80211_ATTR_BSS_SHORT_PREAMBLE]);
-+	ibss.use_short_preamble = sp;
-+
- 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
- 	if (err)
- 		kfree(connkeys);
--- 
-1.8.0
+On Friday 07 December 2012 11:08 AM, Joe Perches wrote:
+> On Fri, 2012-12-07 at 09:47 +0530, Vasanthakumar Thiagarajan wrote:
+>> struct mac_address will be used by ACL related configuration ops.
+>
+> I'd prefer that any new code _not_ use struct mac_address
+> but use u8 addr[ETH_ALEN] instead.
+>
+> That's the most common style in the kernel.
 
+Ok, but struct mac_address looked handy when I want
+to deal with list of mac address instead using linked
+list. Thanks!
+
+Vasanth
