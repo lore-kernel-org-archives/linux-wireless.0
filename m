@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53494 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55750 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755619Ab2LMR6m (ORCPT
+	with ESMTP id S1755338Ab2LGHxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 12:58:42 -0500
-Message-ID: <1355421541.9463.8.camel@jlt4.sipsolutions.net> (sfid-20121213_185845_790863_F58C9E7B)
-Subject: Re: Add a new work-queue for destructing stations?
+	Fri, 7 Dec 2012 02:53:32 -0500
+Message-ID: <1354866830.9552.2.camel@jlt4.sipsolutions.net> (sfid-20121207_085335_751910_8F3F4237)
+Subject: Re: [PATCH 01/24] regulatory: don't write past array when
+ intersecting rules
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 13 Dec 2012 18:59:01 +0100
-In-Reply-To: <50CA1470.4030107@candelatech.com> (sfid-20121213_184629_945929_240FAE82)
-References: <50CA1470.4030107@candelatech.com>
-	 (sfid-20121213_184629_945929_240FAE82)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Dec 2012 08:53:50 +0100
+In-Reply-To: <CAB=NE6VCgdMtj_v07BBZ36pOEP_qzVPR_YOe--C3iXw=_KMVgw@mail.gmail.com> (sfid-20121207_004322_625360_A0828621)
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+	 <1354812468-15709-2-git-send-email-johannes@sipsolutions.net>
+	 <CAB=NE6VCgdMtj_v07BBZ36pOEP_qzVPR_YOe--C3iXw=_KMVgw@mail.gmail.com>
+	 (sfid-20121207_004322_625360_A0828621)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-13 at 09:46 -0800, Ben Greear wrote:
-> As previously posted, there can be cases where the RTNL is held for a
-> very long time when trying to do the:  flush_workqueue(local->workqueue);
-> in mac80211_do_stop because there are lots of 'slow' work-items queued up.
-> 
-> I'd like to work on making this faster...
-> 
-> My first idea is to add a second work-queue to the 'local' for high-priority
-> items that can be executed independently from the current local->workqueue,
-> and put the free_sta_rcu work() in that queue.
-> 
-> I'm guessing that to be safe, the do_stop() code would need to selectively
-> purge any work items in the local->workqueue that relate to the sdata
-> being destroyed, as well.  I'm not sure how possible that would be...
+On Thu, 2012-12-06 at 15:43 -0800, Luis R. Rodriguez wrote:
 
-I don't think that's easy, but you're welcome to try. The
-free_sta_work() function references the sdata so it absolutely must run
-at this point.
+> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> > index b6c7ea6..4197359 100644
+> > --- a/net/wireless/reg.c
+> > +++ b/net/wireless/reg.c
+> > @@ -648,9 +648,9 @@ static struct ieee80211_regdomain *regdom_intersect(
+> >         if (!rd)
+> >                 return NULL;
+> >
+> > -       for (x = 0; x < rd1->n_reg_rules; x++) {
+> > +       for (x = 0; x < rd1->n_reg_rules && rule_idx < num_rules; x++) {
+> >                 rule1 = &rd1->reg_rules[x];
+> > -               for (y = 0; y < rd2->n_reg_rules; y++) {
+> > +               for (y = 0; y < rd2->n_reg_rules && rule_idx < num_rules; y++) {
+> >                         rule2 = &rd2->reg_rules[y];
+> >                         /*
+> 
+> Does rule_idx ever become > num_rules though? The check that builds
+> num_rules are the same as we traverse and increment rule_idx.
 
-The only/easiest thing that seems vaguely safe would be a per-vif
-workqueue for this? But that's really annoying too, since it needs an
-extra thread etc.
+It doesn't become great, but it becomes equal. Say you have the
+following rules:
+
+rd1: 1000-2000, 3000-4000
+rd2: 1000-1500, 5000-6000
+
+The result will be 1000-1500, so 1 rule. But while iterating, that's the
+very first thing, so rule_idx becomes 1 after the first iteration of the
+inner/outer loops, and then without the fix we still check 1000-2000 vs.
+5000-6000, 3000-4000 vs. 1000-1500 and finally 3000-4000 vs. 5000-6000
+and rule_idx is 1 all the time while checking that so we write past the
+array ...
+
+This makes it stop when it knows it has found the right number of rules.
 
 johannes
 
