@@ -1,86 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:47082 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755587Ab2LMN7F (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:44665 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047Ab2LGUM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 08:59:05 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	igalc@ti.com, nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 1/8] cfg80211: add CHAN_MODE_SINGLE_ONLY for DFS use
-Date: Thu, 13 Dec 2012 14:58:26 +0100
-Message-Id: <1355407113-27006-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121213_145920_412752_1CAB8437)
-In-Reply-To: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Fri, 7 Dec 2012 15:12:29 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so700129pad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 12:12:29 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [RFC] iw: add beacon interval and DTIM period parameters to mesh join
+Date: Fri,  7 Dec 2012 12:10:08 -0800
+Message-Id: <1354911008-6522-1-git-send-email-marco@cozybit.com> (sfid-20121207_211232_739551_F28DC83F)
+In-Reply-To: <1354745174-2941-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
+References: <1354745174-2941-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In DFS, we don't allow multiple virtual interfaces on one phy
-for now, because synchronizing channel state between them is not
-trivial and not implemented so far. Therefore, add another channel
-mode to seperate this.
+Set the beacon interval and DTIM period with the mesh join command:
+iw <dev> mesh join <meshid> beacon-interval <time in TUs> dtim-period <value>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Marco Porsch <marco@cozybit.com>
 ---
- net/wireless/core.h |    1 +
- net/wireless/util.c |   14 ++++++++++++++
- 2 files changed, 15 insertions(+)
+ mesh.c |   32 ++++++++++++++++++++++++++++++--
+ 1 file changed, 30 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3563097..642587c 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -257,6 +257,7 @@ enum cfg80211_chan_mode {
- 	CHAN_MODE_UNDEFINED,
- 	CHAN_MODE_SHARED,
- 	CHAN_MODE_EXCLUSIVE,
-+	CHAN_MODE_SINGLE_ONLY,
- };
+diff --git a/mesh.c b/mesh.c
+index 4fdad6a..958c2c0 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -383,6 +383,7 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ {
+ 	struct nlattr *container;
+ 	float rate;
++	int bintval, dtim_period;
+ 	char *end;
  
- struct cfg80211_beacon_registration {
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 16d76a8..18a3349 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1220,6 +1220,10 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	case CHAN_MODE_EXCLUSIVE:
- 		num_different_channels++;
- 		break;
-+	case CHAN_MODE_SINGLE_ONLY:
-+		used_channels[0] = chan;
-+		num_different_channels++;
-+		break;
+ 	if (argc < 1)
+@@ -405,6 +406,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 		argc--;
  	}
  
- 	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
-@@ -1268,6 +1272,12 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 		case CHAN_MODE_EXCLUSIVE:
- 			num_different_channels++;
- 			break;
-+		case CHAN_MODE_SINGLE_ONLY:
-+			/* can't add any more interfaces when a single channel
-+			 * has already been added.
-+			 */
-+			return -EBUSY;
-+			break;
- 		}
- 
- 		num[wdev_iter->iftype]++;
-@@ -1278,6 +1288,10 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	if (total == 1)
- 		return 0;
- 
-+	/* can't add single mode to any other interfaces. */
-+	if ((total > 1) && (chanmode == CHAN_MODE_SINGLE_ONLY))
-+		return -EBUSY;
++	if (argc > 1 && strcmp(argv[0], "beacon-interval") == 0) {
++		argc--;
++		argv++;
 +
- 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
- 		const struct ieee80211_iface_combination *c;
- 		struct ieee80211_iface_limit *limits;
++		bintval = strtoul(argv[0], &end, 10);
++		if (*end != '\0')
++			return 1;
++
++		NLA_PUT_U32(msg, NL80211_ATTR_BEACON_INTERVAL, bintval);
++		argv++;
++		argc--;
++	}
++
++	if (argc > 1 && strcmp(argv[0], "dtim-period") == 0) {
++		argc--;
++		argv++;
++
++		dtim_period = strtoul(argv[0], &end, 10);
++		if (*end != '\0')
++			return 1;
++
++		NLA_PUT_U32(msg, NL80211_ATTR_DTIM_PERIOD, dtim_period);
++		argv++;
++		argc--;
++	}
++
+ 	container = nla_nest_start(msg, NL80211_ATTR_MESH_SETUP);
+ 	if (!container)
+ 		return -ENOBUFS;
+@@ -431,8 +458,9 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>] [vendor_sync on|off]"
+-	" [<param>=<value>]*",
++COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
++	" [beacon-interval <time in TUs>] [dtim-period <value>]"
++	" [vendor_sync on|off] [<param>=<value>]*",
+ 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
+ 	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
+ 
 -- 
-1.7.10.4
+1.7.9.5
 
