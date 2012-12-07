@@ -1,29 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:42347 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411Ab2LDRCy (ORCPT
+Received: from mx-relay04-haj2.antispameurope.com ([83.246.65.204]:43197 "EHLO
+	mx-relay04-haj2.antispameurope.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964900Ab2LGMoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 12:02:54 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so1681544eaa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Dec 2012 09:02:53 -0800 (PST)
+	Fri, 7 Dec 2012 07:44:05 -0500
+Message-ID: <50C1E2A5.40206@fokus.fraunhofer.de> (sfid-20121207_134409_967615_04934EB6)
+Date: Fri, 7 Dec 2012 13:35:49 +0100
+From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn1WUzo0jBv=zJ4Bw+A_4=zr9YszCzP+X4ujXFfGwKAk8w@mail.gmail.com>
-References: <1354393301-11051-1-git-send-email-lewurm@gmail.com>
-	<CAAr_hs53SddPbUUAdaqBFjc8fx-sqDPVjqkq645cMptQqsaQOw@mail.gmail.com>
-	<CAD2nsn1WUzo0jBv=zJ4Bw+A_4=zr9YszCzP+X4ujXFfGwKAk8w@mail.gmail.com>
-Date: Tue, 4 Dec 2012 18:02:52 +0100
-Message-ID: <CAOpc7mF5yW=UtzYDASkbHbNo4QHOmKuWjNK+eqF36OZjY6SUFg@mail.gmail.com> (sfid-20121204_180258_022668_D46EB0F9)
-Subject: Re: [ath9k-devel] [PATCH] ath9k_htc: update RSSI values only when the
- device is associated
-From: Holger Schurig <holgerschurig@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Bernhard Urban <lewurm@gmail.com>, m.sujith@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org, c_manoha@qca.qualcomm.com,
-	markus@indoo.rs, Sujith.Manoharan@atheros.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
+	<linville@tuxdriver.com>, <mcgrof@qca.qualcomm.com>,
+	<sven@narfation.org>, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] ath9k: apply coverage class on slottime too
+References: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de> <508FCB77.9000303@openwrt.org>
+In-Reply-To: <508FCB77.9000303@openwrt.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And I think the commercial for your sponsor should be after the "---"
-line, not inside the commit description ...
+Hi all,
+
+On 10/30/2012 01:43 PM, Felix Fietkau wrote:
+> On 2012-10-30 1:07 PM, Simon Wunderlich wrote:
+>> From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+>>
+>> According to 802.11-2007 17.3.8.6 (slot time), the slot time should
+>> be increased by 3 us * coverage class. The code only increased the
+>> ack timeout, which is fixed by this patch.
+>>
+>> We have noticed in our long shot scenario that we see less collisions
+>> with this patch.
+> At some point I had the slot time increase in the driver, but noticed a
+> massive throughput degradation on 10-20 km links. Leaving the slot time
+> alone and changing only the ACK timeout fixed this. What distances did
+> you test?
+>
+> - Felix
+>
+
+We've run some tests on a 5km .11a link to verify the proper functioning of this 
+patch (slot time depending on coverage class) and the recent patch to ensure the 
+shorter (9us) slot time is used in .11a adhoc mode.
+
+According to the standard, the slot time should be calculated as follows:
+
+slottime = 9us + 3 * ah->coverage_class;
+
+For our link, this would be
+
+slottime = 9 us + 3 * 10 = 39 us.   (coverage class 10: up to 4950 m)
+
+If you look at the below TSFT histogram and try to determine the peaks
+(first column: diffTime, second column: frameCount), the slot time turns out to be 
+roughly 39us, which fits pretty nicely with the expected result.
+
+The TCP throughput (wget -O /dev/null) was very constant between 1.7 and 1.8 
+MByte/s. Which, I'd say, is pretty decent for such a link (without TxOp, etc).
+
+Similar measurements for a 10km link, reveal a slot time of about 71us, which also 
+matches the theoretical figure pretty well:
+
+slottime = 9us + 3 * 21 = 72
+
+Therefore, both patches seem to ensure a proper MAC timing while yielding proper 
+throughput.
+
+Cheers,
+
+Mathias
+
+------------
+
+=== TSFT Histogram (times in us) of 00:00:00:00:00:00, age 66s ===
+411,945
+412,5921
+413,1534
+450,1271
+451,4286
+452,1804
+490,5592
+491,731
+528,773
+529,3482
+530,1177
+567,693
+568,3071
+569,1022
+599,552
+607,3659
+608,486
+637,266
+638,737
+639,437
+645,782
+646,2103
+647,929
+677,1525
+678,560
+684,463
+685,2337
+686,589
+715,276
+716,1630
+717,704
+754,424
+755,1518
+756,889
+794,2347
+795,796
+832,420
+833,1800
+834,891
+975,315
+1014,329
+1015,257
+
+
+
