@@ -1,28 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51545 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431Ab2LTLca (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 06:32:30 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TleMX-0007X6-HQ
-	for linux-wireless@vger.kernel.org; Thu, 20 Dec 2012 12:32:29 +0100
-Message-ID: <1356003172.10029.7.camel@jlt4.sipsolutions.net> (sfid-20121220_123234_389158_88906587)
-Subject: Re: [PATCH 0/3] mac80211: suspend fixes/cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 20 Dec 2012 12:32:52 +0100
-In-Reply-To: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net> (sfid-20121214_125914_082629_10721442)
-References: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121214_125914_082629_10721442)
-Content-Type: text/plain
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:46984 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964789Ab2LGJYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 04:24:07 -0500
+Message-ID: <1354872204.6234.92.camel@cumari.coelho.fi> (sfid-20121207_102411_882893_81D09A6B)
+Subject: Re: [PATCH 11/20] wlcore/wl18xx: change priority calculations for
+ links
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 7 Dec 2012 11:23:24 +0200
+In-Reply-To: <1354095769-8724-12-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-12-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied all.
+On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
+> Update the 18xx FW status private part to include Tx related link
+> priorities. Introduce new HW ops to determine link priority per chip
+> family.
+> 
+> For 18xx the changes are:
+> - Suspended links are at most low priority and Tx for them is stopped
+>   beyond the suspend threshold.
+> - Active links now get their thresholds directly from FW
+> - There's a new "stop" threshold for active links, at which point a link
+>   stops receiving new packets.
+> 
+> Update the min 18xx FW version required to make sure suspended links
+> bitmap is advertised by the FW.
 
-johannes
+This doesn't apply anymore, I'll remove it.
+
+
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
+
+Otherwise this patch looks good!
+
+Just to understand better, why is the firmware deciding on the
+thresholds? Does it make some internal magic itself to know the number
+of links (including multi-channel) and adjust the thresholds
+accordingly? Isn't this something we could (or should?) do in the kernel
+side?
+
+--
+Luca
 
