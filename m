@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58488 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826Ab2LJSuQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58627 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424343Ab2LGUy2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 13:50:16 -0500
-Date: Mon, 10 Dec 2012 13:50:14 -0500 (EST)
-Message-Id: <20121210.135014.574510727443547729.davem@davemloft.net> (sfid-20121210_195020_489583_911075DC)
-To: johannes@sipsolutions.net
-Cc: eric@regit.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	eric.dumazet@gmail.com
-Subject: Re: [PATCH] ipv4: ip_check_defrag must not modify skb before
- unsharing
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1355165152.8083.4.camel@jlt4.sipsolutions.net>
-References: <1355132466.9857.6.camel@jlt4.sipsolutions.net>
-	<20121210.134146.1583909966821253233.davem@davemloft.net>
-	<1355165152.8083.4.camel@jlt4.sipsolutions.net>
+	Fri, 7 Dec 2012 15:54:28 -0500
+Message-ID: <1354913688.9124.2.camel@jlt4.sipsolutions.net> (sfid-20121207_215432_184544_CB854439)
+Subject: Re: Wireless network problem with Access Point selection using ifup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: markh@compro.net
+Cc: dmarkh@cfl.rr.com, linux-wireless@vger.kernel.org
+Date: Fri, 07 Dec 2012 21:54:48 +0100
+In-Reply-To: <50C256A9.7010008@compro.net>
+References: <50C0A743.3000305@compro.net>
+	  (sfid-20121206_152423_356618_ADE5D3BC) <1354806200.18211.1.camel@jlt4.sipsolutions.net>
+	 <50C1C103.1000803@cfl.rr.com> <50C256A9.7010008@compro.net>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 10 Dec 2012 19:45:52 +0100
+On Fri, 2012-12-07 at 15:50 -0500, Mark Hounschell wrote:
+> On 12/07/2012 05:12 AM, Mark Hounschell wrote:
+> > On 12/06/2012 10:03 AM, Johannes Berg wrote:
+> >> On Thu, 2012-12-06 at 09:10 -0500, Mark Hounschell wrote:
+> >>>   I'm using
+> >>> traditional ifup with static configurations.
+> >>
+> >> You should at least run wpa_supplicant, which will pick a better network
+> >> and reconnect if the connection drops etc. Almost no device does that by
+> >> itself any more.
+> >
+> >   wpa_supplicant is running.
+> >
+> > #ps ax | grep wpa
+> >
+> > wpa_supplicant -iwlan0 -c/var/run/wpa_supplicant-wlan0.conf
+> > -Dnl80211,wext -P/var/run/wpa_supplicant/wlan0.pid -B
+> >
+> >
+> > When the router in the middle of the house is chosen, as opposed to the
+> > range extender in the very same room, the network works for a time but
+> > eventually disassociates, usually reason 7, and never reconnects to
+> > anything.
+> >
 
-> On Mon, 2012-12-10 at 13:41 -0500, David Miller wrote:
->> So the bug is that ip_check_defrag() has a precondition which is met
->> properly by all callers except AF_PACKET.
->> 
->> If this is the case, remind me why are we changing ip_check_defrag()
->> rather than the violator of the precondition?
-> 
-> I don't think this is the case.
-> 
-> If you're referring to my note about af_packet: the kernels where this
-> goes into af_packet.c are the kernels that don't even have
-> ip_check_defrag() because macvlan didn't exist/didn't have ip defrag
-> support and af_packet had this code there -- see commit bc416d9768a.
-> 
-> If you're not referring to my note about af_packet: both callers (there
-> are only two) of ip_check_defrag() have this bug as far as I can tell
-> because they're both in the part of the RX path where shared SKBs might
-> happen.
+> Thanks for responding. Do you think my problem is a wpa_supplicant 
+> issue, a kernel issue, or a Dist issue?
 
-You're right, I misinterpreted what's happening here.
+I'd say it's a wpa_s issue, but I can't remember any time that it didn't
+reconnect after getting disconnected, so maybe there's an issue with
+your driver/device that causes it to need a reset or something ... hard
+to tell more without at least the supplicant log.
 
-My misunderstanding was that this was a situation where normal IPV4
-input processing makes sure the SKB is unshared, and we had special
-code paths that didn't make sure that was the case.
+johannes
 
-Rather, here, we have a special entrypoint for macvlan and AF_PACKET
-which is supposed to take care of such issues since it is known to
-execute in a different kind of environment.
-
-I'm pretty sure I'll apply this, after I check a few more things,
-thanks Johannes!
