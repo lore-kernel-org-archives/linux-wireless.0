@@ -1,25 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:52765 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755489Ab2LLSHC (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:39575 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424095Ab2LGBGd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 13:07:02 -0500
-Date: Wed, 12 Dec 2012 13:07:00 -0500 (EST)
-Message-Id: <20121212.130700.690420907161904720.davem@davemloft.net> (sfid-20121212_190806_959917_179956C9)
-To: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
-Subject: NET development closed...
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 6 Dec 2012 20:06:33 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so5758159lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 17:06:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354828714-7731-1-git-send-email-johannes@sipsolutions.net>
+References: <1354828714-7731-1-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 6 Dec 2012 17:06:11 -0800
+Message-ID: <CAB=NE6U==qreEo5Xe+aT+7xD2NMExDp2_weOTtibehNdxHdX-w@mail.gmail.com> (sfid-20121207_020645_716327_398E734A)
+Subject: Re: [PATCH] compat: backport unsigned netlink attribute accessors
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Dec 6, 2012 at 1:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> These were added upstream in commit
+> 4778e0be16c291ba6d9d55eeff3a6764fc84a071.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-We're in the merge window, that means only bug fixes from now until
-the merge window closes and I make a posting notifying everyone
-that net-next is open again.
+Applied and pushed, thanks!
 
-I should be sending a pull request to Linus later today.
-
-Thanks.
+  Luis
