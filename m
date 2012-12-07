@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.compro.net ([12.186.155.4]:17588 "EHLO mx2.compro.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1424112Ab2LGUuu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 15:50:50 -0500
-Message-ID: <50C256A9.7010008@compro.net> (sfid-20121207_215053_597936_F1FCCAF5)
-Date: Fri, 07 Dec 2012 15:50:49 -0500
-From: Mark Hounschell <markh@compro.net>
-Reply-To: markh@compro.net
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:47015 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753101Ab2LGXML (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 18:12:11 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so790915lbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 15:12:10 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1354812468-15709-17-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-17-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 7 Dec 2012 15:11:49 -0800
+Message-ID: <CAB=NE6VmfjfYeDirc-L-cPMmE6b4f_4iAK+nuDUs1-XUeLCO7w@mail.gmail.com> (sfid-20121208_001217_039963_82CF2774)
+Subject: Re: [PATCH 16/24] regulatory: clarify locking rules and assertions
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: dmarkh@cfl.rr.com, linux-wireless@vger.kernel.org
-Subject: Re: Wireless network problem with Access Point selection using ifup
-References: <50C0A743.3000305@compro.net>  (sfid-20121206_152423_356618_ADE5D3BC) <1354806200.18211.1.camel@jlt4.sipsolutions.net> <50C1C103.1000803@cfl.rr.com>
-In-Reply-To: <50C1C103.1000803@cfl.rr.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/07/2012 05:12 AM, Mark Hounschell wrote:
-> On 12/06/2012 10:03 AM, Johannes Berg wrote:
->> On Thu, 2012-12-06 at 09:10 -0500, Mark Hounschell wrote:
->>>   I'm using
->>> traditional ifup with static configurations.
->>
->> You should at least run wpa_supplicant, which will pick a better network
->> and reconnect if the connection drops etc. Almost no device does that by
->> itself any more.
+On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
->   wpa_supplicant is running.
+> Many places that currently check that cfg80211_mutex
+> is held don't actually use any data protected by it.
+> The functions that need to hold the cfg80211_mutex
+> are the ones using the cfg80211_regdomain variable,
+> so add the lock assertion to those and clarify this
+> in the comments.
 >
-> #ps ax | grep wpa
->
-> wpa_supplicant -iwlan0 -c/var/run/wpa_supplicant-wlan0.conf
-> -Dnl80211,wext -P/var/run/wpa_supplicant/wlan0.pid -B
->
->
-> When the router in the middle of the house is chosen, as opposed to the
-> range extender in the very same room, the network works for a time but
-> eventually disassociates, usually reason 7, and never reconnects to
-> anything.
->
+> The reason for this is that nl80211 uses the regdom
+> without being able to hold reg_mutex.
 
-Hi Johannes,
+Hm, do we want to do this or add a caller to reg.c that gets nl80211
+to copy over the current regdomain over for it to parse and then send?
+In that case we'd only need the cfg80211_mutex for
+update_all_wiphy_regulatory(). Thoughts?
 
-Thanks for responding. Do you think my problem is a wpa_supplicant 
-issue, a kernel issue, or a Dist issue?
-
-Regards
-Mark
+  Luis
