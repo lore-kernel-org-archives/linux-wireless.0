@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64970 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819Ab2LME4y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 23:56:54 -0500
-Message-ID: <50C95FFE.2040200@qca.qualcomm.com> (sfid-20121213_055657_776726_973BDF7C)
-Date: Thu, 13 Dec 2012 10:26:30 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:38335 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932675Ab2LGLrX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 06:47:23 -0500
+Message-ID: <50C1D747.2020005@openwrt.org> (sfid-20121207_124727_076337_151D0729)
+Date: Fri, 07 Dec 2012 12:47:19 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] cfg80211/nl80211: Enable drivers to implement mac
- address based ACL
-References: <1354880763-12309-1-git-send-email-vthiagar@qca.qualcomm.com>  <1354880763-12309-2-git-send-email-vthiagar@qca.qualcomm.com>  <1355255841.9819.18.camel@jlt4.sipsolutions.net>  <50C81331.9080304@qca.qualcomm.com>  <1355311595.9708.2.camel@jlt4.sipsolutions.net>  (sfid-20121212_122620_162346_E59A9D73) <1355311635.9708.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355311635.9708.3.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH] Revert "ath9k_hw: Update AR9003 high_power tx gain table"
+References: <1354815611-7220-1-git-send-email-nbd@openwrt.org> <CAJ-Vmonvo9tq4ZF8WosnXNQq=ArqoDuKtz5y8UnFoWfYAikMxQ@mail.gmail.com> <20121207055322.GA27229@hemis.qca.qualcomm.com>
+In-Reply-To: <20121207055322.GA27229@hemis.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2012-12-07 6:53 AM, Rajkumar Manoharan wrote:
+> On Thu, Dec 06, 2012 at 11:35:33AM -0800, Adrian Chadd wrote:
+>> On 6 December 2012 09:40, Felix Fietkau <nbd@openwrt.org> wrote:
+>> > This reverts commit f74b9d365ddd33a375802b064f96a5d0e99af7c0.
+>> >
+>> > Turns out reverting commit a240dc7b3c7463bd60cf0a9b2a90f52f78aae0fd
+>> > "ath9k_hw: Updated AR9003 tx gain table for 5GHz" was not enough to
+>> > bring the tx power back to normal levels on devices like the
+>> > Buffalo WZR-HP-G450H, this one needs to be reverted as well.
+>> >
+>> > This revert improves tx power by ~10 db on that device
+>> 
+>> Did anyone figure out why this was happening?
+>> 
+>> Maybe we should look at the HAL commits around the same time to see if
+>> someone changed the programming - eg, assuming TPC is always on, or
+>> the 2 stream / 3 stream reduction PHY register, or such.
+>> 
+> Generally we update initval taken from Systems team. We might have missed to
+> program the some registers while updating initvals. I prefer to fix the missing
+> portion rather than reverting ini tables. Otherwise we end up with using
+> older initvals and hard to debug hw related issues.
+For a few months I was trying to get an answer from the Systems team as
+to why that change was made. Contacted several people about it, got no
+proper response.
+When I first found the bug (a long time ago), I did extensive review of
+internal changes to driver/initvals around that time, and I'm pretty
+confident that this tx power issue is not caused by missing changes that
+we forgot to port over.
 
-
-On Wednesday 12 December 2012 04:57 PM, Johannes Berg wrote:
-> On Wed, 2012-12-12 at 12:26 +0100, Johannes Berg wrote:
->
->> Yeah but I don't think that's a valid general assumption, and with the
->> feature advertising API that you came up with, the driver can't
->> advertise that it supports both at the same time etc.
->>
->> Also, in fact, I think there needs to be more justification for why you
->> need two lists to start with -- it seems to me that a white- and
->> blacklist doesn't make sense at all, unless it's not really a white- and
->> blacklist but one of
->>   1) a blacklist
->>   2) a whitelist + a "do not notify" list
->
-> And actually, without a notify mechanism (which I don't think exists
-> yet) this doesn't make sense anyway
-
-We have it for a connection request from a client listed under
-black list through NL80211_ATTR_CONN_FAILED_REASON in
-NL80211_CMD_CONN_FAILED. But the one which needs to be
-there for a connection from client which is part of
-neither of the groups is not yet there. As I mentioned
-in my previous reply, is this also be sent in
-NL80211_CMD_CONN_FAILED.
-
-Vasanth
+- Felix
