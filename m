@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44987 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755231Ab2LMA4e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 19:56:34 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211: Allow disabling SGI-20.
-Date: Wed, 12 Dec 2012 16:56:20 -0800
-Message-Id: <1355360180-19295-1-git-send-email-greearb@candelatech.com> (sfid-20121213_015637_703359_E9A35183)
+Received: from icf.org.ru ([91.193.237.1]:35453 "EHLO icf.org.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932917Ab2LHDra (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 22:47:30 -0500
+Date: Sat, 8 Dec 2012 07:47:27 +0400 (MSK)
+From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+To: Thomas Pedersen <thomas@cozybit.com>
+cc: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	open11s <devel@lists.open80211s.org>
+Subject: Re: help: 802.11s bad performance with 802.11n enabled
+In-Reply-To: <CAG6hwVMsghDHzgyk1ZJE7YoMi2+t-LKNGtgw_ha2DdEwHc71hg@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1212080739540.23821@icf.org.ru> (sfid-20121208_044735_393059_5DA16FF0)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp> <alpine.DEB.2.02.1212031842350.27546@icf.org.ru> <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com> <alpine.DEB.2.02.1212080721070.8165@icf.org.ru>
+ <alpine.DEB.2.02.1212080726150.22564@icf.org.ru> <CAG6hwVMsghDHzgyk1ZJE7YoMi2+t-LKNGtgw_ha2DdEwHc71hg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1051000339-142720421-1354938447=:23821"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-This allows user-space (wpa_supplicant) to disable
-short guard interval (SGI) for 20Mhz.  The SGI-40
-disable option is already handled.
+---1051000339-142720421-1354938447=:23821
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- net/mac80211/ht.c   |    3 +++
- net/mac80211/main.c |    1 +
- 2 files changed, 4 insertions(+), 0 deletions(-)
+On 2012-12-07 19:37 -0800, Thomas Pedersen wrote Georgiewskiy Yuriy:
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index a71d891..8a6d68f 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -62,6 +62,9 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SUP_WIDTH_20_40);
- 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_40);
- 
-+	/* Allow user to disable SGI-20 (SGI-40 is handled above) */
-+	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_20);
-+
- 	/* Allow user to disable the max-AMSDU bit. */
- 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_MAX_AMSDU);
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 1b087ff..0c0d4ca 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -537,6 +537,7 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
- 
- 	.cap_info = cpu_to_le16(IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
- 				IEEE80211_HT_CAP_MAX_AMSDU |
-+				IEEE80211_HT_CAP_SGI_20 |
- 				IEEE80211_HT_CAP_SGI_40),
- 	.mcs = {
- 		.rx_mask = { 0xff, 0xff, 0xff, 0xff, 0xff,
--- 
-1.7.3.4
+TP>On Fri, Dec 7, 2012 at 7:29 PM, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
+TP>> On 2012-12-08 07:23 +0400, Georgiewskiy Yuriy wrote Thomas Pedersen:
+TP>>
+TP>> GY>On 2012-12-07 19:17 -0800, Thomas Pedersen wrote Georgiewskiy Yuriy:
+TP>> GY>
+TP>> GY>ок, i try this and report results, can you also test on 2.4 Ggz? as i
+TP>> GY>understand ch 149 is 802.11a? or this make no sense here?
+TP>>
+TP>> and also signal level make sense in my case, i just remove antennas from one of the nodes
+TP>> in range of 3 meters, it works only with pigtails, signal drops to -70 - -80 dbm, and it's
+TP>> triggers filed to stop tx dma immediatlly.
+TP>
+TP>Are you talking about a different bug?
 
+Hm, may bee, but according to Chaoxing Lin emails there is several bugs which cause 
+performance degradation in 802.11s mode, and symptoms in my case indentical, i get same results
+as Chaoxing Lin, and seems same throbles, i will make tests what you want anyway and report 
+results.
+
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
+---1051000339-142720421-1354938447=:23821--
