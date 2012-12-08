@@ -1,71 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4361 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751762Ab2LDTwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 14:52:22 -0500
-Message-ID: <50BE5467.6070203@broadcom.com> (sfid-20121204_205225_073782_768E9128)
-Date: Tue, 4 Dec 2012 20:52:07 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:39821 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932835Ab2LHDhW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 22:37:22 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hj13so71916wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 19:37:21 -0800 (PST)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Kalle Valo" <kvalo@adurom.com>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: Re: [PATCH V2 v3.7] brcmsmac: handle packet drop on enqueuing
- correctly
-References: <1353961396-7061-1-git-send-email-arend@broadcom.com>
- <50BC63E5.9020101@broadcom.com> <871uf7w6w0.fsf@purkki.adurom.net>
- <20121203183912.GE26027@tuxdriver.com> <50BCF57E.8020204@broadcom.com>
- <20121203185914.GH26027@tuxdriver.com>
-In-Reply-To: <20121203185914.GH26027@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <alpine.DEB.2.02.1212080721070.8165@icf.org.ru>
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
+ <alpine.DEB.2.02.1212031842350.27546@icf.org.ru> <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
+ <alpine.DEB.2.02.1212080721070.8165@icf.org.ru>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Fri, 7 Dec 2012 19:37:00 -0800
+Message-ID: <CAG6hwVO8c9ypYS4S0sDUf37eJJuK_5hrgCwCNKwqGLt2BWOtYA@mail.gmail.com> (sfid-20121208_043728_923113_BEE7F1E0)
+Subject: Re: help: 802.11s bad performance with 802.11n enabled
+To: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+Cc: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	open11s <devel@lists.open80211s.org>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/03/2012 07:59 PM, John W. Linville wrote:
-> On Mon, Dec 03, 2012 at 07:54:54PM +0100, Arend van Spriel wrote:
->> On 12/03/2012 07:39 PM, John W. Linville wrote:
->>> On Mon, Dec 03, 2012 at 04:24:31PM +0200, Kalle Valo wrote:
->>>> Hi Arend,
->>>>
->>>> "Arend van Spriel" <arend@broadcom.com> writes:
->>>>
->>>>> What is keeping you from picking up this patch? Anything I should do?
->>>>> This V2 removed the no-op changes in ampdu.c that Seth indicated so...
->>>>
->>>> Most likely it's too late. Dave already told that that John's previous
->>>> pull request might not make it to 3.7.
->>>
->>> Yes, that.  Also, given the merge difficulties this creates and the
->>> fact that Seth's patch is already queued for 3.8, maybe you should
->>> consider sending this for the 3.7 stable series when it opens?
->>>
->>> John
->>>
->>
->> That was my plan when it would not get in for 3.7.0. I wanted it to go
->> to stable anyway as the fix is also needed for 3.6.x stable. Just wanted
->> to get it upstream fixed first.
->>
->> For 3.8 the fix has been reworked on top of Seth patches and is in
->> wireless-next (c4dea35e brcmsmac: handle packet drop during transmit
->> correctly). Should I refer to that commit when submitting to stable
->> (although it is a slightly different patch).
-> 
-> Yes, I think the stable team will appreciate that.
-> 
-> Thanks,
-> 
-> John
-> 
+On Fri, Dec 7, 2012 at 7:23 PM, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
+> On 2012-12-07 19:17 -0800, Thomas Pedersen wrote Georgiewskiy Yuriy:
+>
+> ок, i try this and report results, can you also test on 2.4 Ggz? as i
+> understand ch 149 is 802.11a? or this make no sense here?
 
-Hi John,
+Yes I get similar results on the 2.4Ghz band, and no it shouldn't make
+a difference here :)
 
-Not keeping a close eye on LKML, but I noticed 3.7-rc8 is out. Would you
-reconsider taking this patch for 3.7? Would be nice to be rid of slab
-corruption in v3.7.0.
-
-Gr. AvS
-
+> TP>Hi Chaoxing and Georgiewsky,
+> TP>
+> TP>On Mon, Dec 3, 2012 at 6:45 AM, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
+> TP>> On 2012-12-03 14:37 -0000, Chaoxing Lin wrote linux-wireless@vger.kernel.org:
+> TP>>
+> TP>> CL>After a lot of experiments, here are various problems observed.
+> TP>> CL>
+> TP>> CL>1. The "Fail to stop Tx DMA" related issue plays a role. But not the major part. It accounts for about 3% of packet loss in my testbed.
+> TP>> CL>Is anyone looking at this issue? This issue is now very easy to recreate.
+> TP>>
+> TP>> In my case it much more than 3%.
+> TP>
+> TP>With wireless-testing HEAD (671c924) I made the following observations
+> TP>with 3 nodes in a mesh using ch. 149 HT20 on AR9280.
+> TP>
+> TP>1. ping -i0.1 does not cause aggregation to take place, and losses are 0%
+> TP>2. a UDP iperf test with two nodes generating traffic shows losses
+> TP>around 1%. We can observe aggregation taking place in this case.
+> TP>
+> TP>Can either of you guys reproduce this with the latest
+> TP>wireless-testing? Also please CC devel@lists.open80211s.org on any
+> TP>mesh bugs in the future.
+> TP>
+> TP>Thanks!
+> TP>Thomas
+> TP>--
+> TP>To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> TP>the body of a message to majordomo@vger.kernel.org
+> TP>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> TP>
+>
+> C уважением                       With Best Regards
+> Георгиевский Юрий.                Georgiewskiy Yuriy
+> +7 4872 711666                    +7 4872 711666
+> факс +7 4872 711143               fax +7 4872 711143
+> Компания ООО "Ай Ти Сервис"       IT Service Ltd
+> http://nkoort.ru                  http://nkoort.ru
+> JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+> YG129-RIPE                        YG129-RIPE
