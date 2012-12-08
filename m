@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53529 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753581Ab2L1ODm (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:4715 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753510Ab2LHJzy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Dec 2012 09:03:42 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: unset peer's HT 40 MHz support if not usable
-Date: Fri, 28 Dec 2012 15:04:00 +0100
-Message-Id: <1356703440-29267-1-git-send-email-johannes@sipsolutions.net> (sfid-20121228_150406_525116_53685D17)
+	Sat, 8 Dec 2012 04:55:54 -0500
+Message-ID: <50C30EA0.9080103@broadcom.com> (sfid-20121208_105600_032929_5DCC79F4)
+Date: Sat, 8 Dec 2012 10:55:44 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Stanislaw Gruszka" <sgruszka@redhat.com>
+cc: "Mykyta Iziumtsev" <mykyta.iziumtsev@gmail.com>,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"Pavel Chernyshev" <pchernyshev@gmail.com>,
+	"Andrew Bordunov" <andrew.bordunov@gmail.com>
+Subject: Re: [PATCH v2] wireless-regdb: Update regulations for Ukraine
+References: <CAHc5FiWpUBUDh=8tDaaLRh9fHXT-k3EBj+KdoOGoR=BhYhzrVQ@mail.gmail.com>
+ <20121206090443.GD2502@redhat.com>
+In-Reply-To: <20121206090443.GD2502@redhat.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 12/06/2012 10:04 AM, Stanislaw Gruszka wrote:
+> On Tue, Dec 04, 2012 at 11:27:55PM +0100, Mykyta Iziumtsev wrote:
+>> Add 5GHz band and mark 2.4GHz and 5GHz as NO-OUTDOOR according to
+>> "Рішення про затвердження Переліку радіоелектронних засобів
+>> та випромінювальних пристроїв, для експлуатації яких не потрібні
+>> дозволи на експлуатацію" from 27 May 2010.
+>>
+>> Ref:
+>> * #914 / 06 Sep 2007: http://www.ucrf.gov.ua/uk/doc/nkrz/1196068874
+>> * #1174 / 23 Oct 2008: http://www.nkrz.gov.ua/uk/activities/ruling/1225269361
+>> (appendix 8)
+> 
+> Since regulatory maintainer does not understand Ukrainian,
+> there is little chance to get this patch applied.
+> 
+> IMHO this can be solved by:
+> 
+> * having official English translation of those document on gov.ua site
 
-When an interface is configured to a 20 MHz channel
-and the device as well as the peer are 40 MHz capable
-the HT capabilities of the peer are not restricted to
-20 MHz, even though they're supposed to be restricted
-to the currently possible capabilities.
+This is always a problem and unlikely to be solved.
 
-Unset the 40 MHz HT capability bits in this case.
+> * provide patch by wlan chip vendor, confirmed by legal deparament of
+>   the vendor
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ht.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Legal department is not typically (directly) involved in this, but we
+(Broadcom) have a regulatory department. However, there are OEMs
+involved as well and some do their own FCC/regulatory certification. The
+reason why I suggested adding references in the database is that I
+wanted to get our regulatory department involved to validate at least
+the correctness of the reference itself. Ideally, I would want them to
+look at the rules itself.
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index df46cd8..61ac7c4 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -120,6 +120,21 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
- 		   IEEE80211_HT_CAP_SGI_20 |
- 		   IEEE80211_HT_CAP_SGI_40 |
- 		   IEEE80211_HT_CAP_DSSSCCK40));
-+
-+	/* Unset 40 MHz if we're not using a 40 MHz channel */
-+	switch (sdata->vif.bss_conf.chandef.width) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+	case NL80211_CHAN_WIDTH_20:
-+		ht_cap->cap &= ~IEEE80211_HT_CAP_SGI_40;
-+		ht_cap->cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+		break;
-+	case NL80211_CHAN_WIDTH_40:
-+	case NL80211_CHAN_WIDTH_80:
-+	case NL80211_CHAN_WIDTH_80P80:
-+	case NL80211_CHAN_WIDTH_160:
-+		break;
-+	}
-+
- 	/*
- 	 * The STBC bits are asymmetric -- if we don't have
- 	 * TX then mask out the peer's RX and vice versa.
--- 
-1.8.0
+> * provide patch by some known Ukrainian kernel developer, someone
+>   who is know by regulatory maintainer and can be trust
+
+I think John relies on community members watching the mailing list that
+are affiliated with the chip vendors. Especially, when the url takes him
+to some ukranian document :-)
+
+> Stanislaw
+> 
+
+Gr. AvS
 
