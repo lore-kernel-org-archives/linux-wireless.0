@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47722 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710Ab2LEJNS (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:34592 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757996Ab2LHKrq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 04:13:18 -0500
-Message-ID: <1354698823.9972.6.camel@jlt4.sipsolutions.net> (sfid-20121205_101324_327776_A01BFF75)
-Subject: Re: [RFC v2 14/18] regulatory: clarify locking rules and assertions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 05 Dec 2012 10:13:43 +0100
-In-Reply-To: <20121204190730.GC29880@localhost> (sfid-20121204_200810_702954_7565575D)
-References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
-	 <1354632540-21207-15-git-send-email-johannes@sipsolutions.net>
-	 <20121204190730.GC29880@localhost> (sfid-20121204_200810_702954_7565575D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 8 Dec 2012 05:47:46 -0500
+Received: by mail-ie0-f177.google.com with SMTP id k13so5053694iea.22
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Dec 2012 02:47:45 -0800 (PST)
+MIME-Version: 1.0
+From: HariHara Sudhan <hari@emo2.com>
+Date: Sat, 8 Dec 2012 16:17:25 +0530
+Message-ID: <CADPh3e6rL3V=3Nr4w8P8ZCKeT-VjqT45NHtp_narFsp1kaGjKg@mail.gmail.com> (sfid-20121208_114759_223254_1E51B946)
+Subject: ar3012 bluetooth nor working
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-04 at 14:07 -0500, Bob Copeland wrote:
-> On Tue, Dec 04, 2012 at 03:48:56PM +0100, Johannes Berg wrote:
-> > Many places that currently check that cfg80211_
-> > The function needs to hold the cfg80211_mutex as
-> > it uses the global cfg80211_regdomain variable, so
-> > add the lock assertion to it and fix one of the
-> > callers that doesn't hold that mutex.
-> 
-> Something missing in the description there?
+I've a ar9485 +ar3012 combo card and using .
+ Wifi is working fine with ath9k drivers.
+But for bluetooth i've enabled BT_ATH3k use in kernel. And it loaded btusb ,
+bnep, rfcomm modules. ath3k wasn't comming up, and hcitool scan
+results gave me nothing.
+rfkill shows both wwifi and bluetooth devices are not blocked.
 
-Completely wrong ... looks like I got interrupted while writing it or
-something ...
+so it is told in ath3k drivers guide from your website . i've added
+the id's in ath3k support list and btusb blacklist.
+Now ath3k is loaded when i checked lsmod, and btusb is also loaded .
+But now rfkill is not showing bluetooth device and hcitool scan says
+"Device Not abailable".
+What could be the reason.
+BTW blacklist driverinfo i gave was "BTUSB_IGNORE
 
-Here's what I changed it to now:
+--
+Regards
 
-    Many places that currently check that cfg80211_mutex
-    is held don't actually use any data protected by it.
-    The functions that need to hold the cfg80211_mutex
-    are the ones using the cfg80211_regdomain variable,
-    so add the lock assertion to those and clarify this
-    in the comments.
-    
-    The reason for this is that nl80211 uses the regdom
-    without being able to hold reg_mutex.
-
-
-johannes
-
+HariHaraSudhan
