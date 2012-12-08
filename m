@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56456 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439Ab2LNKhE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 05:37:04 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TjSdb-00062v-0l
-	for linux-wireless@vger.kernel.org; Fri, 14 Dec 2012 11:37:03 +0100
-Message-ID: <1355481446.9571.9.camel@jlt4.sipsolutions.net> (sfid-20121214_113709_209687_8186C18D)
-Subject: Re: [PATCH] mac80211_hwsim: allow testing paged RX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 14 Dec 2012 11:37:26 +0100
-In-Reply-To: <1355137142-21292-1-git-send-email-johannes@sipsolutions.net> (sfid-20121210_115844_109015_C979B5D8)
-References: <1355137142-21292-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121210_115844_109015_C979B5D8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from posteo.de ([89.146.220.134]:48685 "EHLO posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752007Ab2LHWie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Dec 2012 17:38:34 -0500
+Date: Sat, 8 Dec 2012 23:35:09 +0100
+From: Felix Janda <felix.janda@posteo.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] b43: Load initial firmware file asynchronously
+Message-ID: <20121208223509.GA21258@gauss> (sfid-20121208_233838_434660_79B327DA)
+References: <50C01558.8050102@lwfinger.net>
+ <20121208143032.GA1903@gauss>
+ <50C375BE.9050907@lwfinger.net>
+ <20121208175615.GA10664@gauss>
+ <50C399A9.2060304@lwfinger.net>
+ <20121208202435.GA14973@gauss>
+ <50C3AF0C.8000607@lwfinger.net>
+ <20121208214157.GA21034@gauss>
+ <50C3BD0F.1050603@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50C3BD0F.1050603@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-12-10 at 11:59 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 12/08/12 at 04:19pm, Larry Finger wrote:
+> > Now I have a wlan0. Haven't tested it though yet. dmesg still prints some errors.
 > 
-> Paged RX, i.e. SKBs with (some of) the data in pages instead
-> of the SKB header data (skb->data) can behave differently in
-> the stack and cause other bugs. To make debugging easier add
-> an option to hwsim to test with such SKBs.
+> That is not an error - I just left a diagnostic in the code. Please let me know 
+> if it works. It should as we only touched the firmware loading.
+> 
+> Is it OK if I use a "Reported-and-Tested by: <you>?
+> 
+> Larry
 
-Applied.
+It's OK. Over christmas I'll do some thoroughful testing.
 
-johannes
+The delay of 60 seconds will stay?
 
+Felix
