@@ -1,83 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht1.myhostedexchange.com ([69.50.2.37]:22183 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752436Ab2LJKun (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:52591 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757335Ab2LHA6i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 05:50:43 -0500
-Date: Mon, 10 Dec 2012 11:49:37 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: in AD-HOC mode wait for the AUTH response
-Message-ID: <20121210104937.GA26638@open-mesh.com> (sfid-20121210_115046_417144_7109E07B)
-References: <1355134917-17705-1-git-send-email-antonio@open-mesh.com>
- <1355134917-17705-2-git-send-email-antonio@open-mesh.com>
- <50C5BCC3.8090809@lri.fr>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="9amGYk9869ThD9tj"
-In-Reply-To: <50C5BCC3.8090809@lri.fr>
+	Fri, 7 Dec 2012 19:58:38 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so603931eek.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 16:58:36 -0800 (PST)
+From: Eyal Shapira <eyal@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3] wlcore: increase scan dwell times if no activity
+Date: Sat,  8 Dec 2012 02:58:23 +0200
+Message-Id: <1354928303-13438-1-git-send-email-eyal@wizery.com> (sfid-20121208_015842_588455_30EE076C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---9amGYk9869ThD9tj
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There's a limit on scan dwell times of max 30ms in order
+to avoid degrading voip traffic which could be going on
+while scanning. However these dwell times increase the
+chance of missing out on nearby APs leading to partial
+scan results. Allow configuration of longer dwell times
+in case there no active interface (i.e. no STA associated
+or AP up).
 
-On Mon, Dec 10, 2012 at 11:43:15 +0100, Nicolas Cavallari wrote:
-> > -	if (auth && !sdata->u.ibss.auth_frame_registrations) {
-> > +	if (!sdata->u.ibss.auth_frame_registrations) {
-> >  		ibss_dbg(sdata,
-> >  			 "TX Auth SA=3D%pM DA=3D%pM BSSID=3D%pM (auth_transaction=3D1)\n",
-> >  			 sdata->vif.addr, addr, sdata->u.ibss.bssid);
->=20
-> If userspace registered for auth frames, then we shouldn't wait for auth =
-responses,
-> as this code will never see them.
->=20
+[Arik - count started vifs using an in-driver function]
 
-Correct. I think in this case the station should immediately be authenticat=
-ed in
-this point using an else branch.
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+v3: change semantics of new conf values to long dwell time (Thanks Luca)
 
-> I'm also curious about compatibility with the current wpa_supplicant whic=
-h does not know
-> about that new event.
+This applies on top of Luca's current master (WLCORE_CONF_VERSION changes
+to 5 instead of 6 in v2)
 
-Yeah. A patch has already been prepared, I'll send it once this patchset ge=
-ts
-accepted.
+ drivers/net/wireless/ti/wl12xx/main.c |    2 ++
+ drivers/net/wireless/ti/wl18xx/main.c |    2 ++
+ drivers/net/wireless/ti/wlcore/conf.h |   26 +++++++++++++++++++++++++-
+ drivers/net/wireless/ti/wlcore/scan.c |   30 +++++++++++++++++++++++++++---
+ 4 files changed, 56 insertions(+), 4 deletions(-)
 
-Thank you for reviewing!
-Cheers,
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 64a5e81..e703ae7 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -267,6 +267,8 @@ static struct wlcore_conf wl12xx_conf = {
+ 	.scan = {
+ 		.min_dwell_time_active        = 7500,
+ 		.max_dwell_time_active        = 30000,
++		.min_dwell_time_active_long   = 25000,
++		.max_dwell_time_active_long   = 50000,
+ 		.dwell_time_passive           = 100000,
+ 		.dwell_time_dfs               = 150000,
+ 		.num_probe_reqs               = 2,
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index e6f64a4..e23dff8 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -394,6 +394,8 @@ static struct wlcore_conf wl18xx_conf = {
+ 	.scan = {
+ 		.min_dwell_time_active        = 7500,
+ 		.max_dwell_time_active        = 30000,
++		.min_dwell_time_active_long   = 25000,
++		.max_dwell_time_active_long   = 50000,
+ 		.dwell_time_passive           = 100000,
+ 		.dwell_time_dfs               = 150000,
+ 		.num_probe_reqs               = 2,
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index b64d6b5..b3c2dac 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -1044,6 +1044,7 @@ struct conf_roam_trigger_settings {
+ struct conf_scan_settings {
+ 	/*
+ 	 * The minimum time to wait on each channel for active scans
++	 * This value will be used whenever there's a connected interface.
+ 	 *
+ 	 * Range: u32 tu/1000
+ 	 */
+@@ -1051,11 +1052,34 @@ struct conf_scan_settings {
+ 
+ 	/*
+ 	 * The maximum time to wait on each channel for active scans
++	 * This value will be currently used whenever there's a
++	 * connected interface. It shouldn't exceed 30000 (~30ms) to avoid
++	 * possible interference of voip traffic going on while scanning.
+ 	 *
+ 	 * Range: u32 tu/1000
+ 	 */
+ 	u32 max_dwell_time_active;
+ 
++	/*
++	 * The minimum time to wait on each channel for active scans
++	 * when it's possible to have longer scan dwell times.
++	 * Currently this is used whenever we're idle on all interfaces.
++	 * Longer dwell times improve detection of networks within a
++	 * single scan.
++	 *
++	 * Range: u32 tu/1000
++	 */
++	u32 min_dwell_time_active_long;
++
++	/*
++	 * The maximum time to wait on each channel for active scans
++	 * when it's possible to have longer scan dwell times.
++	 * See min_dwell_time_active_long
++	 *
++	 * Range: u32 tu/1000
++	 */
++	u32 max_dwell_time_active_long;
++
+ 	/* time to wait on the channel for passive scans (in TU/1000) */
+ 	u32 dwell_time_passive;
+ 
+@@ -1278,7 +1302,7 @@ struct conf_recovery_settings {
+  * version, the two LSB are the lower driver's private conf
+  * version.
+  */
+-#define WLCORE_CONF_VERSION	(0x0004 << 16)
++#define WLCORE_CONF_VERSION	(0x0005 << 16)
+ #define WLCORE_CONF_MASK	0xffff0000
+ #define WLCORE_CONF_SIZE	(sizeof(struct wlcore_conf_header) +	\
+ 				 sizeof(struct wlcore_conf))
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index 7f42f8a..6cfdeae 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -89,6 +89,25 @@ out:
+ 
+ }
+ 
++static void wlcore_started_vifs_iter(void *data, u8 *mac,
++				     struct ieee80211_vif *vif)
++{
++	int *count = (int *)data;
++
++	if (!vif->bss_conf.idle)
++		(*count)++;
++}
++
++static int wlcore_count_started_vifs(struct wl1271 *wl)
++{
++	int count = 0;
++
++	ieee80211_iterate_active_interfaces_atomic(wl->hw,
++					IEEE80211_IFACE_ITER_RESUME_ALL,
++					wlcore_started_vifs_iter, &count);
++	return count;
++}
++
+ static int
+ wlcore_scan_get_channels(struct wl1271 *wl,
+ 			 struct ieee80211_channel *req_channels[],
+@@ -109,9 +128,14 @@ wlcore_scan_get_channels(struct wl1271 *wl,
+ 	/* configure dwell times according to scan type */
+ 	if (scan_type == SCAN_TYPE_SEARCH) {
+ 		struct conf_scan_settings *c = &wl->conf.scan;
+-
+-		min_dwell_time_active = c->min_dwell_time_active;
+-		max_dwell_time_active = c->max_dwell_time_active;
++		bool active_vif_exists = !!wlcore_count_started_vifs(wl);
++
++		min_dwell_time_active = active_vif_exists ?
++			c->min_dwell_time_active :
++			c->min_dwell_time_active_long;
++		max_dwell_time_active = active_vif_exists ?
++			c->max_dwell_time_active :
++			c->max_dwell_time_active_long;
+ 		dwell_time_passive = c->dwell_time_passive;
+ 		dwell_time_dfs = c->dwell_time_dfs;
+ 	} else {
+-- 
+1.7.9.5
 
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---9amGYk9869ThD9tj
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQxb5BAAoJEADl0hg6qKeORwcQAK1fXuU0DyWK11ph8v43y1Fd
-Z/zlfSwVsm0O5YKzX9yX2sL2fNiZLHstPKcn6ZAWLICJLAPtLpvGSi+TZNAC+rw7
-QSI8vwF6q5GVqflnXQ59XumHQ2mwYYGAoe9Ut54vtPkTz/DCuBQhsPzQKY/VRj/t
-YSsb/Ii6Az2AngmAMzzXc2suwPCDqVqdekFOZ3Vv3MfQdhDhMX0wvfREzg0sYbYp
-PuNfY82uKHoWtHK0fhDJM7OyJgWPyCHy2GcweuYV7ERT4/yWSLCkKC0Gx4EOB6D4
-th4rNCPs3EskPNlKAWeEYEEepMIuEyVvNUO8ytHdKlENOtBrwi1HWm7O1oCreEqR
-wVda9XjawvOvDywL907IzOJkYtfTawHgO0Tyz1oPucOes3HEBWxpy/kth+8c+z6u
-0p672MeGQjL5nbG6WcJZfN5F2aTorwCR303ESapX+whS73ZWXmsWhCouCY3dOVof
-UO1gNIaX7uAJFBicvon3YxngXuDuF/JNhD7VHv60B2Ik2MFPTlBMd0vqEI+04ean
-RdiMqoSIaaT+1KjNVAW8EAIaKh5Px2SeVXS/SP6GIXu4f6k2tj7brJQenjR6d7eI
-W2W2K6Xbd4VRE7H5A6bkuMDX0xjdjA6gpXKeqZ+cVkNYFRON/cRKRH+609LJzvDA
-pLCQIW5MMY1tQy5EgUbw
-=JvOB
------END PGP SIGNATURE-----
-
---9amGYk9869ThD9tj--
