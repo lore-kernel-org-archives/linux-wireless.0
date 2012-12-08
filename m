@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.locum.ru ([193.106.93.111]:54312 "EHLO mail.locum.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751867Ab2LKEjC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 23:39:02 -0500
-Message-ID: <50C6B8E0.4080801@ubuntu.com> (sfid-20121211_053907_553379_BEDB9441)
-Date: Tue, 11 Dec 2012 11:38:56 +0700
-From: Maia Kozheva <sikon@ubuntu.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:38913 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756153Ab2LHXME (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Dec 2012 18:12:04 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so887721qcr.19
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Dec 2012 15:12:04 -0800 (PST)
+Message-ID: <50C3C940.3060704@lwfinger.net> (sfid-20121209_001220_575377_DB672A0C)
+Date: Sat, 08 Dec 2012 17:12:00 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] Add support for 2001:3c1e (D-Link DWA-125 rev B1) USB
- Wi-Fi adapter
-References: <50C6974B.5000206@gmail.com>
-In-Reply-To: <50C6974B.5000206@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Janda <felix.janda@posteo.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] b43: Load initial firmware file asynchronously
+References: <50C01558.8050102@lwfinger.net> <20121208143032.GA1903@gauss> <50C375BE.9050907@lwfinger.net> <20121208175615.GA10664@gauss> <50C399A9.2060304@lwfinger.net> <20121208202435.GA14973@gauss> <50C3AF0C.8000607@lwfinger.net> <20121208214157.GA21034@gauss> <50C3BD0F.1050603@lwfinger.net> <20121208223509.GA21258@gauss>
+In-Reply-To: <20121208223509.GA21258@gauss>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Someone who physically disassembled the device confirms that its chipset is Ralink RT5370n.
+On 12/08/2012 04:35 PM, Felix Janda wrote:
+> On 12/08/12 at 04:19pm, Larry Finger wrote:
+>>> Now I have a wlan0. Haven't tested it though yet. dmesg still prints some errors.
+>>
+>> That is not an error - I just left a diagnostic in the code. Please let me know
+>> if it works. It should as we only touched the firmware loading.
+>>
+>> Is it OK if I use a "Reported-and-Tested by: <you>?
+>>
+>> Larry
+>
+> It's OK. Over christmas I'll do some thoroughful testing.
+>
+> The delay of 60 seconds will stay?
 
-Fixed the patch.
+As this happens while user-space is getting started, there is little we can do. 
+On my dual-core x86_64 system with each CPU running at 2 GHz, it takes 24 sec 
+before the fw is loaded. At least other things happen in parallel.
 
-Signed-off-by: Maia Kozheva <sikon@ubuntu.com>
-diff -uprN a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
---- a/drivers/net/wireless/rt2x00/rt2800usb.c	2012-11-28 04:21:31.000000000 +0700
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c	2012-12-11 11:34:35.889131671 +0700
-@@ -1169,6 +1169,7 @@ static struct usb_device_id rt2800usb_de
- 	{ USB_DEVICE(0x2001, 0x3c19) },
- 	{ USB_DEVICE(0x2001, 0x3c1c) },
- 	{ USB_DEVICE(0x2001, 0x3c1d) },
-+	{ USB_DEVICE(0x2001, 0x3c1e) },
- 	/* LG innotek */
- 	{ USB_DEVICE(0x043e, 0x7a22) },
- 	/* Panasonic */
+Larry
 
-
-Op 11-12-12 09:15, Xose Vazquez Perez schreef:
-> It looks like it's a RT5370 device:
-> http://www.wikidevi.com/wiki/D-Link_DWA-125_rev_B1
-> 
-> It should go in CONFIG_RT2800USB_RT53XX
-> 
-> NACK
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
