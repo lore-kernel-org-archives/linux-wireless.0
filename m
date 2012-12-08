@@ -1,150 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:37205 "EHLO arrakis.dune.hu"
+Received: from icf.org.ru ([91.193.236.10]:47816 "EHLO icf.org.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946393Ab2LFSRf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 13:17:35 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 10/13] qca-swiss-army-knife: allow to print initvals with more than 5 columns
-Date: Thu,  6 Dec 2012 19:17:24 +0100
-Message-Id: <1354817847-23440-11-git-send-email-juhosg@openwrt.org> (sfid-20121206_191740_903972_B8B9F73A)
-In-Reply-To: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
-References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
+	id S932847Ab2LHDXd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Dec 2012 22:23:33 -0500
+Date: Sat, 8 Dec 2012 07:23:30 +0400 (MSK)
+From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+To: Thomas Pedersen <thomas@cozybit.com>
+cc: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	open11s <devel@lists.open80211s.org>
+Subject: Re: help: 802.11s bad performance with 802.11n enabled
+In-Reply-To: <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1212080721070.8165@icf.org.ru> (sfid-20121208_042344_364267_2FFF552A)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp> <alpine.DEB.2.02.1212031842350.27546@icf.org.ru> <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-588890978-1354937010=:8165"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is required for the QCA955X initvals, because that
-contain some arrays with 9 columns.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- tools/initvals/initvals.c |   62 ++++++++++++++++++++++++++++++---------------
- 1 file changed, 41 insertions(+), 21 deletions(-)
+---1050998036-588890978-1354937010=:8165
+Content-Type: TEXT/PLAIN; charset=KOI8-R
+Content-Transfer-Encoding: 8BIT
 
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index 35466bc..b13d12e 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -338,7 +338,8 @@ struct initval_family {
- 		char *sha1sum; \
- 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
- 						ARRAY_SIZE(_array), \
--						ARRAY_SIZE((_array)[0])); \
-+						ARRAY_SIZE((_array)[0]), \
-+						false); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
- 		if (sizeof(_ref) == sizeof(_array) && \
-@@ -349,34 +350,40 @@ struct initval_family {
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
- 				       ARRAY_SIZE(_array), \
- 				       ARRAY_SIZE((_array)[0]), \
-+				       false, \
- 				       false); \
- 	} \
-     } while (0)
- 
--#define INI_PRINT(_array) do { \
-+#define _INI_PRINT(_label, _array, _wide) do { \
- 	if (check) { \
- 		char *sha1sum; \
- 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
--						 ARRAY_SIZE(_array), \
--						 ARRAY_SIZE((_array)[0])); \
--		printf("%s        "#_array"\n", sha1sum); \
-+						ARRAY_SIZE(_array), \
-+						ARRAY_SIZE((_array)[0]), \
-+						_wide); \
-+		printf("%s        " _label "\n", sha1sum); \
- 	} else { \
--		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
-+		ath9k_hw_print_initval((_label), (const u32 *) _array, \
- 				       ARRAY_SIZE(_array), \
- 				       ARRAY_SIZE((_array)[0]), \
--				       false); \
-+				       false, \
-+				       _wide); \
- 	} \
-     } while (0)
- 
-+#define INI_PRINT(_array)	_INI_PRINT(#_array, _array, false)
-+#define INI_PRINTW(_array)	_INI_PRINT(#_array, _array, true)
-+
- #define INI_PRINT_ONEDIM(_array) do { \
- 	if (check) { \
- 		char *sha1sum; \
- 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
--						ARRAY_SIZE(_array), 1); \
-+						ARRAY_SIZE(_array), 1, false); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
--				       ARRAY_SIZE(_array), 1, true); \
-+				       ARRAY_SIZE(_array), 1, true, false); \
- 	} \
-     } while (0)
- 
-@@ -416,19 +423,26 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
- 	return val;
- }
- 
--static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
-+static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
-+				   u32 columns, bool onedim, bool wide)
- {
--	u32 p_columns = columns > 5 ? 5 : columns;
-+	u32 p_columns;
- 	u32 col, row;
- 
--	/*
--	 * This checksum stuff is designed for columns <= 8),
--	 * and spreads the checksum over 64 bits but since currently
--	 * the initval max column size is 6 we only use the first 48
--	 * bits.
--	 */
--	if (columns > 6)
--		return;
-+	if (wide) {
-+		p_columns = columns;
-+	} else {
-+		p_columns = columns > 5 ? 5 : columns;
-+
-+		/*
-+		* This checksum stuff is designed for columns <= 8),
-+		* and spreads the checksum over 64 bits but since currently
-+		* the initval max column size is 6 we only use the first 48
-+		* bits.
-+		*/
-+		if (columns > 6)
-+			return;
-+	}
- 
- 	if (onedim)
- 		printf("static const u32 %s[] = {\n", name);
-@@ -472,14 +486,20 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
- 	printf("};\n\n");
- }
- 
--static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns)
-+static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns,
-+				    bool wide)
- {
- 	SHA1_CTX ctx;
- 	unsigned char digest[SHA1_DIGEST_SIZE];
- 	static char buf[64];
--	u32 p_columns = columns > 5 ? 5 : columns;
-+	u32 p_columns;
- 	u32 col, row;
- 
-+	if (wide)
-+		p_columns = columns;
-+	else
-+		p_columns = columns > 5 ? 5 : columns;
-+
- 	SHA1_Init(&ctx);
- 	for (row = 0; row < rows; row++) {
- 		for (col = 0; col < p_columns; col++) {
--- 
-1.7.10
+On 2012-12-07 19:17 -0800, Thomas Pedersen wrote Georgiewskiy Yuriy:
 
+ок, i try this and report results, can you also test on 2.4 Ggz? as i 
+understand ch 149 is 802.11a? or this make no sense here?
+
+TP>Hi Chaoxing and Georgiewsky,
+TP>
+TP>On Mon, Dec 3, 2012 at 6:45 AM, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
+TP>> On 2012-12-03 14:37 -0000, Chaoxing Lin wrote linux-wireless@vger.kernel.org:
+TP>>
+TP>> CL>After a lot of experiments, here are various problems observed.
+TP>> CL>
+TP>> CL>1. The "Fail to stop Tx DMA" related issue plays a role. But not the major part. It accounts for about 3% of packet loss in my testbed.
+TP>> CL>Is anyone looking at this issue? This issue is now very easy to recreate.
+TP>>
+TP>> In my case it much more than 3%.
+TP>
+TP>With wireless-testing HEAD (671c924) I made the following observations
+TP>with 3 nodes in a mesh using ch. 149 HT20 on AR9280.
+TP>
+TP>1. ping -i0.1 does not cause aggregation to take place, and losses are 0%
+TP>2. a UDP iperf test with two nodes generating traffic shows losses
+TP>around 1%. We can observe aggregation taking place in this case.
+TP>
+TP>Can either of you guys reproduce this with the latest
+TP>wireless-testing? Also please CC devel@lists.open80211s.org on any
+TP>mesh bugs in the future.
+TP>
+TP>Thanks!
+TP>Thomas
+TP>--
+TP>To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+TP>the body of a message to majordomo@vger.kernel.org
+TP>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+TP>
+
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
+---1050998036-588890978-1354937010=:8165--
