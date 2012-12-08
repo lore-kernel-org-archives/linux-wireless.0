@@ -1,73 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:43988 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375Ab2LCS6x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 13:58:53 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so1242960bkw.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 10:58:52 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Mon, 3 Dec 2012 18:48:05 +0100
-Subject: [PATCH] carl9170: explain why sta cannot be NULL for ampdus
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, dan.carpenter@oracle.com
-Message-Id: <20121203185838.E2A80100286@blech.mobile> (sfid-20121203_195857_426662_57ABFDAA)
+Received: from posteo.de ([89.146.220.134]:44010 "EHLO posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932128Ab2LHOrz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Dec 2012 09:47:55 -0500
+Date: Sat, 8 Dec 2012 15:30:32 +0100
+From: Felix Janda <felix.janda@posteo.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] b43: Load initial firmware file asynchronously
+Message-ID: <20121208143032.GA1903@gauss> (sfid-20121208_154759_708085_09D20710)
+References: <50C01558.8050102@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50C01558.8050102@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter reported that smatch detected a potential
-problem with the code [1]:
- drivers/net/wireless/ath/carl9170/tx.c:1488 carl9170_op_tx()
-  error: we previously assumed 'sta' could be null (see line 1482)
+On 12/05/12 at 09:47pm, Larry Finger wrote:
+> Felix,
+> 
+> Please test this with b43 built into the kernel.
+> 
+> Thanks,
+> 
+> Larry
 
- drivers/net/wireless/ath/carl9170/tx.c
-  1482  if (sta) {
-           ^^^^^ New check.
-  [...]
-  1485  }
-  1487  if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-  1488    run = carl9170_tx_ampdu_queue(ar, sta, skb);
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   Old dereference of "sta" inside the call to carl9170_tx_ampdu_queue().
+Thanks, for coming back to this.
 
-A range of solutions have been discussed in [2] and
-we agreed on the following: "
-> we might as well add a comment to carl9170_tx_ampdu_queue
-> and explain the situation [in a way that's obvious to a
-> human reader]. This way we can save the "if"... which is
-> a small win since carl9170_op_tx is sort of a hot-path.
-Putting a comment there is fine. Without the comment
-it's easy for a human reader to get confused why the
-check is there. So long as humans can read the code,
-that's all that matters."
+It now gives me a kernel panic after 30 seconds.
 
-[1] <http://www.spinics.net/lists/linux-wireless/msg94526.html>
-[2] <http://www.spinics.net/lists/linux-kernel-janitors/msg14953.html>
+I did some debugging using ssleep and printk. b43_fw_cb seems
+to be called several times and on the last time the "firmware"
+argument seems to be zero. The execution then returns to
+b43_do_request_fw, which tries to deference a zero pointer in
+the line
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/tx.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+> +	if (ctx->blob->size < sizeof(struct b43_fw_header))
 
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index 6a86814..45c696b 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -1485,6 +1485,13 @@ void carl9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
- 
- 	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		/* to static code analyzers and reviewers:
-+		 * mac80211 guarantees that a valid "sta"
-+		 * reference is present, if a frame is to
-+		 * be part of an ampdu. Hence any extra
-+		 * sta == NULL checks are redundant in this
-+		 * special case.
-+		 */
- 		run = carl9170_tx_ampdu_queue(ar, sta, skb);
- 		if (run)
- 			carl9170_tx_ampdu(ar);
--- 
-1.7.10.4
 
+It is another machine then last time, has B4306 (rev 3) and a
+kernel without modules. The firmware is in /lib/firmware/b43,
+which is on the root partition. There is no udev installed.
+
+Felix
