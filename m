@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out04.msg.oleane.net ([62.161.7.2]:55862 "EHLO
-	smtp-out04.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754232Ab2LZKz7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 05:55:59 -0500
-Received: from smtp07.msg.oleane.net (smtp07.mail.priv [172.17.20.116])
-	by smtp-out04.msg.oleane.net with ESMTP id qBQAUgZ4004468
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2012 11:30:42 +0100
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp07.msg.oleane.net (MTA) with ESMTP id qBQA9vbJ029928
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2012 11:09:57 +0100
-Subject: missing RX_FLAG_DECRIPTED in ieee80211_rx_status after first reassociation in 802.11R
-Date: Wed, 26 Dec 2012 11:09:56 +0100
-Message-ID: <773DB8A82AB6A046AE0195C68612A319014122EF@sbs2003.acksys.local> (sfid-20121226_115604_696053_595367C8)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-From: "Cedric Debarge" <cedric.debarge@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+Received: from arrakis.dune.hu ([78.24.191.176]:55928 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934578Ab2LIW5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2012 17:57:53 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>,
+	<stable@vger.kernel.org>, #@arrakis.dune.hu, 3.0+@arrakis.dune.hu
+Subject: [PATCH] ath9k: ar9003: fix OTP register offsets for AR9340
+Date: Sun,  9 Dec 2012 23:57:09 +0100
+Message-Id: <1355093829-10932-1-git-send-email-juhosg@openwrt.org> (sfid-20121209_235801_298759_F0299C98)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Trying to access the OTP memory on the AR9340
+causes a data bus error like this:
 
-	I am not sure if this is the right place to post my question. Please forgive me if not.
+  Data bus error, epc == 86e84164, ra == 86e84164
+  Oops[#1]:
+  Cpu 0
+  $ 0   : 00000000 00000061 deadc0de 00000000
+  $ 4   : b8115f18 00015f18 00000007 00000004
+  $ 8   : 00000001 7c7c3c7c 7c7c7c7c 7c7c7c7c
+  $12   : 7c7c3c7c 001f0041 00000000 7c7c7c3c
+  $16   : 86ee0000 00015f18 00000000 00000007
+  $20   : 00000004 00000064 00000004 86d71c44
+  $24   : 00000000 86e6ca00
+  $28   : 86d70000 86d71b20 86ece0c0 86e84164
+  Hi    : 00000000
+  Lo    : 00000064
+  epc   : 86e84164 ath9k_hw_wait+0x58/0xb0 [ath9k_hw]
+      Tainted: G           O
+  ra    : 86e84164 ath9k_hw_wait+0x58/0xb0 [ath9k_hw]
+  Status: 1100d403    KERNEL EXL IE
+  Cause : 4080801c
+  PrId  : 0001974c (MIPS 74Kc)
+  Modules linked in: ath9k(O+) ath9k_common(O) ath9k_hw(O) ath(O) ar934x_nfc
+  mac80211(O) usbcore usb_common scsi_mod nls_base nand nand_ecc nand_ids
+  crc_ccitt cfg80211(O) compat(O) arc4 aes_generic crypto_blkcipher cryptomgr
+  aead crypto_hash crypto_algapi ledtrig_timer ledtrig_default_on leds_gpio
+  Process insmod (pid: 459, threadinfo=86d70000, task=87942140, tls=779ac440)
+  Stack : 802fb500 000200da 804db150 804e0000 87816130 86ee0000 00010000 86d71b88
+          86d71bc0 00000004 00000003 86e9fcd0 80305300 0002c0d0 86e74c50 800b4c20
+          000003e8 00000001 00000000 86ee0000 000003ff 86e9fd64 80305300 80123938
+          fffffffc 00000004 000058bc 00000000 86ea0000 86ee0000 000001ff 878d6000
+          99999999 86e9fdc0 86ee0fcc 86e9e664 0000c0d0 86ee0000 0000700000007000
+          ...
+  Call Trace:
+  [<86e84164>] ath9k_hw_wait+0x58/0xb0 [ath9k_hw]
+  [<86e9fcd0>] ath9k_hw_setup_statusring+0x16b8/0x1c7c [ath9k_hw]
 
-	I am experiencing performance issue with 802.11R roaming between two AP with wpa_supplicant ( WPA2 + EAP-TLS).
-	When wpa_supplicant leaves the first AP and successfully associates and authenticates with the second one, data frames coming undecrypted from the radio card (RX_FLAG_DECRIPTED flag not set in ieee80211_rx_status) and consumes a lot of CPU time in ieee80211_rx_h_decrypt to decrypt it.
+  Code: 0000a812  0040f809  00000000 <00531024> 1054000b  24020001  0c05b5dc  2404000a  26520001
 
-	status->flag at the beginning of ieee80211_rx_h_decrypt :
-		0x282 (RX_FLAG_HT | RX_FLAG_MACTIME_MPDU |  RX_FLAG_DECRYPTED) before the first roam
-		0x280 (RX_FLAG_HT | RX_FLAG_MACTIME_MPDU) after the first roam
- 	
-	Is this behavior correct ? if not, can you give me some clue how to work it out ?
+The cause of the error is that the OTP register
+offsets are different on the AR9340 than the
+actually used values.
 
-	I can provide wpa_supplicant logs if needed.
+Cc: <stable@vger.kernel.org> # 3.0+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Wireless driver : ath9k (AR9160)
-Compat-Wireless = 2012-09-07 (OpenWRT package) 
-WPA_Supplicant  = 20120910 (OpenWRT package)
-Linux Kernel : 3.3.8
-
-	Thank in advance.
-
-Best regards,
-
-Cédric DEBARGE
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 41b1a75..54ba42f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -68,13 +68,13 @@
+ #define AR9300_BASE_ADDR 0x3ff
+ #define AR9300_BASE_ADDR_512 0x1ff
+ 
+-#define AR9300_OTP_BASE			0x14000
+-#define AR9300_OTP_STATUS		0x15f18
++#define AR9300_OTP_BASE			(AR_SREV_9340(ah) ? 0x30000 : 0x14000)
++#define AR9300_OTP_STATUS		(AR_SREV_9340(ah) ? 0x30018 : 0x15f18)
+ #define AR9300_OTP_STATUS_TYPE		0x7
+ #define AR9300_OTP_STATUS_VALID		0x4
+ #define AR9300_OTP_STATUS_ACCESS_BUSY	0x2
+ #define AR9300_OTP_STATUS_SM_BUSY	0x1
+-#define AR9300_OTP_READ_DATA		0x15f1c
++#define AR9300_OTP_READ_DATA		(AR_SREV_9340(ah) ? 0x3001c : 0x15f1c)
+ 
+ enum targetPowerHTRates {
+ 	HT_TARGET_RATE_0_8_16,
+-- 
+1.7.10
 
