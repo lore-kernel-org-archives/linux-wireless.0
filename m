@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7865 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933101Ab2LGK1Q (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32023 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754280Ab2LIOQ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 05:27:16 -0500
-Date: Fri, 7 Dec 2012 15:57:14 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
+	Sun, 9 Dec 2012 09:16:26 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
 	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 7/8] ath9k_hw: Calculate the correct training power for
- PAPRD
-Message-ID: <20121207102712.GA3145@hemis.qca.qualcomm.com> (sfid-20121207_112723_400752_91AFBF2C)
-References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
- <1354874521-4138-8-git-send-email-sujith@msujith.org>
+Subject: [PATCH] wireless-regdb: add regulatory rule for US on 60gHz band
+Date: Sun, 9 Dec 2012 16:16:21 +0200
+Message-ID: <8774585.BvFN3Opv12@lx-vladimir> (sfid-20121209_151634_435812_725EB233)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1354874521-4138-8-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 07, 2012 at 03:32:00PM +0530, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Assign the training power for PAPRD based on the chip.
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 41 ++++++++++++++++++--------
->  drivers/net/wireless/ath/ath9k/ar9003_paprd.c  | 22 +++++++++-----
->  2 files changed, 43 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> index c86cb640..0f38895 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> @@ -5076,6 +5076,33 @@ static inline u8 mcsidx_to_tgtpwridx(unsigned int mcs_idx, u8 base_pwridx)
->  		return base_pwridx + 4 * (mcs_idx / 8) + mod_idx - 2;
->  }
->  
-> +static void ar9003_paprd_set_txpower(struct ath_hw *ah,
-> +				     struct ath9k_channel *chan,
-> +				     u8 *targetPowerValT2)
-> +{
-> +	int i;
-> +
-> +	if (!ar9003_is_paprd_enabled(ah))
-> +		return;
-> +
-Can you reorder the patch series as ar9003_is_paprd_enabled is not defined in
-previous patches?
+Hi,
 
--Rajkumar
+I start addressing regulatory for 60g band. As I gather other reference
+documents, patches for other countries will be submitted.
+
+I start with US where there is easy to find documentation on-line.
+
+
+
+>From dfd4087c1d5914481fbe8fc70828a4ffbc5a02d7 Mon Sep 17 00:00:00 2001
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Sun, 9 Dec 2012 16:11:16 +0200
+Subject: [PATCH] wireless-regdb: add regulatory rule for US on 60gHz band
+
+There is coming 802.11ad standard that defines WiFi operations on the new band 60g.
+
+In the US, reference document is:
+
+http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ db.txt |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/db.txt b/db.txt
+index 4c54543..b97255d 100644
+--- a/db.txt
++++ b/db.txt
+@@ -662,6 +662,10 @@ country US: DFS-FCC
+ 	(5490 - 5600 @ 40), (3, 20), DFS
+ 	(5650 - 5710 @ 40), (3, 20), DFS
+ 	(5735 - 5835 @ 40), (3, 30)
++	# 60g band
++	# reference: http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
++	# channels 1,2,3, EIRP=40dBm(43dBm peak)
++	(57240 - 63720 @ 2160), (N/A, 40)
+ 
+ country UY:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
+
+
