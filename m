@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:39287 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401Ab2LFXsC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 18:48:02 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so11898lbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 15:48:00 -0800 (PST)
+Received: from posteo.de ([89.146.220.134]:56827 "EHLO posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964887Ab2LIHsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2012 02:48:16 -0500
+Date: Sun, 9 Dec 2012 08:44:50 +0100
+From: Felix Janda <felix.janda@posteo.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] b43: Load initial firmware file asynchronously
+Message-ID: <20121209074450.GA1073@gauss> (sfid-20121209_084829_427519_1B4D4B21)
+References: <20121208143032.GA1903@gauss>
+ <50C375BE.9050907@lwfinger.net>
+ <20121208175615.GA10664@gauss>
+ <50C399A9.2060304@lwfinger.net>
+ <20121208202435.GA14973@gauss>
+ <50C3AF0C.8000607@lwfinger.net>
+ <20121208214157.GA21034@gauss>
+ <50C3BD0F.1050603@lwfinger.net>
+ <20121208223509.GA21258@gauss>
+ <50C3C940.3060704@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1354812468-15709-3-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-3-git-send-email-johannes@sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 6 Dec 2012 15:47:40 -0800
-Message-ID: <CAB=NE6XWKoRODSOcmgxhENmC3ZkOO5qCE-RBHwaMA-vusz+Dqw@mail.gmail.com> (sfid-20121207_004807_184487_68069CC5)
-Subject: Re: [PATCH 02/24] regulatory: don't allocate too much memory
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50C3C940.3060704@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> There's no need to allocate one reg rule more
-> than will be used, reduce the allocations. The
-> allocation in nl80211 already doesn't allocate
-> too much space.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+On 12/08/12 at 05:12pm, Larry Finger wrote:
+> > The delay of 60 seconds will stay?
+> 
+> As this happens while user-space is getting started, there is little we can do. 
+> On my dual-core x86_64 system with each CPU running at 2 GHz, it takes 24 sec 
+> before the fw is loaded. At least other things happen in parallel.
+> 
+> Larry
 
-Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Ok. (The behavior is now the same as if the firmware was built into the kernel.)
 
-Just for the record without this I ran into odd issues that I could
-not root cause but glad you have verified this should be a non-issue.
-I'll ACK-it provided we let it rip and find any issues during in the
-development cycle.
+So thanks again for the fix.
 
-  Luis
+Felix
