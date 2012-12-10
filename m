@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43347 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090Ab2LLWMA (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:9295 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752554Ab2LJMP7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 17:12:00 -0500
-Message-ID: <50C9012C.9000108@candelatech.com> (sfid-20121212_231212_699524_624A411B)
-Date: Wed, 12 Dec 2012 14:11:56 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+	Mon, 10 Dec 2012 07:15:59 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 3/6] mac80211: Check for NULL in get-ethtool-stats logic.
-References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>  <1355349295-30960-3-git-send-email-greearb@candelatech.com>  (sfid-20121212_225626_327122_3F8FF5FB) <1355349772.9708.19.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355349772.9708.19.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+CC: <linville@tuxdriver.com>, <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless-regdb: add regulatory rule for ETSI members on 60gHz band
+Date: Mon, 10 Dec 2012 14:15:55 +0200
+Message-ID: <2225032.pbhpKMrF3f@lx-vladimir> (sfid-20121210_131607_448975_D9713B15)
+In-Reply-To: <1355139107.9857.15.camel@jlt4.sipsolutions.net>
+References: <8774585.BvFN3Opv12@lx-vladimir> <1424987.QUc2GD1qWX@lx-vladimir> <1355139107.9857.15.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2012 02:02 PM, Johannes Berg wrote:
-> On Wed, 2012-12-12 at 13:54 -0800, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> In an earlier version of this code, testing found that sometimes
->> either sta wasn't found or sta->sdata was NULL.  This caused
->> crashes of course.  So, add checks with WARN_ON_ONCE to
->> catch these.
->
-> I don't know what you tested, but there's absolutely no way that
-> sta->sdata is NULL... *Especially* not after sta_info_get_bss(), I mean,
-> look at that function. But once it's on the list it can't be NULL, so
-> I'm not going to apply this patch.
->
-> In the future, I'd appreciate if you could avoid avoid sending patches
-> for drivers and mac80211 etc. in one series, it gets confusing with who
-> applies what etc.
+On Monday, December 10, 2012 12:31:47 PM Johannes Berg wrote:
+> does the kernel understand the two rules with
+> different TX power/outdoor restriction properly?
 
-Ok, it was quite a while ago..maybe I was hitting other upstream bugs or
-bugs of my own.
+Oh no! You are right, kernel won't get it.
 
-For what it's worth, I haven't noticed my WARN_ON hitting.
+In general: What is the right way to specify different restrictions
+for indoor and outdoor?
 
-I'll drop this patch from my tree.
+In this particular case, would it be appropriate to specify
+indoor usage only, as 60g wi-fi will be used mostly indoor?
 
-Thanks,
-Ben
-
->
-> johannes
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Thanks, Vladimir
