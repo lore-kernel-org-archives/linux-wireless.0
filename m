@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:59446 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424123Ab2LGUq0 (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:62678 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902Ab2LJVQu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 15:46:26 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so607934pbc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 12:46:26 -0800 (PST)
-Message-ID: <50C255A0.7070306@cozybit.com> (sfid-20121207_214630_430216_646701FB)
-Date: Fri, 07 Dec 2012 12:46:24 -0800
-From: Marco Porsch <marco@cozybit.com>
+	Mon, 10 Dec 2012 16:16:50 -0500
+Received: by mail-vc0-f174.google.com with SMTP id d16so2922827vcd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 13:16:49 -0800 (PST)
 MIME-Version: 1.0
-To: devel@lists.open80211s.org
-CC: Thomas Pedersen <thomas@cozybit.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+In-Reply-To: <50C65059.9000501@lwfinger.net>
+References: <CAMfPB_wtsXjxFkY6M4cNjxDK678DV4VPjwDRzVOtgrf-4jDL-Q@mail.gmail.com>
+	<50C61570.6040006@lwfinger.net>
+	<CAMfPB_xV4fCK=G12EYKxgEDBYnOEEe45AmTFCBx67pKP4y+aYQ@mail.gmail.com>
+	<CAMfPB_xBUDwmoHy4RiPZiCN7itYTHW9+n9eMj89YRrg-FkZrgQ@mail.gmail.com>
+	<50C65059.9000501@lwfinger.net>
+Date: Mon, 10 Dec 2012 22:16:49 +0100
+Message-ID: <CAMfPB_xvLQk2Z1iD7e49iPhhxv+J2J8ZKmmr0+vjaXQ-xdcAsg@mail.gmail.com> (sfid-20121210_221704_326559_EE15637F)
+Subject: Re: 8192cu misbehaviours with RTL8188RU chipset
+From: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] {nl, cfg, mac}80211: set beacon interval and DTIM period
- on mesh join
-References: <1354745174-2941-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> <CAG6hwVOc=E67ZxuFZnk3goM8VVEOqSWOi6dn63L2rmEyWOfG1g@mail.gmail.com> <1354791010.10150.1.camel@jlt4.sipsolutions.net> <CAG6hwVMkhScnykjjzzDExo_vcPUWcAopZQn4s8rjC_6LH4g58w@mail.gmail.com>
-In-Reply-To: <CAG6hwVMkhScnykjjzzDExo_vcPUWcAopZQn4s8rjC_6LH4g58w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/07/2012 12:25 PM, Thomas Pedersen wrote:
-> On Thu, Dec 6, 2012 at 2:50 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Wed, 2012-12-05 at 14:57 -0800, Thomas Pedersen wrote:
->>> On Wed, Dec 5, 2012 at 2:06 PM, Marco Porsch
->>> <marco.porsch@etit.tu-chemnitz.de> wrote:
->>>> Move the default mesh beacon interval and DTIM period to cfg80211 and
->>>> make it accessible to nl80211. This enables setting both values when joining
->>>> an MBSS.
->>>>
->>>> NOTE: In a mesh with links in PS mode it is not advised to use the default
->>>> parameters 1000:4, as these cause excessive buffering delays that exceed
->>>> various timeouts (e.g. HWMP path request).
->>>
->>> Then make the default parameters reasonable? How is 1000:2?
->>
->> That's still ~2 seconds, no?
->
-> Yeah I guess those would both be unsuitable for PS anyway, so it's fine as is.
+2012/12/10 Larry Finger <Larry.Finger@lwfinger.net>:
+> modinfo rtl8172cu | grep -v alias
 
-Snap, I just see carl9170 has a check for beacon interval and DTIM 
-period [1].
+Here you are:
 
-I'll change the DTIM period default value.
-To my best knowledge, it does not do any difference out of powersave 
-mode, and for powersave DTIM period 1 is favourable. Any objections?
+<snip>
 
---Marco
+filename:
+/lib/modules/3.5.0-19-generic/updates/drivers/net/wireless/rtlwifi/rtl8192cu/rtl8192cu.ko
+firmware:       rtlwifi/rtl8192cufw.bin
+description:    Realtek 8192C/8188C 802.11n USB wireless
+license:        GPL
+author:         Larry Finger    <Larry.Finger@lwfinger.net>
+author:         Ziv Huang    <ziv_huang@realtek.com>
+author:         Georgia        <georgia@realtek.com>
+srcversion:     DB3CA4D8CA86F098980FA95
+depends:        rtlwifi,mac80211,rtl8192c-common,compat
+vermagic:       3.5.0-19-generic SMP mod_unload modversions 686
+parm:           swenc:Set to 1 for software crypto (default 0)
+ (bool)
+parm:           debug:Set debug level (0-5) (default 0) (int)
 
 
-[1]
-/*
-  * Therefore a hard limit for the broadcast traffic should
-  * prevent false alarms.
-  */
-if (vif->type != NL80211_IFTYPE_STATION &&
-     (bss_conf->beacon_int * bss_conf->dtim_period >=
-      (CARL9170_QUEUE_STUCK_TIMEOUT / 2))) {
-	err = -EINVAL;
-	goto out;
-}
-
-(CARL9170_QUEUE_STUCK_TIMEOUT is 5500.)
-
+</snip>
