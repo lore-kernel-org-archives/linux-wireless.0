@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43311 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755318Ab2LLWIc (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:43457 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751910Ab2LJIBs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 17:08:32 -0500
-Message-ID: <50C9005A.4000805@candelatech.com> (sfid-20121212_230835_864883_7AF17847)
-Date: Wed, 12 Dec 2012 14:08:26 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 10 Dec 2012 03:01:48 -0500
+Received: by mail-wg0-f46.google.com with SMTP id dr13so1600662wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 00:01:47 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 4/6] mac80211: Allow disabling SGI-20.
-References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>  <1355349295-30960-4-git-send-email-greearb@candelatech.com>  (sfid-20121212_225648_739548_AE867F17) <1355349972.9708.20.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355349972.9708.20.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <507FFC5D.7010108@hauke-m.de>
+References: <1346348582-20095-1-git-send-email-arend@broadcom.com>
+	<1346348582-20095-5-git-send-email-arend@broadcom.com>
+	<507FFC5D.7010108@hauke-m.de>
+Date: Mon, 10 Dec 2012 09:01:47 +0100
+Message-ID: <CACna6rw6SO1_XbOJeG4WB1Evq7tHhH_KtrpoGkYz04sXHnGQPQ@mail.gmail.com> (sfid-20121210_090202_794778_10B18360)
+Subject: Re: [PATCH 4/5] brcmfmac: Add 43143 USB support.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2012 02:06 PM, Johannes Berg wrote:
-> On Wed, 2012-12-12 at 13:54 -0800, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
+2012/10/18 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 08/30/2012 07:43 PM, Arend van Spriel wrote:
+>> From: Hante Meuleman <meuleman@broadcom.com>
 >>
->> This allows user-space (wpa_supplicant) to disable
->> short guard interval (SGI) for 20Mhz.  The SGI-40
->> disable option is already handled.
+>> Added usb device id to list of supported devices. 43143 is a new
+>> 802.11n single stream device.
 >>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 >> ---
->>   net/mac80211/ht.c |    3 +++
->>   1 files changed, 3 insertions(+), 0 deletions(-)
 >>
->> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
->> index a71d891..8a6d68f 100644
->> --- a/net/mac80211/ht.c
->> +++ b/net/mac80211/ht.c
->> @@ -62,6 +62,9 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
->>   	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SUP_WIDTH_20_40);
->>   	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_40);
+>> +#define BRCMF_USB_43143_FW_NAME      "brcm/brcmfmac43143.bin"
+>>  #define BRCMF_USB_43236_FW_NAME      "brcm/brcmfmac43236b.bin"
+>>  #define BRCMF_USB_43242_FW_NAME      "brcm/brcmfmac43242a.bin"
 >>
->> +	/* Allow user to disable SGI-20 (SGI-40 is handled above) */
->> +	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_20);
 >
-> And you tested this? And it actually did something, despite
-> mac80211_ht_capa_mod_mask not including it??
-
-I thought it was working, but perhaps I was wrong.  I will re-test.
-
-Thanks,
-Ben
-
+> Hi,
 >
-> johannes
->
+> when do you release the firmware for this devices to the public? I can
+> not find it in linux-firmware or with a quick google search. I haven't
+> found the brcmfmac43242a.bin firmware either.
 
+Ping? The firmware seems to be still lacking.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Rafał
