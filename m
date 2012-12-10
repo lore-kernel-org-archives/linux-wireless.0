@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56861 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab2LFUQn (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:43635 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753460Ab2LJQYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 15:16:43 -0500
-Date: Thu, 6 Dec 2012 15:12:12 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: Re: [GIT] [NFC] 3.7 fix pull request
-Message-ID: <20121206201211.GC2246@tuxdriver.com> (sfid-20121206_211654_803914_F37AA0C1)
-References: <20121129131452.GE12685@sortiz-mobl>
- <20121203184056.GF26027@tuxdriver.com>
- <20121203232650.GB3176@sortiz-mobl>
+	Mon, 10 Dec 2012 11:24:15 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so1602806qcr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 08:24:15 -0800 (PST)
+Message-ID: <50C60CAB.4080400@lwfinger.net> (sfid-20121210_172419_786204_FB3A2D55)
+Date: Mon, 10 Dec 2012 10:24:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121203232650.GB3176@sortiz-mobl>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: dmarkh@cfl.rr.com, markh@compro.net, linux-wireless@vger.kernel.org
+Subject: Re: rtl8192cu problem - Re: Wireless network problem with Access
+ Point selection using ifup
+References: <50C0A743.3000305@compro.net>      (sfid-20121206_152423_356618_ADE5D3BC) <1354806200.18211.1.camel@jlt4.sipsolutions.net>     <50C1C103.1000803@cfl.rr.com> <50C256A9.7010008@compro.net>    <1354913688.9124.2.camel@jlt4.sipsolutions.net>    <50C25A4B.8030302@compro.net> <50C5B65F.4040104@cfl.rr.com>   <1355135199.9857.11.camel@jlt4.sipsolutions.net>   <50C5C321.1090501@cfl.rr.com>  <1355138959.9857.13.camel@jlt4.sipsolutions.net>  <50C5CEF4.1070907@cfl.rr.com> <1355143613.9857.20.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1355143613.9857.20.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 04, 2012 at 12:26:50AM +0100, Samuel Ortiz wrote:
-> Hi John,
-> 
-> On Mon, Dec 03, 2012 at 01:40:56PM -0500, John W. Linville wrote:
-> > I don't think this will make 3.7.  Any problem if I just pull it for 3.8?
-> Fine with me, at least I tried :)
-> 
-> Cheers,
-> Samuel.
+On 12/10/2012 06:46 AM, Johannes Berg wrote:
+> On Mon, 2012-12-10 at 07:00 -0500, Mark Hounschell wrote:
+>
+>> Should I file and bug report and/or contact the author?
+>
+> Larry, the issue seems to be that rtl8192cu doesn't scan after having
+> disconnected at least once, and maybe doesn't report any/good signal
+> strength values.
 
-Pulled...
+The problem is likely that rtl8192cu goes mute after a disconnect. I'm not sure 
+if it happens only with WPA/WPA2 or if all encryption methods are affected. I 
+have not yet found the problem, but this and other reports have increased the 
+priority.
 
-> 
-> -- 
-> Intel Open Source Technology Centre
-> http://oss.intel.com/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Larry
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
