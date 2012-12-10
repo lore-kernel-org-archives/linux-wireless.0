@@ -1,34 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f48.google.com ([209.85.210.48]:40407 "EHLO
-	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751182Ab2L1AEH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 19:04:07 -0500
-Received: by mail-da0-f48.google.com with SMTP id k18so4543579dae.21
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2012 16:04:07 -0800 (PST)
-Message-ID: <50DCE1F3.806@lwfinger.net> (sfid-20121228_010411_479418_15D1B4BD)
-Date: Thu, 27 Dec 2012 18:04:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Alden Page <pagea@allegheny.edu>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: bugreport Connectivity problems with rtl8192cu
-References: <CABLZTyB12FX3e_yAoH7XOfhhA-pcv4GqzpfkBDNi64jdh5eCXA@mail.gmail.com>
-In-Reply-To: <CABLZTyB12FX3e_yAoH7XOfhhA-pcv4GqzpfkBDNi64jdh5eCXA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:45307
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751379Ab2LJBxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2012 20:53:22 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/8] ath9k: Add a few debug messages for PAPRD
+Date: Mon, 10 Dec 2012 07:22:33 +0530
+Message-Id: <1355104358-30062-3-git-send-email-sujith@msujith.org> (sfid-20121210_025339_667895_B23BB45C)
+In-Reply-To: <1355104358-30062-1-git-send-email-sujith@msujith.org>
+References: <1355104358-30062-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/27/2012 05:43 PM, Alden Page wrote:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-What is this doing here? You need to have either the in-kernel driver available, 
-or the vendor driver. This bit shows you have both.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |  3 +++
+ drivers/net/wireless/ath/ath9k/link.c         | 10 ++++++++--
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
-> [    5.448046] rtw driver version=v3.4.4_4749.20121105
-> [    5.448049] Build at: Dec 20 2012 21:30:41
-> [    5.448052] Error: Driver 'rtl8192cu' is already registered, aborting...
-
-I doubt that this bit is the reason for any problems, but why tempt fate?
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index df9158f..4945fdf 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -169,6 +169,9 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK,
+ 		      ah->paprd_ratemask_ht40);
+ 
++	ath_dbg(common, CALIBRATE, "PAPRD HT20 mask: 0x%x, HT40 mask: 0x%x\n",
++		ah->paprd_ratemask, ah->paprd_ratemask_ht40);
++
+ 	for (i = 0; i < ah->caps.max_txchains; i++) {
+ 		REG_RMW_FIELD(ah, ctrl0[i],
+ 			      AR_PHY_PAPRD_CTRL0_USE_SINGLE_TABLE_MASK, 1);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index fc6b075..3c996ff 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -179,11 +179,14 @@ void ath_rx_poll(unsigned long data)
+ static void ath_paprd_activate(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	int chain;
+ 
+-	if (!caldata || !caldata->paprd_done)
++	if (!caldata || !caldata->paprd_done) {
++		ath_dbg(common, CALIBRATE, "Failed to activate PAPRD\n");
+ 		return;
++	}
+ 
+ 	ath9k_ps_wakeup(sc);
+ 	ar9003_paprd_enable(ah, false);
+@@ -194,6 +197,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
+ 		ar9003_paprd_populate_single_table(ah, caldata, chain);
+ 	}
+ 
++	ath_dbg(common, CALIBRATE, "Activating PAPRD\n");
+ 	ar9003_paprd_enable(ah, true);
+ 	ath9k_ps_restore(sc);
+ }
+@@ -253,8 +257,10 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	int len = 1800;
+ 	int ret;
+ 
+-	if (!caldata || !caldata->paprd_packet_sent || caldata->paprd_done)
++	if (!caldata || !caldata->paprd_packet_sent || caldata->paprd_done) {
++		ath_dbg(common, CALIBRATE, "Skipping PAPRD calibration\n");
+ 		return;
++	}
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
+-- 
+1.8.0.1
 
