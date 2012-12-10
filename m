@@ -1,82 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:40689 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144Ab2LVOv1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 09:51:27 -0500
-Received: by mail-we0-f172.google.com with SMTP id r3so2714602wey.3
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 06:51:26 -0800 (PST)
-Message-Id: <ec14d0f50d8789955235a950e3cf42824ff01467.1356186145.git.chunkeey@googlemail.com> (sfid-20121222_155132_387040_CBBFEDBA)
-In-Reply-To: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
-References: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 15 Dec 2012 23:21:32 +0100
-Subject: [PATCH 3/8] carl9170: import 1.9.7 firmware headers
+Received: from nbd.name ([46.4.11.11]:48130 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751261Ab2LJTCh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 14:02:37 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2 2/2] mac80211: fix AP_VLAN channel context handling
+Date: Mon, 10 Dec 2012 20:02:35 +0100
+Message-Id: <1355166155-78532-2-git-send-email-nbd@openwrt.org> (sfid-20121210_200241_246807_822911D2)
+In-Reply-To: <1355166155-78532-1-git-send-email-nbd@openwrt.org>
+References: <1355166155-78532-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Import new headers from my firmware branch:
-<https://github.com/chunkeey/carl9170fw>
+When .start_ap is called, copy the channel context to all active AP VLANs.
+Also copy the channel context when bringing up/down an AP VLAN if the AP
+has been started already.
 
-visit our wiki at:
-<http://wireless.kernel.org/en/users/Drivers/carl9170.fw>
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/carl9170/fwcmd.h   |    8 ++++++++
- drivers/net/wireless/ath/carl9170/hw.h      |    2 +-
- drivers/net/wireless/ath/carl9170/version.h |    6 +++---
- 3 files changed, 12 insertions(+), 4 deletions(-)
+ net/mac80211/cfg.c   |  5 +++++
+ net/mac80211/iface.c | 13 ++++++++++---
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/fwcmd.h b/drivers/net/wireless/ath/carl9170/fwcmd.h
-index 9443c80..9111d4f 100644
---- a/drivers/net/wireless/ath/carl9170/fwcmd.h
-+++ b/drivers/net/wireless/ath/carl9170/fwcmd.h
-@@ -156,6 +156,14 @@ struct carl9170_psm {
- } __packed;
- #define CARL9170_PSM_SIZE		4
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a5d4361..b0a20ac 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -915,6 +915,10 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	if (err)
+ 		return err;
  
-+/*
-+ * Note: If a bit in rx_filter is set, then it
-+ * means that the particular frames which matches
-+ * the condition are FILTERED/REMOVED/DISCARDED!
-+ * (This is can be a bit confusing, especially
-+ * because someone people think it's the exact
-+ * opposite way, so watch out!)
-+ */
- struct carl9170_rx_filter_cmd {
- 	__le32		rx_filter;
- } __packed;
-diff --git a/drivers/net/wireless/ath/carl9170/hw.h b/drivers/net/wireless/ath/carl9170/hw.h
-index fa834c1..0db874a 100644
---- a/drivers/net/wireless/ath/carl9170/hw.h
-+++ b/drivers/net/wireless/ath/carl9170/hw.h
-@@ -384,7 +384,7 @@
++	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++		rcu_assign_pointer(vlan->vif.chanctx_conf,
++				   rcu_access_pointer(sdata->vif.chanctx_conf));
++
+ 	/*
+ 	 * Apply control port protocol, this allows us to
+ 	 * not encrypt dynamic WEP control frames.
+@@ -1001,6 +1005,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
+ 		sta_info_flush(local, vlan);
+ 		netif_carrier_off(vlan->dev);
++		rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
+ 	}
+ 	netif_carrier_off(dev);
  
- #define	AR9170_MAC_REG_BCN_ADDR			(AR9170_MAC_REG_BASE + 0xd84)
- #define	AR9170_MAC_REG_BCN_LENGTH		(AR9170_MAC_REG_BASE + 0xd88)
--#define		AR9170_MAC_BCN_LENGTH_MAX		256
-+#define		AR9170_MAC_BCN_LENGTH_MAX		(512 - 32)
- 
- #define AR9170_MAC_REG_BCN_STATUS		(AR9170_MAC_REG_BASE + 0xd8c)
- 
-diff --git a/drivers/net/wireless/ath/carl9170/version.h b/drivers/net/wireless/ath/carl9170/version.h
-index 2ec3e91..2282847 100644
---- a/drivers/net/wireless/ath/carl9170/version.h
-+++ b/drivers/net/wireless/ath/carl9170/version.h
-@@ -1,7 +1,7 @@
- #ifndef __CARL9170_SHARED_VERSION_H
- #define __CARL9170_SHARED_VERSION_H
- #define CARL9170FW_VERSION_YEAR 12
--#define CARL9170FW_VERSION_MONTH 7
--#define CARL9170FW_VERSION_DAY 7
--#define CARL9170FW_VERSION_GIT "1.9.6"
-+#define CARL9170FW_VERSION_MONTH 12
-+#define CARL9170FW_VERSION_DAY 15
-+#define CARL9170FW_VERSION_GIT "1.9.7"
- #endif /* __CARL9170_SHARED_VERSION_H */
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 40c36d5..c2deb2a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -508,6 +508,7 @@ static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	struct ieee80211_sub_if_data *ap;
+ 	struct net_device *dev = wdev->netdev;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+@@ -587,10 +588,15 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 		/* no need to tell driver, but set carrier */
+-		if (rtnl_dereference(sdata->bss->beacon))
+-			netif_carrier_on(dev);
+-		else
++		if (!rtnl_dereference(sdata->bss->beacon)) {
+ 			netif_carrier_off(dev);
++			break;
++		}
++
++		ap = get_bss_sdata(sdata);
++		rcu_assign_pointer(sdata->vif.chanctx_conf,
++				   rcu_access_pointer(ap->vif.chanctx_conf));
++		netif_carrier_on(dev);
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) {
+@@ -839,6 +845,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 		list_del(&sdata->u.vlan.list);
++		rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
+ 		/* no need to tell driver */
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
 -- 
-1.7.10.4
+1.7.12.2
 
