@@ -1,73 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53212 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945968Ab2LFQra (ORCPT
+Received: from ks28632.kimsufi.com ([91.121.96.152]:44494 "EHLO
+	ks28632.kimsufi.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754441Ab2LJLDm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:47:30 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 08/24] regulatory: remove useless locking on exit
-Date: Thu,  6 Dec 2012 17:47:32 +0100
-Message-Id: <1354812468-15709-9-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174801_474210_29E864CA)
-In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 10 Dec 2012 06:03:42 -0500
+Message-ID: <1355137378.5391.2.camel@tiger2> (sfid-20121210_120401_213303_0AA662A9)
+Subject: Re: [PATCH] ipv4: ip_check_defrag must not modify skb before
+ unsharing
+From: Eric Leblond <eric@regit.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Date: Mon, 10 Dec 2012 12:02:58 +0100
+In-Reply-To: <1355132466.9857.6.camel@jlt4.sipsolutions.net>
+References: <1354906561-4695-1-git-send-email-eric@regit.org>
+	 <20121207.153134.25835204617509469.davem@davemloft.net>
+	 <1354915824.9124.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_223020_561049_DB965D43) <1354916502.9124.18.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_224129_500056_6617D80D) <1354918363.9124.29.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_231231_221604_E7B34625) <1354919017.9124.33.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_232321_820322_B0AAB1D2) <1355131788.9857.1.camel@jlt4.sipsolutions.net>
+	 (sfid-20121210_102940_332564_5C53F8B8) <1355132466.9857.6.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello,
 
-It would be a major problem if anything were to run
-concurrently while the module is being unloaded so
-remove the locking that doesn't help anything.
+On Mon, 2012-12-10 at 10:41 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> ip_check_defrag() might be called from af_packet within the
+> RX path where shared SKBs are used, so it must not modify
+> the input SKB before it has unshared it for defragmentation.
+> Use skb_copy_bits() to get the IP header and only pull in
+> everything later.
+> 
+> The same is true for the other caller in macvlan as it is
+> called from dev->rx_handler which can also get a shared SKB.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+I've applied the patch and built a new kernel. I did not manage to get
+it crashed when using the two techniques (suspend to ram and down/up
+interface) that were working well to crash kernel without the patch.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7391624..4bb953f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2383,34 +2383,29 @@ void regulatory_exit(void)
- 	cancel_work_sync(&reg_work);
- 	cancel_delayed_work_sync(&reg_timeout);
- 
-+	/* Lock to suppress warnings */
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
--
- 	reset_regdomains(true);
-+	mutex_unlock(&cfg80211_mutex);
-+	mutex_unlock(&reg_mutex);
- 
- 	dev_set_uevent_suppress(&reg_pdev->dev, true);
- 
- 	platform_device_unregister(reg_pdev);
- 
--	spin_lock_bh(&reg_pending_beacons_lock);
- 	list_for_each_entry_safe(reg_beacon, btmp, &reg_pending_beacons, list) {
- 		list_del(&reg_beacon->list);
- 		kfree(reg_beacon);
- 	}
--	spin_unlock_bh(&reg_pending_beacons_lock);
- 
- 	list_for_each_entry_safe(reg_beacon, btmp, &reg_beacon_list, list) {
- 		list_del(&reg_beacon->list);
- 		kfree(reg_beacon);
- 	}
- 
--	spin_lock(&reg_requests_lock);
- 	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
- 		list_del(&reg_request->list);
- 		kfree(reg_request);
- 	}
--	spin_unlock(&reg_requests_lock);
--
--	mutex_unlock(&reg_mutex);
--	mutex_unlock(&cfg80211_mutex);
- }
+BR,
+
+> Reported-by: Eric Leblond <eric@regit.org>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> For some versions of the kernel, this code goes into af_packet.c
+> 
+>  net/ipv4/ip_fragment.c | 19 +++++++++----------
+>  1 file changed, 9 insertions(+), 10 deletions(-)
+> 
+> diff --git a/net/ipv4/ip_fragment.c b/net/ipv4/ip_fragment.c
+> index 448e685..8d5cc75 100644
+> --- a/net/ipv4/ip_fragment.c
+> +++ b/net/ipv4/ip_fragment.c
+> @@ -707,28 +707,27 @@ EXPORT_SYMBOL(ip_defrag);
+>  
+>  struct sk_buff *ip_check_defrag(struct sk_buff *skb, u32 user)
+>  {
+> -	const struct iphdr *iph;
+> +	struct iphdr iph;
+>  	u32 len;
+>  
+>  	if (skb->protocol != htons(ETH_P_IP))
+>  		return skb;
+>  
+> -	if (!pskb_may_pull(skb, sizeof(struct iphdr)))
+> +	if (!skb_copy_bits(skb, 0, &iph, sizeof(iph)))
+>  		return skb;
+>  
+> -	iph = ip_hdr(skb);
+> -	if (iph->ihl < 5 || iph->version != 4)
+> +	if (iph.ihl < 5 || iph.version != 4)
+>  		return skb;
+> -	if (!pskb_may_pull(skb, iph->ihl*4))
+> -		return skb;
+> -	iph = ip_hdr(skb);
+> -	len = ntohs(iph->tot_len);
+> -	if (skb->len < len || len < (iph->ihl * 4))
+> +
+> +	len = ntohs(iph.tot_len);
+> +	if (skb->len < len || len < (iph.ihl * 4))
+>  		return skb;
+>  
+> -	if (ip_is_fragment(ip_hdr(skb))) {
+> +	if (ip_is_fragment(&iph)) {
+>  		skb = skb_share_check(skb, GFP_ATOMIC);
+>  		if (skb) {
+> +			if (!pskb_may_pull(skb, iph.ihl*4))
+> +				return skb;
+>  			if (pskb_trim_rcsum(skb, len))
+>  				return skb;
+>  			memset(IPCB(skb), 0, sizeof(struct inet_skb_parm));
+
 -- 
-1.8.0
+Eric Leblond <eric@regit.org>
+Blog: https://home.regit.org/
 
