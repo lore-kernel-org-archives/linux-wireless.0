@@ -1,164 +1,463 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht2.myhostedexchange.com ([69.50.2.38]:18491 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754749Ab2LJKW6 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:59424 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753653Ab2LJJpu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 05:22:58 -0500
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH 1/2] cfg80211: add the new IBSS_STA event
-Date: Mon, 10 Dec 2012 11:21:56 +0100
-Message-ID: <1355134917-17705-1-git-send-email-antonio@open-mesh.com> (sfid-20121210_112309_351424_D3F2EFAB)
+	Mon, 10 Dec 2012 04:45:50 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless-regdb: add regulatory rule for ETSI members on 60gHz band
+Date: Mon, 10 Dec 2012 11:45:46 +0200
+Message-ID: <1573921.0GjqNuABMd@lx-vladimir> (sfid-20121210_104554_770780_B8ABD895)
+In-Reply-To: <8774585.BvFN3Opv12@lx-vladimir>
+References: <8774585.BvFN3Opv12@lx-vladimir>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In IBSS mode it could be the case that a station being added
-is not ready for starting higher level routines (e.g. key
-exchange when IBSS/RSN is enabled). In particular, this can
-happen when we are waiting for the AUTH response message.
+Next is European countries.
 
-This IBSS_STA event is triggered after the NEW_STA one and
-only when the upper layer is allowed to assume that the new
-peer is ready
+>From fb3b4f18ad755be4236204bb2006e55eda3a84be Mon Sep 17 00:00:00 2001
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Mon, 10 Dec 2012 11:37:55 +0200
+Subject: [PATCH] wireless-regdb: add regulatory rule for ETSI members on
+ 60gHz band
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+For the 60gHz band, regulation defined in the "Etsi En 302 567"
+http://docsfiles.com/pdf_final_draft_etsi_en_302_567.html
+
+It defines for the frequency range 57 GHz to 66 GHz,
+Max. power level (EIRP) for
+indoor only: 40 dBm, and indoor/outdoor: 25 dBm
+
+This patch apply this to the full ETSI member countries:
+
+The EU member states:
+Austria, Belgium, Bulgaria, Cyprus, Czech Republic, Denmark,
+Estonia, Finland, France, Germany, Greece, Hungary, Ireland,
+Italy, Latvia, Lithuania, Luxembourg, Malta, Netherlands,
+Poland, Portugal, Romania, Slovakia, Slovenia, Spain, Sweden,
+United Kingdom
+
+plus:
+Andorra, Iceland, Norway, Switzerland, Croatia,
+Bosnia and Herzegovina, Serbia, Macedonia,
+Ukraine, Turkey, Georgia
+
+Final country codes list:
+
+AD
+AT
+BA
+BE
+BG
+CH
+CY
+CZ
+DE
+DK
+EE
+ES
+FI
+FR
+GB
+GE
+GR
+HR
+HU
+IE
+IS
+IT
+LT
+LU
+LV
+MK
+MT
+NL
+NO
+PL
+PT
+RO
+RS
+SE
+SI
+SK
+TR
+UA
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
+ db.txt |  118 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 118 insertions(+)
 
-This patchset fixes an incorrect state handling in the IBSS/RSN
-"cooperation" between kernel and userspace.
-It would probably be more appropriate to create a much general
-event signaling mechanism (e.g. trigger an event each time a
-station changes its internal state), but at the moment it is
-much more important to fix the issue. Re-engineering can be
-done later and with a proper idea.
-
-I'm not sending this to mac80211 because I don't think it would
-make it for this kernel release.
-
-Cheers,
-
-
- include/net/cfg80211.h       |  8 ++++++++
- include/uapi/linux/nl80211.h |  2 ++
- net/wireless/mlme.c          |  9 +++++++++
- net/wireless/nl80211.c       | 33 +++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h       |  3 +++
- 5 files changed, 55 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8e6a6b7..3266c03 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3497,6 +3497,14 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
- 		      struct station_info *sinfo, gfp_t gfp);
+diff --git a/db.txt b/db.txt
+index b97255d..c403773 100644
+--- a/db.txt
++++ b/db.txt
+@@ -12,6 +12,11 @@ country 00:
+         (5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
  
- /**
-+ * cfg80211_ibss_sta - notify userspace that the ibss station is ready
-+ * @dev: the netdev
-+ * @mac_addr: the station's address
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
-+
-+/**
-  * cfg80211_del_sta - notify userspace about deletion of a station
-  *
-  * @dev: the netdev
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e3e19f8..7e0911e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -736,6 +736,8 @@ enum nl80211_commands {
  
- 	NL80211_CMD_SET_MCAST_RATE,
++country AD:
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
++
+ country AE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+@@ -44,6 +49,9 @@ country AT: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
  
-+	NL80211_CMD_IBSS_STATION,
-+
- 	/* add new commands above here */
+ country AU:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -67,6 +75,9 @@ country BA: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
  
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 5e8123e..f9493fc 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -612,6 +612,15 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
- }
- EXPORT_SYMBOL(cfg80211_new_sta);
+ country BB:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -82,12 +93,18 @@ country BE: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
  
-+void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
-+{
-+	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_ibss_sta_event(rdev, dev, mac_addr, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_ibss_sta);
-+
- void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
- {
- 	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f45706a..2d27911 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8564,6 +8564,39 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
- 				nl80211_mlme_mcgrp.id, gfp);
- }
+ country BG: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 23)
+ 	(5250 - 5290 @ 40), (N/A, 23), DFS
+ 	(5490 - 5710 @ 40), (N/A, 30), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
  
-+void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev, const u8 *mac_addr,
-+				 gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
+ country BH:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -139,6 +156,9 @@ country CH: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country CL:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -173,6 +193,9 @@ country CY: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ # Data from http://www.ctu.eu/164/download/VOR/VOR-12-08-2005-34.pdf
+ # and http://www.ctu.eu/164/download/VOR/VOR-12-05-2007-6-AN.pdf
+@@ -183,6 +206,9 @@ country CZ: DFS-ETSI
+ 	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
+ 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+ 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ # Data from "Frequenznutzungsplan" (as published in April 2008), downloaded from
+ # http://www.bundesnetzagentur.de/cae/servlet/contentblob/38448/publicationFile/2659/Frequenznutzungsplan2008_Id17448pdf.pdf
+@@ -205,12 +231,18 @@ country DE: DFS-ETSI
+ 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+ 	# entries 308002, 309001 and 310003
+ 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country DK: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country DO:
+ 	(2402 - 2472 @ 40), (3, 27)
+@@ -232,6 +264,9 @@ country EE: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country EG:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -243,29 +278,44 @@ country ES: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country FI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country FR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country GE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 18)
+ 	(5250 - 5330 @ 40), (N/A, 18), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country GB: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country GD:
+ 	(2402 - 2472 @ 40), (3, 27)
+@@ -279,6 +329,9 @@ country GR: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country GL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -317,6 +370,9 @@ country HR: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country HT:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -329,6 +385,9 @@ country HU: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country ID:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -338,6 +397,9 @@ country IE: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country IL:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -355,6 +417,9 @@ country IS: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country IR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -365,6 +430,9 @@ country IT: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country JM:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -445,18 +513,27 @@ country LT: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country LU: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country LV: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country MC: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -477,12 +554,18 @@ country MK: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country MT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country MY:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -500,12 +583,18 @@ country NL: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20), NO-OUTDOOR
+ 	(5250 - 5330 @ 40), (N/A, 20), NO-OUTDOOR, DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country NO: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country NP:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -553,12 +642,18 @@ country PL: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country PT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country PR:
+ 	(2402 - 2472 @ 40), (3, 27)
+@@ -575,6 +670,14 @@ country RO: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
 +
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_IBSS_STATION);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
-+
- void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
- 				struct net_device *dev, const u8 *mac_addr,
- 				gfp_t gfp)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 2acba84..429f5d6 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -85,6 +85,9 @@ void nl80211_send_remain_on_channel_cancel(
- void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
- 			    struct net_device *dev, const u8 *mac_addr,
- 			    struct station_info *sinfo, gfp_t gfp);
-+void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev, const u8 *mac_addr,
-+				 gfp_t gfp);
- void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
- 				struct net_device *dev, const u8 *mac_addr,
- 				gfp_t gfp);
++country RS:
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country RU:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -595,6 +698,9 @@ country SE: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country SG:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -607,12 +713,18 @@ country SI: DFS-ETSI
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country SK: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 40), (N/A, 20)
+ 	(5250 - 5330 @ 40), (N/A, 20), DFS
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country SV:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -651,9 +763,15 @@ country TR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5170 - 5250 @ 20), (N/A, 20)
+ 	(5250 - 5330 @ 20), (N/A, 20), DFS
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country UA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
++        # 60 gHz band channels 1-4, ref: Etsi En 302 567
++        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++        (57240 - 65880 @ 2160), (N/A, 25)
+ 
+ country US: DFS-FCC
+ 	(2402 - 2472 @ 40), (3, 27)
 -- 
-1.8.0
+1.7.10.4
+
 
