@@ -1,261 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52720 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:40283 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752020Ab2L1JJX (ORCPT
+	with ESMTP id S1750823Ab2LJL3A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Dec 2012 04:09:23 -0500
+	Mon, 10 Dec 2012 06:29:00 -0500
+Message-ID: <1355138959.9857.13.camel@jlt4.sipsolutions.net> (sfid-20121210_122905_508823_CE1A195C)
+Subject: Re: Wireless network problem with Access Point selection using ifup
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/4] mac80211: move ieee80211_remove_tid_tx function
-Date: Fri, 28 Dec 2012 10:09:40 +0100
-Message-Id: <1356685781-6758-4-git-send-email-johannes@sipsolutions.net> (sfid-20121228_100931_072844_FFB99A41)
-In-Reply-To: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net>
-References: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net>
+To: dmarkh@cfl.rr.com
+Cc: markh@compro.net, linux-wireless@vger.kernel.org
+Date: Mon, 10 Dec 2012 12:29:19 +0100
+In-Reply-To: <50C5C321.1090501@cfl.rr.com>
+References: <50C0A743.3000305@compro.net>
+	    (sfid-20121206_152423_356618_ADE5D3BC) <1354806200.18211.1.camel@jlt4.sipsolutions.net>
+	   <50C1C103.1000803@cfl.rr.com> <50C256A9.7010008@compro.net>
+	  <1354913688.9124.2.camel@jlt4.sipsolutions.net>
+	  <50C25A4B.8030302@compro.net> <50C5B65F.4040104@cfl.rr.com>
+	 <1355135199.9857.11.camel@jlt4.sipsolutions.net>
+	 <50C5C321.1090501@cfl.rr.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2012-12-10 at 06:10 -0500, Mark Hounschell wrote:
 
-To call it from ___ieee80211_stop_tx_ba_session,
-move the function and dependencies up.
+> The driver is use has was identified in the original email. So I guess this 
+> is the right place to report this issue? 
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-tx.c | 206 +++++++++++++++++++++++++-------------------------
- 1 file changed, 103 insertions(+), 103 deletions(-)
+Yeah, I guess Larry should take a look.
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 101bbfb..dda8d7d 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -149,6 +149,109 @@ void ieee80211_assign_tid_tx(struct sta_info *sta, int tid,
- 	rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], tid_tx);
- }
- 
-+static inline int ieee80211_ac_from_tid(int tid)
-+{
-+	return ieee802_1d_to_ac[tid & 7];
-+}
-+
-+/*
-+ * When multiple aggregation sessions on multiple stations
-+ * are being created/destroyed simultaneously, we need to
-+ * refcount the global queue stop caused by that in order
-+ * to not get into a situation where one of the aggregation
-+ * setup or teardown re-enables queues before the other is
-+ * ready to handle that.
-+ *
-+ * These two functions take care of this issue by keeping
-+ * a global "agg_queue_stop" refcount.
-+ */
-+static void __acquires(agg_queue)
-+ieee80211_stop_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
-+{
-+	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
-+
-+	if (atomic_inc_return(&sdata->local->agg_queue_stop[queue]) == 1)
-+		ieee80211_stop_queue_by_reason(
-+			&sdata->local->hw, queue,
-+			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
-+	__acquire(agg_queue);
-+}
-+
-+static void __releases(agg_queue)
-+ieee80211_wake_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
-+{
-+	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
-+
-+	if (atomic_dec_return(&sdata->local->agg_queue_stop[queue]) == 0)
-+		ieee80211_wake_queue_by_reason(
-+			&sdata->local->hw, queue,
-+			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
-+	__release(agg_queue);
-+}
-+
-+/*
-+ * splice packets from the STA's pending to the local pending,
-+ * requires a call to ieee80211_agg_splice_finish later
-+ */
-+static void __acquires(agg_queue)
-+ieee80211_agg_splice_packets(struct ieee80211_sub_if_data *sdata,
-+			     struct tid_ampdu_tx *tid_tx, u16 tid)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
-+	unsigned long flags;
-+
-+	ieee80211_stop_queue_agg(sdata, tid);
-+
-+	if (WARN(!tid_tx,
-+		 "TID %d gone but expected when splicing aggregates from the pending queue\n",
-+		 tid))
-+		return;
-+
-+	if (!skb_queue_empty(&tid_tx->pending)) {
-+		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-+		/* copy over remaining packets */
-+		skb_queue_splice_tail_init(&tid_tx->pending,
-+					   &local->pending[queue]);
-+		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+	}
-+}
-+
-+static void __releases(agg_queue)
-+ieee80211_agg_splice_finish(struct ieee80211_sub_if_data *sdata, u16 tid)
-+{
-+	ieee80211_wake_queue_agg(sdata, tid);
-+}
-+
-+static void ieee80211_remove_tid_tx(struct sta_info *sta, int tid)
-+{
-+	struct tid_ampdu_tx *tid_tx;
-+
-+	lockdep_assert_held(&sta->ampdu_mlme.mtx);
-+	lockdep_assert_held(&sta->lock);
-+
-+	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-+
-+	/*
-+	 * When we get here, the TX path will not be lockless any more wrt.
-+	 * aggregation, since the OPERATIONAL bit has long been cleared.
-+	 * Thus it will block on getting the lock, if it occurs. So if we
-+	 * stop the queue now, we will not get any more packets, and any
-+	 * that might be being processed will wait for us here, thereby
-+	 * guaranteeing that no packets go to the tid_tx pending queue any
-+	 * more.
-+	 */
-+
-+	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
-+
-+	/* future packets must not find the tid_tx struct any more */
-+	ieee80211_assign_tid_tx(sta, tid, NULL);
-+
-+	ieee80211_agg_splice_finish(sta->sdata, tid);
-+
-+	kfree_rcu(tid_tx, rcu_head);
-+}
-+
- int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 				    enum ieee80211_agg_stop_reason reason)
- {
-@@ -265,80 +368,6 @@ static void sta_addba_resp_timer_expired(unsigned long data)
- 	rcu_read_unlock();
- }
- 
--static inline int ieee80211_ac_from_tid(int tid)
--{
--	return ieee802_1d_to_ac[tid & 7];
--}
--
--/*
-- * When multiple aggregation sessions on multiple stations
-- * are being created/destroyed simultaneously, we need to
-- * refcount the global queue stop caused by that in order
-- * to not get into a situation where one of the aggregation
-- * setup or teardown re-enables queues before the other is
-- * ready to handle that.
-- *
-- * These two functions take care of this issue by keeping
-- * a global "agg_queue_stop" refcount.
-- */
--static void __acquires(agg_queue)
--ieee80211_stop_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
--{
--	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
--
--	if (atomic_inc_return(&sdata->local->agg_queue_stop[queue]) == 1)
--		ieee80211_stop_queue_by_reason(
--			&sdata->local->hw, queue,
--			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
--	__acquire(agg_queue);
--}
--
--static void __releases(agg_queue)
--ieee80211_wake_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
--{
--	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
--
--	if (atomic_dec_return(&sdata->local->agg_queue_stop[queue]) == 0)
--		ieee80211_wake_queue_by_reason(
--			&sdata->local->hw, queue,
--			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
--	__release(agg_queue);
--}
--
--/*
-- * splice packets from the STA's pending to the local pending,
-- * requires a call to ieee80211_agg_splice_finish later
-- */
--static void __acquires(agg_queue)
--ieee80211_agg_splice_packets(struct ieee80211_sub_if_data *sdata,
--			     struct tid_ampdu_tx *tid_tx, u16 tid)
--{
--	struct ieee80211_local *local = sdata->local;
--	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
--	unsigned long flags;
--
--	ieee80211_stop_queue_agg(sdata, tid);
--
--	if (WARN(!tid_tx,
--		 "TID %d gone but expected when splicing aggregates from the pending queue\n",
--		 tid))
--		return;
--
--	if (!skb_queue_empty(&tid_tx->pending)) {
--		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--		/* copy over remaining packets */
--		skb_queue_splice_tail_init(&tid_tx->pending,
--					   &local->pending[queue]);
--		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--	}
--}
--
--static void __releases(agg_queue)
--ieee80211_agg_splice_finish(struct ieee80211_sub_if_data *sdata, u16 tid)
--{
--	ieee80211_wake_queue_agg(sdata, tid);
--}
--
- void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- {
- 	struct tid_ampdu_tx *tid_tx;
-@@ -713,35 +742,6 @@ int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
- 
--static void ieee80211_remove_tid_tx(struct sta_info *sta, int tid)
--{
--	struct tid_ampdu_tx *tid_tx;
--
--	lockdep_assert_held(&sta->ampdu_mlme.mtx);
--	lockdep_assert_held(&sta->lock);
--
--	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
--
--	/*
--	 * When we get here, the TX path will not be lockless any more wrt.
--	 * aggregation, since the OPERATIONAL bit has long been cleared.
--	 * Thus it will block on getting the lock, if it occurs. So if we
--	 * stop the queue now, we will not get any more packets, and any
--	 * that might be being processed will wait for us here, thereby
--	 * guaranteeing that no packets go to the tid_tx pending queue any
--	 * more.
--	 */
--
--	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
--
--	/* future packets must not find the tid_tx struct any more */
--	ieee80211_assign_tid_tx(sta, tid, NULL);
--
--	ieee80211_agg_splice_finish(sta->sdata, tid);
--
--	kfree_rcu(tid_tx, rcu_head);
--}
--
- void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
--- 
-1.8.0
+> In each of the wpa log files I See 
+> in the beginning, a section like this:
+> 
+> nl80211: Received scan results (4 BSSes)
+> wlan0: BSS: Start scan result update 1
+> wlan0: BSS: Add new id 0 BSSID c8:d7:19:7a:ab:1e SSID 'hounschell-1'
+> wlan0: BSS: Add new id 1 BSSID 20:aa:4b:b2:dd:79 SSID 'hounschell-1'
+> wlan0: BSS: Add new id 2 BSSID 00:18:f8:ff:72:d5 SSID 'hounschell-1'
+> wlan0: BSS: Add new id 3 BSSID 00:1a:70:6d:99:50 SSID 'MACDONALD'
+> 
+> Every time the first one listed is the one actually selected and each time 
+> is different and usually NOT the closest.
+
+That's expected, the order is random by the order in which it was found
+in scanning etc. There's no inherent order here.
+
+> It is a Desktop in a fixed location. The AP is within 15ft of the ASUS USB 
+> adapter and in direct line of sight.  There may be more than one problem 
+> here. I think one of the problems is right here. Above 20:aa:4b:b2:dd:79 is 
+> the closest AP. Why is it not first in the list? 
+
+See above.
+
+> Why, when it selects one 
+> of the others and it can't figure out it selected the wrong one and 
+> reselect the right one seems like a different problem. After all when it 
+> does select the correct one, all is good but the actual bandwidth.
+
+Well so I suspect the driver is also not reporting useful signal
+strength so that wpa_s doesn't know which one to select. And then when
+the connection fails, the driver is refusing scanning so it can't even
+reconnect to a better AP ...
+
+IOW, all driver problems, and I'm not familiar enough with that driver
+to tell you what's going on.
+
+johannes
 
