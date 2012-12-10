@@ -1,47 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35151 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752900Ab2LKNzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 08:55:10 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: [PATCH 3/3] p54: zero-out rx_status
-Date: Tue, 11 Dec 2012 14:55:05 +0100
-Message-Id: <1355234105-12013-3-git-send-email-juhosg@openwrt.org> (sfid-20121211_145517_352823_85DAEB69)
-In-Reply-To: <1355234105-12013-1-git-send-email-juhosg@openwrt.org>
-References: <1355234105-12013-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.ultra-3eti.com ([173.13.207.162]:47220 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751793Ab2LJPs4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 10:48:56 -0500
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: Georgiewskiy Yuriy <bottleman@icf.org.ru>,
+	Thomas Pedersen <thomas@cozybit.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	open11s <devel@lists.open80211s.org>
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+Date: Mon, 10 Dec 2012 15:48:53 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C12939@RockMX01.rock.corp> (sfid-20121210_164859_159568_8FDF46AD)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
+ <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
+ <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
+ <alpine.DEB.2.02.1212080721070.8165@icf.org.ru>
+ <alpine.DEB.2.02.1212080726150.22564@icf.org.ru>
+ <CAG6hwVMsghDHzgyk1ZJE7YoMi2+t-LKNGtgw_ha2DdEwHc71hg@mail.gmail.com>
+ <alpine.DEB.2.02.1212080739540.23821@icf.org.ru>
+In-Reply-To: <alpine.DEB.2.02.1212080739540.23821@icf.org.ru>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 'mac80211: support radiotap vendor namespace RX data'
-new fields were added to 'struct ieee80211_rx_status'.
-The ath5k driver does not initializes those fields and
-this can cause unexpected behaviour. The patch ensures
-that each field gets initialized with zeroes.
-
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
-Compile tested only.
----
- drivers/net/wireless/p54/txrx.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 12f0a34..be2552e 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -345,6 +345,8 @@ static int p54_rx_data(struct p54_common *priv, struct sk_buff *skb)
- 	if (!(hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_IN_FCS_GOOD)))
- 		return 0;
- 
-+	memset(rx_status, 0, sizeof(*rx_status));
-+
- 	if (hdr->decrypt_status == P54_DECRYPT_OK)
- 		rx_status->flag |= RX_FLAG_DECRYPTED;
- 	if ((hdr->decrypt_status == P54_DECRYPT_FAIL_MICHAEL) ||
--- 
-1.7.10
-
+VFA+DQpUUD5BcmUgeW91IHRhbGtpbmcgYWJvdXQgYSBkaWZmZXJlbnQgYnVnPw0KDQpHWT4gSG0s
+IG1heSBiZWUsIGJ1dCBhY2NvcmRpbmcgdG8gQ2hhb3hpbmcgTGluIGVtYWlscyB0aGVyZSBpcyBz
+ZXZlcmFsIGJ1Z3Mgd2hpY2ggY2F1c2UgcGVyZm9ybWFuY2UgZGVncmFkYXRpb24gaW4gODAyLjEx
+cyBtb2RlLCBhbmQgc3ltcHRvbXMgaW4gbXkgY2FzZSBpbmRlbnRpY2FsLCBpIGdldCBzYW1lIHJl
+c3VsdHMgYXMgQ2hhb3hpbmcgTGluLCBhbmQgc2VlbXMgc2FtZSB0aHJvYmxlcywgaSB3aWxsIG1h
+a2UgdGVzdHMgd2hhdCB5b3Ugd2FudCBhbnl3YXkgYW5kIHJlcG9ydCByZXN1bHRzLg0KDQpGb3Ig
+ZWFzeSByZWZlcmVuY2UsIEkgc3VtbWFyaXplIHRoZSA0IHByb2JsZW1zIEkgdW5jb3ZlcmVkIHNv
+IGZhciB0aGF0IGNvbnRyaWJ1dGUgdG8gaW4tc3RhYmlsaXR5IG9mIDctbm9kZSA4MDIuMTFzIG5l
+dHdvcmsuDQoNCjEuIGF0aDlrICJUeCBETUEgZXJyb3IiLiBQaW5nIHBhY2tldCBsb3NzIGlzIHNl
+ZW4gZWFjaCB0aW1lICJGYWlsIHRvIHN0b3AgVHggRE1BIiBsb2cgaXMgc2Vlbi4gIEl0J3MgTk9U
+IHRoZSBtYWluIGNhdXNlLg0KDQoyLiBhdXRoc2FlIG9yIDgwMi4xMXMga2VybmVsIHByb2JsZW06
+IFRoZSB0d28gZW5kcyBvZiBhIHBlZXIgbGluayBnZXQgb3V0IG9mIHN5bmMgZm9yIHdoYXRldmVy
+IHJlYXNvbi4gT25lIGVuZCBzYXlzLCB0aGUgcGVlciBsaW5rIGlzICJFU1RBQiIgYW5kIGFsbCAz
+IGtleXMgYXJlIGluIHBsYWNlLiBXaGlsZSB0aGUgb3RoZXIgZW5kIHNheXMgdGhpcyBwZWVyIGxp
+bmsgaXMgbm90ICJFU1RBQiIsIG5vIGtleXMgaW5zdGFsbGVkIGZvciB0aGUgcGVlci4NCg0KMy4g
+QUVTLUNDTSBwYWlyd2lzZSBrZXkgc29tZXRpbWVzIGNvbXBsYWlucyBwYWNrZXQgcmVwbGF5IHNv
+IHBpbmcgcGFja2V0cyBhcmUgZHJvcHBlZC4gQSBrZXJuZWwga2V5IGR1bXAgaW4gdGhpcyBlcnJv
+ciBjYXNlIGlzIGJlbG93LiAoSSBvdmVyd3JvdGUga2V5X2tleV9yZWFkKCkgZnVuY3Rpb24gaW4g
+ZGVidWdmc19rZXkuYyB0byBkdW1wIGFsbCBpbmZvKQ0KDQoJS2V5IDM2MjogICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IA0KCTB4Y2YzOTM4MDAgQUVTLUNDTSBLZXk6IDQ5MzA1YTczNmE4YjZkNWZjYjM0MDU3ZWU2OTgz
+ZDQ0ICAgUGFpcndpc2UNCglQZWVyIE1BQzogMDA6MGU6OGU6Mzg6MzY6MDMgIA0KCXR4X3BuOiAw
+MDAwMDAwMDAwMDAwMDlmICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQogICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgDQoJcnhfcG5bIDBdOiAwMDAwMDAwZDc4OGIgIHJ4X3BuWyAxXTogMDAwMDAwMDAwMDAwICBy
+eF9wblsgMl06IDAwMDAwMDAwMDAwMCANCglyeF9wblsgM106IDAwMDAwMDAwMDAwMCAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQoJcnhfcG5bIDRd
+OiAwMDAwMDAwMDAwMDAgIHJ4X3BuWyA1XTogMDAwMDAwMDAwMDAwICByeF9wblsgNl06IDAwMDAw
+MDAwMDAwMCANCglyeF9wblsgN106IDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQoJcnhfcG5bIDhdOiAwMDAwMDAwMDAwMDAg
+IHJ4X3BuWyA5XTogMDAwMDAwMDAwMDAwICByeF9wblsxMF06IDAwMDAwMDAwMDAwMCANCglyeF9w
+blsxMV06IDAwMDAwMDAwMDAwMCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgDQoJcnhfcG5bMTJdOiAwMDAwMDAwMDAwMDAgIHJ4X3BuWzEzXTogMDAw
+MDAwMDAwMDAwICByeF9wblsxNF06IDAwMDAwMDAwMDAwMCANCglyeF9wblsxNV06IDAwMDAwMDAw
+MDAwMCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+DQoJcnhfcG5bMTZdOiAwMDAwMDAwMDM1ODAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCglyZXBsYXlzOiAxMTk3
+MCBpY3ZlcnJvcjogIDw9PT09PT09PT09PT09PT09PT09PT09PXByb2JsZW0gaGVyZT09PT09PT09
+PT09DQoNClRoZSB3b3JzZSB0aGluZyBmb3IgcHJvYmxlbSAyIGFuZCAzIGFib3ZlIGlzLCB3aGVu
+IGl0IGdldHMgaW50byB0aGlzIHN0YXRlLCB0aGUgbXBhdGggc3RpbGwgc3RheXMgYWN0aXZlLiBT
+byBhbGwgcGFja2V0cyBhcmUgc3RpbGwgcm91dGVkIHRvIHRoZSBiYWQgcGVlciBsaW5rL21wYXRo
+IGFuZCB3aWxsIGJlIGRyb3BwZWQgYnkgcGVlci4NCg0KNC4gODAyLjExbiBwYWNrZXQgYWdncmVn
+YXRpb24uIEkgYmVsaWV2ZSB0aGlzIGlzIHRoZSBtYWluIHByb2JsZW0gYnkgdGhlIGZhY3QgdGhh
+dCwgZGlzYWJsaW5nIDgwMi4xMW4gcGFja2V0IGFnZ3JlZ2F0aW9uIGluIGF0aDlrIGRyaXZlciB3
+aWxsIG1ha2UgdGhlIG5ldHdvcmsgc3RhYmxlIGFuZCBwcm9ibGVtIDIgYW5kIDMgYXJlIG5vdCBz
+ZWVuLiBJbiBvdGhlciB3b3JkcywgcHJvYmxlbSAyIGFuZCAzIG1heSBiZSBjYXVzZWQgYnkgYWdn
+cmVnYXRpb24gKG15IGltYWdpbmF0aW9uLCBhZ2dyZWdhdGlvbiBjYXVzZWQgY2VydGFpbiBlcnJv
+ciBjb25kaXRpb24gdGhhdCBpcyBub3QgaGFuZGxlZCBwcm9wZXJseSwgd2hpY2ggdHJpZ2dlcnMg
+cHJvYmxlbSAyIGFuZCAzKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgDQogICAgICAgICAgDQo=
