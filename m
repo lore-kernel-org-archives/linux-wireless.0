@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:58684 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754276Ab2LGKMW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 05:12:22 -0500
-Message-ID: <50C1C103.1000803@cfl.rr.com> (sfid-20121207_111226_353885_75F40D08)
-Date: Fri, 07 Dec 2012 05:12:19 -0500
-From: Mark Hounschell <dmarkh@cfl.rr.com>
-Reply-To: dmarkh@cfl.rr.com
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: markh@compro.net, linux-wireless@vger.kernel.org
-Subject: Re: Wireless network problem with Access Point selection using ifup
-References: <50C0A743.3000305@compro.net>  (sfid-20121206_152423_356618_ADE5D3BC) <1354806200.18211.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1354806200.18211.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from nbd.name ([46.4.11.11]:48132 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751273Ab2LJTCi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 14:02:38 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2 1/2] mac80211: flush AP_VLAN stations when tearing down the BSS AP
+Date: Mon, 10 Dec 2012 20:02:34 +0100
+Message-Id: <1355166155-78532-1-git-send-email-nbd@openwrt.org> (sfid-20121210_200242_185387_9D476E9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2012 10:03 AM, Johannes Berg wrote:
-> On Thu, 2012-12-06 at 09:10 -0500, Mark Hounschell wrote:
->>   I'm using
->> traditional ifup with static configurations.
->
-> You should at least run wpa_supplicant, which will pick a better network
-> and reconnect if the connection drops etc. Almost no device does that by
-> itself any more.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/cfg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-  wpa_supplicant is running.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5c61677..a5d4361 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -998,8 +998,10 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	old_probe_resp = rtnl_dereference(sdata->u.ap.probe_resp);
+ 
+ 	/* turn off carrier for this interface and dependent VLANs */
+-	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
++		sta_info_flush(local, vlan);
+ 		netif_carrier_off(vlan->dev);
++	}
+ 	netif_carrier_off(dev);
+ 
+ 	/* remove beacon and probe response */
+-- 
+1.7.12.2
 
-#ps ax | grep wpa
-
-wpa_supplicant -iwlan0 -c/var/run/wpa_supplicant-wlan0.conf -Dnl80211,wext 
--P/var/run/wpa_supplicant/wlan0.pid -B
-
-
-When the router in the middle of the house is chosen, as opposed to the 
-range extender in the very same room, the network works for a time but 
-eventually disassociates, usually reason 7, and never reconnects to 
-anything.
-
-Mark
