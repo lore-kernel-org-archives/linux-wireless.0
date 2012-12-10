@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38657 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753701Ab2LKR1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 12:27:40 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:52704 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826Ab2LJWsX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 17:48:23 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so2372855pad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 14:48:23 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	<users@rt2x00.serialmonkey.com>
-Subject: [PATCH v2] rt2x00: zero-out rx_status
-Date: Tue, 11 Dec 2012 18:27:34 +0100
-Message-Id: <1355246854-12686-1-git-send-email-juhosg@openwrt.org> (sfid-20121211_182752_380495_34DE7861)
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 1/3] ath9k: RX timestamp is reported at end of frame
+Date: Mon, 10 Dec 2012 14:48:01 -0800
+Message-Id: <1355179683-24846-1-git-send-email-thomas@cozybit.com> (sfid-20121210_234827_651314_B60CBB17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 'mac80211: support radiotap vendor namespace RX data'
-new fields were added to 'struct ieee80211_rx_status' and those
-fileds must be zeroed. However the rt2x00 driver stores driver
-specific data in the cb array of the rx skbs, so the fields
-might contain garbage and this can cause unexpected behaviour.
+Accurate RX timestamp reporting is important for proper IBSS merging,
+mesh synchronization, and MCCA scheduling. Namely, knowing where the TSF
+is recorded is needed to sync with the beacon timestamp field.
 
-The rt2x00 driver from the compat-wireless-2012-12-01
-tarball caused the following warning:
+Tested with AR9280.
 
-  WARNING: at
-  /devel/ramips/build_dir/target-mipsel_r2_uClibc-0.9.33.2/linux-ramips_rt305x/
-  compat-wireless-2012-12-01/net/mac80211/rx.c:115 ieee80211_rx_irqsafe+0x274/0xbcc
-  [mac80211]()
-  Modules linked in: dwc_otg ledtrig_usbdev nf_nat_irc
-  nf_nat_ftp nf_conntrack_irc nf_conntrack_ftp ipt_MASQUERADE
-  iptable_nat nf_nat pppoe xt_conntrack xt_CT xt_NOTRACK iptable_raw
-  xt_state nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack pppox
-  ipt_REJECT xt_TCPMSS xt_comment xt_multiport xt_mac xt_limit
-  iptable_mangle iptable_filter ip_tables xt_tcpudp x_tables ppp_async
-  ppp_generic slhc rt2800pci(O) rt2800lib(O) rt2x00soc(O) rt2x00pci(O)
-  rt2x00lib(O) mac80211(O) usbcore usb_common nls_base crc_itu_t
-  crc_ccitt eeprom_93cx6 cfg80211(O) compat(O) arc4 aes_generic
-  crypto_blkcipher cryptomgr aead crypto_hash crypto_algapi leds_gpio
-  button_hotplug(O) gpio_keys_polled input_polldev input_core
-  Call Trace:
-  [<801e96b4>] dump_stack+0x8/0x34
-  [<80010a9c>] warn_slowpath_common+0x78/0xa4
-  [<80010ae0>] warn_slowpath_null+0x18/0x24
-  [<80a9710c>] ieee80211_rx_irqsafe+0x274/0xbcc [mac80211]
-
-The patch ensures that each field gets initialized with
-zeroes.
-
-Cc: <users@rt2x00.serialmonkey.com>
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
-v2:
-  - update the commit message and add a comment to the code
-  - drop the ath5k and p54 patches
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/ath/ath9k/recv.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 3248b42..507c8c5 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -686,6 +686,14 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp)
- 	 * to mac80211.
- 	 */
- 	rx_status = IEEE80211_SKB_RXCB(entry->skb);
-+
-+	/* Ensure that all fields of rx_status are initialized
-+	 * properly. The skb->cb array was used for driver
-+	 * specific informations, so rx_status might contain
-+	 * garbage.
-+	 */
-+	memset(rx_status, 0, sizeof(*rx_status));
-+
- 	rx_status->mactime = rxdesc.timestamp;
- 	rx_status->band = rt2x00dev->curr_band;
- 	rx_status->freq = rt2x00dev->curr_freq;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 6aafbb7..d4df98a 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -976,7 +976,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 	rx_status->freq = hw->conf.channel->center_freq;
+ 	rx_status->signal = ah->noise + rx_stats->rs_rssi;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+-	rx_status->flag |= RX_FLAG_MACTIME_START;
++	rx_status->flag |= RX_FLAG_MACTIME_END;
+ 	if (rx_stats->rs_moreaggr)
+ 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+ 
 -- 
-1.7.10
+1.7.10.4
 
