@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22110 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754290Ab2LKWwx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39942 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751249Ab2LJJ3d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 17:52:53 -0500
-Date: Tue, 11 Dec 2012 14:55:55 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Jason Baron <jbaron@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	<linux-wireless@vger.kernel.org>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-Message-ID: <20121211225555.GC15974@pogo> (sfid-20121211_235313_887383_1F2D1C18)
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1353263740.28214.2.camel@joe-AO722>
- <20121120160845.GB31176@redhat.com>
- <3645415.mrRzvuvPFK@lx-vladimir>
- <20121211193646.GS15974@pogo>
- <20121211200831.GD11815@redhat.com>
- <20121211201250.GA19675@kroah.com>
- <1355257444.24219.7.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1355257444.24219.7.camel@joe-AO722>
+	Mon, 10 Dec 2012 04:29:33 -0500
+Message-ID: <1355131788.9857.1.camel@jlt4.sipsolutions.net> (sfid-20121210_102940_332564_5C53F8B8)
+Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: eric@regit.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Date: Mon, 10 Dec 2012 10:29:48 +0100
+In-Reply-To: <1354919017.9124.33.camel@jlt4.sipsolutions.net> (sfid-20121207_232321_820322_B0AAB1D2)
+References: <1354906561-4695-1-git-send-email-eric@regit.org>
+	 <20121207.153134.25835204617509469.davem@davemloft.net>
+	 <1354915824.9124.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_223020_561049_DB965D43) <1354916502.9124.18.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_224129_500056_6617D80D) <1354918363.9124.29.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_231231_221604_E7B34625) <1354919017.9124.33.camel@jlt4.sipsolutions.net>
+	 (sfid-20121207_232321_820322_B0AAB1D2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 11, 2012 at 12:24:04PM -0800, Joe Perches wrote:
-> On Tue, 2012-12-11 at 12:12 -0800, Greg KH wrote:
-> > On Tue, Dec 11, 2012 at 03:08:31PM -0500, Jason Baron wrote:
-> > > On Tue, Dec 11, 2012 at 11:36:46AM -0800, Luis R. Rodriguez wrote:
-> > > > On Tue, Dec 04, 2012 at 11:28:26AM +0200, Vladimir Kondratiev wrote:
-> > > > > Hi Jason,
-> > > > > 
-> > > > > Do you have any update on the status for patches below?
-> > > > > Where is it now? When do you expect it to merge? 3.8?
-> > > > > I am waiting for this to merge before I can go on
-> > > > > with my driver.
-> > > > 
-> > > > *poke*
-> > > > 
-> > > >   Luis
-> > > 
-> > > Hi Luis,
-> > > 
-> > > Yes, I posted this patch, along with 2 others last week for Greg to
-> > > pull. I believe these are too late for the 3.8 merge window. Perhaps,
-> > > Greg can comment. Here's a link to the post:
-> > > 
-> > > http://marc.info/?l=linux-kernel&m=135474417810281&w=2
-> > 
-> > Yes it's too late, these will go into linux-next after 3.8-rc1 is out.
-> > 
-> > thanks,
-> > 
-> > greg k-h
-> > 
+On Fri, 2012-12-07 at 23:23 +0100, Johannes Berg wrote:
+> Oh I should say ... IP is like black magic to me ;-)
 > 
-> Vladimir, sorry about this.
+> > -	if (!pskb_may_pull(skb, sizeof(struct iphdr)))
+> > +	if (!skb_copy_bits(skb, 0, &iph, sizeof(iph)))
+> >  		return skb;
+> >  
+> > -	iph = ip_hdr(skb);
+> > -	if (iph->ihl < 5 || iph->version != 4)
+> > +	if (iph.ihl < 5 || iph.version != 4)
+> >  		return skb;
+> > -	if (!pskb_may_pull(skb, iph->ihl*4))
+> > -		return skb;
+> > -	iph = ip_hdr(skb);
+> > -	len = ntohs(iph->tot_len);
+> > -	if (skb->len < len || len < (iph->ihl * 4))
+> > +
+> > +	len = ntohs(iph.tot_len);
+> > +	if (skb->len < len || len < (iph.ihl * 4))
+> >  		return skb;
+> >  
+> > -	if (ip_is_fragment(ip_hdr(skb))) {
+> > +	if (ip_is_fragment(&iph)) {
+> >  		skb = skb_share_check(skb, GFP_ATOMIC);
+> >  		if (skb) {
+> > +			if (!pskb_may_pull(skb, iph.ihl*4))
+> > +				return skb;
 > 
-> I suggest you prefix/rename and include these functions directly into
-> your driver and later after 3.9 is out you could again rename the
-> local calls to the now generic kernel functions and delete the local
-> ones.
+> I moved this here but I have no idea what it does.
 
-Vladimir, to be clear, you can continue with waiting for the patches
-to get into 3.9 but that will take a while but given that you want
-your driver in 3.8 you can fold those routines into your driver as
-you had before but with a rename by adding a prefix and sumbit that
-driver and specify it is for 3.8.
+Well, ok, looking further it does seem kinda obvious -- ip_defrag()
+assumes the IP header is (fully?) present in the skb header, so that's
+what this does.
 
-> Your driver is for new hardware, so even now it should be able to
-> go into 3.8.
+Eric (Leblond), could you test this patch?
 
-Agreed.
+johannes
 
-  Luis
