@@ -1,82 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:45126
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754992Ab2LGKCn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 05:02:43 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 3/8] ath9k: Add a few debug messages for PAPRD
-Date: Fri,  7 Dec 2012 15:31:56 +0530
-Message-Id: <1354874521-4138-4-git-send-email-sujith@msujith.org> (sfid-20121207_110249_115602_1DF05B76)
-In-Reply-To: <1354874521-4138-1-git-send-email-sujith@msujith.org>
-References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37117 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753998Ab2LJPEw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 10:04:52 -0500
+Date: Mon, 10 Dec 2012 10:03:41 -0500
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Abhijit Pawar <abhi.c.pawar@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Patrick McHardy <kaber@trash.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Cong Wang <amwang@redhat.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Joe Perches <joe@perches.com>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	netfilter@vger.kernel.org, coreteam@netfilter.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RESEND] net: remove obsolete simple_strto<foo>
+Message-ID: <20121210150341.GD23628@hmsreliant.think-freely.org> (sfid-20121210_160528_140940_6EDDC107)
+References: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |  3 +++
- drivers/net/wireless/ath/ath9k/link.c         | 10 ++++++++--
- 2 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 2cd23e5..b11a166 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -169,6 +169,9 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK,
- 		      ah->paprd_ratemask_ht40);
- 
-+	ath_dbg(common, CALIBRATE, "PAPRD HT20 mask: 0x%x, HT40 mask: 0x%x\n",
-+		ah->paprd_ratemask, ah->paprd_ratemask_ht40);
-+
- 	for (i = 0; i < ah->caps.max_txchains; i++) {
- 		REG_RMW_FIELD(ah, ctrl0[i],
- 			      AR_PHY_PAPRD_CTRL0_USE_SINGLE_TABLE_MASK, 1);
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index fc6b075..3c996ff 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -179,11 +179,14 @@ void ath_rx_poll(unsigned long data)
- static void ath_paprd_activate(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
- 	int chain;
- 
--	if (!caldata || !caldata->paprd_done)
-+	if (!caldata || !caldata->paprd_done) {
-+		ath_dbg(common, CALIBRATE, "Failed to activate PAPRD\n");
- 		return;
-+	}
- 
- 	ath9k_ps_wakeup(sc);
- 	ar9003_paprd_enable(ah, false);
-@@ -194,6 +197,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
- 		ar9003_paprd_populate_single_table(ah, caldata, chain);
- 	}
- 
-+	ath_dbg(common, CALIBRATE, "Activating PAPRD\n");
- 	ar9003_paprd_enable(ah, true);
- 	ath9k_ps_restore(sc);
- }
-@@ -253,8 +257,10 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	int len = 1800;
- 	int ret;
- 
--	if (!caldata || !caldata->paprd_packet_sent || caldata->paprd_done)
-+	if (!caldata || !caldata->paprd_packet_sent || caldata->paprd_done) {
-+		ath_dbg(common, CALIBRATE, "Skipping PAPRD calibration\n");
- 		return;
-+	}
- 
- 	ath9k_ps_wakeup(sc);
- 
--- 
-1.8.0.1
+On Mon, Dec 10, 2012 at 02:42:28PM +0530, Abhijit Pawar wrote:
+> This patch replace the obsolete simple_strto<foo> with kstrto<foo>
+> 
+> Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
+Acked-by: Neil Horman <nhorman@tuxdriver.com>
 
