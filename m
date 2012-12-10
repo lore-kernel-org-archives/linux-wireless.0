@@ -1,34 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57870 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932167Ab2LNS7C (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:36883 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006Ab2LJWWO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 13:59:02 -0500
-Message-ID: <1355511551.9571.10.camel@jlt4.sipsolutions.net> (sfid-20121214_195908_351167_5F8D19B3)
-Subject: Re: [PATCH/RFC] nl80211/cfg80211/mac80211: add
- NL80211_CMD_GET_MESH_SETUP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-Date: Fri, 14 Dec 2012 19:59:11 +0100
-In-Reply-To: <CAPjQAd8-pFCRQLb=t4Cx+RaLbU8ZMT5_1Xc36sNsRgjm4NdgJw@mail.gmail.com> (sfid-20121214_191745_479609_553E8FC2)
-References: <20121214151442.GA10736@localhost>
-	 <CAPjQAd8-pFCRQLb=t4Cx+RaLbU8ZMT5_1Xc36sNsRgjm4NdgJw@mail.gmail.com>
-	 (sfid-20121214_191745_479609_553E8FC2)
+	Mon, 10 Dec 2012 17:22:14 -0500
+Received: by mail-we0-f174.google.com with SMTP id x10so1401818wey.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 14:22:13 -0800 (PST)
+Message-ID: <1355178128.4680.27.camel@canaries64> (sfid-20121210_232221_542578_D4D4B53F)
+Subject: [PATCH 11/11] staging: vt6656: clean up struct vnt manager.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 10 Dec 2012 22:22:08 +0000
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-14 at 10:17 -0800, Javier Cardona wrote:
 
-> > +       setup->is_authenticated = ifmsh->security & IEEE80211_MESH_SEC_AUTHED;
-> +       setup->is_authenticated = !!(ifmsh->security &
-> IEEE80211_MESH_SEC_AUTHED));
-> 
-> i.e. to force the value to be 0 or 1.
+Replacing types defined in "ttype.h" with linux/types.h.
 
-is_authenticate is a bool, so no need, the compiler has to do it.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/wmgr.h | 253 ++++++++++++++++++++----------------------
+ 1 file changed, 122 insertions(+), 131 deletions(-)
 
-johannes
+diff --git a/drivers/staging/vt6656/wmgr.h b/drivers/staging/vt6656/wmgr.h
+index 5112f53..83aed45 100644
+--- a/drivers/staging/vt6656/wmgr.h
++++ b/drivers/staging/vt6656/wmgr.h
+@@ -241,155 +241,146 @@ struct vnt_rx_mgmt {
+ 
+ struct vnt_manager {
+ 	void *pAdapter;
+-    // MAC address
+-    BYTE                    abyMACAddr[WLAN_ADDR_LEN];
+-
+-    // Configuration Mode
+-    WMAC_CONFIG_MODE        eConfigMode; // MAC pre-configed mode
+-
+-    CARD_PHY_TYPE           eCurrentPHYMode;
+-
+-
+-    // Operation state variables
+-    WMAC_CURRENT_MODE       eCurrMode;   // MAC current connection mode
+-    WMAC_BSS_STATE          eCurrState;  // MAC current BSS state
+-    WMAC_BSS_STATE          eLastState;  // MAC last BSS state
+-
+-    PKnownBSS               pCurrBSS;
+-    BYTE                    byCSSGK;
+-    BYTE                    byCSSPK;
+-
+-//    BYTE                    abyNewSuppRates[WLAN_IEHDR_LEN + WLAN_RATES_MAXLEN];
+-//    BYTE                    abyNewExtSuppRates[WLAN_IEHDR_LEN + WLAN_RATES_MAXLEN];
+-    BOOL                    bCurrBSSIDFilterOn;
+-
+-    // Current state vars
+-    unsigned int                    uCurrChannel;
+-    BYTE                    abyCurrSuppRates[WLAN_IEHDR_LEN + WLAN_RATES_MAXLEN + 1];
+-    BYTE                    abyCurrExtSuppRates[WLAN_IEHDR_LEN + WLAN_RATES_MAXLEN + 1];
+-    BYTE                    abyCurrSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
+-    BYTE                    abyCurrBSSID[WLAN_BSSID_LEN];
+-    WORD                    wCurrCapInfo;
+-    WORD                    wCurrAID;
+-    unsigned int                    uRSSITrigger;
+-    WORD                    wCurrATIMWindow;
+-    WORD                    wCurrBeaconPeriod;
+-    BOOL                    bIsDS;
+-    BYTE                    byERPContext;
+-
+-    CMD_STATE               eCommandState;
+-    unsigned int                    uScanChannel;
+-
+-    // Desire joinning BSS vars
+-    BYTE                    abyDesireSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
+-    BYTE                    abyDesireBSSID[WLAN_BSSID_LEN];
+-
+-//restore BSS info for Ad-Hoc mode
+-     BYTE                    abyAdHocSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
+-
+-    // Adhoc or AP configuration vars
+-    WORD                    wIBSSBeaconPeriod;
+-    WORD                    wIBSSATIMWindow;
+-    unsigned int                    uIBSSChannel;
+-    BYTE                    abyIBSSSuppRates[WLAN_IEHDR_LEN + WLAN_RATES_MAXLEN + 1];
+-    BYTE                    byAPBBType;
+-    BYTE                    abyWPAIE[MAX_WPA_IE_LEN];
+-    WORD                    wWPAIELen;
+-
+-    unsigned int                    uAssocCount;
+-    BOOL                    bMoreData;
+-
+-    // Scan state vars
+-    WMAC_SCAN_STATE         eScanState;
+-    WMAC_SCAN_TYPE          eScanType;
+-    unsigned int                    uScanStartCh;
+-    unsigned int                    uScanEndCh;
+-    WORD                    wScanSteps;
+-    unsigned int                    uScanBSSType;
+-    // Desire scannig vars
+-    BYTE                    abyScanSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
+-    BYTE                    abyScanBSSID[WLAN_BSSID_LEN];
+-
+-    // Privacy
+-    WMAC_AUTHENTICATION_MODE eAuthenMode;
+-    BOOL                    bShareKeyAlgorithm;
+-    BYTE                    abyChallenge[WLAN_CHALLENGE_LEN];
+-    BOOL                    bPrivacyInvoked;
+-
+-    // Received beacon state vars
+-    BOOL                    bInTIM;
+-    BOOL                    bMulticastTIM;
+-    BYTE                    byDTIMCount;
+-    BYTE                    byDTIMPeriod;
+-
+-    // Power saving state vars
+-    WMAC_POWER_MODE         ePSMode;
+-    WORD                    wListenInterval;
+-    WORD                    wCountToWakeUp;
+-    BOOL                    bInTIMWake;
+-    PBYTE                   pbyPSPacketPool;
++
++	/* MAC address */
++	u8  abyMACAddr[WLAN_ADDR_LEN];
++
++	/* Configuration Mode */
++	WMAC_CONFIG_MODE eConfigMode; /* MAC pre-configed mode */
++
++	CARD_PHY_TYPE eCurrentPHYMode;
++
++	/* Operation state variables */
++	WMAC_CURRENT_MODE eCurrMode; /* MAC current connection mode */
++	WMAC_BSS_STATE eCurrState; /* MAC current BSS state */
++	WMAC_BSS_STATE eLastState; /* MAC last BSS state */
++
++	PKnownBSS pCurrBSS;
++	u8 byCSSGK;
++	u8 byCSSPK;
++
++	int bCurrBSSIDFilterOn;
++
++	/* Current state vars */
++	u32 uCurrChannel;
++	u8 abyCurrSuppRates[WLAN_IEHDR_LEN + WLAN_RATES_MAXLEN + 1];
++	u8 abyCurrExtSuppRates[WLAN_IEHDR_LEN + WLAN_RATES_MAXLEN + 1];
++	u8 abyCurrSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
++	u8 abyCurrBSSID[WLAN_BSSID_LEN];
++	u16 wCurrCapInfo;
++	u16 wCurrAID;
++	u32 uRSSITrigger;
++	u16 wCurrATIMWindow;
++	u16 wCurrBeaconPeriod;
++	int bIsDS;
++	u8 byERPContext;
++
++	CMD_STATE eCommandState;
++	u32 uScanChannel;
++
++	/* Desire joinning BSS vars */
++	u8 abyDesireSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
++	u8 abyDesireBSSID[WLAN_BSSID_LEN];
++
++	/*restore BSS info for Ad-Hoc mode */
++	u8 abyAdHocSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
++
++	/* Adhoc or AP configuration vars */
++	u16 wIBSSBeaconPeriod;
++	u16 wIBSSATIMWindow;
++	u32 uIBSSChannel;
++	u8 abyIBSSSuppRates[WLAN_IEHDR_LEN + WLAN_RATES_MAXLEN + 1];
++	u8 byAPBBType;
++	u8 abyWPAIE[MAX_WPA_IE_LEN];
++	u16 wWPAIELen;
++
++	u32 uAssocCount;
++	int bMoreData;
++
++	/* Scan state vars */
++	WMAC_SCAN_STATE eScanState;
++	WMAC_SCAN_TYPE eScanType;
++	u32 uScanStartCh;
++	u32 uScanEndCh;
++	u16 wScanSteps;
++	u32 uScanBSSType;
++	/* Desire scannig vars */
++	u8 abyScanSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
++	u8 abyScanBSSID[WLAN_BSSID_LEN];
++
++	/* Privacy */
++	WMAC_AUTHENTICATION_MODE eAuthenMode;
++	int bShareKeyAlgorithm;
++	u8 abyChallenge[WLAN_CHALLENGE_LEN];
++	int bPrivacyInvoked;
++
++	/* Received beacon state vars */
++	int bInTIM;
++	int bMulticastTIM;
++	u8 byDTIMCount;
++	u8 byDTIMPeriod;
++
++	/* Power saving state vars */
++	WMAC_POWER_MODE ePSMode;
++	u16 wListenInterval;
++	u16 wCountToWakeUp;
++	int bInTIMWake;
++	u8 *pbyPSPacketPool;
+ 	u8 byPSPacketPool[sizeof(struct vnt_tx_mgmt)
+ 		+ WLAN_NULLDATA_FR_MAXLEN];
+-    BOOL                    bRxBeaconInTBTTWake;
+-    BYTE                    abyPSTxMap[MAX_NODE_NUM + 1];
++	int bRxBeaconInTBTTWake;
++	u8 abyPSTxMap[MAX_NODE_NUM + 1];
+ 
+-    // management command related
+-    unsigned int                    uCmdBusy;
+-    unsigned int                    uCmdHostAPBusy;
++	/* management command related */
++	u32 uCmdBusy;
++	u32 uCmdHostAPBusy;
+ 
+-    // management packet pool
+-    PBYTE                   pbyMgmtPacketPool;
++	/* management packet pool */
++	u8 *pbyMgmtPacketPool;
+ 	u8 byMgmtPacketPool[sizeof(struct vnt_tx_mgmt)
+ 		+ WLAN_A3FR_MAXLEN];
+ 
+
+-    // One second callback timer
+-	struct timer_list	    sTimerSecondCallback;
++	/* One second callback timer */
++	struct timer_list sTimerSecondCallback;
+ 
+ 	/* Temporarily Rx Mgmt Packet Descriptor */
+ 	struct vnt_rx_mgmt sRxPacket;
+ 
+-    // link list of known bss's (scan results)
+-    KnownBSS                sBSSList[MAX_BSS_NUM];
++	/* link list of known bss's (scan results) */
++	KnownBSS sBSSList[MAX_BSS_NUM];
+ 	/* link list of same bss's */
+-    KnownBSS				pSameBSS[6] ;
+-    BOOL          Cisco_cckm ;
+-    BYTE          Roam_dbm;
+-
+-    // table list of known node
+-    // sNodeDBList[0] is reserved for AP under Infra mode
+-    // sNodeDBList[0] is reserved for Multicast under adhoc/AP mode
+-    KnownNodeDB             sNodeDBTable[MAX_NODE_NUM + 1];
+-
+-
+-
+-    // WPA2 PMKID Cache
+-    SPMKIDCache             gsPMKIDCache;
+-    BOOL                    bRoaming;
+-
+-    // rate fall back vars
+-
+-
+-
+-    // associate info
+-    SAssocInfo              sAssocInfo;
+-
+-
+-    // for 802.11h
+-    BOOL                    b11hEnable;
+-    BOOL                    bSwitchChannel;
+-    BYTE                    byNewChannel;
+-    PWLAN_IE_MEASURE_REP    pCurrMeasureEIDRep;
+-    unsigned int                    uLengthOfRepEIDs;
++	KnownBSS pSameBSS[6];
++	int Cisco_cckm;
++	u8 Roam_dbm;
++
++	/* table list of known node */
++	/* sNodeDBList[0] is reserved for AP under Infra mode */
++	/* sNodeDBList[0] is reserved for Multicast under adhoc/AP mode */
++	KnownNodeDB sNodeDBTable[MAX_NODE_NUM + 1];
++
++	/* WPA2 PMKID Cache */
++	SPMKIDCache gsPMKIDCache;
++	int bRoaming;
++
++	/* associate info */
++	SAssocInfo sAssocInfo;
++
++	/* for 802.11h */
++	int b11hEnable;
++	int bSwitchChannel;
++	u8 byNewChannel;
++	PWLAN_IE_MEASURE_REP    pCurrMeasureEIDRep;
++	u32 uLengthOfRepEIDs;
+ 	u8 abyCurrentMSRReq[sizeof(struct vnt_tx_mgmt)
+ 		+ WLAN_A3FR_MAXLEN];
+ 	u8 abyCurrentMSRRep[sizeof(struct vnt_tx_mgmt)
+ 		+ WLAN_A3FR_MAXLEN];
+-    BYTE                    abyIECountry[WLAN_A3FR_MAXLEN];
+-    BYTE                    abyIBSSDFSOwner[6];
+-    BYTE                    byIBSSDFSRecovery;
++	u8 abyIECountry[WLAN_A3FR_MAXLEN];
++	u8 abyIBSSDFSOwner[6];
++	u8 byIBSSDFSRecovery;
+ 
+-    struct sk_buff  skb;
++	struct sk_buff skb;
+ 
+ };
+ 
+-- 
+1.8.0
+
+
+
 
