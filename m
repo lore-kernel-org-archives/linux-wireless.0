@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:39036 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751922Ab2LWTjd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40466 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612Ab2LJMdl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 14:39:33 -0500
-Message-ID: <50D757D0.2010501@lwfinger.net> (sfid-20121223_203957_657331_65762900)
-Date: Sun, 23 Dec 2012 13:13:20 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>,
-	Mike Galbraith <bitbucket@online.de>,
-	Norbert Preining <preining@logic.at>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: dire state of rtl driver in 3.7
-References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at> <1356241795.5620.47.camel@marge.simpson.net> <20121223132134.GA8190@liondog.tnic>
-In-Reply-To: <20121223132134.GA8190@liondog.tnic>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 10 Dec 2012 07:33:41 -0500
+Message-ID: <1355142835.9857.19.camel@jlt4.sipsolutions.net> (sfid-20121210_133344_447516_E91F43D6)
+Subject: Re: [PATCH] wireless-regdb: add regulatory rule for ETSI members on
+ 60gHz band
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Date: Mon, 10 Dec 2012 13:33:55 +0100
+In-Reply-To: <2225032.pbhpKMrF3f@lx-vladimir>
+References: <8774585.BvFN3Opv12@lx-vladimir>
+	 <1424987.QUc2GD1qWX@lx-vladimir>
+	 <1355139107.9857.15.camel@jlt4.sipsolutions.net>
+	 <2225032.pbhpKMrF3f@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/23/2012 07:21 AM, Borislav Petkov wrote:
-> On Sun, Dec 23, 2012 at 06:49:55AM +0100, Mike Galbraith wrote:
->> Looks a lot like my driver experience with older kernels, I had to use
->> the external driver in the rare event that I needed wireless to work.
->> The in tree driver works peachy these days (needed it recently, was
->> pleasantly surprised when it _just worked_, not even a hiccup), so
->> somebody cared, gave at least the 10ec:8181 bits some serious love.
->
-> Good for you.
->
-> I have a [10ec:8176] in my laptop and while I don't have the issues
-> Norbert is reporting, I can't say the thing just worked.
->
-> I had to use the wireless recently in a bunch of networks and what it
-> would do, is associate properly, connection gets established and traffic
-> is fine for a minute or so. Then, after a minute traffic would cease and
-> I'd need to re-associate. And it worked sporadically, sometimes fine,
-> sometimes with constant connection interruptions. And this observation
-> was the case with almost all wireless networks I'd use.
->
-> FWIW, the wifi adapter is:
->
-> 01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
->          Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8195]
->          Flags: fast devsel, IRQ 17
->          I/O ports at 3000 [size=256]
->          Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
->          Capabilities: [40] Power Management version 3
->          Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
->          Capabilities: [70] Express Endpoint, MSI 00
->          Capabilities: [100] Advanced Error Reporting
->          Capabilities: [140] Virtual Channel
->          Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
->
-> using rtl8192ce.
+On Mon, 2012-12-10 at 14:15 +0200, Vladimir Kondratiev wrote:
+> On Monday, December 10, 2012 12:31:47 PM Johannes Berg wrote:
+> > does the kernel understand the two rules with
+> > different TX power/outdoor restriction properly?
+> 
+> Oh no! You are right, kernel won't get it.
+> 
+> In general: What is the right way to specify different restrictions
+> for indoor and outdoor?
 
-Again a different driver! What do you mean "in a bunch of networks"? How am I 
-supposed to duplicate the conditions with descriptions like this?
+I don't know if we have a way to handle it right now ...
 
-Larry
+> In this particular case, would it be appropriate to specify
+> indoor usage only, as 60g wi-fi will be used mostly indoor?
 
+With the current rule system that'd be the only way, I think.
+
+We should keep it in mind for the new rule system.
+
+However, I notice there are also spectral power limits, that might be
+relevant in case anyone ever uses the database for narrower channels?
+
+johannes
 
