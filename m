@@ -1,54 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:34345 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753386Ab2LMW1d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 17:27:33 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so2255987lag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 14:27:32 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:44786 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753255Ab2LJKIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 05:08:48 -0500
+Date: Mon, 10 Dec 2012 11:08:40 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: netdev@vger.kernel.org
+Cc: Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>
+Subject: [PATCH] wireless: check against default_ethtool_ops
+Message-ID: <20121210100839.GA9851@redhat.com> (sfid-20121210_110857_354901_99A11B84)
 MIME-Version: 1.0
-In-Reply-To: <1354812784-15845-2-git-send-email-johannes@sipsolutions.net>
-References: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net> <1354812784-15845-2-git-send-email-johannes@sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 13 Dec 2012 14:27:11 -0800
-Message-ID: <CAB=NE6XpVxRudaZ0EXRR6KkgPOTqw4pXO+x0Pim+Bt2_HT8fnQ@mail.gmail.com> (sfid-20121213_232737_469506_5F08A683)
-Subject: Re: [RFC 1/2] regulatory: allow arbitrary channel widths
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 6, 2012 at 8:53 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> There aren't any channel width restrictions in the
-> 2.4 GHz band (except the natural ones by the (sub)band
-> boundaries), nor do default restrictions in the 5 GHz
-> band make sense when limited to passive scan/no IBSS
-> etc.
->
-> Allow passing NL80211_NO_REG_BANDWIDTH_LIMIT as the
-> max_bandwidth_khz and make that mean no restrictions.
-> Use it for the default world roaming regdomain.
->
-> Also make the awk script accept "NL" for "no limit"
-> and substitute NL80211_NO_REG_BANDWIDTH_LIMIT.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Since:
 
-For 2.4 GHz this seems fine. For 5 GHz, just to clarify for Michael,
-the changes you are making are for non-DFS channels, and for the
-channels where we always never initiate radiation and just world roam
-unless we get a beacon hint. That is the world regulatory domain
-enabled 5 GHz channels that are non-DFS.
+commit 2c60db037034d27f8c636403355d52872da92f81
+Author: Eric Dumazet <edumazet@google.com>
+Date:   Sun Sep 16 09:17:26 2012 +0000
 
-Michael, just a sanity check for you. What Johannes is saying is that
-regulatory wise for the 2.4 GHz band on channels 1-11 and on 5 GHz on
-non DFS channels where we never initiate radiation we don't have a
-specific bandwidth restriction. Are you aware of any country
-restricting any 5 GHz world roaming frequency (non DFS) or channel
-1-11 on 2.4 GHz in terms of bandwidth used?
+    net: provide a default dev->ethtool_ops
 
-  Luis
+wireless core does not correctly assign ethtool_ops. In order to fix
+the problem, and avoid assigning ethtool_ops on each individual cfg80211
+drivers, we check against default_ethool_ops pointer instead of NULL in
+wireless core.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Ben Hutchings <bhutchings@solarflare.com>
+Cc: stable@vger.kernel.org # 3.7+
+---
+This is not critical fix, user visible effect of a problem,
+is lack of ethtool informations like statistic or link detection.
+
+ include/linux/netdevice.h |    2 ++
+ net/core/dev.c            |    3 ++-
+ net/wireless/core.c       |    2 +-
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index f8eda02..c98e1c3 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -60,6 +60,8 @@ struct wireless_dev;
+ #define SET_ETHTOOL_OPS(netdev,ops) \
+ 	( (netdev)->ethtool_ops = (ops) )
+ 
++extern const struct ethtool_ops default_ethtool_ops;
++
+ /* hardware address assignment types */
+ #define NET_ADDR_PERM		0	/* address is permanent (default) */
+ #define NET_ADDR_RANDOM		1	/* address is generated randomly */
+diff --git a/net/core/dev.c b/net/core/dev.c
+index c0946cb..4cd2168 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -6008,7 +6008,8 @@ struct netdev_queue *dev_ingress_queue_create(struct net_device *dev)
+ 	return queue;
+ }
+ 
+-static const struct ethtool_ops default_ethtool_ops;
++const struct ethtool_ops default_ethtool_ops;
++EXPORT_SYMBOL_GPL(default_ethtool_ops);
+ 
+ /**
+  *	alloc_netdev_mqs - allocate network device
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 14d9904..90915d4 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -866,7 +866,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		/* allow mac80211 to determine the timeout */
+ 		wdev->ps_timeout = -1;
+ 
+-		if (!dev->ethtool_ops)
++		if (dev->ethtool_ops == &default_ethtool_ops)
+ 			dev->ethtool_ops = &cfg80211_ethtool_ops;
+ 
+ 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+-- 
+1.7.1
+
