@@ -1,337 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53214 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945975Ab2LFQrb (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:49046 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093Ab2LJRBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:47:31 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 09/24] regulatory: use proper enum for return values
-Date: Thu,  6 Dec 2012 17:47:33 +0100
-Message-Id: <1354812468-15709-10-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174759_640216_A1BB0388)
-In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 10 Dec 2012 12:01:39 -0500
+Received: by mail-vc0-f174.google.com with SMTP id d16so2645075vcd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 09:01:39 -0800 (PST)
+Message-ID: <50C61570.6040006@lwfinger.net> (sfid-20121210_180144_367148_34052F01)
+Date: Mon, 10 Dec 2012 11:01:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: 8192cu misbehaviours with RTL8188RU chipset
+References: <CAMfPB_wtsXjxFkY6M4cNjxDK678DV4VPjwDRzVOtgrf-4jDL-Q@mail.gmail.com>
+In-Reply-To: <CAMfPB_wtsXjxFkY6M4cNjxDK678DV4VPjwDRzVOtgrf-4jDL-Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 12/09/2012 06:34 PM, Alessandro Lannocca wrote:
+> Good morning, I recently (yesterday) bought an RTL8188RU-based wifi
+> card, the Alfa AWUS036NHR <0bda:817f>, and proceeded to compile
+> compat-wireless 3.6.8-1 to have it working.
+>
+> I'm using this card for penetration testing purposes, so I applied
+> this this patch to be able to switch channels in monitor mode and to
+> prevent the driver from overwriting QoS headers:
+>
+> <snip>
+>
+> --- a/net/mac80211/tx.c  Sat Sep 29 20:29:54 2012 -0400
+> +++ b/net/mac80211/tx.c  Sat Sep 29 20:37:29 2012 -0400
+> @@ -1487,7 +1487,10 @@
+>     /* Older kernels do not have the select_queue callback */
+>     skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, skb));
+>   #endif
+> -  ieee80211_set_qos_hdr(sdata, skb);
+> +  // Don't overwrite QoS header in monitor mode
+> +  if (likely(info->control.vif->
+> type != NL80211_IFTYPE_MONITOR)) {
+> +    ieee80211_set_qos_hdr(sdata, skb);
+> +  }
+>     ieee80211_tx(sdata, skb, false);
+>     rcu_read_unlock();
+>   }
+> diff -r 0de05c2ae1be net/wireless/chan.c
+> --- a/net/wireless/chan.c  Sat Sep 29 20:29:54 2012 -0400
+> +++ b/net/wireless/chan.c  Sat Sep 29 20:37:29 2012 -0400
+> @@ -85,8 +85,8 @@
+>
+>     if (!rdev->ops->set_monitor_channel)
+>       return -EOPNOTSUPP;
+> -  if (!cfg80211_has_monitors_only(rdev))
+> -    return -EBUSY;
+> +  //if (!cfg80211_has_monitors_only(rdev))
+> +  //  return -EBUSY;
+>
+>     chan = rdev_freq_to_chan(rdev, freq, chantype);
+>     if (!chan)
+>
+> </snip>
+>
+> Now, it works almost perfectly, I can use my card for regular surfing
+> with all kinds of AP (WEP/WPA/OPN), monitor mode works and injection
+> too; however, when in monitor mode, it detects associated WPA clients
+> as non-associated (exept for itself, it detects its own association
+> and its own generated wpa-handshake), and I'm unable to get any WPA
+> handshake.
+>
+> Also, after the first succesfull connection and disconnection, the
+> card goes 'mute', it just stops responding, scanning etc, until
+> unplugged and replugged.
+>
+> For this purpose I'm using the latest aircrack-ng suite, other
+> equipment I have, correctly reports all the clients in my own wireless
+> network as being associated, but not this rtl8188ru card; I think some
+> unicast frames are being filtered out while in monitor mode.
+> It's worth noting that injection works and I'm currently able to
+> effectively deauth wpa clients, but the card doesn't pick up their
+> (re-)association nor the wpa handshake.
+>
+> I tried also compat-wireless from linux-next and compat-drivers
+> aswell; all exhibit this behaviour, unfortunately compat-drivers
+> exposes some other bugs.
+>
+> I'm willing to patch/test/recompile to get this bugs ironed out,
+> unfortunately loading rtl8192cu with "options debug=5" doesn't seem to
+> have any effect on my logs, however I'm attaching a .pcap capture and
+> I'm willing to follow your instructions to get you useful info from my
+> system.
+>
+> Also, this bug/problem seems to be a regression, beacuse using an
+> ancient 2.6.34 kernel with compat-wireless-backport.2.6.39-1 the
+> problem doesn't exist, all works perfectly.
+>
+> In the attached .pcap file, you'll find a 2-3 APs, including my own,
+> and 2-3 clients (all connected on my network - CCC), the only
+> associated client shown is the alfa card itself, the handshake has
+> been captured aswell, but the other clients (my phone and my tablet)
+> are show not-associated, when in reality they are
+> connected/reconnecting and their 4-way handshake shoud be visible
+> aswell; this is kinda weird.
+>
+> My system is Ubuntu 12.10
+> kernel 3.5.0-19
+> compat-wireless 3.6.8-1
+> Alfa AWUS036NHR device id 0bda:817f
+> dmesg output (I know it's probably useless, but it's all it gives me)
+> <snip>
+> Dec  6 15:43:26 rothor kernel: [ 1562.960110] rtl8192cu: Chip version 0x10
+> Dec  6 15:43:26 rothor kernel: [ 1563.036520] rtl8192cu: MAC address:
+> 00:c0:ca:6a:e2:38
+> Dec  6 15:43:26 rothor kernel: [ 1563.036523] rtl8192cu: Board Type 1
+> Dec  6 15:43:26 rothor kernel: [ 1563.036822] rtl8192cu: Loading
+> firmware rtlwifi/rtl8192cufw.bin
+> Dec  6 15:43:26 rothor kernel: [ 1563.036901] usbcore: registered new
+> interface driver rtl8192cu
+> Dec  6 15:43:35 rothor kernel: [ 1571.216096] rtl8192cu: MAC auto ON okay!
+> Dec  6 15:43:35 rothor kernel: [ 1571.248809] rtl8192cu: Tx queue select: 0x05
+> </snip>
+>
+> Any help being appreciated, thank you in advance for your time.
 
-Instead of treating special error codes specially,
-like -EALREADY, introduce a real enum for all the
-needed possibilities and use it.
+Are you sure your patches are correct? The location that you used affects 
+*every* driver that uses mac80211, not just rtl8192cu.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 133 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 69 insertions(+), 64 deletions(-)
+I just tested by having rtl8192cu unloaded, then I loaded it with 'sudo modprobe 
+-v rtl8192cu debug=5'. When I did that and plugged in the device, my log was 
+immediately "flooded" with the following:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4bb953f..12576a4 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -65,6 +65,13 @@
- #define REG_DBG_PRINT(args...)
- #endif
- 
-+enum reg_request_treatment {
-+	REG_REQ_OK,
-+	REG_REQ_IGNORE,
-+	REG_REQ_INTERSECT,
-+	REG_REQ_ALREADY_SET,
-+};
-+
- static struct regulatory_request core_request_world = {
- 	.initiator = NL80211_REGDOM_SET_BY_CORE,
- 	.alpha2[0] = '0',
-@@ -926,16 +933,17 @@ bool reg_last_request_cell_base(void)
- 
- #ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
- /* Core specific check */
--static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
-+static enum reg_request_treatment
-+reg_ignore_cell_hint(struct regulatory_request *pending_request)
- {
- 	if (!reg_num_devs_support_basehint)
--		return -EOPNOTSUPP;
-+		return REG_REQ_IGNORE;
- 
- 	if (reg_request_cell_base(last_request) &&
- 	    !regdom_changes(pending_request->alpha2))
--		return -EALREADY;
-+		return REG_REQ_ALREADY_SET;
- 
--	return 0;
-+	return REG_REQ_OK;
- }
- 
- /* Device specific check */
-@@ -946,7 +954,7 @@ static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
- #else
- static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
- {
--	return -EOPNOTSUPP;
-+	return REG_REQ_IGNORE;
- }
- 
- static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
-@@ -1309,15 +1317,10 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
- 
--/*
-- * Return value which can be used by ignore_request() to indicate
-- * it has been determined we should intersect two regulatory domains
-- */
--#define REG_INTERSECT	1
--
- /* This has the logic which determines when a new request
-  * should be ignored. */
--static int ignore_request(struct wiphy *wiphy,
-+static enum reg_request_treatment
-+get_reg_request_treatment(struct wiphy *wiphy,
- 			  struct regulatory_request *pending_request)
- {
- 	struct wiphy *last_wiphy = NULL;
-@@ -1326,17 +1329,17 @@ static int ignore_request(struct wiphy *wiphy,
- 
- 	/* All initial requests are respected */
- 	if (!last_request)
--		return 0;
-+		return REG_REQ_OK;
- 
- 	switch (pending_request->initiator) {
- 	case NL80211_REGDOM_SET_BY_CORE:
--		return 0;
-+		return REG_REQ_OK;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 		if (reg_request_cell_base(last_request)) {
- 			/* Trust a Cell base station over the AP's country IE */
- 			if (regdom_changes(pending_request->alpha2))
--				return -EOPNOTSUPP;
--			return -EALREADY;
-+				return REG_REQ_IGNORE;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 
- 		last_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
-@@ -1353,23 +1356,23 @@ static int ignore_request(struct wiphy *wiphy,
- 				 * to be correct. Reject second one for now.
- 				 */
- 				if (regdom_changes(pending_request->alpha2))
--					return -EOPNOTSUPP;
--				return -EALREADY;
-+					return REG_REQ_IGNORE;
-+				return REG_REQ_ALREADY_SET;
- 			}
- 			/*
- 			 * Two consecutive Country IE hints on the same wiphy.
- 			 * This should be picked up early by the driver/stack
- 			 */
- 			if (WARN_ON(regdom_changes(pending_request->alpha2)))
--				return 0;
--			return -EALREADY;
-+				return REG_REQ_OK;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 		return 0;
- 	case NL80211_REGDOM_SET_BY_DRIVER:
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_CORE) {
- 			if (regdom_changes(pending_request->alpha2))
--				return 0;
--			return -EALREADY;
-+				return REG_REQ_OK;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 
- 		/*
-@@ -1379,25 +1382,25 @@ static int ignore_request(struct wiphy *wiphy,
- 		 */
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 		    !regdom_changes(pending_request->alpha2))
--			return -EALREADY;
-+			return REG_REQ_ALREADY_SET;
- 
--		return REG_INTERSECT;
-+		return REG_REQ_INTERSECT;
- 	case NL80211_REGDOM_SET_BY_USER:
- 		if (reg_request_cell_base(pending_request))
- 			return reg_ignore_cell_hint(pending_request);
- 
- 		if (reg_request_cell_base(last_request))
--			return -EOPNOTSUPP;
-+			return REG_REQ_IGNORE;
- 
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
--			return REG_INTERSECT;
-+			return REG_REQ_INTERSECT;
- 		/*
- 		 * If the user knows better the user should set the regdom
- 		 * to their country before the IE is picked up
- 		 */
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_USER &&
- 		    last_request->intersect)
--			return -EOPNOTSUPP;
-+			return REG_REQ_IGNORE;
- 		/*
- 		 * Process user requests only after previous user/driver/core
- 		 * requests have been processed
-@@ -1406,15 +1409,15 @@ static int ignore_request(struct wiphy *wiphy,
- 		     last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
- 		     last_request->initiator == NL80211_REGDOM_SET_BY_USER) &&
- 		    regdom_changes(last_request->alpha2))
--			return -EAGAIN;
-+			return REG_REQ_IGNORE;
- 
- 		if (!regdom_changes(pending_request->alpha2))
--			return -EALREADY;
-+			return REG_REQ_ALREADY_SET;
- 
--		return 0;
-+		return REG_REQ_OK;
- 	}
- 
--	return -EINVAL;
-+	return REG_REQ_IGNORE;
- }
- 
- static void reg_set_request_processed(void)
-@@ -1444,23 +1447,24 @@ static void reg_set_request_processed(void)
-  * The Wireless subsystem can use this function to hint to the wireless core
-  * what it believes should be the current regulatory domain.
-  *
-- * Returns zero if all went fine, %-EALREADY if a regulatory domain had
-- * already been set or other standard error codes.
-+ * Returns one of the different reg request treatment values.
-  *
-  * Caller must hold &cfg80211_mutex and &reg_mutex
-  */
--static int __regulatory_hint(struct wiphy *wiphy,
--			     struct regulatory_request *pending_request)
-+static enum reg_request_treatment
-+__regulatory_hint(struct wiphy *wiphy,
-+		  struct regulatory_request *pending_request)
- {
- 	const struct ieee80211_regdomain *regd;
- 	bool intersect = false;
--	int r = 0;
-+	enum reg_request_treatment treatment;
- 
- 	assert_cfg80211_lock();
- 
--	r = ignore_request(wiphy, pending_request);
-+	treatment = get_reg_request_treatment(wiphy, pending_request);
- 
--	if (r == REG_INTERSECT) {
-+	switch (treatment) {
-+	case REG_REQ_INTERSECT:
- 		if (pending_request->initiator ==
- 		    NL80211_REGDOM_SET_BY_DRIVER) {
- 			regd = reg_copy_regd(cfg80211_regdomain);
-@@ -1471,26 +1475,28 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 			wiphy->regd = regd;
- 		}
- 		intersect = true;
--	} else if (r) {
-+		break;
-+	case REG_REQ_OK:
-+		break;
-+	default:
- 		/*
- 		 * If the regulatory domain being requested by the
- 		 * driver has already been set just copy it to the
- 		 * wiphy
- 		 */
--		if (r == -EALREADY &&
--		    pending_request->initiator ==
--		    NL80211_REGDOM_SET_BY_DRIVER) {
-+		if (treatment == REG_REQ_ALREADY_SET &&
-+		    pending_request->initiator == NL80211_REGDOM_SET_BY_DRIVER) {
- 			regd = reg_copy_regd(cfg80211_regdomain);
- 			if (IS_ERR(regd)) {
- 				kfree(pending_request);
--				return PTR_ERR(regd);
-+				return REG_REQ_IGNORE;
- 			}
--			r = -EALREADY;
-+			treatment = REG_REQ_ALREADY_SET;
- 			wiphy->regd = regd;
- 			goto new_request;
- 		}
- 		kfree(pending_request);
--		return r;
-+		return treatment;
- 	}
- 
- new_request:
-@@ -1507,28 +1513,29 @@ new_request:
- 		user_alpha2[1] = last_request->alpha2[1];
- 	}
- 
--	/* When r == REG_INTERSECT we do need to call CRDA */
--	if (r < 0) {
-+	/* When r == REG_REQ_INTERSECT we do need to call CRDA */
-+	if (treatment != REG_REQ_OK && treatment != REG_REQ_INTERSECT) {
- 		/*
- 		 * Since CRDA will not be called in this case as we already
- 		 * have applied the requested regulatory domain before we just
- 		 * inform userspace we have processed the request
- 		 */
--		if (r == -EALREADY) {
-+		if (treatment == REG_REQ_ALREADY_SET) {
- 			nl80211_send_reg_change_event(last_request);
- 			reg_set_request_processed();
- 		}
--		return r;
-+		return treatment;
- 	}
- 
--	return call_crda(last_request->alpha2);
-+	if (call_crda(last_request->alpha2))
-+		return REG_REQ_IGNORE;
-+	return REG_REQ_OK;
- }
- 
- /* This processes *all* regulatory hints */
- static void reg_process_hint(struct regulatory_request *reg_request,
- 			     enum nl80211_reg_initiator reg_initiator)
- {
--	int r = 0;
- 	struct wiphy *wiphy = NULL;
- 
- 	BUG_ON(!reg_request->alpha2);
-@@ -1541,20 +1548,18 @@ static void reg_process_hint(struct regulatory_request *reg_request,
- 		return;
- 	}
- 
--	r = __regulatory_hint(wiphy, reg_request);
--	/* This is required so that the orig_* parameters are saved */
--	if (r == -EALREADY && wiphy &&
--	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
--		wiphy_update_regulatory(wiphy, reg_initiator);
--		return;
-+	switch (__regulatory_hint(wiphy, reg_request)) {
-+	case REG_REQ_ALREADY_SET:
-+		/* This is required so that the orig_* parameters are saved */
-+		if (wiphy && wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-+			wiphy_update_regulatory(wiphy, reg_initiator);
-+		break;
-+	default:
-+		if (reg_initiator == NL80211_REGDOM_SET_BY_USER)
-+			schedule_delayed_work(&reg_timeout,
-+					      msecs_to_jiffies(3142));
-+		break;
- 	}
--
--	/*
--	 * We only time out user hints, given that they should be the only
--	 * source of bogus requests.
--	 */
--	if (r != -EALREADY && reg_initiator == NL80211_REGDOM_SET_BY_USER)
--		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
- }
- 
- /*
--- 
-1.8.0
+[ 3269.706508] rtl8192cu: Chip version 0x10
+[ 3270.130396] rtl8192cu: MAC address: 00:1f:1f:c8:8e:cb
+[ 3270.130423] rtl8192cu: Board Type 0
+[ 3270.131246] rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
+[ 3270.131827] rtl8192cu: Loading firmware rtlwifi/rtl8192cufw.bin
+[ 3270.132914] rtlwifi:rtl_fw_cb():<0-0> Firmware callback routine entered!
+[ 3270.137746] ieee80211 phy2: Selected rate control algorithm 'rtl_rc'
+[ 3270.150347] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=0b
+[ 3270.150366] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> N-SS RF =0
+[ 3270.150373] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> 
+pHalData->bHwRadioOff and eRfPowerStateToSet do not match: pHalData->bHwRadioOff 
+0, eRfPowerStateToSet 0
+[ 3270.150379] rtlwifi: wireless switch is on
+[ 3270.150977] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> GPIO_IN=0b
+[ 3270.150984] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> N-SS RF =0
+[ 3270.150990] rtl8192cu:rtl92cu_gpio_radio_on_off_checking():<0-0> 
+pHalData->bHwRadioOff and eRfPowerStateToSet do not match: pHalData->bHwRadioOff 
+0, eRfPowerStateToSet 0
+[ 3270.608096] rtl8192cu:_rtl92cu_init_power_on():<0-0> Autoload Done!
+[ 3270.617855] rtl8192cu: MAC auto ON okay!
+[ 3270.723379] rtl8192cu: Tx queue select: 0x05
+[ 3270.723591] rtl8192cu:rtl92c_set_network_type():<0-0> Set Network type to NO 
+LINK!
+[ 3270.726441] rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver sleep 
+or unload
+[ 3270.727029] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware Version(63), 
+Signature(0x88c1),Size(32)
+[ 3270.727251] rtl8192c_common:_rtl92c_write_fw():<0-0> FW size is 15982 bytes
+[ 3270.745940] rtl8192c_common:_rtl92c_fw_free_to_go():<0-0> Checksum report OK 
+! REG_MCUFWDL:0x00030004
+[ 3270.751440] rtl8192c_common:_rtl92c_fw_free_to_go():<0-0> Polling FW ready 
+success!! REG_MCUFWDL:0x000300c6
+[ 3270.751443] rtl8192c_common:rtl92c_download_fw():<0-0> Firmware is ready to run!
+[ 3270.751446] rtl8192cu:_rtl92cu_phy_config_mac_with_headerfile():<0-0> Read 
+Rtl819XMACPHY_Array
+[ 3270.751448] rtl8192cu:_rtl92cu_phy_config_mac_with_headerfile():<0-0> 
+Img:RTL8192CEMAC_2T_ARRAY
+[ 3270.757884] rtl8192c_common:_rtl92c_phy_bb8192c_config_parafile():<0-0> ==>
+[ 3270.757889] rtl8192c_common:rtl92c_phy_set_bb_reg():<0-0> regaddr(0x24), 
+bitmask(0xffffffff), data(0x11800f)
+[ 3270.757968] rtl8192c_common:rtl92c_phy_set_bb_reg():<0-0> regaddr(0x24), 
+bitmask(0xffffffff), data(0x11800f)
+
+As you can see, that is about 1 second worth of logging. I suggest that you use 
+"debug=4" to start with. It is a lot less like "drinking from a firehose".
+
+Larry
 
