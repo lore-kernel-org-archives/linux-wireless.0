@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:44846 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161Ab2L0VcL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 16:32:11 -0500
-Date: Thu, 27 Dec 2012 13:32:09 -0800 (PST)
-Message-Id: <20121227.133209.1785109551425933956.davem@davemloft.net> (sfid-20121227_223234_657104_513AE31D)
-To: eric.dumazet@gmail.com
-Cc: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] forcedeth: Fix WARNINGS that result when DMA mapping
- is not checked
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1356642209.30414.1411.camel@edumazet-glaptop>
-References: <1356638715.30414.1349.camel@edumazet-glaptop>
-	<50DCB1D9.50906@lwfinger.net>
-	<1356642209.30414.1411.camel@edumazet-glaptop>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:58196 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751310Ab2LJR5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 12:57:39 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 1/2] mac80211: flush AP_VLAN stations when tearing down the BSS AP
+Date: Mon, 10 Dec 2012 18:57:35 +0100
+Message-Id: <1355162256-34131-1-git-send-email-nbd@openwrt.org> (sfid-20121210_185749_963172_D9A790D5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Date: Thu, 27 Dec 2012 13:03:29 -0800
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/cfg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> On Thu, 2012-12-27 at 14:38 -0600, Larry Finger wrote:
->> On 12/27/2012 02:05 PM, Eric Dumazet wrote:
->> > On Thu, 2012-12-27 at 13:42 -0600, Larry Finger wrote:
-> 
->> >> +		if (pci_dma_mapping_error(np->pci_dev,
->> >> +					  np->put_tx_ctx->dma))
->> >> +			return NETDEV_TX_BUSY;
->> >
->> > Really this is not going to work very well : caller will call this in a
->> > loop.
->> 
->> Any suggestions on what value should be returned, or does the caller need to be 
->> modified?
-> 
-> NETDEV_TX_BUSY is really obsolete
-> 
-> Documentation/networking/driver.txt
-> 
-> In case of mapping error, I would drop the packet.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5c61677..a5d4361 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -998,8 +998,10 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	old_probe_resp = rtnl_dereference(sdata->u.ap.probe_resp);
+ 
+ 	/* turn off carrier for this interface and dependent VLANs */
+-	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
++		sta_info_flush(local, vlan);
+ 		netif_carrier_off(vlan->dev);
++	}
+ 	netif_carrier_off(dev);
+ 
+ 	/* remove beacon and probe response */
+-- 
+1.7.12.2
 
-Agreed.
