@@ -1,45 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jacques.telenet-ops.be ([195.130.132.50]:56959 "EHLO
-	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752105Ab2LVVHS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 16:07:18 -0500
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Piotr Haber <phaber@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] brcmsmac: initialize morepending in brcms_b_recv()
-Date: Sat, 22 Dec 2012 22:07:14 +0100
-Message-Id: <1356210434-28435-1-git-send-email-geert@linux-m68k.org> (sfid-20121222_220744_573670_FB86D9C8)
+Received: from smtp1.u-psud.fr ([129.175.33.41]:53750 "EHLO smtp1.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752966Ab2LJKnR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 05:43:17 -0500
+Message-ID: <50C5BCC3.8090809@lri.fr> (sfid-20121210_114321_001399_3DB41361)
+Date: Mon, 10 Dec 2012 11:43:15 +0100
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Antonio Quartulli <antonio@open-mesh.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: in AD-HOC mode wait for the AUTH response
+References: <1355134917-17705-1-git-send-email-antonio@open-mesh.com> <1355134917-17705-2-git-send-email-antonio@open-mesh.com>
+In-Reply-To: <1355134917-17705-2-git-send-email-antonio@open-mesh.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/brcm80211/brcmsmac/main.c: In function ‘brcms_b_recv’:
-drivers/net/wireless/brcm80211/brcmsmac/main.c:7636: warning: ‘morepending’ may be used uninitialized in this function
+On 10/12/2012 11:21, Antonio Quartulli wrote:
+> To prevent race conditions between kernel state and
+> user-space application knowledge, it is better to wait for
+> a new peer to be completely authenticated before telling the
+> userspace that it is ready to start authorization
+> (IBSS/RSN).
+> 
+> Use the IBSS_STA event to tell userspace when a station is
+> authenticated and ready.
+> 
+> It could still be the case that the other node joining the
+> AD-HOC cell does not implement AUTH messages exchange,
+> therefore a fallback mechanism will authenticate the peer
+> after a timeout set for the purpose expires
+> 
+> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+> ---
+>  net/mac80211/ibss.c     | 97 ++++++++++++++++++++++++++++++++++++++++---------
+>  net/mac80211/sta_info.h |  2 +
+>  2 files changed, 81 insertions(+), 18 deletions(-)
+> 
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index 700d0ed..9a11ec3 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -30,6 +30,7 @@
+>  
+>  #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
+>  #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
+> +#define IEEE80211_IBSS_AUTH_TIMEOUT (HZ / 2)
+>  
+>  #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+>  
+> @@ -273,8 +274,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+>  				  false);
+>  }
+>  
+> -static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
+> -						  bool auth)
+> +static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
+>  	__acquires(RCU)
+>  {
+>  	struct ieee80211_sub_if_data *sdata = sta->sdata;
+> @@ -284,19 +284,12 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
+>  
+>  	ibss_dbg(sdata, "Adding new IBSS station %pM\n", addr);
+>  
+> -	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
+> -	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
+> -	/* authorize the station only if the network is not RSN protected. If
+> -	 * not wait for the userspace to authorize it */
+> -	if (!sta->sdata->u.ibss.control_port)
+> -		sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
+> -
+>  	rate_control_rate_init(sta);
+>  
+>  	/* If it fails, maybe we raced another insertion? */
+>  	if (sta_info_insert_rcu(sta))
+>  		return sta_info_get(sdata, addr);
+> -	if (auth && !sdata->u.ibss.auth_frame_registrations) {
+> +	if (!sdata->u.ibss.auth_frame_registrations) {
+>  		ibss_dbg(sdata,
+>  			 "TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=1)\n",
+>  			 sdata->vif.addr, addr, sdata->u.ibss.bssid);
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+If userspace registered for auth frames, then we shouldn't wait for auth responses,
+as this code will never see them.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 17594de..5f0f444 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -7633,7 +7633,7 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
- 
- 	uint n = 0;
- 	uint bound_limit = bound ? RXBND : -1;
--	bool morepending;
-+	bool morepending = false;
- 
- 	skb_queue_head_init(&recv_frames);
- 
--- 
-1.7.0.4
-
+I'm also curious about compatibility with the current wpa_supplicant which does not know
+about that new event.
