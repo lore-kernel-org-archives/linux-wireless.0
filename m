@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:50876 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758Ab2LCQTc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41322 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892Ab2LJRGH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 11:19:32 -0500
-Received: by mail-ia0-f174.google.com with SMTP id y25so2275379iay.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 08:19:32 -0800 (PST)
-Message-ID: <50BCD110.6050803@lwfinger.net> (sfid-20121203_171936_244331_4B1E99D6)
-Date: Mon, 03 Dec 2012 10:19:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Nathan Hintz <nlhintz@hotmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac: Data bus error in reading tsf_random
-References: <50BAB095.2070103@hauke-m.de> <loom.20121203T054035-582@post.gmane.org>
-In-Reply-To: <loom.20121203T054035-582@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 10 Dec 2012 12:06:07 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Ti6nu-0006qh-MN
+	for linux-wireless@vger.kernel.org; Mon, 10 Dec 2012 18:06:06 +0100
+Message-ID: <1355159190.8083.1.camel@jlt4.sipsolutions.net> (sfid-20121210_180614_828499_AE54E429)
+Subject: Re: [RFC 2/2] cfg80211: check (VHT) bandwidth against regulatory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 10 Dec 2012 18:06:30 +0100
+In-Reply-To: <1354812784-15845-3-git-send-email-johannes@sipsolutions.net> (sfid-20121206_175312_766678_F5F435BA)
+References: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net>
+	 <1354812784-15845-3-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121206_175312_766678_F5F435BA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/2012 10:47 PM, Nathan Hintz wrote:
+On Thu, 2012-12-06 at 17:53 +0100, Johannes Berg wrote:
 
-> I encountered a similar DBE using the "broadcom-wl" driver (OpenWRT) on a
-> Linksys E3000; except that it occurred when reading "ifs_ctl" (offset 0x688).
-> I too tried putting in some printk's (in linux_osl.c), which caused the
-> problem to go away.  I eventually found that doing a dummy read of 4 bytes
-> at that particular address just prior to the actual two byte read caused
-> the problem to go away as well (an ugly hack).  I can reproduce it if you
-> want a stack trace.
+> +bool reg_check_bandwidth(struct wiphy *wiphy,
+> +			 u32 center_freq_khz, u32 bw_khz)
+> +{
+> +	const struct ieee80211_reg_rule *reg_rule;
+> +
+> +	/*
+> +	 * This interpretation is a bit of a strange quirk in the regulatory
+> +	 * rules definitions that we have today: each 20 MHz channel must fit
+> +	 * entirely into a single regulatory range, but if this range forbids
+> +	 * using more than 20 MHz then it forbids even using a small part of
+> +	 * this for the wider channel.
+> +	 */
+> +
+> +	reg_rule = freq_reg_info(wiphy, center_freq_khz);
+> +	if (!IS_ERR(reg_rule))
+> +		return reg_rule->freq_range.max_bandwidth_khz >= bw_khz;
 
-Does an ndelay(xx), with xx of 10 or so, be as effective as the dummy read? It 
-is not a lot less of a hack, but it would indicate the source of the problem.
+This needs rcu_read_lock() obviously... Fixed in my version in the wip
+branch.
 
-Larry
+johannes
 
