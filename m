@@ -1,176 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53222 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945962Ab2LFQru (ORCPT
+Received: from ht2.myhostedexchange.com ([69.50.2.38]:18491 "EHLO
+	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754749Ab2LJKW6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:47:50 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 16/24] regulatory: clarify locking rules and assertions
-Date: Thu,  6 Dec 2012 17:47:40 +0100
-Message-Id: <1354812468-15709-17-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174825_170424_4B6945B1)
-In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 10 Dec 2012 05:22:58 -0500
+From: Antonio Quartulli <antonio@open-mesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCH 1/2] cfg80211: add the new IBSS_STA event
+Date: Mon, 10 Dec 2012 11:21:56 +0100
+Message-ID: <1355134917-17705-1-git-send-email-antonio@open-mesh.com> (sfid-20121210_112309_351424_D3F2EFAB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In IBSS mode it could be the case that a station being added
+is not ready for starting higher level routines (e.g. key
+exchange when IBSS/RSN is enabled). In particular, this can
+happen when we are waiting for the AUTH response message.
 
-Many places that currently check that cfg80211_mutex
-is held don't actually use any data protected by it.
-The functions that need to hold the cfg80211_mutex
-are the ones using the cfg80211_regdomain variable,
-so add the lock assertion to those and clarify this
-in the comments.
+This IBSS_STA event is triggered after the NEW_STA one and
+only when the upper layer is allowed to assume that the new
+peer is ready
 
-The reason for this is that nl80211 uses the regdom
-without being able to hold reg_mutex.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- net/wireless/reg.c | 31 +++++++++++--------------------
- 1 file changed, 11 insertions(+), 20 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ab8740b..ea6f057 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -94,14 +94,14 @@ static struct device_type reg_device_type = {
- /*
-  * Central wireless core regulatory domains, we only need two,
-  * the current one and a world regulatory domain in case we have no
-- * information to give us an alpha2
-+ * information to give us an alpha2.
-+ * Protected by the cfg80211_mutex.
-  */
- const struct ieee80211_regdomain *cfg80211_regdomain;
+This patchset fixes an incorrect state handling in the IBSS/RSN
+"cooperation" between kernel and userspace.
+It would probably be more appropriate to create a much general
+event signaling mechanism (e.g. trigger an event each time a
+station changes its internal state), but at the moment it is
+much more important to fix the issue. Re-engineering can be
+done later and with a proper idea.
+
+I'm not sending this to mac80211 because I don't think it would
+make it for this kernel release.
+
+Cheers,
+
+
+ include/net/cfg80211.h       |  8 ++++++++
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/mlme.c          |  9 +++++++++
+ net/wireless/nl80211.c       | 33 +++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h       |  3 +++
+ 5 files changed, 55 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8e6a6b7..3266c03 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3497,6 +3497,14 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ 		      struct station_info *sinfo, gfp_t gfp);
  
- /*
-  * Protects static reg.c components:
-  *     - cfg80211_world_regdom
-- *     - cfg80211_regdom
-  *     - last_request
-  *     - reg_num_devs_support_basehint
-  */
-@@ -186,6 +186,9 @@ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
- 
- static void reset_regdomains(bool full_reset)
- {
-+	assert_cfg80211_lock();
-+	assert_reg_lock();
+ /**
++ * cfg80211_ibss_sta - notify userspace that the ibss station is ready
++ * @dev: the netdev
++ * @mac_addr: the station's address
++ * @gfp: allocation flags
++ */
++void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
 +
- 	/* avoid freeing static information or freeing something twice */
- 	if (cfg80211_regdomain == cfg80211_world_regdom)
- 		cfg80211_regdomain = NULL;
-@@ -216,6 +219,9 @@ static void update_world_regdomain(const struct ieee80211_regdomain *rd)
- {
- 	WARN_ON(!last_request);
++/**
+  * cfg80211_del_sta - notify userspace about deletion of a station
+  *
+  * @dev: the netdev
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e3e19f8..7e0911e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -736,6 +736,8 @@ enum nl80211_commands {
  
-+	assert_cfg80211_lock();
-+	assert_reg_lock();
+ 	NL80211_CMD_SET_MCAST_RATE,
+ 
++	NL80211_CMD_IBSS_STATION,
 +
- 	reset_regdomains(false);
+ 	/* add new commands above here */
  
- 	cfg80211_world_regdom = rd;
-@@ -423,8 +429,6 @@ static int call_crda(const char *alpha2)
- /* Used by nl80211 before kmalloc'ing our regulatory domain */
- bool reg_is_valid_request(const char *alpha2)
- {
--	assert_cfg80211_lock();
--
- 	if (!last_request)
- 		return false;
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 5e8123e..f9493fc 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -612,6 +612,15 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ }
+ EXPORT_SYMBOL(cfg80211_new_sta);
  
-@@ -916,8 +920,6 @@ bool reg_last_request_cell_base(void)
- {
- 	bool val;
- 
--	assert_cfg80211_lock();
--
- 	mutex_lock(&reg_mutex);
- 	val = reg_request_cell_base(last_request);
- 	mutex_unlock(&reg_mutex);
-@@ -1000,8 +1002,6 @@ static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
- 	bool channel_changed = false;
- 	struct ieee80211_channel chan_before;
- 
--	assert_cfg80211_lock();
--
- 	sband = wiphy->bands[reg_beacon->chan.band];
- 	chan = &sband->channels[chan_idx];
- 
-@@ -1043,8 +1043,6 @@ static void wiphy_update_new_beacon(struct wiphy *wiphy,
- 	unsigned int i;
- 	struct ieee80211_supported_band *sband;
- 
--	assert_cfg80211_lock();
--
- 	if (!wiphy->bands[reg_beacon->chan.band])
- 		return;
- 
-@@ -1063,8 +1061,6 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
- 	struct ieee80211_supported_band *sband;
- 	struct reg_beacon *reg_beacon;
- 
--	assert_cfg80211_lock();
--
- 	list_for_each_entry(reg_beacon, &reg_beacon_list, list) {
- 		if (!wiphy->bands[reg_beacon->chan.band])
- 			continue;
-@@ -1076,6 +1072,8 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
- 
- static bool reg_is_world_roaming(struct wiphy *wiphy)
- {
-+	assert_cfg80211_lock();
++void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
++{
++	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
 +
- 	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
- 	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
- 		return true;
-@@ -1117,8 +1115,6 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- 	struct ieee80211_channel *channel_before = NULL, *channel_after = NULL;
- 	unsigned int i;
- 
--	assert_cfg80211_lock();
--
- 	if (!is_ht40_allowed(channel)) {
- 		channel->flags |= IEEE80211_CHAN_NO_HT40;
- 		return;
-@@ -1181,6 +1177,7 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
++	nl80211_send_ibss_sta_event(rdev, dev, mac_addr, gfp);
++}
++EXPORT_SYMBOL(cfg80211_ibss_sta);
++
+ void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
  {
- 	enum ieee80211_band band;
+ 	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f45706a..2d27911 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8564,6 +8564,39 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+ 				nl80211_mlme_mcgrp.id, gfp);
+ }
  
-+	assert_cfg80211_lock();
- 	assert_reg_lock();
- 
- 	if (ignore_reg_update(wiphy, initiator))
-@@ -1300,8 +1297,6 @@ get_reg_request_treatment(struct wiphy *wiphy,
- {
- 	struct wiphy *last_wiphy = NULL;
- 
--	assert_cfg80211_lock();
--
- 	/* All initial requests are respected */
- 	if (!last_request)
- 		return REG_REQ_OK;
-@@ -2247,8 +2242,6 @@ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
- 
- void wiphy_regulatory_register(struct wiphy *wiphy)
- {
--	assert_cfg80211_lock();
--
- 	mutex_lock(&reg_mutex);
- 
- 	if (!reg_dev_ignore_cell_hint(wiphy))
-@@ -2264,8 +2257,6 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
- {
- 	struct wiphy *request_wiphy = NULL;
- 
--	assert_cfg80211_lock();
--
- 	mutex_lock(&reg_mutex);
- 
- 	if (!reg_dev_ignore_cell_hint(wiphy))
++void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev, const u8 *mac_addr,
++				 gfp_t gfp)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_IBSS_STATION);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
++	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
++		goto nla_put_failure;
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
++
+ void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
+ 				struct net_device *dev, const u8 *mac_addr,
+ 				gfp_t gfp)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 2acba84..429f5d6 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -85,6 +85,9 @@ void nl80211_send_remain_on_channel_cancel(
+ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+ 			    struct net_device *dev, const u8 *mac_addr,
+ 			    struct station_info *sinfo, gfp_t gfp);
++void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev, const u8 *mac_addr,
++				 gfp_t gfp);
+ void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
+ 				struct net_device *dev, const u8 *mac_addr,
+ 				gfp_t gfp);
 -- 
 1.8.0
 
