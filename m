@@ -1,54 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3367 "EHLO mms2.broadcom.com"
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:36287
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751165Ab2LCUk0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 15:40:26 -0500
-Message-ID: <50BD0E35.8030807@broadcom.com> (sfid-20121203_214029_946261_9ECD60EB)
-Date: Mon, 3 Dec 2012 21:40:21 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: brcmsmac: Data bus error in reading tsf_random
-References: <50BAB095.2070103@hauke-m.de>
-In-Reply-To: <50BAB095.2070103@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+	id S1751365Ab2LJBxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2012 20:53:22 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/8] ath9k_hw: Fix PAPRD training
+Date: Mon, 10 Dec 2012 07:22:32 +0530
+Message-Id: <1355104358-30062-2-git-send-email-sujith@msujith.org> (sfid-20121210_025341_465209_0411B0DE)
+In-Reply-To: <1355104358-30062-1-git-send-email-sujith@msujith.org>
+References: <1355104358-30062-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/2012 02:36 AM, Hauke Mehrtens wrote:
-> Hi Arend,
-> 
-> I am getting a Data bus error when brcmsmac tries to read tsf_random in
-> brcms_c_wme_setparams. This does not happen when I add a printk
-> somewhere near that read of tsf_random or when I replace the read with a
-> constant. In b43 this code works, without this error for me, see
-> b43_qos_params_upload(). With the BCM4716 I do not have this problem. It
-> could be that this is caused by the broken PCIe controller in the BCM4716.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I can look for known workarounds but I am afraid you know way more about
-the BCM4716 than I do.
+The PAPRD training control registers have to be
+programmed with values that depend on the chip. This patch
+ensures that the correct values are chosen for the chip
+in use.
 
-> I am using brcmsmac from compat-wireless 2012-09-07, but I have also
-> tried the most recent brcmsmac code from wireless-testing. brcmsmac uses
-> the normal firmware from linux-firmware and I have also tried the new
-> firmware posted some days ago with the same result.
-> 
-> I am using a BCM43224 connected to the PCIe controller of the BCM4716.
-> 
-> Are there any special requirements for reading tsf_random under mips?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c | 36 +++++++++++++++++++++------
+ 1 file changed, 29 insertions(+), 7 deletions(-)
 
-Not that I recall.
-
-> To make my BCM43224 work I use this patch [0], the "printk("dummy\n");"
-> is a hack to workaround the problem I am describing here.
-
-That kind of hacks always make me suspicious about the compiler. I guess
-you checked that both brcmsmac and b43 read the same register offset to
-get tsf_random, right?
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 0ed3846..df9158f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -204,7 +204,20 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 		      AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_AGC2_SETTLING, 28);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL1,
+ 		      AR_PHY_PAPRD_TRAINER_CNTL1_CF_CF_PAPRD_TRAIN_ENABLE, 1);
+-	val = AR_SREV_9462(ah) ? 0x91 : 147;
++
++	if (AR_SREV_9485(ah)) {
++		val = 148;
++	} else {
++		if (IS_CHAN_2GHZ(ah->curchan)) {
++			if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
++				val = 145;
++			else
++				val = 147;
++		} else {
++			val = 137;
++		}
++	}
++
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL2,
+ 		      AR_PHY_PAPRD_TRAINER_CNTL2_CF_PAPRD_INIT_RX_BB_GAIN, val);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
+@@ -215,15 +228,24 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_NUM_CORR_STAGES, 7);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
+ 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_MIN_LOOPBACK_DEL, 1);
+-	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9550(ah))
++
++	if (AR_SREV_9485(ah) ||
++	    AR_SREV_9462(ah) ||
++	    AR_SREV_9565(ah) ||
++	    AR_SREV_9550(ah) ||
++	    AR_SREV_9330(ah) ||
++	    AR_SREV_9340(ah))
+ 		REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
+-			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP,
+-			      -3);
++			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP, -3);
+ 	else
+ 		REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
+-			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP,
+-			      -6);
+-	val = AR_SREV_9462(ah) ? -10 : -15;
++			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP, -6);
++
++	val = -10;
++
++	if (IS_CHAN_2GHZ(ah->curchan) && !AR_SREV_9462(ah) && !AR_SREV_9565(ah))
++		val = -15;
++
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
+ 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_ADC_DESIRED_SIZE,
+ 		      val);
+-- 
+1.8.0.1
 
