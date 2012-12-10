@@ -1,67 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:47371 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754627Ab2LQWRs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 17:17:48 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/2] qca-swiss-army-knife: don't print ar9285PciePhy_clkreq_off_L1_9285 array
-Date: Mon, 17 Dec 2012 23:17:40 +0100
-Message-Id: <1355782661-19059-1-git-send-email-juhosg@openwrt.org> (sfid-20121217_231753_060219_A46A9114)
+Received: from ht2.myhostedexchange.com ([69.50.2.38]:58739 "EHLO
+	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751284Ab2LJNlX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 08:41:23 -0500
+From: Antonio Quartulli <antonio@open-mesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv3 1/2] cfg80211: add the new IBSS_STA event
+Date: Mon, 10 Dec 2012 14:40:23 +0100
+Message-ID: <1355146824-25012-1-git-send-email-antonio@open-mesh.com> (sfid-20121210_144128_354769_94CAC2D3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is a dupe of 'ar9280PciePhy_clkreq_off_L1_9280', and
-it is not used in ath9k. I forgot to remove it in commit
-'qca-swiss-army-knife: fix build errors if ATH9K_DIR is used'
+In IBSS mode it could be the case that a station being added
+is not ready for starting higher level routines (e.g. key
+exchange when IBSS/RSN is enabled). In particular, this can
+happen when we are waiting for the AUTH response message.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+This IBSS_STA event is triggered after the NEW_STA one and
+only when the upper layer is allowed to assume that the new
+peer is ready
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- tools/initvals/ar9002_initvals.h |   14 --------------
- tools/initvals/initvals.c        |    3 ++-
- 2 files changed, 2 insertions(+), 15 deletions(-)
 
-diff --git a/tools/initvals/ar9002_initvals.h b/tools/initvals/ar9002_initvals.h
-index 7577055..3adae42 100644
---- a/tools/initvals/ar9002_initvals.h
-+++ b/tools/initvals/ar9002_initvals.h
-@@ -926,20 +926,6 @@ static const u32 ar9280PciePhy_clkreq_always_on_L1_9280[][2] = {
- 	{0x00004044, 0x00000000},
- };
+v2:
+
+ 1/2:
+ * untouched
+ 2/2:
+ * if userspace registered for auth frames, the new station is immediately
+   authenticated and the new IBSS_STA event is triggered.
+
+v3:
+
+ 1/2:
+ * untouched
+ 2/2:
+ * save last_auth time in the proper place (when mac80211 sends the AUTH
+   request)
+
+
+ include/net/cfg80211.h       |  8 ++++++++
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/mlme.c          |  9 +++++++++
+ net/wireless/nl80211.c       | 33 +++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h       |  3 +++
+ 5 files changed, 55 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8e6a6b7..3266c03 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3497,6 +3497,14 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ 		      struct station_info *sinfo, gfp_t gfp);
  
--static const u32 ar9285PciePhy_clkreq_off_L1_9285[][2] = {
--	/* Addr      allmodes  */
--	{0x00004040, 0x9248fd00},
--	{0x00004040, 0x24924924},
--	{0x00004040, 0xa8000019},
--	{0x00004040, 0x13160820},
--	{0x00004040, 0xe5980560},
--	{0x00004040, 0xc01dcffc},
--	{0x00004040, 0x1aaabe41},
--	{0x00004040, 0xbe105554},
--	{0x00004040, 0x00043007},
--	{0x00004044, 0x00000000},
--};
--
- static const u32 ar9285Modes_9285_1_2[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index c74b9c2..5461ad7 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -654,7 +654,8 @@ static void ar9002_hw_print_initvals(bool check)
+ /**
++ * cfg80211_ibss_sta - notify userspace that the ibss station is ready
++ * @dev: the netdev
++ * @mac_addr: the station's address
++ * @gfp: allocation flags
++ */
++void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
++
++/**
+  * cfg80211_del_sta - notify userspace about deletion of a station
+  *
+  * @dev: the netdev
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e3e19f8..7e0911e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -736,6 +736,8 @@ enum nl80211_commands {
  
- 	INI_PRINT_DUP2(ar9285PciePhy_clkreq_always_on_L1_9285,
- 		      ar9280PciePhy_clkreq_always_on_L1_9280);
--	INI_PRINT(ar9285PciePhy_clkreq_off_L1_9285);
-+	INI_PRINT_DUP2(ar9285PciePhy_clkreq_off_L1_9285,
-+		       ar9280PciePhy_clkreq_off_L1_9280);
- 	INI_PRINT(ar9285Modes_9285_1_2);
- 	INI_PRINT(ar9285Common_9285_1_2);
- 	INI_PRINT(ar9285Modes_high_power_tx_gain_9285_1_2);
+ 	NL80211_CMD_SET_MCAST_RATE,
+ 
++	NL80211_CMD_IBSS_STATION,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 5e8123e..f9493fc 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -612,6 +612,15 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ }
+ EXPORT_SYMBOL(cfg80211_new_sta);
+ 
++void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
++{
++	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	nl80211_send_ibss_sta_event(rdev, dev, mac_addr, gfp);
++}
++EXPORT_SYMBOL(cfg80211_ibss_sta);
++
+ void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
+ {
+ 	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f45706a..2d27911 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8564,6 +8564,39 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+ 				nl80211_mlme_mcgrp.id, gfp);
+ }
+ 
++void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev, const u8 *mac_addr,
++				 gfp_t gfp)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_IBSS_STATION);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
++	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
++		goto nla_put_failure;
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
++
+ void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
+ 				struct net_device *dev, const u8 *mac_addr,
+ 				gfp_t gfp)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 2acba84..429f5d6 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -85,6 +85,9 @@ void nl80211_send_remain_on_channel_cancel(
+ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+ 			    struct net_device *dev, const u8 *mac_addr,
+ 			    struct station_info *sinfo, gfp_t gfp);
++void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev, const u8 *mac_addr,
++				 gfp_t gfp);
+ void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
+ 				struct net_device *dev, const u8 *mac_addr,
+ 				gfp_t gfp);
 -- 
-1.7.10
+1.8.0
 
