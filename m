@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:35620 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751160Ab2LLIPH (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:58669 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766Ab2LJTKG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 03:15:07 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id qBC8F71G020514
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2012 02:15:07 -0600
-Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id qBC8F7xp006415
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2012 02:15:07 -0600
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>
-Subject: [PATCH] wlcore: use single-role version when verifying the PLT firmware
-Date: Wed, 12 Dec 2012 10:14:22 +0200
-Message-ID: <1355300062-19677-1-git-send-email-coelho@ti.com> (sfid-20121212_091511_515169_B03DEF26)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 10 Dec 2012 14:10:06 -0500
+Date: Mon, 10 Dec 2012 14:10:02 -0500 (EST)
+Message-Id: <20121210.141002.450030380391247897.davem@davemloft.net> (sfid-20121210_201055_129734_A4C0F07D)
+To: abhi.c.pawar@gmail.com
+Cc: pablo@netfilter.org, kaber@trash.net, kuznet@ms2.inr.ac.ru,
+	jmorris@namei.org, yoshfuji@linux-ipv6.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, amwang@redhat.com, edumazet@google.com,
+	nhorman@tuxdriver.com, joe@perches.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	netfilter@vger.kernel.org, coreteam@netfilter.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RESEND] net: remove obsolete simple_strto<foo>
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com>
+References: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PLT firmware used by wl12xx for calibration always has the same
-version number as the single-role firmware.
+From: Abhijit Pawar <abhi.c.pawar@gmail.com>
+Date: Mon, 10 Dec 2012 14:42:28 +0530
 
-Currntly the driver rejects the PLT firmware since anything that is
-not single-role uses the multi-role version.  Fix this by using the
-single-role version for everything except multi-role.
+> This patch replace the obsolete simple_strto<foo> with kstrto<foo>
+> 
+> Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/boot.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
-index b58ae5f..77752b0 100644
---- a/drivers/net/wireless/ti/wlcore/boot.c
-+++ b/drivers/net/wireless/ti/wlcore/boot.c
-@@ -84,8 +84,8 @@ out:
- static int wlcore_validate_fw_ver(struct wl1271 *wl)
- {
- 	unsigned int *fw_ver = wl->chip.fw_ver;
--	unsigned int *min_ver = (wl->fw_type == WL12XX_FW_TYPE_NORMAL) ?
--		wl->min_sr_fw_ver : wl->min_mr_fw_ver;
-+	unsigned int *min_ver = (wl->fw_type == WL12XX_FW_TYPE_MULTI) ?
-+		wl->min_mr_fw_ver : wl->min_sr_fw_ver;
- 	char min_fw_str[32] = "";
- 	int i;
- 
--- 
-1.7.10.4
-
+Applied.
