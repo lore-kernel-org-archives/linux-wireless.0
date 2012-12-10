@@ -1,144 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56857 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab2LFUQm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42207 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455Ab2LJVrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 15:16:42 -0500
-Date: Thu, 6 Dec 2012 15:11:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 10 Dec 2012 16:47:51 -0500
+Message-ID: <1355176087.8083.17.camel@jlt4.sipsolutions.net> (sfid-20121210_224800_942676_5168418F)
+Subject: pull-request: iwlwifi-next 2012-12-10
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2012-12-03
-Message-ID: <20121206201155.GB2246@tuxdriver.com> (sfid-20121206_211644_704351_2428244D)
-References: <1354567428.9717.18.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1354567428.9717.18.camel@jlt4.sipsolutions.net>
+Date: Mon, 10 Dec 2012 22:48:07 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-Pi+FdfD7tLifA8/xTKm5"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 03, 2012 at 09:43:48PM +0100, Johannes Berg wrote:
-> John,
-> 
-> Linus tagged -rc8, so maybe I have a chance of getting a few more things
-> into -next :-)
-> 
-> If you think there's any chance this might make it still, please pull my
-> mac80211-next tree (per below). This contains a relatively large number
-> of fixes to the previous code, as well as a few small features:
->  * VHT association in mac80211
->  * some new debugfs files
->  * P2P GO powersave configuration
->  * masked MAC address verification
-> 
-> The biggest patch is probably the BSS struct changes to use RCU for
-> their IE buffers to fix potential races. I've not tagged this for stable
-> because it's pretty invasive and nobody has ever seen any bugs in this
-> area as far as I know.
-> 
-> johannes
 
-Pulled...
+--=-Pi+FdfD7tLifA8/xTKm5
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> ----
-> 
-> The following changes since commit ec816087e8978b74c1bd5fae0e335dd97d964e9f:
-> 
->   cfg80211: fix some tracing output issues (2012-11-26 12:48:17 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to da29d2a5780d80857773d7776b7603a449b0b6e0:
-> 
->   cfg80211: fix channel error on mesh join (2012-12-03 11:24:49 +0100)
-> 
-> ----------------------------------------------------------------
-> Antonio Quartulli (1):
->       mac80211: allow userspace registration for probe requests in IBSS
-> 
-> Dan Carpenter (1):
->       mac80211: fix potential NULL dereference
-> 
-> Helmut Schaa (2):
->       mac80211: reject setting masked mac addresses
->       mac80211: don't reinit rate control when mesh sta exists
-> 
-> Johannes Berg (13):
->       cfg80211: rework chandef checking and export it
->       mac80211: support VHT association
->       mac80211: support (partial) VHT radiotap information
->       nl80211: support P2P GO powersave configuration
->       mac80211: support P2P GO powersave configuration
->       nl80211: remove unnecessary checks
->       cfg80211: don't BUG_ON BSS struct issues
->       cfg80211: fix whitespace in scan handling
->       cfg80211: fix cmp_hidden_bss
->       mac80211: make ieee80211_build_preq_ies safer
->       mac80211: remove probe response temporary buffer allocation
->       cfg80211: fix BSS struct IE access races
->       mac80211: simplify loop in minstrel_ht
-> 
-> Mahesh Palivela (1):
->       cfg80211: Remove unused VHT chan code
-> 
-> Marco Porsch (2):
->       mac80211: fix for mesh sync to indicate TBTT adjustment
->       cfg80211: fix channel error on mesh join
-> 
-> Saravana (4):
->       mac80211: add debugfs file for last ack signal
->       mac80211: add debugfs file for current tx rate
->       mac80211: re-organize the rx rate calculation logic
->       mac80211: add debugfs file for last rx rate
-> 
-> Simon Wunderlich (3):
->       nl80211: Fix HT_IBSS feature check in ibss_join
->       mac80211: Fix typo in mac80211.h
->       mac80211: return if CSA is not handle
-> 
->  drivers/net/wireless/libertas/cfg.c      |   9 +-
->  drivers/net/wireless/mac80211_hwsim.c    |   7 +-
->  drivers/net/wireless/mwifiex/sta_ioctl.c |  35 ++-
->  drivers/net/wireless/ti/wl1251/main.c    |   4 +-
->  drivers/net/wireless/ti/wlcore/cmd.c     |   4 +-
->  include/linux/ieee80211.h                |  15 +
->  include/net/cfg80211.h                   |  69 +++--
->  include/net/ieee80211_radiotap.h         |  24 ++
->  include/net/mac80211.h                   |  12 +-
->  include/uapi/linux/nl80211.h             |  16 ++
->  net/mac80211/cfg.c                       |  77 ++++--
->  net/mac80211/debugfs_sta.c               |  36 +++
->  net/mac80211/ieee80211_i.h               |   5 +-
->  net/mac80211/iface.c                     |  45 +++
->  net/mac80211/main.c                      |   5 +-
->  net/mac80211/mesh_plink.c                |   3 +-
->  net/mac80211/mesh_sync.c                 |   4 +
->  net/mac80211/mlme.c                      | 431 ++++++++++++++++++++++-------
->  net/mac80211/rc80211_minstrel_ht.c       |   8 +-
->  net/mac80211/rx.c                        |  42 ++-
->  net/mac80211/scan.c                      |  21 +-
->  net/mac80211/sta_info.h                  |   4 +
->  net/mac80211/status.c                    |   3 +
->  net/mac80211/tx.c                        |   9 +-
->  net/mac80211/util.c                      |  58 ++--
->  net/wireless/chan.c                      |  92 +++++--
->  net/wireless/core.h                      |   8 -
->  net/wireless/mesh.c                      |   3 +-
->  net/wireless/nl80211.c                   | 155 ++++++-----
->  net/wireless/reg.c                       |   2 +-
->  net/wireless/reg.h                       |   2 +-
->  net/wireless/scan.c                      | 452 +++++++++++++++----------------
->  net/wireless/sme.c                       |  13 +-
->  net/wireless/util.c                      |   9 +-
->  net/wireless/wext-sme.c                  |   8 +-
->  35 files changed, 1139 insertions(+), 551 deletions(-)
-> 
+John,
+
+Since the current release seems to be dragging out, I have a few more
+patches for -next. Some are even marked for stable but it's so late that
+I didn't want to send them for 3.7 any more.
+
+Please pull to get a few small fixes, some improvements and a bit of
+infrastructure work in iwlwifi.
+
+johannes
 
 
+The following changes since commit eea54c8ec971d4759c541dba351477dafc39ce54=
+:
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  iwlwifi: remove effectless assignment (2012-11-21 11:30:39 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to 25a172655f837bdb032e451f95441bb4acec51bb:
+
+  iwlwifi: don't handle masked interrupt (2012-12-10 22:40:09 +0100)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (7):
+      iwlwifi: read the Rx write pointer only once
+      iwlwifi: clear trans->op_mode pointer when it is leaving
+      iwlwifi: return real info in probe failure
+      iwlwifi: move prph handling into the transport
+      iwlwifi: reset_ict in stop_hw
+      iwlwifi: silently ignore fw flaws in Tx path
+      iwlwifi: don't handle masked interrupt
+
+Eytan Lifshitz (1):
+      iwlwifi: Change define and struct names in iwl-eeprom-parse.h
+
+Johannes Berg (1):
+      iwlwifi: change TX code to suppress smatch warning
+
+Tim Gardner (1):
+      iwlwifi: iwlagn_request_scan: Fix check for priv->scan_request
+
+ drivers/net/wireless/iwlwifi/dvm/calib.c        | 14 ++---
+ drivers/net/wireless/iwlwifi/dvm/debugfs.c      | 12 ++--
+ drivers/net/wireless/iwlwifi/dvm/dev.h          |  2 +-
+ drivers/net/wireless/iwlwifi/dvm/devices.c      |  8 +--
+ drivers/net/wireless/iwlwifi/dvm/lib.c          |  8 +--
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c     | 12 ++--
+ drivers/net/wireless/iwlwifi/dvm/main.c         | 57 +++++++++--------
+ drivers/net/wireless/iwlwifi/dvm/rs.c           | 44 ++++++-------
+ drivers/net/wireless/iwlwifi/dvm/rxon.c         |  4 +-
+ drivers/net/wireless/iwlwifi/dvm/scan.c         | 13 ++--
+ drivers/net/wireless/iwlwifi/dvm/sta.c          | 12 ++--
+ drivers/net/wireless/iwlwifi/dvm/tx.c           | 67 ++++++++------------
+ drivers/net/wireless/iwlwifi/dvm/ucode.c        | 12 ++--
+ drivers/net/wireless/iwlwifi/iwl-config.h       |  8 +--
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h     | 34 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-drv.c          |  6 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c | 84 ++++++++++++++++-----=
+----
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h | 45 ++++++-------
+ drivers/net/wireless/iwlwifi/iwl-io.c           | 40 ++++++------
+ drivers/net/wireless/iwlwifi/iwl-io.h           | 10 +--
+ drivers/net/wireless/iwlwifi/iwl-trans.h        | 22 +++++--
+ drivers/net/wireless/iwlwifi/pcie/1000.c        |  8 +--
+ drivers/net/wireless/iwlwifi/pcie/2000.c        | 16 ++---
+ drivers/net/wireless/iwlwifi/pcie/5000.c        | 12 ++--
+ drivers/net/wireless/iwlwifi/pcie/6000.c        | 28 ++++-----
+ drivers/net/wireless/iwlwifi/pcie/drv.c         | 11 +++-
+ drivers/net/wireless/iwlwifi/pcie/rx.c          | 14 ++++-
+ drivers/net/wireless/iwlwifi/pcie/trans.c       | 18 ++++++
+ 28 files changed, 358 insertions(+), 263 deletions(-)
+
+
+--=-Pi+FdfD7tLifA8/xTKm5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQxliXAAoJEDBSmw7B7bqrsHsQAKb4mVY4Oq4BsIeSTVPPaWnu
+rwIv0IsHZI+30sgGjukztAmtIf65dPG9OpZgujD51qfqMabaANJcNzFLDkgmTsSz
+pZ+pV3YlxH2qknIy8L1J7oabA2OCRkJwRtk2QzbUCm77YtUagW12Pk4i6PVOvjko
+c1sLggI3b/q6t9z4RQwZ4e9OOGdtTOZ06WOshkl8bAfxjzkKxuHLnbQfpHZ7B0K8
+eqgEzWLTmoX4t3facV7jWFXwJ6jV8tJZdoxGI8XobiKkjFK4jzoYN7Txrr+Xm2tT
+jvV654f5hqHzR9sC4D1Y17SG5GSSUiRVkWXqWqOn80EFISUcmq7acJ1i80TlM6dF
+QOeoKg/EigpBq36DZfGL7LW41pGhfhGURQSeAZ9iBOIN+F9SMUkD5kLo94nnqOjq
+o628sCWmqcvCJFT4b+jsVSFmOG5+cZ0nhcp39DcrkT4cJa/YHIUnVxfG60Fpc6ER
+cl+eM87nneiTTeCuQQV9Z4DjsO6FC98UaRmmwlukmP+LT5A5yXpZoRtsLITaEZT+
+txUu1trzELVk2pNoLIr2+xX6IG5ldvFSrhdCL1pDiue6fEGXUlAYM4Cq1IfH8EtZ
+2My4DGJz+iNfbeHG9M/4xq1JOnG540s8msgN0hQsYV+wtAY0e/hrhfXJbHb724qi
+eCHjhXSMKPdJF819qERg
+=kvOo
+-----END PGP SIGNATURE-----
+
+--=-Pi+FdfD7tLifA8/xTKm5--
+
