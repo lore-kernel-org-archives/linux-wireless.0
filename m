@@ -1,177 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45083 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754303Ab2LCOBj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 09:01:39 -0500
-Date: Mon, 3 Dec 2012 08:46:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wireless: allow Atheros card to not depend on ath.ko
-Message-ID: <20121203134643.GA26027@tuxdriver.com> (sfid-20121203_150157_972441_1A31D4E2)
-References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <20121128141319.GA9118@tuxdriver.com>
- <1967408.WlU5HIbjCs@lx-vladimir>
- <2070615.GY0XtkW6tW@lx-vladimir>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2070615.GY0XtkW6tW@lx-vladimir>
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:41126
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342Ab2LJBxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2012 20:53:22 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 7/8] ath9k_hw: Add HW cap for PAPRD
+Date: Mon, 10 Dec 2012 07:22:37 +0530
+Message-Id: <1355104358-30062-7-git-send-email-sujith@msujith.org> (sfid-20121210_025336_482962_3273AE50)
+In-Reply-To: <1355104358-30062-1-git-send-email-sujith@msujith.org>
+References: <1355104358-30062-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's in wireless-next ATM...
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-commit 23c1d7f65975762386760e36c00f149059e537e2
-Author: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date:   Wed Nov 28 18:57:19 2012 +0200
+Add a HW capability to indicate whether PAPRD is enabled
+for the card, since PAPRD could be enabled in the EEPROM, but
+disabled in the driver. This makes things clearer.
 
-    wireless: allow Atheros card to not depend on ath.ko
-    
-    There are 2 different things:
-    - sub-menu for "Atheros Wireless cards" family
-    - module ath.ko with common Atheros code
-    
-    Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
-    Thus, being "Atheros card" and "depending on ath.ko" was the same.
-    
-    To allow module to belong to the
-    "Atheros Wireless cards" family but not use ath.ko,
-    2 conditions above need to be separated.
-    
-    So, this patch introduce new Kconfig variable ATH_CARDS for belonging
-    to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
-    variable to express dependency on common Atheros code in ath.ko. Modules
-    that depend on this common code now express it by setting ATH_COMMON.
-    
-    Right now, ath6kl do not depend on common code and thus do not set ATH_COMMON.
-    
-    Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 8 ++------
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c  | 9 +++++++++
+ drivers/net/wireless/ath/ath9k/hw.c            | 4 ++++
+ drivers/net/wireless/ath/ath9k/hw.h            | 2 ++
+ drivers/net/wireless/ath/ath9k/link.c          | 2 +-
+ 5 files changed, 18 insertions(+), 7 deletions(-)
 
-On Mon, Dec 03, 2012 at 03:03:00PM +0200, Vladimir Kondratiev wrote:
-> Hi,
-> 
-> Any input?
-> 
-> Luis: does it reflect reality with Atheros drivers dependency now?
-> 
-> Thanks, Vladimir
-> 
-> On Wednesday, November 28, 2012 06:57:19 PM Vladimir Kondratiev wrote:
-> > 
-> > There are 2 different things:
-> > - sub-menu for "Atheros Wireless cards" family
-> > - module ath.ko with common Atheros code
-> > 
-> > Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
-> > Thus, being "Atheros card" and "depending on ath.ko" was the same.
-> > 
-> > To allow module to belong to the
-> > "Atheros Wireless cards" family but not use ath.ko,
-> > 2 conditions above need to be separated.
-> > 
-> > So, this patch introduce new Kconfig variable ATH_CARDS for belonging
-> > to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
-> > variable to express dependency on common Atheros code in ath.ko. Modules
-> > that depend on this common code now express it by setting ATH_COMMON.
-> > 
-> > Right now, ath6kl do not depend on common code and thus do not set ATH_COMMON.
-> > 
-> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> > ---
-> >  drivers/net/wireless/ath/Kconfig          |    7 +++++--
-> >  drivers/net/wireless/ath/ar5523/Kconfig   |    1 +
-> >  drivers/net/wireless/ath/ath5k/Kconfig    |    1 +
-> >  drivers/net/wireless/ath/ath9k/Kconfig    |    1 +
-> >  drivers/net/wireless/ath/carl9170/Kconfig |    1 +
-> >  5 files changed, 9 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/Kconfig 
-> > b/drivers/net/wireless/ath/Kconfig
-> > index c25dcf1..1a67a4f 100644
-> > --- a/drivers/net/wireless/ath/Kconfig
-> > +++ b/drivers/net/wireless/ath/Kconfig
-> > @@ -1,4 +1,7 @@
-> > -menuconfig ATH_COMMON
-> > +config ATH_COMMON
-> > +	tristate
-> > +
-> > +menuconfig ATH_CARDS
-> >  	tristate "Atheros Wireless Cards"
-> >  	depends on CFG80211 && (!UML || BROKEN)
-> >  	---help---
-> > @@ -14,7 +17,7 @@ menuconfig ATH_COMMON
-> >  
-> >  	  http://wireless.kernel.org/en/users/Drivers/Atheros
-> >  
-> > -if ATH_COMMON
-> > +if ATH_CARDS
-> >  
-> >  config ATH_DEBUG
-> >  	bool "Atheros wireless debugging"
-> > diff --git a/drivers/net/wireless/ath/ar5523/Kconfig 
-> > b/drivers/net/wireless/ath/ar5523/Kconfig
-> > index 11d99ee..0d320cc 100644
-> > --- a/drivers/net/wireless/ath/ar5523/Kconfig
-> > +++ b/drivers/net/wireless/ath/ar5523/Kconfig
-> > @@ -1,6 +1,7 @@
-> >  config AR5523
-> >         tristate "Atheros AR5523 wireless driver support"
-> >         depends on MAC80211 && USB
-> > +       select ATH_COMMON
-> >         select FW_LOADER
-> >         ---help---
-> >           This module add support for AR5523 based USB dongles such as D-Link
-> > diff --git a/drivers/net/wireless/ath/ath5k/Kconfig 
-> > b/drivers/net/wireless/ath/ath5k/Kconfig
-> > index 338c5c4..c9f81a3 100644
-> > --- a/drivers/net/wireless/ath/ath5k/Kconfig
-> > +++ b/drivers/net/wireless/ath/ath5k/Kconfig
-> > @@ -1,6 +1,7 @@
-> >  config ATH5K
-> >  	tristate "Atheros 5xxx wireless cards support"
-> >  	depends on (PCI || ATHEROS_AR231X) && MAC80211
-> > +	select ATH_COMMON
-> >  	select MAC80211_LEDS
-> >  	select LEDS_CLASS
-> >  	select NEW_LEDS
-> > diff --git a/drivers/net/wireless/ath/ath9k/Kconfig 
-> > b/drivers/net/wireless/ath/ath9k/Kconfig
-> > index c7aa664..5fc15bf 100644
-> > --- a/drivers/net/wireless/ath/ath9k/Kconfig
-> > +++ b/drivers/net/wireless/ath/ath9k/Kconfig
-> > @@ -17,6 +17,7 @@ config ATH9K_BTCOEX_SUPPORT
-> >  config ATH9K
-> >  	tristate "Atheros 802.11n wireless cards support"
-> >  	depends on MAC80211
-> > +	select ATH_COMMON
-> >  	select ATH9K_HW
-> >  	select MAC80211_LEDS
-> >  	select LEDS_CLASS
-> > diff --git a/drivers/net/wireless/ath/carl9170/Kconfig 
-> > b/drivers/net/wireless/ath/carl9170/Kconfig
-> > index 267d5dc..13a2045 100644
-> > --- a/drivers/net/wireless/ath/carl9170/Kconfig
-> > +++ b/drivers/net/wireless/ath/carl9170/Kconfig
-> > @@ -1,6 +1,7 @@
-> >  config CARL9170
-> >  	tristate "Linux Community AR9170 802.11n USB support"
-> >  	depends on USB && MAC80211 && EXPERIMENTAL
-> > +	select ATH_COMMON
-> >  	select FW_LOADER
-> >  	select CRC32
-> >  	help
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index c86cb640..6b8861c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2987,10 +2987,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 	case EEP_RX_MASK:
+ 		return pBase->txrxMask & 0xf;
+ 	case EEP_PAPRD:
+-		if (AR_SREV_9462(ah))
+-			return false;
+-		if (!ah->config.enable_paprd)
+-			return false;
+ 		return !!(pBase->featureEnable & BIT(5));
+ 	case EEP_CHAIN_MASK_REDUCE:
+ 		return (pBase->miscConfiguration >> 0x3) & 0x1;
+@@ -5097,7 +5093,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 	 */
+ 	ar9003_hw_get_target_power_eeprom(ah, chan, targetPowerValT2);
+ 
+-	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD)) {
++	if (ar9003_is_paprd_enabled(ah)) {
+ 		if (IS_CHAN_2GHZ(chan))
+ 			modal_hdr = &eep->modalHeader2G;
+ 		else
+@@ -5138,7 +5134,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 					   twiceAntennaReduction,
+ 					   powerLimit);
+ 
+-	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD)) {
++	if (ar9003_is_paprd_enabled(ah)) {
+ 		for (i = 0; i < ar9300RateSize; i++) {
+ 			if ((ah->paprd_ratemask & (1 << i)) &&
+ 			    (abs(targetPowerValT2[i] -
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index fb3a87e..aea1908 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -991,3 +991,12 @@ exit:
+ 	return !!paprd_done;
+ }
+ EXPORT_SYMBOL(ar9003_paprd_is_done);
++
++bool ar9003_is_paprd_enabled(struct ath_hw *ah)
++{
++	if ((ah->caps.hw_caps & ATH9K_HW_CAP_PAPRD) && ah->config.enable_paprd)
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL(ar9003_is_paprd_enabled);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e06bcec..7cb7870 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2599,6 +2599,10 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			pCap->hw_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
+ 	}
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah) &&
++	    ah->eep_ops->get_eeprom(ah, EEP_PAPRD))
++			pCap->hw_caps |= ATH9K_HW_CAP_PAPRD;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index fe87d0e..eff6759 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -247,6 +247,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
+ 	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(18),
+ 	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(19),
++	ATH9K_HW_CAP_PAPRD			= BIT(20),
+ };
+ 
+ /*
+@@ -1061,6 +1062,7 @@ int ar9003_paprd_create_curve(struct ath_hw *ah,
+ void ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain);
+ int ar9003_paprd_init_table(struct ath_hw *ah);
+ bool ar9003_paprd_is_done(struct ath_hw *ah);
++bool ar9003_is_paprd_enabled(struct ath_hw *ah);
+ 
+ /* Hardware family op attach helpers */
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index c70b31a..ade3afb 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -435,7 +435,7 @@ set_timer:
+ 
+ 	mod_timer(&common->ani.timer, jiffies + msecs_to_jiffies(cal_interval));
+ 
+-	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD) && ah->caldata) {
++	if (ar9003_is_paprd_enabled(ah) && ah->caldata) {
+ 		if (!ah->caldata->paprd_done) {
+ 			ieee80211_queue_work(sc->hw, &sc->paprd_work);
+ 		} else if (!ah->paprd_table_write_done) {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0.1
+
