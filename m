@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:38633 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152Ab2LLK2N (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 12 Dec 2012 05:28:13 -0500
-From: "Chen, Chien-Chia" <machen@suse.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	users@rt2x00.serialmonkey.com
-Subject: [PATCH] mac80211: modify max_nullfunc parameter
-Date: Wed, 12 Dec 2012 18:28:19 +0800
-Message-Id: <1355308099-18193-1-git-send-email-machen@suse.com> (sfid-20121212_112818_604239_5BEF48FB)
+Received: from he.sipsolutions.net ([78.46.109.217]:40194 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547Ab2LJK6k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 05:58:40 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211_hwsim: allow testing paged RX
+Date: Mon, 10 Dec 2012 11:59:02 +0100
+Message-Id: <1355137142-21292-1-git-send-email-johannes@sipsolutions.net> (sfid-20121210_115844_109015_C979B5D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chen, Chien-Chia <matt680209@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This parameter default is 2. But it is easy to cause my station 
-losing the connection with AP. After I tune it to 20. It improves 
-much when using rt2x00 and Linksys WRT160N V3 AP router.
+Paged RX, i.e. SKBs with (some of) the data in pages instead
+of the SKB header data (skb->data) can behave differently in
+the stack and cause other bugs. To make debugging easier add
+an option to hwsim to test with such SKBs.
 
-Signed-off-by: Chen, Chien-Chia <matt680209@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 26 +++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1b7eed2..ef872d7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -36,7 +36,7 @@
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
- #define IEEE80211_ASSOC_MAX_TRIES 3
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ff90855..145498f 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -48,6 +48,10 @@ static int channels = 1;
+ module_param(channels, int, 0444);
+ MODULE_PARM_DESC(channels, "Number of concurrent channels");
  
--static int max_nullfunc_tries = 2;
-+static int max_nullfunc_tries = 20;
- module_param(max_nullfunc_tries, int, 0644);
- MODULE_PARM_DESC(max_nullfunc_tries,
- 		 "Maximum nullfunc tx tries before disconnecting (reason 4).");
++static bool paged_rx = false;
++module_param(paged_rx, bool, 0644);
++MODULE_PARM_DESC(paged_rx, "Use paged SKBs for RX instead of linear ones");
++
+ /**
+  * enum hwsim_regtest - the type of regulatory tests we offer
+  *
+@@ -755,9 +759,25 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
+ 		 * reserve some space for our vendor and the normal
+ 		 * radiotap header, since we're copying anyway
+ 		 */
+-		nskb = skb_copy_expand(skb, 64, 0, GFP_ATOMIC);
+-		if (nskb == NULL)
+-			continue;
++		if (skb->len < PAGE_SIZE && paged_rx) {
++			struct page *page = alloc_page(GFP_ATOMIC);
++
++			if (!page)
++				continue;
++
++			nskb = dev_alloc_skb(128);
++			if (!nskb) {
++				__free_page(page);
++				continue;
++			}
++
++			memcpy(page_address(page), skb->data, skb->len);
++			skb_add_rx_frag(nskb, 0, page, 0, skb->len, skb->len);
++		} else {
++			nskb = skb_copy(skb, GFP_ATOMIC);
++			if (!nskb)
++				continue;
++		}
+ 
+ 		if (mac80211_hwsim_addr_match(data2, hdr->addr1))
+ 			ack = true;
 -- 
-1.7.7
+1.8.0
 
