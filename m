@@ -1,58 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:45537 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758993Ab2LIVCN (ORCPT
+Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:29941
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751541Ab2LJRY0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2012 16:02:13 -0500
-Received: by mail-qa0-f53.google.com with SMTP id a19so946337qad.19
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Dec 2012 13:02:13 -0800 (PST)
-Message-ID: <50C4FC51.4090201@lwfinger.net> (sfid-20121209_220216_948422_820AB8F1)
-Date: Sun, 09 Dec 2012 15:02:09 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 10 Dec 2012 12:24:26 -0500
+From: Alberto Garau <Alberto.Garau@inpeco.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
+	Luciano Coelho <coelho@ti.com>
+Subject: RE: [PATCH 20/20] wlcore: Always pass DMA-able buffers to mmc
+ functions
+Date: Mon, 10 Dec 2012 17:24:16 +0000
+Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121210_182435_857497_27DD0396)
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+ <1355159205.3738.63.camel@cumari.coelho.fi>
+In-Reply-To: <1355159205.3738.63.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: =?UTF-8?B?0JTQvNC40YLRgNC40Lkg0JbRg9C20LPQvtCy?=
-	<ramzeth@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Question about rtl8188RU chipset.
-References: <CAJeN2nsAtS_v6amDnWhbGQURmNeca0L0k_3icjzCYnKk2PweaQ@mail.gmail.com>
-In-Reply-To: <CAJeN2nsAtS_v6amDnWhbGQURmNeca0L0k_3icjzCYnKk2PweaQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2012 10:03 AM, Дмитрий Жужгов wrote:
-> Hello.
-> I have a problem using ALFA AWUS036nhr card, with rtl8188RU chipset in
-> BackTrack R3, with best suitable (as posted on forums) compat-wireless
-> driver for rtl8192CU chipset.
+SGkgQWxsLA0KDQp0aGFua3MgaW4gYWR2YW5jZSBmb3IgeW91ciBzdXBwb3J0Lg0KDQpJ4oCZbSB0
+cnlpbmcgdG8gbWFrZSB3b3JraW5nIHRoZSBXTDEyNzEgVEkgTXVyYXRhIGNoaXAgd2l0aCBvdXIg
+Y3VzdG9tIGJvYXJkLiAgVGhlIFNQSSBkcml2ZXIgc2VlbXMgdG8gYmUgcnVubmluZyBidXQgSSBj
+YW5ub3Qgc2NhbiBmcm9tIG91ciBXaWZpIE5ldHdvcmsuIA0KDQpBZnRlciBib290aW5nIHRoZSBi
+b2FyZCBJ4oCZbSBkb2luZzoNCg0K4oCiCWluc21vZCAvbWVkaWEvcmVkL3Jvb3Qvd2wxMjcxL3ds
+MTI3MS5rbw0K4oCiCWluc21vZCAvbWVkaWEvcmVkL3Jvb3Qvd2wxMjcxL3dsMTI3MV9zcGkua28N
+CuKAoglpd2NvbmZpZyB3bGFuMCBtb2RlIG1hbmFnZWQNCuKAoglpd2NvbmZpZyB3bGFuMCBlc3Np
+ZCB4eHh4eHh4DQrigKIJaWZjb25maWcgd2xhbjAgaHcgZXRoZXIgMDA6ODA6RTE6MTI6MjY6MTcg
+DQrigKIJaWZjb25maWcgd2xhbjAgMTkyLjE2OC40MC4xMDAgbmV0bWFzayAyNTUuMjU1LjI1NS4w
+IHVwDQoNClRoZW4gSSBib3RhaW46DQoNCmNoaXBfaWQgcmVhZCBmcm9tIG1lbW9yeTogMDQwMzAx
+MTENCndsMTI3MV9mZXRjaF9maXJtd2FyZSAtIGZldGNoaW5nIGZpcm13YXJlIHdsMTI3MS1mdy5i
+aW4NCndsMTI3MV9mZXRjaF9udnMgLSBmZXRjaGluZyBmaXJtd2FyZSB3bDEyNzEtbnZzLmJpbg0K
+d2wxMjcxOiBmaXJtd2FyZSBib290ZWQgKFJldiA2LjEuMC41MC4zNTApDQoNCmJ1dCB1bmZvcnR1
+bmF0ZWx5IHRoZSB3aGVuIEkgcnVuIOKAnGl3bGlzdCB3bGFuMCBzY2Fu4oCdDQoNCkkgb2J0YWlu
+IOKAnHdsYW4wIE5vIHNjYW4gcmVzdWx0c+KAnQ0KDQoNCkNvdWxkIHlvdSBwbGVhc2UgaGVscCB1
+cyBpbiBmaXhpbmcgdGhpcyBpc3N1ZSA/DQoNClRoYW5rcyBhZ2Fpbi4NCg0KQWxiZXJ0bw0KDQot
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdl
+ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
+XSBPbiBCZWhhbGYgT2YgTHVjaWFubyBDb2VsaG8NClNlbnQ6IGx1bmVkw6wgMTAgZGljZW1icmUg
+MjAxMiAxODowNw0KVG86IEFyaWsgTmVtdHNvdg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
+bmVsLm9yZzsgSWRvIFlhcml2DQpTdWJqZWN0OiBSZTogW1BBVENIIDIwLzIwXSB3bGNvcmU6IEFs
+d2F5cyBwYXNzIERNQS1hYmxlIGJ1ZmZlcnMgdG8gbW1jIGZ1bmN0aW9ucw0KDQpPbiBXZWQsIDIw
+MTItMTEtMjggYXQgMTE6NDIgKzAyMDAsIEFyaWsgTmVtdHNvdiB3cm90ZToNCj4gRnJvbTogSWRv
+IFlhcml2IDxpZG9Ad2l6ZXJ5LmNvbT4NCj4gDQo+IFNvbWUgb2YgdGhlIG1tYyBkcml2ZXJzIGlu
+aXRpYXRlIERNQSB0cmFuc2ZlcnMgd2l0aCBidWZmZXJzIHBhc3NlZCANCj4gZnJvbSBoaWdoZXIg
+bGF5ZXJzLiBUaGlzIG1lYW5zIHRoYXQgdGhlIGRyaXZlciBzaG91bGRuJ3QgZXZlciBwYXNzIG5v
+biANCj4gRE1BLWFibGUgYnVmZmVycywgc3VjaCBhcyBvbmVzIHRoYXQgYXJlIHVuYWxpZ25lZCwg
+YWxsb2NhdGVkIG9uIHRoZSANCj4gc3RhY2sgb3Igc3RhdGljLg0KPiANCj4gRml4IGEgY291cGxl
+IG9mIGNhbGxzIHRvIHRoZSBtbWMgbGF5ZXIgaW4gd2hpY2ggYnVmZmVycyB3aGljaCB3ZXJlbid0
+IA0KPiBuZWNlc3NhcmlseSBETUEtYWJsZSB3ZXJlIHBhc3NlZC4NCj4gDQo+IFNpZ25lZC1vZmYt
+Ynk6IElkbyBZYXJpdiA8aWRvQHdpemVyeS5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IEFyaWsgTmVt
+dHNvdiA8YXJpa0B3aXplcnkuY29tPg0KPiAtLS0NCg0KWy4uLl0NCg0KPiBkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL2lvLmggDQo+IGIvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvdGkvd2xjb3JlL2lvLmgNCj4gaW5kZXggNTg5Nzc0Ny4uNzBmOWJkYyAxMDA2NDQNCj4g
+LS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL2lvLmgNCj4gKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL2lvLmgNCj4gQEAgLTEwNSwxMyArMTA1LDEyIEBAIHN0
+YXRpYyBpbmxpbmUgaW50IF9fbXVzdF9jaGVjayANCj4gd2xjb3JlX3Jhd19yZWFkMzIoc3RydWN0
+IHdsMTI3MSAqd2wsIGludCBhZGRyLCAgew0KPiAgCWludCByZXQ7DQo+ICANCj4gLQlyZXQgPSB3
+bGNvcmVfcmF3X3JlYWQod2wsIGFkZHIsICZ3bC0+YnVmZmVyXzMyLA0KPiAtCQkJICAgICAgc2l6
+ZW9mKHdsLT5idWZmZXJfMzIpLCBmYWxzZSk7DQo+ICsJcmV0ID0gd2xjb3JlX3Jhd19yZWFkKHds
+LCBhZGRyLCB3bC0+YnVmZmVyXzMyLCBzaXplb2YodTMyKSwgZmFsc2UpOw0KPiAgCWlmIChyZXQg
+PCAwKQ0KPiAgCQlyZXR1cm4gcmV0Ow0KPiAgDQo+ICAJaWYgKHZhbCkNCj4gLQkJKnZhbCA9IGxl
+MzJfdG9fY3B1KHdsLT5idWZmZXJfMzIpOw0KPiArCQkqdmFsID0gbGUzMl90b19jcHUoKndsLT5i
+dWZmZXJfMzIpOw0KPiAgDQo+ICAJcmV0dXJuIDA7DQo+ICB9DQo+IEBAIC0xMTksOSArMTE4LDgg
+QEAgc3RhdGljIGlubGluZSBpbnQgX19tdXN0X2NoZWNrIA0KPiB3bGNvcmVfcmF3X3JlYWQzMihz
+dHJ1Y3Qgd2wxMjcxICp3bCwgaW50IGFkZHIsICBzdGF0aWMgaW5saW5lIGludCBfX211c3RfY2hl
+Y2sgd2xjb3JlX3Jhd193cml0ZTMyKHN0cnVjdCB3bDEyNzEgKndsLCBpbnQgYWRkciwNCj4gIAkJ
+CQkJCSAgdTMyIHZhbCkNCj4gIHsNCj4gLQl3bC0+YnVmZmVyXzMyID0gY3B1X3RvX2xlMzIodmFs
+KTsNCj4gLQlyZXR1cm4gd2xjb3JlX3Jhd193cml0ZSh3bCwgYWRkciwgJndsLT5idWZmZXJfMzIs
+DQo+IC0JCQkJc2l6ZW9mKHdsLT5idWZmZXJfMzIpLCBmYWxzZSk7DQo+ICsJKndsLT5idWZmZXJf
+MzIgPSBjcHVfdG9fbGUzMih2YWwpOw0KPiArCXJldHVybiB3bGNvcmVfcmF3X3dyaXRlKHdsLCBh
+ZGRyLCB3bC0+YnVmZmVyXzMyLCBzaXplb2YodTMyKSwgDQo+ICtmYWxzZSk7DQo+ICB9DQo+ICAN
+Cj4gIHN0YXRpYyBpbmxpbmUgaW50IF9fbXVzdF9jaGVjayB3bGNvcmVfcmVhZChzdHJ1Y3Qgd2wx
+MjcxICp3bCwgaW50IA0KPiBhZGRyLCBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+dGkvd2xjb3JlL21haW4uYyANCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy90aS93bGNvcmUvbWFp
+bi5jDQo+IGluZGV4IDE3OTNhODIuLmU0ZmY2NmEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL3RpL3dsY29yZS9tYWluLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+dGkvd2xjb3JlL21haW4uYw0KPiBAQCAtNTg5MCw4ICs1ODkwLDE3IEBAIHN0cnVjdCBpZWVlODAy
+MTFfaHcgKndsY29yZV9hbGxvY19odyhzaXplX3QgcHJpdl9zaXplLCB1MzIgYWdncl9idWZfc2l6
+ZSwNCj4gIAkJZ290byBlcnJfZndsb2c7DQo+ICAJfQ0KPiAgDQo+ICsJd2wtPmJ1ZmZlcl8zMiA9
+IGttYWxsb2Moc2l6ZW9mKHUzMiksIEdGUF9LRVJORUwpOw0KPiArCWlmICghd2wtPmJ1ZmZlcl8z
+Mikgew0KPiArCQlyZXQgPSAtRU5PTUVNOw0KPiArCQlnb3RvIGVycl9tYm94Ow0KPiArCX0NCj4g
+Kw0KPiAgCXJldHVybiBodzsNCj4gIA0KPiArZXJyX21ib3g6DQo+ICsJa2ZyZWUod2wtPm1ib3gp
+Ow0KPiArDQo+ICBlcnJfZndsb2c6DQo+ICAJZnJlZV9wYWdlKCh1bnNpZ25lZCBsb25nKXdsLT5m
+d2xvZyk7DQoNCg0KQ2FuJ3Qgd2UgY2hhbmdlIHNpemVvZih1MzIpIHRvIHNpemVvZihfX2xlMzIp
+IG9yIHNpemVvZigqd2wtPmJ1ZmZlcl8zMikganVzdCBmb3IgY29uc2lzdGVuY3k/DQoNCkknbGwg
+Y2hhbmdlIGl0IHRvIHRoZSBsYXR0ZXIgaWYgeW91IGFncmVlLg0KDQotLQ0KTHVjYS4NCg0KLS0N
+ClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmli
+ZSBsaW51eC13aXJlbGVzcyIgaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2
+Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVs
+Lm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQoNCg==
 
-What compat-wireless version are you using? The "best" compat version to use is 
-the compat-drivers version released on 12-04-2012.
-
-> Problems are following:
-> 1. Airodump-ng , shows that all clients are "no assocciated".
-> 2. Can't change TX power above 20dBm even in BO region.
-> 3. Can't connect to AP with WPA using WiCd, because "bad password".
-> 4. When using WireShark i can't any "Probe Response" frame.
->
-> Looking at WEB i've found many similar issues:
-> http://www.backtrack-linux.org/forums/showthread.php?t=45323&highlight=awus036nhr
-> http://hezik.nl/alfa-awus036nhr-chip-rtl8188ru-compat-wireless-driver-install/#
-> http://forum.aircrack-ng.org/index.php?topic=14146.0
-> http://forum.aircrack-ng.org/index.php?topic=11543.30
->
->
-> Can you explain me about supporting this chipset, who can I contact
-> and what can i do to solve this problem ?
-
-I had not tested my Alfa AWUS036NHR recently. The kernel driver works with the 
-RTL8192CU chip, but apparently fails with the RTL8188RU. Obviously, that needs 
-to be fixed, but I cannot estimate when that will happen.
-
-The Linux driver contained within the file named 
-RTL8192xC_USB_linux_v3.4.4_4749.20121105.zip on the Realtek web site does work. 
-It needs patching to build on 64-bit systems and on kernel 3.7. If you want the 
-patch, please contact me with PM. I see no need to send that patch to all 
-subscribers of the wireless ML.
-
-Larry
