@@ -1,60 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:46948 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751142Ab2LZWI4 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:41296 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142Ab2LJJNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 17:08:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V3.8 5/5] rtlwifi: rtl8723ae: Fix warning for unchecked pci_map_single() call
-Date: Wed, 26 Dec 2012 16:08:11 -0600
-Message-Id: <1356559691-5048-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121226_230910_659644_EDCFF72F)
-In-Reply-To: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 10 Dec 2012 04:13:18 -0500
+From: Abhijit Pawar <abhi.c.pawar@gmail.com>
+To: "David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Patrick McHardy <kaber@trash.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Cong Wang <amwang@redhat.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	Abhijit Pawar <abhi.c.pawar@gmail.com>
+Subject: [PATCH RESEND] net: remove obsolete simple_strto<foo>
+Date: Mon, 10 Dec 2012 14:42:28 +0530
+Message-Id: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com> (sfid-20121210_101334_867760_6E65A783)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernel 3.8 implements checking of all DMA mapping calls and issues
-a WARNING for the first it finds that is not checked.
+This patch replace the obsolete simple_strto<foo> with kstrto<foo>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ net/core/netpoll.c                 |    5 ++++-
+ net/ipv4/netfilter/ipt_CLUSTERIP.c |    9 +++++++--
+ net/mac80211/debugfs_sta.c         |    3 +++
+ net/netfilter/nf_conntrack_core.c  |    5 ++++-
+ 4 files changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-index 87331d8..7ddd517 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-@@ -387,6 +387,12 @@ void rtl8723ae_tx_fill_desc(struct ieee80211_hw *hw,
- 					    PCI_DMA_TODEVICE);
- 	u8 bw_40 = 0;
+diff --git a/net/core/netpoll.c b/net/core/netpoll.c
+index 77a0388..12c129f 100644
+--- a/net/core/netpoll.c
++++ b/net/core/netpoll.c
+@@ -674,7 +674,8 @@ int netpoll_parse_options(struct netpoll *np, char *opt)
+ 		if ((delim = strchr(cur, '@')) == NULL)
+ 			goto parse_failed;
+ 		*delim = 0;
+-		np->local_port = simple_strtol(cur, NULL, 10);
++		if (kstrtou16(cur, 10, &np->local_port))
++			goto parse_failed;
+ 		cur = delim;
+ 	}
+ 	cur++;
+@@ -706,6 +707,8 @@ int netpoll_parse_options(struct netpoll *np, char *opt)
+ 		if (*cur == ' ' || *cur == '\t')
+ 			np_info(np, "warning: whitespace is not allowed\n");
+ 		np->remote_port = simple_strtol(cur, NULL, 10);
++		if (kstrtou16(cur, 10, &np->remote_port))
++			goto parse_failed;
+ 		cur = delim;
+ 	}
+ 	cur++;
+diff --git a/net/ipv4/netfilter/ipt_CLUSTERIP.c b/net/ipv4/netfilter/ipt_CLUSTERIP.c
+index fe5daea..75e33a7 100644
+--- a/net/ipv4/netfilter/ipt_CLUSTERIP.c
++++ b/net/ipv4/netfilter/ipt_CLUSTERIP.c
+@@ -661,6 +661,7 @@ static ssize_t clusterip_proc_write(struct file *file, const char __user *input,
+ #define PROC_WRITELEN	10
+ 	char buffer[PROC_WRITELEN+1];
+ 	unsigned long nodenum;
++	int rc;
  
-+	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
-+		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
-+			 "DMA mapping error");
-+		return;
-+	}
-+	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
- 	if (mac->opmode == NL80211_IFTYPE_STATION) {
- 		bw_40 = mac->bw_40;
- 	} else if (mac->opmode == NL80211_IFTYPE_AP ||
-@@ -542,6 +548,12 @@ void rtl8723ae_tx_fill_cmddesc(struct ieee80211_hw *hw,
- 					    PCI_DMA_TODEVICE);
- 	__le16 fc = hdr->frame_control;
+ 	if (size > PROC_WRITELEN)
+ 		return -EIO;
+@@ -669,11 +670,15 @@ static ssize_t clusterip_proc_write(struct file *file, const char __user *input,
+ 	buffer[size] = 0;
  
-+	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
-+		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
-+			 "DMA mapping error");
-+		return;
-+	}
-+	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
- 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+ 	if (*buffer == '+') {
+-		nodenum = simple_strtoul(buffer+1, NULL, 10);
++		rc = kstrtoul(buffer+1, 10, &nodenum);
++		if (rc)
++			return rc;
+ 		if (clusterip_add_node(c, nodenum))
+ 			return -ENOMEM;
+ 	} else if (*buffer == '-') {
+-		nodenum = simple_strtoul(buffer+1, NULL,10);
++		rc = kstrtoul(buffer+1, 10, &nodenum);
++		if (rc)
++			return rc;
+ 		if (clusterip_del_node(c, nodenum))
+ 			return -ENOENT;
+ 	} else
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 49a1c70..0dedb4b 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -221,6 +221,9 @@ static ssize_t sta_agg_status_write(struct file *file, const char __user *userbu
+ 		return -EINVAL;
  
- 	if (firstseg)
+ 	tid = simple_strtoul(buf, NULL, 0);
++	ret = kstrtoul(buf, 0, &tid);
++	if (ret)
++		return ret;
+ 
+ 	if (tid >= IEEE80211_NUM_TIDS)
+ 		return -EINVAL;
+diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+index af17516..37d9e62 100644
+--- a/net/netfilter/nf_conntrack_core.c
++++ b/net/netfilter/nf_conntrack_core.c
+@@ -1409,7 +1409,7 @@ EXPORT_SYMBOL_GPL(nf_ct_alloc_hashtable);
+ 
+ int nf_conntrack_set_hashsize(const char *val, struct kernel_param *kp)
+ {
+-	int i, bucket;
++	int i, bucket, rc;
+ 	unsigned int hashsize, old_size;
+ 	struct hlist_nulls_head *hash, *old_hash;
+ 	struct nf_conntrack_tuple_hash *h;
+@@ -1423,6 +1423,9 @@ int nf_conntrack_set_hashsize(const char *val, struct kernel_param *kp)
+ 		return param_set_uint(val, kp);
+ 
+ 	hashsize = simple_strtoul(val, NULL, 0);
++	rc = kstrtouint(val, 0, &hashsize);
++	if (rc)
++		return rc;
+ 	if (!hashsize)
+ 		return -EINVAL;
+ 
 -- 
-1.7.10.4
+1.7.7.6
 
