@@ -1,77 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:52722 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752233Ab2LVVzv convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42224 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056Ab2LJVtB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 16:55:51 -0500
-Date: Sat, 22 Dec 2012 13:55:45 -0800
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Fw: [Bug 51901] New: mac80211/cfg.c:1995: possible bad call to
- memcpy ?
-Message-ID: <20121222135545.1f134c5a@samsung-9> (sfid-20121222_225554_897530_D9193457)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 10 Dec 2012 16:49:01 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Tim Gardner <tim.gardner@canonical.com>
+Subject: [PATCH 08/10] iwlwifi: iwlagn_request_scan: Fix check for priv->scan_request
+Date: Mon, 10 Dec 2012 22:49:16 +0100
+Message-Id: <1355176158-24675-8-git-send-email-johannes@sipsolutions.net> (sfid-20121210_224919_621594_24FC5CBE)
+In-Reply-To: <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
+References: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
+ <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tim Gardner <tim.gardner@canonical.com>
 
+The WARN_ON_ONCE() check for scan_request will not correctly detect
+a NULL pointer for scan_type == IWL_SCAN_NORMAL. Make it explicit
+that the check only applies to normal scans.
 
-Begin forwarded message:
+Convert WARN_ON_ONCE to WARN_ON since priv->scan_request really _can't_
+be NULL for normal scans. If it is then we should emit frequent warnings.
 
-Date: Sat, 22 Dec 2012 16:28:47 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-To: shemminger@linux-foundation.org
-Subject: [Bug 51901] New: mac80211/cfg.c:1995: possible bad call to memcpy ?
+This smatch warning led to scrutiny of iwlagn_request_scan():
 
+drivers/net/wireless/iwlwifi/dvm/scan.c:894 iwlagn_request_scan() error: we previously assumed 'priv->scan_request' could be null (see line 792)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=51901
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/scan.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-           Summary: mac80211/cfg.c:1995: possible bad call to memcpy ?
-           Product: Networking
-           Version: 2.5
-    Kernel Version: 3.8-rc1
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: shemminger@linux-foundation.org
-        ReportedBy: dcb314@hotmail.com
-        Regression: Yes
-
-
-The source code is 
-
-static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device
-*dev,
-                    int rate[IEEE80211_NUM_BANDS])
-{
-    struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-
-    memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
-
-The compiler says
-
-cfg.c: In function ‘int ieee80211_set_mcast_rate(wiphy*, net_device*, int*)’:
-cfg.c:1995: warning: argument to ‘sizeof’ in ‘void* memcpy(void*, const void*,
-size_t)’ call is the same expression as the source; did you mean to dereference
-it? [-Wsizeof-pointer-memaccess]
-     memcpy(rate2, rate, sizeof(rate));
-                               ^
-
-Here is static analyser cppcheck also finding the same problem
-
-[linux-3.8-rc1/net/mac80211/cfg.c:1995]: (error) Using 'sizeof' on array given
-as function argument returns size of a pointer.
-
-
-Suggest code rework.
-
+diff --git a/drivers/net/wireless/iwlwifi/dvm/scan.c b/drivers/net/wireless/iwlwifi/dvm/scan.c
+index aad5fa4..610ed22 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/dvm/scan.c
+@@ -673,8 +673,9 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	const u8 *ssid = NULL;
+ 	u8 ssid_len = 0;
+ 
+-	if (WARN_ON_ONCE(priv->scan_request &&
+-			 priv->scan_request->n_channels > MAX_SCAN_CHANNEL))
++	if (WARN_ON(priv->scan_type == IWL_SCAN_NORMAL &&
++		    (!priv->scan_request ||
++		     priv->scan_request->n_channels > MAX_SCAN_CHANNEL)))
+ 		return -EINVAL;
+ 
+ 	lockdep_assert_held(&priv->mutex);
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.8.0
+
