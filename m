@@ -1,39 +1,263 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:33476
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751562Ab2LZG61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 01:58:27 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] ath9k_hw: Remove AR9485 1.0 macro
-Date: Wed, 26 Dec 2012 12:27:38 +0530
-Message-Id: <1356505059-18149-1-git-send-email-sujith@msujith.org> (sfid-20121226_075836_534780_D6F44136)
+Received: from ht2.myhostedexchange.com ([69.50.2.38]:18491 "EHLO
+	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752790Ab2LJKW7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 05:22:59 -0500
+From: Antonio Quartulli <antonio@open-mesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCH] mac80211: in AD-HOC mode wait for the AUTH response
+Date: Mon, 10 Dec 2012 11:21:57 +0100
+Message-ID: <1355134917-17705-2-git-send-email-antonio@open-mesh.com> (sfid-20121210_112310_084244_F28EA14D)
+In-Reply-To: <1355134917-17705-1-git-send-email-antonio@open-mesh.com>
+References: <1355134917-17705-1-git-send-email-antonio@open-mesh.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+To prevent race conditions between kernel state and
+user-space application knowledge, it is better to wait for
+a new peer to be completely authenticated before telling the
+userspace that it is ready to start authorization
+(IBSS/RSN).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Use the IBSS_STA event to tell userspace when a station is
+authenticated and ready.
+
+It could still be the case that the other node joining the
+AD-HOC cell does not implement AUTH messages exchange,
+therefore a fallback mechanism will authenticate the peer
+after a timeout set for the purpose expires
+
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/net/wireless/ath/ath9k/reg.h | 3 ---
- 1 file changed, 3 deletions(-)
+ net/mac80211/ibss.c     | 97 ++++++++++++++++++++++++++++++++++++++++---------
+ net/mac80211/sta_info.h |  2 +
+ 2 files changed, 81 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index ad3c82c..0ac205e 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -884,9 +884,6 @@
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 700d0ed..9a11ec3 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -30,6 +30,7 @@
  
- #define AR_SREV_9485(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
--#define AR_SREV_9485_10(_ah) \
--	(AR_SREV_9485(_ah) && \
--	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9485_10))
- #define AR_SREV_9485_11(_ah) \
- 	(AR_SREV_9485(_ah) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9485_11))
+ #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
+ #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
++#define IEEE80211_IBSS_AUTH_TIMEOUT (HZ / 2)
+ 
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+ 
+@@ -273,8 +274,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				  false);
+ }
+ 
+-static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
+-						  bool auth)
++static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
+ 	__acquires(RCU)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -284,19 +284,12 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
+ 
+ 	ibss_dbg(sdata, "Adding new IBSS station %pM\n", addr);
+ 
+-	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
+-	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
+-	/* authorize the station only if the network is not RSN protected. If
+-	 * not wait for the userspace to authorize it */
+-	if (!sta->sdata->u.ibss.control_port)
+-		sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
+-
+ 	rate_control_rate_init(sta);
+ 
+ 	/* If it fails, maybe we raced another insertion? */
+ 	if (sta_info_insert_rcu(sta))
+ 		return sta_info_get(sdata, addr);
+-	if (auth && !sdata->u.ibss.auth_frame_registrations) {
++	if (!sdata->u.ibss.auth_frame_registrations) {
+ 		ibss_dbg(sdata,
+ 			 "TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=1)\n",
+ 			 sdata->vif.addr, addr, sdata->u.ibss.bssid);
+@@ -309,7 +302,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
+ static struct sta_info *
+ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 		       const u8 *bssid, const u8 *addr,
+-		       u32 supp_rates, bool auth)
++		       u32 supp_rates)
+ 	__acquires(RCU)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+@@ -358,7 +351,23 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	sta->sta.supp_rates[band] = supp_rates |
+ 			ieee80211_mandatory_rates(local, band);
+ 
+-	return ieee80211_ibss_finish_sta(sta, auth);
++	return ieee80211_ibss_finish_sta(sta);
++}
++
++static void ieee80211_ibss_auth_sta(struct sta_info *sta)
++{
++	if (sta->sta_state > IEEE80211_STA_NONE)
++		return;
++
++	sta_info_move_state(sta, IEEE80211_STA_AUTH);
++	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
++	/* authorize the station only if the network is not RSN protected. If
++	 * not wait for the userspace to authorize it
++	 */
++	if (!sta->sdata->u.ibss.control_port)
++		sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
++
++	cfg80211_ibss_sta(sta->sdata->dev, sta->sta.addr, GFP_KERNEL);
+ }
+ 
+ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+@@ -395,13 +404,36 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+ 		 "RX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=%d)\n",
+ 		 mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
+ 
+-	if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1)
++	if (auth_alg != WLAN_AUTH_OPEN)
+ 		return;
+ 
+-	sta_info_destroy_addr(sdata, mgmt->sa);
+-	sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
++	rcu_read_lock();
++	sta = sta_info_get(sdata, mgmt->sa);
+ 	rcu_read_unlock();
+ 
++	if (auth_transaction == 2) {
++		ibss_dbg(sdata, "Authenticating STA %pM\n", sta->sta.addr);
++		ieee80211_ibss_auth_sta(sta);
++		return;
++	}
++
++	/* drop bogus auth frames (auth_transaction can be only 1 or 2) */
++	if (auth_transaction != 1)
++		return;
++
++	if (sta && sdata->u.ibss.control_port &&
++	    sta->sta_state == IEEE80211_STA_AUTHORIZED) {
++		ibss_dbg(sdata, "Resetting STA %pM state for IBSS Encryption\n",
++			 sta->sta.addr);
++		sta_info_destroy_addr(sdata, mgmt->sa);
++		sta = NULL;
++	}
++
++	if (!sta) {
++		sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0);
++		rcu_read_unlock();
++	}
++
+ 	/*
+ 	 * if we have any problem in allocating the new station, we reply with a
+ 	 * DEAUTH frame to tell the other end that we had a problem
+@@ -414,12 +446,16 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 	}
+ 
++	sta->last_auth = jiffies;
++
+ 	/*
+ 	 * IEEE 802.11 standard does not require authentication in IBSS
+ 	 * networks and most implementations do not seem to use it.
+ 	 * However, try to reply to authentication attempts if someone
+ 	 * has actually implemented this.
+ 	 */
++	ibss_dbg(sdata, "TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=2)\n",
++		 sdata->vif.addr, mgmt->sa, sdata->u.ibss.bssid);
+ 	ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, 0, NULL, 0,
+ 			    mgmt->sa, sdata->u.ibss.bssid, NULL, 0, 0);
+ }
+@@ -481,7 +517,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 			} else {
+ 				rcu_read_unlock();
+ 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
+-						mgmt->sa, supp_rates, true);
++						mgmt->sa, supp_rates);
+ 			}
+ 		}
+ 
+@@ -592,7 +628,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_sta_join_ibss(sdata, bss);
+ 		supp_rates = ieee80211_sta_get_rates(local, elems, band, NULL);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+-				       supp_rates, true);
++				       supp_rates);
+ 		rcu_read_unlock();
+ 	}
+ 
+@@ -675,6 +711,29 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
+ 	return active;
+ }
+ 
++static void ieee80211_ibss_auth_expire(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++
++	list_for_each_entry(sta, &local->sta_list, list) {
++		if (sdata != sta->sdata)
++			continue;
++
++		if (sta->sta_state > IEEE80211_STA_NONE)
++			continue;
++
++		if (time_after(jiffies,
++			       sta->last_auth + IEEE80211_IBSS_AUTH_TIMEOUT)) {
++			ibss_dbg(sdata,
++				 "Authenticating IBSS STA %pM by timeout\n",
++				 sta->sta.addr);
++			ieee80211_ibss_auth_sta(sta);
++		}
++	}
++}
++
++
+ /*
+  * This function is called with state == IEEE80211_IBSS_MLME_JOINED
+  */
+@@ -688,6 +747,8 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 	mod_timer(&ifibss->timer,
+ 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
+ 
++	ieee80211_ibss_auth_expire(sdata);
++
+ 	ieee80211_sta_expire(sdata, IEEE80211_IBSS_INACTIVITY_LIMIT);
+ 
+ 	if (time_before(jiffies, ifibss->last_scan_completed +
+@@ -976,7 +1037,7 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+ 		list_del(&sta->list);
+ 		spin_unlock_bh(&ifibss->incomplete_lock);
+ 
+-		ieee80211_ibss_finish_sta(sta, true);
++		ieee80211_ibss_finish_sta(sta);
+ 		rcu_read_unlock();
+ 		spin_lock_bh(&ifibss->incomplete_lock);
+ 	}
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 1489bca..3c150a4 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -244,6 +244,7 @@ struct sta_ampdu_mlme {
+  * @rx_bytes: Number of bytes received from this STA
+  * @wep_weak_iv_count: number of weak WEP IVs received from this station
+  * @last_rx: time (in jiffies) when last frame was received from this STA
++ * @last_auth: jiffies of last auth packet with seq = 1
+  * @last_connected: time (in seconds) when a station got connected
+  * @num_duplicates: number of duplicate frames received from this STA
+  * @rx_fragments: number of received MPDUs
+@@ -324,6 +325,7 @@ struct sta_info {
+ 	unsigned long rx_packets, rx_bytes;
+ 	unsigned long wep_weak_iv_count;
+ 	unsigned long last_rx;
++	unsigned long last_auth;
+ 	long last_connected;
+ 	unsigned long num_duplicates;
+ 	unsigned long rx_fragments;
 -- 
-1.8.0.2
+1.8.0
 
