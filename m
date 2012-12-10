@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39942 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249Ab2LJJ3d (ORCPT
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:52805
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750900Ab2LJCun (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 04:29:33 -0500
-Message-ID: <1355131788.9857.1.camel@jlt4.sipsolutions.net> (sfid-20121210_102940_332564_5C53F8B8)
-Subject: Re: [RFC PATCH] af_packet: don't to defrag shared skb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: eric@regit.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Eric Dumazet <eric.dumazet@gmail.com>
-Date: Mon, 10 Dec 2012 10:29:48 +0100
-In-Reply-To: <1354919017.9124.33.camel@jlt4.sipsolutions.net> (sfid-20121207_232321_820322_B0AAB1D2)
-References: <1354906561-4695-1-git-send-email-eric@regit.org>
-	 <20121207.153134.25835204617509469.davem@davemloft.net>
-	 <1354915824.9124.11.camel@jlt4.sipsolutions.net>
-	 (sfid-20121207_223020_561049_DB965D43) <1354916502.9124.18.camel@jlt4.sipsolutions.net>
-	 (sfid-20121207_224129_500056_6617D80D) <1354918363.9124.29.camel@jlt4.sipsolutions.net>
-	 (sfid-20121207_231231_221604_E7B34625) <1354919017.9124.33.camel@jlt4.sipsolutions.net>
-	 (sfid-20121207_232321_820322_B0AAB1D2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 9 Dec 2012 21:50:43 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] qca-swiss-army-knife: Update initvals for AR9340
+Date: Mon, 10 Dec 2012 08:20:06 +0530
+Message-Id: <1355107806-32675-1-git-send-email-sujith@msujith.org> (sfid-20121210_035053_752254_4BEFD1EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-07 at 23:23 +0100, Johannes Berg wrote:
-> Oh I should say ... IP is like black magic to me ;-)
-> 
-> > -	if (!pskb_may_pull(skb, sizeof(struct iphdr)))
-> > +	if (!skb_copy_bits(skb, 0, &iph, sizeof(iph)))
-> >  		return skb;
-> >  
-> > -	iph = ip_hdr(skb);
-> > -	if (iph->ihl < 5 || iph->version != 4)
-> > +	if (iph.ihl < 5 || iph.version != 4)
-> >  		return skb;
-> > -	if (!pskb_may_pull(skb, iph->ihl*4))
-> > -		return skb;
-> > -	iph = ip_hdr(skb);
-> > -	len = ntohs(iph->tot_len);
-> > -	if (skb->len < len || len < (iph->ihl * 4))
-> > +
-> > +	len = ntohs(iph.tot_len);
-> > +	if (skb->len < len || len < (iph.ihl * 4))
-> >  		return skb;
-> >  
-> > -	if (ip_is_fragment(ip_hdr(skb))) {
-> > +	if (ip_is_fragment(&iph)) {
-> >  		skb = skb_share_check(skb, GFP_ATOMIC);
-> >  		if (skb) {
-> > +			if (!pskb_may_pull(skb, iph.ihl*4))
-> > +				return skb;
-> 
-> I moved this here but I have no idea what it does.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Well, ok, looking further it does seem kinda obvious -- ip_defrag()
-assumes the IP header is (fully?) present in the skb header, so that's
-what this does.
+The SLP32_MODE/INC registers have to be programmed with
+values based on the ref. clock, which could be either 25MHz
+or 40MHz. Incorrect values in these registers results in
+TSF drift.
 
-Eric (Leblond), could you test this patch?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ tools/initvals/ar9340_initvals.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/tools/initvals/ar9340_initvals.h b/tools/initvals/ar9340_initvals.h
+index 1d8235e..f69d292 100644
+--- a/tools/initvals/ar9340_initvals.h
++++ b/tools/initvals/ar9340_initvals.h
+@@ -211,6 +211,8 @@ static const u32 ar9340_1p0_radio_core_40M[][2] = {
+ 	{0x0001609c, 0x02566f3a},
+ 	{0x000160ac, 0xa4647c00},
+ 	{0x000160b0, 0x01885f5a},
++	{0x00008244, 0x0010f400},
++	{0x0000824c, 0x0001e800},
+ };
+ 
+ #define ar9340_1p0_mac_postamble ar9300_2p2_mac_postamble
+@@ -1273,9 +1275,9 @@ static const u32 ar9340_1p0_mac_core[][2] = {
+ 	{0x000081f8, 0x00000000},
+ 	{0x000081fc, 0x00000000},
+ 	{0x00008240, 0x00100000},
+-	{0x00008244, 0x0010f424},
++	{0x00008244, 0x0010f3d7},
+ 	{0x00008248, 0x00000800},
+-	{0x0000824c, 0x0001e848},
++	{0x0000824c, 0x0001e7ae},
+ 	{0x00008250, 0x00000000},
+ 	{0x00008254, 0x00000000},
+ 	{0x00008258, 0x00000000},
+-- 
+1.8.0.1
 
