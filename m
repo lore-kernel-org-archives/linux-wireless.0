@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40078 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753528Ab2LLQZK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 11:25:10 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v10 0/3] wireless: Driver for 60GHz card wil6210
-Date: Wed, 12 Dec 2012 18:25:06 +0200
-Message-ID: <2874864.eaglUHDoO0@lx-vladimir> (sfid-20121212_172515_422980_0D889CF9)
-In-Reply-To: <1355328278.9708.15.camel@jlt4.sipsolutions.net>
-References: <1355327278-12965-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1355328278.9708.15.camel@jlt4.sipsolutions.net>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:53935 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750818Ab2LJRuj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 12:50:39 -0500
+Message-ID: <1355161791.3738.67.camel@cumari.coelho.fi> (sfid-20121210_185042_349560_8B8AA23D)
+Subject: wl12xx over spi with no scan results (was: Re: [PATCH 20/20]
+ wlcore: Always pass DMA-able buffers to mmc functions)
+From: Luciano Coelho <coelho@ti.com>
+To: Alberto Garau <Alberto.Garau@inpeco.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ido Yariv" <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>
+Date: Mon, 10 Dec 2012 19:49:51 +0200
+In-Reply-To: <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, December 12, 2012 05:04:38 PM Johannes Berg wrote:
-> On Wed, 2012-12-12 at 17:47 +0200, Vladimir Kondratiev wrote:
+Hi Alberto,
+
+On Mon, 2012-12-10 at 17:24 +0000, Alberto Garau wrote:
+> I’m trying to make working the WL1271 TI Murata chip with our custom board.  The SPI driver seems to be running but I cannot scan from our Wifi Network. 
 > 
-> > Vladimir Kondratiev (3):
-> >   wireless: Driver for 60GHz card wil6210
+> After booting the board I’m doing:
 > 
-> Since you didn't want to hear my objections on the iftype usage ...
-> maybe you should not Cc me any more.
+> •	insmod /media/red/root/wl1271/wl1271.ko
+> •	insmod /media/red/root/wl1271/wl1271_spi.ko
+> •	iwconfig wlan0 mode managed
+> •	iwconfig wlan0 essid xxxxxxx
+> •	ifconfig wlan0 hw ether 00:80:E1:12:26:17 
+> •	ifconfig wlan0 192.168.40.100 netmask 255.255.255.0 up
 > 
-> johannes
+> Then I botain:
 > 
+> chip_id read from memory: 04030111
+> wl1271_fetch_firmware - fetching firmware wl1271-fw.bin
+> wl1271_fetch_nvs - fetching firmware wl1271-nvs.bin
+> wl1271: firmware booted (Rev 6.1.0.50.350)
+> 
+> but unfortunately the when I run “iwlist wlan0 scan”
+> 
+> I obtain “wlan0 No scan results”
+> 
+> 
+> Could you please help us in fixing this issue ?
 
-Johannes,
+This could be many different things.  The first thing that comes to my
+mind is that the scan results are the first thing that comes as a real
+interrupt (before this all the interrupts are polled).  So are you sure
+the interrupt line is working properly?
 
-I do hear it, and I agree with it!!!
+--
+Luca.
 
-I will work to support this new
-iftype, PBSS, properly. I just don't have enough data to do it right
-now. Thus, I want initial driver for the 1-st ever 60g card to be merged;
-this will serve as test bed for the next framework modifications.
-
-I recall, you was asking me why do I pushing to do 60g related
-infrastructure changes when no one driver exists. I want to address this
-and then return to the infrastructure.
-
-Let's have at least something working as 1-st step. Now, I need to assemble
-all pieces of the puzzle:
-
-- initial infrastructure (done)
-- minimal driver (these patches)
-- tools (wpa_supplicant partially done, other patches sent; iw - partially done)
-- regulatory - patches submitted.
-
-Then, when minimal support will be in place, I can handle new features.
-
-Hope it explain why I want to merge minimal driver 1-st.
-
-Thanks, Vladimir
