@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:44034 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751667Ab2LJGjy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 01:39:54 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Thx23-0006XI-VX
-	for linux-wireless@vger.kernel.org; Mon, 10 Dec 2012 07:40:04 +0100
-Received: from 212.199.104.198.static.012.net.il ([212.199.104.198])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 07:40:03 +0100
-Received: from qca_vkondrat by 212.199.104.198.static.012.net.il with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 07:40:03 +0100
+Received: from mail-we0-f174.google.com ([74.125.82.174]:43851 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735Ab2LJOjL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 09:39:11 -0500
+Received: by mail-we0-f174.google.com with SMTP id x10so1202109wey.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 06:39:10 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 10 Dec 2012 15:39:09 +0100
+Message-ID: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com> (sfid-20121210_153915_388007_73D913E2)
+Subject: ath6kl: AR6004 failed to start on computer boot
+From: Julien Massot <jmassot@aldebaran-robotics.com>
 To: linux-wireless@vger.kernel.org
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
-Date: Thu, 6 Dec 2012 15:22:36 +0000 (UTC)
-Message-ID: <loom.20121206T161917-497@post.gmane.org> (sfid-20121210_073959_449549_454E5F27)
-References: <1354729192-22945-1-git-send-email-greearb@candelatech.com> <87a9ts4c1q.fsf@nemi.mork.no> <50BF8C18.9060504@candelatech.com> <20121206122528.GG2502@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: ath6kl-devel@qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@...> writes:
+Hi,
 
-> We should probably assing ethtool_ops before wireless core will
-> call alloc_netdev.
+I have some problem with the AR6004 (hw 1.3) initialisation.
+I'm using the compat wireless 3.6.6-1 package, with the ath6kl driver from
+ https://github.com/kvalo/ath6kl.git. (master branch)
 
-Another option (I verified - it works) - set in the driver
+The device seems not to respond after the firmware upload.
+"ath6kl: htc_wait_recv_ctrl_message: Timeout!"
+Increasing the timeout doesn't help.
+Here is the log at startup.
+http://pastebin.com/DsivqdDP
 
-ndev->ethtool_ops = NULL;
+If I unplug and re-plug the adapter, every thing is going well.
+http://pastebin.com/BTz0w5QL.
 
-before register_netdev(ndev);
+Any Idea on how to fix or workaround this issue ?
 
+(I've also tried the recovery options recovery_enable=1 heart_beat_poll=200)
 
-
+Regards,
+Julien
