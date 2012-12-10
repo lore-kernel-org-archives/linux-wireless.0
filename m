@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:46343 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139Ab2LKPia (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 10:38:30 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so1682698bkw.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 07:38:28 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/3] p54: zero-out rx_status
-Date: Tue, 11 Dec 2012 16:38:15 +0100
-Cc: Gabor Juhos <juhosg@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1355234105-12013-1-git-send-email-juhosg@openwrt.org> <1355239503.9819.1.camel@jlt4.sipsolutions.net> <1355239813.9819.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355239813.9819.3.camel@jlt4.sipsolutions.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:43652 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751550Ab2LJXDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 18:03:16 -0500
+Message-ID: <50C669FA.40103@openwrt.org> (sfid-20121211_000319_723267_38D2CFED)
+Date: Tue, 11 Dec 2012 00:02:18 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201212111638.16033.chunkeey@googlemail.com> (sfid-20121211_163833_592177_D603C2B0)
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kbuild@01.org
+Subject: Re: [wireless-next:master 345/347] drivers/net/wireless/ath/ath9k/init.c:636
+ ath9k_init_softc() error: we previously assumed 'pdata' could be null (see
+ line 582)
+References: <20121210222108.GS22569@mwanda>
+In-Reply-To: <20121210222108.GS22569@mwanda>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, December 11, 2012 04:30:13 PM Johannes Berg wrote:
-> On Tue, 2012-12-11 at 16:25 +0100, Johannes Berg wrote:
-> 
-> > > If this issue just popped up now, I suspect that 
-> > > something else is silently corrupting our SKBs 
-> > > [or can anybody see how rt2x00 hit this issue?]
-> 
-> Oh, ok I assumed that rt2x00 RX SKBs are cleanly allocated, but now that
-> I trace the code further I see that while the SKBs are on the queue
-> inside rt2x00 they have something called "struct skb_frame_desc" on the
-> skb->cb, so this is what's causing the rt2x00 issue. This should be
-> mentioned in the rt2x00 commit, and all other drivers should be fine.
-Ah, you are right. I assumed that rt2x00_queue stuff was only important
-for TX. But it seems rt2x00 pci devices use them as well for RX.
+Hi Dan,
 
-Regards,
-	Chr
+> FYI, there are new smatch warnings show up in
+> 
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+> head:   78f18df4b323d2ac14d6c82e2fc3c8dc4556bccc
+> commit: ab5c4f71d8c7add173a2d32e5beefdaaf1b7cbbc [345/347] ath9k: allow to load EEPROM content via firmware API
+> 
+> + drivers/net/wireless/ath/ath9k/init.c:636 ath9k_init_softc() error: we previously assumed 'pdata' could be null (see line 582)
+> + drivers/net/wireless/ath/ath9k/init.c:647 ath9k_init_softc() warn: variable dereferenced before check 'pdata' (see line 639)
+
+This is absolutely correct, I will send a fix ASAP.
+
+Thank you for the report!
+
+-Gabor
