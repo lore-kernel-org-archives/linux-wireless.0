@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53198 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:42222 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945962Ab2LFQr1 (ORCPT
+	with ESMTP id S1752055Ab2LJVtA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:47:27 -0500
+	Mon, 10 Dec 2012 16:49:00 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 01/24] regulatory: don't write past array when intersecting rules
-Date: Thu,  6 Dec 2012 17:47:25 +0100
-Message-Id: <1354812468-15709-2-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174803_199203_E3EBF5F7)
-In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+Subject: [PATCH 07/10] iwlwifi: change TX code to suppress smatch warning
+Date: Mon, 10 Dec 2012 22:49:15 +0100
+Message-Id: <1355176158-24675-7-git-send-email-johannes@sipsolutions.net> (sfid-20121210_224913_762716_CA645168)
+In-Reply-To: <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
+References: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
+ <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When intersecting rules, we count first to know how many
-rules need to be allocated, and then do the intersection
-into the allocated array. However, the code doing this
-writes past the end of the array because it attempts to
-do all intersections. Make it stop when the right number
-of rules has been reached.
+By using a few temporary variables, smatch can track
+what's happening and stops complaining that we access
+beyond the tid_data array.
 
-Cc: stable@vger.kernel.org
+This also makes the generated code a bit smaller, so
+it's a win all around.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/tx.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b6c7ea6..4197359 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -648,9 +648,9 @@ static struct ieee80211_regdomain *regdom_intersect(
- 	if (!rd)
- 		return NULL;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+index 7d6cc5d..517562b 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+@@ -305,7 +305,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
+ 	u8 hdr_len;
+ 	u16 len, seq_number = 0;
+ 	u8 sta_id, tid = IWL_MAX_TID_COUNT;
+-	bool is_agg = false;
++	bool is_agg = false, is_data_qos = false;
+ 	int txq_id;
  
--	for (x = 0; x < rd1->n_reg_rules; x++) {
-+	for (x = 0; x < rd1->n_reg_rules && rule_idx < num_rules; x++) {
- 		rule1 = &rd1->reg_rules[x];
--		for (y = 0; y < rd2->n_reg_rules; y++) {
-+		for (y = 0; y < rd2->n_reg_rules && rule_idx < num_rules; y++) {
- 			rule2 = &rd2->reg_rules[y];
- 			/*
- 			 * This time around instead of using the stack lets
+ 	if (info->control.vif)
+@@ -378,9 +378,6 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
+ 		iwl_sta_modify_sleep_tx_count(priv, sta_id, 1);
+ 	}
+ 
+-	if (info->flags & IEEE80211_TX_CTL_AMPDU)
+-		is_agg = true;
+-
+ 	dev_cmd = iwl_trans_alloc_tx_cmd(priv->trans);
+ 
+ 	if (unlikely(!dev_cmd))
+@@ -442,6 +439,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
+ 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+ 		hdr->seq_ctrl |= cpu_to_le16(seq_number);
+ 		seq_number += 0x10;
++
++		if (info->flags & IEEE80211_TX_CTL_AMPDU)
++			is_agg = true;
++		is_data_qos = true;
+ 	}
+ 
+ 	/* Copy MAC header from skb into command buffer */
+@@ -474,8 +475,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
+ 	if (iwl_trans_tx(priv->trans, skb, dev_cmd, txq_id))
+ 		goto drop_unlock_sta;
+ 
+-	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc) &&
+-	    !ieee80211_has_morefrags(fc))
++	if (is_data_qos && !ieee80211_has_morefrags(fc))
+ 		priv->tid_data[sta_id][tid].seq_number = seq_number;
+ 
+ 	spin_unlock(&priv->sta_lock);
 -- 
 1.8.0
 
