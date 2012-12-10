@@ -1,175 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58198 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751093Ab2LJR5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 12:57:39 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 2/2] mac80211: fix AP_VLAN channel context handling
-Date: Mon, 10 Dec 2012 18:57:36 +0100
-Message-Id: <1355162256-34131-2-git-send-email-nbd@openwrt.org> (sfid-20121210_185750_689444_B172CEF6)
-In-Reply-To: <1355162256-34131-1-git-send-email-nbd@openwrt.org>
-References: <1355162256-34131-1-git-send-email-nbd@openwrt.org>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:37734 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750981Ab2LJWSq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 17:18:46 -0500
+Received: by mail-qa0-f46.google.com with SMTP id r4so2170105qaq.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 14:18:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1355176215.3738.102.camel@cumari.coelho.fi>
+References: <1354229283-7934-1-git-send-email-arik@wizery.com>
+ <1355153582.3738.53.camel@cumari.coelho.fi> <CA+XVXffLuJuqQJ8Ju5XsipSdkuUBFOx=0ReQJe8Oc7J-5X+B6Q@mail.gmail.com>
+ <1355176215.3738.102.camel@cumari.coelho.fi>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 11 Dec 2012 00:18:30 +0200
+Message-ID: <CA+XVXffZgF+rJfgrGbq0+D2Y1gx2VmZ1HziD18r9NNwqQ2BVjA@mail.gmail.com> (sfid-20121210_231849_732374_330D6FD8)
+Subject: Re: [PATCH v2] wlcore: use separate HW queue for each AC in each vif
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When .start_ap is called, copy the channel context to all active AP VLANs.
-Also copy the channel context when bringing up/down an AP VLAN if the AP
-has been started already.
+On Mon, Dec 10, 2012 at 11:50 PM, Luciano Coelho <coelho@ti.com> wrote:
+>> we can't use normal since we need to assign the exact same HW queue
+>> base to existing interfaces (in case of resume from suspend).
+>> Otherwise we'll have a problem, as mac80211 doesn't flush internal
+>> packets during suspend. So if we assign a new HW queues
+>> to an existing vif we risk stopping/starting the wrong vifs using the
+>> ieee80211_queue_xxx APIs.
+>
+> Isn't the only difference of using _NORMAL that mac80211 won't call the
+> iterator function when the driver already knows about the interface?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/cfg.c         |  7 +++++++
- net/mac80211/chan.c        | 38 +++++++++++++++++++++++++++++++++-----
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/iface.c       | 13 ++++++++++---
- 4 files changed, 52 insertions(+), 8 deletions(-)
+The other way around - the iterator won't be called for interfaces not
+yet added to the driver that already exist in mac80211.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a5d4361..da31909 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -915,6 +915,12 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	if (err)
- 		return err;
- 
-+	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
-+		err = ieee80211_vif_copy_channel(vlan, sdata);
-+		if (err)
-+			return err;
-+	}
-+
- 	/*
- 	 * Apply control port protocol, this allows us to
- 	 * not encrypt dynamic WEP control frames.
-@@ -1001,6 +1007,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
- 		sta_info_flush(local, vlan);
- 		netif_carrier_off(vlan->dev);
-+		ieee80211_vif_release_channel(vlan);
- 	}
- 	netif_carrier_off(dev);
- 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 53f0312..bc504f0 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -119,14 +119,17 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
--	ret = drv_assign_vif_chanctx(local, sdata, ctx);
--	if (ret)
--		return ret;
-+	if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN) {
-+		ret = drv_assign_vif_chanctx(local, sdata, ctx);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	rcu_assign_pointer(sdata->vif.chanctx_conf, &ctx->conf);
- 	ctx->refcount++;
- 
--	ieee80211_recalc_txpower(sdata);
-+	if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-+		ieee80211_recalc_txpower(sdata);
- 
- 	return 0;
- }
-@@ -174,7 +177,8 @@ static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 	ctx->refcount--;
- 	rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
- 
--	drv_unassign_vif_chanctx(local, sdata, ctx);
-+	if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-+		drv_unassign_vif_chanctx(local, sdata, ctx);
- 
- 	if (ctx->refcount > 0) {
- 		ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
-@@ -285,6 +289,30 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 	drv_change_chanctx(local, chanctx, IEEE80211_CHANCTX_CHANGE_RX_CHAINS);
- }
- 
-+int ieee80211_vif_copy_channel(struct ieee80211_sub_if_data *sdata,
-+			       struct ieee80211_sub_if_data *parent)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+
-+	int ret;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(parent->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -ENOENT;
-+		goto out;
-+	}
-+
-+	ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+	ret = ieee80211_assign_vif_chanctx(sdata, ctx);
-+out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	return ret;
-+}
-+
- int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 			      const struct cfg80211_chan_def *chandef,
- 			      enum ieee80211_chanctx_mode mode)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 42d0d02..d223841 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1628,6 +1628,8 @@ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 			  const struct cfg80211_chan_def *chandef,
- 			  enum ieee80211_chanctx_mode mode);
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
-+int ieee80211_vif_copy_channel(struct ieee80211_sub_if_data *sdata,
-+			       struct ieee80211_sub_if_data *parent);
- 
- void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 				   struct ieee80211_chanctx *chanctx);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 40c36d5..1da2f23 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -508,6 +508,7 @@ static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
- int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+	struct ieee80211_sub_if_data *ap_sdata;
- 	struct net_device *dev = wdev->netdev;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-@@ -587,10 +588,14 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
- 		/* no need to tell driver, but set carrier */
--		if (rtnl_dereference(sdata->bss->beacon))
--			netif_carrier_on(dev);
--		else
-+		if (!rtnl_dereference(sdata->bss->beacon)) {
- 			netif_carrier_off(dev);
-+			break;
-+		}
-+
-+		ap_sdata = get_bss_sdata(sdata);
-+		ieee80211_vif_copy_channel(sdata, ap_sdata);
-+		netif_carrier_on(dev);
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
- 		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) {
-@@ -839,6 +844,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
- 		list_del(&sdata->u.vlan.list);
-+		netif_carrier_off(sdata->dev);
-+		ieee80211_vif_release_channel(sdata);
- 		/* no need to tell driver */
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
--- 
-1.7.12.2
+Using the iterator as is, we gain information on which interfaces
+mac80211 knows, regardless of the lower driver. So if the current
+interface already exists, it means this is recovery/resume.
 
+Actually Johannes came up with this little bit of black magic.
+
+>
+>> >> +     if (q_base >= WLCORE_NUM_MAC_ADDRESSES)
+>> >> +             return -EBUSY;
+>> >> +
+>> >> +     wlvif->hw_queue_base = q_base * NUM_TX_QUEUES;
+>> >> +     wl1271_debug(DEBUG_MAC80211, "allocating hw queue base: %d",
+>> >> +                  wlvif->hw_queue_base);
+>> >> +
+>> >> +     for (i = 0; i < NUM_TX_QUEUES; i++) {
+>> >> +             wl->queue_stop_reasons[wlvif->hw_queue_base + i] = 0;
+>> >> +             /* register hw queues in mac80211 */
+>> >> +             vif->hw_queue[i] = wlvif->hw_queue_base + i;
+>> >> +     }
+>> >> +
+>> >> +adjust_cab_queue:
+>> >> +     /* the last places are reserved for cab queues per interface */
+>> >> +     if (wlvif->bss_type == BSS_TYPE_AP_BSS)
+>> >> +             vif->cab_queue = NUM_TX_QUEUES * WLCORE_NUM_MAC_ADDRESSES +
+>> >> +                              wlvif->hw_queue_base / NUM_TX_QUEUES;
+>> >> +     else
+>> >> +             vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
+>> >
+>> > Why not keep the reservation per-vif in the same order (ie. the cab
+>> > queue comes together with the other queues for that vif)? It doesn't
+>> > matter that you don't use the cab_queue for the non AP vifs, since
+>> > you're allocating them anyway.
+>> >
+>> > Keeping them together would make this code clearer.  Just make a macro
+>> > NUM_TX_QUEUES_PER_VIF that includes the space for cab_queue.
+>>
+>> I did it on purpose - that way the functions wlcore_wake_queues and
+>> friends can loop on the "real" vifs and stop/start them.
+>
+> I don't see the difference.  They can still do it all the same.
+
+It's a matter of convenience. It was easier for me to picture the real
+HW queues as contiguous and throw the fake ones off to the side.
+The off-channel HW queue is also fake (but global) and gets treated the same..
+
+>
+>
+>> >> diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+>> >> index d799fc9..dbc1721 100644
+>> >> --- a/drivers/net/wireless/ti/wlcore/tx.c
+>> >> +++ b/drivers/net/wireless/ti/wlcore/tx.c
+>> >
+>> > [...]
+>> >
+>> >> @@ -1189,44 +1192,45 @@ u32 wl1271_tx_min_rate_get(struct wl1271 *wl, u32 rate_set)
+>> >>  }
+>> >>  EXPORT_SYMBOL_GPL(wl1271_tx_min_rate_get);
+>> >>
+>> >> -void wlcore_stop_queue_locked(struct wl1271 *wl, u8 queue,
+>> >> -                           enum wlcore_queue_stop_reason reason)
+>> >> +void wlcore_stop_queue_locked(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>> >> +                           u8 queue, enum wlcore_queue_stop_reason reason)
+>> >>  {
+>> >> -     bool stopped = !!wl->queue_stop_reasons[queue];
+>> >> +     int hwq = wlvif->hw_queue_base + wl1271_tx_get_mac80211_queue(queue);
+>> >
+>> > It would look nicer if we moved the "wlvif->hw_queue_base + " to the
+>> > wl1271_tx_get_mac80211_queue() function.  After all, the function call
+>> > without adding the hw_queue_base doesn't mean anything anymore.
+>>
+>> well a rename is necessary as well then, since this is not a simple
+>> translation between mac8021 and wlcore jargon for queues..
+>
+> I don't think we need to rename.  I think wl1271_tx_get_mac80211_queue()
+> suits very well to include the hw_queue_base.  It would be a more
+> complete translation, actually.
+
+I won't press the issue :)
+
+>
+>
+>> >> @@ -1235,49 +1239,62 @@ out:
+>> >>  void wlcore_stop_queues(struct wl1271 *wl,
+>> >>                       enum wlcore_queue_stop_reason reason)
+>> >>  {
+>> >> -     int i;
+>> >> +     int i, q_base;
+>> >> +     unsigned long flags;
+>> >>
+>> >> -     for (i = 0; i < NUM_TX_QUEUES; i++)
+>> >> -             wlcore_stop_queue(wl, i, reason);
+>> >> -}
+>> >> -EXPORT_SYMBOL_GPL(wlcore_stop_queues);
+>> >> +     spin_lock_irqsave(&wl->wl_lock, flags);
+>> >>
+>> >> -void wlcore_wake_queues(struct wl1271 *wl,
+>> >> -                     enum wlcore_queue_stop_reason reason)
+>> >> -{
+>> >> -     int i;
+>> >> +     for (q_base = 0; q_base < WLCORE_NUM_MAC_ADDRESSES; q_base++)
+>> >> +             for (i = 0; i < NUM_TX_QUEUES; i++) {
+>> >> +                     int h = q_base * NUM_TX_QUEUES + i;
+>> >> +                     WARN_ON(test_and_set_bit(reason,
+>> >> +                                              &wl->queue_stop_reasons[h]));
+>> >> +             }
+>> >
+>> > This looks a bit hacky.  You'll "stop queues" even for vifs that were
+>> > not added, won't you? Also, you can do with a single for-loop here ;)
+>>
+>> there's no harm in setting the bit for queues that were not added, as
+>> we zero out all stop reasons when a vif is added. we need to zero-out
+>> the reasons anyway in case someone removes a stopped vif..
+>
+> Yeah, I know there's no harm, but it still looks a bit ugly.  It's
+> probably not efficient to iterate over the existing vifs to set the stop
+> reasons, but that would look nicer.
+
+Note that "existing" is tricky here as sometimes vifs are removed from
+the driver (suspend/recovery) but still exist in mac80211.
+So for instance we want to stop all vifs during recovery, and mark all
+with stop reasons. That's also the reason I used the mac80211 global
+API for stopping/waking the queues.
+
+>
+> In any case, if you want a quick and dirty way of doing it without
+> caring about the actual vifs, it could be like this:
+>
+>         for (i = 0; i < WLCORE_NUM_MAC_ADDRESSES * NUM_TX_QUEUES; i++)
+>                 WARN_ON(test_and_set_bit(reason,
+>                                          &wl->queue_stop_reasons[i]));
+>
+> Your double-loop would make more sense if the cabs were included in the
+> same block per vif, as I suggested, though.
+
+The compiler optimizes away the difference between my code and yours,
+and I thought my version was a bit clearer, but yours is ok as well.
+
+>
+>
+>> > I'm also not sure about the WARN_ON.  If one of the queues is already
+>> > stopped, should we really warn? I see that, currently, the reasons to
+>> > stop all queues are not used to stop a single queue, but still. :)
+>>
+>> you're not supposed to use the global API if you've already used a
+>> per-vif stop/start API. Generally there are reasons we stop a vif for,
+>> and other reasons we stop all vifs for. There should not be an overlap
+>> between reasons as that doesn't make sense.
+>
+> Yes, this makes my statement below more significant. :)
+>
+>
+>> I guess we could convert it to WARN_ON_ONCE though.
+>
+> Yes, didn't I mention I would convert all WARN_ONs to WARN_ON_ONCEs? Oh,
+> well, I meant it anyway. ;)
+
+:)
+
+>
+>
+>> >
+>> > [...]
+>> >
+>> >> -void wlcore_reset_stopped_queues(struct wl1271 *wl)
+>> >> +void wlcore_wake_queues(struct wl1271 *wl,
+>> >> +                     enum wlcore_queue_stop_reason reason)
+>> >>  {
+>> >> -     int i;
+>> >> +     int i, q_base;
+>> >>       unsigned long flags;
+>> >>
+>> >>       spin_lock_irqsave(&wl->wl_lock, flags);
+>> >>
+>> >> -     for (i = 0; i < NUM_TX_QUEUES; i++) {
+>> >> -             if (!wl->queue_stop_reasons[i])
+>> >> -                     continue;
+>> >> +     for (q_base = 0; q_base < WLCORE_NUM_MAC_ADDRESSES; q_base++)
+>> >> +             for (i = 0; i < NUM_TX_QUEUES; i++) {
+>> >> +                     int h = q_base * NUM_TX_QUEUES + i;
+>> >> +                     WARN_ON(!test_and_clear_bit(reason,
+>> >> +                                             &wl->queue_stop_reasons[h]));
+>> >> +             }
+>> >
+>> > Same thing here.  Actually, wouldn't it make more sense to have a
+>> > separate bitmask for the "full-stops"? In that way, at least it would be
+>> > very clear that the full-stop reasons (eg. flush, restart...) cannot be
+>> > used with single queues.
+>>
+>> I think the WARN_ON separates this quite well already, I would prefer
+>> to avoid the extra complexity. Again this can be converted to
+>> WARN_ON_ONCE, since WARN_ON is frowned upon (and rightly so).
+>
+> A WARN_ON separates it only at runtime.  We could miss it if the exact
+> combination of factors don't happen during testing.  If we would
+> separate them, we could also have a global all_queues_stop_reason
+> instead of going through all the queues and marking them. ;)
+
+I guess it's a good point. But I think this should be in a separate
+patch. This is not directly related to this one and would complicate
+it as is.
