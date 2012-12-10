@@ -1,78 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:50914 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303Ab2LSSxX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42226 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063Ab2LJVtB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 13:53:23 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1414758pbc.33
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 10:53:23 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net, greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 2/3] cfg80211: move reg_is_world_roaming()
-Date: Wed, 19 Dec 2012 10:53:03 -0800
-Message-Id: <1355943184-966-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20121219_195326_342374_12BF2060)
-In-Reply-To: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 10 Dec 2012 16:49:01 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/10] iwlwifi: silently ignore fw flaws in Tx path
+Date: Mon, 10 Dec 2012 22:49:17 +0100
+Message-Id: <1355176158-24675-9-git-send-email-johannes@sipsolutions.net> (sfid-20121210_224917_572203_695C9865)
+In-Reply-To: <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
+References: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
+ <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This will be used later by other code. This has no
-functional change.
+We know that we have issues with the fw in the reclaim path.
+This is why iwl_reclaim doesn't complain too loud when it
+happens since it is recoverable. Somehow, the caller of
+iwl_reclaim however WARNed when it happens. This doesn't
+make any sense.
 
-Tested-by: Ben Greear <greearb@candelatech.com>
-Reported-by: Ben Greear <greearb@candelatech.com>
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+When I digged into the history of that code, I discovered
+that this bug occurs only when we receive a BA notification.
+So move the W/A in the BA notification handling code where
+it was before.
+
+This patch addresses:
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2387
+
+Cc: stable@vger.kernel.org
+Reported-by: Florian Reitmeir <florian@reitmeir.org>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c |   24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/tx.c | 49 +++++++++++++----------------------
+ 1 file changed, 18 insertions(+), 31 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index a2d5a03..f649b5e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1042,6 +1042,18 @@ static bool ignore_reg_update(struct wiphy *wiphy,
- 	return false;
- }
- 
-+static bool reg_is_world_roaming(struct wiphy *wiphy)
-+{
-+	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
-+	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
-+		return true;
-+	if (last_request &&
-+	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY)
-+		return true;
-+	return false;
-+}
-+
- static void handle_reg_beacon(struct wiphy *wiphy,
- 			      unsigned int chan_idx,
- 			      struct reg_beacon *reg_beacon)
-@@ -1128,18 +1140,6 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+index 517562b..da21328 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+@@ -1097,29 +1097,6 @@ static void iwl_check_abort_status(struct iwl_priv *priv,
  	}
  }
  
--static bool reg_is_world_roaming(struct wiphy *wiphy)
+-static int iwl_reclaim(struct iwl_priv *priv, int sta_id, int tid,
+-		       int txq_id, int ssn, struct sk_buff_head *skbs)
 -{
--	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
--	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
--		return true;
--	if (last_request &&
--	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--	    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY)
--		return true;
--	return false;
+-	if (unlikely(txq_id >= IWLAGN_FIRST_AMPDU_QUEUE &&
+-		     tid != IWL_TID_NON_QOS &&
+-		     txq_id != priv->tid_data[sta_id][tid].agg.txq_id)) {
+-		/*
+-		 * FIXME: this is a uCode bug which need to be addressed,
+-		 * log the information and return for now.
+-		 * Since it is can possibly happen very often and in order
+-		 * not to fill the syslog, don't use IWL_ERR or IWL_WARN
+-		 */
+-		IWL_DEBUG_TX_QUEUES(priv,
+-			"Bad queue mapping txq_id=%d, agg_txq[sta:%d,tid:%d]=%d\n",
+-			txq_id, sta_id, tid,
+-			priv->tid_data[sta_id][tid].agg.txq_id);
+-		return 1;
+-	}
+-
+-	iwl_trans_reclaim(priv->trans, txq_id, ssn, skbs);
+-	return 0;
 -}
 -
- /* Reap the advantages of previously found beacons */
- static void reg_process_beacons(struct wiphy *wiphy)
+ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd)
  {
+@@ -1181,9 +1158,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 						  next_reclaimed);
+ 		}
+ 
+-		/*we can free until ssn % q.n_bd not inclusive */
+-		WARN_ON_ONCE(iwl_reclaim(priv, sta_id, tid,
+-					 txq_id, ssn, &skbs));
++		iwl_trans_reclaim(priv->trans, txq_id, ssn, &skbs);
++
+ 		iwlagn_check_ratid_empty(priv, sta_id, tid);
+ 		freed = 0;
+ 
+@@ -1308,16 +1284,27 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 		return 0;
+ 	}
+ 
++	if (unlikely(scd_flow != agg->txq_id)) {
++		/*
++		 * FIXME: this is a uCode bug which need to be addressed,
++		 * log the information and return for now.
++		 * Since it is can possibly happen very often and in order
++		 * not to fill the syslog, don't use IWL_ERR or IWL_WARN
++		 */
++		IWL_DEBUG_TX_QUEUES(priv,
++				    "Bad queue mapping txq_id=%d, agg_txq[sta:%d,tid:%d]=%d\n",
++				    scd_flow, sta_id, tid, agg->txq_id);
++		spin_unlock(&priv->sta_lock);
++		return 0;
++	}
++
+ 	__skb_queue_head_init(&reclaimed_skbs);
+ 
+ 	/* Release all TFDs before the SSN, i.e. all TFDs in front of
+ 	 * block-ack window (we assume that they've been successfully
+ 	 * transmitted ... if not, it's too late anyway). */
+-	if (iwl_reclaim(priv, sta_id, tid, scd_flow,
+-			ba_resp_scd_ssn, &reclaimed_skbs)) {
+-		spin_unlock(&priv->sta_lock);
+-		return 0;
+-	}
++	iwl_trans_reclaim(priv->trans, scd_flow, ba_resp_scd_ssn,
++			  &reclaimed_skbs);
+ 
+ 	IWL_DEBUG_TX_REPLY(priv, "REPLY_COMPRESSED_BA [%d] Received from %pM, "
+ 			   "sta_id = %d\n",
 -- 
-1.7.10.4
+1.8.0
 
