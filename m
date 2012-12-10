@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46984 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964789Ab2LGJYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 04:24:07 -0500
-Message-ID: <1354872204.6234.92.camel@cumari.coelho.fi> (sfid-20121207_102411_882893_81D09A6B)
-Subject: Re: [PATCH 11/20] wlcore/wl18xx: change priority calculations for
- links
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 7 Dec 2012 11:23:24 +0200
-In-Reply-To: <1354095769-8724-12-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-12-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37365 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037Ab2LJP6n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 10:58:43 -0500
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>
+Subject: [PATCH] crda: fix compilation with libnl-3.0
+Date: Mon, 10 Dec 2012 17:58:39 +0200
+Message-ID: <5452866.tG58b6Y9lW@lx-vladimir> (sfid-20121210_165847_463580_D66A06B6)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
-> Update the 18xx FW status private part to include Tx related link
-> priorities. Introduce new HW ops to determine link priority per chip
-> family.
-> 
-> For 18xx the changes are:
-> - Suspended links are at most low priority and Tx for them is stopped
->   beyond the suspend threshold.
-> - Active links now get their thresholds directly from FW
-> - There's a new "stop" threshold for active links, at which point a link
->   stops receiving new packets.
-> 
-> Update the min 18xx FW version required to make sure suspended links
-> bitmap is advertised by the FW.
+>From 97f1b27e02740ce6bb83c548de0c0a7fbe9b648f Mon Sep 17 00:00:00 2001
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Mon, 10 Dec 2012 17:54:29 +0200
+Subject: [PATCH] crda: fix compilation with libnl-3.0
 
-This doesn't apply anymore, I'll remove it.
+On the distributives that use libnl v.3, libnl-genl named
+libnl-genl-3.
 
+Checked for both rpm based distros and Ubuntu.
 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ Makefile |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Otherwise this patch looks good!
+diff --git a/Makefile b/Makefile
+index 084d8e5..f5bd130 100644
+--- a/Makefile
++++ b/Makefile
+@@ -51,7 +51,7 @@ NL3FOUND := $(shell pkg-config --atleast-version=3 libnl-3.0 && echo Y)
+ 
+ ifeq ($(NL3FOUND),Y)
+ CFLAGS += -DCONFIG_LIBNL30
+-NLLIBS += -lnl-genl
++NLLIBS += -lnl-genl-3
+ NLLIBNAME = libnl-3.0
+ else
+ 	ifeq ($(NL2FOUND),Y)
+-- 
+1.7.10.4
 
-Just to understand better, why is the firmware deciding on the
-thresholds? Does it make some internal magic itself to know the number
-of links (including multi-channel) and adjust the thresholds
-accordingly? Isn't this something we could (or should?) do in the kernel
-side?
-
---
-Luca
 
