@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:55599 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774Ab2LJGyC (ORCPT
+Received: from mail.ultra-3eti.com ([173.13.207.162]:42553 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869Ab2LJPXL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 01:54:02 -0500
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>, stable@vger.kernel.org
-Subject: [PATCH] bcma: mips: fix clearing device IRQ
-Date: Mon, 10 Dec 2012 07:53:56 +0100
-Message-Id: <1355122436-32196-1-git-send-email-zajec5@gmail.com> (sfid-20121210_075407_932822_7D3E1A9C)
+	Mon, 10 Dec 2012 10:23:11 -0500
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: Thomas Pedersen <thomas@cozybit.com>,
+	Georgiewskiy Yuriy <bottleman@icf.org.ru>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	open11s <devel@lists.open80211s.org>
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+Date: Mon, 10 Dec 2012 15:23:07 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C12923@RockMX01.rock.corp> (sfid-20121210_162314_485689_6553A92F)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
+ <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
+ <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
+In-Reply-To: <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were using wrong IRQ number so clearing wasn't working at all.
-Depending on a platform this could result in a one device having two
-interrupts assigned. On BCM4706 this resulted in all IRQs being broken.
+Thanks Thomas.
 
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: stable@vger.kernel.org
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-John: I guess it's too late for 3.7 fixes, so I just hope it'll hit
-      3.7.x (and olders) via stable.
----
- drivers/bcma/driver_mips.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+TP> With wireless-testing HEAD (671c924) I made the following observations with 3 nodes in a mesh using ch. 149 HT20 on AR9280.
 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index c45ded8..792daad 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -115,7 +115,7 @@ static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
- 			    bcma_read32(mdev, BCMA_MIPS_MIPS74K_INTMASK(0)) &
- 			    ~(1 << irqflag));
- 	else
--		bcma_write32(mdev, BCMA_MIPS_MIPS74K_INTMASK(irq), 0);
-+		bcma_write32(mdev, BCMA_MIPS_MIPS74K_INTMASK(oldirq), 0);
- 
- 	/* assign the new one */
- 	if (irq == 0) {
--- 
-1.7.7
+3 nodes may not be enough to see the problem.
+
+TP> 1. ping -i0.1 does not cause aggregation to take place, and losses are 0% 
+
+My tool ping each node (total 7 nodes) at about 10~15 packet/second. Maybe in theory, it should not aggregate.
+The fact is with/without aggregation, there is a huge difference on ping loss.
+
+If you are interested in my test tool, it's here.
+http://sites.google.com/site/ebaylinkan5709pictures/files-to-share/clinmonitor.gz
+It's an executable running on any 32-bit Linux.
+I lost the source code for this tool. Only found the executable in my old machine.
+
+
+TP> 2. a UDP iperf test with two nodes generating traffic shows losses around 1%. We can observe aggregation taking place in this case.
+
+For all the kernel versions I have tested, I did not see a problem with two node 802.11s network.
+Before the stability test, I did fairly extensive on two-node throughput tests and did not any problem on overnight test. 150 ~ 220 Mbps TCP throughput (varied on different atheros 11n chipsets)
 
