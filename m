@@ -1,44 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54295 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753415Ab2LMWcw (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:62894 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab2LJVNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 17:32:52 -0500
-Message-ID: <1355437992.9463.30.camel@jlt4.sipsolutions.net> (sfid-20121213_233255_186959_87A0FE01)
-Subject: Re: [RFC 1/2] regulatory: allow arbitrary channel widths
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Michael Green <green@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 13 Dec 2012 23:33:12 +0100
-In-Reply-To: <CAB=NE6XbbkoWyMyjWtV6EpbT4A7MS5fZRiXgd_Pdok8eE1-e0Q@mail.gmail.com> (sfid-20121213_232850_441393_F837467A)
-References: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net>
-	 <1354812784-15845-2-git-send-email-johannes@sipsolutions.net>
-	 <CAB=NE6XpVxRudaZ0EXRR6KkgPOTqw4pXO+x0Pim+Bt2_HT8fnQ@mail.gmail.com>
-	 <CAB=NE6XbbkoWyMyjWtV6EpbT4A7MS5fZRiXgd_Pdok8eE1-e0Q@mail.gmail.com>
-	 (sfid-20121213_232850_441393_F837467A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 10 Dec 2012 16:13:01 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so1779877qcr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 13:13:00 -0800 (PST)
+Message-ID: <50C65059.9000501@lwfinger.net> (sfid-20121210_221306_477966_B552942D)
+Date: Mon, 10 Dec 2012 15:12:57 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: 8192cu misbehaviours with RTL8188RU chipset
+References: <CAMfPB_wtsXjxFkY6M4cNjxDK678DV4VPjwDRzVOtgrf-4jDL-Q@mail.gmail.com> <50C61570.6040006@lwfinger.net> <CAMfPB_xV4fCK=G12EYKxgEDBYnOEEe45AmTFCBx67pKP4y+aYQ@mail.gmail.com> <CAMfPB_xBUDwmoHy4RiPZiCN7itYTHW9+n9eMj89YRrg-FkZrgQ@mail.gmail.com>
+In-Reply-To: <CAMfPB_xBUDwmoHy4RiPZiCN7itYTHW9+n9eMj89YRrg-FkZrgQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-13 at 14:28 -0800, Luis R. Rodriguez wrote:
-> Oops, forgot to add Michael, adding him now.
-> 
-> Michael, just a sanity check for you. What Johannes is saying is that
-> regulatory wise for the 2.4 GHz band on channels 1-11 and on 5 GHz on
-> non DFS channels where we never initiate radiation we don't have a
-> specific bandwidth restriction. Are you aware of any country
-> restricting any 5 GHz world roaming frequency (non DFS) or channel
-> 1-11 on 2.4 GHz in terms of bandwidth used?
+On 12/10/2012 03:06 PM, Alessandro Lannocca wrote:
+> P.S. I also tested a clean tree (no patches) with the same results.
 
-This is world roaming, so we never use any of the 5 GHz channels unless
-we've heard a beacon. If we hear beacons on consecutive (non-DFS)
-channels (say 36,40,44,48) we would even enable them and then allow
-using 80 MHz there. We could try to prevent this in some way I guess,
-but it'd be more complex, and I'm not sure it's needed. However, I think
-we need to be able to use 80 MHz in world roaming situations, which the
-bandwidth setting currently prevents.
-
-johannes
+Please post the output of 'modinfo rtl8172cu | grep -v alias'
 
