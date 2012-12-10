@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:53638
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752608Ab2LKKfo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41318 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744Ab2LJREv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 05:35:44 -0500
-From: Alberto Garau <Alberto.Garau@inpeco.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>
-Subject: RE: wl12xx over spi with no scan results
-Date: Tue, 11 Dec 2012 10:35:31 +0000
-Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121211_113549_438268_715BEFD7)
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-21-git-send-email-arik@wizery.com>
-	 <1355159205.3738.63.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355161791.3738.67.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
- <1355218436.3738.122.camel@cumari.coelho.fi>
-In-Reply-To: <1355218436.3738.122.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 10 Dec 2012 12:04:51 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Ti6mg-0006o2-6t
+	for linux-wireless@vger.kernel.org; Mon, 10 Dec 2012 18:04:50 +0100
+Message-ID: <1355159114.8083.0.camel@jlt4.sipsolutions.net> (sfid-20121210_180455_428993_9EB7E18A)
+Subject: Re: [PATCH 22/24] regulatory: use RCU to protect global and wiphy
+ regdomains
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 10 Dec 2012 18:05:14 +0100
+In-Reply-To: <1354812468-15709-23-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174905_966334_CC7ACD45)
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+	 <1354812468-15709-23-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121206_174905_966334_CC7ACD45)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVjYSwNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEx1Y2lhbm8gQ29l
-bGhvIFttYWlsdG86Y29lbGhvQHRpLmNvbV0gDQpTZW50OiBtYXJ0ZWTDrCAxMSBkaWNlbWJyZSAy
-MDEyIDEwOjM0DQpUbzogQWxiZXJ0byBHYXJhdQ0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
-bmVsLm9yZzsgSWRvIFlhcml2OyBBcmlrIE5lbXRzb3YNClN1YmplY3Q6IFJlOiB3bDEyeHggb3Zl
-ciBzcGkgd2l0aCBubyBzY2FuIHJlc3VsdHMNCg0KT24gVHVlLCAyMDEyLTEyLTExIGF0IDA5OjE2
-ICswMDAwLCBBbGJlcnRvIEdhcmF1IHdyb3RlOg0KPiBIaSBMdWNhLA0KPiANCj4gLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjaWFubyBDb2VsaG8gW21haWx0bzpjb2VsaG9A
-dGkuY29tXQ0KPiBTZW50OiBsdW5lZMOsIDEwIGRpY2VtYnJlIDIwMTIgMTg6NTANCj4gVG86IEFs
-YmVydG8gR2FyYXUNCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSWRvIFlh
-cml2OyBBcmlrIE5lbXRzb3YNCj4gU3ViamVjdDogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8gc2Nh
-biByZXN1bHRzICh3YXM6IFJlOiBbUEFUQ0ggMjAvMjBdIA0KPiB3bGNvcmU6IEFsd2F5cyBwYXNz
-IERNQS1hYmxlIGJ1ZmZlcnMgdG8gbW1jIGZ1bmN0aW9ucykNCj4gDQo+IEhpIEFsYmVydG8sDQo+
-IA0KPiBPbiBNb24sIDIwMTItMTItMTAgYXQgMTc6MjQgKzAwMDAsIEFsYmVydG8gR2FyYXUgd3Jv
-dGU6DQo+ID4gSeKAmW0gdHJ5aW5nIHRvIG1ha2Ugd29ya2luZyB0aGUgV0wxMjcxIFRJIE11cmF0
-YSBjaGlwIHdpdGggb3VyIGN1c3RvbSBib2FyZC4gIFRoZSBTUEkgZHJpdmVyIHNlZW1zIHRvIGJl
-IHJ1bm5pbmcgYnV0IEkgY2Fubm90IHNjYW4gZnJvbSBvdXIgV2lmaSBOZXR3b3JrLiANCj4gPiAN
-Cj4gPiBBZnRlciBib290aW5nIHRoZSBib2FyZCBJ4oCZbSBkb2luZzoNCj4gPiANCj4gPiDigKIJ
-aW5zbW9kIC9tZWRpYS9yZWQvcm9vdC93bDEyNzEvd2wxMjcxLmtvDQo+ID4g4oCiCWluc21vZCAv
-bWVkaWEvcmVkL3Jvb3Qvd2wxMjcxL3dsMTI3MV9zcGkua28NCj4gPiDigKIJaXdjb25maWcgd2xh
-bjAgbW9kZSBtYW5hZ2VkDQo+ID4g4oCiCWl3Y29uZmlnIHdsYW4wIGVzc2lkIHh4eHh4eHgNCj4g
-PiDigKIJaWZjb25maWcgd2xhbjAgaHcgZXRoZXIgMDA6ODA6RTE6MTI6MjY6MTcgDQo+ID4g4oCi
-CWlmY29uZmlnIHdsYW4wIDE5Mi4xNjguNDAuMTAwIG5ldG1hc2sgMjU1LjI1NS4yNTUuMCB1cA0K
-PiA+IA0KPiA+IFRoZW4gSSBib3RhaW46DQo+ID4gDQo+ID4gY2hpcF9pZCByZWFkIGZyb20gbWVt
-b3J5OiAwNDAzMDExMQ0KPiA+IHdsMTI3MV9mZXRjaF9maXJtd2FyZSAtIGZldGNoaW5nIGZpcm13
-YXJlIHdsMTI3MS1mdy5iaW4gDQo+ID4gd2wxMjcxX2ZldGNoX252cyAtIGZldGNoaW5nIGZpcm13
-YXJlIHdsMTI3MS1udnMuYmluDQo+ID4gd2wxMjcxOiBmaXJtd2FyZSBib290ZWQgKFJldiA2LjEu
-MC41MC4zNTApDQo+ID4gDQo+ID4gYnV0IHVuZm9ydHVuYXRlbHkgdGhlIHdoZW4gSSBydW4g4oCc
-aXdsaXN0IHdsYW4wIHNjYW7igJ0NCj4gPiANCj4gPiBJIG9idGFpbiDigJx3bGFuMCBObyBzY2Fu
-IHJlc3VsdHPigJ0NCj4gPiANCj4gPiANCj4gPiBDb3VsZCB5b3UgcGxlYXNlIGhlbHAgdXMgaW4g
-Zml4aW5nIHRoaXMgaXNzdWUgPw0KPiANCj4gVGhpcyBjb3VsZCBiZSBtYW55IGRpZmZlcmVudCB0
-aGluZ3MuICBUaGUgZmlyc3QgdGhpbmcgdGhhdCBjb21lcyB0byBteSANCj4gbWluZCBpcyB0aGF0
-IHRoZSBzY2FuIHJlc3VsdHMgYXJlIHRoZSBmaXJzdCB0aGluZyB0aGF0IGNvbWVzIGFzIGEgcmVh
-bCANCj4gaW50ZXJydXB0IChiZWZvcmUgdGhpcyBhbGwgdGhlIGludGVycnVwdHMgYXJlIHBvbGxl
-ZCkuICBTbyBhcmUgeW91IA0KPiBzdXJlIHRoZSBpbnRlcnJ1cHQgbGluZSBpcyB3b3JraW5nIHBy
-b3Blcmx5Pw0KPiANCj4gVGhlIGludGVycnVwdCBsaW5lIGl0IHNlZW1zIHRvIHdvcmsgcHJvcGVy
-bHkuIEkgcHV0IGEgcHJpbnRrIGluIHRoZSANCj4gaW50ZXJydXB0IGhhbmRsZXIgYW5kIEkgc2Vl
-IGl0IGFjdGl2YXRlZA0KDQpPay4NCg0KDQo+IER1cmluZyB0aGUgZmlybXdhcmUgZmV0Y2ggYW5k
-IHdoZW4gSSBwZXJmb3JtIHRoZSAiaXdsaXN0YSB3bGFuMCBzY2FuIi4NCj4gSSBrZXB0IHRoZSBJ
-UlEgYXNzb2NpYXRpb24gdG8gSVJRX1RZUEVfRURHRV9SSVNJTkcgYXMgeW91ciBzb3VyY2UgY29k
-ZSANCj4gd2FzIGluIDIuNi4zNyBrZXJuZWwuDQoNClRoYXQncyBhbiAqYW5jaWVudCoga2VybmVs
-LiA6KCBBbnkgY2hhbmNlIHlvdSBjYW4gdHJ5IGl0IHdpdGggYSBuZXdlciBrZXJuZWw/DQoNClVu
-b3J0dW5hdGVseSBub3QsIHRoYXQncyBvdXIgcHJvZHVjdGlvbiBrZXJuZWwuIA0KDQoNCj4gQW55
-IG90aGVyIGlkZWEgYWJvdXQgd2h5IHRoZSBzY2FuIGNvbW1hbmQgaXQncyBub3QgcHJvcGVybHkg
-d29ya2luZyA/DQoNCkFub3RoZXIgY29tbW9uIHByb2JsZW0gaXMgdGhlIGNsb2NrIHNldHRpbmdz
-LiAgQXJlIHlvdSBzdXJlIHRoZSBjb3JyZWN0IHZhbHVlIGZvciBib2FyZF9yZWZfY2xvY2sgaW4g
-eW91ciBib2FyZCBmaWxlPw0KDQpBcmUgeW91IHRhbGtpbmcgYWJvdXQgIndsLT5yZWZfY2xvY2sg
-PSBwZGF0YS0+Ym9hcmRfcmVmX2Nsb2NrOyIgaW4gdGhlIHByb2JlID8gV2hpY2ggdmFsdWUgc2hv
-dWxkIEkgcHV0IGZvciAzOC40TUh6IGR1ZSB0byB0aGUgZmFjdCB0aGF0IGl0IGlzIGFuIGludGVn
-ZXIgcGFyYW1ldGVyID8NCg0KVGhhbmtzIGluIGFkdmFuY2UgDQoNCkFsYmVydG8NCg0KLS0NCkx1
-Y2EuDQoNCg0K
+On Thu, 2012-12-06 at 17:47 +0100, Johannes Berg wrote:
+
+> -	if (nla_put_string(msg, NL80211_ATTR_REG_ALPHA2,
+> -			   cfg80211_regdomain->alpha2) ||
+> -	    (cfg80211_regdomain->dfs_region &&
+> -	     nla_put_u8(msg, NL80211_ATTR_DFS_REGION,
+> -			cfg80211_regdomain->dfs_region)))
+> -		goto nla_put_failure;
+> +	rcu_read_lock();
+> +	regdom = rcu_dereference(cfg80211_regdomain);
+> +
+> +	if (nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, regdom->alpha2) ||
+> +	    (regdom->dfs_region &&
+> +	     nla_put_u8(msg, NL80211_ATTR_DFS_REGION, regdom->dfs_region)))
+> +		goto nla_put_failure_rcu;
+>  
+>  	if (reg_last_request_cell_base() &&
+
+This causes a locking issue -- mutex is taken in
+reg_last_request_cell_base(), so it needs to be before the
+rcu_read_lock(). I fixed the version in my mac80211-next.git tree's wip
+branch.
+
+johannes
 
