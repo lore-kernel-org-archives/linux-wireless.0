@@ -1,116 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:60910 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144Ab2LVOyX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 09:54:23 -0500
-Received: by mail-we0-f176.google.com with SMTP id r5so2717629wey.35
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 06:54:21 -0800 (PST)
-Message-Id: <97df7bfd2d02a7cf3862c2b86878c3a9aa3d6ccf.1356186145.git.chunkeey@googlemail.com> (sfid-20121222_155425_818231_8DF3424D)
-In-Reply-To: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
-References: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Mon, 17 Dec 2012 16:30:05 +0100
-Subject: [PATCH 5/8] carl9170: don't enable hw crypto offload, if the fw
- doesn't support it
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:32878
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751381Ab2LJBxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Dec 2012 20:53:23 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/8] ath9k: Fix redundant PS wrappers
+Date: Mon, 10 Dec 2012 07:22:34 +0530
+Message-Id: <1355104358-30062-4-git-send-email-sujith@msujith.org> (sfid-20121210_025337_241335_B0F527B1)
+In-Reply-To: <1355104358-30062-1-git-send-email-sujith@msujith.org>
+References: <1355104358-30062-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, op_start would set disable_offload always
-to false, even if it was set to true by the fw parser.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Move the PowerSave wrappers outside ath_paprd_activate(),
+since they are already being used in ath_paprd_calibrate().
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/carl9170/carl9170.h |    1 +
- drivers/net/wireless/ath/carl9170/fw.c       |    2 +-
- drivers/net/wireless/ath/carl9170/main.c     |   33 +++++++++++++++++---------
- 3 files changed, 24 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/link.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index 2df17f1..c77874c 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -290,6 +290,7 @@ struct ar9170 {
- 		unsigned int rx_size;
- 		unsigned int tx_seq_table;
- 		bool ba_filter;
-+		bool disable_offload_fw;
- 	} fw;
- 
- 	/* interface configuration combinations */
-diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
-index 401a080..6e76179 100644
---- a/drivers/net/wireless/ath/carl9170/fw.c
-+++ b/drivers/net/wireless/ath/carl9170/fw.c
-@@ -282,7 +282,7 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
- 	if (!SUPP(CARL9170FW_COMMAND_CAM)) {
- 		dev_info(&ar->udev->dev, "crypto offloading is disabled "
- 			 "by firmware.\n");
--		ar->disable_offload = true;
-+		ar->fw.disable_offload_fw = true;
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 3c996ff..c70b31a 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -188,7 +188,6 @@ static void ath_paprd_activate(struct ath_softc *sc)
+ 		return;
  	}
  
- 	if (SUPP(CARL9170FW_PSM) && SUPP(CARL9170FW_FIXED_5GHZ_PSM))
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index 5d3cb88..c1a272d 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -358,8 +358,13 @@ static int carl9170_op_start(struct ieee80211_hw *hw)
- 	ar->ps.last_action = jiffies;
- 	ar->ps.last_slept = jiffies;
- 	ar->erp_mode = CARL9170_ERP_AUTO;
--	ar->rx_software_decryption = false;
--	ar->disable_offload = false;
+-	ath9k_ps_wakeup(sc);
+ 	ar9003_paprd_enable(ah, false);
+ 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
+ 		if (!(ah->txchainmask & BIT(chain)))
+@@ -199,7 +198,6 @@ static void ath_paprd_activate(struct ath_softc *sc)
+ 
+ 	ath_dbg(common, CALIBRATE, "Activating PAPRD\n");
+ 	ar9003_paprd_enable(ah, true);
+-	ath9k_ps_restore(sc);
+ }
+ 
+ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int chain)
+@@ -436,11 +434,15 @@ set_timer:
+ 		cal_interval = min(cal_interval, (u32)short_cal_interval);
+ 
+ 	mod_timer(&common->ani.timer, jiffies + msecs_to_jiffies(cal_interval));
 +
-+	/* Set "disable hw crypto offload" whenever the module parameter
-+	 * nohwcrypt is true or if the firmware does not support it.
-+	 */
-+	ar->disable_offload = modparam_nohwcrypt |
-+		ar->fw.disable_offload_fw;
-+	ar->rx_software_decryption = ar->disable_offload;
+ 	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD) && ah->caldata) {
+-		if (!ah->caldata->paprd_done)
++		if (!ah->caldata->paprd_done) {
+ 			ieee80211_queue_work(sc->hw, &sc->paprd_work);
+-		else if (!ah->paprd_table_write_done)
++		} else if (!ah->paprd_table_write_done) {
++			ath9k_ps_wakeup(sc);
+ 			ath_paprd_activate(sc);
++			ath9k_ps_restore(sc);
++		}
+ 	}
+ }
  
- 	for (i = 0; i < ar->hw->queues; i++) {
- 		ar->queue_stop_timeout[i] = jiffies;
-@@ -565,12 +570,20 @@ static int carl9170_init_interface(struct ar9170 *ar,
- 
- 	memcpy(common->macaddr, vif->addr, ETH_ALEN);
- 
--	if (modparam_nohwcrypt ||
--	    ((vif->type != NL80211_IFTYPE_STATION) &&
--	     (vif->type != NL80211_IFTYPE_AP))) {
--		ar->rx_software_decryption = true;
--		ar->disable_offload = true;
--	}
-+	/* We have to fall back to software crypto, whenever
-+	 * the user choose to participates in an IBSS. HW
-+	 * offload for IBSS RSN is not supported by this driver.
-+	 *
-+	 * NOTE: If the previous main interface has already
-+	 * disabled hw crypto offload, we have to keep this
-+	 * previous disable_offload setting as it was.
-+	 * Altough ideally, we should notify mac80211 and tell
-+	 * it to forget about any HW crypto offload for now.
-+	 */
-+	ar->disable_offload |= ((vif->type != NL80211_IFTYPE_STATION) &&
-+	    (vif->type != NL80211_IFTYPE_AP));
-+
-+	ar->rx_software_decryption = ar->disable_offload;
- 
- 	err = carl9170_set_operating_mode(ar);
- 	return err;
-@@ -1160,9 +1173,7 @@ static int carl9170_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if (ar->disable_offload || !vif)
- 		return -EOPNOTSUPP;
- 
--	/*
--	 * We have to fall back to software encryption, whenever
--	 * the user choose to participates in an IBSS or is connected
-+	/* Fall back to software encryption whenever the driver is connected
- 	 * to more than one network.
- 	 *
- 	 * This is very unfortunate, because some machines cannot handle
 -- 
-1.7.10.4
+1.8.0.1
 
