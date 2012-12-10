@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56173 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024Ab2LUOdJ (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:55599 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751774Ab2LJGyC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2012 09:33:09 -0500
-Message-ID: <1356100396.9580.10.camel@jlt4.sipsolutions.net> (sfid-20121221_153314_272784_F114D592)
-Subject: Re: [PATCH v2 1/3] mac80211_hwsim: use hrtimer for beacon timers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linville@tuxdriver.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com, j@wl.fi
-Date: Fri, 21 Dec 2012 15:33:16 +0100
-In-Reply-To: <1356029871-17794-1-git-send-email-thomas@cozybit.com> (sfid-20121220_195824_731125_DAECB6B9)
-References: <1356029871-17794-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20121220_195824_731125_DAECB6B9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 10 Dec 2012 01:54:02 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>, stable@vger.kernel.org
+Subject: [PATCH] bcma: mips: fix clearing device IRQ
+Date: Mon, 10 Dec 2012 07:53:56 +0100
+Message-Id: <1355122436-32196-1-git-send-email-zajec5@gmail.com> (sfid-20121210_075407_932822_7D3E1A9C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-20 at 10:57 -0800, Thomas Pedersen wrote:
+We were using wrong IRQ number so clearing wasn't working at all.
+Depending on a platform this could result in a one device having two
+interrupts assigned. On BCM4706 this resulted in all IRQs being broken.
 
-> @@ -896,7 +897,8 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
->  {
->  	struct mac80211_hwsim_data *data = hw->priv;
->  	data->started = false;
-> -	del_timer(&data->beacon_timer);
-> +	hrtimer_cancel(&data->beacon_timer);
-> +	tasklet_kill(&data->bcn_tasklet);
->  	wiphy_debug(hw->wiphy, "%s\n", __func__);
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: stable@vger.kernel.org
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+John: I guess it's too late for 3.7 fixes, so I just hope it'll hit
+      3.7.x (and olders) via stable.
+---
+ drivers/bcma/driver_mips.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Hm this seems odd, why is it stopped here rather than when beaconing is
-stopped? Or does it do both?
-
-> @@ -1084,12 +1096,12 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
->  
->  	if (changed & BSS_CHANGED_BEACON_INT) {
->  		wiphy_debug(hw->wiphy, "  BCNINT: %d\n", info->beacon_int);
-> -		data->beacon_int = 1024 * info->beacon_int / 1000 * HZ / 1000;
-> -		if (WARN_ON(!data->beacon_int))
-> -			data->beacon_int = 1;
-> -		if (data->started)
-> -			mod_timer(&data->beacon_timer,
-> -				  jiffies + data->beacon_int);
-> +		data->beacon_int = ns_to_ktime(info->beacon_int * 1024 * 1000);
-> +		if (WARN_ON(!ktime_to_ns(data->beacon_int)))
-> +			data->beacon_int = ns_to_ktime(1000 * 1000);
-
-Can that warning really happen? It seems it should be checking
-info->beacon_int rather than data->beacon_int? Why convert back and
-forth?
-
-Also the default here seems very very small, that's like less than 1ms
-beacon interval (not even in TU)?
-
-johannes
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index c45ded8..792daad 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -115,7 +115,7 @@ static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
+ 			    bcma_read32(mdev, BCMA_MIPS_MIPS74K_INTMASK(0)) &
+ 			    ~(1 << irqflag));
+ 	else
+-		bcma_write32(mdev, BCMA_MIPS_MIPS74K_INTMASK(irq), 0);
++		bcma_write32(mdev, BCMA_MIPS_MIPS74K_INTMASK(oldirq), 0);
+ 
+ 	/* assign the new one */
+ 	if (irq == 0) {
+-- 
+1.7.7
 
