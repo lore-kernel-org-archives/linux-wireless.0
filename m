@@ -1,61 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:62502 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752736Ab2LSTAa (ORCPT
+Received: from ht1.myhostedexchange.com ([69.50.2.37]:25767 "EHLO
+	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751284Ab2LJLRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 14:00:30 -0500
-Received: by mail-pa0-f48.google.com with SMTP id fa1so1523329pad.21
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 11:00:29 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net, greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 3/3] cfg80211: move world roaming check for beacon hints
-Date: Wed, 19 Dec 2012 10:53:04 -0800
-Message-Id: <1355943184-966-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20121219_200036_196307_E48D6F1B)
-In-Reply-To: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 10 Dec 2012 06:17:19 -0500
+From: Antonio Quartulli <antonio@open-mesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCHv2 1/2] cfg80211: add the new IBSS_STA event
+Date: Mon, 10 Dec 2012 12:16:21 +0100
+Message-ID: <1355138182-11825-1-git-send-email-antonio@open-mesh.com> (sfid-20121210_121723_094194_D8156E75)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+In IBSS mode it could be the case that a station being added
+is not ready for starting higher level routines (e.g. key
+exchange when IBSS/RSN is enabled). In particular, this can
+happen when we are waiting for the AUTH response message.
 
-We should not add new beacon hints even if the wiphy
-is not world roaming. Without this we were always adding
-a beacon hint if not world roaming for every non world
-roaming wiphy interface.
+This IBSS_STA event is triggered after the NEW_STA one and
+only when the upper layer is allowed to assume that the new
+peer is ready
 
-Tested-by: Ben Greear <greearb@candelatech.com>
-Reported-by: Ben Greear <greearb@candelatech.com>
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- net/wireless/reg.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f649b5e..bdc42d9 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1076,6 +1076,9 @@ static void handle_reg_beacon(struct wiphy *wiphy,
+1/2 v2:
+ * untouched
+2/2 v2:
+ * if userspace registered for auth frames, the new station is immediately
+   authenticated and the new IBSS_STA event is triggered.
+
+ include/net/cfg80211.h       |  8 ++++++++
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/mlme.c          |  9 +++++++++
+ net/wireless/nl80211.c       | 33 +++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h       |  3 +++
+ 5 files changed, 55 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8e6a6b7..3266c03 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3497,6 +3497,14 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ 		      struct station_info *sinfo, gfp_t gfp);
  
- 	chan->beacon_found = true;
- 
-+	if (!reg_is_world_roaming(wiphy))
-+		return;
+ /**
++ * cfg80211_ibss_sta - notify userspace that the ibss station is ready
++ * @dev: the netdev
++ * @mac_addr: the station's address
++ * @gfp: allocation flags
++ */
++void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
 +
- 	if (wiphy->flags & WIPHY_FLAG_DISABLE_BEACON_HINTS)
- 		return;
++/**
+  * cfg80211_del_sta - notify userspace about deletion of a station
+  *
+  * @dev: the netdev
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e3e19f8..7e0911e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -736,6 +736,8 @@ enum nl80211_commands {
  
-@@ -1149,8 +1152,6 @@ static void reg_process_beacons(struct wiphy *wiphy)
- 	 */
- 	if (!last_request)
- 		return;
--	if (!reg_is_world_roaming(wiphy))
--		return;
- 	wiphy_update_beacon_reg(wiphy);
+ 	NL80211_CMD_SET_MCAST_RATE,
+ 
++	NL80211_CMD_IBSS_STATION,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 5e8123e..f9493fc 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -612,6 +612,15 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ }
+ EXPORT_SYMBOL(cfg80211_new_sta);
+ 
++void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
++{
++	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	nl80211_send_ibss_sta_event(rdev, dev, mac_addr, gfp);
++}
++EXPORT_SYMBOL(cfg80211_ibss_sta);
++
+ void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
+ {
+ 	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f45706a..2d27911 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8564,6 +8564,39 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+ 				nl80211_mlme_mcgrp.id, gfp);
  }
  
++void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev, const u8 *mac_addr,
++				 gfp_t gfp)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_IBSS_STATION);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
++	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
++		goto nla_put_failure;
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
++
+ void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
+ 				struct net_device *dev, const u8 *mac_addr,
+ 				gfp_t gfp)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 2acba84..429f5d6 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -85,6 +85,9 @@ void nl80211_send_remain_on_channel_cancel(
+ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+ 			    struct net_device *dev, const u8 *mac_addr,
+ 			    struct station_info *sinfo, gfp_t gfp);
++void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev, const u8 *mac_addr,
++				 gfp_t gfp);
+ void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
+ 				struct net_device *dev, const u8 *mac_addr,
+ 				gfp_t gfp);
 -- 
-1.7.10.4
+1.8.0
 
