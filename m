@@ -1,44 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22282 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755Ab2LaFOx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Dec 2012 00:14:53 -0500
-Message-ID: <50E11F43.4010006@qca.qualcomm.com> (sfid-20121231_061500_661595_28BA910C)
-Date: Mon, 31 Dec 2012 10:44:43 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V4 2/2] cfg80211/nl80211: Enable drivers to implement
- mac address based ACL
-References: <1356690070-26612-1-git-send-email-vthiagar@qca.qualcomm.com>  <1356690070-26612-2-git-send-email-vthiagar@qca.qualcomm.com>  <1356694308.9922.1.camel@jlt4.sipsolutions.net>  (sfid-20121228_123135_896103_E2B28BED) <1356699373.9922.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1356699373.9922.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from arrakis.dune.hu ([78.24.191.176]:38657 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753701Ab2LKR1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 12:27:40 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	<users@rt2x00.serialmonkey.com>
+Subject: [PATCH v2] rt2x00: zero-out rx_status
+Date: Tue, 11 Dec 2012 18:27:34 +0100
+Message-Id: <1355246854-12686-1-git-send-email-juhosg@openwrt.org> (sfid-20121211_182752_380495_34DE7861)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In commit 'mac80211: support radiotap vendor namespace RX data'
+new fields were added to 'struct ieee80211_rx_status' and those
+fileds must be zeroed. However the rt2x00 driver stores driver
+specific data in the cb array of the rx skbs, so the fields
+might contain garbage and this can cause unexpected behaviour.
 
+The rt2x00 driver from the compat-wireless-2012-12-01
+tarball caused the following warning:
 
-On Friday 28 December 2012 06:26 PM, Johannes Berg wrote:
-> On Fri, 2012-12-28 at 12:31 +0100, Johannes Berg wrote:
->> On Fri, 2012-12-28 at 15:51 +0530, Vasanthakumar Thiagarajan wrote:
->>
->>> V4:
->>> 	- Change it accordingly so that at any time the driver can
->>> 	  support either white or black list not both.
->>
->> I was under the impression you needed both. Unless I get confirmation
->> from Kalle and/or Jouni I'll not apply this lest it needs to be changed
->> in yet again incompatible ways later ...
->
-> Actually I just talked to Jouni again and it seems that the best way to
-> think of the combined black/whitelist is to treat it as a whitelist +
-> "notification avoidance optimisation list". The key here being
-> optimisation, we don't really have to worry about it in terms of feature
-> advertising etc. since it can be ignored/managed by the driver.
+  WARNING: at
+  /devel/ramips/build_dir/target-mipsel_r2_uClibc-0.9.33.2/linux-ramips_rt305x/
+  compat-wireless-2012-12-01/net/mac80211/rx.c:115 ieee80211_rx_irqsafe+0x274/0xbcc
+  [mac80211]()
+  Modules linked in: dwc_otg ledtrig_usbdev nf_nat_irc
+  nf_nat_ftp nf_conntrack_irc nf_conntrack_ftp ipt_MASQUERADE
+  iptable_nat nf_nat pppoe xt_conntrack xt_CT xt_NOTRACK iptable_raw
+  xt_state nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack pppox
+  ipt_REJECT xt_TCPMSS xt_comment xt_multiport xt_mac xt_limit
+  iptable_mangle iptable_filter ip_tables xt_tcpudp x_tables ppp_async
+  ppp_generic slhc rt2800pci(O) rt2800lib(O) rt2x00soc(O) rt2x00pci(O)
+  rt2x00lib(O) mac80211(O) usbcore usb_common nls_base crc_itu_t
+  crc_ccitt eeprom_93cx6 cfg80211(O) compat(O) arc4 aes_generic
+  crypto_blkcipher cryptomgr aead crypto_hash crypto_algapi leds_gpio
+  button_hotplug(O) gpio_keys_polled input_polldev input_core
+  Call Trace:
+  [<801e96b4>] dump_stack+0x8/0x34
+  [<80010a9c>] warn_slowpath_common+0x78/0xa4
+  [<80010ae0>] warn_slowpath_null+0x18/0x24
+  [<80a9710c>] ieee80211_rx_irqsafe+0x274/0xbcc [mac80211]
 
-Sure. Is the assumption here is the stations in optimisation list \
-either be denied or allowed which is specific to driver?.
+The patch ensures that each field gets initialized with
+zeroes.
 
-Vasanth
+Cc: <users@rt2x00.serialmonkey.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+v2:
+  - update the commit message and add a comment to the code
+  - drop the ath5k and p54 patches
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 3248b42..507c8c5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -686,6 +686,14 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp)
+ 	 * to mac80211.
+ 	 */
+ 	rx_status = IEEE80211_SKB_RXCB(entry->skb);
++
++	/* Ensure that all fields of rx_status are initialized
++	 * properly. The skb->cb array was used for driver
++	 * specific informations, so rx_status might contain
++	 * garbage.
++	 */
++	memset(rx_status, 0, sizeof(*rx_status));
++
+ 	rx_status->mactime = rxdesc.timestamp;
+ 	rx_status->band = rt2x00dev->curr_band;
+ 	rx_status->freq = rt2x00dev->curr_freq;
+-- 
+1.7.10
+
