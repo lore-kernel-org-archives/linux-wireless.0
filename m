@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53729 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753678Ab2L1PEl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Dec 2012 10:04:41 -0500
-Message-ID: <1356707102.9922.26.camel@jlt4.sipsolutions.net> (sfid-20121228_160453_256371_74E8CF78)
-Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from outside
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 28 Dec 2012 16:05:02 +0100
-In-Reply-To: <20121130134311.GA19037@pandem0nium>
-References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1354042232-32428-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1354111295.9345.25.camel@jlt4.sipsolutions.net>
-	 <20121130134311.GA19037@pandem0nium>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:39105 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751421Ab2LKMP0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 07:15:26 -0500
+Message-ID: <1355228082.3738.135.camel@cumari.coelho.fi> (sfid-20121211_131530_149614_A91F4526)
+Subject: Re: [PATCH 00/20] wlcore fixes for 3.8 (part3)
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 11 Dec 2012 14:14:42 +0200
+In-Reply-To: <1354095769-8724-1-git-send-email-arik@wizery.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-11-30 at 14:43 +0100, Simon Wunderlich wrote:
-> On Wed, Nov 28, 2012 at 03:01:35PM +0100, Johannes Berg wrote:
-> > On Tue, 2012-11-27 at 19:50 +0100, Simon Wunderlich wrote:
-> > > It can be useful to set own WMM parameters from outside, otherwise there
-> > > is no way to change this in Ad-Hoc networks.
-> > 
-> > Having proper WMM support for IBSS doesn't seem this simple.
-> > 
-> > What about IBSS merging? What about adding WMM IEs? etc.
+On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
+> This series applies on top of part 2 sent a couple days ago.
 > 
-> I couldn't find anything on this in the IEEE standard - it only talks
-> about infrastructure mode, and that EDCA Parameter IEs should be adopted. 
-> (Although I doubt that's a good idea).
-
-In infrastructure mode the values are adopted, the IEs aren't ever
-transmitted by a client...
-
-I would argue that in order to join an IBSS you need to execute the
-MLME-JOIN primitive, and that has no EDCA parameter set argument so you
-should take the values from the IBSS.
-
-Why would that be a bad idea? It seems like a much worse idea to have
-different stations in an IBSS that have different EDCA parameters.
-
-> All we want here is to locally change the parameters. Seems we are not the
-> first ones who want to do that [1]. The WMM specification only says that no
-> WMM IEs is in the beacon and distribution of parameters is missing, and
-> therefore defaults are to be used.
+> The main addition is support for mac80211 HW queues and further
+> optimizations for Tx in the multi-channel case.
 > 
-> Therefore, I'd like to go for the local changes only and skip WMM IEs, adoption,
-> etc.
+> Arik Nemtsov (11):
+>   wlcore: remove support for injected Tx
+>   wlcore: improve handling for Rx errors
+>   wlcore: set 5Ghz probe-req template for DFS channels
+>   wlcore/wl18xx: change priority calculations for links
+>   wl18xx: limit Tx for the AP single-STA-in-PSM case
+>   wlcore: use link count for single-STA-PSM optimization
+>   wlcore: use separate HW queue for each AC in each vif
+>   wlcore: don't take mutex before stopping queues
+>   wlcore: consolidate Rx BA bitmap management to links struct
+>   wl18xx: support MIMO only if HT mode is not forced to SISO
+>   wl18xx: count HW block spare based correctly on keys
 > 
-> You have a point regarding IBSS merging - with this change, we would lose the
-> local configuration with the merge. This could be changed for mac80211,
-> not sure about other drivers (or if anyone actually cares).
+> Eliad Peller (1):
+>   wlcore: add ACX_PEER_CAP command
+> 
+> Eyal Shapira (2):
+>   wlcore: increase scan dwell times if no activity
+>   wlcore: support scan reports during periodic scan
+> 
+> Ido Reis (1):
+>   wl12xx/wl18xx: update default fw logger's settings
+> 
+> Ido Yariv (1):
+>   wlcore: Always pass DMA-able buffers to mmc functions
+> 
+> Igal Chernobelsky (1):
+>   wlcore/wl18xx/wl12xx: FW log params per chip arch
+> 
+> Yair Shapira (3):
+>   wlcore: add new plt power-mode: CHIP_AWAKE
+>   wlcore: disable elp sleep while in plt mode
+>   wl18xx: fix a bug in wl->num_rx_desc initialization
 
-Wait I'm lost -- you say you don't want to adopt the parameters from
-others but then when merging ...??
+Applied the whole series, except 03/20, 08/20 and 09/20, for which I'm
+waiting more information or rework, and 01/20, which I dropped entirely.
 
-It seems to me that the WMM IEs also need to be present to even tell the
-peers that you're QoS capable to start with, otherwise they'll never be
-able to use QoS towards you. You're not making all that much sense right
-now, but maybe that's because I haven't looked at the code?
+Some changes were made to some of the patches according to the
+discussions on the respective threads.  In all cases, I used the latest
+version sent, when rework was needed.
 
-johannes
+Thanks!
+
+--
+Luca.
 
