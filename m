@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:51434 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752814Ab2LBRe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 12:34:59 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] rt2x00: rt2800lib: introduce RFCSR3_VCOCAL_EN
-Date: Sun,  2 Dec 2012 18:34:47 +0100
-Message-Id: <1354469687-20895-1-git-send-email-juhosg@openwrt.org> (sfid-20121202_183503_864651_0A8B877D)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56706 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754074Ab2LKUMy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 15:12:54 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so2959756pbc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 12:12:54 -0800 (PST)
+Date: Tue, 11 Dec 2012 12:12:50 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jason Baron <jbaron@redhat.com>
+Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Joe Perches <joe@perches.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, Jim Cromie <jim.cromie@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
+Message-ID: <20121211201250.GA19675@kroah.com> (sfid-20121211_211258_586378_6BCBE37B)
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1353263740.28214.2.camel@joe-AO722>
+ <20121120160845.GB31176@redhat.com>
+ <3645415.mrRzvuvPFK@lx-vladimir>
+ <20121211193646.GS15974@pogo>
+ <20121211200831.GD11815@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121211200831.GD11815@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the RF3290,RF5360,RF5370,RF5372,RF5390,RF5392
-radio frontends, the VCO calibration can be
-controlled via the RFCSR3 register. The current
-code uses the RFCSR30_RF_CALIBRATION constant to
-enable the calibration, however that belongs to
-the RFCSR30 register. Although the values of the
-constant is correct, but using that for another
-register is confusing.
+On Tue, Dec 11, 2012 at 03:08:31PM -0500, Jason Baron wrote:
+> On Tue, Dec 11, 2012 at 11:36:46AM -0800, Luis R. Rodriguez wrote:
+> > On Tue, Dec 04, 2012 at 11:28:26AM +0200, Vladimir Kondratiev wrote:
+> > > Hi Jason,
+> > > 
+> > > Do you have any update on the status for patches below?
+> > > Where is it now? When do you expect it to merge? 3.8?
+> > > I am waiting for this to merge before I can go on
+> > > with my driver.
+> > 
+> > *poke*
+> > 
+> >   Luis
+> 
+> Hi Luis,
+> 
+> Yes, I posted this patch, along with 2 others last week for Greg to
+> pull. I believe these are too late for the 3.8 merge window. Perhaps,
+> Greg can comment. Here's a link to the post:
+> 
+> http://marc.info/?l=linux-kernel&m=135474417810281&w=2
 
-Add a new definition for the VCO calibration enable
-bit of the RFCSR3 register and use that in the
-relevant places in order to avoid confusions.
+Yes it's too late, these will go into linux-next after 3.8-rc1 is out.
 
-The patch contains no functional changes.
+thanks,
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
-This depends on the following patch:
-'rt2x00: rt2800lib: remove trailing semicolons from RFCSR3_* defines'
-
- drivers/net/wireless/rt2x00/rt2800.h    |    2 ++
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 1157b06..4db1088 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1995,6 +1995,8 @@ struct mac_iveiv_entry {
- /* Bits [7-4] for RF3320 (RT3370/RT3390), on other chipsets reserved */
- #define RFCSR3_PA1_BIAS_CCK		FIELD8(0x70)
- #define RFCSR3_PA2_CASCODE_BIAS_CCKK	FIELD8(0x80)
-+/* Bits for RF3290/RF5360/RF5370/RF5372/RF5390/RF5392 */
-+#define RFCSR3_VCOCAL_EN		FIELD8(0x80)
- 
- /*
-  * FRCSR 5:
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 1cc6599..d4d0c36 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2243,7 +2243,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
- 
- 		rt2800_rfcsr_read(rt2x00dev, 3, &rfcsr);
--		rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
-+		rt2x00_set_field8(&rfcsr, RFCSR3_VCOCAL_EN, 1);
- 		rt2800_rfcsr_write(rt2x00dev, 3, rfcsr);
- 	}
- 
-@@ -2804,7 +2804,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 	case RF5390:
- 	case RF5392:
- 		rt2800_rfcsr_read(rt2x00dev, 3, &rfcsr);
--		rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
-+		rt2x00_set_field8(&rfcsr, RFCSR3_VCOCAL_EN, 1);
- 		rt2800_rfcsr_write(rt2x00dev, 3, rfcsr);
- 		break;
- 	default:
--- 
-1.7.10
-
+greg k-h
