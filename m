@@ -1,33 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:33194 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751142Ab2LCX05 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 18:26:57 -0500
-Date: Tue, 4 Dec 2012 00:26:50 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: Re: [GIT] [NFC] 3.7 fix pull request
-Message-ID: <20121203232650.GB3176@sortiz-mobl> (sfid-20121204_002708_264068_B5B89044)
-References: <20121129131452.GE12685@sortiz-mobl>
- <20121203184056.GF26027@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121203184056.GF26027@tuxdriver.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:45829 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753900Ab2LKTwg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 14:52:36 -0500
+Message-ID: <1355255577.9819.14.camel@jlt4.sipsolutions.net> (sfid-20121211_205240_382141_BC24AD77)
+Subject: Re: [RFCv3 5/5] nl80211: allow userspace to access mesh power mode
+ parameters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>
+Date: Tue, 11 Dec 2012 20:52:57 +0100
+In-Reply-To: <1354918443-3076-6-git-send-email-marco@cozybit.com> (sfid-20121207_231445_767326_6747B792)
+References: <1354918443-3076-1-git-send-email-marco@cozybit.com>
+	 <1354918443-3076-6-git-send-email-marco@cozybit.com>
+	 (sfid-20121207_231445_767326_6747B792)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, 2012-12-07 at 14:14 -0800, Marco Porsch wrote:
 
-On Mon, Dec 03, 2012 at 01:40:56PM -0500, John W. Linville wrote:
-> I don't think this will make 3.7.  Any problem if I just pull it for 3.8?
-Fine with me, at least I tried :)
+> +	[NL80211_MESHCONF_POWER_MODE] = { .type = NLA_U8 },
 
-Cheers,
-Samuel.
+I think u32 makes more sense for an enum, even if we're probably never
+going to use the space, it would be more consistent with other enums.
+Also, a u8 attribute really takes the same space anyway, afaik.
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+johannes
+
