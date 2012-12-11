@@ -1,59 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:63460 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025Ab2LLIIF (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:55931 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601Ab2LKQrR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 03:08:05 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Kalle Valo <kvalo@adurom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] wireless: allow Atheros card to not depend on ath.ko
-Date: Wed, 12 Dec 2012 10:07:59 +0200
-Message-ID: <1400620.sjR9nVGjfL@lx-vladimir> (sfid-20121212_090809_729301_C75760FA)
-In-Reply-To: <87wqwov15r.fsf@purkki.adurom.net>
-References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1967408.WlU5HIbjCs@lx-vladimir> <87wqwov15r.fsf@purkki.adurom.net>
+	Tue, 11 Dec 2012 11:47:17 -0500
+Message-ID: <50C76158.1010005@opentechinstitute.org> (sfid-20121211_174720_602267_CB1041D9)
+Date: Tue, 11 Dec 2012 11:37:44 -0500
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Antonio Quartulli <antonio@open-mesh.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 1/2] cfg80211: add the new IBSS_STA event
+References: <1355138182-11825-1-git-send-email-antonio@open-mesh.com>
+In-Reply-To: <1355138182-11825-1-git-send-email-antonio@open-mesh.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, December 11, 2012 09:28:32 PM Kalle Valo wrote:
-> Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
-> 
-> > There are 2 different things:
-> > - sub-menu for "Atheros Wireless cards" family
-> > - module ath.ko with common Atheros code
-> >
-> > Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
-> > Thus, being "Atheros card" and "depending on ath.ko" was the same.
-> >
-> > To allow module to belong to the
-> > "Atheros Wireless cards" family but not use ath.ko,
-> > 2 conditions above need to be separated.
-> >
-> > So, this patch introduce new Kconfig variable ATH_CARDS for belonging
-> > to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
-> > variable to express dependency on common Atheros code in ath.ko. Modules
-> > that depend on this common code now express it by setting ATH_COMMON.
-> >
-> > Right now, ath6kl do not depend on common code and thus do not set ATH_COMMON.
-> >
-> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> 
-> This broke ath6kl, it get compiled unless I enable ath9k or some other
-> atheros driver.
-> 
-> Reverting 23c1d7f6597 or adding "select ATH_COMMON" to ath6kl fixes
-> this. Any ideas what's wrong? It's not obvious to me from looking at
-> Kconfig files.
-> 
+Will this give IBSS something equivalent to the 802.11s
+NL80211_CMD_NEW_PEER_CANDIDATE?
 
-Interesting. I just compiled with ath6kl only, have no ATH_COMMON in .config.
-Compiles with no problem.
+That's how I am reading it, but I just wanted to get some more context.
+If this is what you are adding, it's great! Just exactly what I need.
 
-Maybe something with your setup? Can you elaborate what error do you see?
+Thanks for your work Antonio.
 
-Thanks, Vladimir
+Will
+
+On 12/10/2012 06:16 AM, Antonio Quartulli wrote:
+> In IBSS mode it could be the case that a station being added
+> is not ready for starting higher level routines (e.g. key
+> exchange when IBSS/RSN is enabled). In particular, this can
+> happen when we are waiting for the AUTH response message.
+> 
+> This IBSS_STA event is triggered after the NEW_STA one and
+> only when the upper layer is allowed to assume that the new
+> peer is ready
+> 
+> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+> ---
+> 
+> 1/2 v2:
+>  * untouched
+> 2/2 v2:
+>  * if userspace registered for auth frames, the new station is immediately
+>    authenticated and the new IBSS_STA event is triggered.
+> 
+>  include/net/cfg80211.h       |  8 ++++++++
+>  include/uapi/linux/nl80211.h |  2 ++
+>  net/wireless/mlme.c          |  9 +++++++++
+>  net/wireless/nl80211.c       | 33 +++++++++++++++++++++++++++++++++
+>  net/wireless/nl80211.h       |  3 +++
+>  5 files changed, 55 insertions(+)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 8e6a6b7..3266c03 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -3497,6 +3497,14 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+>  		      struct station_info *sinfo, gfp_t gfp);
+>  
+>  /**
+> + * cfg80211_ibss_sta - notify userspace that the ibss station is ready
+> + * @dev: the netdev
+> + * @mac_addr: the station's address
+> + * @gfp: allocation flags
+> + */
+> +void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
+> +
+> +/**
+>   * cfg80211_del_sta - notify userspace about deletion of a station
+>   *
+>   * @dev: the netdev
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index e3e19f8..7e0911e 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -736,6 +736,8 @@ enum nl80211_commands {
+>  
+>  	NL80211_CMD_SET_MCAST_RATE,
+>  
+> +	NL80211_CMD_IBSS_STATION,
+> +
+>  	/* add new commands above here */
+>  
+>  	/* used to define NL80211_CMD_MAX below */
+> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+> index 5e8123e..f9493fc 100644
+> --- a/net/wireless/mlme.c
+> +++ b/net/wireless/mlme.c
+> @@ -612,6 +612,15 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+>  }
+>  EXPORT_SYMBOL(cfg80211_new_sta);
+>  
+> +void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
+> +{
+> +	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+> +
+> +	nl80211_send_ibss_sta_event(rdev, dev, mac_addr, gfp);
+> +}
+> +EXPORT_SYMBOL(cfg80211_ibss_sta);
+> +
+>  void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
+>  {
+>  	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index f45706a..2d27911 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -8564,6 +8564,39 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+>  				nl80211_mlme_mcgrp.id, gfp);
+>  }
+>  
+> +void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
+> +				 struct net_device *dev, const u8 *mac_addr,
+> +				 gfp_t gfp)
+> +{
+> +	struct sk_buff *msg;
+> +	void *hdr;
+> +
+> +	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
+> +	if (!msg)
+> +		return;
+> +
+> +	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_IBSS_STATION);
+> +	if (!hdr) {
+> +		nlmsg_free(msg);
+> +		return;
+> +	}
+> +
+> +	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
+> +	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
+> +		goto nla_put_failure;
+> +
+> +	genlmsg_end(msg, hdr);
+> +
+> +	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
+> +				nl80211_mlme_mcgrp.id, gfp);
+> +	return;
+> +
+> + nla_put_failure:
+> +	genlmsg_cancel(msg, hdr);
+> +	nlmsg_free(msg);
+> +}
+> +
+> +
+>  void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
+>  				struct net_device *dev, const u8 *mac_addr,
+>  				gfp_t gfp)
+> diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+> index 2acba84..429f5d6 100644
+> --- a/net/wireless/nl80211.h
+> +++ b/net/wireless/nl80211.h
+> @@ -85,6 +85,9 @@ void nl80211_send_remain_on_channel_cancel(
+>  void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+>  			    struct net_device *dev, const u8 *mac_addr,
+>  			    struct station_info *sinfo, gfp_t gfp);
+> +void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
+> +				 struct net_device *dev, const u8 *mac_addr,
+> +				 gfp_t gfp);
+>  void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
+>  				struct net_device *dev, const u8 *mac_addr,
+>  				gfp_t gfp);
+> 
