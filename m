@@ -1,37 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53253 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946082Ab2LFQwm (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22110 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754290Ab2LKWwx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:52:42 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Tgegj-0001bW-4K
-	for linux-wireless@vger.kernel.org; Thu, 06 Dec 2012 17:52:41 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 0/2] VHT regulatory
-Date: Thu,  6 Dec 2012 17:53:02 +0100
-Message-Id: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net> (sfid-20121206_175311_266080_353FB395)
+	Tue, 11 Dec 2012 17:52:53 -0500
+Date: Tue, 11 Dec 2012 14:55:55 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Jason Baron <jbaron@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	<linux-wireless@vger.kernel.org>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
+Message-ID: <20121211225555.GC15974@pogo> (sfid-20121211_235313_887383_1F2D1C18)
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1353263740.28214.2.camel@joe-AO722>
+ <20121120160845.GB31176@redhat.com>
+ <3645415.mrRzvuvPFK@lx-vladimir>
+ <20121211193646.GS15974@pogo>
+ <20121211200831.GD11815@redhat.com>
+ <20121211201250.GA19675@kroah.com>
+ <1355257444.24219.7.camel@joe-AO722>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1355257444.24219.7.camel@joe-AO722>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows wide bandwidth on the world roaming domain
-(with a proposed change to the db.txt file parsing) and
-enables (wide) bandwidth checking against the current
-regulatory domain.
+On Tue, Dec 11, 2012 at 12:24:04PM -0800, Joe Perches wrote:
+> On Tue, 2012-12-11 at 12:12 -0800, Greg KH wrote:
+> > On Tue, Dec 11, 2012 at 03:08:31PM -0500, Jason Baron wrote:
+> > > On Tue, Dec 11, 2012 at 11:36:46AM -0800, Luis R. Rodriguez wrote:
+> > > > On Tue, Dec 04, 2012 at 11:28:26AM +0200, Vladimir Kondratiev wrote:
+> > > > > Hi Jason,
+> > > > > 
+> > > > > Do you have any update on the status for patches below?
+> > > > > Where is it now? When do you expect it to merge? 3.8?
+> > > > > I am waiting for this to merge before I can go on
+> > > > > with my driver.
+> > > > 
+> > > > *poke*
+> > > > 
+> > > >   Luis
+> > > 
+> > > Hi Luis,
+> > > 
+> > > Yes, I posted this patch, along with 2 others last week for Greg to
+> > > pull. I believe these are too late for the 3.8 merge window. Perhaps,
+> > > Greg can comment. Here's a link to the post:
+> > > 
+> > > http://marc.info/?l=linux-kernel&m=135474417810281&w=2
+> > 
+> > Yes it's too late, these will go into linux-next after 3.8-rc1 is out.
+> > 
+> > thanks,
+> > 
+> > greg k-h
+> > 
+> 
+> Vladimir, sorry about this.
+> 
+> I suggest you prefix/rename and include these functions directly into
+> your driver and later after 3.9 is out you could again rename the
+> local calls to the now generic kernel functions and delete the local
+> ones.
 
-It's not entirely clear to me which regdom we should be
-checking but I'm obviously not changing that logic, I'm
-just not sure if wiphy->regd vs. cfg80211_regdomain is
-handled correctly or what that even means ...
+Vladimir, to be clear, you can continue with waiting for the patches
+to get into 3.9 but that will take a while but given that you want
+your driver in 3.8 you can fold those routines into your driver as
+you had before but with a rename by adding a prefix and sumbit that
+driver and specify it is for 3.8.
 
-Also, if a driver has restrictions on VHT channel use,
-say it doesn't allow arbitrary 80+80 MHz combinations,
-I'm not sure how to handle that.
+> Your driver is for new hardware, so even now it should be able to
+> go into 3.8.
 
-Thoughts? :-)
+Agreed.
 
-johannes
-
+  Luis
