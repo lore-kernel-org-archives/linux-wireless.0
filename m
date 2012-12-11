@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:32988 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753028Ab2LMTRT (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:46343 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753139Ab2LKPia (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 14:17:19 -0500
-Message-ID: <50CA29BB.8080104@candelatech.com> (sfid-20121213_201723_614964_9EC30FC6)
-Date: Thu, 13 Dec 2012 11:17:15 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+	Tue, 11 Dec 2012 10:38:30 -0500
+Received: by mail-bk0-f46.google.com with SMTP id q16so1682698bkw.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 07:38:28 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Add a new work-queue for destructing stations?
-References: <50CA1470.4030107@candelatech.com>   (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>   <50CA1C44.5030300@candelatech.com>   <1355423047.9463.9.camel@jlt4.sipsolutions.net>   <50CA1EB6.9030903@candelatech.com>   <1355423836.9463.14.camel@jlt4.sipsolutions.net>   <50CA20D4.90707@candelatech.com>   <1355424117.9463.16.camel@jlt4.sipsolutions.net>   <50CA22BC.7090008@candelatech.com>   <1355424597.9463.17.camel@jlt4.sipsolutions.net>   (sfid-20121213_194937_732132_61453C42) <1355424835.9463.18.camel@jlt4.sipsolutions.net>  <50CA25B1.3080901@candelatech.com> <1355425884.9463.19.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355425884.9463.19.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH 3/3] p54: zero-out rx_status
+Date: Tue, 11 Dec 2012 16:38:15 +0100
+Cc: Gabor Juhos <juhosg@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1355234105-12013-1-git-send-email-juhosg@openwrt.org> <1355239503.9819.1.camel@jlt4.sipsolutions.net> <1355239813.9819.3.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1355239813.9819.3.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201212111638.16033.chunkeey@googlemail.com> (sfid-20121211_163833_592177_D603C2B0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2012 11:11 AM, Johannes Berg wrote:
-> On Thu, 2012-12-13 at 11:00 -0800, Ben Greear wrote:
->> On 12/13/2012 10:53 AM, Johannes Berg wrote:
->>> On Thu, 2012-12-13 at 19:49 +0100, Johannes Berg wrote:
->>>
->>>>>> Well the concern there is that we expose the workqueue to the driver,
->>>>>> and it might even put sdata-referencing work items on it and expect them
->>>>>> to be flushed out before stop_interface() is called?
->>>
->>> Wait actually, that isn't a concern. The flush_workqueue() was new in
->>> commit b22cfcfca, before that drivers couldn't rely on it. It seems very
->>> unlikely that in the meantime drivers have come to rely on it and we
->>> didn't document this, so ... with the proposed change to sta_free_wk we
->>> should be fine.
->>
->> We still need to cancel the other mac80211 work items though, right?
->
-> Well, no, because we didn't add any work items since we added the
-> flush_workqueue() there.
->
->> I didn't understand your proposal for the sta_free_wk changes,
->> but I can at least work on tracking down the mac80211 work items
->> if that helps...
->
-> I'll get a patch out later or tomorrow.
+On Tuesday, December 11, 2012 04:30:13 PM Johannes Berg wrote:
+> On Tue, 2012-12-11 at 16:25 +0100, Johannes Berg wrote:
+> 
+> > > If this issue just popped up now, I suspect that 
+> > > something else is silently corrupting our SKBs 
+> > > [or can anybody see how rt2x00 hit this issue?]
+> 
+> Oh, ok I assumed that rt2x00 RX SKBs are cleanly allocated, but now that
+> I trace the code further I see that while the SKBs are on the queue
+> inside rt2x00 they have something called "struct skb_frame_desc" on the
+> skb->cb, so this is what's causing the rt2x00 issue. This should be
+> mentioned in the rt2x00 commit, and all other drivers should be fine.
+Ah, you are right. I assumed that rt2x00_queue stuff was only important
+for TX. But it seems rt2x00 pci devices use them as well for RX.
 
-Ok, I'll be sure to test it, and will hold off on any of my own
-efforts in this area in the meantime.
-
-Thanks,
-Ben
-
->
-> johannes
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+	Chr
