@@ -1,81 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:65116 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125Ab2LQNap (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 08:30:45 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iw: print all capability bits
-Date: Mon, 17 Dec 2012 15:30:41 +0200
-Message-ID: <4433962.e7lXLf3bMQ@lx-vladimir> (sfid-20121217_143049_890603_1B26CBD3)
-In-Reply-To: <3409795.QNLPYz7pkM@lx-vladimir>
-References: <3409795.QNLPYz7pkM@lx-vladimir>
+Received: from mail.locum.ru ([193.106.93.111]:54312 "EHLO mail.locum.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751867Ab2LKEjC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Dec 2012 23:39:02 -0500
+Message-ID: <50C6B8E0.4080801@ubuntu.com> (sfid-20121211_053907_553379_BEDB9441)
+Date: Tue, 11 Dec 2012 11:38:56 +0700
+From: Maia Kozheva <sikon@ubuntu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] Add support for 2001:3c1e (D-Link DWA-125 rev B1) USB
+ Wi-Fi adapter
+References: <50C6974B.5000206@gmail.com>
+In-Reply-To: <50C6974B.5000206@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To continue with capability: not all bits from .11n printed as well.
-Patch below adds missing bits.
+Someone who physically disassembled the device confirms that its chipset is Ralink RT5370n.
 
-I'll prepare patch for kernel with the #define's as well
+Fixed the patch.
 
->From 9f7b0078e7008e1735d980a4bb583efd2321d9ed Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Mon, 17 Dec 2012 15:26:47 +0200
-Subject: [PATCH] iw: print all capability bits
+Signed-off-by: Maia Kozheva <sikon@ubuntu.com>
+diff -uprN a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c	2012-11-28 04:21:31.000000000 +0700
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c	2012-12-11 11:34:35.889131671 +0700
+@@ -1169,6 +1169,7 @@ static struct usb_device_id rt2800usb_de
+ 	{ USB_DEVICE(0x2001, 0x3c19) },
+ 	{ USB_DEVICE(0x2001, 0x3c1c) },
+ 	{ USB_DEVICE(0x2001, 0x3c1d) },
++	{ USB_DEVICE(0x2001, 0x3c1e) },
+ 	/* LG innotek */
+ 	{ USB_DEVICE(0x043e, 0x7a22) },
+ 	/* Panasonic */
 
-Print all bits from capability info, as defined in the IEEE802.11-2012
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- scan.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/scan.c b/scan.c
-index 295a51c..a07f16a 100644
---- a/scan.c
-+++ b/scan.c
-@@ -25,7 +25,10 @@
- #define WLAN_CAPABILITY_QOS		(1<<9)
- #define WLAN_CAPABILITY_SHORT_SLOT_TIME	(1<<10)
- #define WLAN_CAPABILITY_APSD		(1<<11)
-+#define WLAN_CAPABILITY_RADIO_MEASURE	(1<<12)
- #define WLAN_CAPABILITY_DSSS_OFDM	(1<<13)
-+#define WLAN_CAPABILITY_DEL_BACK	(1<<14)
-+#define WLAN_CAPABILITY_IMM_BACK	(1<<15)
- /* DMG (60gHz) 802.11ad */
- /* type - bits 0..1 */
- #define WLAN_CAPABILITY_DMG_TYPE_MASK		(3<<0)
-@@ -1265,6 +1268,10 @@ static void print_capa_11n(__u16 capa)
- 		printf(" ESS");
- 	if (capa & WLAN_CAPABILITY_IBSS)
- 		printf(" IBSS");
-+	if (capa & WLAN_CAPABILITY_CF_POLLABLE)
-+		printf(" CfPollable");
-+	if (capa & WLAN_CAPABILITY_CF_POLL_REQUEST)
-+		printf(" CfPollReq");
- 	if (capa & WLAN_CAPABILITY_PRIVACY)
- 		printf(" Privacy");
- 	if (capa & WLAN_CAPABILITY_SHORT_PREAMBLE)
-@@ -1281,8 +1288,14 @@ static void print_capa_11n(__u16 capa)
- 		printf(" ShortSlotTime");
- 	if (capa & WLAN_CAPABILITY_APSD)
- 		printf(" APSD");
-+	if (capa & WLAN_CAPABILITY_RADIO_MEASURE)
-+		printf(" RadioMeasure");
- 	if (capa & WLAN_CAPABILITY_DSSS_OFDM)
- 		printf(" DSSS-OFDM");
-+	if (capa & WLAN_CAPABILITY_DEL_BACK)
-+		printf(" DelayedBACK");
-+	if (capa & WLAN_CAPABILITY_IMM_BACK)
-+		printf(" ImmediateBACK");
- }
- 
- static int print_bss_handler(struct nl_msg *msg, void *arg)
--- 
-1.7.10.4
-
+Op 11-12-12 09:15, Xose Vazquez Perez schreef:
+> It looks like it's a RT5370 device:
+> http://www.wikidevi.com/wiki/D-Link_DWA-125_rev_B1
+> 
+> It should go in CONFIG_RT2800USB_RT53XX
+> 
+> NACK
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
