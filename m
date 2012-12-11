@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:53569 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826Ab2LGWpN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 17:45:13 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so772405pad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 14:45:13 -0800 (PST)
-Message-ID: <50C27177.30309@cozybit.com> (sfid-20121207_234518_845103_8ADFFDC3)
-Date: Fri, 07 Dec 2012 14:45:11 -0800
-From: Marco Porsch <marco@cozybit.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:36770 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753782Ab2LKRTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 12:19:24 -0500
+Message-ID: <50C76B1C.5070309@openwrt.org> (sfid-20121211_181927_735103_589ABF60)
+Date: Tue, 11 Dec 2012 18:19:24 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-To: devel@lists.open80211s.org
-CC: Bob Copeland <me@bobcopeland.com>,
-	Max Filippov <jcmvbkbc@gmail.com>, johannes@sipsolutions.net,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Mike Krinkin <krinkin.m.u@gmail.com>
-Subject: Re: [RFCv3 4/5] mac80211: mesh power save basics
-References: <1354918443-3076-1-git-send-email-marco@cozybit.com> <1354918443-3076-5-git-send-email-marco@cozybit.com> <20121207224110.GE535@localhost>
-In-Reply-To: <20121207224110.GE535@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3/3] p54: zero-out rx_status
+References: <1355234105-12013-1-git-send-email-juhosg@openwrt.org>  <1355234105-12013-3-git-send-email-juhosg@openwrt.org>  <201212111608.43293.chunkeey@googlemail.com>  (sfid-20121211_160907_576808_50E80D43) <1355239503.9819.1.camel@jlt4.sipsolutions.net>  (sfid-20121211_162447_361019_EEF95137) <1355239813.9819.3.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1355239813.9819.3.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/07/2012 02:41 PM, Bob Copeland wrote:
-> On Fri, Dec 07, 2012 at 02:14:02PM -0800, Marco Porsch wrote:
->> +void ieee80211_mps_set_sta_local_pm(struct sta_info *sta,
->> +				    enum nl80211_mesh_power_mode pm,
->> +				    u32 delay);
->> +void ieee80211_mps_sta_local_pm_timer(unsigned long data);
->> +void ieee80211_msp_set_frame_flags(struct ieee80211_sub_if_data *sdata,
->> +				   struct sta_info *sta,
->> +				   struct ieee80211_hdr *hdr);
->
-> Does "msp" mean anything, or is it supposed to be mps like the others?
+2012.12.11. 16:30 keltezéssel, Johannes Berg írta:
+> On Tue, 2012-12-11 at 16:25 +0100, Johannes Berg wrote:
+> 
+>>> If this issue just popped up now, I suspect that 
+>>> something else is silently corrupting our SKBs 
+>>> [or can anybody see how rt2x00 hit this issue?]
+> 
+> Oh, ok I assumed that rt2x00 RX SKBs are cleanly allocated, but now that
+> I trace the code further I see that while the SKBs are on the queue
+> inside rt2x00 they have something called "struct skb_frame_desc" on the
+> skb->cb, so this is what's causing the rt2x00 issue. This should be
+> mentioned in the rt2x00 commit, and all other drivers should be fine.
 
-Oh, snap. That was a typo during refactoring. Thanks for noticing!
+Ok, I will update the commit message and will resend the rt2x00 patch only.
+Thank you for the review!
 
+-Gabor
