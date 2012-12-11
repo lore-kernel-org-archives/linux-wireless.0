@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54104 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754545Ab2LFVlj (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:41792 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752163Ab2LKMfd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 16:41:39 -0500
-Message-ID: <1354830114.18211.4.camel@jlt4.sipsolutions.net> (sfid-20121206_224159_374597_18B75B12)
-Subject: Re: [PATCH wireless-next] iwlwifi: iwlagn_request_scan: Fix check
- for NULL priv->scan_request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tim Gardner <tim.gardner@canonical.com>
-Cc: linux-kernel@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Don Fry <donald.h.fry@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 06 Dec 2012 22:41:54 +0100
-In-Reply-To: <1354825445-79551-1-git-send-email-tim.gardner@canonical.com> (sfid-20121206_214912_422543_9C67DD48)
-References: <1354825445-79551-1-git-send-email-tim.gardner@canonical.com>
-	 (sfid-20121206_214912_422543_9C67DD48)
+	Tue, 11 Dec 2012 07:35:33 -0500
+Message-ID: <1355229286.3738.137.camel@cumari.coelho.fi> (sfid-20121211_133537_601280_2D18241A)
+Subject: Re: wl12xx over spi with no scan results
+From: Luciano Coelho <coelho@ti.com>
+To: Alberto Garau <Alberto.Garau@inpeco.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ido Yariv" <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>
+Date: Tue, 11 Dec 2012 14:34:46 +0200
+In-Reply-To: <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355218436.3738.122.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355223079.3738.128.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2012-12-11 at 12:28 +0000, Alberto Garau wrote:
+> Thanks Luca, 
+> 
+> configuring 
+> 
+> board_ref_clock = WL12XX_REFCLOCK_38, /* 38.4 MHz */
+> 
+> gave me the possibility to scan network but only for an essid on channel1 (delivered from one AP).
 
-> --- a/drivers/net/wireless/iwlwifi/dvm/scan.c
-> +++ b/drivers/net/wireless/iwlwifi/dvm/scan.c
-> @@ -673,8 +673,9 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  	const u8 *ssid = NULL;
->  	u8 ssid_len = 0;
->  
-> -	if (WARN_ON_ONCE(priv->scan_request &&
-> -			 priv->scan_request->n_channels > MAX_SCAN_CHANNEL))
-> +	if (WARN_ON(priv->scan_type == IWL_SCAN_NORMAL &&
-> +		(!priv->scan_request ||
-> +		priv->scan_request->n_channels > MAX_SCAN_CHANNEL)))
->  		return -EINVAL;
+Great! This is good progress. :)
 
-I'll pick it up if you fix the indentation :P
 
-johannes
+> I couldn't scan others essids on other channels (for example channel 6) and I don't know why.
+> 
+> Have you got any idea about it ?
+
+Next I'd recommend you to start using the iw tool instead of iwlist and
+friends, so things are more predictable and I can help you more easily.
+
+--
+Luca.
 
