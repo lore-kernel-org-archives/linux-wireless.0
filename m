@@ -1,89 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:55928 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934578Ab2LIW5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2012 17:57:53 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>,
-	<stable@vger.kernel.org>, #@arrakis.dune.hu, 3.0+@arrakis.dune.hu
-Subject: [PATCH] ath9k: ar9003: fix OTP register offsets for AR9340
-Date: Sun,  9 Dec 2012 23:57:09 +0100
-Message-Id: <1355093829-10932-1-git-send-email-juhosg@openwrt.org> (sfid-20121209_235801_298759_F0299C98)
+Received: from he.sipsolutions.net ([78.46.109.217]:45849 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308Ab2LKT5N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 14:57:13 -0500
+Message-ID: <1355255841.9819.18.camel@jlt4.sipsolutions.net> (sfid-20121211_205717_448369_2E029CC7)
+Subject: Re: [PATCH 2/2] cfg80211/nl80211: Enable drivers to implement mac
+ address based ACL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Tue, 11 Dec 2012 20:57:21 +0100
+In-Reply-To: <1354880763-12309-2-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1354880763-12309-1-git-send-email-vthiagar@qca.qualcomm.com>
+	 <1354880763-12309-2-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trying to access the OTP memory on the AR9340
-causes a data bus error like this:
+On Fri, 2012-12-07 at 17:16 +0530, Vasanthakumar Thiagarajan wrote:
+> This patch enables drivers to implement mac address based
+> access control in AP/P2P GO mode. There is a new flag in
+> nl80211_ap_sme_features (NL80211_AP_SME_FEATURE_MAC_ACL)
+> for drivers to advertise this capability. There are two acl
+> policies, white and black list under which an acl list can
+> be configured in the driver. Driver has to advertise the
+> maximum number of mac address entries in acl list through
+> max_acl_mac_addrs of wiphy.
+> 
+> Driver can enable its ACL either with the initial list passed
+> through NL80211_CMD_START_AP or a list passed through
+> NL80211_CMD_SET_MAC_ACL. ACL information passed in these
+> commands is an array of acl configuration containing acl
+> policy and list of mac address. With the acl policy as
+> NL80211_ACL_POLICY_ACCEPT, driver will accept Auth request
+> from any client matching any one of the mac addresses in the acl list.
+> When acl policy is NL80211_ACL_POLICY_DENY, driver will reject any
+> Auth request from the clients having their mac address listed in the
+> acl list. Driver must make sure to clear it's acl list when doing
+> stop ap.
 
-  Data bus error, epc == 86e84164, ra == 86e84164
-  Oops[#1]:
-  Cpu 0
-  $ 0   : 00000000 00000061 deadc0de 00000000
-  $ 4   : b8115f18 00015f18 00000007 00000004
-  $ 8   : 00000001 7c7c3c7c 7c7c7c7c 7c7c7c7c
-  $12   : 7c7c3c7c 001f0041 00000000 7c7c7c3c
-  $16   : 86ee0000 00015f18 00000000 00000007
-  $20   : 00000004 00000064 00000004 86d71c44
-  $24   : 00000000 86e6ca00
-  $28   : 86d70000 86d71b20 86ece0c0 86e84164
-  Hi    : 00000000
-  Lo    : 00000064
-  epc   : 86e84164 ath9k_hw_wait+0x58/0xb0 [ath9k_hw]
-      Tainted: G           O
-  ra    : 86e84164 ath9k_hw_wait+0x58/0xb0 [ath9k_hw]
-  Status: 1100d403    KERNEL EXL IE
-  Cause : 4080801c
-  PrId  : 0001974c (MIPS 74Kc)
-  Modules linked in: ath9k(O+) ath9k_common(O) ath9k_hw(O) ath(O) ar934x_nfc
-  mac80211(O) usbcore usb_common scsi_mod nls_base nand nand_ecc nand_ids
-  crc_ccitt cfg80211(O) compat(O) arc4 aes_generic crypto_blkcipher cryptomgr
-  aead crypto_hash crypto_algapi ledtrig_timer ledtrig_default_on leds_gpio
-  Process insmod (pid: 459, threadinfo=86d70000, task=87942140, tls=779ac440)
-  Stack : 802fb500 000200da 804db150 804e0000 87816130 86ee0000 00010000 86d71b88
-          86d71bc0 00000004 00000003 86e9fcd0 80305300 0002c0d0 86e74c50 800b4c20
-          000003e8 00000001 00000000 86ee0000 000003ff 86e9fd64 80305300 80123938
-          fffffffc 00000004 000058bc 00000000 86ea0000 86ee0000 000001ff 878d6000
-          99999999 86e9fdc0 86ee0fcc 86e9e664 0000c0d0 86ee0000 0000700000007000
-          ...
-  Call Trace:
-  [<86e84164>] ath9k_hw_wait+0x58/0xb0 [ath9k_hw]
-  [<86e9fcd0>] ath9k_hw_setup_statusring+0x16b8/0x1c7c [ath9k_hw]
+It seems easy to imagine a device that supports only a blacklist or
+whitelist, not both combined? What's the point of that anyway?
 
-  Code: 0000a812  0040f809  00000000 <00531024> 1054000b  24020001  0c05b5dc  2404000a  26520001
+> +       NL80211_AP_SME_FEATURE_MAC_ACL          = 1 << 0,
 
-The cause of the error is that the OTP register
-offsets are different on the AR9340 than the
-actually used values.
+This doesn't seem to be needed since you have the max ACL number, and
+should leave out the attribute if it's 0 so its presence can be the
+feature test.
 
-Cc: <stable@vger.kernel.org> # 3.0+
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 41b1a75..54ba42f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -68,13 +68,13 @@
- #define AR9300_BASE_ADDR 0x3ff
- #define AR9300_BASE_ADDR_512 0x1ff
- 
--#define AR9300_OTP_BASE			0x14000
--#define AR9300_OTP_STATUS		0x15f18
-+#define AR9300_OTP_BASE			(AR_SREV_9340(ah) ? 0x30000 : 0x14000)
-+#define AR9300_OTP_STATUS		(AR_SREV_9340(ah) ? 0x30018 : 0x15f18)
- #define AR9300_OTP_STATUS_TYPE		0x7
- #define AR9300_OTP_STATUS_VALID		0x4
- #define AR9300_OTP_STATUS_ACCESS_BUSY	0x2
- #define AR9300_OTP_STATUS_SM_BUSY	0x1
--#define AR9300_OTP_READ_DATA		0x15f1c
-+#define AR9300_OTP_READ_DATA		(AR_SREV_9340(ah) ? 0x3001c : 0x15f1c)
- 
- enum targetPowerHTRates {
- 	HT_TARGET_RATE_0_8_16,
--- 
-1.7.10
+johannes
 
