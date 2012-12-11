@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45074 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771Ab2LKP34 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:34646 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487Ab2LKEoB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 10:29:56 -0500
-Message-ID: <1355239813.9819.3.camel@jlt4.sipsolutions.net> (sfid-20121211_162959_777671_01EE7ACD)
-Subject: Re: [PATCH 3/3] p54: zero-out rx_status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Gabor Juhos <juhosg@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Date: Tue, 11 Dec 2012 16:30:13 +0100
-In-Reply-To: <1355239503.9819.1.camel@jlt4.sipsolutions.net> (sfid-20121211_162447_361019_EEF95137)
-References: <1355234105-12013-1-git-send-email-juhosg@openwrt.org>
-	 <1355234105-12013-3-git-send-email-juhosg@openwrt.org>
-	 <201212111608.43293.chunkeey@googlemail.com>
-	 (sfid-20121211_160907_576808_50E80D43) <1355239503.9819.1.camel@jlt4.sipsolutions.net>
-	 (sfid-20121211_162447_361019_EEF95137)
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 10 Dec 2012 23:44:01 -0500
+Date: Mon, 10 Dec 2012 23:43:58 -0500 (EST)
+Message-Id: <20121210.234358.788502498079611342.davem@davemloft.net> (sfid-20121211_054432_339887_9EDD14A9)
+To: abhi.c.pawar@gmail.com
+Cc: amwang@redhat.com, joe@perches.com, jmorris@namei.org,
+	edumazet@google.com, pablo@netfilter.org, kaber@trash.net,
+	coreteam@netfilter.org, yoshfuji@linux-ipv6.org,
+	netfilter-devel@vger.kernel.org, johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org, netfilter@vger.kernel.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, nhorman@tuxdriver.com, kuznet@ms2.inr.ac.ru
+Subject: Re: [PATCH RESEND] net: remove obsolete simple_strto<foo>
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CA+kxV1GBxdZKnjqs1bm1qBJE8dGXtOfqP_oYbB-hw5Ga1xE65g@mail.gmail.com>
+References: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com>
+	<20121210.141002.450030380391247897.davem@davemloft.net>
+	<CA+kxV1GBxdZKnjqs1bm1qBJE8dGXtOfqP_oYbB-hw5Ga1xE65g@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-11 at 16:25 +0100, Johannes Berg wrote:
+From: Abhijit Pawar <abhi.c.pawar@gmail.com>
+Date: Tue, 11 Dec 2012 06:36:59 +0530
 
-> > If this issue just popped up now, I suspect that 
-> > something else is silently corrupting our SKBs 
-> > [or can anybody see how rt2x00 hit this issue?]
+> It looks like there are two occurences of simple_strtoul which has not been
+> removed cleanly from the patch.
+> They are in netpoll.c and debugfs_sta.c
+> I will send the modified corrected clean patch shortly.
 
-Oh, ok I assumed that rt2x00 RX SKBs are cleanly allocated, but now that
-I trace the code further I see that while the SKBs are on the queue
-inside rt2x00 they have something called "struct skb_frame_desc" on the
-skb->cb, so this is what's causing the rt2x00 issue. This should be
-mentioned in the rt2x00 commit, and all other drivers should be fine.
-
-johannes
-
+You can't simply send me a replacement patch, since I already applied
+the original one and that patch will not be reverted.
