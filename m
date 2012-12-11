@@ -1,67 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41646 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952Ab2LJSpc (ORCPT
+Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:21760
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752711Ab2LKM3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 13:45:32 -0500
-Message-ID: <1355165152.8083.4.camel@jlt4.sipsolutions.net> (sfid-20121210_194540_999976_176F03C6)
-Subject: Re: [PATCH] ipv4: ip_check_defrag must not modify skb before
- unsharing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: eric@regit.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	eric.dumazet@gmail.com
-Date: Mon, 10 Dec 2012 19:45:52 +0100
-In-Reply-To: <20121210.134146.1583909966821253233.davem@davemloft.net>
-References: <1354919017.9124.33.camel@jlt4.sipsolutions.net>
-	 <1355131788.9857.1.camel@jlt4.sipsolutions.net>
-	 <1355132466.9857.6.camel@jlt4.sipsolutions.net>
-	 <20121210.134146.1583909966821253233.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 11 Dec 2012 07:29:34 -0500
+From: Alberto Garau <Alberto.Garau@inpeco.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>
+Subject: RE: wl12xx over spi with no scan results
+Date: Tue, 11 Dec 2012 12:28:56 +0000
+Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121211_132937_802068_D3D7F534)
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355218436.3738.122.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+ <1355223079.3738.128.camel@cumari.coelho.fi>
+In-Reply-To: <1355223079.3738.128.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-12-10 at 13:41 -0500, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Mon, 10 Dec 2012 10:41:06 +0100
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > ip_check_defrag() might be called from af_packet within the
-> > RX path where shared SKBs are used, so it must not modify
-> > the input SKB before it has unshared it for defragmentation.
-> > Use skb_copy_bits() to get the IP header and only pull in
-> > everything later.
-> > 
-> > The same is true for the other caller in macvlan as it is
-> > called from dev->rx_handler which can also get a shared SKB.
-> > 
-> > Reported-by: Eric Leblond <eric@regit.org>
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > ---
-> > For some versions of the kernel, this code goes into af_packet.c
-> 
-> So the bug is that ip_check_defrag() has a precondition which is met
-> properly by all callers except AF_PACKET.
-> 
-> If this is the case, remind me why are we changing ip_check_defrag()
-> rather than the violator of the precondition?
-
-I don't think this is the case.
-
-If you're referring to my note about af_packet: the kernels where this
-goes into af_packet.c are the kernels that don't even have
-ip_check_defrag() because macvlan didn't exist/didn't have ip defrag
-support and af_packet had this code there -- see commit bc416d9768a.
-
-If you're not referring to my note about af_packet: both callers (there
-are only two) of ip_check_defrag() have this bug as far as I can tell
-because they're both in the part of the RX path where shared SKBs might
-happen.
-
-johannes
-
+VGhhbmtzIEx1Y2EsIA0KDQpjb25maWd1cmluZyANCg0KYm9hcmRfcmVmX2Nsb2NrID0gV0wxMlhY
+X1JFRkNMT0NLXzM4LCAvKiAzOC40IE1IeiAqLw0KDQpnYXZlIG1lIHRoZSBwb3NzaWJpbGl0eSB0
+byBzY2FuIG5ldHdvcmsgYnV0IG9ubHkgZm9yIGFuIGVzc2lkIG9uIGNoYW5uZWwxIChkZWxpdmVy
+ZWQgZnJvbSBvbmUgQVApLg0KDQpJIGNvdWxkbid0IHNjYW4gb3RoZXJzIGVzc2lkcyBvbiBvdGhl
+ciBjaGFubmVscyAoZm9yIGV4YW1wbGUgY2hhbm5lbCA2KSBhbmQgSSBkb24ndCBrbm93IHdoeS4N
+Cg0KSGF2ZSB5b3UgZ290IGFueSBpZGVhIGFib3V0IGl0ID8NCg0KUmVnYXJkcw0KDQpBbGJlcnRv
+DQoNCnJvb3RAKG5vbmUpOn4jIGl3bGlzdCB3bGFuMCBzY2FuDQp3bGFuMCAgICAgU2NhbiBjb21w
+bGV0ZWQgOg0KICAgICAgICAgIENlbGwgMDEgLSBBZGRyZXNzOiA5MDpGNjo1MjozRjpDNDpDQw0K
+ICAgICAgICAgICAgICAgICAgICBDaGFubmVsOjENCiAgICAgICAgICAgICAgICAgICAgRnJlcXVl
+bmN5OjIuNDEyIEdIeiAoQ2hhbm5lbCAxKQ0KICAgICAgICAgICAgICAgICAgICBRdWFsaXR5PTQy
+LzcwICBTaWduYWwgbGV2ZWw9LTY4IGRCbQ0KICAgICAgICAgICAgICAgICAgICBFbmNyeXB0aW9u
+IGtleTpvbg0KICAgICAgICAgICAgICAgICAgICBFU1NJRDoiSW5wZWNvLVJhZGl1cyINCiAgICAg
+ICAgICAgICAgICAgICAgQml0IFJhdGVzOjEgTWIvczsgMiBNYi9zOyA1LjUgTWIvczsgMTEgTWIv
+czsgNiBNYi9zDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICA5IE1iL3M7IDEyIE1iL3M7
+IDE4IE1iL3MNCiAgICAgICAgICAgICAgICAgICAgQml0IFJhdGVzOjI0IE1iL3M7IDM2IE1iL3M7
+IDQ4IE1iL3M7IDU0IE1iL3MNCiAgICAgICAgICAgICAgICAgICAgTW9kZTpNYXN0ZXINCiAgICAg
+ICAgICAgICAgICAgICAgRXh0cmE6dHNmPTAwMDAwM2VhN2NjN2FkODANCiAgICAgICAgICAgICAg
+ICAgICAgRXh0cmE6IExhc3QgYmVhY29uOiAxNTZtcyBhZ28NCiAgICAgICAgICAgICAgICAgICAg
+SUU6IFVua25vd246IDAwMEQ0OTZFNzA2NTYzNkYyRDUyNjE2NDY5NzU3Mw0KICAgICAgICAgICAg
+ICAgICAgICBJRTogVW5rbm93bjogMDEwODgyODQ4Qjk2MEMxMjE4MjQNCiAgICAgICAgICAgICAg
+ICAgICAgSUU6IFVua25vd246IDAzMDEwMQ0KICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93
+bjogMDUwNDAwMDEwMDAwDQogICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3duOiAyQTAxMDAN
+CiAgICAgICAgICAgICAgICAgICAgSUU6IElFRUUgODAyLjExaS9XUEEyIFZlcnNpb24gMQ0KICAg
+ICAgICAgICAgICAgICAgICAgICAgR3JvdXAgQ2lwaGVyIDogQ0NNUA0KICAgICAgICAgICAgICAg
+ICAgICAgICAgUGFpcndpc2UgQ2lwaGVycyAoMSkgOiBDQ01QDQogICAgICAgICAgICAgICAgICAg
+ICAgICBBdXRoZW50aWNhdGlvbiBTdWl0ZXMgKDEpIDogODAyLjF4DQogICAgICAgICAgICAgICAg
+ICAgICAgIFByZWF1dGhlbnRpY2F0aW9uIFN1cHBvcnRlZA0KICAgICAgICAgICAgICAgICAgICBJ
+RTogVW5rbm93bjogMzIwNDMwNDg2MDZDDQogICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3du
+OiBERDE4MDA1MEYyMDIwMTAxODYwMDAzQTQwMDAwMjdBNDAwMDA0MjQzNUUwMDYyMzIyRjAwDQog
+ICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3duOiBERDFFMDA5MDRDMzM0RTExMUJGRjAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwDQogICAgICAgICAgICAgICAg
+ICAgIElFOiBVbmtub3duOiAyRDFBNEUxMTFCRkYwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMA0KICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogREQxQTAw
+OTA0QzM0MDEwRDA4MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDANCiAgICAg
+ICAgICAgICAgICAgICAgSUU6IFVua25vd246IDNEMTYwMTBEMDgwMDAwMDAwMDAwMDAwMDAwMDAw
+MDAwMDAwMDAwMDAwMDAwMDAwMA0KICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogREQw
+OTAwMDM3RjAxMDEwMDAwRkY3Rg0KICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogREQw
+QTAwMDM3RjA0MDEwMDAwMDA0MDAwDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9t
+OiBMdWNpYW5vIENvZWxobyBbbWFpbHRvOmNvZWxob0B0aS5jb21dIA0KU2VudDogbWFydGVkw6wg
+MTEgZGljZW1icmUgMjAxMiAxMTo1MQ0KVG86IEFsYmVydG8gR2FyYXUNCkNjOiBsaW51eC13aXJl
+bGVzc0B2Z2VyLmtlcm5lbC5vcmc7IElkbyBZYXJpdjsgQXJpayBOZW10c292DQpTdWJqZWN0OiBS
+ZTogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8gc2NhbiByZXN1bHRzDQoNCk9uIFR1ZSwgMjAxMi0x
+Mi0xMSBhdCAxMDozNSArMDAwMCwgQWxiZXJ0byBHYXJhdSB3cm90ZToNCj4gVGhhdCdzIGFuICph
+bmNpZW50KiBrZXJuZWwuIDooIEFueSBjaGFuY2UgeW91IGNhbiB0cnkgaXQgd2l0aCBhIG5ld2Vy
+IGtlcm5lbD8NCj4gDQo+IFVub3J0dW5hdGVseSBub3QsIHRoYXQncyBvdXIgcHJvZHVjdGlvbiBr
+ZXJuZWwuIA0KDQpFdmVuIGlmIHlvdSBjYW4ndCB1c2UgaXQgaW4gcmVhbCBsaWZlLCBpdCBjb3Vs
+ZCBiZSB3b3J0aCB0cnlpbmcgYSBuZXdlciBrZXJuZWwgaWYgeW91IGtlZXAgZ2V0dGluZyBwcm9i
+bGVtcyB3aXRoIHRoYXQgb2xkIG9uZS4gIFlvdSBjb3VsZCBhbHNvIHRyeSBjb21wYXQtd2lyZWxl
+c3MgdG8gZ2V0IGEgbmV3ZXIgd2lyZWxlc3Mgc3Vic3lzdGVtLCBhdCBsZWFzdC4NCg0KDQo+ID4g
+QW55IG90aGVyIGlkZWEgYWJvdXQgd2h5IHRoZSBzY2FuIGNvbW1hbmQgaXQncyBub3QgcHJvcGVy
+bHkgd29ya2luZyA/DQo+IA0KPiBBbm90aGVyIGNvbW1vbiBwcm9ibGVtIGlzIHRoZSBjbG9jayBz
+ZXR0aW5ncy4gIEFyZSB5b3Ugc3VyZSB0aGUgY29ycmVjdCB2YWx1ZSBmb3IgYm9hcmRfcmVmX2Ns
+b2NrIGluIHlvdXIgYm9hcmQgZmlsZT8NCj4gDQo+IEFyZSB5b3UgdGFsa2luZyBhYm91dCAid2wt
+PnJlZl9jbG9jayA9IHBkYXRhLT5ib2FyZF9yZWZfY2xvY2s7IiBpbiB0aGUgcHJvYmUgPyBXaGlj
+aCB2YWx1ZSBzaG91bGQgSSBwdXQgZm9yIDM4LjRNSHogZHVlIHRvIHRoZSBmYWN0IHRoYXQgaXQg
+aXMgYW4gaW50ZWdlciBwYXJhbWV0ZXIgPw0KDQpZZXMsIHRoYXQncyB0aGUgdmFsdWUgSSdtIHRh
+bGtpbmcgYWJvdXQuICBZb3Ugc2hvdWxkIHB1dCBpdCBpbiB5b3VyIGJvYXJkZmlsZSwgc29tZXRo
+aW5nIGxpa2UgdGhpcyAoZnJvbSBwYW5kYSk6DQoNCnN0YXRpYyBzdHJ1Y3Qgd2wxMnh4X3BsYXRm
+b3JtX2RhdGEgb21hcF9wYW5kYV93bGFuX2RhdGEgIF9faW5pdGRhdGEgPSB7DQoJLmJvYXJkX3Jl
+Zl9jbG9jayA9IFdMMTJYWF9SRUZDTE9DS18zOCwgLyogMzguNCBNSHogKi8gfTsNCg0KWW91IGNh
+biBmaW5kIHRoZXNlIHZhbHVlcyBpbiB0aGUgaW5jbHVkZS9saW51eC93bDEyeHguaCBmaWxlLg0K
+DQotLQ0KTHVjYS4NCg0KDQo=
 
