@@ -1,78 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59357 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756295Ab2LMSj1 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38329 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435Ab2LKDeT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:39:27 -0500
-Message-ID: <50CA20D4.90707@candelatech.com> (sfid-20121213_193931_481111_63D0F5B2)
-Date: Thu, 13 Dec 2012 10:39:16 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 10 Dec 2012 22:34:19 -0500
+Message-ID: <50C6A995.1020908@gmail.com> (sfid-20121211_043444_957597_E9FEB186)
+Date: Tue, 11 Dec 2012 09:03:41 +0530
+From: Abhijit Pawar <abhi.c.pawar@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Add a new work-queue for destructing stations?
-References: <50CA1470.4030107@candelatech.com>    (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>   <50CA1C44.5030300@candelatech.com>  <1355423047.9463.9.camel@jlt4.sipsolutions.net>  <50CA1EB6.9030903@candelatech.com> <1355423836.9463.14.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355423836.9463.14.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: David Miller <davem@davemloft.net>
+CC: abhi.c.pawar@gmail.com, pablo@netfilter.org, kaber@trash.net,
+	kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net,
+	amwang@redhat.com, edumazet@google.com, nhorman@tuxdriver.com,
+	joe@perches.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	netfilter@vger.kernel.org, coreteam@netfilter.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RESEND] net: remove obsolete simple_strto<foo>
+References: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com> <20121210.141002.450030380391247897.davem@davemloft.net>
+In-Reply-To: <20121210.141002.450030380391247897.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2012 10:37 AM, Johannes Berg wrote:
-> On Thu, 2012-12-13 at 10:30 -0800, Ben Greear wrote:
->> On 12/13/2012 10:24 AM, Johannes Berg wrote:
->>> On Thu, 2012-12-13 at 10:19 -0800, Ben Greear wrote:
->>>
->>>>> I don't think that's easy, but you're welcome to try. The
->>>>> free_sta_work() function references the sdata so it absolutely must run
->>>>> at this point.
->>>
->>>> So, cancel_work_sync(&sdata->work) would appear to remove
->>>> all pending sdata->work items from the work-queue.  As long as
->>>> there are no other different work items that reference
->>>> sdata (and maybe there are..I haven't looked at all of them),
->>>> then we should be safe to execute the free_sta_work()
->>>> on a different work-queue safely, I think....
->>>
->>> Sorry, I don't get it. free_sta_work() *itself* has to be executed
->>> before the sdata is destroyed. cancel_work_sync(&sdata->work) has
->>> nothing to do with free_sta_work.
+On 12/11/2012 12:40 AM, David Miller wrote:
+> From: Abhijit Pawar <abhi.c.pawar@gmail.com>
+> Date: Mon, 10 Dec 2012 14:42:28 +0530
+> 
+>> This patch replace the obsolete simple_strto<foo> with kstrto<foo>
 >>
->> My concern is this:
->>
->> If I add a different work queue (called destructor-workqueue, perhaps)
->> for free_sta_work(), then it only helps
->> if I can not block on flushing the current 'big' work-queue.  But, if
->> there are items on the big work-queue that reference sdata, then
->> that could easily execute after free_sta_work(), and I'm guessing
->> that would be very bad.
->>
->> So, near where we currently call cancel_work_sync(&sdata->work), I
->> think we'd also need to cancel things like the sta->ampdu_mlme.work,
->> and probably others as well.
->>
->> Then, when we're sure there are no more references to sdata on the
->> main-work-queue, it would be safe to flush the destructor-workqueue
->> (which would have the fre_sta_work() on it).
->>
->> Maybe?
->
-> Huh, ok, but I don't think you'll find much that doesn't reference an
-> sdata?
-
-I think you are right...so just need to find all of those work items
-and call cancel_work_sync() on them, just like we are currently cancelling
-the sdata->work....
-
-Thanks,
-Ben
-
-
->
-> johannes
->
-
+>> Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
+> 
+> Applied.
+> 
+Hi David,
+It seems that there are occurences of simple_strto* still present in the
+couple of files which are not yet removed correctly by this patch. I
+will send a modified patch shortly. Please revert this commit and use
+the newly sent patch to merge with the tree.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+-
+Abhijit
