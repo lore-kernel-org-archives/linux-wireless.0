@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58196 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751310Ab2LJR5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 12:57:39 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 1/2] mac80211: flush AP_VLAN stations when tearing down the BSS AP
-Date: Mon, 10 Dec 2012 18:57:35 +0100
-Message-Id: <1355162256-34131-1-git-send-email-nbd@openwrt.org> (sfid-20121210_185749_963172_D9A790D5)
+Received: from he.sipsolutions.net ([78.46.109.217]:45060 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752823Ab2LKPYn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 10:24:43 -0500
+Message-ID: <1355239503.9819.1.camel@jlt4.sipsolutions.net> (sfid-20121211_162447_361019_EEF95137)
+Subject: Re: [PATCH 3/3] p54: zero-out rx_status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Gabor Juhos <juhosg@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Date: Tue, 11 Dec 2012 16:25:03 +0100
+In-Reply-To: <201212111608.43293.chunkeey@googlemail.com> (sfid-20121211_160907_576808_50E80D43)
+References: <1355234105-12013-1-git-send-email-juhosg@openwrt.org>
+	 <1355234105-12013-3-git-send-email-juhosg@openwrt.org>
+	 <201212111608.43293.chunkeey@googlemail.com>
+	 (sfid-20121211_160907_576808_50E80D43)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/cfg.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+On Tue, 2012-12-11 at 16:08 +0100, Christian Lamparter wrote:
+> On Tuesday, December 11, 2012 02:55:05 PM Gabor Juhos wrote:
+> > In commit 'mac80211: support radiotap vendor namespace RX data'
+> > new fields were added to 'struct ieee80211_rx_status'.
+> > The ath5k driver does not initializes those fields and
+>       ^^^^^ p54?!
+> 
+> > this can cause unexpected behaviour. The patch ensures
+> > that each field gets initialized with zeroes.
+> 
+> Actually, when the skb is alloced/initialized by
+> __alloc_skb, the skb->cb is already zeroed (which
+> is where the ieee80211_rx_status will be stored).
+> 
+> And while p54 recycles command response skbs, the 
+> driver does not touch the skb->cb of 802.11 skbs,
+> until the frame is destined for ieee80211_rx_irqsave.
+> 
+> If this issue just popped up now, I suspect that 
+> something else is silently corrupting our SKBs 
+> [or can anybody see how rt2x00 hit this issue?]
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5c61677..a5d4361 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -998,8 +998,10 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	old_probe_resp = rtnl_dereference(sdata->u.ap.probe_resp);
- 
- 	/* turn off carrier for this interface and dependent VLANs */
--	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
-+		sta_info_flush(local, vlan);
- 		netif_carrier_off(vlan->dev);
-+	}
- 	netif_carrier_off(dev);
- 
- 	/* remove beacon and probe response */
--- 
-1.7.12.2
+When I reviewed the drivers, I didn't think there was a problem in any
+of them but iwlwifi & iwlegacy which I fixed, for the reasons you
+mention above. So I'm just as confused as you are, I guess :)
+
+johannes
+
 
