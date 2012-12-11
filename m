@@ -1,147 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:51590 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947Ab2LWN2N (ORCPT
+Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:53638
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752608Ab2LKKfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 08:28:13 -0500
-Received: by mail-ee0-f54.google.com with SMTP id c13so3116483eek.27
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Dec 2012 05:28:12 -0800 (PST)
-Message-ID: <50D706D9.80006@gmail.com> (sfid-20121223_142818_761646_B47A76BD)
-Date: Sun, 23 Dec 2012 16:27:53 +0300
-From: Sergey Isachenko <vortexius@gmail.com>
+	Tue, 11 Dec 2012 05:35:44 -0500
+From: Alberto Garau <Alberto.Garau@inpeco.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>
+Subject: RE: wl12xx over spi with no scan results
+Date: Tue, 11 Dec 2012 10:35:31 +0000
+Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121211_113549_438268_715BEFD7)
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+ <1355218436.3738.122.camel@cumari.coelho.fi>
+In-Reply-To: <1355218436.3738.122.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Missinng dependency for debugfs in driver ath9k
-Content-Type: multipart/mixed;
- boundary="------------060802090807070306050806"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060802090807070306050806
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+SGkgTHVjYSwNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEx1Y2lhbm8gQ29l
+bGhvIFttYWlsdG86Y29lbGhvQHRpLmNvbV0gDQpTZW50OiBtYXJ0ZWTDrCAxMSBkaWNlbWJyZSAy
+MDEyIDEwOjM0DQpUbzogQWxiZXJ0byBHYXJhdQ0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
+bmVsLm9yZzsgSWRvIFlhcml2OyBBcmlrIE5lbXRzb3YNClN1YmplY3Q6IFJlOiB3bDEyeHggb3Zl
+ciBzcGkgd2l0aCBubyBzY2FuIHJlc3VsdHMNCg0KT24gVHVlLCAyMDEyLTEyLTExIGF0IDA5OjE2
+ICswMDAwLCBBbGJlcnRvIEdhcmF1IHdyb3RlOg0KPiBIaSBMdWNhLA0KPiANCj4gLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjaWFubyBDb2VsaG8gW21haWx0bzpjb2VsaG9A
+dGkuY29tXQ0KPiBTZW50OiBsdW5lZMOsIDEwIGRpY2VtYnJlIDIwMTIgMTg6NTANCj4gVG86IEFs
+YmVydG8gR2FyYXUNCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSWRvIFlh
+cml2OyBBcmlrIE5lbXRzb3YNCj4gU3ViamVjdDogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8gc2Nh
+biByZXN1bHRzICh3YXM6IFJlOiBbUEFUQ0ggMjAvMjBdIA0KPiB3bGNvcmU6IEFsd2F5cyBwYXNz
+IERNQS1hYmxlIGJ1ZmZlcnMgdG8gbW1jIGZ1bmN0aW9ucykNCj4gDQo+IEhpIEFsYmVydG8sDQo+
+IA0KPiBPbiBNb24sIDIwMTItMTItMTAgYXQgMTc6MjQgKzAwMDAsIEFsYmVydG8gR2FyYXUgd3Jv
+dGU6DQo+ID4gSeKAmW0gdHJ5aW5nIHRvIG1ha2Ugd29ya2luZyB0aGUgV0wxMjcxIFRJIE11cmF0
+YSBjaGlwIHdpdGggb3VyIGN1c3RvbSBib2FyZC4gIFRoZSBTUEkgZHJpdmVyIHNlZW1zIHRvIGJl
+IHJ1bm5pbmcgYnV0IEkgY2Fubm90IHNjYW4gZnJvbSBvdXIgV2lmaSBOZXR3b3JrLiANCj4gPiAN
+Cj4gPiBBZnRlciBib290aW5nIHRoZSBib2FyZCBJ4oCZbSBkb2luZzoNCj4gPiANCj4gPiDigKIJ
+aW5zbW9kIC9tZWRpYS9yZWQvcm9vdC93bDEyNzEvd2wxMjcxLmtvDQo+ID4g4oCiCWluc21vZCAv
+bWVkaWEvcmVkL3Jvb3Qvd2wxMjcxL3dsMTI3MV9zcGkua28NCj4gPiDigKIJaXdjb25maWcgd2xh
+bjAgbW9kZSBtYW5hZ2VkDQo+ID4g4oCiCWl3Y29uZmlnIHdsYW4wIGVzc2lkIHh4eHh4eHgNCj4g
+PiDigKIJaWZjb25maWcgd2xhbjAgaHcgZXRoZXIgMDA6ODA6RTE6MTI6MjY6MTcgDQo+ID4g4oCi
+CWlmY29uZmlnIHdsYW4wIDE5Mi4xNjguNDAuMTAwIG5ldG1hc2sgMjU1LjI1NS4yNTUuMCB1cA0K
+PiA+IA0KPiA+IFRoZW4gSSBib3RhaW46DQo+ID4gDQo+ID4gY2hpcF9pZCByZWFkIGZyb20gbWVt
+b3J5OiAwNDAzMDExMQ0KPiA+IHdsMTI3MV9mZXRjaF9maXJtd2FyZSAtIGZldGNoaW5nIGZpcm13
+YXJlIHdsMTI3MS1mdy5iaW4gDQo+ID4gd2wxMjcxX2ZldGNoX252cyAtIGZldGNoaW5nIGZpcm13
+YXJlIHdsMTI3MS1udnMuYmluDQo+ID4gd2wxMjcxOiBmaXJtd2FyZSBib290ZWQgKFJldiA2LjEu
+MC41MC4zNTApDQo+ID4gDQo+ID4gYnV0IHVuZm9ydHVuYXRlbHkgdGhlIHdoZW4gSSBydW4g4oCc
+aXdsaXN0IHdsYW4wIHNjYW7igJ0NCj4gPiANCj4gPiBJIG9idGFpbiDigJx3bGFuMCBObyBzY2Fu
+IHJlc3VsdHPigJ0NCj4gPiANCj4gPiANCj4gPiBDb3VsZCB5b3UgcGxlYXNlIGhlbHAgdXMgaW4g
+Zml4aW5nIHRoaXMgaXNzdWUgPw0KPiANCj4gVGhpcyBjb3VsZCBiZSBtYW55IGRpZmZlcmVudCB0
+aGluZ3MuICBUaGUgZmlyc3QgdGhpbmcgdGhhdCBjb21lcyB0byBteSANCj4gbWluZCBpcyB0aGF0
+IHRoZSBzY2FuIHJlc3VsdHMgYXJlIHRoZSBmaXJzdCB0aGluZyB0aGF0IGNvbWVzIGFzIGEgcmVh
+bCANCj4gaW50ZXJydXB0IChiZWZvcmUgdGhpcyBhbGwgdGhlIGludGVycnVwdHMgYXJlIHBvbGxl
+ZCkuICBTbyBhcmUgeW91IA0KPiBzdXJlIHRoZSBpbnRlcnJ1cHQgbGluZSBpcyB3b3JraW5nIHBy
+b3Blcmx5Pw0KPiANCj4gVGhlIGludGVycnVwdCBsaW5lIGl0IHNlZW1zIHRvIHdvcmsgcHJvcGVy
+bHkuIEkgcHV0IGEgcHJpbnRrIGluIHRoZSANCj4gaW50ZXJydXB0IGhhbmRsZXIgYW5kIEkgc2Vl
+IGl0IGFjdGl2YXRlZA0KDQpPay4NCg0KDQo+IER1cmluZyB0aGUgZmlybXdhcmUgZmV0Y2ggYW5k
+IHdoZW4gSSBwZXJmb3JtIHRoZSAiaXdsaXN0YSB3bGFuMCBzY2FuIi4NCj4gSSBrZXB0IHRoZSBJ
+UlEgYXNzb2NpYXRpb24gdG8gSVJRX1RZUEVfRURHRV9SSVNJTkcgYXMgeW91ciBzb3VyY2UgY29k
+ZSANCj4gd2FzIGluIDIuNi4zNyBrZXJuZWwuDQoNClRoYXQncyBhbiAqYW5jaWVudCoga2VybmVs
+LiA6KCBBbnkgY2hhbmNlIHlvdSBjYW4gdHJ5IGl0IHdpdGggYSBuZXdlciBrZXJuZWw/DQoNClVu
+b3J0dW5hdGVseSBub3QsIHRoYXQncyBvdXIgcHJvZHVjdGlvbiBrZXJuZWwuIA0KDQoNCj4gQW55
+IG90aGVyIGlkZWEgYWJvdXQgd2h5IHRoZSBzY2FuIGNvbW1hbmQgaXQncyBub3QgcHJvcGVybHkg
+d29ya2luZyA/DQoNCkFub3RoZXIgY29tbW9uIHByb2JsZW0gaXMgdGhlIGNsb2NrIHNldHRpbmdz
+LiAgQXJlIHlvdSBzdXJlIHRoZSBjb3JyZWN0IHZhbHVlIGZvciBib2FyZF9yZWZfY2xvY2sgaW4g
+eW91ciBib2FyZCBmaWxlPw0KDQpBcmUgeW91IHRhbGtpbmcgYWJvdXQgIndsLT5yZWZfY2xvY2sg
+PSBwZGF0YS0+Ym9hcmRfcmVmX2Nsb2NrOyIgaW4gdGhlIHByb2JlID8gV2hpY2ggdmFsdWUgc2hv
+dWxkIEkgcHV0IGZvciAzOC40TUh6IGR1ZSB0byB0aGUgZmFjdCB0aGF0IGl0IGlzIGFuIGludGVn
+ZXIgcGFyYW1ldGVyID8NCg0KVGhhbmtzIGluIGFkdmFuY2UgDQoNCkFsYmVydG8NCg0KLS0NCkx1
+Y2EuDQoNCg0K
 
-Hello i have problem with making your driver in linux kernel:
-
-psix linux # LANG=C make -j5
-make[1]: Nothing to be done for `all'.
-  CHK     include/generated/uapi/linux/version.h
-  CHK     include/generated/utsrelease.h
-make[1]: Nothing to be done for `relocs'.
-  CALL    scripts/checksyscalls.sh
-<stdin>:1223:2: warning: #warning syscall finit_module not implemented
-[-Wcpp]
-  CHK     include/generated/compile.h
-  CHK     kernel/config_data.h
-make[3]: `arch/x86/realmode/rm/realmode.bin' is up to date.
-  CC      drivers/power/power_supply_core.o
-  CC      drivers/power/power_supply_sysfs.o
-  CC      drivers/net/wireless/ath/ath9k/debug.o
-  CC      drivers/rtc/rtc-lib.o
-  CC      drivers/power/power_supply_leds.o
-  CC      drivers/thermal/thermal_sys.o
-  LD      drivers/scsi/pcmcia/built-in.o
-  CC      drivers/scsi/scsi.o
-  LD      drivers/power/power_supply.o
-  LD      drivers/power/built-in.o
-  CC      drivers/rtc/class.o
-  CC      drivers/rtc/interface.o
-drivers/net/wireless/ath/ath9k/debug.c: In function 'ath9k_sta_add_debugfs':
-drivers/net/wireless/ath/ath9k/debug.c:1589:4: error: 'struct ath_node'
-has no member named 'node_stat'
-drivers/net/wireless/ath/ath9k/debug.c: In function
-'ath9k_sta_remove_debugfs':
-drivers/net/wireless/ath/ath9k/debug.c:1599:19: error: 'struct ath_node'
-has no member named 'node_stat'
-make[5]: *** [drivers/net/wireless/ath/ath9k/debug.o] Error 1
-make[4]: *** [drivers/net/wireless/ath/ath9k] Error 2
-make[3]: *** [drivers/net/wireless/ath] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make[1]: *** Waiting for unfinished jobs....
-  CC      drivers/rtc/rtc-dev.o
-  CC      drivers/scsi/hosts.o
-  CC      drivers/scsi/scsi_ioctl.o
-  CC      drivers/rtc/rtc-proc.o
-  CC      drivers/rtc/rtc-sysfs.o
-  CC      drivers/thermal/step_wise.o
-  CC      drivers/scsi/constants.o
-  CC      drivers/rtc/rtc-cmos.o
-  CC      drivers/scsi/scsicam.o
-  CC      drivers/scsi/scsi_error.o
-  LD      drivers/thermal/built-in.o
-  CC      drivers/scsi/scsi_lib.o
-  CC      drivers/scsi/scsi_lib_dma.o
-  LD      drivers/rtc/rtc-core.o
-  LD      drivers/rtc/built-in.o
-  CC      drivers/scsi/scsi_scan.o
-  CC      drivers/scsi/scsi_sysfs.o
-  CC      drivers/scsi/scsi_devinfo.o
-  CC      drivers/scsi/scsi_sysctl.o
-  CC      drivers/scsi/scsi_proc.o
-  CC      drivers/scsi/scsi_trace.o
-  CC      drivers/scsi/scsi_pm.o
-  CC      drivers/scsi/sd.o
-  CC      drivers/scsi/sr.o
-  CC      drivers/scsi/sr_ioctl.o
-  CC      drivers/scsi/sr_vendor.o
-  CC      drivers/scsi/scsi_transport_spi.o
-  CC      drivers/scsi/sg.o
-  LD      drivers/scsi/scsi_mod.o
-  LD      drivers/scsi/sd_mod.oou
-  LD      drivers/scsi/sr_mod.o
-  LD      drivers/scsi/built-in.o
-make: *** [drivers] Error 2
-
-
-
-I write the patch for you team. patch in attachments.
-Thank you.
-
-P.S. srry my terrible English.
-
-Sergey Isachenko.
-
---------------060802090807070306050806
-Content-Type: text/x-patch;
- name="0001-debugfs-fix-missing-dependency-on-DEBUGFS.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="0001-debugfs-fix-missing-dependency-on-DEBUGFS.patch"
-
->From 5975a832b400344b2438bc640b530fb5a8d8a80a Mon Sep 17 00:00:00 2001
-From: Sergey Isachenko <vortexius@gmail.com>
-Date: Sat, 22 Dec 2012 12:42:56 +0300
-Subject: [PATCH] debugfs: fix missing dependency on DEBUGFS
-
----
- drivers/net/wireless/ath/ath9k/Kconfig | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 5fc15bf..8469e52 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -55,11 +55,12 @@ config ATH9K_AHB
- 	  wireless MAC. Say N if unsure.
- 
- config ATH9K_DEBUGFS
--	bool "Atheros ath9k debugging"
-+	bool "Atheros ath9k debugging via debugfs"
- 	depends on ATH9K && DEBUG_FS
-+	select MAC80211_DEBUGFS
- 	---help---
- 	  Say Y, if you need access to ath9k's statistics for
--	  interrupts, rate control, etc.
-+	  interrupts, rate control, etc via debugfs.
- 
- 	  Also required for changing debug message flags at run time.
- 
--- 
-1.8.0.2
-
-
---------------060802090807070306050806--
