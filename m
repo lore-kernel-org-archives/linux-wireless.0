@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42222 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055Ab2LJVtA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 16:49:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 07/10] iwlwifi: change TX code to suppress smatch warning
-Date: Mon, 10 Dec 2012 22:49:15 +0100
-Message-Id: <1355176158-24675-7-git-send-email-johannes@sipsolutions.net> (sfid-20121210_224913_762716_CA645168)
-In-Reply-To: <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
-References: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
- <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:41057 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753083Ab2LKUIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 15:08:49 -0500
+Date: Tue, 11 Dec 2012 15:08:31 -0500
+From: Jason Baron <jbaron@redhat.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	gregkh@linuxfoundation.org
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Joe Perches <joe@perches.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, Jim Cromie <jim.cromie@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
+Message-ID: <20121211200831.GD11815@redhat.com> (sfid-20121211_210906_495314_3A41F527)
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1353263740.28214.2.camel@joe-AO722>
+ <20121120160845.GB31176@redhat.com>
+ <3645415.mrRzvuvPFK@lx-vladimir>
+ <20121211193646.GS15974@pogo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121211193646.GS15974@pogo>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Dec 11, 2012 at 11:36:46AM -0800, Luis R. Rodriguez wrote:
+> On Tue, Dec 04, 2012 at 11:28:26AM +0200, Vladimir Kondratiev wrote:
+> > Hi Jason,
+> > 
+> > Do you have any update on the status for patches below?
+> > Where is it now? When do you expect it to merge? 3.8?
+> > I am waiting for this to merge before I can go on
+> > with my driver.
+> 
+> *poke*
+> 
+>   Luis
 
-By using a few temporary variables, smatch can track
-what's happening and stops complaining that we access
-beyond the tid_data array.
+Hi Luis,
 
-This also makes the generated code a bit smaller, so
-it's a win all around.
+Yes, I posted this patch, along with 2 others last week for Greg to
+pull. I believe these are too late for the 3.8 merge window. Perhaps,
+Greg can comment. Here's a link to the post:
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/tx.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+http://marc.info/?l=linux-kernel&m=135474417810281&w=2
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
-index 7d6cc5d..517562b 100644
---- a/drivers/net/wireless/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
-@@ -305,7 +305,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
- 	u8 hdr_len;
- 	u16 len, seq_number = 0;
- 	u8 sta_id, tid = IWL_MAX_TID_COUNT;
--	bool is_agg = false;
-+	bool is_agg = false, is_data_qos = false;
- 	int txq_id;
- 
- 	if (info->control.vif)
-@@ -378,9 +378,6 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
- 		iwl_sta_modify_sleep_tx_count(priv, sta_id, 1);
- 	}
- 
--	if (info->flags & IEEE80211_TX_CTL_AMPDU)
--		is_agg = true;
--
- 	dev_cmd = iwl_trans_alloc_tx_cmd(priv->trans);
- 
- 	if (unlikely(!dev_cmd))
-@@ -442,6 +439,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
- 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
- 		hdr->seq_ctrl |= cpu_to_le16(seq_number);
- 		seq_number += 0x10;
-+
-+		if (info->flags & IEEE80211_TX_CTL_AMPDU)
-+			is_agg = true;
-+		is_data_qos = true;
- 	}
- 
- 	/* Copy MAC header from skb into command buffer */
-@@ -474,8 +475,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
- 	if (iwl_trans_tx(priv->trans, skb, dev_cmd, txq_id))
- 		goto drop_unlock_sta;
- 
--	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc) &&
--	    !ieee80211_has_morefrags(fc))
-+	if (is_data_qos && !ieee80211_has_morefrags(fc))
- 		priv->tid_data[sta_id][tid].seq_number = seq_number;
- 
- 	spin_unlock(&priv->sta_lock);
--- 
-1.8.0
+Thanks,
 
+-Jason
