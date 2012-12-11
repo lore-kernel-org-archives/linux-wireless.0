@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:34693
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+Received: from arrakis.dune.hu ([78.24.191.176]:39048 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932385Ab2LGKCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 05:02:45 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 4/8] ath9k: Fix redundant PS wrappers
-Date: Fri,  7 Dec 2012 15:31:57 +0530
-Message-Id: <1354874521-4138-5-git-send-email-sujith@msujith.org> (sfid-20121207_110252_277583_C63F23E4)
-In-Reply-To: <1354874521-4138-1-git-send-email-sujith@msujith.org>
-References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
+	id S1754762Ab2LKUgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 15:36:15 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 2/3] qca-swiss-army-knife: add 'ath9k_get_p_columns' helper
+Date: Tue, 11 Dec 2012 21:36:11 +0100
+Message-Id: <1355258172-6938-2-git-send-email-juhosg@openwrt.org> (sfid-20121211_213621_063234_6BAB903F)
+In-Reply-To: <1355258172-6938-1-git-send-email-juhosg@openwrt.org>
+References: <1355258172-6938-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The number of the columns to be printed is computed in
+two different function. Add a helper function for that
+and remove the duplicated code.
 
-Move the PowerSave wrappers outside ath_paprd_activate(),
-since they are already being used in ath_paprd_calibrate().
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/link.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ tools/initvals/initvals.c |   20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index 3c996ff..c70b31a 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -188,7 +188,6 @@ static void ath_paprd_activate(struct ath_softc *sc)
- 		return;
- 	}
- 
--	ath9k_ps_wakeup(sc);
- 	ar9003_paprd_enable(ah, false);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
- 		if (!(ah->txchainmask & BIT(chain)))
-@@ -199,7 +198,6 @@ static void ath_paprd_activate(struct ath_softc *sc)
- 
- 	ath_dbg(common, CALIBRATE, "Activating PAPRD\n");
- 	ar9003_paprd_enable(ah, true);
--	ath9k_ps_restore(sc);
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index 4413e04..94f5aba 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -443,17 +443,26 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+ 	return val;
  }
  
- static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int chain)
-@@ -436,11 +434,15 @@ set_timer:
- 		cal_interval = min(cal_interval, (u32)short_cal_interval);
+-static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+-				   u32 columns, bool onedim, bool wide)
++static u32 ath9k_get_p_columns(u32 columns, bool wide)
+ {
+ 	u32 p_columns;
+-	u32 col, row;
  
- 	mod_timer(&common->ani.timer, jiffies + msecs_to_jiffies(cal_interval));
+ 	if (wide)
+ 		p_columns = columns;
+ 	else
+ 		p_columns = columns > 5 ? 5 : columns;
+ 
++	return p_columns;
++}
 +
- 	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD) && ah->caldata) {
--		if (!ah->caldata->paprd_done)
-+		if (!ah->caldata->paprd_done) {
- 			ieee80211_queue_work(sc->hw, &sc->paprd_work);
--		else if (!ah->paprd_table_write_done)
-+		} else if (!ah->paprd_table_write_done) {
-+			ath9k_ps_wakeup(sc);
- 			ath_paprd_activate(sc);
-+			ath9k_ps_restore(sc);
-+		}
- 	}
- }
++static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
++				   u32 columns, bool onedim, bool wide)
++{
++	u32 p_columns;
++	u32 col, row;
++
++	p_columns = ath9k_get_p_columns(columns, wide);
++
+ 	if (onedim)
+ 		printf("static const u32 %s[] = {\n", name);
+ 	else
+@@ -508,10 +517,7 @@ static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns,
+ 	u32 p_columns;
+ 	u32 col, row;
  
+-	if (wide)
+-		p_columns = columns;
+-	else
+-		p_columns = columns > 5 ? 5 : columns;
++	p_columns = ath9k_get_p_columns(columns, wide);
+ 
+ 	SHA1_Init(&ctx);
+ 	for (row = 0; row < rows; row++) {
 -- 
-1.8.0.1
+1.7.10
 
