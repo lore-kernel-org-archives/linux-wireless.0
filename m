@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:40905 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754232Ab2LZKq5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 05:46:57 -0500
-Received: by mail-we0-f173.google.com with SMTP id z2so3792989wey.4
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2012 02:46:56 -0800 (PST)
+Received: from comal.ext.ti.com ([198.47.26.152]:32866 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752829Ab2LKMKX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 07:10:23 -0500
+Message-ID: <1355227779.3738.130.camel@cumari.coelho.fi> (sfid-20121211_131036_601123_E84254C3)
+Subject: Re: [PATCH 00/20] wlcore fixes for 3.8 (part2)
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 11 Dec 2012 14:09:39 +0200
+In-Reply-To: <1353998701-18171-1-git-send-email-arik@wizery.com>
+References: <1353998701-18171-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <50DAD374.1090305@hauke-m.de>
-References: <1356459816-2214-1-git-send-email-zajec5@gmail.com>
-	<50DAD374.1090305@hauke-m.de>
-Date: Wed, 26 Dec 2012 11:46:56 +0100
-Message-ID: <CACna6rw00D+pVHPoYPgN9OoiQpHGumTw7oCXSmj+ECsqTVzR9Q@mail.gmail.com> (sfid-20121226_114701_354092_F0ABF58B)
-Subject: Re: [RFC][PATCH] ssb: add place for serial flash driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/12/26 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 12/25/2012 07:23 PM, Rafał Miłecki wrote:
->> +#ifdef CONFIG_SSB_SFLASH
->> +struct ssb_sflash {
->> +     bool present;
->> +};
->> +#endif
->
-> I assume you want to share some of the code for the serial flash driver
-> between bcma and ssb. You should create a file with the structure in
-> include/linux/platform_data/ and share that between bcma and ssb.
+On Tue, 2012-11-27 at 08:44 +0200, Arik Nemtsov wrote:
+> This series applies on top of part 1 sent yesterday.
+> 
+> The main addition is a new Tx scheduling algorithm for
+> better multi-channel operation.
+> 
+> Arik Nemtsov (9):
+>   wlcore: clear roc_vif on iface removal
+>   wlcore: take the mutex before resetting Tx queues
+>   wlcore: consolidate free_link and always call it
+>   wlcore: initialize per-link FW freed blocks correctly
+>   wlcore: track wlvif inside per-link structure
+>   wlcore: count packets held per AC in each vif
+>   wlcore: track FW-allocated packets per link
+>   wlcore: improved Tx scheduling algorithm
+>   wl18xx: set last Tx rate from FW status
+> 
+> Eliad Peller (4):
+>   wlcore: allow fw commands to fail
+>   wlcore: allow ACX_BA_SESSION_RX_SETUP to fail
+>   wlcore: remove WLCORE_QUIRK_NO_ELP
+>   wl18xx: declare support for greenfield ht_cap
+> 
+> Ido Reis (3):
+>   wl18xx: update default mac/phy parameters
+>   wlcore: fwlog dynamic mem_block control
+>   wl18xx: FDSP Code RAM Corruption fix
+> 
+> Ido Yariv (1):
+>   wlcore: Allow memory access when the FW crashes
+> 
+> Victor Goldenshtein (2):
+>   wlcore: remove unnecessary WARN_ON in wl12xx_tx_reset
+>   wlcore: restore default channel configuration
+> 
+> Yair Shapira (1):
+>   wl18xx: support 2nd set of mac/phy tx-power params
 
-It's a small struct having about 5 trivial fields. We don't share
-sturcts for any other drivers (chipcommon/mips/pcie) so I think they
-should stay separated here as well.
+Applied the whole series, except for 10/20 (still trying to get more
+information about it).  Some changes as discussed in the respective
+threads.
 
-Plus the mtd driver will have to implement bus abstraction anyway.
+Thanks Arik!
 
--- 
-Rafał
+--
+Luca.
+
