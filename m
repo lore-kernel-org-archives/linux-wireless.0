@@ -1,42 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:42350 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753017Ab2LPTdD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2012 14:33:03 -0500
-Received: by mail-ie0-f174.google.com with SMTP id c11so8302582ieb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Dec 2012 11:33:03 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:38333 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751421Ab2LKJs2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 04:48:28 -0500
+Date: Tue, 11 Dec 2012 10:48:23 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: fix ibss scanning
+Message-ID: <20121211094822.GA3262@redhat.com> (sfid-20121211_104846_433164_0116E9F5)
 MIME-Version: 1.0
-In-Reply-To: <87obhuugg3.fsf@purkki.adurom.net>
-References: <CAKoT1EZh=u3bA6Jcftmsj8cNbGEctVfm_Boi7umzHe1T4EZuTw@mail.gmail.com>
-	<50CB1D7D.2030301@hauke-m.de>
-	<CAKoT1EYRi9pCc9A9mGs3OKGhgrNOL6OJFm87qfmp+hSRaNhZjA@mail.gmail.com>
-	<50CB3058.6020206@hauke-m.de>
-	<CAKoT1EY_DsjtaoZFbCi7+m22X-xAMfXJ0VwPK2O+7mhaxD8tWQ@mail.gmail.com>
-	<87obhuugg3.fsf@purkki.adurom.net>
-Date: Mon, 17 Dec 2012 08:33:02 +1300
-Message-ID: <CAKoT1EZ5B0+NVr1guV6sxQ-UST-P=EG-0MXrfmHhpkxhf6ahCA@mail.gmail.com> (sfid-20121216_203331_318122_D294E323)
-Subject: Re: Problem in FAQ
-From: Kevin McCready <kevin1mccready@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If I am toppsoting, and you say "seem". I apologise. I did my best to
-avoid it. Perhaps someone can help. Alternatively, it might be a
-problem in vger.kernel.org mail system because when his message leaves
-my desktop, and as with the last one, I deleted ALL content except my
-new message.
+Do not scan on no-IBSS and disabled channels in IBSS mode. Doing this
+can trigger Microcode errors on iwlwifi and iwlegacy drivers.
 
-Anyway back to the FAQ, can anyone help me with the original problem.
-I did lspci -nn and couldn't find the data I seem to need.
+Also rename ieee80211_request_internal_scan() function since it is only
+used in IBSS mode and simplify calling it from ieee80211_sta_find_ibss().
 
-Meanwhile I also did a temporary boot of tinycore linux:
-CorePlus-4.7.1.iso
-which had a neat app which recognised 10 wirelesses in my
-neighbourhood, let me choose mine, and let me put in my password and
-connect.
+This patch should address:
+https://bugzilla.redhat.com/show_bug.cgi?id=883414
+https://bugzilla.kernel.org/show_bug.cgi?id=49411
+
+Reported-by: Jesse Kahtava <jesse_kahtava@f-m.fm>
+Reported-by: Mikko Rapeli  <mikko.rapeli@iki.fi>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/ibss.c        |    9 ++++-----
+ net/mac80211/ieee80211_i.h |    6 +++---
+ net/mac80211/scan.c        |   34 ++++++++++++++++++++++++----------
+ 3 files changed, 31 insertions(+), 18 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index c21e33d..d9df6b8 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -678,8 +678,8 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 	sdata_info(sdata,
+ 		   "No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)\n");
+ 
+-	ieee80211_request_internal_scan(sdata,
+-			ifibss->ssid, ifibss->ssid_len, NULL);
++	ieee80211_request_ibss_scan(sdata, ifibss->ssid, ifibss->ssid_len,
++				    NULL);
+ }
+ 
+ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+@@ -777,9 +777,8 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 					IEEE80211_SCAN_INTERVAL)) {
+ 		sdata_info(sdata, "Trigger new scan to find an IBSS to join\n");
+ 
+-		ieee80211_request_internal_scan(sdata,
+-				ifibss->ssid, ifibss->ssid_len,
+-				ifibss->fixed_channel ? ifibss->channel : NULL);
++		ieee80211_request_ibss_scan(sdata, ifibss->ssid,
++					    ifibss->ssid_len, chan);
+ 	} else {
+ 		int interval = IEEE80211_SCAN_INTERVAL;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 156e583..bc48d4d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1247,9 +1247,9 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 
+ /* scan/BSS handling */
+ void ieee80211_scan_work(struct work_struct *work);
+-int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+-				    const u8 *ssid, u8 ssid_len,
+-				    struct ieee80211_channel *chan);
++int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
++				const u8 *ssid, u8 ssid_len,
++				struct ieee80211_channel *chan);
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 			   struct cfg80211_scan_request *req);
+ void ieee80211_scan_cancel(struct ieee80211_local *local);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 43e60b5..fab706f 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -819,9 +819,9 @@ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 	return res;
+ }
+ 
+-int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+-				    const u8 *ssid, u8 ssid_len,
+-				    struct ieee80211_channel *chan)
++int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
++				const u8 *ssid, u8 ssid_len,
++				struct ieee80211_channel *chan)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	int ret = -EBUSY;
+@@ -835,22 +835,36 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* fill internal scan request */
+ 	if (!chan) {
+-		int i, nchan = 0;
++		int i, max_n;
++		int n_ch = 0;
+ 
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 			if (!local->hw.wiphy->bands[band])
+ 				continue;
+-			for (i = 0;
+-			     i < local->hw.wiphy->bands[band]->n_channels;
+-			     i++) {
+-				local->int_scan_req->channels[nchan] =
++
++			max_n = local->hw.wiphy->bands[band]->n_channels;
++			for (i = 0; i < max_n; i++) {
++				struct ieee80211_channel *tmp_ch =
+ 				    &local->hw.wiphy->bands[band]->channels[i];
+-				nchan++;
++
++				if (tmp_ch->flags & (IEEE80211_CHAN_NO_IBSS |
++						     IEEE80211_CHAN_DISABLED))
++					continue;
++
++				local->int_scan_req->channels[n_ch] = tmp_ch;
++				n_ch++;
+ 			}
+ 		}
+ 
+-		local->int_scan_req->n_channels = nchan;
++		if (WARN_ON_ONCE(n_ch == 0))
++			goto unlock;
++
++		local->int_scan_req->n_channels = n_ch;
+ 	} else {
++		if (WARN_ON_ONCE(chan->flags & (IEEE80211_CHAN_NO_IBSS |
++						IEEE80211_CHAN_DISABLED)))
++			goto unlock;
++
+ 		local->int_scan_req->channels[0] = chan;
+ 		local->int_scan_req->n_channels = 1;
+ 	}
+-- 
+1.7.1
+
