@@ -1,141 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50255 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980Ab2L0RQM (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:35675 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660Ab2LKJen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 12:16:12 -0500
-Message-ID: <1356628591.15149.14.camel@jlt4.sipsolutions.net> (sfid-20121227_181617_500387_1846CC38)
-Subject: Re: [PATCH 3/3] cfg80211: move world roaming check for beacon hints
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Thu, 27 Dec 2012 18:16:31 +0100
-In-Reply-To: <1355943184-966-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20121219_200036_196307_E48D6F1B)
-References: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1355943184-966-4-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20121219_200036_196307_E48D6F1B)
+	Tue, 11 Dec 2012 04:34:43 -0500
+Message-ID: <1355218436.3738.122.camel@cumari.coelho.fi> (sfid-20121211_103448_809196_593E626C)
+Subject: Re: wl12xx over spi with no scan results
+From: Luciano Coelho <coelho@ti.com>
+To: Alberto Garau <Alberto.Garau@inpeco.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>
+Date: Tue, 11 Dec 2012 11:33:56 +0200
+In-Reply-To: <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-12-19 at 10:53 -0800, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Tue, 2012-12-11 at 09:16 +0000, Alberto Garau wrote:
+> Hi Luca,
 > 
-> We should not add new beacon hints even if the wiphy
-> is not world roaming. Without this we were always adding
-> a beacon hint if not world roaming for every non world
-> roaming wiphy interface.
+> -----Original Message-----
+> From: Luciano Coelho [mailto:coelho@ti.com] 
+> Sent: lunedì 10 dicembre 2012 18:50
+> To: Alberto Garau
+> Cc: linux-wireless@vger.kernel.org; Ido Yariv; Arik Nemtsov
+> Subject: wl12xx over spi with no scan results (was: Re: [PATCH 20/20] wlcore: Always pass DMA-able buffers to mmc functions)
+> 
+> Hi Alberto,
+> 
+> On Mon, 2012-12-10 at 17:24 +0000, Alberto Garau wrote:
+> > I’m trying to make working the WL1271 TI Murata chip with our custom board.  The SPI driver seems to be running but I cannot scan from our Wifi Network. 
+> > 
+> > After booting the board I’m doing:
+> > 
+> > •	insmod /media/red/root/wl1271/wl1271.ko
+> > •	insmod /media/red/root/wl1271/wl1271_spi.ko
+> > •	iwconfig wlan0 mode managed
+> > •	iwconfig wlan0 essid xxxxxxx
+> > •	ifconfig wlan0 hw ether 00:80:E1:12:26:17 
+> > •	ifconfig wlan0 192.168.40.100 netmask 255.255.255.0 up
+> > 
+> > Then I botain:
+> > 
+> > chip_id read from memory: 04030111
+> > wl1271_fetch_firmware - fetching firmware wl1271-fw.bin 
+> > wl1271_fetch_nvs - fetching firmware wl1271-nvs.bin
+> > wl1271: firmware booted (Rev 6.1.0.50.350)
+> > 
+> > but unfortunately the when I run “iwlist wlan0 scan”
+> > 
+> > I obtain “wlan0 No scan results”
+> > 
+> > 
+> > Could you please help us in fixing this issue ?
+> 
+> This could be many different things.  The first thing that comes to my
+> mind is that the scan results are the first thing that comes as a real
+> interrupt (before this all the interrupts are polled).  So are you
+> sure the interrupt line is working properly?
+> 
+> The interrupt line it seems to work properly. I put a printk in the
+> interrupt handler and I see it activated 
 
-This introduced a locking bug, lockdep splat below. I'm going to drop
-the series for my pull request, please respin.
-
-johannes
+Ok.
 
 
-[ 2442.916674] ===============================
-[ 2442.917287] [ INFO: suspicious RCU usage. ]
-[ 2442.919345] 3.7.0-rc1+ #868 Tainted: G        W  O
-[ 2442.921729] -------------------------------
-[ 2442.923741] /home/johannes/sys/wireless/net/wireless/reg.c:125 suspicious rcu_dereference_protected() usage!
-[ 2442.928222] 
-[ 2442.928222] other info that might help us debug this:
-[ 2442.928222] 
-[ 2442.930621] 
-[ 2442.930621] rcu_scheduler_active = 1, debug_locks = 1
-[ 2442.931408] 4 locks held by kworker/0:3/1773:
-[ 2442.931948]  #0:  (events){.+.+.+}, at: [<ffffffff810615b7>] process_one_work+0x197/0x770
-[ 2442.933022]  #1:  (reg_work){+.+.+.}, at: [<ffffffff810615b7>] process_one_work+0x197/0x770
-[ 2442.934128]  #2:  (cfg80211_mutex){+.+.+.}, at: [<ffffffffa01c0706>] reg_todo+0x186/0x580 [cfg80211]
-[ 2442.935310]  #3:  (&(&reg_pending_beacons_lock)->rlock){+.-...}, at: [<ffffffffa01c0712>] reg_todo+0x192/0x580 [cfg80211]
-[ 2442.936690] 
-[ 2442.936690] stack backtrace:
-[ 2442.937217] Pid: 1773, comm: kworker/0:3 Tainted: G        W  O 3.7.0-rc1+ #868
-[ 2442.938119] Call Trace:
-[ 2442.938427]  [<ffffffff8109f8b2>] lockdep_rcu_suspicious+0xe2/0x130
-[ 2442.939192]  [<ffffffffa01bf887>] get_cfg80211_regdom+0x57/0x60 [cfg80211]
-[ 2442.940104]  [<ffffffffa01bffe1>] handle_reg_beacon.isra.14+0x61/0x110 [cfg80211]
-[ 2442.941010]  [<ffffffff815081b1>] ? _raw_spin_lock_bh+0x71/0x80
-[ 2442.941725]  [<ffffffffa01c07a8>] reg_todo+0x228/0x580 [cfg80211]
-[ 2442.942476]  [<ffffffff81061627>] process_one_work+0x207/0x770
-[ 2442.943172]  [<ffffffff810615b7>] ? process_one_work+0x197/0x770
-[ 2442.943893]  [<ffffffff8109ebb2>] ? get_lock_stats+0x22/0x70
-[ 2442.944574]  [<ffffffffa01c0580>] ? regdom_changes+0x60/0x60 [cfg80211]
-[ 2442.945367]  [<ffffffff81062a2e>] worker_thread+0x14e/0x3e0
-[ 2442.946059]  [<ffffffff810628e0>] ? manage_workers+0x280/0x280
-[ 2442.946762]  [<ffffffff8106911b>] kthread+0xdb/0xe0
-[ 2442.947353]  [<ffffffff81069040>] ? __init_kthread_worker+0x70/0x70
-[ 2442.948130]  [<ffffffff815099ec>] ret_from_fork+0x7c/0xb0
-[ 2442.948760]  [<ffffffff81069040>] ? __init_kthread_worker+0x70/0x70
-[ 2442.949515] 
-[ 2442.949706] ===============================
-[ 2442.950290] [ INFO: suspicious RCU usage. ]
-[ 2442.950800] 3.7.0-rc1+ #868 Tainted: G        W  O
-[ 2442.951379] -------------------------------
-[ 2442.951887] /home/johannes/sys/wireless/net/wireless/reg.c:131 suspicious rcu_dereference_protected() usage!
-[ 2442.953051] 
-[ 2442.953051] other info that might help us debug this:
-[ 2442.953051] 
-[ 2442.954021] 
-[ 2442.954021] rcu_scheduler_active = 1, debug_locks = 1
-[ 2442.954807] 4 locks held by kworker/0:3/1773:
-[ 2442.955331]  #0:  (events){.+.+.+}, at: [<ffffffff810615b7>] process_one_work+0x197/0x770
-[ 2442.956381]  #1:  (reg_work){+.+.+.}, at: [<ffffffff810615b7>] process_one_work+0x197/0x770
-[ 2442.957604]  #2:  (cfg80211_mutex){+.+.+.}, at: [<ffffffffa01c0706>] reg_todo+0x186/0x580 [cfg80211]
-[ 2442.958909]  #3:  (&(&reg_pending_beacons_lock)->rlock){+.-...}, at: [<ffffffffa01c0712>] reg_todo+0x192/0x580 [cfg80211]
-[ 2442.960366] 
-[ 2442.960366] stack backtrace:
-[ 2442.960901] Pid: 1773, comm: kworker/0:3 Tainted: G        W  O 3.7.0-rc1+ #868
-[ 2442.961780] Call Trace:
-[ 2442.962102]  [<ffffffff8109f8b2>] lockdep_rcu_suspicious+0xe2/0x130
-[ 2442.962869]  [<ffffffffa01bfcdf>] get_wiphy_regdom.isra.10+0x5f/0x70 [cfg80211]
-[ 2442.963765]  [<ffffffffa01bfff0>] handle_reg_beacon.isra.14+0x70/0x110 [cfg80211]
-[ 2442.964663]  [<ffffffff815081b1>] ? _raw_spin_lock_bh+0x71/0x80
-[ 2442.965383]  [<ffffffffa01c07a8>] reg_todo+0x228/0x580 [cfg80211]
-[ 2442.966142]  [<ffffffff81061627>] process_one_work+0x207/0x770
-[ 2442.966856]  [<ffffffff810615b7>] ? process_one_work+0x197/0x770
-[ 2442.967584]  [<ffffffff8109ebb2>] ? get_lock_stats+0x22/0x70
-[ 2442.968272]  [<ffffffffa01c0580>] ? regdom_changes+0x60/0x60 [cfg80211]
-[ 2442.969073]  [<ffffffff81062a2e>] worker_thread+0x14e/0x3e0
-[ 2442.969749]  [<ffffffff810628e0>] ? manage_workers+0x280/0x280
-[ 2442.970597]  [<ffffffff8106911b>] kthread+0xdb/0xe0
-[ 2442.971303]  [<ffffffff81069040>] ? __init_kthread_worker+0x70/0x70
-[ 2442.972055]  [<ffffffff815099ec>] ret_from_fork+0x7c/0xb0
-[ 2442.972771]  [<ffffffff81069040>] ? __init_kthread_worker+0x70/0x70
-[ 2442.973609] 
-[ 2442.973800] ===============================
-[ 2442.974322] [ INFO: suspicious RCU usage. ]
-[ 2442.974829] 3.7.0-rc1+ #868 Tainted: G        W  O
-[ 2442.975451] -------------------------------
-[ 2442.975958] /home/johannes/sys/wireless/net/wireless/reg.c:144 suspicious rcu_dereference_protected() usage!
-[ 2442.977170] 
-[ 2442.977170] other info that might help us debug this:
-[ 2442.977170] 
-[ 2442.978201] 
-[ 2442.978201] rcu_scheduler_active = 1, debug_locks = 1
-[ 2442.978988] 4 locks held by kworker/0:3/1773:
-[ 2442.979522]  #0:  (events){.+.+.+}, at: [<ffffffff810615b7>] process_one_work+0x197/0x770
-[ 2442.980654]  #1:  (reg_work){+.+.+.}, at: [<ffffffff810615b7>] process_one_work+0x197/0x770
-[ 2442.981726]  #2:  (cfg80211_mutex){+.+.+.}, at: [<ffffffffa01c0706>] reg_todo+0x186/0x580 [cfg80211]
-[ 2442.983048]  #3:  (&(&reg_pending_beacons_lock)->rlock){+.-...}, at: [<ffffffffa01c0712>] reg_todo+0x192/0x580 [cfg80211]
-[ 2442.984560] 
-[ 2442.984560] stack backtrace:
-[ 2442.985086] Pid: 1773, comm: kworker/0:3 Tainted: G        W  O 3.7.0-rc1+ #868
-[ 2442.985956] Call Trace:
-[ 2442.986265]  [<ffffffff8109f8b2>] lockdep_rcu_suspicious+0xe2/0x130
-[ 2442.987014]  [<ffffffffa01bf827>] get_last_request+0x57/0x60 [cfg80211]
-[ 2442.987801]  [<ffffffffa01bfff8>] handle_reg_beacon.isra.14+0x78/0x110 [cfg80211]
-[ 2442.988694]  [<ffffffff815081b1>] ? _raw_spin_lock_bh+0x71/0x80
-[ 2442.989404]  [<ffffffffa01c07a8>] reg_todo+0x228/0x580 [cfg80211]
-[ 2442.990277]  [<ffffffff81061627>] process_one_work+0x207/0x770
-[ 2442.991026]  [<ffffffff810615b7>] ? process_one_work+0x197/0x770
-[ 2442.991754]  [<ffffffff8109ebb2>] ? get_lock_stats+0x22/0x70
-[ 2442.992439]  [<ffffffffa01c0580>] ? regdom_changes+0x60/0x60 [cfg80211]
-[ 2442.993265]  [<ffffffff81062a2e>] worker_thread+0x14e/0x3e0
-[ 2442.993997]  [<ffffffff810628e0>] ? manage_workers+0x280/0x280
-[ 2442.994684]  [<ffffffff8106911b>] kthread+0xdb/0xe0
-[ 2442.995271]  [<ffffffff81069040>] ? __init_kthread_worker+0x70/0x70
-[ 2442.996070]  [<ffffffff815099ec>] ret_from_fork+0x7c/0xb0
-[ 2442.996762]  [<ffffffff81069040>] ? __init_kthread_worker+0x70/0x70
+> During the firmware fetch and when I perform the "iwlista wlan0 scan".
+> I kept the IRQ association to IRQ_TYPE_EDGE_RISING as your source code
+> was in 2.6.37 kernel.
 
+That's an *ancient* kernel. :( Any chance you can try it with a newer
+kernel?
+
+
+> Any other idea about why the scan command it's not properly working ?
+
+Another common problem is the clock settings.  Are you sure the correct
+value for board_ref_clock in your board file?
+
+--
+Luca.
 
