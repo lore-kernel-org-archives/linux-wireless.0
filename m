@@ -1,73 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:59844 "EHLO mout.web.de"
+Received: from arrakis.dune.hu ([78.24.191.176]:39053 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751847Ab2LWNe6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 08:34:58 -0500
-Received: from ilfaris ([83.215.103.237]) by smtp.web.de (mrweb001) with
- ESMTPSA (Nemesis) id 0MK2JZ-1TlOnF2E7h-001XGT for
- <linux-wireless@vger.kernel.org>; Sun, 23 Dec 2012 14:34:56 +0100
-Date: Sun, 23 Dec 2012 14:34:52 +0100
-From: Julian Wollrath <jwollrath@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: Warning with trace while trying to connect to an AP
-Message-ID: <20121223143452.1d029621@ilfaris> (sfid-20121223_143502_563235_989FE958)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1754762Ab2LKUgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 15:36:19 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 3/3] qca-swiss-army-knife: automatically detect wide initval arrays
+Date: Tue, 11 Dec 2012 21:36:12 +0100
+Message-Id: <1355258172-6938-3-git-send-email-juhosg@openwrt.org> (sfid-20121211_213622_087113_CD733F1D)
+In-Reply-To: <1355258172-6938-1-git-send-email-juhosg@openwrt.org>
+References: <1355258172-6938-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+The number of the columns to be printed usually equals
+with the actual columns. The only exceptions are the
+Modes arrays, where the last column is not used by
+ath9k.
 
-while trying to connect to an AP I got the following trace:
-[13677.506164] ------------[ cut here ]------------
-[13677.506196] WARNING: at net/wireless/mlme.c:517 cfg80211_mlme_disassoc+0x17d/0x190 [cfg80211]()
-[13677.506219] Hardware name: 30515YG
-[13677.506222] Modules linked in: rtl8192ce rtlwifi rtl8192c_common mac80211 cfg80211 xt_tcpudp xt_REDIRECT xt_h
-l iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack ip_tables x_tables deflate zlib_d
-eflate des_generic ecb sha512_generic sha1_generic hmac af_key xfrm_algo acpi_cpufreq mperf loop fuse arc4 snd_h
-da_codec_conexant snd_hda_codec_hdmi radeon snd_hda_intel i2c_algo_bit snd_hda_codec snd_hwdep snd_pcm drm_kms_h
-elper btusb thinkpad_acpi snd_page_alloc uvcvideo videobuf2_vmalloc videobuf2_memops videobuf2_core bluetooth tt
-m snd_timer drm nvram videodev snd crc16 i2c_piix4 agpgart psmouse soundcore evdev rfkill i2c_core pcspkr serio_
-raw k10temp ehci_pci wmi video battery ac button processor sha256_generic twofish_x86_64_3way xts lrw gf128mul g
-lue_helper twofish_x86_64 twofish_common cbc dm_crypt dm_mod sd_mod crc_t10dif rtsx_pci_sdmmc mmc_core ohci_hcd 
-thermal ehci_hcd microcode thermal_sys rtsx_pci atl1c mfd_core usbcore ahci libahci libata scsi_mod usb_common [
-last unloaded: cfg80211]
-[13677.506360] Pid: 19340, comm: wpa_supplicant Tainted: G        W    3.8.0-rc1 #1
-[13677.506368] Call Trace:
-[13677.506378]  [<ffffffff810381d9>] ? warn_slowpath_common+0x79/0xc0
-[13677.506389]  [<ffffffffa039082d>] ? cfg80211_mlme_disassoc+0x17d/0x190 [cfg80211]
-[13677.506399]  [<ffffffffa037e5ce>] ? nl80211_pre_doit+0x30e/0x400 [cfg80211]
-[13677.506409]  [<ffffffffa037c7dd>] ? nl80211_disassociate+0xad/0xf0 [cfg80211]
-[13677.506416]  [<ffffffff8135c919>] ? genl_rcv_msg+0x249/0x2c0
-[13677.506421]  [<ffffffff8135c6d0>] ? genl_rcv+0x30/0x30
-[13677.506425]  [<ffffffff8135c351>] ? netlink_rcv_skb+0x91/0xa0
-[13677.506429]  [<ffffffff8135c6bf>] ? genl_rcv+0x1f/0x30
-[13677.506433]  [<ffffffff8135bc5c>] ? netlink_unicast+0x19c/0x220
-[13677.506438]  [<ffffffff8135bfe3>] ? netlink_sendmsg+0x303/0x3c0
-[13677.506443]  [<ffffffff8131eccb>] ? sock_sendmsg+0x7b/0xb0
-[13677.506472]  [<ffffffff81320524>] ? __sys_sendmsg+0x394/0x3b0
-[13677.506487]  [<ffffffff8102bc32>] ? __do_page_fault+0x1b2/0x480
-[13677.506493]  [<ffffffff81133bec>] ? poll_select_copy_remaining+0xfc/0x150
-[13677.506497]  [<ffffffff81322554>] ? sys_sendmsg+0x44/0x80
-[13677.506503]  [<ffffffff81412792>] ? system_call_fastpath+0x16/0x1b
-[13677.506506] ---[ end trace c4fc3013132383ed ]---
+The patch modifies the 'ath9k_get_p_columns' helper
+so that can determine the correct number of columns
+based on the name of the array. The the patch also
+removes the 'wide' argument of various functions
+because that is not necessary anymore. Additionaly,
+the superfluous INI_PRINTW macro is removed as well.
 
-I am using v3.8-rc1 with the following WiFi device:
-01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-	Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8195]
-	Flags: bus master, fast devsel, latency 0, IRQ 17
-	I/O ports at 3000 [size=256]
-	Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: [40] Power Management version 3
-	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-	Capabilities: [70] Express Endpoint, MSI 00
-	Capabilities: [100] Advanced Error Reporting
-	Capabilities: [140] Virtual Channel
-	Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
-	Kernel driver in use: rtl8192ce
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ tools/initvals/initvals.c |   55 +++++++++++++++++++++------------------------
+ 1 file changed, 26 insertions(+), 29 deletions(-)
 
-If you need further information, please feel free to ask.
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index 94f5aba..3f2c7cd 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -356,10 +356,10 @@ struct initval_family {
+ #define INI_PRINT_DUP(_array, _ref) do { \
+ 	if (check) { \
+ 		char *sha1sum; \
+-		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
++		sha1sum = ath9k_hw_check_initval(#_array, \
++						(const u32 *) &_array,\
+ 						ARRAY_SIZE(_array), \
+-						ARRAY_SIZE((_array)[0]), \
+-						false); \
++						ARRAY_SIZE((_array)[0])); \
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+ 		if (sizeof(_ref) == sizeof(_array) && \
+@@ -370,30 +370,26 @@ struct initval_family {
+ 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), \
+ 				       ARRAY_SIZE((_array)[0]), \
+-				       false, \
+ 				       false); \
+ 	} \
+     } while (0)
+ 
+-#define _INI_PRINT(_label, _array, _wide) do { \
++#define INI_PRINT(_array) do { \
+ 	if (check) { \
+ 		char *sha1sum; \
+-		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
++		sha1sum = ath9k_hw_check_initval(#_array, \
++						(const u32 *) &_array,\
+ 						ARRAY_SIZE(_array), \
+-						ARRAY_SIZE((_array)[0]), \
+-						_wide); \
+-		printf("%s        " _label "\n", sha1sum); \
++						ARRAY_SIZE((_array)[0])); \
++		printf("%s        " #_array "\n", sha1sum); \
+ 	} else { \
+-		ath9k_hw_print_initval((_label), (const u32 *) _array, \
++		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), \
+ 				       ARRAY_SIZE((_array)[0]), \
+-				       false, \
+-				       _wide); \
++				       false); \
+ 	} \
+     } while (0)
+ 
+-#define INI_PRINT(_array)	_INI_PRINT(#_array, _array, false)
+-#define INI_PRINTW(_array)	_INI_PRINT(#_array, _array, true)
+ 
+ #define INI_PRINT_ONEDIM(_array) do { \
+ 	if (check) { \
+@@ -443,25 +439,26 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+ 	return val;
+ }
+ 
+-static u32 ath9k_get_p_columns(u32 columns, bool wide)
++static u32 ath9k_get_p_columns(const char *name, u32 columns)
+ {
+-	u32 p_columns;
+-
+-	if (wide)
+-		p_columns = columns;
+-	else
+-		p_columns = columns > 5 ? 5 : columns;
++	if (columns == 6 && strstr(name, "Modes")) {
++		/*
++		 * The last column contain values for Turbo mode.
++		 * Don't print that because it is not used in ath9k.
++		 */
++		return 5;
++	}
+ 
+-	return p_columns;
++	return columns;
+ }
+ 
+ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+-				   u32 columns, bool onedim, bool wide)
++				   u32 columns, bool onedim)
+ {
+ 	u32 p_columns;
+ 	u32 col, row;
+ 
+-	p_columns = ath9k_get_p_columns(columns, wide);
++	p_columns = ath9k_get_p_columns(name, columns);
+ 
+ 	if (onedim)
+ 		printf("static const u32 %s[] = {\n", name);
+@@ -508,8 +505,8 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+ 	printf("};\n\n");
+ }
+ 
+-static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns,
+-				    bool wide)
++static char *ath9k_hw_check_initval(const char *name, const u32 *array,
++				    u32 rows, u32 columns)
+ {
+ 	SHA1_CTX ctx;
+ 	unsigned char digest[SHA1_DIGEST_SIZE];
+@@ -517,7 +514,7 @@ static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns,
+ 	u32 p_columns;
+ 	u32 col, row;
+ 
+-	p_columns = ath9k_get_p_columns(columns, wide);
++	p_columns = ath9k_get_p_columns(name, columns);
+ 
+ 	SHA1_Init(&ctx);
+ 	for (row = 0; row < rows; row++) {
+@@ -775,7 +772,7 @@ static void ar955x_1p0_hw_print_initvals(bool check)
+ 	INI_PRINT(ar955x_1p0_baseband_core_txfir_coeff_japan_2484);
+ 	INI_PRINT(ar955x_1p0_baseband_postamble);
+ 	INI_PRINT(ar955x_1p0_radio_core);
+-	INI_PRINTW(ar955x_1p0_modes_xpa_tx_gain_table);
++	INI_PRINT(ar955x_1p0_modes_xpa_tx_gain_table);
+ 	INI_PRINT(ar955x_1p0_mac_core);
+ 	INI_PRINT(ar955x_1p0_common_rx_gain_table);
+ 	INI_PRINT(ar955x_1p0_baseband_core);
+@@ -784,7 +781,7 @@ static void ar955x_1p0_hw_print_initvals(bool check)
+ 	INI_PRINT(ar955x_1p0_common_wo_xlna_rx_gain_bounds);
+ 	INI_PRINT(ar955x_1p0_mac_postamble);
+ 	INI_PRINT(ar955x_1p0_common_rx_gain_bounds);
+-	INI_PRINTW(ar955x_1p0_modes_no_xpa_tx_gain_table);
++	INI_PRINT(ar955x_1p0_modes_no_xpa_tx_gain_table);
+ 	INI_PRINT(ar955x_1p0_soc_postamble);
+ 	INI_PRINT(ar955x_1p0_modes_fast_clock);
+ }
+-- 
+1.7.10
 
-
-With best regards,
-Julian Wollrath
