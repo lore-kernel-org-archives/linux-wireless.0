@@ -1,176 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40969 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45825 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567Ab2LCRmu (ORCPT
+	with ESMTP id S1754446Ab2LKTt0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 12:42:50 -0500
+	Tue, 11 Dec 2012 14:49:26 -0500
+Message-ID: <1355255384.9819.13.camel@jlt4.sipsolutions.net> (sfid-20121211_204930_159409_C973CA60)
+Subject: [PATCH] mac80211: assign VLAN channel contexts
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/8] regulatory: clean up reg_copy_regd()
-Date: Mon,  3 Dec 2012 18:43:06 +0100
-Message-Id: <1354556593-2363-2-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184257_742431_02862755)
-In-Reply-To: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
-References: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 11 Dec 2012 20:49:44 +0100
+In-Reply-To: <1355255084.9819.12.camel@jlt4.sipsolutions.net> (sfid-20121211_204424_633539_836664E4)
+References: <1355162256-34131-1-git-send-email-nbd@openwrt.org>
+	 <1355162256-34131-2-git-send-email-nbd@openwrt.org>
+	 <1355254666.9819.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20121211_203729_024742_AB210C1B) <1355255084.9819.12.camel@jlt4.sipsolutions.net>
+	 (sfid-20121211_204424_633539_836664E4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Use ERR_PTR/IS_ERR to return the result or errors
-and fix the allocation to not allocate too much.
+Make AP_VLAN type interfaces track the AP master channel
+context so they have one assigned for the various lookups.
+Don't give them their own refcount etc. since they're just
+slaves to the AP master.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c | 51 +++++++++++++++++++++++++--------------------------
- 1 file changed, 25 insertions(+), 26 deletions(-)
+ net/mac80211/chan.c        | 38 ++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/iface.c       | 10 +++++++---
+ 3 files changed, 46 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b6c7ea6..e71055b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -312,19 +312,20 @@ static bool is_user_regdom_saved(void)
- 	return true;
- }
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 53f0312..80e5552 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -4,6 +4,7 @@
  
--static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
--			 const struct ieee80211_regdomain *src_regd)
-+static const struct ieee80211_regdomain *
-+reg_copy_regd(const struct ieee80211_regdomain *src_regd)
- {
- 	struct ieee80211_regdomain *regd;
--	int size_of_regd = 0;
-+	int size_of_regd;
- 	unsigned int i;
+ #include <linux/nl80211.h>
+ #include <linux/export.h>
++#include <linux/rtnetlink.h>
+ #include <net/cfg80211.h>
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
+@@ -197,6 +198,15 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
  
--	size_of_regd = sizeof(struct ieee80211_regdomain) +
--	  ((src_regd->n_reg_rules + 1) * sizeof(struct ieee80211_reg_rule));
-+	size_of_regd =
-+		sizeof(struct ieee80211_regdomain) +
-+		(src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule));
+ 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
  
- 	regd = kzalloc(size_of_regd, GFP_KERNEL);
- 	if (!regd)
--		return -ENOMEM;
-+		return ERR_PTR(-ENOMEM);
- 
- 	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
- 
-@@ -332,8 +333,7 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
- 		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
- 			sizeof(struct ieee80211_reg_rule));
- 
--	*dst_regd = regd;
--	return 0;
-+	return regd;
- }
- 
- #ifdef CONFIG_CFG80211_INTERNAL_REGDB
-@@ -348,9 +348,8 @@ static DEFINE_MUTEX(reg_regdb_search_mutex);
- static void reg_regdb_search(struct work_struct *work)
- {
- 	struct reg_regdb_search_request *request;
--	const struct ieee80211_regdomain *curdom, *regdom;
-+	const struct ieee80211_regdomain *curdom, *regdom = NULL;
- 	int i, r;
--	bool set_reg = false;
- 
- 	mutex_lock(&cfg80211_mutex);
- 
-@@ -365,10 +364,7 @@ static void reg_regdb_search(struct work_struct *work)
- 			curdom = reg_regdb[i];
- 
- 			if (!memcmp(request->alpha2, curdom->alpha2, 2)) {
--				r = reg_copy_regd(&regdom, curdom);
--				if (r)
--					break;
--				set_reg = true;
-+				regdom = reg_copy_regd(curdom);
- 				break;
- 			}
- 		}
-@@ -377,7 +373,7 @@ static void reg_regdb_search(struct work_struct *work)
- 	}
- 	mutex_unlock(&reg_regdb_search_mutex);
- 
--	if (set_reg)
-+	if (!IS_ERR_OR_NULL(regdom))
- 		set_regdom(regdom);
- 
- 	mutex_unlock(&cfg80211_mutex);
-@@ -1517,6 +1513,7 @@ static void reg_set_request_processed(void)
- static int __regulatory_hint(struct wiphy *wiphy,
- 			     struct regulatory_request *pending_request)
- {
-+	const struct ieee80211_regdomain *regd;
- 	bool intersect = false;
- 	int r = 0;
- 
-@@ -1527,11 +1524,12 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 	if (r == REG_INTERSECT) {
- 		if (pending_request->initiator ==
- 		    NL80211_REGDOM_SET_BY_DRIVER) {
--			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
--			if (r) {
-+			regd = reg_copy_regd(cfg80211_regdomain);
-+			if (IS_ERR(regd)) {
- 				kfree(pending_request);
--				return r;
-+				return PTR_ERR(regd);
- 			}
-+			wiphy->regd = regd;
- 		}
- 		intersect = true;
- 	} else if (r) {
-@@ -1543,12 +1541,13 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 		if (r == -EALREADY &&
- 		    pending_request->initiator ==
- 		    NL80211_REGDOM_SET_BY_DRIVER) {
--			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
--			if (r) {
-+			regd = reg_copy_regd(cfg80211_regdomain);
-+			if (IS_ERR(regd)) {
- 				kfree(pending_request);
--				return r;
-+				return PTR_ERR(regd);
- 			}
- 			r = -EALREADY;
-+			wiphy->regd = regd;
- 			goto new_request;
- 		}
- 		kfree(pending_request);
-@@ -2208,6 +2207,7 @@ static void print_regdomain_info(const struct ieee80211_regdomain *rd)
- /* Takes ownership of rd only if it doesn't fail */
- static int __set_regdom(const struct ieee80211_regdomain *rd)
- {
-+	const struct ieee80211_regdomain *regd;
- 	const struct ieee80211_regdomain *intersected_rd = NULL;
- 	struct wiphy *request_wiphy;
- 	/* Some basic sanity checks first */
-@@ -2265,8 +2265,6 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
++	if (sdata->vif.type == NL80211_IFTYPE_AP) {
++		struct ieee80211_sub_if_data *vlan;
++
++		/* for the VLAN list */
++		ASSERT_RTNL();
++		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++			rcu_assign_pointer(vlan->vif.chanctx_conf, NULL);
++	}
++
+ 	ieee80211_unassign_vif_chanctx(sdata, ctx);
+ 	if (ctx->refcount == 0)
+ 		ieee80211_free_chanctx(local, ctx);
+@@ -316,6 +326,15 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
  	}
  
- 	if (!last_request->intersect) {
--		int r;
--
- 		if (last_request->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
- 			reset_regdomains(false);
- 			cfg80211_regdomain = rd;
-@@ -2285,10 +2283,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		if (request_wiphy->regd)
- 			return -EALREADY;
++	if (sdata->vif.type == NL80211_IFTYPE_AP) {
++		struct ieee80211_sub_if_data *vlan;
++
++		/* for the VLAN list */
++		ASSERT_RTNL();
++		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++			rcu_assign_pointer(vlan->vif.chanctx_conf, &ctx->conf);
++	}
++
+ 	ieee80211_recalc_smps_chanctx(local, ctx);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+@@ -331,6 +350,25 @@ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ 	mutex_unlock(&sdata->local->chanctx_mtx);
+ }
  
--		r = reg_copy_regd(&request_wiphy->regd, rd);
--		if (r)
--			return r;
-+		regd = reg_copy_regd(rd);
-+		if (IS_ERR(regd))
-+			return PTR_ERR(regd);
++void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_sub_if_data *ap;
++	struct ieee80211_chanctx_conf *conf;
++
++	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP_VLAN || !sdata->bss))
++		return;
++
++	ap = container_of(sdata->bss, struct ieee80211_sub_if_data, u.ap);
++
++	mutex_lock(&local->chanctx_mtx);
++
++	conf = rcu_dereference_protected(ap->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	rcu_assign_pointer(sdata->vif.chanctx_conf, conf);
++	mutex_unlock(&local->chanctx_mtx);
++}
++
+ void ieee80211_iter_chan_contexts_atomic(
+ 	struct ieee80211_hw *hw,
+ 	void (*iter)(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 53e97dc..2f3893f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1626,6 +1626,7 @@ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 			  const struct cfg80211_chan_def *chandef,
+ 			  enum ieee80211_chanctx_mode mode);
+ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
++void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
  
-+		request_wiphy->regd = regd;
- 		reset_regdomains(false);
- 		cfg80211_regdomain = rd;
- 		return 0;
+ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 				   struct ieee80211_chanctx *chanctx);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 09a80b5..4a293de 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -508,6 +508,7 @@ static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	struct ieee80211_sub_if_data *ap;
+ 	struct net_device *dev = wdev->netdev;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+@@ -586,11 +587,13 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+-		/* no need to tell driver, but set carrier */
+-		if (rtnl_dereference(sdata->bss->beacon))
++		/* no need to tell driver, but set carrier and chanctx */
++		if (rtnl_dereference(sdata->bss->beacon)) {
++			ieee80211_vif_vlan_copy_chanctx(sdata);
+ 			netif_carrier_on(dev);
+-		else
++		} else {
+ 			netif_carrier_off(dev);
++		}
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) {
+@@ -839,6 +842,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 		list_del(&sdata->u.vlan.list);
++		rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
+ 		/* no need to tell driver */
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
 -- 
 1.8.0
+
+
 
