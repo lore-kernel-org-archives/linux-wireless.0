@@ -1,28 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ultra-3eti.com ([173.13.207.162]:56444 "EHLO
-	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051Ab2LCPrh convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43056 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525Ab2LKDey (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 10:47:37 -0500
-From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-To: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: help: 802.11s bad performance with 802.11n enabled
-Date: Mon, 3 Dec 2012 15:47:33 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C125DB@RockMX01.rock.corp> (sfid-20121203_164740_856738_E9943F9D)
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
- <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
- <BD54DDEB2546894FAB0731EA7B0EDF8D07C1259A@RockMX01.rock.corp>
- <alpine.DEB.2.02.1212031938250.7349@icf.org.ru>
-In-Reply-To: <alpine.DEB.2.02.1212031938250.7349@icf.org.ru>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 10 Dec 2012 22:34:54 -0500
+From: Abhijit Pawar <abhi.c.pawar@gmail.com>
+To: "David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Patrick McHardy <kaber@trash.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Cong Wang <amwang@redhat.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	Abhijit Pawar <abhi.c.pawar@gmail.com>
+Subject: [PATCH RESEND RESEND] net: remove obsolete simple_strto<foo>
+Date: Tue, 11 Dec 2012 09:04:20 +0530
+Message-Id: <1355196860-10708-1-git-send-email-abhi.c.pawar@gmail.com> (sfid-20121211_043525_401194_F747BC9D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch replace the obsolete simple_strto<foo> with kstrto<foo>
 
->On first look in my case disabled aggregation reduces packet loss, link is more reliable, but it's also drop throughput to 15-20 Mbits/sec from about ~50 with aggregation enabled.
+Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
+---
+ net/core/netpoll.c                 |    6 ++++--
+ net/ipv4/netfilter/ipt_CLUSTERIP.c |    9 +++++++--
+ net/mac80211/debugfs_sta.c         |    4 +++-
+ net/netfilter/nf_conntrack_core.c  |    6 ++++--
+ 4 files changed, 18 insertions(+), 7 deletions(-)
 
-Yes. This is the penalty of disabling aggregation. It's just a way to narrow down where is the problem.
+diff --git a/net/core/netpoll.c b/net/core/netpoll.c
+index 77a0388..3151acf 100644
+--- a/net/core/netpoll.c
++++ b/net/core/netpoll.c
+@@ -674,7 +674,8 @@ int netpoll_parse_options(struct netpoll *np, char *opt)
+ 		if ((delim = strchr(cur, '@')) == NULL)
+ 			goto parse_failed;
+ 		*delim = 0;
+-		np->local_port = simple_strtol(cur, NULL, 10);
++		if (kstrtou16(cur, 10, &np->local_port))
++			goto parse_failed;
+ 		cur = delim;
+ 	}
+ 	cur++;
+@@ -705,7 +706,8 @@ int netpoll_parse_options(struct netpoll *np, char *opt)
+ 		*delim = 0;
+ 		if (*cur == ' ' || *cur == '\t')
+ 			np_info(np, "warning: whitespace is not allowed\n");
+-		np->remote_port = simple_strtol(cur, NULL, 10);
++		if (kstrtou16(cur, 10, &np->remote_port))
++			goto parse_failed;
+ 		cur = delim;
+ 	}
+ 	cur++;
+diff --git a/net/ipv4/netfilter/ipt_CLUSTERIP.c b/net/ipv4/netfilter/ipt_CLUSTERIP.c
+index fe5daea..75e33a7 100644
+--- a/net/ipv4/netfilter/ipt_CLUSTERIP.c
++++ b/net/ipv4/netfilter/ipt_CLUSTERIP.c
+@@ -661,6 +661,7 @@ static ssize_t clusterip_proc_write(struct file *file, const char __user *input,
+ #define PROC_WRITELEN	10
+ 	char buffer[PROC_WRITELEN+1];
+ 	unsigned long nodenum;
++	int rc;
+ 
+ 	if (size > PROC_WRITELEN)
+ 		return -EIO;
+@@ -669,11 +670,15 @@ static ssize_t clusterip_proc_write(struct file *file, const char __user *input,
+ 	buffer[size] = 0;
+ 
+ 	if (*buffer == '+') {
+-		nodenum = simple_strtoul(buffer+1, NULL, 10);
++		rc = kstrtoul(buffer+1, 10, &nodenum);
++		if (rc)
++			return rc;
+ 		if (clusterip_add_node(c, nodenum))
+ 			return -ENOMEM;
+ 	} else if (*buffer == '-') {
+-		nodenum = simple_strtoul(buffer+1, NULL,10);
++		rc = kstrtoul(buffer+1, 10, &nodenum);
++		if (rc)
++			return rc;
+ 		if (clusterip_del_node(c, nodenum))
+ 			return -ENOENT;
+ 	} else
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 49a1c70..6fb1168 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -220,7 +220,9 @@ static ssize_t sta_agg_status_write(struct file *file, const char __user *userbu
+ 	} else
+ 		return -EINVAL;
+ 
+-	tid = simple_strtoul(buf, NULL, 0);
++	ret = kstrtoul(buf, 0, &tid);
++	if (ret)
++		return ret;
+ 
+ 	if (tid >= IEEE80211_NUM_TIDS)
+ 		return -EINVAL;
+diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+index af17516..08cdc71 100644
+--- a/net/netfilter/nf_conntrack_core.c
++++ b/net/netfilter/nf_conntrack_core.c
+@@ -1409,7 +1409,7 @@ EXPORT_SYMBOL_GPL(nf_ct_alloc_hashtable);
+ 
+ int nf_conntrack_set_hashsize(const char *val, struct kernel_param *kp)
+ {
+-	int i, bucket;
++	int i, bucket, rc;
+ 	unsigned int hashsize, old_size;
+ 	struct hlist_nulls_head *hash, *old_hash;
+ 	struct nf_conntrack_tuple_hash *h;
+@@ -1422,7 +1422,9 @@ int nf_conntrack_set_hashsize(const char *val, struct kernel_param *kp)
+ 	if (!nf_conntrack_htable_size)
+ 		return param_set_uint(val, kp);
+ 
+-	hashsize = simple_strtoul(val, NULL, 0);
++	rc = kstrtouint(val, 0, &hashsize);
++	if (rc)
++		return rc;
+ 	if (!hashsize)
+ 		return -EINVAL;
+ 
+-- 
+1.7.7.6
 
-Can any expert on 802.11n aggregation and/or 802.11s tell what's going on ?
