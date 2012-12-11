@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:50699 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754028Ab2LEUtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 15:49:02 -0500
-Message-ID: <1354740499.6234.83.camel@cumari.coelho.fi> (sfid-20121205_214908_131047_5B6B6A5C)
-Subject: Re: [PATCH 08/20] wlcore: add new plt power-mode: CHIP_AWAKE
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Yair Shapira <yair.shapira@ti.com>
-Date: Wed, 5 Dec 2012 22:48:19 +0200
-In-Reply-To: <1354095769-8724-9-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-9-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:42874 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751240Ab2LKFba (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 00:31:30 -0500
+From: Abhijit Pawar <abhi.c.pawar@gmail.com>
+To: "David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Patrick McHardy <kaber@trash.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Cong Wang <amwang@redhat.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	Abhijit Pawar <abhi.c.pawar@gmail.com>
+Subject: [PATCH 2/2] net: remove obsolete simple_strto<foo>
+Date: Tue, 11 Dec 2012 11:00:52 +0530
+Message-Id: <1355203852-12749-1-git-send-email-abhi.c.pawar@gmail.com> (sfid-20121211_063134_647026_493CD6DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
-> From: Yair Shapira <yair.shapira@ti.com>
-> 
-> Under this mode the chip is powered on including sdio
-> but no FW is downloaded and run, interrupts are not enabled, etc...
-> 
-> This mode is intended to allow RTTT to bridge sdio as a transport
-> to the chip.
-> 
-> Driver only provides sdio access using the dev_mem debugfs file.
-> 
-> Some fixes done to the code that ensures that PLT mode and normal
-> driver power mode (ifconfig/add_interface) are mutually excluded.
-> 
-> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+This patch removes the redundant occurences of simple_strto<foo>
 
-Hmmm... I must admit that I didn't look very carefully in the previous
-changes to this same code.
+Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
+---
+ net/core/netpoll.c                |    1 -
+ net/mac80211/debugfs_sta.c        |    1 -
+ net/netfilter/nf_conntrack_core.c |    1 -
+ 3 files changed, 0 insertions(+), 3 deletions(-)
 
-Anyway, we already have a similar functionality where we can power the
-chip on without uploading the firmware.  We have the gpio_power file in
-debugfs to handle that.  By using it, you can easily power the chip on
-without uploading and running the firmware, so other tools (such as RTTT
-and the calibrator) can take over.
-
-Do we really need this?
-
---
-Luca.
+diff --git a/net/core/netpoll.c b/net/core/netpoll.c
+index 12c129f..3151acf 100644
+--- a/net/core/netpoll.c
++++ b/net/core/netpoll.c
+@@ -706,7 +706,6 @@ int netpoll_parse_options(struct netpoll *np, char *opt)
+ 		*delim = 0;
+ 		if (*cur == ' ' || *cur == '\t')
+ 			np_info(np, "warning: whitespace is not allowed\n");
+-		np->remote_port = simple_strtol(cur, NULL, 10);
+ 		if (kstrtou16(cur, 10, &np->remote_port))
+ 			goto parse_failed;
+ 		cur = delim;
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 0dedb4b..6fb1168 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -220,7 +220,6 @@ static ssize_t sta_agg_status_write(struct file *file, const char __user *userbu
+ 	} else
+ 		return -EINVAL;
+ 
+-	tid = simple_strtoul(buf, NULL, 0);
+ 	ret = kstrtoul(buf, 0, &tid);
+ 	if (ret)
+ 		return ret;
+diff --git a/net/netfilter/nf_conntrack_core.c b/net/netfilter/nf_conntrack_core.c
+index 37d9e62..08cdc71 100644
+--- a/net/netfilter/nf_conntrack_core.c
++++ b/net/netfilter/nf_conntrack_core.c
+@@ -1422,7 +1422,6 @@ int nf_conntrack_set_hashsize(const char *val, struct kernel_param *kp)
+ 	if (!nf_conntrack_htable_size)
+ 		return param_set_uint(val, kp);
+ 
+-	hashsize = simple_strtoul(val, NULL, 0);
+ 	rc = kstrtouint(val, 0, &hashsize);
+ 	if (rc)
+ 		return rc;
+-- 
+1.7.7.6
 
