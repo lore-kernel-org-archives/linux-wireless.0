@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:41962 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932377Ab2LFJho (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59854 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754183Ab2LLV4r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 04:37:44 -0500
-Message-ID: <50C06763.2080201@posedge.com> (sfid-20121206_103749_970070_CB7D4E4C)
-Date: Thu, 06 Dec 2012 15:07:39 +0530
-From: Chaitanya <chaitanyatk@posedge.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix the multiple warnings for budding chipsets
- without ampdu_action defined
-References: <50C0545B.8060805@posedge.com> <20121206085146.GC2502@redhat.com>
-In-Reply-To: <20121206085146.GC2502@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 12 Dec 2012 16:56:47 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 6/6] ath9k: Allow using ath9k-rate-control without forcing it.
+Date: Wed, 12 Dec 2012 13:54:55 -0800
+Message-Id: <1355349295-30960-6-git-send-email-greearb@candelatech.com> (sfid-20121212_225651_541173_9A11561A)
+In-Reply-To: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
+References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have tested the patch by applying it myself and it worked fine.
-and also in My local editor (gedit) it shows tabs.
+From: Ben Greear <greearb@candelatech.com>
 
-Need to check the issue and revert.
+Let user still pick the rate control method by setting the
+mac80211 module option, ie:
 
-On Thursday 06 December 2012 02:21 PM, Stanislaw Gruszka wrote:
-> On Thu, Dec 06, 2012 at 01:46:27PM +0530, Chaitanya wrote:
->> Changed the mail client to thunder bird to avoid whitespace issues.
->> Changed the subject and also the signing off to use offical mail.
->> Changed the setting for tabs (width=8, noexpandtab) and whitespaces.
-> Don't need to mess up the change log with that.
->
->> Signed-off-by: T Krishna Chaitanya <chaitanyatk@posedge.com>
->> ---
->> net/mac80211/agg-tx.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
->> index 4152ed1..eb9df22 100644
->> --- a/net/mac80211/agg-tx.c
->> +++ b/net/mac80211/agg-tx.c
->> @@ -445,7 +445,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
->>  
->>      trace_api_start_tx_ba_session(pubsta, tid);
->>  
->> -    if (WARN_ON(!local->ops->ampdu_action))
-> ^^^^^^^
-> Patch is still malformed (spaces instead of one tab). Before next
-> posting to mailing list, post patch to yourself and try to apply
-> it. Once that success, continue with mailing list posting.
->
-> Thanks
-> Stanislaw  
+# cat /etc/modprobe.d/mac80211.conf
+options mac80211 ieee80211_default_rc_algo=ath9k_rate_control
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index f69ef5d..772b69f 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -818,7 +818,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	sc->ant_tx = hw->wiphy->available_antennas_tx;
+ 
+ #ifdef CONFIG_ATH9K_RATE_CONTROL
+-	hw->rate_control_algorithm = "ath9k_rate_control";
++	/* hw->rate_control_algorithm = "ath9k_rate_control"; */
+ #endif
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+-- 
+1.7.3.4
 
