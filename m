@@ -1,149 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44560 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753899Ab2LDOsi (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55394 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160Ab2LLJNA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 09:48:38 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 03/18] regulatory: don't test list before iterating
-Date: Tue,  4 Dec 2012 15:48:45 +0100
-Message-Id: <1354632540-21207-4-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154907_066355_F29973D1)
-In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
-References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 12 Dec 2012 04:13:00 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: Joe Perches <joe@perches.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Jason Baron <jbaron@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	<linux-wireless@vger.kernel.org>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
+Date: Wed, 12 Dec 2012 11:12:55 +0200
+Message-ID: <10591713.1pVYGV5bcJ@lx-vladimir> (sfid-20121212_101325_983286_CFE31CEA)
+In-Reply-To: <20121211225555.GC15974@pogo>
+References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1355257444.24219.7.camel@joe-AO722> <20121211225555.GC15974@pogo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tuesday, December 11, 2012 02:55:55 PM Luis R. Rodriguez wrote:
+> Vladimir, to be clear, you can continue with waiting for the patches
+> to get into 3.9 but that will take a while but given that you want
+> your driver in 3.8 you can fold those routines into your driver as
+> you had before but with a rename by adding a prefix and sumbit that
+> driver and specify it is for 3.8.
+> 
 
-There's no need to test whether a list is
-empty or not before iterating.
+I have internally patch that will compensate not merged yet functionality,
+without any rename, see below. I can massage commit message and include it
+with my driver as separate patch to be easier to undo later.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Comments?
+
+>From c4e7254d0cba51c8b43d36a317a1b847fffb18d8 Mon Sep 17 00:00:00 2001
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Wed, 21 Nov 2012 13:57:21 +0200
+Subject: [PATCH] [DEBUG] Allow to compile with mainstream kernel
+
+Unless patch for dynamic hexdump merged into mainstream kernel,
+need to provide replacement for the dynamic hexdump functionality
+
+Do not hurt compilation with kernel that have patch above merged.
+
+REMOVE when dynamic hexdump merged into mainstream kernel!!
+
+Change-Id: I6abb8f91ed529ffc84bd9cc21444a59ee15fe456
 ---
- net/wireless/reg.c | 66 ++++++++++++++++--------------------------------------
- 1 file changed, 19 insertions(+), 47 deletions(-)
+ dbg_hexdump.h |   32 ++++++++++++++++++++++++++++++++
+ wil6210.h     |    2 ++
+ 2 files changed, 34 insertions(+)
+ create mode 100644 dbg_hexdump.h
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7be2110..dc46106 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1113,9 +1113,6 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
+diff --git a/dbg_hexdump.h b/dbg_hexdump.h
+new file mode 100644
+index 0000000..7144eed
+--- /dev/null
++++ b/dbg_hexdump.h
+@@ -0,0 +1,32 @@
++#ifndef DBG_HEXDUMP_H_
++#define DBG_HEXDUMP_H_
++
++#if !defined(print_hex_dump_debug)
++#if defined(CONFIG_DYNAMIC_DEBUG)
++#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)		\
++do {								\
++	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor,		\
++		__builtin_constant_p(prefix_str) ? prefix_str : "hexdump");\
++	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
++		print_hex_dump(KERN_DEBUG, prefix_str,		\
++			       prefix_type, rowsize, groupsize,	\
++			       buf, len, ascii);		\
++} while (0)
++
++#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,	\
++			     groupsize, buf, len, ascii)	\
++	dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)
++
++#define print_hex_dump_bytes(prefix_str, prefix_type, buf, len)	\
++	dynamic_hex_dump(prefix_str, prefix_type, 16, 1, buf, len, true)
++#else /* defined(CONFIG_DYNAMIC_DEBUG) */
++#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,		\
++			     groupsize, buf, len, ascii)		\
++	print_hex_dump(KERN_DEBUG, prefix_str, prefix_type, rowsize,	\
++		       groupsize, buf, len, ascii)
++#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
++#endif /* !defined(print_hex_dump_debug) */
++
++#endif /* DBG_HEXDUMP_H_ */
+diff --git a/wil6210.h b/wil6210.h
+index b37c3d2..4797da0 100644
+--- a/wil6210.h
++++ b/wil6210.h
+@@ -21,6 +21,8 @@
+ #include <linux/wireless.h>
+ #include <net/cfg80211.h>
  
- 	assert_cfg80211_lock();
++#include "dbg_hexdump.h"
++
+ #define WIL_NAME "wil6210"
  
--	if (list_empty(&reg_beacon_list))
--		return;
--
- 	list_for_each_entry(reg_beacon, &reg_beacon_list, list) {
- 		if (!wiphy->bands[reg_beacon->chan.band])
- 			continue;
-@@ -1675,11 +1672,6 @@ static void reg_process_pending_beacon_hints(void)
- 	/* This goes through the _pending_ beacon list */
- 	spin_lock_bh(&reg_pending_beacons_lock);
- 
--	if (list_empty(&reg_pending_beacons)) {
--		spin_unlock_bh(&reg_pending_beacons_lock);
--		goto out;
--	}
--
- 	list_for_each_entry_safe(pending_beacon, tmp,
- 				 &reg_pending_beacons, list) {
- 
-@@ -1694,7 +1686,6 @@ static void reg_process_pending_beacon_hints(void)
- 	}
- 
- 	spin_unlock_bh(&reg_pending_beacons_lock);
--out:
- 	mutex_unlock(&cfg80211_mutex);
- }
- 
-@@ -1958,34 +1949,24 @@ static void restore_regulatory_settings(bool reset_user)
- 	 * settings.
- 	 */
- 	spin_lock(&reg_requests_lock);
--	if (!list_empty(&reg_requests_list)) {
--		list_for_each_entry_safe(reg_request, tmp,
--					 &reg_requests_list, list) {
--			if (reg_request->initiator !=
--			    NL80211_REGDOM_SET_BY_USER)
--				continue;
--			list_move_tail(&reg_request->list, &tmp_reg_req_list);
--		}
-+	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
-+		if (reg_request->initiator != NL80211_REGDOM_SET_BY_USER)
-+			continue;
-+		list_move_tail(&reg_request->list, &tmp_reg_req_list);
- 	}
- 	spin_unlock(&reg_requests_lock);
- 
- 	/* Clear beacon hints */
- 	spin_lock_bh(&reg_pending_beacons_lock);
--	if (!list_empty(&reg_pending_beacons)) {
--		list_for_each_entry_safe(reg_beacon, btmp,
--					 &reg_pending_beacons, list) {
--			list_del(&reg_beacon->list);
--			kfree(reg_beacon);
--		}
-+	list_for_each_entry_safe(reg_beacon, btmp, &reg_pending_beacons, list) {
-+		list_del(&reg_beacon->list);
-+		kfree(reg_beacon);
- 	}
- 	spin_unlock_bh(&reg_pending_beacons_lock);
- 
--	if (!list_empty(&reg_beacon_list)) {
--		list_for_each_entry_safe(reg_beacon, btmp,
--					 &reg_beacon_list, list) {
--			list_del(&reg_beacon->list);
--			kfree(reg_beacon);
--		}
-+	list_for_each_entry_safe(reg_beacon, btmp, &reg_beacon_list, list) {
-+		list_del(&reg_beacon->list);
-+		kfree(reg_beacon);
- 	}
- 
- 	/* First restore to the basic regulatory settings */
-@@ -2499,30 +2480,21 @@ void /* __init_or_exit */ regulatory_exit(void)
- 	platform_device_unregister(reg_pdev);
- 
- 	spin_lock_bh(&reg_pending_beacons_lock);
--	if (!list_empty(&reg_pending_beacons)) {
--		list_for_each_entry_safe(reg_beacon, btmp,
--					 &reg_pending_beacons, list) {
--			list_del(&reg_beacon->list);
--			kfree(reg_beacon);
--		}
-+	list_for_each_entry_safe(reg_beacon, btmp, &reg_pending_beacons, list) {
-+		list_del(&reg_beacon->list);
-+		kfree(reg_beacon);
- 	}
- 	spin_unlock_bh(&reg_pending_beacons_lock);
- 
--	if (!list_empty(&reg_beacon_list)) {
--		list_for_each_entry_safe(reg_beacon, btmp,
--					 &reg_beacon_list, list) {
--			list_del(&reg_beacon->list);
--			kfree(reg_beacon);
--		}
-+	list_for_each_entry_safe(reg_beacon, btmp, &reg_beacon_list, list) {
-+		list_del(&reg_beacon->list);
-+		kfree(reg_beacon);
- 	}
- 
- 	spin_lock(&reg_requests_lock);
--	if (!list_empty(&reg_requests_list)) {
--		list_for_each_entry_safe(reg_request, tmp,
--					 &reg_requests_list, list) {
--			list_del(&reg_request->list);
--			kfree(reg_request);
--		}
-+	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
-+		list_del(&reg_request->list);
-+		kfree(reg_request);
- 	}
- 	spin_unlock(&reg_requests_lock);
- 
+ /**
 -- 
-1.8.0
+1.7.10.4
+
 
