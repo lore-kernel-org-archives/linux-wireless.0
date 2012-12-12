@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53608 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:50236 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755922Ab2LMSgx (ORCPT
+	with ESMTP id S1755705Ab2LLWQw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:36:53 -0500
-Message-ID: <1355423836.9463.14.camel@jlt4.sipsolutions.net> (sfid-20121213_193655_769037_826EEAE5)
-Subject: Re: Add a new work-queue for destructing stations?
+	Wed, 12 Dec 2012 17:16:52 -0500
+Message-ID: <1355350635.9708.23.camel@jlt4.sipsolutions.net> (sfid-20121212_231701_848012_2B205976)
+Subject: Re: [RFC 2/6] wifi: Don't spam logs with 'Found new beacon'
+ messages.
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 13 Dec 2012 19:37:16 +0100
-In-Reply-To: <50CA1EB6.9030903@candelatech.com>
-References: <50CA1470.4030107@candelatech.com>
-	   (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>
-	  <50CA1C44.5030300@candelatech.com>
-	 <1355423047.9463.9.camel@jlt4.sipsolutions.net>
-	 <50CA1EB6.9030903@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 12 Dec 2012 23:17:15 +0100
+In-Reply-To: <50C901FC.3040306@candelatech.com>
+References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
+	  <1355349295-30960-2-git-send-email-greearb@candelatech.com>
+	  (sfid-20121212_225535_981449_212B81FE) <1355350115.9708.21.camel@jlt4.sipsolutions.net>
+	 <50C901FC.3040306@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-13 at 10:30 -0800, Ben Greear wrote:
-> On 12/13/2012 10:24 AM, Johannes Berg wrote:
-> > On Thu, 2012-12-13 at 10:19 -0800, Ben Greear wrote:
+On Wed, 2012-12-12 at 14:15 -0800, Ben Greear wrote:
+> On 12/12/2012 02:08 PM, Johannes Berg wrote:
+> > On Wed, 2012-12-12 at 13:54 -0800, greearb@candelatech.com wrote:
+> >> From: Ben Greear <greearb@candelatech.com>
+> >>
+> >> We saw logs fill with this (at very high speeds):
+> >>
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> >>
+> >> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> >> ---
+> >>   net/wireless/reg.c |   11 ++++++-----
+> >>   1 files changed, 6 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> >> index 6e53089..8aa7867 100644
+> >> --- a/net/wireless/reg.c
+> >> +++ b/net/wireless/reg.c
+> >> @@ -2067,11 +2067,12 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
+> >>   	if (!reg_beacon)
+> >>   		return -ENOMEM;
+> >>
+> >> -	REG_DBG_PRINT("Found new beacon on "
 > >
-> >>> I don't think that's easy, but you're welcome to try. The
-> >>> free_sta_work() function references the sdata so it absolutely must run
-> >>> at this point.
-> >
-> >> So, cancel_work_sync(&sdata->work) would appear to remove
-> >> all pending sdata->work items from the work-queue.  As long as
-> >> there are no other different work items that reference
-> >> sdata (and maybe there are..I haven't looked at all of them),
-> >> then we should be safe to execute the free_sta_work()
-> >> on a different work-queue safely, I think....
-> >
-> > Sorry, I don't get it. free_sta_work() *itself* has to be executed
-> > before the sdata is destroyed. cancel_work_sync(&sdata->work) has
-> > nothing to do with free_sta_work.
+> > Why not just disable the config option for it if you don't care?
 > 
-> My concern is this:
-> 
-> If I add a different work queue (called destructor-workqueue, perhaps)
-> for free_sta_work(), then it only helps
-> if I can not block on flushing the current 'big' work-queue.  But, if
-> there are items on the big work-queue that reference sdata, then
-> that could easily execute after free_sta_work(), and I'm guessing
-> that would be very bad.
-> 
-> So, near where we currently call cancel_work_sync(&sdata->work), I
-> think we'd also need to cancel things like the sta->ampdu_mlme.work,
-> and probably others as well.
-> 
-> Then, when we're sure there are no more references to sdata on the
-> main-work-queue, it would be safe to flush the destructor-workqueue
-> (which would have the fre_sta_work() on it).
-> 
-> Maybe?
+> I don't mind seeing it, just don't want thousands of them in my logs
+> in a very short amount of time.  Maybe I was just hitting some
+> other bug, and there is no valid reason for this to ever spam?
 
-Huh, ok, but I don't think you'll find much that doesn't reference an
-sdata?
+Quite likely, since I think it's supposed to happen only once for each
+channel unless you reset the regulatory (but that would cause more
+messages? I think?)
 
 johannes
 
