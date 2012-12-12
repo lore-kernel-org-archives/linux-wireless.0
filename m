@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:52609 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964810Ab2LEUxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 15:53:15 -0500
-Message-ID: <1354740752.6234.85.camel@cumari.coelho.fi> (sfid-20121205_215325_998852_BC8E3E7D)
-Subject: Re: [PATCH 09/20] wlcore: disable elp sleep while in plt mode
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Yair Shapira <yair.shapira@ti.com>
-Date: Wed, 5 Dec 2012 22:52:32 +0200
-In-Reply-To: <1354095769-8724-10-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-10-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:59816 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754080Ab2LLVzb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2012 16:55:31 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 2/6] wifi: Don't spam logs with 'Found new beacon' messages.
+Date: Wed, 12 Dec 2012 13:54:51 -0800
+Message-Id: <1355349295-30960-2-git-send-email-greearb@candelatech.com> (sfid-20121212_225535_981449_212B81FE)
+In-Reply-To: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
+References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
-> From: Yair Shapira <yair.shapira@ti.com>
-> 
-> We now disable elp sleep during plt mode to allow normal operation of
-> plt tools such as calibrator.
-> 
-> Having elp_sleep enabled during plt mode is actually not required and
-> in fact it disrupt plt operations such as rx statistics etc...
+From: Ben Greear <greearb@candelatech.com>
 
-Has this really been observed in practice? At least what I remember is
-that we use CAM power mode in PLT (during init) so we never get to ELP
-mode.
+We saw logs fill with this (at very high speeds):
 
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
 
-> This is based on wl12xx (R5) commit 5cf0fe31ab
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/wireless/reg.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
 
-This is residue from internal code and is meaningless in the mainline.
-
---
-Luca.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6e53089..8aa7867 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2067,11 +2067,12 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
+ 	if (!reg_beacon)
+ 		return -ENOMEM;
+ 
+-	REG_DBG_PRINT("Found new beacon on "
+-		      "frequency: %d MHz (Ch %d) on %s\n",
+-		      beacon_chan->center_freq,
+-		      ieee80211_frequency_to_channel(beacon_chan->center_freq),
+-		      wiphy_name(wiphy));
++	if (printk_ratelimit())
++		REG_DBG_PRINT("Found new beacon on "
++			      "frequency: %d MHz (Ch %d) on %s\n",
++			      beacon_chan->center_freq,
++			      ieee80211_frequency_to_channel(beacon_chan->center_freq),
++			      wiphy_name(wiphy));
+ 
+ 	memcpy(&reg_beacon->chan, beacon_chan,
+ 		sizeof(struct ieee80211_channel));
+-- 
+1.7.3.4
 
