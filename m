@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:43706 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729Ab2LCIp2 convert rfc822-to-8bit (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:59115 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750714Ab2LLGlA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 03:45:28 -0500
+	Wed, 12 Dec 2012 01:41:00 -0500
 MIME-Version: 1.0
-In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
-References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
-Date: Mon, 3 Dec 2012 09:45:26 +0100
-Message-ID: <CACna6rwmfpNFAFZpvbt8GHzofC6UoyBC4oKF5rL=9xN5_=gYXw@mail.gmail.com> (sfid-20121203_094533_190926_4C087D35)
-Subject: Re: [PATCH v2 00/15] watchdog/bcm47xx/bcma/ssb: add support for SoCs
- with PMU
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, wim@iguana.be,
-	linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	linux-mips@linux-mips.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 12 Dec 2012 12:10:59 +0530
+From: vivekanandah@posedge.com
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>
+Subject: adding =?UTF-8?Q?ba=5Fpolicy=20member=20in=20drv=5Fampdu=5Faction?=
+ =?UTF-8?Q?=20op=20-=20request=20information?=
+Message-ID: <95cd69900bf76c0024d3a0838ed38d30@posedge.com> (sfid-20121212_074103_386762_33ADCA57)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/11/27 Hauke Mehrtens <hauke@hauke-m.de>:
-> This patch series improves the watchdog driver used on the Broadcom
-> bcm47xx SoCs.
-> The watchdog driver does not access the functions directly any more,
-> but it registers as a platform device driver and ssb and bcma are
-> registering a device for this watchdog driver.
-> This also adds support for SoCs with a power management unit (PMU),
-> which have different clock rates.
->
-> This code is currently based on the wireless-testing/master tree by
-> John Linville, because there are some changes in ssb and bcma in that
-> tree queued for 3.8 which will conflict with these changes, if this
-> would be based on an other tree. I have no problem with rebasing this
-> onto any other tree.
->
-> @Wim Could you give me an ACK on the "watchdog: bcm47xx_wdt.c:" patches
->      so that John could take them trough the wireless-testing tree, or
->      provide me with some feedback on what I should change.
+Hi,
 
-Hi Wim,
+presently in code, the block ack policy is not sent by mac80211 to the 
+lower level driver via the ampdu_action callback.
 
-Have you got a chance to look at that patches?
+The mac80211 while transmitting a block ack (ADDBA)request, hardcodes 
+the block ack methodology to immediate block ack.
 
-I've some additional bcma changes I wish to submit on top of this :)
+on the receive side, the delayed block ack bit is checked along-with 
+the capability of the receiver station to support delayed block ack. 
+even if the station supports delayed block ack, mac80211 does not send 
+the ba_policy down to the driver.
 
--- 
-Rafał
+should ba_policy be sent to the driver so that lower level drivers can 
+take a call as to send block ack response in a delayed manner at its 
+convenience?
+
+looking forward to some information
+thanks in advance
+Vivek
+
