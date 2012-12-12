@@ -1,143 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43321 "EHLO bear.ext.ti.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:42825 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752124Ab2LEJfr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 04:35:47 -0500
-Message-ID: <1354700103.6234.16.camel@cumari.coelho.fi> (sfid-20121205_103552_857442_D345A3D8)
-Subject: Re: [PATCH 02/20] wlcore: add ACX_PEER_CAP command
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
-Date: Wed, 5 Dec 2012 11:35:03 +0200
-In-Reply-To: <1354095769-8724-3-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-3-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
+	id S1752766Ab2LLTJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2012 14:09:35 -0500
+Message-ID: <50C8D66D.4030601@openwrt.org> (sfid-20121212_200939_572113_36758405)
+Date: Wed, 12 Dec 2012 20:09:33 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: Daniel Golle <dgolle@allnet.de>,
+	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+	"<users@rt2x00.serialmonkey.com>" <users@rt2x00.serialmonkey.com>,
+	"<sgruszka@redhat.com>" <sgruszka@redhat.com>,
+	"<helmut.schaa@googlemail.com>" <helmut.schaa@googlemail.com>,
+	"<john@phrozen.org>" <john@phrozen.org>
+Subject: Re: [PATCH 1/3] rt2x00: allow overriding eeprom through platform_data
+References: <20121211100350.GA7813@earthship.arig> <555EAC65-09DC-466A-AAC8-4896E08D9F5D@gmail.com>
+In-Reply-To: <555EAC65-09DC-466A-AAC8-4896E08D9F5D@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
-> From: Eliad Peller <eliad@wizery.com>
+2012.12.11. 22:40 keltezéssel, Gertjan van Wingerde írta:
+> Hi Daniel,
 > 
-> ACX_PEER_CAP command is just ACX_PEER_HT_CAP, but allows
-> configuring the peer's support rates as well.
+> On 11 dec. 2012, at 11:03, Daniel Golle <dgolle@allnet.de> wrote:
 > 
-> this is needed because we start the station role when
-> the remote rates are not known yet.
+>>
+>> Signed-off-by: Daniel Golle <dgolle@allnet.de>
 > 
-> the two commands should be unified in future fw versions,
-> but for now add a new set_peer_cap per-hw op, that will
-> use ACX_PEER_CAP for 18xx, and ACX_PEER_HT_CAP for 12xx.
+> We really need a proper patch description, explaining why the patch is needed. You explained in the intro [0 / 3], but that one isn't committed to git. So, to have some proper information in the git log we need the info included in the patch itself.
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+> See also below for some concerns on the changes themselves.
+> 
+> 
+>>
+>> create mode 100644 drivers/net/wireless/rt2x00/rt2x00eeprom.c
+>> create mode 100644 include/linux/rt2x00_platform.h
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+>> index c7548da..e3b9dab 100644
+>> --- a/drivers/net/wireless/rt2x00/Kconfig
+>> +++ b/drivers/net/wireless/rt2x00/Kconfig
+>> @@ -60,6 +60,7 @@ config RT2800PCI
+>>    select RT2X00_LIB_PCI if PCI
+>>    select RT2X00_LIB_SOC if RALINK_RT288X || RALINK_RT305X
+>>    select RT2X00_LIB_FIRMWARE
+>> +    select RT2X00_LIB_EEPROM
+>>    select RT2X00_LIB_CRYPTO
+>>    select CRC_CCITT
+>>    select EEPROM_93CX6
+>> @@ -212,6 +213,9 @@ config RT2X00_LIB_FIRMWARE
+>> config RT2X00_LIB_CRYPTO
+>>    boolean
+>>
+>> +config RT2X00_LIB_EEPROM
+>> +    boolean
+>> +
+>> config RT2X00_LIB_LEDS
+>>    boolean
+>>    default y if (RT2X00_LIB=y && LEDS_CLASS=y) || (RT2X00_LIB=m && LEDS_CLASS!=n)
+> 
+> I find the approach very complicated, with all the general facilities that
+> are only used by rt2800.
 
-[...]
+The idea behind the generic approach was that the feature can be used for
+EEPROM-less rt2500/rt61 based PCI devices as well. However I did not find any
+such device yet, so the rt2500/rt61 part was never implemented.
 
-> diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-> index 0218edd..951b88c 100644
-> --- a/drivers/net/wireless/ti/wl12xx/main.c
-> +++ b/drivers/net/wireless/ti/wl12xx/main.c
-> @@ -1623,6 +1623,15 @@ static int wl12xx_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
->  	return wlcore_set_key(wl, cmd, vif, sta, key_conf);
->  }
->  
-> +static int wl12xx_set_peer_cap(struct wl1271 *wl,
-> +			       struct ieee80211_sta_ht_cap *ht_cap,
-> +			       bool allow_ht_operation,
-> +			       u32 rate_set, u8 hlid)
-> +{
-> +	return wl1271_acx_set_ht_capabilities(wl, ht_cap, allow_ht_operation,
-> +					      hlid);
-> +}
-> +
+> Why not read the eeprom file directly from rt2800pci.c, with an directly
+> coded call to request_firmware, instead of reading it at another place and
+> then only copying it later.
 
-This is quite ugly, because you're just calling wlcore back to perform
-this op.
+You are right, things would be much simpler this way. If someone ever encounter
+a board with a rt2500/rt61 chip which needs this feature, the generalization can
+happen later.
 
+<...>
 
-> diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-> index 801d8af..a169bb5 100644
-> --- a/drivers/net/wireless/ti/wl18xx/acx.c
-> +++ b/drivers/net/wireless/ti/wl18xx/acx.c
-> @@ -140,3 +140,57 @@ out:
->  	return ret;
->  
->  }
-> +
-> +/*
-> + * this command is basically the same as wl1271_acx_ht_capabilities,
-> + * with the addition of supported rates. they should be unified in
-> + * the next fw api change
-> + */
+>> +static void rt2800pci_read_eeprom_file(struct rt2x00_dev *rt2x00dev)
+>> {
+>> +    memcpy(rt2x00dev->eeprom, rt2x00dev->eeprom_file->data, EEPROM_SIZE);
+>> }
+>> -#endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
+> 
+> I meant with the previous comment to read the file right here, instead of at
+> a different place in the code.
 
-Has this been already unified? What's the status or plan for this new
-API change? I guess we're only waiting for the change in the wl12xx
-firmware to catch up with wl18xx, right?
+True.
 
+>> #ifdef CONFIG_PCI
+>> static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
+>> @@ -322,6 +312,20 @@ static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
+>> }
+>>
+>> /*
+>> + * EEPROM file functions.
+>> + */
+>> +static char *rt2800pci_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+>> +{
+>> +    struct rt2x00_platform_data *pdata;
+>> +
+>> +    pdata = rt2x00dev->dev->platform_data;
+>> +    if (pdata)
+>> +        return pdata->eeprom_file_name;
+>> +
+>> +    return NULL;
+>> +}
+>> +
+>> +/*
+> 
+> That would make this redundant.
 
-> diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-> index b57e348..0e636de 100644
-> --- a/drivers/net/wireless/ti/wl18xx/acx.h
-> +++ b/drivers/net/wireless/ti/wl18xx/acx.h
-> @@ -297,11 +297,44 @@ struct wlcore_peer_ht_operation_mode {
->  	u8 padding[2];
->  };
->  
-> +/*
-> + * ACX_PEER_CAP
-> + * this struct is very similar to wl1271_acx_ht_capabilities, with the
-> + * addition of supported rates
-> + */
-> +struct wlcore_acx_peer_cap {
-> +	struct acx_header header;
-> +
-> +	/* bitmask of capability bits supported by the peer */
-> +	__le32 ht_capabilites;
-> +
-> +	/* rates supported by the remote peer */
-> +	__le32 supported_rates;
-> +
-> +	/* Indicates to which link these capabilities apply. */
-> +	u8 hlid;
-> +
-> +	/*
-> +	 * This the maximum A-MPDU length supported by the AP. The FW may not
-> +	 * exceed this length when sending A-MPDUs
-> +	 */
-> +	u8 ampdu_max_length;
-> +
-> +	/* This is the minimal spacing required when sending A-MPDUs to the AP*/
-> +	u8 ampdu_min_spacing;
-> +
-> +	u8 padding;
-> +} __packed;
+Yes.
 
-If we're sure this will be also changed in the wl12xx firmware, maybe
-this could already be in the wlcore acx.h? Otherwise we'll just be
-moving this around...
+> 
+>>  * Initialization functions.
+>>  */
+>> static bool rt2800pci_get_entry_state(struct queue_entry *entry)
+>> @@ -972,8 +976,9 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+>>  */
+>> static void rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
+>> {
+>> -    if (rt2x00_is_soc(rt2x00dev))
+>> -        rt2800pci_read_eeprom_soc(rt2x00dev);
+>> +    if (rt2x00_is_soc(rt2x00dev) ||
+>> +        test_bit(REQUIRE_EEPROM_FILE, &rt2x00dev->cap_flags))
+>> +        rt2800pci_read_eeprom_file(rt2x00dev);
+>>    else if (rt2800pci_efuse_detect(rt2x00dev))
+>>        rt2800pci_read_eeprom_efuse(rt2x00dev);
+>>    else
+>> @@ -1033,6 +1038,7 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
+>>    .get_firmware_name    = rt2800pci_get_firmware_name,
+>>    .check_firmware        = rt2800_check_firmware,
+>>    .load_firmware        = rt2800_load_firmware,
+>> +    .get_eeprom_file_name   = rt2800pci_get_eeprom_file_name,
+>>    .initialize        = rt2x00pci_initialize,
+>>    .uninitialize        = rt2x00pci_uninitialize,
+>>    .get_entry_state    = rt2800pci_get_entry_state,
+> 
+> And this part as well.
 
+Yes.
 
-> diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-> index 71137aa..ecdd5e6 100644
-> --- a/drivers/net/wireless/ti/wlcore/wlcore.h
-> +++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-> @@ -106,6 +106,11 @@ struct wlcore_ops {
->  	u32 (*pre_pkt_send)(struct wl1271 *wl, u32 buf_offset, u32 last_len);
->  	void (*sta_rc_update)(struct wl1271 *wl, struct wl12xx_vif *wlvif,
->  			      struct ieee80211_sta *sta, u32 changed);
-> +	int (*set_peer_cap)(struct wl1271 *wl,
-> +			    struct ieee80211_sta_ht_cap *ht_cap,
-> +			    bool allow_ht_operation,
-> +			    u32 rate_set, u8 hlid);
-> +
+<...>
 
-I think it would be much nicer to do all this with a quirk instead.
-Then we don't need to add ops that will have to be removed later and
-make all this ping-pong of calls between the modules.
+>> @@ -989,6 +992,11 @@ struct rt2x00_dev {
+>>    const struct firmware *fw;
+>>
+>>    /*
+>> +     * EEPROM image.
+>> +     */
+>> +    const struct firmware *eeprom_file;
+>> +
+>> +    /*
+>>     * FIFO for storing tx status reports between isr and tasklet.
+>>     */
+>>    DECLARE_KFIFO_PTR(txstatus_fifo, u32);
+> 
+> And this would not be needed at all, as the struct firmware could be local to
+> the firmware reading function.
 
---
-Luca.
+Ok.
+
+<...>
+>> +static int rt2x00lib_request_eeprom_file(struct rt2x00_dev *rt2x00dev)
+>> +{
+>> +    const struct firmware *ee;
+>> +    char *ee_name;
+>> +    int retval;
+>> +
+>> +    ee_name = rt2x00dev->ops->lib->get_eeprom_file_name(rt2x00dev);
+>> +    if (!ee_name) {
+>> +        ERROR(rt2x00dev,
+>> +              "Invalid EEPROM filename.\n"
+>> +              "Please file bug report to %s.\n", DRV_PROJECT);
+>> +        return -EINVAL;
+>> +    }
+>> +
+>> +    INFO(rt2x00dev, "Loading EEPROM data from '%s'.\n", ee_name);
+>> +
+>> +    retval = request_firmware(&ee, ee_name, rt2x00dev->dev);
+>> +    if (retval) {
+>> +        ERROR(rt2x00dev, "Failed to request EEPROM.\n");
+>> +        return retval;
+>> +    }
+> 
+> And here is the biggest problem of this patch. Request_firmware is 
+> synchronous and will fail when userspace isn't up yet. For built-in versions
+> of the driver userspace isn't up yet at this point of time, so this will fail
+> then.
+
+Yes, this should be asynchronous. The original patch was developed two years ago
+and I was not aware of the asynchronous version of request_firmware at that
+time. Because OpenWrt uses the compat-wireless package so the driver is always
+loaded as a module, I did not bother to change this.
+
+Thank you for the review!
+
+-Gabor
 
