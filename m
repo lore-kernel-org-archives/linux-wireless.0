@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54388 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752978Ab2LMW7U (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:63460 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025Ab2LLIIF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 17:59:20 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/5] mac80211: warn if unexpectedly removing stations
-Date: Thu, 13 Dec 2012 23:59:32 +0100
-Message-Id: <1355439573-13206-5-git-send-email-johannes@sipsolutions.net> (sfid-20121213_235924_370077_D61D9153)
-In-Reply-To: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
-References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 12 Dec 2012 03:08:05 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Kalle Valo <kvalo@adurom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] wireless: allow Atheros card to not depend on ath.ko
+Date: Wed, 12 Dec 2012 10:07:59 +0200
+Message-ID: <1400620.sjR9nVGjfL@lx-vladimir> (sfid-20121212_090809_729301_C75760FA)
+In-Reply-To: <87wqwov15r.fsf@purkki.adurom.net>
+References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1967408.WlU5HIbjCs@lx-vladimir> <87wqwov15r.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tuesday, December 11, 2012 09:28:32 PM Kalle Valo wrote:
+> Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
+> 
+> > There are 2 different things:
+> > - sub-menu for "Atheros Wireless cards" family
+> > - module ath.ko with common Atheros code
+> >
+> > Until now, they both used to depend on the same Kconfig variable ATH_COMMON.
+> > Thus, being "Atheros card" and "depending on ath.ko" was the same.
+> >
+> > To allow module to belong to the
+> > "Atheros Wireless cards" family but not use ath.ko,
+> > 2 conditions above need to be separated.
+> >
+> > So, this patch introduce new Kconfig variable ATH_CARDS for belonging
+> > to the "Atheros Wireless Cards" family; while ATH_COMMON becomes hidden
+> > variable to express dependency on common Atheros code in ath.ko. Modules
+> > that depend on this common code now express it by setting ATH_COMMON.
+> >
+> > Right now, ath6kl do not depend on common code and thus do not set ATH_COMMON.
+> >
+> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> 
+> This broke ath6kl, it get compiled unless I enable ath9k or some other
+> atheros driver.
+> 
+> Reverting 23c1d7f6597 or adding "select ATH_COMMON" to ath6kl fixes
+> this. Any ideas what's wrong? It's not obvious to me from looking at
+> Kconfig files.
+> 
 
-When an interface is brought down it must have been
-disconnected (or similar) in all modes other than WDS,
-so warn if any stations were removed in other modes.
+Interesting. I just compiled with ath6kl only, have no ATH_COMMON in .config.
+Compiles with no problem.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+Maybe something with your setup? Can you elaborate what error do you see?
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 36109eb..9dacc3a 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -756,7 +756,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	unsigned long flags;
- 	struct sk_buff *skb, *tmp;
- 	u32 hw_reconf_flags = 0;
--	int i;
-+	int i, flushed;
- 
- 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
- 
-@@ -781,11 +781,13 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	 * (because if we remove a STA after ops->remove_interface()
- 	 * the driver will have removed the vif info already!)
- 	 *
--	 * This is relevant only in AP, WDS and mesh modes, since in
--	 * all other modes we've already removed all stations when
--	 * disconnecting etc.
-+	 * This is relevant only in WDS mode, in all other modes we've
-+	 * already removed all stations when disconnecting or similar,
-+	 * so warn otherwise.
- 	 */
--	sta_info_flush(sdata);
-+	flushed = sta_info_flush(sdata);
-+	WARN_ON_ONCE((sdata->vif.type != NL80211_IFTYPE_WDS && flushed > 0) ||
-+		     (sdata->vif.type == NL80211_IFTYPE_WDS && flushed != 1));
- 
- 	/*
- 	 * Don't count this interface for promisc/allmulti while it
--- 
-1.8.0
-
+Thanks, Vladimir
