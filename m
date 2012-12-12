@@ -1,72 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:47021 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217Ab2LTErL (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:54082 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754094Ab2LLBrn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 23:47:11 -0500
-Received: by mail-ea0-f169.google.com with SMTP id a12so1169496eaa.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 20:47:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CANa_0w1YusGWqpgTRZ5Xxq0dzKVuZJUKTFccv6zPLekfG+NntA@mail.gmail.com>
-References: <CANa_0w2mShPgK4VwSzAFh+BSsxU5xYmWxogTcz_ZpVdj1seKgg@mail.gmail.com>
-	<CANa_0w1YusGWqpgTRZ5Xxq0dzKVuZJUKTFccv6zPLekfG+NntA@mail.gmail.com>
-Date: Wed, 19 Dec 2012 23:19:32 -0500
-Message-ID: <CANa_0w1FUaC4S7Msrk6mbioR__2F4MQ3+LrQcZ=4H0uOkduNmA@mail.gmail.com> (sfid-20121220_054718_124527_1A0B3E14)
-Subject: Re: txpower anything you make db.txt say ?
-From: Jason Mclaughlin <mcjason@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 11 Dec 2012 20:47:43 -0500
+Received: by mail-pb0-f42.google.com with SMTP id rp2so89363pbb.29
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 17:47:43 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [RFC] mac80211: update mesh established plink counter after userspace peering
+Date: Tue, 11 Dec 2012 17:22:47 -0800
+Message-Id: <1355275367-21371-1-git-send-email-marco@cozybit.com> (sfid-20121212_024746_874935_BC3EFAEC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nobody knows ?!?!?!
+The established peer link count is indicated in mesh beacons and used for
+other internal tasks. Previously it was not updated when authenticated peering
+is performed in userspace.
 
+Signed-off-by: Marco Porsch <marco@cozybit.com>
+---
+ net/mac80211/cfg.c        |   22 +++++++++++++++++++---
+ net/mac80211/mesh.h       |   14 ++++++++++++++
+ net/mac80211/mesh_plink.c |   14 --------------
+ 3 files changed, 33 insertions(+), 17 deletions(-)
 
-whatever i set my domain's power limit to is appearantly the power
-output of my alfa aws036nha device
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 4965aa6..2b8e3f8 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1200,18 +1200,33 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+-		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
++		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED) {
++			u32 changed = 0;
++
+ 			switch (params->plink_state) {
+-			case NL80211_PLINK_LISTEN:
+ 			case NL80211_PLINK_ESTAB:
++				if (sta->plink_state != NL80211_PLINK_ESTAB)
++					changed = mesh_plink_inc_estab_count(
++							sdata);
++				sta->plink_state = params->plink_state;
++				break;
++			case NL80211_PLINK_LISTEN:
+ 			case NL80211_PLINK_BLOCKED:
++			case NL80211_PLINK_OPN_SNT:
++			case NL80211_PLINK_OPN_RCVD:
++			case NL80211_PLINK_CNF_RCVD:
++			case NL80211_PLINK_HOLDING:
++				if (sta->plink_state == NL80211_PLINK_ESTAB)
++					changed = mesh_plink_dec_estab_count(
++							sdata);
+ 				sta->plink_state = params->plink_state;
+ 				break;
+ 			default:
+ 				/*  nothing  */
+ 				break;
+ 			}
+-		else
++			ieee80211_bss_info_change_notify(sdata, changed);
++		} else {
+ 			switch (params->plink_action) {
+ 			case PLINK_ACTION_OPEN:
+ 				mesh_plink_open(sta);
+@@ -1220,6 +1235,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 				mesh_plink_block(sta);
+ 				break;
+ 			}
++		}
+ #endif
+ 	}
+ 
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 7c9215f..39897e0 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -307,6 +307,20 @@ extern int mesh_paths_generation;
+ #ifdef CONFIG_MAC80211_MESH
+ extern int mesh_allocated;
+ 
++static inline
++u32 mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
++{
++	atomic_inc(&sdata->u.mesh.estab_plinks);
++	return mesh_accept_plinks_update(sdata);
++}
++
++static inline
++u32 mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
++{
++	atomic_dec(&sdata->u.mesh.estab_plinks);
++	return mesh_accept_plinks_update(sdata);
++}
++
+ static inline int mesh_plink_free_count(struct ieee80211_sub_if_data *sdata)
+ {
+ 	return sdata->u.mesh.mshcfg.dot11MeshMaxPeerLinks -
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index ca52dfd..3254522 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -41,20 +41,6 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		enum ieee80211_self_protected_actioncode action,
+ 		u8 *da, __le16 llid, __le16 plid, __le16 reason);
+ 
+-static inline
+-u32 mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
+-{
+-	atomic_inc(&sdata->u.mesh.estab_plinks);
+-	return mesh_accept_plinks_update(sdata);
+-}
+-
+-static inline
+-u32 mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
+-{
+-	atomic_dec(&sdata->u.mesh.estab_plinks);
+-	return mesh_accept_plinks_update(sdata);
+-}
+-
+ /**
+  * mesh_plink_fsm_restart - restart a mesh peer link finite state machine
+  *
+-- 
+1.7.9.5
 
-it doesn't stop at a 27db or so or whatever the device's limit is. i
-tried 60db just for the heck of it in db.txt and that was the showing
-tx power in iwconfig
-
-though i doubt that's the actual power output :)
-
-On Sun, Dec 16, 2012 at 9:30 PM, Jason Mclaughlin <mcjason@gmail.com> wrote:
-> to better word myself... what i meant was, with the ath9k driver....
-> you're tx power seems to go as high as you say your limit is in db.txt
->
-> On Sat, Dec 15, 2012 at 10:29 PM, Jason Mclaughlin <mcjason@gmail.com> wrote:
->>  was wondering... with a AEUS036NHA wireless adapater (ath9k), why
->> does it seem like I can set the power arbitrarily higher if I make my
->> own regulatory.bin
->> from the crda package. I doubt for real that's the power since the
->> adapater is rated at 1000mw afaik.
->>
->> I wanted to test if it was really having more power than 20db when I
->> found out how to do that, but I suspiciously though it was just saying
->> it's as high
->> as you make db.txt say. This seems true at a whopping 48db (I never
->> did anything like connect to someone, just rebooted at turned it back
->> to 30).
->>
->> Also wanted to know, does it really do 30db? I noticed between two
->> adapaters a mild improvement when setting it higher than 20 but it's
->> hard to tell.
->>
->>
->> root@debian:/home/jason# iwconfig
->> wlan2     IEEE 802.11bgn  ESSID:off/any
->>           Mode:Managed  Access Point: Not-Associated   Tx-Power=48 dBm
->>           Retry  long limit:7   RTS thr:off   Fragment thr:off
->>           Encryption key:off
->>           Power Management:off
->>
->> eth0      no wireless extensions.
->>
->> lo        no wireless extensions.
->>
->> wlan0     IEEE 802.11bgn  ESSID:off/any
->>           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
->>           Retry  long limit:7   RTS thr:off   Fragment thr:off
->>           Encryption key:off
->>           Power Management:off
