@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ultra-3eti.com ([173.13.207.162]:42553 "EHLO
-	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751869Ab2LJPXL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 10:23:11 -0500
-From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-To: Thomas Pedersen <thomas@cozybit.com>,
-	Georgiewskiy Yuriy <bottleman@icf.org.ru>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	open11s <devel@lists.open80211s.org>
-Subject: RE: help: 802.11s bad performance with 802.11n enabled
-Date: Mon, 10 Dec 2012 15:23:07 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C12923@RockMX01.rock.corp> (sfid-20121210_162314_485689_6553A92F)
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
- <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
- <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
-In-Reply-To: <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from arrakis.dune.hu ([78.24.191.176]:43118 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752766Ab2LLTMG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2012 14:12:06 -0500
+Message-ID: <50C8D705.3090304@openwrt.org> (sfid-20121212_201211_847324_A0445057)
+Date: Wed, 12 Dec 2012 20:12:05 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Daniel Golle <dgolle@allnet.de>, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, helmut.schaa@googlemail.com,
+	gwingerde@gmail.com, john@phrozen.org
+Subject: Re: [PATCH 1/3] rt2x00: allow overriding eeprom through platform_data
+References: <20121211100350.GA7813@earthship.arig> <20121212073627.GB2253@redhat.com>
+In-Reply-To: <20121212073627.GB2253@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Thomas.
+2012.12.12. 8:36 keltezéssel, Stanislaw Gruszka írta:
+> Hi 
+> 
+> I have one additional question:
+> 
+> On Tue, Dec 11, 2012 at 12:03:53PM +0200, Daniel Golle wrote:
+>> +	if (rt2x00_is_soc(rt2x00dev) ||
+>> +	    test_bit(REQUIRE_EEPROM_FILE, &rt2x00dev->cap_flags))
+>> +		rt2800pci_read_eeprom_file(rt2x00dev);
+> Is || correct here ?
 
-TP> With wireless-testing HEAD (671c924) I made the following observations with 3 nodes in a mesh using ch. 149 HT20 on AR9280.
+There are various embedded boards where a Ralink WiFi chip is soldered directly
+onto the PCB and that does not have a separate EEPROM. The EEPROM data is stored
+in the main flash of the board. The '||' allows to load the EEPROM data via
+firmware API for such PCI devices as well.
 
-3 nodes may not be enough to see the problem.
+However, the condition can be simplified. The REQUIRE_EEPROM_FILE bit is always
+set for SoC devices, so the 'rt2x00_is_soc(rt2x00dev) ||' part is superfluous.
 
-TP> 1. ping -i0.1 does not cause aggregation to take place, and losses are 0% 
+Given the fact that the patch must be reworked, this part will go away anyway
+probably.
 
-My tool ping each node (total 7 nodes) at about 10~15 packet/second. Maybe in theory, it should not aggregate.
-The fact is with/without aggregation, there is a huge difference on ping loss.
-
-If you are interested in my test tool, it's here.
-http://sites.google.com/site/ebaylinkan5709pictures/files-to-share/clinmonitor.gz
-It's an executable running on any 32-bit Linux.
-I lost the source code for this tool. Only found the executable in my old machine.
-
-
-TP> 2. a UDP iperf test with two nodes generating traffic shows losses around 1%. We can observe aggregation taking place in this case.
-
-For all the kernel versions I have tested, I did not see a problem with two node 802.11s network.
-Before the stability test, I did fairly extensive on two-node throughput tests and did not any problem on overnight test. 150 ~ 220 Mbps TCP throughput (varied on different atheros 11n chipsets)
-
+-Gabor
