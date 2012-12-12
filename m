@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41057 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753083Ab2LKUIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 15:08:49 -0500
-Date: Tue, 11 Dec 2012 15:08:31 -0500
-From: Jason Baron <jbaron@redhat.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	gregkh@linuxfoundation.org
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Joe Perches <joe@perches.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, Jim Cromie <jim.cromie@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-Message-ID: <20121211200831.GD11815@redhat.com> (sfid-20121211_210906_495314_3A41F527)
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1353263740.28214.2.camel@joe-AO722>
- <20121120160845.GB31176@redhat.com>
- <3645415.mrRzvuvPFK@lx-vladimir>
- <20121211193646.GS15974@pogo>
+Received: from mail.hostpark.net ([212.243.197.30]:50799 "EHLO
+	mail.hostpark.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025Ab2LLILF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2012 03:11:05 -0500
+Message-ID: <50C83998.4020508@elsoft.ch> (sfid-20121212_091108_754626_9F2DA90E)
+Date: Wed, 12 Dec 2012 09:00:24 +0100
+From: =?ISO-8859-1?Q?=22David_M=FCller_=28ELSOFT_AG=29=22?=
+	<d.mueller@elsoft.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121211193646.GS15974@pogo>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2800: refactor RFCSR initialization
+References: <20121212053054.GA4356@localhost.localdomain>
+In-Reply-To: <20121212053054.GA4356@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 11, 2012 at 11:36:46AM -0800, Luis R. Rodriguez wrote:
-> On Tue, Dec 04, 2012 at 11:28:26AM +0200, Vladimir Kondratiev wrote:
-> > Hi Jason,
-> > 
-> > Do you have any update on the status for patches below?
-> > Where is it now? When do you expect it to merge? 3.8?
-> > I am waiting for this to merge before I can go on
-> > with my driver.
-> 
-> *poke*
-> 
->   Luis
+Hi
 
-Hi Luis,
+Stanislaw Gruszka wrote:
+> +static void rt2800_init_rfcsr_305x_soc(struct rt2x00_dev *rt2x00dev)
+> +{
+> +	rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+> +	rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+> +	rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+> +	rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
+> +	rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+> +	rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+> +	rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+> +	rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
 
-Yes, I posted this patch, along with 2 others last week for Greg to
-pull. I believe these are too late for the 3.8 merge window. Perhaps,
-Greg can comment. Here's a link to the post:
 
-http://marc.info/?l=linux-kernel&m=135474417810281&w=2
+Wouldn't a table based initialization be more readable and also shorter?
 
-Thanks,
+Dave
 
--Jason
