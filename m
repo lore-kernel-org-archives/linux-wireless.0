@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42949 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752027Ab2LAOjb (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40078 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753528Ab2LLQZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Dec 2012 09:39:31 -0500
-Date: Sat, 1 Dec 2012 06:39:26 -0800
-From: Tejun Heo <tj@kernel.org>
-To: Anders Kaseorg <andersk@MIT.EDU>
-Cc: Herbert Xu <herbert@gondor.hengli.com.au>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Wireless regression in workqueue: use mod_delayed_work() instead
- of __cancel + queue
-Message-ID: <20121201143926.GB2685@htj.dyndns.org> (sfid-20121201_153950_109226_1EF86E47)
-References: <alpine.DEB.2.00.1211280953350.26602@dr-wily.mit.edu>
- <alpine.DEB.2.00.1211281016320.26602@dr-wily.mit.edu>
- <20121130211435.GJ3873@htj.dyndns.org>
- <20121130225619.GD6021@htj.dyndns.org>
- <alpine.DEB.2.00.1211302234410.25064@dr-wily.mit.edu>
+	Wed, 12 Dec 2012 11:25:10 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v10 0/3] wireless: Driver for 60GHz card wil6210
+Date: Wed, 12 Dec 2012 18:25:06 +0200
+Message-ID: <2874864.eaglUHDoO0@lx-vladimir> (sfid-20121212_172515_422980_0D889CF9)
+In-Reply-To: <1355328278.9708.15.camel@jlt4.sipsolutions.net>
+References: <1355327278-12965-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1355328278.9708.15.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.1211302234410.25064@dr-wily.mit.edu>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey, Anders.
+On Wednesday, December 12, 2012 05:04:38 PM Johannes Berg wrote:
+> On Wed, 2012-12-12 at 17:47 +0200, Vladimir Kondratiev wrote:
+> 
+> > Vladimir Kondratiev (3):
+> >   wireless: Driver for 60GHz card wil6210
+> 
+> Since you didn't want to hear my objections on the iftype usage ...
+> maybe you should not Cc me any more.
+> 
+> johannes
+> 
 
-On Fri, Nov 30, 2012 at 11:15:50PM -0500, Anders Kaseorg wrote:
-> Yes.  I tested that both directly on top of the bad commit, and on 
-> v3.7-rc7, and it fixes the bug in both cases.
+Johannes,
 
-Can you please test this one too?  Thanks!
+I do hear it, and I agree with it!!!
 
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 042d221..94964d1 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -1364,6 +1364,11 @@ static void __queue_delayed_work(int cpu, struct workqueue_struct *wq,
- 	BUG_ON(timer_pending(timer));
- 	BUG_ON(!list_empty(&work->entry));
- 
-+	if (!delay) {
-+		__queue_work(cpu, wq, &dwork->work);
-+		return;
-+	}
-+
- 	timer_stats_timer_set_start_info(&dwork->timer);
- 
- 	/*
-@@ -1417,9 +1422,6 @@ bool queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
- 	bool ret = false;
- 	unsigned long flags;
- 
--	if (!delay)
--		return queue_work_on(cpu, wq, &dwork->work);
--
- 	/* read the comment in __queue_work() */
- 	local_irq_save(flags);
- 
+I will work to support this new
+iftype, PBSS, properly. I just don't have enough data to do it right
+now. Thus, I want initial driver for the 1-st ever 60g card to be merged;
+this will serve as test bed for the next framework modifications.
+
+I recall, you was asking me why do I pushing to do 60g related
+infrastructure changes when no one driver exists. I want to address this
+and then return to the infrastructure.
+
+Let's have at least something working as 1-st step. Now, I need to assemble
+all pieces of the puzzle:
+
+- initial infrastructure (done)
+- minimal driver (these patches)
+- tools (wpa_supplicant partially done, other patches sent; iw - partially done)
+- regulatory - patches submitted.
+
+Then, when minimal support will be in place, I can handle new features.
+
+Hope it explain why I want to merge minimal driver 1-st.
+
+Thanks, Vladimir
