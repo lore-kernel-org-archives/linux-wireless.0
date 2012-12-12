@@ -1,65 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31206 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932079Ab2LFMZl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 07:25:41 -0500
-Date: Thu, 6 Dec 2012 13:25:29 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:50244 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076Ab2LLWTi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2012 17:19:38 -0500
+Message-ID: <1355350801.9708.24.camel@jlt4.sipsolutions.net> (sfid-20121212_231941_234616_99AEDE06)
+Subject: Re: [RFC 2/6] wifi: Don't spam logs with 'Found new beacon'
+ messages.
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Ben Greear <greearb@candelatech.com>
-Cc: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
-Message-ID: <20121206122528.GG2502@redhat.com> (sfid-20121206_132545_618137_5ACA193A)
-References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
- <87a9ts4c1q.fsf@nemi.mork.no>
- <50BF8C18.9060504@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <50BF8C18.9060504@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 12 Dec 2012 23:20:01 +0100
+In-Reply-To: <1355350635.9708.23.camel@jlt4.sipsolutions.net> (sfid-20121212_231701_848012_2B205976)
+References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
+	 <1355349295-30960-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20121212_225535_981449_212B81FE) <1355350115.9708.21.camel@jlt4.sipsolutions.net>
+	 <50C901FC.3040306@candelatech.com>
+	 <1355350635.9708.23.camel@jlt4.sipsolutions.net>
+	 (sfid-20121212_231701_848012_2B205976)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 05, 2012 at 10:02:00AM -0800, Ben Greear wrote:
-> On 12/05/2012 09:57 AM, Bjørn Mork wrote:
-> >Ben Greear <greearb@candelatech.com> writes:
-> >
-> >>net/core/dev.c now assigns a default ethtool ops, so
-> >>the net/wireless/core.c check for existing ops is always true
-> >>so the wireless ops would never be assigned.
-> >>
-> >>Simply remove the check for existing ops and always assign
-> >>the wireless ops.
-> >>
-> >>Signed-off-by: Ben Greear <greearb@candelatech.com>
-> >>---
-> >>  net/wireless/core.c |    3 +--
-> >>  1 files changed, 1 insertions(+), 2 deletions(-)
-> >>
-> >>diff --git a/net/wireless/core.c b/net/wireless/core.c
-> >>index 4e6fe62..6309699 100644
-> >>--- a/net/wireless/core.c
-> >>+++ b/net/wireless/core.c
-> >>@@ -863,8 +863,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
-> >>  		/* allow mac80211 to determine the timeout */
-> >>  		wdev->ps_timeout = -1;
-> >>
-> >>-		if (!dev->ethtool_ops)
-> >>-			dev->ethtool_ops = &cfg80211_ethtool_ops;
-> >>+		dev->ethtool_ops = &cfg80211_ethtool_ops;
-> >>
-> >>  		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
-> >>  		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
-> >
-> >
-> >Won't this break drivers which for some reason have their own
-> >ethtool_ops?
+On Wed, 2012-12-12 at 23:17 +0100, Johannes Berg wrote:
+> On Wed, 2012-12-12 at 14:15 -0800, Ben Greear wrote:
+> > On 12/12/2012 02:08 PM, Johannes Berg wrote:
+> > > On Wed, 2012-12-12 at 13:54 -0800, greearb@candelatech.com wrote:
+> > >> From: Ben Greear <greearb@candelatech.com>
+> > >>
+> > >> We saw logs fill with this (at very high speeds):
+> > >>
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > >>
+> > >> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> > >> ---
+> > >>   net/wireless/reg.c |   11 ++++++-----
+> > >>   1 files changed, 6 insertions(+), 5 deletions(-)
+> > >>
+> > >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> > >> index 6e53089..8aa7867 100644
+> > >> --- a/net/wireless/reg.c
+> > >> +++ b/net/wireless/reg.c
+> > >> @@ -2067,11 +2067,12 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
+> > >>   	if (!reg_beacon)
+> > >>   		return -ENOMEM;
+> > >>
+> > >> -	REG_DBG_PRINT("Found new beacon on "
+> > >
+> > > Why not just disable the config option for it if you don't care?
+> > 
+> > I don't mind seeing it, just don't want thousands of them in my logs
+> > in a very short amount of time.  Maybe I was just hitting some
+> > other bug, and there is no valid reason for this to ever spam?
 > 
-> I guess it will.  What a mess.
-> 
-> Maybe we could assign individual method pointers in the ethtool_ops
-> struct if it already exists (and if those pointers are NULL)?
+> Quite likely, since I think it's supposed to happen only once for each
+> channel unless you reset the regulatory (but that would cause more
+> messages? I think?)
 
-We should probably assing ethtool_ops before wireless core will
-call alloc_netdev.
+Ah, no, I get it. It is related to your many interfaces :-)
 
-Stanislaw
+The thing is that when a beacon comes in it schedules a work item, and
+that work item only sets the beacon_found to true. Now since you have a
+ton of interfaces each beacon can be processed many times, and you get a
+ton of work items, and ... ouch.
+
+Not sure how the locking works here so can't really suggest a fix right
+now.
+
+johannes
+
