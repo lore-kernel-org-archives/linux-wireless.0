@@ -1,64 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:43307 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752579Ab2LER51 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49592 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754295Ab2LLSef (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 12:57:27 -0500
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
-References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
-Date: Wed, 05 Dec 2012 18:57:21 +0100
-In-Reply-To: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
-	(greearb-my8's message of "Wed, 5 Dec 2012 09:39:52 -0800")
-Message-ID: <87a9ts4c1q.fsf@nemi.mork.no> (sfid-20121205_185731_303939_703F3387)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Wed, 12 Dec 2012 13:34:35 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] nl80211: advertise HT/VHT channel limitations
+Date: Wed, 12 Dec 2012 19:34:56 +0100
+Message-Id: <1355337296-5815-3-git-send-email-johannes@sipsolutions.net> (sfid-20121212_193439_469171_0C662D8F)
+In-Reply-To: <1355337296-5815-1-git-send-email-johannes@sipsolutions.net>
+References: <1355337296-5815-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> net/core/dev.c now assigns a default ethtool ops, so
-> the net/wireless/core.c check for existing ops is always true
-> so the wireless ops would never be assigned.
->
-> Simply remove the check for existing ops and always assign
-> the wireless ops.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  net/wireless/core.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
->
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index 4e6fe62..6309699 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -863,8 +863,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
->  		/* allow mac80211 to determine the timeout */
->  		wdev->ps_timeout = -1;
->  
-> -		if (!dev->ethtool_ops)
-> -			dev->ethtool_ops = &cfg80211_ethtool_ops;
-> +		dev->ethtool_ops = &cfg80211_ethtool_ops;
->  
->  		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
->  		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+When drivers or regulatory have limitations on
+40, 80 or 160 MHz channels, advertise these to
+userspace via nl80211. Also add a new feature
+flag to let userspace know this is supported.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/uapi/linux/nl80211.h | 17 +++++++++++++++++
+ net/wireless/core.c          |  3 ++-
+ net/wireless/nl80211.c       | 12 ++++++++++++
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-Won't this break drivers which for some reason have their own
-ethtool_ops?
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 331cfb3..4abe593 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1971,6 +1971,16 @@ enum nl80211_band_attr {
+  *	on this channel in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in mBm
+  *	(100 * dBm).
++ * @NL80211_FREQUENCY_ATTR_NO_HT40_MINUS: HT40- isn't possible with this
++ *	channel as the control channel
++ * @NL80211_FREQUENCY_ATTR_NO_HT40_PLUS: HT40+ isn't possible with this
++ *	channel as the control channel
++ * @NL80211_FREQUENCY_ATTR_NO_80MHZ: any 80 MHz channel using this channel
++ *	as the primary or any of the secondary channels isn't possible,
++ *	this includes 80+80 channels
++ * @NL80211_FREQUENCY_ATTR_NO_160MHZ: any 160 MHz (but not 80+80) channel
++ *	using this channel as the primary or any of the secondary channels
++ *	isn't possible
+  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
+  *	currently defined
+  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
+@@ -1983,6 +1993,10 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_NO_IBSS,
+ 	NL80211_FREQUENCY_ATTR_RADAR,
+ 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
++	NL80211_FREQUENCY_ATTR_NO_HT40_MINUS,
++	NL80211_FREQUENCY_ATTR_NO_HT40_PLUS,
++	NL80211_FREQUENCY_ATTR_NO_80MHZ,
++	NL80211_FREQUENCY_ATTR_NO_160MHZ,
+ 
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+@@ -3157,6 +3171,8 @@ enum nl80211_ap_sme_features {
+  *	Note that even for drivers that support this, the default is to add
+  *	stations in authenticated/associated state, so to add unauthenticated
+  *	stations the authenticated/associated bits have to be set in the mask.
++ * @NL80211_FEATURE_ADVERTISE_CHAN_LIMITS: cfg80211 advertises channel limits
++ *	(HT40, VHT 80/160 MHz) if this flag is set
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3173,6 +3189,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_P2P_GO_CTWIN			= 1 << 11,
+ 	NL80211_FEATURE_P2P_GO_OPPPS			= 1 << 12,
+ 	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 13,
++	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
+ };
+ 
+ /**
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 747dd93..b18f642 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -365,7 +365,8 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ 	rdev->wiphy.rts_threshold = (u32) -1;
+ 	rdev->wiphy.coverage_class = 0;
+ 
+-	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH;
++	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH |
++			       NL80211_FEATURE_ADVERTISE_CHAN_LIMITS;
+ 
+ 	return &rdev->wiphy;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c545d6e..d5691d9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -532,6 +532,18 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 	if ((chan->flags & IEEE80211_CHAN_RADAR) &&
+ 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
+ 		goto nla_put_failure;
++	if ((chan->flags & IEEE80211_CHAN_NO_HT40MINUS) &&
++	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_MINUS))
++		goto nla_put_failure;
++	if ((chan->flags & IEEE80211_CHAN_NO_HT40PLUS) &&
++	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_PLUS))
++		goto nla_put_failure;
++	if ((chan->flags & IEEE80211_CHAN_NO_80MHZ) &&
++	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_80MHZ))
++		goto nla_put_failure;
++	if ((chan->flags & IEEE80211_CHAN_NO_160MHZ) &&
++	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_160MHZ))
++		goto nla_put_failure;
+ 
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+ 			DBM_TO_MBM(chan->max_power)))
+-- 
+1.8.0
 
-bjorn@nemi:/usr/local/src/git/linux$ git grep -- "->ethtool_ops" drivers/net/wireless/
-drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c:    ndev->ethtool_ops = &brcmf_ethtool_ops;
-drivers/net/wireless/ipw2x00/ipw2100.c: dev->ethtool_ops = &ipw2100_ethtool_ops;
-drivers/net/wireless/ipw2x00/ipw2200.c: net_dev->ethtool_ops = &ipw_ethtool_ops;
-drivers/net/wireless/libertas/main.c:   dev->ethtool_ops = &lbs_ethtool_ops;
-drivers/net/wireless/libertas/mesh.c:   mesh_dev->ethtool_ops = &lbs_ethtool_ops;
-drivers/net/wireless/prism54/islpci_dev.c:      ndev->ethtool_ops = &islpci_ethtool_ops;
-
-
-
-Bjørn
