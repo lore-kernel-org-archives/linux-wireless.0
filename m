@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f49.google.com ([209.85.210.49]:64143 "EHLO
-	mail-da0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212Ab2LZXRf (ORCPT
+Received: from ns1.pc-advies.be ([83.149.101.17]:36137 "EHLO
+	spo001.leaseweb.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755059Ab2LLVh7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 18:17:35 -0500
-Message-ID: <50DB858A.9070905@lwfinger.net> (sfid-20121227_001744_055392_E6C3BCD8)
-Date: Wed, 26 Dec 2012 17:17:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH V3.8 5/5] rtlwifi: rtl8723ae: Fix warning for unchecked
- pci_map_single() call
-References: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>  <1356559691-5048-6-git-send-email-Larry.Finger@lwfinger.net> <1356563631.30414.3.camel@edumazet-glaptop>
-In-Reply-To: <1356563631.30414.3.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 12 Dec 2012 16:37:59 -0500
+Date: Wed, 12 Dec 2012 22:37:53 +0100
+From: Wim Van Sebroeck <wim@iguana.be>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	linux-mips@linux-mips.org
+Subject: Re: [PATCH v2 00/15] watchdog/bcm47xx/bcma/ssb: add support for SoCs with PMU
+Message-ID: <20121212213753.GC31853@spo001.leaseweb.com> (sfid-20121212_223803_219062_2E2BC448)
+References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de> <CACna6rwmfpNFAFZpvbt8GHzofC6UoyBC4oKF5rL=9xN5_=gYXw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACna6rwmfpNFAFZpvbt8GHzofC6UoyBC4oKF5rL=9xN5_=gYXw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/26/2012 05:13 PM, Eric Dumazet wrote:
-> On Wed, 2012-12-26 at 16:08 -0600, Larry Finger wrote:
->> Kernel 3.8 implements checking of all DMA mapping calls and issues
->> a WARNING for the first it finds that is not checked.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>   drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |   12 ++++++++++++
->>   1 file changed, 12 insertions(+)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
->> index 87331d8..7ddd517 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
->> @@ -387,6 +387,12 @@ void rtl8723ae_tx_fill_desc(struct ieee80211_hw *hw,
->>   					    PCI_DMA_TODEVICE);
->>   	u8 bw_40 = 0;
->>
->> +	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
->> +		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
->> +			 "DMA mapping error");
->> +		return;
->> +	}
->> +	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
->>   	if (mac->opmode == NL80211_IFTYPE_STATION) {
->>   		bw_40 = mac->bw_40;
->>   	} else if (mac->opmode == NL80211_IFTYPE_AP ||
->> @@ -542,6 +548,12 @@ void rtl8723ae_tx_fill_cmddesc(struct ieee80211_hw *hw,
->>   					    PCI_DMA_TODEVICE);
->>   	__le16 fc = hdr->frame_control;
->>
->> +	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
->> +		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
->> +			 "DMA mapping error");
->> +		return;
->> +	}
->> +	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
->>   	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
->>
->>   	if (firstseg)
->
-> This seems wrong...
->
-> CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE) doesnt need to be done
-> twice, does it ?
+Hi,
 
-No it does not. That is a patching error
+> > @Wim Could you give me an ACK on the "watchdog: bcm47xx_wdt.c:" patches
+> >      so that John could take them trough the wireless-testing tree, or
+> >      provide me with some feedback on what I should change.
+> 
+> Hi Wim,
+> 
+> Have you got a chance to look at that patches?
+> 
+> I've some additional bcma changes I wish to submit on top of this :)
 
-Thanks,
+Sorry, but family health issues have distracted me from kernel stuff the last months.
+Things are better now.
 
-Larry
+Concerning these patches: The correct decision has been taken to split this allready up
+into the bcma/ssb patches and do the watchdog patches later on. I will check the watchdog
+part and react on it as soon as possible.
 
+Kind regards,
+Wim.
 
