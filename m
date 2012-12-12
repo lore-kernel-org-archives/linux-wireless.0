@@ -1,75 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:39048 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754762Ab2LKUgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 15:36:15 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/3] qca-swiss-army-knife: add 'ath9k_get_p_columns' helper
-Date: Tue, 11 Dec 2012 21:36:11 +0100
-Message-Id: <1355258172-6938-2-git-send-email-juhosg@openwrt.org> (sfid-20121211_213621_063234_6BAB903F)
-In-Reply-To: <1355258172-6938-1-git-send-email-juhosg@openwrt.org>
-References: <1355258172-6938-1-git-send-email-juhosg@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46522 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754030Ab2LLBRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Dec 2012 20:17:49 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: john@phrozen.org, ralf@linux-mips.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] bcma: add gpio_to_irq again
+Date: Wed, 12 Dec 2012 02:17:10 +0100
+Message-Id: <1355275031-19297-1-git-send-email-hauke@hauke-m.de> (sfid-20121212_021755_346854_1D22B161)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The number of the columns to be printed is computed in
-two different function. Add a helper function for that
-and remove the duplicated code.
+The old code had support for gpio_to_irq, but the new code did not
+provide this function, but returned -ENXIO all the time. This patch
+adds the missing function.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- tools/initvals/initvals.c |   20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/bcma/driver_gpio.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index 4413e04..94f5aba 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -443,17 +443,26 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
- 	return val;
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index 9a6f585..212fda6 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -73,6 +73,16 @@ static void bcma_gpio_free(struct gpio_chip *chip, unsigned gpio)
+ 	bcma_chipco_gpio_pullup(cc, 1 << gpio, 0);
  }
  
--static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
--				   u32 columns, bool onedim, bool wide)
-+static u32 ath9k_get_p_columns(u32 columns, bool wide)
- {
- 	u32 p_columns;
--	u32 col, row;
- 
- 	if (wide)
- 		p_columns = columns;
- 	else
- 		p_columns = columns > 5 ? 5 : columns;
- 
-+	return p_columns;
++static int bcma_gpio_to_irq(struct gpio_chip *chip, unsigned gpio)
++{
++	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
++
++	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
++		return bcma_core_mips_irq(cc->core) + 2;
++	else
++		return -EINVAL;
 +}
 +
-+static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
-+				   u32 columns, bool onedim, bool wide)
-+{
-+	u32 p_columns;
-+	u32 col, row;
-+
-+	p_columns = ath9k_get_p_columns(columns, wide);
-+
- 	if (onedim)
- 		printf("static const u32 %s[] = {\n", name);
- 	else
-@@ -508,10 +517,7 @@ static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns,
- 	u32 p_columns;
- 	u32 col, row;
- 
--	if (wide)
--		p_columns = columns;
--	else
--		p_columns = columns > 5 ? 5 : columns;
-+	p_columns = ath9k_get_p_columns(columns, wide);
- 
- 	SHA1_Init(&ctx);
- 	for (row = 0; row < rows; row++) {
+ int bcma_gpio_init(struct bcma_drv_cc *cc)
+ {
+ 	struct gpio_chip *chip = &cc->gpio;
+@@ -85,6 +95,7 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+ 	chip->set		= bcma_gpio_set_value;
+ 	chip->direction_input	= bcma_gpio_direction_input;
+ 	chip->direction_output	= bcma_gpio_direction_output;
++	chip->to_irq		= bcma_gpio_to_irq;
+ 	chip->ngpio		= 16;
+ 	/* There is just one SoC in one device and its GPIO addresses should be
+ 	 * deterministic to address them more easily. The other buses could get
 -- 
-1.7.10
+1.7.10.4
 
