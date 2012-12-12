@@ -1,337 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44570 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731Ab2LDOsk (ORCPT
+Received: from db3ehsobe002.messaging.microsoft.com ([213.199.154.140]:43644
+	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750989Ab2LLKNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 09:48:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 07/18] regulatory: use proper enum for return values
-Date: Tue,  4 Dec 2012 15:48:49 +0100
-Message-Id: <1354632540-21207-8-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154904_206564_1112667F)
-In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
-References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 12 Dec 2012 05:13:38 -0500
+From: Alberto Garau <Alberto.Garau@inpeco.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
+	Adriano Melis <ADRIANO.MELIS@inpeco.com>,
+	Luca Fresi <luca.fresi@bithiatec.com>
+Subject: RE: wl12xx over spi with no scan results
+Date: Wed, 12 Dec 2012 10:13:00 +0000
+Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C360984@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121212_111342_462742_AFBDB94F)
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355218436.3738.122.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355223079.3738.128.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355229286.3738.137.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360949@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+ <1355301922.21129.8.camel@cumari.coelho.fi>
+In-Reply-To: <1355301922.21129.8.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Instead of treating special error codes specially,
-like -EALREADY, introduce a real enum for all the
-needed possibilities and use it.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 133 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 69 insertions(+), 64 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index be6b00c..dc0ddca 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -65,6 +65,13 @@
- #define REG_DBG_PRINT(args...)
- #endif
- 
-+enum reg_request_treatment {
-+	REG_REQ_OK,
-+	REG_REQ_IGNORE,
-+	REG_REQ_INTERSECT,
-+	REG_REQ_ALREADY_SET,
-+};
-+
- static struct regulatory_request core_request_world = {
- 	.initiator = NL80211_REGDOM_SET_BY_CORE,
- 	.alpha2[0] = '0',
-@@ -934,16 +941,17 @@ bool reg_last_request_cell_base(void)
- 
- #ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
- /* Core specific check */
--static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
-+static enum reg_request_treatment
-+reg_ignore_cell_hint(struct regulatory_request *pending_request)
- {
- 	if (!reg_num_devs_support_basehint)
--		return -EOPNOTSUPP;
-+		return REG_REQ_IGNORE;
- 
- 	if (reg_request_cell_base(last_request) &&
- 	    !regdom_changes(pending_request->alpha2))
--		return -EALREADY;
-+		return REG_REQ_ALREADY_SET;
- 
--	return 0;
-+	return REG_REQ_OK;
- }
- 
- /* Device specific check */
-@@ -954,7 +962,7 @@ static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
- #else
- static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
- {
--	return -EOPNOTSUPP;
-+	return REG_REQ_IGNORE;
- }
- 
- static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
-@@ -1317,15 +1325,10 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
- 
--/*
-- * Return value which can be used by ignore_request() to indicate
-- * it has been determined we should intersect two regulatory domains
-- */
--#define REG_INTERSECT	1
--
- /* This has the logic which determines when a new request
-  * should be ignored. */
--static int ignore_request(struct wiphy *wiphy,
-+static enum reg_request_treatment
-+get_reg_request_treatment(struct wiphy *wiphy,
- 			  struct regulatory_request *pending_request)
- {
- 	struct wiphy *last_wiphy = NULL;
-@@ -1334,17 +1337,17 @@ static int ignore_request(struct wiphy *wiphy,
- 
- 	/* All initial requests are respected */
- 	if (!last_request)
--		return 0;
-+		return REG_REQ_OK;
- 
- 	switch (pending_request->initiator) {
- 	case NL80211_REGDOM_SET_BY_CORE:
--		return 0;
-+		return REG_REQ_OK;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 		if (reg_request_cell_base(last_request)) {
- 			/* Trust a Cell base station over the AP's country IE */
- 			if (regdom_changes(pending_request->alpha2))
--				return -EOPNOTSUPP;
--			return -EALREADY;
-+				return REG_REQ_IGNORE;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 
- 		last_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
-@@ -1361,23 +1364,23 @@ static int ignore_request(struct wiphy *wiphy,
- 				 * to be correct. Reject second one for now.
- 				 */
- 				if (regdom_changes(pending_request->alpha2))
--					return -EOPNOTSUPP;
--				return -EALREADY;
-+					return REG_REQ_IGNORE;
-+				return REG_REQ_ALREADY_SET;
- 			}
- 			/*
- 			 * Two consecutive Country IE hints on the same wiphy.
- 			 * This should be picked up early by the driver/stack
- 			 */
- 			if (WARN_ON(regdom_changes(pending_request->alpha2)))
--				return 0;
--			return -EALREADY;
-+				return REG_REQ_OK;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 		return 0;
- 	case NL80211_REGDOM_SET_BY_DRIVER:
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_CORE) {
- 			if (regdom_changes(pending_request->alpha2))
--				return 0;
--			return -EALREADY;
-+				return REG_REQ_OK;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 
- 		/*
-@@ -1387,25 +1390,25 @@ static int ignore_request(struct wiphy *wiphy,
- 		 */
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 		    !regdom_changes(pending_request->alpha2))
--			return -EALREADY;
-+			return REG_REQ_ALREADY_SET;
- 
--		return REG_INTERSECT;
-+		return REG_REQ_INTERSECT;
- 	case NL80211_REGDOM_SET_BY_USER:
- 		if (reg_request_cell_base(pending_request))
- 			return reg_ignore_cell_hint(pending_request);
- 
- 		if (reg_request_cell_base(last_request))
--			return -EOPNOTSUPP;
-+			return REG_REQ_IGNORE;
- 
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
--			return REG_INTERSECT;
-+			return REG_REQ_INTERSECT;
- 		/*
- 		 * If the user knows better the user should set the regdom
- 		 * to their country before the IE is picked up
- 		 */
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_USER &&
- 		    last_request->intersect)
--			return -EOPNOTSUPP;
-+			return REG_REQ_IGNORE;
- 		/*
- 		 * Process user requests only after previous user/driver/core
- 		 * requests have been processed
-@@ -1414,15 +1417,15 @@ static int ignore_request(struct wiphy *wiphy,
- 		     last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
- 		     last_request->initiator == NL80211_REGDOM_SET_BY_USER) &&
- 		    regdom_changes(last_request->alpha2))
--			return -EAGAIN;
-+			return REG_REQ_IGNORE;
- 
- 		if (!regdom_changes(pending_request->alpha2))
--			return -EALREADY;
-+			return REG_REQ_ALREADY_SET;
- 
--		return 0;
-+		return REG_REQ_OK;
- 	}
- 
--	return -EINVAL;
-+	return REG_REQ_IGNORE;
- }
- 
- static void reg_set_request_processed(void)
-@@ -1452,23 +1455,24 @@ static void reg_set_request_processed(void)
-  * The Wireless subsystem can use this function to hint to the wireless core
-  * what it believes should be the current regulatory domain.
-  *
-- * Returns zero if all went fine, %-EALREADY if a regulatory domain had
-- * already been set or other standard error codes.
-+ * Returns one of the different reg request treatment values.
-  *
-  * Caller must hold &cfg80211_mutex and &reg_mutex
-  */
--static int __regulatory_hint(struct wiphy *wiphy,
--			     struct regulatory_request *pending_request)
-+static enum reg_request_treatment
-+__regulatory_hint(struct wiphy *wiphy,
-+		  struct regulatory_request *pending_request)
- {
- 	const struct ieee80211_regdomain *regd;
- 	bool intersect = false;
--	int r = 0;
-+	enum reg_request_treatment treatment;
- 
- 	assert_cfg80211_lock();
- 
--	r = ignore_request(wiphy, pending_request);
-+	treatment = get_reg_request_treatment(wiphy, pending_request);
- 
--	if (r == REG_INTERSECT) {
-+	switch (treatment) {
-+	case REG_REQ_INTERSECT:
- 		if (pending_request->initiator ==
- 		    NL80211_REGDOM_SET_BY_DRIVER) {
- 			regd = reg_copy_regd(cfg80211_regdomain);
-@@ -1479,26 +1483,28 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 			wiphy->regd = regd;
- 		}
- 		intersect = true;
--	} else if (r) {
-+		break;
-+	case REG_REQ_OK:
-+		break;
-+	default:
- 		/*
- 		 * If the regulatory domain being requested by the
- 		 * driver has already been set just copy it to the
- 		 * wiphy
- 		 */
--		if (r == -EALREADY &&
--		    pending_request->initiator ==
--		    NL80211_REGDOM_SET_BY_DRIVER) {
-+		if (treatment == REG_REQ_ALREADY_SET &&
-+		    pending_request->initiator == NL80211_REGDOM_SET_BY_DRIVER) {
- 			regd = reg_copy_regd(cfg80211_regdomain);
- 			if (IS_ERR(regd)) {
- 				kfree(pending_request);
--				return PTR_ERR(regd);
-+				return REG_REQ_IGNORE;
- 			}
--			r = -EALREADY;
-+			treatment = REG_REQ_ALREADY_SET;
- 			wiphy->regd = regd;
- 			goto new_request;
- 		}
- 		kfree(pending_request);
--		return r;
-+		return treatment;
- 	}
- 
- new_request:
-@@ -1515,28 +1521,29 @@ new_request:
- 		user_alpha2[1] = last_request->alpha2[1];
- 	}
- 
--	/* When r == REG_INTERSECT we do need to call CRDA */
--	if (r < 0) {
-+	/* When r == REG_REQ_INTERSECT we do need to call CRDA */
-+	if (treatment != REG_REQ_OK && treatment != REG_REQ_INTERSECT) {
- 		/*
- 		 * Since CRDA will not be called in this case as we already
- 		 * have applied the requested regulatory domain before we just
- 		 * inform userspace we have processed the request
- 		 */
--		if (r == -EALREADY) {
-+		if (treatment == REG_REQ_ALREADY_SET) {
- 			nl80211_send_reg_change_event(last_request);
- 			reg_set_request_processed();
- 		}
--		return r;
-+		return treatment;
- 	}
- 
--	return call_crda(last_request->alpha2);
-+	if (call_crda(last_request->alpha2))
-+		return REG_REQ_IGNORE;
-+	return REG_REQ_OK;
- }
- 
- /* This processes *all* regulatory hints */
- static void reg_process_hint(struct regulatory_request *reg_request,
- 			     enum nl80211_reg_initiator reg_initiator)
- {
--	int r = 0;
- 	struct wiphy *wiphy = NULL;
- 
- 	BUG_ON(!reg_request->alpha2);
-@@ -1549,20 +1556,18 @@ static void reg_process_hint(struct regulatory_request *reg_request,
- 		return;
- 	}
- 
--	r = __regulatory_hint(wiphy, reg_request);
--	/* This is required so that the orig_* parameters are saved */
--	if (r == -EALREADY && wiphy &&
--	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
--		wiphy_update_regulatory(wiphy, reg_initiator);
--		return;
-+	switch (__regulatory_hint(wiphy, reg_request)) {
-+	case REG_REQ_ALREADY_SET:
-+		/* This is required so that the orig_* parameters are saved */
-+		if (wiphy && wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-+			wiphy_update_regulatory(wiphy, reg_initiator);
-+		break;
-+	default:
-+		if (reg_initiator == NL80211_REGDOM_SET_BY_USER)
-+			schedule_delayed_work(&reg_timeout,
-+					      msecs_to_jiffies(3142));
-+		break;
- 	}
--
--	/*
--	 * We only time out user hints, given that they should be the only
--	 * source of bogus requests.
--	 */
--	if (r != -EALREADY && reg_initiator == NL80211_REGDOM_SET_BY_USER)
--		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
- }
- 
- /*
--- 
-1.8.0
+VGhhbmtzIEx1Y2EsDQoNCndlIHRyaWVkIHdpdGggRkFMTElOR19FREdFIGZvciB0aGUgaW50ZXJy
+dXB0IGJ1dCB0aGUgZHJpdmVyIGdvdCBzdHVja2VkIHNvIEkgaGFkIHRvIHB1dCBhZ2FpbiBSSVNJ
+TkdfRURHRS4NCg0KV2Ugc3VjY2Vzc2Z1bGx5IGNyb3NzIGNvbXBpbGVkIGl3IGJ1dCBhbHNvIHdp
+dGggdGhhdCB0b29sIHdlIGFsd2F5cyBzZWUgb25seSBvbiBFU1NJRCBmcm9tIG9uZSBzcGVjaWZp
+YyBBUA0KDQp3aGlsZSB0aGUgb3RoZXJzIEVTU0lEIGZyb20gdGhlIHNlY29uZCBBUCBhcmUgYXZh
+aWxhYmxlIG9ubHkgc29tZXRpbWUuIA0KDQpUaGF0J3MgdmVyeSBzdHJhbmdlLg0KDQpEbyB5b3Ug
+dGhpbmsgd2UgYXJlIGZhY2luZyBjYWxpYnJhdGlvbiBwcm9ibGVtcyA/DQoNCkluIG91ciBDTUQw
+IHdlIGhhdmUNCg0KYml0IDEzID0gMSBJQiBpbnRlcnJ1cHQgaXMgYWN0aXZlIGhpZ2gNCg0KYml0
+IDE0ID0gMSBJQiBpbnRlcnJ1cHQgaXMgb3BlbiBkcmFpbiANCg0KRG8geW91IHRoaW5rIGlzIHJp
+Z2h0IGFjY29yZGluZyBkbyBSSVNJTkdfRURHRSBpbnRlcnJ1cHQgPw0KDQpUaGFua3MNCg0KQWxi
+ZXJ0bw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogTHVjaWFubyBDb2VsaG8g
+W21haWx0bzpjb2VsaG9AdGkuY29tXSANClNlbnQ6IG1lcmNvbGVkw6wgMTIgZGljZW1icmUgMjAx
+MiAwOTo0NQ0KVG86IEFsYmVydG8gR2FyYXUNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
+bC5vcmc7IElkbyBZYXJpdjsgQXJpayBOZW10c292OyBBZHJpYW5vIE1lbGlzOyBMdWNhIEZyZXNp
+DQpTdWJqZWN0OiBSZTogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8gc2NhbiByZXN1bHRzDQoNCk9u
+IFdlZCwgMjAxMi0xMi0xMiBhdCAwODoxOCArMDAwMCwgQWxiZXJ0byBHYXJhdSB3cm90ZToNCj4g
+SGkgTHVjYSwNCj4gDQo+IHllcyB0aGF0J3MgYSBncmVhdCBuZXdzIGZvciB1cy4NCj4gDQo+IFll
+c3RlcmRheSBhZnRlcm5vb24gd2l0aCAiaXdsaXN0IHdsYW4wIHNjYW4iIChub3QgIml3IiB5ZXQp
+IEkgc2F3IGFsc28gDQo+IG90aGVyIHR3byBuZXR3b3JrcyBlc3NpZHMgKGZvciBhIHNtYWxsIGFt
+b3VudCBvZiBzZWNvbmRzIG9ubHkpIHdoaWNoIEknbSBpbnRlcmVzdGVkIGluLg0KPiANCj4gVGhp
+cyBzZWVtcyB0byBzYXkgdGhhdCB0aGUgbmV0d29ya3MgSSB3b3VsZCBsaWtlIHRvIGNvbm5lY3Qg
+dG8gYXJlIGF2YWlsYWJsZSB0byB0aGUgd2wxMjcxLiANCj4gDQo+IEluIHRoZSBtZWFudGltZSB0
+aGF0IEknbSBjcm9zcyBidWlsZGluZyAiaXciLCBJIHdvdWxkIGxpa2UgdG8gY29ubmVjdCB0byBh
+biB1bnByb3RlY3RlZCBuZXR3b3JrIGNhbGxlZCAiSW5wZWNvLXRlc3QiKG5vIFdFUCwgbm8gV1BB
+KS4NCj4gDQo+IFdvdWxkIHlvdSBiZSBzbyBraW5kIHRvIHN1Z2dlc3QgbWUgdGhlIHNlcmllIG9m
+IGNvbW1hbmRzIEkgaGF2ZSB0byANCj4gbGF1bmNoIHRvIGNvbm5lY3QgdG8gdGhpcyBuZXR3b3Jr
+ID8gSSB3b3VsZCBsaWtlIHRoZW4gdG8gcGluZyBvdXRzaWRlIG9mIGNvdXJzZS4NCg0KaWZjb25m
+aWcgd2xhbjAgdXANCml3IHdsYW4wIGNvbm5lY3QgLXcgSW5wZWNvLXRlc3QNCg0KVGhlbiwgdG8g
+cGluZywgeW91IG5lZWQgdG8gc2V0IHlvdXIgSVAgYWRkcmVzcywgZWl0aGVyIHdpdGggYSBESENQ
+IGNsaWVudCBvciBzdGF0aWNhbGx5Lg0KDQo+IEkgaGF2ZSBnb3QgYWxzbyBvbmUgdGVjaG5pY2Fs
+IHF1ZXN0aW9uLiBJbiB0aGUgc291cmNlIGNvZGUgb2YgdGhlIA0KPiBkcml2ZXIgSSBoYXZlIGZv
+dW5kIGZvciB3bDEyNzFfc3BpLmMgaW4ga2VybmVsDQo+IDIuNi4zNyBJIGhhdmUgaW50ZXJydXB0
+cyBzZXQgaW4gUklTSU5HX0VER0Ugd2hpbGUgdGhlIGRhdGFzaGVldCAoaW4gYXR0YWNobWVudDog
+NC4xLjE4IGF0IHBhZyAxOSkgdGFsa3MgYWJvdXQgRkFMTElOR19FREdFLg0KPiBXaGljaCBpcyB0
+aGUgcmlnaHQgc2V0dGluZyB0byBiZSBhcHBsaWVkIGFuZCB3aHkgPw0KDQpXZSBjdXJyZW50bHkg
+dXNlIGxldmVsIGFuZCBoaWdoIHdpdGggb25lIHNob3QgYXMgZGVmYXVsdC4gIFRoZXJlIGFyZSBz
+b21lIHBsYXRmb3JtcyB0aGF0IHVzZSByaXNpbmcsIHRob3VnaCwgc28gd2UgaGF2ZSBhIHBsYXRm
+b3JtX3F1aXJrIHZhbHVlIHRoYXQgZW5hYmxlcyB1cyB0byB0b2dnbGUgdGhhdC4NCg0KWW91IGNv
+dWxkIGJlIG1pc3Npbmcgc29tZSBpbnRlcnJ1cHRzIGJ5IHVzaW5nIHJpc2luZyBhbmQgdGhpcyBj
+b3VsZCBiZSB0aGUgcmVhc29uIHdoeSB5b3UgZG9uJ3Qgc2VlIHRoZSBTU0lEcyBjb25zaXN0ZW50
+bHkuDQoNCi0tDQpMdWNhLg0KDQoNCg==
 
