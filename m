@@ -1,61 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:6929 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878Ab2LLLIH (ORCPT
+Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:46239
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751650Ab2LLMS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 06:08:07 -0500
-Message-ID: <50C8657F.60606@qca.qualcomm.com> (sfid-20121212_120812_094437_9AEEB844)
-Date: Wed, 12 Dec 2012 16:37:43 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+	Wed, 12 Dec 2012 07:18:28 -0500
+From: Alberto Garau <Alberto.Garau@inpeco.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
+	Adriano Melis <ADRIANO.MELIS@inpeco.com>,
+	Luca Fresi <luca.fresi@bithiatec.com>
+Subject: RE: wl12xx over spi with no scan results
+Date: Wed, 12 Dec 2012 12:18:18 +0000
+Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C3609D7@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121212_131831_111654_40F68DAA)
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355218436.3738.122.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355223079.3738.128.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355229286.3738.137.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360949@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355301922.21129.8.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360984@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+ <1355307404.21129.15.camel@cumari.coelho.fi>
+In-Reply-To: <1355307404.21129.15.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Antonio Quartulli <ordex@autistici.org>
-CC: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] cfg80211/nl80211: Enable drivers to implement mac
- address based ACL
-References: <1354880763-12309-1-git-send-email-vthiagar@qca.qualcomm.com> <1354880763-12309-2-git-send-email-vthiagar@qca.qualcomm.com> <20121212101415.GH3458@ritirata.org>
-In-Reply-To: <20121212101415.GH3458@ritirata.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+SGkgTHVjYSwNCg0KSSdtIHRyeWluZyB0byBjYWxpYnJhdGUgbXkgZGV2aWNlIGFzIHN1Z2dlc3Rl
+ZCwgZm9sbG93aW5nIHRoZSBndWlkZSBmb3VuZCBhdDogaHR0cDovL3Byb2Nlc3NvcnMud2lraS50
+aS5jb20vaW5kZXgucGhwL09NQVBfV2lyZWxlc3NfQ29ubmVjdGl2aXR5X0NhbGlicmF0aW9uX1By
+b2NjZXNzX05MQ1ANCg0KSW4gcGFydGljdWxhciBJJ20gdHJ5aW5nIHRvIHJlcGxpY2F0ZSB0aGUg
+ZXhhbXBsZSBhdCB0aGUgZW5kIG9mIHRoZSBkb2N1bWVudCBhbmQgYXQgc3RlcCAzIG9mIHRoZSBl
+eGFtcGxlIEknbSBvYnRhaW5pbmc6DQoNCnJvb3RAKG5vbmUpOn4vdGktdXRpbHMjIC4vY2FsaWJy
+YXRvciBwbHQgY2FsaWJyYXRlDQp3bDEyNzE6IHBvd2VyIHVwDQpjaGlwX2lkIHJlYWQgZnJvbSBt
+ZW1vcnk6IDA0MDMwMTExDQp3bDEyNzFfZmV0Y2hfZmlybXdhcmUgLSBmZXRjaGluZyBmaXJtd2Fy
+ZSB3bDEyNzEtZncuYmluDQp3bDEyNzFfZmV0Y2hfbnZzIC0gZmV0Y2hpbmcgZmlybXdhcmUgd2wx
+MjcxLW52cy5iaW4NCmVuYWJsZV9pbnRlcnJ1cHRzX3dsMTI3MQ0Kd2wxMjcxOiBmaXJtd2FyZSBi
+b290ZWQgaW4gUExUIG1vZGUgKFJldiA2LjEuMC41MC4zNTApDQpGYWlsIHRvIGNhbGlicmF0d2wx
+MjcxOiBwb3dlciBkb3duDQplIGl0aCByYWRpbyBzdGF0ZGlzYWJsZV9pbnRlcnJ1cHRzX3dsMTI3
+MQ0KdXMgKC04MCkNCnJvb3RAKG5vbmUpOn4vdGktdXRpbHMjDQoNCg0KQW55IGlkZWEgYWJvdXQg
+d2h5IG15IGNhbGlicmF0aW9uIHByb2Nlc3MgaXMgZmFpbGluZyA/IEkgd2FzIGFibGUgdG8gY29t
+cGxldGUgdGhlIGZpcnN0IHN0ZXBzIGNyZWF0aW5nIHRoZSBudnMgZnJvbSBpbmkgZmlsZXMgDQpC
+dXQgSSdtIGZhaWxpbmcgaW4gImNhbGlicmF0b3IgcGx0IGNhbGlicmF0ZSIuIA0KDQpUaGFua3Mg
+aW4gYWR2YW5jZSANCg0KQWxiZXJ0bw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
+bTogTHVjaWFubyBDb2VsaG8gW21haWx0bzpjb2VsaG9AdGkuY29tXSANClNlbnQ6IG1lcmNvbGVk
+w6wgMTIgZGljZW1icmUgMjAxMiAxMToxNw0KVG86IEFsYmVydG8gR2FyYXUNCkNjOiBsaW51eC13
+aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IElkbyBZYXJpdjsgQXJpayBOZW10c292OyBBZHJpYW5v
+IE1lbGlzOyBMdWNhIEZyZXNpDQpTdWJqZWN0OiBSZTogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8g
+c2NhbiByZXN1bHRzDQoNCk9uIFdlZCwgMjAxMi0xMi0xMiBhdCAxMDoxMyArMDAwMCwgQWxiZXJ0
+byBHYXJhdSB3cm90ZToNCj4gVGhhbmtzIEx1Y2EsDQo+IA0KPiB3ZSB0cmllZCB3aXRoIEZBTExJ
+TkdfRURHRSBmb3IgdGhlIGludGVycnVwdCBidXQgdGhlIGRyaXZlciBnb3Qgc3R1Y2tlZCBzbyBJ
+IGhhZCB0byBwdXQgYWdhaW4gUklTSU5HX0VER0UuDQo+IA0KPiBXZSBzdWNjZXNzZnVsbHkgY3Jv
+c3MgY29tcGlsZWQgaXcgYnV0IGFsc28gd2l0aCB0aGF0IHRvb2wgd2UgYWx3YXlzIA0KPiBzZWUg
+b25seSBvbiBFU1NJRCBmcm9tIG9uZSBzcGVjaWZpYyBBUA0KDQpJIGRpZG4ndCBleHBlY3QgdGhl
+IHNjYW4gdG8gaW1wcm92ZSB3aXRoIGl3LCBidXQgYXQgbGVhc3Qgbm93IHlvdSdyZSB1c2luZyB0
+aGUgcmlnaHQgdG9vbC4gOikNCg0KDQo+IHdoaWxlIHRoZSBvdGhlcnMgRVNTSUQgZnJvbSB0aGUg
+c2Vjb25kIEFQIGFyZSBhdmFpbGFibGUgb25seSBzb21ldGltZS4gDQo+IA0KPiBUaGF0J3MgdmVy
+eSBzdHJhbmdlLg0KPiANCj4gRG8geW91IHRoaW5rIHdlIGFyZSBmYWNpbmcgY2FsaWJyYXRpb24g
+cHJvYmxlbXMgPw0KDQpZZXMsIEkgZ3Vlc3MgY2FsaWJyYXRpb24gaXMgdGhlIG1vc3QgbGlrZWx5
+IGNhdXNlIG5vdy4NCg0KDQo+IEluIG91ciBDTUQwIHdlIGhhdmUNCj4gDQo+IGJpdCAxMyA9IDEg
+SUIgaW50ZXJydXB0IGlzIGFjdGl2ZSBoaWdoDQo+IA0KPiBiaXQgMTQgPSAxIElCIGludGVycnVw
+dCBpcyBvcGVuIGRyYWluDQo+IA0KPiBEbyB5b3UgdGhpbmsgaXMgcmlnaHQgYWNjb3JkaW5nIGRv
+IFJJU0lOR19FREdFIGludGVycnVwdCA/DQoNCkkgdGhpbmsgdGhpcyBpcyBva2F5LiAgSSBkb24n
+dCB0aGluayB0aGUgcHJvYmxlbSBpcyB0aGUgaW50ZXJydXB0IG5vdy4NCg0KWW91IHNob3VsZCB0
+cnkgdG8gY2FsaWJyYXRlIHlvdXIgZGV2aWNlIGFuZCBnZW5lcmF0ZSBhIHByb3BlciBOVlMgZmls
+ZS4NCg0KLS0NCkx1Y2EuDQoNCg0K
 
-
-On Wednesday 12 December 2012 03:44 PM, Antonio Quartulli wrote:
-> Hello Vasanthakumar,
->
-> On Fri, Dec 07, 2012 at 05:16:03PM +0530, Vasanthakumar Thiagarajan wrote:
->> This patch enables drivers to implement mac address based
->> access control in AP/P2P GO mode. There is a new flag in
->> nl80211_ap_sme_features (NL80211_AP_SME_FEATURE_MAC_ACL)
->> for drivers to advertise this capability. There are two acl
->> policies, white and black list under which an acl list can
->> be configured in the driver. Driver has to advertise the
->> maximum number of mac address entries in acl list through
->> max_acl_mac_addrs of wiphy.
->>
->> Driver can enable its ACL either with the initial list passed
->> through NL80211_CMD_START_AP or a list passed through
->> NL80211_CMD_SET_MAC_ACL. ACL information passed in these
->> commands is an array of acl configuration containing acl
->> policy and list of mac address. With the acl policy as
->> NL80211_ACL_POLICY_ACCEPT, driver will accept Auth request
->> from any client matching any one of the mac addresses in the acl list.
->> When acl policy is NL80211_ACL_POLICY_DENY, driver will reject any
->> Auth request from the clients having their mac address listed in the
->> acl list. Driver must make sure to clear it's acl list when doing
->> stop ap.
->>
->
-> I'm curious about this feature: at the moment mac ACL is implemented and working
-> in hostapd. What would the advantage of implementing this in the driver?
-> I don't think this can be offloaded on the device, so the advantage is that this
-> would move the ACL mechanism from the user to the kernel-space? Or am I missing
-> something else?
-
-This is mainly for the devices which have the AP SME in fw like ath6kl.
-So that the auth request will be dropped after checking the acl instead
-instead of doing it in hostapd where it could be done only after
-the connection with the station goes through successfully.
-
-Vasanth
