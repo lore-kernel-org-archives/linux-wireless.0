@@ -1,165 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47405 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753222Ab2LERsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 12:48:24 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, wim@iguana.be
-Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 11/11] ssb: register watchdog driver
-Date: Wed,  5 Dec 2012 18:46:08 +0100
-Message-Id: <1354729568-19993-12-git-send-email-hauke@hauke-m.de> (sfid-20121205_184827_198370_4E312814)
-In-Reply-To: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
-References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:15435 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754245Ab2LLPsX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2012 10:48:23 -0500
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Joe Perches <joe@perches.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v10 2/3] wil6210: Local compensation for dynamic hexdump
+Date: Wed, 12 Dec 2012 17:47:57 +0200
+Message-ID: <1355327278-12965-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20121212_164832_044617_0E7E3A0F)
+In-Reply-To: <1355327278-12965-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1355327278-12965-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register the watchdog driver to the system if it is a SoC. Using the
-watchdog on a non SoC device, like a PCI card, will make the PCI
-card die when the timeout expired, but starting it again is not
-supported by ssb.
+Unless patch for dynamic hexdump merged into mainstream kernel,
+need to provide replacement for the dynamic hexdump functionality
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+This patch do not hurt compilation with kernel that have
+'dynamic hexdump' patch merged - check performed by
+#if !defined(print_hex_dump_debug)
+
+To REMOVE when dynamic hexdump merged!!
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/ssb/embedded.c    |   35 +++++++++++++++++++++++++++++++++++
- drivers/ssb/main.c        |    8 ++++++++
- drivers/ssb/ssb_private.h |   10 ++++++++++
- include/linux/ssb/ssb.h   |    2 ++
- 4 files changed, 55 insertions(+)
+ drivers/net/wireless/ath/wil6210/dbg_hexdump.h |   32 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h     |    2 ++
+ 2 files changed, 34 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wil6210/dbg_hexdump.h
 
-diff --git a/drivers/ssb/embedded.c b/drivers/ssb/embedded.c
-index 9ef124f..bb18d76 100644
---- a/drivers/ssb/embedded.c
-+++ b/drivers/ssb/embedded.c
-@@ -4,11 +4,13 @@
-  *
-  * Copyright 2005-2008, Broadcom Corporation
-  * Copyright 2006-2008, Michael Buesch <m@bues.ch>
-+ * Copyright 2012, Hauke Mehrtens <hauke@hauke-m.de>
-  *
-  * Licensed under the GNU/GPL. See COPYING for details.
-  */
- 
- #include <linux/export.h>
-+#include <linux/platform_device.h>
- #include <linux/ssb/ssb.h>
- #include <linux/ssb/ssb_embedded.h>
- #include <linux/ssb/ssb_driver_pci.h>
-@@ -32,6 +34,39 @@ int ssb_watchdog_timer_set(struct ssb_bus *bus, u32 ticks)
- }
- EXPORT_SYMBOL(ssb_watchdog_timer_set);
- 
-+int ssb_watchdog_register(struct ssb_bus *bus)
-+{
-+	struct bcm47xx_wdt wdt = {};
-+	struct platform_device *pdev;
+diff --git a/drivers/net/wireless/ath/wil6210/dbg_hexdump.h b/drivers/net/wireless/ath/wil6210/dbg_hexdump.h
+new file mode 100644
+index 0000000..7144eed
+--- /dev/null
++++ b/drivers/net/wireless/ath/wil6210/dbg_hexdump.h
+@@ -0,0 +1,32 @@
++#ifndef DBG_HEXDUMP_H_
++#define DBG_HEXDUMP_H_
 +
-+	if (ssb_chipco_available(&bus->chipco)) {
-+		wdt.driver_data = &bus->chipco;
-+		wdt.timer_set = ssb_chipco_watchdog_timer_set_wdt;
-+		wdt.timer_set_ms = ssb_chipco_watchdog_timer_set_ms;
-+		wdt.max_timer_ms = bus->chipco.max_timer_ms;
-+	} else if (ssb_extif_available(&bus->extif)) {
-+		wdt.driver_data = &bus->extif;
-+		wdt.timer_set = ssb_extif_watchdog_timer_set_wdt;
-+		wdt.timer_set_ms = ssb_extif_watchdog_timer_set_ms;
-+		wdt.max_timer_ms = SSB_EXTIF_WATCHDOG_MAX_TIMER_MS;
-+	} else {
-+		return -ENODEV;
-+	}
++#if !defined(print_hex_dump_debug)
++#if defined(CONFIG_DYNAMIC_DEBUG)
++#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)		\
++do {								\
++	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor,		\
++		__builtin_constant_p(prefix_str) ? prefix_str : "hexdump");\
++	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
++		print_hex_dump(KERN_DEBUG, prefix_str,		\
++			       prefix_type, rowsize, groupsize,	\
++			       buf, len, ascii);		\
++} while (0)
 +
-+	pdev = platform_device_register_data(NULL, "bcm47xx-wdt",
-+					     bus->busnumber, &wdt,
-+					     sizeof(wdt));
-+	if (IS_ERR(pdev)) {
-+		ssb_dprintk(KERN_INFO PFX
-+			    "can not register watchdog device, err: %li\n",
-+			    PTR_ERR(pdev));
-+		return PTR_ERR(pdev);
-+	}
++#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,	\
++			     groupsize, buf, len, ascii)	\
++	dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)
 +
-+	bus->watchdog = pdev;
-+	return 0;
-+}
++#define print_hex_dump_bytes(prefix_str, prefix_type, buf, len)	\
++	dynamic_hex_dump(prefix_str, prefix_type, 16, 1, buf, len, true)
++#else /* defined(CONFIG_DYNAMIC_DEBUG) */
++#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,		\
++			     groupsize, buf, len, ascii)		\
++	print_hex_dump(KERN_DEBUG, prefix_str, prefix_type, rowsize,	\
++		       groupsize, buf, len, ascii)
++#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
++#endif /* !defined(print_hex_dump_debug) */
 +
- u32 ssb_gpio_in(struct ssb_bus *bus, u32 mask)
- {
- 	unsigned long flags;
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index df0f145..58c7da2 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -13,6 +13,7 @@
- #include <linux/delay.h>
- #include <linux/io.h>
- #include <linux/module.h>
-+#include <linux/platform_device.h>
- #include <linux/ssb/ssb.h>
- #include <linux/ssb/ssb_regs.h>
- #include <linux/ssb/ssb_driver_gige.h>
-@@ -433,6 +434,11 @@ static void ssb_devices_unregister(struct ssb_bus *bus)
- 		if (sdev->dev)
- 			device_unregister(sdev->dev);
- 	}
-+
-+#ifdef CONFIG_SSB_EMBEDDED
-+	if (bus->bustype == SSB_BUSTYPE_SSB)
-+		platform_device_unregister(bus->watchdog);
-+#endif
- }
++#endif /* DBG_HEXDUMP_H_ */
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index ef5a17f..dd6ccc5 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -21,6 +21,8 @@
+ #include <linux/wireless.h>
+ #include <net/cfg80211.h>
  
- void ssb_bus_unregister(struct ssb_bus *bus)
-@@ -561,6 +567,8 @@ static int __devinit ssb_attach_queued_buses(void)
- 		if (err)
- 			goto error;
- 		ssb_pcicore_init(&bus->pcicore);
-+		if (bus->bustype == SSB_BUSTYPE_SSB)
-+			ssb_watchdog_register(bus);
- 		ssb_bus_may_powerdown(bus);
- 
- 		err = ssb_devices_register(bus);
-diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
-index 50ea028..8942db1 100644
---- a/drivers/ssb/ssb_private.h
-+++ b/drivers/ssb/ssb_private.h
-@@ -232,4 +232,14 @@ static inline u32 ssb_extif_watchdog_timer_set_ms(struct bcm47xx_wdt *wdt,
- 	return 0;
- }
- #endif
++#include "dbg_hexdump.h"
 +
-+#ifdef CONFIG_SSB_EMBEDDED
-+extern int ssb_watchdog_register(struct ssb_bus *bus);
-+#else /* CONFIG_SSB_EMBEDDED */
-+static inline int ssb_watchdog_register(struct ssb_bus *bus)
-+{
-+	return 0;
-+}
-+#endif /* CONFIG_SSB_EMBEDDED */
-+
- #endif /* LINUX_SSB_PRIVATE_H_ */
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index bb674c0..1f64e3f 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -8,6 +8,7 @@
- #include <linux/pci.h>
- #include <linux/mod_devicetable.h>
- #include <linux/dma-mapping.h>
-+#include <linux/platform_device.h>
+ #define WIL_NAME "wil6210"
  
- #include <linux/ssb/ssb_regs.h>
- 
-@@ -432,6 +433,7 @@ struct ssb_bus {
- #ifdef CONFIG_SSB_EMBEDDED
- 	/* Lock for GPIO register access. */
- 	spinlock_t gpio_lock;
-+	struct platform_device *watchdog;
- #endif /* EMBEDDED */
- 
- 	/* Internal-only stuff follows. Do not touch. */
+ /**
 -- 
 1.7.10.4
 
