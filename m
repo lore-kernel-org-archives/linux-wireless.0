@@ -1,37 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:52113 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757083Ab2LMU3A (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:35142 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997Ab2LLKtF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 15:29:00 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1815582pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 12:28:59 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net, greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFT 0/3] cfg80211: beacon hint improvements
-Date: Thu, 13 Dec 2012 12:28:51 -0800
-Message-Id: <1355430534-7881-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20121213_213028_083091_F4BBB13F)
+	Wed, 12 Dec 2012 05:49:05 -0500
+Received: by mail-wg0-f46.google.com with SMTP id dr13so211441wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2012 02:49:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1355309167.9708.0.camel@jlt4.sipsolutions.net>
+References: <1355308099-18193-1-git-send-email-machen@suse.com>
+	<1355309167.9708.0.camel@jlt4.sipsolutions.net>
+Date: Wed, 12 Dec 2012 02:49:03 -0800
+Message-ID: <CAJ-VmokUOyOMrh_d14O__J1VL2woDiCsbk96KeA3stqsLhz20g@mail.gmail.com> (sfid-20121212_114913_577175_9F9F6850)
+Subject: Re: [PATCH] mac80211: modify max_nullfunc parameter
+From: Adrian Chadd <adrian@freebsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Chen, Chien-Chia" <machen@suse.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Well, first question is figuring out why that's occuring. It's not
+being sent at some really ridiculously high rate, is it?
 
-Just a few improvements for beacon hint processing due to
-scheduling considerations and discovered by Ben with a lot of
-stations. For details see:
 
-http://article.gmane.org/gmane.linux.kernel.wireless.general/101482
-
-Luis R. Rodriguez (3):
-  cfg80211: do not process beacon hints if one is already queued
-  cfg80211: move reg_is_world_roaming()
-  cfg80211: move world roaming check for beacon hints
-
- net/wireless/reg.c |   48 ++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 34 insertions(+), 14 deletions(-)
-
--- 
-1.7.10.4
-
+Adrian
