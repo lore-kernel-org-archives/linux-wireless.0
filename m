@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45814 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754415Ab2LKToV (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37695 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753920Ab2LLSbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 14:44:21 -0500
-Message-ID: <1355255084.9819.12.camel@jlt4.sipsolutions.net> (sfid-20121211_204424_633539_836664E4)
-Subject: Re: [PATCH 2/2] mac80211: fix AP_VLAN channel context handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 11 Dec 2012 20:44:44 +0100
-In-Reply-To: <1355254666.9819.11.camel@jlt4.sipsolutions.net> (sfid-20121211_203729_024742_AB210C1B)
-References: <1355162256-34131-1-git-send-email-nbd@openwrt.org>
-	 <1355162256-34131-2-git-send-email-nbd@openwrt.org>
-	 <1355254666.9819.11.camel@jlt4.sipsolutions.net>
-	 (sfid-20121211_203729_024742_AB210C1B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 12 Dec 2012 13:31:52 -0500
+Date: Wed, 12 Dec 2012 13:19:05 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: Steev Klimaszewski <steev@genesi-usa.com>,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
+Message-ID: <20121212181905.GA1885@tuxdriver.com> (sfid-20121212_193157_149509_159B471D)
+References: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+ <CAMG6FYjYMqf9C15Bid3hAfzTcB=gEXq8RWRcM9n+HNtvckgVZQ@mail.gmail.com>
+ <CAFED-jk84vKMRr_NDThMqhZrnXt6ddhViztitB_=M_nKbC6c8Q@mail.gmail.com>
+ <CA+Bgp3N2gUDoey-cXV+4sN0q+2Jm7+rPcu776FMUWxaR4F0qwg@mail.gmail.com>
+ <20120706201839.GE1879@tuxdriver.com>
+ <20121211232311.GA9080@shaftnet.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121211232311.GA9080@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-11 at 20:37 +0100, Johannes Berg wrote:
-> I still don't like the lock-free stuff, I'll apply the patch below
-> instead.
+On Tue, Dec 11, 2012 at 06:23:11PM -0500, Solomon Peachy wrote:
 
-Well, modulo the bugs:
+> > So anyway, it seems like a repost of the current version (i.e. with
+> > Bob's fixes, etc) is in order?
+> 
+> I'll have to go back and see if any of those fixes are still relevant.
+> 
+> Anyway, let me know how I should proceed from here..
 
+It looks like others are interacting with you on this, and you
+are getting good feedback.  I have no problem with you being the
+maintainer for this driver -- just get it into shape and post it.
+As Kalle suggested, posting it in pieces for review is usually a
+good idea.  A final merge patch could be posted as one single patch,
+or in many cases I just combine them into a single patch myself at
+the final merge.
 
-> +	conf = rcu_dereference_protected(ap->vif.chanctx_conf,
-> +					 lockdep_is_held(&local->chanctx_mtx));
-> +	if (WARN_ON(!conf))
-> +		goto unlock;
+Hth!
 
-get rid of this
-
-
-> -		else
-> -			netif_carrier_off(dev);
-> +		} else {
-> +			netif_carrier_on(dev);
-
-and don't mess up this
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
