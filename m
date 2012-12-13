@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:35530 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947Ab2LWMri (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35539 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755774Ab2LMSaS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 07:47:38 -0500
-Date: Sun, 23 Dec 2012 07:47:35 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Bartosz Markowski <markowski.bartosz@gmail.com>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/17] cw1200: Mini-AP implementation
-Message-ID: <20121223124734.GB29607@shaftnet.org> (sfid-20121223_134746_405341_2ECE7CA0)
-References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
- <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
- <50D61117.8020009@gmail.com>
- <CAM8CFPgJu5CR9tU_mMw1_0yDUEj-dLk2G+6W91W1-H4LMa+BUw@mail.gmail.com>
+	Thu, 13 Dec 2012 13:30:18 -0500
+Message-ID: <50CA1EB6.9030903@candelatech.com> (sfid-20121213_193022_391865_9123F59F)
+Date: Thu, 13 Dec 2012 10:30:14 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="eAbsdosE1cNLO4uF"
-In-Reply-To: <CAM8CFPgJu5CR9tU_mMw1_0yDUEj-dLk2G+6W91W1-H4LMa+BUw@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Add a new work-queue for destructing stations?
+References: <50CA1470.4030107@candelatech.com>   (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>  <50CA1C44.5030300@candelatech.com> <1355423047.9463.9.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1355423047.9463.9.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/13/2012 10:24 AM, Johannes Berg wrote:
+> On Thu, 2012-12-13 at 10:19 -0800, Ben Greear wrote:
+>
+>>> I don't think that's easy, but you're welcome to try. The
+>>> free_sta_work() function references the sdata so it absolutely must run
+>>> at this point.
+>
+>> So, cancel_work_sync(&sdata->work) would appear to remove
+>> all pending sdata->work items from the work-queue.  As long as
+>> there are no other different work items that reference
+>> sdata (and maybe there are..I haven't looked at all of them),
+>> then we should be safe to execute the free_sta_work()
+>> on a different work-queue safely, I think....
+>
+> Sorry, I don't get it. free_sta_work() *itself* has to be executed
+> before the sdata is destroyed. cancel_work_sync(&sdata->work) has
+> nothing to do with free_sta_work.
 
---eAbsdosE1cNLO4uF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+My concern is this:
 
-On Sat, Dec 22, 2012 at 09:41:26PM +0100, Bartosz Markowski wrote:
-> Depends on air condition a single NULL packet can be confirmed even after
-> BSS loss evt what leads to connection_loss_work cancellation. We queued f=
-ew
-> NULL frames (5 if I good remember and fired them to confim BSS loss to ma=
-ke
-> sure AP is really gone).
+If I add a different work queue (called destructor-workqueue, perhaps)
+for free_sta_work(), then it only helps
+if I can not block on flushing the current 'big' work-queue.  But, if
+there are items on the big work-queue that reference sdata, then
+that could easily execute after free_sta_work(), and I'm guessing
+that would be very bad.
 
-I've noticed the LMAC spits out BSS_LOST events all the time, almost=20
-alwas followed immediately with BSS_REGAINED events.
+So, near where we currently call cancel_work_sync(&sdata->work), I
+think we'd also need to cancel things like the sta->ampdu_mlme.work,
+and probably others as well.
 
-Is there something that the LMAC is doing that causes it to miss 20 (!)=20
-beacons in a row?  Otherwise it speaks rather poorly about the LMAC's=20
-internal timekeeping.  :)
+Then, when we're sure there are no more references to sdata on the
+main-work-queue, it would be safe to flush the destructor-workqueue
+(which would have the fre_sta_work() on it).
 
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
-Quidquid latine dictum sit, altum viditur.
+Maybe?
 
---eAbsdosE1cNLO4uF
-Content-Type: application/pgp-signature
+Thanks,
+Ben
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
 
-iD8DBQFQ1v1mPuLgii2759ARAhBzAKD1j/VdYNZKu42/w8zMLw+ppFaW7wCgqUyD
-IeCAI3n7GqtUs/nv4+PUw58=
-=x+El
------END PGP SIGNATURE-----
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
---eAbsdosE1cNLO4uF--
