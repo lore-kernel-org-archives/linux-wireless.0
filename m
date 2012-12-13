@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:59258 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762Ab2LWTKl (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59357 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756295Ab2LMSj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 14:10:41 -0500
-Message-ID: <50D7572E.8060908@lwfinger.net> (sfid-20121223_201057_507075_6BBE6C1F)
-Date: Sun, 23 Dec 2012 13:10:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 13 Dec 2012 13:39:27 -0500
+Message-ID: <50CA20D4.90707@candelatech.com> (sfid-20121213_193931_481111_63D0F5B2)
+Date: Thu, 13 Dec 2012 10:39:16 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Mike Galbraith <bitbucket@online.de>
-CC: Norbert Preining <preining@logic.at>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: dire state of rtl driver in 3.7
-References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at> <1356241795.5620.47.camel@marge.simpson.net>
-In-Reply-To: <1356241795.5620.47.camel@marge.simpson.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Add a new work-queue for destructing stations?
+References: <50CA1470.4030107@candelatech.com>    (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>   <50CA1C44.5030300@candelatech.com>  <1355423047.9463.9.camel@jlt4.sipsolutions.net>  <50CA1EB6.9030903@candelatech.com> <1355423836.9463.14.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1355423836.9463.14.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/22/2012 11:49 PM, Mike Galbraith wrote:
-> On Sun, 2012-12-23 at 00:09 +0900, Norbert Preining wrote:
+On 12/13/2012 10:37 AM, Johannes Berg wrote:
+> On Thu, 2012-12-13 at 10:30 -0800, Ben Greear wrote:
+>> On 12/13/2012 10:24 AM, Johannes Berg wrote:
+>>> On Thu, 2012-12-13 at 10:19 -0800, Ben Greear wrote:
+>>>
+>>>>> I don't think that's easy, but you're welcome to try. The
+>>>>> free_sta_work() function references the sdata so it absolutely must run
+>>>>> at this point.
+>>>
+>>>> So, cancel_work_sync(&sdata->work) would appear to remove
+>>>> all pending sdata->work items from the work-queue.  As long as
+>>>> there are no other different work items that reference
+>>>> sdata (and maybe there are..I haven't looked at all of them),
+>>>> then we should be safe to execute the free_sta_work()
+>>>> on a different work-queue safely, I think....
+>>>
+>>> Sorry, I don't get it. free_sta_work() *itself* has to be executed
+>>> before the sdata is destroyed. cancel_work_sync(&sdata->work) has
+>>> nothing to do with free_sta_work.
+>>
+>> My concern is this:
+>>
+>> If I add a different work queue (called destructor-workqueue, perhaps)
+>> for free_sta_work(), then it only helps
+>> if I can not block on flushing the current 'big' work-queue.  But, if
+>> there are items on the big work-queue that reference sdata, then
+>> that could easily execute after free_sta_work(), and I'm guessing
+>> that would be very bad.
+>>
+>> So, near where we currently call cancel_work_sync(&sdata->work), I
+>> think we'd also need to cancel things like the sta->ampdu_mlme.work,
+>> and probably others as well.
+>>
+>> Then, when we're sure there are no more references to sdata on the
+>> main-work-queue, it would be safe to flush the destructor-workqueue
+>> (which would have the fre_sta_work() on it).
+>>
+>> Maybe?
 >
->> Network card is built in into a Lenovo Thinkpad Edge
->
-> Toshiba Satellite.
->> # lspci -nnv -s  03:00.0
->> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB
->> Wireless LAN Controller [10ec:8172] (rev 10)
->>          Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:e020]
->
-> [10ec:8181] here.
->
->> Effects:
->> - either does not associate at all with the AP
->> - or the kernel believes it is associated and packages ping to the router
->>    get stuck for up to 50+ seconds!!!
->> - the kernel believes everything is fine but actually nothing gets out
->>    (Destination unreachable)
->> - wild ping time up-down:
->> 64 bytes from 192.168.0.1: icmp_req=73 ttl=255 time=3.05 ms
->> 64 bytes from 192.168.0.1: icmp_req=74 ttl=255 time=6.42 ms
->> 64 bytes from 192.168.0.1: icmp_req=75 ttl=255 time=1.21 ms
->> 64 bytes from 192.168.0.1: icmp_req=76 ttl=255 time=6808 ms
->> 64 bytes from 192.168.0.1: icmp_req=77 ttl=255 time=5800 ms
->> 64 bytes from 192.168.0.1: icmp_req=78 ttl=255 time=4792 ms
->
-> ...
->
-> Looks a lot like my driver experience with older kernels, I had to use
-> the external driver in the rare event that I needed wireless to work.
-> The in tree driver works peachy these days (needed it recently, was
-> pleasantly surprised when it _just worked_, not even a hiccup), so
-> somebody cared, gave at least the 10ec:8181 bits some serious love.
+> Huh, ok, but I don't think you'll find much that doesn't reference an
+> sdata?
 
-Note, the RTL8188CE uses rtl8192ce, while the RTL8191SE uses rtl8192se. They 
-share the underlying plumbing in driver rtlwifi, but the rest is completely 
-different.
+I think you are right...so just need to find all of those work items
+and call cancel_work_sync() on them, just like we are currently cancelling
+the sdata->work....
 
-The reason that rtl8192ce now works with your device is that the so-called B-Cut 
-chip was not supported until recently. The fix required 2 patches. The first was 
-simple enough to be backported to stable; however the second was too invasive 
-for that. Accordingly the second part had to wait for kernel 3.7.
+Thanks,
+Ben
 
-Larry
 
+>
+> johannes
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
