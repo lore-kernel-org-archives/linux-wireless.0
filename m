@@ -1,77 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:49683 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751581Ab2LTDTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 22:19:52 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1TlWg0-0007Uz-Fg
-	for linux-wireless@vger.kernel.org; Thu, 20 Dec 2012 04:20:04 +0100
-Received: from gate-az2.freescale.com ([192.88.158.212])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 04:20:04 +0100
-Received: from cash.q by gate-az2.freescale.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 04:20:04 +0100
-To: linux-wireless@vger.kernel.org
-From: cashq <cash.q@hotmail.com>
-Subject: Re: ath6kl in compat wireless supports AP mode?
-Date: Thu, 20 Dec 2012 03:13:11 +0000 (UTC)
-Message-ID: <loom.20121220T040301-54@post.gmane.org> (sfid-20121220_041956_631649_A5021A8C)
-References: <4F10AA2D.1060000@lenbrook.com>	<4F16AF8D.6070201@qca.qualcomm.com> <20246.46742.295455.729628@gargle.gargle.HOWL> <4F172101.3010207@lenbrook.com> <4F17B712.6020907@qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:35907 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757267Ab2LMU2Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2012 15:28:24 -0500
+Date: Thu, 13 Dec 2012 12:31:45 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ben Greear <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/6] wifi: Don't spam logs with 'Found new beacon'
+ messages.
+Message-ID: <20121213203145.GP15974@pogo> (sfid-20121213_212830_642522_0A5B5A38)
+References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
+ <1355349295-30960-2-git-send-email-greearb@candelatech.com>
+ <1355350115.9708.21.camel@jlt4.sipsolutions.net>
+ <50C901FC.3040306@candelatech.com>
+ <1355350635.9708.23.camel@jlt4.sipsolutions.net>
+ <1355350801.9708.24.camel@jlt4.sipsolutions.net>
+ <1355351067.9708.27.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1355351067.9708.27.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@...> writes:
-
-> 
-> On 01/18/2012 09:44 PM, Jonathan Bagg wrote:
-> 
-> > I'm running....
-> > Compat-wireless 3.1 (ath6kl still in staging) built against kernel 2.6.35.3
-> >      mac80211 as module
-> >      cfg80211 as module
-> > hostapd v2.0-devel (git cloned today)
-> > libnl-2.0
-> > arm, freescale imx51
+On Wed, Dec 12, 2012 at 11:24:27PM +0100, Johannes Berg wrote:
+> On Wed, 2012-12-12 at 23:20 +0100, Johannes Berg wrote:
+> > On Wed, 2012-12-12 at 23:17 +0100, Johannes Berg wrote:
+> > > On Wed, 2012-12-12 at 14:15 -0800, Ben Greear wrote:
+> > > > On 12/12/2012 02:08 PM, Johannes Berg wrote:
+> > > > > On Wed, 2012-12-12 at 13:54 -0800, greearb@candelatech.com wrote:
+> > > > >> From: Ben Greear <greearb@candelatech.com>
+> > > > >>
+> > > > >> We saw logs fill with this (at very high speeds):
+> > > > >>
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >> cfg80211: Found new beacon on frequency: 5745 MHz (Ch 149) on wiphy0
+> > > > >>
+> > > > >> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> > > > >> ---
+> > > > >>   net/wireless/reg.c |   11 ++++++-----
+> > > > >>   1 files changed, 6 insertions(+), 5 deletions(-)
+> > > > >>
+> > > > >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> > > > >> index 6e53089..8aa7867 100644
+> > > > >> --- a/net/wireless/reg.c
+> > > > >> +++ b/net/wireless/reg.c
+> > > > >> @@ -2067,11 +2067,12 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
+> > > > >>   	if (!reg_beacon)
+> > > > >>   		return -ENOMEM;
+> > > > >>
+> > > > >> -	REG_DBG_PRINT("Found new beacon on "
+> > > > >
+> > > > > Why not just disable the config option for it if you don't care?
+> > > > 
+> > > > I don't mind seeing it, just don't want thousands of them in my logs
+> > > > in a very short amount of time.  Maybe I was just hitting some
+> > > > other bug, and there is no valid reason for this to ever spam?
+> > > 
+> > > Quite likely, since I think it's supposed to happen only once for each
+> > > channel unless you reset the regulatory (but that would cause more
+> > > messages? I think?)
 > > 
-> > I tried hostapd v2.0-devel and no go.
-> 
-> If ath6kl is still in staging you have an ancient version and it will
-> not support AP mode. Please try latest wireless-compat or use the latest
-> kernel from ath6kl.git:
-> 
-> git://github.com/kvalo/ath6kl.git
-> 
-> Kalle
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> > Ah, no, I get it. It is related to your many interfaces :-)
+> > 
+> > The thing is that when a beacon comes in it schedules a work item, and
+> > that work item only sets the beacon_found to true. Now since you have a
+> > ton of interfaces each beacon can be processed many times, and you get a
+> > ton of work items, and ... ouch.
 
-Hi Kalle,
+As explained below indeed you should only see this once for one channel
+even if your box has a billion interfaces, but Johannes is right that we
+won't be able to reap benefits of the check that annotates this was an
+already established beacon hint until the work item gets processed and
+since its a scheduled task we can potentially alloc quite a lot of beacon
+hints for the same channel if you have a lot of interfaces.
 
-I've tried ath6kl in compact-wireless-3.6.8-1 built with kernel v3.5.7 on arm 
-for AR6003, as well the driver in kernel v3.5.7. Both of them still failed to 
-work at AP mode with hostapd 0.7.3 complaining "Failed to create interface 
-mon.wlan0: -95 (Operation not supported)". 
+I'll post a patch for this, please test.
 
-Only IBSS(adhoc) mode can work with wpa_supplicant.
+> Or if you're not world roaming.. this is really bad, we alloc all those
+> beacon hint structs just to not do anything with them,
 
-Has anyone successfully had AP mode enabled for ath6kl?
+Indeed, we don't annotate the beacon hint as found if we are not world
+roaming. I'll look to annotate this, patch to follow after the first one.
 
-Is there any official announcement about the capability of ath6kl driver in 
-compact-wireless?
+> I wonder if they even get leaked or added to reg_beacon_list (but that's
+> about the same)
 
-Only thing I found is http://linuxwireless.org/en/users/Drivers. It indicates 
-ath6kl does not support AP mode in linux driver. I'm just not sure whether it 
-covers the capability of the one in compact-wireless.
+We get beacon hints added to the reg_beacon_list if the channel fits
+the area where we allow it given that we allow for future devices to
+pop up and we want them to learn from the exisitng device's information.
+We can certainly change this if we want.
 
-Regards,
-cashq
-
+  Luis
