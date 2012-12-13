@@ -1,108 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:55994 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754744Ab2LSADk (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46157 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932539Ab2LMU3M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2012 19:03:40 -0500
-Received: by mail-ee0-f52.google.com with SMTP id d17so649077eek.25
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Dec 2012 16:03:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1355847743-16659-1-git-send-email-juhosg@openwrt.org>
-References: <1355847743-16659-1-git-send-email-juhosg@openwrt.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 19 Dec 2012 10:58:05 +1100
-Message-ID: <CAGRGNgVC46Qe0vYUYDFdjC+=ww8AL4NdHaS4wjp7w=S90ztKOA@mail.gmail.com> (sfid-20121219_010345_229435_F5EBF1F6)
-Subject: Re: [PATCH 1/2] rt2x00: rt2800pci: verify ioremap return value
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Daniel Golle <dgolle@allnet.de>, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 13 Dec 2012 15:29:12 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so1815723pbc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 12:29:12 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net, greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFT 3/3] cfg80211: move world roaming check for beacon hints
+Date: Thu, 13 Dec 2012 12:28:54 -0800
+Message-Id: <1355430534-7881-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20121213_212939_625045_2E9952C7)
+In-Reply-To: <1355430534-7881-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1355430534-7881-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gabor,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-One minor question:
+We should not add new beacon hints even if the wiphy
+is not world roaming. Without this we were always adding
+a beacon hint if not world roaming for every non world
+roaming wiphy interface.
 
-On Wed, Dec 19, 2012 at 3:22 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
-> An ioremap call is allowed to fail, however
-> the return value of that is not checked in
-> the 'rt2800pci_read_eeprom_soc' function.
->
-> The patch adds the missing check, and makes
-> the function return an int value. The patch
-> also converts the 'rt2800_read_eeprom' and
-> 'rt2800_ops.read_eeprom' functions to return
-> an int value, so the error value can be
-> propagated up to the 'rt2800_validate_eeprom'
-> function.
->
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    5 ++++-
->  drivers/net/wireless/rt2x00/rt2800lib.h |    6 +++---
->  drivers/net/wireless/rt2x00/rt2800pci.c |   17 ++++++++++++-----
->  drivers/net/wireless/rt2x00/rt2800usb.c |    4 +++-
->  4 files changed, 22 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 9224d87..5fc16dd 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -970,14 +974,17 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
->  /*
->   * Device probe functions.
->   */
-> -static void rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
-> +static int rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
->  {
->         if (rt2x00_is_soc(rt2x00dev))
-> -               rt2800pci_read_eeprom_soc(rt2x00dev);
-> -       else if (rt2800pci_efuse_detect(rt2x00dev))
-> +               return rt2800pci_read_eeprom_soc(rt2x00dev);
-> +
-> +       if (rt2800pci_efuse_detect(rt2x00dev))
->                 rt2800pci_read_eeprom_efuse(rt2x00dev);
->         else
->                 rt2800pci_read_eeprom_pci(rt2x00dev);
+Reported-by: Ben Greear <greearb@candelatech.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/reg.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Would it make any sense to have rt2800pci_read_eeprom_efuse() and
-rt2800pci_read_eeprom_pci() return a value, simply for consistency
-with rt2800pci_read_eeprom_soc()?
-
-> +
-> +       return 0;
->  }
->
->  static const struct ieee80211_ops rt2800pci_mac80211_ops = {
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 5c149b5..48de5c9 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -735,13 +735,15 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
->  /*
->   * Device probe functions.
->   */
-> -static void rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
-> +static int rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
->  {
->         if (rt2800_efuse_detect(rt2x00dev))
->                 rt2800_read_eeprom_efuse(rt2x00dev);
->         else
->                 rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
->                                       EEPROM_SIZE);
-
-Same here.
-
-Thanks,
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f649b5e..bdc42d9 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1076,6 +1076,9 @@ static void handle_reg_beacon(struct wiphy *wiphy,
+ 
+ 	chan->beacon_found = true;
+ 
++	if (!reg_is_world_roaming(wiphy))
++		return;
++
+ 	if (wiphy->flags & WIPHY_FLAG_DISABLE_BEACON_HINTS)
+ 		return;
+ 
+@@ -1149,8 +1152,6 @@ static void reg_process_beacons(struct wiphy *wiphy)
+ 	 */
+ 	if (!last_request)
+ 		return;
+-	if (!reg_is_world_roaming(wiphy))
+-		return;
+ 	wiphy_update_beacon_reg(wiphy);
+ }
+ 
 -- 
-Julian Calaby
+1.7.10.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
