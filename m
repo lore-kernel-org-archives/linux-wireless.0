@@ -1,88 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47363 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753035Ab2LERsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 12:48:10 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, wim@iguana.be
-Cc: linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 07/11] ssb: set the PMU watchdog if available
-Date: Wed,  5 Dec 2012 18:46:04 +0100
-Message-Id: <1354729568-19993-8-git-send-email-hauke@hauke-m.de> (sfid-20121205_184814_984484_8E343F9E)
-In-Reply-To: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
-References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:53604 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755922Ab2LMSf5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2012 13:35:57 -0500
+Message-ID: <1355423779.9463.13.camel@jlt4.sipsolutions.net> (sfid-20121213_193601_246727_BCBB9EC4)
+Subject: Re: Add a new work-queue for destructing stations?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Eliad Peller <eliad@wizery.com>
+Date: Thu, 13 Dec 2012 19:36:19 +0100
+In-Reply-To: <1355423271.9463.11.camel@jlt4.sipsolutions.net> (sfid-20121213_192745_389892_F9637F1C)
+References: <50CA1470.4030107@candelatech.com>
+	 (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>
+	 <50CA1C44.5030300@candelatech.com>
+	 <1355423047.9463.9.camel@jlt4.sipsolutions.net>
+	 (sfid-20121213_192352_293430_50F585FD) <1355423271.9463.11.camel@jlt4.sipsolutions.net>
+	 (sfid-20121213_192745_389892_F9637F1C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some ssb based devices have a PMU and the PMU watchdog register should
-be used instead of the register in the chip common part, if the device
-has a PMU. This patch also calculates the maximal number the watchdog
-could be set to.
+On Thu, 2012-12-13 at 19:27 +0100, Johannes Berg wrote:
+> On Thu, 2012-12-13 at 19:24 +0100, Johannes Berg wrote:
+> > On Thu, 2012-12-13 at 10:19 -0800, Ben Greear wrote:
+> > 
+> > > > I don't think that's easy, but you're welcome to try. The
+> > > > free_sta_work() function references the sdata so it absolutely must run
+> > > > at this point.
+> > 
+> > > So, cancel_work_sync(&sdata->work) would appear to remove
+> > > all pending sdata->work items from the work-queue.  As long as
+> > > there are no other different work items that reference
+> > > sdata (and maybe there are..I haven't looked at all of them),
+> > > then we should be safe to execute the free_sta_work()
+> > > on a different work-queue safely, I think....
+> > 
+> > Sorry, I don't get it. free_sta_work() *itself* has to be executed
+> > before the sdata is destroyed. cancel_work_sync(&sdata->work) has
+> > nothing to do with free_sta_work.
+> 
+> In fact, this is already buggy now, and I should probably revert
+> b22cfcfca, because the work item might run after the AP is stopped and
+> then we call into the driver anyway, and on teardown things are probably
+> messed up. I'll poke at it tomorrow.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/driver_chipcommon.c |   38 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 36 insertions(+), 2 deletions(-)
+Oh I know an easy way to fix this: we just add the stations to a
+(per-sdata?) "cleanup" list in the rcu callback and run a single work
+item that cleans up this list. Then we can clean this list in the right
+places (stop_ap, etc.)
 
-diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
-index 603b630..6e080f6 100644
---- a/drivers/ssb/driver_chipcommon.c
-+++ b/drivers/ssb/driver_chipcommon.c
-@@ -288,6 +288,24 @@ static u32 ssb_chipco_alp_clock(struct ssb_chipcommon *cc)
- 	return 20000000;
- }
- 
-+static u32 ssb_chipco_watchdog_get_max_timer(struct ssb_chipcommon *cc)
-+{
-+	u32 nb;
-+
-+	if (cc->capabilities & SSB_CHIPCO_CAP_PMU) {
-+		if (cc->dev->id.revision < 26)
-+			nb = 16;
-+		else
-+			nb = (cc->dev->id.revision >= 37) ? 32 : 24;
-+	} else {
-+		nb = 28;
-+	}
-+	if (nb == 32)
-+		return 0xffffffff;
-+	else
-+		return (1 << nb) - 1;
-+}
-+
- void ssb_chipcommon_init(struct ssb_chipcommon *cc)
- {
- 	if (!cc->dev)
-@@ -405,8 +423,24 @@ void ssb_chipco_timing_init(struct ssb_chipcommon *cc,
- /* Set chip watchdog reset timer to fire in 'ticks' backplane cycles */
- void ssb_chipco_watchdog_timer_set(struct ssb_chipcommon *cc, u32 ticks)
- {
--	/* instant NMI */
--	chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
-+	u32 maxt;
-+	enum ssb_clkmode clkmode;
-+
-+	maxt = ssb_chipco_watchdog_get_max_timer(cc);
-+	if (cc->capabilities & SSB_CHIPCO_CAP_PMU) {
-+		if (ticks == 1)
-+			ticks = 2;
-+		else if (ticks > maxt)
-+			ticks = maxt;
-+		chipco_write32(cc, SSB_CHIPCO_PMU_WATCHDOG, ticks);
-+	} else {
-+		clkmode = ticks ? SSB_CLKMODE_FAST : SSB_CLKMODE_DYNAMIC;
-+		ssb_chipco_set_clockmode(cc, clkmode);
-+		if (ticks > maxt)
-+			ticks = maxt;
-+		/* instant NMI */
-+		chipco_write32(cc, SSB_CHIPCO_WATCHDOG, ticks);
-+	}
- }
- 
- void ssb_chipco_irq_mask(struct ssb_chipcommon *cc, u32 mask, u32 value)
--- 
-1.7.10.4
+johannes
 
