@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f74.google.com ([209.85.213.74]:41419 "EHLO
-	mail-yh0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754250Ab2LEU6W (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38159 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755226Ab2LMSwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 15:58:22 -0500
-Received: by mail-yh0-f74.google.com with SMTP id 10so560893yhl.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2012 12:58:22 -0800 (PST)
-Subject: [PATCH 12/12] iwlwifi: Use standard #defines for PCIe Capability ASPM
-	fields
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date: Wed, 05 Dec 2012 13:58:21 -0700
-Message-ID: <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com> (sfid-20121205_215831_436859_0EDF2BD3)
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 13 Dec 2012 13:52:07 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so1756195pbc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 10:52:07 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [PATCH 0/6] mesh power save - basics
+Date: Thu, 13 Dec 2012 10:51:52 -0800
+Message-Id: <1355424718-2982-1-git-send-email-marco@cozybit.com> (sfid-20121213_195212_845782_24952C8A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the standard #defines rather than creating local definitions for
-PCIe Capability ASPM fields.
+Commits #5 and #6 cover the basic subset of functions, that each mesh node
+must support to communicate in the presence of power saving nodes.
+The current patchset does not implement any actual power savings yet (no
+hardware configuration, no doze state).
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes.berg@intel.com>
-CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>
-CC: linux-wireless@vger.kernel.org
----
- drivers/net/wireless/iwlwifi/pcie/trans.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+Mesh powersave is different from client mode powersave in the sense that
+1) there is not just a singular power mode towards the access point, but a
+   link-specific power mode towards each peer instead
+2) peers also maintain a power mode towards us (the local STA)
+3) each node has to buffer frames towards power saving neighbors
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 5cd06b3..1dfa6be 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -670,8 +670,6 @@ static void iwl_set_pwr_vmain(struct iwl_trans *trans)
- 
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
--#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
--#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
- 
- static void iwl_apm_config(struct iwl_trans *trans)
- {
-@@ -688,8 +686,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
- 	 */
- 
- 	pcie_capability_read_word(trans_pcie->pci_dev, PCI_EXP_LNKCTL, &lctl);
--	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
--				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
-+	if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
- 		/* L1-ASPM enabled; disable(!) L0S */
- 		iwl_set_bit(trans, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
- 		dev_printk(KERN_INFO, trans->dev,
-@@ -700,7 +697,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
- 		dev_printk(KERN_INFO, trans->dev,
- 			   "L1 Disabled; Enabling L0S\n");
- 	}
--	trans->pm_support = !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
-+	trans->pm_support = !(lctl & PCI_EXP_LNKCTL_ASPM_L0S);
- }
- 
- /*
+changes since RFCv3:
+- indentation fixes
+- function name typo msp->mps
+- merged nl80211 and cfg80211 into one commit
+- default value of 2 for DTIM period
+- only check STA local_pm once in nl80211.c
+- concentrate RX handler code in mesh_ps.c
+
+Marco Porsch (6):
+  nl80211: add range checks to mesh parameters
+  mac80211: update mesh peer link counter during userspace peering
+  mac80211: move add_tim to subfunction
+  {cfg,nl,mac}80211: set beacon interval and DTIM period on mesh join
+  {cfg,nl}80211: mesh power mode primitives and userspace access
+  mac80211: mesh power save basics
+
+ include/linux/ieee80211.h     |   17 ++
+ include/net/cfg80211.h        |   25 ++
+ include/uapi/linux/nl80211.h  |   47 +++
+ net/mac80211/Kconfig          |   11 +
+ net/mac80211/Makefile         |    3 +-
+ net/mac80211/cfg.c            |   54 +++-
+ net/mac80211/debug.h          |   10 +
+ net/mac80211/debugfs_netdev.c |    5 +
+ net/mac80211/debugfs_sta.c    |    5 +-
+ net/mac80211/ieee80211_i.h    |    7 +
+ net/mac80211/mesh.c           |   37 ++-
+ net/mac80211/mesh.h           |   35 ++-
+ net/mac80211/mesh_hwmp.c      |    7 +
+ net/mac80211/mesh_pathtbl.c   |    1 +
+ net/mac80211/mesh_plink.c     |   35 ++-
+ net/mac80211/mesh_ps.c        |  640 +++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rx.c             |    7 +
+ net/mac80211/sta_info.c       |   18 +-
+ net/mac80211/sta_info.h       |   17 ++
+ net/mac80211/status.c         |    5 +
+ net/mac80211/tx.c             |   81 ++++--
+ net/mac80211/util.c           |    4 +
+ net/mac80211/wme.c            |   13 +-
+ net/wireless/mesh.c           |    8 +
+ net/wireless/nl80211.c        |  133 ++++++---
+ 25 files changed, 1135 insertions(+), 90 deletions(-)
+ create mode 100644 net/mac80211/mesh_ps.c
+
+-- 
+1.7.9.5
 
