@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42240 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674Ab2LJVvT (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:38375 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756631Ab2LMUtg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 16:51:19 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TiBFu-0002xF-FC
-	for linux-wireless@vger.kernel.org; Mon, 10 Dec 2012 22:51:18 +0100
-Message-ID: <1355176302.8083.18.camel@jlt4.sipsolutions.net> (sfid-20121210_225121_859622_79AA51D2)
-Subject: Re: [PATCH] minstrel: update stats after processing status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 10 Dec 2012 22:51:42 +0100
-In-Reply-To: <1354539400-20470-1-git-send-email-johannes@sipsolutions.net> (sfid-20121203_135621_378787_B39B2CAA)
-References: <1354539400-20470-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121203_135621_378787_B39B2CAA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Dec 2012 15:49:36 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so2186663lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 12:49:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1355424107-31412-1-git-send-email-juhosg@openwrt.org>
+References: <1355424107-31412-1-git-send-email-juhosg@openwrt.org>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 13 Dec 2012 12:49:15 -0800
+Message-ID: <CAB=NE6Unx+p8k--efOG9+nqD-1orQdtgEMGwfVgVQF0uwsiz0w@mail.gmail.com> (sfid-20121213_214939_950073_F27AD7E3)
+Subject: Re: [PATCH] qca-swiss-army-knife: update checksums.txt
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-12-03 at 13:56 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Instead of updating stats before sending a packet,
-> update them after processing the packet's status.
-> This makes minstrel in line with minstrel_ht.
+On Thu, Dec 13, 2012 at 10:41 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> Due to the recent changes in AR9340 initvals,
+> checksums.txt needs to be updated.
+>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-Applied.
+Applied and pushed, thanks!
 
-johannes
-
+  Luis
