@@ -1,140 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56858 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845Ab2LFUQm (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:37177 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752800Ab2LMKMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 15:16:42 -0500
-Date: Thu, 6 Dec 2012 15:11:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Bill Pemberton <wfp5p@virginia.edu>
-Subject: Re: [GIT PULL] Remove __dev* markings from the networking drivers
-Message-ID: <20121206201135.GA2246@tuxdriver.com> (sfid-20121206_211648_186355_FF25A94A)
-References: <20121203202910.GB29451@kroah.com>
+	Thu, 13 Dec 2012 05:12:38 -0500
+Message-ID: <50C9AA12.4060303@posedge.com> (sfid-20121213_111241_891740_D2752950)
+Date: Thu, 13 Dec 2012 15:42:34 +0530
+From: Srinivasan B <srinivasanb@posedge.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121203202910.GB29451@kroah.com>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: 802.11h DFS support
+References: <50C89C8B.6040301@posedge.com> <20121213095134.GA26314@pandem0nium>
+In-Reply-To: <20121213095134.GA26314@pandem0nium>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I went ahead and applied these as patches, since they were based on
-something other than wireless-next.  I hope that's OK!
+Hi Simon,
+          Thanks for the clarification.
 
-John
+regards,
+Srinivasan
 
-On Mon, Dec 03, 2012 at 12:29:10PM -0800, Greg KH wrote:
-> Hi John,
-> 
-> Here's a pull request for all of Bill's __dev* removal patches for the
-> wireless networking drivers, based on net-next.  If you want this
-> rebased on a different tree, or sent as patches (it's only 18 of them),
-> please let me know.
-> 
-> thanks,
-> 
-> greg k-h
-> 
-> -------------
-> 
-> The following changes since commit 60e476d02129acb1f863a9b4932358678ee6a355:
-> 
->   bna: remove useless calls to memset(). (2012-12-02 20:32:56 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/net-next.git tags/dev_removal_wireless
-> 
-> for you to fetch changes up to 40ccc6ab03053a2ad1f52c8b3f4d3ee828b7c013:
-> 
->   rtlwifi: remove __dev* attributes (2012-12-03 11:47:38 -0800)
-> 
-> ----------------------------------------------------------------
-> Wireless:  Remove __dev* markings from the wireless drivers
-> 
-> This is a series of patches that remove the dev* attributes for all
-> wireless drivers.
-> 
-> Use of __devinit, __devexit_p, __devinitdata, __devinitconst, and
-> __devexit are no longer needed since CONFIG_HOTPLUG is being removed as
-> an option.
-> 
-> Note, there are some devinit compiler section mismatch warnings due to
-> this series, but they are fixed up when merged with my driver-next
-> branch, which fixes the PCI device id warnings, and removes the modpost
-> detection, as it's no longer needed.
-> 
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
-> ----------------------------------------------------------------
-> Bill Pemberton (18):
->       rfkill: remove __dev* attributes
->       wireless: remove __dev* attributes
->       ath5k: remove __dev* attributes
->       atmel: remove __dev* attributes
->       b43: remove __dev* attributes
->       brcm80211: remove __dev* attributes
->       ipw2x00: remove __dev* attributes
->       iwlegacy: remove __dev* attributes
->       iwlwifi: remove __dev* attributes
->       libertas: remove __dev* attributes
->       mwl8k: remove __dev* attributes
->       orinoco: remove __dev* attributes
->       p54: remove __dev* attributes
->       rt2x00: remove __dev* attributes
->       rtl8187: remove __dev* attributes
->       rtl8187: remove __dev* attributes
->       wlcore/wl18xx/wl12xx: remove __dev* attributes
->       rtlwifi: remove __dev* attributes
-> 
->  drivers/net/wireless/adm8211.c                        |  6 +++---
->  drivers/net/wireless/airo.c                           |  6 +++---
->  drivers/net/wireless/ath/ath5k/base.c                 |  4 ++--
->  drivers/net/wireless/ath/ath5k/led.c                  |  2 +-
->  drivers/net/wireless/ath/ath5k/pci.c                  |  6 +++---
->  drivers/net/wireless/atmel_pci.c                      |  6 +++---
->  drivers/net/wireless/b43/pcmcia.c                     |  6 +++---
->  drivers/net/wireless/b43/sdio.c                       |  6 +++---
->  drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |  4 ++--
->  drivers/net/wireless/ipw2x00/ipw2100.c                |  4 ++--
->  drivers/net/wireless/ipw2x00/ipw2200.c                |  8 ++++----
->  drivers/net/wireless/iwlegacy/3945-mac.c              |  4 ++--
->  drivers/net/wireless/iwlegacy/4965-mac.c              |  4 ++--
->  drivers/net/wireless/iwlwifi/pcie/drv.c               |  4 ++--
->  drivers/net/wireless/libertas/if_spi.c                |  6 +++---
->  drivers/net/wireless/mwl8k.c                          | 12 ++++++------
->  drivers/net/wireless/orinoco/orinoco_nortel.c         |  4 ++--
->  drivers/net/wireless/orinoco/orinoco_pci.c            |  4 ++--
->  drivers/net/wireless/orinoco/orinoco_plx.c            |  4 ++--
->  drivers/net/wireless/orinoco/orinoco_tmd.c            |  4 ++--
->  drivers/net/wireless/p54/p54pci.c                     |  6 +++---
->  drivers/net/wireless/p54/p54spi.c                     |  6 +++---
->  drivers/net/wireless/p54/p54usb.c                     |  6 +++---
->  drivers/net/wireless/rt2x00/rt2400pci.c               |  2 +-
->  drivers/net/wireless/rt2x00/rt2500pci.c               |  2 +-
->  drivers/net/wireless/rt2x00/rt2800pci.c               |  4 ++--
->  drivers/net/wireless/rt2x00/rt61pci.c                 |  2 +-
->  drivers/net/wireless/rtl818x/rtl8180/dev.c            |  6 +++---
->  drivers/net/wireless/rtl818x/rtl8187/dev.c            |  6 +++---
->  drivers/net/wireless/rtlwifi/pci.c                    |  2 +-
->  drivers/net/wireless/rtlwifi/pci.h                    |  2 +-
->  drivers/net/wireless/rtlwifi/rtl8192de/sw.c           |  2 +-
->  drivers/net/wireless/rtlwifi/rtl8192se/sw.c           |  2 +-
->  drivers/net/wireless/rtlwifi/usb.c                    |  2 +-
->  drivers/net/wireless/rtlwifi/usb.h                    |  2 +-
->  drivers/net/wireless/ti/wl1251/sdio.c                 |  4 ++--
->  drivers/net/wireless/ti/wl1251/spi.c                  |  6 +++---
->  drivers/net/wireless/ti/wl12xx/main.c                 |  6 +++---
->  drivers/net/wireless/ti/wl18xx/main.c                 |  6 +++---
->  drivers/net/wireless/ti/wlcore/main.c                 |  4 ++--
->  drivers/net/wireless/ti/wlcore/sdio.c                 |  8 ++++----
->  drivers/net/wireless/ti/wlcore/spi.c                  |  6 +++---
->  drivers/net/wireless/ti/wlcore/wlcore.h               |  4 ++--
->  net/rfkill/rfkill-gpio.c                              |  2 +-
->  net/rfkill/rfkill-regulator.c                         |  6 +++---
->  45 files changed, 104 insertions(+), 104 deletions(-)
-> 
+On 12/13/2012 03:21 PM, Simon Wunderlich wrote:
+> Hello Srinivasan,
+>
+> On Wed, Dec 12, 2012 at 08:32:35PM +0530, Srinivasan B wrote:
+>> Hi,
+>>          I was looking for the DFS support in
+>> mac80211/cfg80211/nl80211/hostapd and observed that the latest
+>> wireless-testing kernel&  hostapd.git does not include support for
+>> 802.11h.
+> that's correct.
+>>          I also referred few patches submitted by Victor Goldenshtein
+>> which had support for entire DFS operation basing wireless-testing
+>> kernel. As per my understanding these patches are presently getting
+>> modified to support new channel-context modifications.
+>>
+>>          Could someone confirm if I am right at my understanding.
+> Yup. Actually I picked up Victors patchset and doing the channel context
+> rework right now, and plan to send a revised patchset for nl80211/mac80211
+> soon.
+>
+> "Entire" DFS operation is not entirely correct. There will still be quite
+> a few bits missing:
+>
+>   * driver support - some drivers like ath9k have something prepared, but
+>     it still needs to be integrated
+>   * ETSI/FCC support has to be verified for the different drivers
+>   * testing, of course
+>
+> Cheers,
+> 	Simon
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
