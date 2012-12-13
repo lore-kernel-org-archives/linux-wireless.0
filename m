@@ -1,120 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:35273 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752396Ab2LAUfi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54382 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707Ab2LMW7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Dec 2012 15:35:38 -0500
-Received: by mail-wg0-f42.google.com with SMTP id dr1so300271wgb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Dec 2012 12:35:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1354393301-11051-1-git-send-email-lewurm@gmail.com>
-References: <1354393301-11051-1-git-send-email-lewurm@gmail.com>
-From: Bernhard Urban <lewurm@gmail.com>
-Date: Sat, 1 Dec 2012 21:26:58 +0100
-Message-ID: <CAAr_hs53SddPbUUAdaqBFjc8fx-sqDPVjqkq645cMptQqsaQOw@mail.gmail.com> (sfid-20121201_213541_632779_BCAB4576)
-Subject: Re: [PATCH] ath9k_htc: update RSSI values only when the device is associated
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	c_manoha@qca.qualcomm.com, Sujith.Manoharan@atheros.com,
-	linville@tuxdriver.com, m.sujith@gmail.com, nbd@openwrt.org
-Cc: markus@indoo.rs, lewurm@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 13 Dec 2012 17:59:20 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/5] mac80211: fix station destruction in AP/mesh modes
+Date: Thu, 13 Dec 2012 23:59:29 +0100
+Message-Id: <1355439573-13206-2-git-send-email-johannes@sipsolutions.net> (sfid-20121213_235929_131851_AD94CBD4)
+In-Reply-To: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
+References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 1, 2012 at 9:21 PM, Bernhard Urban <lewurm@gmail.com> wrote:
-> add an if-guard, otherwise iw(8) reports weird signal strengths.
->
-> The behaviour was fine before this commit:
-> 7c277349ecbd66e19fad3d949fa6ef6c131a3b62
-> This patch is therefore a partially revert of it.
->
-> Tested with "TP-Link TL-WN722N"
->
-> Thanks to indoo.rs http://indoo.rs/ for sponsoring
->
-> Reported-by: Markus Krainz <markus@indoo.rs>
-> Tested-by: Markus Krainz <markus@indoo.rs>
-> Signed-off-by: Bernhard Urban <lewurm@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/htc.h          |    1 +
->  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   29 +++++++++++++++----------
->  2 files changed, 19 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-> index 936e920..00ebf1c 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc.h
-> +++ b/drivers/net/wireless/ath/ath9k/htc.h
-> @@ -22,6 +22,7 @@
->  #include <linux/firmware.h>
->  #include <linux/skbuff.h>
->  #include <linux/netdevice.h>
-> +#include <linux/etherdevice.h>
->  #include <linux/leds.h>
->  #include <linux/slab.h>
->  #include <net/mac80211.h>
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> index 47e61d0..8b4da3d 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> @@ -969,6 +969,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
->         int hdrlen, padpos, padsize;
->         int last_rssi = ATH_RSSI_DUMMY_MARKER;
->         __le16 fc;
-> +       u8 is_mybeacon;
->
->         if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
->                 ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
-> @@ -1060,22 +1061,28 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
->         ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
->                            rxbuf->rxstatus.rs_flags);
->
-> -       if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
-> -           !rxbuf->rxstatus.rs_moreaggr)
-> -               ATH_RSSI_LPF(priv->rx.last_rssi,
-> -                            rxbuf->rxstatus.rs_rssi);
-> +       is_mybeacon = ieee80211_is_beacon(fc) &&
-> +               !is_zero_ether_addr(common->curbssid) &&
-> +               ether_addr_equal(hdr->addr3, common->curbssid);
->
-> -       last_rssi = priv->rx.last_rssi;
-> +       if (is_mybeacon && priv->ah->opmode == NL80211_IFTYPE_STATION) {
-> +               if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
-> +                   !rxbuf->rxstatus.rs_moreaggr)
-> +                       ATH_RSSI_LPF(priv->rx.last_rssi,
-> +                                    rxbuf->rxstatus.rs_rssi);
->
-> -       if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
-> -               rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
-> -                                                    ATH_RSSI_EP_MULTIPLIER);
-> +               last_rssi = priv->rx.last_rssi;
->
-> -       if (rxbuf->rxstatus.rs_rssi < 0)
-> -               rxbuf->rxstatus.rs_rssi = 0;
-> +               if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER)) {
-> +                       s8 rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
-> +                       rxbuf->rxstatus.rs_rssi = rssi;
-> +               }
-> +
-> +               if (rxbuf->rxstatus.rs_rssi < 0)
-> +                       rxbuf->rxstatus.rs_rssi = 0;
->
-> -       if (ieee80211_is_beacon(fc))
->                 priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
-> +       }
->
->         rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
->         rx_status->band = hw->conf.channel->band;
-> --
-> 1.7.9.5
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm sending this patch again, because I'm not sure if I messed up
-something with my mail client in this reply:
-http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg09470.html
+Unfortunately, commit b22cfcfcae5b, intended to speed up roaming
+by avoiding the synchronize_rcu() broke AP/mesh modes as it moved
+some code into that work item that will still call into the driver
+at a time where it's no longer expected to handle this: after the
+AP or mesh has been stopped.
 
-It doesn't show up on gmane for linux-wireless and I didn't get an
-answer so far.
+To fix this problem remove the per-station work struct, maintain a
+station cleanup list instead and flush this list when stations are
+flushed. To keep this patch smaller for stable, do this when the
+stations are flushed (sta_info_flush()). This unfortunately brings
+back the original roaming delay; I'll fix that again in a separate
+patch.
 
+Also, Ben reported that the original commit could sometimes (with
+many interfaces) cause long delays when an interface is set down,
+due to blocking on flush_workqueue(). Since we now maintain the
+cleanup list, this particular change of the original patch can be
+reverted.
 
-Thanks,
-Bernhard
+Cc: stable@vger.kernel.org [3.7]
+Reported-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  4 ++++
+ net/mac80211/iface.c       | 28 ++++++++++++++++------------
+ net/mac80211/sta_info.c    | 44 ++++++++++++++++++++++++++++++++++++++++----
+ net/mac80211/sta_info.h    |  3 ++-
+ 4 files changed, 62 insertions(+), 17 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 47875e0..fe86472 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -773,6 +773,10 @@ struct ieee80211_sub_if_data {
+ 		u32 mntr_flags;
+ 	} u;
+ 
++	spinlock_t cleanup_stations_lock;
++	struct list_head cleanup_stations;
++	struct work_struct cleanup_stations_wk;
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct {
+ 		struct dentry *dir;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 54fb7f9..0f2a9f9 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -868,20 +868,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		cancel_work_sync(&sdata->work);
+ 		/*
+ 		 * When we get here, the interface is marked down.
+-		 * Call rcu_barrier() to wait both for the RX path
++		 * Call synchronize_rcu() to wait for the RX path
+ 		 * should it be using the interface and enqueuing
+-		 * frames at this very time on another CPU, and
+-		 * for the sta free call_rcu callbacks.
++		 * frames at this very time on another CPU.
+ 		 */
+-		rcu_barrier();
+-
+-		/*
+-		 * free_sta_rcu() enqueues a work for the actual
+-		 * sta cleanup, so we need to flush it while
+-		 * sdata is still valid.
+-		 */
+-		flush_workqueue(local->workqueue);
+-
++		synchronize_rcu();
+ 		skb_queue_purge(&sdata->skb_queue);
+ 
+ 		/*
+@@ -1501,6 +1492,15 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
++static void ieee80211_cleanup_sdata_stas_wk(struct work_struct *wk)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	sdata = container_of(wk, struct ieee80211_sub_if_data, cleanup_stations_wk);
++
++	ieee80211_cleanup_sdata_stas(sdata);
++}
++
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
+ 		     struct vif_params *params)
+@@ -1576,6 +1576,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 
+ 	INIT_LIST_HEAD(&sdata->key_list);
+ 
++	spin_lock_init(&sdata->cleanup_stations_lock);
++	INIT_LIST_HEAD(&sdata->cleanup_stations);
++	INIT_WORK(&sdata->cleanup_stations_wk, ieee80211_cleanup_sdata_stas_wk);
++
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+ 		struct ieee80211_supported_band *sband;
+ 		sband = local->hw.wiphy->bands[i];
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index dadcfcf..0f709d54 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -91,9 +91,8 @@ static int sta_info_hash_del(struct ieee80211_local *local,
+ 	return -ENOENT;
+ }
+ 
+-static void free_sta_work(struct work_struct *wk)
++static void cleanup_single_sta(struct sta_info *sta)
+ {
+-	struct sta_info *sta = container_of(wk, struct sta_info, free_sta_wk);
+ 	int ac, i;
+ 	struct tid_ampdu_tx *tid_tx;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -153,11 +152,35 @@ static void free_sta_work(struct work_struct *wk)
+ 	sta_info_free(local, sta);
+ }
+ 
++void ieee80211_cleanup_sdata_stas(struct ieee80211_sub_if_data *sdata)
++{
++	struct sta_info *sta;
++
++	spin_lock_bh(&sdata->cleanup_stations_lock);
++	while (!list_empty(&sdata->cleanup_stations)) {
++		sta = list_first_entry(&sdata->cleanup_stations,
++				       struct sta_info, list);
++		list_del(&sta->list);
++		spin_unlock_bh(&sdata->cleanup_stations_lock);
++
++		cleanup_single_sta(sta);
++
++		spin_lock_bh(&sdata->cleanup_stations_lock);
++	}
++
++	spin_unlock_bh(&sdata->cleanup_stations_lock);
++}
++
+ static void free_sta_rcu(struct rcu_head *h)
+ {
+ 	struct sta_info *sta = container_of(h, struct sta_info, rcu_head);
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
+-	ieee80211_queue_work(&sta->local->hw, &sta->free_sta_wk);
++	spin_lock(&sdata->cleanup_stations_lock);
++	list_add_tail(&sta->list, &sdata->cleanup_stations);
++	spin_unlock(&sdata->cleanup_stations_lock);
++
++	ieee80211_queue_work(&sdata->local->hw, &sdata->cleanup_stations_wk);
+ }
+ 
+ /* protected by RCU */
+@@ -310,7 +333,6 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	spin_lock_init(&sta->lock);
+ 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
+-	INIT_WORK(&sta->free_sta_wk, free_sta_work);
+ 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
+ 	mutex_init(&sta->ampdu_mlme.mtx);
+ 
+@@ -891,6 +913,20 @@ int sta_info_flush(struct ieee80211_local *local,
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
++	rcu_barrier();
++
++	if (sdata) {
++		ieee80211_cleanup_sdata_stas(sdata);
++		cancel_work_sync(&sdata->cleanup_stations_wk);
++	} else {
++		mutex_lock(&local->iflist_mtx);
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			ieee80211_cleanup_sdata_stas(sdata);
++			cancel_work_sync(&sdata->cleanup_stations_wk);
++		}
++		mutex_unlock(&local->iflist_mtx);
++	}
++
+ 	return ret;
+ }
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 1489bca..37c1889 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -299,7 +299,6 @@ struct sta_info {
+ 	spinlock_t lock;
+ 
+ 	struct work_struct drv_unblock_wk;
+-	struct work_struct free_sta_wk;
+ 
+ 	u16 listen_interval;
+ 
+@@ -563,4 +562,6 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta);
+ void ieee80211_sta_ps_deliver_poll_response(struct sta_info *sta);
+ void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta);
+ 
++void ieee80211_cleanup_sdata_stas(struct ieee80211_sub_if_data *sdata);
++
+ #endif /* STA_INFO_H */
+-- 
+1.8.0
+
