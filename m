@@ -1,70 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:45718 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753176Ab2LKUYG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 15:24:06 -0500
-Message-ID: <1355257444.24219.7.camel@joe-AO722> (sfid-20121211_212411_808880_A405D3EF)
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-From: Joe Perches <joe@perches.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Jason Baron <jbaron@redhat.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, Jim Cromie <jim.cromie@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Tue, 11 Dec 2012 12:24:04 -0800
-In-Reply-To: <20121211201250.GA19675@kroah.com>
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1353263740.28214.2.camel@joe-AO722> <20121120160845.GB31176@redhat.com>
-	 <3645415.mrRzvuvPFK@lx-vladimir> <20121211193646.GS15974@pogo>
-	 <20121211200831.GD11815@redhat.com> <20121211201250.GA19675@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:37561 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753481Ab2LMKSW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2012 05:18:22 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 13 Dec 2012 15:48:21 +0530
+From: vivekanandah@posedge.com
+To: <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: Re: adding =?UTF-8?Q?ba=5Fpolicy=20member=20in=20drv=5Fampdu?=
+ =?UTF-8?Q?=5Faction=20op=20-=20request=20information?=
+Message-ID: <53a9b58ee917248d8fa617dd1bbcde83@posedge.com> (sfid-20121213_111825_443355_70DA9F23)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-11 at 12:12 -0800, Greg KH wrote:
-> On Tue, Dec 11, 2012 at 03:08:31PM -0500, Jason Baron wrote:
-> > On Tue, Dec 11, 2012 at 11:36:46AM -0800, Luis R. Rodriguez wrote:
-> > > On Tue, Dec 04, 2012 at 11:28:26AM +0200, Vladimir Kondratiev wrote:
-> > > > Hi Jason,
-> > > > 
-> > > > Do you have any update on the status for patches below?
-> > > > Where is it now? When do you expect it to merge? 3.8?
-> > > > I am waiting for this to merge before I can go on
-> > > > with my driver.
-> > > 
-> > > *poke*
-> > > 
-> > >   Luis
-> > 
-> > Hi Luis,
-> > 
-> > Yes, I posted this patch, along with 2 others last week for Greg to
-> > pull. I believe these are too late for the 3.8 merge window. Perhaps,
-> > Greg can comment. Here's a link to the post:
-> > 
-> > http://marc.info/?l=linux-kernel&m=135474417810281&w=2
-> 
-> Yes it's too late, these will go into linux-next after 3.8-rc1 is out.
-> 
-> thanks,
-> 
-> greg k-h
-> 
+Hi johannes,
 
-Vladimir, sorry about this.
+kindly find my thoughts below:
 
-I suggest you prefix/rename and include these functions directly into
-your driver and later after 3.9 is out you could again rename the
-local calls to the now generic kernel functions and delete the local
-ones.
+if you are referring to the addba-request to transmit a ADDBA with 
+delayed block ack, yes, i accept what you have stated. but, then we 
+would need to support delayed block ack on the TX.
 
-Your driver is for new hardware, so even now it should be able to
-go into 3.8.
+for my query, i was thinking more with respect to the receive side of 
+an AP.
 
-cheers, Joe
+if, let us say a particular station is capable of delayed block ack 
+which might not be a linux station(presently it seems, linux box will 
+only pursue immediate block ack), then on receive of a block ack 
+request, the lower layer can just send an ack if the policy is known to 
+be delayed block ack.
+
+It can later decide to send out the actual block ack response in the 
+next TXOP. i felt this could be independent of actual support of delayed 
+block ack on the TX side. this also provides the entire block ack info 
+to the lower layers.
+
+looking forward to your inputs
+thanks and regards
+Vivek
+
+
+
+> -------- Original Message --------
+>
+> SUBJECT:
+> Re: adding ba_policy member in drv_ampdu_action op - request
+> information
+>
+> DATE:
+> Wed, 12 Dec 2012 15:17:58 +0100
+>
+> FROM:
+> Johannes Berg  [1]
+>
+> TO:
+> vivekanandah@posedge.com [2]
+>
+> CC:
+> linux-wireless@vger.kernel.org [3]
+>
+> On Wed, 2012-12-12 at 12:10 +0530, vivekanandah@posedge.com [4]
+> wrote:
+>> Hi,
+>>
+>> presently in code, the block ack policy is not sent by mac80211 to
+> the
+>> lower level driver via the ampdu_action callback.
+>>
+>> The mac80211 while transmitting a block ack (ADDBA)request,
+> hardcodes
+>> the block ack methodology to immediate block ack.
+>>
+>> on the receive side, the delayed block ack bit is checked
+> along-with
+>> the capability of the receiver station to support delayed block
+> ack.
+>> even if the station supports delayed block ack, mac80211 does not
+> send
+>> the ba_policy down to the driver.
+>>
+>> should ba_policy be sent to the driver so that lower level drivers
+> can
+>> take a call as to send block ack response in a delayed manner at
+> its
+>> convenience?
+>
+> Well, if you wanted to support it, you'd first have to change the
+> negotiation to actually ask for it, no?
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org [5]
+> More majordomo info at http://vger.kernel.org/majordomo-info.html [6]
+>
+>
+>
+> Links:
+> ------
+> [1] mailto:johannes@sipsolutions.net
+> [2] mailto:vivekanandah@posedge.com
+> [3] mailto:linux-wireless@vger.kernel.org
+> [4] mailto:vivekanandah@posedge.com
+> [5] mailto:majordomo@vger.kernel.org
+> [6] http://vger.kernel.org/majordomo-info.html
 
