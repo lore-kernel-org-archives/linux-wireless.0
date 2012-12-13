@@ -1,37 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40099 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754667Ab2LJKVp (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:48602 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753376Ab2LMNTV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 05:21:45 -0500
-Message-ID: <1355134918.9857.9.camel@jlt4.sipsolutions.net> (sfid-20121210_112446_737216_82298E55)
-Subject: Re: [PATCH] wireless-regdb: add regulatory rule for ETSI members on
- 60gHz band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Date: Mon, 10 Dec 2012 11:21:58 +0100
-In-Reply-To: <1573921.0GjqNuABMd@lx-vladimir> (sfid-20121210_104554_770780_B8ABD895)
-References: <8774585.BvFN3Opv12@lx-vladimir>
-	 <1573921.0GjqNuABMd@lx-vladimir> (sfid-20121210_104554_770780_B8ABD895)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Dec 2012 08:19:21 -0500
+Message-ID: <50C9D5D6.3060808@posedge.com> (sfid-20121213_141925_365311_C894459C)
+Date: Thu, 13 Dec 2012 18:49:18 +0530
+From: Chaitanya <chaitanyatk@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [Query] Operation Mode Change on the Fly (AP-STA/STA-AP)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-12-10 at 11:45 +0200, Vladimir Kondratiev wrote:
+Hi,
 
-> For the 60gHz band, regulation defined in the "Etsi En 302 567"
-> http://docsfiles.com/pdf_final_draft_etsi_en_302_567.html
+While trying to run hostapd in ubuntu i am seeing a error with regards "an operation already in progress" while registering mgmt_frame (208-action).
+After some debugging found that the same action frame is registered by the STA (wpa_supplicant service was running by default) causing the AP mode to fail?
 
-> +country AD:
-> +        # 60 gHz band channels 1-4, ref: Etsi En 302 567
-> +        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-> +        (57240 - 65880 @ 2160), (N/A, 25)
+Is this expected behavior? (or) in order to support on the fly mode change, do we need purge the old state when starting a new mode and continue.
+For Eg. in case of AP mode from hostapd, do we need to purge all entries registered by STA (from wpa_supplicant)?
 
-There doesn't seem to be a bandwidth limitation in the rules, should we
-really put one into the database?
+For now disabled the wpa_supplicant service, but curious to know the design here.
 
-johannes
-
+Regards,
+Chaitanya T K.
