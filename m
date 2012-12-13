@@ -1,159 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48222 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751912Ab2LEK4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 05:56:18 -0500
-Message-ID: <1354704935.6234.44.camel@cumari.coelho.fi> (sfid-20121205_115622_823732_7EF2694F)
-Subject: Re: [PATCH 03/20] wlcore/wl18xx/wl12xx: FW log params per chip arch
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>, Igal Chernobelsky <igalc@ti.com>
-Date: Wed, 5 Dec 2012 12:55:35 +0200
-In-Reply-To: <1354095769-8724-4-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-4-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:49445 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753028Ab2LMXnb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2012 18:43:31 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so1588331eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 15:43:30 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <50C9D469.8010809@posedge.com>
+References: <50C9D469.8010809@posedge.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 14 Dec 2012 10:43:10 +1100
+Message-ID: <CAGRGNgUUb8iBtmRDyZz=jG8jYVTNmG=beCjAf7wDT0nbsLMDwg@mail.gmail.com> (sfid-20121214_004335_196849_7A23D76C)
+Subject: Re: apparmor: Strlen oops in 3.7.0-rc1 (mac80211-next)
+To: Chaitanya <chaitanyatk@posedge.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	viro@parcelfarce.linux.theplanet.co.uk,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
-> From: Igal Chernobelsky <igalc@ti.com>
-> 
-> FW memory block size and FW log end marker parameters
-> are added to wl structure and are initialized per
-> chip architecture. convert_hwaddr hw operation is added
-> to convert chip dependent FW internal address.
-> Copy from FW log is also simplified to copy the entire
-> memory block as FW logger utility is repsponsible
-> for parsing of FW log content.
-> 
-> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Hi Chaitanya,
+
+On Fri, Dec 14, 2012 at 12:13 AM, Chaitanya <chaitanyatk@posedge.com> wrote:
+> Hi Johannes/Al Viro,
+>
+> Can you submit the below patch?
+
+Why don't you submit it?
+
+Read Documentation/SubmittingPatches for instructions on how to format
+your patch correctly.
+
+Looking at what you've sent so far, you're pretty much there, all you
+need to do is:
+1. Check that your email client is sending patches that are formatted
+correctly (send one to yourself and make sure it applies.)
+2. Make the patch message a bit more descriptive, a listing of the
+error would be useful, as would some background on what introduced it
+3. Sign it off
+4. Send it to the correct maintainers of the appropriate parts of the
+kernel - check MAINTAINERS in the top level directory of the kernel
+tree - from the content of the patch, I'd guess that this is for the
+AppArmour maintainers
+
+Once you've done all that, there shouldn't be any reason why it won't
+be applied, and once that happens, it'll make it's way to the
+mac80211-next tree shortly. You should CC Johannes and linux-wireless
+just to make sure that everyone's aware of it.
+
+Thanks,
+
+Julian Calaby
+
+> When moved to mac80211-next kernel was facing the crash related to strlen failure in the audit module.
+> After some searching found a fix from Al Viro (http://lkml.indiana.edu/hypermail/linux/kernel/1210.2/01060.html) .
+>
+> This is recurrent.
 > ---
-
-This commit log explains what has been done, which can quite easily be
-see in the patch itself.  That's okay, but what I'm missing here is the
-explanation *why* this needs to be done.
-
-
-> diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-> index 951b88c..5e3c808 100644
-> --- a/drivers/net/wireless/ti/wl12xx/main.c
-> +++ b/drivers/net/wireless/ti/wl12xx/main.c
-> @@ -706,6 +706,9 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
->  		goto out;
->  	}
->  
-> +	wl->fw_mem_block_size = 256;
-> +	wl->fwlog_end = 0x2000000;
-
-This value used to be in a macro before (WLCORE_FW_LOG_END), why kill
-it? It should just be renamed to WL12XX_FW_LOG_END and a new one be
-created for WL18XX.
-
-
-> @@ -1632,6 +1635,11 @@ static int wl12xx_set_peer_cap(struct wl1271 *wl,
->  					      hlid);
->  }
->  
-> +static u32 wl12xx_convert_hwaddr(struct wl1271 *wl, u32 hwaddr)
-> +{
-> +	return hwaddr << 5;
-> +}
-
-There was a good comment about this calculation before, it should be
-moved here instead of deleted.
-
-
-> @@ -1669,6 +1677,7 @@ static struct wlcore_ops wl12xx_ops = {
->  	.channel_switch		= wl12xx_cmd_channel_switch,
->  	.pre_pkt_send		= NULL,
->  	.set_peer_cap		= wl12xx_set_peer_cap,
-> +	.convert_hwaddr = wl12xx_convert_hwaddr,
-
-No need to break the alignment here.
-
-
->  static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
-> diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-> index df8de71..d806241 100644
-> --- a/drivers/net/wireless/ti/wl18xx/main.c
-> +++ b/drivers/net/wireless/ti/wl18xx/main.c
-> @@ -667,6 +667,9 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
->  		goto out;
->  	}
->  
-> +	wl->fw_mem_block_size = 272;
-> +	wl->fwlog_end = 0x40000000;
-
-Again, the magic number here can be avoided.
-
-> @@ -1423,6 +1426,11 @@ static int wl18xx_set_peer_cap(struct wl1271 *wl,
->  				       rate_set, hlid);
->  }
->  
-> +static u32 wl18xx_convert_hwaddr(struct wl1271 *wl, u32 hwaddr)
-> +{
-> +	return hwaddr & ~0x80000000;
-> +}
-
-A small explanation here would be nice.
-
-[...]
+>  security/apparmor/Makefile |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/security/apparmor/Makefile b/security/apparmor/Makefile
+> index 7b3021c..5706b74 100644
+> --- a/security/apparmor/Makefile
+> +++ b/security/apparmor/Makefile
+> @@ -57,7 +57,7 @@ cmd_make-rlim = echo "static const char *const rlim_names[RLIM_NLIMITS] = {" \
+>
+>  $(obj)/capability.o : $(obj)/capability_names.h
+>  $(obj)/resource.o : $(obj)/rlim_names.h
+> -$(obj)/capability_names.h : $(srctree)/include/linux/capability.h \
+> +$(obj)/capability_names.h : $(srctree)/include/uapi/linux/capability.h \
+>                             $(src)/Makefile
+>         $(call cmd,make-caps)
+>  $(obj)/rlim_names.h : $(srctree)/include/uapi/asm-generic/resource.h \
+>
+> Regards,
+> Chaitanya T K.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 
->  	/* Traverse the memory blocks linked list */
->  	do {
-> -		memset(block, 0, WL12XX_HW_BLOCK_SIZE);
-> -		ret = wlcore_read_hwaddr(wl, addr, block, WL12XX_HW_BLOCK_SIZE,
-> -					 false);
-> +		part.mem.start = wlcore_hw_convert_hwaddr(wl, addr);
-> +		part.mem.size  = PAGE_SIZE;
-> +
-> +		ret = wlcore_set_partition(wl, &part);
-> +		if (ret < 0) {
-> +			wl1271_error("%s: set_partition start=0x%X size=%d",
-> +				__func__, part.mem.start, part.mem.size);
+-- 
+Julian Calaby
 
-This could probably be a bit more descriptive, like saying that the
-fwlog seems to be corrupt because the address in the linked list can't
-be used for setting the partition.
-
-
-> diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
-> index f48530f..5897747 100644
-> --- a/drivers/net/wireless/ti/wlcore/io.h
-> +++ b/drivers/net/wireless/ti/wlcore/io.h
-> @@ -165,8 +165,8 @@ static inline int __must_check wlcore_read_hwaddr(struct wl1271 *wl, int hwaddr,
->         int physical;
->         int addr;
->  
-> -       /* Addresses are stored internally as addresses to 32 bytes blocks */
-> -       addr = hwaddr << 5;
-> +       /* Convert from FW internal address which is chip arch dependent */
-> +       addr = wl->ops->convert_hwaddr(wl, hwaddr);
-
-This could be more descriptive.  As I understand, this is converting an
-internal representation of pointers in the hardware to an address that
-can be used to set the partitions.
-
-
-
-> diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-> index a664662..a8647bd 100644
-> --- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-> +++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-> @@ -523,6 +523,4 @@ void wl1271_rx_filter_flatten_fields(struct wl12xx_rx_filter *filter,
->  #define HW_HT_RATES_OFFSET	16
->  #define HW_MIMO_RATES_OFFSET	24
->  
-> -#define WL12XX_HW_BLOCK_SIZE	256
-
-I think this should also be created separately for wl12xx and wl18xx
-instead of deleting the macro and hardcoding the values.
-
---
-Luca.
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
