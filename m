@@ -1,76 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:46239
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751650Ab2LLMS2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54380 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752978Ab2LMW7T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 07:18:28 -0500
-From: Alberto Garau <Alberto.Garau@inpeco.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
-	Adriano Melis <ADRIANO.MELIS@inpeco.com>,
-	Luca Fresi <luca.fresi@bithiatec.com>
-Subject: RE: wl12xx over spi with no scan results
-Date: Wed, 12 Dec 2012 12:18:18 +0000
-Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C3609D7@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121212_131831_111654_40F68DAA)
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-21-git-send-email-arik@wizery.com>
-	 <1355159205.3738.63.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355161791.3738.67.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355218436.3738.122.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355223079.3738.128.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355229286.3738.137.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360949@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355301922.21129.8.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360984@DB3PRD0510MB381.eurprd05.prod.outlook.com>
- <1355307404.21129.15.camel@cumari.coelho.fi>
-In-Reply-To: <1355307404.21129.15.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Thu, 13 Dec 2012 17:59:19 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>,
+	Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 0/5] mac80211: fix station cleanup/destruction
+Date: Thu, 13 Dec 2012 23:59:28 +0100
+Message-Id: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net> (sfid-20121213_235922_790374_BA80AD0B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVjYSwNCg0KSSdtIHRyeWluZyB0byBjYWxpYnJhdGUgbXkgZGV2aWNlIGFzIHN1Z2dlc3Rl
-ZCwgZm9sbG93aW5nIHRoZSBndWlkZSBmb3VuZCBhdDogaHR0cDovL3Byb2Nlc3NvcnMud2lraS50
-aS5jb20vaW5kZXgucGhwL09NQVBfV2lyZWxlc3NfQ29ubmVjdGl2aXR5X0NhbGlicmF0aW9uX1By
-b2NjZXNzX05MQ1ANCg0KSW4gcGFydGljdWxhciBJJ20gdHJ5aW5nIHRvIHJlcGxpY2F0ZSB0aGUg
-ZXhhbXBsZSBhdCB0aGUgZW5kIG9mIHRoZSBkb2N1bWVudCBhbmQgYXQgc3RlcCAzIG9mIHRoZSBl
-eGFtcGxlIEknbSBvYnRhaW5pbmc6DQoNCnJvb3RAKG5vbmUpOn4vdGktdXRpbHMjIC4vY2FsaWJy
-YXRvciBwbHQgY2FsaWJyYXRlDQp3bDEyNzE6IHBvd2VyIHVwDQpjaGlwX2lkIHJlYWQgZnJvbSBt
-ZW1vcnk6IDA0MDMwMTExDQp3bDEyNzFfZmV0Y2hfZmlybXdhcmUgLSBmZXRjaGluZyBmaXJtd2Fy
-ZSB3bDEyNzEtZncuYmluDQp3bDEyNzFfZmV0Y2hfbnZzIC0gZmV0Y2hpbmcgZmlybXdhcmUgd2wx
-MjcxLW52cy5iaW4NCmVuYWJsZV9pbnRlcnJ1cHRzX3dsMTI3MQ0Kd2wxMjcxOiBmaXJtd2FyZSBi
-b290ZWQgaW4gUExUIG1vZGUgKFJldiA2LjEuMC41MC4zNTApDQpGYWlsIHRvIGNhbGlicmF0d2wx
-MjcxOiBwb3dlciBkb3duDQplIGl0aCByYWRpbyBzdGF0ZGlzYWJsZV9pbnRlcnJ1cHRzX3dsMTI3
-MQ0KdXMgKC04MCkNCnJvb3RAKG5vbmUpOn4vdGktdXRpbHMjDQoNCg0KQW55IGlkZWEgYWJvdXQg
-d2h5IG15IGNhbGlicmF0aW9uIHByb2Nlc3MgaXMgZmFpbGluZyA/IEkgd2FzIGFibGUgdG8gY29t
-cGxldGUgdGhlIGZpcnN0IHN0ZXBzIGNyZWF0aW5nIHRoZSBudnMgZnJvbSBpbmkgZmlsZXMgDQpC
-dXQgSSdtIGZhaWxpbmcgaW4gImNhbGlicmF0b3IgcGx0IGNhbGlicmF0ZSIuIA0KDQpUaGFua3Mg
-aW4gYWR2YW5jZSANCg0KQWxiZXJ0bw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
-bTogTHVjaWFubyBDb2VsaG8gW21haWx0bzpjb2VsaG9AdGkuY29tXSANClNlbnQ6IG1lcmNvbGVk
-w6wgMTIgZGljZW1icmUgMjAxMiAxMToxNw0KVG86IEFsYmVydG8gR2FyYXUNCkNjOiBsaW51eC13
-aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IElkbyBZYXJpdjsgQXJpayBOZW10c292OyBBZHJpYW5v
-IE1lbGlzOyBMdWNhIEZyZXNpDQpTdWJqZWN0OiBSZTogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8g
-c2NhbiByZXN1bHRzDQoNCk9uIFdlZCwgMjAxMi0xMi0xMiBhdCAxMDoxMyArMDAwMCwgQWxiZXJ0
-byBHYXJhdSB3cm90ZToNCj4gVGhhbmtzIEx1Y2EsDQo+IA0KPiB3ZSB0cmllZCB3aXRoIEZBTExJ
-TkdfRURHRSBmb3IgdGhlIGludGVycnVwdCBidXQgdGhlIGRyaXZlciBnb3Qgc3R1Y2tlZCBzbyBJ
-IGhhZCB0byBwdXQgYWdhaW4gUklTSU5HX0VER0UuDQo+IA0KPiBXZSBzdWNjZXNzZnVsbHkgY3Jv
-c3MgY29tcGlsZWQgaXcgYnV0IGFsc28gd2l0aCB0aGF0IHRvb2wgd2UgYWx3YXlzIA0KPiBzZWUg
-b25seSBvbiBFU1NJRCBmcm9tIG9uZSBzcGVjaWZpYyBBUA0KDQpJIGRpZG4ndCBleHBlY3QgdGhl
-IHNjYW4gdG8gaW1wcm92ZSB3aXRoIGl3LCBidXQgYXQgbGVhc3Qgbm93IHlvdSdyZSB1c2luZyB0
-aGUgcmlnaHQgdG9vbC4gOikNCg0KDQo+IHdoaWxlIHRoZSBvdGhlcnMgRVNTSUQgZnJvbSB0aGUg
-c2Vjb25kIEFQIGFyZSBhdmFpbGFibGUgb25seSBzb21ldGltZS4gDQo+IA0KPiBUaGF0J3MgdmVy
-eSBzdHJhbmdlLg0KPiANCj4gRG8geW91IHRoaW5rIHdlIGFyZSBmYWNpbmcgY2FsaWJyYXRpb24g
-cHJvYmxlbXMgPw0KDQpZZXMsIEkgZ3Vlc3MgY2FsaWJyYXRpb24gaXMgdGhlIG1vc3QgbGlrZWx5
-IGNhdXNlIG5vdy4NCg0KDQo+IEluIG91ciBDTUQwIHdlIGhhdmUNCj4gDQo+IGJpdCAxMyA9IDEg
-SUIgaW50ZXJydXB0IGlzIGFjdGl2ZSBoaWdoDQo+IA0KPiBiaXQgMTQgPSAxIElCIGludGVycnVw
-dCBpcyBvcGVuIGRyYWluDQo+IA0KPiBEbyB5b3UgdGhpbmsgaXMgcmlnaHQgYWNjb3JkaW5nIGRv
-IFJJU0lOR19FREdFIGludGVycnVwdCA/DQoNCkkgdGhpbmsgdGhpcyBpcyBva2F5LiAgSSBkb24n
-dCB0aGluayB0aGUgcHJvYmxlbSBpcyB0aGUgaW50ZXJydXB0IG5vdy4NCg0KWW91IHNob3VsZCB0
-cnkgdG8gY2FsaWJyYXRlIHlvdXIgZGV2aWNlIGFuZCBnZW5lcmF0ZSBhIHByb3BlciBOVlMgZmls
-ZS4NCg0KLS0NCkx1Y2EuDQoNCg0K
+Turns out that not only was flush_workqueue() slow as reported
+by Ben, it was also broken because this is way too late to
+finish the station destruction in AP mode.
+
+Fixing this with keeping the roaming semantics (no RCU barrier
+or synchronize in there) is a bit tricky so the first patch just
+fixes the problem, and the last patch puts back the optimisation.
+
+The patches inbetween are just padding ;-)
+
+johannes
 
