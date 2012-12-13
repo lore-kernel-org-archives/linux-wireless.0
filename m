@@ -1,81 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f74.google.com ([209.85.212.74]:36649 "EHLO
-	mail-vb0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119Ab2LEU6C (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:5914 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755867Ab2LMUrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 15:58:02 -0500
-Received: by mail-vb0-f74.google.com with SMTP id s24so556247vbi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2012 12:58:01 -0800 (PST)
-Subject: [PATCH 08/12] ath9k: Use standard #defines for PCIe Capability ASPM
-	fields
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Date: Wed, 05 Dec 2012 13:58:01 -0700
-Message-ID: <20121205205801.13851.35427.stgit@bhelgaas.mtv.corp.google.com> (sfid-20121205_215811_874399_666C1E6B)
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+	Thu, 13 Dec 2012 15:47:47 -0500
+Date: Thu, 13 Dec 2012 12:51:16 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v10 0/3] wireless: Driver for 60GHz card wil6210
+Message-ID: <20121213205116.GQ15974@pogo> (sfid-20121213_214751_845988_F539284B)
+References: <1355327278-12965-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1355328278.9708.15.camel@jlt4.sipsolutions.net>
+ <2874864.eaglUHDoO0@lx-vladimir>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2874864.eaglUHDoO0@lx-vladimir>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the standard #defines for PCIe Capability ASPM fields.
+On Wed, Dec 12, 2012 at 06:25:06PM +0200, Vladimir Kondratiev wrote:
+> On Wednesday, December 12, 2012 05:04:38 PM Johannes Berg wrote:
+> > On Wed, 2012-12-12 at 17:47 +0200, Vladimir Kondratiev wrote:
+> > 
+> > > Vladimir Kondratiev (3):
+> > >   wireless: Driver for 60GHz card wil6210
+> > 
+> > Since you didn't want to hear my objections on the iftype usage ...
+> > maybe you should not Cc me any more.
+> > 
+> > johannes
+> > 
+> 
+> Johannes,
+> 
+> I do hear it, and I agree with it!!!
+> 
+> I will work to support this new
+> iftype, PBSS, properly. I just don't have enough data to do it right
+> now. Thus, I want initial driver for the 1-st ever 60g card to be merged;
+> this will serve as test bed for the next framework modifications.
+> 
+> I recall, you was asking me why do I pushing to do 60g related
+> infrastructure changes when no one driver exists. I want to address this
+> and then return to the infrastructure.
+> 
+> Let's have at least something working as 1-st step. Now, I need to assemble
+> all pieces of the puzzle:
+> 
+> - initial infrastructure (done)
+> - minimal driver (these patches)
+> - tools (wpa_supplicant partially done, other patches sent; iw - partially done)
+> - regulatory - patches submitted.
+> 
+> Then, when minimal support will be in place, I can handle new features.
+> 
+> Hope it explain why I want to merge minimal driver 1-st.
 
-Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1 directly, but
-these are defined for the Linux ASPM interfaces, e.g.,
-pci_disable_link_state(), and only coincidentally match the actual register
-bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not match
-the register bit.
+Vladimir, please only enable monitor support and STA mode to
+be used on the upstream driver submission. If you want PCP mode
+you'll have to address Johannes' concerns. If you want to enable
+PCP mode as you have you can enable it by enabling it through an
+extra crap/ category patch on compat-drivers.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: "John W. Linville" <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
----
- drivers/net/wireless/ath/ath9k/pci.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index f088f4b..71d8207 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -125,23 +125,23 @@ static void ath_pci_aspm_init(struct ath_common *common)
- 
- 	if ((ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) &&
- 	    (AR_SREV_9285(ah))) {
--		/* Bluetooth coexistance requires disabling ASPM. */
-+		/* Bluetooth coexistence requires disabling ASPM. */
- 		pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL,
--			PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
-+			PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1);
- 
- 		/*
- 		 * Both upstream and downstream PCIe components should
- 		 * have the same ASPM settings.
- 		 */
- 		pcie_capability_clear_word(parent, PCI_EXP_LNKCTL,
--			PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
-+			PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1);
- 
- 		ath_info(common, "Disabling ASPM since BTCOEX is enabled\n");
- 		return;
- 	}
- 
- 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &aspm);
--	if (aspm & (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1)) {
-+	if (aspm & (PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1)) {
- 		ah->aspm_enabled = true;
- 		/* Initialize PCIe PM and SERDES registers. */
- 		ath9k_hw_configpcipowersave(ah, false);
-
+  Luis
