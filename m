@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41636 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53575 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944Ab2LCVPM (ORCPT
+	with ESMTP id S1755884Ab2LMSXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 16:15:12 -0500
-Message-ID: <1354569336.9717.21.camel@jlt4.sipsolutions.net> (sfid-20121203_221521_941836_15B2CCB0)
-Subject: brcmsmac HT40 regulatory
+	Thu, 13 Dec 2012 13:23:47 -0500
+Message-ID: <1355423047.9463.9.camel@jlt4.sipsolutions.net> (sfid-20121213_192352_293430_50F585FD)
+Subject: Re: Add a new work-queue for destructing stations?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 03 Dec 2012 22:15:36 +0100
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 13 Dec 2012 19:24:07 +0100
+In-Reply-To: <50CA1C44.5030300@candelatech.com>
+References: <50CA1470.4030107@candelatech.com>
+	  (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>
+	 <50CA1C44.5030300@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend,
+On Thu, 2012-12-13 at 10:19 -0800, Ben Greear wrote:
 
-While I was looking at uses of IEEE80211_CHAN_NO_HT40 I saw brcmsmac and
-found that it uses that on channels 8 and 9 which doesn't really make
-sense, here in Europe HT40 can be used on channel 9 where the entire 40
-MHz channel will then extend all the way to channel 13. We just recently
-fixed a bug in the regulatory code to allow this.
+> > I don't think that's easy, but you're welcome to try. The
+> > free_sta_work() function references the sdata so it absolutely must run
+> > at this point.
 
-Is this intentional in your code? If not I'd suggest to remove all the
-IEEE80211_CHAN_NO_HT40* flags in 2.4 GHz since the common regulatory
-code will enforce that all secondary channels must exist & be allowed
-anyway.
+> So, cancel_work_sync(&sdata->work) would appear to remove
+> all pending sdata->work items from the work-queue.  As long as
+> there are no other different work items that reference
+> sdata (and maybe there are..I haven't looked at all of them),
+> then we should be safe to execute the free_sta_work()
+> on a different work-queue safely, I think....
 
-On 5 GHz you might also consider removing them since they are spec
-restrictions, not regulatory restrictions.
-
-Unless of course this matches some firmware checking, in which case
-you'll want to keep it so the firmware isn't unhappy when somebody
-connects to such APs :)
+Sorry, I don't get it. free_sta_work() *itself* has to be executed
+before the sdata is destroyed. cancel_work_sync(&sdata->work) has
+nothing to do with free_sta_work.
 
 johannes
 
