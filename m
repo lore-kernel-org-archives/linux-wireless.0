@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:27596 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961Ab2LaIDx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52790 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756144Ab2LMODw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Dec 2012 03:03:53 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH V5 1/2] cfg80211: Move the definition of struct mac_address up
-Date: Mon, 31 Dec 2012 13:33:40 +0530
-Message-ID: <1356941021-3988-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20121231_090401_958827_1E51B583)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 13 Dec 2012 09:03:52 -0500
+Message-ID: <1355407454.9463.5.camel@jlt4.sipsolutions.net> (sfid-20121213_160117_692009_EE090D5B)
+Subject: Re: [PATCH] mac80211: Allow disabling SGI-20.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 13 Dec 2012 15:04:14 +0100
+In-Reply-To: <1355360180-19295-1-git-send-email-greearb@candelatech.com> (sfid-20121213_015637_703359_E9A35183)
+References: <1355360180-19295-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20121213_015637_703359_E9A35183)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct mac_address will be used by ACL related configuration ops.
+On Wed, 2012-12-12 at 16:56 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> This allows user-space (wpa_supplicant) to disable
+> short guard interval (SGI) for 20Mhz.  The SGI-40
+> disable option is already handled.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- include/net/cfg80211.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Applied.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e78db2c..475230b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -503,6 +503,10 @@ struct cfg80211_beacon_data {
- 	size_t probe_resp_len;
- };
- 
-+struct mac_address {
-+	u8 addr[ETH_ALEN];
-+};
-+
- /**
-  * struct cfg80211_ap_settings - AP configuration
-  *
-@@ -2111,10 +2115,6 @@ struct ieee80211_iface_combination {
- 	bool beacon_int_infra_match;
- };
- 
--struct mac_address {
--	u8 addr[ETH_ALEN];
--};
--
- struct ieee80211_txrx_stypes {
- 	u16 tx, rx;
- };
--- 
-1.7.0.4
+Caveat as before, I'm going to have to rebase my trees once the merge
+window concludes.
+
+johannes
 
