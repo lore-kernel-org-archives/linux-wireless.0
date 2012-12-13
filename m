@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:44423 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754317Ab2LSQo5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 11:44:57 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1TlMlV-0004Kz-3S
-	for linux-wireless@vger.kernel.org; Wed, 19 Dec 2012 17:45:05 +0100
-Received: from aslw039181.ethz.ch ([129.132.39.181])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 17:45:05 +0100
-Received: from dantard by aslw039181.ethz.ch with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 17:45:05 +0100
+Received: from mail.candelatech.com ([208.74.158.172]:44987 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755231Ab2LMA4e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Dec 2012 19:56:34 -0500
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-From: Danilo <dantard@unizar.es>
-Subject: Incoerency in iw (or mac80211 or drivers) behavior
-Date: Wed, 19 Dec 2012 16:41:44 +0000 (UTC)
-Message-ID: <loom.20121219T172801-213@post.gmane.org> (sfid-20121219_174500_837374_EED1E7EE)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211: Allow disabling SGI-20.
+Date: Wed, 12 Dec 2012 16:56:20 -0800
+Message-Id: <1355360180-19295-1-git-send-email-greearb@candelatech.com> (sfid-20121213_015637_703359_E9A35183)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-I figured out that the command: 
+From: Ben Greear <greearb@candelatech.com>
 
-iw dev wlan0 set bitrates legacy-5 24
+This allows user-space (wpa_supplicant) to disable
+short guard interval (SGI) for 20Mhz.  The SGI-40
+disable option is already handled.
 
-has different behaviors in different devices.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/ht.c   |    3 +++
+ net/mac80211/main.c |    1 +
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-With iwl3945 wireless cards, it fixes the rate at 24Mbps ALSO for multicast 
-frames while in iwl4965 cards, it doesn't.
-
-
-In both cases I tried with ubuntu linux 12.04 and kernel-3.2.0-32-generic using  
-iwl4965/iwl_legacy driver for 4965 and iwl3945/iwl_legacy driver for 3945.
-
-
-I've also tried with compat-wireless-3.6, same result.
-
-What's the expected behavior? 
-
-Thanks in advance,
- D. Tardioli
-
-
-
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index a71d891..8a6d68f 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -62,6 +62,9 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+ 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+ 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_40);
+ 
++	/* Allow user to disable SGI-20 (SGI-40 is handled above) */
++	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_SGI_20);
++
+ 	/* Allow user to disable the max-AMSDU bit. */
+ 	__check_htcap_disable(sdata, ht_cap, IEEE80211_HT_CAP_MAX_AMSDU);
+ 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 1b087ff..0c0d4ca 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -537,6 +537,7 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
+ 
+ 	.cap_info = cpu_to_le16(IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+ 				IEEE80211_HT_CAP_MAX_AMSDU |
++				IEEE80211_HT_CAP_SGI_20 |
+ 				IEEE80211_HT_CAP_SGI_40),
+ 	.mcs = {
+ 		.rx_mask = { 0xff, 0xff, 0xff, 0xff, 0xff,
+-- 
+1.7.3.4
 
