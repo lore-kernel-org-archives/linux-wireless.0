@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:54299
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751353Ab2LJBxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2012 20:53:22 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/8] ath9k_hw: Fix PAPRD retraining for AR9485
-Date: Mon, 10 Dec 2012 07:22:36 +0530
-Message-Id: <1355104358-30062-6-git-send-email-sujith@msujith.org> (sfid-20121210_025334_360301_BB650DEB)
-In-Reply-To: <1355104358-30062-1-git-send-email-sujith@msujith.org>
-References: <1355104358-30062-1-git-send-email-sujith@msujith.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:54384 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755097Ab2LMW7T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2012 17:59:19 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/5] mac80211: use del_timer_sync for final sta cleanup timer deletion
+Date: Thu, 13 Dec 2012 23:59:30 +0100
+Message-Id: <1355439573-13206-3-git-send-email-johannes@sipsolutions.net> (sfid-20121213_235927_069921_DDF2F57A)
+In-Reply-To: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
+References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Retraining of PAPRD based on agc2_pwr is required for
-chips other than AR9485.
+This is a very old bug, but there's nothing that prevents the
+timer from running while the module is being removed when we
+only do del_timer() instead of del_timer_sync().
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The timer should normally not be running at this point, but
+it's not clearly impossible (or we could just remove this.)
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ net/mac80211/sta_info.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index b28565e..fb3a87e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -965,9 +965,13 @@ EXPORT_SYMBOL(ar9003_paprd_init_table);
- bool ar9003_paprd_is_done(struct ath_hw *ah)
- {
- 	int paprd_done, agc2_pwr;
-+
- 	paprd_done = REG_READ_FIELD(ah, AR_PHY_PAPRD_TRAINER_STAT1,
- 				AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_DONE);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 0f709d54..527453d 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -884,7 +884,7 @@ void sta_info_init(struct ieee80211_local *local)
  
-+	if (AR_SREV_9485(ah))
-+		goto exit;
-+
- 	if (paprd_done == 0x1) {
- 		agc2_pwr = REG_READ_FIELD(ah, AR_PHY_PAPRD_TRAINER_STAT1,
- 				AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_AGC2_PWR);
-@@ -983,7 +987,7 @@ bool ar9003_paprd_is_done(struct ath_hw *ah)
- 		if (agc2_pwr <= PAPRD_IDEAL_AGC2_PWR_RANGE)
- 			paprd_done = 0;
- 	}
--
-+exit:
- 	return !!paprd_done;
+ void sta_info_stop(struct ieee80211_local *local)
+ {
+-	del_timer(&local->sta_cleanup);
++	del_timer_sync(&local->sta_cleanup);
+ 	sta_info_flush(local, NULL);
  }
- EXPORT_SYMBOL(ar9003_paprd_is_done);
+ 
 -- 
-1.8.0.1
+1.8.0
 
