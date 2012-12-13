@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49685 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339Ab2LCTBi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53682 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932121Ab2LMSxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 14:01:38 -0500
-Date: Mon, 3 Dec 2012 13:59:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Piotr Haber <phaber@broadcom.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH V2 v3.7] brcmsmac: handle packet drop on enqueuing
- correctly
-Message-ID: <20121203185914.GH26027@tuxdriver.com> (sfid-20121203_200142_346412_0FDDF991)
-References: <1353961396-7061-1-git-send-email-arend@broadcom.com>
- <50BC63E5.9020101@broadcom.com>
- <871uf7w6w0.fsf@purkki.adurom.net>
- <20121203183912.GE26027@tuxdriver.com>
- <50BCF57E.8020204@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50BCF57E.8020204@broadcom.com>
+	Thu, 13 Dec 2012 13:53:32 -0500
+Message-ID: <1355424835.9463.18.camel@jlt4.sipsolutions.net> (sfid-20121213_195336_066707_2D04C09D)
+Subject: Re: Add a new work-queue for destructing stations?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 13 Dec 2012 19:53:55 +0100
+In-Reply-To: <1355424597.9463.17.camel@jlt4.sipsolutions.net> (sfid-20121213_194937_732132_61453C42)
+References: <50CA1470.4030107@candelatech.com>
+	 (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>
+	 <50CA1C44.5030300@candelatech.com>
+	 <1355423047.9463.9.camel@jlt4.sipsolutions.net>
+	 <50CA1EB6.9030903@candelatech.com>
+	 <1355423836.9463.14.camel@jlt4.sipsolutions.net>
+	 <50CA20D4.90707@candelatech.com>
+	 <1355424117.9463.16.camel@jlt4.sipsolutions.net>
+	 <50CA22BC.7090008@candelatech.com>
+	 <1355424597.9463.17.camel@jlt4.sipsolutions.net>
+	 (sfid-20121213_194937_732132_61453C42)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 03, 2012 at 07:54:54PM +0100, Arend van Spriel wrote:
-> On 12/03/2012 07:39 PM, John W. Linville wrote:
-> > On Mon, Dec 03, 2012 at 04:24:31PM +0200, Kalle Valo wrote:
-> >> Hi Arend,
-> >>
-> >> "Arend van Spriel" <arend@broadcom.com> writes:
-> >>
-> >>> What is keeping you from picking up this patch? Anything I should do?
-> >>> This V2 removed the no-op changes in ampdu.c that Seth indicated so...
-> >>
-> >> Most likely it's too late. Dave already told that that John's previous
-> >> pull request might not make it to 3.7.
-> > 
-> > Yes, that.  Also, given the merge difficulties this creates and the
-> > fact that Seth's patch is already queued for 3.8, maybe you should
-> > consider sending this for the 3.7 stable series when it opens?
-> > 
-> > John
-> > 
-> 
-> That was my plan when it would not get in for 3.7.0. I wanted it to go
-> to stable anyway as the fix is also needed for 3.6.x stable. Just wanted
-> to get it upstream fixed first.
-> 
-> For 3.8 the fix has been reworked on top of Seth patches and is in
-> wireless-next (c4dea35e brcmsmac: handle packet drop during transmit
-> correctly). Should I refer to that commit when submitting to stable
-> (although it is a slightly different patch).
+On Thu, 2012-12-13 at 19:49 +0100, Johannes Berg wrote:
 
-Yes, I think the stable team will appreciate that.
+> > > Well the concern there is that we expose the workqueue to the driver,
+> > > and it might even put sdata-referencing work items on it and expect them
+> > > to be flushed out before stop_interface() is called?
 
-Thanks,
+Wait actually, that isn't a concern. The flush_workqueue() was new in
+commit b22cfcfca, before that drivers couldn't rely on it. It seems very
+unlikely that in the meantime drivers have come to rely on it and we
+didn't document this, so ... with the proposed change to sta_free_wk we
+should be fine.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
