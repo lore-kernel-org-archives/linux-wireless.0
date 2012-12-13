@@ -1,76 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:38159 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755226Ab2LMSwH (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47733 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006Ab2LMSra (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:52:07 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1756195pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 10:52:07 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCH 0/6] mesh power save - basics
-Date: Thu, 13 Dec 2012 10:51:52 -0800
-Message-Id: <1355424718-2982-1-git-send-email-marco@cozybit.com> (sfid-20121213_195212_845782_24952C8A)
+	Thu, 13 Dec 2012 13:47:30 -0500
+Message-ID: <50CA22BC.7090008@candelatech.com> (sfid-20121213_194733_553208_3AA517AD)
+Date: Thu, 13 Dec 2012 10:47:24 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Add a new work-queue for destructing stations?
+References: <50CA1470.4030107@candelatech.com>     (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>    <50CA1C44.5030300@candelatech.com>   <1355423047.9463.9.camel@jlt4.sipsolutions.net>   <50CA1EB6.9030903@candelatech.com>  <1355423836.9463.14.camel@jlt4.sipsolutions.net>  <50CA20D4.90707@candelatech.com> <1355424117.9463.16.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1355424117.9463.16.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commits #5 and #6 cover the basic subset of functions, that each mesh node
-must support to communicate in the presence of power saving nodes.
-The current patchset does not implement any actual power savings yet (no
-hardware configuration, no doze state).
+On 12/13/2012 10:41 AM, Johannes Berg wrote:
+> On Thu, 2012-12-13 at 10:39 -0800, Ben Greear wrote:
+>
+>>>> So, near where we currently call cancel_work_sync(&sdata->work), I
+>>>> think we'd also need to cancel things like the sta->ampdu_mlme.work,
+>>>> and probably others as well.
+>>>>
+>>>> Then, when we're sure there are no more references to sdata on the
+>>>> main-work-queue, it would be safe to flush the destructor-workqueue
+>>>> (which would have the fre_sta_work() on it).
+>>>>
+>>>> Maybe?
+>>>
+>>> Huh, ok, but I don't think you'll find much that doesn't reference an
+>>> sdata?
+>>
+>> I think you are right...so just need to find all of those work items
+>> and call cancel_work_sync() on them, just like we are currently cancelling
+>> the sdata->work....
+>
+> Well the concern there is that we expose the workqueue to the driver,
+> and it might even put sdata-referencing work items on it and expect them
+> to be flushed out before stop_interface() is called?
+>
+> You'd be welcome to change the API so that isn't true, or things are
+> different, or whatever, but it'd be a lot of careful auditing (and
+> probably fixing) of drivers.
 
-Mesh powersave is different from client mode powersave in the sense that
-1) there is not just a singular power mode towards the access point, but a
-   link-specific power mode towards each peer instead
-2) peers also maintain a power mode towards us (the local STA)
-3) each node has to buffer frames towards power saving neighbors
+So, maybe a new driver api call to 'cancel_all_work_items(sdata)',
+and if the driver does not implement this, then we stick with the
+full flush_workqueue() in mac80211_do_stop().  But, if the driver
+does implement it, and we add code there to flush any mac80211 related
+work-items, then we could skip the flush_workqueue() call....
 
-changes since RFCv3:
-- indentation fixes
-- function name typo msp->mps
-- merged nl80211 and cfg80211 into one commit
-- default value of 2 for DTIM period
-- only check STA local_pm once in nl80211.c
-- concentrate RX handler code in mesh_ps.c
+I'll go looking in ath9k to see how much it uses the work-queue...that
+driver is my only real concern at the moment.
 
-Marco Porsch (6):
-  nl80211: add range checks to mesh parameters
-  mac80211: update mesh peer link counter during userspace peering
-  mac80211: move add_tim to subfunction
-  {cfg,nl,mac}80211: set beacon interval and DTIM period on mesh join
-  {cfg,nl}80211: mesh power mode primitives and userspace access
-  mac80211: mesh power save basics
+Thanks,
+Ben
 
- include/linux/ieee80211.h     |   17 ++
- include/net/cfg80211.h        |   25 ++
- include/uapi/linux/nl80211.h  |   47 +++
- net/mac80211/Kconfig          |   11 +
- net/mac80211/Makefile         |    3 +-
- net/mac80211/cfg.c            |   54 +++-
- net/mac80211/debug.h          |   10 +
- net/mac80211/debugfs_netdev.c |    5 +
- net/mac80211/debugfs_sta.c    |    5 +-
- net/mac80211/ieee80211_i.h    |    7 +
- net/mac80211/mesh.c           |   37 ++-
- net/mac80211/mesh.h           |   35 ++-
- net/mac80211/mesh_hwmp.c      |    7 +
- net/mac80211/mesh_pathtbl.c   |    1 +
- net/mac80211/mesh_plink.c     |   35 ++-
- net/mac80211/mesh_ps.c        |  640 +++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c             |    7 +
- net/mac80211/sta_info.c       |   18 +-
- net/mac80211/sta_info.h       |   17 ++
- net/mac80211/status.c         |    5 +
- net/mac80211/tx.c             |   81 ++++--
- net/mac80211/util.c           |    4 +
- net/mac80211/wme.c            |   13 +-
- net/wireless/mesh.c           |    8 +
- net/wireless/nl80211.c        |  133 ++++++---
- 25 files changed, 1135 insertions(+), 90 deletions(-)
- create mode 100644 net/mac80211/mesh_ps.c
+>
+> johannes
+>
+
 
 -- 
-1.7.9.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
