@@ -1,85 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:51834 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752672Ab2LGHrZ (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38939 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755594Ab2LMN7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 02:47:25 -0500
-Received: by mail-ie0-f174.google.com with SMTP id c11so408360ieb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 23:47:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYLrre0u0XotTWupgefExM14AgkP-UTfVECGyy7AY0z9SQ@mail.gmail.com>
-References: <CABPxzYLrre0u0XotTWupgefExM14AgkP-UTfVECGyy7AY0z9SQ@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 7 Dec 2012 13:17:04 +0530
-Message-ID: <CABPxzYKxtpiWiabyPCQVqNnQDNyGqf4Mp3K_X1CbZoM=jppsBg@mail.gmail.com> (sfid-20121207_084729_498446_DB88E69A)
-Subject: Re: [ath9k-devel] AR5008: AMPDU Status Support for Radiotap monitor mode
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 13 Dec 2012 08:59:05 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	igalc@ti.com, nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv5 5/8] mac80211: check radar interaction with scan and roc
+Date: Thu, 13 Dec 2012 14:58:30 +0100
+Message-Id: <1355407113-27006-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121213_145914_920820_150ECB1B)
+In-Reply-To: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ Linux Wireless for Information.
+Scanning and remain on channel functionality must be disabled while
+doing radar detection/scanning, and vice versa.
 
-On Tue, Dec 4, 2012 at 5:51 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> Hi All,
->
-> I am working on AMPDU stats for ath9k PCIe cards for use as sniffer in
-> monitor mode.
-> As the driver doesnt support the AMPDU stats for radiotap we have
-> written the below snippet to add support for the same.
->
-> Can someone answer the below queries?
->
-> 1) How to populate the below fields?
->                 ampdu_reference
->                 ampdu_delimiter_crc
-> 2) Whats the difference between the PRE and POST delimiter CRC Error counters?
-> 3) how do we get the first subframe info? the status8 register (0x8)
-> is not working.
->
-> Once i get all the answers and after testing will submit this patch.
->
-> Reference for radiotap ampdu fields:
-> http://www.radiotap.org/defined-fields/A-MPDU%20status
->
-> Attached the capture with the below code added.
->
-> Code Snippet: recv.c:  ath9k_rx_skb_preprocess (similar approach can
-> be done for HTC based chips, htc_txrx.c: ath9k_rx_prepare)
->
-> #define AR_RxFirstAggr      0x20000000
->
->
->         if (rx_stats->rs_isaggr) {
->                 rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
->                 rx_status->ampdu_reference=0x99999999; // Junk..
->                 rx_status->ampdu_delimiter_crc=0x10; //Junk
->                 rx_status->flag |= RX_FLAG_AMPDU_LAST_KNOWN;
->                 if (rx_stats->rs_isfirstaggr) { // Took from other
-> chipset (ar9220) but not working for ar5008 chipset...always it shows
-> zero
->                         printk("\n packet is first SF of the AMPDU\n");
->                         rx_status->flag |=RX_FLAG_AMPDU_IS_ZEROLEN; //
-> Temp Hack to Verify
->                 }
->                 //printk("\n packet is aggr: Setting the AMPDU\n");
->                 if (!rx_stats->rs_moreaggr) {
->                         rx_status->flag |=RX_FLAG_AMPDU_IS_LAST;
->                 }
->                 if (rx_stats->pre_delim_crc_err ||
-> rx_stats->post_delim_crc_err ) {
->                         printk("\n packet is aggr: Delim crc is True\n");
->                         rx_status->flag |= RX_FLAG_AMPDU_DELIM_CRC_ERROR;
->                 } else if(!rx_stats->pre_delim_crc_err &&
-> !rx_stats->post_delim_crc_err ) {
->                         //printk("\n packet is aggr: Delim crc is True\n");
->                         rx_status->flag |= RX_FLAG_AMPDU_DELIM_CRC_KNOWN;
->
->                 }
->
->         }
->
-> Regards,
-> Chaitanya T K.
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ net/mac80211/cfg.c         |   12 ++++++++++--
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/scan.c        |    3 +++
+ 3 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a9de035..9c190c5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1019,6 +1019,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	skb_queue_purge(&sdata->u.ap.ps.bc_buf);
+ 
+ 	ieee80211_vif_release_channel(sdata);
++	local->radar_detect_enabled = false;
+ 
+ 	return 0;
+ }
+@@ -2301,7 +2302,9 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 	INIT_LIST_HEAD(&roc->dependents);
+ 
+ 	/* if there's one pending or we're scanning, queue this one */
+-	if (!list_empty(&local->roc_list) || local->scanning)
++	if (!list_empty(&local->roc_list) ||
++	    local->scanning ||
++	    local->radar_detect_enabled)
+ 		goto out_check_combine;
+ 
+ 	/* if not HW assist, just queue & schedule work */
+@@ -2562,6 +2565,9 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 	if (!local->ops->start_radar_detection)
+ 		return -EOPNOTSUPP;
+ 
++	if (!list_empty(&local->roc_list) || local->scanning)
++		return -EBUSY;
++
+ 	/* whatever, but channel contexts should not complain about that one */
+ 	sdata->smps_mode = IEEE80211_SMPS_OFF;
+ 	sdata->needed_rx_chains = sdata->local->rx_chains;
+@@ -2572,8 +2578,10 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 		return -EBUSY;
+ 
+ 	res = drv_start_radar_detection(local, sdata, chandef->chan);
+-	if (!res)
++	if (!res) {
++		local->radar_detect_enabled = true;
+ 		ieee80211_vif_release_channel(sdata);
++	}
+ 
+ 	return res;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 42d0d02..abb2759 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -962,6 +962,9 @@ struct ieee80211_local {
+ 	/* wowlan is enabled -- don't reconfig on resume */
+ 	bool wowlan;
+ 
++	/* DFS/radar detection is enabled */
++	bool radar_detect_enabled;
++
+ 	/* number of RX chains the hardware has */
+ 	u8 rx_chains;
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 8ed83dc..c058749 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -369,6 +369,9 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ static bool ieee80211_can_scan(struct ieee80211_local *local,
+ 			       struct ieee80211_sub_if_data *sdata)
+ {
++	if (local->radar_detect_enabled)
++		return false;
++
+ 	if (!list_empty(&local->roc_list))
+ 		return false;
+ 
+-- 
+1.7.10.4
+
