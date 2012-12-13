@@ -1,187 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40980 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755743Ab2LCRmx (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:47082 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755587Ab2LMN7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 12:42:53 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 13 Dec 2012 08:59:05 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/8] cfg80211: remove wiphy_idx_valid
-Date: Mon,  3 Dec 2012 18:43:12 +0100
-Message-Id: <1354556593-2363-8-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184259_334111_BB2B70B5)
-In-Reply-To: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
-References: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
+Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	igalc@ti.com, nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv5 1/8] cfg80211: add CHAN_MODE_SINGLE_ONLY for DFS use
+Date: Thu, 13 Dec 2012 14:58:26 +0100
+Message-Id: <1355407113-27006-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121213_145920_412752_1CAB8437)
+In-Reply-To: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In DFS, we don't allow multiple virtual interfaces on one phy
+for now, because synchronizing channel state between them is not
+trivial and not implemented so far. Therefore, add another channel
+mode to seperate this.
 
-This is pretty much useless since get_wiphy_idx()
-always returns true since it's always called with
-a valid wiphy pointer.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 ---
- net/wireless/core.c    | 14 +++-----------
- net/wireless/core.h    | 16 +++-------------
- net/wireless/nl80211.c |  2 +-
- net/wireless/reg.c     | 14 +++++---------
- 4 files changed, 12 insertions(+), 34 deletions(-)
+ net/wireless/core.h |    1 +
+ net/wireless/util.c |   14 ++++++++++++++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 14d9904..747dd93 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -57,9 +57,6 @@ struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx)
- {
- 	struct cfg80211_registered_device *result = NULL, *rdev;
- 
--	if (!wiphy_idx_valid(wiphy_idx))
--		return NULL;
--
- 	assert_cfg80211_lock();
- 
- 	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-@@ -74,10 +71,8 @@ struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx)
- 
- int get_wiphy_idx(struct wiphy *wiphy)
- {
--	struct cfg80211_registered_device *rdev;
--	if (!wiphy)
--		return WIPHY_IDX_STALE;
--	rdev = wiphy_to_dev(wiphy);
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
- 	return rdev->wiphy_idx;
- }
- 
-@@ -86,9 +81,6 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx)
- {
- 	struct cfg80211_registered_device *rdev;
- 
--	if (!wiphy_idx_valid(wiphy_idx))
--		return NULL;
--
- 	assert_cfg80211_lock();
- 
- 	rdev = cfg80211_rdev_by_wiphy_idx(wiphy_idx);
-@@ -309,7 +301,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	rdev->wiphy_idx = wiphy_counter++;
- 
--	if (unlikely(!wiphy_idx_valid(rdev->wiphy_idx))) {
-+	if (unlikely(rdev->wiphy_idx < 0)) {
- 		wiphy_counter--;
- 		mutex_unlock(&cfg80211_mutex);
- 		/* ugh, wrapped! */
 diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3563097..b8f4630 100644
+index 3563097..642587c 100644
 --- a/net/wireless/core.h
 +++ b/net/wireless/core.h
-@@ -18,6 +18,9 @@
- #include <net/cfg80211.h>
- #include "reg.h"
+@@ -257,6 +257,7 @@ enum cfg80211_chan_mode {
+ 	CHAN_MODE_UNDEFINED,
+ 	CHAN_MODE_SHARED,
+ 	CHAN_MODE_EXCLUSIVE,
++	CHAN_MODE_SINGLE_ONLY,
+ };
  
-+
-+#define WIPHY_IDX_INVALID	-1
-+
- struct cfg80211_registered_device {
- 	const struct cfg80211_ops *ops;
- 	struct list_head list;
-@@ -96,13 +99,6 @@ struct cfg80211_registered_device *wiphy_to_dev(struct wiphy *wiphy)
- 	return container_of(wiphy, struct cfg80211_registered_device, wiphy);
- }
- 
--/* Note 0 is valid, hence phy0 */
--static inline
--bool wiphy_idx_valid(int wiphy_idx)
--{
--	return wiphy_idx >= 0;
--}
--
- static inline void
- cfg80211_rdev_free_wowlan(struct cfg80211_registered_device *rdev)
- {
-@@ -126,12 +122,6 @@ static inline void assert_cfg80211_lock(void)
- 	lockdep_assert_held(&cfg80211_mutex);
- }
- 
--/*
-- * You can use this to mark a wiphy_idx as not having an associated wiphy.
-- * It guarantees cfg80211_rdev_by_wiphy_idx(wiphy_idx) will return NULL
-- */
--#define WIPHY_IDX_STALE -1
--
- struct cfg80211_internal_bss {
- 	struct list_head list;
- 	struct rb_node rbn;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e5c2988..fb81208 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8072,7 +8072,7 @@ void nl80211_send_reg_change_event(struct regulatory_request *request)
- 			goto nla_put_failure;
+ struct cfg80211_beacon_registration {
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 16d76a8..18a3349 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1220,6 +1220,10 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	case CHAN_MODE_EXCLUSIVE:
+ 		num_different_channels++;
+ 		break;
++	case CHAN_MODE_SINGLE_ONLY:
++		used_channels[0] = chan;
++		num_different_channels++;
++		break;
  	}
  
--	if (wiphy_idx_valid(request->wiphy_idx) &&
-+	if (request->wiphy_idx != WIPHY_IDX_INVALID &&
- 	    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
- 		goto nla_put_failure;
+ 	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
+@@ -1268,6 +1272,12 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 		case CHAN_MODE_EXCLUSIVE:
+ 			num_different_channels++;
+ 			break;
++		case CHAN_MODE_SINGLE_ONLY:
++			/* can't add any more interfaces when a single channel
++			 * has already been added.
++			 */
++			return -EBUSY;
++			break;
+ 		}
  
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9f70573..4b00083 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1551,7 +1551,7 @@ static void reg_process_hint(struct regulatory_request *reg_request,
+ 		num[wdev_iter->iftype]++;
+@@ -1278,6 +1288,10 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	if (total == 1)
+ 		return 0;
  
- 	BUG_ON(!reg_request->alpha2);
- 
--	if (wiphy_idx_valid(reg_request->wiphy_idx))
-+	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
- 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
- 
- 	if (reg_initiator == NL80211_REGDOM_SET_BY_DRIVER && !wiphy) {
-@@ -1703,7 +1703,7 @@ int regulatory_hint_user(const char *alpha2,
- 	if (!request)
- 		return -ENOMEM;
- 
--	request->wiphy_idx = WIPHY_IDX_STALE;
-+	request->wiphy_idx = WIPHY_IDX_INVALID;
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
- 	request->initiator = NL80211_REGDOM_SET_BY_USER;
-@@ -1728,9 +1728,6 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- 
- 	request->wiphy_idx = get_wiphy_idx(wiphy);
- 
--	/* Must have registered wiphy first */
--	BUG_ON(!wiphy_idx_valid(request->wiphy_idx));
--
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
- 	request->initiator = NL80211_REGDOM_SET_BY_DRIVER;
-@@ -1777,9 +1774,8 @@ void regulatory_hint_11d(struct wiphy *wiphy, enum ieee80211_band band,
- 	 * We leave conflict resolution to the workqueue, where can hold
- 	 * cfg80211_mutex.
- 	 */
--	if (likely(last_request->initiator ==
--		   NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--		   wiphy_idx_valid(last_request->wiphy_idx)))
-+	if (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	    last_request->wiphy_idx != WIPHY_IDX_INVALID)
- 		goto out;
- 
- 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-@@ -2341,7 +2337,7 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy)
- 	if (!request_wiphy || request_wiphy != wiphy)
- 		goto out;
- 
--	last_request->wiphy_idx = WIPHY_IDX_STALE;
-+	last_request->wiphy_idx = WIPHY_IDX_INVALID;
- 	last_request->country_ie_env = ENVIRON_ANY;
- out:
- 	mutex_unlock(&reg_mutex);
++	/* can't add single mode to any other interfaces. */
++	if ((total > 1) && (chanmode == CHAN_MODE_SINGLE_ONLY))
++		return -EBUSY;
++
+ 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+ 		const struct ieee80211_iface_combination *c;
+ 		struct ieee80211_iface_limit *limits;
 -- 
-1.8.0
+1.7.10.4
 
