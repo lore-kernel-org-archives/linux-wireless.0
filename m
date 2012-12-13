@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46744 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752806Ab2LQNsu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 08:48:50 -0500
-Date: Mon, 17 Dec 2012 14:48:30 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to
- initialize hw
-Message-ID: <20121217134829.GA25021@redhat.com> (sfid-20121217_144928_767725_F873D055)
-References: <20686.63778.840426.61474@pilspetsen.it.uu.se>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20686.63778.840426.61474@pilspetsen.it.uu.se>
+Received: from he.sipsolutions.net ([78.46.109.217]:54487 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409Ab2LMXQb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2012 18:16:31 -0500
+Message-ID: <1355440612.9463.41.camel@jlt4.sipsolutions.net> (sfid-20121214_001634_600817_20F2E302)
+Subject: Re: [RFC 2/2] cfg80211: check (VHT) bandwidth against regulatory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Bitterli, Felix" <felixb@qca.qualcomm.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 14 Dec 2012 00:16:52 +0100
+In-Reply-To: <40F35DA312B2CC468349B21A177FEE63382FC9A8@NASANEXD02E.na.qualcomm.com>
+References: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net>
+	 <1354812784-15845-3-git-send-email-johannes@sipsolutions.net>
+	 <CAB=NE6W=BAOwcQ_XjbDiySx7xvAFoutv96Kcc9ULujUAWDHMGA@mail.gmail.com>
+	 <1355438841.9463.33.camel@jlt4.sipsolutions.net>
+	,<CAB=NE6U8_YibHNu+rBP-rXUTnFom9N4gqck1R9-hK=g-OBBBRg@mail.gmail.com>
+	 <40F35DA312B2CC468349B21A177FEE63382FC9A8@NASANEXD02E.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 17, 2012 at 11:51:14AM +0100, Mikael Pettersson wrote:
-> I just updated an old 1st gen AMD64 laptop from kernel 3.6.0 to 3.7.0,
-> Fedora 15 user-space, and was greeted by the following kernel warning:
-> 
-> WARNING: at net/wireless/core.c:389 wiphy_register+0x5c3/0x600 [cfg80211]()
+On Thu, 2012-12-13 at 23:13 +0000, Bitterli, Felix wrote:
 
-Already fixed on linus tree, should appear in 3.7 -stable soon.
+> Pfft, yeah I have no clue yet. Felix would you know if there are any
+> limitations hardware wise in theory at least of doing 80+80
+> configurations (apart form what the standard would allow).
 
-commit f5685ba675449b072feab6a5391a9ef9f604bc94
-Author: Helmut Schaa <helmut.schaa@googlemail.com>
-Date:   Mon Dec 3 22:35:39 2012 +0100
+>  In case the two 80 are adjacent, it's called 160.
 
-    rt2x00: Only specify interface combinations if more then one interface is possible
+So basically you're saying in general, 80+80 adjacent aren't allowed.
+I'll put in a check for that.
 
-Stanislaw
+johannes
+
