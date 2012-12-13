@@ -1,131 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38978 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755617Ab2LMN7I (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:52595 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756286Ab2LMV1f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 08:59:08 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	igalc@ti.com, nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 8/8] nl80211: allow DFS in start_ap
-Date: Thu, 13 Dec 2012 14:58:33 +0100
-Message-Id: <1355407113-27006-9-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121213_145929_660679_35C930EA)
-In-Reply-To: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Thu, 13 Dec 2012 16:27:35 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so2218928lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 13:27:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354812468-15709-19-git-send-email-johannes@sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-19-git-send-email-johannes@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 13 Dec 2012 13:27:14 -0800
+Message-ID: <CAB=NE6WVa8bqbe2oyfpEaEJ84s6+C=9wM9+wzgtm6HUNaqm4DQ@mail.gmail.com> (sfid-20121213_222738_841890_A6BADE5B)
+Subject: Re: [PATCH 18/24] regulatory: fix reg_is_valid_request handling
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables DFS within nl80211/cfg80211. start_ap now checks if
-DFS is allowed on the channel, and enables it with SINGLE_ONLY channel
-mode if appropriate.
+On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> There's a bug with the world regulatory domain, it
+> can be updated any time which is different from all
+> other regdomains that can only be updated once after
+> a request for them. Fix this by adding a check for
+> "processed" to the reg_is_valid_request() function
+> and clear that when doing a request.
+>
+> While looking at this I also found another locking
+> bug, last_request is protected by the reg_mutex not
+> the cfg80211_mutex so the code in nl80211 is racy.
+> Remove that code as it only tries to prevent an
+> allocation in an error case, which isn't necessary.
+> Then the function can also become static and locking
+> in nl80211 can have a smaller scope.
+>
+> Also change __set_regdom() to do the checks earlier
+> and not different for world/other regdomains.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/wireless/nl80211.c |  9 ++-------
+>  net/wireless/reg.c     | 21 +++++++++++----------
+>  net/wireless/reg.h     |  1 -
+>  3 files changed, 13 insertions(+), 18 deletions(-)
+>
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 260b5d8..370cd31 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -4333,6 +4326,8 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+>                 }
+>         }
+>
+> +       mutex_lock(&cfg80211_mutex);
+> +
+>         r = set_regdom(rd);
+>         rd = NULL;
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- net/wireless/chan.c    |    5 ++++-
- net/wireless/mlme.c    |   11 +++++++++++
- net/wireless/nl80211.c |   28 ++++++++++++++++++++++++++--
- 3 files changed, 41 insertions(+), 3 deletions(-)
+Unless you removed it from previous patches in the series the
+"bad_reg" goto label has an unlock but above you removed the top
+locking call so I think you just forgot to remove the unlock on the
+goto label.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 18888f6..16a5f69 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -344,7 +344,10 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_P2P_GO:
--		if (wdev->beacon_interval) {
-+		if (wdev->dfs_nlportid) {
-+			*chan = wdev->channel;
-+			*chanmode = CHAN_MODE_SINGLE_ONLY;
-+		} else if (wdev->beacon_interval) {
- 			*chan = wdev->channel;
- 			*chanmode = CHAN_MODE_SHARED;
- 		}
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 8cdbdd0e..fec3414 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -709,6 +709,7 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
- {
- 	struct wiphy *wiphy = wdev->wiphy;
-+	struct net_device *dev = wdev->netdev;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
- 	struct cfg80211_mgmt_registration *reg, *tmp;
- 
-@@ -733,6 +734,16 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
- 
- 	if (nlportid == wdev->ap_unexpected_nlportid)
- 		wdev->ap_unexpected_nlportid = 0;
-+
-+	if (nlportid == wdev->dfs_nlportid) {
-+		if ((dev->ieee80211_ptr->iftype == NL80211_IFTYPE_AP ||
-+		     dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO) &&
-+		    wdev->beacon_interval)
-+			/* DFS userspace controller crashed, stop AP */
-+			cfg80211_stop_ap(rdev, dev);
-+
-+		wdev->dfs_nlportid = 0;
-+	}
- }
- 
- void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 898d829..2af9c6e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2600,6 +2600,9 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	struct net_device *dev = info->user_ptr[1];
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_ap_settings params;
-+	enum nl80211_chan_width dfs_capability = -1;
-+	enum cfg80211_chan_mode chanmode;
-+	struct ieee80211_channel *chan;
- 	int err;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-@@ -2716,13 +2719,34 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	} else if (!nl80211_get_ap_channel(rdev, &params))
- 		return -EINVAL;
- 
-+	if (rdev->wiphy.features & NL80211_FEATURE_20MHZ_DFS &&
-+	    rdev->wiphy.features & NL80211_FEATURE_AP_CH_SWITCH)
-+		dfs_capability = NL80211_CHAN_WIDTH_20;
-+
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef,
--				     -1))
-+				     dfs_capability))
- 		return -EINVAL;
- 
-+	chan = params.chandef.chan;
-+
-+	if (chan->flags & IEEE80211_CHAN_RADAR) {
-+		if (!wdev->dfs_nlportid)
-+			return -EPERM;
-+
-+		if (!chan->cac_started)
-+			return -EPERM;
-+
-+		if (time_is_after_jiffies(chan->radar_detect_timeout))
-+			return -EPERM;
-+
-+		chanmode = CHAN_MODE_SINGLE_ONLY;
-+	} else {
-+		chanmode = CHAN_MODE_SHARED;
-+	}
-+
- 	mutex_lock(&rdev->devlist_mtx);
- 	err = cfg80211_can_use_chan(rdev, wdev, params.chandef.chan,
--				    CHAN_MODE_SHARED);
-+				    chanmode);
- 	mutex_unlock(&rdev->devlist_mtx);
- 
- 	if (err)
--- 
-1.7.10.4
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index dfab71b..10d8edb 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -426,12 +426,16 @@ static int call_crda(const char *alpha2)
+>         return kobject_uevent(&reg_pdev->dev.kobj, KOBJ_CHANGE);
+>  }
+>
+> -/* Used by nl80211 before kmalloc'ing our regulatory domain */
+> -bool reg_is_valid_request(const char *alpha2)
+> +static bool reg_is_valid_request(const char *alpha2)
+>  {
+> +       assert_reg_lock();
+> +
+>         if (!last_request)
+>                 return false;
+>
+> +       if (last_request->processed)
+> +               return false;
+> +
+>         return alpha2_equal(last_request->alpha2, alpha2);
+>  }
+>
+> @@ -1471,6 +1475,7 @@ new_request:
+>
+>         last_request = pending_request;
+>         last_request->intersect = intersect;
+> +       last_request->processed = false;
 
+The clearing you are doing is on the last_request but it comes from
+the pending regulatory request which is always false given that the
+request is kzalloc'd, not sure if that was needed or how that helped.
+
+Apart from that looks good.
+
+  Luis
