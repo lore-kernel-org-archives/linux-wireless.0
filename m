@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:43337 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491Ab2LFXzi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54126 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754635Ab2LMVez (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 18:55:38 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so15097lbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 15:55:36 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1354812468-15709-4-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-4-git-send-email-johannes@sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 6 Dec 2012 15:55:16 -0800
-Message-ID: <CAB=NE6V-Szo6SSHdTBA3Ww+=W24avx1AFuu_-m97xSyo8uQ3mg@mail.gmail.com> (sfid-20121207_005542_272142_8B9BD045)
-Subject: Re: [PATCH 03/24] regulatory: clean up regdom_intersect
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 13 Dec 2012 16:34:55 -0500
+Message-ID: <1355434516.9463.24.camel@jlt4.sipsolutions.net> (sfid-20121213_223458_037822_D90CED25)
+Subject: Re: [PATCH 18/24] regulatory: fix reg_is_valid_request handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 13 Dec 2012 22:35:16 +0100
+In-Reply-To: <CAB=NE6WVa8bqbe2oyfpEaEJ84s6+C=9wM9+wzgtm6HUNaqm4DQ@mail.gmail.com> (sfid-20121213_222736_616047_BC93283F)
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+	 <1354812468-15709-19-git-send-email-johannes@sipsolutions.net>
+	 <CAB=NE6WVa8bqbe2oyfpEaEJ84s6+C=9wM9+wzgtm6HUNaqm4DQ@mail.gmail.com>
+	 (sfid-20121213_222736_616047_BC93283F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> As the dummy_rule (also renamed from irule) is only
-> used for output by the reg_rules_intersect() function
-> there's no need to clear it at all, remove that.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2012-12-13 at 13:27 -0800, Luis R. Rodriguez wrote:
 
-Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+> > diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> > index 260b5d8..370cd31 100644
+> > --- a/net/wireless/nl80211.c
+> > +++ b/net/wireless/nl80211.c
+> > @@ -4333,6 +4326,8 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+> >                 }
+> >         }
+> >
+> > +       mutex_lock(&cfg80211_mutex);
+> > +
+> >         r = set_regdom(rd);
+> >         rd = NULL;
+> 
+> Unless you removed it from previous patches in the series the
+> "bad_reg" goto label has an unlock but above you removed the top
+> locking call so I think you just forgot to remove the unlock on the
+> goto label.
 
-The removal of the pointer is fine but the removal of the memset() is
-not trivial but given that reg_rules_intersect() does indeed re-set
-all elements of the struct this works OK. If reg_rules_intersect()
-ever branches though we may need to re-add a memset() back, but its
-fine like this. The issue I was trying to avoid was if you do not
-memset you potentially piggy backed data set from the previous
-intersect and this could potentially reduce the number of possible
-valid rules.
+Good catch. Wonder why smatch didn't complain? Fixed.
 
-  Luis
+
+> > @@ -1471,6 +1475,7 @@ new_request:
+
+        if (last_request != &core_request_world)
+                kfree(last_request);
+
+> >
+> >         last_request = pending_request;
+> >         last_request->intersect = intersect;
+> > +       last_request->processed = false;
+> 
+> The clearing you are doing is on the last_request but it comes from
+> the pending regulatory request which is always false given that the
+> request is kzalloc'd, not sure if that was needed or how that helped.
+
+Not necessarily, I added a bit more context above -- if it's
+core_request_world the clearing is needed I believe.
+
+johannes
+
