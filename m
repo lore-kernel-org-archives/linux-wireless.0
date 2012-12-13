@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:39449 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347Ab2LEIQN (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:62748 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411Ab2LMWuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 03:16:13 -0500
-Message-ID: <50BF02CA.2030009@monom.org> (sfid-20121205_091616_469135_F56A8FBA)
-Date: Wed, 05 Dec 2012 09:16:10 +0100
-From: Daniel Wagner <wagi@monom.org>
+	Thu, 13 Dec 2012 17:50:16 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so2268793lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 14:50:15 -0800 (PST)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded debug/trace
- support
-References: <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org> <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org> <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org> <50AC07F2.8000400@monom.org> <50ACA28F.9010800@broadcom.com> <50ACA55F.5050406@monom.org> <20121121143528.GC23606@thinkpad-t410> <20121126193655.GF4556@thinkpad-t410> <50B3DD38.5060808@monom.org> <50BC6181.8080307@monom.org> <50BC64C4.9040001@broadcom.com> <50BC7BC8.8030003@monom.org> <50BCE3FF.6020603@broadcom.com>
-In-Reply-To: <50BCE3FF.6020603@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1355438841.9463.33.camel@jlt4.sipsolutions.net>
+References: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net>
+ <1354812784-15845-3-git-send-email-johannes@sipsolutions.net>
+ <CAB=NE6W=BAOwcQ_XjbDiySx7xvAFoutv96Kcc9ULujUAWDHMGA@mail.gmail.com> <1355438841.9463.33.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 13 Dec 2012 14:49:54 -0800
+Message-ID: <CAB=NE6U8_YibHNu+rBP-rXUTnFom9N4gqck1R9-hK=g-OBBBRg@mail.gmail.com> (sfid-20121213_235020_886396_380B4DD0)
+Subject: Re: [RFC 2/2] cfg80211: check (VHT) bandwidth against regulatory
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Bitterli <felixb@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend
+On Thu, Dec 13, 2012 at 2:47 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-12-13 at 14:38 -0800, Luis R. Rodriguez wrote:
+>> On Thu, Dec 6, 2012 at 8:53 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > -       /* TODO: missing regulatory check on 80/160 bandwidth */
+>> > +       /*
+>> > +        * TODO: What if there are only certain 80/160/80+80 MHz channels
+>> > +        *       allowed by the driver, or only certain combinations?
+>> > +        *       For 40 MHz the driver can set the NO_HT40 flags, but for
+>> > +        *       80/160 MHz and in particular 80+80 MHz this isn't really
+>> > +        *       feasible -- should we ask the driver here?
+>> > +        */
+>>
+>> It'd be real odd if a card could only do certain settings but at least
+>> from what I was told the spec did limit the required combinations to a
+>> smaller set so technically I could see the firmware having the checks
+>> to only allow those settings. I don't think it makes sense to add this
+>> as a limitation that gets annotated by a flag on the driver though. I
+>> suspect we can assume a driver that supports VHT80 will support those
+>> combos defined on the spec and so will a card that can support VHT160
+>> and the only restriction really should be regulatory.
+>
+> Ok so mostly I'm thinking 80+80 limitations. I could imagine, for
+> example, that a card doesn't want to do 80+80 if they're adjacent (do
+> 160 instead), but I have no idea what 80+80 cards are like...
 
-On 03.12.2012 18:40, Arend van Spriel wrote:
-> So what exactly is the brand and model of your home 11n AP. With a bit
-> of luck we may have it over here.
+Pfft, yeah I have no clue yet. Felix would you know if there are any
+limitations hardware wise in theory at least of doing 80+80
+configurations (apart form what the standard would allow).
 
-It is a "Alice Modem WLAN 1421". It seems to be a device only created for
-this ISP. Some research gave me that it might be produced by Arcadyan.
-According my findings the chipset would come either from  Lantiq
-(Infineon) Danube or Amazon-SE.
-
-BTW, I found a lot of people complaining about that crap hardware.
-Not only WLAN performance is pretty bad for lot's of people it also has
-sever problems keeping the Internet link open. The only working fix
-seems to be to replace it with something which is known to work.
-
-Ah, some more googling revealed this:
-
-https://forum.openwrt.org/viewtopic.php?id=15934&p=23
-
-"""
-just wanting to know if i am right
-
-I am having an arcardyan AR7505 board here with an Infineon PSB 50601HL V1.2 SOC
-
-it has 2M Flash - EON EN29LV160AB and a RTL8306 Switch
-
-it runs a BRN Bootloader: Wireless ADSL Gateway AMAZON_SE Loader V0.02.06 build Jul 23 2010 00:32:10
-
-i was able to connect a Serial connector and managed to download the firmware as a backup.
-
-after this was trying to run u-boot from memory (this is where i hit the wall)
-from my understanding i do upload an uboot.bin (BRN-Version) version via xmodem to
-RAM Memory and execute it from there - since this was only a test, i "just"
-tried any danube/lantiq uboot to see if it might work.... but it does not. 
-(most of the time the system just reboots . the rest of the time i get an output 
-on the serial console that does not seem to be in the correct speed .... and the
-system sticks in limbo) can you give me a brief hint what i need to do.
-
-thanks for your help
-
-BTW: it is a German Alice ADSL Wlan 1421 Modem
-
-"""
-
-cheers,
-daniel
+  Luis
