@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53575 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:54360 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755884Ab2LMSXr (ORCPT
+	with ESMTP id S1754849Ab2LMWqV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:23:47 -0500
-Message-ID: <1355423047.9463.9.camel@jlt4.sipsolutions.net> (sfid-20121213_192352_293430_50F585FD)
-Subject: Re: Add a new work-queue for destructing stations?
+	Thu, 13 Dec 2012 17:46:21 -0500
+Message-ID: <1355438798.9463.32.camel@jlt4.sipsolutions.net> (sfid-20121213_234623_873499_9A8D5A6A)
+Subject: Re: [RFC 2/2] cfg80211: check (VHT) bandwidth against regulatory
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 13 Dec 2012 19:24:07 +0100
-In-Reply-To: <50CA1C44.5030300@candelatech.com>
-References: <50CA1470.4030107@candelatech.com>
-	  (sfid-20121213_184629_945929_240FAE82) <1355421541.9463.8.camel@jlt4.sipsolutions.net>
-	 <50CA1C44.5030300@candelatech.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 13 Dec 2012 23:46:38 +0100
+In-Reply-To: <CAB=NE6VCiPXwUGO+KZmi4Bhd5PvUwwUscnQ0F3xtd5FurEDN-A@mail.gmail.com> (sfid-20121213_233433_174271_005A45D4)
+References: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net>
+	 <1354812784-15845-3-git-send-email-johannes@sipsolutions.net>
+	 <1355159190.8083.1.camel@jlt4.sipsolutions.net>
+	 <CAB=NE6VCiPXwUGO+KZmi4Bhd5PvUwwUscnQ0F3xtd5FurEDN-A@mail.gmail.com>
+	 (sfid-20121213_233433_174271_005A45D4)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-13 at 10:19 -0800, Ben Greear wrote:
+On Thu, 2012-12-13 at 14:34 -0800, Luis R. Rodriguez wrote:
+> On Mon, Dec 10, 2012 at 9:06 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2012-12-06 at 17:53 +0100, Johannes Berg wrote:
+> >
+> >> +bool reg_check_bandwidth(struct wiphy *wiphy,
+> >> +                      u32 center_freq_khz, u32 bw_khz)
+> >> +{
+> >> +     const struct ieee80211_reg_rule *reg_rule;
+> >> +
+> >> +     /*
+> >> +      * This interpretation is a bit of a strange quirk in the regulatory
+> >> +      * rules definitions that we have today: each 20 MHz channel must fit
+> >> +      * entirely into a single regulatory range, but if this range forbids
+> >> +      * using more than 20 MHz then it forbids even using a small part of
+> >> +      * this for the wider channel.
+> >> +      */
+> >> +
+> >> +     reg_rule = freq_reg_info(wiphy, center_freq_khz);
+> >> +     if (!IS_ERR(reg_rule))
+> >> +             return reg_rule->freq_range.max_bandwidth_khz >= bw_khz;
+> >
+> > This needs rcu_read_lock() obviously... Fixed in my version in the wip
+> > branch.
+> 
+> Looks good, the get_wiphy_regdom() change above seemed like it'd
+> belong on a separate patch though.
 
-> > I don't think that's easy, but you're welcome to try. The
-> > free_sta_work() function references the sdata so it absolutely must run
-> > at this point.
-
-> So, cancel_work_sync(&sdata->work) would appear to remove
-> all pending sdata->work items from the work-queue.  As long as
-> there are no other different work items that reference
-> sdata (and maybe there are..I haven't looked at all of them),
-> then we should be safe to execute the free_sta_work()
-> on a different work-queue safely, I think....
-
-Sorry, I don't get it. free_sta_work() *itself* has to be executed
-before the sdata is destroyed. cancel_work_sync(&sdata->work) has
-nothing to do with free_sta_work.
+Humm, yeah, wtf. That belongs into the RCU change.
 
 johannes
 
