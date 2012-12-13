@@ -1,30 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47823 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859Ab2LSMJD (ORCPT
+Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:40906
+	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751414Ab2LMFsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 07:09:03 -0500
-Message-ID: <1355918963.9954.8.camel@jlt4.sipsolutions.net> (sfid-20121219_130907_568117_8C757F04)
-Subject: Re: [PATCH] mac80211: RMC buckets are just list heads
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Wed, 19 Dec 2012 13:09:23 +0100
-In-Reply-To: <1355798517-27063-1-git-send-email-thomas@cozybit.com> (sfid-20121218_034223_498306_7A933775)
-References: <1355798517-27063-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20121218_034223_498306_7A933775)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Dec 2012 00:48:12 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20681.27637.559013.79620@gargle.gargle.HOWL> (sfid-20121213_064816_229729_77FA28C9)
+Date: Thu, 13 Dec 2012 11:17:33 +0530
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] cfg80211/nl80211: Enable drivers to implement mac
+ address based ACL
+In-Reply-To: <50C95F06.9090702@qca.qualcomm.com>
+References: <1354880763-12309-1-git-send-email-vthiagar@qca.qualcomm.com>
+	<1354880763-12309-2-git-send-email-vthiagar@qca.qualcomm.com>
+	<1355255841.9819.18.camel@jlt4.sipsolutions.net>
+	<50C81331.9080304@qca.qualcomm.com>
+	<1355311595.9708.2.camel@jlt4.sipsolutions.net>
+	<50C95F06.9090702@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-12-17 at 18:41 -0800, Thomas Pedersen wrote:
-> The array of rmc_entrys is redundant since only the
-> list_head is used. Make this an array of list_heads
-> instead and save ~6k per vif at runtime :D
+Vasanthakumar Thiagarajan wrote:
+> Here the white and black list are real white and black list.
+> The mac address listed under white list are allowed to connect
+> while the ones available on black are blocked unconditionally
+> from connection. If a station's mac is part of neither of the lists,
+> that needs to be notified which is missing now. It is not very clear
+> to me about how the notification needs to be done, is it through
+> NL80211_ATTR_CONN_FAILED_REASON in NL80211_CMD_CONN_FAILED or
+> there needs to be new command/attr?.
 
-:)
-Applied.
+What if an address is part of both the lists ? :)
 
-johannes
-
+Sujith
