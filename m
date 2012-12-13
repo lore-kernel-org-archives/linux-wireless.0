@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50171 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755259Ab2LLWCa (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:58290 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755639Ab2LMU5o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 17:02:30 -0500
-Message-ID: <1355349772.9708.19.camel@jlt4.sipsolutions.net> (sfid-20121212_230234_315095_69C1DB19)
-Subject: Re: [RFC 3/6] mac80211: Check for NULL in get-ethtool-stats logic.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
+	Thu, 13 Dec 2012 15:57:44 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so2193073lag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 12:57:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354922175.9124.34.camel@jlt4.sipsolutions.net>
+References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+ <1354812468-15709-17-git-send-email-johannes@sipsolutions.net>
+ <CAB=NE6VmfjfYeDirc-L-cPMmE6b4f_4iAK+nuDUs1-XUeLCO7w@mail.gmail.com> <1354922175.9124.34.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 13 Dec 2012 12:57:22 -0800
+Message-ID: <CAB=NE6VABjP=-ysYALAC=hc==sXp2ghPq925eJZCTTYnPqDLzg@mail.gmail.com> (sfid-20121213_215747_547691_4CCA9686)
+Subject: Re: [PATCH 16/24] regulatory: clarify locking rules and assertions
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 12 Dec 2012 23:02:52 +0100
-In-Reply-To: <1355349295-30960-3-git-send-email-greearb@candelatech.com> (sfid-20121212_225626_327122_3F8FF5FB)
-References: <1355349295-30960-1-git-send-email-greearb@candelatech.com>
-	 <1355349295-30960-3-git-send-email-greearb@candelatech.com>
-	 (sfid-20121212_225626_327122_3F8FF5FB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-12-12 at 13:54 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> In an earlier version of this code, testing found that sometimes
-> either sta wasn't found or sta->sdata was NULL.  This caused
-> crashes of course.  So, add checks with WARN_ON_ONCE to
-> catch these.
+On Fri, Dec 7, 2012 at 3:16 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-12-07 at 15:11 -0800, Luis R. Rodriguez wrote:
+>
+>> > The reason for this is that nl80211 uses the regdom
+>> > without being able to hold reg_mutex.
+>>
+>> Hm, do we want to do this or add a caller to reg.c that gets nl80211
+>> to copy over the current regdomain over for it to parse and then send?
+>> In that case we'd only need the cfg80211_mutex for
+>> update_all_wiphy_regulatory(). Thoughts?
+>
+> I think you should look at the later patches :)
 
-I don't know what you tested, but there's absolutely no way that
-sta->sdata is NULL... *Especially* not after sta_info_get_bss(), I mean,
-look at that function. But once it's on the list it can't be NULL, so
-I'm not going to apply this patch.
+I'm on it now.
 
-In the future, I'd appreciate if you could avoid avoid sending patches
-for drivers and mac80211 etc. in one series, it gets confusing with who
-applies what etc.
-
-johannes
-
+  Luis
