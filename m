@@ -1,89 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:53750 "EHLO smtp1.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752966Ab2LJKnR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 05:43:17 -0500
-Message-ID: <50C5BCC3.8090809@lri.fr> (sfid-20121210_114321_001399_3DB41361)
-Date: Mon, 10 Dec 2012 11:43:15 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41565 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932498Ab2LMOIC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Dec 2012 09:08:02 -0500
+Date: Thu, 13 Dec 2012 15:07:53 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, nbd@openwrt.org, jonbither@gmail.com,
+	jouni@qca.qualcomm.com, kgiori@qca.qualcomm.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
+Message-ID: <20121213140753.GA26868@pandem0nium> (sfid-20121213_154331_521846_653BED14)
+References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 MIME-Version: 1.0
-To: Antonio Quartulli <antonio@open-mesh.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: in AD-HOC mode wait for the AUTH response
-References: <1355134917-17705-1-git-send-email-antonio@open-mesh.com> <1355134917-17705-2-git-send-email-antonio@open-mesh.com>
-In-Reply-To: <1355134917-17705-2-git-send-email-antonio@open-mesh.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
+In-Reply-To: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2012 11:21, Antonio Quartulli wrote:
-> To prevent race conditions between kernel state and
-> user-space application knowledge, it is better to wait for
-> a new peer to be completely authenticated before telling the
-> userspace that it is ready to start authorization
-> (IBSS/RSN).
-> 
-> Use the IBSS_STA event to tell userspace when a station is
-> authenticated and ready.
-> 
-> It could still be the case that the other node joining the
-> AD-HOC cell does not implement AUTH messages exchange,
-> therefore a fallback mechanism will authenticate the peer
-> after a timeout set for the purpose expires
-> 
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
->  net/mac80211/ibss.c     | 97 ++++++++++++++++++++++++++++++++++++++++---------
->  net/mac80211/sta_info.h |  2 +
->  2 files changed, 81 insertions(+), 18 deletions(-)
-> 
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index 700d0ed..9a11ec3 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -30,6 +30,7 @@
->  
->  #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
->  #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
-> +#define IEEE80211_IBSS_AUTH_TIMEOUT (HZ / 2)
->  
->  #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
->  
-> @@ -273,8 +274,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->  				  false);
->  }
->  
-> -static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
-> -						  bool auth)
-> +static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
->  	__acquires(RCU)
->  {
->  	struct ieee80211_sub_if_data *sdata = sta->sdata;
-> @@ -284,19 +284,12 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
->  
->  	ibss_dbg(sdata, "Adding new IBSS station %pM\n", addr);
->  
-> -	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-> -	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
-> -	/* authorize the station only if the network is not RSN protected. If
-> -	 * not wait for the userspace to authorize it */
-> -	if (!sta->sdata->u.ibss.control_port)
-> -		sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
-> -
->  	rate_control_rate_init(sta);
->  
->  	/* If it fails, maybe we raced another insertion? */
->  	if (sta_info_insert_rcu(sta))
->  		return sta_info_get(sdata, addr);
-> -	if (auth && !sdata->u.ibss.auth_frame_registrations) {
-> +	if (!sdata->u.ibss.auth_frame_registrations) {
->  		ibss_dbg(sdata,
->  			 "TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=1)\n",
->  			 sdata->vif.addr, addr, sdata->u.ibss.bssid);
 
-If userspace registered for auth frames, then we shouldn't wait for auth responses,
-as this code will never see them.
+--W/nzBZO5zC0uMSeA
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I'm also curious about compatibility with the current wpa_supplicant which does not know
-about that new event.
+Hey there,
+
+just to bump the issue again - isn't there anyone here who can answer
+some of these questions?
+
+Adrian gave me some hints, but the FFT format is still completely unclear
+- I would really like to integrate/fix things before bringing this patch(se=
+t)
+to the next level.
+
+I'm begging all the Qualcomm/Atheros-affiliated guys on the list to have
+a look on the questions below and help me out here. :)
+
+Thanks a lot!
+	Simon
+
+On Thu, Dec 06, 2012 at 05:36:07PM +0100, Simon Wunderlich wrote:
+> This patch(set) is the second iteration of the request for comments for
+> upcoming spectral scan feature. It adds spectral scan control and dump
+> features to debugfs. When the open questions regarding interpretation
+> are answered, I would like to build an interface to nl80211/mac80211.
+> Please see the open questions below, every hint is kindly appreciated. :)
+>=20
+> This feature has been enabled for AR92xx and AR93xx based chipsets.
+> We've also written a visual evaluation program for these samples (see
+> screenshot [1] and sourcecode [2]).
+>=20
+> Many details are not known due to the fact that I don't have access to
+> Atheros specifications and details. Many things are done by guessing
+> and might be wrong. I'm therefore requesting help from Qualcomm/Atheros
+> guys to confirm or correct my findings. Apart from that, after
+> discussion I think we could integrate this patchset to allow other
+> people to work on this as well, even if it is experimental now.
+>=20
+> Questions from my end:
+>  1. There are many TODOs/Comments in the patches regarding details,
+>     please answer if you can. :)
+
+See code comments, e.g. regarding phy error type which are not defined
+in the headers, etc.
+
+>  2. The output format is very Atheros-dependent. If my finding that=20
+>     byte n-4 is some kind of offset/exponent, I'd integrate this in
+>     the debugfs output as well
+
+still unclear.
+
+>  3. The data length varies pretty much, there might be some false
+>     positives/PHY errors which are not FFT data - what should be
+>     the correct length?
+
+still unclear.
+
+>  4. Is there any special handling for HT40? At least the proprietary
+>     driver symbol names suggest so [3]
+
+-> this one is solved: yes, there is. it has more FFT bins. Although
+I didn't see that yet (I doubt they are the "small" variations I have seen,
+like up to 4 byte, I'd expect like double frame size).
+
+>=20
+> (Possible) further work:
+>  1. Integrate this patchset, confirm/correct findings
+>  2. If anyone would like: Atheros proprietary driver seems to
+>     support some kind of classification [3] (is this microwave? cordless
+>     phone? whatever?)
+>  3. If other devices also offer spectral scan support: define a
+>     common interface to use it (not debugfs).
+>=20
+> Changes to RFCv1:
+>  * remove nl80211/mac80211 stuff for now, to build a proper interface
+>    after intepretation/output stabilized
+>  * split spectral scan call into config, trigger and wait call, which can
+>    be called as desired (or depending on the mode)
+>  * use relay(fs) to stream spectral scan results (thanks for the hint Fel=
+ix),
+>    this seems to be much cleaner - as long as we stay in debugfs
+>=20
+> [1] http://packetmixer.de/sdl_spec_scan2.png
+> [2] https://github.com/simonwunderlich/FFT_eval
+> [3] http://www.wehavemorefun.de/fritzbox/Ath_spectral.ko#Symbole
+>=20
+> Simon Wunderlich (1):
+>   ath9k: add spectral scan feature
+>=20
+>  drivers/net/wireless/ath/ath9k/ar9002_phy.c |   52 ++++++++++
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   52 ++++++++++
+>  drivers/net/wireless/ath/ath9k/ath9k.h      |   36 +++++++
+>  drivers/net/wireless/ath/ath9k/debug.c      |  148 +++++++++++++++++++++=
+++++++
+>  drivers/net/wireless/ath/ath9k/debug.h      |    5 +
+>  drivers/net/wireless/ath/ath9k/hw.h         |   26 +++++
+>  drivers/net/wireless/ath/ath9k/init.c       |    6 ++
+>  drivers/net/wireless/ath/ath9k/mac.h        |    7 +-
+>  drivers/net/wireless/ath/ath9k/main.c       |   97 ++++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/recv.c       |   28 +++++
+>  10 files changed, 455 insertions(+), 2 deletions(-)
+>=20
+> --=20
+> 1.7.10.4
+>=20
+>=20
+
+--W/nzBZO5zC0uMSeA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlDJ4TgACgkQrzg/fFk7axYatgCg10/zGJCdSJLInX/UcgYE62jT
+rAAAnRLJpgwRLAt6NisxzHrWwXZs9yjO
+=qqOO
+-----END PGP SIGNATURE-----
+
+--W/nzBZO5zC0uMSeA--
