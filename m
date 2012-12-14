@@ -1,93 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:35972 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750756Ab2LNFAS (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:58179 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932188Ab2LNUlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 00:00:18 -0500
-Message-ID: <50CAB259.4020704@posedge.com> (sfid-20121214_060024_317312_85FF8235)
-Date: Fri, 14 Dec 2012 10:30:09 +0530
-From: Chaitanya <chaitanyatk@posedge.com>
+	Fri, 14 Dec 2012 15:41:51 -0500
+Received: by mail-ie0-f174.google.com with SMTP id c11so6587333ieb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Dec 2012 12:41:51 -0800 (PST)
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	viro@parcelfarce.linux.theplanet.co.uk,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: apparmor: Strlen oops in 3.7.0-rc1 (mac80211-next)
-References: <50C9D469.8010809@posedge.com> <CAGRGNgUUb8iBtmRDyZz=jG8jYVTNmG=beCjAf7wDT0nbsLMDwg@mail.gmail.com>
-In-Reply-To: <CAGRGNgUUb8iBtmRDyZz=jG8jYVTNmG=beCjAf7wDT0nbsLMDwg@mail.gmail.com>
+In-Reply-To: <50CB3058.6020206@hauke-m.de>
+References: <CAKoT1EZh=u3bA6Jcftmsj8cNbGEctVfm_Boi7umzHe1T4EZuTw@mail.gmail.com>
+	<50CB1D7D.2030301@hauke-m.de>
+	<CAKoT1EYRi9pCc9A9mGs3OKGhgrNOL6OJFm87qfmp+hSRaNhZjA@mail.gmail.com>
+	<50CB3058.6020206@hauke-m.de>
+Date: Sat, 15 Dec 2012 09:41:50 +1300
+Message-ID: <CAKoT1EY_DsjtaoZFbCi7+m22X-xAMfXJ0VwPK2O+7mhaxD8tWQ@mail.gmail.com> (sfid-20121214_214155_688509_5E0009D0)
+Subject: Re: Problem in FAQ
+From: Kevin McCready <kevin1mccready@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I apologise for top posting and have googled it and now understand (it
+took me a while since I've never heard of it before). So after I hit
+"reply all", I deleted everything in the email and started again. If
+this email is another top post, please excuse me and tell me how not
+to do it. I am using gmail on their website.
 
-Hi Julian,
+Here is the output of lspci -nn. There is nowhere where it says PCI
+ID= . So if someone could help me extract the information from this
+output I would be grateful.
 
-I have no problems to submit the patch, but thought it would be good if the person who fixed it submits.
-If there is still no response from Viro, will submit the patch myself.
+lspci -nn
+00:00.0 Host bridge [0600]: Intel Corporation 2nd Generation Core
+Processor Family DRAM Controller [8086:0104] (rev 09)
+00:02.0 VGA compatible controller [0300]: Intel Corporation 2nd
+Generation Core Processor Family Integrated Graphics Controller
+[8086:0106] (rev 09)
+00:16.0 Communication controller [0780]: Intel Corporation 6
+Series/C200 Series Chipset Family MEI Controller #1 [8086:1c3a] (rev
+04)
+00:1a.0 USB controller [0c03]: Intel Corporation 6 Series/C200 Series
+Chipset Family USB Enhanced Host Controller #2 [8086:1c2d] (rev 05)
+00:1b.0 Audio device [0403]: Intel Corporation 6 Series/C200 Series
+Chipset Family High Definition Audio Controller [8086:1c20] (rev 05)
+00:1c.0 PCI bridge [0604]: Intel Corporation 6 Series/C200 Series
+Chipset Family PCI Express Root Port 1 [8086:1c10] (rev b5)
+00:1c.2 PCI bridge [0604]: Intel Corporation 6 Series/C200 Series
+Chipset Family PCI Express Root Port 3 [8086:1c14] (rev b5)
+00:1c.4 PCI bridge [0604]: Intel Corporation 6 Series/C200 Series
+Chipset Family PCI Express Root Port 5 [8086:1c18] (rev b5)
+00:1d.0 USB controller [0c03]: Intel Corporation 6 Series/C200 Series
+Chipset Family USB Enhanced Host Controller #1 [8086:1c26] (rev 05)
+00:1f.0 ISA bridge [0601]: Intel Corporation HM65 Express Chipset
+Family LPC Controller [8086:1c49] (rev 05)
+00:1f.2 SATA controller [0106]: Intel Corporation 6 Series/C200 Series
+Chipset Family 6 port SATA AHCI Controller [8086:1c03] (rev 05)
+00:1f.3 SMBus [0c05]: Intel Corporation 6 Series/C200 Series Chipset
+Family SMBus Controller [8086:1c22] (rev 05)
+01:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
+RTL8101E/RTL8102E PCI Express Fast Ethernet controller [10ec:8136]
+(rev 05)
+02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
+RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+03:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd.
+RTS5116 PCI Express Card Reader [10ec:5209] (rev 01)
 
-Thanks.
-
-On Friday 14 December 2012 05:13 AM, Julian Calaby wrote:
-> Hi Chaitanya,
+On Sat, Dec 15, 2012 at 2:57 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 12/14/2012 01:50 PM, Kevin McCready wrote:
+>> It seems the output of lspci -nn and lspci are the same in this case.
+>> I don't know how to extract the pci ID from the output.
 >
-> On Fri, Dec 14, 2012 at 12:13 AM, Chaitanya <chaitanyatk@posedge.com> wrote:
->> Hi Johannes/Al Viro,
+> No lspci -nn has a different output, it also prints the pci id of the
+> devices.
+>
+> Please do not remove the mailing list from cc and stop top posting.
+>
+> Hauke
 >>
->> Can you submit the below patch?
-> Why don't you submit it?
->
-> Read Documentation/SubmittingPatches for instructions on how to format
-> your patch correctly.
->
-> Looking at what you've sent so far, you're pretty much there, all you
-> need to do is:
-> 1. Check that your email client is sending patches that are formatted
-> correctly (send one to yourself and make sure it applies.)
-> 2. Make the patch message a bit more descriptive, a listing of the
-> error would be useful, as would some background on what introduced it
-> 3. Sign it off
-> 4. Send it to the correct maintainers of the appropriate parts of the
-> kernel - check MAINTAINERS in the top level directory of the kernel
-> tree - from the content of the patch, I'd guess that this is for the
-> AppArmour maintainers
->
-> Once you've done all that, there shouldn't be any reason why it won't
-> be applied, and once that happens, it'll make it's way to the
-> mac80211-next tree shortly. You should CC Johannes and linux-wireless
-> just to make sure that everyone's aware of it.
->
-> Thanks,
->
-> Julian Calaby
->
->> When moved to mac80211-next kernel was facing the crash related to strlen failure in the audit module.
->> After some searching found a fix from Al Viro (http://lkml.indiana.edu/hypermail/linux/kernel/1210.2/01060.html) .
+>> On Sat, Dec 15, 2012 at 1:37 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>> On 12/14/2012 09:35 AM, Kevin McCready wrote:
+>>>>
+>>>> FAQ says: Forget about XXX, what really matters is PCI or USB
+>>>> (depending on the bus your device uses) ID pair: VID:PID. So to find
+>>>> out if your device is supported, use lspci -nn or lsusb to learn the
+>>>> ID pair.
+>>>>
+>>>> I have no idea what this means.
+>>>>
+>>>> I did lspci and got
+>>>> k@k-Presario-CQ57-Notebook-PC:
+>>>> ~$ lspci
+>>> ...
+>>>> 02:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
+>>>> 802.11b/g/n WiFi Adapter (rev 01)
+>>> ...
+>>>
+>>> You have a Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
+>>> Adapter and it should be supported by Linux since 2.6.38. If you are
+>>> using such a kernel version or a more recent one and this device is
+>>> still not recognized by Linux, please run "lspci -nn" like the FAQ says
+>>> to get the pci id.
+>>>
+>>>>
+>>>> I have no idea whether my wireless problem is a usb or pci problem.
+>>>> I have no idea what the pair is.
+>>>>
+>>>> I would be grateful for a better FAQ to help me.
+>>>
 >>
->> This is recurrent.
->> ---
->>  security/apparmor/Makefile |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
 >>
->> diff --git a/security/apparmor/Makefile b/security/apparmor/Makefile
->> index 7b3021c..5706b74 100644
->> --- a/security/apparmor/Makefile
->> +++ b/security/apparmor/Makefile
->> @@ -57,7 +57,7 @@ cmd_make-rlim = echo "static const char *const rlim_names[RLIM_NLIMITS] = {" \
 >>
->>  $(obj)/capability.o : $(obj)/capability_names.h
->>  $(obj)/resource.o : $(obj)/rlim_names.h
->> -$(obj)/capability_names.h : $(srctree)/include/linux/capability.h \
->> +$(obj)/capability_names.h : $(srctree)/include/uapi/linux/capability.h \
->>                             $(src)/Makefile
->>         $(call cmd,make-caps)
->>  $(obj)/rlim_names.h : $(srctree)/include/uapi/asm-generic/resource.h \
->>
->> Regards,
->> Chaitanya T K.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 >
 
+
+
+-- 
+cheers
+kevin1mccready@gmail.com
+32 Hawera Rd
+Kohimarama 1071
+Auckland, New Zealand
++64 (0)9 528 1174 home
++64 (0)226 710 335 cell
+http://kmccready.wordpress.com
