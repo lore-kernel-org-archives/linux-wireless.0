@@ -1,31 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:40760 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137Ab2LPCLh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56695 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589Ab2LNL7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Dec 2012 21:11:37 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so1866933eaa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Dec 2012 18:11:36 -0800 (PST)
-MIME-Version: 1.0
-Date: Sat, 15 Dec 2012 21:11:36 -0500
-Message-ID: <CANa_0w32t0RCk2sMqz9W19FO66nMetYLOFoymEprMj_ThvT_hw@mail.gmail.com> (sfid-20121216_031141_378915_BE96F128)
-Subject: AWUS036NHA and capturing only good packets
-From: Jason Mclaughlin <mcjason@gmail.com>
+	Fri, 14 Dec 2012 06:59:09 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TjTv1-00072Y-U0
+	for linux-wireless@vger.kernel.org; Fri, 14 Dec 2012 12:59:08 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH 0/3] mac80211: suspend fixes/cleanups
+Date: Fri, 14 Dec 2012 12:59:25 +0100
+Message-Id: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net> (sfid-20121214_125914_082629_10721442)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Some things I found while testing suspend ...
 
-I'm happening to notice that the fcsfail option is default on with
-this wireless adapater and the ath9k driver.
+johannes
 
-most people ask how do you turn fcsfail on, but I want to ask how do
-you turn it off so you don't capture bad packets.
-
-i've tried "iw wlan2 set monitor otherbss control", without the
-fcsfail flag, and it's still capturing bad packets.
-
-
-I've done much searching and can't find anything that works.
