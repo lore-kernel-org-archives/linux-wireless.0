@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f45.google.com ([209.85.210.45]:64832 "EHLO
-	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201Ab2L0Qhs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57890 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932157Ab2LNTMS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 11:37:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 3.8 1/5 V2] rtlwifi: Fix warning for unchecked pci_map_single() call
-Date: Thu, 27 Dec 2012 10:37:28 -0600
-Message-Id: <1356626252-4058-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121227_173758_816537_E980CA80)
-In-Reply-To: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 14 Dec 2012 14:12:18 -0500
+Message-ID: <1355512358.9571.11.camel@jlt4.sipsolutions.net> (sfid-20121214_201220_368846_BBFD2EF2)
+Subject: Re: RSSI threshold events?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 14 Dec 2012 20:12:38 +0100
+In-Reply-To: <50CB66D5.6070900@candelatech.com> (sfid-20121214_185024_393287_1E46F699)
+References: <50CB66D5.6070900@candelatech.com>
+	 (sfid-20121214_185024_393287_1E46F699)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernel 3.8 implements checking of all DMA mapping calls and issues
-a WARNING for the first it finds that is not checked.
+On Fri, 2012-12-14 at 09:50 -0800, Ben Greear wrote:
+> I'm seeing lots of these events in the 3.7.0+ kernel (and in 3.5 as well).
+> 
+> I *should* be connected to good APs that are only a few feet away.
+> 
+> Either way, maybe we should report the threshold and actual value
+> that caused the event to make it easier to figure out what the
+> problem is?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/pci.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+Are you saying you're seeing these events without even having configured
+them? They should only happen if you configured a CQM RSSI threshold
+(and hysteresis) so you should pretty much know what's going on?
 
-No change for V2.
-
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 3deacaf..4261e8e 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -743,6 +743,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 
- done:
- 		bufferaddress = (*((dma_addr_t *)skb->cb));
-+		if (pci_dma_mapping_error(rtlpci->pdev, bufferaddress))
-+			return;
- 		tmp_one = 1;
- 		rtlpriv->cfg->ops->set_desc((u8 *) pdesc, false,
- 					    HW_DESC_RXBUFF_ADDR,
-@@ -1115,6 +1117,10 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw)
- 					   PCI_DMA_FROMDEVICE);
- 
- 			bufferaddress = (*((dma_addr_t *)skb->cb));
-+			if (pci_dma_mapping_error(rtlpci->pdev, bufferaddress)) {
-+				dev_kfree_skb_any(skb);
-+				return 1;
-+			}
- 			rtlpriv->cfg->ops->set_desc((u8 *)entry, false,
- 						    HW_DESC_RXBUFF_ADDR,
- 						    (u8 *)&bufferaddress);
--- 
-1.7.10.4
+johannes
 
