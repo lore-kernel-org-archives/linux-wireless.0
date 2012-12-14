@@ -1,134 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50388 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648Ab2L0R7H (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58960 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754461Ab2LNSKl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 12:59:07 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/3] mac80211: track number of spatial streams
-Date: Thu, 27 Dec 2012 18:59:25 +0100
-Message-Id: <1356631167-15192-2-git-send-email-johannes@sipsolutions.net> (sfid-20121227_185918_919204_53638DAA)
-In-Reply-To: <1356631167-15192-1-git-send-email-johannes@sipsolutions.net>
-References: <1356631167-15192-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 14 Dec 2012 13:10:41 -0500
+Message-ID: <50CB6B9B.7020508@candelatech.com> (sfid-20121214_191044_206501_77BED70D)
+Date: Fri, 14 Dec 2012 10:10:35 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFT 0/3] cfg80211: beacon hint improvements
+References: <1355430534-7881-1-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1355430534-7881-1-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 12/13/2012 12:28 PM, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+>
+> Just a few improvements for beacon hint processing due to
+> scheduling considerations and discovered by Ben with a lot of
+> stations. For details see:
 
-With VHT, a station can change the number of spatial
-streams it can receive on the fly, not unlike spatial
-multiplexing in HT. Prepare for that by tracking the
-maximum number of spatial streams it can receive when
-the connection is established.
+I added this and Johannes' station cleanup patches to 3.7 and the
+600-station tests are running well so far.  I see a few beacon
+messages, but no spammage.  (I also backed out my rate-limit
+patch on the beacon messages, so if they *were* inclined to spam,
+I should have seen it).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     |  5 +++++
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/rate.h        |  2 ++
- net/mac80211/vht.c         | 41 +++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 50 insertions(+)
+So:
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0978b0f..5bc6459 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1197,6 +1197,10 @@ enum ieee80211_sta_state {
-  * @uapsd_queues: bitmap of queues configured for uapsd. Only valid
-  *	if wme is supported.
-  * @max_sp: max Service Period. Only valid if wme is supported.
-+ * @rx_nss: in HT/VHT, the maximum number of spatial streams the
-+ *	station can receive at the moment, changed by operating mode
-+ *	notifications and capabilities. The value is only valid after
-+ *	the station moves to associated state.
-  */
- struct ieee80211_sta {
- 	u32 supp_rates[IEEE80211_NUM_BANDS];
-@@ -1207,6 +1211,7 @@ struct ieee80211_sta {
- 	bool wme;
- 	u8 uapsd_queues;
- 	u8 max_sp;
-+	u8 rx_nss;
- 
- 	/* must be last */
- 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5ab33c7..edc88e2 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1462,6 +1462,8 @@ void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_supported_band *sband,
- 					 struct ieee80211_vht_cap *vht_cap_ie,
- 					 struct ieee80211_sta_vht_cap *vht_cap);
-+void ieee80211_sta_set_rx_nss(struct sta_info *sta);
-+
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index 301386d..d35a5dd 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -68,6 +68,8 @@ static inline void rate_control_rate_init(struct sta_info *sta)
- 	sband = local->hw.wiphy->bands[chanctx_conf->def.chan->band];
- 	rcu_read_unlock();
- 
-+	ieee80211_sta_set_rx_nss(sta);
-+
- 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
- 	set_sta_flag(sta, WLAN_STA_RATE_CONTROL);
- }
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index f311388..7751867 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -33,3 +33,44 @@ void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	memcpy(&vht_cap->vht_mcs, &vht_cap_ie->supp_mcs,
- 	       sizeof(struct ieee80211_vht_mcs_info));
- }
-+
-+void ieee80211_sta_set_rx_nss(struct sta_info *sta)
-+{
-+	u8 ht_rx_nss = 0, vht_rx_nss = 0;
-+
-+	/* if we received a notification already don't overwrite it */
-+	if (sta->sta.rx_nss)
-+		return;
-+
-+	if (sta->sta.ht_cap.ht_supported) {
-+		if (sta->sta.ht_cap.mcs.rx_mask[0])
-+			ht_rx_nss++;
-+		if (sta->sta.ht_cap.mcs.rx_mask[1])
-+			ht_rx_nss++;
-+		if (sta->sta.ht_cap.mcs.rx_mask[2])
-+			ht_rx_nss++;
-+		if (sta->sta.ht_cap.mcs.rx_mask[3])
-+			ht_rx_nss++;
-+		/* FIXME: consider rx_highest? */
-+	}
-+
-+	if (sta->sta.vht_cap.vht_supported) {
-+		int i;
-+		u16 rx_mcs_map;
-+
-+		rx_mcs_map = le16_to_cpu(sta->sta.vht_cap.vht_mcs.rx_mcs_map);
-+
-+		for (i = 7; i >= 0; i--) {
-+			u8 mcs = (rx_mcs_map >> (2 * i)) & 3;
-+
-+			if (mcs != IEEE80211_VHT_MCS_NOT_SUPPORTED) {
-+				vht_rx_nss = i + 1;
-+				break;
-+			}
-+		}
-+		/* FIXME: consider rx_highest? */
-+	}
-+
-+	ht_rx_nss = max(ht_rx_nss, vht_rx_nss);
-+	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
-+}
+Tested-by:  Ben Greear <greearb@candelatech.com>
+
+Thanks,
+Ben
+
+>
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/101482
+>
+> Luis R. Rodriguez (3):
+>    cfg80211: do not process beacon hints if one is already queued
+>    cfg80211: move reg_is_world_roaming()
+>    cfg80211: move world roaming check for beacon hints
+>
+>   net/wireless/reg.c |   48 ++++++++++++++++++++++++++++++++++--------------
+>   1 file changed, 34 insertions(+), 14 deletions(-)
+>
+
+
 -- 
-1.8.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
