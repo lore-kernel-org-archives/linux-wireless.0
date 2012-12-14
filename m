@@ -1,72 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.236.10]:47816 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932847Ab2LHDXd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 22:23:33 -0500
-Date: Sat, 8 Dec 2012 07:23:30 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: Thomas Pedersen <thomas@cozybit.com>
-cc: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	open11s <devel@lists.open80211s.org>
-Subject: Re: help: 802.11s bad performance with 802.11n enabled
-In-Reply-To: <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1212080721070.8165@icf.org.ru> (sfid-20121208_042344_364267_2FFF552A)
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp> <alpine.DEB.2.02.1212031842350.27546@icf.org.ru> <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-588890978-1354937010=:8165"
+Received: from he.sipsolutions.net ([78.46.109.217]:56696 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab2LNL7K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Dec 2012 06:59:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/3] mac80211: clean up ieee80211_quiesce
+Date: Fri, 14 Dec 2012 12:59:26 +0100
+Message-Id: <1355486368-14563-2-git-send-email-johannes@sipsolutions.net> (sfid-20121214_125916_372837_03FF856E)
+In-Reply-To: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net>
+References: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Johannes Berg <johannes.berg@intel.com>
 
----1050998036-588890978-1354937010=:8165
-Content-Type: TEXT/PLAIN; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+It's a bit odd that there's a return value that only
+depends on the iftype, move that logic out of the
+function into the only caller that needs it.
 
-On 2012-12-07 19:17 -0800, Thomas Pedersen wrote Georgiewskiy Yuriy:
+Also, since the quiescing could stop timers that
+trigger the sdata work, move the sdata work cancel
+into the function and after the actual quiesce.
 
-ок, i try this and report results, can you also test on 2.4 Ggz? as i 
-understand ch 149 is 802.11a? or this make no sense here?
+Finally, there's no need to call it on interfaces
+that are down, so don't.
 
-TP>Hi Chaoxing and Georgiewsky,
-TP>
-TP>On Mon, Dec 3, 2012 at 6:45 AM, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
-TP>> On 2012-12-03 14:37 -0000, Chaoxing Lin wrote linux-wireless@vger.kernel.org:
-TP>>
-TP>> CL>After a lot of experiments, here are various problems observed.
-TP>> CL>
-TP>> CL>1. The "Fail to stop Tx DMA" related issue plays a role. But not the major part. It accounts for about 3% of packet loss in my testbed.
-TP>> CL>Is anyone looking at this issue? This issue is now very easy to recreate.
-TP>>
-TP>> In my case it much more than 3%.
-TP>
-TP>With wireless-testing HEAD (671c924) I made the following observations
-TP>with 3 nodes in a mesh using ch. 149 HT20 on AR9280.
-TP>
-TP>1. ping -i0.1 does not cause aggregation to take place, and losses are 0%
-TP>2. a UDP iperf test with two nodes generating traffic shows losses
-TP>around 1%. We can observe aggregation taking place in this case.
-TP>
-TP>Can either of you guys reproduce this with the latest
-TP>wireless-testing? Also please CC devel@lists.open80211s.org on any
-TP>mesh bugs in the future.
-TP>
-TP>Thanks!
-TP>Thomas
-TP>--
-TP>To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-TP>the body of a message to majordomo@vger.kernel.org
-TP>More majordomo info at  http://vger.kernel.org/majordomo-info.html
-TP>
+Change-Id: I1632d46d21ba3558ea713d035184f1939905f2f1
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/pm.c | 36 +++++++++++++++++++-----------------
+ 1 file changed, 19 insertions(+), 17 deletions(-)
 
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1050998036-588890978-1354937010=:8165--
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 79a48f3..f321783 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -7,25 +7,23 @@
+ #include "led.h"
+ 
+ /* return value indicates whether the driver should be further notified */
+-static bool ieee80211_quiesce(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_quiesce(struct ieee80211_sub_if_data *sdata)
+ {
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		ieee80211_sta_quiesce(sdata);
+-		return true;
++		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		ieee80211_ibss_quiesce(sdata);
+-		return true;
++		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		ieee80211_mesh_quiesce(sdata);
+-		return true;
+-	case NL80211_IFTYPE_AP_VLAN:
+-	case NL80211_IFTYPE_MONITOR:
+-		/* don't tell driver about this */
+-		return false;
++		break;
+ 	default:
+-		return true;
++		break;
+ 	}
++
++	cancel_work_sync(&sdata->work);
+ }
+ 
+ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+@@ -94,10 +92,9 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 			WARN_ON(err != 1);
+ 			local->wowlan = false;
+ 		} else {
+-			list_for_each_entry(sdata, &local->interfaces, list) {
+-				cancel_work_sync(&sdata->work);
+-				ieee80211_quiesce(sdata);
+-			}
++			list_for_each_entry(sdata, &local->interfaces, list)
++				if (ieee80211_sdata_running(sdata))
++					ieee80211_quiesce(sdata);
+ 			goto suspend;
+ 		}
+ 	}
+@@ -124,13 +121,18 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 
+ 	/* remove all interfaces */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		cancel_work_sync(&sdata->work);
+-
+-		if (!ieee80211_quiesce(sdata))
++		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+ 
+-		if (!ieee80211_sdata_running(sdata))
++		switch (sdata->vif.type) {
++		case NL80211_IFTYPE_AP_VLAN:
++		case NL80211_IFTYPE_MONITOR:
++			/* skip these */
+ 			continue;
++		default:
++			ieee80211_quiesce(sdata);
++			break;
++		}
+ 
+ 		/* disable beaconing */
+ 		ieee80211_bss_info_change_notify(sdata,
+-- 
+1.8.0
+
