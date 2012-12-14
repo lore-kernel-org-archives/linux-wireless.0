@@ -1,30 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57024 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753419Ab2LNNqZ (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:37984 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755745Ab2LNAbB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 08:46:25 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TjVap-0001YU-7T
-	for linux-wireless@vger.kernel.org; Fri, 14 Dec 2012 14:46:23 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] mac80211: bss_info_changed cleanups
-Date: Fri, 14 Dec 2012 14:46:42 +0100
-Message-Id: <1355492806-31673-1-git-send-email-johannes@sipsolutions.net> (sfid-20121214_144629_183869_9F7A9072)
+	Thu, 13 Dec 2012 19:31:01 -0500
+Received: by mail-we0-f174.google.com with SMTP id x10so1205814wey.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 16:31:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <50CA71A4.1010806@net.t-labs.tu-berlin.de>
+References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	<20121213140753.GA26868@pandem0nium>
+	<50CA0F8B.3060905@openwrt.org>
+	<20121213220651.GA30855@pandem0nium>
+	<50CA5EE9.30606@openwrt.org>
+	<50CA71A4.1010806@net.t-labs.tu-berlin.de>
+Date: Thu, 13 Dec 2012 16:30:59 -0800
+Message-ID: <CAJ-Vmonq0kw9_yvub0HXQXJvP6HKhVD81gfo+ttKgyxo1rdG=Q@mail.gmail.com> (sfid-20121214_013117_917121_AE69DB1C)
+Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
+From: Adrian Chadd <adrian@freebsd.org>
+To: Tobias Steinicke <tobias.steinicke@net.t-labs.tu-berlin.de>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	jonbither@gmail.com, jouni@qca.qualcomm.com,
+	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The recalculations going on in the function are rather odd
-and hard to follow, replace them with explicit interface
-type dependent handling where needed at all, overall this
-makes the code simpler and little bit smaller:
+Hi,
 
-   text	   data	    bss	    dec	    hex	filename
- 610582	  38811	    720	 650113	  9eb81	net/mac80211/mac80211.ko (before)
- 610415	  38812	    720	 649947	  9eadb	net/mac80211/mac80211.ko (after)
+So the payload length will be based on HT20 vs HT40, but also the
+spectral scan FFT config. You can specify how many samples to take
+each time and whether to gather them "short" or "not short" time
+interval.
 
-johannes
+So fiddle around with the number of samples in the FFT config and
+you'll see different sized payloads.
 
+Since Felix has just posted the spectral scan FFT format, we may as
+well post the radar FFT format. :)
+
+
+
+Adrian
