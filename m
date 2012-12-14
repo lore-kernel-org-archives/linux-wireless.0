@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53230 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946007Ab2LFQsF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:48:05 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 14/24] regulatory: remove useless warning
-Date: Thu,  6 Dec 2012 17:47:38 +0100
-Message-Id: <1354812468-15709-15-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174855_761076_00E6999A)
-In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37793 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756079Ab2LNN5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Dec 2012 08:57:53 -0500
+Message-ID: <50CB3058.6020206@hauke-m.de> (sfid-20121214_145818_558259_E95A362D)
+Date: Fri, 14 Dec 2012 14:57:44 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Kevin McCready <kevin1mccready@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Problem in FAQ
+References: <CAKoT1EZh=u3bA6Jcftmsj8cNbGEctVfm_Boi7umzHe1T4EZuTw@mail.gmail.com> <50CB1D7D.2030301@hauke-m.de> <CAKoT1EYRi9pCc9A9mGs3OKGhgrNOL6OJFm87qfmp+hSRaNhZjA@mail.gmail.com>
+In-Reply-To: <CAKoT1EYRi9pCc9A9mGs3OKGhgrNOL6OJFm87qfmp+hSRaNhZjA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 12/14/2012 01:50 PM, Kevin McCready wrote:
+> It seems the output of lspci -nn and lspci are the same in this case.
+> I don't know how to extract the pci ID from the output.
 
-Even if it never happens and is hidden behind the
-debug config option, it's completely useless: the
-calltrace will only show module loading.
+No lspci -nn has a different output, it also prints the pci id of the
+devices.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 4 ----
- 1 file changed, 4 deletions(-)
+Please do not remove the mailing list from cc and stop top posting.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index de3cf71..fe8a13f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2323,10 +2323,6 @@ int __init regulatory_init(void)
- 		 * errors as non-fatal.
- 		 */
- 		pr_err("kobject_uevent_env() was unable to call CRDA during init\n");
--#ifdef CONFIG_CFG80211_REG_DEBUG
--		/* We want to find out exactly why when debugging */
--		WARN_ON(err);
--#endif
- 	}
- 
- 	/*
--- 
-1.8.0
+Hauke
+> 
+> On Sat, Dec 15, 2012 at 1:37 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> On 12/14/2012 09:35 AM, Kevin McCready wrote:
+>>>
+>>> FAQ says: Forget about XXX, what really matters is PCI or USB
+>>> (depending on the bus your device uses) ID pair: VID:PID. So to find
+>>> out if your device is supported, use lspci -nn or lsusb to learn the
+>>> ID pair.
+>>>
+>>> I have no idea what this means.
+>>>
+>>> I did lspci and got
+>>> k@k-Presario-CQ57-Notebook-PC:
+>>> ~$ lspci
+>> ...
+>>> 02:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
+>>> 802.11b/g/n WiFi Adapter (rev 01)
+>> ...
+>>
+>> You have a Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
+>> Adapter and it should be supported by Linux since 2.6.38. If you are
+>> using such a kernel version or a more recent one and this device is
+>> still not recognized by Linux, please run "lspci -nn" like the FAQ says
+>> to get the pci id.
+>>
+>>>
+>>> I have no idea whether my wireless problem is a usb or pci problem.
+>>> I have no idea what the pair is.
+>>>
+>>> I would be grateful for a better FAQ to help me.
+>>
+> 
+> 
+> 
 
