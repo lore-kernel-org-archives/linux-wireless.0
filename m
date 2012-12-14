@@ -1,50 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54431 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753877Ab2LMXJZ (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:56029 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751088Ab2LNIfR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 18:09:25 -0500
-Message-ID: <1355440186.9463.36.camel@jlt4.sipsolutions.net> (sfid-20121214_000928_312565_7B8D87D3)
-Subject: Re: [PATCH 1/2] cfg80211: allow drivers to selectively disable
- 80/160 MHz
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 14 Dec 2012 00:09:46 +0100
-In-Reply-To: <CAB=NE6Wudb52Wurot4j_+9JSjrcKHrfwgKmr_PVVftjLtfxY5A@mail.gmail.com> (sfid-20121213_234445_071561_AB20E3B3)
-References: <1355337296-5815-1-git-send-email-johannes@sipsolutions.net>
-	 <1355337296-5815-2-git-send-email-johannes@sipsolutions.net>
-	 <CAB=NE6Wudb52Wurot4j_+9JSjrcKHrfwgKmr_PVVftjLtfxY5A@mail.gmail.com>
-	 (sfid-20121213_234445_071561_AB20E3B3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 14 Dec 2012 03:35:17 -0500
+Received: by mail-ie0-f174.google.com with SMTP id c11so5433221ieb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Dec 2012 00:35:16 -0800 (PST)
+MIME-Version: 1.0
+Date: Fri, 14 Dec 2012 21:35:16 +1300
+Message-ID: <CAKoT1EZh=u3bA6Jcftmsj8cNbGEctVfm_Boi7umzHe1T4EZuTw@mail.gmail.com> (sfid-20121214_093526_102969_8B2D9BA0)
+Subject: Problem in FAQ
+From: Kevin McCready <kevin1mccready@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-13 at 14:44 -0800, Luis R. Rodriguez wrote:
-> On Wed, Dec 12, 2012 at 10:34 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > Some drivers might support 80 or 160 MHz only on some
-> > channels for whatever reason, so allow them to disable
-> > these channel widths. Also maintain the new flags when
-> > regulatory bandwidth limitations would disable these
-> > wide channels.
-> >
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> We need something to spell out VHT80 and VHT160 as a capability for
-> debugging on ht_print_chan().
+--
+cheers
+kevin1mccready@gmail.com
+32 Hawera Rd
+Kohimarama 1071
+Auckland, New Zealand
++64 (0)9 528 1174 home
++64 (0)226 710 335 cell
+http://kmccready.wordpress.com
 
-Well, not sure. I don't have VHT80 bits like HT40+/-, I only have "can
-do 80 MHz on this channel", and the next patch advertises it to nl80211
-anyway so we can use iw to dump it.
+FAQ says: Forget about XXX, what really matters is PCI or USB
+(depending on the bus your device uses) ID pair: VID:PID. So to find
+out if your device is supported, use lspci -nn or lsusb to learn the
+ID pair.
 
->  This patch also seems to depend on a
-> patch posted as RFC, not PATCH.
+I have no idea what this means.
 
-Yeah that's probably true.
+I did lspci and got
+k@k-Presario-CQ57-Notebook-PC:
+~$ lspci
+00:00.0 Host bridge: Intel Corporation 2nd Generation Core Processor
+Family DRAM Controller (rev 09)
+00:02.0 VGA compatible controller: Intel Corporation 2nd Generation
+Core Processor Family Integrated Graphics Controller (rev 09)
+00:16.0 Communication controller: Intel Corporation 6 Series/C200
+Series Chipset Family MEI Controller #1 (rev 04)
+00:1a.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset
+Family USB Enhanced Host Controller #2 (rev 05)
+00:1b.0 Audio device: Intel Corporation 6 Series/C200 Series Chipset
+Family High Definition Audio Controller (rev 05)
+00:1c.0 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset
+Family PCI Express Root Port 1 (rev b5)
+00:1c.2 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset
+Family PCI Express Root Port 3 (rev b5)
+00:1c.4 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset
+Family PCI Express Root Port 5 (rev b5)
+00:1d.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset
+Family USB Enhanced Host Controller #1 (rev 05)
+00:1f.0 ISA bridge: Intel Corporation HM65 Express Chipset Family LPC
+Controller (rev 05)
+00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series
+Chipset Family 6 port SATA AHCI Controller (rev 05)
+00:1f.3 SMBus: Intel Corporation 6 Series/C200 Series Chipset Family
+SMBus Controller (rev 05)
+01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+RTL8101E/RTL8102E PCI Express Fast Ethernet controller (rev 05)
+02:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
+802.11b/g/n WiFi Adapter (rev 01)
+03:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd.
+RTS5116 PCI Express Card Reader (rev 01)
 
-johannes
+I did lsusb and got:
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 002 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 001 Device 003: ID 05c8:021e Cheng Uei Precision Industry Co., Ltd (Foxlink)
+Bus 002 Device 003: ID 0458:0037 KYE Systems Corp. (Mouse Systems)
 
+I have no idea whether my wireless problem is a usb or pci problem.
+I have no idea what the pair is.
+
+I would be grateful for a better FAQ to help me.
