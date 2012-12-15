@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:52199 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752775Ab2LZCYx (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:34500 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab2LVOwo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Dec 2012 21:24:53 -0500
-Message-ID: <50DA5FF0.2010300@lwfinger.net> (sfid-20121226_032526_227459_FB23A1CA)
-Date: Tue, 25 Dec 2012 20:24:48 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dwmw2@infradead.org, Champion Chen <champion_chen@realsil.com.cn>
-Subject: Re: [PATCH] rtk_btusb: Add Bluetooth firmware
-References: <1356057465-15669-1-git-send-email-Larry.Finger@lwfinger.net> <1356477982.21837.93.camel@deadeye.wl.decadent.org.uk>
-In-Reply-To: <1356477982.21837.93.camel@deadeye.wl.decadent.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sat, 22 Dec 2012 09:52:44 -0500
+Received: by mail-wg0-f48.google.com with SMTP id dt10so2538513wgb.15
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 06:52:43 -0800 (PST)
+Message-Id: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com> (sfid-20121222_155248_247145_439B732E)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 15 Dec 2012 23:18:06 +0100
+Subject: [PATCH 1/8] carl9170: advertise support for TDLS
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/25/2012 05:26 PM, Ben Hutchings wrote:
-> On Thu, 2012-12-20 at 20:37 -0600, Larry Finger wrote:
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Signed-off-by: Champion Chen <champion_chen@realsil.com.cn>
->> ---
->>   WHENCE              |    8 ++++++++
->>   rtl_bt/rtl8723a.bin |  Bin 0 -> 23772 bytes
->>   2 files changed, 8 insertions(+)
->>   create mode 100644 rtl_bt/rtl8723a.bin
->>
->> diff --git a/WHENCE b/WHENCE
->> index 3b2f282..f485111 100644
->> --- a/WHENCE
->> +++ b/WHENCE
->> @@ -1811,6 +1811,14 @@ Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
->>
->>   --------------------------------------------------------------------------
->>
->> +Driver: rtk_btusb - Realtek Bluetooth driver
->> +
->> +Info: Supplied by champion_chen@realsil.com.cn along with driver source code
->> +File: rtl_bt/rtl8723a.bin
->> +
->> +Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
-> [...]
->
-> There seem to be some serious problems with the driver that uses this.
-> So, if this is not already in use with an external firmware blob, could
-> you perhaps add some sort of header to the blob and have the driver make
-> some sanity checks before uploading to the device?
+Based on a quick test [ath9k and carl9170],
+TDLS seemed to be working fine. And while
+we are at it, let's move the wiphy feature
+flag set from carl9170_alloc into a single
+place in carl9170_fw.
 
-Yes, I will add a header and the necessary checking. At that point, I will then 
-resubmit.
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/carl9170/fw.c   |    6 +++++-
+ drivers/net/wireless/ath/carl9170/main.c |    4 ----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Larry
-
+diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
+index aaebecd..5a8a9f8 100644
+--- a/drivers/net/wireless/ath/carl9170/fw.c
++++ b/drivers/net/wireless/ath/carl9170/fw.c
+@@ -354,7 +354,11 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
+ 
+ 	ar->hw->wiphy->interface_modes |= if_comb_types;
+ 
+-	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
++	ar->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
++
++	/* As IBSS Encryption is software-based, IBSS RSN is supported. */
++	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
++		 WIPHY_FLAG_IBSS_RSN | WIPHY_FLAG_SUPPORTS_TDLS;
+ 
+ #undef SUPPORTED
+ 	return carl9170_fw_tx_sequence(ar);
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 25a1e2f..9dce200 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1805,10 +1805,6 @@ void *carl9170_alloc(size_t priv_size)
+ 	for (i = 0; i < ARRAY_SIZE(ar->noise); i++)
+ 		ar->noise[i] = -95; /* ATH_DEFAULT_NOISE_FLOOR */
+ 
+-	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+-
+-	/* As IBSS Encryption is software-based, IBSS RSN is supported. */
+-	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 	return ar;
+ 
+ err_nomem:
+-- 
+1.7.10.4
 
