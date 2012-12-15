@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from posteo.de ([89.146.220.134]:56827 "EHLO posteo.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964887Ab2LIHsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2012 02:48:16 -0500
-Date: Sun, 9 Dec 2012 08:44:50 +0100
-From: Felix Janda <felix.janda@posteo.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT] b43: Load initial firmware file asynchronously
-Message-ID: <20121209074450.GA1073@gauss> (sfid-20121209_084829_427519_1B4D4B21)
-References: <20121208143032.GA1903@gauss>
- <50C375BE.9050907@lwfinger.net>
- <20121208175615.GA10664@gauss>
- <50C399A9.2060304@lwfinger.net>
- <20121208202435.GA14973@gauss>
- <50C3AF0C.8000607@lwfinger.net>
- <20121208214157.GA21034@gauss>
- <50C3BD0F.1050603@lwfinger.net>
- <20121208223509.GA21258@gauss>
- <50C3C940.3060704@lwfinger.net>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:61194 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837Ab2LOXgR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Dec 2012 18:36:17 -0500
+Received: by mail-vc0-f174.google.com with SMTP id d16so5817127vcd.19
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Dec 2012 15:36:17 -0800 (PST)
+Message-ID: <50CD096D.1000504@lwfinger.net> (sfid-20121216_003626_322562_D93100EC)
+Date: Sat, 15 Dec 2012 17:36:13 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50C3C940.3060704@lwfinger.net>
+To: Martin Beran <info@berycz.net>
+CC: linux-wireless@vger.kernel.org, Piotr Haber <phaber@broadcom.com>
+Subject: Re: bugreport Broadcom BCM4313
+References: <50CCCF49.7040108@berycz.net> <50CCE126.6020503@berycz.net>
+In-Reply-To: <50CCE126.6020503@berycz.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/08/12 at 05:12pm, Larry Finger wrote:
-> > The delay of 60 seconds will stay?
-> 
-> As this happens while user-space is getting started, there is little we can do. 
-> On my dual-core x86_64 system with each CPU running at 2 GHz, it takes 24 sec 
-> before the fw is loaded. At least other things happen in parallel.
-> 
-> Larry
+On 12/15/2012 02:44 PM, Martin Beran wrote:
+> (sry for my mistake in the subject before, Broadcom BCM4313 it is)
+>
+> to clarify
+> it is still asking for wpa key, but doesnt want to connect
+>
+> from irc:
+>  > b6fc28a158076ca2764edc9a6d1e1402f56e1c0c is the bad commit
+>  > it added usleep_range() instead of udelay()
 
-Ok. (The behavior is now the same as if the firmware was built into the kernel.)
+Did you get a patch from IRC? If not, the one below will likely do the trick.
 
-So thanks again for the fix.
+Larry
 
-Felix
+
+
+Index: wireless-testing-new/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ wireless-testing-new/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -1343,13 +1343,13 @@ static bool wlc_lcnphy_rx_iq_cal_gain(st
+
+  	wlc_lcnphy_rx_gain_override_enable(pi, true);
+  	wlc_lcnphy_start_tx_tone(pi, 2000, (40 >> 1), 0);
+-	usleep_range(500, 500);
++	udelay(500);
+  	write_radio_reg(pi, RADIO_2064_REG112, 0);
+  	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_l))
+  		return false;
+
+  	wlc_lcnphy_start_tx_tone(pi, 2000, 40, 0);
+-	usleep_range(500, 500);
++	udelay(500);
+  	write_radio_reg(pi, RADIO_2064_REG112, 0);
+  	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_h))
+  		return false;
