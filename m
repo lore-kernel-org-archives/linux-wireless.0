@@ -1,96 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52719 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335Ab2L1JJW (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:60184 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab2LPIzw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Dec 2012 04:09:22 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/4] mac80211: split out aggregation TX removal
-Date: Fri, 28 Dec 2012 10:09:39 +0100
-Message-Id: <1356685781-6758-3-git-send-email-johannes@sipsolutions.net> (sfid-20121228_100932_482535_F2E083AC)
-In-Reply-To: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net>
-References: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net>
+	Sun, 16 Dec 2012 03:55:52 -0500
+Received: by mail-ie0-f174.google.com with SMTP id c11so7933789ieb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Dec 2012 00:55:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1355486368-14563-3-git-send-email-johannes@sipsolutions.net>
+References: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net>
+	<1355486368-14563-3-git-send-email-johannes@sipsolutions.net>
+Date: Sun, 16 Dec 2012 10:55:51 +0200
+Message-ID: <CAB3XZEeGABu9B-Cd27rjrTgtArf3gvV=2KejW+MctSWyGAL4CA@mail.gmail.com> (sfid-20121216_095556_135553_3BA8D335)
+Subject: Re: [PATCH 2/3] mac80211: clean up association better in suspend
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Dec 14, 2012 at 1:59 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> When suspending, bss_info_changed() is called to
+> disable beacons, but managed mode interfaces are
+> simply removed (bss_info_changed() is called with
+> "no change" only). This can lead to problems.
+>
+> To fix this and copy the BSS configuration, clear
+> it during suspend and restore it on resume.
+>
+> Change-Id: Ie1b7f6343fe59dfbff886b9720e4c15686d7fda7
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
 
-Create the function ieee80211_remove_tid_tx to call
-it from ___ieee80211_stop_tx_ba_session later.
+> @@ -121,6 +121,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+> @@ -129,14 +131,19 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+>                 case NL80211_IFTYPE_MONITOR:
+>                         /* skip these */
+>                         continue;
+> +               case NL80211_IFTYPE_STATION:
+> +                       changed = BSS_CHANGED_ASSOC;
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-tx.c | 48 ++++++++++++++++++++++++++++++------------------
- 1 file changed, 30 insertions(+), 18 deletions(-)
+maybe set it only if associated?
+also, is there really a point in notifying BSS_CHANGED_ASSOC without
+notifying CHANGED_BSSID (and maybe CHANGED_IDLE)?
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index e0656d7..101bbfb 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -713,6 +713,35 @@ int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
- 
-+static void ieee80211_remove_tid_tx(struct sta_info *sta, int tid)
-+{
-+	struct tid_ampdu_tx *tid_tx;
-+
-+	lockdep_assert_held(&sta->ampdu_mlme.mtx);
-+	lockdep_assert_held(&sta->lock);
-+
-+	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-+
-+	/*
-+	 * When we get here, the TX path will not be lockless any more wrt.
-+	 * aggregation, since the OPERATIONAL bit has long been cleared.
-+	 * Thus it will block on getting the lock, if it occurs. So if we
-+	 * stop the queue now, we will not get any more packets, and any
-+	 * that might be being processed will wait for us here, thereby
-+	 * guaranteeing that no packets go to the tid_tx pending queue any
-+	 * more.
-+	 */
-+
-+	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
-+
-+	/* future packets must not find the tid_tx struct any more */
-+	ieee80211_assign_tid_tx(sta, tid, NULL);
-+
-+	ieee80211_agg_splice_finish(sta->sdata, tid);
-+
-+	kfree_rcu(tid_tx, rcu_head);
-+}
-+
- void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-@@ -751,24 +780,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
- 		ieee80211_send_delba(sta->sdata, ra, tid,
- 			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
- 
--	/*
--	 * When we get here, the TX path will not be lockless any more wrt.
--	 * aggregation, since the OPERATIONAL bit has long been cleared.
--	 * Thus it will block on getting the lock, if it occurs. So if we
--	 * stop the queue now, we will not get any more packets, and any
--	 * that might be being processed will wait for us here, thereby
--	 * guaranteeing that no packets go to the tid_tx pending queue any
--	 * more.
--	 */
--
--	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
--
--	/* future packets must not find the tid_tx struct any more */
--	ieee80211_assign_tid_tx(sta, tid, NULL);
--
--	ieee80211_agg_splice_finish(sta->sdata, tid);
--
--	kfree_rcu(tid_tx, rcu_head);
-+	ieee80211_remove_tid_tx(sta, tid);
- 
-  unlock_sta:
- 	spin_unlock_bh(&sta->lock);
--- 
-1.8.0
+> -               /* disable beaconing */
+> -               ieee80211_bss_info_change_notify(sdata,
+> -                       BSS_CHANGED_BEACON_ENABLED);
+> +               sdata->suspend_bss_conf = sdata->vif.bss_conf;
+> +               memset(&sdata->vif.bss_conf, 0, sizeof(sdata->vif.bss_conf));
 
+it probably doesn't matter much (as you don't notify CHANGED_IDLE),
+but setting vif.idle=0 is probably not your intention here.
