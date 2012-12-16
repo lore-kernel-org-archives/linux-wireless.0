@@ -1,171 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:48610 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756358Ab2LMSwJ (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:62571 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab2LVOqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:52:09 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so1795431pad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 10:52:08 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCH 1/6] nl80211: add range checks to mesh parameters
-Date: Thu, 13 Dec 2012 10:51:53 -0800
-Message-Id: <1355424718-2982-2-git-send-email-marco@cozybit.com> (sfid-20121213_195215_248537_B2959015)
-In-Reply-To: <1355424718-2982-1-git-send-email-marco@cozybit.com>
-References: <1355424718-2982-1-git-send-email-marco@cozybit.com>
+	Sat, 22 Dec 2012 09:46:09 -0500
+Received: by mail-wi0-f172.google.com with SMTP id o1so5699747wic.11
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 06:46:08 -0800 (PST)
+Message-Id: <d343eda14ab39b1890edf2d2a4e1456eae55a254.1356186145.git.chunkeey@googlemail.com> (sfid-20121222_154618_732471_DFADE9AE)
+In-Reply-To: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
+References: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 16 Dec 2012 01:41:37 +0100
+Subject: [PATCH 4/8] carl9170: allow P2P_GO interface creation after
+ P2P_CLIENT
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ranges are taken from IEEE 802.11-2012, common sense or current implementation
-requirements.
+Janusz Dziedzic reported that after a change in wpa_supplicant
+["nl80211: Automatically use concurrent P2P if possible"],
+carl9170 was no longer able to host a P2P network.
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
+This patch tackles the problem by allowing GO interfaces to be
+registered, long after the P2P_CLIENT interface is brought up.
+
+Reported-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- net/wireless/nl80211.c |   75 +++++++++++++++++++++++++++---------------------
- 1 file changed, 42 insertions(+), 33 deletions(-)
+ drivers/net/wireless/ath/carl9170/main.c |   54 ++++++++++++++++++++++++++++--
+ 1 file changed, 51 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f45706a..fa58012 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3967,11 +3967,13 @@ static int nl80211_parse_mesh_config(struct genl_info *info,
- 	struct nlattr *tb[NL80211_MESHCONF_ATTR_MAX + 1];
- 	u32 mask = 0;
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 9dce200..5d3cb88 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -580,7 +580,7 @@ static int carl9170_op_add_interface(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif)
+ {
+ 	struct carl9170_vif_info *vif_priv = (void *) vif->drv_priv;
+-	struct ieee80211_vif *main_vif;
++	struct ieee80211_vif *main_vif, *old_main = NULL;
+ 	struct ar9170 *ar = hw->priv;
+ 	int vif_id = -1, err = 0;
  
--#define FILL_IN_MESH_PARAM_IF_SET(table, cfg, param, mask, attr_num, nla_fn) \
--do {\
--	if (table[attr_num]) {\
--		cfg->param = nla_fn(table[attr_num]); \
--		mask |= (1 << (attr_num - 1)); \
-+#define FILL_IN_MESH_PARAM_IF_SET(tb, cfg, param, min, max, mask, attr, fn) \
-+do { \
-+	if (tb[attr]) { \
-+		if (fn(tb[attr]) < min || fn(tb[attr]) > max) \
-+			return -EINVAL; \
-+		cfg->param = fn(tb[attr]); \
-+		mask |= (1 << (attr - 1)); \
- 	} \
- } while (0);\
+@@ -602,6 +602,15 @@ static int carl9170_op_add_interface(struct ieee80211_hw *hw,
+ 		goto init;
+ 	}
  
-@@ -3988,81 +3990,88 @@ do {\
- 	BUILD_BUG_ON(NL80211_MESHCONF_ATTR_MAX > 32);
++	/* Because the AR9170 HW's MAC doesn't provide full support for
++	 * multiple, independent interfaces [of different operation modes].
++	 * We have to select ONE main interface [main mode of HW], but we
++	 * can have multiple slaves [AKA: entry in the ACK-table].
++	 *
++	 * The first (from HEAD/TOP) interface in the ar->vif_list is
++	 * always the main intf. All following intfs in this list
++	 * are considered to be slave intfs.
++	 */
+ 	main_vif = carl9170_get_main_vif(ar);
  
- 	/* Fill in the params struct */
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout, 1, 255,
- 				  mask, NL80211_MESHCONF_RETRY_TIMEOUT,
- 				  nla_get_u16);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConfirmTimeout,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConfirmTimeout, 1, 255,
- 				  mask, NL80211_MESHCONF_CONFIRM_TIMEOUT,
- 				  nla_get_u16);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHoldingTimeout,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHoldingTimeout, 1, 255,
- 				  mask, NL80211_MESHCONF_HOLDING_TIMEOUT,
- 				  nla_get_u16);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxPeerLinks,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxPeerLinks, 0, 255,
- 				  mask, NL80211_MESHCONF_MAX_PEER_LINKS,
- 				  nla_get_u16);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxRetries,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxRetries, 0, 16,
- 				  mask, NL80211_MESHCONF_MAX_RETRIES,
- 				  nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshTTL,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshTTL, 1, 255,
- 				  mask, NL80211_MESHCONF_TTL, nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, element_ttl,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, element_ttl, 1, 255,
- 				  mask, NL80211_MESHCONF_ELEMENT_TTL,
- 				  nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, auto_open_plinks,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, auto_open_plinks, 0, 1,
- 				  mask, NL80211_MESHCONF_AUTO_OPEN_PLINKS,
- 				  nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshNbrOffsetMaxNeighbor, mask,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshNbrOffsetMaxNeighbor,
-+				  1, 255, mask,
- 				  NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR,
- 				  nla_get_u32);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPmaxPREQretries,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPmaxPREQretries, 0, 255,
- 				  mask, NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES,
- 				  nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, path_refresh_time,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, path_refresh_time, 1, 65535,
- 				  mask, NL80211_MESHCONF_PATH_REFRESH_TIME,
- 				  nla_get_u32);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, min_discovery_timeout,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, min_discovery_timeout, 1, 65535,
- 				  mask, NL80211_MESHCONF_MIN_DISCOVERY_TIMEOUT,
- 				  nla_get_u16);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathTimeout, mask,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathTimeout,
-+				  1, 65535, mask,
- 				  NL80211_MESHCONF_HWMP_ACTIVE_PATH_TIMEOUT,
- 				  nla_get_u32);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPpreqMinInterval,
--				  mask, NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL,
-+				  1, 65535, mask,
-+				  NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL,
- 				  nla_get_u16);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPperrMinInterval,
--				  mask, NL80211_MESHCONF_HWMP_PERR_MIN_INTERVAL,
-+				  1, 65535, mask,
-+				  NL80211_MESHCONF_HWMP_PERR_MIN_INTERVAL,
- 				  nla_get_u16);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
--				  dot11MeshHWMPnetDiameterTraversalTime, mask,
-+				  dot11MeshHWMPnetDiameterTraversalTime,
-+				  1, 65535, mask,
- 				  NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
- 				  nla_get_u16);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRootMode, mask,
--				  NL80211_MESHCONF_HWMP_ROOTMODE, nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRannInterval, mask,
--				  NL80211_MESHCONF_HWMP_RANN_INTERVAL,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRootMode, 0, 4,
-+				  mask, NL80211_MESHCONF_HWMP_ROOTMODE,
-+				  nla_get_u8);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRannInterval, 1, 65535,
-+				  mask, NL80211_MESHCONF_HWMP_RANN_INTERVAL,
- 				  nla_get_u16);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
--				  dot11MeshGateAnnouncementProtocol, mask,
--				  NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
-+				  dot11MeshGateAnnouncementProtocol, 0, 1,
-+				  mask, NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
- 				  nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding, 0, 1,
- 				  mask, NL80211_MESHCONF_FORWARDING,
- 				  nla_get_u8);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, 1, 255,
- 				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
- 				  nla_get_u32);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
- 				  mask, NL80211_MESHCONF_HT_OPMODE,
- 				  nla_get_u16);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
--				  mask,
-+				  1, 65535, mask,
- 				  NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
- 				  nla_get_u32);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMProotInterval,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMProotInterval, 1, 65535,
- 				  mask, NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
- 				  nla_get_u16);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
--				  dot11MeshHWMPconfirmationInterval, mask,
-+				  dot11MeshHWMPconfirmationInterval,
-+				  1, 65535, mask,
- 				  NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
- 				  nla_get_u16);
- 	if (mask_out)
+ 	if (main_vif) {
+@@ -610,6 +619,18 @@ static int carl9170_op_add_interface(struct ieee80211_hw *hw,
+ 			if (vif->type == NL80211_IFTYPE_STATION)
+ 				break;
+ 
++			/* P2P GO [master] use-case
++			 * Because the P2P GO station is selected dynamically
++			 * by all participating peers of a WIFI Direct network,
++			 * the driver has be able to change the main interface
++			 * operating mode on the fly.
++			 */
++			if (main_vif->p2p && vif->p2p &&
++			    vif->type == NL80211_IFTYPE_AP) {
++				old_main = main_vif;
++				break;
++			}
++
+ 			err = -EBUSY;
+ 			rcu_read_unlock();
+ 
+@@ -648,14 +669,41 @@ static int carl9170_op_add_interface(struct ieee80211_hw *hw,
+ 	vif_priv->id = vif_id;
+ 	vif_priv->enable_beacon = false;
+ 	ar->vifs++;
+-	list_add_tail_rcu(&vif_priv->list, &ar->vif_list);
++	if (old_main) {
++		/* We end up in here, if the main interface is being replaced.
++		 * Put the new main interface at the HEAD of the list and the
++		 * previous inteface will automatically become second in line.
++		 */
++		list_add_rcu(&vif_priv->list, &ar->vif_list);
++	} else {
++		/* Add new inteface. If the list is empty, it will become the
++		 * main inteface, otherwise it will be slave.
++		 */
++		list_add_tail_rcu(&vif_priv->list, &ar->vif_list);
++	}
+ 	rcu_assign_pointer(ar->vif_priv[vif_id].vif, vif);
+ 
+ init:
+-	if (carl9170_get_main_vif(ar) == vif) {
++	main_vif = carl9170_get_main_vif(ar);
++
++	if (main_vif == vif) {
+ 		rcu_assign_pointer(ar->beacon_iter, vif_priv);
+ 		rcu_read_unlock();
+ 
++		if (old_main) {
++			struct carl9170_vif_info *old_main_priv =
++				(void *) old_main->drv_priv;
++			/* downgrade old main intf to slave intf.
++			 * NOTE: We are no longer under rcu_read_lock.
++			 * But we are still holding ar->mutex, so the
++			 * vif data [id, addr] is safe.
++			 */
++			err = carl9170_mod_virtual_mac(ar, old_main_priv->id,
++						       old_main->addr);
++			if (err)
++				goto unlock;
++		}
++
+ 		err = carl9170_init_interface(ar, vif);
+ 		if (err)
+ 			goto unlock;
 -- 
-1.7.9.5
+1.7.10.4
 
