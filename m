@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:52257 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753539Ab2LEUpb (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:63979 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752289Ab2LPD3l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 15:45:31 -0500
-Received: by mail-wg0-f46.google.com with SMTP id dr13so3266255wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2012 12:45:30 -0800 (PST)
+	Sat, 15 Dec 2012 22:29:41 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so1876887eaa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Dec 2012 19:29:40 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1354612418-6644-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1354612418-6644-1-git-send-email-rmanohar@qca.qualcomm.com>
-Date: Wed, 5 Dec 2012 12:39:00 -0800
-Message-ID: <CAJ-VmonMu=98Viwk1qvR-NGrO-qBx2KYT551xaO1KjHEz4Kt3A@mail.gmail.com> (sfid-20121205_214535_449957_6B5CE15E)
-Subject: Re: [PATCH] qca-swiss-army-knife: Add support to dump AR9003 chips EEPROM
-From: Adrian Chadd <adrian@freebsd.org>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: rodrigue@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Sat, 15 Dec 2012 22:29:40 -0500
+Message-ID: <CANa_0w2mShPgK4VwSzAFh+BSsxU5xYmWxogTcz_ZpVdj1seKgg@mail.gmail.com> (sfid-20121216_042950_419350_4B4A993F)
+Subject: txpower anything you make db.txt say ?
+From: Jason Mclaughlin <mcjason@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a general comment - wouldn't it be cleaner to have the PCI IDs
-and the EEPROM definitions pulled from the ath9k driver source or a
-separate header file, so you don't run the risk of having definitions
-"drift" slightly?
+ was wondering... with a AEUS036NHA wireless adapater (ath9k), why
+does it seem like I can set the power arbitrarily higher if I make my
+own regulatory.bin
+from the crda package. I doubt for real that's the power since the
+adapater is rated at 1000mw afaik.
 
-I doubt that anyone is going to change the cal data format or the
-default templates very often (or at all!), but .. just having those
-definitions duplicated feels wrong to me.
+I wanted to test if it was really having more power than 20db when I
+found out how to do that, but I suspiciously though it was just saying
+it's as high
+as you make db.txt say. This seems true at a whopping 48db (I never
+did anything like connect to someone, just rebooted at turned it back
+to 30).
 
-I have EEPROM dump/parse utilities in FreeBSD, but I pull the EEPROM
-structure definitions out of the HAL code so I only have them defined
-in one place.
-
-2c,
+Also wanted to know, does it really do 30db? I noticed between two
+adapaters a mild improvement when setting it higher than 20 but it's
+hard to tell.
 
 
-Adrian
+root@debian:/home/jason# iwconfig
+wlan2     IEEE 802.11bgn  ESSID:off/any
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=48 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+
+eth0      no wireless extensions.
+
+lo        no wireless extensions.
+
+wlan0     IEEE 802.11bgn  ESSID:off/any
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
