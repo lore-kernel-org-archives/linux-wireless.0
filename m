@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:44022 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411Ab2LMLPI (ORCPT
+Received: from mo-p05-ob.rzone.de ([81.169.146.180]:34058 "EHLO
+	mo-p05-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132Ab2LPByQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 06:15:08 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so1483074pad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 03:15:07 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] [mac80211] use short slot time in mesh for 5GHz
-Date: Thu, 13 Dec 2012 18:59:57 +0800
-Message-Id: <1355396397-25298-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20121213_121512_705340_345D63A2)
+	Sat, 15 Dec 2012 20:54:16 -0500
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: Realtek RTL8192DU
+Date: Sun, 16 Dec 2012 02:54:06 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+References: <5087035E.9010609@lwfinger.net>
+In-Reply-To: <5087035E.9010609@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201212160254.11739.s.L-H@gmx.de> (sfid-20121216_025421_127015_840E73B4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use short slot time in 5GHz for mesh. The performance is
-increased from 16.4Mbps to 23.4Mbps for two directly
-connected mesh STAs operating in legacy rate using iperf
-measurement. Almost similar to the results claimed in IBSS
-mode.
+Hi
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- net/mac80211/mesh.c |   19 ++++++++++++++-----
- 1 files changed, 14 insertions(+), 5 deletions(-)
+On Tuesday 23 October 2012, Larry Finger wrote:
+> Arend and Franky,
+> 
+> I recently purchased a Belkin N600 DB USB dongle on Ebay. I wanted to get the 
+> model with a Realtek RTL8192DU chip.
+[…] 
+> I have since acquired a different device with the Realtek chip, thus I could 
+> return the Belkin device;
+[…]
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 1bf03f9..ee0d8a3 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -607,6 +607,13 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_local *local = sdata->local;
-+	u32 changed;
-+
-+	changed = BSS_CHANGED_BEACON |
-+		  BSS_CHANGED_BEACON_ENABLED |
-+		  BSS_CHANGED_HT |
-+		  BSS_CHANGED_BASIC_RATES |
-+		  BSS_CHANGED_BEACON_INT;
- 
- 	local->fif_other_bss++;
- 	/* mesh ifaces must set allmulti to forward mcast traffic */
-@@ -628,11 +635,13 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.bss_conf.basic_rates =
- 		ieee80211_mandatory_rates(sdata->local,
- 					  ieee80211_get_sdata_band(sdata));
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
--						BSS_CHANGED_BEACON_ENABLED |
--						BSS_CHANGED_HT |
--						BSS_CHANGED_BASIC_RATES |
--						BSS_CHANGED_BEACON_INT);
-+
-+	if (ieee80211_get_sdata_band(sdata) == IEEE80211_BAND_5GHZ) {
-+		sdata->vif.bss_conf.use_short_slot = true;
-+		changed |= BSS_CHANGED_ERP_SLOT;
-+	}
-+
-+	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	netif_carrier_on(sdata->dev);
- }
--- 
-1.7.0.4
+As I just got hold of a Realtek RTL8192DU device (DeLock 88540[1]), I'm
+curious if you had a go with a driver for this chipset. The vendor 
+driver seems to have issues with 64 bit operation (and kernel 3.7).
 
+usb 3-1.1: new high-speed USB device number 6 using ehci_hcd
+usb 3-1.1: New USB device found, idVendor=0bda, idProduct=8194
+usb 3-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 3-1.1: Product: 802.11n NIC
+usb 3-1.1: Manufacturer: Realtek
+usb 3-1.1: SerialNumber: 00e04c000001
+
+Regards
+	Stefan Lippers-Hollmann
+
+[1]	http://www.delock.com/produkte/G_88540/merkmale.html?setLanguage=en
