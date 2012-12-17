@@ -1,108 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht2.myhostedexchange.com ([69.50.2.38]:26126 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753003Ab2LBRL2 (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:46093 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752678Ab2LQM7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 12:11:28 -0500
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCHv2 2/2] mac80211: configure short_preamble capability if requested
-Date: Sun, 2 Dec 2012 18:10:18 +0100
-Message-ID: <1354468218-30605-2-git-send-email-antonio@open-mesh.com> (sfid-20121202_181132_678440_485779CC)
-In-Reply-To: <1354468218-30605-1-git-send-email-antonio@open-mesh.com>
-References: <1354468218-30605-1-git-send-email-antonio@open-mesh.com>
+	Mon, 17 Dec 2012 07:59:07 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20687.3736.365327.811519@pilspetsen.it.uu.se>
+References: <20686.63778.840426.61474@pilspetsen.it.uu.se>
+	<CAHdPZaPQNQ1WS5Qkb4FpmmOX7mXL10HsdaXf5dctp2hd2T0Sow@mail.gmail.com>
+	<20687.3736.365327.811519@pilspetsen.it.uu.se>
+Date: Mon, 17 Dec 2012 07:59:06 -0500
+Message-ID: <CAHdPZaNOK=isKPZtxYaBFsGvcpN0261wExaXgRYjg5N3Y7qJZg@mail.gmail.com> (sfid-20121217_135912_792990_786835B3)
+Subject: Re: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to
+ initialize hw
+From: "devendra.aaru" <devendra.aaru@gmail.com>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the short preamble option is specified by the user on
-IBSS join, mac80211 will try to set it in the driver.
-Such capability is then advertised by Beacons/ProbeResp
-in the capability field.
+On Mon, Dec 17, 2012 at 7:22 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
+> devendra.aaru writes:
+>  > On Mon, Dec 17, 2012 at 5:51 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
+>  > > I just updated an old 1st gen AMD64 laptop from kernel 3.6.0 to 3.7.0,
+>  > > Fedora 15 user-space, and was greeted by the following kernel warning:
+>  > >
+>  > > WARNING: at net/wireless/core.c:389 wiphy_register+0x5c3/0x600 [cfg80211]()
+>  >
+>  > I am seeing this line actually when i do vim +389 net/wireless/core.c.
+>  >
+>  >                 u16 all_iftypes = 0;
+>  >
+>  > its good if you tell us the top sha1 of yours?
+>
+> It's the plain linux-3.7.tar.xz from kernel.org, no git involved.
+> Lines 389-390 of net/wireless/core.c are:
+>
+>                 if (WARN_ON(c->max_interfaces < 2))
+>                         return -EINVAL;
+>
 
-A station not matching the short_preamble capability of
-another set of nodes cannot join the same cell.
+so its v3.7 tag hash 29594404d7fe73cd80eaa4ee8c43dcc53970c60e.
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- net/mac80211/ibss.c | 22 +++++++++++++++++++---
- 1 file changed, 19 insertions(+), 3 deletions(-)
+i see that code line :). thanks
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 11a6a1b..e5ba99a 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -535,6 +535,11 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	if (!(cbss->capability & WLAN_CAPABILITY_IBSS))
- 		goto put_bss;
- 
-+	/* not using the same preamble policy */
-+	if ((cbss->capability & WLAN_CAPABILITY_SHORT_PREAMBLE) !=
-+	    sdata->vif.bss_conf.use_short_preamble)
-+		goto put_bss;
-+
- 	/* different channel */
- 	if (sdata->u.ibss.fixed_channel &&
- 	    sdata->u.ibss.channel != cbss->channel)
-@@ -724,6 +729,9 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
- 	else
- 		sdata->drop_unencrypted = 0;
- 
-+	if (ifibss->vif.bss_conf.use_short_preamble)
-+		capability |= WLAN_CAPABILITY_SHORT_PREAMBLE;
-+
- 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
- 				  ifibss->channel, ifibss->basic_rates,
- 				  capability, 0, true);
-@@ -754,6 +762,8 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 	capability = WLAN_CAPABILITY_IBSS;
- 	if (ifibss->privacy)
- 		capability |= WLAN_CAPABILITY_PRIVACY;
-+	if (ifibss->vif.bss_conf.use_short_preamble)
-+		capability |= WLAN_CAPABILITY_SHORT_PREAMBLE;
- 	if (ifibss->fixed_bssid)
- 		bssid = ifibss->bssid;
- 	if (ifibss->fixed_channel)
-@@ -762,8 +772,8 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 		bssid = ifibss->bssid;
- 	cbss = cfg80211_get_bss(local->hw.wiphy, chan, bssid,
- 				ifibss->ssid, ifibss->ssid_len,
--				WLAN_CAPABILITY_IBSS | WLAN_CAPABILITY_PRIVACY,
--				capability);
-+				WLAN_CAPABILITY_IBSS | WLAN_CAPABILITY_PRIVACY |
-+				WLAN_CAPABILITY_SHORT_PREAMBLE, capability);
- 
- 	if (cbss) {
- 		struct ieee80211_bss *bss;
-@@ -1102,6 +1112,9 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 	memcpy(sdata->u.ibss.ssid, params->ssid, params->ssid_len);
- 	sdata->u.ibss.ssid_len = params->ssid_len;
- 
-+	sdata->vif.bss_conf.use_short_preamble = params->use_short_preamble;
-+	changed |= BSS_CHANGED_ERP_PREAMBLE;
-+
- 	mutex_unlock(&sdata->u.ibss.mtx);
- 
- 	mutex_lock(&sdata->local->mtx);
-@@ -1156,11 +1169,14 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 
- 		if (ifibss->privacy)
- 			capability |= WLAN_CAPABILITY_PRIVACY;
-+		if (ifibss->vif.bss_conf.use_short_preamble)
-+			capability |= WLAN_CAPABILITY_SHORT_PREAMBLE;
- 
- 		cbss = cfg80211_get_bss(local->hw.wiphy, ifibss->channel,
- 					ifibss->bssid, ifibss->ssid,
- 					ifibss->ssid_len, WLAN_CAPABILITY_IBSS |
--					WLAN_CAPABILITY_PRIVACY,
-+					WLAN_CAPABILITY_PRIVACY |
-+					WLAN_CAPABILITY_SHORT_PREAMBLE,
- 					capability);
- 
- 		if (cbss) {
--- 
-1.8.0
+i traced a while and looked at the rt2500pci.c code and there we are
+assigning the max_ap_intf variable to 1. the same go with the
+rt2800pci.c
 
+here's the part of the ops structure
+
+static const struct rt2x00_ops rt2500pci_ops = {
+        .name                   = KBUILD_MODNAME,
+        .max_ap_intf            = 1,
+        .eeprom_size            = EEPROM_SIZE,
+        .rf_size                = RF_SIZE,
+        .tx_queues              = NUM_TX_QUEUES,
+        .extra_tx_headroom      = 0,
+        .rx                     = &rt2500pci_queue_rx,
+        .tx                     = &rt2500pci_queue_tx,
+        .bcn                    = &rt2500pci_queue_bcn,
+        .atim                   = &rt2500pci_queue_atim,
+        .lib                    = &rt2500pci_rt2x00_ops,
+        .hw                     = &rt2500pci_mac80211_ops,
+#ifdef CONFIG_RT2X00_LIB_DEBUGFS
+        .debugfs                = &rt2500pci_rt2x00debug,
+#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+};
+
+i really dont know why is that max_ap_intf is 1. may be some wireless
+dev's know about this?
+
+
+> /Mikael
+>
