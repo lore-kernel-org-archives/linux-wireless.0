@@ -1,72 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:48559 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751592Ab2LTNRv (ORCPT
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:55050 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751448Ab2LQJii (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 08:17:51 -0500
-Message-ID: <50D30FFB.9030003@posedge.com> (sfid-20121220_141755_917337_3233B37B)
-Date: Thu, 20 Dec 2012 18:47:47 +0530
-From: Chaitanya <chaitanyatk@posedge.com>
+	Mon, 17 Dec 2012 04:38:38 -0500
+From: Alberto Garau <Alberto.Garau@inpeco.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
+	Adriano Melis <ADRIANO.MELIS@inpeco.com>,
+	Luca Fresi <luca.fresi@bithiatec.com>
+Subject: RE: wl12xx over spi with no scan results
+Date: Mon, 17 Dec 2012 09:38:29 +0000
+Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C361686@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121217_103842_652603_EE6F896B)
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355218436.3738.122.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355223079.3738.128.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355229286.3738.137.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360949@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355301922.21129.8.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360984@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+ <1355307404.21129.15.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: Fix MAX MTU Calculation
-References: <201212201236.qBKCakFZ011657@chaitanya-desktop>  <50D307FD.9010508@posedge.com> <1356008873.10029.13.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1356008873.10029.13.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 December 2012 06:37 PM, Johannes Berg wrote:
-> On Thu, 2012-12-20 at 18:13 +0530, Chaitanya wrote:
->> Fix the MTU calculation, we should check for data_len+ mesh hdr len
->> and shouldn't include any header lengths.
->>
->> ToDo: Get the MAX_DATA_LEN based on driver's AMSDU capability.
->>
->> Signed-off-by: T Krishna Chaitanya <chaitanyatk@posedge.com>
->>
->> ---
->>
->>  net/mac80211/iface.c |   17 ++++++++++++++++-
->>  1 files changed, 16 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
->> index 54fb7f9..da74ef9 100644
->> --- a/net/mac80211/iface.c
->> +++ b/net/mac80211/iface.c
->> @@ -214,8 +214,23 @@ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
->>  
->>  	/* FIX: what would be proper limits for MTU?
->>  	 * This interface uses 802.3 frames. */
->> +	/* Fixed: MTU needn't worry about headers*/
->> +
->> +	/* 802.11-2012: 8.2.3: The maximum frame body size is determined by
->> +	1. The maximum MSDU size (2304 octets),
->> +	2. plus the length of the Mesh Control field (6, 12, or 18 octets)
->> +		if present,
->> +	3. the maximum unencrypted MMPDU size excluding the MAC header and
->> +		FCS (2304 octets) or
->> +	4. the maximum A- MSDU size (3839 or 7935 octets),
->> +		plus any overhead from security encapsulation.
->> +	Note1: IEEE80211_MAX_DATA_LEN doesnt include any headers (2304),
->> +		so it can be used directly+ Mesh HDR Len
->> +	Note2: In Other places (like skb_alloc) its handled properly.
->> +	 */
->> +
-> ok so the comment style is wrong, you shouldn't list changelog-type
-> things in comments ("Fixed: ...") etc.
->
-> I also don't understand why we should add the mesh length? It seems that
-> this is really just the maximum MSDU size, i.e. 2304 octets.
->
-> johannes
->
-Ok, will change the comments.  So shall i remove the comments
-for FIX as well (or) should i retain them?
-
-As for WLAN is concerned the mesh
-header is part of data (MSDU) hence the standard says the MSDU
-can be Maximum of 2304 + Any Mesh Control Field. (#2 above).
-
+SGkgTHVjYSwNCg0Kd2UgaGF2ZSBiZWVuIGFibGUgdG8gc3VjY2Vzc2Z1bGx5IHJ1biB0aGUgZHJp
+dmVyIGJ1dDoNCg0KV2UgaGF2ZSB0aGUgZGV2aWNlIHJ1bm5pbmcgaW4gU1BJIGFuZCB3ZSBhcmUg
+b2JzZXJ2aW5nIGEgc3RyYW5nZSBzY2VuYXJpby4gV2hlbiB0aGUgQVAgaXMgcGxhY2VkIDEwIG1l
+dGVycyBmYXIgZnJvbSB0aGUgZGV2aWNlICgtNTdkYikgaXQncyB2ZXJ5IGRpZmZpY3VsdCBzY2Fu
+bmluZyB0aGUgRVNTSURzIGFuZCBpbXBvc3NpYmxlIHRvIGNvbm5lY3QgdG8gdGhlbSwgdGhlIHNh
+bWUgYmVoYXZpb3VyIGRvZXNuJ3QgaGFwcGVuIHdoZW4gSSBtb3ZlIHRoZSBBUCBjbG9zZSAoMTAg
+Y20pIHRvIHRoZSBkZXZpY2UuIEluIHRoYXQgY2FzZSBJIGNhbiBzY2FuIHRoZSBFU1NJRHMgYW5k
+IEkgY2FuIGNvbm5lY3QgdG8gdGhlbSBlYXNpbHkuDQoNClRoZSBjYWxpYnJhdGlvbiB3ZSBoYXZl
+IHBlcmZvcm1lZCBpcyB0aGUgRmlyc3QgQ2FsaWJyYXRpb24gbGlzdGVkIG9uIHRoYXQgd2ViIHNp
+dGUgYW5kIHdlIGhhdmUgbW9yZSBxdWVzdGlvbnM6DQoNCjEpIGlzIHRoZXJlIGFueSBkb2N1bWVu
+dCBleHBsYWluaW5nIGluIGRlcHRoIGFsbCB0aGUgcGFyYW1ldGVycyBvZiB0aGUgaW5pIGZpbGUg
+VFFTX1NfMi42LmluaQ0KDQoyKSB3ZSB1c2VkICIuL2NhbGlicmF0b3IgcGx0IGNhbGlicmF0ZSIs
+IHdoYXQgcGx0IG1lYW5zID8NCg0KMykgaWYgd2Ugd2FudCB0byB1c2UgdGhlIGV4cGVydCBtb2Rl
+LCB3ZSB3b3VsZCBoYXZlIHRvIHByb3ZpZGUgPHZvbHRhZ2U+LDxwb3dlcj4sPHN1YmJhbmQ+IGFu
+ZCB0aGVuIHR4X2JpcCBwYXJhbWV0ZXJzLCB3aGVyZSB3ZSBjYW4gZm91bmQgaW5kaWNhdGlvbi9k
+b2N1bWVudGF0aW9uIGFib3V0IHRoYXQgPw0KDQo0KSBpcyB0aGVyZSBhbnkgYXV0byBjYWxpYnJh
+dGlvbiA/DQoNCjUpIENvdWxkIHlvdSBwbGVhc2UgZGVmaW5lIHRoZSBtZWFuaW5nIG9mIHRoZSAi
+VHhCaXAgcHJvY2VkdXJlIiBhbmQgd2hlbiBzaG91bGQgYmUgdXNlZCA/DQoNCjYpIENvdWxkIHlv
+dSBwbGVhc2UgZGVmaW5lIHRoZSBtZWFuaW5nIG9mIHRoZSAiVHggQ29udCBQcm9jZWR1cmUiICBh
+bmQgd2hlbiBzaG91bGQgYmUgdXNlZCA/DQoNCjcpIENvdWxkIHlvdSBwbGVhc2UgZGVmaW5lIHRo
+ZSBtZWFuaW5nIG9mIHRoZSAiUnggU3RhdCBwcm9jZWR1cmUiIGFuZCB3aGVuIHNob3VsZCBiZSB1
+c2VkICA/DQoNCktpbmQgUmVnYXJkcw0KDQpBbGJlcnRvDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2Fn
+ZS0tLS0tDQpGcm9tOiBBbGJlcnRvIEdhcmF1IA0KU2VudDogbWVyY29sZWTDrCAxMiBkaWNlbWJy
+ZSAyMDEyIDEzOjE4DQpUbzogJ0x1Y2lhbm8gQ29lbGhvJw0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZn
+ZXIua2VybmVsLm9yZzsgSWRvIFlhcml2OyBBcmlrIE5lbXRzb3Y7IEFkcmlhbm8gTWVsaXM7IEx1
+Y2EgRnJlc2kNClN1YmplY3Q6IFJFOiB3bDEyeHggb3ZlciBzcGkgd2l0aCBubyBzY2FuIHJlc3Vs
+dHMNCg0KSGkgTHVjYSwNCg0KSSdtIHRyeWluZyB0byBjYWxpYnJhdGUgbXkgZGV2aWNlIGFzIHN1
+Z2dlc3RlZCwgZm9sbG93aW5nIHRoZSBndWlkZSBmb3VuZCBhdDogaHR0cDovL3Byb2Nlc3NvcnMu
+d2lraS50aS5jb20vaW5kZXgucGhwL09NQVBfV2lyZWxlc3NfQ29ubmVjdGl2aXR5X0NhbGlicmF0
+aW9uX1Byb2NjZXNzX05MQ1ANCg0KSW4gcGFydGljdWxhciBJJ20gdHJ5aW5nIHRvIHJlcGxpY2F0
+ZSB0aGUgZXhhbXBsZSBhdCB0aGUgZW5kIG9mIHRoZSBkb2N1bWVudCBhbmQgYXQgc3RlcCAzIG9m
+IHRoZSBleGFtcGxlIEknbSBvYnRhaW5pbmc6DQoNCnJvb3RAKG5vbmUpOn4vdGktdXRpbHMjIC4v
+Y2FsaWJyYXRvciBwbHQgY2FsaWJyYXRlDQp3bDEyNzE6IHBvd2VyIHVwDQpjaGlwX2lkIHJlYWQg
+ZnJvbSBtZW1vcnk6IDA0MDMwMTExDQp3bDEyNzFfZmV0Y2hfZmlybXdhcmUgLSBmZXRjaGluZyBm
+aXJtd2FyZSB3bDEyNzEtZncuYmluIHdsMTI3MV9mZXRjaF9udnMgLSBmZXRjaGluZyBmaXJtd2Fy
+ZSB3bDEyNzEtbnZzLmJpbg0KZW5hYmxlX2ludGVycnVwdHNfd2wxMjcxDQp3bDEyNzE6IGZpcm13
+YXJlIGJvb3RlZCBpbiBQTFQgbW9kZSAoUmV2IDYuMS4wLjUwLjM1MCkgRmFpbCB0byBjYWxpYnJh
+dHdsMTI3MTogcG93ZXIgZG93biBlIGl0aCByYWRpbyBzdGF0ZGlzYWJsZV9pbnRlcnJ1cHRzX3ds
+MTI3MSB1cyAoLTgwKSByb290QChub25lKTp+L3RpLXV0aWxzIw0KDQoNCkFueSBpZGVhIGFib3V0
+IHdoeSBteSBjYWxpYnJhdGlvbiBwcm9jZXNzIGlzIGZhaWxpbmcgPyBJIHdhcyBhYmxlIHRvIGNv
+bXBsZXRlIHRoZSBmaXJzdCBzdGVwcyBjcmVhdGluZyB0aGUgbnZzIGZyb20gaW5pIGZpbGVzIEJ1
+dCBJJ20gZmFpbGluZyBpbiAiY2FsaWJyYXRvciBwbHQgY2FsaWJyYXRlIi4gDQoNClRoYW5rcyBp
+biBhZHZhbmNlIA0KDQpBbGJlcnRvDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9t
+OiBMdWNpYW5vIENvZWxobyBbbWFpbHRvOmNvZWxob0B0aS5jb21dDQpTZW50OiBtZXJjb2xlZMOs
+IDEyIGRpY2VtYnJlIDIwMTIgMTE6MTcNClRvOiBBbGJlcnRvIEdhcmF1DQpDYzogbGludXgtd2ly
+ZWxlc3NAdmdlci5rZXJuZWwub3JnOyBJZG8gWWFyaXY7IEFyaWsgTmVtdHNvdjsgQWRyaWFubyBN
+ZWxpczsgTHVjYSBGcmVzaQ0KU3ViamVjdDogUmU6IHdsMTJ4eCBvdmVyIHNwaSB3aXRoIG5vIHNj
+YW4gcmVzdWx0cw0KDQpPbiBXZWQsIDIwMTItMTItMTIgYXQgMTA6MTMgKzAwMDAsIEFsYmVydG8g
+R2FyYXUgd3JvdGU6DQo+IFRoYW5rcyBMdWNhLA0KPiANCj4gd2UgdHJpZWQgd2l0aCBGQUxMSU5H
+X0VER0UgZm9yIHRoZSBpbnRlcnJ1cHQgYnV0IHRoZSBkcml2ZXIgZ290IHN0dWNrZWQgc28gSSBo
+YWQgdG8gcHV0IGFnYWluIFJJU0lOR19FREdFLg0KPiANCj4gV2Ugc3VjY2Vzc2Z1bGx5IGNyb3Nz
+IGNvbXBpbGVkIGl3IGJ1dCBhbHNvIHdpdGggdGhhdCB0b29sIHdlIGFsd2F5cyANCj4gc2VlIG9u
+bHkgb24gRVNTSUQgZnJvbSBvbmUgc3BlY2lmaWMgQVANCg0KSSBkaWRuJ3QgZXhwZWN0IHRoZSBz
+Y2FuIHRvIGltcHJvdmUgd2l0aCBpdywgYnV0IGF0IGxlYXN0IG5vdyB5b3UncmUgdXNpbmcgdGhl
+IHJpZ2h0IHRvb2wuIDopDQoNCg0KPiB3aGlsZSB0aGUgb3RoZXJzIEVTU0lEIGZyb20gdGhlIHNl
+Y29uZCBBUCBhcmUgYXZhaWxhYmxlIG9ubHkgc29tZXRpbWUuIA0KPiANCj4gVGhhdCdzIHZlcnkg
+c3RyYW5nZS4NCj4gDQo+IERvIHlvdSB0aGluayB3ZSBhcmUgZmFjaW5nIGNhbGlicmF0aW9uIHBy
+b2JsZW1zID8NCg0KWWVzLCBJIGd1ZXNzIGNhbGlicmF0aW9uIGlzIHRoZSBtb3N0IGxpa2VseSBj
+YXVzZSBub3cuDQoNCg0KPiBJbiBvdXIgQ01EMCB3ZSBoYXZlDQo+IA0KPiBiaXQgMTMgPSAxIElC
+IGludGVycnVwdCBpcyBhY3RpdmUgaGlnaA0KPiANCj4gYml0IDE0ID0gMSBJQiBpbnRlcnJ1cHQg
+aXMgb3BlbiBkcmFpbg0KPiANCj4gRG8geW91IHRoaW5rIGlzIHJpZ2h0IGFjY29yZGluZyBkbyBS
+SVNJTkdfRURHRSBpbnRlcnJ1cHQgPw0KDQpJIHRoaW5rIHRoaXMgaXMgb2theS4gIEkgZG9uJ3Qg
+dGhpbmsgdGhlIHByb2JsZW0gaXMgdGhlIGludGVycnVwdCBub3cuDQoNCllvdSBzaG91bGQgdHJ5
+IHRvIGNhbGlicmF0ZSB5b3VyIGRldmljZSBhbmQgZ2VuZXJhdGUgYSBwcm9wZXIgTlZTIGZpbGUu
+DQoNCi0tDQpMdWNhLg0KDQoNCg==
 
