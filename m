@@ -1,70 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:37224 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946510Ab2LFSRe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 13:17:34 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 08/13] qca-swiss-army-knife: reformat INI_PRINT_* macros
-Date: Thu,  6 Dec 2012 19:17:22 +0100
-Message-Id: <1354817847-23440-9-git-send-email-juhosg@openwrt.org> (sfid-20121206_192413_133983_08FE48F0)
-In-Reply-To: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
-References: <1354817847-23440-1-git-send-email-juhosg@openwrt.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:60331 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254Ab2LQMrj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2012 07:47:39 -0500
+Message-ID: <50CF1465.3050205@canonical.com> (sfid-20121217_134748_414291_1154357B)
+Date: Mon, 17 Dec 2012 04:47:33 -0800
+From: John Johansen <john.johansen@canonical.com>
+MIME-Version: 1.0
+To: Chaitanya <chaitanyatk@posedge.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Apparamor: Fix the OOPS due to wrong header inclusion
+ in file in Makefile(3.7.0-rc1 Kernel)
+References: <201212171158.qBHBwYni003158@chaitanya-desktop> <50CF0C21.60101@posedge.com>
+In-Reply-To: <50CF0C21.60101@posedge.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Keep the length of the macro lines under 80 character.
+On 12/17/2012 04:12 AM, Chaitanya wrote:
+> 
+> 
+> Fix the OOPS in the apparmor security module
+> during the bootup.(oops points to strlen in audit_log_untrustedstring function)
+> Note: Actual fix lifted from Al-Viro.
+>  
+> Signed-off-by: Chaitanya T K <chaitanyatk@posedge.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- tools/initvals/initvals.c |   17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+thanks for reporting, this patch was included in 3.7-rc2
+see 43c422eda99b894f18d1cca17bcd2401efaf7bd0
 
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index 0ab4d7f..90ca377 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -329,15 +329,19 @@ typedef long long unsigned int u64;
- 	if (check) { \
- 		char *sha1sum; \
- 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
--						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
-+						ARRAY_SIZE(_array), \
-+						ARRAY_SIZE((_array)[0])); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
--		if (sizeof(_ref) == sizeof(_array) && !memcmp(&_ref, &_array, sizeof(_ref))) { \
-+		if (sizeof(_ref) == sizeof(_array) && \
-+		    !memcmp(&_ref, &_array, sizeof(_ref))) { \
- 			printf("#define " #_array " " #_ref "\n\n"); \
- 			break; \
- 		} \
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
--				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
-+				       ARRAY_SIZE(_array), \
-+				       ARRAY_SIZE((_array)[0]), \
-+				       false); \
- 	} \
-     } while (0)
- 
-@@ -345,11 +349,14 @@ typedef long long unsigned int u64;
- 	if (check) { \
- 		char *sha1sum; \
- 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
--						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
-+						 ARRAY_SIZE(_array), \
-+						 ARRAY_SIZE((_array)[0])); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
--				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
-+				       ARRAY_SIZE(_array), \
-+				       ARRAY_SIZE((_array)[0]), \
-+				       false); \
- 	} \
-     } while (0)
- 
--- 
-1.7.10
+
+> ---
+>  security/apparmor/Makefile |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/security/apparmor/Makefile b/security/apparmor/Makefile
+> index 7b3021c..5706b74 100644
+> --- a/security/apparmor/Makefile
+> +++ b/security/apparmor/Makefile
+> @@ -57,7 +57,7 @@ cmd_make-rlim = echo "static const char *const rlim_names[RLIM_NLIMITS] = {" \
+>  
+>  $(obj)/capability.o : $(obj)/capability_names.h
+>  $(obj)/resource.o : $(obj)/rlim_names.h
+> -$(obj)/capability_names.h : $(srctree)/include/linux/capability.h \
+> +$(obj)/capability_names.h : $(srctree)/include/uapi/linux/capability.h \
+>  			    $(src)/Makefile
+>  	$(call cmd,make-caps)
+>  $(obj)/rlim_names.h : $(srctree)/include/uapi/asm-generic/resource.h \
+> 
+> 
+> 
+> 
 
