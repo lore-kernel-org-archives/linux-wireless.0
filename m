@@ -1,74 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55943 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754680Ab2LFXgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 18:36:08 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] brcmsmac: add support for cores with revision 17
-Date: Fri,  7 Dec 2012 00:35:53 +0100
-Message-Id: <1354836953-11628-1-git-send-email-hauke@hauke-m.de> (sfid-20121207_003617_978287_71F52F17)
+Received: from comal.ext.ti.com ([198.47.26.152]:58119 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752267Ab2LQLTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2012 06:19:18 -0500
+Message-ID: <1355743109.21129.89.camel@cumari.coelho.fi> (sfid-20121217_121924_849727_FABF47EA)
+Subject: Re: wl12xx over spi with no scan results
+From: Luciano Coelho <coelho@ti.com>
+To: Alberto Garau <Alberto.Garau@inpeco.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
+	Adriano Melis <ADRIANO.MELIS@inpeco.com>,
+	Luca Fresi <luca.fresi@bithiatec.com>
+Date: Mon, 17 Dec 2012 13:18:29 +0200
+In-Reply-To: <0294E4ABF3EF28409B75AAF7EAC3D41A0C361686@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355218436.3738.122.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355223079.3738.128.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355229286.3738.137.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360949@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355301922.21129.8.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360984@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355307404.21129.15.camel@cumari.coelho.fi>
+	  <0294E4ABF3EF28409B75AAF7EAC3D41A0C361686@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for bcma wifi core revision 17 which is found on
-BCM4716/4717/4718 SoCs. The firmware version 610.812 for brcmsmac found
-in linux-firmware does not support these cores, but a firmware
-generated with b43-fwcutter from the proprietary broadcom wireless
-driver works with these chips. This wifi core contains a revision 5
-N-PHY and a revision 7 radio of type 0x2056.
+On Mon, 2012-12-17 at 09:38 +0000, Alberto Garau wrote:
+> Hi Luca,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/main.c        |    6 +++---
- 2 files changed, 4 insertions(+), 3 deletions(-)
+Hi Alberto,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 02d27ea..1fbd8ec 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -93,6 +93,7 @@ MODULE_FIRMWARE("brcm/bcm43xx_hdr-0.fw");
- 
- /* recognized BCMA Core IDs */
- static struct bcma_device_id brcms_coreid_table[] = {
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 17, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 23, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 24, BCMA_ANY_CLASS),
- 	BCMA_CORETABLE_END
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 8fce687..cb48fc4 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -717,7 +717,7 @@ static void brcms_c_ucode_bsinit(struct brcms_hardware *wlc_hw)
- 	brcms_c_write_mhf(wlc_hw, wlc_hw->band->mhfs);
- 
- 	/* do band-specific ucode IHR, SHM, and SCR inits */
--	if (D11REV_IS(wlc_hw->corerev, 23)) {
-+	if (D11REV_IS(wlc_hw->corerev, 17) || D11REV_IS(wlc_hw->corerev, 23)) {
- 		if (BRCMS_ISNPHY(wlc_hw->band))
- 			brcms_c_write_inits(wlc_hw, ucode->d11n0bsinitvals16);
- 		else
-@@ -2264,7 +2264,7 @@ static void brcms_ucode_download(struct brcms_hardware *wlc_hw)
- 	if (wlc_hw->ucode_loaded)
- 		return;
- 
--	if (D11REV_IS(wlc_hw->corerev, 23)) {
-+	if (D11REV_IS(wlc_hw->corerev, 17) || D11REV_IS(wlc_hw->corerev, 23)) {
- 		if (BRCMS_ISNPHY(wlc_hw->band)) {
- 			brcms_ucode_write(wlc_hw, ucode->bcm43xx_16_mimo,
- 					  ucode->bcm43xx_16_mimosz);
-@@ -3216,7 +3216,7 @@ static void brcms_b_coreinit(struct brcms_c_info *wlc)
- 
- 	sflags = bcma_aread32(core, BCMA_IOST);
- 
--	if (D11REV_IS(wlc_hw->corerev, 23)) {
-+	if (D11REV_IS(wlc_hw->corerev, 17) || D11REV_IS(wlc_hw->corerev, 23)) {
- 		if (BRCMS_ISNPHY(wlc_hw->band))
- 			brcms_c_write_inits(wlc_hw, ucode->d11n0initvals16);
- 		else
--- 
-1.7.10.4
+
+> we have been able to successfully run the driver but:
+> 
+> We have the device running in SPI and we are observing a strange scenario. When the AP is placed 10 meters far from the device (-57db) it's very difficult scanning the ESSIDs and impossible to connect to them, the same behaviour doesn't happen when I move the AP close (10 cm) to the device. In that case I can scan the ESSIDs and I can connect to them easily.
+
+This definitely sounds like an RF problem.  Are you sure everything is
+correct with your antenna? 10 meters reach sounds like what happens if
+there's no antenna connected. ;)
+
+If you used the correct INI file, even without proper tuning of the
+settings, the RF shouldn't be that bad.  In general, if you use the
+appropriate INI settings for your FEM, you should get relatively good
+connectivity.
+
+
+> The calibration we have performed is the First Calibration listed on that web site and we have more questions:
+> 
+> 1) is there any document explaining in depth all the parameters of the ini file TQS_S_2.6.ini
+
+You should get this from your official TI contact.  Do you have any
+support channel?
+
+
+> 2) we used "./calibrator plt calibrate", what plt means ?
+
+PLT means Production Line Tests (calibration is usually done at the
+production line, so it's included with the rest of the PLT tests).
+
+
+> 3) if we want to use the expert mode, we would have to provide <voltage>,<power>,<subband> and then tx_bip parameters, where we can found indication/documentation about that ?
+
+This is used if you want to fine tune the RF path.  To use it you need
+special equipment to test and measure the output and input.
+
+
+> 4) is there any auto calibration ?
+
+Yes, the calibration tool has the auto-calibration feature.
+
+
+> 5) Could you please define the meaning of the "TxBip procedure" and when should be used ?
+
+This is the procedure used to calibrate the device and generate some
+parameters that go into the NVS file.
+
+
+> 6) Could you please define the meaning of the "Tx Cont Procedure"  and when should be used ?
+
+This is used in R&D and in the production line.  It is used to transmit
+packets continuously using the parameters specified.
+
+
+> 7) Could you please define the meaning of the "Rx Stat procedure" and when should be used  ?
+
+This command is used to get statistics about the received packets.  It
+can be used to check whether the device is receiving packets as it
+should.  Generally used in R&D and in the production line.
+
+I hope this helps.
+
+--
+Luca.
 
