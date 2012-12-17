@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:38329 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435Ab2LKDeT (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10565 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254Ab2LQMto (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 22:34:19 -0500
-Message-ID: <50C6A995.1020908@gmail.com> (sfid-20121211_043444_957597_E9FEB186)
-Date: Tue, 11 Dec 2012 09:03:41 +0530
-From: Abhijit Pawar <abhi.c.pawar@gmail.com>
+	Mon, 17 Dec 2012 07:49:44 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH V3 1/2] cfg80211: Move the definition of struct mac_address up
+Date: Mon, 17 Dec 2012 18:19:12 +0530
+Message-ID: <1355748553-19560-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20121217_134949_675335_E146386C)
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: abhi.c.pawar@gmail.com, pablo@netfilter.org, kaber@trash.net,
-	kuznet@ms2.inr.ac.ru, jmorris@namei.org, yoshfuji@linux-ipv6.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	amwang@redhat.com, edumazet@google.com, nhorman@tuxdriver.com,
-	joe@perches.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	netfilter@vger.kernel.org, coreteam@netfilter.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RESEND] net: remove obsolete simple_strto<foo>
-References: <1355130748-7828-1-git-send-email-abhi.c.pawar@gmail.com> <20121210.141002.450030380391247897.davem@davemloft.net>
-In-Reply-To: <20121210.141002.450030380391247897.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/11/2012 12:40 AM, David Miller wrote:
-> From: Abhijit Pawar <abhi.c.pawar@gmail.com>
-> Date: Mon, 10 Dec 2012 14:42:28 +0530
-> 
->> This patch replace the obsolete simple_strto<foo> with kstrto<foo>
->>
->> Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
-> 
-> Applied.
-> 
-Hi David,
-It seems that there are occurences of simple_strto* still present in the
-couple of files which are not yet removed correctly by this patch. I
-will send a modified patch shortly. Please revert this commit and use
-the newly sent patch to merge with the tree.
+struct mac_address will be used by ACL related configuration ops.
 
--- 
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ include/net/cfg80211.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e78db2c..475230b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -503,6 +503,10 @@ struct cfg80211_beacon_data {
+ 	size_t probe_resp_len;
+ };
+ 
++struct mac_address {
++	u8 addr[ETH_ALEN];
++};
++
+ /**
+  * struct cfg80211_ap_settings - AP configuration
+  *
+@@ -2111,10 +2115,6 @@ struct ieee80211_iface_combination {
+ 	bool beacon_int_infra_match;
+ };
+ 
+-struct mac_address {
+-	u8 addr[ETH_ALEN];
+-};
 -
-Abhijit
+ struct ieee80211_txrx_stypes {
+ 	u16 tx, rx;
+ };
+-- 
+1.7.0.4
+
