@@ -1,88 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42228 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137Ab2LJVtB (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:61800 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942Ab2LQVMy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 16:49:01 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/10] iwlwifi: don't handle masked interrupt
-Date: Mon, 10 Dec 2012 22:49:18 +0100
-Message-Id: <1355176158-24675-10-git-send-email-johannes@sipsolutions.net> (sfid-20121210_224915_539994_3B232599)
-In-Reply-To: <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
-References: <1355176087.8083.17.camel@jlt4.sipsolutions.net>
- <1355176158-24675-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 17 Dec 2012 16:12:54 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so5195654lag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Dec 2012 13:12:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1355756343-3406-1-git-send-email-juhosg@openwrt.org>
+References: <1355756343-3406-1-git-send-email-juhosg@openwrt.org>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 17 Dec 2012 13:12:32 -0800
+Message-ID: <CAB=NE6VjRQvg3ijdCX2G=4Q2d+OoyfQSfxPawHDviAapfS6X0w@mail.gmail.com> (sfid-20121217_221258_601152_15904CD9)
+Subject: Re: [PATCH] qca-swiss-army-knife: fix build errors if ATH9K_DIR is used
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, Dec 17, 2012 at 6:59 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> Some initval arrays were removed from ath9k with the
+> upstream commit 14fec8d9baffc026beaffa2ee9e911df9d1d4ad2
+> (ath9k_hw: remove duplicate initvals).
+>
+> Due to the missing symbols, this causes build errors
+> when the ATHEROS Makefile variable is not set, and
+> an external ATH9K_DIR is specified:
+>
+>   $ make clean all ATH9K_DIR=/devel/wireless-testing/drivers/net/wireless/ath/ath9k
+>   rm -f initvals
+>   gcc  -I"/devel/wireless-testing/drivers/net/wireless/ath/ath9k" -o initvals initvals.c sha1.c
+>   initvals.c: In function ‘ar9001_hw_print_initvals’:
+>   initvals.c:588:2: error: ‘ar5416Bank0_9100’ undeclared (first use in this function)
+>   initvals.c:588:2: note: each undeclared identifier is reported only once for each function it appears in
+>   initvals.c:589:2: error: ‘ar5416BB_RfGain_9100’ undeclared (first use in this function)
+>   initvals.c:590:2: error: ‘ar5416Bank1_9100’ undeclared (first use in this function)
+>   initvals.c:591:2: error: ‘ar5416Bank2_9100’ undeclared (first use in this function)
+>   initvals.c:592:2: error: ‘ar5416Bank3_9100’ undeclared (first use in this function)
+>   initvals.c:595:2: error: ‘ar5416Bank7_9100’ undeclared (first use in this function)
+>   initvals.c:599:2: error: ‘ar5416Bank0_9160’ undeclared (first use in this function)
+>   initvals.c:600:2: error: ‘ar5416BB_RfGain_9160’ undeclared (first use in this function)
+>   initvals.c:601:2: error: ‘ar5416Bank1_9160’ undeclared (first use in this function)
+>   initvals.c:602:2: error: ‘ar5416Bank2_9160’ undeclared (first use in this function)
+>   initvals.c:603:2: error: ‘ar5416Bank3_9160’ undeclared (first use in this function)
+>   initvals.c:604:2: error: ‘ar5416Bank6_9160’ undeclared (first use in this function)
+>   initvals.c:605:2: error: ‘ar5416Bank6TPC_9160’ undeclared (first use in this function)
+>   initvals.c:606:2: error: ‘ar5416Bank7_9160’ undeclared (first use in this function)
+>   initvals.c: In function ‘ar9002_hw_print_initvals’:
+>   initvals.c:597:2: error: ‘ar9285PciePhy_clkreq_always_on_L1_9285’ undeclared (first use in this function)
+>   initvals.c:598:2: error: ‘ar9285PciePhy_clkreq_off_L1_9285’ undeclared (first use in this function)
+>   initvals.c:605:2: error: ‘ar9285PciePhy_clkreq_always_on_L1_9285_1_2’ undeclared (first use in this function)
+>   initvals.c:606:2: error: ‘ar9285PciePhy_clkreq_off_L1_9285_1_2’ undeclared (first use in this function)
+>   initvals.c:613:2: error: ‘ar9287PciePhy_clkreq_always_on_L1_9287_1_1’ undeclared (first use in this function)
+>   initvals.c:614:2: error: ‘ar9287PciePhy_clkreq_off_L1_9287_1_1’ undeclared (first use in this function)
+>   initvals.c:617:2: error: ‘ar9271Common_normal_cck_fir_coeff_9271’ undeclared (first use in this function)
+>   initvals.c:618:2: error: ‘ar9271Common_japan_2484_cck_fir_coeff_9271’ undeclared (first use in this function)
+>   initvals.c:619:2: error: ‘ar9271Modes_9271_1_0_only’ undeclared (first use in this function)
+>   make: *** [initvals] Error 1
+>   $
+>
+> Add definitions for the missing arrays to avoid
+> these compiler errors. Also introduce two new
+> macros and use those for printing the arrays.
+>
+> After these changes, the initvals tool builds without
+> errors:
+>
+>   $ make clean all ATH9K_DIR=/devel/wireless-testing/drivers/net/wireless/ath/ath9k
+>   rm -f initvals
+>   gcc  -I"/devel/wireless-testing/drivers/net/wireless/ath/ath9k" -o initvals initvals.c sha1.c
+>   $
+>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-This can lead to a panic if the driver isn't ready to
-handle them. Since our interrupt line is shared, we can get
-an interrupt at any time (and CONFIG_DEBUG_SHIRQ checks
-that even when the interrupt is being freed).
+Thanks, applied and pushed!
 
-If the op_mode has gone away, we musn't call it. To avoid
-this the transport disables the interrupts when the hw is
-stopped and the op_mode is leaving.
-If there is an event that would cause an interrupt the INTA
-register is updated regardless of the enablement of the
-interrupts: even if the interrupts are disabled, the INTA
-will be changed, but the device won't issue an interrupt.
-But the ISR can be called at any time, so we ought ignore
-the value in the INTA otherwise we can call the op_mode
-after it was freed.
-
-I found this bug when the op_mode_start failed, and called
-iwl_trans_stop_hw(trans, true). Then I played with the
-RFKILL button, and removed the module.
-While removing the module, the IRQ is freed, and the ISR is
-called (CONFIG_DEBUG_SHIRQ enabled). Panic.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/rx.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 787b9ca..6f72e1a 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -1103,12 +1103,20 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
- 	 *    back-to-back ISRs and sporadic interrupts from our NIC.
- 	 * If we have something to service, the tasklet will re-enable ints.
- 	 * If we *don't* have something, we'll re-enable before leaving here. */
--	inta_mask = iwl_read32(trans, CSR_INT_MASK);  /* just for debug */
-+	inta_mask = iwl_read32(trans, CSR_INT_MASK);
- 	iwl_write32(trans, CSR_INT_MASK, 0x00000000);
- 
- 	/* Discover which interrupts are active/pending */
- 	inta = iwl_read32(trans, CSR_INT);
- 
-+	if (inta & (~inta_mask)) {
-+		IWL_DEBUG_ISR(trans,
-+			      "We got a masked interrupt (0x%08x)...Ack and ignore\n",
-+			      inta & (~inta_mask));
-+		iwl_write32(trans, CSR_INT, inta & (~inta_mask));
-+		inta &= inta_mask;
-+	}
-+
- 	/* Ignore interrupt if there's nothing in NIC to service.
- 	 * This may be due to IRQ shared with another device,
- 	 * or due to sporadic interrupts thrown from our NIC. */
-@@ -1190,7 +1198,7 @@ irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
- 	 * If we have something to service, the tasklet will re-enable ints.
- 	 * If we *don't* have something, we'll re-enable before leaving here.
- 	 */
--	inta_mask = iwl_read32(trans, CSR_INT_MASK);  /* just for debug */
-+	inta_mask = iwl_read32(trans, CSR_INT_MASK);
- 	iwl_write32(trans, CSR_INT_MASK, 0x00000000);
- 
- 	/* Ignore interrupt if there's nothing in NIC to service.
--- 
-1.8.0
-
+  Luis
