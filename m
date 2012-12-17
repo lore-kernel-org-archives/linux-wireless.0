@@ -1,136 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:46539 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125Ab2LQNWo (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:45354 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752965Ab2LQNtB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 08:22:44 -0500
-Date: Mon, 17 Dec 2012 14:22:32 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	jonbither@gmail.com, jouni@qca.qualcomm.com,
-	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
-Message-ID: <20121217132232.GA447@pandem0nium> (sfid-20121217_142247_944934_46E27AF6)
-References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <20121213140753.GA26868@pandem0nium>
- <50CA0F8B.3060905@openwrt.org>
- <20121213220651.GA30855@pandem0nium>
- <50CA5EE9.30606@openwrt.org>
- <CAJ-VmokcJUBZeOAyjaNefqgtEkdjGFhH3NQEXA38Xe_i2M+wYA@mail.gmail.com>
- <CAJ-Vmo=qWihSMZ3Jwb9NGU_uXSGYd-Nxya+oT0MQdoT6r0JZFw@mail.gmail.com>
+	Mon, 17 Dec 2012 08:49:01 -0500
+Date: Mon, 17 Dec 2012 22:25:41 +0900
+From: Norbert Preining <preining@logic.at>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Borislav Petkov <bp@alien8.de>
+Subject: Re: rtl8192se: ping router gives mdev of 25387.102???
+Message-ID: <20121217132541.GA19386@gamma.logic.tuwien.ac.at> (sfid-20121217_144927_942986_2ECF9DA1)
+References: <505251FD.2090901@lwfinger.net> <5051EF3C.3020401@lwfinger.net> <20120913222850.GA438@gandalf.dynalias.org> <20120915041513.GF30623@gamma.logic.tuwien.ac.at>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
-In-Reply-To: <CAJ-Vmo=qWihSMZ3Jwb9NGU_uXSGYd-Nxya+oT0MQdoT6r0JZFw@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120915041513.GF30623@gamma.logic.tuwien.ac.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There we go again, rtl is completely hosed ...
 
---DocE+STaALJfprDB
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+$ ping 192.168.0.1 # this is my router!!!
+PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
+>From 192.168.0.6 icmp_seq=21 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=22 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=23 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=24 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=25 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=26 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=27 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=28 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=29 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=30 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=31 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=32 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=33 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=34 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=35 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=36 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=37 Destination Host Unreachable
+>From 192.168.0.6 icmp_seq=38 Destination Host Unreachable
+64 bytes from 192.168.0.1: icmp_req=1 ttl=255 time=38455 ms
+64 bytes from 192.168.0.1: icmp_req=2 ttl=255 time=37453 ms
+64 bytes from 192.168.0.1: icmp_req=3 ttl=255 time=36445 ms
+64 bytes from 192.168.0.1: icmp_req=4 ttl=255 time=35437 ms
+64 bytes from 192.168.0.1: icmp_req=5 ttl=255 time=34429 ms
+64 bytes from 192.168.0.1: icmp_req=6 ttl=255 time=33421 ms
+64 bytes from 192.168.0.1: icmp_req=7 ttl=255 time=32413 ms
+64 bytes from 192.168.0.1: icmp_req=8 ttl=255 time=31405 ms
+64 bytes from 192.168.0.1: icmp_req=9 ttl=255 time=30397 ms
+64 bytes from 192.168.0.1: icmp_req=10 ttl=255 time=29388 ms
+64 bytes from 192.168.0.1: icmp_req=11 ttl=255 time=28381 ms
+64 bytes from 192.168.0.1: icmp_req=12 ttl=255 time=27373 ms
+64 bytes from 192.168.0.1: icmp_req=13 ttl=255 time=26365 ms
+64 bytes from 192.168.0.1: icmp_req=14 ttl=255 time=25357 ms
+64 bytes from 192.168.0.1: icmp_req=15 ttl=255 time=24349 ms
+64 bytes from 192.168.0.1: icmp_req=16 ttl=255 time=23341 ms
+64 bytes from 192.168.0.1: icmp_req=17 ttl=255 time=22333 ms
+64 bytes from 192.168.0.1: icmp_req=18 ttl=255 time=21325 ms
+64 bytes from 192.168.0.1: icmp_req=19 ttl=255 time=20317 ms
+64 bytes from 192.168.0.1: icmp_req=20 ttl=255 time=19309 ms
+64 bytes from 192.168.0.1: icmp_req=39 ttl=255 time=207 ms
+64 bytes from 192.168.0.1: icmp_req=40 ttl=255 time=1.36 ms
+64 bytes from 192.168.0.1: icmp_req=41 ttl=255 time=1.22 ms
+64 bytes from 192.168.0.1: icmp_req=42 ttl=255 time=1.76 ms
+^C
+--- 192.168.0.1 ping statistics ---
+42 packets transmitted, 24 received, +18 errors, 42% packet loss, time 41261ms
+rtt min/avg/max/mdev = 1.229/24079.534/38455.055/11983.493 ms, pipe 39
+$
 
-Hello Adrian,
 
-thank you for posting this and the explanation!
+Yeahhhhh.....
 
-On Sat, Dec 15, 2012 at 08:06:47PM -0800, Adrian Chadd wrote:
-> The formats are as follows. Please note that if a pulse terminates
-> during an FFT, the final entry may be truncated. So yes, you may not
-> always get an integer multiple of the relevant frame length.
+we are talking about my router, and a stability that is below 
+the quality of morse code ...
 
-OK - my data is mostly in the range of 55-58 bytes (see below), sometimes
-I got some longer packets, but I'm currently dropping them.=20
-The variation still puzzles me though.
+On Sa, 15 Sep 2012, Norbert Preining wrote:
+> Hi Larry, hi all,
+> 
+> On Fr, 14 Sep 2012,  wrote:
+> > I am running on top of default kernel git, will try wireless-testing, too.
+> 
+> I tried now with wireless-testing from yesterday, and had the same problem.
+> Actually, I got even *better* results:
+> 64 bytes from 192.168.0.1: icmp_req=75 ttl=255 time=137856 ms
+> 64 bytes from 192.168.0.1: icmp_req=76 ttl=255 time=136848 ms
+> 64 bytes from 192.168.0.1: icmp_req=78 ttl=255 time=134943 ms
+> 
+> ...
+> rtt min/avg/max/mdev = 1.110/46967.879/137856.232/49666.671 ms, pipe 138
+> 
+> 
+> So now we are mdev of 50secs sometimes ;-)
+> 
+> 
+> Another interesting things:
+> At home I have the problems with the NEC router, but I am now at
+> the university. I am writing this email over a very very stable 
+> ssh link to another server.
+> 
+> Here is the output iof ifconfig:
+> $ ifconfig
+> eth0      Link encap:Ethernet  HWaddr 60:eb:69:c9:0c:ea  
+>           UP BROADCAST MULTICAST  MTU:1500  Metric:1
+>           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>           collisions:0 txqueuelen:1000 
+>           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+> 
+> lo        Link encap:Local Loopback  
+>           inet addr:127.0.0.1  Mask:255.0.0.0
+>           UP LOOPBACK RUNNING  MTU:16436  Metric:1
+>           RX packets:20418 errors:0 dropped:0 overruns:0 frame:0
+>           TX packets:20418 errors:0 dropped:0 overruns:0 carrier:0
+>           collisions:0 txqueuelen:0 
+>           RX bytes:1950587 (1.8 MiB)  TX bytes:1950587 (1.8 MiB)
+> 
+> wlan0     Link encap:Ethernet  HWaddr 88:9f:fa:f9:07:28  
+>           inet addr:150.65.206.200  Bcast:150.65.207.255  Mask:255.255.252.0
+>           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>           RX packets:232640 errors:0 dropped:1 overruns:0 frame:0
+>           TX packets:69798 errors:0 dropped:0 overruns:0 carrier:0
+>           collisions:0 txqueuelen:1000 
+>           RX bytes:85599897 (81.6 MiB)  TX bytes:8925832 (8.5 MiB)
+> 
+> 
+> But the kernel is convinced that I am not connected ...:
+> $ iw dev wlan0 link
+> Not connected.
+> $ iwconfig wlan0
+> wlan0     IEEE 802.11bgn  ESSID:off/any  
+>           Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm   
+>           Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
+>           Encryption key:off
+>           Power Management:off
+> 
+> 
+> And no, I guarantee you there is no ethernet cable plugged in ;-)
+> 
+> I can only assume that is a problem with iwconfig/iw being too old,
+> although according to the output of iwconfig it is fine:
+> # iw --version
+> iw version 3.4
+> # iwconfig --version
+> iwconfig  Wireless-Tools version 30
+>           Compatible with Wireless Extension v11 to v22.
+> 
+> Kernel    Currently compiled with Wireless Extension v22.
+> 
+> wlan0     Recommend Wireless Extension v21 or later,
+>           Currently compiled with Wireless Extension v22.
+> 
+> #  uname -a
+> Linux tofuschnitzel 3.6.0-rc5-wl+ #19 SMP PREEMPT Fri Sep 14 13:14:15 JST 2012 x86_64 GNU/Linux
+> 
+> 
+> Best wishes
+> 
+> Norbert
+> ------------------------------------------------------------------------
+> Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+> JAIST, Japan                                 TeX Live & Debian Developer
+> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+> ------------------------------------------------------------------------
+> CHICAGO (n.)
+> The foul-smelling wind which precedes an underground railway train.
+> 			--- Douglas Adams, The Meaning of Liff
 
->=20
-> Note that you shift each of the readings by max_exp to get a total
-> reading. max_index and max_magnitude I think are just derived from the
-> existing dataset; they're just a shortcut for software so it doesn't
-> have to parse the whole frame looking for the peak.
+Best wishes
 
-Ah ok, that makes sense. Thanks for the clarification. :)
->=20
-> Static 20 mode:
->=20
-> 0  bin -28 magnitude[7:0] =3D (|i| + |q|) >> max_exp
-> 1  bin -27 magnitude[7:0] =3D (|i| + |q|) >> max_exp
-> 2 - 53  =E2=80=A6
-> 54  bin  26 magnitude[7:0] =3D (|i| + |q|) >> max_exp
-> 55  bin  27 magnitude[7:0] =3D (|i| + |q|) >> max_exp
-
-I've checked my data again: On my AR9280 in 2.4GHz, I get 55 or 57 bytes pl=
-us
-7 "special bytes" (4 bytes meta info plus 3 bytes "radar trailer?"). In 5 G=
-Hz
-and on my AR9380 in both bands, it is always either 56 or 58 bytes. The num=
-ber
-of bytes comes from rs_datalen from the rx_status struct as found in the pa=
-tch
-sent earlier.
-
-So to summarise, what I currently get:
- * 55-58 bytes of "data"
- * 4 bytes of meta-information (as you provided)
- * 3 bytes of "radar trailer" (bwinfo and such)
-
-The variation in the data puzzles me, I've already checked bit 4 in bwinfo
-as Felix suggested. Is there any other "header" to the DFS data? Or should I
-just skip the first few bytes and always use the last 55 bytes? At least fr=
-om the
-distribution, all of these numbers look like normal data and not a bitfield.
-Ideas welcome. :)
-
-I've also noticed that the middle of the data (like data[28]) is usually hi=
-gher
-than the rest - this might be the carrier, or something alike?
-
-> 56  [7:0]: all bins {max_magnitude[1:0], bitmap_weight[5:0]}
-> 57  [7:0]: all bins  max_magnitude[9:2]
-> 58  [7:0]: all bins {max_index[5:0], max_magnitude[11:10]}
-> 59  [3:0]: max_exp (shift amount to size max bin to 8-bit unsigned)
->=20
-> Dynamic 20/40 mode:
->=20
-> 0  bin -64 magnitude[7:0] =3D (|i| + |q|) >> max_exp  or  power (in dBm)
-> 1  bin -63 magnitude[7:0] =3D (|i| + |q|) >> max_exp  or  power (in dBm)
-> 2 - 125  =E2=80=A6
-> 126  bin  62 magnitude[7:0] =3D (|i| + |q|) >> max_exp  or  power (in dBm)
-> 127  bin  63 magnitude[7:0] =3D (|i| + |q|) >> max_exp  or  power (in dBm)
-> 128  [7:0]: lower bins {max_magnitude[1:0], bitmap_weight[5:0]}
-> Baseband DFS 2 (Radar) Micro-Architecture
-> 129  [7:0]: lower bins  max_magnitude[9:2]
-> 130  [7:0]: lower bins {max_index[5:0], max_magnitude[11:10]}
-> 131  [7:0]: upper bins {max_magnitude[1:0], bitmap_weight[5:0]}
-> 132  [7:0]: upper bins  max_magnitude[9:2]
-> 133  [7:0]: upper bins {max_index[5:0], max_magnitude[11:10]}
-> 134  [3:0]: max_exp (shift amount to size max bin to 8-bit unsigned)
-
-Thanks again, also for posting the radar packet format! I'll play a little =
-bit more
-with spectral for now ...
-
-Cheers,
-	Simon
-
---DocE+STaALJfprDB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlDPHJgACgkQrzg/fFk7axYhoQCgzBT/lTIObkmz7MoishNsDo5l
-yZ0AoIdp5kUjCglz32/HkyfeBmD49729
-=PXP+
------END PGP SIGNATURE-----
-
---DocE+STaALJfprDB--
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+SPITTAL OF GLENSHEE (n.)
+That which has to be cleaned off castle floors in the morning after a
+bagpipe contest or vampire attack.
+			--- Douglas Adams, The Meaning of Liff
