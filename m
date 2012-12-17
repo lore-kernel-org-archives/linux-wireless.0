@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:28120 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753251Ab2LKTjs (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:47162 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915Ab2LQCad (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 14:39:48 -0500
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Date: Tue, 11 Dec 2012 11:42:49 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Subject: Re: ACS and Hostapd
-Message-ID: <20121211194249.GT15974@pogo> (sfid-20121211_203951_582485_976D7D96)
-References: <20121123081444.GA6028@markyou.marvell.com>
+	Sun, 16 Dec 2012 21:30:33 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so2933256eek.19
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Dec 2012 18:30:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20121123081444.GA6028@markyou.marvell.com>
+In-Reply-To: <CANa_0w2mShPgK4VwSzAFh+BSsxU5xYmWxogTcz_ZpVdj1seKgg@mail.gmail.com>
+References: <CANa_0w2mShPgK4VwSzAFh+BSsxU5xYmWxogTcz_ZpVdj1seKgg@mail.gmail.com>
+Date: Sun, 16 Dec 2012 21:30:32 -0500
+Message-ID: <CANa_0w1YusGWqpgTRZ5Xxq0dzKVuZJUKTFccv6zPLekfG+NntA@mail.gmail.com> (sfid-20121217_033037_695556_7A31D3FA)
+Subject: Re: txpower anything you make db.txt say ?
+From: Jason Mclaughlin <mcjason@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 23, 2012 at 01:44:51PM +0530, Yogesh Ashok Powar wrote:
-> Hi Luis,
-> 
-> I was looking at your patches on the linux-wireless mailing list
-> regarding ACS feature addition in hostapd.
-> 
-> It is seen that you went till v8 patches and still the patches are not
-> seen upstream?
+to better word myself... what i meant was, with the ath9k driver....
+you're tx power seems to go as high as you say your limit is in db.txt
 
-Correct.
-
-> Is there any specific reason for this patches not being accepted?
-
-It didn't get good test coverage and by the time I got results from Jouni
-on his test I already lost interest on the code. If anyone wants to work
-on it and enhance it feel free to do so.
-
-> I am refering http://marc.info/?l=linux-wireless&m=131257363303693 seems
-> like all in one patch. But I have trouble finding correct git base for
-> it; since patch doens't apply cleanly even when I take hostap.git back
-> to Jul end of 2011. For v7, 1 through 3 apply cleanly but not 4th.
-> 
-> Or I am I looking at some wrong hostapd git?
-
-It should have been the same date / tag around when I submitted it. Sorry
-I do not recall the exact commit.
-
-  Luis
+On Sat, Dec 15, 2012 at 10:29 PM, Jason Mclaughlin <mcjason@gmail.com> wrote:
+>  was wondering... with a AEUS036NHA wireless adapater (ath9k), why
+> does it seem like I can set the power arbitrarily higher if I make my
+> own regulatory.bin
+> from the crda package. I doubt for real that's the power since the
+> adapater is rated at 1000mw afaik.
+>
+> I wanted to test if it was really having more power than 20db when I
+> found out how to do that, but I suspiciously though it was just saying
+> it's as high
+> as you make db.txt say. This seems true at a whopping 48db (I never
+> did anything like connect to someone, just rebooted at turned it back
+> to 30).
+>
+> Also wanted to know, does it really do 30db? I noticed between two
+> adapaters a mild improvement when setting it higher than 20 but it's
+> hard to tell.
+>
+>
+> root@debian:/home/jason# iwconfig
+> wlan2     IEEE 802.11bgn  ESSID:off/any
+>           Mode:Managed  Access Point: Not-Associated   Tx-Power=48 dBm
+>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:off
+>           Power Management:off
+>
+> eth0      no wireless extensions.
+>
+> lo        no wireless extensions.
+>
+> wlan0     IEEE 802.11bgn  ESSID:off/any
+>           Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
+>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:off
+>           Power Management:off
