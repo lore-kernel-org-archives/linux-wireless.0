@@ -1,70 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:46612 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755689Ab2LLWQh (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:47024 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751935Ab2LQOOf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 17:16:37 -0500
-Received: by mail-ie0-f181.google.com with SMTP id 16so3044107iea.12
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Dec 2012 14:16:36 -0800 (PST)
+	Mon, 17 Dec 2012 09:14:35 -0500
 MIME-Version: 1.0
-In-Reply-To: <1355346934.9708.17.camel@jlt4.sipsolutions.net>
-References: <CAMcMvshyr6p2dqv-4YKW3=ZqLXskqvOtR9E4+UGOM4pzzJumgg@mail.gmail.com>
-	<1355346934.9708.17.camel@jlt4.sipsolutions.net>
-Date: Wed, 12 Dec 2012 14:09:11 -0800
-Message-ID: <CAMcMvsid-g4LticD+LcpvP4jaEQrsYy09gjcqtt0=_PMxFuxtQ@mail.gmail.com> (sfid-20121212_231648_581476_AA70B705)
-Subject: Re: Question about "authorized state" test in tx.c
-From: Paul Stewart <pstew@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAL1gcdMyx4y0TeSRi+5oG6cpULPXGu+i8E0ej3-6+n9pt8qPSw@mail.gmail.com>
+References: <20686.63778.840426.61474@pilspetsen.it.uu.se>
+	<CAHdPZaPQNQ1WS5Qkb4FpmmOX7mXL10HsdaXf5dctp2hd2T0Sow@mail.gmail.com>
+	<20687.3736.365327.811519@pilspetsen.it.uu.se>
+	<CAHdPZaNOK=isKPZtxYaBFsGvcpN0261wExaXgRYjg5N3Y7qJZg@mail.gmail.com>
+	<CAL1gcdMyx4y0TeSRi+5oG6cpULPXGu+i8E0ej3-6+n9pt8qPSw@mail.gmail.com>
+Date: Mon, 17 Dec 2012 09:14:33 -0500
+Message-ID: <CAHdPZaPq6em+mRSoJ1SJMi++J9rAObgtt2e1sXqqFOqbeDctAg@mail.gmail.com> (sfid-20121217_151451_688626_D2B97F1A)
+Subject: Re: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to
+ initialize hw
+From: "devendra.aaru" <devendra.aaru@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 12, 2012 at 1:15 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-12-12 at 13:08 -0800, Paul Stewart wrote:
->> The "unauthorized port" test in ieee80211_subif_start_xmit reads as follows:
->>
->>         /*
->>          * Drop unicast frames to unauthorised stations unless they are
->>          * EAPOL frames from the local station.
->>          */
->>         if (unlikely(!ieee80211_vif_is_mesh(&sdata->vif) &&
->>                      !is_multicast_ether_addr(hdr.addr1) && !authorized &&
->>                      (cpu_to_be16(ethertype) != sdata->control_port_protocol ||
->>                       !ether_addr_equal(sdata->vif.addr, skb->data + ETH_ALEN)))
->> ) {
->> #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
->>                 net_info_ratelimited("%s: dropped frame to %pM (unauthorized por
->> t)\n",
->>                                     dev->name, hdr.addr1);
->> #endif
->>
->>   [...]
->>
->> Was it explicitly meant to allow multicast/broadcast frames while not
->> authorized?  I'm starting to see isolated cases in packet traces where
->> APs deauth clients due to errant broadcasts being sent during/before
->> the 4-way handshake, after association.  Are there situations where
->> these broadcasts / multicasts should be allowed, or would it be
->> acceptable to drop the multicast check?  The change which introduced
->> it is
->> 7d185b8bb17eac9e9d673eb483ded0fbf0b28b97, but I don't quite understand
->> it since if we're not authenticated to the AP, should we still be
->> allowed to send (non-authentication) traffic to it?
+> This is caused by the introduction of interface combinations. Helmut
+> Schaa has already submitted a patch to fix this, but this has
+> unfortunately not ended up in 3.7. I'm confident it will end up in one
+> of the upcoming 3.7.x stable releases.
 >
-> That commit was meant for AP mode, and in managed mode hdr.addr1 should
-> never be a multicast address. Any idea how that happens?
+> See http://marc.info/?l=linux-wireless&m=135478723823922&w=2 for the
+> patch submitted by Helmut.
+> ---
+> Gertjan
 
-Good point.  I mistook that for the Ethernet addr1.  Moreover, looking
-at the packet capture, this is a "from DS to STA" frame, which implies
-I compeltely mistook where this frame originated from (either that or
-something much stranger is happening).  Needless to say, I should look
-a lot more closely at this before presuming that the problem lies
-here.
 
---
-Paul
->
-> johannes
->
+thanks for the info, it seems that it fixes Mikael's problem.
