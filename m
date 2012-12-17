@@ -1,72 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:40702 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756812Ab2LIScT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Dec 2012 13:32:19 -0500
-Message-ID: <1355077939.19224.25.camel@joe-AO722> (sfid-20121209_193223_046966_A5D7EC2B)
-Subject: Re: [PATCH V2 05/11] brcmfmac: error messages should not be
- suppressed
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Sun, 09 Dec 2012 10:32:19 -0800
-In-Reply-To: <50C05B64.5050702@broadcom.com>
-References: <1354717564-7183-6-git-send-email-arend@broadcom.com>
-	 <1354742910-8822-1-git-send-email-arend@broadcom.com>
-	 <1354775578.8320.26.camel@joe-AO722> <50C05B64.5050702@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:34635 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750942Ab2LQVGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2012 16:06:15 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH] ath9k: fix column header comments for some initval arrays
+Date: Mon, 17 Dec 2012 22:06:08 +0100
+Message-Id: <1355778368-4507-1-git-send-email-juhosg@openwrt.org> (sfid-20121217_220619_072740_7C40EDED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-06 at 09:46 +0100, Arend van Spriel wrote:
-> On 12/06/2012 07:32 AM, Joe Perches wrote:
-> > On Wed, 2012-12-05 at 22:28 +0100, Arend van Spriel wrote:
-> >> The call to brcmf_dbg(ERROR, ...) only resulted in a log message
-> >> when compiled with -DDEBUG. Error messages are valuable for resolving
-> >> issues so this patch replaces it with brcmf_err(...) so they always
-> >> end up in the log.
-> > []
-> > 
-> >> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-> > []
-> >> @@ -35,20 +34,11 @@
-> >>  
-> >>  #if defined(DEBUG)
-> >>  
-> >> -#define brcmf_dbg(level, fmt, ...)					\
-> >> -do {									\
-> >> -	if (BRCMF_ERROR_VAL == BRCMF_##level##_VAL) {			\
-> >> -		if (brcmf_msg_level & BRCMF_##level##_VAL) {		\
-> >> -			if (net_ratelimit())				\
-> >> -				pr_debug("%s: " fmt,			\
-> >> -					 __func__, ##__VA_ARGS__);	\
-> >> -		}							\
-> >> -	} else {							\
-> >> -		if (brcmf_msg_level & BRCMF_##level##_VAL) {		\
-> >> -			pr_debug("%s: " fmt,				\
-> >> -				 __func__, ##__VA_ARGS__);		\
-> >> -		}							\
-> >> -	}								\
-> >> +#define brcmf_err(fmt, ...)	pr_err("%s: " fmt, __func__, ##__VA_ARGS__)
-> > 
-> > You still lost the net_ratelimit() for the DEBUG case.
-> > 
-> > This brcmf_err macro should probably be in dhd.h,
-> > not in a debug header and not guarded by DEBUG at all.
-> 
-> I thought I explained why in my email response to you, but now I don't
-> see that one on the mailing list archives (attached now). When we are
-> debugging we do not want error messages to be filtered.
+Some 3-column initval arrays have wrong comments. The
+column of these arrays is indexed by the 'freqIndex'
+variable in 'ar5008_hw_process_ini' which only depends
+on the actual band.
 
-I suppose that depends on how flooded the dmesg log
-could be by these.  I presumed that because all
-brcmf_dbg uses were debug only messages, and only
-BRCMF_ERROR_VAL messages were rate limited, then it
-was because flooding these messages at debug wasn't
-useful.
+The 'initvals' tool from 'qca-swiss-army-knife' prints
+the correct comment lines for these arrays, since commit
+'atheros-initvals: fix comments for non-fastclock 3-column tables'
+however the comments were not refreshed in ath9k.
 
-I presume that's still true.
+The patch contains no functional changes.
 
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_initvals.h |    8 ++++----
+ drivers/net/wireless/ath/ath9k/ar9001_initvals.h |    4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+index f81e7fc..467ccfa 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+@@ -466,7 +466,7 @@ static const u32 ar5416Bank0[][2] = {
+ };
+ 
+ static const u32 ar5416BB_RfGain[][3] = {
+-	/* Addr      5G_HT20     5G_HT40   */
++	/* Addr      5G          2G        */
+ 	{0x00009a00, 0x00000000, 0x00000000},
+ 	{0x00009a04, 0x00000040, 0x00000040},
+ 	{0x00009a08, 0x00000080, 0x00000080},
+@@ -546,12 +546,12 @@ static const u32 ar5416Bank2[][2] = {
+ };
+ 
+ static const u32 ar5416Bank3[][3] = {
+-	/* Addr      5G_HT20     5G_HT40   */
++	/* Addr      5G          2G        */
+ 	{0x000098f0, 0x01400018, 0x01c00018},
+ };
+ 
+ static const u32 ar5416Bank6[][3] = {
+-	/* Addr      5G_HT20     5G_HT40   */
++	/* Addr      5G          2G        */
+ 	{0x0000989c, 0x00000000, 0x00000000},
+ 	{0x0000989c, 0x00000000, 0x00000000},
+ 	{0x0000989c, 0x00000000, 0x00000000},
+@@ -588,7 +588,7 @@ static const u32 ar5416Bank6[][3] = {
+ };
+ 
+ static const u32 ar5416Bank6TPC[][3] = {
+-	/* Addr      5G_HT20     5G_HT40   */
++	/* Addr      5G          2G        */
+ 	{0x0000989c, 0x00000000, 0x00000000},
+ 	{0x0000989c, 0x00000000, 0x00000000},
+ 	{0x0000989c, 0x00000000, 0x00000000},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9001_initvals.h b/drivers/net/wireless/ath/ath9k/ar9001_initvals.h
+index ea4a230..59524e1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9001_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9001_initvals.h
+@@ -460,7 +460,7 @@ static const u32 ar5416Common_9100[][2] = {
+ };
+ 
+ static const u32 ar5416Bank6_9100[][3] = {
+-	/* Addr      5G_HT20     5G_HT40   */
++	/* Addr      5G          2G        */
+ 	{0x0000989c, 0x00000000, 0x00000000},
+ 	{0x0000989c, 0x00000000, 0x00000000},
+ 	{0x0000989c, 0x00000000, 0x00000000},
+@@ -497,7 +497,7 @@ static const u32 ar5416Bank6_9100[][3] = {
+ };
+ 
+ static const u32 ar5416Bank6TPC_9100[][3] = {
+-	/* Addr      5G_HT20     5G_HT40   */
++	/* Addr      5G          2G        */
+ 	{0x0000989c, 0x00000000, 0x00000000},
+ 	{0x0000989c, 0x00000000, 0x00000000},
+ 	{0x0000989c, 0x00000000, 0x00000000},
+-- 
+1.7.10
 
