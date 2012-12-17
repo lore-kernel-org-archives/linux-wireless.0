@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:46093 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752678Ab2LQM7H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 07:59:07 -0500
+Received: from smtp1.uu.se ([130.238.7.54]:34381 "EHLO smtp1.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751935Ab2LQN6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Dec 2012 08:58:11 -0500
 MIME-Version: 1.0
-In-Reply-To: <20687.3736.365327.811519@pilspetsen.it.uu.se>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20687.9425.163651.172293@pilspetsen.it.uu.se> (sfid-20121217_145826_949909_342FF092)
+Date: Mon, 17 Dec 2012 14:57:37 +0100
+From: Mikael Pettersson <mikpe@it.uu.se>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "devendra.aaru" <devendra.aaru@gmail.com>,
+	Mikael Pettersson <mikpe@it.uu.se>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to
+ initialize hw
+In-Reply-To: <CAL1gcdMyx4y0TeSRi+5oG6cpULPXGu+i8E0ej3-6+n9pt8qPSw@mail.gmail.com>
 References: <20686.63778.840426.61474@pilspetsen.it.uu.se>
 	<CAHdPZaPQNQ1WS5Qkb4FpmmOX7mXL10HsdaXf5dctp2hd2T0Sow@mail.gmail.com>
 	<20687.3736.365327.811519@pilspetsen.it.uu.se>
-Date: Mon, 17 Dec 2012 07:59:06 -0500
-Message-ID: <CAHdPZaNOK=isKPZtxYaBFsGvcpN0261wExaXgRYjg5N3Y7qJZg@mail.gmail.com> (sfid-20121217_135912_792990_786835B3)
-Subject: Re: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to
- initialize hw
-From: "devendra.aaru" <devendra.aaru@gmail.com>
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	<CAHdPZaNOK=isKPZtxYaBFsGvcpN0261wExaXgRYjg5N3Y7qJZg@mail.gmail.com>
+	<CAL1gcdMyx4y0TeSRi+5oG6cpULPXGu+i8E0ej3-6+n9pt8qPSw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 17, 2012 at 7:22 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
-> devendra.aaru writes:
->  > On Mon, Dec 17, 2012 at 5:51 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
->  > > I just updated an old 1st gen AMD64 laptop from kernel 3.6.0 to 3.7.0,
->  > > Fedora 15 user-space, and was greeted by the following kernel warning:
->  > >
->  > > WARNING: at net/wireless/core.c:389 wiphy_register+0x5c3/0x600 [cfg80211]()
->  >
->  > I am seeing this line actually when i do vim +389 net/wireless/core.c.
->  >
->  >                 u16 all_iftypes = 0;
->  >
->  > its good if you tell us the top sha1 of yours?
->
-> It's the plain linux-3.7.tar.xz from kernel.org, no git involved.
-> Lines 389-390 of net/wireless/core.c are:
->
->                 if (WARN_ON(c->max_interfaces < 2))
->                         return -EINVAL;
->
+Gertjan van Wingerde writes:
+ > Mikael, Devendra,
+ > 
+ > On Mon, Dec 17, 2012 at 1:59 PM, devendra.aaru <devendra.aaru@gmail.com> wrote:
+ > > On Mon, Dec 17, 2012 at 7:22 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
+ > >> devendra.aaru writes:
+ > >>  > On Mon, Dec 17, 2012 at 5:51 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
+ > >>  > > I just updated an old 1st gen AMD64 laptop from kernel 3.6.0 to 3.7.0,
+ > >>  > > Fedora 15 user-space, and was greeted by the following kernel warning:
+ > >>  > >
+ > >>  > > WARNING: at net/wireless/core.c:389 wiphy_register+0x5c3/0x600 [cfg80211]()
+...
+ > This is caused by the introduction of interface combinations. Helmut
+ > Schaa has already submitted a patch to fix this, but this has
+ > unfortunately not ended up in 3.7. I'm confident it will end up in one
+ > of the upcoming 3.7.x stable releases.
+ > 
+ > See http://marc.info/?l=linux-wireless&m=135478723823922&w=2 for the
+ > patch submitted by Helmut.
 
-so its v3.7 tag hash 29594404d7fe73cd80eaa4ee8c43dcc53970c60e.
+That patch fixes the problem.  Thanks.
 
-i see that code line :). thanks
-
-i traced a while and looked at the rt2500pci.c code and there we are
-assigning the max_ap_intf variable to 1. the same go with the
-rt2800pci.c
-
-here's the part of the ops structure
-
-static const struct rt2x00_ops rt2500pci_ops = {
-        .name                   = KBUILD_MODNAME,
-        .max_ap_intf            = 1,
-        .eeprom_size            = EEPROM_SIZE,
-        .rf_size                = RF_SIZE,
-        .tx_queues              = NUM_TX_QUEUES,
-        .extra_tx_headroom      = 0,
-        .rx                     = &rt2500pci_queue_rx,
-        .tx                     = &rt2500pci_queue_tx,
-        .bcn                    = &rt2500pci_queue_bcn,
-        .atim                   = &rt2500pci_queue_atim,
-        .lib                    = &rt2500pci_rt2x00_ops,
-        .hw                     = &rt2500pci_mac80211_ops,
-#ifdef CONFIG_RT2X00_LIB_DEBUGFS
-        .debugfs                = &rt2500pci_rt2x00debug,
-#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
-};
-
-i really dont know why is that max_ap_intf is 1. may be some wireless
-dev's know about this?
-
-
-> /Mikael
->
+/Mikael
