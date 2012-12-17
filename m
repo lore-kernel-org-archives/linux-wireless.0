@@ -1,126 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53238 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946004Ab2LFQsM (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:37037 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822Ab2LQLKj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:48:12 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 21/24] regulatory: pass new regdomain to reset function
-Date: Thu,  6 Dec 2012 17:47:45 +0100
-Message-Id: <1354812468-15709-22-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174858_802570_8C0D4D61)
-In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 17 Dec 2012 06:10:39 -0500
+MIME-Version: 1.0
+In-Reply-To: <20686.63778.840426.61474@pilspetsen.it.uu.se>
+References: <20686.63778.840426.61474@pilspetsen.it.uu.se>
+Date: Mon, 17 Dec 2012 06:10:38 -0500
+Message-ID: <CAHdPZaPQNQ1WS5Qkb4FpmmOX7mXL10HsdaXf5dctp2hd2T0Sow@mail.gmail.com> (sfid-20121217_121056_800231_D069E773)
+Subject: Re: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to
+ initialize hw
+From: "devendra.aaru" <devendra.aaru@gmail.com>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Dec 17, 2012 at 5:51 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
+> I just updated an old 1st gen AMD64 laptop from kernel 3.6.0 to 3.7.0,
+> Fedora 15 user-space, and was greeted by the following kernel warning:
+>
+> WARNING: at net/wireless/core.c:389 wiphy_register+0x5c3/0x600 [cfg80211]()
 
-Instead of assigning after calling the function do
-it inside the function. This will later avoid a
-period of time where the pointer is NULL.
+I am seeing this line actually when i do vim +389 net/wireless/core.c.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 26 +++++++++++---------------
- 1 file changed, 11 insertions(+), 15 deletions(-)
+                u16 all_iftypes = 0;
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5a34830..ff5ac4a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -184,7 +184,8 @@ static char user_alpha2[2];
- module_param(ieee80211_regdom, charp, 0444);
- MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
- 
--static void reset_regdomains(bool full_reset)
-+static void reset_regdomains(bool full_reset,
-+			     const struct ieee80211_regdomain *new_regdom)
- {
- 	assert_cfg80211_lock();
- 	assert_reg_lock();
-@@ -201,7 +202,7 @@ static void reset_regdomains(bool full_reset)
- 	kfree(cfg80211_world_regdom);
- 
- 	cfg80211_world_regdom = &world_regdom;
--	cfg80211_regdomain = NULL;
-+	cfg80211_regdomain = new_regdom;
- 
- 	if (!full_reset)
- 		return;
-@@ -222,10 +223,9 @@ static void update_world_regdomain(const struct ieee80211_regdomain *rd)
- 	assert_cfg80211_lock();
- 	assert_reg_lock();
- 
--	reset_regdomains(false);
-+	reset_regdomains(false, rd);
- 
- 	cfg80211_world_regdom = rd;
--	cfg80211_regdomain = rd;
- }
- 
- bool is_world_regdom(const char *alpha2)
-@@ -1818,7 +1818,7 @@ static void restore_regulatory_settings(bool reset_user)
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
- 
--	reset_regdomains(true);
-+	reset_regdomains(true, cfg80211_world_regdom);
- 	restore_alpha2(alpha2, reset_user);
- 
- 	/*
-@@ -1849,9 +1849,8 @@ static void restore_regulatory_settings(bool reset_user)
- 	}
- 
- 	/* First restore to the basic regulatory settings */
--	cfg80211_regdomain = cfg80211_world_regdom;
--	world_alpha2[0] = cfg80211_regdomain->alpha2[0];
--	world_alpha2[1] = cfg80211_regdomain->alpha2[1];
-+	world_alpha2[0] = cfg80211_world_regdom->alpha2[0];
-+	world_alpha2[1] = cfg80211_world_regdom->alpha2[1];
- 
- 	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
- 		if (rdev->wiphy.flags & WIPHY_FLAG_CUSTOM_REGULATORY)
-@@ -2102,8 +2101,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 
- 	if (!last_request->intersect) {
- 		if (last_request->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
--			reset_regdomains(false);
--			cfg80211_regdomain = rd;
-+			reset_regdomains(false, rd);
- 			return 0;
- 		}
- 
-@@ -2126,8 +2124,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		}
- 
- 		request_wiphy->regd = regd;
--		reset_regdomains(false);
--		cfg80211_regdomain = rd;
-+		reset_regdomains(false, rd);
- 		return 0;
- 	}
- 
-@@ -2150,8 +2147,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 
- 		rd = NULL;
- 
--		reset_regdomains(false);
--		cfg80211_regdomain = intersected_rd;
-+		reset_regdomains(false, intersected_rd);
- 
- 		return 0;
- 	}
-@@ -2322,7 +2318,7 @@ void regulatory_exit(void)
- 	/* Lock to suppress warnings */
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
--	reset_regdomains(true);
-+	reset_regdomains(true, NULL);
- 	mutex_unlock(&cfg80211_mutex);
- 	mutex_unlock(&reg_mutex);
- 
--- 
-1.8.0
+its good if you tell us the top sha1 of yours?
 
+
+> Hardware name: SAM#451B
+> Modules linked in: rt2500pci(+) snd_mpu401_uart rt2x00pci snd_rawmidi rt2x00lib sg snd_seq_device mac80211 cfg80211 amd64_agp agpgart snd eeprom_93cx6 soundcore via_rhine mii evdev ipv6 ehci_hcd uhci_hcd sr_mod cdrom usbcore usb_common
+> Pid: 378, comm: modprobe Not tainted 3.7.0 #1
+> Call Trace:
+>  [<ffffffff810260b9>] ? warn_slowpath_common+0x79/0xc0
+>  [<ffffffffa0115773>] ? wiphy_register+0x5c3/0x600 [cfg80211]
+>  [<ffffffff810c5b3f>] ? __kmalloc+0xef/0x170
+>  [<ffffffffa013ac97>] ? ieee80211_register_hw+0x347/0x6d0 [mac80211]
+>  [<ffffffffa00f92ed>] ? rt2x00lib_probe_dev+0x53d/0x720 [rt2x00lib]
+>  [<ffffffffa0060888>] ? rt2x00pci_probe+0x168/0x2e4 [rt2x00pci]
+>  [<ffffffff81194cd0>] ? pci_device_probe+0xd0/0x170
+>  [<ffffffff811f2934>] ? driver_probe_device+0x64/0x210
+>  [<ffffffff811f2b73>] ? __driver_attach+0x93/0xa0
+>  [<ffffffff811f2ae0>] ? driver_probe_device+0x210/0x210
+>  [<ffffffff811f0f95>] ? bus_for_each_dev+0x45/0x80
+>  [<ffffffff811f20d8>] ? bus_add_driver+0x178/0x250
+>  [<ffffffff811f314e>] ? driver_register+0x6e/0x170
+>  [<ffffffff81048a14>] ? notifier_call_chain+0x44/0x60
+>  [<ffffffffa0196000>] ? 0xffffffffa0195fff
+>  [<ffffffff810002ca>] ? do_one_initcall+0x11a/0x160
+>  [<ffffffff81069786>] ? sys_init_module+0x76/0x1c0
+>  [<ffffffff812c15d0>] ? system_call_fastpath+0x16/0x1b
+> ---[ end trace f8413f27de31929d ]---
+> phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
+> rt2500pci: probe of 0000:00:0c.0 failed with error -22
+>
+> Rebooting into 3.6.0 shows no such error, booting 3.7.0 again shows the error,
+> so it's completely reproducible.
+>
+
+there are lots of WARN_ON's btw, :) may be one of them triggered, but
+please tell us the top sha1 of yours, so that the wireless dev's can
+easily see whats' happening with the rt2x00 to trigger this :)
+
+
+> lspci -v for the device in question:
+>
+> 00:0c.0 Network controller: Ralink corp. RT2500 802.11g (rev 01)
+>         Subsystem: Micro-Star International Co., Ltd. Unknown 802.11g mini-PCI Adapter
+>         Flags: bus master, slow devsel, latency 64, IRQ 18
+>         Memory at d0000000 (32-bit, non-prefetchable) [size=8K]
+>         Capabilities: [40] Power Management version 2
+>         Kernel driver in use: rt2500pci
+>         Kernel modules: rt2500pci
+>
+> I've never actually used or configured this device (the laptop is always
+> on wired ethernet), but thought you should know about this possible driver
+> regression.
+>
+> /Mikael
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
