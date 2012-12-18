@@ -1,56 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.237.1]:35996 "EHLO icf.org.ru"
+Received: from mx4.wp.pl ([212.77.101.8]:10452 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751412Ab2LCPnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 10:43:42 -0500
-Date: Mon, 3 Dec 2012 19:43:41 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: help: 802.11s bad performance with 802.11n enabled
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1259A@RockMX01.rock.corp>
-Message-ID: <alpine.DEB.2.02.1212031938250.7349@icf.org.ru> (sfid-20121203_164346_083136_9E8F16C5)
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp> <alpine.DEB.2.02.1212031842350.27546@icf.org.ru> <BD54DDEB2546894FAB0731EA7B0EDF8D07C1259A@RockMX01.rock.corp>
+	id S1755366Ab2LRWWd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2012 17:22:33 -0500
+Date: Tue, 18 Dec 2012 23:22:26 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Golle <dgolle@allnet.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 2/2] rt2x00: rt2800pci: allow to load
+ EEPROM data via firmware API
+Message-ID: <20121218222226.GB4825@localhost.localdomain> (sfid-20121218_232238_772736_F78E3617)
+References: <1355847743-16659-1-git-send-email-juhosg@openwrt.org>
+ <1355847743-16659-2-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-646201792-1354549421=:7349"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1355847743-16659-2-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, Dec 18, 2012 at 05:22:23PM +0100, Gabor Juhos wrote:
+> Currently the driver fetches the EEPROM data
+> from a fixed memory location for SoC devices
+> for SoC devices with a built-in wireless MAC.
+> 
+> The usability of this approach is quite
+> limited, because it is only suitable if the
+> location of the EEPROM data is mapped into
+> the memory. This condition is true on embedded
+> boards equipped which are using a parallel NOR
+> flash, but it is not true for boards equipped
+> with SPI or NAND flashes. The fixed location
+> also does not work in all cases, because the
+> offset of the EEPROM data varies between
+> different boards.
+> 
+> Additionally, various embedded boards are using
+> a PCI/PCIe chip soldered directly onto the PCB.
+> Such boards usually does not have a separate
+> EEPROM chip for the PCI/PCIe devices, the data
+> of the EEPROM is stored in the main flash
+> instead.
+> 
+> The patch makes it possible to load the EEPROM
+> data via firmware API. This new method works
+> regardless of the type of the flash, and it is
+> usable with built-in and with PCI/PCIe devices.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
----1050998036-646201792-1354549421=:7349
-Content-Type: TEXT/PLAIN; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+I understand this patch will not broke NOR boards, which use
+ioremap approach currently?
 
-On 2012-12-03 14:56 -0000, Chaoxing Lin wrote Georgiewskiy Yuriy:
+> +	init_completion(&ec.complete);
+> +	retval = request_firmware_nowait(THIS_MODULE, 1, name,
+> +					 rt2x00dev->dev, GFP_KERNEL, &ec,
+> +					 rt2800pci_eeprom_request_cb);
+> +	if (retval < 0) {
+> +		ERROR(rt2x00dev, "EEPROM request failed\n");
+> +		return retval;
+> +	}
+> +
+> +	wait_for_completion(&ec.complete);
+Since we use completion here, why we can not just use normal synchronous
+version of request_firmware? I heard of request_firmware drawbacks, so
+this approach can be correct. Just want to know if we do not complicate
+things not necessarily here.
 
-CL>CL>For experiment, I changed ath9k driver to disable 802.11n packet aggregation. The network becomes much better.
-CL>CL>It's as stable as running 802.11a only mode.
-CL>CL>So it seems that the aggregation plays a big role in in-stability of 802.11s network with 802.11n.
-CL>CL>Any one has any idea why?
-CL>
-CL>Can you post a patch? i want test this too.
-CL>
-CL>The change is easy
-CL>In ath9k/init.c
-CL>Function ath9k_set_hw_capab()
-CL>Replace below
-CL>    if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
-CL>         hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-CL>with
-CL>	hw->flags &= ~IEEE80211_HW_AMPDU_AGGREGATION; 
+> +		goto release_eeprom;
+> +	}
+> +
+> +	memcpy(rt2x00dev->eeprom, ec.blob->data, EEPROM_SIZE);
+> +	retval = 0;
+> +
+> +release_eeprom:
+We do not free memory - I guess we should do relase_firmware(ec.blob)?
 
-On first look in my case disabled aggregation reduces packet loss, 
-link is more reliable, but it's also drop throughput to 15-20 Mbits/sec
-from about ~50 with aggregation enabled.
-
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1050998036-646201792-1354549421=:7349--
+Thanks
+Stanislaw
