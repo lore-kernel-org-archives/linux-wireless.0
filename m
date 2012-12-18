@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58864 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753103Ab2LJLJa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 06:09:30 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless-regdb: add regulatory rule for ETSI members on 60gHz band
-Date: Mon, 10 Dec 2012 13:09:27 +0200
-Message-ID: <1424987.QUc2GD1qWX@lx-vladimir> (sfid-20121210_120934_466865_9F91583E)
-In-Reply-To: <1355134918.9857.9.camel@jlt4.sipsolutions.net>
-References: <8774585.BvFN3Opv12@lx-vladimir> <1573921.0GjqNuABMd@lx-vladimir> <1355134918.9857.9.camel@jlt4.sipsolutions.net>
+Received: from mail.neratec.com ([80.75.119.105]:36073 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755081Ab2LRQC4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2012 11:02:56 -0500
+Message-ID: <50D093AC.9020501@neratec.com> (sfid-20121218_170300_289478_90E4C0E6)
+Date: Tue, 18 Dec 2012 17:02:52 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
+	adrian@freebsd.org, nbd@openwrt.org, jonbither@gmail.com,
+	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
+References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de> <20121213140753.GA26868@pandem0nium> <50D04EC9.2040805@neratec.com> <20121218134611.GA7053@pandem0nium>
+In-Reply-To: <20121218134611.GA7053@pandem0nium>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, December 10, 2012 11:21:58 AM Johannes Berg wrote:
-> On Mon, 2012-12-10 at 11:45 +0200, Vladimir Kondratiev wrote:
+On 12/18/2012 02:46 PM, Simon Wunderlich wrote:
+> [...]
 > 
-> > For the 60gHz band, regulation defined in the "Etsi En 302 567"
-> > http://docsfiles.com/pdf_final_draft_etsi_en_302_567.html
+> Yes, that helped very much, especially the varying data part was something I had no
+> clue about. This might also fix the "weird high numbers in the middle of the dump"
+> problem I was seeing.
 > 
-> > +country AD:
-> > +        # 60 gHz band channels 1-4, ref: Etsi En 302 567
-> > +        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-> > +        (57240 - 65880 @ 2160), (N/A, 25)
-> 
-> There doesn't seem to be a bandwidth limitation in the rules, should we
-> really put one into the database?
-Yes, there is no limit and I'd want to remove bandwidth, but I don't see
-how to do so. If I simply omit '@ 2160', I am getting error from db2bin.py:
+If you mean the bin at center frequency, it is because spectral is blind there. To
+remove discontinuity, that bin is interpolated, see line
++	// DC value is invalid -> interpolate
++	*dc_pwr = (dc_pwr[-1] + dc_pwr[1]) / 2;
 
-$ ./db2bin.py regulatory.bin db.txt vkondrat.key.priv.pem 
-Traceback (most recent call last):
-  File "./db2bin.py", line 52, in <module>
-    countries = p.parse(file(sys.argv[2]))
-  File "/local/mnt/vkondrat/60ghz/wireless-regdb/dbparse.py", line 361, in parse
-    self._parse_country_item(line)
-  File "/local/mnt/vkondrat/60ghz/wireless-regdb/dbparse.py", line 268, in _parse_country_item
-    self._syntax_error("Badly parenthesised band definition")
-  File "/local/mnt/vkondrat/60ghz/wireless-regdb/dbparse.py", line 139, in _syntax_error
-    raise SyntaxError("Syntax error in line %d%s" % (self._lineno, txt))
-dbparse.SyntaxError: Syntax error in line 17 (Badly parenthesised band definition)
+> I'll change the patch according to your explanations, so that only 56 byte data samples
+> are returned (at least for HT20).
+> 
+> Thank you very much!
+> 	Simon
+> 
 
+Good luck!
+Zefir
