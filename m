@@ -1,104 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:52681 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752297Ab2LAUUW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Dec 2012 15:20:22 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so914617eek.19
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Dec 2012 12:20:21 -0800 (PST)
-From: Bernhard Urban <lewurm@gmail.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	c_manoha@qca.qualcomm.com, Sujith.Manoharan@atheros.com,
-	linville@tuxdriver.com, m.sujith@gmail.com, nbd@openwrt.org
-Cc: markus@indoo.rs, lewurm@gmail.com
-Subject: [PATCH] ath9k_htc: update RSSI values only when the device is associated
-Date: Sat,  1 Dec 2012 21:21:41 +0100
-Message-Id: <1354393301-11051-1-git-send-email-lewurm@gmail.com> (sfid-20121201_212030_420619_BC7636AF)
+Received: from arrakis.dune.hu ([78.24.191.176]:41960 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754712Ab2LRQWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Dec 2012 11:22:34 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Daniel Golle <dgolle@allnet.de>, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/2] rt2x00: rt2800pci: verify ioremap return value
+Date: Tue, 18 Dec 2012 17:22:22 +0100
+Message-Id: <1355847743-16659-1-git-send-email-juhosg@openwrt.org> (sfid-20121218_172238_006738_6D04B19F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add an if-guard, otherwise iw(8) reports weird signal strengths.
+An ioremap call is allowed to fail, however
+the return value of that is not checked in
+the 'rt2800pci_read_eeprom_soc' function.
 
-The behaviour was fine before this commit:
-7c277349ecbd66e19fad3d949fa6ef6c131a3b62
-This patch is therefore a partially revert of it.
+The patch adds the missing check, and makes
+the function return an int value. The patch
+also converts the 'rt2800_read_eeprom' and
+'rt2800_ops.read_eeprom' functions to return
+an int value, so the error value can be
+propagated up to the 'rt2800_validate_eeprom'
+function.
 
-Tested with "TP-Link TL-WN722N"
-
-Thanks to indoo.rs http://indoo.rs/ for sponsoring
-
-Reported-by: Markus Krainz <markus@indoo.rs>
-Tested-by: Markus Krainz <markus@indoo.rs>
-Signed-off-by: Bernhard Urban <lewurm@gmail.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   29 +++++++++++++++----------
- 2 files changed, 19 insertions(+), 11 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    5 ++++-
+ drivers/net/wireless/rt2x00/rt2800lib.h |    6 +++---
+ drivers/net/wireless/rt2x00/rt2800pci.c |   17 ++++++++++++-----
+ drivers/net/wireless/rt2x00/rt2800usb.c |    4 +++-
+ 4 files changed, 22 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 936e920..00ebf1c 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -22,6 +22,7 @@
- #include <linux/firmware.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
-+#include <linux/etherdevice.h>
- #include <linux/leds.h>
- #include <linux/slab.h>
- #include <net/mac80211.h>
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 47e61d0..8b4da3d 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -969,6 +969,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	int hdrlen, padpos, padsize;
- 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	__le16 fc;
-+	u8 is_mybeacon;
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 197b446..52b2978 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4635,11 +4635,14 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	u16 word;
+ 	u8 *mac;
+ 	u8 default_lna_gain;
++	int retval;
  
- 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
- 		ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
-@@ -1060,22 +1061,28 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
- 			   rxbuf->rxstatus.rs_flags);
+ 	/*
+ 	 * Read the EEPROM.
+ 	 */
+-	rt2800_read_eeprom(rt2x00dev);
++	retval = rt2800_read_eeprom(rt2x00dev);
++	if (retval)
++		return retval;
  
--	if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
--	    !rxbuf->rxstatus.rs_moreaggr)
--		ATH_RSSI_LPF(priv->rx.last_rssi,
--			     rxbuf->rxstatus.rs_rssi);
-+	is_mybeacon = ieee80211_is_beacon(fc) &&
-+		!is_zero_ether_addr(common->curbssid) &&
-+		ether_addr_equal(hdr->addr3, common->curbssid);
+ 	/*
+ 	 * Start validation of the data that has been read.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+index a128cea..8252c67 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+@@ -43,7 +43,7 @@ struct rt2800_ops {
+ 			    const unsigned int offset,
+ 			    const struct rt2x00_field32 field, u32 *reg);
  
--	last_rssi = priv->rx.last_rssi;
-+	if (is_mybeacon && priv->ah->opmode == NL80211_IFTYPE_STATION) {
-+		if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
-+		    !rxbuf->rxstatus.rs_moreaggr)
-+			ATH_RSSI_LPF(priv->rx.last_rssi,
-+				     rxbuf->rxstatus.rs_rssi);
+-	void (*read_eeprom)(struct rt2x00_dev *rt2x00dev);
++	int (*read_eeprom)(struct rt2x00_dev *rt2x00dev);
+ 	bool (*hwcrypt_disabled)(struct rt2x00_dev *rt2x00dev);
  
--	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
--						     ATH_RSSI_EP_MULTIPLIER);
-+		last_rssi = priv->rx.last_rssi;
+ 	int (*drv_write_firmware)(struct rt2x00_dev *rt2x00dev,
+@@ -117,11 +117,11 @@ static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ 	return rt2800ops->regbusy_read(rt2x00dev, offset, field, reg);
+ }
  
--	if (rxbuf->rxstatus.rs_rssi < 0)
--		rxbuf->rxstatus.rs_rssi = 0;
-+		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER)) {
-+			s8 rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
-+			rxbuf->rxstatus.rs_rssi = rssi;
-+		}
+-static inline void rt2800_read_eeprom(struct rt2x00_dev *rt2x00dev)
++static inline int rt2800_read_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	const struct rt2800_ops *rt2800ops = rt2x00dev->ops->drv;
+ 
+-	rt2800ops->read_eeprom(rt2x00dev);
++	return rt2800ops->read_eeprom(rt2x00dev);
+ }
+ 
+ static inline bool rt2800_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 9224d87..5fc16dd 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -90,17 +90,21 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ }
+ 
+ #if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
+-static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
++static int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+ {
+ 	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
+ 
++	if (!base_addr)
++		return -ENOMEM;
 +
-+		if (rxbuf->rxstatus.rs_rssi < 0)
-+			rxbuf->rxstatus.rs_rssi = 0;
+ 	memcpy_fromio(rt2x00dev->eeprom, base_addr, EEPROM_SIZE);
  
--	if (ieee80211_is_beacon(fc))
- 		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
-+	}
+ 	iounmap(base_addr);
+ }
+ #else
+-static inline void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
++static inline int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+ {
++	return -ENOMEM;
+ }
+ #endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
  
- 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
+@@ -970,14 +974,17 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+ /*
+  * Device probe functions.
+  */
+-static void rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
++static int rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	if (rt2x00_is_soc(rt2x00dev))
+-		rt2800pci_read_eeprom_soc(rt2x00dev);
+-	else if (rt2800pci_efuse_detect(rt2x00dev))
++		return rt2800pci_read_eeprom_soc(rt2x00dev);
++
++	if (rt2800pci_efuse_detect(rt2x00dev))
+ 		rt2800pci_read_eeprom_efuse(rt2x00dev);
+ 	else
+ 		rt2800pci_read_eeprom_pci(rt2x00dev);
++
++	return 0;
+ }
+ 
+ static const struct ieee80211_ops rt2800pci_mac80211_ops = {
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 5c149b5..48de5c9 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -735,13 +735,15 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ /*
+  * Device probe functions.
+  */
+-static void rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
++static int rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	if (rt2800_efuse_detect(rt2x00dev))
+ 		rt2800_read_eeprom_efuse(rt2x00dev);
+ 	else
+ 		rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
+ 				      EEPROM_SIZE);
++
++	return 0;
+ }
+ 
+ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
 -- 
-1.7.9.5
+1.7.10
 
