@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:59894 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838Ab2LTOYp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 09:24:45 -0500
-Subject: [PATCH] rtlwifi: fix incorrect use of usb_alloc_coherent with
- usb_control_msg
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	stable@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
-Date: Thu, 20 Dec 2012 16:24:43 +0200
-Message-ID: <20121220142443.16895.45834.stgit@localhost6.localdomain6> (sfid-20121220_152450_235340_472C8CC3)
+Received: from arrakis.dune.hu ([78.24.191.176]:56178 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752263Ab2LSL73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2012 06:59:29 -0500
+Message-ID: <50D1AC1E.7070002@openwrt.org> (sfid-20121219_125933_878883_08C9681D)
+Date: Wed, 19 Dec 2012 12:59:26 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Jones Desougi <jones.desougi@27m.se>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Daniel Golle <dgolle@allnet.de>, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 1/2] rt2x00: rt2800pci: verify ioremap return value
+References: <1355847743-16659-1-git-send-email-juhosg@openwrt.org> <50D19F97.9000000@27m.se>
+In-Reply-To: <50D19F97.9000000@27m.se>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Incorrect use of usb_alloc_coherent memory as input buffer to usb_control_msg
-can cause problems in arch DMA code, for example kernel BUG at
-'arch/arm/include/asm/dma-mapping.h:321' on ARM (linux-3.4).
+2012.12.19. 12:05 keltezéssel, Jones Desougi írta:
+> Hi Gabor,
+> 
+> One thing:
+> 
+> On 12/18/2012 05:22 PM, Gabor Juhos wrote:
+>> An ioremap call is allowed to fail, however
+>> the return value of that is not checked in
+>> the 'rt2800pci_read_eeprom_soc' function.
+>>
+>> The patch adds the missing check, and makes
+>> the function return an int value. The patch
+>> also converts the 'rt2800_read_eeprom' and
+>> 'rt2800_ops.read_eeprom' functions to return
+>> an int value, so the error value can be
+>> propagated up to the 'rt2800_validate_eeprom'
+>> function.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-Change _usb_writeN_sync use kmalloc'd buffer instead.
+>> +static int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+>>  {
+>>  	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
+>>  
+>> +	if (!base_addr)
+>> +		return -ENOMEM;
+>> +
+>>  	memcpy_fromio(rt2x00dev->eeprom, base_addr, EEPROM_SIZE);
+>>  
+>>  	iounmap(base_addr);
+>>  }
+> 
+> Missing return at the end, since it should now return an int.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/rtlwifi/usb.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+You are right.
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 29f0969..a3312b7 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -210,17 +210,16 @@ static void _usb_writeN_sync(struct rtl_priv *rtlpriv, u32 addr, void *data,
- 	u16 index = REALTEK_USB_VENQT_CMD_IDX;
- 	int pipe = usb_sndctrlpipe(udev, 0); /* write_out */
- 	u8 *buffer;
--	dma_addr_t dma_addr;
- 
--	wvalue = (u16)(addr&0x0000ffff);
--	buffer = usb_alloc_coherent(udev, (size_t)len, GFP_ATOMIC, &dma_addr);
-+	wvalue = (u16)(addr & 0x0000ffff);
-+	buffer = kmalloc(len, GFP_ATOMIC);
- 	if (!buffer)
- 		return;
- 	memcpy(buffer, data, len);
- 	usb_control_msg(udev, pipe, request, reqtype, wvalue,
- 			index, buffer, len, 50);
- 
--	usb_free_coherent(udev, (size_t)len, buffer, dma_addr);
-+	kfree(buffer);
- }
- 
- static void _rtl_usb_io_handler_init(struct device *dev,
+> Even if this is gone with the second patch.
 
+I will post an updated version of the patch-set anyway and will fix this.
+
+Thank you for the review!
+
+-Gabor
