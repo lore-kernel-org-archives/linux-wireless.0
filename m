@@ -1,45 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:59412 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753294Ab2LEM1m (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:50914 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303Ab2LSSxX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 07:27:42 -0500
-Message-ID: <50BF3DBB.90000@posedge.com> (sfid-20121205_132746_039401_5037C9FB)
-Date: Wed, 05 Dec 2012 17:57:39 +0530
-From: Chaitanya <chaitanyatk@posedge.com>
-MIME-Version: 1.0
-To: johannes@sipsolutions.net
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: fix the multiple warnings for budding chipsets
- without ampdu_action defined
-Content-Type: text/plain; charset=UTF-8
+	Wed, 19 Dec 2012 13:53:23 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so1414758pbc.33
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 10:53:23 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net, greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/3] cfg80211: move reg_is_world_roaming()
+Date: Wed, 19 Dec 2012 10:53:03 -0800
+Message-Id: <1355943184-966-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20121219_195326_342374_12BF2060)
+In-Reply-To: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Warn once should suffice.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Eg: our driver doesn't support the ampdu_action yet, so
-seeing a lot of warnings, hence the check for any
-new drivers to avoid messing the kernel log.
+This will be used later by other code. This has no
+functional change.
 
-Changed the mail client to thunder bird to avoid whitespace issues.
-Changed the subject and also the signing off to use offical mail.
-
-Signed-off-by: T Krushna Chaitanya <chaitanyatk@posedge.com>
+Tested-by: Ben Greear <greearb@candelatech.com>
+Reported-by: Ben Greear <greearb@candelatech.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
-net/mac80211/agg-tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/wireless/reg.c |   24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 4152ed1..eb9df22 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -445,7 +445,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a2d5a03..f649b5e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1042,6 +1042,18 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	return false;
+ }
  
-     trace_api_start_tx_ba_session(pubsta, tid);
++static bool reg_is_world_roaming(struct wiphy *wiphy)
++{
++	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
++	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
++		return true;
++	if (last_request &&
++	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++	    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY)
++		return true;
++	return false;
++}
++
+ static void handle_reg_beacon(struct wiphy *wiphy,
+ 			      unsigned int chan_idx,
+ 			      struct reg_beacon *reg_beacon)
+@@ -1128,18 +1140,6 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
+ 	}
+ }
  
--    if (WARN_ON(!local->ops->ampdu_action))
-+    if (WARN_ON_ONCE(!local->ops->ampdu_action))
-         return -EINVAL;
- 
-     if ((tid >= IEEE80211_NUM_TIDS) ||
+-static bool reg_is_world_roaming(struct wiphy *wiphy)
+-{
+-	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
+-	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
+-		return true;
+-	if (last_request &&
+-	    last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+-	    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY)
+-		return true;
+-	return false;
+-}
+-
+ /* Reap the advantages of previously found beacons */
+ static void reg_process_beacons(struct wiphy *wiphy)
+ {
+-- 
+1.7.10.4
+
