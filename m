@@ -1,68 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52609 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226Ab2LACqh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859Ab2LSMQb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Nov 2012 21:46:37 -0500
-Date: Fri, 30 Nov 2012 21:38:00 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Jason Baron <jbaron@redhat.com>
-Subject: Re: [RFC] How to manage dependency between patches
-Message-ID: <20121201023800.GD2355@tuxdriver.com> (sfid-20121201_034648_844544_63DBA12F)
-References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <20121128141319.GA9118@tuxdriver.com>
- <1480359.ZVbZvOVayc@lx-vladimir>
- <1585902.GCBvcuyASu@lx-vladimir>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1585902.GCBvcuyASu@lx-vladimir>
+	Wed, 19 Dec 2012 07:16:31 -0500
+Message-ID: <1355919410.9954.14.camel@jlt4.sipsolutions.net> (sfid-20121219_131634_800014_2F80BE0F)
+Subject: Re: [PATCH V3 2/2] cfg80211/nl80211: Enable drivers to implement
+ mac address based ACL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Wed, 19 Dec 2012 13:16:50 +0100
+In-Reply-To: <1355748553-19560-2-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1355748553-19560-1-git-send-email-vthiagar@qca.qualcomm.com>
+	 <1355748553-19560-2-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 29, 2012 at 11:29:55AM +0200, Vladimir Kondratiev wrote:
-> Hi,
-> 
-> I have the following situation:
-> 
-> - there is the driver for 60g WiFi card, "wil6210", that I want to merge. It 
-> consists of 2 patches:
-> 
-> wireless: Driver for 60GHz card wil6210
-> wireless: integrate wil6210 driver into build
-> 
-> - then, there is one more patch for Atheros drivers family config that I rely 
-> on:
-> 
-> wireless: allow Atheros card to not depend on ath.ko
-> 
-> - and, there is one more patch that I depend on:
-> 
-> dynamic_debug: dynamic hex dump
-> 
-> Discussion about last patch was taken from linux-wireless to the LKML, and it 
-> get pushed to Greg K-H by Jason Baron.
-> 
-> So, question is: what is the right strategy for wil6210 driver?
-> 
-> Shall I wait till 2 patches I depend on get merged? Some other idea?
-> 
-> Please advise.
-> 
-> Thanks, Vladimir
+On Mon, 2012-12-17 at 18:19 +0530, Vasanthakumar Thiagarajan wrote:
 
-Since Greg is merging one patch and I'm merging the other, under
-normal circumstances they will only reach the same tree sometime
-during the 3.8 merge window.  FWIW, I was under the impression that
-you were targeting 3.9 anyway.  If so, you can simply wait to have
-your driver merged sometime after 3.8-rc1.
+>  /**
+> + * struct cfg80211_acl_data - Access control data
+> + * @acl_policy: Access control policy to be applied on the station's
+> +	entry specified by mac_addr
+> + * @n_acl_entries: Number of mac address entries passed
+> + * @mac_addrs: List of mac addresses of stations to be used for acl
+> + */
+> +struct cfg80211_acl_data {
+> +	enum nl80211_acl_policy_attr acl_policy;
+> +	int n_acl_entries;
+> +
+> +	/* Keep it last */
+> +	struct mac_address mac_addrs[0];
 
-Does that help?
+just [] would make more sense?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> +/**
+> + * struct cfg80211_acl_settings - Access control configuration
+> + * @acl_data: Acl data for various acl policies
+> + * @mac_acl_list: Number of acl configurations
+> + */
+> +struct cfg80211_acl_settings {
+> +	struct cfg80211_acl_data *acl_data[NL80211_ACL_POLICY_MAX + 1];
+> +	int num_acl_list;
+> +};
+
+This ... doesn't make sense? Why not have the array and remove
+num_acl_list here and the policy from the array entry?
+
+> + * @max_acl_mac_addrs: Maximum number of mac addresses that the device
+> + *	supports for ACL. Driver having ACL based on MAC address support
+> + *	has to fill this. This limit is common for both (white and black)
+> + *	the acl policies.
+> + *
+> + * @acl_types: Bit masks of supported acl policies
+
+Still doesn't make sense. Drivers might support a whitelist _or_ a
+blacklist, but not both, right?
+
+> + * @NL80211_CONN_FAIL_ACL_NOTIFY: Connection failed because the client's
+> +	mac address is not part of any acl list.
+
+That description doesn't really make sense, presumably the default (if
+there's no list) is allowing the connection.
+
+> +/*
+> + * This functoion parses acl information and fills the configuration.
+
+typo function
+
+> +	memset(avail_acl, 0, sizeof(avail_acl));
+> +	nla_for_each_nested(nla_acl, acl_attr, tmp_acl) {
+> +
+
+better move the blank line one up?
+
+> +		if (n_acl > NL80211_ACL_POLICY_MAX) {
+> +			err = -EINVAL;
+> +			goto free_acl;
+> +		}
+> +
+> +		if (nla_parse_nested(tb, NL80211_ACL_ATTR_MAX, nla_acl,
+> +				     mac_acl_policy))
+> +			continue;
+> +
+> +		if (!tb[NL80211_ACL_ATTR_POLICY])
+> +			continue;
+
+shouldn't those be errors?
+
+> +		acl_policy = nla_get_u8(tb[NL80211_ACL_ATTR_POLICY]);
+> +		if (!(rdev->wiphy.acl_types & BIT(acl_policy)) ||
+> +		    acl_policy > NL80211_ACL_POLICY_MAX)
+> +			continue;
+
+ditto
+
+> +		/* Skip multiple acl information for the same acl policy */
+> +		if (avail_acl[acl_policy])
+> +			continue;
+
+ditto
+
+> +		if (!tb[NL80211_ACL_ATTR_MAC_ADDRS])
+> +			continue;
+
+that maybe as well?
+
+> +		n_entries =
+> +			validate_acl_mac_addrs(tb[NL80211_ACL_ATTR_MAC_ADDRS]);
+> +		if (n_entries < 0 || n_entries > rdev->wiphy.max_acl_mac_addrs)
+> +			continue;
+
+ditto
+
+> +		acl->acl_data[n_acl] =
+> +			kzalloc(sizeof(struct cfg80211_acl_data) +
+> +				(n_entries * sizeof(struct mac_address)),
+> +				GFP_KERNEL);
+> +		if (!acl->acl_data[n_acl]) {
+> +			err = -ENOMEM;
+> +			goto free_acl;
+> +		}
+> +
+> +		j = 0;
+> +		nla_for_each_nested(attr, tb[NL80211_ACL_ATTR_MAC_ADDRS], tmp) {
+> +			memcpy(acl->acl_data[n_acl]->mac_addrs[j].addr,
+> +			       nla_data(attr), ETH_ALEN);
+> +			j++;
+> +		}
+> +
+> +		acl->acl_data[n_acl]->n_acl_entries = j;
+> +		acl->acl_data[n_acl]->acl_policy = acl_policy;
+> +		avail_acl[acl_policy] = 1;
+> +		n_acl++;
+> +	}
+> +
+> +	if (!n_acl)
+> +		return -EINVAL;
+> +
+> +	acl->num_acl_list = n_acl;
+> +
+> +	return 0;
+
+Where is the data freed?
+
+> @@ -2645,13 +2808,14 @@ static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
+>  	}
+>  }
+>  
+> +
+
+??
+
+>  static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>  {
+>  	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>  	struct net_device *dev = info->user_ptr[1];
+>  	struct wireless_dev *wdev = dev->ieee80211_ptr;
+>  	struct cfg80211_ap_settings params;
+> -	int err;
+> +	int err, i;
+>  
+>  	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+>  	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+> @@ -2752,6 +2916,16 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>  	if (err)
+>  		return err;
+>  
+> +	if (info->attrs[NL80211_ATTR_MAC_ACL_LISTS]) {
+> +		if (!rdev->wiphy.acl_types)
+> +			return -EOPNOTSUPP;
+> +
+> +		err = parse_acl_information(rdev,
+> +				info->attrs[NL80211_ATTR_MAC_ACL_LISTS],
+> +				&params.acl);
+> +		if (err)
+> +			return err;
+> +	}
+>  	err = rdev_start_ap(rdev, dev, &params);
+
+that blank line should be here .... do I really have to review your
+whitespace?
+
+johannes
+
