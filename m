@@ -1,64 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:46646 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751592Ab2LTMno (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38365 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859Ab2LSSf1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 07:43:44 -0500
-Message-ID: <50D307FD.9010508@posedge.com> (sfid-20121220_134347_822750_3A567BF2)
-Date: Thu, 20 Dec 2012 18:13:41 +0530
-From: Chaitanya <chaitanyatk@posedge.com>
+	Wed, 19 Dec 2012 13:35:27 -0500
+Date: Wed, 19 Dec 2012 13:32:20 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2012-12-19
+Message-ID: <20121219183220.GB1912@tuxdriver.com> (sfid-20121219_193554_589985_EB6651D5)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC] mac80211: Fix MAX MTU Calculation
-References: <201212201236.qBKCakFZ011657@chaitanya-desktop>
-In-Reply-To: <201212201236.qBKCakFZ011657@chaitanya-desktop>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="vtzGhvizbBRQ85DL"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix the MTU calculation, we should check for data_len+ mesh hdr len
-and shouldn't include any header lengths.
 
-ToDo: Get the MAX_DATA_LEN based on driver's AMSDU capability.
+--vtzGhvizbBRQ85DL
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: T Krishna Chaitanya <chaitanyatk@posedge.com>
+Dave,
+
+Please pull these fixes for the 3.8 stream.
+
+Gabor Juhos provides and rt2x00 fix to properly clear-out the skb->cb
+for reporting tx_status.  Recent changes made this necessary where it
+previously was not.
+
+Vladimir Kondratiev gives us a fix for a build issue that caused some
+ath9k devices to be skipped in the build based on unrelated config
+choices.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
 
 ---
 
- net/mac80211/iface.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
+The following changes since commit c1e37ea287979052e3eab441e58da3899a8e2389:
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 54fb7f9..da74ef9 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -214,8 +214,23 @@ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
- 
- 	/* FIX: what would be proper limits for MTU?
- 	 * This interface uses 802.3 frames. */
-+	/* Fixed: MTU needn't worry about headers*/
+  net: fec: forbid FEC_PTP on SoCs that do not support (2012-12-18 16:26:18=
+ -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-d=
+avem
+
+for you to fetch changes up to d67df2b9edfc42ccc0a9ee5332e2821d487d6b3b:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless into for-davem (2012-12-19 13:00:00 -0500)
+
+----------------------------------------------------------------
+
+Gabor Juhos (1):
+      rt2x00: zero-out rx_status
+
+John W. Linville (1):
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
+nto for-davem
+
+Vladimir Kondratiev (1):
+      wireless: fix Atheros drivers compilation
+
+ drivers/net/wireless/Makefile           | 2 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c | 8 ++++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 062dfdf..67156ef 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -47,7 +47,7 @@ obj-$(CONFIG_RT2X00)	+=3D rt2x00/
+=20
+ obj-$(CONFIG_P54_COMMON)	+=3D p54/
+=20
+-obj-$(CONFIG_ATH_COMMON)	+=3D ath/
++obj-$(CONFIG_ATH_CARDS)		+=3D ath/
+=20
+ obj-$(CONFIG_MAC80211_HWSIM)	+=3D mac80211_hwsim.o
+=20
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless=
+/rt2x00/rt2x00dev.c
+index 4ffb6a5..44f8b3f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -685,6 +685,14 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t=
+ gfp)
+ 	 * to mac80211.
+ 	 */
+ 	rx_status =3D IEEE80211_SKB_RXCB(entry->skb);
 +
-+	/* 802.11-2012: 8.2.3: The maximum frame body size is determined by
-+	1. The maximum MSDU size (2304 octets),
-+	2. plus the length of the Mesh Control field (6, 12, or 18 octets)
-+		if present,
-+	3. the maximum unencrypted MMPDU size excluding the MAC header and
-+		FCS (2304 octets) or
-+	4. the maximum A- MSDU size (3839 or 7935 octets),
-+		plus any overhead from security encapsulation.
-+	Note1: IEEE80211_MAX_DATA_LEN doesnt include any headers (2304),
-+		so it can be used directly+ Mesh HDR Len
-+	Note2: In Other places (like skb_alloc) its handled properly.
++	/* Ensure that all fields of rx_status are initialized
++	 * properly. The skb->cb array was used for driver
++	 * specific informations, so rx_status might contain
++	 * garbage.
 +	 */
++	memset(rx_status, 0, sizeof(*rx_status));
 +
- 	if (new_mtu < 256 ||
--	    new_mtu > IEEE80211_MAX_DATA_LEN - 24 - 6 - meshhdrlen) {
-+	    new_mtu > IEEE80211_MAX_DATA_LEN + meshhdrlen) {
- 		return -EINVAL;
- 	}
- 
+ 	rx_status->mactime =3D rxdesc.timestamp;
+ 	rx_status->band =3D rt2x00dev->curr_band;
+ 	rx_status->freq =3D rt2x00dev->curr_freq;
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
 
+--vtzGhvizbBRQ85DL
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
+iQIcBAEBAgAGBQJQ0gg0AAoJEJctW/TcYTgGexIP/0Qm5wLE7PuKV+NXfoPyySv6
+sp4ZkXsboZ0HXjZBjD1pn4aBjzU4G67tRThmHvWlIwaYgWXY3aDwXpvsy+JRCzTh
+xoFlp83u2wmIJSKoTiF9HEThPH65pQszAvn7AuzMIERnr1KexE0Iy9M5bIPOgGzm
+H4aOIGfITeh3SZa3NtschWGSbSAnJZfka123IuYNVGG5CVaq2B6yyzh3Ut+CdnEh
+xlaQ+ppoL0FyBykxou7B1proMzIvca1Ul2pp9sXgMPAqmNkAJi6Wnu46Q/hQKy3J
+7dIJhY86oFGQnmpdh/X5NMqTV2iSyOnKj+ZvSzR7X1VavKcAXqEUHEld7tcpdILn
+unAoIHDDSPq+Cfw7uD4Z1hpP7zYZRJ69MSr8ZcpulGe7b6jhbYD0deJeE5wz2Blg
+1frW6KeoXNczCdEUySIpGvYGSZLWy/1Pnh1sW7pk2n3zUlyoRP8bjyOLbBTdPC3Q
+1nfpSBiobQizQ8xvBC5YVv7FN0FHK67NsV5R1A+f8O+0hObYGg/f2SwMuT1oefqT
+ZarLR+m7a9MEBSzPY8aYbj9sVOnSrnQqP/aLKv1qjl3zVtIe0YyyQQWTgA85iOIM
+bL7ScFcsunOSrN47ZjKCxwMh8EuchcE8kj6FKfeMOO7qumfCVktK3ykVBohv1aCe
+jy4YE+nmPlnGSxtpvnbq
+=wDOd
+-----END PGP SIGNATURE-----
 
+--vtzGhvizbBRQ85DL--
