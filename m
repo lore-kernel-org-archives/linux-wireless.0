@@ -1,33 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51550 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069Ab2LTLgK (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:62502 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752736Ab2LSTAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 06:36:10 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TleQ5-0007ac-8o
-	for linux-wireless@vger.kernel.org; Thu, 20 Dec 2012 12:36:09 +0100
-Message-ID: <1356003391.10029.8.camel@jlt4.sipsolutions.net> (sfid-20121220_123614_077143_F46C8DB5)
-Subject: Re: [PATCH 0/4] mac80211: bss_info_changed cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 20 Dec 2012 12:36:31 +0100
-In-Reply-To: <1355492806-31673-1-git-send-email-johannes@sipsolutions.net> (sfid-20121214_144629_183869_9F7A9072)
-References: <1355492806-31673-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121214_144629_183869_9F7A9072)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 19 Dec 2012 14:00:30 -0500
+Received: by mail-pa0-f48.google.com with SMTP id fa1so1523329pad.21
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 11:00:29 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net, greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 3/3] cfg80211: move world roaming check for beacon hints
+Date: Wed, 19 Dec 2012 10:53:04 -0800
+Message-Id: <1355943184-966-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20121219_200036_196307_E48D6F1B)
+In-Reply-To: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-14 at 14:46 +0100, Johannes Berg wrote:
-> The recalculations going on in the function are rather odd
-> and hard to follow, replace them with explicit interface
-> type dependent handling where needed at all
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-applied all
+We should not add new beacon hints even if the wiphy
+is not world roaming. Without this we were always adding
+a beacon hint if not world roaming for every non world
+roaming wiphy interface.
 
-johannes
+Tested-by: Ben Greear <greearb@candelatech.com>
+Reported-by: Ben Greear <greearb@candelatech.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/reg.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f649b5e..bdc42d9 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1076,6 +1076,9 @@ static void handle_reg_beacon(struct wiphy *wiphy,
+ 
+ 	chan->beacon_found = true;
+ 
++	if (!reg_is_world_roaming(wiphy))
++		return;
++
+ 	if (wiphy->flags & WIPHY_FLAG_DISABLE_BEACON_HINTS)
+ 		return;
+ 
+@@ -1149,8 +1152,6 @@ static void reg_process_beacons(struct wiphy *wiphy)
+ 	 */
+ 	if (!last_request)
+ 		return;
+-	if (!reg_is_world_roaming(wiphy))
+-		return;
+ 	wiphy_update_beacon_reg(wiphy);
+ }
+ 
+-- 
+1.7.10.4
 
