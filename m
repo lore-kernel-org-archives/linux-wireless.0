@@ -1,232 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53254 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946083Ab2LFQwn (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:56068 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753379Ab2LSNa3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:52:43 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/2] regulatory: allow arbitrary channel widths
-Date: Thu,  6 Dec 2012 17:53:03 +0100
-Message-Id: <1354812784-15845-2-git-send-email-johannes@sipsolutions.net> (sfid-20121206_175312_063940_1358D844)
-In-Reply-To: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net>
-References: <1354812784-15845-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 19 Dec 2012 08:30:29 -0500
+Message-ID: <50D1C156.9030606@qca.qualcomm.com> (sfid-20121219_143032_452801_231574BD)
+Date: Wed, 19 Dec 2012 18:59:58 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V3 2/2] cfg80211/nl80211: Enable drivers to implement
+ mac address based ACL
+References: <1355748553-19560-1-git-send-email-vthiagar@qca.qualcomm.com>  <1355748553-19560-2-git-send-email-vthiagar@qca.qualcomm.com> <1355919410.9954.14.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1355919410.9954.14.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-There aren't any channel width restrictions in the
-2.4 GHz band (except the natural ones by the (sub)band
-boundaries), nor do default restrictions in the 5 GHz
-band make sense when limited to passive scan/no IBSS
-etc.
 
-Allow passing NL80211_NO_REG_BANDWIDTH_LIMIT as the
-max_bandwidth_khz and make that mean no restrictions.
-Use it for the default world roaming regdomain.
+On Wednesday 19 December 2012 05:46 PM, Johannes Berg wrote:
+> On Mon, 2012-12-17 at 18:19 +0530, Vasanthakumar Thiagarajan wrote:
+>
+>>   /**
+>> + * struct cfg80211_acl_data - Access control data
+>> + * @acl_policy: Access control policy to be applied on the station's
+>> +	entry specified by mac_addr
+>> + * @n_acl_entries: Number of mac address entries passed
+>> + * @mac_addrs: List of mac addresses of stations to be used for acl
+>> + */
+>> +struct cfg80211_acl_data {
+>> +	enum nl80211_acl_policy_attr acl_policy;
+>> +	int n_acl_entries;
+>> +
+>> +	/* Keep it last */
+>> +	struct mac_address mac_addrs[0];
+>
+> just [] would make more sense?
 
-Also make the awk script accept "NL" for "no limit"
-and substitute NL80211_NO_REG_BANDWIDTH_LIMIT.
+Ok.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/regulatory.h     |  5 ++-
- include/uapi/linux/nl80211.h |  4 ++-
- net/wireless/genregdb.awk    |  5 ++-
- net/wireless/reg.c           | 77 +++++++++++++++++++++++---------------------
- 4 files changed, 52 insertions(+), 39 deletions(-)
+>
+>> +/**
+>> + * struct cfg80211_acl_settings - Access control configuration
+>> + * @acl_data: Acl data for various acl policies
+>> + * @mac_acl_list: Number of acl configurations
+>> + */
+>> +struct cfg80211_acl_settings {
+>> +	struct cfg80211_acl_data *acl_data[NL80211_ACL_POLICY_MAX + 1];
+>> +	int num_acl_list;
+>> +};
+>
+> This ... doesn't make sense? Why not have the array and remove
+> num_acl_list here and the policy from the array entry?
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index f17ed59..06c4c10 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -122,7 +122,10 @@ struct ieee80211_regdomain {
- {							\
- 	.freq_range.start_freq_khz = MHZ_TO_KHZ(start),	\
- 	.freq_range.end_freq_khz = MHZ_TO_KHZ(end),	\
--	.freq_range.max_bandwidth_khz = MHZ_TO_KHZ(bw),	\
-+	.freq_range.max_bandwidth_khz =			\
-+		(bw) == NL80211_NO_REG_BANDWIDTH_LIMIT ?\
-+			NL80211_NO_REG_BANDWIDTH_LIMIT :\
-+			MHZ_TO_KHZ(bw),			\
- 	.power_rule.max_antenna_gain = DBI_TO_MBI(gain),\
- 	.power_rule.max_eirp = DBM_TO_MBM(eirp),	\
- 	.flags = reg_flags,				\
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5470171..331cfb3 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2070,7 +2070,7 @@ enum nl80211_reg_type {
-  * 	in KHz. This is not a center a frequency but an actual regulatory
-  * 	band edge.
-  * @NL80211_ATTR_FREQ_RANGE_MAX_BW: maximum allowed bandwidth for this
-- * 	frequency range, in KHz.
-+ * 	frequency range, in KHz, or %NL80211_NO_REG_BANDWIDTH_LIMIT.
-  * @NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN: the maximum allowed antenna gain
-  * 	for a given frequency range. The value is in mBi (100 * dBi).
-  * 	If you don't have one then don't send this.
-@@ -2096,6 +2096,8 @@ enum nl80211_reg_rule_attr {
- 	NL80211_REG_RULE_ATTR_MAX = __NL80211_REG_RULE_ATTR_AFTER_LAST - 1
- };
- 
-+#define NL80211_NO_REG_BANDWIDTH_LIMIT	0xffffffff
-+
- /**
-  * enum nl80211_sched_scan_match_attr - scheduled scan match attributes
-  * @__NL80211_SCHED_SCAN_MATCH_ATTR_INVALID: attribute number 0 is reserved
-diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
-index 9392f8c..301ec36 100644
---- a/net/wireless/genregdb.awk
-+++ b/net/wireless/genregdb.awk
-@@ -57,6 +57,9 @@ active && /^[ \t]*\(/ {
- 	end = $3
- 	bw = $5
- 	sub(/\),/, "", bw)
-+	if (bw == "NL") {
-+		bw = "NL80211_NO_REG_BANDWIDTH_LIMIT"
-+	}
- 	gain = $6
- 	sub(/\(/, "", gain)
- 	sub(/,/, "", gain)
-@@ -107,7 +110,7 @@ active && /^[ \t]*\(/ {
- 		}
- 	}
- 	flags = flags "0"
--	printf "\t\tREG_RULE(%d, %d, %d, %d, %d, %s),\n", start, end, bw, gain, power, flags
-+	printf "\t\tREG_RULE(%d, %d, %s, %d, %d, %s),\n", start, end, bw, gain, power, flags
- 	rules++
- }
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 041f22c..422b93e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -172,29 +172,29 @@ static const struct ieee80211_regdomain world_regdom = {
- 	.alpha2 =  "00",
- 	.reg_rules = {
- 		/* IEEE 802.11b/g, channels 1..11 */
--		REG_RULE(2412-10, 2462+10, 40, 6, 20, 0),
--		/* IEEE 802.11b/g, channels 12..13. No HT40
--		 * channel fits here. */
--		REG_RULE(2467-10, 2472+10, 20, 6, 20,
--			NL80211_RRF_PASSIVE_SCAN |
--			NL80211_RRF_NO_IBSS),
-+		REG_RULE(2412-10, 2462+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
-+			 6, 20, 0),
-+		/* IEEE 802.11b/g, channels 12..13. */
-+		REG_RULE(2467-10, 2472+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
-+			 6, 20, NL80211_RRF_PASSIVE_SCAN |
-+				NL80211_RRF_NO_IBSS),
- 		/* IEEE 802.11 channel 14 - Only JP enables
- 		 * this and for 802.11b only */
--		REG_RULE(2484-10, 2484+10, 20, 6, 20,
--			NL80211_RRF_PASSIVE_SCAN |
--			NL80211_RRF_NO_IBSS |
--			NL80211_RRF_NO_OFDM),
-+		REG_RULE(2484-10, 2484+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
-+			 6, 20, NL80211_RRF_PASSIVE_SCAN |
-+				NL80211_RRF_NO_IBSS |
-+				NL80211_RRF_NO_OFDM),
- 		/* IEEE 802.11a, channel 36..48 */
--		REG_RULE(5180-10, 5240+10, 40, 6, 20,
--                        NL80211_RRF_PASSIVE_SCAN |
--                        NL80211_RRF_NO_IBSS),
-+		REG_RULE(5180-10, 5240+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
-+			 6, 20, NL80211_RRF_PASSIVE_SCAN |
-+				NL80211_RRF_NO_IBSS),
- 
- 		/* NB: 5260 MHz - 5700 MHz requies DFS */
- 
- 		/* IEEE 802.11a, channel 149..165 */
--		REG_RULE(5745-10, 5825+10, 40, 6, 20,
--			NL80211_RRF_PASSIVE_SCAN |
--			NL80211_RRF_NO_IBSS),
-+		REG_RULE(5745-10, 5825+10, NL80211_NO_REG_BANDWIDTH_LIMIT,
-+			 6, 20, NL80211_RRF_PASSIVE_SCAN |
-+				NL80211_RRF_NO_IBSS),
- 
- 		/* IEEE 802.11ad (60gHz), channels 1..3 */
- 		REG_RULE(56160+2160*1-1080, 56160+2160*3+1080, 2160, 0, 0, 0),
-@@ -482,8 +482,13 @@ static bool is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
- 
- 	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
- 
--	if (freq_range->end_freq_khz <= freq_range->start_freq_khz ||
--	    freq_range->max_bandwidth_khz > freq_diff)
-+	if (freq_range->end_freq_khz <= freq_range->start_freq_khz)
-+		return false;
-+
-+	if (freq_range->max_bandwidth_khz == NL80211_NO_REG_BANDWIDTH_LIMIT)
-+		return true;
-+
-+	if (freq_range->max_bandwidth_khz > freq_diff)
- 		return false;
- 
- 	return true;
-@@ -588,7 +593,8 @@ static int reg_rules_intersect(const struct ieee80211_reg_rule *rule1,
- 					    freq_range2->max_bandwidth_khz);
- 
- 	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
--	if (freq_range->max_bandwidth_khz > freq_diff)
-+	if (freq_range->max_bandwidth_khz != NL80211_NO_REG_BANDWIDTH_LIMIT &&
-+	    freq_range->max_bandwidth_khz > freq_diff)
- 		freq_range->max_bandwidth_khz = freq_diff;
- 
- 	power_rule->max_eirp = min(power_rule1->max_eirp,
-@@ -806,7 +812,7 @@ static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
- 	REG_DBG_PRINT("Updating information on frequency %d MHz with regulatory rule:\n",
- 		      chan->center_freq);
- 
--	REG_DBG_PRINT("%d KHz - %d KHz @ %d KHz), (%s mBi, %d mBm)\n",
-+	REG_DBG_PRINT("%d KHz - %d KHz @ %u KHz), (%s mBi, %d mBm)\n",
- 		      freq_range->start_freq_khz, freq_range->end_freq_khz,
- 		      freq_range->max_bandwidth_khz, max_antenna_gain,
- 		      power_rule->max_eirp);
-@@ -1971,27 +1977,26 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
- 	pr_info("  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)\n");
- 
- 	for (i = 0; i < rd->n_reg_rules; i++) {
-+		char bandwidth[20] = "";
-+		char max_ag[20] = "N/A";
-+
- 		reg_rule = &rd->reg_rules[i];
- 		freq_range = &reg_rule->freq_range;
- 		power_rule = &reg_rule->power_rule;
- 
--		/*
--		 * There may not be documentation for max antenna gain
--		 * in certain regions
--		 */
-+		if (freq_range->max_bandwidth_khz != NL80211_NO_REG_BANDWIDTH_LIMIT)
-+			snprintf(bandwidth, sizeof(bandwidth),
-+				 " @ %u KHz", freq_range->max_bandwidth_khz);
-+
- 		if (power_rule->max_antenna_gain)
--			pr_info("  (%d KHz - %d KHz @ %d KHz), (%d mBi, %d mBm)\n",
--				freq_range->start_freq_khz,
--				freq_range->end_freq_khz,
--				freq_range->max_bandwidth_khz,
--				power_rule->max_antenna_gain,
--				power_rule->max_eirp);
--		else
--			pr_info("  (%d KHz - %d KHz @ %d KHz), (N/A, %d mBm)\n",
--				freq_range->start_freq_khz,
--				freq_range->end_freq_khz,
--				freq_range->max_bandwidth_khz,
--				power_rule->max_eirp);
-+			snprintf(max_ag, sizeof(max_ag),
-+				 "%u mBi", power_rule->max_antenna_gain);
-+
-+		pr_info("  (%d KHz - %d KHz%s), (%s, %d mBm)\n",
-+			freq_range->start_freq_khz,
-+			freq_range->end_freq_khz,
-+			bandwidth, max_ag,
-+			power_rule->max_eirp);
- 	}
- }
- 
--- 
-1.8.0
+The assumption is, there can be more than one list with respective
+acl policy will be sent from user space.
 
+>
+>> + * @max_acl_mac_addrs: Maximum number of mac addresses that the device
+>> + *	supports for ACL. Driver having ACL based on MAC address support
+>> + *	has to fill this. This limit is common for both (white and black)
+>> + *	the acl policies.
+>> + *
+>> + * @acl_types: Bit masks of supported acl policies
+>
+> Still doesn't make sense. Drivers might support a whitelist _or_ a
+> blacklist, but not both, right?
+
+I'm sorry that it is still not clear to me that both the lists can
+not co-exist. It seems is reasonable that there can be
+explicit white and black list configured, the stations which do
+not have their entries in either of the lists needs to be notified
+to user space for possible user feedback.
+
+>
+>> + * @NL80211_CONN_FAIL_ACL_NOTIFY: Connection failed because the client's
+>> +	mac address is not part of any acl list.
+>
+> That description doesn't really make sense, presumably the default (if
+> there's no list) is allowing the connection.
+
+I think this can be implementation specific where some drivers
+will allow the connections when the entry is not present in
+any list which some notify the user for the feed back?.
+The comment needs to be changed, i guess.
+
+>> +
+>> +		if (!tb[NL80211_ACL_ATTR_POLICY])
+>> +			continue;
+>
+> shouldn't those be errors?
+
+As there can be more than one list passed from userspace,
+it makes sense to proceed with the next one when the current
+one is not valid.
+
+>> +		acl->acl_data[n_acl] =
+>> +			kzalloc(sizeof(struct cfg80211_acl_data) +
+>> +				(n_entries * sizeof(struct mac_address)),
+>> +				GFP_KERNEL);
+>> +		if (!acl->acl_data[n_acl]) {
+>> +			err = -ENOMEM;
+>> +			goto free_acl;
+>> +		}
+>> +
+>> +		j = 0;
+>> +		nla_for_each_nested(attr, tb[NL80211_ACL_ATTR_MAC_ADDRS], tmp) {
+>> +			memcpy(acl->acl_data[n_acl]->mac_addrs[j].addr,
+>> +			       nla_data(attr), ETH_ALEN);
+>> +			j++;
+>> +		}
+>> +
+>> +		acl->acl_data[n_acl]->n_acl_entries = j;
+>> +		acl->acl_data[n_acl]->acl_policy = acl_policy;
+>> +		avail_acl[acl_policy] = 1;
+>> +		n_acl++;
+>> +	}
+>> +
+>> +	if (!n_acl)
+>> +		return -EINVAL;
+>> +
+>> +	acl->num_acl_list = n_acl;
+>> +
+>> +	return 0;
+>
+> Where is the data freed?
+
+The data is freed by the calling function after it is
+processed in the driver.
+
+>>   static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>>   {
+>>   	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>>   	struct net_device *dev = info->user_ptr[1];
+>>   	struct wireless_dev *wdev = dev->ieee80211_ptr;
+>>   	struct cfg80211_ap_settings params;
+>> -	int err;
+>> +	int err, i;
+>>
+>>   	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP&&
+>>   	dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+>> @@ -2752,6 +2916,16 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>>   	if (err)
+>>   		return err;
+>>
+>> +	if (info->attrs[NL80211_ATTR_MAC_ACL_LISTS]) {
+>> +		if (!rdev->wiphy.acl_types)
+>> +			return -EOPNOTSUPP;
+>> +
+>> +		err = parse_acl_information(rdev,
+>> +				info->attrs[NL80211_ATTR_MAC_ACL_LISTS],
+>> +				&params.acl);
+>> +		if (err)
+>> +			return err;
+>> +	}
+>>   	err = rdev_start_ap(rdev, dev,&params);
+>
+> that blank line should be here .... do I really have to review your
+> whitespace?
+
+I'm really sorry about the whitespace mistakes. thanks for
+the review.
+
+Vasanth
