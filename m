@@ -1,166 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:55931 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601Ab2LKQrR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 11:47:17 -0500
-Message-ID: <50C76158.1010005@opentechinstitute.org> (sfid-20121211_174720_602267_CB1041D9)
-Date: Tue, 11 Dec 2012 11:37:44 -0500
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
+Received: from mout.gmx.net ([212.227.17.21]:60754 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750987Ab2LSKDm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2012 05:03:42 -0500
+Received: from mailout-de.gmx.net ([10.1.76.37]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0LwCie-1T2gRh2cYw-0185Xr for
+ <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 10:50:59 +0100
+Message-ID: <50D18E01.7080502@gmx.net> (sfid-20121219_110345_922445_64874B58)
+Date: Wed, 19 Dec 2012 10:50:57 +0100
+From: George News <george.news@gmx.net>
 MIME-Version: 1.0
-To: Antonio Quartulli <antonio@open-mesh.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 1/2] cfg80211: add the new IBSS_STA event
-References: <1355138182-11825-1-git-send-email-antonio@open-mesh.com>
-In-Reply-To: <1355138182-11825-1-git-send-email-antonio@open-mesh.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Linux Wireless mailing list <linux-wireless@vger.kernel.org>
+Subject: Change adhoc network speed not working
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Will this give IBSS something equivalent to the 802.11s
-NL80211_CMD_NEW_PEER_CANDIDATE?
+Hi all,
 
-That's how I am reading it, but I just wanted to get some more context.
-If this is what you are adding, it's great! Just exactly what I need.
+I'm using Ubuntu 12.04.1 64bit with a TPLink TL-WN821 v3. The driver 
+used is ath9k_htc. I'm creating an adhoc/ibss network and want to change 
+the bitrate of the network.
 
-Thanks for your work Antonio.
+First of all I disable wireless from the network manager in order to be 
+able to execute my commands.
 
-Will
+These are the commands I execute on both ends:
 
-On 12/10/2012 06:16 AM, Antonio Quartulli wrote:
-> In IBSS mode it could be the case that a station being added
-> is not ready for starting higher level routines (e.g. key
-> exchange when IBSS/RSN is enabled). In particular, this can
-> happen when we are waiting for the AUTH response message.
-> 
-> This IBSS_STA event is triggered after the NEW_STA one and
-> only when the upper layer is allowed to assume that the new
-> peer is ready
-> 
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
-> 
-> 1/2 v2:
->  * untouched
-> 2/2 v2:
->  * if userspace registered for auth frames, the new station is immediately
->    authenticated and the new IBSS_STA event is triggered.
-> 
->  include/net/cfg80211.h       |  8 ++++++++
->  include/uapi/linux/nl80211.h |  2 ++
->  net/wireless/mlme.c          |  9 +++++++++
->  net/wireless/nl80211.c       | 33 +++++++++++++++++++++++++++++++++
->  net/wireless/nl80211.h       |  3 +++
->  5 files changed, 55 insertions(+)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 8e6a6b7..3266c03 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -3497,6 +3497,14 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
->  		      struct station_info *sinfo, gfp_t gfp);
->  
->  /**
-> + * cfg80211_ibss_sta - notify userspace that the ibss station is ready
-> + * @dev: the netdev
-> + * @mac_addr: the station's address
-> + * @gfp: allocation flags
-> + */
-> +void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
-> +
-> +/**
->   * cfg80211_del_sta - notify userspace about deletion of a station
->   *
->   * @dev: the netdev
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index e3e19f8..7e0911e 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -736,6 +736,8 @@ enum nl80211_commands {
->  
->  	NL80211_CMD_SET_MCAST_RATE,
->  
-> +	NL80211_CMD_IBSS_STATION,
-> +
->  	/* add new commands above here */
->  
->  	/* used to define NL80211_CMD_MAX below */
-> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-> index 5e8123e..f9493fc 100644
-> --- a/net/wireless/mlme.c
-> +++ b/net/wireless/mlme.c
-> @@ -612,6 +612,15 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
->  }
->  EXPORT_SYMBOL(cfg80211_new_sta);
->  
-> +void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
-> +{
-> +	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-> +
-> +	nl80211_send_ibss_sta_event(rdev, dev, mac_addr, gfp);
-> +}
-> +EXPORT_SYMBOL(cfg80211_ibss_sta);
-> +
->  void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
->  {
->  	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index f45706a..2d27911 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -8564,6 +8564,39 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
->  				nl80211_mlme_mcgrp.id, gfp);
->  }
->  
-> +void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
-> +				 struct net_device *dev, const u8 *mac_addr,
-> +				 gfp_t gfp)
-> +{
-> +	struct sk_buff *msg;
-> +	void *hdr;
-> +
-> +	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-> +	if (!msg)
-> +		return;
-> +
-> +	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_IBSS_STATION);
-> +	if (!hdr) {
-> +		nlmsg_free(msg);
-> +		return;
-> +	}
-> +
-> +	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-> +	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
-> +		goto nla_put_failure;
-> +
-> +	genlmsg_end(msg, hdr);
-> +
-> +	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-> +				nl80211_mlme_mcgrp.id, gfp);
-> +	return;
-> +
-> + nla_put_failure:
-> +	genlmsg_cancel(msg, hdr);
-> +	nlmsg_free(msg);
-> +}
-> +
-> +
->  void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
->  				struct net_device *dev, const u8 *mac_addr,
->  				gfp_t gfp)
-> diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-> index 2acba84..429f5d6 100644
-> --- a/net/wireless/nl80211.h
-> +++ b/net/wireless/nl80211.h
-> @@ -85,6 +85,9 @@ void nl80211_send_remain_on_channel_cancel(
->  void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
->  			    struct net_device *dev, const u8 *mac_addr,
->  			    struct station_info *sinfo, gfp_t gfp);
-> +void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
-> +				 struct net_device *dev, const u8 *mac_addr,
-> +				 gfp_t gfp);
->  void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
->  				struct net_device *dev, const u8 *mac_addr,
->  				gfp_t gfp);
-> 
+         master$ sudo ifconfig wlan0 down
+	master$ sudo rfkill unblock wifi
+	master$ sudo iw dev wlan0 set type ibss
+	master$ sudo iw dev wlan0 set bitrates legacy-2.4 1
+	master$ sudo ifconfig wlan0 up
+	master$ sudo iw dev wlan0 ibss join adhoc_linux 2462
+	master$ sudo ifconfig wlan0 1.2.3.4 up
+	master$ iperf -s -u -l 1472
+
+	slave$ sudo ifconfig wlan0 down
+	slave$ sudo rfkill unblock wifi
+	slave$ sudo iw dev wlan0 set type ibss
+	slave$ sudo iw dev wlan0 set bitrates legacy-2.4 1
+	slave$ sudo ifconfig wlan0 up
+	slave$ sudo iw dev wlan0 scan | less
+	slave$ sudo iw dev wlan0 ibss join adhoc_linux 2462
+	slave$ sudo ifconfig wlan0 1.2.3.5 up
+	slave$ iperf -c 1.2.3.4 -u -b 100M -l 1472 -t 25 -i 1
+
+As you can see I want to set the speed to 1 Mbps. However I don't know 
+why I get 25Mbps from iperf which is more or less the maximun speed for 
+802.11g (theoretically 54Mbps but in reality is something like 30Mbps).
+
+The output of `iw dev wlan0 station dump` reports that both nodes are 
+attached to the same network at 54Mbps.
+
+After testing that I have also tried with another command:
+
+$ sudo iw dev wlan0 ibss join adhoc_linux 2462 basic-rates 1
+
+But I got the same result.
+
+I have tried many many things, putting the iface up, down, leaving the 
+ibss net, setting the speed while iface up, etc. I'm just stuck.
+
+Any help is more than welcome.
+
+Jorge
+
+
+P.S.: Please include my email address in the reply as I'm not subscribed 
+to the list and otherwise I won't be receiving the answer.
