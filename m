@@ -1,71 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:64987 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289Ab2LXE15 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:49270 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753923Ab2LSUj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Dec 2012 23:27:57 -0500
-Message-ID: <1356323269.5656.43.camel@marge.simpson.net> (sfid-20121224_052806_642110_1233688A)
-Subject: Re: dire state of rtl driver in 3.7
-From: Mike Galbraith <bitbucket@online.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Norbert Preining <preining@logic.at>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 24 Dec 2012 05:27:49 +0100
-In-Reply-To: <50D7572E.8060908@lwfinger.net>
-References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at>
-	 <1356241795.5620.47.camel@marge.simpson.net>
-	 <50D7572E.8060908@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 19 Dec 2012 15:39:27 -0500
+Date: Wed, 19 Dec 2012 12:39:26 -0800 (PST)
+Message-Id: <20121219.123926.1847105130884132288.davem@davemloft.net> (sfid-20121219_213952_045505_91CDCD88)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-12-19
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20121219183220.GB1912@tuxdriver.com>
+References: <20121219183220.GB1912@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-12-23 at 13:10 -0600, Larry Finger wrote:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 19 Dec 2012 13:32:20 -0500
 
-> Note, the RTL8188CE uses rtl8192ce, while the RTL8191SE uses rtl8192se. They 
-> share the underlying plumbing in driver rtlwifi, but the rest is completely 
-> different.
+> Please pull these fixes for the 3.8 stream.
+> 
+> Gabor Juhos provides and rt2x00 fix to properly clear-out the skb->cb
+> for reporting tx_status.  Recent changes made this necessary where it
+> previously was not.
+> 
+> Vladimir Kondratiev gives us a fix for a build issue that caused some
+> ath9k devices to be skipped in the build based on unrelated config
+> choices.
 
-Driver here is rtl8192se.
-
-08:00.0 0280: 10ec:8172 (rev 10)
-	Subsystem: 10ec:8181
-	Flags: bus master, fast devsel, latency 0, IRQ 17
-	I/O ports at 4000 [size=256]
-	Memory at c0900000 (32-bit, non-prefetchable) [size=16K]
-	Capabilities: [40] Power Management version 3
-	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-	Capabilities: [70] Express Legacy Endpoint, MSI 00
-	Capabilities: [100] Advanced Error Reporting
-	Capabilities: [140] Virtual Channel
-	Capabilities: [160] Device Serial Number 88-55-22-fe-ff-4c-e0-00
-	Kernel driver in use: rtl8192se
-
-Point was, driver state may still be dire for some hardware, but here,
-the same driver for very similar looking hardware went from useless to
-works fine.
-
-My desktop box has this thing in it, which also used to be completely
-useless with the in kernel driver, but now works (it's still useless,
-router sits on top of that box;).  Both devices now seem to work just
-fine, whereas both used to be a PITA if I wanted to use them.
-
-Bus 001 Device 004: ID 13d3:3247 IMC Networks 802.11 n/g/b Wireless LAN Adapter
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               2.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0 
-  bDeviceProtocol         0 
-  bMaxPacketSize0        64
-  idVendor           0x13d3 IMC Networks
-  idProduct          0x3247 802.11 n/g/b Wireless LAN Adapter
-  bcdDevice            8.01
-  iManufacturer           1 Ralink
-  iProduct                2 802.11 n WLAN
-  iSerial                 3 1.0
-
-
-
-
+Pulled, thanks John.
