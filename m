@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60731 "EHLO mx1.redhat.com"
+Received: from plane.gmane.org ([80.91.229.3]:44423 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752099Ab2LGLky (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 06:40:54 -0500
-Date: Fri, 7 Dec 2012 12:40:46 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
-Message-ID: <20121207114045.GC11933@redhat.com> (sfid-20121207_124058_468002_716543F0)
-References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
- <87a9ts4c1q.fsf@nemi.mork.no>
- <50BF8C18.9060504@candelatech.com>
- <20121206122528.GG2502@redhat.com>
- <50C0FCE0.2090507@candelatech.com>
- <20121207095012.GB11933@redhat.com>
- <87zk1q3xrv.fsf@nemi.mork.no>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <87zk1q3xrv.fsf@nemi.mork.no>
+	id S1754317Ab2LSQo5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2012 11:44:57 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TlMlV-0004Kz-3S
+	for linux-wireless@vger.kernel.org; Wed, 19 Dec 2012 17:45:05 +0100
+Received: from aslw039181.ethz.ch ([129.132.39.181])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 17:45:05 +0100
+Received: from dantard by aslw039181.ethz.ch with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 17:45:05 +0100
+To: linux-wireless@vger.kernel.org
+From: Danilo <dantard@unizar.es>
+Subject: Incoerency in iw (or mac80211 or drivers) behavior
+Date: Wed, 19 Dec 2012 16:41:44 +0000 (UTC)
+Message-ID: <loom.20121219T172801-213@post.gmane.org> (sfid-20121219_174500_837374_EED1E7EE)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 07, 2012 at 12:30:12PM +0100, Bjørn Mork wrote:
-> Stanislaw Gruszka <sgruszka@redhat.com> writes:
-> > On Thu, Dec 06, 2012 at 12:15:28PM -0800, Ben Greear wrote:
-> >> I don't have time to work on this today...maybe not tomorrow either.
-> >> 
-> >> So, if someone else feels like fixing it, please feel free.
-> >
-> > Ok, I'll try to fix that. However this could require modification
-> > of all cfg80211 drivers, so could not be fast.
-> 
-> I wonder if that strategy isn't just adding unnecessary complexity?  How
-> about using something like the (completely untested) patch below instead?
+Hello,
+I figured out that the command: 
 
-Yeah, I wrote very similar patch and I'm testing it locally. Plan to
-post RFC to net folks ...
+iw dev wlan0 set bitrates legacy-5 24
 
-Stanislaw
+has different behaviors in different devices.
+
+With iwl3945 wireless cards, it fixes the rate at 24Mbps ALSO for multicast 
+frames while in iwl4965 cards, it doesn't.
+
+
+In both cases I tried with ubuntu linux 12.04 and kernel-3.2.0-32-generic using  
+iwl4965/iwl_legacy driver for 4965 and iwl3945/iwl_legacy driver for 3945.
+
+
+I've also tried with compat-wireless-3.6, same result.
+
+What's the expected behavior? 
+
+Thanks in advance,
+ D. Tardioli
+
+
+
+
