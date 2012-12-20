@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:52663 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293Ab2LKTdq (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:21542 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752221Ab2LTTNz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 14:33:46 -0500
-Date: Tue, 11 Dec 2012 11:36:46 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-CC: Jason Baron <jbaron@redhat.com>, Joe Perches <joe@perches.com>,
+	Thu, 20 Dec 2012 14:13:55 -0500
+From: Sasha Levin <sasha.levin@oracle.com>
+To: Bing Zhao <bzhao@marvell.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	<linux-wireless@vger.kernel.org>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-Message-ID: <20121211193646.GS15974@pogo> (sfid-20121211_203415_164871_9BB33D79)
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1353263740.28214.2.camel@joe-AO722>
- <20121120160845.GB31176@redhat.com>
- <3645415.mrRzvuvPFK@lx-vladimir>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <3645415.mrRzvuvPFK@lx-vladimir>
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Sasha Levin <sasha.levin@oracle.com>
+Subject: [PATCH] wireless: mwifiex: remove unreachable paths
+Date: Thu, 20 Dec 2012 14:11:25 -0500
+Message-Id: <1356030701-16284-17-git-send-email-sasha.levin@oracle.com> (sfid-20121220_201950_093585_3A0A6381)
+In-Reply-To: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com>
+References: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 04, 2012 at 11:28:26AM +0200, Vladimir Kondratiev wrote:
-> Hi Jason,
-> 
-> Do you have any update on the status for patches below?
-> Where is it now? When do you expect it to merge? 3.8?
-> I am waiting for this to merge before I can go on
-> with my driver.
+We know 'firmware' is non-NULL from the beginning of mwifiex_prog_fw_w_helper,
+remove all !firmware paths from the rest of the function.
 
-*poke*
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+ drivers/net/wireless/mwifiex/usb.c | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 63ac9f2..8bd7098 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -836,23 +836,14 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 			dlen = 0;
+ 		} else {
+ 			/* copy the header of the fw_data to get the length */
+-			if (firmware)
+-				memcpy(&fwdata->fw_hdr, &firmware[tlen],
+-				       sizeof(struct fw_header));
+-			else
+-				mwifiex_get_fw_data(adapter, tlen,
+-						    sizeof(struct fw_header),
+-						    (u8 *)&fwdata->fw_hdr);
++			memcpy(&fwdata->fw_hdr, &firmware[tlen],
++			       sizeof(struct fw_header));
+ 
+ 			dlen = le32_to_cpu(fwdata->fw_hdr.data_len);
+ 			dnld_cmd = le32_to_cpu(fwdata->fw_hdr.dnld_cmd);
+ 			tlen += sizeof(struct fw_header);
+ 
+-			if (firmware)
+-				memcpy(fwdata->data, &firmware[tlen], dlen);
+-			else
+-				mwifiex_get_fw_data(adapter, tlen, dlen,
+-						    (u8 *)fwdata->data);
++			memcpy(fwdata->data, &firmware[tlen], dlen);
+ 
+ 			fwdata->seq_num = cpu_to_le32(fw_seqnum);
+ 			tlen += dlen;
+-- 
+1.8.0
+
