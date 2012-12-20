@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-01.prod.sin2.secureserver.net ([182.50.145.4]:54968
-	"HELO sg2plout10-01.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756318Ab2LGPAl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52290 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195Ab2LTP0K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 10:00:41 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20674.1145.341426.66436@gargle.gargle.HOWL> (sfid-20121207_160044_383147_4FCB0D99)
-Date: Fri, 7 Dec 2012 20:30:09 +0530
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 2/8] ath9k_hw: Fix PAPRD training
-In-Reply-To: <20121207102826.GB3145@hemis.qca.qualcomm.com>
-References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
-	<1354874521-4138-3-git-send-email-sujith@msujith.org>
-	<20121207102826.GB3145@hemis.qca.qualcomm.com>
+	Thu, 20 Dec 2012 10:26:10 -0500
+Message-ID: <1356017187.10029.18.camel@jlt4.sipsolutions.net> (sfid-20121220_162614_558432_553D2DAF)
+Subject: Re: [PATCH 2/3] iwl3945: disable 11a support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 20 Dec 2012 16:26:27 +0100
+In-Reply-To: <20121220144549.GA10276@redhat.com>
+References: <1356010313-9782-1-git-send-email-sgruszka@redhat.com>
+	 <1356010313-9782-2-git-send-email-sgruszka@redhat.com>
+	 <1356010819.10029.15.camel@jlt4.sipsolutions.net>
+	 <20121220144549.GA10276@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> > +
-> > +	if (AR_SREV_9485(ah)) {
-> > +		val = 148;
-> > +	} else {
-> > +		if (IS_CHAN_2GHZ(ah->curchan)) {
-> > +			if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
-> > +				val = 0x91;
-> Please change the hex to decimal for the sake of uniformity
+On Thu, 2012-12-20 at 15:45 +0100, Stanislaw Gruszka wrote:
+> On Thu, Dec 20, 2012 at 02:40:19PM +0100, Johannes Berg wrote:
+> > On Thu, 2012-12-20 at 14:31 +0100, Stanislaw Gruszka wrote:
+> > > I don't believe if there still are users using 11a mode. If they are,
+> > > they should probably update their network to something that was
+> > > designed in current century, but I also left module option for them.
+> > 
+> > Huh? All of VHT etc. is going to use 5 GHz and will be compatible with
+> > legacy clients, so having 11a support will allow them to connect to new
+> > networks? Or am I midunderstanding what you're doing here?
+> 
+> Yes, this disable 5GHz for 3945. I assumed this is not and will not be
+> used anymore, but seems I was wrong.
+> 
+> BTW: I'm not expect that 11ac AP will work good with 11a, i.e. I'm not
+> able to connect to mixed network 11a & 11n on my 5GHz AP, but at least
+> this should be theoretically possible. 
+> 
+> What I'm looking for is possibility to disable 5GHz to avoid network
+> traffic delays while scanning, but this should be done in cfg80211.
 
-Ok. :)
+Sounds more like a policy decision in wpa_s?
 
-Sujith
+johannes
+
