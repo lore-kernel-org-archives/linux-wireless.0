@@ -1,127 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57049 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756015Ab2LNN5g (ORCPT
+Received: from mail-da0-f52.google.com ([209.85.210.52]:39983 "EHLO
+	mail-da0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab2LTS6U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 08:57:36 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: optimise AP stop RCU handling
-Date: Fri, 14 Dec 2012 14:57:56 +0100
-Message-Id: <1355493476-2927-1-git-send-email-johannes@sipsolutions.net> (sfid-20121214_145817_787355_201B178C)
-In-Reply-To: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
-References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 20 Dec 2012 13:58:20 -0500
+Received: by mail-da0-f52.google.com with SMTP id f10so1671841dak.39
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 10:58:20 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linville@tuxdriver.org
+Cc: linux-wireless@vger.kernel.org, jlopex@gmail.com, j@wl.fi,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v2 1/3] mac80211_hwsim: use hrtimer for beacon timers
+Date: Thu, 20 Dec 2012 10:57:49 -0800
+Message-Id: <1356029871-17794-1-git-send-email-thomas@cozybit.com> (sfid-20121220_195824_731125_DAECB6B9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+For testing various timing-sensitive protocols (power
+save, etc.), a beacon accuracy of jiffies is not
+sufficient.
 
-If there are VLANs, stopping an AP is inefficient as it
-calls rcu_barrier() once for each interface (the VLANs
-and the AP itself). Optimise this by moving rcu_barrier()
-out of the station cleanups and calling it only once for
-all interfaces combined.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- net/mac80211/cfg.c      |  8 ++++++--
- net/mac80211/iface.c    | 13 ++++++++-----
- net/mac80211/sta_info.c |  2 --
- net/mac80211/sta_info.h | 14 ++++++++++++++
- 4 files changed, 28 insertions(+), 9 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8576723..c485b36 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1014,8 +1014,12 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		kfree_rcu(old_probe_resp, rcu_head);
+v2:
+	Use tasklet_kill() on interface stop.
+
+ drivers/net/wireless/mac80211_hwsim.c |   63 ++++++++++++++++++++-------------
+ 1 file changed, 39 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ff90855..84dbfe8 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -333,11 +333,11 @@ struct mac80211_hwsim_data {
+ 	int scan_chan_idx;
  
- 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
--		sta_info_flush(vlan);
--	sta_info_flush(sdata);
-+		sta_info_flush_defer(vlan);
-+	sta_info_flush_defer(sdata);
-+	rcu_barrier();
-+	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+		sta_info_flush_cleanup(vlan);
-+	sta_info_flush_cleanup(sdata);
+ 	struct ieee80211_channel *channel;
+-	unsigned long beacon_int; /* in jiffies unit */
++	ktime_t beacon_int;
+ 	unsigned int rx_filter;
+ 	bool started, idle, scanning;
+ 	struct mutex mutex;
+-	struct timer_list beacon_timer;
++	struct hrtimer beacon_timer;
+ 	enum ps_mode {
+ 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+ 	} ps;
+@@ -358,6 +358,7 @@ struct mac80211_hwsim_data {
  
- 	sdata->vif.bss_conf.enable_beacon = false;
- 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index dcf943e..e02f7a0 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -872,12 +872,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		cancel_work_sync(&sdata->work);
- 		/*
- 		 * When we get here, the interface is marked down.
--		 * sta_info_flush_cleanup() calls rcu_barrier to
--		 * wait for the station call_rcu() calls to complete,
--		 * here we require it to wait for the RX path in case
--		 * it is using the interface and enqueuing frames at
--		 * this very time on another CPU.
-+		 *
-+		 * sta_info_flush_cleanup() requires rcu_barrier()
-+		 * first to wait for the station call_rcu() calls
-+		 * to complete, here we need at least sychronize_rcu()
-+		 * it to wait for the RX path in case it is using the
-+		 * interface and enqueuing frames at this very time on
-+		 * another CPU.
- 		 */
-+		rcu_barrier();
- 		sta_info_flush_cleanup(sdata);
+ 	/* difference between this hw's clock and the real clock, in usecs */
+ 	u64 tsf_offset;
++	struct tasklet_struct bcn_tasklet;
+ };
  
- 		skb_queue_purge(&sdata->skb_queue);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 2f74031..f61bb46 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -920,8 +920,6 @@ int sta_info_flush_defer(struct ieee80211_sub_if_data *sdata)
  
- void sta_info_flush_cleanup(struct ieee80211_sub_if_data *sdata)
+@@ -896,7 +897,8 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
  {
--	rcu_barrier();
--
- 	ieee80211_cleanup_sdata_stas(sdata);
- 	cancel_work_sync(&sdata->cleanup_stations_wk);
+ 	struct mac80211_hwsim_data *data = hw->priv;
+ 	data->started = false;
+-	del_timer(&data->beacon_timer);
++	hrtimer_cancel(&data->beacon_timer);
++	tasklet_kill(&data->bcn_tasklet);
+ 	wiphy_debug(hw->wiphy, "%s\n", __func__);
  }
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index c3266aed..031e4a5 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -549,6 +549,19 @@ void sta_info_recalc_tim(struct sta_info *sta);
- void sta_info_init(struct ieee80211_local *local);
- void sta_info_stop(struct ieee80211_local *local);
- int sta_info_flush_defer(struct ieee80211_sub_if_data *sdata);
-+
-+/**
-+ * sta_info_flush_cleanup - flush the sta_info cleanup queue
-+ * @sdata: the interface
-+ *
-+ * Flushes the sta_info cleanup queue for a given interface;
-+ * this is necessary before the interface is removed or, for
-+ * AP/mesh interfaces, before it is deconfigured.
-+ *
-+ * Note an rcu_barrier() must precede the function, after all
-+ * stations have been flushed/removed to ensure the call_rcu()
-+ * calls that add stations to the cleanup queue have completed.
-+ */
- void sta_info_flush_cleanup(struct ieee80211_sub_if_data *sdata);
  
- /**
-@@ -562,6 +575,7 @@ static inline int sta_info_flush(struct ieee80211_sub_if_data *sdata)
+@@ -980,21 +982,30 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+ 				rcu_dereference(vif->chanctx_conf)->def.chan);
+ }
+ 
+-
+-static void mac80211_hwsim_beacon(unsigned long arg)
++static void mac80211_hwsim_bcn_tasklet(unsigned long d)
  {
- 	int ret = sta_info_flush_defer(sdata);
+-	struct ieee80211_hw *hw = (struct ieee80211_hw *) arg;
+-	struct mac80211_hwsim_data *data = hw->priv;
+-
+-	if (!data->started)
+-		return;
++	struct mac80211_hwsim_data *data = (struct mac80211_hwsim_data *) d;
++	struct ieee80211_hw *hw = data->hw;
  
-+	rcu_barrier();
- 	sta_info_flush_cleanup(sdata);
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 		hw, IEEE80211_IFACE_ITER_NORMAL,
+ 		mac80211_hwsim_beacon_tx, hw);
++}
  
- 	return ret;
+-	data->beacon_timer.expires = jiffies + data->beacon_int;
+-	add_timer(&data->beacon_timer);
++static enum hrtimer_restart
++mac80211_hwsim_beacon(struct hrtimer *timer)
++{
++	struct mac80211_hwsim_data *data =
++		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
++
++	if (!data->started)
++		return HRTIMER_NORESTART;
++
++	/* must defer here since hrtimers are run in hard-IRQ */
++	tasklet_schedule(&data->bcn_tasklet);
++
++	hrtimer_forward(timer, hrtimer_get_expires(timer), data->beacon_int);
++	return HRTIMER_RESTART;
+ }
+ 
+ static const char *hwsim_chantypes[] = {
+@@ -1031,10 +1042,11 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 	WARN_ON(data->channel && channels > 1);
+ 
+ 	data->power_level = conf->power_level;
+-	if (!data->started || !data->beacon_int)
+-		del_timer(&data->beacon_timer);
+-	else
+-		mod_timer(&data->beacon_timer, jiffies + data->beacon_int);
++	if (!data->started || !ktime_to_ns(data->beacon_int))
++		hrtimer_cancel(&data->beacon_timer);
++	else if (!hrtimer_is_queued(&data->beacon_timer))
++		hrtimer_start(&data->beacon_timer, data->beacon_int,
++			      HRTIMER_MODE_REL);
+ 
+ 	return 0;
+ }
+@@ -1084,12 +1096,12 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	if (changed & BSS_CHANGED_BEACON_INT) {
+ 		wiphy_debug(hw->wiphy, "  BCNINT: %d\n", info->beacon_int);
+-		data->beacon_int = 1024 * info->beacon_int / 1000 * HZ / 1000;
+-		if (WARN_ON(!data->beacon_int))
+-			data->beacon_int = 1;
+-		if (data->started)
+-			mod_timer(&data->beacon_timer,
+-				  jiffies + data->beacon_int);
++		data->beacon_int = ns_to_ktime(info->beacon_int * 1024 * 1000);
++		if (WARN_ON(!ktime_to_ns(data->beacon_int)))
++			data->beacon_int = ns_to_ktime(1000 * 1000);
++		if (data->started && !hrtimer_is_queued(&data->beacon_timer))
++			hrtimer_start(&data->beacon_timer,
++				      data->beacon_int, HRTIMER_MODE_REL);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
+@@ -2370,8 +2382,11 @@ static int __init init_mac80211_hwsim(void)
+ 							data->debugfs, data,
+ 							&hwsim_fops_group);
+ 
+-		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
+-			    (unsigned long) hw);
++		tasklet_init(&data->bcn_tasklet,
++			     mac80211_hwsim_bcn_tasklet, (unsigned long) data);
++		hrtimer_init(&data->beacon_timer,
++			     CLOCK_MONOTONIC, HRTIMER_MODE_REL);
++		data->beacon_timer.function = mac80211_hwsim_beacon;
+ 
+ 		list_add_tail(&data->list, &hwsim_radios);
+ 	}
 -- 
-1.8.0
+1.7.10.4
 
