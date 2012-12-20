@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:43885 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752148Ab2LHWUE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51463 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956Ab2LTLMU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Dec 2012 17:20:04 -0500
-Received: by mail-qc0-f174.google.com with SMTP id o22so875403qcr.19
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Dec 2012 14:20:02 -0800 (PST)
-Message-ID: <50C3BD0F.1050603@lwfinger.net> (sfid-20121208_232012_688045_0E245A6D)
-Date: Sat, 08 Dec 2012 16:19:59 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Felix Janda <felix.janda@posteo.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT] b43: Load initial firmware file asynchronously
-References: <50C01558.8050102@lwfinger.net> <20121208143032.GA1903@gauss> <50C375BE.9050907@lwfinger.net> <20121208175615.GA10664@gauss> <50C399A9.2060304@lwfinger.net> <20121208202435.GA14973@gauss> <50C3AF0C.8000607@lwfinger.net> <20121208214157.GA21034@gauss>
-In-Reply-To: <20121208214157.GA21034@gauss>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 20 Dec 2012 06:12:20 -0500
+Message-ID: <1356001957.10029.0.camel@jlt4.sipsolutions.net> (sfid-20121220_121234_725402_71BEDE57)
+Subject: Re: [PATCH 0/5] mac80211: fix station cleanup/destruction
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>,
+	Eliad Peller <eliad@wizery.com>
+Date: Thu, 20 Dec 2012 12:12:37 +0100
+In-Reply-To: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net> (sfid-20121213_235922_790374_BA80AD0B)
+References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121213_235922_790374_BA80AD0B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/08/2012 03:41 PM, Felix Janda wrote:
-> On 12/08/12 at 03:20pm, Larry Finger wrote:
->> On 12/08/2012 02:24 PM, Felix Janda wrote:
->>>
->>> Not much has changed. Say, if you want to have the complete dmesg output.
->>
->> Yes, I messed that one up. Try this one - it is different in the error recovery.
->>
->> Larry
->
-> Now I have a wlan0. Haven't tested it though yet. dmesg still prints some errors.
+On Thu, 2012-12-13 at 23:59 +0100, Johannes Berg wrote:
+> Turns out that not only was flush_workqueue() slow as reported
+> by Ben, it was also broken because this is way too late to
+> finish the station destruction in AP mode.
+> 
+> Fixing this with keeping the roaming semantics (no RCU barrier
+> or synchronize in there) is a bit tricky so the first patch just
+> fixes the problem, and the last patch puts back the optimisation.
 
-That is not an error - I just left a diagnostic in the code. Please let me know 
-if it works. It should as we only touched the firmware loading.
+Applied all.
 
-Is it OK if I use a "Reported-and-Tested by: <you>?
-
-Larry
-
+johannes
 
