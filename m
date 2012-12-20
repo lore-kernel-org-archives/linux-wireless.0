@@ -1,356 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:46681 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734Ab2LVPpu (ORCPT
+Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:17883
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750838Ab2LTO0R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 10:45:50 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 14/17] cw1200:  driver state and definitions
-Date: Sat, 22 Dec 2012 10:45:17 -0500
-Message-Id: <1356191120-5280-15-git-send-email-pizza@shaftnet.org> (sfid-20121222_164607_415389_EBE47749)
-In-Reply-To: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
-References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
+	Thu, 20 Dec 2012 09:26:17 -0500
+From: Alberto Garau <Alberto.Garau@inpeco.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
+	Adriano Melis <ADRIANO.MELIS@inpeco.com>,
+	Luca Fresi <luca.fresi@bithiatec.com>
+Subject: RE: wl12xx over spi with no scan results
+Date: Thu, 20 Dec 2012 14:25:57 +0000
+Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0CD0C3CD@AMSPRD0510MB350.eurprd05.prod.outlook.com> (sfid-20121220_152620_939239_5B360629)
+References: <1354095769-8724-1-git-send-email-arik@wizery.com>
+	 <1354095769-8724-21-git-send-email-arik@wizery.com>
+	 <1355159205.3738.63.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355161791.3738.67.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355218436.3738.122.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355223079.3738.128.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355229286.3738.137.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360949@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355301922.21129.8.camel@cumari.coelho.fi>
+	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360984@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+	 <1355307404.21129.15.camel@cumari.coelho.fi>
+	  <0294E4ABF3EF28409B75AAF7EAC3D41A0C361686@DB3PRD0510MB381.eurprd05.prod.outlook.com>
+ <1355743109.21129.89.camel@cumari.coelho.fi>
+In-Reply-To: <1355743109.21129.89.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/staging/cw1200/cw1200.h | 324 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 324 insertions(+)
- create mode 100644 drivers/staging/cw1200/cw1200.h
-
-diff --git a/drivers/staging/cw1200/cw1200.h b/drivers/staging/cw1200/cw1200.h
-new file mode 100644
-index 0000000..8080d5c
---- /dev/null
-+++ b/drivers/staging/cw1200/cw1200.h
-@@ -0,0 +1,324 @@
-+/*
-+ * Common private data for ST-Ericsson CW1200 drivers
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * Based on the mac80211 Prism54 code, which is
-+ * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-+ *
-+ * Based on the islsm (softmac prism54) driver, which is:
-+ * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef CW1200_H
-+#define CW1200_H
-+
-+#include <linux/wait.h>
-+#include <linux/mutex.h>
-+#include <linux/workqueue.h>
-+#include <net/mac80211.h>
-+
-+#include "queue.h"
-+#include "wsm.h"
-+#include "scan.h"
-+#include "txrx.h"
-+#include "ht.h"
-+#include "pm.h"
-+
-+/* Forward declarations */
-+struct sbus_ops;
-+struct task_struct;
-+struct cw1200_debug_priv;
-+struct firmware;
-+
-+#ifdef CONFIG_CW1200_ETF
-+extern int etf_mode;
-+extern char *etf_firmware;
-+#endif
-+
-+#if defined(CONFIG_CW1200_TXRX_DEBUG)
-+#define txrx_printk(...) printk(__VA_ARGS__)
-+#else
-+#define txrx_printk(...)
-+#endif
-+
-+#define CW1200_MAX_CTRL_FRAME_LEN	(0x1000)
-+
-+#define CW1200_MAX_STA_IN_AP_MODE	(5)
-+#define CW1200_LINK_ID_AFTER_DTIM	(CW1200_MAX_STA_IN_AP_MODE + 1)
-+#define CW1200_LINK_ID_UAPSD		(CW1200_MAX_STA_IN_AP_MODE + 2)
-+#define CW1200_LINK_ID_MAX		(CW1200_MAX_STA_IN_AP_MODE + 3)
-+#define CW1200_MAX_REQUEUE_ATTEMPTS	(5)
-+
-+#define CW1200_MAX_TID			(8)
-+
-+#define CW1200_BLOCK_ACK_CNT		(30)
-+#define CW1200_BLOCK_ACK_THLD		(800)
-+#define CW1200_BLOCK_ACK_HIST		(3)
-+#define CW1200_BLOCK_ACK_INTERVAL	(1 * HZ / CW1200_BLOCK_ACK_HIST)
-+
-+/* Please keep order */
-+enum cw1200_join_status {
-+	CW1200_JOIN_STATUS_PASSIVE = 0,
-+	CW1200_JOIN_STATUS_MONITOR,
-+	CW1200_JOIN_STATUS_STA,
-+	CW1200_JOIN_STATUS_AP,
-+};
-+
-+enum cw1200_link_status {
-+	CW1200_LINK_OFF,
-+	CW1200_LINK_RESERVE,
-+	CW1200_LINK_SOFT,
-+	CW1200_LINK_HARD,
-+#if defined(CONFIG_CW1200_USE_STE_EXTENSIONS)
-+	CW1200_LINK_RESET,
-+	CW1200_LINK_RESET_REMAP,
-+#endif
-+};
-+
-+enum cw1200_bss_loss_status {
-+	CW1200_BSS_LOSS_NONE,
-+	CW1200_BSS_LOSS_CHECKING,
-+	CW1200_BSS_LOSS_CONFIRMING,
-+	CW1200_BSS_LOSS_CONFIRMED,
-+};
-+
-+extern int cw1200_power_mode;
-+
-+struct cw1200_link_entry {
-+	unsigned long			timestamp;
-+	enum cw1200_link_status		status;
-+#if defined(CONFIG_CW1200_USE_STE_EXTENSIONS)
-+	enum cw1200_link_status		prev_status;
-+#endif
-+	u8				mac[ETH_ALEN];
-+	u8				buffered[CW1200_MAX_TID];
-+	struct sk_buff_head		rx_queue;
-+};
-+
-+struct cw1200_common {
-+	struct cw1200_queue		tx_queue[4];
-+	struct cw1200_queue_stats	tx_queue_stats;
-+	int				tx_burst_idx;
-+	struct cw1200_debug_priv	*debug;
-+
-+	struct ieee80211_hw		*hw;
-+	struct ieee80211_vif		*vif;
-+	struct device			*pdev;
-+	struct workqueue_struct		*workqueue;
-+
-+	struct mutex			conf_mutex;
-+
-+	const struct sbus_ops		*sbus_ops;
-+	struct sbus_priv		*sbus_priv;
-+
-+	/* HW type (HIF_...) */
-+	int				hw_type;
-+	int				hw_revision;
-+	int                             hw_refclk;
-+
-+	/* firmware/hardware info */
-+	unsigned int tx_hdr_len;
-+
-+	/* Radio data */
-+	int output_power;
-+	int noise;
-+
-+	/* calibration, output power limit and rssi<->dBm conversation data */
-+
-+	/* BBP/MAC state */
-+	const struct firmware		*sdd;
-+	char                            *sdd_path;
-+	struct ieee80211_rate		*rates;
-+	struct ieee80211_rate		*mcs_rates;
-+	u8 mac_addr[ETH_ALEN];
-+	struct ieee80211_channel	*channel;
-+	u8 bssid[ETH_ALEN];
-+	struct wsm_edca_params		edca;
-+	struct wsm_tx_queue_params	tx_queue_params;
-+	struct wsm_association_mode	association_mode;
-+	struct wsm_set_bss_params	bss_params;
-+	struct cw1200_ht_info		ht_info;
-+	struct wsm_set_pm		powersave_mode;
-+	struct wsm_set_pm		firmware_ps_mode;
-+	int				cqm_rssi_thold;
-+	unsigned			cqm_rssi_hyst;
-+	unsigned			cqm_tx_failure_thold;
-+	unsigned			cqm_tx_failure_count;
-+	bool				cqm_use_rssi;
-+	int				cqm_link_loss_count;
-+	int				cqm_beacon_loss_count;
-+	int				channel_switch_in_progress;
-+	wait_queue_head_t		channel_switch_done;
-+	u8				long_frame_max_tx_count;
-+	u8				short_frame_max_tx_count;
-+	int				mode;
-+	bool				enable_beacon;
-+	int				beacon_int;
-+	size_t				ssid_length;
-+	u8				ssid[IEEE80211_MAX_SSID_LEN];
-+	bool				listening;
-+	struct wsm_rx_filter		rx_filter;
-+	struct wsm_beacon_filter_table	bf_table;
-+	struct wsm_beacon_filter_control bf_control;
-+	struct wsm_multicast_filter	multicast_filter;
-+	bool				has_multicast_subscription;
-+	bool				disable_beacon_filter;
-+	struct work_struct		update_filtering_work;
-+
-+	u8				ba_tid_mask;
-+	int				ba_acc;
-+	int				ba_cnt;
-+	int				ba_hist;
-+	struct timer_list		ba_timer;
-+	spinlock_t			ba_lock;
-+	bool				ba_ena;
-+	struct work_struct              ba_work;
-+
-+#ifdef CONFIG_CW1200_PM
-+	struct cw1200_pm_state		pm_state;
-+#endif
-+	struct wsm_p2p_ps_modeinfo	p2p_ps_modeinfo;
-+	struct wsm_uapsd_info		uapsd_info;
-+	bool				setbssparams_done;
-+	bool				is_BT_Present;
-+	u8				conf_listen_interval;
-+	u32				listen_interval;
-+	u32				erp_info;
-+
-+	/* BH */
-+	atomic_t			bh_rx;
-+	atomic_t			bh_tx;
-+	atomic_t			bh_term;
-+	atomic_t			bh_suspend;
-+	struct task_struct		*bh_thread;
-+	int				bh_error;
-+	wait_queue_head_t		bh_wq;
-+	wait_queue_head_t		bh_evt_wq;
-+	int				buf_id_tx;	/* byte */
-+	int				buf_id_rx;	/* byte */
-+	int				wsm_rx_seq;	/* byte */
-+	int				wsm_tx_seq;	/* byte */
-+	int				hw_bufs_used;
-+	bool				powersave_enabled;
-+	bool				device_can_sleep;
-+
-+	/* WSM */
-+	struct wsm_caps			wsm_caps;
-+	struct mutex			wsm_cmd_mux;
-+	struct wsm_buf			wsm_cmd_buf;
-+	struct wsm_cmd			wsm_cmd;
-+	wait_queue_head_t		wsm_cmd_wq;
-+	wait_queue_head_t		wsm_startup_done;
-+	struct wsm_cbc			wsm_cbc;
-+	atomic_t			tx_lock;
-+
-+	/* WSM debug */
-+	int				wsm_enable_wsm_dumps;
-+	u32				wsm_dump_max_size;
-+
-+	/* Scan status */
-+	struct cw1200_scan scan;
-+
-+	/* WSM Join */
-+	enum cw1200_join_status	join_status;
-+	u8			join_bssid[ETH_ALEN];
-+	u32			pending_frame_id;
-+	struct work_struct	join_work;
-+	struct delayed_work	join_timeout;
-+	struct work_struct	unjoin_work;
-+	struct work_struct	offchannel_work;
-+	int			join_dtim_period;
-+	bool			delayed_unjoin;
-+
-+	/* TX/RX and security */
-+	s8			wep_default_key_id;
-+	struct work_struct	wep_key_work;
-+	u32			key_map;
-+	struct wsm_add_key	keys[WSM_KEY_MAX_INDEX + 1];
-+	unsigned long		rx_timestamp;
-+
-+	/* AP powersave */
-+	u32			link_id_map;
-+	struct cw1200_link_entry link_id_db[CW1200_MAX_STA_IN_AP_MODE];
-+	struct work_struct	link_id_work;
-+	struct delayed_work	link_id_gc_work;
-+	u32			sta_asleep_mask;
-+	u32			pspoll_mask;
-+	bool			aid0_bit_set;
-+	spinlock_t		ps_state_lock;
-+	bool			buffered_multicasts;
-+	bool			tx_multicast;
-+	struct work_struct	set_tim_work;
-+	struct delayed_work	set_cts_work;
-+	struct work_struct	multicast_start_work;
-+	struct work_struct	multicast_stop_work;
-+	struct timer_list	mcast_timeout;
-+
-+
-+	/* WSM events and CQM implementation */
-+	spinlock_t		event_queue_lock;
-+	struct list_head	event_queue;
-+	struct work_struct	event_handler;
-+	struct delayed_work	bss_loss_work;
-+	struct delayed_work	connection_loss_work;
-+#ifdef CONFIG_CW1200_USE_STE_EXTENSIONS
-+	struct work_struct	tx_failure_work;
-+#endif
-+	int			delayed_link_loss;
-+	spinlock_t		bss_loss_lock;
-+	int			bss_loss_status;
-+	int			bss_loss_confirm_id;
-+
-+	/* TX rate policy cache */
-+	struct tx_policy_cache tx_policy_cache;
-+	struct work_struct tx_policy_upload_work;
-+
-+	/* cryptographic engine information */
-+
-+	/* bit field of glowing LEDs */
-+	u16 softled_state;
-+
-+	/* statistics */
-+	struct ieee80211_low_level_stats stats;
-+#if defined(CONFIG_CW1200_USE_STE_EXTENSIONS)
-+	/* Workaround for WFD testcase 6.1.10*/
-+	struct work_struct	linkid_reset_work;
-+	u8			action_frame_sa[ETH_ALEN];
-+	u8			action_linkid;
-+#endif
-+
-+#ifdef CONFIG_CW1200_ETF
-+	struct sk_buff_head etf_q;
-+#endif
-+
-+
-+#ifdef CONFIG_CW1200_POLL_IRQ
-+	struct timer_list	irqpoll_timer;
-+#endif
-+};
-+
-+struct cw1200_sta_priv {
-+	int link_id;
-+};
-+
-+/* interfaces for the drivers */
-+int cw1200_core_probe(const struct sbus_ops *sbus_ops,
-+		      struct sbus_priv *sbus,
-+		      struct device *pdev,
-+		      struct cw1200_common **pself,
-+		      int ref_clk, const u8 *macaddr,
-+		      const char *sdd_path);
-+void cw1200_core_release(struct cw1200_common *self);
-+
-+#define STUB()	\
-+	printk(KERN_INFO "%s: STUB at line %d.\n", __func__, __LINE__)
-+
-+#define FWLOAD_BLOCK_SIZE (1024)
-+
-+#endif /* CW1200_H */
--- 
-1.7.11.7
+SGkgTHVjYSwNCg0KSSd2ZSB0cmllZCB3aXRoIGRpZmZlcmVudCBhbnRlbm5hcyB3aGljaCBpbXBy
+b3ZlZCB0aGUgbGV2ZWwgb2YgdGhlIHNpZ25hbCB0byAtNDUgZEJtIHNvbWV0aW1lIGJ1dCBJJ20g
+c3RpbGwgZmFjaW5nIHRoZSBSRiBwcm9ibGVtLg0KIA0KTGV0IG1lIGRlc2NyaWJlIGJldHRlciB0
+aGUgc2NlbmFyaW86DQoNCmEpIEFQIGNsb3NlICgxMGNtIG5vdCAxMG0pIHRvIHRoZSBjaGlwIHdp
+dGggYW50ZW5uYQ0KDQpUaGUgc2lnbmFsIGlzIHZlcnkgZ29vZCwgSSBjYW4gY29ubmVjdCB0byB0
+aGUgQVAgb24gYSB1bnByb3RlY3RlZCBuZXR3b3JrIG9yIFdQQS1BRVMgcHJvdGVjdGVkIG9uZS4N
+ClRoZW4gSSBjYW4gcGluZyB0aGUgZ2F0ZXdheSBzdGVhZGlseSB3aXRob3V0IGFueSBwcm9ibGVt
+DQoNCmIpIEFQIGZhciAoNW0pIGZyb20gdGhlIGNoaXAgd2l0aCBhbnRlbm5hDQoNCkluIHRoaXMg
+Y2FzZSBpZiBJIHJ1bjoNCg0KLi9pdyBkZXYgd2xhbjAgc2Nhbg0KDQpJdCBjYW4gaGFwcGVuIHRo
+YXQgZm9yIDE1IG9yIDIwIHRpbWVzIEkgY2FuJ3QgcmV0cmlldmUgYW55IG5ldHdvcmsgYWx3YXlz
+IGV4ZWN1dGluZyB0aGUgc2FtZSBjb21tYW5kLiBBZnRlciB0aGF0LCANCml0IGNhbiBoYXBwZW4g
+dGhhdCBmb3IgMTUgb3IgMjAgdGltZXMgSSBjYW4gc2VlIG9uZSBvciBib3RoIHRoZSBuZXR3b3Jr
+cyBhdmFpbGFibGUgZnJvbSB0aGUgQVAgd2hlcmUgdGhlIHNpZ25hbCBjb3VsZCBiZSBhbHNvIC00
+NSBkQm0uDQpUaGVuIGl0IGNhbiBoYXBwZW4gYWdhaW4gdGhhdCBmb3IgMTUgb3IgMjAgdGltZXMg
+SSBjYW4ndCByZXRyaWV2ZSBhbnkgbmV0d29yayB3aGVuIHNjYW5uaW5nIGFnYWluLiANCg0KSWYg
+SSB0cnkgdG8gY29ubmVjdCB0byB0aGUgbmV0d29yayAodW5wcm90ZWN0ZWQpIHdoZW4gdGhleSBh
+cmUgYXZhaWxhYmxlIEkgY2FuJ3QgYW5kIEkgb2J0YWluOg0KDQpyb290QChub25lKTp+IyAuL2l3
+IHdsYW4wIGNvbm5lY3QgLXcgSW5wZWNvLXRlc3QNCndsYW4wIChwaHkgIzApOiBmYWlsZWQgdG8g
+Y29ubmVjdCwgc3RhdHVzOiAxOiBVbnNwZWNpZmllZCBmYWlsdXJlDQoNCldoZXJlIHdvdWxkIHlv
+dSBzdWdnZXN0IHVzIHRvIGxvb2sgaW4gb3JkZXIgdG8gb3ZlcmNvbWUgdGhpcyBwcm9ibGVtIHdl
+IGFyZSBmaWdodGluZyBhZ2FpbnN0ID8NCg0KVGhhbmtzIGluIGFkdmFuY2UuDQoNCkFsYmVydG8N
+Cg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogTHVjaWFubyBDb2VsaG8gW21h
+aWx0bzpjb2VsaG9AdGkuY29tXSANClNlbnQ6IGx1bmVkw6wgMTcgZGljZW1icmUgMjAxMiAxMjox
+OA0KVG86IEFsYmVydG8gR2FyYXUNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7
+IElkbyBZYXJpdjsgQXJpayBOZW10c292OyBBZHJpYW5vIE1lbGlzOyBMdWNhIEZyZXNpDQpTdWJq
+ZWN0OiBSZTogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8gc2NhbiByZXN1bHRzDQoNCk9uIE1vbiwg
+MjAxMi0xMi0xNyBhdCAwOTozOCArMDAwMCwgQWxiZXJ0byBHYXJhdSB3cm90ZToNCj4gSGkgTHVj
+YSwNCg0KSGkgQWxiZXJ0bywNCg0KDQo+IHdlIGhhdmUgYmVlbiBhYmxlIHRvIHN1Y2Nlc3NmdWxs
+eSBydW4gdGhlIGRyaXZlciBidXQ6DQo+IA0KPiBXZSBoYXZlIHRoZSBkZXZpY2UgcnVubmluZyBp
+biBTUEkgYW5kIHdlIGFyZSBvYnNlcnZpbmcgYSBzdHJhbmdlIHNjZW5hcmlvLiBXaGVuIHRoZSBB
+UCBpcyBwbGFjZWQgMTAgbWV0ZXJzIGZhciBmcm9tIHRoZSBkZXZpY2UgKC01N2RiKSBpdCdzIHZl
+cnkgZGlmZmljdWx0IHNjYW5uaW5nIHRoZSBFU1NJRHMgYW5kIGltcG9zc2libGUgdG8gY29ubmVj
+dCB0byB0aGVtLCB0aGUgc2FtZSBiZWhhdmlvdXIgZG9lc24ndCBoYXBwZW4gd2hlbiBJIG1vdmUg
+dGhlIEFQIGNsb3NlICgxMCBjbSkgdG8gdGhlIGRldmljZS4gSW4gdGhhdCBjYXNlIEkgY2FuIHNj
+YW4gdGhlIEVTU0lEcyBhbmQgSSBjYW4gY29ubmVjdCB0byB0aGVtIGVhc2lseS4NCg0KVGhpcyBk
+ZWZpbml0ZWx5IHNvdW5kcyBsaWtlIGFuIFJGIHByb2JsZW0uICBBcmUgeW91IHN1cmUgZXZlcnl0
+aGluZyBpcyBjb3JyZWN0IHdpdGggeW91ciBhbnRlbm5hPyAxMCBtZXRlcnMgcmVhY2ggc291bmRz
+IGxpa2Ugd2hhdCBoYXBwZW5zIGlmIHRoZXJlJ3Mgbm8gYW50ZW5uYSBjb25uZWN0ZWQuIDspDQoN
+CklmIHlvdSB1c2VkIHRoZSBjb3JyZWN0IElOSSBmaWxlLCBldmVuIHdpdGhvdXQgcHJvcGVyIHR1
+bmluZyBvZiB0aGUgc2V0dGluZ3MsIHRoZSBSRiBzaG91bGRuJ3QgYmUgdGhhdCBiYWQuICBJbiBn
+ZW5lcmFsLCBpZiB5b3UgdXNlIHRoZSBhcHByb3ByaWF0ZSBJTkkgc2V0dGluZ3MgZm9yIHlvdXIg
+RkVNLCB5b3Ugc2hvdWxkIGdldCByZWxhdGl2ZWx5IGdvb2QgY29ubmVjdGl2aXR5Lg0KDQoNCj4g
+VGhlIGNhbGlicmF0aW9uIHdlIGhhdmUgcGVyZm9ybWVkIGlzIHRoZSBGaXJzdCBDYWxpYnJhdGlv
+biBsaXN0ZWQgb24gdGhhdCB3ZWIgc2l0ZSBhbmQgd2UgaGF2ZSBtb3JlIHF1ZXN0aW9uczoNCj4g
+DQo+IDEpIGlzIHRoZXJlIGFueSBkb2N1bWVudCBleHBsYWluaW5nIGluIGRlcHRoIGFsbCB0aGUg
+cGFyYW1ldGVycyBvZiB0aGUgDQo+IGluaSBmaWxlIFRRU19TXzIuNi5pbmkNCg0KWW91IHNob3Vs
+ZCBnZXQgdGhpcyBmcm9tIHlvdXIgb2ZmaWNpYWwgVEkgY29udGFjdC4gIERvIHlvdSBoYXZlIGFu
+eSBzdXBwb3J0IGNoYW5uZWw/DQoNCg0KPiAyKSB3ZSB1c2VkICIuL2NhbGlicmF0b3IgcGx0IGNh
+bGlicmF0ZSIsIHdoYXQgcGx0IG1lYW5zID8NCg0KUExUIG1lYW5zIFByb2R1Y3Rpb24gTGluZSBU
+ZXN0cyAoY2FsaWJyYXRpb24gaXMgdXN1YWxseSBkb25lIGF0IHRoZSBwcm9kdWN0aW9uIGxpbmUs
+IHNvIGl0J3MgaW5jbHVkZWQgd2l0aCB0aGUgcmVzdCBvZiB0aGUgUExUIHRlc3RzKS4NCg0KDQo+
+IDMpIGlmIHdlIHdhbnQgdG8gdXNlIHRoZSBleHBlcnQgbW9kZSwgd2Ugd291bGQgaGF2ZSB0byBw
+cm92aWRlIDx2b2x0YWdlPiw8cG93ZXI+LDxzdWJiYW5kPiBhbmQgdGhlbiB0eF9iaXAgcGFyYW1l
+dGVycywgd2hlcmUgd2UgY2FuIGZvdW5kIGluZGljYXRpb24vZG9jdW1lbnRhdGlvbiBhYm91dCB0
+aGF0ID8NCg0KVGhpcyBpcyB1c2VkIGlmIHlvdSB3YW50IHRvIGZpbmUgdHVuZSB0aGUgUkYgcGF0
+aC4gIFRvIHVzZSBpdCB5b3UgbmVlZCBzcGVjaWFsIGVxdWlwbWVudCB0byB0ZXN0IGFuZCBtZWFz
+dXJlIHRoZSBvdXRwdXQgYW5kIGlucHV0Lg0KDQoNCj4gNCkgaXMgdGhlcmUgYW55IGF1dG8gY2Fs
+aWJyYXRpb24gPw0KDQpZZXMsIHRoZSBjYWxpYnJhdGlvbiB0b29sIGhhcyB0aGUgYXV0by1jYWxp
+YnJhdGlvbiBmZWF0dXJlLg0KDQoNCj4gNSkgQ291bGQgeW91IHBsZWFzZSBkZWZpbmUgdGhlIG1l
+YW5pbmcgb2YgdGhlICJUeEJpcCBwcm9jZWR1cmUiIGFuZCB3aGVuIHNob3VsZCBiZSB1c2VkID8N
+Cg0KVGhpcyBpcyB0aGUgcHJvY2VkdXJlIHVzZWQgdG8gY2FsaWJyYXRlIHRoZSBkZXZpY2UgYW5k
+IGdlbmVyYXRlIHNvbWUgcGFyYW1ldGVycyB0aGF0IGdvIGludG8gdGhlIE5WUyBmaWxlLg0KDQoN
+Cj4gNikgQ291bGQgeW91IHBsZWFzZSBkZWZpbmUgdGhlIG1lYW5pbmcgb2YgdGhlICJUeCBDb250
+IFByb2NlZHVyZSIgIGFuZCB3aGVuIHNob3VsZCBiZSB1c2VkID8NCg0KVGhpcyBpcyB1c2VkIGlu
+IFImRCBhbmQgaW4gdGhlIHByb2R1Y3Rpb24gbGluZS4gIEl0IGlzIHVzZWQgdG8gdHJhbnNtaXQg
+cGFja2V0cyBjb250aW51b3VzbHkgdXNpbmcgdGhlIHBhcmFtZXRlcnMgc3BlY2lmaWVkLg0KDQoN
+Cj4gNykgQ291bGQgeW91IHBsZWFzZSBkZWZpbmUgdGhlIG1lYW5pbmcgb2YgdGhlICJSeCBTdGF0
+IHByb2NlZHVyZSIgYW5kIHdoZW4gc2hvdWxkIGJlIHVzZWQgID8NCg0KVGhpcyBjb21tYW5kIGlz
+IHVzZWQgdG8gZ2V0IHN0YXRpc3RpY3MgYWJvdXQgdGhlIHJlY2VpdmVkIHBhY2tldHMuICBJdCBj
+YW4gYmUgdXNlZCB0byBjaGVjayB3aGV0aGVyIHRoZSBkZXZpY2UgaXMgcmVjZWl2aW5nIHBhY2tl
+dHMgYXMgaXQgc2hvdWxkLiAgR2VuZXJhbGx5IHVzZWQgaW4gUiZEIGFuZCBpbiB0aGUgcHJvZHVj
+dGlvbiBsaW5lLg0KDQpJIGhvcGUgdGhpcyBoZWxwcy4NCg0KLS0NCkx1Y2EuDQoNCg0K
 
