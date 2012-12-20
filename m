@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:46419 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071Ab2LVWzq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 17:55:46 -0500
-Date: Sun, 23 Dec 2012 07:55:43 +0900
-From: Norbert Preining <preining@logic.at>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: dire state of rtl8192se driver in 3.7
-Message-ID: <20121222225543.GA21544@gamma.logic.tuwien.ac.at> (sfid-20121222_235613_410781_8EE4D58A)
-References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at> <50D5E194.3050503@lwfinger.net>
+Received: from mx4.wp.pl ([212.77.101.8]:17242 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750809Ab2LTLGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2012 06:06:08 -0500
+Date: Thu, 20 Dec 2012 12:06:02 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Gabor Juhos <juhosg@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Daniel Golle <dgolle@allnet.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [rt2x00-users] [PATCH 2/2] rt2x00: rt2800pci: allow to load
+ EEPROM data via firmware API
+Message-ID: <20121220110602.GA13055@localhost.localdomain> (sfid-20121220_120612_713803_DB78E565)
+References: <1355847743-16659-1-git-send-email-juhosg@openwrt.org>
+ <1355847743-16659-2-git-send-email-juhosg@openwrt.org>
+ <20121218222226.GB4825@localhost.localdomain>
+ <50D18A5A.2020505@openwrt.org>
+ <87d2y5umko.fsf@purkki.adurom.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50D5E194.3050503@lwfinger.net>
+In-Reply-To: <87d2y5umko.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,, hi all
+On Thu, Dec 20, 2012 at 10:58:31AM +0200, Kalle Valo wrote:
+> Gabor Juhos <juhosg@openwrt.org> writes:
+> 
+> >> Since we use completion here, why we can not just use normal synchronous
+> >> version of request_firmware? I heard of request_firmware drawbacks, so
+> >> this approach can be correct. Just want to know if we do not complicate
+> >> things not necessarily here.
+> >
+> > If the driver is built into the kernel, then the synchronous version
+> > would fail because user-space is not up during probe time.
+> 
+> Didn't udev/systemd guys finally fix their software? At least I recall
+> seeing such claims on g+.
 
-On Sa, 22 Dez 2012, Larry Finger wrote:
-> It is not that no one cares; however, your attitude does nothing to 
-> induce me to work on this problem. The facts are not needed "to make 
+Udev broke and later fixed request_firmware when driver is compiled as
+module. Here we avoid problem when driver is compiled into kernel
+(problem which was there from very beginning) - no userspace available
+so request_firmware fail. But since everyone are using modules, nobody
+cares.
 
-Aehm, ... after my initial report you asked me several more questions,
-which I answered within a few hours. After that no as in 0 response,
-although I pinged back a few times.
+Openwrt must use modules too, since it use compat-wireless, right? So
+I'm not sure if it worth to use request_firmware_nowait. Especially
+like that with completion, which block ->probe. As long kernel does
+not probes devices in parallel, we block whole boot, and deadlock since
+probe wait for userspace.
 
-So am I supposed to deduce from 0 reactions that anyone is interested?
+Gabor, did you test your patches ?
 
-> people happy", they are necessary to try to reproduce the problem. If I 
-> cannot make it happen here, then I cannot fix it. Also, remember that I 
-
-Disagree. I am involved in tracking down a nasty regression in the intel 
-drm driver, which the intel people can *not* reproduce, but several
-other people, and after long trials and patches and converse it is 
-starting to look much better.
-
-> am a volunteer. I get nothing from Realtek but starting code of varying 
-> quality and some sample chips. At least my versions do not crash your 
-
-Ok, that is a problem I understand. If this is the case, that it is
-a single volunteer caring for the code, then I see a real problem.
-(And I also will try to stay away from rtl wlan cards on my next laptop)
-
-> I have never tested forcing a reset on the chip the way you did. I am not 
-> surprised that bad things happen.
-
-But the DMAR item I also reported points to a real problem I guess.
-
-> From some of the material that you report, it appears that you have an 
-> 802.11n connection using WPA1 encryption. (More of those pesky details!) 
-
-WPA PSK, yes. I don't know the difference between WPA2 and WPA, though.
-
-Best wishes, and merry christmas
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-`This must be Thursday,' said Arthur to himself, sinking
-low over his beer, `I never could get the hang of
-Thursdays.'
-                 --- Arthur, on what was to be his last Thursday on Earth.
-                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
+Stanislaw
