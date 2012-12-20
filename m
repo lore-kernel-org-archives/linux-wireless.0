@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44161 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754379Ab2LCOri (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 09:47:38 -0500
-Message-ID: <1354546054.17107.2.camel@deadeye.wl.decadent.org.uk> (sfid-20121203_154745_835882_6FDC6B07)
-Subject: Re: [PATCH] ar5523: Add firmware for new driver
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org,
-	qca-linux-team@qca.qualcomm.com
-Date: Mon, 03 Dec 2012 14:47:34 +0000
-In-Reply-To: <1353445872-4861-1-git-send-email-pontus.fuchs@gmail.com>
-References: <1353445872-4861-1-git-send-email-pontus.fuchs@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-oqQ5gtdGyTtXq+RaTVXQ"
-Mime-Version: 1.0
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:53328 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751036Ab2LTUPm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2012 15:15:42 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Sasha Levin <sasha.levin@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 20 Dec 2012 12:13:44 -0800
+Subject: RE: [PATCH] wireless: mwifiex: remove unreachable paths
+Message-ID: <477F20668A386D41ADCC57781B1F70430D13D806CA@SC-VEXCH1.marvell.com> (sfid-20121220_211612_211650_6035D1FE)
+References: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com>
+ <1356030701-16284-17-git-send-email-sasha.levin@oracle.com>
+In-Reply-To: <1356030701-16284-17-git-send-email-sasha.levin@oracle.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Sasha,
 
---=-oqQ5gtdGyTtXq+RaTVXQ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thanks for the patch.
 
-On Tue, 2012-11-20 at 22:11 +0100, Pontus Fuchs wrote:
-> AR5523 is a USB Wifi chipset that was popular circa 2005.
-> Better late then never.
->=20
-> Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-[...]
+> We know 'firmware' is non-NULL from the beginning of mwifiex_prog_fw_w_helper,
+> remove all !firmware paths from the rest of the function.
 
-Applied, thanks.
+After removing all !firmware paths the function 'mwifiex_get_fw_data' becomes an orphan.
 
-Ben.
+Could you please remove that function as well and resend a v2 patch?
 
---=20
-Ben Hutchings
-Always try to do things in chronological order;
-it's less confusing that way.
+Thanks,
+Bing
 
---=-oqQ5gtdGyTtXq+RaTVXQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> 
+> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+> ---
+>  drivers/net/wireless/mwifiex/usb.c | 15 +++------------
+>  1 file changed, 3 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+> index 63ac9f2..8bd7098 100644
+> --- a/drivers/net/wireless/mwifiex/usb.c
+> +++ b/drivers/net/wireless/mwifiex/usb.c
+> @@ -836,23 +836,14 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+>  			dlen = 0;
+>  		} else {
+>  			/* copy the header of the fw_data to get the length */
+> -			if (firmware)
+> -				memcpy(&fwdata->fw_hdr, &firmware[tlen],
+> -				       sizeof(struct fw_header));
+> -			else
+> -				mwifiex_get_fw_data(adapter, tlen,
+> -						    sizeof(struct fw_header),
+> -						    (u8 *)&fwdata->fw_hdr);
+> +			memcpy(&fwdata->fw_hdr, &firmware[tlen],
+> +			       sizeof(struct fw_header));
+> 
+>  			dlen = le32_to_cpu(fwdata->fw_hdr.data_len);
+>  			dnld_cmd = le32_to_cpu(fwdata->fw_hdr.dnld_cmd);
+>  			tlen += sizeof(struct fw_header);
+> 
+> -			if (firmware)
+> -				memcpy(fwdata->data, &firmware[tlen], dlen);
+> -			else
+> -				mwifiex_get_fw_data(adapter, tlen, dlen,
+> -						    (u8 *)fwdata->data);
+> +			memcpy(fwdata->data, &firmware[tlen], dlen);
+> 
+>  			fwdata->seq_num = cpu_to_le32(fw_seqnum);
+>  			tlen += dlen;
+> --
+> 1.8.0
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAULy7hue/yOyVhhEJAQpgHA/+K3N60OcJJGMyFgv4DZxp1v4OBvCWE50Z
-SHkUnGyX2Ewbh/EjOjlC44IT6Deje/hXFOEVIi/9f+pIGyEwj+XOF74iNNG7nU03
-+5x1uGMQOnXRi/RoQkOD3zs8ngD7vlYBkqY4MUHwoBZ1YaXUgi+8v/4kzb3twwmd
-IryiNgusz8WrwkApC418er6NwMUlZR6MFqrnaemikvuFMkrZAbP6rBAhBlNJeR2X
-UDUnO3z9TCE9wZyxLYFIdo9TF3frVK5oTRY29fzCUWsY0IVDilNgMqxnO8DeJICg
-x6Q6KkSeg41x1SUhRFjaQmTIMY+DINEYFyp3mLbQGFU4keg6evbb34jAX12PJAer
-nP/KAthf/4WWnVyhenkJt9W6qT6CVcFZt0kyRJ6Zlr6E0eeJBDMiolPVqLon9/pr
-RJCxbp9Xu5wgxwa54fLj89CjqVuuv13B3i5iOUG5l/H9tG2AhRkuLmBPTZjOzbWE
-JoxtvkVq7zKqHD+8sbO5Zxtxo8Ajqk6ppttu57+mpWaC5JcJzRbu8pqhU81rTGry
-Tbkl/GM6bP6BntG0rkkCFE+Sf/itNeyzcZPHH0f8K/TKVQOmb9dYLP/P4+nHOLiG
-VSvDvnZfAAgaPf1TT3RBvkl7djI3E2Z6705y7H2kDO8g1NUnuJaCTjDwrtVH8kMv
-hN+s65QooEM=
-=27lY
------END PGP SIGNATURE-----
-
---=-oqQ5gtdGyTtXq+RaTVXQ--
