@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56825 "EHLO mx1.redhat.com"
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:54305
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751758Ab2LCL7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 06:59:14 -0500
-Date: Mon, 3 Dec 2012 12:59:04 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com,
-	Francisco Pina Martins <f.pinamartins@gmail.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 2/2] Revert: "rt2x00: Don't let mac80211 send a BAR when an
- AMPDU subframe fails"
-Message-ID: <20121203115903.GB2490@redhat.com> (sfid-20121203_125917_744761_ED19A227)
-References: <20121203115632.GA2490@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121203115632.GA2490@redhat.com>
+	id S1752129Ab2LTDIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Dec 2012 22:08:49 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Fengguang Wu <fengguang.wu@intel.com>
+Subject: [PATCH] ath9k: Fix compilation breakage
+Date: Thu, 20 Dec 2012 08:38:00 +0530
+Message-Id: <1355972880-30671-1-git-send-email-sujith@msujith.org> (sfid-20121220_040852_959332_2BD12BF8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This revert:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-commit be03d4a45c09ee5100d3aaaedd087f19bc20d01f
-Author: Andreas Hartmann <andihartmann@01019freenet.de>
-Date:   Tue Apr 17 00:25:28 2012 +0200
+Since ath9k makes use of mac80211's debugfs hooks to
+maintain station statistics, make ATH9K_DEBUGFS
+select MAC80211_DEBUGFS. This fixes the issue reported by
+Fengguang Wu:
 
-    rt2x00: Don't let mac80211 send a BAR when an AMPDU subframe fails
+drivers/net/wireless/ath/ath9k/debug.c: In function 'ath9k_sta_add_debugfs':
+drivers/net/wireless/ath/ath9k/debug.c:1589:4: error: 'struct ath_node' has no member named 'node_stat'
+drivers/net/wireless/ath/ath9k/debug.c: In function 'ath9k_sta_remove_debugfs':
+drivers/net/wireless/ath/ath9k/debug.c:1599:19: error: 'struct ath_node' has no member named 'node_stat'
 
-To fix problem workaround by above commit use
-IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL flag (see change log for
-"mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL" patch).
-
-Resolve: https://bugzilla.kernel.org/show_bug.cgi?id=42828
-Bisected-by: Francisco Pina Martins <f.pinamartins@gmail.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 ++-
- drivers/net/wireless/rt2x00/rt2x00dev.c |    7 +++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 59474ae..175a9b9 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -5036,7 +5036,8 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HW_SUPPORTS_PS |
- 	    IEEE80211_HW_PS_NULLFUNC_STACK |
- 	    IEEE80211_HW_AMPDU_AGGREGATION |
--	    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
-+	    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-+	    IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL;
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 5fc15bf..581913e 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -56,7 +56,8 @@ config ATH9K_AHB
  
- 	/*
- 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 69097d1..b0183d1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -391,10 +391,9 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
- 		tx_info->status.ampdu_len = 1;
- 		tx_info->status.ampdu_ack_len = success ? 1 : 0;
--		/*
--		 * TODO: Need to tear down BA session here
--		 * if not successful.
--		 */
-+
-+		if (!success)
-+			tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
- 	}
- 
- 	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ config ATH9K_DEBUGFS
+ 	bool "Atheros ath9k debugging"
+-	depends on ATH9K && DEBUG_FS
++	depends on ATH9K
++	select MAC80211_DEBUGFS
+ 	---help---
+ 	  Say Y, if you need access to ath9k's statistics for
+ 	  interrupts, rate control, etc.
 -- 
-1.7.4.4
+1.8.0.2
 
