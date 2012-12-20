@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:42147 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723Ab2LDIaV (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:53012 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341Ab2LTI6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 03:30:21 -0500
-Received: by mail-qa0-f53.google.com with SMTP id a19so504764qad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Dec 2012 00:30:20 -0800 (PST)
+	Thu, 20 Dec 2012 03:58:04 -0500
+Received: by mail-wg0-f54.google.com with SMTP id fg15so1356045wgb.33
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 00:58:03 -0800 (PST)
 MIME-Version: 1.0
-Date: Tue, 4 Dec 2012 03:30:20 -0500
-Message-ID: <CAPgLHd_sFMFXRLBUmoKS73VhTSRfn84R=03aPN5WgF20jPFfPw@mail.gmail.com> (sfid-20121204_093024_889279_1994B496)
-Subject: [PATCH -next] brcmsmac: remove duplicated include from debug.c
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: brudley@broadcom.com, arend@broadcom.com, meuleman@broadcom.com,
-	linville@tuxdriver.com, frankyl@broadcom.com, phaber@broadcom.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
+In-Reply-To: <CAG6hwVM=xBtZ9OEHo_77DvOKkiRLrT8epgMNRyrWLuY7svXNLw@mail.gmail.com>
+References: <1355881021-7071-1-git-send-email-thomas@cozybit.com> <CAG6hwVM=xBtZ9OEHo_77DvOKkiRLrT8epgMNRyrWLuY7svXNLw@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 20 Dec 2012 00:57:41 -0800
+Message-ID: <CAG6hwVN_6M99x=Mr+npZ8r0A6CaXCrr_Kd4-Y7YKNKB_KSWfGQ@mail.gmail.com> (sfid-20121220_095819_665261_6772ACC4)
+Subject: Re: [PATCH 1/3] mac80211_hwsim: use hrtimer for beacon timers
+To: linville@tuxdriver.com
+Cc: j@wl.fi, jlopex@cozybit.com, linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Thu, Dec 20, 2012 at 12:37 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> On Tue, Dec 18, 2012 at 5:36 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+>> For testing various timing-sensitive protocols (power
+>> save, etc.), a beacon accuracy of jiffies is not
+>> sufficient.
+>>
+>> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+>> ---
+>>  drivers/net/wireless/mac80211_hwsim.c |   63 ++++++++++++++++++++-------------
+>>  1 file changed, 39 insertions(+), 24 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+>> index ff90855..0a8f37e 100644
+>> --- a/drivers/net/wireless/mac80211_hwsim.c
+>> +++ b/drivers/net/wireless/mac80211_hwsim.c
+>> @@ -333,11 +333,11 @@ struct mac80211_hwsim_data {
+>>         int scan_chan_idx;
+>>
+>>         struct ieee80211_channel *channel;
+>> -       unsigned long beacon_int; /* in jiffies unit */
+>> +       ktime_t beacon_int;
+>>         unsigned int rx_filter;
+>>         bool started, idle, scanning;
+>>         struct mutex mutex;
+>> -       struct timer_list beacon_timer;
+>> +       struct hrtimer beacon_timer;
+>>         enum ps_mode {
+>>                 PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+>>         } ps;
+>> @@ -358,6 +358,7 @@ struct mac80211_hwsim_data {
+>>
+>>         /* difference between this hw's clock and the real clock, in usecs */
+>>         u64 tsf_offset;
+>> +       struct tasklet_struct bcn_tasklet;
+>
+> oops  We need to stop the hrtimer and tasklet on teardown. Will submit
+> a v2 reflecting this.
 
-Remove duplicated include.
+No this patch already does this. Sorry for the noise.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/brcm80211/brcmsmac/debug.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/debug.c b/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-index be84791..9761deb 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-@@ -21,7 +21,6 @@
- #include <linux/netdevice.h>
- #include <linux/ieee80211.h>
- #include <linux/module.h>
--#include <linux/netdevice.h>
- #include <net/mac80211.h>
- 
- #include <defs.h>
-
-
+Thomas
