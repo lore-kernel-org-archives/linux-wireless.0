@@ -1,174 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53204 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945968Ab2LFQr2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 11:47:28 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 04/24] regulatory: clean up reg_copy_regd()
-Date: Thu,  6 Dec 2012 17:47:28 +0100
-Message-Id: <1354812468-15709-5-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174757_924835_32203AAA)
-In-Reply-To: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:60487 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751744Ab2LTNl3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2012 08:41:29 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/2] mac80211: properly stop/wake queues before/after off-channel
+Date: Thu, 20 Dec 2012 14:41:19 +0100
+Message-Id: <1356010879-10054-2-git-send-email-sgruszka@redhat.com> (sfid-20121220_144135_978357_0252CBD0)
+In-Reply-To: <1356010879-10054-1-git-send-email-sgruszka@redhat.com>
+References: <1356010879-10054-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Do not assume driver will not stop some queue during off-channel.
 
-Use ERR_PTR/IS_ERR to return the result or errors,
-also do some code cleanups.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/wireless/reg.c | 48 +++++++++++++++++++++++-------------------------
- 1 file changed, 23 insertions(+), 25 deletions(-)
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/offchannel.c  |   19 +++++--------------
+ 2 files changed, 6 insertions(+), 14 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 0f25a1a..45adc8f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -312,11 +312,11 @@ static bool is_user_regdom_saved(void)
- 	return true;
- }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 63c5d9f..4302494 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -830,6 +830,7 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
+ 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
++	IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
+ };
  
--static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
--			 const struct ieee80211_regdomain *src_regd)
-+static const struct ieee80211_regdomain *
-+reg_copy_regd(const struct ieee80211_regdomain *src_regd)
- {
- 	struct ieee80211_regdomain *regd;
--	int size_of_regd = 0;
-+	int size_of_regd;
- 	unsigned int i;
+ #ifdef CONFIG_MAC80211_LEDS
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index a3ad4c3..0fdbe75 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -132,7 +132,8 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
+ 				sdata, BSS_CHANGED_BEACON_ENABLED);
  
- 	size_of_regd =
-@@ -325,16 +325,15 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+ 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
+-			netif_tx_stop_all_queues(sdata->dev);
++			ieee80211_stop_queues_by_reason(&local->hw,
++				IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL);
+ 			if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 			    sdata->u.mgd.associated)
+ 				ieee80211_offchannel_ps_enable(sdata);
+@@ -164,19 +165,9 @@ void ieee80211_offchannel_return(struct ieee80211_local *local)
+ 		    sdata->u.mgd.associated)
+ 			ieee80211_offchannel_ps_disable(sdata);
  
- 	regd = kzalloc(size_of_regd, GFP_KERNEL);
- 	if (!regd)
--		return -ENOMEM;
-+		return ERR_PTR(-ENOMEM);
+-		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
+-			/*
+-			 * This may wake up queues even though the driver
+-			 * currently has them stopped. This is not very
+-			 * likely, since the driver won't have gotten any
+-			 * (or hardly any) new packets while we weren't
+-			 * on the right channel, and even if it happens
+-			 * it will at most lead to queueing up one more
+-			 * packet per queue in mac80211 rather than on
+-			 * the interface qdisc.
+-			 */
+-			netif_tx_wake_all_queues(sdata->dev);
+-		}
++		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
++			ieee80211_wake_queues_by_reason(&local->hw,
++				IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL);
  
- 	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
- 
- 	for (i = 0; i < src_regd->n_reg_rules; i++)
- 		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
--			sizeof(struct ieee80211_reg_rule));
-+		       sizeof(struct ieee80211_reg_rule));
- 
--	*dst_regd = regd;
--	return 0;
-+	return regd;
- }
- 
- #ifdef CONFIG_CFG80211_INTERNAL_REGDB
-@@ -349,9 +348,8 @@ static DEFINE_MUTEX(reg_regdb_search_mutex);
- static void reg_regdb_search(struct work_struct *work)
- {
- 	struct reg_regdb_search_request *request;
--	const struct ieee80211_regdomain *curdom, *regdom;
-+	const struct ieee80211_regdomain *curdom, *regdom = NULL;
- 	int i, r;
--	bool set_reg = false;
- 
- 	mutex_lock(&cfg80211_mutex);
- 
-@@ -366,10 +364,7 @@ static void reg_regdb_search(struct work_struct *work)
- 			curdom = reg_regdb[i];
- 
- 			if (!memcmp(request->alpha2, curdom->alpha2, 2)) {
--				r = reg_copy_regd(&regdom, curdom);
--				if (r)
--					break;
--				set_reg = true;
-+				regdom = reg_copy_regd(curdom);
- 				break;
- 			}
- 		}
-@@ -378,7 +373,7 @@ static void reg_regdb_search(struct work_struct *work)
- 	}
- 	mutex_unlock(&reg_regdb_search_mutex);
- 
--	if (set_reg)
-+	if (!IS_ERR_OR_NULL(regdom))
- 		set_regdom(regdom);
- 
- 	mutex_unlock(&cfg80211_mutex);
-@@ -1510,6 +1505,7 @@ static void reg_set_request_processed(void)
- static int __regulatory_hint(struct wiphy *wiphy,
- 			     struct regulatory_request *pending_request)
- {
-+	const struct ieee80211_regdomain *regd;
- 	bool intersect = false;
- 	int r = 0;
- 
-@@ -1520,11 +1516,12 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 	if (r == REG_INTERSECT) {
- 		if (pending_request->initiator ==
- 		    NL80211_REGDOM_SET_BY_DRIVER) {
--			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
--			if (r) {
-+			regd = reg_copy_regd(cfg80211_regdomain);
-+			if (IS_ERR(regd)) {
- 				kfree(pending_request);
--				return r;
-+				return PTR_ERR(regd);
- 			}
-+			wiphy->regd = regd;
- 		}
- 		intersect = true;
- 	} else if (r) {
-@@ -1536,12 +1533,13 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 		if (r == -EALREADY &&
- 		    pending_request->initiator ==
- 		    NL80211_REGDOM_SET_BY_DRIVER) {
--			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
--			if (r) {
-+			regd = reg_copy_regd(cfg80211_regdomain);
-+			if (IS_ERR(regd)) {
- 				kfree(pending_request);
--				return r;
-+				return PTR_ERR(regd);
- 			}
- 			r = -EALREADY;
-+			wiphy->regd = regd;
- 			goto new_request;
- 		}
- 		kfree(pending_request);
-@@ -2201,6 +2199,7 @@ static void print_regdomain_info(const struct ieee80211_regdomain *rd)
- /* Takes ownership of rd only if it doesn't fail */
- static int __set_regdom(const struct ieee80211_regdomain *rd)
- {
-+	const struct ieee80211_regdomain *regd;
- 	const struct ieee80211_regdomain *intersected_rd = NULL;
- 	struct wiphy *request_wiphy;
- 	/* Some basic sanity checks first */
-@@ -2258,8 +2257,6 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	}
- 
- 	if (!last_request->intersect) {
--		int r;
--
- 		if (last_request->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
- 			reset_regdomains(false);
- 			cfg80211_regdomain = rd;
-@@ -2278,10 +2275,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		if (request_wiphy->regd)
- 			return -EALREADY;
- 
--		r = reg_copy_regd(&request_wiphy->regd, rd);
--		if (r)
--			return r;
-+		regd = reg_copy_regd(rd);
-+		if (IS_ERR(regd))
-+			return PTR_ERR(regd);
- 
-+		request_wiphy->regd = regd;
- 		reset_regdomains(false);
- 		cfg80211_regdomain = rd;
- 		return 0;
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP ||
+ 		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
 -- 
-1.8.0
+1.7.1
 
