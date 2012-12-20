@@ -1,61 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gerard.telenet-ops.be ([195.130.132.48]:36408 "EHLO
-	gerard.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060Ab2LPPft (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51507 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956Ab2LTLQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Dec 2012 10:35:49 -0500
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Michael Buesch <m@bues.ch>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 2/2] ssb: SSB_DRIVER_GPIO should depend on GPIOLIB instead of selecting it
-Date: Sun, 16 Dec 2012 16:35:36 +0100
-Message-Id: <1355672136-24808-2-git-send-email-geert@linux-m68k.org> (sfid-20121216_163629_082663_ADFB0C32)
-In-Reply-To: <1355672136-24808-1-git-send-email-geert@linux-m68k.org>
-References: <1355672136-24808-1-git-send-email-geert@linux-m68k.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 20 Dec 2012 06:16:20 -0500
+Message-ID: <1356002202.10029.3.camel@jlt4.sipsolutions.net> (sfid-20121220_121622_829833_D4014D42)
+Subject: Re: [PATCH] mac80211: optimise AP stop RCU handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>,
+	Eliad Peller <eliad@wizery.com>
+Date: Thu, 20 Dec 2012 12:16:42 +0100
+In-Reply-To: <1355493476-2927-1-git-send-email-johannes@sipsolutions.net> (sfid-20121214_145817_787355_201B178C)
+References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
+	 <1355493476-2927-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121214_145817_787355_201B178C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit ec43b08b5733494ad88aa618ecdf534320dd8207 ("ssb: add GPIO driver")
-added SSB_DRIVER_GPIO, which unconditionally selects GPIOLIB, causing
-a Kconfig warning:
+On Fri, 2012-12-14 at 14:57 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> If there are VLANs, stopping an AP is inefficient as it
+> calls rcu_barrier() once for each interface (the VLANs
+> and the AP itself). Optimise this by moving rcu_barrier()
+> out of the station cleanups and calling it only once for
+> all interfaces combined.
 
-warning: (ARCH_REQUIRE_GPIOLIB && SSB_DRIVER_GPIO && BCMA_DRIVER_GPIO && MFD_TC6393XB && FB_VIA) selects GPIOLIB which has unmet direct dependencies (ARCH_WANT_OPTIONAL_GPIOLIB || ARCH_REQUIRE_GPIOLIB)
+Applied.
 
-and build failure for m68k/allmodconfig:
-
-In file included from drivers/ssb/ssb_private.h:5,
-                 from drivers/ssb/main.c:12:
-include/linux/ssb/ssb.h:440: error: field ‘gpio’ has incomplete type
-make[4]: *** [drivers/ssb/main.o] Error 1
-make[3]: *** [drivers/ssb/] Error 2
-
-Turn the select into a dependency to fix this.
-
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/ssb/Kconfig |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-index ff3c8a2..5d6f2ec 100644
---- a/drivers/ssb/Kconfig
-+++ b/drivers/ssb/Kconfig
-@@ -162,8 +162,7 @@ config SSB_DRIVER_GIGE
- 
- config SSB_DRIVER_GPIO
- 	bool "SSB GPIO driver"
--	depends on SSB
--	select GPIOLIB
-+	depends on SSB && GPIOLIB
- 	help
- 	  Driver to provide access to the GPIO pins on the bus.
- 
--- 
-1.7.0.4
+johannes
 
