@@ -1,55 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:57624 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751239Ab2LGTKW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51545 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431Ab2LTLca (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 14:10:22 -0500
-Date: Fri, 07 Dec 2012 14:10:19 -0500 (EST)
-Message-Id: <20121207.141019.1235012151153841155.davem@davemloft.net> (sfid-20121207_201030_934431_1CE9DE4D)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-12-07
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20121207185754.GF1869@tuxdriver.com>
-References: <20121207185754.GF1869@tuxdriver.com>
+	Thu, 20 Dec 2012 06:32:30 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TleMX-0007X6-HQ
+	for linux-wireless@vger.kernel.org; Thu, 20 Dec 2012 12:32:29 +0100
+Message-ID: <1356003172.10029.7.camel@jlt4.sipsolutions.net> (sfid-20121220_123234_389158_88906587)
+Subject: Re: [PATCH 0/3] mac80211: suspend fixes/cleanups
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 20 Dec 2012 12:32:52 +0100
+In-Reply-To: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net> (sfid-20121214_125914_082629_10721442)
+References: <1355486368-14563-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121214_125914_082629_10721442)
+Content-Type: text/plain
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 7 Dec 2012 13:57:54 -0500
+Applied all.
 
-> This includes a Bluetooth pull.  Gustavo says:
-> 
-> "A few more patches to 3.8, I hope they can still make it to mainline!
-> The most important ones are the socket option for the SCO protocol to allow
-> accept/refuse new connections from userspace. Other than that I added some
-> fixes and Andrei did more AMP work."
-> 
-> Also, a mac80211 pull.  Johannes says:
-> 
-> "If you think there's any chance this might make it still, please pull my
-> mac80211-next tree (per below). This contains a relatively large number
-> of fixes to the previous code, as well as a few small features:
->  * VHT association in mac80211
->  * some new debugfs files
->  * P2P GO powersave configuration
->  * masked MAC address verification
-> 
-> The biggest patch is probably the BSS struct changes to use RCU for
-> their IE buffers to fix potential races. I've not tagged this for stable
-> because it's pretty invasive and nobody has ever seen any bugs in this
-> area as far as I know."
-> 
-> Several other drivers get some attention, including ath9k, brcmfmac,
-> brcmsmac, and a number of others.  Also, Hauke gives us a series that
-> improves watchdog support for the bcma and ssb busses.  Finally, Bill
-> Pemberton delivers a group of "remove __dev* attributes" for wireless
-> drivers -- these generate some "section mismatch" warnings, but Greg
-> K-H assures me that they will disappear by the time -rc1 is released.
-> 
-> This also includes a pull of the wireless tree to avoid merge
-> conflicts.
+johannes
 
-Pulled, thanks John.
