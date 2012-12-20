@@ -1,69 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:52396 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753421Ab2LMPui (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 10:50:38 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so1908085lag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 07:50:37 -0800 (PST)
-Message-ID: <50C9F944.6060506@gmail.com> (sfid-20121213_165042_258424_FFCB86A0)
-Date: Thu, 13 Dec 2012 16:50:28 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:50594 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751292Ab2LTI6f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2012 03:58:35 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Daniel Golle <dgolle@allnet.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 2/2] rt2x00: rt2800pci: allow to load EEPROM data via firmware API
+References: <1355847743-16659-1-git-send-email-juhosg@openwrt.org>
+	<1355847743-16659-2-git-send-email-juhosg@openwrt.org>
+	<20121218222226.GB4825@localhost.localdomain>
+	<50D18A5A.2020505@openwrt.org>
+Date: Thu, 20 Dec 2012 10:58:31 +0200
+In-Reply-To: <50D18A5A.2020505@openwrt.org> (Gabor Juhos's message of "Wed, 19
+	Dec 2012 10:35:22 +0100")
+Message-ID: <87d2y5umko.fsf@purkki.adurom.net> (sfid-20121220_095837_575113_AFC87B63)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	IvDoorn@gmail.com, linville@tuxdriver.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com
-Subject: Re: [PATCH] wireless: rt2x00: rt{2500,73}usb.c put back duplicate
- id
-References: <1334437201-12737-1-git-send-email-xose.vazquez@gmail.com> <4F89EDCC.7080302@lwfinger.net> <4F8D8882.3070004@gmail.com> <4F8D8FBE.7080107@lwfinger.net>
-In-Reply-To: <4F8D8FBE.7080107@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/17/2012 05:43 PM, Larry Finger wrote:
-> On 04/17/2012 10:13 AM, Xose Vazquez Perez wrote:
->> On 04/14/2012 11:36 PM, Larry Finger wrote:
->>
->>> On 04/14/2012 04:00 PM, Xose Vazquez Perez wrote:
->>>> put back 0x050d,0x7050 to rt73usb, same usb_id for two chips:
->>>>
->>>> K7SF5D7050A ver 2xxx is rt2500
->>>> K7SF5D7050B ver 3xxx is rt73
->>>>
->>>> <http://en-us-support.belkin.com/app/answers/detail/a_id/297/kw/K7SF5D7050>
->>>>
->>>>
->>>> Signed-off-by: Xose Vazquez Perez<xose.vazquez@gmail.com>
->>
->>> I did a quick look at the rt2500 driver and did not see any code
->>> that detects what version chip is being read. If it is possible
->>> to determine if it is ver 2xxx and not 3xxx, then the probe
->>> routine should do that and return an error if the wrong driver
->>> is being loaded. A similar situation arises in the Realtek PCI
->>> devices. In that case, it is a PCI revision that allows a driver
->>> to reject the wrong hardware.
->>
->> This is just a patch to return to the original situation.
->> (0x050d, 0x7050) was deleted by commit
->> 08b8099c128d601fd675b212ef8b10397706b633
->> [1], and I was wrong.
->>
->> [1]<http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=08b8099c128d601fd675b212ef8b10397706b633>
->>
+Gabor Juhos <juhosg@openwrt.org> writes:
+
+>> Since we use completion here, why we can not just use normal synchronous
+>> version of request_firmware? I heard of request_firmware drawbacks, so
+>> this approach can be correct. Just want to know if we do not complicate
+>> things not necessarily here.
 >
-> You should not "fix" a mistake by making another. My position is that
-> this should be done properly this time, otherwise users get devices that
-> don't work merely because the wrong driver got loaded first. As long as
-> there is some parameter available early in the load process that
-> distinguishes the two devices, the probe routine needs to use it to
-> avoid using the wrong driver.
->
-> I don't have either of these devices, thus I cannot help in that part.
+> If the driver is built into the kernel, then the synchronous version
+> would fail because user-space is not up during probe time.
 
-[old thread, lost on my Inbox]
+Didn't udev/systemd guys finally fix their software? At least I recall
+seeing such claims on g+.
 
-Me too. I do not have any of these devices.
-
-It should be done by someone with both devices.
+-- 
+Kalle Valo
