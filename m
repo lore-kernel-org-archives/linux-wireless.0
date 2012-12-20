@@ -1,132 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.allnet.de ([212.18.29.59]:22488 "EHLO mail.allnet.de"
+Received: from mx1.redhat.com ([209.132.183.28]:1254 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751418Ab2LKKKB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 05:10:01 -0500
-Date: Tue, 11 Dec 2012 12:04:22 +0200
-From: Daniel Golle <dgolle@allnet.de>
-To: <linux-wireless@vger.kernel.org>
-CC: <users@rt2x00.serialmonkey.com>, <juhosg@openwrt.org>,
-	<sgruszka@redhat.com>, <helmut.schaa@googlemail.com>,
-	<gwingerde@gmail.com>, <john@phrozen.org>
-Subject: [PATCH 3/3] rt2x00: add platform_data mac address
-Message-ID: <20121211100419.GA7822@earthship.arig> (sfid-20121211_111008_824122_AD3D8760)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="RnlQjJ0d97Da+TV1"
+	id S1751794Ab2LTNl2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2012 08:41:28 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/2] mac80211: synchronize scan off/on-channel and PS states
+Date: Thu, 20 Dec 2012 14:41:18 +0100
+Message-Id: <1356010879-10054-1-git-send-email-sgruszka@redhat.com> (sfid-20121220_144134_118128_819CDDCC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---RnlQjJ0d97Da+TV1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Since:
 
+commit b23b025fe246f3acc2988eb6d400df34c27cb8ae
+Author: Ben Greear <greearb@candelatech.com>
+Date:   Fri Feb 4 11:54:17 2011 -0800
 
-Signed-off-by: Daniel Golle <dgolle@allnet.de>
+    mac80211: Optimize scans on current operating channel.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt=
-2x00/rt2x00.h
-index c67e769..8b82e77 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -1294,6 +1294,7 @@ static inline void rt2x00debug_dump_frame(struct rt2x=
-00_dev *rt2x00dev,
-  */
- u32 rt2x00lib_get_bssidx(struct rt2x00_dev *rt2x00dev,
- 			 struct ieee80211_vif *vif);
-+const u8 *rt2x00lib_get_mac_address(struct rt2x00_dev *rt2x00dev);
-=20
- /*
-  * Interrupt context handlers.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless=
-/rt2x00/rt2x00dev.c
-index b7856bf..f9868d1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -826,6 +826,18 @@ static void rt2x00lib_rate(struct ieee80211_rate *entr=
-y,
- 		entry->flags |=3D IEEE80211_RATE_SHORT_PREAMBLE;
+we do not disable PS while going back to operational channel (on
+ieee80211_scan_state_suspend) and deffer that until scan finish.
+But since we are allowed to send frames, we can send a frame to AP
+without PM bit set, so disable PS on AP side. Then when we switch
+to off-channel (in ieee80211_scan_state_resume) we do not enable PS.
+Hence we are off-channel with PS disabled, frames are not buffered
+by AP.
+
+To fix remove offchannel_ps_disable argument and always enable PS when
+going off-channel and disable it when going on-channel, like it was
+before.
+
+Cc: stable@vger.kernel.org # 2.6.39+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/ieee80211_i.h |    6 ++----
+ net/mac80211/offchannel.c  |   19 +++++++------------
+ net/mac80211/scan.c        |   15 +++++----------
+ 3 files changed, 14 insertions(+), 26 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 42d0d02..63c5d9f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1357,10 +1357,8 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sched_scan_stopped_work(struct work_struct *work);
+ 
+ /* off-channel helpers */
+-void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+-				    bool offchannel_ps_enable);
+-void ieee80211_offchannel_return(struct ieee80211_local *local,
+-				 bool offchannel_ps_disable);
++void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local);
++void ieee80211_offchannel_return(struct ieee80211_local *local);
+ void ieee80211_roc_setup(struct ieee80211_local *local);
+ void ieee80211_start_next_roc(struct ieee80211_local *local);
+ void ieee80211_roc_purge(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index a5379ae..a3ad4c3 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -102,8 +102,7 @@ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_sta_reset_conn_monitor(sdata);
  }
-=20
-+const u8 *rt2x00lib_get_mac_address(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct rt2x00_platform_data *pdata;
-+
-+	pdata =3D rt2x00dev->dev->platform_data;
-+	if (!pdata)
-+		return NULL;
-+
-+	return pdata->mac_address;
-+}
-+EXPORT_SYMBOL_GPL(rt2x00lib_get_mac_address);
-+
- static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
- 				    struct hw_mode_spec *spec)
+ 
+-void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+-				    bool offchannel_ps_enable)
++void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
  {
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/r=
-t2x00/rt61pci.c
-index f95792c..7dbc0ba 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2392,6 +2392,7 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev =
-*rt2x00dev)
- 	u32 reg;
- 	u16 word;
- 	u8 *mac;
-+	const u8 *pdata_mac;
- 	s8 value;
-=20
- 	rt2x00pci_register_read(rt2x00dev, E2PROM_CSR, &reg);
-@@ -2412,7 +2413,11 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev=
- *rt2x00dev)
- 	/*
- 	 * Start validation of the data that has been read.
- 	 */
-+	pdata_mac =3D rt2x00lib_get_mac_address(rt2x00dev);
- 	mac =3D rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
-+	if (pdata_mac)
-+		memcpy(mac, pdata_mac, 6);
-+
- 	if (!is_valid_ether_addr(mac)) {
- 		eth_random_addr(mac);
- 		EEPROM(rt2x00dev, "MAC: %pM\n", mac);
-diff --git a/include/linux/rt2x00_platform.h b/include/linux/rt2x00_platfor=
-m.h
-index b4c7768..e10377e 100644
---- a/include/linux/rt2x00_platform.h
-+++ b/include/linux/rt2x00_platform.h
-@@ -14,6 +14,7 @@
-=20
- struct rt2x00_platform_data {
- 	char *eeprom_file_name;
-+	const u8 *mac_address;
-=20
- 	int disable_2ghz;
- 	int disable_5ghz;
---=20
-1.8.0.1
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+@@ -134,8 +133,7 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+ 
+ 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
+ 			netif_tx_stop_all_queues(sdata->dev);
+-			if (offchannel_ps_enable &&
+-			    (sdata->vif.type == NL80211_IFTYPE_STATION) &&
++			if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 			    sdata->u.mgd.associated)
+ 				ieee80211_offchannel_ps_enable(sdata);
+ 		}
+@@ -143,8 +141,7 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
+-void ieee80211_offchannel_return(struct ieee80211_local *local,
+-				 bool offchannel_ps_disable)
++void ieee80211_offchannel_return(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+@@ -163,11 +160,9 @@ void ieee80211_offchannel_return(struct ieee80211_local *local,
+ 			continue;
+ 
+ 		/* Tell AP we're back */
+-		if (offchannel_ps_disable &&
+-		    sdata->vif.type == NL80211_IFTYPE_STATION) {
+-			if (sdata->u.mgd.associated)
+-				ieee80211_offchannel_ps_disable(sdata);
+-		}
++		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++		    sdata->u.mgd.associated)
++			ieee80211_offchannel_ps_disable(sdata);
+ 
+ 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
+ 			/*
+@@ -385,7 +380,7 @@ void ieee80211_sw_roc_work(struct work_struct *work)
+ 			local->tmp_channel = NULL;
+ 			ieee80211_hw_config(local, 0);
+ 
+-			ieee80211_offchannel_return(local, true);
++			ieee80211_offchannel_return(local);
+ 		}
+ 
+ 		ieee80211_recalc_idle(local);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 8ed83dc..2ac129a 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -304,7 +304,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
+ 	if (!was_hw_scan) {
+ 		ieee80211_configure_filter(local);
+ 		drv_sw_scan_complete(local);
+-		ieee80211_offchannel_return(local, true);
++		ieee80211_offchannel_return(local);
+ 	}
+ 
+ 	ieee80211_recalc_idle(local);
+@@ -353,7 +353,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 	local->next_scan_state = SCAN_DECISION;
+ 	local->scan_channel_idx = 0;
+ 
+-	ieee80211_offchannel_stop_vifs(local, true);
++	ieee80211_offchannel_stop_vifs(local);
+ 
+ 	ieee80211_configure_filter(local);
+ 
+@@ -690,12 +690,8 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
+ 	local->scan_channel = NULL;
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
+-	/*
+-	 * Re-enable vifs and beaconing.  Leave PS
+-	 * in off-channel state..will put that back
+-	 * on-channel at the end of scanning.
+-	 */
+-	ieee80211_offchannel_return(local, false);
++	/* disable PS */
++	ieee80211_offchannel_return(local);
+ 
+ 	*next_delay = HZ / 5;
+ 	/* afterwards, resume scan & go to next channel */
+@@ -705,8 +701,7 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
+ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
+ 					unsigned long *next_delay)
+ {
+-	/* PS already is in off-channel mode */
+-	ieee80211_offchannel_stop_vifs(local, false);
++	ieee80211_offchannel_stop_vifs(local);
+ 
+ 	if (local->ops->flush) {
+ 		drv_flush(local, false);
+-- 
+1.7.1
 
-
---RnlQjJ0d97Da+TV1
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQxwUjAAoJEDy9cKN/1Et0iqMQAJvps47XqXHKdqeJDAXKGJd9
-+j+VUrU8q3SmOYoj3vTQRo1k/hD7Qn9QBZG9S2RF3lhyiRXL1yF92ggR/C0qcnsF
-LjVVx/6eKm40+ws0/Jv7E7HLjC1yt1qkgIiVAfKP8gIZwM4NIMIg46ZFLGEkb49L
-jP1XeZXrifhEr76I/2CSyRGrWuFla20IcNzgDxTNfERwgPzpZj14D3WYBWNwSFZo
-/9lmVIGJtETDJ12RTdnOUJx4L3IhhGNNtLX9Vypu56o28b+R8h+npb73Csm1C4gJ
-XCL1x/A4ltoIKfDnTxGBfO1WR8t2eejBXsMzERSjwFedKVbyiI3HxLQAfknAENhG
-y5a7+NWeC5SZety18+lP5OQwdag6lCRrjbTb2gPcmDWGKMrWF8M+pXWS0JduR4kd
-ISE6wXPQaCSA5GjKB3DbHLZUPYD/+Zix0R3RNsVemr/8h8SJD28NWY41ueIUnCyc
-mPdQeVmORzLmtSEqjOqy0vwQ6W4UImb88cwNn7Z7qO89943JyqGf02ciDdA2biwX
-JFxUHq0j9Psch98qJ7eoddgEALyFFsa6+IBwxLYR5yQTzMM7SzlbGo92Jm32dvn4
-IN3hc42iMObYWUhWKl7HdOVFuLixgontmAfIjqHhGmIoJJBnREPuqmRDdI7RThi+
-OfkNgNAtUlbCIMeRQcvT
-=F6cV
------END PGP SIGNATURE-----
-
---RnlQjJ0d97Da+TV1--
