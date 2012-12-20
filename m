@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44576 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732Ab2LDOtD (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:52645 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113Ab2LTVNZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 09:49:03 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 11/18] regulatory: remove redundant isalpha() check
-Date: Tue,  4 Dec 2012 15:48:53 +0100
-Message-Id: <1354632540-21207-12-git-send-email-johannes@sipsolutions.net> (sfid-20121204_154907_708111_EA7CF888)
-In-Reply-To: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
-References: <1354632540-21207-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 20 Dec 2012 16:13:25 -0500
+Received: by mail-pa0-f54.google.com with SMTP id bi5so2370969pad.41
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Dec 2012 13:13:24 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v12] wireless: add wil6210
+Date: Thu, 20 Dec 2012 13:13:18 -0800
+Message-Id: <1356037999-26092-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20121220_221343_346001_C4E8B340)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-toupper() only modifies lower-case letters, so
-the isalpha() check is redundant; remove it.
+John,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+I've taken Vladimir's work and adjusted the Kconfig, added
+MAINTAINERS and goes reviewed by me. We'd like this in for
+the 3.8-rc series and as such the code identified as generic
+will be moved to generic places in the development cycle,
+for not it goes stuffed under dbg_hexdump.h. I also folded
+his second patch into this one that adds the entries to
+Kconfig to enable the module. The concerns that Johannes
+had expressed of using PCP mode emulated as AP mode are
+addressed by removing that support for now. I've also nuked
+the Documentation/ pages in favor more for ensuring we keep
+up to date the wiki page.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index bc8b3d1..26eff64 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1623,10 +1623,8 @@ static void reg_todo(struct work_struct *work)
- 
- static void queue_regulatory_request(struct regulatory_request *request)
- {
--	if (isalpha(request->alpha2[0]))
--		request->alpha2[0] = toupper(request->alpha2[0]);
--	if (isalpha(request->alpha2[1]))
--		request->alpha2[1] = toupper(request->alpha2[1]);
-+	request->alpha2[0] = toupper(request->alpha2[0]);
-+	request->alpha2[1] = toupper(request->alpha2[1]);
- 
- 	spin_lock(&reg_requests_lock);
- 	list_add_tail(&request->list, &reg_requests_list);
+The volatile use cases seem odd but the hardware has issues
+using the supplied IO accessors and as such it provdes its
+own for now. If and when that can be addressed each use case
+will be addressed. Other checkpatch warnings are spurious.
+
+In case the patch does not make it to your inbox you can
+wget it here:
+
+http://bombadil.infradead.org/~mcgrof/2012/12/20/0001-wireless-add-new-wil6210-802.11ad-60GHz-driver.patch
+sha256sum:
+dd4d8927c24a7906f94b80af7438b3fbb220d2f304d1a5ea7d7d200a8c650418
+
+Vladimir Kondratiev (1):
+  wireless: add new wil6210 802.11ad 60GHz driver
+
+ MAINTAINERS                                    |    8 +
+ drivers/net/wireless/ath/Kconfig               |    1 +
+ drivers/net/wireless/ath/Makefile              |    1 +
+ drivers/net/wireless/ath/wil6210/Kconfig       |   30 +
+ drivers/net/wireless/ath/wil6210/Makefile      |   14 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c    |  573 ++++++++++++
+ drivers/net/wireless/ath/wil6210/dbg_hexdump.h |   30 +
+ drivers/net/wireless/ath/wil6210/debugfs.c     |  603 +++++++++++++
+ drivers/net/wireless/ath/wil6210/interrupt.c   |  471 ++++++++++
+ drivers/net/wireless/ath/wil6210/main.c        |  407 +++++++++
+ drivers/net/wireless/ath/wil6210/netdev.c      |  157 ++++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c    |  223 +++++
+ drivers/net/wireless/ath/wil6210/txrx.c        |  871 ++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.h        |  362 ++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h     |  363 ++++++++
+ drivers/net/wireless/ath/wil6210/wmi.c         |  975 +++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h         | 1116 ++++++++++++++++++++++++
+ 17 files changed, 6205 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wil6210/Kconfig
+ create mode 100644 drivers/net/wireless/ath/wil6210/Makefile
+ create mode 100644 drivers/net/wireless/ath/wil6210/cfg80211.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/dbg_hexdump.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/debugfs.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/interrupt.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/main.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/netdev.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/pcie_bus.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/wil6210.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/wmi.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/wmi.h
+
 -- 
-1.8.0
+1.7.10.4
 
