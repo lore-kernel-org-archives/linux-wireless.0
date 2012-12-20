@@ -1,159 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:41960 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754712Ab2LRQWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Dec 2012 11:22:34 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Daniel Golle <dgolle@allnet.de>, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/2] rt2x00: rt2800pci: verify ioremap return value
-Date: Tue, 18 Dec 2012 17:22:22 +0100
-Message-Id: <1355847743-16659-1-git-send-email-juhosg@openwrt.org> (sfid-20121218_172238_006738_6D04B19F)
+Received: from he.sipsolutions.net ([78.46.109.217]:51555 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114Ab2LTLjp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Dec 2012 06:39:45 -0500
+Message-ID: <1356003605.10029.9.camel@jlt4.sipsolutions.net> (sfid-20121220_123949_001764_538E1AE2)
+Subject: Re: Re: adding ba_policy member in drv_ampdu_action op - request
+ information
+From: Johannes Berg <johannes@sipsolutions.net>
+To: vivekanandah@posedge.com
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 20 Dec 2012 12:40:05 +0100
+In-Reply-To: <ccd9b999d335370ce1508dae369e0951@posedge.com>
+References: <53a9b58ee917248d8fa617dd1bbcde83@posedge.com>
+	 <1355407319.9463.4.camel@jlt4.sipsolutions.net>
+	 <ccd9b999d335370ce1508dae369e0951@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An ioremap call is allowed to fail, however
-the return value of that is not checked in
-the 'rt2800pci_read_eeprom_soc' function.
+On Thu, 2012-12-20 at 02:39 -0800, vivekanandah@posedge.com wrote:
 
-The patch adds the missing check, and makes
-the function return an int value. The patch
-also converts the 'rt2800_read_eeprom' and
-'rt2800_ops.read_eeprom' functions to return
-an int value, so the error value can be
-propagated up to the 'rt2800_validate_eeprom'
-function.
+> is'nt the station's capability and the AP capability intersected during 
+> association? i always thought that the comment was mis-represented.
+> 
+> i did a small test and i see that the stations capability is actually 
+> the subset of AP capabilities that both support.
+> if that is the case, then we do not have to check for the capability 
+> independently there! do i miss something in my understanding?
+> 
+> also, if what i have stated above is correct, then yes, i feel delayed 
+> block ack as a feature might need to be implemented on mac80211 and then 
+> check for the same.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    5 ++++-
- drivers/net/wireless/rt2x00/rt2800lib.h |    6 +++---
- drivers/net/wireless/rt2x00/rt2800pci.c |   17 ++++++++++++-----
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 +++-
- 4 files changed, 22 insertions(+), 10 deletions(-)
+I don't see what difference that makes? You still have to implement the
+feature fully, we don't have support for it at all.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 197b446..52b2978 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4635,11 +4635,14 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	u16 word;
- 	u8 *mac;
- 	u8 default_lna_gain;
-+	int retval;
- 
- 	/*
- 	 * Read the EEPROM.
- 	 */
--	rt2800_read_eeprom(rt2x00dev);
-+	retval = rt2800_read_eeprom(rt2x00dev);
-+	if (retval)
-+		return retval;
- 
- 	/*
- 	 * Start validation of the data that has been read.
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index a128cea..8252c67 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -43,7 +43,7 @@ struct rt2800_ops {
- 			    const unsigned int offset,
- 			    const struct rt2x00_field32 field, u32 *reg);
- 
--	void (*read_eeprom)(struct rt2x00_dev *rt2x00dev);
-+	int (*read_eeprom)(struct rt2x00_dev *rt2x00dev);
- 	bool (*hwcrypt_disabled)(struct rt2x00_dev *rt2x00dev);
- 
- 	int (*drv_write_firmware)(struct rt2x00_dev *rt2x00dev,
-@@ -117,11 +117,11 @@ static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
- 	return rt2800ops->regbusy_read(rt2x00dev, offset, field, reg);
- }
- 
--static inline void rt2800_read_eeprom(struct rt2x00_dev *rt2x00dev)
-+static inline int rt2800_read_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	const struct rt2800_ops *rt2800ops = rt2x00dev->ops->drv;
- 
--	rt2800ops->read_eeprom(rt2x00dev);
-+	return rt2800ops->read_eeprom(rt2x00dev);
- }
- 
- static inline bool rt2800_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 9224d87..5fc16dd 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -90,17 +90,21 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
- }
- 
- #if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
--static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
-+static int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
- {
- 	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
- 
-+	if (!base_addr)
-+		return -ENOMEM;
-+
- 	memcpy_fromio(rt2x00dev->eeprom, base_addr, EEPROM_SIZE);
- 
- 	iounmap(base_addr);
- }
- #else
--static inline void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
-+static inline int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
- {
-+	return -ENOMEM;
- }
- #endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
- 
-@@ -970,14 +974,17 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- /*
-  * Device probe functions.
-  */
--static void rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
-+static int rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	if (rt2x00_is_soc(rt2x00dev))
--		rt2800pci_read_eeprom_soc(rt2x00dev);
--	else if (rt2800pci_efuse_detect(rt2x00dev))
-+		return rt2800pci_read_eeprom_soc(rt2x00dev);
-+
-+	if (rt2800pci_efuse_detect(rt2x00dev))
- 		rt2800pci_read_eeprom_efuse(rt2x00dev);
- 	else
- 		rt2800pci_read_eeprom_pci(rt2x00dev);
-+
-+	return 0;
- }
- 
- static const struct ieee80211_ops rt2800pci_mac80211_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 5c149b5..48de5c9 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -735,13 +735,15 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
- /*
-  * Device probe functions.
-  */
--static void rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
-+static int rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	if (rt2800_efuse_detect(rt2x00dev))
- 		rt2800_read_eeprom_efuse(rt2x00dev);
- 	else
- 		rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
- 				      EEPROM_SIZE);
-+
-+	return 0;
- }
- 
- static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
--- 
-1.7.10
+johannes
 
