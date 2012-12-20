@@ -1,75 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:41517 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071Ab2LVWeh (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:48559 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751592Ab2LTNRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 17:34:37 -0500
-Date: Sat, 22 Dec 2012 17:34:34 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/17] cw1200:  Mini-AP implementation
-Message-ID: <20121222223434.GH5120@shaftnet.org> (sfid-20121222_233441_609050_788B6CF7)
-References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
- <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
- <50D61117.8020009@gmail.com>
+	Thu, 20 Dec 2012 08:17:51 -0500
+Message-ID: <50D30FFB.9030003@posedge.com> (sfid-20121220_141755_917337_3233B37B)
+Date: Thu, 20 Dec 2012 18:47:47 +0530
+From: Chaitanya <chaitanyatk@posedge.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="SdvjNjn6lL3tIsv0"
-In-Reply-To: <50D61117.8020009@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: Fix MAX MTU Calculation
+References: <201212201236.qBKCakFZ011657@chaitanya-desktop>  <50D307FD.9010508@posedge.com> <1356008873.10029.13.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1356008873.10029.13.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 20 December 2012 06:37 PM, Johannes Berg wrote:
+> On Thu, 2012-12-20 at 18:13 +0530, Chaitanya wrote:
+>> Fix the MTU calculation, we should check for data_len+ mesh hdr len
+>> and shouldn't include any header lengths.
+>>
+>> ToDo: Get the MAX_DATA_LEN based on driver's AMSDU capability.
+>>
+>> Signed-off-by: T Krishna Chaitanya <chaitanyatk@posedge.com>
+>>
+>> ---
+>>
+>>  net/mac80211/iface.c |   17 ++++++++++++++++-
+>>  1 files changed, 16 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+>> index 54fb7f9..da74ef9 100644
+>> --- a/net/mac80211/iface.c
+>> +++ b/net/mac80211/iface.c
+>> @@ -214,8 +214,23 @@ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+>>  
+>>  	/* FIX: what would be proper limits for MTU?
+>>  	 * This interface uses 802.3 frames. */
+>> +	/* Fixed: MTU needn't worry about headers*/
+>> +
+>> +	/* 802.11-2012: 8.2.3: The maximum frame body size is determined by
+>> +	1. The maximum MSDU size (2304 octets),
+>> +	2. plus the length of the Mesh Control field (6, 12, or 18 octets)
+>> +		if present,
+>> +	3. the maximum unencrypted MMPDU size excluding the MAC header and
+>> +		FCS (2304 octets) or
+>> +	4. the maximum A- MSDU size (3839 or 7935 octets),
+>> +		plus any overhead from security encapsulation.
+>> +	Note1: IEEE80211_MAX_DATA_LEN doesnt include any headers (2304),
+>> +		so it can be used directly+ Mesh HDR Len
+>> +	Note2: In Other places (like skb_alloc) its handled properly.
+>> +	 */
+>> +
+> ok so the comment style is wrong, you shouldn't list changelog-type
+> things in comments ("Fixed: ...") etc.
+>
+> I also don't understand why we should add the mesh length? It seems that
+> this is really just the maximum MSDU size, i.e. 2304 octets.
+>
+> johannes
+>
+Ok, will change the comments.  So shall i remove the comments
+for FIX as well (or) should i retain them?
 
---SdvjNjn6lL3tIsv0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+As for WLAN is concerned the mesh
+header is part of data (MSDU) hence the standard says the MSDU
+can be Maximum of 2304 + Any Mesh Control Field. (#2 above).
 
-On Sat, Dec 22, 2012 at 08:59:19PM +0100, Pontus Fuchs wrote:
-> I remember fixing a tricky bug here. When loosing BSS the driver can
-> in some case leave
-> priv->bss_loss_status to > CW1200_BSS_LOSS_NONE.
-> This blocks further processing of the BSS_LOST events from firmware
-> causing link loss detection to fail.
->=20
-> The fix was to clean up bss_lost_status here before canceling
-> bss_loss_work and connection_loss_work:
->=20
-> priv->delayed_link_loss =3D 0;
-> spin_lock(&priv->bss_loss_lock);
-> priv->bss_loss_status =3D CW1200_BSS_LOSS_NONE;
-> spin_unlock(&priv->bss_loss_lock);
->=20
-> >+			cancel_delayed_work_sync(&priv->bss_loss_work);
-> >+			cancel_delayed_work_sync(&priv->connection_loss_work);
-> >+#endif /* CONFIG_CW1200_USE_STE_EXTENSIONS */
 
-The code you're referencing is partially wrapped in STE_EXTENSIONS --=20
-and most of that refers to stuff that wasn't ever part of mac80211.
-
-So I pulled the work cancellation out of the STE_EXTENSION wrapper and=20
-prepended that code you suggested.=20
-
-I'm finally done auditing and (mostly) purging all the STE_EXTENSIONS=20
-stuff, so I'll be submitting another patch series shortly that=20
-incorporates everything suggested so far.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
-Quidquid latine dictum sit, altum viditur.
-
---SdvjNjn6lL3tIsv0
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iD8DBQFQ1jV6PuLgii2759ARAhV8AKCTOlBM7Vtzcgbr1UV7UtyZgEYHdwCfQoql
-tVp25z2J5AkjRgPS5o4Xs7E=
-=r1Zz
------END PGP SIGNATURE-----
-
---SdvjNjn6lL3tIsv0--
