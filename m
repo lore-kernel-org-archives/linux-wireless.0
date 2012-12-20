@@ -1,103 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:52872 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756358Ab2LMSwL (ORCPT
+Received: from [64.78.22.98] ([64.78.22.98]:38813 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751326Ab2LTKji (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:52:11 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1756244pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Dec 2012 10:52:11 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCH 3/6] mac80211: move add_tim to subfunction
-Date: Thu, 13 Dec 2012 10:51:55 -0800
-Message-Id: <1355424718-2982-4-git-send-email-marco@cozybit.com> (sfid-20121213_195219_338321_227CE1B4)
-In-Reply-To: <1355424718-2982-1-git-send-email-marco@cozybit.com>
-References: <1355424718-2982-1-git-send-email-marco@cozybit.com>
+	Thu, 20 Dec 2012 05:39:38 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 20 Dec 2012 02:39:17 -0800
+From: vivekanandah@posedge.com
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: Re: adding =?UTF-8?Q?ba=5Fpolicy=20member=20in=20drv=5Fampdu?=
+ =?UTF-8?Q?=5Faction=20op=20-=20request=20information?=
+In-Reply-To: <1355407319.9463.4.camel@jlt4.sipsolutions.net>
+References: <53a9b58ee917248d8fa617dd1bbcde83@posedge.com>
+ <1355407319.9463.4.camel@jlt4.sipsolutions.net>
+Message-ID: <ccd9b999d335370ce1508dae369e0951@posedge.com> (sfid-20121220_113945_028523_28669005)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This functions will be used for mesh beacons, too.
+hi johannes,
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
----
- net/mac80211/tx.c |   48 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 29 insertions(+), 19 deletions(-)
+sorry for the delayed response. i was off from work for a few days.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e9eadc4..1b04984 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2261,9 +2261,9 @@ void ieee80211_tx_pending(unsigned long data)
- 
- /* functions for drivers to get certain frames */
- 
--static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
--				     struct ps_data *ps,
--				     struct sk_buff *skb)
-+static void __ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
-+				       struct ps_data *ps,
-+				       struct sk_buff *skb)
- {
- 	u8 *pos, *tim;
- 	int aid0 = 0;
-@@ -2325,6 +2325,31 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
- 	}
- }
- 
-+static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
-+				    struct ps_data *ps,
-+				    struct sk_buff *skb)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+
-+	/* Not very nice, but we want to allow the driver to call
-+	 * ieee80211_beacon_get() as a response to the set_tim() callback.
-+	 * That, however, is already invoked under the sta_lock to guarantee
-+	 * consistent and race-free update of the tim bitmap in mac80211 and
-+	 * the driver.
-+	 */
-+	if (local->tim_in_locked_section) {
-+		__ieee80211_beacon_add_tim(sdata, ps, skb);
-+	} else {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&local->tim_lock, flags);
-+		__ieee80211_beacon_add_tim(sdata, ps, skb);
-+		spin_unlock_irqrestore(&local->tim_lock, flags);
-+	}
-+
-+	return 0;
-+}
-+
- struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 					 struct ieee80211_vif *vif,
- 					 u16 *tim_offset, u16 *tim_length)
-@@ -2369,22 +2394,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 			memcpy(skb_put(skb, beacon->head_len), beacon->head,
- 			       beacon->head_len);
- 
--			/*
--			 * Not very nice, but we want to allow the driver to call
--			 * ieee80211_beacon_get() as a response to the set_tim()
--			 * callback. That, however, is already invoked under the
--			 * sta_lock to guarantee consistent and race-free update
--			 * of the tim bitmap in mac80211 and the driver.
--			 */
--			if (local->tim_in_locked_section) {
--				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
--			} else {
--				unsigned long flags;
--
--				spin_lock_irqsave(&local->tim_lock, flags);
--				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
--				spin_unlock_irqrestore(&local->tim_lock, flags);
--			}
-+			ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
- 
- 			if (tim_offset)
- 				*tim_offset = beacon->head_len;
--- 
-1.7.9.5
+is'nt the station's capability and the AP capability intersected during 
+association? i always thought that the comment was mis-represented.
+
+i did a small test and i see that the stations capability is actually 
+the subset of AP capabilities that both support.
+if that is the case, then we do not have to check for the capability 
+independently there! do i miss something in my understanding?
+
+also, if what i have stated above is correct, then yes, i feel delayed 
+block ack as a feature might need to be implemented on mac80211 and then 
+check for the same.
+
+thanks and regards
+Vivek
+
+
+On Thu, 13 Dec 2012 15:01:59 +0100, Johannes Berg wrote:
+> Hi Vivek,
+>
+>> if you are referring to the addba-request to transmit a ADDBA with
+>> delayed block ack, yes, i accept what you have stated. but, then we
+>> would need to support delayed block ack on the TX.
+>>
+>> for my query, i was thinking more with respect to the receive side 
+>> of
+>> an AP.
+>
+> Ah, ok.
+>
+>> if, let us say a particular station is capable of delayed block ack
+>> which might not be a linux station(presently it seems, linux box 
+>> will
+>> only pursue immediate block ack), then on receive of a block ack
+>> request, the lower layer can just send an ack if the policy is known 
+>> to
+>> be delayed block ack.
+>
+> Right now, a mac80211-based station should probably never even 
+> advertise
+> that it is delayed-BA capable since it won't correctly be handled.
+> Therefore, any other station must not ask for a delayed-BA session in
+> its AddBA request. And in fact, ieee80211_process_addba_request() 
+> drops
+> frames that ask for delayed BA.
+>
+> So I guess what you're really saying is that you want to implement
+> delayed BA and address the todo item in
+> ieee80211_process_addba_request() that says:
+>
+>         /* XXX: check own ht delayed BA capability?? */
+>
+> i.e. add a check here for our own capability and add a new parameter 
+> to
+> let the driver know...
+>
+> Overall that seems reasonable.
+>
+> johannes
 
