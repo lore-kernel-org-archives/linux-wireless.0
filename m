@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37525 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753220Ab2LNMh3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Dec 2012 07:37:29 -0500
-Message-ID: <50CB1D7D.2030301@hauke-m.de> (sfid-20121214_133740_137399_5053BB8A)
-Date: Fri, 14 Dec 2012 13:37:17 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from purkki.adurom.net ([80.68.90.206]:41888 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751450Ab2LUJ0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2012 04:26:49 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Sven Eckelmann <sven@narfation.org>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, nbd@openwrt.org,
+	tobias.steinicke@net.t-labs.tu-berlin.de, jonbither@gmail.com,
+	kgiori@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [RFCv3] ath9k: add spectral scan feature
+References: <1355936604-13568-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	<87hanhumxb.fsf@purkki.adurom.net> <3148461.C4k1rIvhbp@bentobox>
+Date: Fri, 21 Dec 2012 11:26:42 +0200
+In-Reply-To: <3148461.C4k1rIvhbp@bentobox> (Sven Eckelmann's message of "Thu,
+	20 Dec 2012 19:11:52 +0100")
+Message-ID: <874njfvjql.fsf@purkki.adurom.net> (sfid-20121221_102652_932344_CAB02617)
 MIME-Version: 1.0
-To: Kevin McCready <kevin1mccready@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Problem in FAQ
-References: <CAKoT1EZh=u3bA6Jcftmsj8cNbGEctVfm_Boi7umzHe1T4EZuTw@mail.gmail.com>
-In-Reply-To: <CAKoT1EZh=u3bA6Jcftmsj8cNbGEctVfm_Boi7umzHe1T4EZuTw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/14/2012 09:35 AM, Kevin McCready wrote:
-> 
-> FAQ says: Forget about XXX, what really matters is PCI or USB
-> (depending on the bus your device uses) ID pair: VID:PID. So to find
-> out if your device is supported, use lspci -nn or lsusb to learn the
-> ID pair.
-> 
-> I have no idea what this means.
-> 
-> I did lspci and got
-> k@k-Presario-CQ57-Notebook-PC:
-> ~$ lspci
-...
-> 02:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE
-> 802.11b/g/n WiFi Adapter (rev 01)
-...
+Sven Eckelmann <sven@narfation.org> writes:
 
-You have a Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
-Adapter and it should be supported by Linux since 2.6.38. If you are
-using such a kernel version or a more recent one and this device is
-still not recognized by Linux, please run "lspci -nn" like the FAQ says
-to get the pci id.
+>> > https://github.com/simonwunderlich/FFT_eval/
+>> 
+>> But no screenshots? :)
+>
+> There is one here: https://github.com/simonwunderlich/FFT_eval/wiki
+>
+> But this screenshot was also shown the last two times.
 
-> 
-> I have no idea whether my wireless problem is a usb or pci problem.
-> I have no idea what the pair is.
-> 
-> I would be grateful for a better FAQ to help me.
+Sorry, I missed that. Thanks for the screenshot, it looks cool :)
 
+-- 
+Kalle Valo
