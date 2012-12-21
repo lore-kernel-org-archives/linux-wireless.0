@@ -1,80 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:44094 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751576Ab2LELV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 06:21:59 -0500
-Message-ID: <1354706476.6234.50.camel@cumari.coelho.fi> (sfid-20121205_122204_196084_A08F21A6)
-Subject: Re: [PATCH 05/20] wlcore: increase scan dwell times if no activity
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: <linux-wireless@vger.kernel.org>, Eyal Shapira <eyal@wizery.com>
-Date: Wed, 5 Dec 2012 13:21:16 +0200
-In-Reply-To: <1354095769-8724-6-git-send-email-arik@wizery.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-6-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-da0-f45.google.com ([209.85.210.45]:56157 "EHLO
+	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751924Ab2LUScR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2012 13:32:17 -0500
+Received: by mail-da0-f45.google.com with SMTP id w4so2201966dam.4
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Dec 2012 10:32:17 -0800 (PST)
+Date: Fri, 21 Dec 2012 10:31:53 -0800
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com, j@wl.fi
+Subject: Re: [PATCH v2 3/3] mac80211_hwsim: emulate proper beaconing
+Message-ID: <20121221183153.GC24585@cable.cozybit.com> (sfid-20121221_193220_337150_500384BC)
+References: <1356029871-17794-1-git-send-email-thomas@cozybit.com>
+ <1356029871-17794-3-git-send-email-thomas@cozybit.com>
+ <1356100638.9580.12.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1356100638.9580.12.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-11-28 at 11:42 +0200, Arik Nemtsov wrote:
-> From: Eyal Shapira <eyal@wizery.com>
+On Fri, Dec 21, 2012 at 03:37:18PM +0100, Johannes Berg wrote:
+> On Thu, 2012-12-20 at 10:57 -0800, Thomas Pedersen wrote:
 > 
-> There's a limit on scan dwell times of max 30ms in order
-> to avoid degrading voip traffic which could be going on
-> while scanning. However these dwell times increase the
-> chance of missing out on nearby APs leading to partial
-> scan results. Allow configuration of longer dwell times
-> in case there no active interface (i.e. no STA associated
-> or AP up).
+> > +	u64 now = __mac80211_hwsim_get_tsf(data);
 > 
-> [Arik - count started vifs using an in-driver function]
-> 
-> Signed-off-by: Eyal Shapira <eyal@wizery.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+> That looks like an endian bug.
 
-[...]
+Yep :)
 
-> diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
-> index ad15cae..a4eb14c 100644
-> --- a/drivers/net/wireless/ti/wlcore/conf.h
-> +++ b/drivers/net/wireless/ti/wlcore/conf.h
-> @@ -1097,6 +1097,24 @@ struct conf_scan_settings {
->  	 */
->  	u32 max_dwell_time_active;
->  
-> +	/*
-> +	 * The minimum time to wait on each channel for active scans
-> +	 * when there's a concurrent active interface. This should
-> +	 * lower than min_dwell_time_active usually in order to avoid
-> +	 * interfering with possible voip traffic on another interface.
-> +	 *
-> +	 * Range: u32 tu/1000
-> +	 */
-> +	u32 min_dwell_time_active_conc;
-> +
-> +	/*
-> +	 * The maximum time to wait on each channel for active scans
-> +	 * See explanation about min_dwell_time_active_conc
-> +	 *
-> +	 * Range: u32 tu/1000
-> +	 */
-> +	u32 max_dwell_time_active_conc;
-> +
-
-IMO it would have been nicer to keep the existing ones as they are and
-not change the semantics.  Then add the new ones with another name.
-Maybe something like "max_dwell_time_active_long", which is more
-generic.
-
-It is possible that we will find more scenarios where this long scans
-could be used (eg. if it would be possible to identify whether there are
-any low latency TIDs running or not).
-
-Also, the "concurrent" name here sounds strange, because the first thing
-that comes to mind is concurrent scans and not started vifs.
-
---
-Luca.
-
+Thomas
