@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48787 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257Ab2LLORf (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:34225 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352Ab2LUSY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 09:17:35 -0500
-Message-ID: <1355321878.9708.6.camel@jlt4.sipsolutions.net> (sfid-20121212_151738_778738_A047E871)
-Subject: Re: adding ba_policy member in drv_ampdu_action op - request
- information
-From: Johannes Berg <johannes@sipsolutions.net>
-To: vivekanandah@posedge.com
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 12 Dec 2012 15:17:58 +0100
-In-Reply-To: <95cd69900bf76c0024d3a0838ed38d30@posedge.com>
-References: <95cd69900bf76c0024d3a0838ed38d30@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 21 Dec 2012 13:24:56 -0500
+Received: by mail-pa0-f41.google.com with SMTP id bj3so3005302pad.0
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Dec 2012 10:24:56 -0800 (PST)
+Date: Fri, 21 Dec 2012 10:24:32 -0800
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com, j@wl.fi
+Subject: Re: [PATCH v2 1/3] mac80211_hwsim: use hrtimer for beacon timers
+Message-ID: <20121221182432.GA24585@cable.cozybit.com> (sfid-20121221_192510_244404_D83B0FC3)
+References: <1356029871-17794-1-git-send-email-thomas@cozybit.com>
+ <1356100396.9580.10.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1356100396.9580.10.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-12-12 at 12:10 +0530, vivekanandah@posedge.com wrote:
-> Hi,
+On Fri, Dec 21, 2012 at 03:33:16PM +0100, Johannes Berg wrote:
+> On Thu, 2012-12-20 at 10:57 -0800, Thomas Pedersen wrote:
 > 
-> presently in code, the block ack policy is not sent by mac80211 to the 
-> lower level driver via the ampdu_action callback.
+> > @@ -896,7 +897,8 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
+> >  {
+> >  	struct mac80211_hwsim_data *data = hw->priv;
+> >  	data->started = false;
+> > -	del_timer(&data->beacon_timer);
+> > +	hrtimer_cancel(&data->beacon_timer);
+> > +	tasklet_kill(&data->bcn_tasklet);
+> >  	wiphy_debug(hw->wiphy, "%s\n", __func__);
 > 
-> The mac80211 while transmitting a block ack (ADDBA)request, hardcodes 
-> the block ack methodology to immediate block ack.
-> 
-> on the receive side, the delayed block ack bit is checked along-with 
-> the capability of the receiver station to support delayed block ack. 
-> even if the station supports delayed block ack, mac80211 does not send 
-> the ba_policy down to the driver.
-> 
-> should ba_policy be sent to the driver so that lower level drivers can 
-> take a call as to send block ack response in a delayed manner at its 
-> convenience?
+> Hm this seems odd, why is it stopped here rather than when beaconing is
+> stopped? Or does it do both?
 
-Well, if you wanted to support it, you'd first have to change the
-negotiation to actually ask for it, no?
+It seems mac80211_hwsim doesn't even handle the case of
+BSS_CHANGED_BEACON_ENABLED, I can add this.
 
-johannes
+> > @@ -1084,12 +1096,12 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+> >  
+> >  	if (changed & BSS_CHANGED_BEACON_INT) {
+> >  		wiphy_debug(hw->wiphy, "  BCNINT: %d\n", info->beacon_int);
+> > -		data->beacon_int = 1024 * info->beacon_int / 1000 * HZ / 1000;
+> > -		if (WARN_ON(!data->beacon_int))
+> > -			data->beacon_int = 1;
+> > -		if (data->started)
+> > -			mod_timer(&data->beacon_timer,
+> > -				  jiffies + data->beacon_int);
+> > +		data->beacon_int = ns_to_ktime(info->beacon_int * 1024 * 1000);
+> > +		if (WARN_ON(!ktime_to_ns(data->beacon_int)))
+> > +			data->beacon_int = ns_to_ktime(1000 * 1000);
+> 
+> Can that warning really happen? It seems it should be checking
+> info->beacon_int rather than data->beacon_int? Why convert back and
+> forth?
 
+No, it looks like nl80211 will filter out beacon intervals of 0 anyway
+so let's kill that.
+
+> Also the default here seems very very small, that's like less than 1ms
+> beacon interval (not even in TU)?
+
+Yes, I was just trying to mirror the existing code. How is 1000 (TU) for
+a sane default?
+
+Thomas
