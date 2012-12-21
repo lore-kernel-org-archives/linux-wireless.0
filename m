@@ -1,124 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:34693
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932384Ab2LGKCv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 05:02:51 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 7/8] ath9k_hw: Calculate the correct training power for PAPRD
-Date: Fri,  7 Dec 2012 15:32:00 +0530
-Message-Id: <1354874521-4138-8-git-send-email-sujith@msujith.org> (sfid-20121207_110256_807647_C8695D70)
-In-Reply-To: <1354874521-4138-1-git-send-email-sujith@msujith.org>
-References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:60740 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504Ab2LUSbS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2012 13:31:18 -0500
+Received: by mail-pb0-f44.google.com with SMTP id uo1so2898092pbc.17
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Dec 2012 10:31:17 -0800 (PST)
+Date: Fri, 21 Dec 2012 10:30:53 -0800
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com, j@wl.fi
+Subject: Re: [PATCH v2 2/3] mac80211_hwsim: beacon at beacon interval
+Message-ID: <20121221183053.GB24585@cable.cozybit.com> (sfid-20121221_193121_671243_D8BCDCA2)
+References: <1356029871-17794-1-git-send-email-thomas@cozybit.com>
+ <1356029871-17794-2-git-send-email-thomas@cozybit.com>
+ <1356100584.9580.11.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1356100584.9580.11.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Fri, Dec 21, 2012 at 03:36:24PM +0100, Johannes Berg wrote:
+> On Thu, 2012-12-20 at 10:57 -0800, Thomas Pedersen wrote:
+> 
+> > +	else if (!hrtimer_is_queued(&data->beacon_timer)) {
+> > +		u64 tsf = le64_to_cpu(__mac80211_hwsim_get_tsf(data));
+> 
+> This is odd, you haven't even modified __mac80211_hwsim_get_tsf() yet?
+> Also, there's mac80211_hwsim_get_tsf() (although I'd argue that they
+> should be the other way around wrt. endianness)
 
-Assign the training power for PAPRD based on the chip.
+You're right, mac80211_hwsim_get_tsf() is less redundant. Also I guess
+the timebase changes should go into the first patch.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 41 ++++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  | 22 +++++++++-----
- 2 files changed, 43 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index c86cb640..0f38895 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -5076,6 +5076,33 @@ static inline u8 mcsidx_to_tgtpwridx(unsigned int mcs_idx, u8 base_pwridx)
- 		return base_pwridx + 4 * (mcs_idx / 8) + mod_idx - 2;
- }
- 
-+static void ar9003_paprd_set_txpower(struct ath_hw *ah,
-+				     struct ath9k_channel *chan,
-+				     u8 *targetPowerValT2)
-+{
-+	int i;
-+
-+	if (!ar9003_is_paprd_enabled(ah))
-+		return;
-+
-+	if (IS_CHAN_HT40(chan))
-+		i = ALL_TARGET_HT40_7;
-+	else
-+		i = ALL_TARGET_HT20_7;
-+
-+	if (IS_CHAN_2GHZ(chan)) {
-+		if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) &&
-+		    !AR_SREV_9462(ah) && !AR_SREV_9565(ah)) {
-+			if (IS_CHAN_HT40(chan))
-+				i = ALL_TARGET_HT40_0_8_16;
-+			else
-+				i = ALL_TARGET_HT20_0_8_16;
-+		}
-+	}
-+
-+	ah->paprd_target_power = targetPowerValT2[i];
-+}
-+
- static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 					struct ath9k_channel *chan, u16 cfgCtl,
- 					u8 twiceAntennaReduction,
-@@ -5170,19 +5197,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 	/* Write target power array to registers */
- 	ar9003_hw_tx_power_regwrite(ah, targetPowerValT2);
- 	ar9003_hw_calibration_apply(ah, chan->channel);
--
--	if (IS_CHAN_2GHZ(chan)) {
--		if (IS_CHAN_HT40(chan))
--			i = ALL_TARGET_HT40_0_8_16;
--		else
--			i = ALL_TARGET_HT20_0_8_16;
--	} else {
--		if (IS_CHAN_HT40(chan))
--			i = ALL_TARGET_HT40_7;
--		else
--			i = ALL_TARGET_HT20_7;
--	}
--	ah->paprd_target_power = targetPowerValT2[i];
-+	ar9003_paprd_set_txpower(ah, chan, targetPowerValT2);
- }
- 
- static u16 ath9k_hw_ar9300_get_spur_channel(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 3eca9bd..548b451 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -74,15 +74,23 @@ static int ar9003_get_training_power_2g(struct ath_hw *ah)
- 	unsigned int power, scale, delta;
- 
- 	scale = ar9003_get_paprd_scale_factor(ah, chan);
--	power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
--			       AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
- 
--	delta = abs((int) ah->paprd_target_power - (int) power);
--	if (delta > scale)
--		return -1;
-+	if (AR_SREV_9330(ah) || AR_SREV_9340(ah) ||
-+	    AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-+		power = ah->paprd_target_power + 2;
-+	} else if (AR_SREV_9485(ah)) {
-+		power = 25;
-+	} else {
-+		power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
-+				       AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
-+
-+		delta = abs((int) ah->paprd_target_power - (int) power);
-+		if (delta > scale)
-+			return -1;
- 
--	if (delta < 4)
--		power -= 4 - delta;
-+		if (delta < 4)
-+			power -= 4 - delta;
-+	}
- 
- 	return power;
- }
--- 
-1.8.0.1
-
+Thomas
