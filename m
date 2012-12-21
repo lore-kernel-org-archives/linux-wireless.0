@@ -1,69 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:34225 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751352Ab2LUSY4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Dec 2012 13:24:56 -0500
-Received: by mail-pa0-f41.google.com with SMTP id bj3so3005302pad.0
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Dec 2012 10:24:56 -0800 (PST)
-Date: Fri, 21 Dec 2012 10:24:32 -0800
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com, j@wl.fi
-Subject: Re: [PATCH v2 1/3] mac80211_hwsim: use hrtimer for beacon timers
-Message-ID: <20121221182432.GA24585@cable.cozybit.com> (sfid-20121221_192510_244404_D83B0FC3)
-References: <1356029871-17794-1-git-send-email-thomas@cozybit.com>
- <1356100396.9580.10.camel@jlt4.sipsolutions.net>
+Received: from comal.ext.ti.com ([198.47.26.152]:47679 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751033Ab2LUTGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2012 14:06:16 -0500
+From: "Zigman, Eran" <eranz@ti.com>
+To: "Coelho, Luciano" <coelho@ti.com>, Girish Bn <Girish.BN@lnties.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: wl12xx (ol_R5.SP3.05) drivers + firmware (ol_R5.SP3.05) doesn't
+ work on WL1271 (HW PG 2.0)
+Date: Fri, 21 Dec 2012 19:06:08 +0000
+Message-ID: <58098F92B10CE64E898E9D20B13AA4830B58C497@DNCE05.ent.ti.com> (sfid-20121221_200620_373456_27D2F818)
+References: <45566970CF58C74CB52107862E0541CD1D1CB484@POCITMSEXMB02.LntUniverse.com>
+ <1355945507.5373.2.camel@cumari.coelho.fi>
+In-Reply-To: <1355945507.5373.2.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1356100396.9580.10.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 21, 2012 at 03:33:16PM +0100, Johannes Berg wrote:
-> On Thu, 2012-12-20 at 10:57 -0800, Thomas Pedersen wrote:
-> 
-> > @@ -896,7 +897,8 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
-> >  {
-> >  	struct mac80211_hwsim_data *data = hw->priv;
-> >  	data->started = false;
-> > -	del_timer(&data->beacon_timer);
-> > +	hrtimer_cancel(&data->beacon_timer);
-> > +	tasklet_kill(&data->bcn_tasklet);
-> >  	wiphy_debug(hw->wiphy, "%s\n", __func__);
-> 
-> Hm this seems odd, why is it stopped here rather than when beaconing is
-> stopped? Or does it do both?
-
-It seems mac80211_hwsim doesn't even handle the case of
-BSS_CHANGED_BEACON_ENABLED, I can add this.
-
-> > @@ -1084,12 +1096,12 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
-> >  
-> >  	if (changed & BSS_CHANGED_BEACON_INT) {
-> >  		wiphy_debug(hw->wiphy, "  BCNINT: %d\n", info->beacon_int);
-> > -		data->beacon_int = 1024 * info->beacon_int / 1000 * HZ / 1000;
-> > -		if (WARN_ON(!data->beacon_int))
-> > -			data->beacon_int = 1;
-> > -		if (data->started)
-> > -			mod_timer(&data->beacon_timer,
-> > -				  jiffies + data->beacon_int);
-> > +		data->beacon_int = ns_to_ktime(info->beacon_int * 1024 * 1000);
-> > +		if (WARN_ON(!ktime_to_ns(data->beacon_int)))
-> > +			data->beacon_int = ns_to_ktime(1000 * 1000);
-> 
-> Can that warning really happen? It seems it should be checking
-> info->beacon_int rather than data->beacon_int? Why convert back and
-> forth?
-
-No, it looks like nl80211 will filter out beacon intervals of 0 anyway
-so let's kill that.
-
-> Also the default here seems very very small, that's like less than 1ms
-> beacon interval (not even in TU)?
-
-Yes, I was just trying to mirror the existing code. How is 1000 (TU) for
-a sane default?
-
-Thomas
+THVjYSwNCldlIGhhdmUgdGVzdGVkIHRoZSBiZWxvdyByZWxlYXNlIFI1LlNQMyBvbiBBTTMzNXgg
+YW5kIFdMMTI3MUwgKEhXIFBHIDMueCkgb24gTGludXggYnV0IG5vdCBvbiBQRyAyLjAuDQpJIGFt
+IG5vdCBzdXJlIGlmIHRoZSBSNS5TUDMgZHJpdmVyL2Zpcm13YXJlIHdvdWxkIGhhdmUgYW55IGxp
+bWl0YXRpb25zIG9mIG9sZCB2ZXJzaW9uIFBHMi4wLg0KV2Ugd2lsbCBydW4gdGhlIGV4YWN0IHNj
+ZW5hcmlvcyB0aGF0IHlvdSBtZW50aW9uZWQgZm9yIFdMNiAoUEczLngpIGFuZCB1cGRhdGUuDQoN
+Cg0KQ2FuIHlvdSBwbGVhc2Ugc2hlZCBzb21lIGxpZ2h0IG9uIHRoaXMgYWN0aXZpdHksIGN1c3Rv
+bWVyLi4uIA0KDQpUaGFua3MgYW5kIFJlZ2FyZHMsDQoNCkVyYW4gWmlnbWFuDQpUZXhhcyBJbnN0
+cnVtZW50cyBJbmMNCkVDUyBBcHBsaWNhdGlvbiANCkNlbGw6IDQwOC02ODA5NzM0LCBPZmZpY2U6
+IDcyMTM3MjYNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQ29lbGhvLCBM
+dWNpYW5vIA0KU2VudDogV2VkbmVzZGF5LCBEZWNlbWJlciAxOSwgMjAxMiAxMTozMiBBTQ0KVG86
+IFppZ21hbiwgRXJhbjsgR2lyaXNoIEJuDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
+b3JnDQpTdWJqZWN0OiBSZTogd2wxMnh4IChvbF9SNS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJtd2Fy
+ZSAob2xfUjUuU1AzLjA1KSBkb2Vzbid0IHdvcmsgb24gV0wxMjcxIChIVyBQRyAyLjApDQoNCkhp
+IEVyYW4sDQoNCkNhbiB5b3UgcGxlYXNlIGNoZWNrIEdpcmlzaCdzIGVtYWlsIGJlbG93IGFuZCBo
+ZWxwIGhpbSB3aXRoIHRoaXM/DQoNClRoYW5rcyENCg0KLS0NCkx1Y2EuDQoNCk9uIFdlZCwgMjAx
+Mi0xMi0xOSBhdCAxNDo0MSArMDAwMCwgR2lyaXNoIEJuIHdyb3RlOg0KPiBIaSwNCj4gDQo+IFdl
+IGFyZSBjbGllbnQgaXMgdXNpbmcgdGhlIEpvcmppbiBXRzczMTAtMDAgV0xBTi9CVC9GTSBNb2R1
+bGUgZm9yIG9uZSBvZiB0aGUgV0xBTiBzZXJ2ZXIgbW9kdWxlLg0KPiBXZSBhcmUgcG9ydGluZyB0
+aGUgTGludXggb3BlbiBzb3VyY2UgZHJpdmVycyB0byBXTDEyNzEgYmFzZWQgSm9yamluIG1vZHVs
+ZS4gT3VyIGtlcm5lbCB2ZXJzaW9uIGlzIDIuNi4yOC4yIGFuZCBwcm9jZXNzb3IgaXMgTFBDMzEz
+MC4gVGhlIFBHIHZlciBvZiBXbDEyNzEgaXMgMi4NCj4gUmVjZW50bHkgd2UgaGF2ZSBiYWNrIHBv
+cnRlZCB0aGUgd2wxMnh4IGRyaXZlcnMgZnJvbSB0aGUgVEktT3BlbkxpbmsgDQo+IHNpdGUgV2Ug
+aGF2ZSB0YWtlbiB0aGUgd2wxMnh4IGRyaXZlcnMgZnJvbSANCj4gaHR0cHM6Ly9naXRodWIuY29t
+L1RJLU9wZW5MaW5rL3dsMTJ4eCBhbmQgYnJhbmNoIHI1X2piIGFuZCB0YWcgDQo+IG9sX1I1LlNQ
+My4wNSBBbHNvIHdlIGhhZCB0YWtlbiB0aGUgZmlybXdhcmUgZnJvbSANCj4gaHR0cHM6Ly9naXRo
+dWIuY29tL1RJLU9wZW5MaW5rL3RpLXV0aWxzIGFuZCBicmFuY2ggcjVfamIgYW5kIHRhZyANCj4g
+b2xfUjUuU1AzLjA1IFRoZSBzdXBwbGljYW50IGFsc28gd2FzIHRha2VuIGZyb20gDQo+IGh0dHBz
+Oi8vZ2l0aHViLmNvbS9USS1PcGVuTGluay9ob3N0YXAgYW5kIGJyYW5jaCByNV9qYiBhbmQgdGFn
+IA0KPiBvbF9SNS5TUDMuMDUNCj4gDQo+IFdlIHVzaW5nIHRoZSBtdWx0aS1yb2xlIGZlYXR1cmUg
+b2YgdGhlIGRyaXZlci4NCj4gV2UgaGFkIHNwZWNpZmljYWxseSB0YWtlbiBhYm92ZSBwYWNrYWdl
+IGFzIHdlIHdhbnRlZCB0aGUgQVAgY2hhbm5lbCBzd2l0Y2ggZnVuY3Rpb25hbGl0eS4gVGhpcyBm
+ZWF0dXJlIGhhbmRsZXMgYSBwYXJ0aWN1bGFyIGNhc2UgbGlrZSBpZiB5b3Ugc3RhcnRlZCB0aGUg
+U1RBIG9uIENoYW5uZWwgWCBhbmQgYWxzbyB5b3Ugd2lsbCBzdGFydCBBUCAoUDJQIEdyb3VwIE93
+bmVyKSBvbiB0aGUgc2FtZSBjaGFubmVsIChDaGFubmVsIFgpLiBOb3cgaWYgeW91IGNoYW5nZSB0
+aGUgY2hhbm5lbCBvZiBTdGF0aW9uIHRvIENoYW5uZWwoWSksIHRoZSBkcml2ZXIgYXV0b21hdGlj
+YWxseSB3aWxsIHRha2UgY2FyZSBvZiByZXN0YXJ0aW5nIHRoZSBBUChQMlAgR08pIG9uIHRoZSBz
+YW1lIGNoYW5uZWwoQ2hhbm5lbCBZKS4NCj4gDQo+IFdlIGFyZSBmYWNpbmcgaXNzdWUgd2l0aCB0
+aGlzIHBhY2thZ2UgYW5kIHRoZSBkcml2ZXJzIHdvbid0IHdvcmsgcHJvcGVybHkgZm9yIHVzLg0K
+PiBUaGUgbWFqb3IgaXNzdWVzIHNlZW4gd2l0aCB0aGlzIHBhY2thZ2UgYXJlIDEuIFdlIGFibGUg
+dG8gZG8gdGhlIHNjYW4gDQo+IGFuZCBjb25uZWN0IHRvIGFuIGVuY3J5cHRlZCBuZXR3b3JrLiAg
+QnV0IHdoZW4gd2UgcnVuIERIQ1AgY2xpZW50IG9uIHdsYW4wIHRvIGdldCB0aGUgSVAgYWRkcmVz
+cyBmcm9tIHRoZSBBY2Nlc3MgUG9pbnQsIHRoZSBkcml2ZXIgdGhyb3dzICJ3bDEyeHg6IEJlYWNv
+biBsb3NzIGRldGVjdGVkIiBtZXNzYWdlIGFuZCB0aGUgY29ubmVjdGlvbiBicmVha3MgYW5kIHRo
+ZSBkcml2ZXIgZ2V0cyBpbnRvIFNDQU4gbW9kZSBhbmQgd2lsbCB0cnkgdG8gcmVjb25uZWN0IHRv
+IHRoZSBBY2Nlc3MgUG9pbnQuIEV2ZW50dWFsbHkgd2UgZG9uJ3QgcmVjZWl2ZSB0aGUgSVAgYWRk
+cmVzcyBmcm9tIHRoZSBBY2Nlc3MgUG9pbnQuDQo+IDIuIEkgd2FzIGFibGUgdG8gc3RhcnQgdGhl
+IFN0YXRpb24gYW5kIEFQIHJvbGUgb24gdGhlIHNhbWUgY2hhbm5lbC4gQnV0IHRoZSBhZnRlciBz
+dGF0aW5nIHRoZSBBUCByb2xlLCBzdGF0aW9uIHJvbGUgd2lsbCBiZSBkaXNjb25uZWN0ZWQgYXV0
+b21hdGljYWxseSBhbmQgSSB3b24ndCBiZSBhYmxlIHRvIGRvIHNjYW4gYW5kIGNvbm5lY3Rpb24g
+b24gU1RBLg0KPiAzLiBBbHNvIGNhbm5vdCBjb25uZWN0IHRvIG15IFN5c3RlbSB3aGljaCBpcyBh
+Y3RpbmcgYXMgUDJQIEdyb3VwIE93bmVyKEFQKSBmcm9tIGFueSBvdGhlciBXaS1GaSBkZXZpY2Ug
+bGlrZSBpUGhvbmUvTGFwdG9wIG9yIGFueSBvdGhlci4gVGhlIGlzc3VlIGlzIHNlZW4gd2hlbiBT
+eXN0ZW0gaXMgc2V0IHRvIFAyUCBHTyBlaXRoZXIgdXNpbmcgU2luZ2xlIFJvbGUgZmlybXdhcmUg
+b25seSBvciB1c2luZyBNdWx0aS1yb2xlIGZpcm13YXJlLg0KPiANCj4gV2Ugc3VzcGVjdCB0aGUg
+aXNzdWUgd2l0aCB0aGUgYWJvdmUgdmVyc2lvbnMgb2YgKG9sX1I1LlNQMy4wNSkgd2wxMjd4IA0K
+PiBmaXJtd2FyZSBhbmQgc3VycHJpc2luZ2x5IGFsbCB0aGUgYWJvdmUgdGhyZWUgaXNzdWVzIGFy
+ZSBOT1Qgc2VlbiB3aGVuIA0KPiBJIHVzZSB0aGUgYmVsb3cgZmlybXdhcmUgdmVyc2lvbnMgKHdo
+aWNoIGlzIHF1aXRlIG9sZCkgU2luZ2xlIFJvbGUgDQo+IChTUik6ICBSZXYgNi4zLjcuMC4xMDUN
+Cj4gTXVsdGktUm9sZShNUik6IFJldiA2LjUuNS4wLjIxDQo+IA0KPiANCj4gVGhlIGZpcm13YXJl
+IHZlcnNpb25zIHRha2VuIGZyb20gDQo+IGh0dHBzOi8vZ2l0aHViLmNvbS9USS1PcGVuTGluay90
+aS11dGlscyBhbmQgYnJhbmNoIHI1X2piIGFuZCB0YWcgDQo+IG9sX1I1LlNQMy4wNSBhcmUgU2lu
+Z2xlIFJvbGUgKFNSKTogIFJldiA2LjMuMTAuMC4xMzIgTXVsdGktUm9sZSAoTVIpOiANCj4gUmV2
+IDYuNS43LjAuNDINCj4gDQo+IENhbiB5b3UgbGV0IHVzIGtub3cgd2hldGhlciBXbDEyNzEgaHcg
+UEcgVmVyIDIuMCBjYW4gcnVuIHRoZSBvbF9SNS5TUDMuMDUgZmlybXdhcmUgc3VjY2Vzc2Z1bGx5
+IG9yIGFueSBoYXJkd2FyZSBsaW1pdGF0aW9ucyB3aXRoIFdsMTI3MT8NCj4gQW55IHN1Z2dlc3Rp
+b25zIG9uIHRoZSBhYm92ZSBpc3N1ZXMgd2lsbCBiZSBncmVhdGx5IGhlbHBmdWwNCj4gDQo+IA0K
+PiBUaGFua3MgJiBSZWdhcmRzLA0KPiBHaXJpc2gNCj4gTCZUIElFUywNCj4gS0lBREIgSW5kdXN0
+cmlhbCBBcmVhLA0KPiBIZWJiYWwtSG9vdGFnYWxsaSwgTXlzb3JlIC0gNTcwIDAxOA0KPiBUZWxl
+cGhvbmUgOiAgRElEKzkxLTgyMS0yNDA1NTUyDQo+IE1vYmlsZTogKzkxLTk3NDEyMDY0MDINCj4g
+RS1tYWlsIElEIDpHaXJpc2guQk5AbG50aWVzLmNvbQ0KPiB3d3cubG50aWVzLmNvbQ0KPiANCj4g
+VGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KPiAoICApIEwmVCBJRVMgUHJvcHJpZXRhcnkN
+Cj4gKCAgKSBMJlQgSUVTIENvbmZpZGVudGlhbA0KPiAoWCkgTCZUIElFUyBJbnRlcm5hbCBVc2UN
+Cj4gKCApIEwmVCBJRVMgR2VuZXJhbCBCdXNpbmVzcw0KPiANCj4gTGFyc2VuICYgVG91YnJvIExp
+bWl0ZWQNCj4gDQo+IHd3dy5sYXJzZW50b3Vicm8uY29tDQo+IA0KPiBUaGlzIEVtYWlsIG1heSBj
+b250YWluIGNvbmZpZGVudGlhbCBvciBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIGZvciB0aGUgaW50
+ZW5kZWQgcmVjaXBpZW50IChzKS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVu
+dCwgcGxlYXNlIGRvIG5vdCB1c2Ugb3IgZGlzc2VtaW5hdGUgdGhlIGluZm9ybWF0aW9uLCBub3Rp
+ZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGl0IGZyb20geW91ciBzeXN0ZW0uDQoNCg==
