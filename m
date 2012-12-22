@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10565 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254Ab2LQMto (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:45908 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753Ab2LVXSK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 07:49:44 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH V3 1/2] cfg80211: Move the definition of struct mac_address up
-Date: Mon, 17 Dec 2012 18:19:12 +0530
-Message-ID: <1355748553-19560-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20121217_134949_675335_E146386C)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 22 Dec 2012 18:18:10 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: RFCv2: ST-E cw1200 driver
+Date: Sat, 22 Dec 2012 18:18:15 -0500
+Message-Id: <1356218312-13616-1-git-send-email-pizza@shaftnet.org> (sfid-20121223_001820_136979_B1186603)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct mac_address will be used by ACL related configuration ops.
+Okay, here's the second pass.  Changes from v1:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- include/net/cfg80211.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ * Nuked all references to CONFIG_WAKELOCK
+ * Nuked CONFIG_CW1200_WAPI_SUPPORT (support mainlined)
+ * Nuked CONFIG_CW1200_WSM_DUMPS_SHORT and associated code
+ * Converted printk() into appropriate pr_*() calls
+ * Nuked the myriad CONFIG_CW1200_*_DEBUG options
+ * Replaced STUB() calls with more specific errors
+ * All checkpatch errors fixed
+ * Clean up bss_loss_status before cancelling loss workers
+ * Nuked or integrated all STE_EXTENSIONS-wrapped code
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e78db2c..475230b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -503,6 +503,10 @@ struct cfg80211_beacon_data {
- 	size_t probe_resp_len;
- };
- 
-+struct mac_address {
-+	u8 addr[ETH_ALEN];
-+};
-+
- /**
-  * struct cfg80211_ap_settings - AP configuration
-  *
-@@ -2111,10 +2115,6 @@ struct ieee80211_iface_combination {
- 	bool beacon_int_infra_match;
- };
- 
--struct mac_address {
--	u8 addr[ETH_ALEN];
--};
--
- struct ieee80211_txrx_stypes {
- 	u16 tx, rx;
- };
--- 
-1.7.0.4
+To-do:
+
+ * Fix/Audit metric boatload of checkpatch warnings
+ * Fix/Audit remaining build warnings
+ * Fix IBSS
+ * Achieve world peace
+
+This code has only been compile-tested as I won't have access to real 
+hardware until Monday.  I anticipate at least one more patch cycle.
+
+Again, feedback welcome!
+
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 
