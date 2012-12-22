@@ -1,156 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht1.myhostedexchange.com ([69.50.2.37]:25767 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751284Ab2LJLRT (ORCPT
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:65027 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916Ab2LVB6C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 06:17:19 -0500
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCHv2 1/2] cfg80211: add the new IBSS_STA event
-Date: Mon, 10 Dec 2012 12:16:21 +0100
-Message-ID: <1355138182-11825-1-git-send-email-antonio@open-mesh.com> (sfid-20121210_121723_094194_D8156E75)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 21 Dec 2012 20:58:02 -0500
+From: Tejun Heo <tj@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 04/25] ipw2x00: simplify scan_event handling
+Date: Fri, 21 Dec 2012 17:56:54 -0800
+Message-Id: <1356141435-17340-5-git-send-email-tj@kernel.org> (sfid-20121222_030344_161930_0CFBCFF4)
+In-Reply-To: <1356141435-17340-1-git-send-email-tj@kernel.org>
+References: <1356141435-17340-1-git-send-email-tj@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In IBSS mode it could be the case that a station being added
-is not ready for starting higher level routines (e.g. key
-exchange when IBSS/RSN is enabled). In particular, this can
-happen when we are waiting for the AUTH response message.
+* Drop unnesssary delayd_work_pending() tests.
 
-This IBSS_STA event is triggered after the NEW_STA one and
-only when the upper layer is allowed to assume that the new
-peer is ready
+* Unify scan_event_{now|later} by using mod_delayed_work() w/ 0 delay
+  for scan_event_now.
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+* Make ipw2200 scan_event handling match ipw2100 - use
+  mod_delayed_work() w/ 0 delay for immediate scanning.
+
+Only compile tested.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 ---
+Please let me know how this patch should be routed.  I can take it
+through the workqueue tree if necessary.
 
-1/2 v2:
- * untouched
-2/2 v2:
- * if userspace registered for auth frames, the new station is immediately
-   authenticated and the new IBSS_STA event is triggered.
+Thanks.
 
- include/net/cfg80211.h       |  8 ++++++++
- include/uapi/linux/nl80211.h |  2 ++
- net/wireless/mlme.c          |  9 +++++++++
- net/wireless/nl80211.c       | 33 +++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h       |  3 +++
- 5 files changed, 55 insertions(+)
+ drivers/net/wireless/ipw2x00/ipw2100.c | 31 ++++++++-----------------------
+ drivers/net/wireless/ipw2x00/ipw2100.h |  3 +--
+ drivers/net/wireless/ipw2x00/ipw2200.c | 13 +++----------
+ 3 files changed, 12 insertions(+), 35 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8e6a6b7..3266c03 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3497,6 +3497,14 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
- 		      struct station_info *sinfo, gfp_t gfp);
- 
- /**
-+ * cfg80211_ibss_sta - notify userspace that the ibss station is ready
-+ * @dev: the netdev
-+ * @mac_addr: the station's address
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
-+
-+/**
-  * cfg80211_del_sta - notify userspace about deletion of a station
-  *
-  * @dev: the netdev
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e3e19f8..7e0911e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -736,6 +736,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_SET_MCAST_RATE,
- 
-+	NL80211_CMD_IBSS_STATION,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 5e8123e..f9493fc 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -612,6 +612,15 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index d92b21a..b3ab7b7 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -2181,9 +2181,10 @@ static void isr_indicate_rf_kill(struct ipw2100_priv *priv, u32 status)
+ 	mod_delayed_work(system_wq, &priv->rf_kill, round_jiffies_relative(HZ));
  }
- EXPORT_SYMBOL(cfg80211_new_sta);
  
-+void cfg80211_ibss_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
-+{
-+	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_ibss_sta_event(rdev, dev, mac_addr, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_ibss_sta);
-+
- void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
+-static void send_scan_event(void *data)
++static void ipw2100_scan_event(struct work_struct *work)
  {
- 	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f45706a..2d27911 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8564,6 +8564,39 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
- 				nl80211_mlme_mcgrp.id, gfp);
+-	struct ipw2100_priv *priv = data;
++	struct ipw2100_priv *priv = container_of(work, struct ipw2100_priv,
++						 scan_event.work);
+ 	union iwreq_data wrqu;
+ 
+ 	wrqu.data.length = 0;
+@@ -2191,18 +2192,6 @@ static void send_scan_event(void *data)
+ 	wireless_send_event(priv->net_dev, SIOCGIWSCAN, &wrqu, NULL);
  }
  
-+void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev, const u8 *mac_addr,
-+				 gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_IBSS_STATION);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
-+
- void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
- 				struct net_device *dev, const u8 *mac_addr,
- 				gfp_t gfp)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 2acba84..429f5d6 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -85,6 +85,9 @@ void nl80211_send_remain_on_channel_cancel(
- void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
- 			    struct net_device *dev, const u8 *mac_addr,
- 			    struct station_info *sinfo, gfp_t gfp);
-+void nl80211_send_ibss_sta_event(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev, const u8 *mac_addr,
-+				 gfp_t gfp);
- void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
- 				struct net_device *dev, const u8 *mac_addr,
- 				gfp_t gfp);
+-static void ipw2100_scan_event_later(struct work_struct *work)
+-{
+-	send_scan_event(container_of(work, struct ipw2100_priv,
+-					scan_event_later.work));
+-}
+-
+-static void ipw2100_scan_event_now(struct work_struct *work)
+-{
+-	send_scan_event(container_of(work, struct ipw2100_priv,
+-					scan_event_now));
+-}
+-
+ static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
+ {
+ 	IPW_DEBUG_SCAN("scan complete\n");
+@@ -2212,13 +2201,11 @@ static void isr_scan_complete(struct ipw2100_priv *priv, u32 status)
+ 
+ 	/* Only userspace-requested scan completion events go out immediately */
+ 	if (!priv->user_requested_scan) {
+-		if (!delayed_work_pending(&priv->scan_event_later))
+-			schedule_delayed_work(&priv->scan_event_later,
+-					      round_jiffies_relative(msecs_to_jiffies(4000)));
++		schedule_delayed_work(&priv->scan_event,
++				      round_jiffies_relative(msecs_to_jiffies(4000)));
+ 	} else {
+ 		priv->user_requested_scan = 0;
+-		cancel_delayed_work(&priv->scan_event_later);
+-		schedule_work(&priv->scan_event_now);
++		mod_delayed_work(system_wq, &priv->scan_event, 0);
+ 	}
+ }
+ 
+@@ -4459,8 +4446,7 @@ static void ipw2100_kill_works(struct ipw2100_priv *priv)
+ 	cancel_delayed_work_sync(&priv->wx_event_work);
+ 	cancel_delayed_work_sync(&priv->hang_check);
+ 	cancel_delayed_work_sync(&priv->rf_kill);
+-	cancel_work_sync(&priv->scan_event_now);
+-	cancel_delayed_work_sync(&priv->scan_event_later);
++	cancel_delayed_work_sync(&priv->scan_event);
+ }
+ 
+ static int ipw2100_tx_allocate(struct ipw2100_priv *priv)
+@@ -6195,8 +6181,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+ 	INIT_DELAYED_WORK(&priv->wx_event_work, ipw2100_wx_event_work);
+ 	INIT_DELAYED_WORK(&priv->hang_check, ipw2100_hang_check);
+ 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
+-	INIT_WORK(&priv->scan_event_now, ipw2100_scan_event_now);
+-	INIT_DELAYED_WORK(&priv->scan_event_later, ipw2100_scan_event_later);
++	INIT_DELAYED_WORK(&priv->scan_event, ipw2100_scan_event);
+ 
+ 	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
+ 		     ipw2100_irq_tasklet, (unsigned long)priv);
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
+index 5fe17cb..c6d7879 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.h
++++ b/drivers/net/wireless/ipw2x00/ipw2100.h
+@@ -577,8 +577,7 @@ struct ipw2100_priv {
+ 	struct delayed_work wx_event_work;
+ 	struct delayed_work hang_check;
+ 	struct delayed_work rf_kill;
+-	struct work_struct scan_event_now;
+-	struct delayed_work scan_event_later;
++	struct delayed_work scan_event;
+ 
+ 	int user_requested_scan;
+ 
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 844f201..2c2d6db 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -4480,18 +4480,11 @@ static void handle_scan_event(struct ipw_priv *priv)
+ {
+ 	/* Only userspace-requested scan completion events go out immediately */
+ 	if (!priv->user_requested_scan) {
+-		if (!delayed_work_pending(&priv->scan_event))
+-			schedule_delayed_work(&priv->scan_event,
+-					      round_jiffies_relative(msecs_to_jiffies(4000)));
++		schedule_delayed_work(&priv->scan_event,
++				      round_jiffies_relative(msecs_to_jiffies(4000)));
+ 	} else {
+-		union iwreq_data wrqu;
+-
+ 		priv->user_requested_scan = 0;
+-		cancel_delayed_work(&priv->scan_event);
+-
+-		wrqu.data.length = 0;
+-		wrqu.data.flags = 0;
+-		wireless_send_event(priv->net_dev, SIOCGIWSCAN, &wrqu, NULL);
++		mod_delayed_work(system_wq, &priv->scan_event, 0);
+ 	}
+ }
+ 
 -- 
-1.8.0
+1.8.0.2
 
