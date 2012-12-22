@@ -1,263 +1,1108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht2.myhostedexchange.com ([69.50.2.38]:18491 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752790Ab2LJKW7 (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:49216 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752396Ab2LVXSs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 05:22:59 -0500
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH] mac80211: in AD-HOC mode wait for the AUTH response
-Date: Mon, 10 Dec 2012 11:21:57 +0100
-Message-ID: <1355134917-17705-2-git-send-email-antonio@open-mesh.com> (sfid-20121210_112310_084244_F28EA14D)
-In-Reply-To: <1355134917-17705-1-git-send-email-antonio@open-mesh.com>
-References: <1355134917-17705-1-git-send-email-antonio@open-mesh.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 22 Dec 2012 18:18:48 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 15/17] cw1200: v2: SDIO and SPI glue code, and platform definitions
+Date: Sat, 22 Dec 2012 18:18:30 -0500
+Message-Id: <1356218312-13616-16-git-send-email-pizza@shaftnet.org> (sfid-20121223_002323_002715_2B23C0B0)
+In-Reply-To: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
+References: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To prevent race conditions between kernel state and
-user-space application knowledge, it is better to wait for
-a new peer to be completely authenticated before telling the
-userspace that it is ready to start authorization
-(IBSS/RSN).
-
-Use the IBSS_STA event to tell userspace when a station is
-authenticated and ready.
-
-It could still be the case that the other node joining the
-AD-HOC cell does not implement AUTH messages exchange,
-therefore a fallback mechanism will authenticate the peer
-after a timeout set for the purpose expires
-
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- net/mac80211/ibss.c     | 97 ++++++++++++++++++++++++++++++++++++++++---------
- net/mac80211/sta_info.h |  2 +
- 2 files changed, 81 insertions(+), 18 deletions(-)
+ drivers/staging/cw1200/cw1200_plat.h |  42 +++
+ drivers/staging/cw1200/cw1200_sdio.c | 537 +++++++++++++++++++++++++++++++++++
+ drivers/staging/cw1200/cw1200_spi.c  | 481 +++++++++++++++++++++++++++++++
+ 3 files changed, 1060 insertions(+)
+ create mode 100644 drivers/staging/cw1200/cw1200_plat.h
+ create mode 100644 drivers/staging/cw1200/cw1200_sdio.c
+ create mode 100644 drivers/staging/cw1200/cw1200_spi.c
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 700d0ed..9a11ec3 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -30,6 +30,7 @@
- 
- #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
- #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
-+#define IEEE80211_IBSS_AUTH_TIMEOUT (HZ / 2)
- 
- #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
- 
-@@ -273,8 +274,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				  false);
- }
- 
--static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
--						  bool auth)
-+static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
- 	__acquires(RCU)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-@@ -284,19 +284,12 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
- 
- 	ibss_dbg(sdata, "Adding new IBSS station %pM\n", addr);
- 
--	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
--	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
--	/* authorize the station only if the network is not RSN protected. If
--	 * not wait for the userspace to authorize it */
--	if (!sta->sdata->u.ibss.control_port)
--		sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
--
- 	rate_control_rate_init(sta);
- 
- 	/* If it fails, maybe we raced another insertion? */
- 	if (sta_info_insert_rcu(sta))
- 		return sta_info_get(sdata, addr);
--	if (auth && !sdata->u.ibss.auth_frame_registrations) {
-+	if (!sdata->u.ibss.auth_frame_registrations) {
- 		ibss_dbg(sdata,
- 			 "TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=1)\n",
- 			 sdata->vif.addr, addr, sdata->u.ibss.bssid);
-@@ -309,7 +302,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
- static struct sta_info *
- ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 		       const u8 *bssid, const u8 *addr,
--		       u32 supp_rates, bool auth)
-+		       u32 supp_rates)
- 	__acquires(RCU)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-@@ -358,7 +351,23 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	sta->sta.supp_rates[band] = supp_rates |
- 			ieee80211_mandatory_rates(local, band);
- 
--	return ieee80211_ibss_finish_sta(sta, auth);
-+	return ieee80211_ibss_finish_sta(sta);
+diff --git a/drivers/staging/cw1200/cw1200_plat.h b/drivers/staging/cw1200/cw1200_plat.h
+new file mode 100644
+index 0000000..5775f38
+--- /dev/null
++++ b/drivers/staging/cw1200/cw1200_plat.h
+@@ -0,0 +1,42 @@
++/*
++ * Copyright (C) ST-Ericsson SA 2011
++ *
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ * License terms: GNU General Public License (GPL) version 2
++ */
++
++#ifndef CW1200_PLAT_H_INCLUDED
++#define CW1200_PLAT_H_INCLUDED
++
++#include <linux/ioport.h>
++
++#include "hwio.h"  /* For DPLL init values */
++
++struct cw1200_platform_data_spi {
++	u8 spi_bits_per_word;           /* REQUIRED */
++	u16 ref_clk;                    /* REQUIRED (in KHz) */
++	const struct resource *reset;   /* Can be NULL w/ HW reset circuit */
++	int (*power_ctrl)(const struct cw1200_platform_data_spi *pdata,
++			  bool enable); /* Can be NULL w/ HW power circuit */
++	int (*clk_ctrl)(const struct cw1200_platform_data_spi *pdata,
++			bool enable); /* Can be NULL */
++	const u8 *macaddr;  /* if NULL, use cw1200_mac_template module parameter */
++	const char *sdd_file;  /* if NULL, will use default for detected hw type */
++};
++
++struct cw1200_platform_data_sdio {
++	const char *mmc_id;             /* REQUIRED */
++	u16 ref_clk;                    /* REQUIRED (in KHz) */
++#ifdef CONFIG_CW1200_USE_GPIO_IRQ
++	const struct resource *irq;     /* REQUIRED */
++#endif
++	const struct resource *reset;   /* Can be NULL w/ HW reset circuit */
++	int (*power_ctrl)(const struct cw1200_platform_data_sdio *pdata,
++			  bool enable); /* Can be NULL w/ HW power circuit */
++	int (*clk_ctrl)(const struct cw1200_platform_data_sdio *pdata,
++			bool enable); /* Can be NULL */
++	const u8 *macaddr;  /* if NULL, use cw1200_mac_template module parameter */
++	const char *sdd_file;  /* if NULL, will use "default" */
++};
++
++#endif /* CW1200_PLAT_H_INCLUDED */
+diff --git a/drivers/staging/cw1200/cw1200_sdio.c b/drivers/staging/cw1200/cw1200_sdio.c
+new file mode 100644
+index 0000000..1affcde
+--- /dev/null
++++ b/drivers/staging/cw1200/cw1200_sdio.c
+@@ -0,0 +1,537 @@
++/*
++ * Mac80211 SDIO driver for ST-Ericsson CW1200 device
++ *
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/version.h>
++#include <linux/module.h>
++#include <linux/gpio.h>
++#include <linux/delay.h>
++#include <linux/mmc/host.h>
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/card.h>
++#include <linux/mmc/sdio.h>
++#include <net/mac80211.h>
++
++#include "cw1200.h"
++#include "sbus.h"
++#include "cw1200_plat.h"
++#include "hwio.h"
++
++MODULE_AUTHOR("Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>");
++MODULE_DESCRIPTION("mac80211 ST-Ericsson CW1200 SDIO driver");
++MODULE_LICENSE("GPL");
++
++#define SDIO_BLOCK_SIZE (512)
++
++#define USE_INTERNAL_RESOURCE_LIST
++/* XXX The intent is that this info is part of the board platform data in arch/mach-xxxx/mach-yyyy.c -- listed here for convenience.. */
++
++/* Declaration only. Should be implemented in arch/xxx/mach-yyy */
++const struct cw1200_platform_data_sdio *cw1200_get_platform_data(void);
++
++#ifdef USE_INTERNAL_RESOURCE_LIST
++#if 0
++static struct resource cw1200_href_resources[] = {
++	{
++		.start = 215,  /* fix me as appropriate */
++		.end = 215,    /* ditto */
++		.flags = IORESOURCE_IO,
++		.name = "cw1200_wlan_reset",
++	},
++#ifdef CONFIG_CW1200_USE_GPIO_IRQ
++	{
++		.start = NOMADIK_GPIO_TO_IRQ(216), /* fix me as appropriate */
++		.end = NOMADIK_GPIO_TO_IRQ(216),   /* ditto */
++		.flags = IORESOURCE_IRQ,
++		.name = "cw1200_wlan_irq",
++	},
++#endif /* CONFIG_CW1200_USE_GPIO_IRQ */
++};
++#endif
++
++static int cw1200_power_ctrl(const struct cw1200_platform_data_sdio *pdata,
++			     bool enable)
++{
++	/* Turn PWR_EN off and on as appropriate. */
++	/* Note this is not needed when there's a hardware reset circuit */
++
++	return 0;
 +}
 +
-+static void ieee80211_ibss_auth_sta(struct sta_info *sta)
++static int cw1200_clk_ctrl(const struct cw1200_platform_data_sdio *pdata,
++			   bool enable)
 +{
-+	if (sta->sta_state > IEEE80211_STA_NONE)
-+		return;
++	/* Turn CLK_32K off and on as appropriate. */
++	/* Note this is not needed if it's always on */
 +
-+	sta_info_move_state(sta, IEEE80211_STA_AUTH);
-+	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
-+	/* authorize the station only if the network is not RSN protected. If
-+	 * not wait for the userspace to authorize it
++	return 0;
++}
++
++struct cw1200_platform_data_sdio cw1200_platform_data = {
++	.mmc_id = "mmc1",
++	.ref_clk = 38400,
++#if 0
++	.reset = &cw1200_href_resources[0],
++#ifdef CONFIG_CW1200_USE_GPIO_IRQ
++	.irq = &cw1200_href_resources[1],
++#endif
++#endif
++	.power_ctrl = cw1200_power_ctrl,
++	.clk_ctrl = cw1200_clk_ctrl,
++	.sdd_file = "sdd_sagrad_1091_1098.bin",
++};
++
++const struct cw1200_platform_data_sdio *cw1200_get_platform_data(void)
++{
++	return &cw1200_platform_data;
++}
++EXPORT_SYMBOL_GPL(cw1200_get_platform_data);
++#endif
++
++struct sbus_priv {
++	struct sdio_func	*func;
++	struct cw1200_common	*core;
++	const struct cw1200_platform_data_sdio *pdata;
++};
++
++#ifndef SDIO_VENDOR_ID_STE
++#define SDIO_VENDOR_ID_STE		0x0020
++#endif
++
++#ifndef SDIO_DEVICE_ID_STE_CW1200
++#define SDIO_DEVICE_ID_STE_CW1200	0x2280
++#endif
++
++static const struct sdio_device_id cw1200_sdio_ids[] = {
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_STE, SDIO_DEVICE_ID_STE_CW1200) },
++	{ /* end: all zeroes */			},
++};
++
++/* sbus_ops implemetation */
++
++static int cw1200_sdio_memcpy_fromio(struct sbus_priv *self,
++				     unsigned int addr,
++				     void *dst, int count)
++{
++	return sdio_memcpy_fromio(self->func, dst, addr, count);
++}
++
++static int cw1200_sdio_memcpy_toio(struct sbus_priv *self,
++				   unsigned int addr,
++				   const void *src, int count)
++{
++	return sdio_memcpy_toio(self->func, addr, (void *)src, count);
++}
++
++static void cw1200_sdio_lock(struct sbus_priv *self)
++{
++	sdio_claim_host(self->func);
++}
++
++static void cw1200_sdio_unlock(struct sbus_priv *self)
++{
++	sdio_release_host(self->func);
++}
++
++#ifndef CONFIG_CW1200_POLL_IRQ
++
++#ifndef CONFIG_CW1200_USE_GPIO_IRQ
++static void cw1200_sdio_irq_handler(struct sdio_func *func)
++{
++	struct sbus_priv *self = sdio_get_drvdata(func);
++
++	BUG_ON(!self);
++
++	/* note:  sdio_host already claimed here. */
++	cw1200_irq_handler(self->core);
++}
++static void cw1200_sdio_irq_enable(struct sbus_priv *self, int enable)
++{
++	__cw1200_irq_enable(self->core, enable);
++}
++
++#else /* CONFIG_CW1200_USE_GPIO_IRQ */
++static irqreturn_t cw1200_gpio_irq_handler(int irq, void *dev_id)
++{
++	struct sbus_priv *self = dev_id;
++
++	BUG_ON(!self);
++	cw1200_irq_handler(self->core);
++	return IRQ_HANDLED;
++}
++
++static int cw1200_request_irq(struct sbus_priv *self,
++			      irq_handler_t handler)
++{
++	int ret;
++	int func_num;
++	const struct resource *irq = self->pdata->irq;
++	u8 cccr;
++
++	ret = request_any_context_irq(irq->start, handler,
++			IRQF_TRIGGER_FALLING, irq->name, self);
++	if (WARN_ON(ret < 0))
++		goto exit;
++
++	/* Hack to access Fuction-0 */
++	func_num = self->func->num;
++	self->func->num = 0;
++
++	cccr = sdio_readb(self->func, SDIO_CCCR_IENx, &ret);
++	if (WARN_ON(ret))
++		goto set_func;
++
++	/* Master interrupt enable ... */
++	cccr |= BIT(0);
++
++	/* ... for our function */
++	cccr |= BIT(func_num);
++
++	sdio_writeb(self->func, cccr, SDIO_CCCR_IENx, &ret);
++	if (WARN_ON(ret))
++		goto set_func;
++
++#ifdef CONFIG_CW1200_PM
++	ret = enable_irq_wake(self->pdata->irq->start);
++	if (WARN_ON(ret))
++		goto set_func;
++#endif
++
++	/* Restore the WLAN function number */
++	self->func->num = func_num;
++	return 0;
++
++set_func:
++	self->func->num = func_num;
++	free_irq(irq->start, self);
++exit:
++	return ret;
++}
++#endif /* CONFIG_CW1200_USE_GPIO_IRQ */
++
++static int cw1200_sdio_irq_subscribe(struct sbus_priv *self)
++{
++	int ret = 0;
++
++	pr_debug("SW IRQ subscribe\n");
++	sdio_claim_host(self->func);
++#ifndef CONFIG_CW1200_USE_GPIO_IRQ
++	ret = sdio_claim_irq(self->func, cw1200_sdio_irq_handler);
++#else
++	ret = cw1200_request_irq(self, cw1200_gpio_irq_handler);
++#endif
++	sdio_release_host(self->func);
++	return ret;
++}
++
++static int cw1200_sdio_irq_unsubscribe(struct sbus_priv *self)
++{
++	int ret = 0;
++#ifdef CONFIG_CW1200_USE_GPIO_IRQ
++	const struct resource *irq = self->pdata->irq;
++#endif
++
++	pr_debug("SW IRQ unsubscribe\n");
++#ifndef CONFIG_CW1200_USE_GPIO_IRQ
++	sdio_claim_host(self->func);
++	ret = sdio_release_irq(self->func);
++	sdio_release_host(self->func);
++#else
++#ifdef CONFIG_CW1200_PM
++	disable_irq_wake(self->pdata->irq->start);
++#endif
++	free_irq(irq->start, self);
++#endif
++
++	return ret;
++}
++#endif
++
++static int cw1200_detect_card(const struct cw1200_platform_data_sdio *pdata)
++{
++	/* HACK!!!
++	 * Rely on mmc->class_dev.class set in mmc_alloc_host
++	 * Tricky part: a new mmc hook is being (temporary) created
++	 * to discover mmc_host class.
++	 * Do you know more elegant way how to enumerate mmc_hosts?
 +	 */
-+	if (!sta->sdata->u.ibss.control_port)
-+		sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
 +
-+	cfg80211_ibss_sta(sta->sdata->dev, sta->sta.addr, GFP_KERNEL);
- }
- 
- static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
-@@ -395,13 +404,36 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
- 		 "RX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=%d)\n",
- 		 mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
- 
--	if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1)
-+	if (auth_alg != WLAN_AUTH_OPEN)
- 		return;
- 
--	sta_info_destroy_addr(sdata, mgmt->sa);
--	sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
-+	rcu_read_lock();
-+	sta = sta_info_get(sdata, mgmt->sa);
- 	rcu_read_unlock();
- 
-+	if (auth_transaction == 2) {
-+		ibss_dbg(sdata, "Authenticating STA %pM\n", sta->sta.addr);
-+		ieee80211_ibss_auth_sta(sta);
-+		return;
-+	}
++	struct mmc_host *mmc = NULL;
++	struct class_dev_iter iter;
++	struct device *dev;
 +
-+	/* drop bogus auth frames (auth_transaction can be only 1 or 2) */
-+	if (auth_transaction != 1)
-+		return;
++	mmc = mmc_alloc_host(0, NULL);
++	if (!mmc)
++		return -ENOMEM;
 +
-+	if (sta && sdata->u.ibss.control_port &&
-+	    sta->sta_state == IEEE80211_STA_AUTHORIZED) {
-+		ibss_dbg(sdata, "Resetting STA %pM state for IBSS Encryption\n",
-+			 sta->sta.addr);
-+		sta_info_destroy_addr(sdata, mgmt->sa);
-+		sta = NULL;
-+	}
++	BUG_ON(!mmc->class_dev.class);
++	class_dev_iter_init(&iter, mmc->class_dev.class, NULL, NULL);
++	for (;;) {
++		dev = class_dev_iter_next(&iter);
++		if (!dev) {
++			pr_err("cw1200: %s is not found.\n",
++				pdata->mmc_id);
++			break;
++		} else {
++			struct mmc_host *host = container_of(dev,
++				struct mmc_host, class_dev);
 +
-+	if (!sta) {
-+		sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0);
-+		rcu_read_unlock();
-+	}
++			if (dev_name(&host->class_dev) &&
++				strcmp(dev_name(&host->class_dev),
++					pdata->mmc_id))
++				continue;
 +
- 	/*
- 	 * if we have any problem in allocating the new station, we reply with a
- 	 * DEAUTH frame to tell the other end that we had a problem
-@@ -414,12 +446,16 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- 
-+	sta->last_auth = jiffies;
-+
- 	/*
- 	 * IEEE 802.11 standard does not require authentication in IBSS
- 	 * networks and most implementations do not seem to use it.
- 	 * However, try to reply to authentication attempts if someone
- 	 * has actually implemented this.
- 	 */
-+	ibss_dbg(sdata, "TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=2)\n",
-+		 sdata->vif.addr, mgmt->sa, sdata->u.ibss.bssid);
- 	ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, 0, NULL, 0,
- 			    mgmt->sa, sdata->u.ibss.bssid, NULL, 0, 0);
- }
-@@ -481,7 +517,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 			} else {
- 				rcu_read_unlock();
- 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
--						mgmt->sa, supp_rates, true);
-+						mgmt->sa, supp_rates);
- 			}
- 		}
- 
-@@ -592,7 +628,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_sta_join_ibss(sdata, bss);
- 		supp_rates = ieee80211_sta_get_rates(local, elems, band, NULL);
- 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
--				       supp_rates, true);
-+				       supp_rates);
- 		rcu_read_unlock();
- 	}
- 
-@@ -675,6 +711,29 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
- 	return active;
- }
- 
-+static void ieee80211_ibss_auth_expire(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+
-+	list_for_each_entry(sta, &local->sta_list, list) {
-+		if (sdata != sta->sdata)
-+			continue;
-+
-+		if (sta->sta_state > IEEE80211_STA_NONE)
-+			continue;
-+
-+		if (time_after(jiffies,
-+			       sta->last_auth + IEEE80211_IBSS_AUTH_TIMEOUT)) {
-+			ibss_dbg(sdata,
-+				 "Authenticating IBSS STA %pM by timeout\n",
-+				 sta->sta.addr);
-+			ieee80211_ibss_auth_sta(sta);
++			mmc_detect_change(host, 10);
++			break;
 +		}
 +	}
++	mmc_free_host(mmc);
++	return 0;
++}
++
++static int cw1200_sdio_off(const struct cw1200_platform_data_sdio *pdata)
++{
++	const struct resource *reset = pdata->reset;
++
++	if (reset) {
++		gpio_set_value(reset->start, 0);
++		gpio_free(reset->start);
++		cw1200_detect_card(pdata);
++	}
++
++	if (pdata->power_ctrl)
++		pdata->power_ctrl(pdata, false);
++	if (pdata->clk_ctrl)
++		pdata->clk_ctrl(pdata, false);
++
++	return 0;
++}
++
++static int cw1200_sdio_on(const struct cw1200_platform_data_sdio *pdata)
++{
++	const struct resource *reset = pdata->reset;
++
++	if (pdata->clk_ctrl) {
++		if (pdata->clk_ctrl(pdata, true)) {
++			pr_err("clk_ctrl() failed!\n");
++			return -1;
++		}
++		msleep(20); /* XXX may be lowered? */
++	}
++
++	if (pdata->power_ctrl) {
++		if (pdata->power_ctrl(pdata, true)) {
++			pr_err("power_ctrl() failed!\n");
++			return -1;
++		}
++		msleep(250);  /* can be lowered probably */
++	}
++
++	if (!reset)
++		return 0;
++	gpio_request(reset->start, reset->name);
++	gpio_direction_output(reset->start, 0);
++	/* A valid reset shall be obtained by maintaining WRESETN
++	 * active (low) for at least two cycles of LP_CLK (32768Hz)
++	 * after VDDIO is stable within it operating range. */
++	msleep(30);
++	gpio_set_value(reset->start, 1);
++	/* The host should wait 30 ms after the WRESETN release
++	 * for the on-chip LDO to stabilize */
++	msleep(60);
++	cw1200_detect_card(pdata);
++	return 0;
++}
++
++static int cw1200_sdio_reset(struct sbus_priv *self)
++{
++	cw1200_sdio_off(self->pdata);
++	msleep(1000);
++	cw1200_sdio_on(self->pdata);
++	return 0;
++}
++
++static size_t cw1200_sdio_align_size(struct sbus_priv *self, size_t size)
++{
++#if defined(CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES)
++	size = sdio_align_size(self->func, size);
++#else /* CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES */
++	size = round_up(size, SDIO_BLOCK_SIZE);
++#endif /* CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES */
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0))
++	/* A quirk to handle this was committed in 3.2-rc */
++	if (size == SDIO_BLOCK_SIZE)
++		size += SDIO_BLOCK_SIZE;  /* HW bug; force use of block mode */
++#endif
++
++	return size;
++}
++
++#ifdef CONFIG_CW1200_PM
++static int cw1200_sdio_pm(struct sbus_priv *self, bool suspend)
++{
++	int ret = 0;
++
++#ifdef CONFIG_CW1200_USE_GPIO_IRQ
++	ret = irq_set_irq_wake(self->pdata->irq->start, suspend);
++#endif
++	return ret;
++}
++#endif
++
++static struct sbus_ops cw1200_sdio_sbus_ops = {
++	.sbus_memcpy_fromio	= cw1200_sdio_memcpy_fromio,
++	.sbus_memcpy_toio	= cw1200_sdio_memcpy_toio,
++	.lock			= cw1200_sdio_lock,
++	.unlock			= cw1200_sdio_unlock,
++#ifndef CONFIG_CW1200_POLL_IRQ
++	.irq_subscribe		= cw1200_sdio_irq_subscribe,
++	.irq_unsubscribe	= cw1200_sdio_irq_unsubscribe,
++#ifndef CONFIG_CW1200_USE_GPIO_IRQ
++	.irq_enable             = cw1200_sdio_irq_enable,
++#endif
++#endif
++	.reset			= cw1200_sdio_reset,
++	.align_size		= cw1200_sdio_align_size,
++#ifdef CONFIG_CW1200_PM
++	.power_mgmt		= cw1200_sdio_pm,
++#endif
++};
++
++/* Probe Function to be called by SDIO stack when device is discovered */
++static int __devinit cw1200_sdio_probe(struct sdio_func *func,
++				       const struct sdio_device_id *id)
++{
++	struct sbus_priv *self;
++	int status;
++
++	pr_info("cw1200_wlan_sdio Probe called\n");
++
++	self = kzalloc(sizeof(*self), GFP_KERNEL);
++	if (!self) {
++		pr_err("Can't allocate SDIO sbus_priv.\n");
++		return -ENOMEM;
++	}
++
++	self->pdata = cw1200_get_platform_data();
++	self->func = func;
++	sdio_set_drvdata(func, self);
++	sdio_claim_host(func);
++	sdio_enable_func(func);
++	sdio_release_host(func);
++
++	status = cw1200_core_probe(&cw1200_sdio_sbus_ops,
++				   self, &func->dev, &self->core,
++				   self->pdata->ref_clk,
++				   self->pdata->macaddr,
++				   self->pdata->sdd_file);
++	if (status) {
++		sdio_claim_host(func);
++		sdio_disable_func(func);
++		sdio_release_host(func);
++		sdio_set_drvdata(func, NULL);
++		kfree(self);
++	}
++
++	return status;
++}
++
++/* Disconnect Function to be called by SDIO stack when
++ * device is disconnected */
++static void __devexit cw1200_sdio_disconnect(struct sdio_func *func)
++{
++	struct sbus_priv *self = sdio_get_drvdata(func);
++
++	if (self) {
++#ifndef CONFIG_CW1200_POLL_IRQ
++		cw1200_sdio_irq_unsubscribe(self);
++#endif
++		if (self->core) {
++			cw1200_core_release(self->core);
++			self->core = NULL;
++		}
++		sdio_claim_host(func);
++		sdio_disable_func(func);
++		sdio_release_host(func);
++		sdio_set_drvdata(func, NULL);
++		kfree(self);
++	}
++}
++
++static int cw1200_suspend(struct device *dev)
++{
++	int ret;
++	struct sdio_func *func = dev_to_sdio_func(dev);
++
++	/* Notify SDIO that CW1200 will remain powered during suspend */
++	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
++	if (ret)
++		pr_err("Error setting SDIO pm flags: %i\n", ret);
++
++	return ret;
++}
++
++static int cw1200_resume(struct device *dev)
++{
++	return 0;
++}
++
++static const struct dev_pm_ops cw1200_pm_ops = {
++	.suspend = cw1200_suspend,
++	.resume = cw1200_resume,
++};
++
++static struct sdio_driver sdio_driver = {
++	.name		= "cw1200_wlan_sdio",
++	.id_table	= cw1200_sdio_ids,
++	.probe		= cw1200_sdio_probe,
++	.remove		= __devexit_p(cw1200_sdio_disconnect),
++	.drv = {
++		.pm = &cw1200_pm_ops,
++	}
++};
++
++/* Init Module function -> Called by insmod */
++static int __init cw1200_sdio_init(void)
++{
++	const struct cw1200_platform_data_sdio *pdata;
++	int ret;
++
++	pdata = cw1200_get_platform_data();
++
++	if (cw1200_sdio_on(pdata)) {
++		ret = -1;
++		goto err;
++	}
++
++	ret = sdio_register_driver(&sdio_driver);
++	if (ret)
++		goto err;
++
++	return 0;
++
++err:
++	cw1200_sdio_off(pdata);
++	return ret;
++}
++
++/* Called at Driver Unloading */
++static void __exit cw1200_sdio_exit(void)
++{
++	const struct cw1200_platform_data_sdio *pdata;
++	pdata = cw1200_get_platform_data();
++	sdio_unregister_driver(&sdio_driver);
++	cw1200_sdio_off(pdata);
 +}
 +
 +
- /*
-  * This function is called with state == IEEE80211_IBSS_MLME_JOINED
-  */
-@@ -688,6 +747,8 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- 	mod_timer(&ifibss->timer,
- 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
- 
-+	ieee80211_ibss_auth_expire(sdata);
++module_init(cw1200_sdio_init);
++module_exit(cw1200_sdio_exit);
+diff --git a/drivers/staging/cw1200/cw1200_spi.c b/drivers/staging/cw1200/cw1200_spi.c
+new file mode 100644
+index 0000000..f9f855e
+--- /dev/null
++++ b/drivers/staging/cw1200/cw1200_spi.c
+@@ -0,0 +1,481 @@
++/*
++ * Mac80211 SPI driver for ST-Ericsson CW1200 device
++ *
++ * Copyright (c) 2011, Sagrad Inc.
++ * Author:  Solomon Peachy <speachy@sagrad.com>
++ *
++ * Based on cw1200_gpio.c
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
 +
- 	ieee80211_sta_expire(sdata, IEEE80211_IBSS_INACTIVITY_LIMIT);
- 
- 	if (time_before(jiffies, ifibss->last_scan_completed +
-@@ -976,7 +1037,7 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
- 		list_del(&sta->list);
- 		spin_unlock_bh(&ifibss->incomplete_lock);
- 
--		ieee80211_ibss_finish_sta(sta, true);
-+		ieee80211_ibss_finish_sta(sta);
- 		rcu_read_unlock();
- 		spin_lock_bh(&ifibss->incomplete_lock);
- 	}
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 1489bca..3c150a4 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -244,6 +244,7 @@ struct sta_ampdu_mlme {
-  * @rx_bytes: Number of bytes received from this STA
-  * @wep_weak_iv_count: number of weak WEP IVs received from this station
-  * @last_rx: time (in jiffies) when last frame was received from this STA
-+ * @last_auth: jiffies of last auth packet with seq = 1
-  * @last_connected: time (in seconds) when a station got connected
-  * @num_duplicates: number of duplicate frames received from this STA
-  * @rx_fragments: number of received MPDUs
-@@ -324,6 +325,7 @@ struct sta_info {
- 	unsigned long rx_packets, rx_bytes;
- 	unsigned long wep_weak_iv_count;
- 	unsigned long last_rx;
-+	unsigned long last_auth;
- 	long last_connected;
- 	unsigned long num_duplicates;
- 	unsigned long rx_fragments;
++#include <linux/version.h>
++#include <linux/module.h>
++#include <linux/gpio.h>
++#include <linux/delay.h>
++#include <net/mac80211.h>
++
++#include <linux/spi/spi.h>
++#include <linux/device.h>
++
++#include "cw1200.h"
++#include "sbus.h"
++#include "cw1200_plat.h"
++#include "hwio.h"
++
++MODULE_AUTHOR("Solomon Peachy <speachy@sagrad.com>");
++MODULE_DESCRIPTION("mac80211 ST-Ericsson CW1200 SPI driver");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("spi:cw1200_wlan_spi");
++
++#if 0
++/* Note that this is an example of integrating into your board support file */
++static struct resource cw1200_href_resources[] = {
++	{
++		.start = GPIO_RF_RESET,
++		.end = GPIO_RF_RESET,
++		.flags = IORESOURCE_IO,
++		.name = "cw1200_wlan_reset",
++	},
++};
++
++static int cw1200_power_ctrl(const struct cw1200_platform_data_spi *pdata,
++			     bool enable)
++{
++	gpio_set_value(GPIO_RF_POWER, enable);
++
++	/* Turn PWR_EN off and on as appropriate. */
++	/* Note this is not needed when there's a hardware reset circuit */
++	return 0;
++}
++static int cw1200_clk_ctrl(const struct cw1200_platform_data_spi *pdata,
++			   bool enable)
++{
++	/* Turn CLK_32K off and on as appropriate. */
++	/* Note this is not needed if it's always on */
++	return 0;
++}
++
++static struct cw1200_platform_data_spi cw1200_platform_data = {
++	.ref_clk = 38400,
++	.spi_bits_per_word = 16,
++	.reset = &cw1200_href_resources[0],
++	.power_ctrl = cw1200_power_ctrl,
++	.clk_ctrl = cw1200_clk_ctrl,
++/*	.macaddr = ??? */
++	.sdd_file = "sdd_sagrad_1091_1098.bin",
++};
++static struct spi_board_info myboard_spi_devices[] __initdata = {
++	{
++		.modalias = "cw1200_wlan_spi",
++		.max_speed_hz = 10000000, /* 52MHz Max */
++		.bus_num = 0,
++		.irq = WIFI_IRQ,
++		.platform_data = &cw1200_platform_data,
++		.chip_select = 0,
++	},
++};
++#endif
++
++struct sbus_priv {
++	struct spi_device	*func;
++	struct cw1200_common	*core;
++	const struct cw1200_platform_data_spi *pdata;
++};
++
++/* sbus_ops implemetation */
++
++#define SDIO_TO_SPI_ADDR(addr) ((addr & 0x1f)>>2)
++#define SET_WRITE 0x7FFF /* usage: and operation */
++#define SET_READ 0x8000  /* usage: or operation */
++
++/* Notes on byte ordering:
++   LE:  B0 B1 B2 B3
++   BE:  B3 B2 B1 B0
++
++   Hardware expects 32-bit data in this order:
++
++   B1 B0 B3 B2
++*/
++
++static int cw1200_spi_memcpy_fromio(struct sbus_priv *self,
++				     unsigned int addr,
++				     void *dst, int count)
++{
++	int ret, i;
++	uint16_t regaddr;
++	struct spi_message      m;
++
++	struct spi_transfer     t_addr = {
++		.tx_buf         = &regaddr,
++		.len            = sizeof(regaddr),
++	};
++	struct spi_transfer     t_msg = {
++		.rx_buf         = dst,
++		.len            = count,
++	};
++
++	regaddr = (SDIO_TO_SPI_ADDR(addr))<<12;
++	regaddr |= SET_READ;
++	regaddr |= (count>>1);
++	regaddr = cpu_to_le16(regaddr);
++
++	/* pr_info("READ : %04d from 0x%02x (%04x)\n", count, addr, le16_to_cpu(regaddr)); */
++
++#if defined(__LITTLE_ENDIAN)
++	/* We have to byteswap if the SPI bus is limited to 8b operation */
++	if (self->func->bits_per_word == 8)
++#endif
++		regaddr = swab16(regaddr);
++
++	spi_message_init(&m);
++	spi_message_add_tail(&t_addr, &m);
++	spi_message_add_tail(&t_msg, &m);
++	ret = spi_sync(self->func, &m);
++
++#if 0
++	pr_info("READ : ");
++	for (i = 0 ; i < t_addr.len ; i++)
++		printk("%02x ", ((u8 *)t_addr.tx_buf)[i]);
++	printk(" : ");
++	for (i = 0 ; i < t_msg.len ; i++)
++		printk("%02x ", ((u8 *)t_msg.rx_buf)[i]);
++	printk("\n");
++#endif
++
++#if defined(__LITTLE_ENDIAN)
++	/* We have to byteswap if the SPI bus is limited to 8b operation */
++	if (self->func->bits_per_word == 8)
++#endif
++	{
++		uint16_t *buf = (uint16_t *)dst;
++		for (i = 0 ; i < (count + 1) >> 1 ; i++) {
++			buf[i] = swab16(buf[i]);
++		}
++	}
++
++	return ret;
++}
++
++static int cw1200_spi_memcpy_toio(struct sbus_priv *self,
++				   unsigned int addr,
++				   const void *src, int count)
++{
++	int rval, i;
++	uint16_t regaddr;
++	struct spi_transfer     t_addr = {
++		.tx_buf         = &regaddr,
++		.len            = sizeof(regaddr),
++	};
++	struct spi_transfer     t_msg = {
++		.tx_buf         = src,
++		.len            = count,
++	};
++	struct spi_message      m;
++
++	regaddr = (SDIO_TO_SPI_ADDR(addr))<<12;
++	regaddr &= SET_WRITE;
++	regaddr |= (count>>1);
++	regaddr = cpu_to_le16(regaddr);
++
++	/* pr_info("WRITE: %04d  to  0x%02x (%04x)\n", count, addr, le16_to_cpu(regaddr)); */
++
++#if defined(__LITTLE_ENDIAN)
++	/* We have to byteswap if the SPI bus is limited to 8b operation */
++	if (self->func->bits_per_word == 8)
++#endif
++	{
++		uint16_t *buf = (uint16_t *)src;
++		regaddr = swab16(regaddr);
++		for (i = 0 ; i < (count + 1) >> 1 ; i++)
++			buf[i] = swab16(buf[i]);
++	}
++
++#if 0
++	pr_info("WRITE: ");
++	for (i = 0 ; i < t_addr.len ; i++)
++		printk("%02x ", ((u8 *)t_addr.tx_buf)[i]);
++	printk(" : ");
++	for (i = 0 ; i < t_msg.len ; i++)
++		printk("%02x ", ((u8 *)t_msg.tx_buf)[i]);
++	printk("\n");
++#endif
++
++	spi_message_init(&m);
++	spi_message_add_tail(&t_addr, &m);
++	spi_message_add_tail(&t_msg, &m);
++	rval = spi_sync(self->func, &m);
++
++#if 0
++	pr_info("WROTE: %d\n", m.actual_length);
++#endif
++
++#if defined(__LITTLE_ENDIAN)
++	/* We have to byteswap if the SPI bus is limited to 8b operation */
++	if (self->func->bits_per_word == 8)
++#endif
++	{
++		uint16_t *buf = (uint16_t *)src;
++		for (i = 0 ; i < (count + 1) >> 1 ; i++)
++			buf[i] = swab16(buf[i]);
++	}
++	return rval;
++}
++
++static void cw1200_spi_lock(struct sbus_priv *self)
++{
++	return;
++}
++
++static void cw1200_spi_unlock(struct sbus_priv *self)
++{
++	return;
++}
++
++#ifndef CONFIG_CW1200_POLL_IRQ
++static irqreturn_t cw1200_spi_irq_handler(int irq, void *dev_id)
++{
++	struct sbus_priv *self = dev_id;
++
++	BUG_ON(!self);
++	cw1200_irq_handler(self->core);
++	return IRQ_HANDLED;
++}
++
++static int cw1200_spi_irq_subscribe(struct sbus_priv *self)
++{
++	int ret;
++
++	pr_debug("SW IRQ subscribe\n");
++
++	ret = request_any_context_irq(self->func->irq, cw1200_spi_irq_handler,
++				      IRQF_TRIGGER_RISING,
++				      "cw1200_wlan_irq", self);
++	if (WARN_ON(ret < 0))
++		goto exit;
++
++#ifdef CONFIG_CW1200_PM
++	ret = enable_irq_wake(self->func->irq);
++	if (WARN_ON(ret))
++		goto free_irq;
++#endif
++
++	return 0;
++
++#ifdef CONFIG_CW1200_PM
++free_irq:
++	free_irq(self->func->irq, self);
++#endif
++exit:
++	return ret;
++}
++
++static int cw1200_spi_irq_unsubscribe(struct sbus_priv *self)
++{
++	int ret = 0;
++
++	pr_debug("SW IRQ unsubscribe\n");
++#ifdef CONFIG_CW1200_PM
++	disable_irq_wake(self->func->irq);
++#endif
++	free_irq(self->func->irq, self);
++
++	return ret;
++}
++#endif
++
++static int cw1200_spi_off(const struct cw1200_platform_data_spi *pdata)
++{
++	const struct resource *reset = pdata->reset;
++
++	if (reset) {
++		gpio_set_value(reset->start, 0);
++		gpio_free(reset->start);
++	}
++
++	if (pdata->power_ctrl)
++		pdata->power_ctrl(pdata, false);
++	if (pdata->clk_ctrl)
++		pdata->clk_ctrl(pdata, false);
++
++	return 0;
++}
++
++static int cw1200_spi_on(const struct cw1200_platform_data_spi *pdata)
++{
++	const struct resource *reset = pdata->reset;
++
++	if (pdata->clk_ctrl) {
++		if (pdata->clk_ctrl(pdata, true)) {
++			pr_err("clk_ctrl() failed!\n");
++			return -1;
++		}
++		msleep(20); /* XXX may be lowered? */
++	}
++
++	if (pdata->power_ctrl) {
++		if (pdata->power_ctrl(pdata, true)) {
++			pr_err("power_ctrl() failed!\n");
++			return -1;
++		}
++		msleep(250);  /* XXX can be lowered probably */
++	}
++
++	if (!reset)
++		return 0;
++	gpio_request(reset->start, reset->name);
++	gpio_direction_output(reset->start, 0);
++	/* A valid reset shall be obtained by maintaining WRESETN
++	 * active (low) for at least two cycles of LP_CLK (32768Hz)
++	 * after VDDIO is stable within it operating range. */
++	msleep(30);
++	gpio_set_value(reset->start, 1);
++	/* The host should wait 30 ms after the WRESETN release
++	 * for the on-chip LDO to stabilize */
++	msleep(60);
++	return 0;
++}
++
++static int cw1200_spi_reset(struct sbus_priv *self)
++{
++	cw1200_spi_off(self->pdata);
++	msleep(1000);
++	cw1200_spi_on(self->pdata);
++	return 0;
++}
++
++static size_t cw1200_spi_align_size(struct sbus_priv *self, size_t size)
++{
++	return size & 1 ? size + 1 : size;
++}
++
++#ifdef CONFIG_CW1200_PM
++static int cw1200_spi_pm(struct sbus_priv *self, bool suspend)
++{
++	return irq_set_irq_wake(self->func->irq, suspend);
++}
++#endif
++
++static struct sbus_ops cw1200_spi_sbus_ops = {
++	.sbus_memcpy_fromio	= cw1200_spi_memcpy_fromio,
++	.sbus_memcpy_toio	= cw1200_spi_memcpy_toio,
++	.lock			= cw1200_spi_lock,
++	.unlock			= cw1200_spi_unlock,
++#ifndef CONFIG_CW1200_POLL_IRQ
++	.irq_subscribe		= cw1200_spi_irq_subscribe,
++	.irq_unsubscribe	= cw1200_spi_irq_unsubscribe,
++#endif
++	.reset			= cw1200_spi_reset,
++	.align_size		= cw1200_spi_align_size,
++#ifdef CONFIG_CW1200_PM
++	.power_mgmt		= cw1200_spi_pm,
++#endif
++};
++
++/* Probe Function to be called by SPI stack when device is discovered */
++static int __devinit cw1200_spi_probe(struct spi_device *func)
++{
++	const struct cw1200_platform_data_spi *plat_data = func->dev.platform_data;
++	struct sbus_priv *self;
++	int status;
++
++	/* Sanity check speed */
++	if (func->max_speed_hz > 52000000)
++		func->max_speed_hz = 52000000;
++	if (func->max_speed_hz < 1000000)
++		func->max_speed_hz = 1000000;
++
++	/* Fix up transfer size */
++	if (plat_data->spi_bits_per_word)
++		func->bits_per_word = plat_data->spi_bits_per_word;
++	if (!func->bits_per_word)
++		func->bits_per_word = 16;
++
++	/* And finally.. */
++	func->mode = SPI_MODE_0;
++
++	pr_info("cw1200_wlan_spi Probe called (CS %d M %d BPW %d CLK %d)\n",
++	       func->chip_select, func->mode, func->bits_per_word, func->max_speed_hz);
++
++	if (cw1200_spi_on(plat_data)) {
++		pr_err("spi_on() failed!\n");
++		return -1;
++	}
++
++	if (spi_setup(func)) {
++		pr_err("spi_setup() failed!\n");
++		return -1;
++	}
++
++	self = kzalloc(sizeof(*self), GFP_KERNEL);
++	if (!self) {
++		pr_err("Can't allocate SPI sbus_priv.");
++		return -ENOMEM;
++	}
++
++	self->pdata = plat_data;
++	self->func = func;
++	spi_set_drvdata(func, self);
++
++	status = cw1200_core_probe(&cw1200_spi_sbus_ops,
++				   self, &func->dev, &self->core,
++				   self->pdata->ref_clk,
++				   self->pdata->macaddr,
++				   self->pdata->sdd_file);
++
++	if (status) {
++		cw1200_spi_off(plat_data);
++		kfree(self);
++	}
++
++	return status;
++}
++
++/* Disconnect Function to be called by SPI stack when device is disconnected */
++static int __devexit cw1200_spi_disconnect(struct spi_device *func)
++{
++	struct sbus_priv *self = spi_get_drvdata(func);
++
++	if (self) {
++#ifndef CONFIG_CW1200_POLL_IRQ
++		cw1200_spi_irq_unsubscribe(self);
++#endif
++		if (self->core) {
++			cw1200_core_release(self->core);
++			self->core = NULL;
++		}
++		kfree(self);
++	}
++	cw1200_spi_off(func->dev.platform_data);
++
++	return 0;
++}
++
++static struct spi_driver spi_driver = {
++	.probe		= cw1200_spi_probe,
++	.remove		= __devexit_p(cw1200_spi_disconnect),
++	.driver = {
++		.name		= "cw1200_wlan_spi",
++		.bus            = &spi_bus_type,
++		.owner          = THIS_MODULE,
++	},
++};
++
++/* Init Module function -> Called by insmod */
++static int __init cw1200_spi_init(void)
++{
++	return spi_register_driver(&spi_driver);
++}
++
++/* Called at Driver Unloading */
++static void __exit cw1200_spi_exit(void)
++{
++	spi_unregister_driver(&spi_driver);
++}
++
++module_init(cw1200_spi_init);
++module_exit(cw1200_spi_exit);
 -- 
-1.8.0
+1.7.11.7
 
