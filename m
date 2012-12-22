@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51250 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752645Ab2L1DLO (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:46006 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751866Ab2LVRvf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 22:11:14 -0500
-Received: by mail-wi0-f172.google.com with SMTP id o1so7979801wic.17
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2012 19:11:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20121218134611.GA7053@pandem0nium>
-References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	<20121213140753.GA26868@pandem0nium>
-	<50D04EC9.2040805@neratec.com>
-	<20121218134611.GA7053@pandem0nium>
-Date: Thu, 27 Dec 2012 19:11:12 -0800
-Message-ID: <CAJ-Vmo=MzOVgk45fcSKeA5Kj-8x9zMUE=Ld-u4D1qLQSjMGBoA@mail.gmail.com> (sfid-20121228_041118_205510_F136D0E3)
-Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
-From: Adrian Chadd <adrian@freebsd.org>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>, nbd@openwrt.org,
-	jonbither@gmail.com, kgiori@qca.qualcomm.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 22 Dec 2012 12:51:35 -0500
+Received: by mail-bk0-f44.google.com with SMTP id w11so2855400bku.3
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 09:51:33 -0800 (PST)
+In-Reply-To: <20121222171854.3ee183a36a12491da52553a9@o2.pl>
+References: <20121222171854.3ee183a36a12491da52553a9@o2.pl>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 22 Dec 2012 18:30:01 +0100
+Subject: [PATCH v2] p54usb: add USB ID for T-Com Sinus 154 data II
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, tsg@o2.pl
+Message-Id: <E1TmT8k-0006UE-3m@debian64.localnet> (sfid-20121222_185149_863104_2E7ABC53)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 December 2012 05:46, Simon Wunderlich
-<simon.wunderlich@s2003.tu-chemnitz.de> wrote:
+From: Tomasz Guszkowski <tsg@o2.pl>
 
->> As for the incorrect data, there are 4 cases to consider:
->> 1) data length is correct => take the 56 bins as is
->> 2) data length is 1 less => duplicate the first bin
->> 3) data length is 2 more => remove bins 30 and 32
->> 4) data length is 1 more => combine 2) + 3)
->
-> ... didn't see THAT coming. But that explains it very well how to
-> handle these varying data lengths. Although I wonder how this can happen.
-> I guess there are some chip-internal reasons ...
+Added USB ID for T-Com Sinus 154 data II.
 
-It's a known problem. It's fixed in later silicon.
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Tomasz Guszkowski <tsg@o2.pl>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+Thank you for reporting this one. A few minutes ago, I added
+the device to our Supported USB wireless devices' list at:
+<http://http://wireless.kernel.org/en/users/Drivers/p54/devices>
 
-But yes, that's quite a bit of analysis by Zefir to classify and
-repair those samples. Good work!
+Changes from v1:
+	- put device id into the ISL3887 section
+	  [which it probably is, since it needs the LM87 FW]
+	- Added Cc -stable
+	  [-stable allows usbid patches anytime]
+	- cc'd John
 
+Regards
 
-Adrian
+Chrisitan
+---
+ drivers/net/wireless/p54/p54usb.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index e71c702..64b944b 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -82,6 +82,7 @@ static struct usb_device_id p54u_table[] = {
+ 	{USB_DEVICE(0x06a9, 0x000e)},	/* Westell 802.11g USB (A90-211WG-01) */
+ 	{USB_DEVICE(0x06b9, 0x0121)},	/* Thomson SpeedTouch 121g */
+ 	{USB_DEVICE(0x0707, 0xee13)},   /* SMC 2862W-G version 2 */
++	{USB_DEVICE(0x083a, 0x4503)},	/* T-Com Sinus 154 data II */
+ 	{USB_DEVICE(0x083a, 0x4521)},   /* Siemens Gigaset USB Adapter 54 version 2 */
+ 	{USB_DEVICE(0x083a, 0xc501)},	/* Zoom Wireless-G 4410 */
+ 	{USB_DEVICE(0x083a, 0xf503)},	/* Accton FD7050E ver 1010ec  */
+-- 
+1.7.10.4
+
