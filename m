@@ -1,107 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38939 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755594Ab2LMN7F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 08:59:05 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Received: from tur.go2.pl ([193.17.41.50]:38325 "EHLO tur.go2.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751624Ab2LVQUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2012 11:20:11 -0500
+Received: from moh1-ve3.go2.pl (moh1-ve3.go2.pl [193.17.41.134])
+	by tur.go2.pl (Postfix) with ESMTP id 979C115A073C
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 17:20:10 +0100 (CET)
+Received: from moh1-ve3.go2.pl (unknown [10.0.0.134])
+	by moh1-ve3.go2.pl (Postfix) with ESMTP id CD9E4665742
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 17:19:01 +0100 (CET)
+Received: from unknown (unknown [10.0.0.74])
+	by moh1-ve3.go2.pl (Postfix) with SMTP
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 17:19:01 +0100 (CET)
+Date: Sat, 22 Dec 2012 17:18:54 +0100
+From: Tomasz Guszkowski <tsg@o2.pl>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	igalc@ti.com, nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv5 5/8] mac80211: check radar interaction with scan and roc
-Date: Thu, 13 Dec 2012 14:58:30 +0100
-Message-Id: <1355407113-27006-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20121213_145914_920820_150ECB1B)
-In-Reply-To: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Subject: [PATCH] p54usb: add USB ID for T-Com Sinus 154 data II
+Message-Id: <20121222171854.3ee183a36a12491da52553a9@o2.pl> (sfid-20121222_172021_856145_E1354547)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Scanning and remain on channel functionality must be disabled while
-doing radar detection/scanning, and vice versa.
+From: Tomasz Guszkowski <tsg@o2.pl>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Added USB ID for T-Com Sinus 154 data II. 
+
+Signed-off-by: Tomasz Guszkowski <tsg@o2.pl>
 ---
- net/mac80211/cfg.c         |   12 ++++++++++--
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/scan.c        |    3 +++
- 3 files changed, 16 insertions(+), 2 deletions(-)
+I have tested the device in managed mode with no security, WEP 128 bit and WPA-PSK (TKIP) with firmware 2.13.1.0.lm87.arm (md5sum: 7d676323ac60d6e1a3b6d61e8c528248). No problems have been encountered.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a9de035..9c190c5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1019,6 +1019,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	skb_queue_purge(&sdata->u.ap.ps.bc_buf);
- 
- 	ieee80211_vif_release_channel(sdata);
-+	local->radar_detect_enabled = false;
- 
- 	return 0;
- }
-@@ -2301,7 +2302,9 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
- 	INIT_LIST_HEAD(&roc->dependents);
- 
- 	/* if there's one pending or we're scanning, queue this one */
--	if (!list_empty(&local->roc_list) || local->scanning)
-+	if (!list_empty(&local->roc_list) ||
-+	    local->scanning ||
-+	    local->radar_detect_enabled)
- 		goto out_check_combine;
- 
- 	/* if not HW assist, just queue & schedule work */
-@@ -2562,6 +2565,9 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	if (!local->ops->start_radar_detection)
- 		return -EOPNOTSUPP;
- 
-+	if (!list_empty(&local->roc_list) || local->scanning)
-+		return -EBUSY;
-+
- 	/* whatever, but channel contexts should not complain about that one */
- 	sdata->smps_mode = IEEE80211_SMPS_OFF;
- 	sdata->needed_rx_chains = sdata->local->rx_chains;
-@@ -2572,8 +2578,10 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 		return -EBUSY;
- 
- 	res = drv_start_radar_detection(local, sdata, chandef->chan);
--	if (!res)
-+	if (!res) {
-+		local->radar_detect_enabled = true;
- 		ieee80211_vif_release_channel(sdata);
-+	}
- 
- 	return res;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 42d0d02..abb2759 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -962,6 +962,9 @@ struct ieee80211_local {
- 	/* wowlan is enabled -- don't reconfig on resume */
- 	bool wowlan;
- 
-+	/* DFS/radar detection is enabled */
-+	bool radar_detect_enabled;
-+
- 	/* number of RX chains the hardware has */
- 	u8 rx_chains;
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 8ed83dc..c058749 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -369,6 +369,9 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- static bool ieee80211_can_scan(struct ieee80211_local *local,
- 			       struct ieee80211_sub_if_data *sdata)
- {
-+	if (local->radar_detect_enabled)
-+		return false;
-+
- 	if (!list_empty(&local->roc_list))
- 		return false;
- 
--- 
-1.7.10.4
-
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index e71c702..03a8bd3 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -52,6 +52,7 @@ static struct usb_device_id p54u_table[] = {
+ 	{USB_DEVICE(0x07aa, 0x001c)},	/* Corega CG-WLUSB2GT */
+ 	{USB_DEVICE(0x083a, 0x4501)},	/* Accton 802.11g WN4501 USB */
+ 	{USB_DEVICE(0x083a, 0x4502)},	/* Siemens Gigaset USB Adapter */
++	{USB_DEVICE(0x083a, 0x4503)},	/* T-Com Sinus 154 data II */
+ 	{USB_DEVICE(0x083a, 0x5501)},	/* Phillips CPWUA054 */
+ 	{USB_DEVICE(0x0846, 0x4200)},	/* Netgear WG121 */
+ 	{USB_DEVICE(0x0846, 0x4210)},	/* Netgear WG121 the second ? */
