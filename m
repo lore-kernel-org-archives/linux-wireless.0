@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61413 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753133Ab2L0Pzl (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:48017 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034Ab2LVUci (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 10:55:41 -0500
-Cc: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sat, 22 Dec 2012 15:32:38 -0500
+Date: Sat, 22 Dec 2012 15:32:35 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 5/7] ath6kl: convert ath6kl_info/err/warn macros to real functions
-References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
-	<20121227114447.27069.54329.stgit@localhost6.localdomain6>
-	<1356610754.15149.11.camel@jlt4.sipsolutions.net>
-	<871uebfqe3.fsf@qca.qualcomm.com>
-Date: Thu, 27 Dec 2012 17:55:46 +0200
-In-Reply-To: <871uebfqe3.fsf@qca.qualcomm.com> (Kalle Valo's message of "Thu,
-	27 Dec 2012 17:47:48 +0200")
-Message-ID: <87wqw3ebgd.fsf@qca.qualcomm.com> (sfid-20121227_165555_544593_D504BFD2)
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 16/17] cw1200:  Integration into the kernel build system
+Message-ID: <20121222203234.GD5120@shaftnet.org> (sfid-20121222_213242_788479_2A6A33EB)
+References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
+ <1356191120-5280-17-git-send-email-pizza@shaftnet.org>
+ <1356207598.10280.0.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="d01dLTUuW90fS44H"
+In-Reply-To: <1356207598.10280.0.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
->> Note that by inserting the tracing here later, you're relying on the
->> fact that "%pV" does va_copy(). This isn't true in all kernel versions,
->> I think there's on version or so where %pV is supported but didn't
->> va_copy(). That may lead to problems (I don't remember what kind) here.
->>
->> This is relevant for compat only, I think I carry a patch there to add
->> va_copy() into the tracing or something.
->
-> Compat-drivers has 55-iwlwifi-msg-trace-fix.patch which says:
->
-> "In recent kernels, %pV will copy the va_list before using it.
-> This isn't true for all kernels, so copy the va_list for use
-> by the dev_*() functions, otherwise the kernel will crash if
-> the message is printed and traced."
->
-> I take it that the problem happens when the message is both printed and
-> traced at the same time. So ath6kl will need a similar patch as well.
+--d01dLTUuW90fS44H
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-For the archives: I'm guessing this is the commit which fixed the issue:
+On Sat, Dec 22, 2012 at 09:19:58PM +0100, Johannes Berg wrote:
+> > +config CW1200
+> > +       tristate "CW1200 WLAN support"
+> > +       select MAC80211
+> > +       select CFG80211
+>=20
+> You should depend on mac80211/cfg80211, they in turn have dependencies
+> that can't be resolved this way.
 
-commit 5756b76e4db643d8f75174a9a50038523d4b9e32
-Author: Jan Beulich <JBeulich@suse.com>
-Date:   Mon Mar 5 16:49:24 2012 +0000
+Done.
 
-    vsprintf: make %pV handling compatible with kasprintf()
+ - Solomon [Working on nuking the CW1200*DEBUG options...]
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
 
-And git-describe tells me that it was introduced in 3.3-rc7, so quite
-recent.
+--d01dLTUuW90fS44H
+Content-Type: application/pgp-signature
 
-Kalle
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iD8DBQFQ1hjiPuLgii2759ARAgraAKCgc0xo5MwB3exMiaAbNnPDa81KQgCgh9sL
+rLs6jfQa1FndH5ZuJ5EwhAA=
+=MU4d
+-----END PGP SIGNATURE-----
+
+--d01dLTUuW90fS44H--
