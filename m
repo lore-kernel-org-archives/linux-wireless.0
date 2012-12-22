@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:63979 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289Ab2LPD3l (ORCPT
+Received: from mail-ia0-f172.google.com ([209.85.210.172]:51770 "EHLO
+	mail-ia0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303Ab2LVB6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Dec 2012 22:29:41 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so1876887eaa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Dec 2012 19:29:40 -0800 (PST)
-MIME-Version: 1.0
-Date: Sat, 15 Dec 2012 22:29:40 -0500
-Message-ID: <CANa_0w2mShPgK4VwSzAFh+BSsxU5xYmWxogTcz_ZpVdj1seKgg@mail.gmail.com> (sfid-20121216_042950_419350_4B4A993F)
-Subject: txpower anything you make db.txt say ?
-From: Jason Mclaughlin <mcjason@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 21 Dec 2012 20:58:14 -0500
+From: Tejun Heo <tj@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Luciano Coelho <coelho@ti.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 09/25] wl1251: don't use [delayed_]work_pending()
+Date: Fri, 21 Dec 2012 17:56:59 -0800
+Message-Id: <1356141435-17340-10-git-send-email-tj@kernel.org> (sfid-20121222_030310_446995_A607E941)
+In-Reply-To: <1356141435-17340-1-git-send-email-tj@kernel.org>
+References: <1356141435-17340-1-git-send-email-tj@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- was wondering... with a AEUS036NHA wireless adapater (ath9k), why
-does it seem like I can set the power arbitrarily higher if I make my
-own regulatory.bin
-from the crda package. I doubt for real that's the power since the
-adapater is rated at 1000mw afaik.
+There's no need to test whether a (delayed) work item in pending
+before queueing, flushing or cancelling it.  Most uses are unnecessary
+and quite a few of them are buggy.
 
-I wanted to test if it was really having more power than 20db when I
-found out how to do that, but I suspiciously though it was just saying
-it's as high
-as you make db.txt say. This seems true at a whopping 48db (I never
-did anything like connect to someone, just rebooted at turned it back
-to 30).
+Remove unnecessary pending tests from wl1251.  Only compile tested.
 
-Also wanted to know, does it really do 30db? I noticed between two
-adapaters a mild improvement when setting it higher than 20 but it's
-hard to tell.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+---
+Please let me know how this patch should be routed.  I can take it
+through the workqueue tree if necessary.
 
+Thanks.
 
-root@debian:/home/jason# iwconfig
-wlan2     IEEE 802.11bgn  ESSID:off/any
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=48 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
+ drivers/net/wireless/ti/wl1251/ps.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-eth0      no wireless extensions.
+diff --git a/drivers/net/wireless/ti/wl1251/ps.c b/drivers/net/wireless/ti/wl1251/ps.c
+index db719f7..b9e27b9 100644
+--- a/drivers/net/wireless/ti/wl1251/ps.c
++++ b/drivers/net/wireless/ti/wl1251/ps.c
+@@ -68,8 +68,7 @@ int wl1251_ps_elp_wakeup(struct wl1251 *wl)
+ 	unsigned long timeout, start;
+ 	u32 elp_reg;
+ 
+-	if (delayed_work_pending(&wl->elp_work))
+-		cancel_delayed_work(&wl->elp_work);
++	cancel_delayed_work(&wl->elp_work);
+ 
+ 	if (!wl->elp)
+ 		return 0;
+-- 
+1.8.0.2
 
-lo        no wireless extensions.
-
-wlan0     IEEE 802.11bgn  ESSID:off/any
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=16 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
