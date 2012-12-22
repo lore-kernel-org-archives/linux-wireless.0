@@ -1,151 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3044 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752024Ab2LCIdx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 03:33:53 -0500
-Message-ID: <50BC63E5.9020101@broadcom.com> (sfid-20121203_093357_129519_EB279150)
-Date: Mon, 3 Dec 2012 09:33:41 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: Re: [PATCH V2 v3.7] brcmsmac: handle packet drop on enqueuing
- correctly
-References: <1353961396-7061-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1353961396-7061-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:34300 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554Ab2LVPpy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2012 10:45:54 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 17/17] cw1200:  Integrate into staging tree
+Date: Sat, 22 Dec 2012 10:45:20 -0500
+Message-Id: <1356191120-5280-18-git-send-email-pizza@shaftnet.org> (sfid-20121222_164609_963173_32880E95)
+In-Reply-To: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
+References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/26/2012 09:23 PM, Arend van Spriel wrote:
-> From: Piotr Haber <phaber@broadcom.com>
-> 
-> In the event that tx packet can not be queued by the driver
-> the packet is dropped. Propagate that information to the .tx()
-> callback to make sure the freed packet is not accessed after
-> that.
-> 
-> This has happened causing slab corruptions as reported by
-> Stanislaw Gruszka.
-> 
-> Bug #47721: https://bugzilla.kernel.org/show_bug.cgi?id=47721
-> 
-> Reported-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> Reviewed-by: Arend van Spriel <arend@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Piotr Haber <phaber@broadcom.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 ++--
->  drivers/net/wireless/brcm80211/brcmsmac/main.c        |   14 +++++++++-----
->  drivers/net/wireless/brcm80211/brcmsmac/main.h        |    2 +-
->  drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 +-
->  4 files changed, 13 insertions(+), 9 deletions(-)
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+---
+ drivers/staging/Kconfig | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Hi, John
-
-What is keeping you from picking up this patch? Anything I should do?
-This V2 removed the no-op changes in ampdu.c that Seth indicated so...
-please let me know.
-
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> index a744ea5..5590499 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> @@ -280,8 +280,8 @@ static void brcms_ops_tx(struct ieee80211_hw *hw,
->  		kfree_skb(skb);
->  		goto done;
->  	}
-> -	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
-> -	tx_info->rate_driver_data[0] = control->sta;
-> +	if (brcms_c_sendpkt_mac80211(wl->wlc, skb, hw))
-> +		tx_info->rate_driver_data[0] = control->sta;
-
-This is where the slab corruption used to occur, because txinfo is part
-of a possibly released sk_buff.
-
-Regards,
-Arend
-
->   done:
->  	spin_unlock_bh(&wl->lock);
->  }
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> index 75086b3..9fb0a4c9 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> @@ -6095,7 +6095,7 @@ static bool brcms_c_prec_enq(struct brcms_c_info *wlc, struct pktq *q,
->  	return brcms_c_prec_enq_head(wlc, q, pkt, prec, false);
->  }
->  
-> -void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
-> +bool brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
->  		     struct sk_buff *sdu, uint prec)
->  {
->  	struct brcms_txq_info *qi = wlc->pkt_queue;	/* Check me */
-> @@ -6110,7 +6110,9 @@ void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
->  		 * packet flooding from mac80211 stack
->  		 */
->  		brcmu_pkt_buf_free_skb(sdu);
-> +		return false;
->  	}
-> +	return true;
->  }
->  
->  /*
-> @@ -7273,7 +7275,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
->  	return 0;
->  }
->  
-> -void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
-> +bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
->  			      struct ieee80211_hw *hw)
->  {
->  	u8 prio;
-> @@ -7288,10 +7290,12 @@ void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
->  	prio = ieee80211_is_data(d11_header->frame_control) ? sdu->priority :
->  		MAXPRIO;
->  	fifo = prio2fifo[prio];
-> -	if (brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0))
-> -		return;
-> -	brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio));
-> +	brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0);
-> +	if (!brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio)))
-> +		return false;
->  	brcms_c_send_q(wlc);
-> +
-> +	return true;
->  }
->  
->  void brcms_c_send_q(struct brcms_c_info *wlc)
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-> index 8debc74..b44725c 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-> @@ -642,7 +642,7 @@ extern void brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo,
->  			   bool commit, s8 txpktpend);
->  extern void brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo,
->  				    s8 txpktpend);
-> -extern void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
-> +extern bool brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
->  			    struct sk_buff *sdu, uint prec);
->  extern void brcms_c_print_txstatus(struct tx_status *txs);
->  extern int brcms_b_xmtfifo_sz_get(struct brcms_hardware *wlc_hw, uint fifo,
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-> index 5855f4f..bfa2630 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-> @@ -321,7 +321,7 @@ extern void brcms_c_intrsrestore(struct brcms_c_info *wlc, u32 macintmask);
->  extern bool brcms_c_intrsupd(struct brcms_c_info *wlc);
->  extern bool brcms_c_isr(struct brcms_c_info *wlc, bool *wantdpc);
->  extern bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded);
-> -extern void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
-> +extern bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
->  				     struct sk_buff *sdu,
->  				     struct ieee80211_hw *hw);
->  extern bool brcms_c_aggregatable(struct brcms_c_info *wlc, u8 tid);
-> 
-
+diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
+index 329bdb4..ca8b790 100644
+--- a/drivers/staging/Kconfig
++++ b/drivers/staging/Kconfig
+@@ -142,4 +142,6 @@ source "drivers/staging/sb105x/Kconfig"
+ 
+ source "drivers/staging/fwserial/Kconfig"
+ 
++source "drivers/staging/cw1200/Kconfig"
++
+ endif # STAGING
+-- 
+1.7.11.7
 
