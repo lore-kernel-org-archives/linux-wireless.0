@@ -1,255 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3252 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754042Ab2LEO0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 09:26:25 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/11] brcmsmac: radio on led support
-Date: Wed, 5 Dec 2012 15:25:57 +0100
-Message-ID: <1354717564-7183-5-git-send-email-arend@broadcom.com> (sfid-20121205_152648_865955_B16F3E11)
-In-Reply-To: <1354717564-7183-1-git-send-email-arend@broadcom.com>
-References: <1354717564-7183-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:43530 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab2LVOxm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2012 09:53:42 -0500
+Received: by mail-wg0-f49.google.com with SMTP id 15so2675581wgd.16
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 06:53:41 -0800 (PST)
+Message-Id: <cb7272cf1a47b747467aec3c907fff99dae012e4.1356186145.git.chunkeey@googlemail.com> (sfid-20121222_155345_018866_D34F4EEA)
+In-Reply-To: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
+References: <8f92b38a456c1dd901ce2022fcb66609a5b8ac4b.1356186145.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 22 Dec 2012 15:05:26 +0100
+Subject: [PATCH 8/8] carl9170: refactor carl9170_update_beacon
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Piotr Haber <phaber@broadcom.com>
+This patch moves parts of carl9170_update_beacon
+into separate subroutines, so the parts become
+more manageable.
 
-Add support for radio on led indicator.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/Makefile   |    3 +-
- drivers/net/wireless/brcm80211/brcmsmac/led.c      |  103 ++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmsmac/led.h      |   29 ++++++
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    5 +
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    4 +
- 5 files changed, 143 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/led.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/led.h
+ drivers/net/wireless/ath/carl9170/tx.c |  133 +++++++++++++++++++-------------
+ 1 file changed, 80 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/Makefile b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-index d3d4151..0efa1c4 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-@@ -41,7 +41,8 @@ BRCMSMAC_OFILES := \
- 	phy/phy_qmath.o \
- 	dma.o \
- 	brcms_trace_events.o \
--	debug.o
-+	debug.o	\
-+	led.o
- 
- MODULEPFX := brcmsmac
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/led.c b/drivers/net/wireless/brcm80211/brcmsmac/led.c
-new file mode 100644
-index 0000000..9babf98
---- /dev/null
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/led.c
-@@ -0,0 +1,103 @@
-+#include <net/mac80211.h>
-+#include <linux/bcma/bcma_driver_chipcommon.h>
-+
-+#include "mac80211_if.h"
-+#include "pub.h"
-+#include "main.h"
-+#include "led.h"
-+
-+	/* number of leds */
-+#define  BRCMS_LED_NO		4
-+	/* behavior mask */
-+#define  BRCMS_LED_BEH_MASK	0x7f
-+	/* activelow (polarity) bit */
-+#define  BRCMS_LED_AL_MASK	0x80
-+	/* radio enabled */
-+#define  BRCMS_LED_RADIO	3
-+
-+static void brcms_radio_led_ctrl(struct brcms_info *wl, bool state)
-+{
-+	/* get CC core */
-+	struct bcma_drv_cc *cc_drv  = &wl->wlc->hw->d11core->bus->drv_cc;
-+	int gpio_out;
-+
-+	if (wl->radio_led.gpio == 0xf)
-+		return;
-+
-+	gpio_out = 1 << wl->radio_led.gpio;
-+	if (wl->radio_led.active_low)
-+		state = !state;
-+
-+	if (state)
-+		bcma_cc_set32(cc_drv, BCMA_CC_GPIOOUT, gpio_out);
-+	else
-+		bcma_cc_mask32(cc_drv, BCMA_CC_GPIOOUT, ~gpio_out);
-+}
-+
-+
-+/* Callback from the LED subsystem. */
-+static void brcms_led_brightness_set(struct led_classdev *led_dev,
-+				   enum led_brightness brightness)
-+{
-+	struct brcms_info *wl = container_of(led_dev,
-+		struct brcms_info, led_dev);
-+	brcms_radio_led_ctrl(wl, brightness);
-+}
-+
-+void brcms_led_register(struct brcms_info *wl)
-+{
-+	if (wl->radio_led.gpio == 0xf)
-+		return;
-+
-+	snprintf(wl->radio_led.name, sizeof(wl->radio_led.name),
-+		 "brcmsmac-%s:radio", wiphy_name(wl->wiphy));
-+
-+	wl->led_dev.name = wl->radio_led.name;
-+	wl->led_dev.default_trigger =
-+		ieee80211_get_radio_led_name(wl->pub->ieee_hw);
-+	wl->led_dev.brightness_set = brcms_led_brightness_set;
-+	led_classdev_register(wiphy_dev(wl->wiphy), &wl->led_dev);
-+}
-+
-+void brcms_led_unregister(struct brcms_info *wl)
-+{
-+	if (wl->led_dev.dev)
-+		led_classdev_unregister(&wl->led_dev);
-+}
-+
-+void brcms_led_init(struct brcms_info *wl)
-+{
-+	int i;
-+	struct brcms_led *radio_led = &wl->radio_led;
-+	/* get CC core */
-+	struct bcma_drv_cc *cc_drv  = &wl->wlc->hw->d11core->bus->drv_cc;
-+	struct ssb_sprom *sprom = &wl->wlc->hw->d11core->bus->sprom;
-+	u8 *leds[] = { &sprom->gpio0,
-+		&sprom->gpio1,
-+		&sprom->gpio2,
-+		&sprom->gpio3 };
-+
-+	/* none by default */
-+	radio_led->gpio = 0xf;
-+	radio_led->active_low = false;
-+
-+	/* find radio enabled LED */
-+	for (i = 0; i < BRCMS_LED_NO; i++) {
-+		u8 led = *leds[i];
-+		if ((led & BRCMS_LED_BEH_MASK) == BRCMS_LED_RADIO) {
-+			radio_led->gpio = i;
-+			if (led & BRCMS_LED_AL_MASK)
-+				radio_led->active_low = true;
-+			break;
-+		}
-+	}
-+
-+	if (radio_led->gpio != 0xf) {
-+		int gpio_out = 1 << radio_led->gpio;
-+		/* enable out */
-+		bcma_cc_set32(cc_drv, BCMA_CC_GPIOOUTEN, gpio_out);
-+		if (radio_led->active_low)
-+			bcma_cc_set32(cc_drv, BCMA_CC_GPIOPULLUP, gpio_out);
-+	}
-+}
-+
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/led.h b/drivers/net/wireless/brcm80211/brcmsmac/led.h
-new file mode 100644
-index 0000000..ce3f8a4
---- /dev/null
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/led.h
-@@ -0,0 +1,29 @@
-+/*
-+ * Copyright (c) 2012 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _BRCM_LED_H_
-+#define _BRCM_LED_H_
-+struct brcms_led {
-+	char name[32];
-+	u8 gpio;
-+	bool active_low;
-+};
-+
-+void brcms_led_register(struct brcms_info *wl);
-+void brcms_led_unregister(struct brcms_info *wl);
-+void brcms_led_init(struct brcms_info *wl);
-+
-+#endif /* _BRCM_LED_H_ */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 85dbaf8..b1ea75f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -34,6 +34,7 @@
- #include "mac80211_if.h"
- #include "main.h"
- #include "debug.h"
-+#include "led.h"
- 
- #define N_TX_QUEUES	4 /* #tx queues on mac80211<->driver interface */
- 
-@@ -884,6 +885,7 @@ static void brcms_remove(struct bcma_device *pdev)
- 	struct brcms_info *wl = hw->priv;
- 
- 	if (wl->wlc) {
-+		brcms_led_unregister(wl);
- 		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
- 		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
- 		ieee80211_unregister_hw(hw);
-@@ -1129,6 +1131,9 @@ static int __devinit brcms_bcma_probe(struct bcma_device *pdev)
- 		pr_err("%s: brcms_attach failed!\n", __func__);
- 		return -ENODEV;
- 	}
-+	brcms_led_init(wl);
-+	brcms_led_register(wl);
-+
- 	return 0;
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index ef4ec0d..9c0b150 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -1520,35 +1520,92 @@ void carl9170_tx_scheduler(struct ar9170 *ar)
+ 		carl9170_tx(ar);
  }
  
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
-index 9358bd5..c16b849 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
-@@ -20,8 +20,10 @@
- #include <linux/timer.h>
- #include <linux/interrupt.h>
- #include <linux/workqueue.h>
-+#include <linux/leds.h>
+-int carl9170_update_beacon(struct ar9170 *ar, const bool submit)
++/* caller has to take rcu_read_lock */
++static struct carl9170_vif_info *carl9170_pick_beaconing_vif(struct ar9170 *ar)
+ {
+-	struct sk_buff *skb = NULL;
+ 	struct carl9170_vif_info *cvif;
++	int i = 1;
++
++	/* The AR9170 hardware has no fancy beacon queue or some
++	 * other scheduling mechanism. So, the driver has to make
++	 * due by setting the two beacon timers (pretbtt and tbtt)
++	 * once and then swapping the beacon address in the HW's
++	 * register file each time the pretbtt fires.
++	 */
++
++	cvif = rcu_dereference(ar->beacon_iter);
++	if (ar->vifs > 0 && cvif) {
++		do {
++			list_for_each_entry_continue_rcu(cvif, &ar->vif_list,
++							 list) {
++				if (cvif->active && cvif->enable_beacon)
++					goto out;
++			}
++		} while (ar->beacon_enabled && i--);
++	}
++
++out:
++	rcu_assign_pointer(ar->beacon_iter, cvif);
++	return cvif;
++}
++
++static bool carl9170_tx_beacon_physet(struct ar9170 *ar, struct sk_buff *skb,
++				      u32 *ht1, u32 *plcp)
++{
+ 	struct ieee80211_tx_info *txinfo;
+ 	struct ieee80211_tx_rate *rate;
+-	__le32 *data, *old = NULL;
+-	unsigned int plcp, power, chains;
+-	u32 word, ht1, off, addr, len;
+-	int i = 0, err = 0;
++	unsigned int power, chains;
++	bool ht_rate;
  
- #include "ucode_loader.h"
-+#include "led.h"
- /*
-  * Starting index for 5G rates in the
-  * legacy rate table.
-@@ -79,6 +81,8 @@ struct brcms_info {
- 	struct wiphy *wiphy;
- 	struct brcms_ucode ucode;
- 	bool mute_tx;
-+	struct brcms_led radio_led;
-+	struct led_classdev led_dev;
- };
+-	rcu_read_lock();
+-	cvif = rcu_dereference(ar->beacon_iter);
+-retry:
+-	if (ar->vifs == 0 || !cvif)
+-		goto out_unlock;
++	txinfo = IEEE80211_SKB_CB(skb);
++	rate = &txinfo->control.rates[0];
++	ht_rate = !!(txinfo->control.rates[0].flags & IEEE80211_TX_RC_MCS);
++	carl9170_tx_rate_tpc_chains(ar, txinfo, rate, plcp, &power, &chains);
  
- /* misc callbacks */
+-	list_for_each_entry_continue_rcu(cvif, &ar->vif_list, list) {
+-		if (cvif->active && cvif->enable_beacon)
+-			goto found;
++	*ht1 = AR9170_MAC_BCN_HT1_TX_ANT0;
++	if (chains == AR9170_TX_PHY_TXCHAIN_2)
++		*ht1 |= AR9170_MAC_BCN_HT1_TX_ANT1;
++	SET_VAL(AR9170_MAC_BCN_HT1_PWR_CTRL, *ht1, 7);
++	SET_VAL(AR9170_MAC_BCN_HT1_TPC, *ht1, power);
++	SET_VAL(AR9170_MAC_BCN_HT1_CHAIN_MASK, *ht1, chains);
++
++	if (ht_rate) {
++		*ht1 |= AR9170_MAC_BCN_HT1_HT_EN;
++		if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
++			*plcp |= AR9170_MAC_BCN_HT2_SGI;
++
++		if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
++			*ht1 |= AR9170_MAC_BCN_HT1_BWC_40M_SHARED;
++			*plcp |= AR9170_MAC_BCN_HT2_BW40;
++		} else if (rate->flags & IEEE80211_TX_RC_DUP_DATA) {
++			*ht1 |= AR9170_MAC_BCN_HT1_BWC_40M_DUP;
++			*plcp |= AR9170_MAC_BCN_HT2_BW40;
++		}
++
++		SET_VAL(AR9170_MAC_BCN_HT2_LEN, *plcp, skb->len + FCS_LEN);
++	} else {
++		if (*plcp <= AR9170_TX_PHY_RATE_CCK_11M)
++			*plcp |= ((skb->len + FCS_LEN) << (3 + 16)) + 0x0400;
++		else
++			*plcp |= ((skb->len + FCS_LEN) << 16) + 0x0010;
+ 	}
+ 
+-	if (!ar->beacon_enabled || i++)
+-		goto out_unlock;
++	return ht_rate;
++}
+ 
+-	goto retry;
++int carl9170_update_beacon(struct ar9170 *ar, const bool submit)
++{
++	struct sk_buff *skb = NULL;
++	struct carl9170_vif_info *cvif;
++	__le32 *data, *old = NULL;
++	u32 word, ht1, plcp, off, addr, len;
++	int i = 0, err = 0;
++	bool ht_rate;
+ 
+-found:
+-	rcu_assign_pointer(ar->beacon_iter, cvif);
++	rcu_read_lock();
++	cvif = carl9170_pick_beaconing_vif(ar);
++	if (!cvif)
++		goto out_unlock;
+ 
+ 	skb = ieee80211_beacon_get_tim(ar->hw, carl9170_get_vif(cvif),
+ 		NULL, NULL);
+@@ -1558,7 +1615,6 @@ found:
+ 		goto err_free;
+ 	}
+ 
+-	txinfo = IEEE80211_SKB_CB(skb);
+ 	spin_lock_bh(&ar->beacon_lock);
+ 	data = (__le32 *)skb->data;
+ 	if (cvif->beacon)
+@@ -1588,43 +1644,14 @@ found:
+ 		goto err_unlock;
+ 	}
+ 
+-	ht1 = AR9170_MAC_BCN_HT1_TX_ANT0;
+-	rate = &txinfo->control.rates[0];
+-	carl9170_tx_rate_tpc_chains(ar, txinfo, rate, &plcp, &power, &chains);
+-	if (!(txinfo->control.rates[0].flags & IEEE80211_TX_RC_MCS)) {
+-		if (plcp <= AR9170_TX_PHY_RATE_CCK_11M)
+-			plcp |= ((skb->len + FCS_LEN) << (3 + 16)) + 0x0400;
+-		else
+-			plcp |= ((skb->len + FCS_LEN) << 16) + 0x0010;
+-	} else {
+-		ht1 |= AR9170_MAC_BCN_HT1_HT_EN;
+-		if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
+-			plcp |= AR9170_MAC_BCN_HT2_SGI;
+-
+-		if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
+-			ht1 |= AR9170_MAC_BCN_HT1_BWC_40M_SHARED;
+-			plcp |= AR9170_MAC_BCN_HT2_BW40;
+-		}
+-		if (rate->flags & IEEE80211_TX_RC_DUP_DATA) {
+-			ht1 |= AR9170_MAC_BCN_HT1_BWC_40M_DUP;
+-			plcp |= AR9170_MAC_BCN_HT2_BW40;
+-		}
+-
+-		SET_VAL(AR9170_MAC_BCN_HT2_LEN, plcp, skb->len + FCS_LEN);
+-	}
+-
+-	SET_VAL(AR9170_MAC_BCN_HT1_PWR_CTRL, ht1, 7);
+-	SET_VAL(AR9170_MAC_BCN_HT1_TPC, ht1, power);
+-	SET_VAL(AR9170_MAC_BCN_HT1_CHAIN_MASK, ht1, chains);
+-	if (chains == AR9170_TX_PHY_TXCHAIN_2)
+-		ht1 |= AR9170_MAC_BCN_HT1_TX_ANT1;
++	ht_rate = carl9170_tx_beacon_physet(ar, skb, &ht1, &plcp);
+ 
+ 	carl9170_async_regwrite_begin(ar);
+ 	carl9170_async_regwrite(AR9170_MAC_REG_BCN_HT1, ht1);
+-	if (!(txinfo->control.rates[0].flags & IEEE80211_TX_RC_MCS))
+-		carl9170_async_regwrite(AR9170_MAC_REG_BCN_PLCP, plcp);
+-	else
++	if (ht_rate)
+ 		carl9170_async_regwrite(AR9170_MAC_REG_BCN_HT2, plcp);
++	else
++		carl9170_async_regwrite(AR9170_MAC_REG_BCN_PLCP, plcp);
+ 
+ 	for (i = 0; i < DIV_ROUND_UP(skb->len, 4); i++) {
+ 		/*
 -- 
-1.7.9.5
-
+1.7.10.4
 
