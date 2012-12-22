@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:47481 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753422Ab2LGGtn (ORCPT
+Received: from mail-ia0-f175.google.com ([209.85.210.175]:57975 "EHLO
+	mail-ia0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303Ab2LVB6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 01:49:43 -0500
-Message-ID: <50C1917E.2010407@posedge.com> (sfid-20121207_074946_466854_A5CA27BF)
-Date: Fri, 07 Dec 2012 12:19:34 +0530
-From: Chaitanya <chaitanyatk@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: fix the multiple warnings for budding chipsets
- without ampdu_action defined
-References: <201212070645.qB76jSjN013395@chaitanya-desktop>
-In-Reply-To: <201212070645.qB76jSjN013395@chaitanya-desktop>
-Content-Type: multipart/mixed;
- boundary="------------010604080503030804070006"
+	Fri, 21 Dec 2012 20:58:09 -0500
+From: Tejun Heo <tj@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Bing Zhao <bzhao@marvell.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 07/25] mwifiex: don't use [delayed_]work_pending()
+Date: Fri, 21 Dec 2012 17:56:57 -0800
+Message-Id: <1356141435-17340-8-git-send-email-tj@kernel.org> (sfid-20121222_030320_555806_6E3FD7F2)
+In-Reply-To: <1356141435-17340-1-git-send-email-tj@kernel.org>
+References: <1356141435-17340-1-git-send-email-tj@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010604080503030804070006
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Drop work_pending() test from mwifiex_sdio_card_reset().  As
+work_pending() becomes %false before sdio_card_reset_worker() starts
+executing, it doesn't really protect anything.  reset_host may change
+between mmc_remove_host() and mmc_add_host().  Make
+sdio_card_reset_worker() cache the target mmc_host so that it isn't
+affected by mwifiex_sdio_card_reset() racing with it.
 
+Only compile tested.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org
+---
+Please let me know how this patch should be routed.  I can take it
+through the workqueue tree if necessary.
 
-Warn once should suffice.
+Thanks.
 
-Eg: our driver doesn't support the ampdu_action yet, so
-seeing a lot of warnings, hence the check for any
-new drivers to avoid messing the kernel log.
+ drivers/net/wireless/mwifiex/sdio.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-
-Signed-off-by: T Krushna Chaitanya <chaitanyatk@posedge.com>
---- 
-net/mac80211/agg-tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 4152ed1..eb9df22 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -445,7 +445,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 5a1c1d0..f2874c3 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1752,6 +1752,8 @@ mwifiex_update_mp_end_port(struct mwifiex_adapter *adapter, u16 port)
+ static struct mmc_host *reset_host;
+ static void sdio_card_reset_worker(struct work_struct *work)
+ {
++	struct mmc_host *target = reset_host;
++
+ 	/* The actual reset operation must be run outside of driver thread.
+ 	 * This is because mmc_remove_host() will cause the device to be
+ 	 * instantly destroyed, and the driver then needs to end its thread,
+@@ -1761,10 +1763,10 @@ static void sdio_card_reset_worker(struct work_struct *work)
+ 	 */
  
- 	trace_api_start_tx_ba_session(pubsta, tid);
+ 	pr_err("Resetting card...\n");
+-	mmc_remove_host(reset_host);
++	mmc_remove_host(target);
+ 	/* 20ms delay is based on experiment with sdhci controller */
+ 	mdelay(20);
+-	mmc_add_host(reset_host);
++	mmc_add_host(target);
+ }
+ static DECLARE_WORK(card_reset_work, sdio_card_reset_worker);
  
--	if (WARN_ON(!local->ops->ampdu_action))
-+	if (WARN_ON_ONCE(!local->ops->ampdu_action))
- 		return -EINVAL;
+@@ -1773,9 +1775,6 @@ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
  
- 	if ((tid >= IEEE80211_NUM_TIDS) ||
+-	if (work_pending(&card_reset_work))
+-		return;
+-
+ 	reset_host = card->func->card->host;
+ 	schedule_work(&card_reset_work);
+ }
+-- 
+1.8.0.2
 
-
-
-
-
---------------010604080503030804070006
-Content-Type: text/plain; charset=UTF-8;
- name="Attached Message Part"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="Attached Message Part"
-
-
---------------010604080503030804070006--
