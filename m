@@ -1,94 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:33912
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+Received: from mail.vyatta.com ([76.74.103.46]:52722 "EHLO mail.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932384Ab2LGKCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 05:02:47 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 5/8] ath9k_hw: Various trivial fixes for PAPRD
-Date: Fri,  7 Dec 2012 15:31:58 +0530
-Message-Id: <1354874521-4138-6-git-send-email-sujith@msujith.org> (sfid-20121207_110252_961023_547F6939)
-In-Reply-To: <1354874521-4138-1-git-send-email-sujith@msujith.org>
-References: <1354874521-4138-1-git-send-email-sujith@msujith.org>
+	id S1752233Ab2LVVzv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2012 16:55:51 -0500
+Date: Sat, 22 Dec 2012 13:55:45 -0800
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Fw: [Bug 51901] New: mac80211/cfg.c:1995: possible bad call to
+ memcpy ?
+Message-ID: <20121222135545.1f134c5a@samsung-9> (sfid-20121222_225554_897530_D9193457)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-* Remove unneeded memset.
 
-  All the values in the PAPRD gain table are filled, so there
-  is no need to zero out the arrays.
+Begin forwarded message:
 
-* Use GFP_KERNEL in ar9003_paprd_create_curve
+Date: Sat, 22 Dec 2012 16:28:47 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+To: shemminger@linux-foundation.org
+Subject: [Bug 51901] New: mac80211/cfg.c:1995: possible bad call to memcpy ?
 
-  This is called from the PAPRD work, so the atomic variant
-  is not needed.
 
-* Change return type of ar9003_paprd_setup_gain_table
+https://bugzilla.kernel.org/show_bug.cgi?id=51901
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c | 9 ++-------
- drivers/net/wireless/ath/ath9k/hw.h           | 2 +-
- 2 files changed, 3 insertions(+), 8 deletions(-)
+           Summary: mac80211/cfg.c:1995: possible bad call to memcpy ?
+           Product: Networking
+           Version: 2.5
+    Kernel Version: 3.8-rc1
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: shemminger@linux-foundation.org
+        ReportedBy: dcb314@hotmail.com
+        Regression: Yes
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index b11a166..cd8727b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -287,9 +287,6 @@ static void ar9003_paprd_get_gain_table(struct ath_hw *ah)
- 	u32 reg = AR_PHY_TXGAIN_TABLE;
- 	int i;
- 
--	memset(entry, 0, sizeof(ah->paprd_gain_table_entries));
--	memset(index, 0, sizeof(ah->paprd_gain_table_index));
--
- 	for (i = 0; i < PAPRD_GAIN_TABLE_ENTRIES; i++) {
- 		entry[i] = REG_READ(ah, reg);
- 		index[i] = (entry[i] >> 24) & 0xff;
-@@ -788,7 +785,7 @@ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- }
- EXPORT_SYMBOL(ar9003_paprd_populate_single_table);
- 
--int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
-+void ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
- {
- 	unsigned int i, desired_gain, gain_index;
- 	unsigned int train_power = ah->paprd_training_power;
-@@ -806,8 +803,6 @@ int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
- 
- 	REG_CLR_BIT(ah, AR_PHY_PAPRD_TRAINER_STAT1,
- 			AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_DONE);
--
--	return 0;
- }
- EXPORT_SYMBOL(ar9003_paprd_setup_gain_table);
- 
-@@ -919,7 +914,7 @@ int ar9003_paprd_create_curve(struct ath_hw *ah,
- 
- 	memset(caldata->pa_table[chain], 0, sizeof(caldata->pa_table[chain]));
- 
--	buf = kmalloc(2 * 48 * sizeof(u32), GFP_ATOMIC);
-+	buf = kmalloc(2 * 48 * sizeof(u32), GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 3636dab..fe87d0e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1058,7 +1058,7 @@ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- 					int chain);
- int ar9003_paprd_create_curve(struct ath_hw *ah,
- 			      struct ath9k_hw_cal_data *caldata, int chain);
--int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain);
-+void ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain);
- int ar9003_paprd_init_table(struct ath_hw *ah);
- bool ar9003_paprd_is_done(struct ath_hw *ah);
- 
+
+The source code is 
+
+static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device
+*dev,
+                    int rate[IEEE80211_NUM_BANDS])
+{
+    struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+
+    memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
+
+The compiler says
+
+cfg.c: In function ‘int ieee80211_set_mcast_rate(wiphy*, net_device*, int*)’:
+cfg.c:1995: warning: argument to ‘sizeof’ in ‘void* memcpy(void*, const void*,
+size_t)’ call is the same expression as the source; did you mean to dereference
+it? [-Wsizeof-pointer-memaccess]
+     memcpy(rate2, rate, sizeof(rate));
+                               ^
+
+Here is static analyser cppcheck also finding the same problem
+
+[linux-3.8-rc1/net/mac80211/cfg.c:1995]: (error) Using 'sizeof' on array given
+as function argument returns size of a pointer.
+
+
+Suggest code rework.
+
 -- 
-1.8.0.1
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
