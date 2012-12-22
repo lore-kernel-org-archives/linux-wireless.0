@@ -1,48 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:32955 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756048Ab2LMSmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 13:42:05 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: qca-linux-team@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] qca-swiss-army-knife: update checksums.txt
-Date: Thu, 13 Dec 2012 19:41:47 +0100
-Message-Id: <1355424107-31412-1-git-send-email-juhosg@openwrt.org> (sfid-20121213_194208_687079_C2BF744C)
+Received: from mail-vc0-f176.google.com ([209.85.220.176]:63098 "EHLO
+	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447Ab2LVEkR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Dec 2012 23:40:17 -0500
+Received: by mail-vc0-f176.google.com with SMTP id fo13so5795041vcb.7
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Dec 2012 20:40:16 -0800 (PST)
+Message-ID: <50D537EE.7030803@gmail.com> (sfid-20121222_054025_325690_CE76FF5F)
+Date: Fri, 21 Dec 2012 23:32:46 -0500
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] mac80211/cfg80211: report monitor channel in wireless
+ extensions
+References: <1320778327.24797.36.camel@jlt3.sipsolutions.net>  (sfid-20111108_195213_970616_E8AF4017)  <1320778887.24797.38.camel@jlt3.sipsolutions.net>  (sfid-20111108_200133_998551_FF45D33D) <1320831021.3845.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1320831021.3845.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due to the recent changes in AR9340 initvals,
-checksums.txt needs to be updated.
+On 11/09/2011 04:30 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- tools/initvals/checksums.txt |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Johannes,
 
-diff --git a/tools/initvals/checksums.txt b/tools/initvals/checksums.txt
-index 0128621..837b0c8 100644
---- a/tools/initvals/checksums.txt
-+++ b/tools/initvals/checksums.txt
-@@ -123,7 +123,7 @@ b7bd4501d52be3219578b47403dc7cde8178d2f9        ar9331_1p2_mac_core
- d54185c6c9486055563fd86d0a1f536e6ab81745        ar9340Modes_lowest_ob_db_tx_gain_table_1p0
- 87e0ecae5df96673e22bc448b17d813510964de8        ar9340Modes_fast_clock_1p0
- 58815c0dcf227e155a4dee6a5c69843e1ca4707d        ar9340_1p0_radio_core
--7939d402295e3d37914f1bcc70f10d9d15696f58        ar9340_1p0_radio_core_40M
-+fc8b1321c600afd10ff73140efe4230e2121b395        ar9340_1p0_radio_core_40M
- c8dc777b012068116cd5282aade8eb460f397d20        ar9340_1p0_mac_postamble
- 8ad6e285ff8db78d133b0b5203145ef2c7f97364        ar9340_1p0_soc_postamble
- ad869d094ffe9893209e8961197f00d560c74551        ar9340_1p0_baseband_postamble
-@@ -134,7 +134,7 @@ ca6088034f339ea8f106f7f034d34baafec0c0ca        ar9340Modes_high_ob_db_tx_gain_t
- 2b67b93c41a4e7cd5761a7c698387f4282d3d092        ar9340Common_rx_gain_table_1p0
- 8ee20f85d01d7fe5fac96077d1dc30878aa8966e        ar9340Modes_low_ob_db_tx_gain_table_1p0
- 39b2d884643923daceb1273b8f7826348c216277        ar9340Modes_mixed_ob_db_tx_gain_table_1p0
--58caac4e0a0184f6904d4adc7f7be8e528e6d0e3        ar9340_1p0_mac_core
-+8023e4790d8b4e99c93dfee8d1afa66ef5ae496a        ar9340_1p0_mac_core
- 481b3066bd6b4dfa425027157f7c6252b535ebe4        ar9340Common_wo_xlna_rx_gain_table_1p0
- 1b9f617ab8c10ec0760e81fe61d469692f2acc29        ar9340_1p0_soc_preamble
- d9efd1c575ac43d60c310d717c59617a5323c111        ar9462_modes_fast_clock_2p0
--- 
-1.7.10
+This patch has been great for us since it was added in 3.3_rc1, however,
+it looks like there was some rewrite in 3.7_rc1 and this is no longer
+functional.  I'm not really the guy that understands the code, but I'm
+hoping you will have mercy on us again and maybe take a look? :-)
+
+Thanks,
+Zero
+
+> 
+> Just add API to get the channel & report it. Trivial really.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> So trivial it didn't even work ;-)
+> 
+>  include/net/cfg80211.h     |    5 +++++
+>  net/mac80211/cfg.c         |    9 +++++++++
+>  net/wireless/wext-compat.c |   12 ++++++++++++
+>  3 files changed, 26 insertions(+)
+> 
+> --- a/include/net/cfg80211.h	2011-11-09 10:13:05.000000000 +0100
+> +++ b/include/net/cfg80211.h	2011-11-09 10:27:47.000000000 +0100
+> @@ -1342,6 +1342,9 @@ struct cfg80211_gtk_rekey_data {
+>   *	doesn't verify much. Note, however, that the passed netdev may be
+>   *	%NULL as well if the user requested changing the channel for the
+>   *	device itself, or for a monitor interface.
+> + * @get_channel: Get the current operating channel, should return %NULL if
+> + *	there's no single defined operating channel if for example the
+> + *	device implements channel hopping for multi-channel virtual interfaces.
+>   *
+>   * @scan: Request to do a scan. If returning zero, the scan request is given
+>   *	the driver, and will be valid until passed to cfg80211_scan_done().
+> @@ -1627,6 +1630,8 @@ struct cfg80211_ops {
+>  
+>  	int	(*probe_client)(struct wiphy *wiphy, struct net_device *dev,
+>  				const u8 *peer, u64 *cookie);
+> +
+> +	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
+>  };
+>  
+>  /*
+> --- a/net/wireless/wext-compat.c	2011-11-09 10:07:35.000000000 +0100
+> +++ b/net/wireless/wext-compat.c	2011-11-09 10:13:18.000000000 +0100
+> @@ -819,12 +819,24 @@ static int cfg80211_wext_giwfreq(struct
+>  				 struct iw_freq *freq, char *extra)
+>  {
+>  	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+> +	struct ieee80211_channel *chan;
+>  
+>  	switch (wdev->iftype) {
+>  	case NL80211_IFTYPE_STATION:
+>  		return cfg80211_mgd_wext_giwfreq(dev, info, freq, extra);
+>  	case NL80211_IFTYPE_ADHOC:
+>  		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
+> +	case NL80211_IFTYPE_MONITOR:
+> +		if (!rdev->ops->get_channel)
+> +			return -EINVAL;
+> +
+> +		chan = rdev->ops->get_channel(wdev->wiphy);
+> +		if (!chan)
+> +			return -EINVAL;
+> +		freq->m = chan->center_freq;
+> +		freq->e = 6;
+> +		return 0;
+>  	default:
+>  		if (!wdev->channel)
+>  			return -EINVAL;
+> --- a/net/mac80211/cfg.c	2011-11-09 10:10:56.000000000 +0100
+> +++ b/net/mac80211/cfg.c	2011-11-09 10:29:40.000000000 +0100
+> @@ -2579,6 +2579,14 @@ static int ieee80211_probe_client(struct
+>  	return 0;
+>  }
+>  
+> +static struct ieee80211_channel *
+> +ieee80211_wiphy_get_channel(struct wiphy *wiphy)
+> +{
+> +	struct ieee80211_local *local = wiphy_priv(wiphy);
+> +
+> +	return local->oper_channel;
+> +}
+> +
+>  struct cfg80211_ops mac80211_config_ops = {
+>  	.add_virtual_intf = ieee80211_add_iface,
+>  	.del_virtual_intf = ieee80211_del_iface,
+> @@ -2645,4 +2653,5 @@ struct cfg80211_ops mac80211_config_ops
+>  	.tdls_oper = ieee80211_tdls_oper,
+>  	.tdls_mgmt = ieee80211_tdls_mgmt,
+>  	.probe_client = ieee80211_probe_client,
+> +	.get_channel = ieee80211_wiphy_get_channel,
+>  };
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
