@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45378 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308Ab2LDTHc (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:38886 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071Ab2LVVWz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 14:07:32 -0500
-Message-ID: <1354648076.9608.16.camel@jlt4.sipsolutions.net> (sfid-20121204_200736_394665_F50A4BB0)
-Subject: Re: [PATCH v2] mac80211: add debug file for mic failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Saravana <saravanad@posedge.com>
+	Sat, 22 Dec 2012 16:22:55 -0500
+Date: Sat, 22 Dec 2012 16:22:52 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 04 Dec 2012 20:07:56 +0100
-In-Reply-To: <1354633038.9608.3.camel@jlt4.sipsolutions.net> (sfid-20121204_155658_509490_E48BCD66)
-References: <50BE0606.3000103@posedge.com>
-	 <1354633038.9608.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20121204_155658_509490_E48BCD66)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH 06/17] cw1200:  Mini-AP implementation
+Message-ID: <20121222212252.GE5120@shaftnet.org> (sfid-20121222_222303_980048_651D8589)
+References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
+ <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
+ <50D61117.8020009@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sfyO1m2EN8ZOtJL6"
+In-Reply-To: <50D61117.8020009@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-04 at 15:57 +0100, Johannes Berg wrote:
-> On Tue, 2012-12-04 at 19:47 +0530, Saravana wrote:
-> > The mic failure count will provide the number of mic failure that 
-> > have happened without a countermeasure being started. Once the 
-> > countermeasure is started, the counter will be reset to 0.
-> > This count will be helpful when the consecutive 
-> > mic failure occur at intervals greater than 60 seconds regularly(frequently).
-> 
-> Applied.
 
-Never mind, dropped. It has a null pointer issue and still has
-whitespace issues. Please figure out how to actually indent
-parameters ...
+--sfyO1m2EN8ZOtJL6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Also, signed-off-by should be your full name, is that really just
-"Saravana"? Your email seems to indicate there's something else
-("saravanad")
+On Sat, Dec 22, 2012 at 08:59:19PM +0100, Pontus Fuchs wrote:
+> Please kill CONFIG_CW1200_*_DEBUG  and use pr_debug or other dyndbg
+> interface instead. Goes for all files.
 
-johannes
+Just finished the last of that now.  (man, what a PITA..)
 
+> Please get rid of CONFIG_CW1200_USE_STE_EXTENSIONS. The "extensions"=20
+> is standard stuff anyway.
+
+I'm currently working on auditing all places wrapped by STE_EXTENSIONS=20
+and determining what to nuke (or permanently enable) on a case-by-case=20
+basis.  More on this in a bit.
+
+I'll submit a v2 RFC this evening, I think.  (Still under drivers/staging)
+
+It's worth mentioning that I don't have any hardware to test my changes=20
+out at the moment; it's all sitting on my desk at $dayjob.
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--sfyO1m2EN8ZOtJL6
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iD8DBQFQ1iSsPuLgii2759ARAomeAKDIkTH9UB3o7dwAgG5PCDt+JHiubwCdHknS
+w425nh6xmZwhq8WRLpffuTI=
+=+js3
+-----END PGP SIGNATURE-----
+
+--sfyO1m2EN8ZOtJL6--
