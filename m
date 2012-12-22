@@ -1,229 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:37544 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752020Ab2LJOaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 09:30:55 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 3/4] ath9k: use 'struct ath_hw *' as the first argument for 'ath9k_hw_nvram_read'
-Date: Mon, 10 Dec 2012 15:30:27 +0100
-Message-Id: <1355149828-7394-3-git-send-email-juhosg@openwrt.org> (sfid-20121210_153059_307316_3BFBABEC)
-In-Reply-To: <1355149828-7394-1-git-send-email-juhosg@openwrt.org>
-References: <1355149828-7394-1-git-send-email-juhosg@openwrt.org>
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:46419 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071Ab2LVWzq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Dec 2012 17:55:46 -0500
+Date: Sun, 23 Dec 2012 07:55:43 +0900
+From: Norbert Preining <preining@logic.at>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: dire state of rtl8192se driver in 3.7
+Message-ID: <20121222225543.GA21544@gamma.logic.tuwien.ac.at> (sfid-20121222_235613_410781_8EE4D58A)
+References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at> <50D5E194.3050503@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50D5E194.3050503@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'ath9k_hw_nvram_read' function takes a
-'struct ath_common *' as its first argument.
-Almost each of its caller has a 'struct ath_hw *'
-parameter in their argument list, and that is
-dereferenced in order to get the 'struct ath_common'
-pointer.
+Hi Larry,, hi all
 
-Change the first argument of 'ath9k_hw_nvram_read'
-to be a 'struct ath_hw *', and remove the dereference
-calls from the callers.
+On Sa, 22 Dez 2012, Larry Finger wrote:
+> It is not that no one cares; however, your attitude does nothing to 
+> induce me to work on this problem. The facts are not needed "to make 
 
-Also change the type of the first argument of the
-ar9300_eeprom_read_{byte,word} functions.
+Aehm, ... after my initial report you asked me several more questions,
+which I answered within a few hours. After that no as in 0 response,
+although I pinged back a few times.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   17 ++++++++---------
- drivers/net/wireless/ath/ath9k/eeprom.c        |    3 ++-
- drivers/net/wireless/ath/ath9k/eeprom.h        |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    6 ++----
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    6 ++----
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |    5 ++---
- 6 files changed, 17 insertions(+), 22 deletions(-)
+So am I supposed to deduce from 0 reactions that anyone is interested?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index c86cb640..2fd7334 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3005,24 +3005,24 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 	}
- }
- 
--static bool ar9300_eeprom_read_byte(struct ath_common *common, int address,
-+static bool ar9300_eeprom_read_byte(struct ath_hw *ah, int address,
- 				    u8 *buffer)
- {
- 	u16 val;
- 
--	if (unlikely(!ath9k_hw_nvram_read(common, address / 2, &val)))
-+	if (unlikely(!ath9k_hw_nvram_read(ah, address / 2, &val)))
- 		return false;
- 
- 	*buffer = (val >> (8 * (address % 2))) & 0xff;
- 	return true;
- }
- 
--static bool ar9300_eeprom_read_word(struct ath_common *common, int address,
-+static bool ar9300_eeprom_read_word(struct ath_hw *ah, int address,
- 				    u8 *buffer)
- {
- 	u16 val;
- 
--	if (unlikely(!ath9k_hw_nvram_read(common, address / 2, &val)))
-+	if (unlikely(!ath9k_hw_nvram_read(ah, address / 2, &val)))
- 		return false;
- 
- 	buffer[0] = val >> 8;
-@@ -3048,14 +3048,14 @@ static bool ar9300_read_eeprom(struct ath_hw *ah, int address, u8 *buffer,
- 	 * the 16-bit word at that address
- 	 */
- 	if (address % 2 == 0) {
--		if (!ar9300_eeprom_read_byte(common, address--, buffer++))
-+		if (!ar9300_eeprom_read_byte(ah, address--, buffer++))
- 			goto error;
- 
- 		count--;
- 	}
- 
- 	for (i = 0; i < count / 2; i++) {
--		if (!ar9300_eeprom_read_word(common, address, buffer))
-+		if (!ar9300_eeprom_read_word(ah, address, buffer))
- 			goto error;
- 
- 		address -= 2;
-@@ -3063,7 +3063,7 @@ static bool ar9300_read_eeprom(struct ath_hw *ah, int address, u8 *buffer,
- 	}
- 
- 	if (count % 2)
--		if (!ar9300_eeprom_read_byte(common, address, buffer))
-+		if (!ar9300_eeprom_read_byte(ah, address, buffer))
- 			goto error;
- 
- 	return true;
-@@ -3240,12 +3240,11 @@ static bool ar9300_check_eeprom_header(struct ath_hw *ah, eeprom_read_op read,
- static int ar9300_eeprom_restore_flash(struct ath_hw *ah, u8 *mptr,
- 				       int mdata_size)
- {
--	struct ath_common *common = ath9k_hw_common(ah);
- 	u16 *data = (u16 *) mptr;
- 	int i;
- 
- 	for (i = 0; i < mdata_size / 2; i++, data++)
--		ath9k_hw_nvram_read(common, i, data);
-+		ath9k_hw_nvram_read(ah, i, data);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index bf52ae1..eb9ac5e 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -113,8 +113,9 @@ void ath9k_hw_usb_gen_fill_eeprom(struct ath_hw *ah, u16 *eep_data,
- 	}
- }
- 
--bool ath9k_hw_nvram_read(struct ath_common *common, u32 off, u16 *data)
-+bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
- {
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	bool ret;
- 
- 	ret = common->bus_ops->eeprom_read(common, off, data);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 319c651..40d4f62 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -663,7 +663,7 @@ int16_t ath9k_hw_interpolate(u16 target, u16 srcLeft, u16 srcRight,
- 			     int16_t targetRight);
- bool ath9k_hw_get_lower_upper_index(u8 target, u8 *pList, u16 listSize,
- 				    u16 *indexL, u16 *indexR);
--bool ath9k_hw_nvram_read(struct ath_common *common, u32 off, u16 *data);
-+bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data);
- void ath9k_hw_usb_gen_fill_eeprom(struct ath_hw *ah, u16 *eep_data,
- 				  int eep_start_loc, int size);
- void ath9k_hw_fill_vpd_table(u8 pwrMin, u8 pwrMax, u8 *pPwrList,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 17c843d..c2bfd74 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -32,13 +32,11 @@ static int ath9k_hw_4k_get_eeprom_rev(struct ath_hw *ah)
- 
- static bool __ath9k_hw_4k_fill_eeprom(struct ath_hw *ah)
- {
--	struct ath_common *common = ath9k_hw_common(ah);
- 	u16 *eep_data = (u16 *)&ah->eeprom.map4k;
- 	int addr, eep_start_loc = 64;
- 
- 	for (addr = 0; addr < SIZE_EEPROM_4K; addr++) {
--		if (!ath9k_hw_nvram_read(common, addr + eep_start_loc,
--					 eep_data))
-+		if (!ath9k_hw_nvram_read(ah, addr + eep_start_loc, eep_data))
- 			return false;
- 		eep_data++;
- 	}
-@@ -194,7 +192,7 @@ static int ath9k_hw_4k_check_eeprom(struct ath_hw *ah)
- 
- 
- 	if (!ath9k_hw_use_flash(ah)) {
--		if (!ath9k_hw_nvram_read(common, AR5416_EEPROM_MAGIC_OFFSET,
-+		if (!ath9k_hw_nvram_read(ah, AR5416_EEPROM_MAGIC_OFFSET,
- 					 &magic)) {
- 			ath_err(common, "Reading Magic # failed\n");
- 			return false;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index f2c32bc..3ae1f3d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -33,14 +33,12 @@ static int ath9k_hw_ar9287_get_eeprom_rev(struct ath_hw *ah)
- static bool __ath9k_hw_ar9287_fill_eeprom(struct ath_hw *ah)
- {
- 	struct ar9287_eeprom *eep = &ah->eeprom.map9287;
--	struct ath_common *common = ath9k_hw_common(ah);
- 	u16 *eep_data;
- 	int addr, eep_start_loc = AR9287_EEP_START_LOC;
- 	eep_data = (u16 *)eep;
- 
- 	for (addr = 0; addr < SIZE_EEPROM_AR9287; addr++) {
--		if (!ath9k_hw_nvram_read(common, addr + eep_start_loc,
--					 eep_data))
-+		if (!ath9k_hw_nvram_read(ah, addr + eep_start_loc, eep_data))
- 			return false;
- 		eep_data++;
- 	}
-@@ -187,7 +185,7 @@ static int ath9k_hw_ar9287_check_eeprom(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (!ath9k_hw_use_flash(ah)) {
--		if (!ath9k_hw_nvram_read(common, AR5416_EEPROM_MAGIC_OFFSET,
-+		if (!ath9k_hw_nvram_read(ah, AR5416_EEPROM_MAGIC_OFFSET,
- 					 &magic)) {
- 			ath_err(common, "Reading Magic # failed\n");
- 			return false;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 2654f74..1c25368 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -91,12 +91,11 @@ static int ath9k_hw_def_get_eeprom_rev(struct ath_hw *ah)
- 
- static bool __ath9k_hw_def_fill_eeprom(struct ath_hw *ah)
- {
--	struct ath_common *common = ath9k_hw_common(ah);
- 	u16 *eep_data = (u16 *)&ah->eeprom.def;
- 	int addr, ar5416_eep_start_loc = 0x100;
- 
- 	for (addr = 0; addr < SIZE_EEPROM_DEF; addr++) {
--		if (!ath9k_hw_nvram_read(common, addr + ar5416_eep_start_loc,
-+		if (!ath9k_hw_nvram_read(ah, addr + ar5416_eep_start_loc,
- 					 eep_data))
- 			return false;
- 		eep_data++;
-@@ -268,7 +267,7 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
- 	bool need_swap = false;
- 	int i, addr, size;
- 
--	if (!ath9k_hw_nvram_read(common, AR5416_EEPROM_MAGIC_OFFSET, &magic)) {
-+	if (!ath9k_hw_nvram_read(ah, AR5416_EEPROM_MAGIC_OFFSET, &magic)) {
- 		ath_err(common, "Reading Magic # failed\n");
- 		return false;
- 	}
--- 
-1.7.10
+> people happy", they are necessary to try to reproduce the problem. If I 
+> cannot make it happen here, then I cannot fix it. Also, remember that I 
 
+Disagree. I am involved in tracking down a nasty regression in the intel 
+drm driver, which the intel people can *not* reproduce, but several
+other people, and after long trials and patches and converse it is 
+starting to look much better.
+
+> am a volunteer. I get nothing from Realtek but starting code of varying 
+> quality and some sample chips. At least my versions do not crash your 
+
+Ok, that is a problem I understand. If this is the case, that it is
+a single volunteer caring for the code, then I see a real problem.
+(And I also will try to stay away from rtl wlan cards on my next laptop)
+
+> I have never tested forcing a reset on the chip the way you did. I am not 
+> surprised that bad things happen.
+
+But the DMAR item I also reported points to a real problem I guess.
+
+> From some of the material that you report, it appears that you have an 
+> 802.11n connection using WPA1 encryption. (More of those pesky details!) 
+
+WPA PSK, yes. I don't know the difference between WPA2 and WPA, though.
+
+Best wishes, and merry christmas
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+`This must be Thursday,' said Arthur to himself, sinking
+low over his beer, `I never could get the hang of
+Thursdays.'
+                 --- Arthur, on what was to be his last Thursday on Earth.
+                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
