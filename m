@@ -1,40 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:52564 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932835Ab2LHDho convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:50706 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097Ab2LVDnO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 22:37:44 -0500
-Received: by mail-wg0-f46.google.com with SMTP id dr13so666562wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Dec 2012 19:37:43 -0800 (PST)
+	Fri, 21 Dec 2012 22:43:14 -0500
+Received: by mail-ee0-f47.google.com with SMTP id e51so2694320eek.34
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Dec 2012 19:43:13 -0800 (PST)
+Subject: [PATCH -stable 3.7] carl9170: fix -EINVAL bailout during init with !CONFIG_MAC80211_MESH
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, quantheory@gmail.com
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 22 Dec 2012 04:35:24 +0100
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1212080726150.22564@icf.org.ru>
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
- <alpine.DEB.2.02.1212031842350.27546@icf.org.ru> <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
- <alpine.DEB.2.02.1212080721070.8165@icf.org.ru> <alpine.DEB.2.02.1212080726150.22564@icf.org.ru>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Fri, 7 Dec 2012 19:37:23 -0800
-Message-ID: <CAG6hwVMsghDHzgyk1ZJE7YoMi2+t-LKNGtgw_ha2DdEwHc71hg@mail.gmail.com> (sfid-20121208_043748_339418_60CEF14D)
-Subject: Re: help: 802.11s bad performance with 802.11n enabled
-To: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-Cc: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	open11s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201212220435.24719.chunkeey@googlemail.com> (sfid-20121222_044318_682398_7C267D55)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 7, 2012 at 7:29 PM, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
-> On 2012-12-08 07:23 +0400, Georgiewskiy Yuriy wrote Thomas Pedersen:
->
-> GY>On 2012-12-07 19:17 -0800, Thomas Pedersen wrote Georgiewskiy Yuriy:
-> GY>
-> GY>ок, i try this and report results, can you also test on 2.4 Ggz? as i
-> GY>understand ch 149 is 802.11a? or this make no sense here?
->
-> and also signal level make sense in my case, i just remove antennas from one of the nodes
-> in range of 3 meters, it works only with pigtails, signal drops to -70 - -80 dbm, and it's
-> triggers filed to stop tx dma immediatlly.
+Sean reported that as of 3.7, his AR9170 device no longer works
+because the driver fails during initialization. He noted this
+is due to:
+"In carl9170/fw.c, ar->hw->wiphy is tagged with
+NL80211_IFTYPE_MESH_POINT support if the firmware has Content
+after Beacon Queuing. This is both in interface_modes and the
+only iface_combinations entry.
 
-Are you talking about a different bug?
+If CONFIG_MAC80211_MESH is not set, ieee80211_register_hw
+removes NL80211_IFTYPE_MESH_POINT from interface_modes, but
+not iface_combinations.
 
-Thomas
+wiphy_register then checks to see if every interface type in
+every interface combination is in interface_modes.
+NL80211_IFTYPE_MESH_POINT was removed, so you get a WARN_ON
+warning and it returns -EINVAL, giving up."
+
+Unfortunately, the iface_combination (types) feature bitmap
+in ieee80211_iface_limit is part of a const member in the
+ieee80211_iface_combination struct. Hence, the MESH_POINT
+feature flag can't be masked by wiphy_register in the
+same way as interface_modes in ieee80211_register_hw.
+
+Cc: <stable@vger.kernel.org>
+Reported-by: Sean Patrick Santos <quantheory@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+only compile tested.
+---
+ drivers/net/wireless/ath/carl9170/fw.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
+index aaebecd..63fd9af 100644
+--- a/drivers/net/wireless/ath/carl9170/fw.c
++++ b/drivers/net/wireless/ath/carl9170/fw.c
+@@ -336,8 +336,12 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
+ 		if (SUPP(CARL9170FW_WLANTX_CAB)) {
+ 			if_comb_types |=
+ 				BIT(NL80211_IFTYPE_AP) |
+-				BIT(NL80211_IFTYPE_MESH_POINT) |
+ 				BIT(NL80211_IFTYPE_P2P_GO);
++
++#ifdef CONFIG_MAC80211_MESH
++			if_comb_types |=
++				BIT(NL80211_IFTYPE_MESH_POINT);
++#endif /* CONFIG_MAC80211_MESH */
+ 		}
+ 	}
+ 
+-- 
+1.7.10.4
+
