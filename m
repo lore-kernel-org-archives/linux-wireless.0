@@ -1,67 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49465 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874Ab2LCSqm (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:40826 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752674Ab2LVB6Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 13:46:42 -0500
-Date: Mon, 3 Dec 2012 13:40:56 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Waldemar Rymarkiewicz <waldemar.rymarkiewicz@tieto.com>
-Subject: Re: [GIT] [NFC] 3.7 fix pull request
-Message-ID: <20121203184056.GF26027@tuxdriver.com> (sfid-20121203_194646_431062_434CA4E0)
-References: <20121129131452.GE12685@sortiz-mobl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121129131452.GE12685@sortiz-mobl>
+	Fri, 21 Dec 2012 20:58:25 -0500
+From: Tejun Heo <tj@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 14/25] rfkill: don't use [delayed_]work_pending()
+Date: Fri, 21 Dec 2012 17:57:04 -0800
+Message-Id: <1356141435-17340-15-git-send-email-tj@kernel.org> (sfid-20121222_030236_218242_05D0330F)
+In-Reply-To: <1356141435-17340-1-git-send-email-tj@kernel.org>
+References: <1356141435-17340-1-git-send-email-tj@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't think this will make 3.7.  Any problem if I just pull it for 3.8?
+There's no need to test whether a (delayed) work item in pending
+before queueing, flushing or cancelling it.  Most uses are unnecessary
+and quite a few of them are buggy.
 
-John
+Remove unnecessary pending tests from rfkill.  Only compile
+tested.
 
-On Thu, Nov 29, 2012 at 02:14:52PM +0100, Samuel Ortiz wrote:
-> Hi John,
-> 
-> I'm hoping it's not too late for 3.7 fixes, so here is a last minute one:
-> 
-> This is an NFC LLCP fix for 3.7 and contains only one patch.
-> 
-> It fixes a potential crash when receiving an LLCP HDLC frame acking a frame
-> that is not the last sent one. In that case we may dereference an already
-> freed pointer.
-> 
-> 
-> The following changes since commit 6bdd253f635f7b2ef027d116933a6c9ec148b87f:
-> 
->   mac80211: fix remain-on-channel (non-)cancelling (2012-11-26 14:41:40 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git tags/nfc-fixes-3.7-2
-> 
-> for you to fetch changes up to 289814918ce3af1296ac7d9b05508bde64e97348:
-> 
->   NFC: Fix incorrect llcp pointer dereference (2012-11-28 18:42:04 +0100)
-> 
-> ----------------------------------------------------------------
-> Waldemar Rymarkiewicz (1):
->       NFC: Fix incorrect llcp pointer dereference
-> 
->  net/nfc/llcp/llcp.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> -- 
-> Intel Open Source Technology Centre
-> http://oss.intel.com/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+---
+Please let me know how this patch should be routed.  I can take it
+through the workqueue tree if necessary.
 
+Thanks.
+
+ net/rfkill/input.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/net/rfkill/input.c b/net/rfkill/input.c
+index c9d931e..b85107b 100644
+--- a/net/rfkill/input.c
++++ b/net/rfkill/input.c
+@@ -148,11 +148,9 @@ static unsigned long rfkill_ratelimit(const unsigned long last)
+ 
+ static void rfkill_schedule_ratelimited(void)
+ {
+-	if (delayed_work_pending(&rfkill_op_work))
+-		return;
+-	schedule_delayed_work(&rfkill_op_work,
+-			      rfkill_ratelimit(rfkill_last_scheduled));
+-	rfkill_last_scheduled = jiffies;
++	if (schedule_delayed_work(&rfkill_op_work,
++				  rfkill_ratelimit(rfkill_last_scheduled)))
++		rfkill_last_scheduled = jiffies;
+ }
+ 
+ static void rfkill_schedule_global_op(enum rfkill_sched_op op)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0.2
+
