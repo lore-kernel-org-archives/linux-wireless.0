@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45569 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193Ab2LZWIy (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:51180 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034Ab2LVUF0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 17:08:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V3.8 4/5] rtlwifi: rtl8192se: Fix warning for unchecked pci_map_single() call
-Date: Wed, 26 Dec 2012 16:08:10 -0600
-Message-Id: <1356559691-5048-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121226_230938_305420_3D303B5A)
-In-Reply-To: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sat, 22 Dec 2012 15:05:26 -0500
+Received: by mail-la0-f48.google.com with SMTP id m13so6958059lah.35
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Dec 2012 12:05:25 -0800 (PST)
+Message-ID: <50D61117.8020009@gmail.com> (sfid-20121222_210543_433320_EC91C234)
+Date: Sat, 22 Dec 2012 20:59:19 +0100
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+MIME-Version: 1.0
+To: Solomon Peachy <pizza@shaftnet.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 06/17] cw1200:  Mini-AP implementation
+References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org> <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
+In-Reply-To: <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernel 3.8 implements checking of all DMA mapping calls and issues
-a WARNING for the first it finds that is not checked.
+On 2012-12-22 16:45, Solomon Peachy wrote:
+> The cw1200 is a thick-ish MAC that manages many aspects of AP operation
+> in the firmware.  As such, it only supports a limited number of clients.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+[...]
+> +#if defined(CONFIG_CW1200_STA_DEBUG)
+> +#define ap_printk(...) printk(__VA_ARGS__)
+> +#else
+> +#define ap_printk(...)
+> +#endif
+Please kill CONFIG_CW1200_*_DEBUG  and use pr_debug or other dyndbg 
+interface instead. Goes for all files.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-index 0e9f6eb..206561d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -611,6 +611,11 @@ void rtl92se_tx_fill_desc(struct ieee80211_hw *hw,
- 		    PCI_DMA_TODEVICE);
- 	u8 bw_40 = 0;
- 
-+	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
-+		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
-+			 "DMA mapping error");
-+		return;
-+	}
- 	if (mac->opmode == NL80211_IFTYPE_STATION) {
- 		bw_40 = mac->bw_40;
- 	} else if (mac->opmode == NL80211_IFTYPE_AP ||
-@@ -763,6 +768,7 @@ void rtl92se_tx_fill_desc(struct ieee80211_hw *hw,
- void rtl92se_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
- 	bool firstseg, bool lastseg, struct sk_buff *skb)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_tcb_desc *tcb_desc = (struct rtl_tcb_desc *)(skb->cb);
-@@ -770,7 +776,12 @@ void rtl92se_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
- 	dma_addr_t mapping = pci_map_single(rtlpci->pdev, skb->data, skb->len,
- 			PCI_DMA_TODEVICE);
- 
--    /* Clear all status	*/
-+	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
-+		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
-+			 "DMA mapping error");
-+		return;
-+	}
-+	/* Clear all status	*/
- 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_CMDDESC_SIZE_RTL8192S);
- 
- 	/* This bit indicate this packet is used for FW download. */
--- 
-1.7.10.4
+[...]
 
++#if defined(CONFIG_CW1200_USE_STE_EXTENSIONS)
+
+Please get rid of CONFIG_CW1200_USE_STE_EXTENSIONS. The "extensions" is standard stuff anyway.
+
++			priv->cqm_beacon_loss_count =
++					info->cqm_beacon_miss_thold;
++			priv->cqm_tx_failure_thold =
++					info->cqm_tx_fail_thold;
++			priv->cqm_tx_failure_count = 0;
+
+I remember fixing a tricky bug here. When loosing BSS the driver can in 
+some case leave
+priv->bss_loss_status to > CW1200_BSS_LOSS_NONE.
+This blocks further processing of the BSS_LOST events from firmware 
+causing link loss detection to fail.
+
+The fix was to clean up bss_lost_status here before canceling 
+bss_loss_work and connection_loss_work:
+
+priv->delayed_link_loss = 0;
+spin_lock(&priv->bss_loss_lock);
+priv->bss_loss_status = CW1200_BSS_LOSS_NONE;
+spin_unlock(&priv->bss_loss_lock);
+
+> +			cancel_delayed_work_sync(&priv->bss_loss_work);
+> +			cancel_delayed_work_sync(&priv->connection_loss_work);
+> +#endif /* CONFIG_CW1200_USE_STE_EXTENSIONS */
+
+//Pontus
