@@ -1,93 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:55316 "EHLO
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:63623 "EHLO
 	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab2LVPpv (ORCPT
+	with ESMTP id S1752357Ab2LVXSe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 10:45:51 -0500
+	Sat, 22 Dec 2012 18:18:34 -0500
 From: Solomon Peachy <pizza@shaftnet.org>
 To: linux-wireless@vger.kernel.org
 Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 15/17] cw1200:  SDIO and SPI glue code, plus platform data
-Date: Sat, 22 Dec 2012 10:45:18 -0500
-Message-Id: <1356191120-5280-16-git-send-email-pizza@shaftnet.org> (sfid-20121222_164609_234806_456F290D)
-In-Reply-To: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
-References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
+Subject: [PATCH 10/17] cw1200: v2: packet transmit/receive handling
+Date: Sat, 22 Dec 2012 18:18:25 -0500
+Message-Id: <1356218312-13616-11-git-send-email-pizza@shaftnet.org> (sfid-20121223_002323_389203_1DBE7F44)
+In-Reply-To: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
+References: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SPI driver in particular is uglier than I'd like (with the
-unfortunately necessary byte swapping).  I'm open to suggestons on how
-to clean this up.
-
-The SPI driver wasn't present in ST-E's original submission, and the
-SDIO driver has been rewritten quite a bit for stability and simplicity.
-
 Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- drivers/staging/cw1200/cw1200_plat.h |  42 +++
- drivers/staging/cw1200/cw1200_sdio.c | 542 +++++++++++++++++++++++++++++++++++
- drivers/staging/cw1200/cw1200_spi.c  | 487 +++++++++++++++++++++++++++++++
- 3 files changed, 1071 insertions(+)
- create mode 100644 drivers/staging/cw1200/cw1200_plat.h
- create mode 100644 drivers/staging/cw1200/cw1200_sdio.c
- create mode 100644 drivers/staging/cw1200/cw1200_spi.c
+ drivers/staging/cw1200/txrx.c | 1315 +++++++++++++++++++++++++++++++++++++++++
+ drivers/staging/cw1200/txrx.h |   93 +++
+ 2 files changed, 1408 insertions(+)
+ create mode 100644 drivers/staging/cw1200/txrx.c
+ create mode 100644 drivers/staging/cw1200/txrx.h
 
-diff --git a/drivers/staging/cw1200/cw1200_plat.h b/drivers/staging/cw1200/cw1200_plat.h
+diff --git a/drivers/staging/cw1200/txrx.c b/drivers/staging/cw1200/txrx.c
 new file mode 100644
-index 0000000..5775f38
+index 0000000..484ae69
 --- /dev/null
-+++ b/drivers/staging/cw1200/cw1200_plat.h
-@@ -0,0 +1,42 @@
++++ b/drivers/staging/cw1200/txrx.c
+@@ -0,0 +1,1315 @@
 +/*
-+ * Copyright (C) ST-Ericsson SA 2011
-+ *
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ * License terms: GNU General Public License (GPL) version 2
-+ */
-+
-+#ifndef CW1200_PLAT_H_INCLUDED
-+#define CW1200_PLAT_H_INCLUDED
-+
-+#include <linux/ioport.h>
-+
-+#include "hwio.h"  /* For DPLL init values */
-+
-+struct cw1200_platform_data_spi {
-+	u8 spi_bits_per_word;           /* REQUIRED */
-+	u16 ref_clk;                    /* REQUIRED (in KHz) */
-+	const struct resource *reset;   /* Can be NULL w/ HW reset circuit */
-+	int (*power_ctrl)(const struct cw1200_platform_data_spi *pdata,
-+			  bool enable); /* Can be NULL w/ HW power circuit */
-+	int (*clk_ctrl)(const struct cw1200_platform_data_spi *pdata,
-+			bool enable); /* Can be NULL */
-+	const u8 *macaddr;  /* if NULL, use cw1200_mac_template module parameter */
-+	const char *sdd_file;  /* if NULL, will use default for detected hw type */
-+};
-+
-+struct cw1200_platform_data_sdio {
-+	const char *mmc_id;             /* REQUIRED */
-+	u16 ref_clk;                    /* REQUIRED (in KHz) */
-+#ifdef CONFIG_CW1200_USE_GPIO_IRQ
-+	const struct resource *irq;     /* REQUIRED */
-+#endif
-+	const struct resource *reset;   /* Can be NULL w/ HW reset circuit */
-+	int (*power_ctrl)(const struct cw1200_platform_data_sdio *pdata,
-+			  bool enable); /* Can be NULL w/ HW power circuit */
-+	int (*clk_ctrl)(const struct cw1200_platform_data_sdio *pdata,
-+			bool enable); /* Can be NULL */
-+	const u8 *macaddr;  /* if NULL, use cw1200_mac_template module parameter */
-+	const char *sdd_file;  /* if NULL, will use "default" */
-+};
-+
-+#endif /* CW1200_PLAT_H_INCLUDED */
-diff --git a/drivers/staging/cw1200/cw1200_sdio.c b/drivers/staging/cw1200/cw1200_sdio.c
-new file mode 100644
-index 0000000..d6c8268
---- /dev/null
-+++ b/drivers/staging/cw1200/cw1200_sdio.c
-@@ -0,0 +1,542 @@
-+/*
-+ * Mac80211 SDIO driver for ST-Ericsson CW1200 device
++ * Datapath implementation for ST-Ericsson CW1200 mac80211 drivers
 + *
 + * Copyright (c) 2010, ST-Ericsson
 + * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
@@ -97,550 +40,1319 @@ index 0000000..d6c8268
 + * published by the Free Software Foundation.
 + */
 +
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/gpio.h>
-+#include <linux/delay.h>
-+#include <linux/mmc/host.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/card.h>
-+#include <linux/mmc/sdio.h>
 +#include <net/mac80211.h>
++#include <linux/etherdevice.h>
 +
 +#include "cw1200.h"
-+#include "sbus.h"
-+#include "cw1200_plat.h"
-+#include "hwio.h"
++#include "wsm.h"
++#include "bh.h"
++#include "ap.h"
++#include "debug.h"
 +
-+MODULE_AUTHOR("Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>");
-+MODULE_DESCRIPTION("mac80211 ST-Ericsson CW1200 SDIO driver");
-+MODULE_LICENSE("GPL");
++#define CW1200_INVALID_RATE_ID (0xFF)
 +
-+#define SDIO_BLOCK_SIZE (512)
++static int cw1200_handle_action_rx(struct cw1200_common *priv,
++				   struct sk_buff *skb);
++static const struct ieee80211_rate *
++cw1200_get_tx_rate(const struct cw1200_common *priv,
++		   const struct ieee80211_tx_rate *rate);
 +
-+#define USE_INTERNAL_RESOURCE_LIST
-+// XXX The intent is that this info is part of the board platform data in arch/mach-xxxx/mach-yyyy.c
++/* ******************************************************************** */
++/* TX queue lock / unlock						*/
 +
-+/* Declaration only. Should be implemented in arch/xxx/mach-yyy */
-+const struct cw1200_platform_data_sdio *cw1200_get_platform_data(void);
-+
-+#ifdef USE_INTERNAL_RESOURCE_LIST
-+#if 0
-+static struct resource cw1200_href_resources[] = {
-+	{
-+		.start = 215,  // fix me as appropriate
-+		.end = 215,    // ditto.
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_reset",
-+	},
-+#ifdef CONFIG_CW1200_USE_GPIO_IRQ
-+	{
-+		.start = NOMADIK_GPIO_TO_IRQ(216), // fix me as appropriate
-+		.end = NOMADIK_GPIO_TO_IRQ(216),   // ditto
-+		.flags = IORESOURCE_IRQ,
-+		.name = "cw1200_wlan_irq",
-+	},
-+#endif /* CONFIG_CW1200_USE_GPIO_IRQ */
-+};
-+#endif
-+
-+static int cw1200_power_ctrl(const struct cw1200_platform_data_sdio *pdata,
-+		 	     bool enable)
++static inline void cw1200_tx_queues_lock(struct cw1200_common *priv)
 +{
-+	/* Turn PWR_EN off and on as appropriate. */
-+	/* Note this is not needed when there's a hardware reset circuit */
-+
-+	return 0;
++	int i;
++	for (i = 0; i < 4; ++i)
++		cw1200_queue_lock(&priv->tx_queue[i]);
 +}
 +
-+static int cw1200_clk_ctrl(const struct cw1200_platform_data_sdio *pdata,
-+			   bool enable)
++static inline void cw1200_tx_queues_unlock(struct cw1200_common *priv)
 +{
-+	/* Turn CLK_32K off and on as appropriate. */
-+	/* Note this is not needed if it's always on */
-+	return 0;
++	int i;
++	for (i = 0; i < 4; ++i)
++		cw1200_queue_unlock(&priv->tx_queue[i]);
 +}
 +
-+struct cw1200_platform_data_sdio cw1200_platform_data = {
-+	.mmc_id = "mmc1",
-+	.ref_clk = 38400,
-+#if 0
-+	.reset = &cw1200_href_resources[0],
-+#ifdef CONFIG_CW1200_USE_GPIO_IRQ
-+	.irq = &cw1200_href_resources[1],
-+#endif
-+#endif
-+	.power_ctrl = cw1200_power_ctrl,
-+	.clk_ctrl = cw1200_clk_ctrl,
-+	.sdd_file = "sdd_sagrad_1091_1098.bin",
-+};
++/* ******************************************************************** */
++/* TX policy cache implementation					*/
 +
-+const struct cw1200_platform_data_sdio *cw1200_get_platform_data(void)
++static void tx_policy_dump(struct tx_policy *policy)
 +{
-+	return &cw1200_platform_data;
-+}
-+EXPORT_SYMBOL_GPL(cw1200_get_platform_data);
-+#endif
-+
-+struct sbus_priv {
-+	struct sdio_func	*func;
-+	struct cw1200_common	*core;
-+	const struct cw1200_platform_data_sdio *pdata;
-+};
-+
-+#ifndef SDIO_VENDOR_ID_STE
-+#define SDIO_VENDOR_ID_STE		0x0020
-+#endif
-+
-+#ifndef SDIO_DEVICE_ID_STE_CW1200
-+#define SDIO_DEVICE_ID_STE_CW1200	0x2280
-+#endif
-+
-+static const struct sdio_device_id cw1200_sdio_ids[] = {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_STE, SDIO_DEVICE_ID_STE_CW1200) },
-+	{ /* end: all zeroes */			},
-+};
-+
-+/* sbus_ops implemetation */
-+
-+static int cw1200_sdio_memcpy_fromio(struct sbus_priv *self,
-+				     unsigned int addr,
-+				     void *dst, int count)
-+{
-+	return sdio_memcpy_fromio(self->func, dst, addr, count);
++	pr_debug("[TX policy] "
++		"%.1X%.1X%.1X%.1X%.1X%.1X%.1X%.1X"
++		"%.1X%.1X%.1X%.1X%.1X%.1X%.1X%.1X"
++		"%.1X%.1X%.1X%.1X%.1X%.1X%.1X%.1X: %d\n",
++		policy->raw[0] & 0x0F,  policy->raw[0] >> 4,
++		policy->raw[1] & 0x0F,  policy->raw[1] >> 4,
++		policy->raw[2] & 0x0F,  policy->raw[2] >> 4,
++		policy->raw[3] & 0x0F,  policy->raw[3] >> 4,
++		policy->raw[4] & 0x0F,  policy->raw[4] >> 4,
++		policy->raw[5] & 0x0F,  policy->raw[5] >> 4,
++		policy->raw[6] & 0x0F,  policy->raw[6] >> 4,
++		policy->raw[7] & 0x0F,  policy->raw[7] >> 4,
++		policy->raw[8] & 0x0F,  policy->raw[8] >> 4,
++		policy->raw[9] & 0x0F,  policy->raw[9] >> 4,
++		policy->raw[10] & 0x0F,  policy->raw[10] >> 4,
++		policy->raw[11] & 0x0F,  policy->raw[11] >> 4,
++		policy->defined);
 +}
 +
-+static int cw1200_sdio_memcpy_toio(struct sbus_priv *self,
-+				   unsigned int addr,
-+				   const void *src, int count)
++static void tx_policy_build(const struct cw1200_common *priv,
++	/* [out] */ struct tx_policy *policy,
++	struct ieee80211_tx_rate *rates, size_t count)
 +{
-+	return sdio_memcpy_toio(self->func, addr, (void *)src, count);
-+}
++	int i, j;
++	unsigned limit = priv->short_frame_max_tx_count;
++	unsigned total = 0;
++	BUG_ON(rates[0].idx < 0);
++	memset(policy, 0, sizeof(*policy));
 +
-+static void cw1200_sdio_lock(struct sbus_priv *self)
-+{
-+	sdio_claim_host(self->func);
-+}
++	/* minstrel is buggy a little bit, so distille
++	 * incoming rates first. */
 +
-+static void cw1200_sdio_unlock(struct sbus_priv *self)
-+{
-+	sdio_release_host(self->func);
-+}
++	/* Sort rates in descending order. */
++	for (i = 1; i < count; ++i) {
++		if (rates[i].idx < 0) {
++			count = i;
++			break;
++		}
++		if (rates[i].idx > rates[i - 1].idx) {
++			struct ieee80211_tx_rate tmp = rates[i - 1];
++			rates[i - 1] = rates[i];
++			rates[i] = tmp;
++		}
++	}
 +
-+#ifndef CONFIG_CW1200_POLL_IRQ
-+
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+static void cw1200_sdio_irq_handler(struct sdio_func *func)
-+{
-+	struct sbus_priv *self = sdio_get_drvdata(func);
-+
-+	BUG_ON(!self);
-+
-+	/* note:  sdio_host already claimed here. */
-+	cw1200_irq_handler(self->core);
-+}
-+static void cw1200_sdio_irq_enable(struct sbus_priv *self, int enable)
-+{
-+#if 0
-+		self->func->card->host->ops->enable_sdio_irq(self->func->card->host, enable);
-+#else
-+		__cw1200_irq_enable(self->core, enable);
-+#endif
-+}
-+
-+#else /* CONFIG_CW1200_USE_GPIO_IRQ */
-+static irqreturn_t cw1200_gpio_irq_handler(int irq, void *dev_id)
-+{
-+	struct sbus_priv *self = dev_id;
-+
-+	BUG_ON(!self);
-+	cw1200_irq_handler(self->core);
-+	return IRQ_HANDLED;
-+}
-+
-+static int cw1200_request_irq(struct sbus_priv *self,
-+			      irq_handler_t handler)
-+{
-+	int ret;
-+	int func_num;
-+	const struct resource *irq = self->pdata->irq;
-+	u8 cccr;
-+
-+	ret = request_any_context_irq(irq->start, handler,
-+			IRQF_TRIGGER_FALLING, irq->name, self);
-+	if (WARN_ON(ret < 0))
-+		goto exit;
-+
-+	/* Hack to access Fuction-0 */
-+	func_num = self->func->num;
-+	self->func->num = 0;
-+
-+	cccr = sdio_readb(self->func, SDIO_CCCR_IENx, &ret);
-+	if (WARN_ON(ret))
-+		goto set_func;
-+
-+	/* Master interrupt enable ... */
-+	cccr |= BIT(0);
-+
-+	/* ... for our function */
-+	cccr |= BIT(func_num);
-+
-+	sdio_writeb(self->func, cccr, SDIO_CCCR_IENx, &ret);
-+	if (WARN_ON(ret))
-+		goto set_func;
-+
-+#ifdef CONFIG_CW1200_PM
-+	ret = enable_irq_wake(self->pdata->irq->start);
-+	if (WARN_ON(ret))
-+		goto set_func;
-+#endif
-+
-+	/* Restore the WLAN function number */
-+	self->func->num = func_num;
-+	return 0;
-+
-+set_func:
-+	self->func->num = func_num;
-+	free_irq(irq->start, self);
-+exit:
-+	return ret;
-+}
-+#endif /* CONFIG_CW1200_USE_GPIO_IRQ */
-+
-+static int cw1200_sdio_irq_subscribe(struct sbus_priv *self)
-+{
-+	int ret = 0;
-+
-+	printk(KERN_DEBUG "SW IRQ subscribe\n");
-+	sdio_claim_host(self->func);
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+	ret = sdio_claim_irq(self->func, cw1200_sdio_irq_handler);
-+#else
-+	ret = cw1200_request_irq(self, cw1200_gpio_irq_handler);
-+#endif
-+	sdio_release_host(self->func);
-+	return ret;
-+}
-+
-+static int cw1200_sdio_irq_unsubscribe(struct sbus_priv *self)
-+{
-+	int ret = 0;
-+#ifdef CONFIG_CW1200_USE_GPIO_IRQ
-+	const struct resource *irq = self->pdata->irq;
-+#endif
-+
-+	printk(KERN_DEBUG "SW IRQ unsubscribe\n");
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+	sdio_claim_host(self->func);
-+	ret = sdio_release_irq(self->func);
-+	sdio_release_host(self->func);
-+#else
-+#ifdef CONFIG_CW1200_PM
-+	disable_irq_wake(self->pdata->irq->start);
-+#endif
-+	free_irq(irq->start, self);
-+#endif
-+
-+	return ret;
-+}
-+#endif
-+
-+static int cw1200_detect_card(const struct cw1200_platform_data_sdio *pdata)
-+{
-+	/* HACK!!!
-+	 * Rely on mmc->class_dev.class set in mmc_alloc_host
-+	 * Tricky part: a new mmc hook is being (temporary) created
-+	 * to discover mmc_host class.
-+	 * Do you know more elegant way how to enumerate mmc_hosts?
-+	 */
-+
-+	struct mmc_host *mmc = NULL;
-+	struct class_dev_iter iter;
-+	struct device *dev;
-+
-+	mmc = mmc_alloc_host(0, NULL);
-+	if (!mmc)
-+		return -ENOMEM;
-+
-+	BUG_ON(!mmc->class_dev.class);
-+	class_dev_iter_init(&iter, mmc->class_dev.class, NULL, NULL);
-+	for (;;) {
-+		dev = class_dev_iter_next(&iter);
-+		if (!dev) {
-+			printk(KERN_ERR "cw1200: %s is not found.\n",
-+				pdata->mmc_id);
++	/* Eliminate duplicates. */
++	total = rates[0].count;
++	for (i = 0, j = 1; j < count; ++j) {
++		if (rates[j].idx == rates[i].idx) {
++			rates[i].count += rates[j].count;
++		} else if (rates[j].idx > rates[i].idx) {
 +			break;
 +		} else {
-+			struct mmc_host *host = container_of(dev,
-+				struct mmc_host, class_dev);
++			++i;
++			if (i != j)
++				rates[i] = rates[j];
++		}
++		total += rates[j].count;
++	}
++	count = i + 1;
 +
-+			if (dev_name(&host->class_dev) &&
-+				strcmp(dev_name(&host->class_dev),
-+					pdata->mmc_id))
-+				continue;
++	/* Re-fill policy trying to keep every requested rate and with
++	 * respect to the global max tx retransmission count. */
++	if (limit < count)
++		limit = count;
++	if (total > limit) {
++		for (i = 0; i < count; ++i) {
++			int left = count - i - 1;
++			if (rates[i].count > limit - left)
++				rates[i].count = limit - left;
++			limit -= rates[i].count;
++		}
++	}
 +
-+			mmc_detect_change(host, 10);
++	/* HACK!!! Device has problems (at least) switching from
++	 * 54Mbps CTS to 1Mbps. This switch takes enormous amount
++	 * of time (100-200 ms), leading to valuable throughput drop.
++	 * As a workaround, additional g-rates are injected to the
++	 * policy.
++	 */
++	if (count == 2 && !(rates[0].flags & IEEE80211_TX_RC_MCS) &&
++			rates[0].idx > 4 && rates[0].count > 2 &&
++			rates[1].idx < 2) {
++		/* ">> 1" is an equivalent of "/ 2", but faster */
++		int mid_rate = (rates[0].idx + 4) >> 1;
++
++		/* Decrease number of retries for the initial rate */
++		rates[0].count -= 2;
++
++		if (mid_rate != 4) {
++			/* Keep fallback rate at 1Mbps. */
++			rates[3] = rates[1];
++
++			/* Inject 1 transmission on lowest g-rate */
++			rates[2].idx = 4;
++			rates[2].count = 1;
++			rates[2].flags = rates[1].flags;
++
++			/* Inject 1 transmission on mid-rate */
++			rates[1].idx = mid_rate;
++			rates[1].count = 1;
++
++			/* Fallback to 1 Mbps is a really bad thing,
++			 * so let's try to increase probability of
++			 * successful transmission on the lowest g rate
++			 * even more */
++			if (rates[0].count >= 3) {
++				--rates[0].count;
++				++rates[2].count;
++			}
++
++			/* Adjust amount of rates defined */
++			count += 2;
++		} else {
++			/* Keep fallback rate at 1Mbps. */
++			rates[2] = rates[1];
++
++			/* Inject 2 transmissions on lowest g-rate */
++			rates[1].idx = 4;
++			rates[1].count = 2;
++
++			/* Adjust amount of rates defined */
++			count += 1;
++		}
++	}
++
++	policy->defined = cw1200_get_tx_rate(priv, &rates[0])->hw_value + 1;
++
++	for (i = 0; i < count; ++i) {
++		register unsigned rateid, off, shift, retries;
++
++		rateid = cw1200_get_tx_rate(priv, &rates[i])->hw_value;
++		off = rateid >> 3;		/* eq. rateid / 8 */
++		shift = (rateid & 0x07) << 2;	/* eq. (rateid % 8) * 4 */
++
++		retries = rates[i].count;
++		if (unlikely(retries > 0x0F))
++			rates[i].count = retries = 0x0F;
++		policy->tbl[off] |= __cpu_to_le32(retries << shift);
++		policy->retry_count += retries;
++	}
++
++	pr_debug("[TX policy] Policy (%d): " \
++		"%d:%d, %d:%d, %d:%d, %d:%d, %d:%d\n",
++		count,
++		rates[0].idx, rates[0].count,
++		rates[1].idx, rates[1].count,
++		rates[2].idx, rates[2].count,
++		rates[3].idx, rates[3].count,
++		rates[4].idx, rates[4].count);
++}
++
++static inline bool tx_policy_is_equal(const struct tx_policy *wanted,
++					const struct tx_policy *cached)
++{
++	size_t count = wanted->defined >> 1;
++	if (wanted->defined > cached->defined)
++		return false;
++	if (count) {
++		if (memcmp(wanted->raw, cached->raw, count))
++			return false;
++	}
++	if (wanted->defined & 1) {
++		if ((wanted->raw[count] & 0x0F) != (cached->raw[count] & 0x0F))
++			return false;
++	}
++	return true;
++}
++
++static int tx_policy_find(struct tx_policy_cache *cache,
++				const struct tx_policy *wanted)
++{
++	/* O(n) complexity. Not so good, but there's only 8 entries in
++	 * the cache.
++	 * Also lru helps to reduce search time. */
++	struct tx_policy_cache_entry *it;
++	/* First search for policy in "used" list */
++	list_for_each_entry(it, &cache->used, link) {
++		if (tx_policy_is_equal(wanted, &it->policy))
++			return it - cache->cache;
++	}
++	/* Then - in "free list" */
++	list_for_each_entry(it, &cache->free, link) {
++		if (tx_policy_is_equal(wanted, &it->policy))
++			return it - cache->cache;
++	}
++	return -1;
++}
++
++static inline void tx_policy_use(struct tx_policy_cache *cache,
++				 struct tx_policy_cache_entry *entry)
++{
++	++entry->policy.usage_count;
++	list_move(&entry->link, &cache->used);
++}
++
++static inline int tx_policy_release(struct tx_policy_cache *cache,
++				    struct tx_policy_cache_entry *entry)
++{
++	int ret = --entry->policy.usage_count;
++	if (!ret)
++		list_move(&entry->link, &cache->free);
++	return ret;
++}
++
++/* ******************************************************************** */
++/* External TX policy cache API						*/
++
++void tx_policy_init(struct cw1200_common *priv)
++{
++	struct tx_policy_cache *cache = &priv->tx_policy_cache;
++	int i;
++
++	memset(cache, 0, sizeof(*cache));
++
++	spin_lock_init(&cache->lock);
++	INIT_LIST_HEAD(&cache->used);
++	INIT_LIST_HEAD(&cache->free);
++
++	for (i = 0; i < TX_POLICY_CACHE_SIZE; ++i)
++		list_add(&cache->cache[i].link, &cache->free);
++}
++
++static int tx_policy_get(struct cw1200_common *priv,
++		  struct ieee80211_tx_rate *rates,
++		  size_t count, bool *renew)
++{
++	int idx;
++	struct tx_policy_cache *cache = &priv->tx_policy_cache;
++	struct tx_policy wanted;
++
++	tx_policy_build(priv, &wanted, rates, count);
++
++	spin_lock_bh(&cache->lock);
++	if (WARN_ON_ONCE(list_empty(&cache->free))) {
++		spin_unlock_bh(&cache->lock);
++		return CW1200_INVALID_RATE_ID;
++	}
++	idx = tx_policy_find(cache, &wanted);
++	if (idx >= 0) {
++		pr_debug("[TX policy] Used TX policy: %d\n",
++					idx);
++		*renew = false;
++	} else {
++		struct tx_policy_cache_entry *entry;
++		*renew = true;
++		/* If policy is not found create a new one
++		 * using the oldest entry in "free" list */
++		entry = list_entry(cache->free.prev,
++			struct tx_policy_cache_entry, link);
++		entry->policy = wanted;
++		idx = entry - cache->cache;
++		pr_debug("[TX policy] New TX policy: %d\n",
++					idx);
++		tx_policy_dump(&entry->policy);
++	}
++	tx_policy_use(cache, &cache->cache[idx]);
++	if (unlikely(list_empty(&cache->free))) {
++		/* Lock TX queues. */
++		cw1200_tx_queues_lock(priv);
++	}
++	spin_unlock_bh(&cache->lock);
++	return idx;
++}
++
++static void tx_policy_put(struct cw1200_common *priv, int idx)
++{
++	int usage, locked;
++	struct tx_policy_cache *cache = &priv->tx_policy_cache;
++
++	spin_lock_bh(&cache->lock);
++	locked = list_empty(&cache->free);
++	usage = tx_policy_release(cache, &cache->cache[idx]);
++	if (unlikely(locked) && !usage) {
++		/* Unlock TX queues. */
++		cw1200_tx_queues_unlock(priv);
++	}
++	spin_unlock_bh(&cache->lock);
++}
++
++/*
++bool tx_policy_cache_full(struct cw1200_common *priv)
++{
++	bool ret;
++	struct tx_policy_cache *cache = &priv->tx_policy_cache;
++	spin_lock_bh(&cache->lock);
++	ret = list_empty(&cache->free);
++	spin_unlock_bh(&cache->lock);
++	return ret;
++}
++*/
++
++static int tx_policy_upload(struct cw1200_common *priv)
++{
++	struct tx_policy_cache *cache = &priv->tx_policy_cache;
++	int i;
++	struct wsm_set_tx_rate_retry_policy arg = {
++		.hdr = {
++			.numTxRatePolicies = 0,
++		}
++	};
++	spin_lock_bh(&cache->lock);
++
++	/* Upload only modified entries. */
++	for (i = 0; i < TX_POLICY_CACHE_SIZE; ++i) {
++		struct tx_policy *src = &cache->cache[i].policy;
++		if (src->retry_count && !src->uploaded) {
++			struct wsm_set_tx_rate_retry_policy_policy *dst =
++				&arg.tbl[arg.hdr.numTxRatePolicies];
++			dst->policyIndex = i;
++			dst->shortRetryCount = priv->short_frame_max_tx_count;
++			dst->longRetryCount = priv->long_frame_max_tx_count;
++
++			/* BIT(2) - Terminate retries when Tx rate retry policy
++			 *          finishes.
++			 * BIT(3) - Count initial frame transmission as part of
++			 *          rate retry counting but not as a retry
++			 *          attempt */
++			dst->policyFlags = BIT(2) | BIT(3);
++
++			memcpy(dst->rateCountIndices, src->tbl,
++					sizeof(dst->rateCountIndices));
++			src->uploaded = 1;
++			++arg.hdr.numTxRatePolicies;
++		}
++	}
++	spin_unlock_bh(&cache->lock);
++	cw1200_debug_tx_cache_miss(priv);
++	pr_debug("[TX policy] Upload %d policies\n",
++				arg.hdr.numTxRatePolicies);
++	return wsm_set_tx_rate_retry_policy(priv, &arg);
++}
++
++void tx_policy_upload_work(struct work_struct *work)
++{
++	struct cw1200_common *priv =
++		container_of(work, struct cw1200_common, tx_policy_upload_work);
++
++	pr_debug("[TX] TX policy upload.\n");
++	WARN_ON(tx_policy_upload(priv));
++
++	wsm_unlock_tx(priv);
++	cw1200_tx_queues_unlock(priv);
++}
++
++/* ******************************************************************** */
++/* cw1200 TX implementation						*/
++
++struct cw1200_txinfo {
++	struct sk_buff *skb;
++	unsigned queue;
++	struct ieee80211_tx_info *tx_info;
++	const struct ieee80211_rate *rate;
++	struct ieee80211_hdr *hdr;
++	size_t hdrlen;
++	const u8 *da;
++	struct cw1200_sta_priv *sta_priv;
++	struct cw1200_txpriv txpriv;
++};
++
++u32 cw1200_rate_mask_to_wsm(struct cw1200_common *priv, u32 rates)
++{
++	u32 ret = 0;
++	int i;
++	for (i = 0; i < 32; ++i) {
++		if (rates & BIT(i))
++			ret |= BIT(priv->rates[i].hw_value);
++	}
++	return ret;
++}
++
++static const struct ieee80211_rate *
++cw1200_get_tx_rate(const struct cw1200_common *priv,
++		   const struct ieee80211_tx_rate *rate)
++{
++	if (rate->idx < 0)
++		return NULL;
++	if (rate->flags & IEEE80211_TX_RC_MCS)
++		return &priv->mcs_rates[rate->idx];
++	return &priv->hw->wiphy->bands[priv->channel->band]->
++		bitrates[rate->idx];
++}
++
++static int
++cw1200_tx_h_calc_link_ids(struct cw1200_common *priv,
++			  struct cw1200_txinfo *t)
++{
++
++	if (likely(t->tx_info->control.sta && t->sta_priv->link_id))
++		t->txpriv.raw_link_id =
++				t->txpriv.link_id =
++				t->sta_priv->link_id;
++	else if (priv->mode != NL80211_IFTYPE_AP)
++		t->txpriv.raw_link_id =
++				t->txpriv.link_id = 0;
++	else if (is_multicast_ether_addr(t->da)) {
++		if (priv->enable_beacon) {
++			t->txpriv.raw_link_id = 0;
++			t->txpriv.link_id = CW1200_LINK_ID_AFTER_DTIM;
++		} else {
++			t->txpriv.raw_link_id = 0;
++			t->txpriv.link_id = 0;
++		}
++	} else {
++		t->txpriv.link_id = cw1200_find_link_id(priv, t->da);
++		if (!t->txpriv.link_id)
++			t->txpriv.link_id = cw1200_alloc_link_id(priv, t->da);
++		if (!t->txpriv.link_id) {
++			wiphy_err(priv->hw->wiphy,
++				"%s: No more link IDs available.\n",
++				__func__);
++			return -ENOENT;
++		}
++		t->txpriv.raw_link_id = t->txpriv.link_id;
++	}
++	if (t->txpriv.raw_link_id)
++		priv->link_id_db[t->txpriv.raw_link_id - 1].timestamp =
++				jiffies;
++	if (t->tx_info->control.sta &&
++			(t->tx_info->control.sta->uapsd_queues & BIT(t->queue)))
++		t->txpriv.link_id = CW1200_LINK_ID_UAPSD;
++	return 0;
++}
++
++static void
++cw1200_tx_h_pm(struct cw1200_common *priv,
++	       struct cw1200_txinfo *t)
++{
++	if (unlikely(ieee80211_is_auth(t->hdr->frame_control))) {
++		u32 mask = ~BIT(t->txpriv.raw_link_id);
++		spin_lock_bh(&priv->ps_state_lock);
++		priv->sta_asleep_mask &= mask;
++		priv->pspoll_mask &= mask;
++		spin_unlock_bh(&priv->ps_state_lock);
++	}
++}
++
++static void
++cw1200_tx_h_calc_tid(struct cw1200_common *priv,
++		     struct cw1200_txinfo *t)
++{
++	if (ieee80211_is_data_qos(t->hdr->frame_control)) {
++		u8 *qos = ieee80211_get_qos_ctl(t->hdr);
++		t->txpriv.tid = qos[0] & IEEE80211_QOS_CTL_TID_MASK;
++	} else if (ieee80211_is_data(t->hdr->frame_control)) {
++		t->txpriv.tid = 0;
++	}
++}
++
++static int
++cw1200_tx_h_crypt(struct cw1200_common *priv,
++		  struct cw1200_txinfo *t)
++{
++	if (!t->tx_info->control.hw_key ||
++	    !ieee80211_has_protected(t->hdr->frame_control))
++		return 0;
++
++	t->hdrlen += t->tx_info->control.hw_key->iv_len;
++	skb_put(t->skb, t->tx_info->control.hw_key->icv_len);
++
++	if (t->tx_info->control.hw_key->cipher == WLAN_CIPHER_SUITE_TKIP)
++		skb_put(t->skb, 8); /* MIC space */
++
++	return 0;
++}
++
++static int
++cw1200_tx_h_align(struct cw1200_common *priv,
++		  struct cw1200_txinfo *t,
++		  u8 *flags)
++{
++	size_t offset = (size_t)t->skb->data & 3;
++
++	if (!offset)
++		return 0;
++
++	if (offset & 1) {
++		wiphy_err(priv->hw->wiphy,
++			"Bug: attempt to transmit a frame "
++			"with wrong alignment: %d\n",
++			offset);
++		return -EINVAL;
++	}
++
++	if (skb_headroom(t->skb) < offset) {
++		wiphy_err(priv->hw->wiphy,
++			"Bug: no space allocated "
++			"for DMA alignment.\n"
++			"headroom: %d\n",
++			skb_headroom(t->skb));
++		return -ENOMEM;
++	}
++	skb_push(t->skb, offset);
++	t->hdrlen += offset;
++	t->txpriv.offset += offset;
++	*flags |= WSM_TX_2BYTES_SHIFT;
++	cw1200_debug_tx_align(priv);
++	return 0;
++}
++
++static int
++cw1200_tx_h_action(struct cw1200_common *priv,
++		   struct cw1200_txinfo *t)
++{
++	struct ieee80211_mgmt *mgmt =
++		(struct ieee80211_mgmt *)t->hdr;
++	if (ieee80211_is_action(t->hdr->frame_control) &&
++			mgmt->u.action.category == WLAN_CATEGORY_BACK)
++		return 1;
++	else
++		return 0;
++}
++
++/* Add WSM header */
++static struct wsm_tx *
++cw1200_tx_h_wsm(struct cw1200_common *priv,
++		struct cw1200_txinfo *t)
++{
++	struct wsm_tx *wsm;
++
++	if (skb_headroom(t->skb) < sizeof(struct wsm_tx)) {
++		wiphy_err(priv->hw->wiphy,
++			"Bug: no space allocated "
++			"for WSM header.\n"
++			"headroom: %d\n",
++			skb_headroom(t->skb));
++		return NULL;
++	}
++
++	wsm = (struct wsm_tx *)skb_push(t->skb, sizeof(struct wsm_tx));
++	t->txpriv.offset += sizeof(struct wsm_tx);
++	memset(wsm, 0, sizeof(*wsm));
++	wsm->hdr.len = __cpu_to_le16(t->skb->len);
++	wsm->hdr.id = __cpu_to_le16(0x0004);
++	wsm->queueId = wsm_queue_id_to_wsm(t->queue);
++	return wsm;
++}
++
++/* BT Coex specific handling */
++static void
++cw1200_tx_h_bt(struct cw1200_common *priv,
++	       struct cw1200_txinfo *t,
++	       struct wsm_tx *wsm)
++{
++	u8 priority = 0;
++
++	if (!priv->is_BT_Present)
++		return;
++
++	if (unlikely(ieee80211_is_nullfunc(t->hdr->frame_control)))
++		priority = WSM_EPTA_PRIORITY_MGT;
++	else if (ieee80211_is_data(t->hdr->frame_control)) {
++		/* Skip LLC SNAP header (+6) */
++		u8 *payload = &t->skb->data[t->hdrlen];
++		u16 *ethertype = (u16 *) &payload[6];
++		if (unlikely(*ethertype == __be16_to_cpu(ETH_P_PAE)))
++			priority = WSM_EPTA_PRIORITY_EAPOL;
++	} else if (unlikely(ieee80211_is_assoc_req(t->hdr->frame_control) ||
++		ieee80211_is_reassoc_req(t->hdr->frame_control))) {
++		struct ieee80211_mgmt *mgt_frame =
++				(struct ieee80211_mgmt *)t->hdr;
++
++		if (mgt_frame->u.assoc_req.listen_interval <
++						priv->listen_interval) {
++			pr_debug("Modified Listen Interval to %d from %d\n",
++				priv->listen_interval,
++				mgt_frame->u.assoc_req.listen_interval);
++			/* Replace listen interval derieved from
++			 * the one read from SDD */
++			mgt_frame->u.assoc_req.listen_interval =
++				priv->listen_interval;
++		}
++	}
++
++	if (likely(!priority)) {
++		if (ieee80211_is_action(t->hdr->frame_control))
++			priority = WSM_EPTA_PRIORITY_ACTION;
++		else if (ieee80211_is_mgmt(t->hdr->frame_control))
++			priority = WSM_EPTA_PRIORITY_MGT;
++		else if ((wsm->queueId == WSM_QUEUE_VOICE))
++			priority = WSM_EPTA_PRIORITY_VOICE;
++		else if ((wsm->queueId == WSM_QUEUE_VIDEO))
++			priority = WSM_EPTA_PRIORITY_VIDEO;
++		else
++			priority = WSM_EPTA_PRIORITY_DATA;
++	}
++
++	pr_debug("[TX] EPTA priority %d.\n",
++		priority);
++
++	wsm->flags |= priority << 1;
++}
++
++static int
++cw1200_tx_h_rate_policy(struct cw1200_common *priv,
++			struct cw1200_txinfo *t,
++			struct wsm_tx *wsm)
++{
++	bool tx_policy_renew = false;
++
++	t->txpriv.rate_id = tx_policy_get(priv,
++		t->tx_info->control.rates, IEEE80211_TX_MAX_RATES,
++		&tx_policy_renew);
++	if (t->txpriv.rate_id == CW1200_INVALID_RATE_ID)
++		return -EFAULT;
++
++	wsm->flags |= t->txpriv.rate_id << 4;
++
++	t->rate = cw1200_get_tx_rate(priv,
++		&t->tx_info->control.rates[0]),
++	wsm->maxTxRate = t->rate->hw_value;
++	if (t->rate->flags & IEEE80211_TX_RC_MCS) {
++		if (cw1200_ht_greenfield(&priv->ht_info))
++			wsm->htTxParameters |=
++				__cpu_to_le32(WSM_HT_TX_GREENFIELD);
++		else
++			wsm->htTxParameters |=
++				__cpu_to_le32(WSM_HT_TX_MIXED);
++	}
++
++	if (tx_policy_renew) {
++		pr_debug("[TX] TX policy renew.\n");
++		/* It's not so optimal to stop TX queues every now and then.
++		 * Maybe it's better to reimplement task scheduling with
++		 * a counter. */
++		/* cw1200_tx_queues_lock(priv); */
++		/* Definetly better. TODO. */
++		wsm_lock_tx_async(priv);
++		cw1200_tx_queues_lock(priv);
++		if (queue_work(priv->workqueue,
++				&priv->tx_policy_upload_work) <= 0) {
++			cw1200_tx_queues_unlock(priv);
++			wsm_unlock_tx(priv);
++		}
++	}
++	return 0;
++}
++
++static bool
++cw1200_tx_h_pm_state(struct cw1200_common *priv,
++		     struct cw1200_txinfo *t)
++{
++	int was_buffered = 1;
++
++	if (t->txpriv.link_id == CW1200_LINK_ID_AFTER_DTIM &&
++			!priv->buffered_multicasts) {
++		priv->buffered_multicasts = true;
++		if (priv->sta_asleep_mask)
++			queue_work(priv->workqueue,
++				&priv->multicast_start_work);
++	}
++
++	if (t->txpriv.raw_link_id && t->txpriv.tid < CW1200_MAX_TID)
++		was_buffered = priv->link_id_db[t->txpriv.raw_link_id - 1]
++				.buffered[t->txpriv.tid]++;
++
++	return !was_buffered;
++}
++
++static void
++cw1200_tx_h_ba_stat(struct cw1200_common *priv,
++		    struct cw1200_txinfo *t)
++{
++	if (priv->join_status != CW1200_JOIN_STATUS_STA)
++		return;
++	if (!cw1200_is_ht(&priv->ht_info))
++		return;
++	if (!priv->setbssparams_done)
++		return;
++	if (!ieee80211_is_data(t->hdr->frame_control))
++		return;
++
++	spin_lock_bh(&priv->ba_lock);
++	priv->ba_acc += t->skb->len - t->hdrlen;
++	if (!priv->ba_cnt++) {
++		mod_timer(&priv->ba_timer,
++			jiffies + CW1200_BLOCK_ACK_INTERVAL);
++	}
++	spin_unlock_bh(&priv->ba_lock);
++}
++
++/* ******************************************************************** */
++
++void cw1200_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
++{
++	struct cw1200_common *priv = dev->priv;
++	struct cw1200_txinfo t = {
++		.skb = skb,
++		.queue = skb_get_queue_mapping(skb),
++		.tx_info = IEEE80211_SKB_CB(skb),
++		.hdr = (struct ieee80211_hdr *)skb->data,
++		.txpriv.tid = CW1200_MAX_TID,
++		.txpriv.rate_id = CW1200_INVALID_RATE_ID,
++	};
++	struct ieee80211_sta *sta;
++	struct wsm_tx *wsm;
++	bool tid_update = 0;
++	u8 flags = 0;
++	int ret;
++
++	if (priv->bh_error)
++		goto drop;
++
++	t.hdrlen = ieee80211_hdrlen(t.hdr->frame_control);
++	t.da = ieee80211_get_DA(t.hdr);
++	t.sta_priv =
++		(struct cw1200_sta_priv *)&t.tx_info->control.sta->drv_priv;
++
++	if (WARN_ON(t.queue >= 4))
++		goto drop;
++
++	ret = cw1200_tx_h_calc_link_ids(priv, &t);
++	if (ret)
++		goto drop;
++
++	pr_debug("[TX] TX %d bytes "
++			"(queue: %d, link_id: %d (%d)).\n",
++			skb->len, t.queue, t.txpriv.link_id,
++			t.txpriv.raw_link_id);
++
++	cw1200_tx_h_pm(priv, &t);
++	cw1200_tx_h_calc_tid(priv, &t);
++	ret = cw1200_tx_h_crypt(priv, &t);
++	if (ret)
++		goto drop;
++	ret = cw1200_tx_h_align(priv, &t, &flags);
++	if (ret)
++		goto drop;
++	ret = cw1200_tx_h_action(priv, &t);
++	if (ret)
++		goto drop;
++	wsm = cw1200_tx_h_wsm(priv, &t);
++	if (!wsm) {
++		ret = -ENOMEM;
++		goto drop;
++	}
++	wsm->flags |= flags;
++	cw1200_tx_h_bt(priv, &t, wsm);
++	ret = cw1200_tx_h_rate_policy(priv, &t, wsm);
++	if (ret)
++		goto drop;
++
++	rcu_read_lock();
++	sta = rcu_dereference(t.tx_info->control.sta);
++
++	cw1200_tx_h_ba_stat(priv, &t);
++	spin_lock_bh(&priv->ps_state_lock);
++	{
++		tid_update = cw1200_tx_h_pm_state(priv, &t);
++		BUG_ON(cw1200_queue_put(&priv->tx_queue[t.queue],
++				t.skb, &t.txpriv));
++	}
++	spin_unlock_bh(&priv->ps_state_lock);
++
++	if (tid_update && sta)
++		ieee80211_sta_set_buffered(sta,
++				t.txpriv.tid, true);
++
++	rcu_read_unlock();
++
++	cw1200_bh_wakeup(priv);
++
++	return;
++
++drop:
++	cw1200_skb_dtor(priv, skb, &t.txpriv);
++	return;
++}
++
++/* ******************************************************************** */
++
++static int cw1200_handle_action_rx(struct cw1200_common *priv,
++				   struct sk_buff *skb)
++{
++	struct ieee80211_mgmt *mgmt = (void *)skb->data;
++
++	/* Filter block ACK negotiation: fully controlled by firmware */
++	if (mgmt->u.action.category == WLAN_CATEGORY_BACK)
++		return 1;
++
++	return 0;
++}
++
++static int cw1200_handle_pspoll(struct cw1200_common *priv,
++				struct sk_buff *skb)
++{
++	struct ieee80211_sta *sta;
++	struct ieee80211_pspoll *pspoll =
++		(struct ieee80211_pspoll *) skb->data;
++	int link_id = 0;
++	u32 pspoll_mask = 0;
++	int drop = 1;
++	int i;
++
++	if (priv->join_status != CW1200_JOIN_STATUS_AP)
++		goto done;
++	if (memcmp(priv->vif->addr, pspoll->bssid, ETH_ALEN))
++		goto done;
++
++	rcu_read_lock();
++	sta = ieee80211_find_sta(priv->vif, pspoll->ta);
++	if (sta) {
++		struct cw1200_sta_priv *sta_priv;
++		sta_priv = (struct cw1200_sta_priv *)&sta->drv_priv;
++		link_id = sta_priv->link_id;
++		pspoll_mask = BIT(sta_priv->link_id);
++	}
++	rcu_read_unlock();
++	if (!link_id)
++		goto done;
++
++	priv->pspoll_mask |= pspoll_mask;
++	drop = 0;
++
++	/* Do not report pspols if data for given link id is
++	 * queued already. */
++	for (i = 0; i < 4; ++i) {
++		if (cw1200_queue_get_num_queued(
++				&priv->tx_queue[i],
++				pspoll_mask)) {
++			cw1200_bh_wakeup(priv);
++			drop = 1;
 +			break;
 +		}
 +	}
-+	mmc_free_host(mmc);
-+	return 0;
++	pr_debug("[RX] PSPOLL: %s\n", drop ? "local" : "fwd");
++done:
++	return drop;
 +}
 +
-+static int cw1200_sdio_off(const struct cw1200_platform_data_sdio *pdata)
-+{
-+	const struct resource *reset = pdata->reset;
++/* ******************************************************************** */
 +
-+	if (reset) {
-+		gpio_set_value(reset->start, 0);
-+		gpio_free(reset->start);
-+		cw1200_detect_card(pdata);
++void cw1200_tx_confirm_cb(struct cw1200_common *priv,
++			  struct wsm_tx_confirm *arg)
++{
++	u8 queue_id = cw1200_queue_get_queue_id(arg->packetID);
++	struct cw1200_queue *queue = &priv->tx_queue[queue_id];
++	struct sk_buff *skb;
++	const struct cw1200_txpriv *txpriv;
++
++	pr_debug("[TX] TX confirm: %d, %d.\n",
++		arg->status, arg->ackFailures);
++
++	if (unlikely(cw1200_itp_tx_running(priv)))
++		return;
++
++	if (unlikely(priv->mode == NL80211_IFTYPE_UNSPECIFIED)) {
++		/* STA is stopped. */
++		return;
 +	}
 +
-+	if (pdata->power_ctrl)
-+		pdata->power_ctrl(pdata, false);
-+	if (pdata->clk_ctrl)
-+		pdata->clk_ctrl(pdata, false);
++	if (WARN_ON(queue_id >= 4))
++		return;
 +
-+	return 0;
-+}
++	if (arg->status)
++		pr_debug("TX failed: %d.\n",
++				arg->status);
 +
-+static int cw1200_sdio_on(const struct cw1200_platform_data_sdio *pdata)
-+{
-+	const struct resource *reset = pdata->reset;
-+
-+	if (pdata->clk_ctrl) {
-+		if (pdata->clk_ctrl(pdata, true)) {
-+			printk(KERN_ERR "clk_ctrl() failed!\n");
-+			return -1;
++	if ((arg->status == WSM_REQUEUE) &&
++	    (arg->flags & WSM_TX_STATUS_REQUEUE)) {
++		/* "Requeue" means "implicit suspend" */
++		struct wsm_suspend_resume suspend = {
++			.link_id = arg->link_id,
++			.stop = 1,
++			.multicast = !arg->link_id,
++		};
++		cw1200_suspend_resume(priv, &suspend);
++		wiphy_warn(priv->hw->wiphy, "Requeue for link_id %d (try %d)."
++			" STAs asleep: 0x%.8X\n",
++			arg->link_id,
++			cw1200_queue_get_generation(arg->packetID) + 1,
++			priv->sta_asleep_mask);
++		WARN_ON(cw1200_queue_requeue(queue,
++				arg->packetID));
++		spin_lock_bh(&priv->ps_state_lock);
++		if (!arg->link_id) {
++			priv->buffered_multicasts = true;
++			if (priv->sta_asleep_mask) {
++				queue_work(priv->workqueue,
++					&priv->multicast_start_work);
++			}
 +		}
-+		msleep(20); // XXX may be lowered?
-+	}
++		spin_unlock_bh(&priv->ps_state_lock);
++	} else if (!WARN_ON(cw1200_queue_get_skb(
++			queue, arg->packetID, &skb, &txpriv))) {
++		struct ieee80211_tx_info *tx = IEEE80211_SKB_CB(skb);
++		int tx_count = arg->ackFailures;
++		u8 ht_flags = 0;
++		int i;
 +
-+	if (pdata->power_ctrl) {
-+		if (pdata->power_ctrl(pdata, true)) {
-+			printk(KERN_ERR "power_ctrl() failed!\n");
-+			return -1;
++		if (cw1200_ht_greenfield(&priv->ht_info))
++			ht_flags |= IEEE80211_TX_RC_GREEN_FIELD;
++
++		if (likely(!arg->status)) {
++			tx->flags |= IEEE80211_TX_STAT_ACK;
++			++tx_count;
++			cw1200_debug_txed(priv);
++			if (arg->flags & WSM_TX_STATUS_AGGREGATION) {
++				/* Do not report aggregation to mac80211:
++				 * it confuses minstrel a lot. */
++				/* tx->flags |= IEEE80211_TX_STAT_AMPDU; */
++				cw1200_debug_txed_agg(priv);
++			}
++		} else {
++			spin_lock(&priv->bss_loss_lock);
++			if (priv->bss_loss_status ==
++					CW1200_BSS_LOSS_CONFIRMING &&
++					priv->bss_loss_confirm_id ==
++					arg->packetID) {
++				priv->bss_loss_status =
++					CW1200_BSS_LOSS_CONFIRMED;
++				spin_unlock(&priv->bss_loss_lock);
++				cancel_delayed_work(&priv->bss_loss_work);
++				queue_delayed_work(priv->workqueue,
++						&priv->bss_loss_work, 0);
++			} else
++				spin_unlock(&priv->bss_loss_lock);
++
++			if (tx_count)
++				++tx_count;
 +		}
-+		msleep(250);  // XXX can be lowered probably
++
++		for (i = 0; i < IEEE80211_TX_MAX_RATES; ++i) {
++			if (tx->status.rates[i].count >= tx_count) {
++				tx->status.rates[i].count = tx_count;
++				break;
++			}
++			tx_count -= tx->status.rates[i].count;
++			if (tx->status.rates[i].flags & IEEE80211_TX_RC_MCS)
++				tx->status.rates[i].flags |= ht_flags;
++		}
++
++		for (++i; i < IEEE80211_TX_MAX_RATES; ++i) {
++			tx->status.rates[i].count = 0;
++			tx->status.rates[i].idx = -1;
++		}
++
++		/* Pull off any crypto trailers that we added on */
++		if (tx->control.hw_key) {
++			skb_trim(skb, skb->len - tx->control.hw_key->icv_len);
++			if (tx->control.hw_key->cipher == WLAN_CIPHER_SUITE_TKIP)
++				skb_trim(skb, skb->len - 8); /* MIC space */
++		}
++		cw1200_queue_remove(queue, arg->packetID);
 +	}
-+
-+	if (!reset) 
-+		return 0;
-+	gpio_request(reset->start, reset->name);
-+	gpio_direction_output(reset->start, 0);
-+	/* A valid reset shall be obtained by maintaining WRESETN
-+	 * active (low) for at least two cycles of LP_CLK (32768Hz)
-+	 * after VDDIO is stable within it operating range. */
-+	msleep(30);
-+	gpio_set_value(reset->start, 1);
-+	/* The host should wait 30 ms after the WRESETN release
-+	 * for the on-chip LDO to stabilize */
-+	msleep(60);
-+	cw1200_detect_card(pdata);
-+	return 0;
++	cw1200_bh_wakeup(priv); /* XXX TODO:  Only wake if there are pending transmits.. */
 +}
 +
-+static int cw1200_sdio_reset(struct sbus_priv *self)
++static void cw1200_notify_buffered_tx(struct cw1200_common *priv,
++			       struct sk_buff *skb, int link_id, int tid)
 +{
-+	cw1200_sdio_off(self->pdata);
-+	msleep(1000);
-+	cw1200_sdio_on(self->pdata);
-+	return 0;
++	struct ieee80211_sta *sta;
++	struct ieee80211_hdr *hdr;
++	u8 *buffered;
++	u8 still_buffered = 0;
++
++	if (link_id && tid < CW1200_MAX_TID) {
++		buffered = priv->link_id_db
++				[link_id - 1].buffered;
++
++		spin_lock_bh(&priv->ps_state_lock);
++		if (!WARN_ON(!buffered[tid]))
++			still_buffered = --buffered[tid];
++		spin_unlock_bh(&priv->ps_state_lock);
++
++		if (!still_buffered && tid < CW1200_MAX_TID) {
++			hdr = (struct ieee80211_hdr *) skb->data;
++			rcu_read_lock();
++			sta = ieee80211_find_sta(priv->vif, hdr->addr1);
++			if (sta)
++				ieee80211_sta_set_buffered(sta, tid, false);
++			rcu_read_unlock();
++		}
++	}
 +}
 +
-+static size_t cw1200_sdio_align_size(struct sbus_priv *self, size_t size)
++void cw1200_skb_dtor(struct cw1200_common *priv,
++		     struct sk_buff *skb,
++		     const struct cw1200_txpriv *txpriv)
 +{
-+#if defined(CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES)
-+	size = sdio_align_size(self->func, size);
-+#else /* CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES */
-+	size = round_up(size, SDIO_BLOCK_SIZE);
-+#endif /* CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES */
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0))
-+#ifdef CONFIG_CW1200_SDIO_CMD53_WORKAROUND
-+	if (size == SDIO_BLOCK_SIZE)
-+		size += SDIO_BLOCK_SIZE;  /* HW bug; force use of block mode */
-+#endif
-+#endif
-+
-+	return size;
++	skb_pull(skb, txpriv->offset);
++	if (txpriv->rate_id != CW1200_INVALID_RATE_ID) {
++		cw1200_notify_buffered_tx(priv, skb,
++				txpriv->raw_link_id, txpriv->tid);
++		tx_policy_put(priv, txpriv->rate_id);
++	}
++	if (likely(!cw1200_is_itp(priv)))
++		ieee80211_tx_status(priv->hw, skb);
 +}
 +
++void cw1200_rx_cb(struct cw1200_common *priv,
++		  struct wsm_rx *arg,
++		  struct sk_buff **skb_p)
++{
++	struct sk_buff *skb = *skb_p;
++	struct ieee80211_rx_status *hdr = IEEE80211_SKB_RXCB(skb);
++	struct ieee80211_hdr *frame = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
++	struct cw1200_link_entry *entry = NULL;
 +#ifdef CONFIG_CW1200_PM
-+static int cw1200_sdio_pm(struct sbus_priv *self, bool suspend)
-+{
-+	int ret = 0;
-+
-+#ifdef CONFIG_CW1200_USE_GPIO_IRQ
-+	ret = irq_set_irq_wake(self->pdata->irq->start, suspend);
++	unsigned long grace_period;
 +#endif
-+	return ret;
-+}
-+#endif
++	bool early_data = false;
++	hdr->flag = 0;
 +
-+static struct sbus_ops cw1200_sdio_sbus_ops = {
-+	.sbus_memcpy_fromio	= cw1200_sdio_memcpy_fromio,
-+	.sbus_memcpy_toio	= cw1200_sdio_memcpy_toio,
-+	.lock			= cw1200_sdio_lock,
-+	.unlock			= cw1200_sdio_unlock,
-+#ifndef CONFIG_CW1200_POLL_IRQ
-+	.irq_subscribe		= cw1200_sdio_irq_subscribe,
-+	.irq_unsubscribe	= cw1200_sdio_irq_unsubscribe,
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+	.irq_enable             = cw1200_sdio_irq_enable,
-+#endif
-+#endif
-+	.reset			= cw1200_sdio_reset,
-+	.align_size		= cw1200_sdio_align_size,
-+#ifdef CONFIG_CW1200_PM
-+	.power_mgmt		= cw1200_sdio_pm,
-+#endif
-+};
-+
-+/* Probe Function to be called by SDIO stack when device is discovered */
-+static int __devinit cw1200_sdio_probe(struct sdio_func *func,
-+				       const struct sdio_device_id *id)
-+{
-+	struct sbus_priv *self;
-+	int status;
-+
-+	printk(KERN_INFO "cw1200_wlan_sdio Probe called\n");
-+
-+	self = kzalloc(sizeof(*self), GFP_KERNEL);
-+	if (!self) {
-+		printk(KERN_ERR  "Can't allocate SDIO sbus_priv.");
-+		return -ENOMEM;
++	if (unlikely(priv->mode == NL80211_IFTYPE_UNSPECIFIED)) {
++		/* STA is stopped. */
++		goto drop;
 +	}
 +
-+	self->pdata = cw1200_get_platform_data();
-+	self->func = func;
-+	sdio_set_drvdata(func, self);
-+	sdio_claim_host(func);
-+	sdio_enable_func(func);
-+	sdio_release_host(func);
++	if (arg->link_id && arg->link_id <= CW1200_MAX_STA_IN_AP_MODE) {
++		entry =	&priv->link_id_db[arg->link_id - 1];
++		if (entry->status == CW1200_LINK_SOFT &&
++				ieee80211_is_data(frame->frame_control))
++			early_data = true;
++		entry->timestamp = jiffies;
++	} else if ((priv->vif->p2p == WSM_START_MODE_P2P_GO)
++			&& ieee80211_is_action(frame->frame_control)
++			&& (mgmt->u.action.category == WLAN_CATEGORY_PUBLIC)) {
++		pr_debug("[RX] Going to MAP&RESET link ID\n");
 +
-+	status = cw1200_core_probe(&cw1200_sdio_sbus_ops,
-+				   self, &func->dev, &self->core,
-+				   self->pdata->ref_clk,
-+				   self->pdata->macaddr,
-+				   self->pdata->sdd_file);
-+	if (status) {
-+		sdio_claim_host(func);
-+		sdio_disable_func(func);
-+		sdio_release_host(func);
-+		sdio_set_drvdata(func, NULL);
-+		kfree(self);
++		if (work_pending(&priv->linkid_reset_work))
++			WARN_ON(1);
++
++		memcpy(&priv->action_frame_sa[0],
++				ieee80211_get_SA(frame), ETH_ALEN);
++		priv->action_linkid = 0;
++		schedule_work(&priv->linkid_reset_work);
 +	}
 +
-+	return status;
-+}
-+
-+/* Disconnect Function to be called by SDIO stack when
-+ * device is disconnected */
-+static void __devexit cw1200_sdio_disconnect(struct sdio_func *func)
-+{
-+	struct sbus_priv *self = sdio_get_drvdata(func);
-+
-+	if (self) {
-+#ifndef CONFIG_CW1200_POLL_IRQ
-+		cw1200_sdio_irq_unsubscribe(self);
-+#endif
-+		if (self->core) {
-+			cw1200_core_release(self->core);
-+			self->core = NULL;
++	if (arg->link_id && (priv->vif->p2p == WSM_START_MODE_P2P_GO)
++			&& ieee80211_is_action(frame->frame_control)
++			&& (mgmt->u.action.category == WLAN_CATEGORY_PUBLIC)) {
++		/* Link ID already exists for the ACTION frame.
++		 * Reset and Remap */
++		if (work_pending(&priv->linkid_reset_work))
++			WARN_ON(1);
++		memcpy(&priv->action_frame_sa[0],
++				ieee80211_get_SA(frame), ETH_ALEN);
++		priv->action_linkid = arg->link_id;
++		schedule_work(&priv->linkid_reset_work);
++	}
++	if (unlikely(arg->status)) {
++		if (arg->status == WSM_STATUS_MICFAILURE) {
++			pr_debug("[RX] MIC failure.\n");
++			hdr->flag |= RX_FLAG_MMIC_ERROR;
++		} else if (arg->status == WSM_STATUS_NO_KEY_FOUND) {
++			pr_debug("[RX] No key found.\n");
++			goto drop;
++		} else {
++			pr_debug("[RX] Receive failure: %d.\n",
++				arg->status);
++			goto drop;
 +		}
-+		sdio_claim_host(func);
-+		sdio_disable_func(func);
-+		sdio_release_host(func);
-+		sdio_set_drvdata(func, NULL);
-+		kfree(self);
 +	}
++
++	if (skb->len < sizeof(struct ieee80211_pspoll)) {
++		wiphy_warn(priv->hw->wiphy, "Mailformed SDU rx'ed. Size is lesser than IEEE header.\n");
++		goto drop;
++	}
++
++	if (unlikely(ieee80211_is_pspoll(frame->frame_control)))
++		if (cw1200_handle_pspoll(priv, skb))
++			goto drop;
++
++	hdr->mactime = 0; /* Not supported by WSM */
++	hdr->band = ((arg->channelNumber & 0xff00) || (arg->channelNumber > 14)) ?
++			IEEE80211_BAND_5GHZ : IEEE80211_BAND_2GHZ;
++	hdr->freq = ieee80211_channel_to_frequency(
++			arg->channelNumber,
++			hdr->band);
++
++	if (arg->rxedRate >= 14) {
++		hdr->flag |= RX_FLAG_HT;
++		hdr->rate_idx = arg->rxedRate - 14;
++	} else if (arg->rxedRate >= 4) {
++		hdr->rate_idx = arg->rxedRate - 2;
++	} else {
++		hdr->rate_idx = arg->rxedRate;
++	}
++
++	hdr->signal = (s8)arg->rcpiRssi;
++	hdr->antenna = 0;
++
++	if (WSM_RX_STATUS_ENCRYPTION(arg->flags)) {
++		size_t iv_len = 0, icv_len = 0;
++		size_t hdrlen = ieee80211_hdrlen(frame->frame_control);
++
++		hdr->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED;
++
++		/* Oops... There is no fast way to ask mac80211 about
++		 * IV/ICV lengths. Even defineas are not exposed.*/
++		switch (WSM_RX_STATUS_ENCRYPTION(arg->flags)) {
++		case WSM_RX_STATUS_WEP:
++			iv_len = 4 /* WEP_IV_LEN */;
++			icv_len = 4 /* WEP_ICV_LEN */;
++			break;
++		case WSM_RX_STATUS_TKIP:
++			iv_len = 8 /* TKIP_IV_LEN */;
++			icv_len = 4 /* TKIP_ICV_LEN */
++				+ 8 /*MICHAEL_MIC_LEN*/;
++			hdr->flag |= RX_FLAG_MMIC_STRIPPED;
++			break;
++		case WSM_RX_STATUS_AES:
++			iv_len = 8 /* CCMP_HDR_LEN */;
++			icv_len = 8 /* CCMP_MIC_LEN */;
++			break;
++		case WSM_RX_STATUS_WAPI:
++			iv_len = 18 /* WAPI_HDR_LEN */;
++			icv_len = 16 /* WAPI_MIC_LEN */;
++			break;
++		default:
++			WARN_ON("Unknown encryption type");
++			goto drop;
++		}
++
++		/* Firmware strips ICV in case of MIC failure. */
++		if (arg->status == WSM_STATUS_MICFAILURE)
++			icv_len = 0;
++
++		if (skb->len < hdrlen + iv_len + icv_len) {
++			wiphy_warn(priv->hw->wiphy, "Mailformed SDU rx'ed. "
++				"Size is lesser than crypto headers.\n");
++			goto drop;
++		}
++
++		/* Remove IV, ICV and MIC */
++		skb_trim(skb, skb->len - icv_len);
++		memmove(skb->data + iv_len, skb->data, hdrlen);
++		skb_pull(skb, iv_len);
++	}
++
++	cw1200_debug_rxed(priv);
++	if (arg->flags & WSM_RX_STATUS_AGGREGATE)
++		cw1200_debug_rxed_agg(priv);
++
++	if (ieee80211_is_action(frame->frame_control) &&
++			(arg->flags & WSM_RX_STATUS_ADDRESS1)) {
++		if (cw1200_handle_action_rx(priv, skb))
++			return;
++	} else if (unlikely(priv->disable_beacon_filter) &&
++			!arg->status &&
++			ieee80211_is_beacon(frame->frame_control) &&
++			!memcmp(ieee80211_get_SA(frame), priv->join_bssid,
++				ETH_ALEN)) {
++		priv->disable_beacon_filter = false;
++		queue_work(priv->workqueue, &priv->update_filtering_work);
++	}
++
++	/* Stay awake for 1sec. after frame is received to give
++	 * userspace chance to react and acquire appropriate
++	 * wakelock. */
++#ifdef CONFIG_CW1200_PM
++	if (ieee80211_is_auth(frame->frame_control))
++		grace_period = 5 * HZ;
++	else if (ieee80211_is_deauth(frame->frame_control))
++		grace_period = 5 * HZ;
++	else
++		grace_period = 1 * HZ;
++	cw1200_pm_stay_awake(&priv->pm_state, grace_period);
++#endif
++	if (unlikely(cw1200_itp_rxed(priv, skb)))
++		consume_skb(skb);
++	else if (unlikely(early_data)) {
++		spin_lock_bh(&priv->ps_state_lock);
++		/* Double-check status with lock held */
++		if (entry->status == CW1200_LINK_SOFT)
++			skb_queue_tail(&entry->rx_queue, skb);
++		else
++			ieee80211_rx_irqsafe(priv->hw, skb);
++		spin_unlock_bh(&priv->ps_state_lock);
++	} else {
++		ieee80211_rx_irqsafe(priv->hw, skb);
++	}
++	*skb_p = NULL;
++
++	return;
++
++drop:
++	/* TODO: update failure counters */
++	return;
 +}
 +
-+static int cw1200_suspend(struct device *dev)
++/* ******************************************************************** */
++/* Security								*/
++
++int cw1200_alloc_key(struct cw1200_common *priv)
 +{
-+	int ret;
-+	struct sdio_func *func = dev_to_sdio_func(dev);
++	int idx;
 +
-+	/* Notify SDIO that CW1200 will remain powered during suspend */
-+	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
-+	if (ret)
-+		printk(KERN_ERR
-+			   "Error setting SDIO pm flags: %i\n", ret);
++	idx = ffs(~priv->key_map) - 1;
++	if (idx < 0 || idx > WSM_KEY_MAX_INDEX)
++		return -1;
 +
++	priv->key_map |= BIT(idx);
++	priv->keys[idx].entryIndex = idx;
++	return idx;
++}
++
++void cw1200_free_key(struct cw1200_common *priv, int idx)
++{
++	BUG_ON(!(priv->key_map & BIT(idx)));
++	memset(&priv->keys[idx], 0, sizeof(priv->keys[idx]));
++	priv->key_map &= ~BIT(idx);
++}
++
++void cw1200_free_keys(struct cw1200_common *priv)
++{
++	memset(&priv->keys, 0, sizeof(priv->keys));
++	priv->key_map = 0;
++}
++
++int cw1200_upload_keys(struct cw1200_common *priv)
++{
++	int idx, ret = 0;
++	for (idx = 0; idx <= WSM_KEY_MAX_INDEX; ++idx)
++		if (priv->key_map & BIT(idx)) {
++			ret = wsm_add_key(priv, &priv->keys[idx]);
++			if (ret < 0)
++				break;
++		}
 +	return ret;
 +}
 +
-+static int cw1200_resume(struct device *dev)
++/* Workaround for WFD test case 6.1.10 */
++void cw1200_link_id_reset(struct work_struct *work)
 +{
-+	return 0;
-+}
++	struct cw1200_common *priv =
++		container_of(work, struct cw1200_common, linkid_reset_work);
++	int temp_linkid;
 +
-+static const struct dev_pm_ops cw1200_pm_ops = {
-+	.suspend = cw1200_suspend,
-+	.resume = cw1200_resume,
-+};
-+
-+static struct sdio_driver sdio_driver = {
-+	.name		= "cw1200_wlan_sdio",
-+	.id_table	= cw1200_sdio_ids,
-+	.probe		= cw1200_sdio_probe,
-+	.remove		= __devexit_p(cw1200_sdio_disconnect),
-+	.drv = {
-+		.pm = &cw1200_pm_ops,
++	if (!priv->action_linkid) {
++		/* In GO mode we can receive ACTION frames without a linkID */
++		temp_linkid = cw1200_alloc_link_id(priv,
++				&priv->action_frame_sa[0]);
++		WARN_ON(!temp_linkid);
++		if (temp_linkid) {
++			/* Make sure we execute the WQ */
++			flush_workqueue(priv->workqueue);
++			/* Release the link ID */
++			spin_lock_bh(&priv->ps_state_lock);
++			priv->link_id_db[temp_linkid - 1].prev_status =
++				priv->link_id_db[temp_linkid - 1].status;
++			priv->link_id_db[temp_linkid - 1].status =
++				CW1200_LINK_RESET;
++			spin_unlock_bh(&priv->ps_state_lock);
++			wsm_lock_tx_async(priv);
++			if (queue_work(priv->workqueue,
++					&priv->link_id_work) <= 0)
++				wsm_unlock_tx(priv);
++		}
++	} else {
++		spin_lock_bh(&priv->ps_state_lock);
++		priv->link_id_db[priv->action_linkid - 1].prev_status =
++			priv->link_id_db[priv->action_linkid - 1].status;
++		priv->link_id_db[priv->action_linkid - 1].status =
++			CW1200_LINK_RESET_REMAP;
++		spin_unlock_bh(&priv->ps_state_lock);
++		wsm_lock_tx_async(priv);
++		if (queue_work(priv->workqueue, &priv->link_id_work) <= 0)
++			wsm_unlock_tx(priv);
++		flush_workqueue(priv->workqueue);
 +	}
-+};
-+
-+/* Init Module function -> Called by insmod */
-+static int __init cw1200_sdio_init(void)
-+{
-+	const struct cw1200_platform_data_sdio *pdata;
-+	int ret;
-+
-+	pdata = cw1200_get_platform_data();
-+
-+	if (cw1200_sdio_on(pdata)) {
-+		ret = -1;
-+		goto err;
-+	}
-+
-+	ret = sdio_register_driver(&sdio_driver);
-+	if (ret)
-+		goto err;
-+
-+	return 0;
-+
-+err:
-+	cw1200_sdio_off(pdata);
-+	return ret;
 +}
 +
-+/* Called at Driver Unloading */
-+static void __exit cw1200_sdio_exit(void)
-+{
-+	const struct cw1200_platform_data_sdio *pdata;
-+	pdata = cw1200_get_platform_data();
-+	sdio_unregister_driver(&sdio_driver);
-+	cw1200_sdio_off(pdata);
-+}
-+
-+
-+module_init(cw1200_sdio_init);
-+module_exit(cw1200_sdio_exit);
-diff --git a/drivers/staging/cw1200/cw1200_spi.c b/drivers/staging/cw1200/cw1200_spi.c
+diff --git a/drivers/staging/cw1200/txrx.h b/drivers/staging/cw1200/txrx.h
 new file mode 100644
-index 0000000..ff90b9a
+index 0000000..f0c5b04
 --- /dev/null
-+++ b/drivers/staging/cw1200/cw1200_spi.c
-@@ -0,0 +1,487 @@
++++ b/drivers/staging/cw1200/txrx.h
+@@ -0,0 +1,93 @@
 +/*
-+ * Mac80211 SPI driver for ST-Ericsson CW1200 device
++ * Datapath interface for ST-Ericsson CW1200 mac80211 drivers
 + *
-+ * Copyright (c) 2011, Sagrad Inc.
-+ * Author:  Solomon Peachy <speachy@sagrad.com>
-+ *
-+ * Based on cw1200_gpio.c
 + * Copyright (c) 2010, ST-Ericsson
 + * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
 + *
@@ -649,478 +1361,88 @@ index 0000000..ff90b9a
 + * published by the Free Software Foundation.
 + */
 +
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/gpio.h>
-+#include <linux/delay.h>
-+#include <net/mac80211.h>
++#ifndef CW1200_TXRX_H
++#define CW1200_TXRX_H
 +
-+#include <linux/spi/spi.h>
-+#include <linux/device.h>
++#include <linux/list.h>
 +
-+#include "cw1200.h"
-+#include "sbus.h"
-+#include "cw1200_plat.h"
-+#include "hwio.h"
++/* extern */ struct ieee80211_hw;
++/* extern */ struct sk_buff;
++/* extern */ struct wsm_tx;
++/* extern */ struct wsm_rx;
++/* extern */ struct wsm_tx_confirm;
++/* extern */ struct cw1200_txpriv;
 +
-+MODULE_AUTHOR("Solomon Peachy <speachy@sagrad.com>");
-+MODULE_DESCRIPTION("mac80211 ST-Ericsson CW1200 SPI driver");
-+MODULE_LICENSE("GPL");
-+MODULE_ALIAS("spi:cw1200_wlan_spi");
-+
-+#if 0
-+/* Note that this is an example of integrating into your board support file */
-+static struct resource cw1200_href_resources[] = {
-+	{
-+		.start = GPIO_RF_RESET,
-+		.end = GPIO_RF_RESET,
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_reset",
-+	},
-+};
-+
-+static int cw1200_power_ctrl(const struct cw1200_platform_data_spi *pdata,
-+			     bool enable)
-+{
-+	gpio_set_value(GPIO_RF_POWER, enable);
-+
-+	/* Turn PWR_EN off and on as appropriate. */
-+	/* Note this is not needed when there's a hardware reset circuit */
-+	return 0;
-+}
-+static int cw1200_clk_ctrl(const struct cw1200_platform_data_spi *pdata,
-+			   bool enable)
-+{
-+	/* Turn CLK_32K off and on as appropriate. */
-+	/* Note this is not needed if it's always on */
-+	return 0;
-+}
-+
-+static struct cw1200_platform_data_spi cw1200_platform_data = {
-+	.ref_clk = 38400,
-+	.spi_bits_per_word = 16,
-+	.reset = &cw1200_href_resources[0],
-+	.power_ctrl = cw1200_power_ctrl,
-+	.clk_ctrl = cw1200_clk_ctrl,
-+//	.macaddr = ???
-+	.sdd_file = "sdd_sagrad_1091_1098.bin",
-+};
-+static struct spi_board_info myboard_spi_devices[] __initdata = {
-+	{
-+		.modalias = "cw1200_wlan_spi",
-+		.max_speed_hz = 10000000, // 52MHz Max
-+		.bus_num = 0,
-+		.irq = WIFI_IRQ,
-+		.platform_data = &cw1200_platform_data,
-+		.chip_select = 0,
-+	},
-+};
-+#endif
-+
-+struct sbus_priv {
-+	struct spi_device	*func;
-+	struct cw1200_common	*core;
-+	const struct cw1200_platform_data_spi *pdata;
-+};
-+
-+/* sbus_ops implemetation */
-+
-+#define SDIO_TO_SPI_ADDR(addr) ((addr & 0x1f)>>2)
-+#define SET_WRITE 0x7FFF //usage: and operation
-+#define SET_READ 0x8000  //usage: or operation
-+
-+/* Notes on byte ordering:
-+   LE:  B0 B1 B2 B3
-+   BE:  B3 B2 B1 B0
-+
-+   Hardware expects 32-bit data in this order:
-+
-+   B1 B0 B3 B2
-+*/
-+
-+static int cw1200_spi_memcpy_fromio(struct sbus_priv *self,
-+				     unsigned int addr,
-+				     void *dst, int count)
-+{
-+	int ret, i;
-+	uint16_t regaddr;
-+	struct spi_message      m;
-+
-+	struct spi_transfer     t_addr = {
-+		.tx_buf         = &regaddr,
-+		.len            = sizeof(regaddr),
++struct tx_policy {
++	union {
++		__le32 tbl[3];
++		u8 raw[12];
 +	};
-+	struct spi_transfer     t_msg = {
-+		.rx_buf         = dst,
-+		.len            = count,
-+	};
-+
-+	regaddr = (SDIO_TO_SPI_ADDR(addr))<<12;
-+	regaddr |= SET_READ;
-+	regaddr |= (count>>1);
-+	regaddr = cpu_to_le16(regaddr);
-+
-+	// printk(KERN_ERR "READ : %04d from 0x%02x (%04x)\n", count, addr, le16_to_cpu(regaddr));
-+
-+#if defined(__LITTLE_ENDIAN)
-+	/* We have to byteswap if the SPI bus is limited to 8b operation */
-+	if (self->func->bits_per_word == 8)
-+#endif
-+		regaddr = swab16(regaddr);
-+
-+        spi_message_init(&m);
-+        spi_message_add_tail(&t_addr, &m);
-+        spi_message_add_tail(&t_msg, &m);
-+        ret = spi_sync(self->func, &m);
-+
-+#if 0
-+	printk(KERN_INFO "READ : ");
-+	for (i = 0 ; i < t_addr.len ; i++) {
-+		printk("%02x ", ((u8 *)t_addr.tx_buf)[i]);
-+	}
-+	printk(" : ");
-+	for (i = 0 ; i < t_msg.len ; i++) {
-+		printk("%02x ", ((u8 *)t_msg.rx_buf)[i]);
-+	}
-+	printk("\n");
-+#endif
-+
-+#if defined(__LITTLE_ENDIAN)
-+	/* We have to byteswap if the SPI bus is limited to 8b operation */
-+	if (self->func->bits_per_word == 8)
-+#endif
-+	{
-+		uint16_t *buf = (uint16_t*)dst;
-+		for (i = 0 ; i < (count + 1) >> 1 ; i++) {
-+			buf[i] = swab16(buf[i]);
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+static int cw1200_spi_memcpy_toio(struct sbus_priv *self,
-+				   unsigned int addr,
-+				   const void *src, int count)
-+{
-+	int rval, i;
-+	uint16_t regaddr;
-+	struct spi_transfer     t_addr = {
-+		.tx_buf         = &regaddr,
-+		.len            = sizeof(regaddr),
-+	};
-+	struct spi_transfer     t_msg = {
-+		.tx_buf         = src,
-+		.len            = count,
-+	};
-+	struct spi_message      m;
-+
-+        regaddr = (SDIO_TO_SPI_ADDR(addr))<<12;
-+        regaddr &= SET_WRITE;
-+        regaddr |= (count>>1);
-+	regaddr = cpu_to_le16(regaddr);
-+
-+	// printk(KERN_ERR "WRITE: %04d  to  0x%02x (%04x)\n", count, addr, le16_to_cpu(regaddr));
-+
-+#if defined(__LITTLE_ENDIAN)
-+	/* We have to byteswap if the SPI bus is limited to 8b operation */
-+	if (self->func->bits_per_word == 8)
-+#endif
-+	{
-+		uint16_t *buf = (uint16_t*)src;
-+		regaddr = swab16(regaddr);
-+		for (i = 0 ; i < (count + 1) >> 1 ; i++) {
-+			buf[i] = swab16(buf[i]);
-+		}
-+	}
-+
-+#if 0
-+	printk(KERN_INFO "WRITE: ");
-+	for (i = 0 ; i < t_addr.len ; i++) {
-+		printk("%02x ", ((u8 *)t_addr.tx_buf)[i]);
-+	}
-+	printk(" : ");
-+	for (i = 0 ; i < t_msg.len ; i++) {
-+		printk("%02x ", ((u8 *)t_msg.tx_buf)[i]);
-+	}
-+	printk("\n");
-+#endif
-+
-+        spi_message_init(&m);
-+        spi_message_add_tail(&t_addr, &m);
-+        spi_message_add_tail(&t_msg, &m);
-+        rval = spi_sync(self->func, &m);
-+
-+#if 0
-+	printk(KERN_INFO "WROTE: %d\n", m.actual_length);
-+#endif
-+
-+#if defined(__LITTLE_ENDIAN)
-+	/* We have to byteswap if the SPI bus is limited to 8b operation */
-+	if (self->func->bits_per_word == 8)
-+#endif
-+	{
-+		uint16_t *buf = (uint16_t *)src;
-+                for (i = 0 ; i < (count + 1) >> 1 ; i++) {
-+                        buf[i] = swab16(buf[i]);
-+                }
-+        }
-+
-+	return rval;
-+}
-+
-+static void cw1200_spi_lock(struct sbus_priv *self)
-+{
-+	return;
-+}
-+
-+static void cw1200_spi_unlock(struct sbus_priv *self)
-+{
-+	return;
-+}
-+
-+#ifndef CONFIG_CW1200_POLL_IRQ
-+static irqreturn_t cw1200_spi_irq_handler(int irq, void *dev_id)
-+{
-+	struct sbus_priv *self = dev_id;
-+
-+	BUG_ON(!self);
-+	cw1200_irq_handler(self->core);
-+	return IRQ_HANDLED;
-+}
-+
-+static int cw1200_spi_irq_subscribe(struct sbus_priv *self)
-+{
-+	int ret;
-+
-+	printk(KERN_DEBUG "SW IRQ subscribe\n");
-+
-+	ret = request_any_context_irq(self->func->irq, cw1200_spi_irq_handler,
-+				      IRQF_TRIGGER_RISING, "cw1200_wlan_irq", self);
-+	if (WARN_ON(ret < 0))
-+		goto exit;
-+
-+#ifdef CONFIG_CW1200_PM
-+	ret = enable_irq_wake(self->func->irq);
-+	if (WARN_ON(ret))
-+		goto free_irq;
-+#endif
-+
-+	return 0;
-+
-+#ifdef CONFIG_CW1200_PM
-+free_irq:
-+	free_irq(self->func->irq, self);
-+#endif
-+exit:
-+	return ret;
-+}
-+
-+static int cw1200_spi_irq_unsubscribe(struct sbus_priv *self)
-+{
-+	int ret = 0;
-+
-+	printk(KERN_DEBUG "SW IRQ unsubscribe\n");
-+#ifdef CONFIG_CW1200_PM
-+	disable_irq_wake(self->func->irq);
-+#endif
-+	free_irq(self->func->irq, self);
-+
-+	return ret;
-+}
-+#endif
-+
-+static int cw1200_spi_off(const struct cw1200_platform_data_spi *pdata)
-+{
-+	const struct resource *reset = pdata->reset;
-+
-+	if (reset) {
-+		gpio_set_value(reset->start, 0);
-+		gpio_free(reset->start);
-+	}
-+
-+	if (pdata->power_ctrl)
-+		pdata->power_ctrl(pdata, false);
-+	if (pdata->clk_ctrl)
-+		pdata->clk_ctrl(pdata, false);
-+
-+	return 0;
-+}
-+
-+static int cw1200_spi_on(const struct cw1200_platform_data_spi *pdata)
-+{
-+	const struct resource *reset = pdata->reset;
-+
-+	if (pdata->clk_ctrl) {
-+		if (pdata->clk_ctrl(pdata, true)) {
-+			printk(KERN_ERR "clk_ctrl() failed!\n");
-+			return -1;
-+		}
-+		msleep(20); // XXX may be lowered?
-+	}
-+
-+	if (pdata->power_ctrl) {
-+		if (pdata->power_ctrl(pdata, true)) {
-+			printk(KERN_ERR "power_ctrl() failed!\n");
-+			return -1;
-+		}
-+		msleep(250);  // XXX can be lowered probably
-+	}
-+
-+	if (!reset)
-+		return 0;
-+	gpio_request(reset->start, reset->name);
-+	gpio_direction_output(reset->start, 0);
-+	/* A valid reset shall be obtained by maintaining WRESETN
-+	 * active (low) for at least two cycles of LP_CLK (32768Hz)
-+	 * after VDDIO is stable within it operating range. */
-+	msleep(30);
-+	gpio_set_value(reset->start, 1);
-+	/* The host should wait 30 ms after the WRESETN release
-+	 * for the on-chip LDO to stabilize */
-+	msleep(60);
-+	return 0;
-+}
-+
-+static int cw1200_spi_reset(struct sbus_priv *self)
-+{
-+	cw1200_spi_off(self->pdata);
-+	msleep(1000);
-+	cw1200_spi_on(self->pdata);
-+	return 0;
-+}
-+
-+static size_t cw1200_spi_align_size(struct sbus_priv *self, size_t size)
-+{
-+	return size & 1 ? size + 1 : size;
-+}
-+
-+#ifdef CONFIG_CW1200_PM
-+static int cw1200_spi_pm(struct sbus_priv *self, bool suspend)
-+{
-+	return irq_set_irq_wake(self->func->irq, suspend);
-+}
-+#endif
-+
-+static struct sbus_ops cw1200_spi_sbus_ops = {
-+	.sbus_memcpy_fromio	= cw1200_spi_memcpy_fromio,
-+	.sbus_memcpy_toio	= cw1200_spi_memcpy_toio,
-+	.lock			= cw1200_spi_lock,
-+	.unlock			= cw1200_spi_unlock,
-+#ifndef CONFIG_CW1200_POLL_IRQ
-+	.irq_subscribe		= cw1200_spi_irq_subscribe,
-+	.irq_unsubscribe	= cw1200_spi_irq_unsubscribe,
-+#endif
-+	.reset			= cw1200_spi_reset,
-+	.align_size		= cw1200_spi_align_size,
-+#ifdef CONFIG_CW1200_PM
-+	.power_mgmt		= cw1200_spi_pm,
-+#endif
++	u8  defined;		/* TODO: u32 or u8, profile and select best */
++	u8  usage_count;	/* --// -- */
++	u8  retry_count;	/* --// -- */
++	u8  uploaded;
 +};
 +
-+/* Probe Function to be called by SPI stack when device is discovered */
-+static int __devinit cw1200_spi_probe(struct spi_device *func)
-+{
-+	const struct cw1200_platform_data_spi *plat_data = func->dev.platform_data;
-+	struct sbus_priv *self;
-+	int status;
-+
-+	/* Sanity check speed */
-+	if (func->max_speed_hz > 52000000)
-+		func->max_speed_hz = 52000000;
-+	if (func->max_speed_hz < 1000000)
-+		func->max_speed_hz = 1000000;
-+
-+	/* Fix up transfer size */
-+	if (plat_data->spi_bits_per_word)
-+		func->bits_per_word = plat_data->spi_bits_per_word;
-+	if (!func->bits_per_word)
-+		func->bits_per_word = 16;
-+
-+	/* And finally.. */
-+	func->mode = SPI_MODE_0;
-+
-+	printk(KERN_INFO "cw1200_wlan_spi Probe called (CS %d M %d BPW %d CLK %d)\n",
-+	       func->chip_select, func->mode, func->bits_per_word, func->max_speed_hz);
-+
-+	if (cw1200_spi_on(plat_data)) {
-+		printk(KERN_ERR "spi_on() failed!\n");
-+		return -1;
-+	}
-+
-+        if (spi_setup(func)) {
-+		printk(KERN_ERR "spi_setup() failed!\n");
-+		return -1;
-+        }
-+
-+	self = kzalloc(sizeof(*self), GFP_KERNEL);
-+	if (!self) {
-+		printk(KERN_ERR  "Can't allocate SPI sbus_priv.");
-+		return -ENOMEM;
-+	}
-+
-+	self->pdata = plat_data;
-+	self->func = func;
-+	spi_set_drvdata(func, self);
-+
-+	status = cw1200_core_probe(&cw1200_spi_sbus_ops,
-+				   self, &func->dev, &self->core,
-+				   self->pdata->ref_clk,
-+				   self->pdata->macaddr,
-+				   self->pdata->sdd_file);
-+
-+	if (status) {
-+		cw1200_spi_off(plat_data);
-+		kfree(self);
-+	}
-+
-+	return status;
-+}
-+
-+/* Disconnect Function to be called by SPI stack when device is disconnected */
-+static int __devexit cw1200_spi_disconnect(struct spi_device *func)
-+{
-+	struct sbus_priv *self = spi_get_drvdata(func);
-+
-+	if (self) {
-+#ifndef CONFIG_CW1200_POLL_IRQ
-+		cw1200_spi_irq_unsubscribe(self);
-+#endif
-+		if (self->core) {
-+			cw1200_core_release(self->core);
-+			self->core = NULL;
-+		}
-+		kfree(self);
-+	}
-+	cw1200_spi_off(func->dev.platform_data);
-+
-+	return 0;
-+}
-+
-+static struct spi_driver spi_driver = {
-+	.probe		= cw1200_spi_probe,
-+	.remove		= __devexit_p(cw1200_spi_disconnect),
-+	.driver = {
-+		.name		= "cw1200_wlan_spi",
-+		.bus            = &spi_bus_type,
-+		.owner          = THIS_MODULE,
-+	},
++struct tx_policy_cache_entry {
++	struct tx_policy policy;
++	struct list_head link;
 +};
 +
-+/* Init Module function -> Called by insmod */
-+static int __init cw1200_spi_init(void)
-+{
-+	return spi_register_driver(&spi_driver);
-+}
++#define TX_POLICY_CACHE_SIZE	(8)
++struct tx_policy_cache {
++	struct tx_policy_cache_entry cache[TX_POLICY_CACHE_SIZE];
++	struct list_head used;
++	struct list_head free;
++	spinlock_t lock;
++};
 +
-+/* Called at Driver Unloading */
-+static void __exit cw1200_spi_exit(void)
-+{
-+	spi_unregister_driver(&spi_driver);
-+}
++/* ******************************************************************** */
++/* TX policy cache							*/
++/* Intention of TX policy cache is an overcomplicated WSM API.
++ * Device does not accept per-PDU tx retry sequence.
++ * It uses "tx retry policy id" instead, so driver code has to sync
++ * linux tx retry sequences with a retry policy table in the device.
++ */
++void tx_policy_init(struct cw1200_common *priv);
++void tx_policy_upload_work(struct work_struct *work);
 +
-+module_init(cw1200_spi_init);
-+module_exit(cw1200_spi_exit);
++/* ******************************************************************** */
++/* TX implementation							*/
++
++u32 cw1200_rate_mask_to_wsm(struct cw1200_common *priv,
++			       u32 rates);
++void cw1200_tx(struct ieee80211_hw *dev, struct sk_buff *skb);
++void cw1200_skb_dtor(struct cw1200_common *priv,
++		     struct sk_buff *skb,
++		     const struct cw1200_txpriv *txpriv);
++
++/* ******************************************************************** */
++/* WSM callbacks							*/
++
++void cw1200_tx_confirm_cb(struct cw1200_common *priv,
++			  struct wsm_tx_confirm *arg);
++void cw1200_rx_cb(struct cw1200_common *priv,
++		  struct wsm_rx *arg,
++		  struct sk_buff **skb_p);
++
++/* ******************************************************************** */
++/* Timeout								*/
++
++void cw1200_tx_timeout(struct work_struct *work);
++
++/* ******************************************************************** */
++/* Security								*/
++int cw1200_alloc_key(struct cw1200_common *priv);
++void cw1200_free_key(struct cw1200_common *priv, int idx);
++void cw1200_free_keys(struct cw1200_common *priv);
++int cw1200_upload_keys(struct cw1200_common *priv);
++
++/* ******************************************************************** */
++/* Workaround for WFD test case 6.1.10					*/
++void cw1200_link_id_reset(struct work_struct *work);
++
++#endif /* CW1200_TXRX_H */
 -- 
 1.7.11.7
 
