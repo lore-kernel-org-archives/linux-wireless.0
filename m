@@ -1,15 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:49410 "EHLO
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:42352 "EHLO
 	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397Ab2LVXSp (ORCPT
+	with ESMTP id S1752246Ab2LVXSY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 18:18:45 -0500
+	Sat, 22 Dec 2012 18:18:24 -0500
 From: Solomon Peachy <pizza@shaftnet.org>
 To: linux-wireless@vger.kernel.org
 Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 14/17] cw1200: v2: driver state and definitions
-Date: Sat, 22 Dec 2012 18:18:29 -0500
-Message-Id: <1356218312-13616-15-git-send-email-pizza@shaftnet.org> (sfid-20121223_002323_767208_EB699FB9)
+Subject: [PATCH 07/17] cw1200: v2: debuging hooks
+Date: Sat, 22 Dec 2012 18:18:22 -0500
+Message-Id: <1356218312-13616-8-git-send-email-pizza@shaftnet.org> (sfid-20121223_001828_484298_6803A1EE)
 In-Reply-To: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
 References: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -17,343 +17,922 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- drivers/staging/cw1200/cw1200.h | 327 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 327 insertions(+)
- create mode 100644 drivers/staging/cw1200/cw1200.h
+ drivers/staging/cw1200/debug.c | 740 +++++++++++++++++++++++++++++++++++++++++
+ drivers/staging/cw1200/debug.h | 158 +++++++++
+ 2 files changed, 898 insertions(+)
+ create mode 100644 drivers/staging/cw1200/debug.c
+ create mode 100644 drivers/staging/cw1200/debug.h
 
-diff --git a/drivers/staging/cw1200/cw1200.h b/drivers/staging/cw1200/cw1200.h
+diff --git a/drivers/staging/cw1200/debug.c b/drivers/staging/cw1200/debug.c
 new file mode 100644
-index 0000000..eaf1281
+index 0000000..7309929
 --- /dev/null
-+++ b/drivers/staging/cw1200/cw1200.h
-@@ -0,0 +1,327 @@
++++ b/drivers/staging/cw1200/debug.c
+@@ -0,0 +1,740 @@
 +/*
-+ * Common private data for ST-Ericsson CW1200 drivers
++ * mac80211 glue code for mac80211 ST-Ericsson CW1200 drivers
++ * DebugFS code
 + *
 + * Copyright (c) 2010, ST-Ericsson
 + * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * Based on the mac80211 Prism54 code, which is
-+ * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-+ *
-+ * Based on the islsm (softmac prism54) driver, which is:
-+ * Copyright 2004-2006 Jean-Baptiste Note <jbnote@gmail.com>, et al.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License version 2 as
 + * published by the Free Software Foundation.
 + */
 +
-+#ifndef CW1200_H
-+#define CW1200_H
++#include <linux/module.h>
++#include <linux/debugfs.h>
++#include <linux/seq_file.h>
++#include "cw1200.h"
++#include "debug.h"
++#include "fwio.h"
 +
-+#include <linux/wait.h>
-+#include <linux/mutex.h>
-+#include <linux/workqueue.h>
-+#include <net/mac80211.h>
++/* join_status */
++static const char * const cw1200_debug_join_status[] = {
++	"passive",
++	"monitor",
++	"station",
++	"access point",
++};
 +
-+#include "queue.h"
-+#include "wsm.h"
-+#include "scan.h"
-+#include "txrx.h"
-+#include "pm.h"
++/* WSM_JOIN_PREAMBLE_... */
++static const char * const cw1200_debug_preamble[] = {
++	"long",
++	"short",
++	"long on 1 and 2 Mbps",
++};
 +
-+/* Forward declarations */
-+struct sbus_ops;
-+struct task_struct;
-+struct cw1200_debug_priv;
-+struct firmware;
++static const char * const cw1200_debug_fw_types[] = {
++	"ETF",
++	"WFM",
++	"WSM",
++	"HI test",
++	"Platform test",
++};
++
++static const char * const cw1200_debug_link_id[] = {
++	"OFF",
++	"REQ",
++	"SOFT",
++	"HARD",
++};
++
++static const char *cw1200_debug_mode(int mode)
++{
++	switch (mode) {
++	case NL80211_IFTYPE_UNSPECIFIED:
++		return "unspecified";
++	case NL80211_IFTYPE_MONITOR:
++		return "monitor";
++	case NL80211_IFTYPE_STATION:
++		return "station";
++	case NL80211_IFTYPE_ADHOC:
++		return "ad-hok";
++	case NL80211_IFTYPE_MESH_POINT:
++		return "mesh point";
++	case NL80211_IFTYPE_AP:
++		return "access point";
++	case NL80211_IFTYPE_P2P_CLIENT:
++		return "p2p client";
++	case NL80211_IFTYPE_P2P_GO:
++		return "p2p go";
++	default:
++		return "unsupported";
++	}
++}
++
++static void cw1200_queue_status_show(struct seq_file *seq,
++				     struct cw1200_queue *q)
++{
++	int i;
++	seq_printf(seq, "Queue       %d:\n", q->queue_id);
++	seq_printf(seq, "  capacity: %d\n", q->capacity);
++	seq_printf(seq, "  queued:   %d\n", q->num_queued);
++	seq_printf(seq, "  pending:  %d\n", q->num_pending);
++	seq_printf(seq, "  sent:     %d\n", q->num_sent);
++	seq_printf(seq, "  locked:   %s\n", q->tx_locked_cnt ? "yes" : "no");
++	seq_printf(seq, "  overfull: %s\n", q->overfull ? "yes" : "no");
++	seq_puts(seq,   "  link map: 0-> ");
++	for (i = 0; i < q->stats->map_capacity; ++i)
++		seq_printf(seq, "%.2d ", q->link_map_cache[i]);
++	seq_printf(seq, "<-%d\n", q->stats->map_capacity);
++}
++
++static void cw1200_debug_print_map(struct seq_file *seq,
++				   struct cw1200_common *priv,
++				   const char *label,
++				   u32 map)
++{
++	int i;
++	seq_printf(seq, "%s0-> ", label);
++	for (i = 0; i < priv->tx_queue_stats.map_capacity; ++i)
++		seq_printf(seq, "%s ", (map & BIT(i)) ? "**" : "..");
++	seq_printf(seq, "<-%d\n", priv->tx_queue_stats.map_capacity - 1);
++}
++
++static int cw1200_status_show(struct seq_file *seq, void *v)
++{
++	int i;
++	struct list_head *item;
++	struct cw1200_common *priv = seq->private;
++	struct cw1200_debug_priv *d = priv->debug;
++
++	int ba_cnt, ba_acc, ba_avg = 0;
++	bool ba_ena;
++
++	spin_lock_bh(&priv->ba_lock);
++	ba_cnt = priv->debug->ba_cnt;
++	ba_acc = priv->debug->ba_acc;
++	ba_ena = priv->ba_ena;
++	if (ba_cnt)
++		ba_avg = ba_acc / ba_cnt;
++	spin_unlock_bh(&priv->ba_lock);
++
++	seq_puts(seq,   "CW1200 Wireless LAN driver status\n");
++	seq_printf(seq, "Hardware:   %d.%d\n",
++		priv->wsm_caps.hardwareId,
++		priv->wsm_caps.hardwareSubId);
++	seq_printf(seq, "Firmware:   %s %d.%d\n",
++		cw1200_debug_fw_types[priv->wsm_caps.firmwareType],
++		priv->wsm_caps.firmwareVersion,
++		priv->wsm_caps.firmwareBuildNumber);
++	seq_printf(seq, "FW API:     %d\n",
++		priv->wsm_caps.firmwareApiVer);
++	seq_printf(seq, "FW caps:    0x%.4X\n",
++		priv->wsm_caps.firmwareCap);
++	seq_printf(seq, "Mode:       %s%s\n",
++		cw1200_debug_mode(priv->mode),
++		priv->listening ? " (listening)" : "");
++	seq_printf(seq, "Assoc:      %s\n",
++		cw1200_debug_join_status[priv->join_status]);
++	if (priv->channel)
++		seq_printf(seq, "Channel:    %d%s\n",
++			priv->channel->hw_value,
++			priv->channel_switch_in_progress ?
++			" (switching)" : "");
++	if (priv->rx_filter.promiscuous)
++		seq_puts(seq,   "Filter:     promisc\n");
++	else if (priv->rx_filter.fcs)
++		seq_puts(seq,   "Filter:     fcs\n");
++	if (priv->rx_filter.bssid)
++		seq_puts(seq,   "Filter:     bssid\n");
++	if (priv->bf_control.bcn_count)
++		seq_puts(seq,   "Filter:     beacons\n");
++
++	if (priv->enable_beacon ||
++			priv->mode == NL80211_IFTYPE_AP ||
++			priv->mode == NL80211_IFTYPE_ADHOC ||
++			priv->mode == NL80211_IFTYPE_MESH_POINT ||
++			priv->mode == NL80211_IFTYPE_P2P_GO)
++		seq_printf(seq, "Beaconing:  %s\n",
++			priv->enable_beacon ?
++			"enabled" : "disabled");
++	if (priv->ssid_length ||
++			priv->mode == NL80211_IFTYPE_AP ||
++			priv->mode == NL80211_IFTYPE_ADHOC ||
++			priv->mode == NL80211_IFTYPE_MESH_POINT ||
++			priv->mode == NL80211_IFTYPE_P2P_GO)
++		seq_printf(seq, "SSID:       %.*s\n",
++			priv->ssid_length, priv->ssid);
++
++	for (i = 0; i < 4; ++i) {
++		seq_printf(seq, "EDCA(%d):    %d, %d, %d, %d, %d\n", i,
++			priv->edca.params[i].cwMin,
++			priv->edca.params[i].cwMax,
++			priv->edca.params[i].aifns,
++			priv->edca.params[i].txOpLimit,
++			priv->edca.params[i].maxReceiveLifetime);
++	}
++	if (priv->join_status == CW1200_JOIN_STATUS_STA) {
++		static const char *pmMode = "unknown";
++		switch (priv->powersave_mode.pmMode) {
++		case WSM_PSM_ACTIVE:
++			pmMode = "off";
++			break;
++		case WSM_PSM_PS:
++			pmMode = "on";
++			break;
++		case WSM_PSM_FAST_PS:
++			pmMode = "dynamic";
++			break;
++		}
++		seq_printf(seq, "Preamble:   %s\n",
++			cw1200_debug_preamble[
++			priv->association_mode.preambleType]);
++		seq_printf(seq, "AMPDU spcn: %d\n",
++			priv->association_mode.mpduStartSpacing);
++		seq_printf(seq, "Basic rate: 0x%.8X\n",
++			le32_to_cpu(priv->association_mode.basicRateSet));
++		seq_printf(seq, "Bss lost:   %d beacons\n",
++			priv->bss_params.beaconLostCount);
++		seq_printf(seq, "AID:        %d\n",
++			priv->bss_params.aid);
++		seq_printf(seq, "Rates:      0x%.8X\n",
++			priv->bss_params.operationalRateSet);
++		seq_printf(seq, "Powersave:  %s\n", pmMode);
++	}
++	seq_printf(seq, "HT:         %s\n",
++		cw1200_is_ht(&priv->ht_info) ? "on" : "off");
++	if (cw1200_is_ht(&priv->ht_info)) {
++		seq_printf(seq, "Greenfield: %s\n",
++			cw1200_ht_greenfield(&priv->ht_info) ? "yes" : "no");
++		seq_printf(seq, "AMPDU dens: %d\n",
++			cw1200_ht_ampdu_density(&priv->ht_info));
++	}
++	seq_printf(seq, "RSSI thold: %d\n",
++		priv->cqm_rssi_thold);
++	seq_printf(seq, "RSSI hyst:  %d\n",
++		priv->cqm_rssi_hyst);
++	seq_printf(seq, "Bcnloss:    %d\n",
++		priv->cqm_beacon_loss_count);
++	seq_printf(seq, "Long retr:  %d\n",
++		priv->long_frame_max_tx_count);
++	seq_printf(seq, "Short retr: %d\n",
++		priv->short_frame_max_tx_count);
++	spin_lock_bh(&priv->tx_policy_cache.lock);
++	i = 0;
++	list_for_each(item, &priv->tx_policy_cache.used)
++		++i;
++	spin_unlock_bh(&priv->tx_policy_cache.lock);
++	seq_printf(seq, "RC in use:  %d\n", i);
++	seq_printf(seq, "BA stat:    %d, %d (%d)\n",
++		ba_cnt, ba_acc, ba_avg);
++	seq_printf(seq, "Block ACK:  %s\n", ba_ena ? "on" : "off");
++
++	seq_puts(seq, "\n");
++	for (i = 0; i < 4; ++i) {
++		cw1200_queue_status_show(seq, &priv->tx_queue[i]);
++		seq_puts(seq, "\n");
++	}
++
++	cw1200_debug_print_map(seq, priv, "Link map:   ",
++		priv->link_id_map);
++	cw1200_debug_print_map(seq, priv, "Asleep map: ",
++		priv->sta_asleep_mask);
++	cw1200_debug_print_map(seq, priv, "PSPOLL map: ",
++		priv->pspoll_mask);
++
++	seq_puts(seq, "\n");
++
++	for (i = 0; i < CW1200_MAX_STA_IN_AP_MODE; ++i) {
++		if (priv->link_id_db[i].status) {
++			seq_printf(seq, "Link %d:     %s, %pM\n",
++				i + 1, cw1200_debug_link_id[
++				priv->link_id_db[i].status],
++				priv->link_id_db[i].mac);
++		}
++	}
++
++	seq_puts(seq, "\n");
++
++	seq_printf(seq, "BH status:  %s\n",
++		atomic_read(&priv->bh_term) ? "terminated" : "alive");
++	seq_printf(seq, "Pending RX: %d\n",
++		atomic_read(&priv->bh_rx));
++	seq_printf(seq, "Pending TX: %d\n",
++		atomic_read(&priv->bh_tx));
++	if (priv->bh_error)
++		seq_printf(seq, "BH errcode: %d\n",
++			priv->bh_error);
++	seq_printf(seq, "TX bufs:    %d x %d bytes\n",
++		priv->wsm_caps.numInpChBufs,
++		priv->wsm_caps.sizeInpChBuf);
++	seq_printf(seq, "Used bufs:  %d\n",
++		priv->hw_bufs_used);
++	seq_printf(seq, "Powermgmt:  %s\n",
++		priv->powersave_enabled ? "on" : "off");
++	seq_printf(seq, "Device:     %s\n",
++		priv->device_can_sleep ? "alseep" : "awake");
++
++	spin_lock(&priv->wsm_cmd.lock);
++	seq_printf(seq, "WSM status: %s\n",
++		priv->wsm_cmd.done ? "idle" : "active");
++	seq_printf(seq, "WSM cmd:    0x%.4X (%d bytes)\n",
++		priv->wsm_cmd.cmd, priv->wsm_cmd.len);
++	seq_printf(seq, "WSM retval: %d\n",
++		priv->wsm_cmd.ret);
++	spin_unlock(&priv->wsm_cmd.lock);
++
++	seq_printf(seq, "Datapath:   %s\n",
++		atomic_read(&priv->tx_lock) ? "locked" : "unlocked");
++	if (atomic_read(&priv->tx_lock))
++		seq_printf(seq, "TXlock cnt: %d\n",
++			atomic_read(&priv->tx_lock));
++
++	seq_printf(seq, "TXed:       %d\n",
++		d->tx);
++	seq_printf(seq, "AGG TXed:   %d\n",
++		d->tx_agg);
++	seq_printf(seq, "MULTI TXed: %d (%d)\n",
++		d->tx_multi, d->tx_multi_frames);
++	seq_printf(seq, "RXed:       %d\n",
++		d->rx);
++	seq_printf(seq, "AGG RXed:   %d\n",
++		d->rx_agg);
++	seq_printf(seq, "TX miss:    %d\n",
++		d->tx_cache_miss);
++	seq_printf(seq, "TX align:   %d\n",
++		d->tx_align);
++	seq_printf(seq, "TX burst:   %d\n",
++		d->tx_burst);
++	seq_printf(seq, "TX TTL:     %d\n",
++		d->tx_ttl);
++	seq_printf(seq, "Scan:       %s\n",
++		atomic_read(&priv->scan.in_progress) ? "active" : "idle");
++	seq_printf(seq, "Led state:  0x%.2X\n",
++		priv->softled_state);
++
++	return 0;
++}
++
++static int cw1200_status_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, &cw1200_status_show,
++		inode->i_private);
++}
++
++static const struct file_operations fops_status = {
++	.open = cw1200_status_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = single_release,
++	.owner = THIS_MODULE,
++};
++
++static int cw1200_counters_show(struct seq_file *seq, void *v)
++{
++	int ret;
++	struct cw1200_common *priv = seq->private;
++	struct wsm_counters_table counters;
++
++	ret = wsm_get_counters_table(priv, &counters);
++	if (ret)
++		return ret;
++
++#define CAT_STR(x, y) x ## y
++#define PUT_COUNTER(tab, name) \
++	seq_printf(seq, "%s:" tab "%d\n", #name, \
++		__le32_to_cpu(counters.CAT_STR(count, name)))
++
++	PUT_COUNTER("\t\t", PlcpErrors);
++	PUT_COUNTER("\t\t", FcsErrors);
++	PUT_COUNTER("\t\t", TxPackets);
++	PUT_COUNTER("\t\t", RxPackets);
++	PUT_COUNTER("\t\t", RxPacketErrors);
++	PUT_COUNTER("\t",   RxDecryptionFailures);
++	PUT_COUNTER("\t\t", RxMicFailures);
++	PUT_COUNTER("\t",   RxNoKeyFailures);
++	PUT_COUNTER("\t",   TxMulticastFrames);
++	PUT_COUNTER("\t",   TxFramesSuccess);
++	PUT_COUNTER("\t",   TxFrameFailures);
++	PUT_COUNTER("\t",   TxFramesRetried);
++	PUT_COUNTER("\t",   TxFramesMultiRetried);
++	PUT_COUNTER("\t",   RxFrameDuplicates);
++	PUT_COUNTER("\t\t", RtsSuccess);
++	PUT_COUNTER("\t\t", RtsFailures);
++	PUT_COUNTER("\t\t", AckFailures);
++	PUT_COUNTER("\t",   RxMulticastFrames);
++	PUT_COUNTER("\t",   RxFramesSuccess);
++	PUT_COUNTER("\t",   RxCMACICVErrors);
++	PUT_COUNTER("\t\t", RxCMACReplays);
++	PUT_COUNTER("\t",   RxMgmtCCMPReplays);
++
++#undef PUT_COUNTER
++#undef CAT_STR
++
++	return 0;
++}
++
++static int cw1200_counters_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, &cw1200_counters_show,
++		inode->i_private);
++}
++
++static const struct file_operations fops_counters = {
++	.open = cw1200_counters_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = single_release,
++	.owner = THIS_MODULE,
++};
++
++static int cw1200_generic_open(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++	return 0;
++}
++
++static ssize_t cw1200_11n_read(struct file *file,
++	char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct cw1200_common *priv = file->private_data;
++	struct ieee80211_supported_band *band =
++		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ];
++	return simple_read_from_buffer(user_buf, count, ppos,
++		band->ht_cap.ht_supported ? "1\n" : "0\n", 2);
++}
++
++static ssize_t cw1200_11n_write(struct file *file,
++	const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct cw1200_common *priv = file->private_data;
++	struct ieee80211_supported_band *band[2] = {
++		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ],
++		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ],
++	};
++	char buf[1];
++	int ena = 0;
++
++	if (!count)
++		return -EINVAL;
++	if (copy_from_user(buf, user_buf, 1))
++		return -EFAULT;
++	if (buf[0] == 1)
++		ena = 1;
++
++	band[0]->ht_cap.ht_supported = ena;
++	if (band[1])
++		band[1]->ht_cap.ht_supported = ena;
++
++	return count;
++}
++
++static const struct file_operations fops_11n = {
++	.open = cw1200_generic_open,
++	.read = cw1200_11n_read,
++	.write = cw1200_11n_write,
++	.llseek = default_llseek,
++};
 +
 +#ifdef CONFIG_CW1200_ETF
-+extern int etf_mode;
-+extern char *etf_firmware;
-+#endif
++static int cw1200_etf_out_show(struct seq_file *seq, void *v)
++{
++	struct cw1200_common *priv = seq->private;
++	struct sk_buff *skb;
++	u32 len = 0;
 +
-+#define CW1200_MAX_CTRL_FRAME_LEN	(0x1000)
++	skb = skb_dequeue(&priv->etf_q);
 +
-+#define CW1200_MAX_STA_IN_AP_MODE	(5)
-+#define CW1200_LINK_ID_AFTER_DTIM	(CW1200_MAX_STA_IN_AP_MODE + 1)
-+#define CW1200_LINK_ID_UAPSD		(CW1200_MAX_STA_IN_AP_MODE + 2)
-+#define CW1200_LINK_ID_MAX		(CW1200_MAX_STA_IN_AP_MODE + 3)
-+#define CW1200_MAX_REQUEUE_ATTEMPTS	(5)
++	if (skb)
++		len = skb->len;
 +
-+#define CW1200_MAX_TID			(8)
++	seq_write(seq, &len, sizeof(len));
 +
-+#define CW1200_BLOCK_ACK_CNT		(30)
-+#define CW1200_BLOCK_ACK_THLD		(800)
-+#define CW1200_BLOCK_ACK_HIST		(3)
-+#define CW1200_BLOCK_ACK_INTERVAL	(1 * HZ / CW1200_BLOCK_ACK_HIST)
++	if (skb) {
++		seq_write(seq, skb->data, len);
++		kfree_skb(skb);
++	}
 +
-+struct cw1200_ht_info {
-+	struct ieee80211_sta_ht_cap     ht_cap;
-+	enum nl80211_channel_type       channel_type;
-+	u16                             operation_mode;
++	return 0;
++}
++
++static int cw1200_etf_out_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, &cw1200_etf_out_show,
++			   inode->i_private);
++}
++
++static const struct file_operations fops_etf_out = {
++	.open = cw1200_etf_out_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = single_release,
++	.owner = THIS_MODULE,
 +};
 +
-+/* Please keep order */
-+enum cw1200_join_status {
-+	CW1200_JOIN_STATUS_PASSIVE = 0,
-+	CW1200_JOIN_STATUS_MONITOR,
-+	CW1200_JOIN_STATUS_STA,
-+	CW1200_JOIN_STATUS_AP,
++struct etf_req_msg;
++int ETF_Request(struct cw1200_common *priv, struct etf_req_msg *msg, u32 len);
++
++#define MAX_RX_SZE 2600
++
++struct etf_in_state {
++	struct cw1200_common *priv;
++	u32 total_len;
++	u8 buf[MAX_RX_SZE];
++	u32 written;
 +};
 +
-+enum cw1200_link_status {
-+	CW1200_LINK_OFF,
-+	CW1200_LINK_RESERVE,
-+	CW1200_LINK_SOFT,
-+	CW1200_LINK_HARD,
-+	CW1200_LINK_RESET,
-+	CW1200_LINK_RESET_REMAP,
++static int cw1200_etf_in_open(struct inode *inode, struct file *file)
++{
++	struct etf_in_state *etf = kmalloc(sizeof(struct etf_in_state), GFP_KERNEL);
++
++	if (!etf)
++		return -ENOMEM;
++
++	etf->written = 0;
++	etf->total_len = 0;
++	etf->priv = inode->i_private;
++
++	file->private_data = etf;
++
++	return 0;
++}
++
++static int cw1200_etf_in_release(struct inode *inode, struct file *file)
++{
++	kfree(file->private_data);
++	return 0;
++}
++
++static ssize_t cw1200_etf_in_write(struct file *file,
++	const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct etf_in_state *etf = file->private_data;
++
++	ssize_t written = 0;
++
++	if (!etf->total_len) {
++		if (count < sizeof(etf->total_len)) {
++			pr_err("count < sizeof(total_len)\n");
++			return -EINVAL;
++		}
++
++		if (copy_from_user(&etf->total_len, user_buf, sizeof(etf->total_len))) {
++			pr_err("copy_from_user (len) failed\n");
++			return -EFAULT;
++		}
++
++		written += sizeof(etf->total_len);
++		count -= sizeof(etf->total_len);
++	}
++
++	if (!count)
++		goto done;
++
++	if (copy_from_user(etf->buf + etf->written, user_buf + written, count)) {
++		pr_err("copy_from_user (payload %d) failed\n", count);
++		return -EFAULT;
++	}
++
++	written += count;
++	etf->written += count;
++
++	if (etf->written >= etf->total_len) {
++		if (ETF_Request(etf->priv, (struct etf_req_msg *)etf->buf, etf->total_len)) {
++			pr_err("ETF_Request failed\n");
++			return -EIO;
++		}
++	}
++
++done:
++	return written;
++}
++
++static const struct file_operations fops_etf_in = {
++	.open = cw1200_etf_in_open,
++	.release = cw1200_etf_in_release,
++	.write = cw1200_etf_in_write,
++	.llseek = default_llseek,
++	.owner = THIS_MODULE,
++};
++#endif /* CONFIG_CW1200_ETF */
++
++static ssize_t cw1200_wsm_dumps(struct file *file,
++	const char __user *user_buf, size_t count, loff_t *ppos)
++{
++	struct cw1200_common *priv = file->private_data;
++	char buf[1];
++
++	if (!count)
++		return -EINVAL;
++	if (copy_from_user(buf, user_buf, 1))
++		return -EFAULT;
++
++	if (buf[0] == '1')
++		priv->wsm_enable_wsm_dumps = 1;
++	else
++		priv->wsm_enable_wsm_dumps = 0;
++
++	return count;
++}
++
++static const struct file_operations fops_wsm_dumps = {
++	.open = cw1200_generic_open,
++	.write = cw1200_wsm_dumps,
++	.llseek = default_llseek,
 +};
 +
-+enum cw1200_bss_loss_status {
-+	CW1200_BSS_LOSS_NONE,
-+	CW1200_BSS_LOSS_CHECKING,
-+	CW1200_BSS_LOSS_CONFIRMING,
-+	CW1200_BSS_LOSS_CONFIRMED,
-+};
++int cw1200_debug_init(struct cw1200_common *priv)
++{
++	int ret = -ENOMEM;
++	struct cw1200_debug_priv *d = kzalloc(sizeof(struct cw1200_debug_priv),
++			GFP_KERNEL);
++	priv->debug = d;
++	if (!d)
++		return ret;
 +
-+extern int cw1200_power_mode;
++	d->debugfs_phy = debugfs_create_dir("cw1200",
++			priv->hw->wiphy->debugfsdir);
++	if (!d->debugfs_phy)
++		goto err;
 +
-+struct cw1200_link_entry {
-+	unsigned long			timestamp;
-+	enum cw1200_link_status		status;
-+	enum cw1200_link_status		prev_status;
-+	u8				mac[ETH_ALEN];
-+	u8				buffered[CW1200_MAX_TID];
-+	struct sk_buff_head		rx_queue;
-+};
++	if (!debugfs_create_file("status", S_IRUSR, d->debugfs_phy,
++			priv, &fops_status))
++		goto err;
 +
-+struct cw1200_common {
-+	struct cw1200_queue		tx_queue[4];
-+	struct cw1200_queue_stats	tx_queue_stats;
-+	int				tx_burst_idx;
-+	struct cw1200_debug_priv	*debug;
++	if (!debugfs_create_file("counters", S_IRUSR, d->debugfs_phy,
++			priv, &fops_counters))
++		goto err;
 +
-+	struct ieee80211_hw		*hw;
-+	struct ieee80211_vif		*vif;
-+	struct device			*pdev;
-+	struct workqueue_struct		*workqueue;
-+
-+	struct mutex			conf_mutex;
-+
-+	const struct sbus_ops		*sbus_ops;
-+	struct sbus_priv		*sbus_priv;
-+
-+	/* HW type (HIF_...) */
-+	int				hw_type;
-+	int				hw_revision;
-+	int                             hw_refclk;
-+
-+	/* firmware/hardware info */
-+	unsigned int tx_hdr_len;
-+
-+	/* Radio data */
-+	int output_power;
-+	int noise;
-+
-+	/* calibration, output power limit and rssi<->dBm conversation data */
-+
-+	/* BBP/MAC state */
-+	const struct firmware		*sdd;
-+	char                            *sdd_path;
-+	struct ieee80211_rate		*rates;
-+	struct ieee80211_rate		*mcs_rates;
-+	u8 mac_addr[ETH_ALEN];
-+	struct ieee80211_channel	*channel;
-+	u8 bssid[ETH_ALEN];
-+	struct wsm_edca_params		edca;
-+	struct wsm_tx_queue_params	tx_queue_params;
-+	struct wsm_association_mode	association_mode;
-+	struct wsm_set_bss_params	bss_params;
-+	struct cw1200_ht_info		ht_info;
-+	struct wsm_set_pm		powersave_mode;
-+	struct wsm_set_pm		firmware_ps_mode;
-+	int				cqm_rssi_thold;
-+	unsigned			cqm_rssi_hyst;
-+	bool				cqm_use_rssi;
-+	int				cqm_beacon_loss_count;
-+	int				channel_switch_in_progress;
-+	wait_queue_head_t		channel_switch_done;
-+	u8				long_frame_max_tx_count;
-+	u8				short_frame_max_tx_count;
-+	int				mode;
-+	bool				enable_beacon;
-+	int				beacon_int;
-+	size_t				ssid_length;
-+	u8				ssid[IEEE80211_MAX_SSID_LEN];
-+	bool				listening;
-+	struct wsm_rx_filter		rx_filter;
-+	struct wsm_beacon_filter_table	bf_table;
-+	struct wsm_beacon_filter_control bf_control;
-+	struct wsm_multicast_filter	multicast_filter;
-+	bool				has_multicast_subscription;
-+	bool				disable_beacon_filter;
-+	struct work_struct		update_filtering_work;
-+
-+	u8				ba_tid_mask;
-+	int				ba_acc;
-+	int				ba_cnt;
-+	int				ba_hist;
-+	struct timer_list		ba_timer;
-+	spinlock_t			ba_lock;
-+	bool				ba_ena;
-+	struct work_struct              ba_work;
-+
-+#ifdef CONFIG_CW1200_PM
-+	struct cw1200_pm_state		pm_state;
-+#endif
-+	struct wsm_p2p_ps_modeinfo	p2p_ps_modeinfo;
-+	struct wsm_uapsd_info		uapsd_info;
-+	bool				setbssparams_done;
-+	bool				is_BT_Present;
-+	u8				conf_listen_interval;
-+	u32				listen_interval;
-+	u32				erp_info;
-+
-+	/* BH */
-+	atomic_t			bh_rx;
-+	atomic_t			bh_tx;
-+	atomic_t			bh_term;
-+	atomic_t			bh_suspend;
-+	struct task_struct		*bh_thread;
-+	int				bh_error;
-+	wait_queue_head_t		bh_wq;
-+	wait_queue_head_t		bh_evt_wq;
-+	int				buf_id_tx;	/* byte */
-+	int				buf_id_rx;	/* byte */
-+	int				wsm_rx_seq;	/* byte */
-+	int				wsm_tx_seq;	/* byte */
-+	int				hw_bufs_used;
-+	bool				powersave_enabled;
-+	bool				device_can_sleep;
-+
-+	/* WSM */
-+	struct wsm_caps			wsm_caps;
-+	struct mutex			wsm_cmd_mux;
-+	struct wsm_buf			wsm_cmd_buf;
-+	struct wsm_cmd			wsm_cmd;
-+	wait_queue_head_t		wsm_cmd_wq;
-+	wait_queue_head_t		wsm_startup_done;
-+	struct wsm_cbc			wsm_cbc;
-+	atomic_t			tx_lock;
-+
-+	/* WSM debug */
-+	int				wsm_enable_wsm_dumps;
-+
-+	/* Scan status */
-+	struct cw1200_scan scan;
-+
-+	/* WSM Join */
-+	enum cw1200_join_status	join_status;
-+	u8			join_bssid[ETH_ALEN];
-+	u32			pending_frame_id;
-+	struct work_struct	join_work;
-+	struct delayed_work	join_timeout;
-+	struct work_struct	unjoin_work;
-+	struct work_struct	offchannel_work;
-+	int			join_dtim_period;
-+	bool			delayed_unjoin;
-+
-+	/* TX/RX and security */
-+	s8			wep_default_key_id;
-+	struct work_struct	wep_key_work;
-+	u32			key_map;
-+	struct wsm_add_key	keys[WSM_KEY_MAX_INDEX + 1];
-+	unsigned long		rx_timestamp;
-+
-+	/* AP powersave */
-+	u32			link_id_map;
-+	struct cw1200_link_entry link_id_db[CW1200_MAX_STA_IN_AP_MODE];
-+	struct work_struct	link_id_work;
-+	struct delayed_work	link_id_gc_work;
-+	u32			sta_asleep_mask;
-+	u32			pspoll_mask;
-+	bool			aid0_bit_set;
-+	spinlock_t		ps_state_lock;
-+	bool			buffered_multicasts;
-+	bool			tx_multicast;
-+	struct work_struct	set_tim_work;
-+	struct delayed_work	set_cts_work;
-+	struct work_struct	multicast_start_work;
-+	struct work_struct	multicast_stop_work;
-+	struct timer_list	mcast_timeout;
-+
-+
-+	/* WSM events and CQM implementation */
-+	spinlock_t		event_queue_lock;
-+	struct list_head	event_queue;
-+	struct work_struct	event_handler;
-+	struct delayed_work	bss_loss_work;
-+	struct delayed_work	connection_loss_work;
-+	int			delayed_link_loss;
-+	spinlock_t		bss_loss_lock;
-+	int			bss_loss_status;
-+	int			bss_loss_confirm_id;
-+
-+	/* TX rate policy cache */
-+	struct tx_policy_cache tx_policy_cache;
-+	struct work_struct tx_policy_upload_work;
-+
-+	/* cryptographic engine information */
-+
-+	/* bit field of glowing LEDs */
-+	u16 softled_state;
-+
-+	/* statistics */
-+	struct ieee80211_low_level_stats stats;
-+	/* Workaround for WFD testcase 6.1.10*/
-+	struct work_struct	linkid_reset_work;
-+	u8			action_frame_sa[ETH_ALEN];
-+	u8			action_linkid;
++	if (!debugfs_create_file("11n", S_IRUSR | S_IWUSR,
++			d->debugfs_phy, priv, &fops_11n))
++		goto err;
 +
 +#ifdef CONFIG_CW1200_ETF
-+	struct sk_buff_head etf_q;
-+#endif
++	if (etf_mode) {
++		skb_queue_head_init(&priv->etf_q);
 +
++		if (!debugfs_create_file("etf_out", S_IRUSR, d->debugfs_phy,
++					 priv, &fops_etf_out))
++			goto err;
++		if (!debugfs_create_file("etf_in", S_IWUSR, d->debugfs_phy,
++					 priv, &fops_etf_in))
++			goto err;
++	}
++#endif /* CONFIG_CW1200_ETF */
 +
-+#ifdef CONFIG_CW1200_POLL_IRQ
-+	struct timer_list	irqpoll_timer;
-+#endif
++	if (!debugfs_create_file("wsm_dumps", S_IWUSR, d->debugfs_phy,
++			priv, &fops_wsm_dumps))
++		goto err;
++
++	ret = cw1200_itp_init(priv);
++	if (ret)
++		goto err;
++
++	return 0;
++
++err:
++	priv->debug = NULL;
++	debugfs_remove_recursive(d->debugfs_phy);
++	kfree(d);
++	return ret;
++}
++
++void cw1200_debug_release(struct cw1200_common *priv)
++{
++	struct cw1200_debug_priv *d = priv->debug;
++	if (d) {
++		cw1200_itp_release(priv);
++		priv->debug = NULL;
++		kfree(d);
++	}
++}
++
++int cw1200_print_fw_version(struct cw1200_common *priv, u8 *buf, size_t len)
++{
++	return snprintf(buf, len, "%s %d.%d",
++			cw1200_debug_fw_types[priv->wsm_caps.firmwareType],
++			priv->wsm_caps.firmwareVersion,
++			priv->wsm_caps.firmwareBuildNumber);
++}
++
++#ifdef CONFIG_CW1200_ETF
++struct cw1200_sdd {
++	u8 id;
++	u8 len;
++	u8 data[];
 +};
 +
-+struct cw1200_sta_priv {
-+	int link_id;
++struct etf_req_msg {
++	u32 id;
++	u32 len;
++	u8 data[];
 +};
 +
-+/* interfaces for the drivers */
-+int cw1200_core_probe(const struct sbus_ops *sbus_ops,
-+		      struct sbus_priv *sbus,
-+		      struct device *pdev,
-+		      struct cw1200_common **pself,
-+		      int ref_clk, const u8 *macaddr,
-+		      const char *sdd_path);
-+void cw1200_core_release(struct cw1200_common *self);
-+
-+#define FWLOAD_BLOCK_SIZE (1024)
-+
-+static inline int cw1200_is_ht(const struct cw1200_ht_info *ht_info)
++static int Parse_SDD_File(struct cw1200_common *priv, u8 *data, u32 length)
 +{
-+        return ht_info->channel_type != NL80211_CHAN_NO_HT;
++	struct cw1200_sdd *ie;
++
++	while (length > 0) {
++		ie = (struct cw1200_sdd *) data;
++		if (ie->id == SDD_REFERENCE_FREQUENCY_ELT_ID) {
++			priv->hw_refclk = cpu_to_le16(*((u16 *)ie->data));
++			pr_info("Using Reference clock frequency %d KHz\n", priv->hw_refclk);
++			break;
++		}
++
++		length -= ie->len + sizeof(*ie);
++		data += ie->len + sizeof(*ie);
++	}
++	return 0;
 +}
 +
-+static inline int cw1200_ht_greenfield(const struct cw1200_ht_info *ht_info)
++char *etf_firmware;
++
++#define ST90TDS_START_ADAPTER           0x09    /*  Loads Firmware and start the adapter */
++#define ST90TDS_STOP_ADAPTER            0x0A    /*  Stops the adapter */
++#define ST90TDS_CONFIG_ADAPTER          0x0E    /*  send adapter configuration params */
++#define ST90TDS_SBUS_READ               0x13
++#define ST90TDS_SBUS_WRITE              0x14
++#define ST90TDS_GET_DEVICE_OPTION       0x19
++#define ST90TDS_SET_DEVICE_OPTION       0x1A
++#define ST90TDS_SEND_SDD                0x1D    /* SDD File used to find DPLL */
++
++#include "fwio.h"
++
++int ETF_Request(struct cw1200_common *priv, struct etf_req_msg *msg, u32 len)
 +{
-+        return cw1200_is_ht(ht_info) &&
-+                (ht_info->ht_cap.cap & IEEE80211_HT_CAP_GRN_FLD) &&
-+                !(ht_info->operation_mode &
-+                        IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
++	int rval = -1;
++	switch (msg->id) {
++	case ST90TDS_START_ADAPTER:
++		etf_firmware = "cw1200_etf.bin";
++		pr_info("ETF_START (len %d, '%s')\n", len, etf_firmware);
++		rval = cw1200_load_firmware(priv);
++		break;
++	case ST90TDS_STOP_ADAPTER:
++		pr_info("ETF_STOP (unhandled)\n");
++		break;
++	case ST90TDS_SEND_SDD:
++		pr_info("ETF_SDD\n");
++		rval = Parse_SDD_File(priv, msg->data, msg->len);
++		break;
++	case ST90TDS_CONFIG_ADAPTER:
++		pr_info("ETF_CONFIG_ADAP (unhandled)\n");
++		break;
++	case ST90TDS_SBUS_READ:
++		pr_info("ETF_SBUS_READ (unhandled)\n");
++		break;
++	case ST90TDS_SBUS_WRITE:
++		pr_info("ETF_SBUS_WRITE (unhandled)\n");
++		break;
++	case ST90TDS_SET_DEVICE_OPTION:
++		pr_info("ETF_SET_DEV_OPT (unhandled)\n");
++		break;
++	default:
++		pr_info("ETF_PASSTHRU (0x%08x)\n", msg->id);
++		rval = wsm_raw_cmd(priv, (u8 *)msg, len);
++		break;
++	}
++
++	return rval;
++}
++#endif /* CONFIG_CW1200_ETF */
+diff --git a/drivers/staging/cw1200/debug.h b/drivers/staging/cw1200/debug.h
+new file mode 100644
+index 0000000..dd7b0da
+--- /dev/null
++++ b/drivers/staging/cw1200/debug.h
+@@ -0,0 +1,158 @@
++/*
++ * DebugFS code for ST-Ericsson CW1200 mac80211 driver
++ *
++ * Copyright (c) 2011, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef CW1200_DEBUG_H_INCLUDED
++#define CW1200_DEBUG_H_INCLUDED
++
++#include "itp.h"
++
++struct cw200_common;
++
++#ifdef CONFIG_CW1200_DEBUGFS
++
++struct cw1200_debug_priv {
++	struct dentry *debugfs_phy;
++	int tx;
++	int tx_agg;
++	int rx;
++	int rx_agg;
++	int tx_multi;
++	int tx_multi_frames;
++	int tx_cache_miss;
++	int tx_align;
++	int tx_ttl;
++	int tx_burst;
++	int ba_cnt;
++	int ba_acc;
++#ifdef CONFIG_CW1200_ITP
++	struct cw1200_itp itp;
++#endif /* CONFIG_CW1200_ITP */
++};
++
++int cw1200_debug_init(struct cw1200_common *priv);
++void cw1200_debug_release(struct cw1200_common *priv);
++
++static inline void cw1200_debug_txed(struct cw1200_common *priv)
++{
++	++priv->debug->tx;
 +}
 +
-+static inline int cw1200_ht_ampdu_density(const struct cw1200_ht_info *ht_info)
++static inline void cw1200_debug_txed_agg(struct cw1200_common *priv)
 +{
-+        if (!cw1200_is_ht(ht_info))
-+                return 0;
-+        return ht_info->ht_cap.ampdu_density;
++	++priv->debug->tx_agg;
 +}
 +
-+#endif /* CW1200_H */
++static inline void cw1200_debug_txed_multi(struct cw1200_common *priv,
++					   int count)
++{
++	++priv->debug->tx_multi;
++	priv->debug->tx_multi_frames += count;
++}
++
++static inline void cw1200_debug_rxed(struct cw1200_common *priv)
++{
++	++priv->debug->rx;
++}
++
++static inline void cw1200_debug_rxed_agg(struct cw1200_common *priv)
++{
++	++priv->debug->rx_agg;
++}
++
++static inline void cw1200_debug_tx_cache_miss(struct cw1200_common *priv)
++{
++	++priv->debug->tx_cache_miss;
++}
++
++static inline void cw1200_debug_tx_align(struct cw1200_common *priv)
++{
++	++priv->debug->tx_align;
++}
++
++static inline void cw1200_debug_tx_ttl(struct cw1200_common *priv)
++{
++	++priv->debug->tx_ttl;
++}
++
++static inline void cw1200_debug_tx_burst(struct cw1200_common *priv)
++{
++	++priv->debug->tx_burst;
++}
++
++static inline void cw1200_debug_ba(struct cw1200_common *priv,
++				   int ba_cnt, int ba_acc)
++{
++	priv->debug->ba_cnt = ba_cnt;
++	priv->debug->ba_acc = ba_acc;
++}
++
++int cw1200_print_fw_version(struct cw1200_common *priv, u8 *buf, size_t len);
++
++#else /* CONFIG_CW1200_DEBUGFS */
++
++static inline int cw1200_debug_init(struct cw1200_common *priv)
++{
++	return 0;
++}
++
++static inline void cw1200_debug_release(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_txed(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_txed_agg(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_txed_multi(struct cw1200_common *priv,
++					   int count)
++{
++}
++
++static inline void cw1200_debug_rxed(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_rxed_agg(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_tx_cache_miss(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_tx_align(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_tx_ttl(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_tx_burst(struct cw1200_common *priv)
++{
++}
++
++static inline void cw1200_debug_ba(struct cw1200_common *priv,
++				   int ba_cnt, int ba_acc)
++{
++}
++
++int cw1200_print_fw_version(struct cw1200_common *priv, u8 *buf, size_t len)
++{
++}
++
++#endif /* CONFIG_CW1200_DEBUGFS */
++
++#endif /* CW1200_DEBUG_H_INCLUDED */
 -- 
 1.7.11.7
 
