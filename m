@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33051 "EHLO nbd.name"
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:50886
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752728Ab2LCIPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 03:15:00 -0500
-Message-ID: <50BC5F7C.3080505@openwrt.org> (sfid-20121203_091506_532036_511BD82B)
-Date: Mon, 03 Dec 2012 09:14:52 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1751113Ab2LWOaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2012 09:30:19 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Saravana <saravanad@posedge.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add debugfs file for last rx rate
-References: <50B77013.6040508@posedge.com> <50BB4BC5.1010806@openwrt.org> <50BC4453.2070705@posedge.com>
-In-Reply-To: <50BC4453.2070705@posedge.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20695.5440.557084.853868@gargle.gargle.HOWL> (sfid-20121223_153023_945445_15214248)
+Date: Sun, 23 Dec 2012 19:59:20 +0530
+To: Sergey Isachenko <vortexius@gmail.com>
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: Missinng dependency for debugfs in driver ath9k
+In-Reply-To: <50D706D9.80006@gmail.com>
+References: <50D706D9.80006@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-12-03 7:18 AM, Saravana wrote:
-> On 12/02/2012 06:08 PM, Felix Fietkau wrote:
->> On 2012-11-29 3:24 PM, Saravana wrote:
->>> Add a debugfs file showing the rate at which
->>> the last packet is received.
->>>
->>> Signed-off-by: Saravana <saravanad@posedge.com>
->> What's the point of adding debugfs files for data which is already
->> available via nl80211?
->> 
-> The debugfs is a repository of statistics. Many of the statistics like
-> tx/rx bytes/packets, retries, signal,power etc which are available via nl80211(iw)
-> are already available in debugfs. For the sake of completeness and to maintain
-> uniformity the last rx rate is added to debugfs.
-I think debugfs does not have (or need) completeness and uniformity, nor
-is it meant as a repository of statistics. It is to be used for various
-debugging purposes (as the name implies).
-I think any additions of info to debugfs that are also available through
-regular APIs should be considered unnecessary bloat and dropped.
+Sergey Isachenko wrote:
+> Hello i have problem with making your driver in linux kernel:
+> 
+> I write the patch for you team. patch in attachments.
 
-- Felix
+Thanks.
+
+A patch has already been submitted:
+https://patchwork.kernel.org/patch/1898351/
+
+Sujith
