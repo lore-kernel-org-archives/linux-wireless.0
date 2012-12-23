@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:55013 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174Ab2LEURh (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55390 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751657Ab2LWJox (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 15:17:37 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm9so2434259wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Dec 2012 12:17:36 -0800 (PST)
+	Sun, 23 Dec 2012 04:44:53 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless-regdb: add regulatory rule for US on 60gHz band
+Date: Sun, 23 Dec 2012 11:36:03 +0200
+Message-ID: <42386442.bUoSgr792i@lx-vladimir> (sfid-20121223_104534_134909_8D1135BA)
+In-Reply-To: <8774585.BvFN3Opv12@lx-vladimir>
+References: <8774585.BvFN3Opv12@lx-vladimir>
 MIME-Version: 1.0
-In-Reply-To: <1354684410-31170-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-References: <1354684410-31170-1-git-send-email-marco.porsch@etit.tu-chemnitz.de>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 5 Dec 2012 12:17:15 -0800
-Message-ID: <CAG6hwVM4xNVr4ewDKcus1ZG-KO-TZLhM7qt3JR+LgGxEzVxVZQ@mail.gmail.com> (sfid-20121205_211741_299476_8E664AF7)
-Subject: Re: [RFC] mac80211: dont drop mesh Peering Open frames from unknown STA
-To: devel@lists.open80211s.org
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 4, 2012 at 9:13 PM, Marco Porsch
-<marco.porsch@etit.tu-chemnitz.de> wrote:
-> These are valid mesh peering frames. The STA entry will then be created in
-> mesh_peer_init.
-> The problem was previously worked around, since both STA receive the beacons
-> of one another, which create the STA entry. This may not be the case when
-> either node is in PS mode.
+On Sunday, December 09, 2012 04:16:21 PM Vladimir Kondratiev wrote:
+> Subject: [PATCH] wireless-regdb: add regulatory rule for US on 60gHz band
+> 
+> There is coming 802.11ad standard that defines WiFi operations on the new band 60g.
+> 
+> In the US, reference document is:
+> 
+> http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
+> 
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> 
 
-Nice, this bug has been there for quite some time then. Please clean
-up the commit message before resubmitting as a patch.
+Hi John,
 
-> Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-> ---
->  net/mac80211/rx.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 8d267ec..89bfbbb 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -2319,7 +2319,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
->         if (len < IEEE80211_MIN_ACTION_SIZE)
->                 return RX_DROP_UNUSABLE;
->
-> -       if (!rx->sta && mgmt->u.action.category != WLAN_CATEGORY_PUBLIC)
-> +       if (!rx->sta && mgmt->u.action.category != WLAN_CATEGORY_PUBLIC &&
-> +           mgmt->u.action.category != WLAN_CATEGORY_SELF_PROTECTED)
->                 return RX_DROP_UNUSABLE;
->
->         if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
-> --
-> 1.7.9.5
->
-> _______________________________________________
-> Devel mailing list
-> Devel@lists.open80211s.org
-> http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
+Any comments? Can you please merge this patch?
+
+Same about 2 more, with 60g for Europe and China. Titled as:
+
+[PATCH] wireless-regdb: add regulatory rule for ETSI members on
+ 60gHz band
+[PATCH] wireless-regdb: add regulatory rule for China on 60GHz band
+
+Thanks, Vladimir.
