@@ -1,88 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:53441 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754203Ab2LEWWl (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:52399 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182Ab2LWQoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 17:22:41 -0500
+	Sun, 23 Dec 2012 11:44:12 -0500
+Date: Sun, 23 Dec 2012 11:44:09 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Bartosz Markowski <markowski.bartosz@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: Re: [PATCH 06/17] cw1200: Mini-AP implementation
+Message-ID: <20121223164408.GA3624@shaftnet.org> (sfid-20121223_174417_308414_597C8FFF)
+References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
+ <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
+ <50D61117.8020009@gmail.com>
+ <CAM8CFPgJu5CR9tU_mMw1_0yDUEj-dLk2G+6W91W1-H4LMa+BUw@mail.gmail.com>
+ <20121223124734.GB29607@shaftnet.org>
+ <CAM8CFPj==UdTjCe0=hPRtT_BC1E4TvRFDjqBZUD4=c+PbkncVA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1354729568-19993-7-git-send-email-hauke@hauke-m.de>
-References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de> <1354729568-19993-7-git-send-email-hauke@hauke-m.de>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 6 Dec 2012 09:22:19 +1100
-Message-ID: <CAGRGNgXp7PVtdVOraF3PcGpzZ=9zAfa=9MWODiTCq9cFXPCoqA@mail.gmail.com> (sfid-20121205_232245_249677_8D5432F2)
-Subject: Re: [PATCH v3 06/11] ssb: get alp clock from devices with PMU
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, wim@iguana.be,
-	linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	zajec5@gmail.com, linux-mips@linux-mips.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
+In-Reply-To: <CAM8CFPj==UdTjCe0=hPRtT_BC1E4TvRFDjqBZUD4=c+PbkncVA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hauke,
 
-Sorry this is so late, I only just noticed.
+--XsQoSWH+UP9D9v3l
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Dec 6, 2012 at 4:46 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> If there is a PMU in the device, get the alp clock from that part and
-> do not assume 20000000.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/ssb/driver_chipcommon.c     |   15 +++++++++------
->  drivers/ssb/driver_chipcommon_pmu.c |   27 +++++++++++++++++++++++++++
->  drivers/ssb/ssb_private.h           |    1 +
->  3 files changed, 37 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/ssb/driver_chipcommon_pmu.c b/drivers/ssb/driver_chipcommon_pmu.c
-> index d7d5804..a43415a 100644
-> --- a/drivers/ssb/driver_chipcommon_pmu.c
-> +++ b/drivers/ssb/driver_chipcommon_pmu.c
-> @@ -618,6 +618,33 @@ void ssb_pmu_set_ldo_paref(struct ssb_chipcommon *cc, bool on)
->  EXPORT_SYMBOL(ssb_pmu_set_ldo_voltage);
->  EXPORT_SYMBOL(ssb_pmu_set_ldo_paref);
->
-> +static u32 ssb_pmu_get_alp_clock_clk0(struct ssb_chipcommon *cc)
-> +{
-> +       u32 crystalfreq;
-> +       const struct pmu0_plltab_entry *e = NULL;
-> +
-> +       crystalfreq = chipco_read32(cc, SSB_CHIPCO_PMU_CTL) &
-> +                     SSB_CHIPCO_PMU_CTL_XTALFREQ >> SSB_CHIPCO_PMU_CTL_XTALFREQ_SHIFT;
-> +       e = pmu0_plltab_find_entry(crystalfreq);
-> +       BUG_ON(!e);
-> +       return e->freq * 1000;
-> +}
-> +
-> +u32 ssb_pmu_get_alp_clock(struct ssb_chipcommon *cc)
-> +{
-> +       struct ssb_bus *bus = cc->dev->bus;
-> +
-> +       switch (bus->chip_id) {
-> +       case 0x5354:
-> +               ssb_pmu_get_alp_clock_clk0(cc);
-> +       default:
-> +               ssb_printk(KERN_ERR PFX
-> +                          "ERROR: PMU alp clock unknown for device %04X\n",
-> +                          bus->chip_id);
-> +               return 0;
+On Sun, Dec 23, 2012 at 04:49:05PM +0100, Bartosz Markowski wrote:
+> Are you using this bss loss evt subscription? It was under STE_EXTENSIONS
+> if I good remember. This is part of STE CQM design. But answering to the
+> question FW should not spam with loss/regained events like that and if I
+> good remember (I do not work with this for more than 6 months now) this
+> behave quite well those days. I do not know lmac internals however , Ive
+> used to work with the driver only.
 
-Would it be better to return the default here (or handle this case in
-ssb_chipco_alp_clock() ) so these chips have a clock rate?
+This "spamming" isn't a problem using the GPL driver thanks to its=20
+hysterisis and delays.
 
-> +       }
-> +}
-> +
->  u32 ssb_pmu_get_cpu_clock(struct ssb_chipcommon *cc)
->  {
->         struct ssb_bus *bus = cc->dev->bus;
+=46rom my own investigations into the LMAC sources, that event is=20
+triggered by an internal LMAC timer if it hasn't received a beacon at=20
+all in that time.  Disabling powersave operation makes the problem go=20
+away entirely, so I suspect what's happening is that the LMAC is=20
+consistently waking up a little too late (or going back to sleep too=20
+early) to hear the beacons.
 
-Thanks,
+My guess is that the LMAC is pushing its powersaving margins too close.
 
--- 
-Julian Calaby
+> Btw. how old is the fw bin you have?
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+I'm using WSM395 currently, dated June 18 2012.  (It fixed a problem=20
+that a client of ours observed with WSM392 and WSM385; the LMAC would=20
+lock up on noisy environments when block acks were in use)
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--XsQoSWH+UP9D9v3l
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iD8DBQFQ1zTYPuLgii2759ARAiwIAJ9glSBkmPflaSxKPs25SFzHuDUqwQCfb67E
+s6wcnGo2ETzjZmXGQqiHyK8=
+=JZTg
+-----END PGP SIGNATURE-----
+
+--XsQoSWH+UP9D9v3l--
