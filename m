@@ -1,105 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:53244 "EHLO arrakis.dune.hu"
+Received: from mms2.broadcom.com ([216.31.210.18]:4409 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751448Ab2LBOxc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Dec 2012 09:53:32 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/2] rt2x00: rt2800lib: fix indentation of some rt2x00_rt calls
-Date: Sun,  2 Dec 2012 15:53:28 +0100
-Message-Id: <1354460009-28449-2-git-send-email-juhosg@openwrt.org> (sfid-20121202_155338_970311_D19846B3)
-In-Reply-To: <1354460009-28449-1-git-send-email-juhosg@openwrt.org>
-References: <1354460009-28449-1-git-send-email-juhosg@openwrt.org>
+	id S1751511Ab2LWRbb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2012 12:31:31 -0500
+Message-ID: <50D73FE1.6080907@broadcom.com> (sfid-20121223_183142_198310_2875F81C)
+Date: Sun, 23 Dec 2012 18:31:13 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Geert Uytterhoeven" <geert@linux-m68k.org>
+cc: "Piotr Haber" <phaber@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmsmac: initialize morepending in brcms_b_recv()
+References: <1356210434-28435-1-git-send-email-geert@linux-m68k.org>
+In-Reply-To: <1356210434-28435-1-git-send-email-geert@linux-m68k.org>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch contains no functional changes.
+On 12/22/2012 10:07 PM, Geert Uytterhoeven wrote:
+> drivers/net/wireless/brcm80211/brcmsmac/main.c: In function ‘brcms_b_recv’:
+> drivers/net/wireless/brcm80211/brcmsmac/main.c:7636: warning: ‘morepending’ may be used uninitialized in this function
+> 
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Reading the code this warning seems to be invalid except when RXBND is
+defined as zero, which would make the whole function totally bogus.
+Would be good to have a WARN_ON(!RXBND) in brcms_b_attach().
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index c0441a7..3d7b74e 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2173,7 +2173,7 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
- 				rt2800_rfcsr_write(rt2x00dev, 59,
- 						   r59_nonbt_rev[idx]);
- 			} else if (rt2x00_rt(rt2x00dev, RT5390) ||
--					   rt2x00_rt(rt2x00dev, RT5392)) {
-+				   rt2x00_rt(rt2x00dev, RT5392)) {
- 				static const char r59_non_bt[] = {0x8f, 0x8f,
- 					0x8f, 0x8f, 0x8f, 0x8f, 0x8f, 0x8d,
- 					0x8a, 0x88, 0x88, 0x87, 0x87, 0x86};
-@@ -2264,7 +2264,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rf->channel <= 14) {
- 		if (!rt2x00_rt(rt2x00dev, RT5390) &&
--			!rt2x00_rt(rt2x00dev, RT5392)) {
-+		    !rt2x00_rt(rt2x00dev, RT5392)) {
- 			if (test_bit(CAPABILITY_EXTERNAL_LNA_BG,
- 				     &rt2x00dev->cap_flags)) {
- 				rt2800_bbp_write(rt2x00dev, 82, 0x62);
-@@ -3592,8 +3592,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860D))
- 		rt2800_bbp_write(rt2x00dev, 84, 0x19);
- 	else if (rt2x00_rt(rt2x00dev, RT3290) ||
--		     rt2x00_rt(rt2x00dev, RT5390) ||
--		     rt2x00_rt(rt2x00dev, RT5392))
-+		 rt2x00_rt(rt2x00dev, RT5390) ||
-+		 rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 84, 0x9a);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 84, 0x99);
-@@ -3652,7 +3652,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	else if (rt2x00_rt(rt2x00dev, RT3352))
- 		rt2800_bbp_write(rt2x00dev, 105, 0x34);
- 	else if (rt2x00_rt(rt2x00dev, RT5390) ||
--			 rt2x00_rt(rt2x00dev, RT5392))
-+		 rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 105, 0x3c);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 105, 0x05);
-@@ -3746,7 +3746,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	if (rt2x00_rt(rt2x00dev, RT5390) ||
--		rt2x00_rt(rt2x00dev, RT5392)) {
-+	    rt2x00_rt(rt2x00dev, RT5392)) {
- 		int ant, div_mode;
- 
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
-@@ -4356,7 +4356,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_read(rt2x00dev, 26, &drv_data->bbp26);
- 
- 	if (!rt2x00_rt(rt2x00dev, RT5390) &&
--		!rt2x00_rt(rt2x00dev, RT5392)) {
-+	    !rt2x00_rt(rt2x00dev, RT5392)) {
- 		/*
- 		 * Set back to initial state
- 		 */
-@@ -4385,7 +4385,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
- 
- 	if (!rt2x00_rt(rt2x00dev, RT5390) &&
--		!rt2x00_rt(rt2x00dev, RT5392)) {
-+	    !rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
- 		rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
- 		if (rt2x00_rt(rt2x00dev, RT3070) ||
-@@ -4457,7 +4457,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	if (rt2x00_rt(rt2x00dev, RT5390) ||
--		rt2x00_rt(rt2x00dev, RT5392)) {
-+	    rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_rfcsr_read(rt2x00dev, 38, &rfcsr);
- 		rt2x00_set_field8(&rfcsr, RFCSR38_RX_LO1_EN, 0);
- 		rt2800_rfcsr_write(rt2x00dev, 38, rfcsr);
--- 
-1.7.10
+I don't like pleasing a compiler with unnecessary initializers but I am
+also for builds with zero warnings. So...
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/main.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> index 17594de..5f0f444 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> @@ -7633,7 +7633,7 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+>  
+>  	uint n = 0;
+>  	uint bound_limit = bound ? RXBND : -1;
+> -	bool morepending;
+> +	bool morepending = false;
+>  
+>  	skb_queue_head_init(&recv_frames);
+>  
+
 
