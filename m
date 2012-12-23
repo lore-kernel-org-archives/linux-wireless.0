@@ -1,95 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2241 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755562Ab2LCRkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 12:40:46 -0500
-Message-ID: <50BCE3FF.6020603@broadcom.com> (sfid-20121203_184049_701137_95DEB70C)
-Date: Mon, 3 Dec 2012 18:40:15 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:35530 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750947Ab2LWMri (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Dec 2012 07:47:38 -0500
+Date: Sun, 23 Dec 2012 07:47:35 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Bartosz Markowski <markowski.bartosz@gmail.com>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 06/17] cw1200: Mini-AP implementation
+Message-ID: <20121223124734.GB29607@shaftnet.org> (sfid-20121223_134746_405341_2ECE7CA0)
+References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
+ <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
+ <50D61117.8020009@gmail.com>
+ <CAM8CFPgJu5CR9tU_mMw1_0yDUEj-dLk2G+6W91W1-H4LMa+BUw@mail.gmail.com>
 MIME-Version: 1.0
-To: "Daniel Wagner" <wagi@monom.org>
-cc: "Seth Forshee" <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH v2 00/22] brcmsmac: Tx rework and expanded
- debug/trace support
-References: <50AA845C.2050809@monom.org> <50AB3182.5040505@monom.org>
- <20121120142822.GA26602@thinkpad-t410> <50ABC168.8080904@monom.org>
- <20121120205418.GB26602@thinkpad-t410> <50AC05A5.3090706@monom.org>
- <50AC07F2.8000400@monom.org> <50ACA28F.9010800@broadcom.com>
- <50ACA55F.5050406@monom.org> <20121121143528.GC23606@thinkpad-t410>
- <20121126193655.GF4556@thinkpad-t410> <50B3DD38.5060808@monom.org>
- <50BC6181.8080307@monom.org> <50BC64C4.9040001@broadcom.com>
- <50BC7BC8.8030003@monom.org>
-In-Reply-To: <50BC7BC8.8030003@monom.org>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="eAbsdosE1cNLO4uF"
+In-Reply-To: <CAM8CFPgJu5CR9tU_mMw1_0yDUEj-dLk2G+6W91W1-H4LMa+BUw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/03/2012 11:15 AM, Daniel Wagner wrote:
-> Hi Arend,
-> 
-> On 03.12.2012 09:37, Arend van Spriel wrote:
->>> On 26.11.2012 22:20, Daniel Wagner wrote:
->>>> On 26.11.2012 20:36, Seth Forshee wrote:
->>>>> On Wed, Nov 21, 2012 at 08:35:28AM -0600, Seth Forshee wrote:
->>>>>>> My 'test' setup is following: I downloaded a larger file and let a
->>>>>>> youtube
->>>>>>> video play. With tracing enabled the download and the playback did
->>>>>>> work nicely.
->>>>>>>
->>>>>>> Without tracing enabled playing back only a youtube video was
->>>>>>> 'triggering'
->>>>>>> the problem. It downloads a few seconds of content in a burst and
->>>>>>> then the playback
->>>>>>> starts. Under normal conditions, the app will continue downloading
->>>>>>> the video at a
->>>>>>> lower rate. But this normally doesn't happen right now. Often it
->>>>>>> will just stop
->>>>>>> working and often the connection is completely blocked, e.g. pinging
->>>>>>> a host
->>>>>>> wont work.
->>>>>>
->>>>>> I'll see if I can reproduce, but if it's specific to the AP then I
->>>>>> may
->>>>>> not have any luck. Don't expect to hear much from me until next week
->>>>>> though; I'm on holiday starting today and will be visiting family.
->>>>>
->>>>> It seems I'm unable to reproduce the problem with any of the APs
->>>>> available to me, unfortunately.
->>>>
->>>> I tried it again with disabled the TX trace but I can't reproduce it
->>>> either. Well, I am sick of this AP and I might just get a better one
->>>> (which should be fairly simple).
->>>
->>> FYI, I got my old Netgear 11g AP out and I get a very 'smooth' wifi
->>> experience.
->>>
->>> If you like you can add Tested-by tag :)
->>
->> You basically tested 11g operation is ok. Still interesting to know,
->> because it may indicate that problems start happening when doing 11n
->> rates and/or A-MPDU sessions.
-> 
-> A friend of mine have the same 11n AP and for them it also behaves
-> pretty shitty for him (Windows even worse then Linux...).
-> 
-> I don't know if it is worth to continue to debug with this this
-> particular 11n AP.
-> 
-> I had a good performance during LinuxCon which indicates that it is
-> really only my home AP. What I could do is to test with 11n APs at my
-> workplace and see if the it is really only my home 11n AP.
-> 
 
-So what exactly is the brand and model of your home 11n AP. With a bit
-of luck we may have it over here.
+--eAbsdosE1cNLO4uF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Gr. AvS
+On Sat, Dec 22, 2012 at 09:41:26PM +0100, Bartosz Markowski wrote:
+> Depends on air condition a single NULL packet can be confirmed even after
+> BSS loss evt what leads to connection_loss_work cancellation. We queued f=
+ew
+> NULL frames (5 if I good remember and fired them to confim BSS loss to ma=
+ke
+> sure AP is really gone).
 
+I've noticed the LMAC spits out BSS_LOST events all the time, almost=20
+alwas followed immediately with BSS_REGAINED events.
 
+Is there something that the LMAC is doing that causes it to miss 20 (!)=20
+beacons in a row?  Otherwise it speaks rather poorly about the LMAC's=20
+internal timekeeping.  :)
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--eAbsdosE1cNLO4uF
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iD8DBQFQ1v1mPuLgii2759ARAhBzAKD1j/VdYNZKu42/w8zMLw+ppFaW7wCgqUyD
+IeCAI3n7GqtUs/nv4+PUw58=
+=x+El
+-----END PGP SIGNATURE-----
+
+--eAbsdosE1cNLO4uF--
