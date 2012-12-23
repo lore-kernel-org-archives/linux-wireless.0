@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47821 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859Ab2LSMIY (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.171]:60783 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751174Ab2LWFuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 07:08:24 -0500
-Message-ID: <1355918919.9954.7.camel@jlt4.sipsolutions.net> (sfid-20121219_130827_608028_2BDD74C5)
-Subject: Re: [PATCH] wireless: more 'capability info' bits
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 19 Dec 2012 13:08:39 +0100
-In-Reply-To: <1439651.zKbLy76ZDy@lx-vladimir>
-References: <1439651.zKbLy76ZDy@lx-vladimir>
+	Sun, 23 Dec 2012 00:50:20 -0500
+Message-ID: <1356241795.5620.47.camel@marge.simpson.net> (sfid-20121223_065121_934377_24D0973D)
+Subject: Re: dire state of rtl driver in 3.7
+From: Mike Galbraith <bitbucket@online.de>
+To: Norbert Preining <preining@logic.at>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Sun, 23 Dec 2012 06:49:55 +0100
+In-Reply-To: <20121222150909.GA3979@gamma.logic.tuwien.ac.at>
+References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-18 at 10:01 +0200, Vladimir Kondratiev wrote:
-> From 5b9cd73d0df1733b33b7fbb6ae5682c8c8716602 Mon Sep 17 00:00:00 2001
-> From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> Date: Tue, 18 Dec 2012 09:55:33 +0200
-> Subject: [PATCH] wireless: more 'capability info' bits
-> 
-> define bits for 'capability info', as in recent spec edition
-> IEEE802.11-2012
-> 
-> Also, add mask for 2-bit field 'bss type', as it is in 802.11ad
+On Sun, 2012-12-23 at 00:09 +0900, Norbert Preining wrote:
 
-Applied.
+> Network card is built in into a Lenovo Thinkpad Edge
 
-johannes
+Toshiba Satellite.
+> # lspci -nnv -s  03:00.0
+> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB
+> Wireless LAN Controller [10ec:8172] (rev 10)
+>         Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:e020]
+
+[10ec:8181] here.
+
+> Effects:
+> - either does not associate at all with the AP
+> - or the kernel believes it is associated and packages ping to the router
+>   get stuck for up to 50+ seconds!!!
+> - the kernel believes everything is fine but actually nothing gets out
+>   (Destination unreachable)
+> - wild ping time up-down:
+> 64 bytes from 192.168.0.1: icmp_req=73 ttl=255 time=3.05 ms
+> 64 bytes from 192.168.0.1: icmp_req=74 ttl=255 time=6.42 ms
+> 64 bytes from 192.168.0.1: icmp_req=75 ttl=255 time=1.21 ms
+> 64 bytes from 192.168.0.1: icmp_req=76 ttl=255 time=6808 ms
+> 64 bytes from 192.168.0.1: icmp_req=77 ttl=255 time=5800 ms
+> 64 bytes from 192.168.0.1: icmp_req=78 ttl=255 time=4792 ms
+
+...
+
+Looks a lot like my driver experience with older kernels, I had to use
+the external driver in the rare event that I needed wireless to work.
+The in tree driver works peachy these days (needed it recently, was
+pleasantly surprised when it _just worked_, not even a hiccup), so
+somebody cared, gave at least the 10ec:8181 bits some serious love.
+
+-Mike
 
