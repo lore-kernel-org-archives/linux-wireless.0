@@ -1,90 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:59089 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754570Ab2LLRZU (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.8]:64987 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752289Ab2LXE15 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 12:25:20 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] wireless: fix Atheros drivers compilation
-Date: Wed, 12 Dec 2012 19:25:16 +0200
-Message-ID: <9038958.vZIvzVgBXq@lx-vladimir> (sfid-20121212_182524_877281_8782FA38)
-In-Reply-To: <50C8B9F6.8010906@qca.qualcomm.com>
-References: <1352978222-13866-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <3215021.3tS1djxBu1@lx-vladimir> <50C8B9F6.8010906@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 23 Dec 2012 23:27:57 -0500
+Message-ID: <1356323269.5656.43.camel@marge.simpson.net> (sfid-20121224_052806_642110_1233688A)
+Subject: Re: dire state of rtl driver in 3.7
+From: Mike Galbraith <bitbucket@online.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Norbert Preining <preining@logic.at>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 24 Dec 2012 05:27:49 +0100
+In-Reply-To: <50D7572E.8060908@lwfinger.net>
+References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at>
+	 <1356241795.5620.47.camel@marge.simpson.net>
+	 <50D7572E.8060908@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, December 12, 2012 07:08:06 PM Kalle Valo wrote:
-> Hi,
-> 
-> On 12/12/2012 10:58 AM, Vladimir Kondratiev wrote:
-> 
-> > Subject: [PATCH] wireless: fix Atheros drivers compilation
-> > 
-> > Bug introduced in commit:
-> > wireless: allow Atheros card to not depend on ath.ko
-> > 
-> > Change in CONFIG_ option name should be reflected in top level Makefile
-> 
-> You should explain what the bug was (if ath6kl was the only enabled
-> atheros driver it wasn't included in the compilation).
-> 
-> > Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> 
-> Thanks, this fixed it.
-> 
-> Tested-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> John, as this bug is in wireless-next and is on it's way to 3.8, we
-> should get this fix also to 3.8.
-> 
-> Kalle
-> 
+On Sun, 2012-12-23 at 13:10 -0600, Larry Finger wrote:
 
-OK, below same patch with explanation added. Good now?
+> Note, the RTL8188CE uses rtl8192ce, while the RTL8191SE uses rtl8192se. They 
+> share the underlying plumbing in driver rtlwifi, but the rest is completely 
+> different.
 
->From bb80d009b31c2b0751d156d6a653547107d490fa Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Wed, 12 Dec 2012 10:56:09 +0200
-Subject: [PATCH v2] wireless: fix Atheros drivers compilation
+Driver here is rtl8192se.
 
-Bug introduced in commit:
-wireless: allow Atheros card to not depend on ath.ko
+08:00.0 0280: 10ec:8172 (rev 10)
+	Subsystem: 10ec:8181
+	Flags: bus master, fast devsel, latency 0, IRQ 17
+	I/O ports at 4000 [size=256]
+	Memory at c0900000 (32-bit, non-prefetchable) [size=16K]
+	Capabilities: [40] Power Management version 3
+	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+	Capabilities: [70] Express Legacy Endpoint, MSI 00
+	Capabilities: [100] Advanced Error Reporting
+	Capabilities: [140] Virtual Channel
+	Capabilities: [160] Device Serial Number 88-55-22-fe-ff-4c-e0-00
+	Kernel driver in use: rtl8192se
 
-Commit in question changed CONFIG_ATH_COMMON to CONFIG_ATH_CARDS as
-"Atheros card" indication in drivers/net/wireless/ath/Kconfig but it
-is used also by drivers/net/wireless/Makefile
+Point was, driver state may still be dire for some hardware, but here,
+the same driver for very similar looking hardware went from useless to
+works fine.
 
-If there are only Atheros cards that do not require ATH_COMMON, whole
-Makefile for Atheros cards was not executed; and as result, driver
-won't compile in this case.
+My desktop box has this thing in it, which also used to be completely
+useless with the in kernel driver, but now works (it's still useless,
+router sits on top of that box;).  Both devices now seem to work just
+fine, whereas both used to be a PITA if I wanted to use them.
 
-Change in CONFIG_ option name should be reflected in the
-drivers/net/wireless/Makefile
+Bus 001 Device 004: ID 13d3:3247 IMC Networks 802.11 n/g/b Wireless LAN Adapter
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0        64
+  idVendor           0x13d3 IMC Networks
+  idProduct          0x3247 802.11 n/g/b Wireless LAN Adapter
+  bcdDevice            8.01
+  iManufacturer           1 Ralink
+  iProduct                2 802.11 n WLAN
+  iSerial                 3 1.0
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/Makefile |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 062dfdf..2ba8cb8 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -47,7 +47,7 @@ obj-$(CONFIG_RT2X00)  += rt2x00/
- 
- obj-$(CONFIG_P54_COMMON)       += p54/
- 
--obj-$(CONFIG_ATH_COMMON)       += ath/
-+obj-$(CONFIG_ATH_CARDS)        += ath/
- 
- obj-$(CONFIG_MAC80211_HWSIM)   += mac80211_hwsim.o
- 
--- 
-1.7.10.4
+
 
