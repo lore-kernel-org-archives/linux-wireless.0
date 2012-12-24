@@ -1,44 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns1.pc-advies.be ([83.149.101.17]:36137 "EHLO
-	spo001.leaseweb.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755059Ab2LLVh7 (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:53151 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129Ab2LXTA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 16:37:59 -0500
-Date: Wed, 12 Dec 2012 22:37:53 +0100
-From: Wim Van Sebroeck <wim@iguana.be>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	linux-mips@linux-mips.org
-Subject: Re: [PATCH v2 00/15] watchdog/bcm47xx/bcma/ssb: add support for SoCs with PMU
-Message-ID: <20121212213753.GC31853@spo001.leaseweb.com> (sfid-20121212_223803_219062_2E2BC448)
-References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de> <CACna6rwmfpNFAFZpvbt8GHzofC6UoyBC4oKF5rL=9xN5_=gYXw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACna6rwmfpNFAFZpvbt8GHzofC6UoyBC4oKF5rL=9xN5_=gYXw@mail.gmail.com>
+	Mon, 24 Dec 2012 14:00:28 -0500
+Received: from stuffed.shaftnet.org (localhost [127.0.0.1])
+	by stuffed.shaftnet.org (8.14.5/8.14.5) with ESMTP id qBOJ0PIc010650
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Dec 2012 14:00:25 -0500
+Received: (from pizza@localhost)
+	by stuffed.shaftnet.org (8.14.5/8.14.5/Submit) id qBOJ0PfM010649
+	for linux-wireless@vger.kernel.org; Mon, 24 Dec 2012 14:00:25 -0500
+Date: Mon, 24 Dec 2012 14:00:25 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Subject: Re: RFCv2: ST-E cw1200 driver
+Message-ID: <20121224190024.GB9739@shaftnet.org> (sfid-20121224_200032_603746_0A060192)
+References: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="KFztAG8eRSV9hGtP"
+In-Reply-To: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-> > @Wim Could you give me an ACK on the "watchdog: bcm47xx_wdt.c:" patches
-> >      so that John could take them trough the wireless-testing tree, or
-> >      provide me with some feedback on what I should change.
-> 
-> Hi Wim,
-> 
-> Have you got a chance to look at that patches?
-> 
-> I've some additional bcma changes I wish to submit on top of this :)
+--KFztAG8eRSV9hGtP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Sorry, but family health issues have distracted me from kernel stuff the last months.
-Things are better now.
+On Sat, Dec 22, 2012 at 06:18:15PM -0500, Solomon Peachy wrote:
+> Okay, here's the second pass.  Changes from v1:
 
-Concerning these patches: The correct decision has been taken to split this allready up
-into the bcma/ssb patches and do the watchdog patches later on. I will check the watchdog
-part and react on it as soon as possible.
+I just finised going through a code drop that Sony provided=20
+(v6.1.1.B.1.10 for the Xperia go/advance/sola/U) and merged a bunch of=20
+changes they made.  I've also fixed a few more checkpatch warnings.=20
 
-Kind regards,
-Wim.
+The most notable change is that the "bh_thread" abombination is gone,=20
+but in its place is a single high-priority workqueue. =20
 
+This code is undergoing testing on my desk now.  Needless to say, any=20
+help with testing this out would be greatly appreciated.
+
+To that effect, if anyone's interested in tracking my tree I created a=20
+git tree of my work-in-progress, built on top of compat-wireless 3.6. =20
+Its initial commit was the RFCv2 code.
+
+	git://git.shaftnet.org/compat-wireless-cw1200.git
+
+(I don't have an SDIO-capable target capable of running anything newer=20
+ than Linux 3.2 at the moment, so I need to stick with compat-wireless=20
+ for now)
+
+Anyway, back to the bit mines.
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--KFztAG8eRSV9hGtP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iD8DBQFQ2KZIPuLgii2759ARAlvYAJ0R03kcaPS1GPruxG+Gm29SuV7QaACgpNth
+Tc0X4UCsTmysEqL0dtrRnsY=
+=K1xz
+-----END PGP SIGNATURE-----
+
+--KFztAG8eRSV9hGtP--
