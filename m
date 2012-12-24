@@ -1,73 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44180 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755554Ab2LCOtL (ORCPT
+Received: from srv5.sysproserver.de ([78.138.89.176]:34537 "EHLO
+	srv5.sysproserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022Ab2LXMHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 09:49:11 -0500
-Message-ID: <1354546148.17107.5.camel@deadeye.wl.decadent.org.uk> (sfid-20121203_154919_592318_6D01C190)
-Subject: Re: [PATCH] linux-firmware: add Marvell USB8797-B0 firmware image
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>,
-	Jackey Shen <Jackey.Shen@amd.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 03 Dec 2012 14:49:08 +0000
-In-Reply-To: <1354229289-28989-1-git-send-email-bzhao@marvell.com>
-References: <1354229289-28989-1-git-send-email-bzhao@marvell.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-Kp0yWjjtVsqZ3Z9g49BC"
-Mime-Version: 1.0
+	Mon, 24 Dec 2012 07:07:44 -0500
+From: Niels Ole Salscheider <niels_ole@salscheider-online.de>
+To: linux-wireless@vger.kernel.org
+Cc: Niels Ole Salscheider <niels_ole@salscheider-online.de>
+Subject: [PATCH] brcmsmac: Use udelay instead of usleep_range
+Date: Mon, 24 Dec 2012 13:07:36 +0100
+Message-Id: <1356350856-3389-1-git-send-email-niels_ole@salscheider-online.de> (sfid-20121224_130747_914875_C75B6A23)
+In-Reply-To: <1356350538-3243-1-git-send-email-niels_ole@salscheider-online.de>
+References: <1356350538-3243-1-git-send-email-niels_ole@salscheider-online.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+wlc_lcnphy_rx_iq_cal_gain is called during initialization, i. e. when
+executing brcms_up.
+But brcms_up is called from brcms_ops_start while the latter holds a spin lock.
+Thus, we cannot use usleep_range but have to use udelay.
 
---=-Kp0yWjjtVsqZ3Z9g49BC
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2012-11-29 at 14:48 -0800, Bing Zhao wrote:
-> Version 14.69.11.p179
->=20
-> This is for Marvell Avastar 88W8797 Rev B0 combo chip with USB
-> interfaces for both WLAN and Bluetooth.
->=20
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> Signed-off-by: Frank Huang <frankh@marvell.com>
+This fixes:
+BUG: scheduling while atomic: NetworkManager/1652/0x00000200
+[...]
+Call Trace:
+ [<ffffffff81582522>] __schedule_bug+0x48/0x54
+ [<ffffffff815892b6>] __schedule+0x596/0x6d0
+ [<ffffffff81589719>] schedule+0x29/0x70
+ [<ffffffff8158893c>] schedule_hrtimeout_range_clock+0xfc/0x140
+ [<ffffffff81060f10>] ? update_rmtp+0x70/0x70
+ [<ffffffff81588993>] schedule_hrtimeout_range+0x13/0x20
+ [<ffffffff810495e0>] usleep_range+0x40/0x50
+ [<ffffffffa05dedcb>] wlc_lcnphy_rx_iq_cal.constprop.10+0x59b/0xa90 [brcmsmac]
+ [<ffffffffa05df4ce>] wlc_lcnphy_periodic_cal+0x20e/0x220 [brcmsmac]
+ [<ffffffffa05dce8d>] ? wlc_lcnphy_set_tx_pwr_ctrl+0x21d/0x3c0 [brcmsmac]
+ [<ffffffffa05e0cfc>] wlc_phy_init_lcnphy+0xacc/0x1100 [brcmsmac]
+ [<ffffffffa05e0230>] ? wlc_phy_txpower_recalc_target_lcnphy+0x90/0x90 [brcmsmac]
+ [<ffffffffa05d7c7d>] wlc_phy_init+0xcd/0x170 [brcmsmac]
+ [<ffffffffa05c9dfe>] brcms_b_bsinit.isra.65+0x12e/0x310 [brcmsmac]
+ [<ffffffffa05d061b>] brcms_c_init+0x8fb/0x1170 [brcmsmac]
+ [<ffffffffa05c3a0a>] brcms_init+0x5a/0x70 [brcmsmac]
+ [<ffffffffa05ce76c>] brcms_c_up+0x1ac/0x4a0 [brcmsmac]
+ [<ffffffffa05c3c65>] brcms_up+0x25/0x30 [brcmsmac]
+ [<ffffffffa05c44c0>] brcms_ops_start+0xd0/0x100 [brcmsmac]
 [...]
 
-Applied, thanks.
+Signed-off-by: Niels Ole Salscheider <niels_ole@salscheider-online.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Ben.
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+index 606b534..21a8242 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -1343,13 +1343,13 @@ static bool wlc_lcnphy_rx_iq_cal_gain(struct brcms_phy *pi, u16 biq1_gain,
+ 
+ 	wlc_lcnphy_rx_gain_override_enable(pi, true);
+ 	wlc_lcnphy_start_tx_tone(pi, 2000, (40 >> 1), 0);
+-	usleep_range(500, 500);
++	udelay(500);
+ 	write_radio_reg(pi, RADIO_2064_REG112, 0);
+ 	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_l))
+ 		return false;
+ 
+ 	wlc_lcnphy_start_tx_tone(pi, 2000, 40, 0);
+-	usleep_range(500, 500);
++	udelay(500);
+ 	write_radio_reg(pi, RADIO_2064_REG112, 0);
+ 	if (!wlc_lcnphy_rx_iq_est(pi, 1024, 32, &iq_est_h))
+ 		return false;
+-- 
+1.8.0.2
 
---=20
-Ben Hutchings
-Always try to do things in chronological order;
-it's less confusing that way.
-
---=-Kp0yWjjtVsqZ3Z9g49BC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAULy75Oe/yOyVhhEJAQpxCQ/8Cjb4O4MVJQqwhqnsvfXlrhzysz4DpGlF
-adEC2KDyEFn+sKVxZMB/J0QS+WZUsfmRHvNT5O6xJ6XrY4ZTBjxTJ9Qee9/Cnv2m
-CNDZr4D+OteQDWe10XHLvJic9HP/df0WsXUnwbId9/QP+ycoTssW+SgiSL5Z4CuY
-ho33hVpRvec4abYPIGANmVguk4sWSS5RUzn8FaS+ns1TdPRhbe/GwofDO8V/AUNc
-xk0MiavzfPFBr+EoHx3dTjs9eeu3F8PJPNWOUKijHn806yzCY0qf/43hNOg393Lv
-k2cQkyz5ZubeMt9oHstgsxvyzi9ba8uQTALQTvh75D6+rPP7yks21rC1wMITho0i
-+ldCjsmq1yFEEkVVomSAv2jhOG0uZVBePddCgwhmUfAjxPjIn8PStobKBw0eJIgg
-8XSuLuNyemkcrO5fEnT/Y2iLh/hCBHMcFhrh0Df1BLDr16ioWtmk+xVsIqu7BY90
-xSrumwbNIbYZTAhfsn5I4Ixi6bbuZlHeJqYEeJYY4+OspYWTFK5897JaJl56KpJ/
-3EPmivooekDbsbiWtjyXMELy6Ke1sWDixMWfRPSisw9YUcIqWUFNnuRSz42+fJLq
-PVGJ7pFGID/c6aLk9RzOJrW1vhVEPyW9KrDouG0pqYQML1mMQla4DqBibN7Yj+tR
-mXaOFCz/yRs=
-=3M0v
------END PGP SIGNATURE-----
-
---=-Kp0yWjjtVsqZ3Z9g49BC--
