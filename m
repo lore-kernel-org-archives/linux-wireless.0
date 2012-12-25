@@ -1,41 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:44986 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759Ab2LZWIj (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57086 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752510Ab2LYX0u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Dec 2012 17:08:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V3.8 0/5] Fixes for WARNINGS due to unchecked DMA mapping calls
-Date: Wed, 26 Dec 2012 16:08:06 -0600
-Message-Id: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121226_230850_616807_C91EB3B7)
+	Tue, 25 Dec 2012 18:26:50 -0500
+Message-ID: <1356477982.21837.93.camel@deadeye.wl.decadent.org.uk> (sfid-20121226_002730_116936_73F2BAE0)
+Subject: Re: [PATCH] rtk_btusb: Add Bluetooth firmware
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dwmw2@infradead.org, Champion Chen <champion_chen@realsil.com.cn>
+Date: Tue, 25 Dec 2012 23:26:22 +0000
+In-Reply-To: <1356057465-15669-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1356057465-15669-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-UkPLcTTKGmkekd3jElAp"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Beginning with kernel 3.8, the DMA mapping systems begins issuing a WARNING for
-the first call that maps DMA and fails to call dma_mapping_error() to check
-the result. This set of patches adds the appropriate checks to the rtlwifi
-family of drivers.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+--=-UkPLcTTKGmkekd3jElAp
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Larry Finger (5):
-  rtlwifi: Fix warning for unchecked pci_map_single() call
-  rtlwifi: rtl8192ce: Fix warning for unchecked pci_map_single() call
-  rtlwifi: rtl8192de: Fix warning for unchecked pci_map_single() call
-  rtlwifi: rtl8192se: Fix warning for unchecked pci_map_single() call
-  rtlwifi: rtl8723ae: Fix warning for unchecked pci_map_single() call
+On Thu, 2012-12-20 at 20:37 -0600, Larry Finger wrote:
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Champion Chen <champion_chen@realsil.com.cn>
+> ---
+>  WHENCE              |    8 ++++++++
+>  rtl_bt/rtl8723a.bin |  Bin 0 -> 23772 bytes
+>  2 files changed, 8 insertions(+)
+>  create mode 100644 rtl_bt/rtl8723a.bin
+>=20
+> diff --git a/WHENCE b/WHENCE
+> index 3b2f282..f485111 100644
+> --- a/WHENCE
+> +++ b/WHENCE
+> @@ -1811,6 +1811,14 @@ Licence: Redistributable. See LICENCE.rtlwifi_firm=
+ware.txt for details.
+> =20
+>  ------------------------------------------------------------------------=
+--
+> =20
+> +Driver: rtk_btusb - Realtek Bluetooth driver
+> +
+> +Info: Supplied by champion_chen@realsil.com.cn along with driver source =
+code
+> +File: rtl_bt/rtl8723a.bin
+> +
+> +Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
+[...]
 
- drivers/net/wireless/rtlwifi/pci.c           |    6 ++++++
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |   11 +++++++++++
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c |   10 ++++++++++
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c |   13 ++++++++++++-
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |   12 ++++++++++++
- 5 files changed, 51 insertions(+), 1 deletion(-)
+There seem to be some serious problems with the driver that uses this.
+So, if this is not already in use with an external firmware blob, could
+you perhaps add some sort of header to the blob and have the driver make
+some sanity checks before uploading to the device?
 
--- 
-1.7.10.4
+Ben.
 
+--=20
+Ben Hutchings
+Every program is either trivial or else contains at least one bug
+
+--=-UkPLcTTKGmkekd3jElAp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUNo2Hue/yOyVhhEJAQqFUg//QLLgM4kiatk13w765aiKdwVnghDp5cwH
+6M1TAep90UurMBsG4Bzk9k7mr1XKU6v+rp8iPmfr4obXx+nGzNANfO/xpg/TEQwh
+SZiD0wg68IO2GaHCl+cS0mQMgzFmJ2rSnmrlUGJEeXrXok20b+atA1epyyAwVohB
+YeCpJf84PxZJrqnS/V1M2aFSdguFPVUjGVdIR7x1pNqDmxYebnHROkK1+ZsMgaj3
+foVJMCeEY1WECe+FnORYiTQGXx4ookCTb0WOUcv93/Ez6eHwiZP7jXC2954P2Maq
+sEngikNqf02pXBYnnSU9v5HqbUYYpNzfHQdODa9gNtIH1/4Ev36qWJPu6JtdnY06
+dZ8+CYGGJzRXOIsOTXs3J2+URMkgsrQ1IGJ9dX/pJ2PFkaWFNPTXU6gDpAX/wT8r
+zzZXa8q7Ve/tNnguW5xqtb4YimbdHrw1SHRjPMeHSmAoEwxjMLOnuqvoe/lyorm2
+qJ10+NVcylNCUgf/X2SY1YSwYlKsvk+LLwqN8FWFR7OZ5tTDeZ6jnRaJASw+C/k8
+//lbjGFbA/SxY27UCsfhFfT62EQ3P9RpQYrGRTOZwjUXlMxPE6g1YIZy2Wmk0gJh
+9OgF6xUsqoQ3JdiNITpikZ7xxXsk0l40pVRnx4GCjz2B50UC416jEoak6APGEjSw
+R7WdNqxBCkc=
+=COnG
+-----END PGP SIGNATURE-----
+
+--=-UkPLcTTKGmkekd3jElAp--
