@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:46372 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148Ab2LEJow (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52199 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752775Ab2LZCYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 04:44:52 -0500
+	Tue, 25 Dec 2012 21:24:53 -0500
+Message-ID: <50DA5FF0.2010300@lwfinger.net> (sfid-20121226_032526_227459_FB23A1CA)
+Date: Tue, 25 Dec 2012 20:24:48 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAPgLHd_AN+Tr5EQFBZMH0FZCp6ESHVURZHvd9SuW=a2PYkPoXw@mail.gmail.com>
-References: <CAPgLHd_AN+Tr5EQFBZMH0FZCp6ESHVURZHvd9SuW=a2PYkPoXw@mail.gmail.com>
-Date: Wed, 5 Dec 2012 01:44:50 -0800
-Message-ID: <CA++WF2OmLMP3NHvN44yVzsnWEHjeZVGfgG9CfC2CkZGyNQFLLw@mail.gmail.com> (sfid-20121205_104458_553131_E50D5FD4)
-Subject: Re: [PATCH -next v2] ipw2200: return error code on error in ipw_wx_get_auth()
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dwmw2@infradead.org, Champion Chen <champion_chen@realsil.com.cn>
+Subject: Re: [PATCH] rtk_btusb: Add Bluetooth firmware
+References: <1356057465-15669-1-git-send-email-Larry.Finger@lwfinger.net> <1356477982.21837.93.camel@deadeye.wl.decadent.org.uk>
+In-Reply-To: <1356477982.21837.93.camel@deadeye.wl.decadent.org.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 December 2012 00:08, Wei Yongjun <weiyj.lk@gmail.com> wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 12/25/2012 05:26 PM, Ben Hutchings wrote:
+> On Thu, 2012-12-20 at 20:37 -0600, Larry Finger wrote:
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Signed-off-by: Champion Chen <champion_chen@realsil.com.cn>
+>> ---
+>>   WHENCE              |    8 ++++++++
+>>   rtl_bt/rtl8723a.bin |  Bin 0 -> 23772 bytes
+>>   2 files changed, 8 insertions(+)
+>>   create mode 100644 rtl_bt/rtl8723a.bin
+>>
+>> diff --git a/WHENCE b/WHENCE
+>> index 3b2f282..f485111 100644
+>> --- a/WHENCE
+>> +++ b/WHENCE
+>> @@ -1811,6 +1811,14 @@ Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
+>>
+>>   --------------------------------------------------------------------------
+>>
+>> +Driver: rtk_btusb - Realtek Bluetooth driver
+>> +
+>> +Info: Supplied by champion_chen@realsil.com.cn along with driver source code
+>> +File: rtl_bt/rtl8723a.bin
+>> +
+>> +Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
+> [...]
 >
-> We have assinged error code to 'ret' when get auth from some
-> option is not supported but never used it, but we'd better return
-> the error code.
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> There seem to be some serious problems with the driver that uses this.
+> So, if this is not already in use with an external firmware blob, could
+> you perhaps add some sort of header to the blob and have the driver make
+> some sanity checks before uploading to the device?
 
-Looks fine, thanks.
+Yes, I will add a header and the necessary checking. At that point, I will then 
+resubmit.
 
-Stanislav.
+Larry
 
-> ---
->  drivers/net/wireless/ipw2x00/ipw2200.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-> index 482f505..b0879ad 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> @@ -6812,7 +6812,6 @@ static int ipw_wx_get_auth(struct net_device *dev,
->         struct libipw_device *ieee = priv->ieee;
->         struct lib80211_crypt_data *crypt;
->         struct iw_param *param = &wrqu->param;
-> -       int ret = 0;
->
->         switch (param->flags & IW_AUTH_INDEX) {
->         case IW_AUTH_WPA_VERSION:
-> @@ -6822,8 +6821,7 @@ static int ipw_wx_get_auth(struct net_device *dev,
->                 /*
->                  * wpa_supplicant will control these internally
->                  */
-> -               ret = -EOPNOTSUPP;
-> -               break;
-> +               return -EOPNOTSUPP;
->
->         case IW_AUTH_TKIP_COUNTERMEASURES:
->                 crypt = priv->ieee->crypt_info.crypt[priv->ieee->crypt_info.tx_keyidx];
->
->
+
