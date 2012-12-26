@@ -1,76 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from db3ehsobe002.messaging.microsoft.com ([213.199.154.140]:43644
-	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750989Ab2LLKNi (ORCPT
+Received: from mail-da0-f49.google.com ([209.85.210.49]:64143 "EHLO
+	mail-da0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212Ab2LZXRf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 05:13:38 -0500
-From: Alberto Garau <Alberto.Garau@inpeco.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>,
-	Adriano Melis <ADRIANO.MELIS@inpeco.com>,
-	Luca Fresi <luca.fresi@bithiatec.com>
-Subject: RE: wl12xx over spi with no scan results
-Date: Wed, 12 Dec 2012 10:13:00 +0000
-Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C360984@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121212_111342_462742_AFBDB94F)
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-21-git-send-email-arik@wizery.com>
-	 <1355159205.3738.63.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355161791.3738.67.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355218436.3738.122.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355223079.3738.128.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355229286.3738.137.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360949@DB3PRD0510MB381.eurprd05.prod.outlook.com>
- <1355301922.21129.8.camel@cumari.coelho.fi>
-In-Reply-To: <1355301922.21129.8.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 26 Dec 2012 18:17:35 -0500
+Message-ID: <50DB858A.9070905@lwfinger.net> (sfid-20121227_001744_055392_E6C3BCD8)
+Date: Wed, 26 Dec 2012 17:17:30 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH V3.8 5/5] rtlwifi: rtl8723ae: Fix warning for unchecked
+ pci_map_single() call
+References: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>  <1356559691-5048-6-git-send-email-Larry.Finger@lwfinger.net> <1356563631.30414.3.camel@edumazet-glaptop>
+In-Reply-To: <1356563631.30414.3.camel@edumazet-glaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhhbmtzIEx1Y2EsDQoNCndlIHRyaWVkIHdpdGggRkFMTElOR19FREdFIGZvciB0aGUgaW50ZXJy
-dXB0IGJ1dCB0aGUgZHJpdmVyIGdvdCBzdHVja2VkIHNvIEkgaGFkIHRvIHB1dCBhZ2FpbiBSSVNJ
-TkdfRURHRS4NCg0KV2Ugc3VjY2Vzc2Z1bGx5IGNyb3NzIGNvbXBpbGVkIGl3IGJ1dCBhbHNvIHdp
-dGggdGhhdCB0b29sIHdlIGFsd2F5cyBzZWUgb25seSBvbiBFU1NJRCBmcm9tIG9uZSBzcGVjaWZp
-YyBBUA0KDQp3aGlsZSB0aGUgb3RoZXJzIEVTU0lEIGZyb20gdGhlIHNlY29uZCBBUCBhcmUgYXZh
-aWxhYmxlIG9ubHkgc29tZXRpbWUuIA0KDQpUaGF0J3MgdmVyeSBzdHJhbmdlLg0KDQpEbyB5b3Ug
-dGhpbmsgd2UgYXJlIGZhY2luZyBjYWxpYnJhdGlvbiBwcm9ibGVtcyA/DQoNCkluIG91ciBDTUQw
-IHdlIGhhdmUNCg0KYml0IDEzID0gMSBJQiBpbnRlcnJ1cHQgaXMgYWN0aXZlIGhpZ2gNCg0KYml0
-IDE0ID0gMSBJQiBpbnRlcnJ1cHQgaXMgb3BlbiBkcmFpbiANCg0KRG8geW91IHRoaW5rIGlzIHJp
-Z2h0IGFjY29yZGluZyBkbyBSSVNJTkdfRURHRSBpbnRlcnJ1cHQgPw0KDQpUaGFua3MNCg0KQWxi
-ZXJ0bw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogTHVjaWFubyBDb2VsaG8g
-W21haWx0bzpjb2VsaG9AdGkuY29tXSANClNlbnQ6IG1lcmNvbGVkw6wgMTIgZGljZW1icmUgMjAx
-MiAwOTo0NQ0KVG86IEFsYmVydG8gR2FyYXUNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
-bC5vcmc7IElkbyBZYXJpdjsgQXJpayBOZW10c292OyBBZHJpYW5vIE1lbGlzOyBMdWNhIEZyZXNp
-DQpTdWJqZWN0OiBSZTogd2wxMnh4IG92ZXIgc3BpIHdpdGggbm8gc2NhbiByZXN1bHRzDQoNCk9u
-IFdlZCwgMjAxMi0xMi0xMiBhdCAwODoxOCArMDAwMCwgQWxiZXJ0byBHYXJhdSB3cm90ZToNCj4g
-SGkgTHVjYSwNCj4gDQo+IHllcyB0aGF0J3MgYSBncmVhdCBuZXdzIGZvciB1cy4NCj4gDQo+IFll
-c3RlcmRheSBhZnRlcm5vb24gd2l0aCAiaXdsaXN0IHdsYW4wIHNjYW4iIChub3QgIml3IiB5ZXQp
-IEkgc2F3IGFsc28gDQo+IG90aGVyIHR3byBuZXR3b3JrcyBlc3NpZHMgKGZvciBhIHNtYWxsIGFt
-b3VudCBvZiBzZWNvbmRzIG9ubHkpIHdoaWNoIEknbSBpbnRlcmVzdGVkIGluLg0KPiANCj4gVGhp
-cyBzZWVtcyB0byBzYXkgdGhhdCB0aGUgbmV0d29ya3MgSSB3b3VsZCBsaWtlIHRvIGNvbm5lY3Qg
-dG8gYXJlIGF2YWlsYWJsZSB0byB0aGUgd2wxMjcxLiANCj4gDQo+IEluIHRoZSBtZWFudGltZSB0
-aGF0IEknbSBjcm9zcyBidWlsZGluZyAiaXciLCBJIHdvdWxkIGxpa2UgdG8gY29ubmVjdCB0byBh
-biB1bnByb3RlY3RlZCBuZXR3b3JrIGNhbGxlZCAiSW5wZWNvLXRlc3QiKG5vIFdFUCwgbm8gV1BB
-KS4NCj4gDQo+IFdvdWxkIHlvdSBiZSBzbyBraW5kIHRvIHN1Z2dlc3QgbWUgdGhlIHNlcmllIG9m
-IGNvbW1hbmRzIEkgaGF2ZSB0byANCj4gbGF1bmNoIHRvIGNvbm5lY3QgdG8gdGhpcyBuZXR3b3Jr
-ID8gSSB3b3VsZCBsaWtlIHRoZW4gdG8gcGluZyBvdXRzaWRlIG9mIGNvdXJzZS4NCg0KaWZjb25m
-aWcgd2xhbjAgdXANCml3IHdsYW4wIGNvbm5lY3QgLXcgSW5wZWNvLXRlc3QNCg0KVGhlbiwgdG8g
-cGluZywgeW91IG5lZWQgdG8gc2V0IHlvdXIgSVAgYWRkcmVzcywgZWl0aGVyIHdpdGggYSBESENQ
-IGNsaWVudCBvciBzdGF0aWNhbGx5Lg0KDQo+IEkgaGF2ZSBnb3QgYWxzbyBvbmUgdGVjaG5pY2Fs
-IHF1ZXN0aW9uLiBJbiB0aGUgc291cmNlIGNvZGUgb2YgdGhlIA0KPiBkcml2ZXIgSSBoYXZlIGZv
-dW5kIGZvciB3bDEyNzFfc3BpLmMgaW4ga2VybmVsDQo+IDIuNi4zNyBJIGhhdmUgaW50ZXJydXB0
-cyBzZXQgaW4gUklTSU5HX0VER0Ugd2hpbGUgdGhlIGRhdGFzaGVldCAoaW4gYXR0YWNobWVudDog
-NC4xLjE4IGF0IHBhZyAxOSkgdGFsa3MgYWJvdXQgRkFMTElOR19FREdFLg0KPiBXaGljaCBpcyB0
-aGUgcmlnaHQgc2V0dGluZyB0byBiZSBhcHBsaWVkIGFuZCB3aHkgPw0KDQpXZSBjdXJyZW50bHkg
-dXNlIGxldmVsIGFuZCBoaWdoIHdpdGggb25lIHNob3QgYXMgZGVmYXVsdC4gIFRoZXJlIGFyZSBz
-b21lIHBsYXRmb3JtcyB0aGF0IHVzZSByaXNpbmcsIHRob3VnaCwgc28gd2UgaGF2ZSBhIHBsYXRm
-b3JtX3F1aXJrIHZhbHVlIHRoYXQgZW5hYmxlcyB1cyB0byB0b2dnbGUgdGhhdC4NCg0KWW91IGNv
-dWxkIGJlIG1pc3Npbmcgc29tZSBpbnRlcnJ1cHRzIGJ5IHVzaW5nIHJpc2luZyBhbmQgdGhpcyBj
-b3VsZCBiZSB0aGUgcmVhc29uIHdoeSB5b3UgZG9uJ3Qgc2VlIHRoZSBTU0lEcyBjb25zaXN0ZW50
-bHkuDQoNCi0tDQpMdWNhLg0KDQoNCg==
+On 12/26/2012 05:13 PM, Eric Dumazet wrote:
+> On Wed, 2012-12-26 at 16:08 -0600, Larry Finger wrote:
+>> Kernel 3.8 implements checking of all DMA mapping calls and issues
+>> a WARNING for the first it finds that is not checked.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>   drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |   12 ++++++++++++
+>>   1 file changed, 12 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+>> index 87331d8..7ddd517 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+>> @@ -387,6 +387,12 @@ void rtl8723ae_tx_fill_desc(struct ieee80211_hw *hw,
+>>   					    PCI_DMA_TODEVICE);
+>>   	u8 bw_40 = 0;
+>>
+>> +	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
+>> +		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
+>> +			 "DMA mapping error");
+>> +		return;
+>> +	}
+>> +	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+>>   	if (mac->opmode == NL80211_IFTYPE_STATION) {
+>>   		bw_40 = mac->bw_40;
+>>   	} else if (mac->opmode == NL80211_IFTYPE_AP ||
+>> @@ -542,6 +548,12 @@ void rtl8723ae_tx_fill_cmddesc(struct ieee80211_hw *hw,
+>>   					    PCI_DMA_TODEVICE);
+>>   	__le16 fc = hdr->frame_control;
+>>
+>> +	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
+>> +		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
+>> +			 "DMA mapping error");
+>> +		return;
+>> +	}
+>> +	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+>>   	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+>>
+>>   	if (firstseg)
+>
+> This seems wrong...
+>
+> CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE) doesnt need to be done
+> twice, does it ?
+
+No it does not. That is a patching error
+
+Thanks,
+
+Larry
+
 
