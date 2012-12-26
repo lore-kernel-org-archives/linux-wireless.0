@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58627 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424343Ab2LGUy2 (ORCPT
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:46948 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142Ab2LZWI4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 15:54:28 -0500
-Message-ID: <1354913688.9124.2.camel@jlt4.sipsolutions.net> (sfid-20121207_215432_184544_CB854439)
-Subject: Re: Wireless network problem with Access Point selection using ifup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: markh@compro.net
-Cc: dmarkh@cfl.rr.com, linux-wireless@vger.kernel.org
-Date: Fri, 07 Dec 2012 21:54:48 +0100
-In-Reply-To: <50C256A9.7010008@compro.net>
-References: <50C0A743.3000305@compro.net>
-	  (sfid-20121206_152423_356618_ADE5D3BC) <1354806200.18211.1.camel@jlt4.sipsolutions.net>
-	 <50C1C103.1000803@cfl.rr.com> <50C256A9.7010008@compro.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 26 Dec 2012 17:08:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH V3.8 5/5] rtlwifi: rtl8723ae: Fix warning for unchecked pci_map_single() call
+Date: Wed, 26 Dec 2012 16:08:11 -0600
+Message-Id: <1356559691-5048-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121226_230910_659644_EDCFF72F)
+In-Reply-To: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-07 at 15:50 -0500, Mark Hounschell wrote:
-> On 12/07/2012 05:12 AM, Mark Hounschell wrote:
-> > On 12/06/2012 10:03 AM, Johannes Berg wrote:
-> >> On Thu, 2012-12-06 at 09:10 -0500, Mark Hounschell wrote:
-> >>>   I'm using
-> >>> traditional ifup with static configurations.
-> >>
-> >> You should at least run wpa_supplicant, which will pick a better network
-> >> and reconnect if the connection drops etc. Almost no device does that by
-> >> itself any more.
-> >
-> >   wpa_supplicant is running.
-> >
-> > #ps ax | grep wpa
-> >
-> > wpa_supplicant -iwlan0 -c/var/run/wpa_supplicant-wlan0.conf
-> > -Dnl80211,wext -P/var/run/wpa_supplicant/wlan0.pid -B
-> >
-> >
-> > When the router in the middle of the house is chosen, as opposed to the
-> > range extender in the very same room, the network works for a time but
-> > eventually disassociates, usually reason 7, and never reconnects to
-> > anything.
-> >
+Kernel 3.8 implements checking of all DMA mapping calls and issues
+a WARNING for the first it finds that is not checked.
 
-> Thanks for responding. Do you think my problem is a wpa_supplicant 
-> issue, a kernel issue, or a Dist issue?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-I'd say it's a wpa_s issue, but I can't remember any time that it didn't
-reconnect after getting disconnected, so maybe there's an issue with
-your driver/device that causes it to need a reset or something ... hard
-to tell more without at least the supplicant log.
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+index 87331d8..7ddd517 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+@@ -387,6 +387,12 @@ void rtl8723ae_tx_fill_desc(struct ieee80211_hw *hw,
+ 					    PCI_DMA_TODEVICE);
+ 	u8 bw_40 = 0;
+ 
++	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
++		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
++			 "DMA mapping error");
++		return;
++	}
++	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+ 	if (mac->opmode == NL80211_IFTYPE_STATION) {
+ 		bw_40 = mac->bw_40;
+ 	} else if (mac->opmode == NL80211_IFTYPE_AP ||
+@@ -542,6 +548,12 @@ void rtl8723ae_tx_fill_cmddesc(struct ieee80211_hw *hw,
+ 					    PCI_DMA_TODEVICE);
+ 	__le16 fc = hdr->frame_control;
+ 
++	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
++		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
++			 "DMA mapping error");
++		return;
++	}
++	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+ 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+ 
+ 	if (firstseg)
+-- 
+1.7.10.4
 
