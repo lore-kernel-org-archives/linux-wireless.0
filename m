@@ -1,115 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55394 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751160Ab2LLJNA (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:53408 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754357Ab2LZMLa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 04:13:00 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: Joe Perches <joe@perches.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Jason Baron <jbaron@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	<linux-wireless@vger.kernel.org>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-Date: Wed, 12 Dec 2012 11:12:55 +0200
-Message-ID: <10591713.1pVYGV5bcJ@lx-vladimir> (sfid-20121212_101325_983286_CFE31CEA)
-In-Reply-To: <20121211225555.GC15974@pogo>
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1355257444.24219.7.camel@joe-AO722> <20121211225555.GC15974@pogo>
+	Wed, 26 Dec 2012 07:11:30 -0500
+Received: by mail-we0-f171.google.com with SMTP id u3so3861809wey.2
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2012 04:11:29 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <50DAD8A6.8050405@hauke-m.de>
+References: <1356459816-2214-1-git-send-email-zajec5@gmail.com>
+	<50DAD374.1090305@hauke-m.de>
+	<CACna6rw00D+pVHPoYPgN9OoiQpHGumTw7oCXSmj+ECsqTVzR9Q@mail.gmail.com>
+	<50DAD8A6.8050405@hauke-m.de>
+Date: Wed, 26 Dec 2012 13:11:27 +0100
+Message-ID: <CACna6rwS0Ueu3kvKjM_rGB9ZqJ_UbDZv4wwMdWX4W4_4GkK9Zg@mail.gmail.com> (sfid-20121226_131135_203473_8EA9E547)
+Subject: Re: [RFC][PATCH] ssb: add place for serial flash driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, December 11, 2012 02:55:55 PM Luis R. Rodriguez wrote:
-> Vladimir, to be clear, you can continue with waiting for the patches
-> to get into 3.9 but that will take a while but given that you want
-> your driver in 3.8 you can fold those routines into your driver as
-> you had before but with a rename by adding a prefix and sumbit that
-> driver and specify it is for 3.8.
-> 
+2012/12/26 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 12/26/2012 11:46 AM, Rafał Miłecki wrote:
+>> 2012/12/26 Hauke Mehrtens <hauke@hauke-m.de>:
+>>> On 12/25/2012 07:23 PM, Rafał Miłecki wrote:
+>>>> +#ifdef CONFIG_SSB_SFLASH
+>>>> +struct ssb_sflash {
+>>>> +     bool present;
+>>>> +};
+>>>> +#endif
+>>>
+>>> I assume you want to share some of the code for the serial flash driver
+>>> between bcma and ssb. You should create a file with the structure in
+>>> include/linux/platform_data/ and share that between bcma and ssb.
+>>
+>> It's a small struct having about 5 trivial fields. We don't share
+>> sturcts for any other drivers (chipcommon/mips/pcie) so I think they
+>> should stay separated here as well.
+>
+> When this structure is just used in ssb or bcma and in the nvram code of
+> arch/mips/bcm47x I would also prefer two structures one for bcma and one
+> for ssb.
+>
+>> Plus the mtd driver will have to implement bus abstraction anyway.
+>
+> If you have a structure describing the needs of the serial flash driver
+> in drivers/mtd/ you could write the flash driver without any ifdef
+> BCMA_* or SSB_* and if does not have to include linux/ssb/ssb.h or
+> linu/bcma/bcma.h, like I did this with the watchdog driver
+> include/linux/bcm47xx_wdt.h
 
-I have internally patch that will compensate not merged yet functionality,
-without any rename, see below. I can massage commit message and include it
-with my driver as separate patch to be easier to undo later.
+OK, I've analyzed your bcm47xx_wdt. I can see you abstract bus here
+and implement some simple ops.
 
-Comments?
+We could add similar extra layer for sflash, but I wonder what we
+could put in that. For full sflash support we need 2 things:
+1) Hardware info (u32 window, u32 blocksize, u16 numblocks)
+2) Chipcommon access (read32, write32)
 
->From c4e7254d0cba51c8b43d36a317a1b847fffb18d8 Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Wed, 21 Nov 2012 13:57:21 +0200
-Subject: [PATCH] [DEBUG] Allow to compile with mainstream kernel
+In total that are only ~5 fields in some struct. I wonder if it makes
+sense to move that abstracting code to an extra layer? Maybe we can
+just do that in bcm47xxsflash with few ifdefs?
 
-Unless patch for dynamic hexdump merged into mainstream kernel,
-need to provide replacement for the dynamic hexdump functionality
-
-Do not hurt compilation with kernel that have patch above merged.
-
-REMOVE when dynamic hexdump merged into mainstream kernel!!
-
-Change-Id: I6abb8f91ed529ffc84bd9cc21444a59ee15fe456
----
- dbg_hexdump.h |   32 ++++++++++++++++++++++++++++++++
- wil6210.h     |    2 ++
- 2 files changed, 34 insertions(+)
- create mode 100644 dbg_hexdump.h
-
-diff --git a/dbg_hexdump.h b/dbg_hexdump.h
-new file mode 100644
-index 0000000..7144eed
---- /dev/null
-+++ b/dbg_hexdump.h
-@@ -0,0 +1,32 @@
-+#ifndef DBG_HEXDUMP_H_
-+#define DBG_HEXDUMP_H_
-+
-+#if !defined(print_hex_dump_debug)
-+#if defined(CONFIG_DYNAMIC_DEBUG)
-+#define dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-+			 groupsize, buf, len, ascii)		\
-+do {								\
-+	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor,		\
-+		__builtin_constant_p(prefix_str) ? prefix_str : "hexdump");\
-+	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
-+		print_hex_dump(KERN_DEBUG, prefix_str,		\
-+			       prefix_type, rowsize, groupsize,	\
-+			       buf, len, ascii);		\
-+} while (0)
-+
-+#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,	\
-+			     groupsize, buf, len, ascii)	\
-+	dynamic_hex_dump(prefix_str, prefix_type, rowsize,	\
-+			 groupsize, buf, len, ascii)
-+
-+#define print_hex_dump_bytes(prefix_str, prefix_type, buf, len)	\
-+	dynamic_hex_dump(prefix_str, prefix_type, 16, 1, buf, len, true)
-+#else /* defined(CONFIG_DYNAMIC_DEBUG) */
-+#define print_hex_dump_debug(prefix_str, prefix_type, rowsize,		\
-+			     groupsize, buf, len, ascii)		\
-+	print_hex_dump(KERN_DEBUG, prefix_str, prefix_type, rowsize,	\
-+		       groupsize, buf, len, ascii)
-+#endif /* defined(CONFIG_DYNAMIC_DEBUG) */
-+#endif /* !defined(print_hex_dump_debug) */
-+
-+#endif /* DBG_HEXDUMP_H_ */
-diff --git a/wil6210.h b/wil6210.h
-index b37c3d2..4797da0 100644
---- a/wil6210.h
-+++ b/wil6210.h
-@@ -21,6 +21,8 @@
- #include <linux/wireless.h>
- #include <net/cfg80211.h>
- 
-+#include "dbg_hexdump.h"
-+
- #define WIL_NAME "wil6210"
- 
- /**
 -- 
-1.7.10.4
-
-
+Rafał
