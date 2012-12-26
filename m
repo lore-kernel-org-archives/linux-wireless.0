@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42251 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925Ab2LJVzB (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:50391 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537Ab2LZUvO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 16:55:01 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TiBJU-0002yb-Kz
-	for linux-wireless@vger.kernel.org; Mon, 10 Dec 2012 22:55:00 +0100
-Message-ID: <1355176525.8083.19.camel@jlt4.sipsolutions.net> (sfid-20121210_225507_269247_25470208)
-Subject: Re: [PATCH 01/24] regulatory: don't write past array when
- intersecting rules
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 10 Dec 2012 22:55:25 +0100
-In-Reply-To: <1354812468-15709-2-git-send-email-johannes@sipsolutions.net> (sfid-20121206_174803_199203_E3EBF5F7)
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net>
-	 <1354812468-15709-2-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121206_174803_199203_E3EBF5F7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 26 Dec 2012 15:51:14 -0500
+Date: Wed, 26 Dec 2012 21:51:12 +0100 (CET)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-kernel@vger.kernel.org
+cc: wlanfae <wlanfae@realtek.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH] rtlwifi: Don't leak on error in _rtl_usb_receive()
+Message-ID: <alpine.LNX.2.00.1212262145220.23814@swampdragon.chaosbits.net> (sfid-20121226_215137_877292_10FFE447)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-06 at 17:47 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When intersecting rules, we count first to know how many
-> rules need to be allocated, and then do the intersection
-> into the allocated array. However, the code doing this
-> writes past the end of the array because it attempts to
-> do all intersections. Make it stop when the right number
-> of rules has been reached.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+We fail to release 'urb' if '_rtl_prep_rx_urb()' fails in
+_rtl_usb_receive().
+This patch should take care of the leak.
 
-FWIW, since we currently allocate enough memory here to actually write
-past the end of the intended array, I've decided to remove the stable
-tag. It doesn't really fix anything -- with the next patch it fixes the
-allocation to not be too large, but that doesn't really need to go to
-stable.
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/net/wireless/rtlwifi/usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-johannes
+ note: compile tested only.
+
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 29f0969..75c29e6 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -640,6 +640,7 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
+ 			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
+ 				 "Failed to prep_rx_urb!!\n");
+ 			err = PTR_ERR(skb);
++			usb_free_urb(urb);
+ 			goto err_out;
+ 		}
+ 
+-- 
+1.7.1
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
