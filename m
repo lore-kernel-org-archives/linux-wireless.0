@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:5890 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751421Ab2LKJQ1 (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:42261 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142Ab2LZWIs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 04:16:27 -0500
-From: Alberto Garau <Alberto.Garau@inpeco.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>
-Subject: RE: wl12xx over spi with no scan results (was: Re: [PATCH 20/20]
- wlcore: Always pass DMA-able buffers to mmc functions)
-Date: Tue, 11 Dec 2012 09:16:13 +0000
-Message-ID: <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com> (sfid-20121211_101632_947300_A0B48AB2)
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-21-git-send-email-arik@wizery.com>
-	 <1355159205.3738.63.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
- <1355161791.3738.67.camel@cumari.coelho.fi>
-In-Reply-To: <1355161791.3738.67.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 26 Dec 2012 17:08:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH V3.8 1/5] rtlwifi: Fix warning for unchecked pci_map_single() call
+Date: Wed, 26 Dec 2012 16:08:07 -0600
+Message-Id: <1356559691-5048-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121226_230858_726224_15C53FE2)
+In-Reply-To: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVjYSwNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEx1Y2lhbm8gQ29l
-bGhvIFttYWlsdG86Y29lbGhvQHRpLmNvbV0gDQpTZW50OiBsdW5lZMOsIDEwIGRpY2VtYnJlIDIw
-MTIgMTg6NTANClRvOiBBbGJlcnRvIEdhcmF1DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnOyBJZG8gWWFyaXY7IEFyaWsgTmVtdHNvdg0KU3ViamVjdDogd2wxMnh4IG92ZXIgc3Bp
-IHdpdGggbm8gc2NhbiByZXN1bHRzICh3YXM6IFJlOiBbUEFUQ0ggMjAvMjBdIHdsY29yZTogQWx3
-YXlzIHBhc3MgRE1BLWFibGUgYnVmZmVycyB0byBtbWMgZnVuY3Rpb25zKQ0KDQpIaSBBbGJlcnRv
-LA0KDQpPbiBNb24sIDIwMTItMTItMTAgYXQgMTc6MjQgKzAwMDAsIEFsYmVydG8gR2FyYXUgd3Jv
-dGU6DQo+IEnigJltIHRyeWluZyB0byBtYWtlIHdvcmtpbmcgdGhlIFdMMTI3MSBUSSBNdXJhdGEg
-Y2hpcCB3aXRoIG91ciBjdXN0b20gYm9hcmQuICBUaGUgU1BJIGRyaXZlciBzZWVtcyB0byBiZSBy
-dW5uaW5nIGJ1dCBJIGNhbm5vdCBzY2FuIGZyb20gb3VyIFdpZmkgTmV0d29yay4gDQo+IA0KPiBB
-ZnRlciBib290aW5nIHRoZSBib2FyZCBJ4oCZbSBkb2luZzoNCj4gDQo+IOKAoglpbnNtb2QgL21l
-ZGlhL3JlZC9yb290L3dsMTI3MS93bDEyNzEua28NCj4g4oCiCWluc21vZCAvbWVkaWEvcmVkL3Jv
-b3Qvd2wxMjcxL3dsMTI3MV9zcGkua28NCj4g4oCiCWl3Y29uZmlnIHdsYW4wIG1vZGUgbWFuYWdl
-ZA0KPiDigKIJaXdjb25maWcgd2xhbjAgZXNzaWQgeHh4eHh4eA0KPiDigKIJaWZjb25maWcgd2xh
-bjAgaHcgZXRoZXIgMDA6ODA6RTE6MTI6MjY6MTcgDQo+IOKAoglpZmNvbmZpZyB3bGFuMCAxOTIu
-MTY4LjQwLjEwMCBuZXRtYXNrIDI1NS4yNTUuMjU1LjAgdXANCj4gDQo+IFRoZW4gSSBib3RhaW46
-DQo+IA0KPiBjaGlwX2lkIHJlYWQgZnJvbSBtZW1vcnk6IDA0MDMwMTExDQo+IHdsMTI3MV9mZXRj
-aF9maXJtd2FyZSAtIGZldGNoaW5nIGZpcm13YXJlIHdsMTI3MS1mdy5iaW4gDQo+IHdsMTI3MV9m
-ZXRjaF9udnMgLSBmZXRjaGluZyBmaXJtd2FyZSB3bDEyNzEtbnZzLmJpbg0KPiB3bDEyNzE6IGZp
-cm13YXJlIGJvb3RlZCAoUmV2IDYuMS4wLjUwLjM1MCkNCj4gDQo+IGJ1dCB1bmZvcnR1bmF0ZWx5
-IHRoZSB3aGVuIEkgcnVuIOKAnGl3bGlzdCB3bGFuMCBzY2Fu4oCdDQo+IA0KPiBJIG9idGFpbiDi
-gJx3bGFuMCBObyBzY2FuIHJlc3VsdHPigJ0NCj4gDQo+IA0KPiBDb3VsZCB5b3UgcGxlYXNlIGhl
-bHAgdXMgaW4gZml4aW5nIHRoaXMgaXNzdWUgPw0KDQpUaGlzIGNvdWxkIGJlIG1hbnkgZGlmZmVy
-ZW50IHRoaW5ncy4gIFRoZSBmaXJzdCB0aGluZyB0aGF0IGNvbWVzIHRvIG15IG1pbmQgaXMgdGhh
-dCB0aGUgc2NhbiByZXN1bHRzIGFyZSB0aGUgZmlyc3QgdGhpbmcgdGhhdCBjb21lcyBhcyBhIHJl
-YWwgaW50ZXJydXB0IChiZWZvcmUgdGhpcyBhbGwgdGhlIGludGVycnVwdHMgYXJlIHBvbGxlZCku
-ICBTbyBhcmUgeW91IHN1cmUgdGhlIGludGVycnVwdCBsaW5lIGlzIHdvcmtpbmcgcHJvcGVybHk/
-DQoNClRoZSBpbnRlcnJ1cHQgbGluZSBpdCBzZWVtcyB0byB3b3JrIHByb3Blcmx5LiBJIHB1dCBh
-IHByaW50ayBpbiB0aGUgaW50ZXJydXB0IGhhbmRsZXIgYW5kIEkgc2VlIGl0IGFjdGl2YXRlZCAN
-CkR1cmluZyB0aGUgZmlybXdhcmUgZmV0Y2ggYW5kIHdoZW4gSSBwZXJmb3JtIHRoZSAiaXdsaXN0
-YSB3bGFuMCBzY2FuIi4gSSBrZXB0IHRoZSBJUlEgYXNzb2NpYXRpb24gdG8gSVJRX1RZUEVfRURH
-RV9SSVNJTkcgYXMgeW91ciBzb3VyY2UgY29kZSB3YXMgaW4gMi42LjM3IGtlcm5lbC4NCkFueSBv
-dGhlciBpZGVhIGFib3V0IHdoeSB0aGUgc2NhbiBjb21tYW5kIGl0J3Mgbm90IHByb3Blcmx5IHdv
-cmtpbmcgPw0KDQpSZWdhcmRzDQoNCkFsYmVydG8NCg0KLS0NCkx1Y2EuDQoNCg0K
+Kernel 3.8 implements checking of all DMA mapping calls and issues
+a WARNING for the first it finds that is not checked.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/pci.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 3deacaf..4261e8e 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -743,6 +743,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 
+ done:
+ 		bufferaddress = (*((dma_addr_t *)skb->cb));
++		if (pci_dma_mapping_error(rtlpci->pdev, bufferaddress))
++			return;
+ 		tmp_one = 1;
+ 		rtlpriv->cfg->ops->set_desc((u8 *) pdesc, false,
+ 					    HW_DESC_RXBUFF_ADDR,
+@@ -1115,6 +1117,10 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw)
+ 					   PCI_DMA_FROMDEVICE);
+ 
+ 			bufferaddress = (*((dma_addr_t *)skb->cb));
++			if (pci_dma_mapping_error(rtlpci->pdev, bufferaddress)) {
++				dev_kfree_skb_any(skb);
++				return 1;
++			}
+ 			rtlpriv->cfg->ops->set_desc((u8 *)entry, false,
+ 						    HW_DESC_RXBUFF_ADDR,
+ 						    (u8 *)&bufferaddress);
+-- 
+1.7.10.4
 
