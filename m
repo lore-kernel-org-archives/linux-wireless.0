@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:41792 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163Ab2LKMfd (ORCPT
+Received: from eazy.amigager.de ([213.239.192.238]:53415 "EHLO
+	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752113Ab2LZTBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 07:35:33 -0500
-Message-ID: <1355229286.3738.137.camel@cumari.coelho.fi> (sfid-20121211_133537_601280_2D18241A)
-Subject: Re: wl12xx over spi with no scan results
-From: Luciano Coelho <coelho@ti.com>
-To: Alberto Garau <Alberto.Garau@inpeco.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ido Yariv" <ido@wizery.com>, Arik Nemtsov <arik@wizery.com>
-Date: Tue, 11 Dec 2012 14:34:46 +0200
-In-Reply-To: <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-References: <1354095769-8724-1-git-send-email-arik@wizery.com>
-	 <1354095769-8724-21-git-send-email-arik@wizery.com>
-	 <1355159205.3738.63.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360305@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355161791.3738.67.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C360609@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355218436.3738.122.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C36067E@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-	 <1355223079.3738.128.camel@cumari.coelho.fi>
-	 <0294E4ABF3EF28409B75AAF7EAC3D41A0C3606E9@DB3PRD0510MB381.eurprd05.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 26 Dec 2012 14:01:39 -0500
+Received: from x61.home (p4FDDDC1A.dip.t-dialin.net [79.221.220.26])
+	by eazy.amigager.de (Postfix) with ESMTPA id 4BA44F48026
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Dec 2012 19:54:31 +0100 (CET)
+Date: Wed, 26 Dec 2012 19:54:25 +0100
+From: Tino Keitel <tino.keitel@tikei.de>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Power saving features for iwl4965
+Message-ID: <20121226185425.GA12627@x61.home> (sfid-20121226_200145_036593_8E57594A)
+References: <20120418203543.GA16000@x61.home>
+ <20120425122554.GD2466@redhat.com>
+ <20120503182853.GA12461@mac.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120503182853.GA12461@mac.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-12-11 at 12:28 +0000, Alberto Garau wrote:
-> Thanks Luca, 
+On Thu, May 03, 2012 at 20:28:53 +0200, Tino Keitel wrote:
+> On Wed, Apr 25, 2012 at 14:25:55 +0200, Stanislaw Gruszka wrote:
+> > On Wed, Apr 18, 2012 at 10:35:43PM +0200, Tino Keitel wrote:
+> > > up to 2.6.38, the iwl4965 driver was able to use power saving features
+> > > by invoking "iwconfig <interface> power on", at least when unsetting
+> > > the broken_powersave variable.
+> > > 
+> > > 2.6.39 introduced a new iwlegacy driver for iwl4965 hardware, which was
+> > > missing power saving.  I was able to port the 2.6.38 driver up to
+> > > kernel 3.1, but it got too complicated for me with 3.2. 
+> > > 
+> > > Are there any plans to fix this power usage regression at some point in
+> > > the iwlegacy driver? I think there are still a lot of iwl4965 users out
+> > > there.
+> > Yes, adding PS support is on my iwlegacy TODO list.
 > 
-> configuring 
-> 
-> board_ref_clock = WL12XX_REFCLOCK_38, /* 38.4 MHz */
-> 
-> gave me the possibility to scan network but only for an essid on channel1 (delivered from one AP).
+> Thanks, I'd be glad if I could help, testing etc.
 
-Great! This is good progress. :)
+Hi Stanislaw,
 
+is there any progress regarding this? If not, I could try to implement
+it in the current kernel.  However, I don't have any knowlegde about
+hardware related features.  If you have, maybe I could use your
+knowledge to do it myself.
 
-> I couldn't scan others essids on other channels (for example channel 6) and I don't know why.
-> 
-> Have you got any idea about it ?
-
-Next I'd recommend you to start using the iw tool instead of iwlist and
-friends, so things are more predictable and I can help you more easily.
-
---
-Luca.
+Regards,
+Tino
 
