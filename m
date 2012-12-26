@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:37438 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422674Ab2LGAUj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Dec 2012 19:20:39 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so5742122lag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Dec 2012 16:20:38 -0800 (PST)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42639 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754232Ab2LZKkW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Dec 2012 05:40:22 -0500
+Message-ID: <50DAD40E.7040000@hauke-m.de> (sfid-20121226_114029_327706_E40F833E)
+Date: Wed, 26 Dec 2012 11:40:14 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <1354812468-15709-10-git-send-email-johannes@sipsolutions.net>
-References: <1354812468-15709-1-git-send-email-johannes@sipsolutions.net> <1354812468-15709-10-git-send-email-johannes@sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 6 Dec 2012 16:20:17 -0800
-Message-ID: <CAB=NE6UY6Y7c=sTAoMasY5bgc-q5LfrbT-Tg3xXwtJdtnvU=MQ@mail.gmail.com> (sfid-20121207_012045_650189_1E4D6AE3)
-Subject: Re: [PATCH 09/24] regulatory: use proper enum for return values
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH][3.8?] bcma: correct M25P32 serial flash ID
+References: <1356471262-9242-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1356471262-9242-1-git-send-email-zajec5@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 6, 2012 at 8:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Instead of treating special error codes specially,
-> like -EALREADY, introduce a real enum for all the
-> needed possibilities and use it.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+On 12/25/2012 10:34 PM, Rafał Miłecki wrote:
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Acked-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+I already saw a bug report on the OpenWrt mailing list because of this
+problem:
+http://permalink.gmane.org/gmane.comp.embedded.openwrt.devel/16944
 
-  Luis
+> ---
+> John: it's trivial, you may want to take it for fixes (3.8).
+> I leave it up to you. Noticed it while working on ssb.
+> ---
+>  drivers/bcma/driver_chipcommon_sflash.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/bcma/driver_chipcommon_sflash.c b/drivers/bcma/driver_chipcommon_sflash.c
+> index 63e6883..1e694db 100644
+> --- a/drivers/bcma/driver_chipcommon_sflash.c
+> +++ b/drivers/bcma/driver_chipcommon_sflash.c
+> @@ -35,7 +35,7 @@ static struct bcma_sflash_tbl_e bcma_sflash_st_tbl[] = {
+>  	{ "M25P40", 0x12, 0x10000, 8, },
+>  
+>  	{ "M25P16", 0x14, 0x10000, 32, },
+> -	{ "M25P32", 0x14, 0x10000, 64, },
+> +	{ "M25P32", 0x15, 0x10000, 64, },
+>  	{ "M25P64", 0x16, 0x10000, 128, },
+>  	{ "M25FL128", 0x17, 0x10000, 256, },
+>  	{ 0 },
+> 
+
