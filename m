@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:41062 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753693Ab2LKRv0 (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:44986 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759Ab2LZWIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 12:51:26 -0500
-Date: Tue, 11 Dec 2012 12:51:23 -0500 (EST)
-Message-Id: <20121211.125123.1239332621724872493.davem@davemloft.net> (sfid-20121211_185150_956478_F5109F4C)
-To: abhi.c.pawar@gmail.com
-Cc: pablo@netfilter.org, kaber@trash.net, kuznet@ms2.inr.ac.ru,
-	jmorris@namei.org, yoshfuji@linux-ipv6.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, amwang@redhat.com, edumazet@google.com,
-	nhorman@tuxdriver.com, joe@perches.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	netfilter@vger.kernel.org, coreteam@netfilter.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] net: remove obsolete simple_strto<foo>
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1355203852-12749-1-git-send-email-abhi.c.pawar@gmail.com>
-References: <1355203852-12749-1-git-send-email-abhi.c.pawar@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 26 Dec 2012 17:08:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH V3.8 0/5] Fixes for WARNINGS due to unchecked DMA mapping calls
+Date: Wed, 26 Dec 2012 16:08:06 -0600
+Message-Id: <1356559691-5048-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121226_230850_616807_C91EB3B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijit Pawar <abhi.c.pawar@gmail.com>
-Date: Tue, 11 Dec 2012 11:00:52 +0530
+Beginning with kernel 3.8, the DMA mapping systems begins issuing a WARNING for
+the first call that maps DMA and fails to call dma_mapping_error() to check
+the result. This set of patches adds the appropriate checks to the rtlwifi
+family of drivers.
 
-> This patch removes the redundant occurences of simple_strto<foo>
-> 
-> Signed-off-by: Abhijit Pawar <abhi.c.pawar@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Applied.
+Larry Finger (5):
+  rtlwifi: Fix warning for unchecked pci_map_single() call
+  rtlwifi: rtl8192ce: Fix warning for unchecked pci_map_single() call
+  rtlwifi: rtl8192de: Fix warning for unchecked pci_map_single() call
+  rtlwifi: rtl8192se: Fix warning for unchecked pci_map_single() call
+  rtlwifi: rtl8723ae: Fix warning for unchecked pci_map_single() call
+
+ drivers/net/wireless/rtlwifi/pci.c           |    6 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |   11 +++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c |   10 ++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c |   13 ++++++++++++-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |   12 ++++++++++++
+ 5 files changed, 51 insertions(+), 1 deletion(-)
+
+-- 
+1.7.10.4
+
