@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:45191 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828Ab2LCSxI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49360 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752644Ab2L0MMp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 13:53:08 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq7so33692wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Dec 2012 10:53:07 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201212031611.57351.s.L-H@gmx.de>
-References: <201212031611.57351.s.L-H@gmx.de>
-Date: Mon, 3 Dec 2012 19:53:06 +0100
-Message-ID: <CAGXE3d-xwQArEMM030ht04JDJueHTX3YJp+O6Mmt+LVaPpp1Cg@mail.gmail.com> (sfid-20121203_195316_293660_8445BF89)
-Subject: Re: rt2500usb/ kernel 3.7+: WARNING: at net/wireless/core.c:389
- wiphy_register+0x3fd/0x431 [cfg80211]()
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 27 Dec 2012 07:12:45 -0500
+Message-ID: <1356610386.15149.6.camel@jlt4.sipsolutions.net> (sfid-20121227_131249_993995_25A74003)
+Subject: Re: [PATCH 2/7] ath6kl: add tracing points for sdio transfers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Date: Thu, 27 Dec 2012 13:13:06 +0100
+In-Reply-To: <20121227114430.27069.9849.stgit@localhost6.localdomain6> (sfid-20121227_125304_397419_424F7D8C)
+References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+	 <20121227114430.27069.9849.stgit@localhost6.localdomain6>
+	 (sfid-20121227_125304_397419_424F7D8C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 3, 2012 at 4:11 PM, Stefan Lippers-Hollmann <s.L-H@gmx.de> wrote:
-> Using kernel v3.7-rc7-176-g7e5530a (current mainline HEAD), I notice
-> the following WARN_ON() triggering with rt2500usb and no wireless
-> interface appears.
+On Thu, 2012-12-27 at 13:44 +0200, Kalle Valo wrote:
 
-Mind to try the patch below?
+> +	if (request & HIF_WRITE)
+> +		trace_ath6kl_sdio_wr(addr, request, buf, len);
+> +	else
+> +		trace_ath6kl_sdio_rd(addr, request, buf, len);
 
-Thanks,
-Helmut
+It would be more efficient to use a single tracepoint and have a
+"direction" field or so -- then the if doesn't have to be executed when
+tracing is disabled.
 
 
+> +	for (i = 0; i < scat_req->scat_entries; i++) {
+> +		if (scat_req->req & HIF_WRITE)
+> +			trace_ath6kl_sdio_wr(scat_req->addr,
+> +					     scat_req->req,
+> +					     scat_req->scat_list[i].buf,
+> +					     scat_req->scat_list[i].len);
+> +		else
+> +			trace_ath6kl_sdio_rd(scat_req->addr,
+> +					     scat_req->req,
+> +					     scat_req->scat_list[i].buf,
+> +					     scat_req->scat_list[i].len);
+> +	}
 
->From 4e4223674e2e76ca7a8e449fccd1e0a2d326fc7b Mon Sep 17 00:00:00 2001
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Date: Mon, 3 Dec 2012 19:45:42 +0100
-Subject: [PATCH] rt2x00: Only specify interface combinations if more then one
- interface is possible
+Same here, although it would be even better to move the loop into the
+tracepoint ... is there a small upper bound on "scat_entries"? If yes,
+you could do something like here:
 
-Otherwise this triggers a warning in cfg80211, from net/wireless/core.c:
+http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-next.git;a=blob;f=drivers/net/wireless/iwlwifi/iwl-devtrace.h;hb=HEAD#l325
 
-	/* Combinations with just one interface aren't real */
-	if (WARN_ON(c->max_interfaces < 2))
+where I put a function call into the __entry to figure out how much
+space is needed.
 
-This was introduced in commit 55d2e9da744ba11eae900b4bfc2da72eace3c1e1:
-rt2x00: Replace open coded interface checking with interface combinations.
+johannes
 
-Reported-by: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c
-b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 69097d1..dafb448 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1123,6 +1123,9 @@ static inline void
-rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
- 	struct ieee80211_iface_limit *if_limit;
- 	struct ieee80211_iface_combination *if_combination;
-
-+	if (rt2x00dev->ops->max_ap_intf < 2)
-+		return;
-+
- 	/*
- 	 * Build up AP interface limits structure.
- 	 */
--- 
-1.8.0
