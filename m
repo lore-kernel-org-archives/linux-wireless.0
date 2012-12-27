@@ -1,45 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:32914 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676Ab2LEOEg (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50387 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751204Ab2L0R7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Dec 2012 09:04:36 -0500
-Date: Wed, 5 Dec 2012 08:04:31 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fixing the warning storm for budding chipsets
- without ampdu_action defined
-Message-ID: <20121205140431.GA31677@thinkpad-t410> (sfid-20121205_150439_628404_FC58AF15)
-References: <CABPxzYKrYPo9S-t6dSPS3qgwKcsaD=uoiAm2+naS7C6D=3KBOg@mail.gmail.com>
- <1354699072.9972.7.camel@jlt4.sipsolutions.net>
- <CABPxzYKwA99yXhVR52L1UD=EGNNCotuR94d5pjfhOpnUj_G1DA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABPxzYKwA99yXhVR52L1UD=EGNNCotuR94d5pjfhOpnUj_G1DA@mail.gmail.com>
+	Thu, 27 Dec 2012 12:59:07 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1ToHjU-0001dm-NM
+	for linux-wireless@vger.kernel.org; Thu, 27 Dec 2012 18:59:05 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 0/3] (VHT) operating mode notification
+Date: Thu, 27 Dec 2012 18:59:24 +0100
+Message-Id: <1356631167-15192-1-git-send-email-johannes@sipsolutions.net> (sfid-20121227_185918_260165_4BF8DF9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 05, 2012 at 04:37:19PM +0530, Krishna Chaitanya wrote:
-> I have verified the patch with the checkpatch.pl, i think the
-> whitespace got introduced when i copied the patch from the file to
-> mail.
-> The Mail editor (gmail/thunderbird) automatically converts all tabs to spaces.
-> 
-> What should be the ideal settings for VIM editor and lets say gmail/thunderbird.
-> 
-> for VIM i have done:
-> 
-> set tabstop=4
-> set shiftwidth=4
-> set expandtab
+Here's an attempt to handle the new operating mode notifications.
 
-That's not correct for editing kernel source. You should have:
+So far, only NSS changes are supported, need to do some refactoring
+to support bandwidth changes. Also, the operating mode can also be
+in a beacon IE, need to add support for that.
 
- set tapstop=8
- set shiftwidth=8
- set noexpandtab
-
-Seth
+johannes
 
