@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:54217 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752010Ab2LJMAy (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:40863 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753203Ab2L0Qhz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Dec 2012 07:00:54 -0500
-Message-ID: <50C5CEF4.1070907@cfl.rr.com> (sfid-20121210_130057_632396_1B4F4476)
-Date: Mon, 10 Dec 2012 07:00:52 -0500
-From: Mark Hounschell <dmarkh@cfl.rr.com>
-Reply-To: dmarkh@cfl.rr.com
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: markh@compro.net, linux-wireless@vger.kernel.org
-Subject: Re: Wireless network problem with Access Point selection using ifup
-References: <50C0A743.3000305@compro.net>     (sfid-20121206_152423_356618_ADE5D3BC) <1354806200.18211.1.camel@jlt4.sipsolutions.net>    <50C1C103.1000803@cfl.rr.com> <50C256A9.7010008@compro.net>   <1354913688.9124.2.camel@jlt4.sipsolutions.net>   <50C25A4B.8030302@compro.net> <50C5B65F.4040104@cfl.rr.com>  <1355135199.9857.11.camel@jlt4.sipsolutions.net>  <50C5C321.1090501@cfl.rr.com> <1355138959.9857.13.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1355138959.9857.13.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 27 Dec 2012 11:37:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 3.8 4/5 V2] rtlwifi: rtl8192se: Fix warning for unchecked pci_map_single() call
+Date: Thu, 27 Dec 2012 10:37:31 -0600
+Message-Id: <1356626252-4058-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121227_173812_698985_F3AD72D1)
+In-Reply-To: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2012 06:29 AM, Johannes Berg wrote:
-> On Mon, 2012-12-10 at 06:10 -0500, Mark Hounschell wrote:
->
->> The driver is use has was identified in the original email. So I guess this
->> is the right place to report this issue?
->
-> Yeah, I guess Larry should take a look.
->
->> In each of the wpa log files I See
->> in the beginning, a section like this:
->>
->> nl80211: Received scan results (4 BSSes)
->> wlan0: BSS: Start scan result update 1
->> wlan0: BSS: Add new id 0 BSSID c8:d7:19:7a:ab:1e SSID 'hounschell-1'
->> wlan0: BSS: Add new id 1 BSSID 20:aa:4b:b2:dd:79 SSID 'hounschell-1'
->> wlan0: BSS: Add new id 2 BSSID 00:18:f8:ff:72:d5 SSID 'hounschell-1'
->> wlan0: BSS: Add new id 3 BSSID 00:1a:70:6d:99:50 SSID 'MACDONALD'
->>
->> Every time the first one listed is the one actually selected and each time
->> is different and usually NOT the closest.
->
-> That's expected, the order is random by the order in which it was found
-> in scanning etc. There's no inherent order here.
->
->> It is a Desktop in a fixed location. The AP is within 15ft of the ASUS USB
->> adapter and in direct line of sight.  There may be more than one problem
->> here. I think one of the problems is right here. Above 20:aa:4b:b2:dd:79 is
->> the closest AP. Why is it not first in the list?
->
-> See above.
->
->> Why, when it selects one
->> of the others and it can't figure out it selected the wrong one and
->> reselect the right one seems like a different problem. After all when it
->> does select the correct one, all is good but the actual bandwidth.
->
-> Well so I suspect the driver is also not reporting useful signal
-> strength so that wpa_s doesn't know which one to select. And then when
-> the connection fails, the driver is refusing scanning so it can't even
-> reconnect to a better AP ...
->
-> IOW, all driver problems, and I'm not familiar enough with that driver
-> to tell you what's going on.
->
+Kernel 3.8 implements checking of all DMA mapping calls and issues
+a WARNING for the first it finds that is not checked.
 
-Should I file and bug report and/or contact the author?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-Mark
+v2 - Copy-and-paste error fixed.
 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
+index 0e9f6eb..206561d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
+@@ -611,6 +611,11 @@ void rtl92se_tx_fill_desc(struct ieee80211_hw *hw,
+ 		    PCI_DMA_TODEVICE);
+ 	u8 bw_40 = 0;
+ 
++	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
++		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
++			 "DMA mapping error");
++		return;
++	}
+ 	if (mac->opmode == NL80211_IFTYPE_STATION) {
+ 		bw_40 = mac->bw_40;
+ 	} else if (mac->opmode == NL80211_IFTYPE_AP ||
+@@ -763,6 +768,7 @@ void rtl92se_tx_fill_desc(struct ieee80211_hw *hw,
+ void rtl92se_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+ 	bool firstseg, bool lastseg, struct sk_buff *skb)
+ {
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_tcb_desc *tcb_desc = (struct rtl_tcb_desc *)(skb->cb);
+@@ -770,7 +776,12 @@ void rtl92se_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+ 	dma_addr_t mapping = pci_map_single(rtlpci->pdev, skb->data, skb->len,
+ 			PCI_DMA_TODEVICE);
+ 
+-    /* Clear all status	*/
++	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
++		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
++			 "DMA mapping error");
++		return;
++	}
++	/* Clear all status	*/
+ 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_CMDDESC_SIZE_RTL8192S);
+ 
+ 	/* This bit indicate this packet is used for FW download. */
+-- 
+1.7.10.4
 
