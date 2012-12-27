@@ -1,88 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:37037 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822Ab2LQLKj (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:53049 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752293Ab2L0Lw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Dec 2012 06:10:39 -0500
+	Thu, 27 Dec 2012 06:52:57 -0500
+Subject: [PATCH 6/7] ath6kl: add tracing support to log functions
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com
+Date: Thu, 27 Dec 2012 13:44:52 +0200
+Message-ID: <20121227114452.27069.55695.stgit@localhost6.localdomain6> (sfid-20121227_125306_413366_4D4277A9)
+In-Reply-To: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <20686.63778.840426.61474@pilspetsen.it.uu.se>
-References: <20686.63778.840426.61474@pilspetsen.it.uu.se>
-Date: Mon, 17 Dec 2012 06:10:38 -0500
-Message-ID: <CAHdPZaPQNQ1WS5Qkb4FpmmOX7mXL10HsdaXf5dctp2hd2T0Sow@mail.gmail.com> (sfid-20121217_121056_800231_D069E773)
-Subject: Re: [3.7.0 regression] rt2x00lib_probe_dev: Error - Failed to
- initialize hw
-From: "devendra.aaru" <devendra.aaru@gmail.com>
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 17, 2012 at 5:51 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
-> I just updated an old 1st gen AMD64 laptop from kernel 3.6.0 to 3.7.0,
-> Fedora 15 user-space, and was greeted by the following kernel warning:
->
-> WARNING: at net/wireless/core.c:389 wiphy_register+0x5c3/0x600 [cfg80211]()
+All log messages are now sent through tracing interface as well if
+ATH6KL_TRACING is enabled.
 
-I am seeing this line actually when i do vim +389 net/wireless/core.c.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.h |    4 +++
+ drivers/net/wireless/ath/ath6kl/trace.c |    3 +++
+ drivers/net/wireless/ath/ath6kl/trace.h |   37 +++++++++++++++++++++++++++++++
+ 3 files changed, 44 insertions(+), 0 deletions(-)
 
-                u16 all_iftypes = 0;
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index 06f47f5..b6c7ff1 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -19,6 +19,7 @@
+ #define DEBUG_H
+ 
+ #include "hif.h"
++#include "trace.h"
+ 
+ enum ATH6K_DEBUG_MASK {
+ 	ATH6KL_DBG_CREDIT	= BIT(0),
+@@ -63,6 +64,7 @@ static inline __printf(1,2) int ath6kl_info(const char *fmt, ...)
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+ 	ret = ath6kl_printk(KERN_INFO, "%pV", &vaf);
++	trace_ath6kl_log_info(&vaf);
+ 	va_end(args);
+ 
+ 	return ret;
+@@ -79,6 +81,7 @@ static inline __printf(1,2) int ath6kl_err(const char *fmt, ...)
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+ 	ret = ath6kl_printk(KERN_ERR, "%pV", &vaf);
++	trace_ath6kl_log_err(&vaf);
+ 	va_end(args);
+ 
+ 	return ret;
+@@ -95,6 +98,7 @@ static inline __printf(1,2) int ath6kl_warn(const char *fmt, ...)
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+ 	ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
++	trace_ath6kl_log_warn(&vaf);
+ 	va_end(args);
+ 
+ 	return ret;
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.c b/drivers/net/wireless/ath/ath6kl/trace.c
+index adc74a0..68eece7 100644
+--- a/drivers/net/wireless/ath/ath6kl/trace.c
++++ b/drivers/net/wireless/ath/ath6kl/trace.c
+@@ -21,3 +21,6 @@
+ 
+ EXPORT_TRACEPOINT_SYMBOL(ath6kl_sdio_wr);
+ EXPORT_TRACEPOINT_SYMBOL(ath6kl_sdio_rd);
++EXPORT_TRACEPOINT_SYMBOL(ath6kl_log_info);
++EXPORT_TRACEPOINT_SYMBOL(ath6kl_log_warn);
++EXPORT_TRACEPOINT_SYMBOL(ath6kl_log_err);
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
+index f5838e0..8278143 100644
+--- a/drivers/net/wireless/ath/ath6kl/trace.h
++++ b/drivers/net/wireless/ath/ath6kl/trace.h
+@@ -24,6 +24,11 @@ static inline unsigned int ath6kl_get_wmi_id(void *buf, size_t buf_len)
+ #undef TRACE_EVENT
+ #define TRACE_EVENT(name, proto, ...) \
+ static inline void trace_ ## name(proto) {}
++#undef DECLARE_EVENT_CLASS
++#define DECLARE_EVENT_CLASS(...)
++#undef DEFINE_EVENT
++#define DEFINE_EVENT(evt_class, name, proto, ...) \
++static inline void trace_ ## name(proto) {}
+ #endif /* !CONFIG_ATH6KL_TRACING || __CHECKER__ */
+ 
+ #undef TRACE_SYSTEM
+@@ -192,6 +197,38 @@ TRACE_EVENT(ath6kl_htc_tx,
+ 	)
+ );
+ 
++#define ATH6KL_MSG_MAX 200
++
++DECLARE_EVENT_CLASS(ath6kl_log_event,
++	TP_PROTO(struct va_format *vaf),
++	TP_ARGS(vaf),
++	TP_STRUCT__entry(
++		__dynamic_array(char, msg, ATH6KL_MSG_MAX)
++	),
++	TP_fast_assign(
++		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
++				       ATH6KL_MSG_MAX,
++				       vaf->fmt,
++				       *vaf->va) >= ATH6KL_MSG_MAX);
++	),
++	TP_printk("%s", __get_str(msg))
++);
++
++DEFINE_EVENT(ath6kl_log_event, ath6kl_log_err,
++	     TP_PROTO(struct va_format *vaf),
++	     TP_ARGS(vaf)
++);
++
++DEFINE_EVENT(ath6kl_log_event, ath6kl_log_warn,
++	     TP_PROTO(struct va_format *vaf),
++	     TP_ARGS(vaf)
++);
++
++DEFINE_EVENT(ath6kl_log_event, ath6kl_log_info,
++	     TP_PROTO(struct va_format *vaf),
++	     TP_ARGS(vaf)
++);
++
+ #endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
+ 
+ /* we don't want to use include/trace/events */
 
-its good if you tell us the top sha1 of yours?
-
-
-> Hardware name: SAM#451B
-> Modules linked in: rt2500pci(+) snd_mpu401_uart rt2x00pci snd_rawmidi rt2x00lib sg snd_seq_device mac80211 cfg80211 amd64_agp agpgart snd eeprom_93cx6 soundcore via_rhine mii evdev ipv6 ehci_hcd uhci_hcd sr_mod cdrom usbcore usb_common
-> Pid: 378, comm: modprobe Not tainted 3.7.0 #1
-> Call Trace:
->  [<ffffffff810260b9>] ? warn_slowpath_common+0x79/0xc0
->  [<ffffffffa0115773>] ? wiphy_register+0x5c3/0x600 [cfg80211]
->  [<ffffffff810c5b3f>] ? __kmalloc+0xef/0x170
->  [<ffffffffa013ac97>] ? ieee80211_register_hw+0x347/0x6d0 [mac80211]
->  [<ffffffffa00f92ed>] ? rt2x00lib_probe_dev+0x53d/0x720 [rt2x00lib]
->  [<ffffffffa0060888>] ? rt2x00pci_probe+0x168/0x2e4 [rt2x00pci]
->  [<ffffffff81194cd0>] ? pci_device_probe+0xd0/0x170
->  [<ffffffff811f2934>] ? driver_probe_device+0x64/0x210
->  [<ffffffff811f2b73>] ? __driver_attach+0x93/0xa0
->  [<ffffffff811f2ae0>] ? driver_probe_device+0x210/0x210
->  [<ffffffff811f0f95>] ? bus_for_each_dev+0x45/0x80
->  [<ffffffff811f20d8>] ? bus_add_driver+0x178/0x250
->  [<ffffffff811f314e>] ? driver_register+0x6e/0x170
->  [<ffffffff81048a14>] ? notifier_call_chain+0x44/0x60
->  [<ffffffffa0196000>] ? 0xffffffffa0195fff
->  [<ffffffff810002ca>] ? do_one_initcall+0x11a/0x160
->  [<ffffffff81069786>] ? sys_init_module+0x76/0x1c0
->  [<ffffffff812c15d0>] ? system_call_fastpath+0x16/0x1b
-> ---[ end trace f8413f27de31929d ]---
-> phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
-> rt2500pci: probe of 0000:00:0c.0 failed with error -22
->
-> Rebooting into 3.6.0 shows no such error, booting 3.7.0 again shows the error,
-> so it's completely reproducible.
->
-
-there are lots of WARN_ON's btw, :) may be one of them triggered, but
-please tell us the top sha1 of yours, so that the wireless dev's can
-easily see whats' happening with the rt2x00 to trigger this :)
-
-
-> lspci -v for the device in question:
->
-> 00:0c.0 Network controller: Ralink corp. RT2500 802.11g (rev 01)
->         Subsystem: Micro-Star International Co., Ltd. Unknown 802.11g mini-PCI Adapter
->         Flags: bus master, slow devsel, latency 64, IRQ 18
->         Memory at d0000000 (32-bit, non-prefetchable) [size=8K]
->         Capabilities: [40] Power Management version 2
->         Kernel driver in use: rt2500pci
->         Kernel modules: rt2500pci
->
-> I've never actually used or configured this device (the laptop is always
-> on wired ethernet), but thought you should know about this possible driver
-> regression.
->
-> /Mikael
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
