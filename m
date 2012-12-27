@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47119 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964789Ab2LGJum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Dec 2012 04:50:42 -0500
-Date: Fri, 7 Dec 2012 10:50:13 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless:  Fix ethtool stats and other ops.
-Message-ID: <20121207095012.GB11933@redhat.com> (sfid-20121207_105045_326679_34B91055)
-References: <1354729192-22945-1-git-send-email-greearb@candelatech.com>
- <87a9ts4c1q.fsf@nemi.mork.no>
- <50BF8C18.9060504@candelatech.com>
- <20121206122528.GG2502@redhat.com>
- <50C0FCE0.2090507@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50C0FCE0.2090507@candelatech.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:44846 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161Ab2L0VcL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Dec 2012 16:32:11 -0500
+Date: Thu, 27 Dec 2012 13:32:09 -0800 (PST)
+Message-Id: <20121227.133209.1785109551425933956.davem@davemloft.net> (sfid-20121227_223234_657104_513AE31D)
+To: eric.dumazet@gmail.com
+Cc: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] forcedeth: Fix WARNINGS that result when DMA mapping
+ is not checked
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1356642209.30414.1411.camel@edumazet-glaptop>
+References: <1356638715.30414.1349.camel@edumazet-glaptop>
+	<50DCB1D9.50906@lwfinger.net>
+	<1356642209.30414.1411.camel@edumazet-glaptop>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 06, 2012 at 12:15:28PM -0800, Ben Greear wrote:
-> I don't have time to work on this today...maybe not tomorrow either.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Date: Thu, 27 Dec 2012 13:03:29 -0800
+
+> On Thu, 2012-12-27 at 14:38 -0600, Larry Finger wrote:
+>> On 12/27/2012 02:05 PM, Eric Dumazet wrote:
+>> > On Thu, 2012-12-27 at 13:42 -0600, Larry Finger wrote:
 > 
-> So, if someone else feels like fixing it, please feel free.
+>> >> +		if (pci_dma_mapping_error(np->pci_dev,
+>> >> +					  np->put_tx_ctx->dma))
+>> >> +			return NETDEV_TX_BUSY;
+>> >
+>> > Really this is not going to work very well : caller will call this in a
+>> > loop.
+>> 
+>> Any suggestions on what value should be returned, or does the caller need to be 
+>> modified?
+> 
+> NETDEV_TX_BUSY is really obsolete
+> 
+> Documentation/networking/driver.txt
+> 
+> In case of mapping error, I would drop the packet.
 
-Ok, I'll try to fix that. However this could require modification
-of all cfg80211 drivers, so could not be fast.
-
-Stanislaw
+Agreed.
