@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns1.pc-advies.be ([83.149.101.17]:36108 "EHLO
-	spo001.leaseweb.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754383Ab2LLVVB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48871 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980Ab2L0ItJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Dec 2012 16:21:01 -0500
-Date: Wed, 12 Dec 2012 22:00:09 +0100
-From: Wim Van Sebroeck <wim@iguana.be>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, castet.matthieu@free.fr,
-	biblbroks@sezampro.rs, m@bues.ch, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Subject: Re: [PATCH v2 00/15] watchdog/bcm47xx/bcma/ssb: add support for SoCs with PMU
-Message-ID: <20121212210009.GB31388@spo001.leaseweb.com> (sfid-20121212_222105_743146_239A0DE5)
-References: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
+	Thu, 27 Dec 2012 03:49:09 -0500
+Message-ID: <1356598165.15149.3.camel@jlt4.sipsolutions.net> (sfid-20121227_094915_314133_0433EB40)
+Subject: Re: Fw: [Bug 51901] New: mac80211/cfg.c:1995: possible bad call to
+ memcpy ?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Stephen Hemminger <shemminger@vyatta.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 27 Dec 2012 09:49:25 +0100
+In-Reply-To: <50DC0743.8050608@openwrt.org>
+References: <20121222135545.1f134c5a@samsung-9>
+	  (sfid-20121222_225554_897530_D9193457) <1356594315.15149.1.camel@jlt4.sipsolutions.net>
+	 <50DC0743.8050608@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1353975925-32056-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hauke,
+On Thu, 2012-12-27 at 09:30 +0100, Felix Fietkau wrote:
+> On 2012-12-27 8:45 AM, Johannes Berg wrote:
+> > On Sat, 2012-12-22 at 13:55 -0800, Stephen Hemminger wrote:
+> > 
+> >> static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device
+> >> *dev,
+> >>                     int rate[IEEE80211_NUM_BANDS])
+> >> {
+> >>     struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> >> 
+> >>     memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
+> > 
+> > Seems fine to me. If anyone's bothered by the warning, patch welcome,
+> > but the code is ok since it's an array.
+> I think the warning is correct and the code needs to be fixed. Since
+> rate is a function parameter, sizeof(rate) == sizeof(int).
+> I didn't know about this weird aspect of the C standard either, but I
+> verified it with a simple user space test program. ;)
 
-> @Wim Could you give me an ACK on the "watchdog: bcm47xx_wdt.c:" patches
->      so that John could take them trough the wireless-testing tree, or
->      provide me with some feedback on what I should change.
+Yeah you're right, I even tried to test it but got it wrong. It should
+be changed.
 
-I'll take a look at it and come back on it.
+johannes
 
-Kind regards,
-Wim.
