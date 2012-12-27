@@ -1,223 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54382 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753707Ab2LMW7U (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:42540 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752216Ab2L0Lw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Dec 2012 17:59:20 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 27 Dec 2012 06:52:57 -0500
+Subject: [PATCH 7/7] ath6kl: add tracing support to debug message macros
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/5] mac80211: fix station destruction in AP/mesh modes
-Date: Thu, 13 Dec 2012 23:59:29 +0100
-Message-Id: <1355439573-13206-2-git-send-email-johannes@sipsolutions.net> (sfid-20121213_235929_131851_AD94CBD4)
-In-Reply-To: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
-References: <1355439573-13206-1-git-send-email-johannes@sipsolutions.net>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com
+Date: Thu, 27 Dec 2012 13:44:58 +0200
+Message-ID: <20121227114458.27069.96579.stgit@localhost6.localdomain6> (sfid-20121227_125305_036529_672FE8EA)
+In-Reply-To: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Now all log messages are sent through the tracing infrastruture as well.
+Tracing point doesn't follow debug_mask module parameter, instead it sends
+all debug messages, so once you enable ath6kl_log_dbg tracing point you will
+get a lot of messages. Needs to be discussed if this is sensible or not.
+The overhead should be small enough and we anyway include debug level as
+well so it's easy to filter in user space.
 
-Unfortunately, commit b22cfcfcae5b, intended to speed up roaming
-by avoiding the synchronize_rcu() broke AP/mesh modes as it moved
-some code into that work item that will still call into the driver
-at a time where it's no longer expected to handle this: after the
-AP or mesh has been stopped.
+I wasn't really sure what to do with ath6kl_dbg_dump() and for now decided
+that it also sends the buffer to user space. But most likely in the future
+ath6kl_dbg_dump() should go away in favor of using proper tracing points but
+we will see.
 
-To fix this problem remove the per-station work struct, maintain a
-station cleanup list instead and flush this list when stations are
-flushed. To keep this patch smaller for stable, do this when the
-stations are flushed (sta_info_flush()). This unfortunately brings
-back the original roaming delay; I'll fix that again in a separate
-patch.
-
-Also, Ben reported that the original commit could sometimes (with
-many interfaces) cause long delays when an interface is set down,
-due to blocking on flush_workqueue(). Since we now maintain the
-cleanup list, this particular change of the original patch can be
-reverted.
-
-Cc: stable@vger.kernel.org [3.7]
-Reported-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/mac80211/ieee80211_i.h |  4 ++++
- net/mac80211/iface.c       | 28 ++++++++++++++++------------
- net/mac80211/sta_info.c    | 44 ++++++++++++++++++++++++++++++++++++++++----
- net/mac80211/sta_info.h    |  3 ++-
- 4 files changed, 62 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath6kl/debug.c |   12 ++++++---
+ drivers/net/wireless/ath/ath6kl/trace.h |   42 +++++++++++++++++++++++++++++++
+ 2 files changed, 50 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 47875e0..fe86472 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -773,6 +773,10 @@ struct ieee80211_sub_if_data {
- 		u32 mntr_flags;
- 	} u;
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 15cfe30..2620910 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -63,15 +63,15 @@ void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
+ 	struct va_format vaf;
+ 	va_list args;
  
-+	spinlock_t cleanup_stations_lock;
-+	struct list_head cleanup_stations;
-+	struct work_struct cleanup_stations_wk;
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct {
- 		struct dentry *dir;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 54fb7f9..0f2a9f9 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -868,20 +868,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		cancel_work_sync(&sdata->work);
- 		/*
- 		 * When we get here, the interface is marked down.
--		 * Call rcu_barrier() to wait both for the RX path
-+		 * Call synchronize_rcu() to wait for the RX path
- 		 * should it be using the interface and enqueuing
--		 * frames at this very time on another CPU, and
--		 * for the sta free call_rcu callbacks.
-+		 * frames at this very time on another CPU.
- 		 */
--		rcu_barrier();
+-	if (!(debug_mask & mask))
+-		return;
 -
--		/*
--		 * free_sta_rcu() enqueues a work for the actual
--		 * sta cleanup, so we need to flush it while
--		 * sdata is still valid.
--		 */
--		flush_workqueue(local->workqueue);
--
-+		synchronize_rcu();
- 		skb_queue_purge(&sdata->skb_queue);
+ 	va_start(args, fmt);
  
- 		/*
-@@ -1501,6 +1492,15 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 	mutex_unlock(&local->iflist_mtx);
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
++	if (debug_mask & mask)
++		ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
++
++	trace_ath6kl_log_dbg(mask, &vaf);
+ 
+ 	va_end(args);
  }
+@@ -87,6 +87,10 @@ void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
  
-+static void ieee80211_cleanup_sdata_stas_wk(struct work_struct *wk)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	sdata = container_of(wk, struct ieee80211_sub_if_data, cleanup_stations_wk);
-+
-+	ieee80211_cleanup_sdata_stas(sdata);
-+}
-+
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
- 		     struct vif_params *params)
-@@ -1576,6 +1576,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 
- 	INIT_LIST_HEAD(&sdata->key_list);
- 
-+	spin_lock_init(&sdata->cleanup_stations_lock);
-+	INIT_LIST_HEAD(&sdata->cleanup_stations);
-+	INIT_WORK(&sdata->cleanup_stations_wk, ieee80211_cleanup_sdata_stas_wk);
-+
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
- 		struct ieee80211_supported_band *sband;
- 		sband = local->hw.wiphy->bands[i];
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index dadcfcf..0f709d54 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -91,9 +91,8 @@ static int sta_info_hash_del(struct ieee80211_local *local,
- 	return -ENOENT;
- }
- 
--static void free_sta_work(struct work_struct *wk)
-+static void cleanup_single_sta(struct sta_info *sta)
- {
--	struct sta_info *sta = container_of(wk, struct sta_info, free_sta_wk);
- 	int ac, i;
- 	struct tid_ampdu_tx *tid_tx;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-@@ -153,11 +152,35 @@ static void free_sta_work(struct work_struct *wk)
- 	sta_info_free(local, sta);
- }
- 
-+void ieee80211_cleanup_sdata_stas(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct sta_info *sta;
-+
-+	spin_lock_bh(&sdata->cleanup_stations_lock);
-+	while (!list_empty(&sdata->cleanup_stations)) {
-+		sta = list_first_entry(&sdata->cleanup_stations,
-+				       struct sta_info, list);
-+		list_del(&sta->list);
-+		spin_unlock_bh(&sdata->cleanup_stations_lock);
-+
-+		cleanup_single_sta(sta);
-+
-+		spin_lock_bh(&sdata->cleanup_stations_lock);
-+	}
-+
-+	spin_unlock_bh(&sdata->cleanup_stations_lock);
-+}
-+
- static void free_sta_rcu(struct rcu_head *h)
- {
- 	struct sta_info *sta = container_of(h, struct sta_info, rcu_head);
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 
--	ieee80211_queue_work(&sta->local->hw, &sta->free_sta_wk);
-+	spin_lock(&sdata->cleanup_stations_lock);
-+	list_add_tail(&sta->list, &sdata->cleanup_stations);
-+	spin_unlock(&sdata->cleanup_stations_lock);
-+
-+	ieee80211_queue_work(&sdata->local->hw, &sdata->cleanup_stations_wk);
- }
- 
- /* protected by RCU */
-@@ -310,7 +333,6 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 
- 	spin_lock_init(&sta->lock);
- 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
--	INIT_WORK(&sta->free_sta_wk, free_sta_work);
- 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
- 	mutex_init(&sta->ampdu_mlme.mtx);
- 
-@@ -891,6 +913,20 @@ int sta_info_flush(struct ieee80211_local *local,
+ 		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
  	}
- 	mutex_unlock(&local->sta_mtx);
- 
-+	rcu_barrier();
 +
-+	if (sdata) {
-+		ieee80211_cleanup_sdata_stas(sdata);
-+		cancel_work_sync(&sdata->cleanup_stations_wk);
-+	} else {
-+		mutex_lock(&local->iflist_mtx);
-+		list_for_each_entry(sdata, &local->interfaces, list) {
-+			ieee80211_cleanup_sdata_stas(sdata);
-+			cancel_work_sync(&sdata->cleanup_stations_wk);
-+		}
-+		mutex_unlock(&local->iflist_mtx);
-+	}
-+
- 	return ret;
++	/* tracing code doesn't like null strings :/ */
++	trace_ath6kl_log_dbg_dump(msg ? msg : "", prefix ? prefix : "",
++				  buf, len);
  }
+ EXPORT_SYMBOL(ath6kl_dbg_dump);
  
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 1489bca..37c1889 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -299,7 +299,6 @@ struct sta_info {
- 	spinlock_t lock;
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
+index 8278143..0676ef0 100644
+--- a/drivers/net/wireless/ath/ath6kl/trace.h
++++ b/drivers/net/wireless/ath/ath6kl/trace.h
+@@ -229,6 +229,48 @@ DEFINE_EVENT(ath6kl_log_event, ath6kl_log_info,
+ 	     TP_ARGS(vaf)
+ );
  
- 	struct work_struct drv_unblock_wk;
--	struct work_struct free_sta_wk;
- 
- 	u16 listen_interval;
- 
-@@ -563,4 +562,6 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta);
- void ieee80211_sta_ps_deliver_poll_response(struct sta_info *sta);
- void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta);
- 
-+void ieee80211_cleanup_sdata_stas(struct ieee80211_sub_if_data *sdata);
++TRACE_EVENT(ath6kl_log_dbg,
++	TP_PROTO(unsigned int level, struct va_format *vaf),
++	TP_ARGS(level, vaf),
++	TP_STRUCT__entry(
++		__field(unsigned int, level)
++		__dynamic_array(char, msg, ATH6KL_MSG_MAX)
++	),
++	TP_fast_assign(
++		__entry->level = level;
++		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
++				       ATH6KL_MSG_MAX,
++				       vaf->fmt,
++				       *vaf->va) >= ATH6KL_MSG_MAX);
++	),
++	TP_printk("%s", __get_str(msg))
++);
 +
- #endif /* STA_INFO_H */
--- 
-1.8.0
++TRACE_EVENT(ath6kl_log_dbg_dump,
++	TP_PROTO(const char *msg, const char *prefix,
++		 const void *buf, size_t buf_len),
++
++	TP_ARGS(msg, prefix, buf, buf_len),
++
++	TP_STRUCT__entry(
++		__string(msg, msg)
++		__string(prefix, prefix)
++		__field(size_t, buf_len)
++		__dynamic_array(u8, buf, buf_len)
++	),
++
++	TP_fast_assign(
++		__assign_str(msg, msg);
++		__assign_str(prefix, prefix);
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(buf), buf, buf_len);
++	),
++
++	TP_printk(
++		"%s/%s\n", __get_str(prefix), __get_str(msg)
++	)
++);
++
+ #endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
+ 
+ /* we don't want to use include/trace/events */
 
