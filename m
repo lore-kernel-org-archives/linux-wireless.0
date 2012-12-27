@@ -1,69 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35144 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752816Ab2LKNzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 08:55:10 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>,
-	<users@rt2x00.serialmonkey.com>
-Subject: [PATCH 1/3] rt2x00: zero-out rx_status
-Date: Tue, 11 Dec 2012 14:55:03 +0100
-Message-Id: <1355234105-12013-1-git-send-email-juhosg@openwrt.org> (sfid-20121211_145515_231523_CE45EFE3)
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:38633 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752592Ab2L0LxA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Dec 2012 06:53:00 -0500
+Subject: [PATCH 1/7] ath6kl: add tracing support and tracing points for wmi
+	packets
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com
+Date: Thu, 27 Dec 2012 13:44:24 +0200
+Message-ID: <20121227114423.27069.19067.stgit@localhost6.localdomain6> (sfid-20121227_125309_415682_79D6D001)
+In-Reply-To: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 'mac80211: support radiotap vendor namespace RX data'
-new fields were added to 'struct ieee80211_rx_status'.
-The rt2x00 driver does not initializes those fields and
-this can cause unexpected behaviour.
+Add basic tracing infrastructure support to ath6kl and which can be
+enabled with CONFIG_ATH6KL_TRACING.
 
-The rt2x00 driver from the compat-wireless-2012-12-01
-tarball caused the following warning:
-
-  WARNING: at
-  /devel/ramips/build_dir/target-mipsel_r2_uClibc-0.9.33.2/linux-ramips_rt305x/
-  compat-wireless-2012-12-01/net/mac80211/rx.c:115 ieee80211_rx_irqsafe+0x274/0xbcc
-  [mac80211]()
-  Modules linked in: dwc_otg ledtrig_usbdev nf_nat_irc
-  nf_nat_ftp nf_conntrack_irc nf_conntrack_ftp ipt_MASQUERADE
-  iptable_nat nf_nat pppoe xt_conntrack xt_CT xt_NOTRACK iptable_raw
-  xt_state nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack pppox
-  ipt_REJECT xt_TCPMSS xt_comment xt_multiport xt_mac xt_limit
-  iptable_mangle iptable_filter ip_tables xt_tcpudp x_tables ppp_async
-  ppp_generic slhc rt2800pci(O) rt2800lib(O) rt2x00soc(O) rt2x00pci(O)
-  rt2x00lib(O) mac80211(O) usbcore usb_common nls_base crc_itu_t
-  crc_ccitt eeprom_93cx6 cfg80211(O) compat(O) arc4 aes_generic
-  crypto_blkcipher cryptomgr aead crypto_hash crypto_algapi leds_gpio
-  button_hotplug(O) gpio_keys_polled input_polldev input_core
-  Call Trace:
-  [<801e96b4>] dump_stack+0x8/0x34
-  [<80010a9c>] warn_slowpath_common+0x78/0xa4
-  [<80010ae0>] warn_slowpath_null+0x18/0x24
-  [<80a9710c>] ieee80211_rx_irqsafe+0x274/0xbcc [mac80211]
-
-The patch ensures that each field gets initialized with
-zeroes.
-
-Cc: <users@rt2x00.serialmonkey.com>
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath6kl/Kconfig  |    9 +++
+ drivers/net/wireless/ath/ath6kl/Makefile |    5 ++
+ drivers/net/wireless/ath/ath6kl/trace.c  |   18 ++++++
+ drivers/net/wireless/ath/ath6kl/trace.h  |   87 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/txrx.c   |    3 +
+ drivers/net/wireless/ath/ath6kl/wmi.c    |    3 +
+ 6 files changed, 125 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/trace.c
+ create mode 100644 drivers/net/wireless/ath/ath6kl/trace.h
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 3248b42..be90277 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -686,6 +686,8 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp)
- 	 * to mac80211.
- 	 */
- 	rx_status = IEEE80211_SKB_RXCB(entry->skb);
-+	memset(rx_status, 0, sizeof(*rx_status));
+diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
+index 26c4b72..6971b7a 100644
+--- a/drivers/net/wireless/ath/ath6kl/Kconfig
++++ b/drivers/net/wireless/ath/ath6kl/Kconfig
+@@ -31,6 +31,15 @@ config ATH6KL_DEBUG
+ 	---help---
+ 	  Enables debug support
+ 
++config ATH6KL_TRACING
++	bool "Atheros ath6kl tracing support"
++	depends on ATH6KL
++	depends on EVENT_TRACING
++	---help---
++	  Select this to ath6kl use tracing infrastructure.
 +
- 	rx_status->mactime = rxdesc.timestamp;
- 	rx_status->band = rt2x00dev->curr_band;
- 	rx_status->freq = rt2x00dev->curr_freq;
--- 
-1.7.10
++	  If unsure, say Y to make it easier to debug problems.
++
+ config ATH6KL_REGDOMAIN
+ 	bool "Atheros ath6kl regdomain support"
+ 	depends on ATH6KL
+diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
+index cab0ec0..dc2b3b4 100644
+--- a/drivers/net/wireless/ath/ath6kl/Makefile
++++ b/drivers/net/wireless/ath/ath6kl/Makefile
+@@ -35,10 +35,15 @@ ath6kl_core-y += txrx.o
+ ath6kl_core-y += wmi.o
+ ath6kl_core-y += core.o
+ ath6kl_core-y += recovery.o
++
+ ath6kl_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
++ath6kl_core-$(CONFIG_ATH6KL_TRACING) += trace.o
+ 
+ obj-$(CONFIG_ATH6KL_SDIO) += ath6kl_sdio.o
+ ath6kl_sdio-y += sdio.o
+ 
+ obj-$(CONFIG_ATH6KL_USB) += ath6kl_usb.o
+ ath6kl_usb-y += usb.o
++
++# for tracing framework to find trace.h
++CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.c b/drivers/net/wireless/ath/ath6kl/trace.c
+new file mode 100644
+index 0000000..4118a29
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/trace.c
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (c) 2012 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#define CREATE_TRACE_POINTS
++#include "trace.h"
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
+new file mode 100644
+index 0000000..0787619
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/trace.h
+@@ -0,0 +1,87 @@
++#if !defined(_ATH6KL_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
++
++#include <net/cfg80211.h>
++#include <linux/skbuff.h>
++#include <linux/tracepoint.h>
++#include "wmi.h"
++
++#if !defined(_ATH6KL_TRACE_H)
++static inline unsigned int ath6kl_get_wmi_id(void *buf, size_t buf_len)
++{
++	struct wmi_cmd_hdr *hdr = buf;
++
++	if (buf_len < sizeof(*hdr))
++		return 0;
++
++	return le16_to_cpu(hdr->cmd_id);
++}
++#endif /* __ATH6KL_TRACE_H */
++
++#define _ATH6KL_TRACE_H
++
++/* create empty functions when tracing is disabled */
++#if !defined(CONFIG_ATH6KL_TRACING)
++#undef TRACE_EVENT
++#define TRACE_EVENT(name, proto, ...) \
++static inline void trace_ ## name(proto) {}
++#endif /* !CONFIG_ATH6KL_TRACING || __CHECKER__ */
++
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM ath6kl
++
++TRACE_EVENT(ath6kl_wmi_cmd,
++	TP_PROTO(void *buf, size_t buf_len),
++
++	TP_ARGS(buf, buf_len),
++
++	TP_STRUCT__entry(
++		__field(unsigned int, id)
++		__field(size_t, buf_len)
++		__dynamic_array(u8, buf, buf_len)
++	),
++
++	TP_fast_assign(
++		__entry->id = ath6kl_get_wmi_id(buf, buf_len);
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(buf), buf, buf_len);
++	),
++
++	TP_printk(
++		"id %d len %d",
++		__entry->id, __entry->buf_len
++	)
++);
++
++TRACE_EVENT(ath6kl_wmi_event,
++	TP_PROTO(void *buf, size_t buf_len),
++
++	TP_ARGS(buf, buf_len),
++
++	TP_STRUCT__entry(
++		__field(unsigned int, id)
++		__field(size_t, buf_len)
++		__dynamic_array(u8, buf, buf_len)
++	),
++
++	TP_fast_assign(
++		__entry->id = ath6kl_get_wmi_id(buf, buf_len);
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(buf), buf, buf_len);
++	),
++
++	TP_printk(
++		"id %d len %d",
++		__entry->id, __entry->buf_len
++	)
++);
++
++#endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
++
++/* we don't want to use include/trace/events */
++#undef TRACE_INCLUDE_PATH
++#define TRACE_INCLUDE_PATH .
++#undef TRACE_INCLUDE_FILE
++#define TRACE_INCLUDE_FILE trace
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 78b3692..43dbdaa 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -20,6 +20,7 @@
+ #include "core.h"
+ #include "debug.h"
+ #include "htc-ops.h"
++#include "trace.h"
+ 
+ /*
+  * tid - tid_mux0..tid_mux3
+@@ -288,6 +289,8 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
+ 	int status = 0;
+ 	struct ath6kl_cookie *cookie = NULL;
+ 
++	trace_ath6kl_wmi_cmd(skb->data, skb->len);
++
+ 	if (WARN_ON_ONCE(ar->state == ATH6KL_STATE_WOW)) {
+ 		dev_kfree_skb(skb);
+ 		return -EACCES;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 214f741..7c8c535 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -20,6 +20,7 @@
+ #include "core.h"
+ #include "debug.h"
+ #include "testmode.h"
++#include "trace.h"
+ #include "../regd.h"
+ #include "../regd_common.h"
+ 
+@@ -4086,6 +4087,8 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 		return -EINVAL;
+ 	}
+ 
++	trace_ath6kl_wmi_event(skb->data, skb->len);
++
+ 	return ath6kl_wmi_proc_events(wmi, skb);
+ }
+ 
 
