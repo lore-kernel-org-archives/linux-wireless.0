@@ -1,141 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:49410 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413Ab2LVXSt (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33259 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040Ab2L0VIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 18:18:49 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 16/17] cw1200: v2: kbuild integration
-Date: Sat, 22 Dec 2012 18:18:31 -0500
-Message-Id: <1356218312-13616-17-git-send-email-pizza@shaftnet.org> (sfid-20121223_002322_661981_8883104B)
-In-Reply-To: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
-References: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
+	Thu, 27 Dec 2012 16:08:51 -0500
+Received: by mail-pa0-f54.google.com with SMTP id bi5so5714873pad.41
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2012 13:08:50 -0800 (PST)
+Subject: Re: [PATCH] forcedeth: Fix WARNINGS that result when DMA mapping
+ is not checked
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <50DCB1D9.50906@lwfinger.net>
+References: <1356637327-4884-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <1356638715.30414.1349.camel@edumazet-glaptop>
+	 <50DCB1D9.50906@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 Dec 2012 13:03:29 -0800
+Message-ID: <1356642209.30414.1411.camel@edumazet-glaptop> (sfid-20121227_220858_254864_B3FC48F0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/staging/cw1200/Kconfig  | 78 +++++++++++++++++++++++++++++++++++++++++
- drivers/staging/cw1200/Makefile | 23 ++++++++++++
- 2 files changed, 101 insertions(+)
- create mode 100644 drivers/staging/cw1200/Kconfig
- create mode 100644 drivers/staging/cw1200/Makefile
+On Thu, 2012-12-27 at 14:38 -0600, Larry Finger wrote:
+> On 12/27/2012 02:05 PM, Eric Dumazet wrote:
+> > On Thu, 2012-12-27 at 13:42 -0600, Larry Finger wrote:
 
-diff --git a/drivers/staging/cw1200/Kconfig b/drivers/staging/cw1200/Kconfig
-new file mode 100644
-index 0000000..6d59094
---- /dev/null
-+++ b/drivers/staging/cw1200/Kconfig
-@@ -0,0 +1,78 @@
-+config CW1200
-+       tristate "CW1200 WLAN support"
-+       depends on MAC80211 && CFG80211
-+       help
-+         This is driver for the ST-E CW1100 & CW1200 WLAN chipsets.
-+         This option just enables the driver core, see below for 
-+	 specific bus support.
-+
-+if CW1200
-+
-+config CW1200_WLAN_SDIO
-+       tristate "Support SDIO platforms"
-+       depends on CW1200 && MMC
-+       help
-+         This enables support for the CW1200 via an SDIO bus.
-+
-+config CW1200_WLAN_SPI
-+       tristate "Support SPI platforms"
-+       select CW1200_USE_GPIO_IRQ
-+       depends on CW1200 && SPI
-+       help
-+         This enables support for the CW1200 via a SPI bus.
-+
-+config CW1200_NON_POWER_OF_TWO_BLOCKSIZES
-+      bool "Platform supports non-power-of-two SDIO transfer"
-+      depends on CW1200_SDIO
-+      help
-+        Say N here only if you are running the driver on a platform
-+        which does not have support for non-power-of-two SDIO transfer.
-+        If unsure, say Y.
-+
-+config CW1200_USE_GPIO_IRQ
-+      bool "Use GPIO interrupt"
-+      depends on CW1200_SDIO
-+      help
-+        Say Y here if you want to include GPIO IRQ support instead of 
-+	SDIO IRQ.  Note that you will be limited to 1-bit SDIO operation.
-+        If unsure, say N.
-+
-+config CW1200_POLL_IRQ
-+       bool "Poll for data to work around irq delivery bugs"
-+       help
-+         You should say Y if your board has problems with IRQ delibery.
-+	 Otherwise say N.
-+
-+config CW1200_5GHZ_SUPPORT
-+      bool "5GHz band support"
-+      depends on CW1200
-+      help
-+        Say Y if your device supports 5GHz band. Should be disabled for
-+        CW1100 silicon.
-+        If unsure, say N.
-+
-+config CW1200_PM
-+      bool "Enable CW1200 advanced power management"
-+      depends on CW1200 && PM
-+
-+menu "Driver debug features"
-+      depends on CW1200
-+
-+config CW1200_DEBUGFS
-+      bool "Expose driver internals to DebugFS (DEVELOPMENT)"
-+
-+config CW1200_ETF
-+       bool "Enable CW1200 Engineering Test Framework hooks"
-+       depends on CW1200_DEBUGFS
-+       help 
-+       	 If you don't know what this is, just say N.
-+
-+config CW1200_ITP
-+       bool "Enable ITP access"
-+       depends on CW1200_DEBUGFS
-+	 help 
-+	 If you don't know what this is, just say N.
-+
-+endmenu
-+
-+endif
-diff --git a/drivers/staging/cw1200/Makefile b/drivers/staging/cw1200/Makefile
-new file mode 100644
-index 0000000..2d5e8ad
---- /dev/null
-+++ b/drivers/staging/cw1200/Makefile
-@@ -0,0 +1,23 @@
-+cw1200_core-y := \
-+		fwio.o \
-+		txrx.o \
-+		main.o \
-+		queue.o \
-+		hwio.o \
-+		bh.o \
-+		wsm.o \
-+		sta.o \
-+		ap.o \
-+		scan.o
-+cw1200_core-$(CONFIG_CW1200_DEBUGFS)	+= debug.o
-+cw1200_core-$(CONFIG_CW1200_ITP)	+= itp.o
-+cw1200_core-$(CONFIG_CW1200_PM)		+= pm.o
-+
-+cw1200_wlan_sdio-y := cw1200_sdio.o
-+cw1200_wlan_spi-y := cw1200_spi.o
-+
-+obj-$(CONFIG_CW1200) += cw1200_core.o
-+obj-$(CONFIG_CW1200_WLAN_SDIO) += cw1200_wlan_sdio.o
-+obj-$(CONFIG_CW1200_WLAN_SPI) += cw1200_wlan_spi.o
-+
-+
--- 
-1.7.11.7
+> >> +		if (pci_dma_mapping_error(np->pci_dev,
+> >> +					  np->put_tx_ctx->dma))
+> >> +			return NETDEV_TX_BUSY;
+> >
+> > Really this is not going to work very well : caller will call this in a
+> > loop.
+> 
+> Any suggestions on what value should be returned, or does the caller need to be 
+> modified?
+
+NETDEV_TX_BUSY is really obsolete
+
+Documentation/networking/driver.txt
+
+In case of mapping error, I would drop the packet.
+
+(kfree_skb() it, increment a device tx_dropped counter,  and return
+NETDEV_TX_OK)
+
+
 
