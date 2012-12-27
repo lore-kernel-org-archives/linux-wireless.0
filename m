@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56706 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754074Ab2LKUMy (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:51671 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752293Ab2L0OHf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 15:12:54 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so2959756pbc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 12:12:54 -0800 (PST)
-Date: Tue, 11 Dec 2012 12:12:50 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jason Baron <jbaron@redhat.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Joe Perches <joe@perches.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org, Jim Cromie <jim.cromie@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC] dynamic_debug: introduce debug_hex_dump()
-Message-ID: <20121211201250.GA19675@kroah.com> (sfid-20121211_211258_586378_6BCBE37B)
-References: <1352895463-22851-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1353263740.28214.2.camel@joe-AO722>
- <20121120160845.GB31176@redhat.com>
- <3645415.mrRzvuvPFK@lx-vladimir>
- <20121211193646.GS15974@pogo>
- <20121211200831.GD11815@redhat.com>
+	Thu, 27 Dec 2012 09:07:35 -0500
+Date: Thu, 27 Dec 2012 09:07:31 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Bartosz Markowski <markowski.bartosz@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: Re: [PATCH 06/17] cw1200: Mini-AP implementation
+Message-ID: <20121227140730.GA31475@shaftnet.org> (sfid-20121227_150739_696610_1A3E4613)
+References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
+ <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
+ <50D61117.8020009@gmail.com>
+ <CAM8CFPgJu5CR9tU_mMw1_0yDUEj-dLk2G+6W91W1-H4LMa+BUw@mail.gmail.com>
+ <20121223124734.GB29607@shaftnet.org>
+ <CAM8CFPj==UdTjCe0=hPRtT_BC1E4TvRFDjqBZUD4=c+PbkncVA@mail.gmail.com>
+ <20121223164408.GA3624@shaftnet.org>
+ <87r4mbubhj.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121211200831.GD11815@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
+In-Reply-To: <87r4mbubhj.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 11, 2012 at 03:08:31PM -0500, Jason Baron wrote:
-> On Tue, Dec 11, 2012 at 11:36:46AM -0800, Luis R. Rodriguez wrote:
-> > On Tue, Dec 04, 2012 at 11:28:26AM +0200, Vladimir Kondratiev wrote:
-> > > Hi Jason,
-> > > 
-> > > Do you have any update on the status for patches below?
-> > > Where is it now? When do you expect it to merge? 3.8?
-> > > I am waiting for this to merge before I can go on
-> > > with my driver.
-> > 
-> > *poke*
-> > 
-> >   Luis
-> 
-> Hi Luis,
-> 
-> Yes, I posted this patch, along with 2 others last week for Greg to
-> pull. I believe these are too late for the 3.8 merge window. Perhaps,
-> Greg can comment. Here's a link to the post:
-> 
-> http://marc.info/?l=linux-kernel&m=135474417810281&w=2
 
-Yes it's too late, these will go into linux-next after 3.8-rc1 is out.
+--82I3+IH0IqGh5yIs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-thanks,
+On Thu, Dec 27, 2012 at 10:48:24AM +0200, Kalle Valo wrote:
+> > away entirely, so I suspect what's happening is that the LMAC is=20
+> > consistently waking up a little too late (or going back to sleep too=20
+> > early) to hear the beacons.
+> >
+> > My guess is that the LMAC is pushing its powersaving margins too close.
+>=20
+> Or synchronisation to TBTT is busted for some reason, like not
+> receiving a beacon before enabling power save etc. (just guessing here).
 
-greg k-h
+Unlikely; the "join" command to the LMAC is blocking and won't return=20
+until it hears a beacon.
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--82I3+IH0IqGh5yIs
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iD8DBQFQ3FYiPuLgii2759ARAofTAKDbAkk2Jtirsph/DS8bzC5kdwolngCeO9yx
+1n2873i6FutCISEH8ptWSV0=
+=Wjzo
+-----END PGP SIGNATURE-----
+
+--82I3+IH0IqGh5yIs--
