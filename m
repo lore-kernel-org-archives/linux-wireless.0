@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48716 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894Ab2L0HpA (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36333 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804Ab2L0Pru (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 02:45:00 -0500
-Message-ID: <1356594315.15149.1.camel@jlt4.sipsolutions.net> (sfid-20121227_084507_769440_2D8D74F2)
-Subject: Re: Fw: [Bug 51901] New: mac80211/cfg.c:1995: possible bad call to
- memcpy ?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 27 Dec 2012 08:45:15 +0100
-In-Reply-To: <20121222135545.1f134c5a@samsung-9> (sfid-20121222_225554_897530_D9193457)
-References: <20121222135545.1f134c5a@samsung-9>
-	 (sfid-20121222_225554_897530_D9193457)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 27 Dec 2012 10:47:50 -0500
+Cc: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 5/7] ath6kl: convert ath6kl_info/err/warn macros to real functions
+References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+	<20121227114447.27069.54329.stgit@localhost6.localdomain6>
+	<1356610754.15149.11.camel@jlt4.sipsolutions.net>
+Date: Thu, 27 Dec 2012 17:47:48 +0200
+In-Reply-To: <1356610754.15149.11.camel@jlt4.sipsolutions.net> (Johannes
+	Berg's message of "Thu, 27 Dec 2012 13:19:14 +0100")
+Message-ID: <871uebfqe3.fsf@qca.qualcomm.com> (sfid-20121227_164754_111011_64A5ACEA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-12-22 at 13:55 -0800, Stephen Hemminger wrote:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device
-> *dev,
->                     int rate[IEEE80211_NUM_BANDS])
-> {
->     struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> 
->     memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
+> On Thu, 2012-12-27 at 13:44 +0200, Kalle Valo wrote:
+>
+>> +	va_start(args, fmt);
+>> +	vaf.va = &args;
+>> +	ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
+>> +	va_end(args);
+>
+> Note that by inserting the tracing here later, you're relying on the
+> fact that "%pV" does va_copy(). This isn't true in all kernel versions,
+> I think there's on version or so where %pV is supported but didn't
+> va_copy(). That may lead to problems (I don't remember what kind) here.
+>
+> This is relevant for compat only, I think I carry a patch there to add
+> va_copy() into the tracing or something.
 
-Seems fine to me. If anyone's bothered by the warning, patch welcome,
-but the code is ok since it's an array.
+Compat-drivers has 55-iwlwifi-msg-trace-fix.patch which says:
 
-johannes
+"In recent kernels, %pV will copy the va_list before using it.
+This isn't true for all kernels, so copy the va_list for use
+by the dev_*() functions, otherwise the kernel will crash if
+the message is printed and traced."
 
+I take it that the problem happens when the message is both printed and
+traced at the same time. So ath6kl will need a similar patch as well.
+
+Thanks for the heads up.
+
+Kalle
