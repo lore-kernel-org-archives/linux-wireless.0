@@ -1,178 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:45504 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987Ab2LSLMt (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:47920 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752580Ab2L0Lw6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 06:12:49 -0500
-Received: by mail-lb0-f172.google.com with SMTP id y2so1626881lbk.17
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 03:12:48 -0800 (PST)
-Message-ID: <50D19F97.9000000@27m.se> (sfid-20121219_121254_102737_DB43777B)
-Date: Wed, 19 Dec 2012 12:05:59 +0100
-From: Jones Desougi <jones.desougi@27m.se>
+	Thu, 27 Dec 2012 06:52:58 -0500
+Subject: [PATCH 3/7] ath6kl: add tracing point for hif irqs
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com
+Date: Thu, 27 Dec 2012 13:44:35 +0200
+Message-ID: <20121227114435.27069.96674.stgit@localhost6.localdomain6> (sfid-20121227_125314_525194_B86557CA)
+In-Reply-To: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
+References: <20121227114156.27069.30223.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Daniel Golle <dgolle@allnet.de>, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 1/2] rt2x00: rt2800pci: verify ioremap return value
-References: <1355847743-16659-1-git-send-email-juhosg@openwrt.org>
-In-Reply-To: <1355847743-16659-1-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gabor,
+Add a tracing point for hif irq and dump the register content to user space.
+This is in hif.c as we could use the same code also with SPI but, as ath6kl
+doesn't SPI and most likely never will be, this is used just by SDIO so
+name the trace point as ath6kl_sdio_irq to make it easier to manage filters.
 
-One thing:
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/hif.c   |    3 +++
+ drivers/net/wireless/ath/ath6kl/trace.h |   20 ++++++++++++++++++++
+ 2 files changed, 23 insertions(+), 0 deletions(-)
 
-On 12/18/2012 05:22 PM, Gabor Juhos wrote:
-> An ioremap call is allowed to fail, however
-> the return value of that is not checked in
-> the 'rt2800pci_read_eeprom_soc' function.
-> 
-> The patch adds the missing check, and makes
-> the function return an int value. The patch
-> also converts the 'rt2800_read_eeprom' and
-> 'rt2800_ops.read_eeprom' functions to return
-> an int value, so the error value can be
-> propagated up to the 'rt2800_validate_eeprom'
-> function.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    5 ++++-
->  drivers/net/wireless/rt2x00/rt2800lib.h |    6 +++---
->  drivers/net/wireless/rt2x00/rt2800pci.c |   17 ++++++++++++-----
->  drivers/net/wireless/rt2x00/rt2800usb.c |    4 +++-
->  4 files changed, 22 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 197b446..52b2978 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -4635,11 +4635,14 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
->  	u16 word;
->  	u8 *mac;
->  	u8 default_lna_gain;
-> +	int retval;
->  
->  	/*
->  	 * Read the EEPROM.
->  	 */
-> -	rt2800_read_eeprom(rt2x00dev);
-> +	retval = rt2800_read_eeprom(rt2x00dev);
-> +	if (retval)
-> +		return retval;
->  
->  	/*
->  	 * Start validation of the data that has been read.
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-> index a128cea..8252c67 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-> @@ -43,7 +43,7 @@ struct rt2800_ops {
->  			    const unsigned int offset,
->  			    const struct rt2x00_field32 field, u32 *reg);
->  
-> -	void (*read_eeprom)(struct rt2x00_dev *rt2x00dev);
-> +	int (*read_eeprom)(struct rt2x00_dev *rt2x00dev);
->  	bool (*hwcrypt_disabled)(struct rt2x00_dev *rt2x00dev);
->  
->  	int (*drv_write_firmware)(struct rt2x00_dev *rt2x00dev,
-> @@ -117,11 +117,11 @@ static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
->  	return rt2800ops->regbusy_read(rt2x00dev, offset, field, reg);
->  }
->  
-> -static inline void rt2800_read_eeprom(struct rt2x00_dev *rt2x00dev)
-> +static inline int rt2800_read_eeprom(struct rt2x00_dev *rt2x00dev)
->  {
->  	const struct rt2800_ops *rt2800ops = rt2x00dev->ops->drv;
->  
-> -	rt2800ops->read_eeprom(rt2x00dev);
-> +	return rt2800ops->read_eeprom(rt2x00dev);
->  }
->  
->  static inline bool rt2800_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 9224d87..5fc16dd 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -90,17 +90,21 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
->  }
->  
->  #if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
-> -static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
-> +static int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
->  {
->  	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
->  
-> +	if (!base_addr)
-> +		return -ENOMEM;
-> +
->  	memcpy_fromio(rt2x00dev->eeprom, base_addr, EEPROM_SIZE);
->  
->  	iounmap(base_addr);
->  }
-
-Missing return at the end, since it should now return an int.
-Even if this is gone with the second patch.
-
->  #else
-> -static inline void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
-> +static inline int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
->  {
-> +	return -ENOMEM;
->  }
->  #endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
->  
-> @@ -970,14 +974,17 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
->  /*
->   * Device probe functions.
->   */
-> -static void rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
-> +static int rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
->  {
->  	if (rt2x00_is_soc(rt2x00dev))
-> -		rt2800pci_read_eeprom_soc(rt2x00dev);
-> -	else if (rt2800pci_efuse_detect(rt2x00dev))
-> +		return rt2800pci_read_eeprom_soc(rt2x00dev);
-> +
-> +	if (rt2800pci_efuse_detect(rt2x00dev))
->  		rt2800pci_read_eeprom_efuse(rt2x00dev);
->  	else
->  		rt2800pci_read_eeprom_pci(rt2x00dev);
-> +
-> +	return 0;
->  }
->  
->  static const struct ieee80211_ops rt2800pci_mac80211_ops = {
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 5c149b5..48de5c9 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -735,13 +735,15 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
->  /*
->   * Device probe functions.
->   */
-> -static void rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
-> +static int rt2800usb_read_eeprom(struct rt2x00_dev *rt2x00dev)
->  {
->  	if (rt2800_efuse_detect(rt2x00dev))
->  		rt2800_read_eeprom_efuse(rt2x00dev);
->  	else
->  		rt2x00usb_eeprom_read(rt2x00dev, rt2x00dev->eeprom,
->  				      EEPROM_SIZE);
-> +
-> +	return 0;
->  }
->  
->  static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
-> 
-
-
-Regards,
-   /Jones
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
+index a6b6144..fea7709 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.c
++++ b/drivers/net/wireless/ath/ath6kl/hif.c
+@@ -22,6 +22,7 @@
+ #include "target.h"
+ #include "hif-ops.h"
+ #include "debug.h"
++#include "trace.h"
+ 
+ #define MAILBOX_FOR_BLOCK_SIZE          1
+ 
+@@ -436,6 +437,8 @@ static int proc_pending_irqs(struct ath6kl_device *dev, bool *done)
+ 
+ 		ath6kl_dump_registers(dev, &dev->irq_proc_reg,
+ 				      &dev->irq_en_reg);
++		trace_ath6kl_sdio_irq(&dev->irq_en_reg,
++				      sizeof(dev->irq_en_reg));
+ 
+ 		/* Update only those registers that are enabled */
+ 		host_int_status = dev->irq_proc_reg.host_int_status &
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
+index be2e4e2..6553dc1 100644
+--- a/drivers/net/wireless/ath/ath6kl/trace.h
++++ b/drivers/net/wireless/ath/ath6kl/trace.h
+@@ -116,6 +116,26 @@ DEFINE_EVENT(ath6kl_sdio_transaction, ath6kl_sdio_rd,
+ 	TP_ARGS(addr, flags, buf, buf_len)
+ );
+ 
++TRACE_EVENT(ath6kl_sdio_irq,
++	TP_PROTO(void *buf, size_t buf_len),
++
++	TP_ARGS(buf, buf_len),
++
++	TP_STRUCT__entry(
++		__field(size_t, buf_len)
++		__dynamic_array(u8, buf, buf_len)
++	),
++
++	TP_fast_assign(
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(buf), buf, buf_len);
++	),
++
++	TP_printk(
++		"irq len %d\n", __entry->buf_len
++	)
++);
++
+ #endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
+ 
+ /* we don't want to use include/trace/events */
 
