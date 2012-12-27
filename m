@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:48279 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660Ab2LKHim (ORCPT
+Received: from mail-da0-f45.google.com ([209.85.210.45]:64832 "EHLO
+	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201Ab2L0Qhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 02:38:42 -0500
-Received: by mail-qa0-f53.google.com with SMTP id a19so2570582qad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Dec 2012 23:38:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1355180983.3738.112.camel@cumari.coelho.fi>
-References: <1354229283-7934-1-git-send-email-arik@wizery.com>
- <1355153582.3738.53.camel@cumari.coelho.fi> <CA+XVXffLuJuqQJ8Ju5XsipSdkuUBFOx=0ReQJe8Oc7J-5X+B6Q@mail.gmail.com>
- <1355176215.3738.102.camel@cumari.coelho.fi> <CA+XVXffZgF+rJfgrGbq0+D2Y1gx2VmZ1HziD18r9NNwqQ2BVjA@mail.gmail.com>
- <1355180983.3738.112.camel@cumari.coelho.fi>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 11 Dec 2012 09:38:24 +0200
-Message-ID: <CA+XVXfe7BcG+8_9MTBzxovfoQF81uW-KoSMWdV8sPmY-Dj-mbw@mail.gmail.com> (sfid-20121211_083846_636151_97B56740)
-Subject: Re: [PATCH v2] wlcore: use separate HW queue for each AC in each vif
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 27 Dec 2012 11:37:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 3.8 1/5 V2] rtlwifi: Fix warning for unchecked pci_map_single() call
+Date: Thu, 27 Dec 2012 10:37:28 -0600
+Message-Id: <1356626252-4058-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121227_173758_816537_E980CA80)
+In-Reply-To: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 11, 2012 at 1:09 AM, Luciano Coelho <coelho@ti.com> wrote:
->
->> So for instance we want to stop all vifs during recovery, and mark all
->> with stop reasons. That's also the reason I used the mac80211 global
->> API for stopping/waking the queues.
->
-> A "global" ieee80211_iterate_active_interfaces_atomic() would do the
-> same thing. ;)
->
-> But I agree that it's simpler to set all possible vifs as stopped here.
+Kernel 3.8 implements checking of all DMA mapping calls and issues
+a WARNING for the first it finds that is not checked.
 
-Actually your suggestion acts differently in some corner cases.
-Namely, if we stop all vifs and suddenly mac80211 decides to add a
-vif, then the new vif will not be stopped, and we will clear all stop
-reasons for it.
-Then with my version, we will trigger the the WARN_ON when waking the
-queues. But this corner case is so strange that I would like a WARN_ON
-there to detect it. If we do stumble across it, we can discuss various
-solutions, including changing mac80211..
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/pci.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-TLDR: Let's keep it the way it is today :)
+No change for V2.
+
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 3deacaf..4261e8e 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -743,6 +743,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 
+ done:
+ 		bufferaddress = (*((dma_addr_t *)skb->cb));
++		if (pci_dma_mapping_error(rtlpci->pdev, bufferaddress))
++			return;
+ 		tmp_one = 1;
+ 		rtlpriv->cfg->ops->set_desc((u8 *) pdesc, false,
+ 					    HW_DESC_RXBUFF_ADDR,
+@@ -1115,6 +1117,10 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw)
+ 					   PCI_DMA_FROMDEVICE);
+ 
+ 			bufferaddress = (*((dma_addr_t *)skb->cb));
++			if (pci_dma_mapping_error(rtlpci->pdev, bufferaddress)) {
++				dev_kfree_skb_any(skb);
++				return 1;
++			}
+ 			rtlpriv->cfg->ops->set_desc((u8 *)entry, false,
+ 						    HW_DESC_RXBUFF_ADDR,
+ 						    (u8 *)&bufferaddress);
+-- 
+1.7.10.4
+
