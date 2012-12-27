@@ -1,335 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40978 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755851Ab2LCRmx (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:56055 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752446Ab2L0OS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 12:42:53 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 27 Dec 2012 09:18:28 -0500
+Received: by mail-we0-f181.google.com with SMTP id t11so4442974wey.40
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2012 06:18:25 -0800 (PST)
+Subject: [PATCH -stable] p54usb: add USBIDs for two more p54usb devices
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 6/8] regulatory: use proper enum for return values
-Date: Mon,  3 Dec 2012 18:43:11 +0100
-Message-Id: <1354556593-2363-7-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184258_705767_EC264166)
-In-Reply-To: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
-References: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Thu, 27 Dec 2012 15:18:20 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201212271518.20770.chunkeey@googlemail.com> (sfid-20121227_151833_450859_289A19AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch adds USBIDs for:
+	- DrayTek Vigor 530
+	- Zoom 4410a
 
-Instead of treating special error codes specially,
-like -EALREADY, introduce a real enum for all the
-needed possibilities and use it.
+It also adds a note about Gemtek WUBI-100GW
+and SparkLAN WL-682 USBID conflict [WUBI-100GW
+is a ISL3886+NET2280 (LM86 firmare) solution,
+whereas WL-682 is a ISL3887 (LM87 firmware)]
+device.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Source: <http://www.wikidevi.com/wiki/Intersil/p54/usb/windows>
+
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- net/wireless/reg.c | 131 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 68 insertions(+), 63 deletions(-)
+ drivers/net/wireless/p54/p54usb.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9de3360..9f70573 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -65,6 +65,13 @@
- #define REG_DBG_PRINT(args...)
- #endif
- 
-+enum reg_request_treatment {
-+	REG_REQ_OK,
-+	REG_REQ_IGNORE,
-+	REG_REQ_INTERSECT,
-+	REG_REQ_ALREADY_SET,
-+};
-+
- static struct regulatory_request core_request_world = {
- 	.initiator = NL80211_REGDOM_SET_BY_CORE,
- 	.alpha2[0] = '0',
-@@ -934,16 +941,17 @@ bool reg_last_request_cell_base(void)
- 
- #ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
- /* Core specific check */
--static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
-+static enum reg_request_treatment
-+reg_ignore_cell_hint(struct regulatory_request *pending_request)
- {
- 	if (!reg_num_devs_support_basehint)
--		return -EOPNOTSUPP;
-+		return REG_REQ_IGNORE;
- 
- 	if (reg_request_cell_base(last_request) &&
- 	    !regdom_changes(pending_request->alpha2))
--		return -EALREADY;
-+		return REG_REQ_ALREADY_SET;
- 
--	return 0;
-+	return REG_REQ_OK;
- }
- 
- /* Device specific check */
-@@ -954,7 +962,7 @@ static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
- #else
- static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
- {
--	return -EOPNOTSUPP;
-+	return REG_REQ_IGNORE;
- }
- 
- static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
-@@ -1320,15 +1328,10 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
- 
--/*
-- * Return value which can be used by ignore_request() to indicate
-- * it has been determined we should intersect two regulatory domains
-- */
--#define REG_INTERSECT	1
--
- /* This has the logic which determines when a new request
-  * should be ignored. */
--static int ignore_request(struct wiphy *wiphy,
-+static enum reg_request_treatment
-+get_reg_request_treatment(struct wiphy *wiphy,
- 			  struct regulatory_request *pending_request)
- {
- 	struct wiphy *last_wiphy = NULL;
-@@ -1337,17 +1340,17 @@ static int ignore_request(struct wiphy *wiphy,
- 
- 	/* All initial requests are respected */
- 	if (!last_request)
--		return 0;
-+		return REG_REQ_OK;
- 
- 	switch (pending_request->initiator) {
- 	case NL80211_REGDOM_SET_BY_CORE:
--		return 0;
-+		return REG_REQ_OK;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 		if (reg_request_cell_base(last_request)) {
- 			/* Trust a Cell base station over the AP's country IE */
- 			if (regdom_changes(pending_request->alpha2))
--				return -EOPNOTSUPP;
--			return -EALREADY;
-+				return REG_REQ_IGNORE;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 
- 		last_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
-@@ -1364,23 +1367,23 @@ static int ignore_request(struct wiphy *wiphy,
- 				 * to be correct. Reject second one for now.
- 				 */
- 				if (regdom_changes(pending_request->alpha2))
--					return -EOPNOTSUPP;
--				return -EALREADY;
-+					return REG_REQ_IGNORE;
-+				return REG_REQ_ALREADY_SET;
- 			}
- 			/*
- 			 * Two consecutive Country IE hints on the same wiphy.
- 			 * This should be picked up early by the driver/stack
- 			 */
- 			if (WARN_ON(regdom_changes(pending_request->alpha2)))
--				return 0;
--			return -EALREADY;
-+				return REG_REQ_OK;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 		return 0;
- 	case NL80211_REGDOM_SET_BY_DRIVER:
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_CORE) {
- 			if (regdom_changes(pending_request->alpha2))
--				return 0;
--			return -EALREADY;
-+				return REG_REQ_OK;
-+			return REG_REQ_ALREADY_SET;
- 		}
- 
- 		/*
-@@ -1390,25 +1393,25 @@ static int ignore_request(struct wiphy *wiphy,
- 		 */
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 		    !regdom_changes(pending_request->alpha2))
--			return -EALREADY;
-+			return REG_REQ_ALREADY_SET;
- 
--		return REG_INTERSECT;
-+		return REG_REQ_INTERSECT;
- 	case NL80211_REGDOM_SET_BY_USER:
- 		if (reg_request_cell_base(pending_request))
- 			return reg_ignore_cell_hint(pending_request);
- 
- 		if (reg_request_cell_base(last_request))
--			return -EOPNOTSUPP;
-+			return REG_REQ_IGNORE;
- 
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
--			return REG_INTERSECT;
-+			return REG_REQ_INTERSECT;
- 		/*
- 		 * If the user knows better the user should set the regdom
- 		 * to their country before the IE is picked up
- 		 */
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_USER &&
- 		    last_request->intersect)
--			return -EOPNOTSUPP;
-+			return REG_REQ_IGNORE;
- 		/*
- 		 * Process user requests only after previous user/driver/core
- 		 * requests have been processed
-@@ -1417,15 +1420,15 @@ static int ignore_request(struct wiphy *wiphy,
- 		     last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
- 		     last_request->initiator == NL80211_REGDOM_SET_BY_USER) &&
- 		    regdom_changes(last_request->alpha2))
--			return -EAGAIN;
-+			return REG_REQ_IGNORE;
- 
- 		if (!regdom_changes(pending_request->alpha2))
--			return -EALREADY;
-+			return REG_REQ_ALREADY_SET;
- 
--		return 0;
-+		return REG_REQ_OK;
- 	}
- 
--	return -EINVAL;
-+	return REG_REQ_IGNORE;
- }
- 
- static void reg_set_request_processed(void)
-@@ -1455,23 +1458,24 @@ static void reg_set_request_processed(void)
-  * The Wireless subsystem can use this function to hint to the wireless core
-  * what it believes should be the current regulatory domain.
-  *
-- * Returns zero if all went fine, %-EALREADY if a regulatory domain had
-- * already been set or other standard error codes.
-+ * Returns one of the different reg request treatment values.
-  *
-  * Caller must hold &cfg80211_mutex and &reg_mutex
-  */
--static int __regulatory_hint(struct wiphy *wiphy,
--			     struct regulatory_request *pending_request)
-+static enum reg_request_treatment
-+__regulatory_hint(struct wiphy *wiphy,
-+		  struct regulatory_request *pending_request)
- {
- 	const struct ieee80211_regdomain *regd;
- 	bool intersect = false;
--	int r = 0;
-+	enum reg_request_treatment treatment;
- 
- 	assert_cfg80211_lock();
- 
--	r = ignore_request(wiphy, pending_request);
-+	treatment = get_reg_request_treatment(wiphy, pending_request);
- 
--	if (r == REG_INTERSECT) {
-+	switch (treatment) {
-+	case REG_REQ_INTERSECT:
- 		if (pending_request->initiator ==
- 		    NL80211_REGDOM_SET_BY_DRIVER) {
- 			regd = reg_copy_regd(cfg80211_regdomain);
-@@ -1482,26 +1486,28 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 			wiphy->regd = regd;
- 		}
- 		intersect = true;
--	} else if (r) {
-+		break;
-+	case REG_REQ_OK:
-+		break;
-+	default:
- 		/*
- 		 * If the regulatory domain being requested by the
- 		 * driver has already been set just copy it to the
- 		 * wiphy
- 		 */
--		if (r == -EALREADY &&
--		    pending_request->initiator ==
--		    NL80211_REGDOM_SET_BY_DRIVER) {
-+		if (treatment == REG_REQ_ALREADY_SET &&
-+		    pending_request->initiator == NL80211_REGDOM_SET_BY_DRIVER) {
- 			regd = reg_copy_regd(cfg80211_regdomain);
- 			if (IS_ERR(regd)) {
- 				kfree(pending_request);
--				return PTR_ERR(regd);
-+				return REG_REQ_IGNORE;
- 			}
--			r = -EALREADY;
-+			treatment = REG_REQ_ALREADY_SET;
- 			wiphy->regd = regd;
- 			goto new_request;
- 		}
- 		kfree(pending_request);
--		return r;
-+		return treatment;
- 	}
- 
- new_request:
-@@ -1519,27 +1525,28 @@ new_request:
- 	}
- 
- 	/* When r == REG_INTERSECT we do need to call CRDA */
--	if (r < 0) {
-+	if (treatment != REG_REQ_OK) {
- 		/*
- 		 * Since CRDA will not be called in this case as we already
- 		 * have applied the requested regulatory domain before we just
- 		 * inform userspace we have processed the request
- 		 */
--		if (r == -EALREADY) {
-+		if (treatment == REG_REQ_ALREADY_SET) {
- 			nl80211_send_reg_change_event(last_request);
- 			reg_set_request_processed();
- 		}
--		return r;
-+		return treatment;
- 	}
- 
--	return call_crda(last_request->alpha2);
-+	if (call_crda(last_request->alpha2))
-+		return REG_REQ_IGNORE;
-+	return REG_REQ_OK;
- }
- 
- /* This processes *all* regulatory hints */
- static void reg_process_hint(struct regulatory_request *reg_request,
- 			     enum nl80211_reg_initiator reg_initiator)
- {
--	int r = 0;
- 	struct wiphy *wiphy = NULL;
- 
- 	BUG_ON(!reg_request->alpha2);
-@@ -1552,20 +1559,18 @@ static void reg_process_hint(struct regulatory_request *reg_request,
- 		return;
- 	}
- 
--	r = __regulatory_hint(wiphy, reg_request);
--	/* This is required so that the orig_* parameters are saved */
--	if (r == -EALREADY && wiphy &&
--	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
--		wiphy_update_regulatory(wiphy, reg_initiator);
--		return;
-+	switch (__regulatory_hint(wiphy, reg_request)) {
-+	case REG_REQ_ALREADY_SET:
-+		/* This is required so that the orig_* parameters are saved */
-+		if (wiphy && wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-+			wiphy_update_regulatory(wiphy, reg_initiator);
-+		break;
-+	default:
-+		if (reg_initiator == NL80211_REGDOM_SET_BY_USER)
-+			schedule_delayed_work(&reg_timeout,
-+					      msecs_to_jiffies(3142));
-+		break;
- 	}
--
--	/*
--	 * We only time out user hints, given that they should be the only
--	 * source of bogus requests.
--	 */
--	if (r != -EALREADY && reg_initiator == NL80211_REGDOM_SET_BY_USER)
--		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
- }
- 
- /*
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 64b944b..800a165 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -47,6 +47,7 @@ static struct usb_device_id p54u_table[] = {
+ 	{USB_DEVICE(0x0411, 0x0050)},	/* Buffalo WLI2-USB2-G54 */
+ 	{USB_DEVICE(0x045e, 0x00c2)},	/* Microsoft MN-710 */
+ 	{USB_DEVICE(0x0506, 0x0a11)},	/* 3COM 3CRWE254G72 */
++	{USB_DEVICE(0x0675, 0x0530)},	/* DrayTek Vigor 530 */
+ 	{USB_DEVICE(0x06b9, 0x0120)},	/* Thomson SpeedTouch 120g */
+ 	{USB_DEVICE(0x0707, 0xee06)},	/* SMC 2862W-G */
+ 	{USB_DEVICE(0x07aa, 0x001c)},	/* Corega CG-WLUSB2GT */
+@@ -82,6 +83,7 @@ static struct usb_device_id p54u_table[] = {
+ 	{USB_DEVICE(0x06a9, 0x000e)},	/* Westell 802.11g USB (A90-211WG-01) */
+ 	{USB_DEVICE(0x06b9, 0x0121)},	/* Thomson SpeedTouch 121g */
+ 	{USB_DEVICE(0x0707, 0xee13)},   /* SMC 2862W-G version 2 */
++	{USB_DEVICE(0x0803, 0x4310)},	/* Zoom 4410a */
+ 	{USB_DEVICE(0x083a, 0x4503)},	/* T-Com Sinus 154 data II */
+ 	{USB_DEVICE(0x083a, 0x4521)},   /* Siemens Gigaset USB Adapter 54 version 2 */
+ 	{USB_DEVICE(0x083a, 0xc501)},	/* Zoom Wireless-G 4410 */
+@@ -102,6 +104,7 @@ static struct usb_device_id p54u_table[] = {
+ 	{USB_DEVICE(0x13B1, 0x000C)},	/* Linksys WUSB54AG */
+ 	{USB_DEVICE(0x1413, 0x5400)},   /* Telsey 802.11g USB2.0 Adapter */
+ 	{USB_DEVICE(0x1435, 0x0427)},	/* Inventel UR054G */
++	/* {USB_DEVICE(0x15a9, 0x0002)}, * Also SparkLAN WL-682 with 3887 */
+ 	{USB_DEVICE(0x1668, 0x1050)},	/* Actiontec 802UIG-1 */
+ 	{USB_DEVICE(0x1740, 0x1000)},	/* Senao NUB-350 */
+ 	{USB_DEVICE(0x2001, 0x3704)},	/* DLink DWL-G122 rev A2 */
 -- 
-1.8.0
+1.7.10.4
 
