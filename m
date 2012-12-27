@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:58333 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751278Ab2LSJel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 04:34:41 -0500
-Message-ID: <50D18A2D.1010806@openwrt.org> (sfid-20121219_103447_396641_CA9A0A87)
-Date: Wed, 19 Dec 2012 10:34:37 +0100
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Daniel Golle <dgolle@allnet.de>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 1/2] rt2x00: rt2800pci: verify ioremap
- return value
-References: <1355847743-16659-1-git-send-email-juhosg@openwrt.org> <20121218215708.GA4825@localhost.localdomain>
-In-Reply-To: <20121218215708.GA4825@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:51669 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753284Ab2L0Qh4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Dec 2012 11:37:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 3.8 5/5 V2] rtlwifi: rtl8723ae: Fix warning for unchecked pci_map_single() call
+Date: Thu, 27 Dec 2012 10:37:32 -0600
+Message-Id: <1356626252-4058-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121227_173806_920059_7296982E)
+In-Reply-To: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012.12.18. 22:57 keltezéssel, Stanislaw Gruszka írta:
-> On Tue, Dec 18, 2012 at 05:22:22PM +0100, Gabor Juhos wrote:
->> An ioremap call is allowed to fail, however
->> the return value of that is not checked in
->> the 'rt2800pci_read_eeprom_soc' function.
->>
->> The patch adds the missing check, and makes
->> the function return an int value. The patch
->> also converts the 'rt2800_read_eeprom' and
->> 'rt2800_ops.read_eeprom' functions to return
->> an int value, so the error value can be
->> propagated up to the 'rt2800_validate_eeprom'
->> function.
->>
->> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Reviewed-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Kernel 3.8 implements checking of all DMA mapping calls and issues
+a WARNING for the first it finds that is not checked.
 
-Thanks!
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
--Gabor
+No change in V2
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+index 87331d8..7ddd517 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+@@ -387,6 +387,11 @@ void rtl8723ae_tx_fill_desc(struct ieee80211_hw *hw,
+ 					    PCI_DMA_TODEVICE);
+ 	u8 bw_40 = 0;
+ 
++	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
++		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
++			 "DMA mapping error");
++		return;
++	}
+ 	if (mac->opmode == NL80211_IFTYPE_STATION) {
+ 		bw_40 = mac->bw_40;
+ 	} else if (mac->opmode == NL80211_IFTYPE_AP ||
+@@ -542,6 +548,11 @@ void rtl8723ae_tx_fill_cmddesc(struct ieee80211_hw *hw,
+ 					    PCI_DMA_TODEVICE);
+ 	__le16 fc = hdr->frame_control;
+ 
++	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
++		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
++			 "DMA mapping error");
++		return;
++	}
+ 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+ 
+ 	if (firstseg)
+-- 
+1.7.10.4
 
