@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:32785 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771Ab2LSTAa (ORCPT
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:59091 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753072Ab2L0Qhq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Dec 2012 14:00:30 -0500
-Received: by mail-pa0-f47.google.com with SMTP id fa10so1513866pad.34
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Dec 2012 11:00:29 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net, greearb@candelatech.com
+	Thu, 27 Dec 2012 11:37:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 0/3] cfg80211: few regulatory beacon hint enhancements
-Date: Wed, 19 Dec 2012 10:53:01 -0800
-Message-Id: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20121219_200033_965673_F9A47126)
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 3.8 0/5 V2] Fixes for WARNINGS due to unchecked DMA mapping calls
+Date: Thu, 27 Dec 2012 10:37:27 -0600
+Message-Id: <1356626252-4058-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20121227_173751_235079_634A320C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Beginning with kernel 3.8, the DMA mapping systems begins issuing a WARNING for
+the first call that maps DMA and fails to call dma_mapping_error() to check
+the result. This set of patches adds the appropriate checks to the rtlwifi
+family of drivers.
 
-Johannes, these now go tested by Ben, please merge.
+V2 fixes a copy-and-paste error in patch 4/5. All others are unchanged.
 
-Luis R. Rodriguez (3):
-  cfg80211: do not process beacon hints if one is already queued
-  cfg80211: move reg_is_world_roaming()
-  cfg80211: move world roaming check for beacon hints
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
- net/wireless/reg.c |   48 ++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 34 insertions(+), 14 deletions(-)
+Larry Finger (5):
+  rtlwifi: Fix warning for unchecked pci_map_single() call
+  rtlwifi: rtl8192ce: Fix warning for unchecked pci_map_single() call
+  rtlwifi: rtl8192de: Fix warning for unchecked pci_map_single() call
+  rtlwifi: rtl8192se: Fix warning for unchecked pci_map_single() call
+  rtlwifi: rtl8723ae: Fix warning for unchecked pci_map_single() call
+
+ drivers/net/wireless/rtlwifi/pci.c           |    6 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |   11 +++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c |   10 ++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c |   13 ++++++++++++-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |   12 ++++++++++++
+ 5 files changed, 51 insertions(+), 1 deletion(-)
 
 -- 
 1.7.10.4
