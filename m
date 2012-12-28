@@ -1,109 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50075 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753267Ab2L0Qex (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:44810 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082Ab2L1KVV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Dec 2012 11:34:53 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: disallow more station changes
-Date: Thu, 27 Dec 2012 17:35:13 +0100
-Message-Id: <1356626113-22698-1-git-send-email-johannes@sipsolutions.net> (sfid-20121227_173523_486460_2DBF2FDA)
+	Fri, 28 Dec 2012 05:21:21 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH V4 1/2] cfg80211: Move the definition of struct mac_address up
+Date: Fri, 28 Dec 2012 15:51:09 +0530
+Message-ID: <1356690070-26612-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20121228_112125_190854_BFE38DF5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+struct mac_address will be used by ACL related configuration ops.
 
-The following changes are invalid and should be
-disallowed when a station already exists:
- * supported rates changes, except for TDLS peers
- * listen interval changes
- * HT capability changes
-
-Disallow them and also update a mac80211 comment
-explaining how they would be racy.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- net/mac80211/cfg.c     |  9 +++++----
- net/wireless/nl80211.c | 22 ++++++++--------------
- 2 files changed, 13 insertions(+), 18 deletions(-)
+ include/net/cfg80211.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ff2ccc3..3c69c02 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1185,10 +1185,11 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		sta->sta.aid = params->aid;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e78db2c..475230b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -503,6 +503,10 @@ struct cfg80211_beacon_data {
+ 	size_t probe_resp_len;
+ };
  
- 	/*
--	 * FIXME: updating the following information is racy when this
--	 *	  function is called from ieee80211_change_station().
--	 *	  However, all this information should be static so
--	 *	  maybe we should just reject attemps to change it.
-+	 * Some of the following updates would be racy if called on an
-+	 * existing station, via ieee80211_change_station(). However,
-+	 * all such changes are rejected by cfg80211 except for updates
-+	 * changing the supported rates on an existing but not yet used
-+	 * TDLS peer.
- 	 */
- 
- 	if (params->listen_interval >= 0)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b3cf7cc..a877e27 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3188,13 +3188,9 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
- 	}
- 
--	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
--		params.listen_interval =
--		    nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
--
--	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
--		params.ht_capa =
--			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
-+	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL] ||
-+	    info->attrs[NL80211_ATTR_HT_CAPABILITY])
-+		return -EINVAL;
- 
- 	if (!rdev->ops->change_station)
- 		return -EOPNOTSUPP;
-@@ -3236,6 +3232,10 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 				  BIT(NL80211_STA_FLAG_MFP)))
- 			return -EINVAL;
- 
-+		/* reject other things that can't change */
-+		if (params.supported_rates)
-+			return -EINVAL;
++struct mac_address {
++	u8 addr[ETH_ALEN];
++};
 +
- 		/* must be last in here for error handling */
- 		params.vlan = get_vlan(info, rdev);
- 		if (IS_ERR(params.vlan))
-@@ -3255,10 +3255,6 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 		/* disallow things sta doesn't support */
- 		if (params.plink_action)
- 			return -EINVAL;
--		if (params.ht_capa)
--			return -EINVAL;
--		if (params.listen_interval >= 0)
--			return -EINVAL;
- 		/* reject any changes other than AUTHORIZED */
- 		if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
- 			return -EINVAL;
-@@ -3267,9 +3263,7 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 		/* disallow things mesh doesn't support */
- 		if (params.vlan)
- 			return -EINVAL;
--		if (params.ht_capa)
--			return -EINVAL;
--		if (params.listen_interval >= 0)
-+		if (params.supported_rates)
- 			return -EINVAL;
- 		/*
- 		 * No special handling for TDLS here -- the userspace
+ /**
+  * struct cfg80211_ap_settings - AP configuration
+  *
+@@ -2111,10 +2115,6 @@ struct ieee80211_iface_combination {
+ 	bool beacon_int_infra_match;
+ };
+ 
+-struct mac_address {
+-	u8 addr[ETH_ALEN];
+-};
+-
+ struct ieee80211_txrx_stypes {
+ 	u16 tx, rx;
+ };
 -- 
-1.8.0
+1.7.0.4
 
