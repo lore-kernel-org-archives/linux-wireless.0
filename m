@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38327 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753466Ab2LKRZo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 12:25:44 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] ath9k: check pdata variable before dereferencing it
-Date: Tue, 11 Dec 2012 18:25:40 +0100
-Message-Id: <1355246740-12539-1-git-send-email-juhosg@openwrt.org> (sfid-20121211_182547_811809_06D21380)
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51250 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645Ab2L1DLO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Dec 2012 22:11:14 -0500
+Received: by mail-wi0-f172.google.com with SMTP id o1so7979801wic.17
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Dec 2012 19:11:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20121218134611.GA7053@pandem0nium>
+References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	<20121213140753.GA26868@pandem0nium>
+	<50D04EC9.2040805@neratec.com>
+	<20121218134611.GA7053@pandem0nium>
+Date: Thu, 27 Dec 2012 19:11:12 -0800
+Message-ID: <CAJ-Vmo=MzOVgk45fcSKeA5Kj-8x9zMUE=Ld-u4D1qLQSjMGBoA@mail.gmail.com> (sfid-20121228_041118_205510_F136D0E3)
+Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
+From: Adrian Chadd <adrian@freebsd.org>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>, nbd@openwrt.org,
+	jonbither@gmail.com, kgiori@qca.qualcomm.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due to my recent commit (ath9k: allow to load EEPROM
-content via firmware API) smatch complains about that
-the 'pdata' variable in 'ath9k_hw_init' can be NULL
-and it is dereferenced before checking that. That is
-absolutely correct.
+On 18 December 2012 05:46, Simon Wunderlich
+<simon.wunderlich@s2003.tu-chemnitz.de> wrote:
 
-Check the 'pdata' variable before using it to avoid
-a NULL pointer dereference.
+>> As for the incorrect data, there are 4 cases to consider:
+>> 1) data length is correct => take the 56 bins as is
+>> 2) data length is 1 less => duplicate the first bin
+>> 3) data length is 2 more => remove bins 30 and 32
+>> 4) data length is 1 more => combine 2) + 3)
+>
+> ... didn't see THAT coming. But that explains it very well how to
+> handle these varying data lengths. Although I wonder how this can happen.
+> I guess there are some chip-internal reasons ...
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/init.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It's a known problem. It's fixed in later silicon.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 27703a5..f69ef5d 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -633,7 +633,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	ath_read_cachesize(common, &csz);
- 	common->cachelsz = csz << 2; /* convert to bytes */
- 
--	if (pdata->eeprom_name) {
-+	if (pdata && pdata->eeprom_name) {
- 		ret = ath9k_eeprom_request(sc, pdata->eeprom_name);
- 		if (ret)
- 			goto err_eeprom;
--- 
-1.7.10
+But yes, that's quite a bit of analysis by Zefir to classify and
+repair those samples. Good work!
 
+
+Adrian
