@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:56076 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683Ab2LaHsi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53362 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536Ab2L1NIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Dec 2012 02:48:38 -0500
-Received: by mail-wg0-f50.google.com with SMTP id es5so5561890wgb.17
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Dec 2012 23:48:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <50D04EC9.2040805@neratec.com>
-References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	<20121213140753.GA26868@pandem0nium>
-	<50D04EC9.2040805@neratec.com>
-Date: Sun, 30 Dec 2012 23:48:36 -0800
-Message-ID: <CAJ-Vmom8FRrHB0ts1infzgWuXFJjkpvqkB2LyxdZFsP_Vq=4WA@mail.gmail.com> (sfid-20121231_084851_284542_89976051)
-Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
-From: Adrian Chadd <adrian@freebsd.org>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
-	nbd@openwrt.org, jonbither@gmail.com, kgiori@qca.qualcomm.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 28 Dec 2012 08:08:52 -0500
+Message-ID: <1356700150.9922.7.camel@jlt4.sipsolutions.net> (sfid-20121228_140855_318609_D19D18E7)
+Subject: Re: [PATCH V4 2/2] cfg80211/nl80211: Enable drivers to implement
+ mac address based ACL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Fri, 28 Dec 2012 14:09:10 +0100
+In-Reply-To: <1356690070-26612-2-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1356690070-26612-1-git-send-email-vthiagar@qca.qualcomm.com>
+	 <1356690070-26612-2-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Fri, 2012-12-28 at 15:51 +0530, Vasanthakumar Thiagarajan wrote:
 
-Simon - I've reviewed your code a bit.
+> + * @acl_type: ACL policy that driver supports,
+> + *	see &enum nl80211_acl_policy_attr.
 
-You're not (yet) shifting the magnitude values over as needed before
-trying to extract the channel power out of it all.
+That doesn't make a lot of sense, in particular not the way you use it.
+What if a driver supports a blacklist but not a whitelist? It seems that
+it should be a bitfield. Also setting a default that isn't "unsupported"
+is a bad idea.
 
-Specifically:
+> +	NL80211_ATTR_ACL_POLICY,
+> +
+> +	NL80211_ATTR_MAC_ADDRS,
+> +
+> +	NL80211_ATTR_MAC_ACL_MAX,
+> +
+> +	NL80211_ATTR_ACL_TYPE,
 
-* each bin has a 7 bit value;
-* the bin value is scaled by max_exp;
-* there's a max magnitude value which I don't think you need for
-spectral FFT reports; only radar FFT reports (since in radar FFT
-reports, the reported FFT bins are between 0..7/8ths of the maximum
-magnitude value)
+> +	if (WARN_ON((wiphy->acl_type <= NL80211_ACL_POLICY_MAX) &&
 
-You're not scaling the data by max_exp in your FFT dump program, so
-the values aren't entirely correct.
-Are you doing it in the kernel code?
-
-I've just finished my first pass at this and plotting whatever values
-I get from the spectral data frames. I'll post more updates as I
-find/fix more bugs.
-
-Thanks,
+So basically you could remove the acl_type field completely.
 
 
+I think maybe if you want to continue supporting the white- & blacklist
+you should change it back to nested attributes, but treat the blacklist
+there as an optimisation and ignore it for feature advertising.
 
-Adrian
+johannes
+
