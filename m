@@ -1,58 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:32882 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452Ab2LDKnE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52722 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053Ab2L1JJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Dec 2012 05:43:04 -0500
-Date: Tue, 4 Dec 2012 11:42:52 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [PATCH] mac80211: adapt slot time in IBSS mode
-Message-ID: <20121204104252.GA25450@pandem0nium> (sfid-20121204_114308_942844_D794C43F)
-References: <1354569690-23559-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <CAGRGNgXqQAnUK7_nKkwVpn1OyVMb2B8Dykbjr2X=6AJTa5OJZg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="yrj/dFKFPuw6o+aM"
-In-Reply-To: <CAGRGNgXqQAnUK7_nKkwVpn1OyVMb2B8Dykbjr2X=6AJTa5OJZg@mail.gmail.com>
+	Fri, 28 Dec 2012 04:09:23 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] mac80211: split TX aggregation stop action
+Date: Fri, 28 Dec 2012 10:09:41 +0100
+Message-Id: <1356685781-6758-5-git-send-email-johannes@sipsolutions.net> (sfid-20121228_100939_938385_FBC9C838)
+In-Reply-To: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net>
+References: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---yrj/dFKFPuw6o+aM
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+When TX aggregation is stopped, there are a few
+different cases:
+ - connection with the peer was dropped
+ - session stop was requested locally
+ - session stop was requested by the peer
+ - connection was dropped while a session is stopping
 
-Hey Julian,
+The behaviour in these cases should be different, if
+the connection is dropped then the driver should drop
+all frames, otherwise the frames may continue to be
+transmitted, aggregated in the case of a locally
+requested session stop or unaggregated in the case of
+the peer requesting session stop.
 
-On Tue, Dec 04, 2012 at 10:00:33AM +1100, Julian Calaby wrote:
->=20
-> I don't know if this is done elsewhere, but this code doesn't match
-> the comment - there is no test for IBSS mode.
+Split these different cases so that the driver can
+act accordingly; however, treat local and remote stop
+the same way and ask the driver to not send frames as
+aggregated packets any more.
 
-As Nicolas pointed out, this is only called in IBSS - it is part of the
-ibss join/initialization code, so this is not a problem. :)
+In the case of connection drop, the stop callback the
+driver is otherwise supposed to call is no longer
+required.
 
-Cheers,
-	Simon
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |  4 ++-
+ drivers/net/wireless/ath/ath9k/main.c              |  4 ++-
+ drivers/net/wireless/ath/carl9170/main.c           |  4 ++-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  4 ++-
+ drivers/net/wireless/iwlegacy/4965-mac.c           |  4 ++-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c        |  4 ++-
+ drivers/net/wireless/mac80211_hwsim.c              |  4 ++-
+ drivers/net/wireless/mwl8k.c                       |  4 ++-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |  4 ++-
+ drivers/net/wireless/rtlwifi/core.c                |  4 ++-
+ drivers/net/wireless/ti/wlcore/main.c              |  4 ++-
+ include/net/mac80211.h                             | 22 +++++++++---
+ net/mac80211/agg-tx.c                              | 40 +++++++++++++++++++---
+ 13 files changed, 85 insertions(+), 21 deletions(-)
 
---yrj/dFKFPuw6o+aM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 02cce95..de11ae4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1628,7 +1628,9 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
+ 		if (!ret)
+ 			ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		ath9k_htc_tx_aggr_oper(priv, vif, sta, action, tid);
+ 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c084532..662f21a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1627,7 +1627,9 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 			ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		ath9k_ps_restore(sc);
+ 		break;
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		ath9k_ps_wakeup(sc);
+ 		ath_tx_aggr_stop(sc, sta, tid);
+ 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 25a1e2f..9d2051a 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1394,7 +1394,9 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		rcu_read_lock();
+ 		tid_info = rcu_dereference(sta_info->agg[tid]);
+ 		if (tid_info) {
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index a744ea5..25ea701 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -660,7 +660,9 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		spin_lock_bh(&wl->lock);
+ 		brcms_c_ampdu_flush(wl->wlc, sta, tid);
+ 		spin_unlock_bh(&wl->lock);
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index ef68b72..144ab09 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -5968,7 +5968,9 @@ il4965_mac_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		D_HT("start Tx\n");
+ 		ret = il4965_tx_agg_start(il, vif, sta, tid, ssn);
+ 		break;
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		D_HT("stop Tx\n");
+ 		ret = il4965_tx_agg_stop(il, vif, sta, tid);
+ 		if (test_bit(S_EXIT_PENDING, &il->status))
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index 852edb0..bafa82f 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -676,7 +676,9 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+ 		IWL_DEBUG_HT(priv, "start Tx\n");
+ 		ret = iwlagn_tx_agg_start(priv, vif, sta, tid, ssn);
+ 		break;
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		IWL_DEBUG_HT(priv, "stop Tx\n");
+ 		ret = iwlagn_tx_agg_stop(priv, vif, sta, tid);
+ 		if ((ret == 0) && (priv->agg_tids_count > 0)) {
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 145498f..d248a4c 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1312,7 +1312,9 @@ static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_TX_START:
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 5099e53..7f5a556 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5152,7 +5152,9 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		}
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, addr, tid);
+ 		break;
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		if (stream) {
+ 			if (stream->state == AMPDU_STREAM_ACTIVE) {
+ 				spin_unlock(&priv->stream_lock);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index e000269..3e6fbd5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -5484,7 +5484,9 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	case IEEE80211_AMPDU_TX_START:
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index a7c0e52..14c6516 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -879,7 +879,9 @@ static int rtl_op_ampdu_action(struct ieee80211_hw *hw,
+ 			 "IEEE80211_AMPDU_TX_START: TID:%d\n", tid);
+ 		return rtl_tx_agg_start(hw, sta, tid, ssn);
+ 		break;
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
+ 			 "IEEE80211_AMPDU_TX_STOP: TID:%d\n", tid);
+ 		return rtl_tx_agg_stop(hw, sta, tid);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 4f1a05b..6738df6 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4575,7 +4575,9 @@ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
+ 	 * Falling break here on purpose for all TX APDU commands.
+ 	 */
+ 	case IEEE80211_AMPDU_TX_START:
+-	case IEEE80211_AMPDU_TX_STOP:
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+ 		ret = -EINVAL;
+ 		break;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 66a8b0a..6ee0650 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2038,17 +2038,29 @@ enum ieee80211_filter_flags {
+  * calling ieee80211_start_tx_ba_cb_irqsafe, because the peer
+  * might receive the addBA frame and send a delBA right away!
+  *
+- * @IEEE80211_AMPDU_RX_START: start Rx aggregation
+- * @IEEE80211_AMPDU_RX_STOP: stop Rx aggregation
+- * @IEEE80211_AMPDU_TX_START: start Tx aggregation
+- * @IEEE80211_AMPDU_TX_STOP: stop Tx aggregation
++ * @IEEE80211_AMPDU_RX_START: start RX aggregation
++ * @IEEE80211_AMPDU_RX_STOP: stop RX aggregation
++ * @IEEE80211_AMPDU_TX_START: start TX aggregation
+  * @IEEE80211_AMPDU_TX_OPERATIONAL: TX aggregation has become operational
++ * @IEEE80211_AMPDU_TX_STOP_CONT: stop TX aggregation but continue transmitting
++ *	queued packets, now unaggregated. After all packets are transmitted the
++ *	driver has to call ieee80211_stop_tx_ba_cb_irqsafe().
++ * @IEEE80211_AMPDU_TX_STOP_FLUSH: stop TX aggregation and flush all packets,
++ *	called when the station is removed. There's no need or reason to call
++ *	ieee80211_stop_tx_ba_cb_irqsafe() in this case as mac80211 assumes the
++ *	session is gone and removes the station.
++ * @IEEE80211_AMPDU_TX_STOP_FLUSH_CONT: called when TX aggregation is stopped
++ *	but the driver hasn't called ieee80211_stop_tx_ba_cb_irqsafe() yet and
++ *	now the connection is dropped and the station will be removed. Drivers
++ *	should clean up and drop remaining packets when this is called.
+  */
+ enum ieee80211_ampdu_mlme_action {
+ 	IEEE80211_AMPDU_RX_START,
+ 	IEEE80211_AMPDU_RX_STOP,
+ 	IEEE80211_AMPDU_TX_START,
+-	IEEE80211_AMPDU_TX_STOP,
++	IEEE80211_AMPDU_TX_STOP_CONT,
++	IEEE80211_AMPDU_TX_STOP_FLUSH,
++	IEEE80211_AMPDU_TX_STOP_FLUSH_CONT,
+ 	IEEE80211_AMPDU_TX_OPERATIONAL,
+ };
+ 
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index dda8d7d..2f0ccbc 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -257,10 +257,25 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct tid_ampdu_tx *tid_tx;
++	enum ieee80211_ampdu_mlme_action action;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&sta->ampdu_mlme.mtx);
+ 
++	switch (reason) {
++	case AGG_STOP_DECLINED:
++	case AGG_STOP_LOCAL_REQUEST:
++	case AGG_STOP_PEER_REQUEST:
++		action = IEEE80211_AMPDU_TX_STOP_CONT;
++		break;
++	case AGG_STOP_DESTROY_STA:
++		action = IEEE80211_AMPDU_TX_STOP_FLUSH;
++		break;
++	default:
++		WARN_ON_ONCE(1);
++		return -EINVAL;
++	}
++
+ 	spin_lock_bh(&sta->lock);
+ 
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+@@ -269,10 +284,19 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 		return -ENOENT;
+ 	}
+ 
+-	/* if we're already stopping ignore any new requests to stop */
++	/*
++	 * if we're already stopping ignore any new requests to stop
++	 * unless we're destroying it in which case notify the driver
++	 */
+ 	if (test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
+ 		spin_unlock_bh(&sta->lock);
+-		return -EALREADY;
++		if (reason != AGG_STOP_DESTROY_STA)
++			return -EALREADY;
++		ret = drv_ampdu_action(local, sta->sdata,
++				       IEEE80211_AMPDU_TX_STOP_FLUSH_CONT,
++				       &sta->sta, tid, NULL, 0);
++		WARN_ON_ONCE(ret);
++		goto remove_tid_tx;
+ 	}
+ 
+ 	if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
+@@ -319,8 +343,7 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 					WLAN_BACK_INITIATOR;
+ 	tid_tx->tx_stop = reason == AGG_STOP_LOCAL_REQUEST;
+ 
+-	ret = drv_ampdu_action(local, sta->sdata,
+-			       IEEE80211_AMPDU_TX_STOP,
++	ret = drv_ampdu_action(local, sta->sdata, action,
+ 			       &sta->sta, tid, NULL, 0);
+ 
+ 	/* HW shall not deny going back to legacy */
+@@ -331,7 +354,14 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 		 */
+ 	}
+ 
+-	return ret;
++	if (reason == AGG_STOP_DESTROY_STA) {
++ remove_tid_tx:
++		spin_lock_bh(&sta->lock);
++		ieee80211_remove_tid_tx(sta, tid);
++		spin_unlock_bh(&sta->lock);
++	}
++
++	return 0;
+ }
+ 
+ /*
+-- 
+1.8.0
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlC906wACgkQrzg/fFk7axaW5QCggIev+9nBGSXTL0ad5mAkSfDq
-+OEAn0AZwtFqP17xNPbSYQoah3VLoyFm
-=gMl6
------END PGP SIGNATURE-----
-
---yrj/dFKFPuw6o+aM--
