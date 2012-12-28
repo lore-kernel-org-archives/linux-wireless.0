@@ -1,95 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:42494 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753176Ab2LKVqP convert rfc822-to-8bit (ORCPT
+Received: from mail-vc0-f170.google.com ([209.85.220.170]:36618 "EHLO
+	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754192Ab2L1Vmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Dec 2012 16:46:15 -0500
-Received: by mail-wg0-f46.google.com with SMTP id dr13so2708325wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Dec 2012 13:46:13 -0800 (PST)
-References: <20121211100404.GA7817@earthship.arig>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <20121211100404.GA7817@earthship.arig>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <5533C657-B24F-4835-9728-E77D65CA9348@gmail.com> (sfid-20121211_224618_486165_A023B801)
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-	"<users@rt2x00.serialmonkey.com>" <users@rt2x00.serialmonkey.com>,
-	"<juhosg@openwrt.org>" <juhosg@openwrt.org>,
-	"<sgruszka@redhat.com>" <sgruszka@redhat.com>,
-	"<helmut.schaa@googlemail.com>" <helmut.schaa@googlemail.com>,
-	"<john@phrozen.org>" <john@phrozen.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 2/3] rt2x00: allow disabling bands through platform_data
-Date: Tue, 11 Dec 2012 22:46:12 +0100
-To: Daniel Golle <dgolle@allnet.de>
+	Fri, 28 Dec 2012 16:42:55 -0500
+Date: Fri, 28 Dec 2012 16:42:45 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 14/25] rfkill: don't use [delayed_]work_pending()
+Message-ID: <20121228214245.GH3062@mtj.dyndns.org> (sfid-20121228_224313_603851_343D6599)
+References: <1356141435-17340-1-git-send-email-tj@kernel.org>
+ <1356141435-17340-15-git-send-email-tj@kernel.org>
+ <1356207733.10280.1.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1356207733.10280.1.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+On Sat, Dec 22, 2012 at 09:22:13PM +0100, Johannes Berg wrote:
+> On Fri, 2012-12-21 at 17:57 -0800, Tejun Heo wrote:
+> > There's no need to test whether a (delayed) work item in pending
+> > before queueing, flushing or cancelling it.  Most uses are unnecessary
+> > and quite a few of them are buggy.
+> > 
+> > Remove unnecessary pending tests from rfkill.  Only compile
+> > tested.
+> 
+> Looks fine to me, feel free to route through your tree -- nobody changes
+> rfkill much (famous last words...) :-)
 
-On 11 dec. 2012, at 11:04, Daniel Golle <dgolle@allnet.de> wrote:
+Applied to wq/for-3.9-cleanups w/ your Acked-by added.  Thanks.
 
-> 
-> Signed-off-by: Daniel Golle <dgolle@allnet.de>
-
-Again we need a proper patch description here.
-
-Also, can you explain why the enabling / disabling of individual bands needs to be done via platform data, as opposed to letting user space handle this?
-
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 355cff5..c67e769 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -426,6 +426,7 @@ struct hw_mode_spec {
->    unsigned int supported_bands;
-> #define SUPPORT_BAND_2GHZ    0x00000001
-> #define SUPPORT_BAND_5GHZ    0x00000002
-> +#define SUPPORT_BAND_BOTH    (SUPPORT_BAND_2GHZ | SUPPORT_BAND_5GHZ)
-> 
->    unsigned int supported_rates;
-> #define SUPPORT_RATE_CCK    0x00000001
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index d454488..b7856bf 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -835,6 +835,22 @@ static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
->    unsigned int num_rates;
->    unsigned int i;
-> 
-> +    if (rt2x00dev->dev->platform_data) {
-> +        struct rt2x00_platform_data *pdata;
-> +
-> +        pdata = rt2x00dev->dev->platform_data;
-> +        if (pdata->disable_2ghz)
-> +            spec->supported_bands &= ~SUPPORT_BAND_2GHZ;
-> +        if (pdata->disable_5ghz)
-> +            spec->supported_bands &= ~SUPPORT_BAND_5GHZ;
-> +    }
-> +
-> +    if ((spec->supported_bands & SUPPORT_BAND_BOTH) == 0) {
-> +        ERROR(rt2x00dev, "No supported bands\n");
-> +        return -EINVAL;
-> +    }
-> +
-> +
->    num_rates = 0;
->    if (spec->supported_rates & SUPPORT_RATE_CCK)
->        num_rates += 4;
-> diff --git a/include/linux/rt2x00_platform.h b/include/linux/rt2x00_platform.h
-> index 80effa7..b4c7768 100644
-> --- a/include/linux/rt2x00_platform.h
-> +++ b/include/linux/rt2x00_platform.h
-> @@ -14,6 +14,9 @@
-> 
-> struct rt2x00_platform_data {
->    char *eeprom_file_name;
-> +
-> +    int disable_2ghz;
-> +    int disable_5ghz;
-> };
-> 
-> #endif /* _RT2X00_PLATFORM_H */
-> -- 
-> 1.8.0.1
-> 
+-- 
+tejun
