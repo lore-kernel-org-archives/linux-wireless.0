@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:38886 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071Ab2LVVWz (ORCPT
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:42201 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083Ab2L3Om4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Dec 2012 16:22:55 -0500
-Date: Sat, 22 Dec 2012 16:22:52 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/17] cw1200:  Mini-AP implementation
-Message-ID: <20121222212252.GE5120@shaftnet.org> (sfid-20121222_222303_980048_651D8589)
-References: <1356191120-5280-1-git-send-email-pizza@shaftnet.org>
- <1356191120-5280-7-git-send-email-pizza@shaftnet.org>
- <50D61117.8020009@gmail.com>
+	Sun, 30 Dec 2012 09:42:56 -0500
+Received: by mail-ie0-f171.google.com with SMTP id 17so14493636iea.30
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Dec 2012 06:42:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sfyO1m2EN8ZOtJL6"
-In-Reply-To: <50D61117.8020009@gmail.com>
+From: HariHara Sudhan <hari@emo2.com>
+Date: Sun, 30 Dec 2012 06:42:56 -0800
+Message-ID: <-1211637985816790459@unknownmsgid> (sfid-20121230_154300_945464_7552B0A8)
+Subject: RE: ar3012 bluetooth nor working
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Solved the problem by enabling wext_priv . Since kernel 3.5.4 doesn't
+have direct option to enable wext_priv. I had to enable IEEE 802.11
+host ap to enable wext_priv.
 
---sfyO1m2EN8ZOtJL6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Sent from my Windows Phone
+From: Mohammed Shafi
+Sent: 12/30/2012 7:51 PM
+To: HariHara Sudhan
+Cc: linux-wireless@vger.kernel.org; Mohammed Shafi Shajakhan
+Subject: Re: ar3012 bluetooth nor working
+On Sat, Dec 8, 2012 at 4:17 PM, HariHara Sudhan <hari@emo2.com> wrote:
+> I've a ar9485 +ar3012 combo card and using .
+>  Wifi is working fine with ath9k drivers.
+> But for bluetooth i've enabled BT_ATH3k use in kernel. And it loaded btusb ,
+> bnep, rfcomm modules. ath3k wasn't comming up, and hcitool scan
+> results gave me nothing.
+> rfkill shows both wwifi and bluetooth devices are not blocked.
+>
+> so it is told in ath3k drivers guide from your website . i've added
+> the id's in ath3k support list and btusb blacklist.
+> Now ath3k is loaded when i checked lsmod, and btusb is also loaded .
+> But now rfkill is not showing bluetooth device and hcitool scan says
+> "Device Not abailable".
+> What could be the reason.
+> BTW blacklist driverinfo i gave was "BTUSB_IGNORE
+>
+> --
+> Regards
+>
+> HariHaraSudhan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-On Sat, Dec 22, 2012 at 08:59:19PM +0100, Pontus Fuchs wrote:
-> Please kill CONFIG_CW1200_*_DEBUG  and use pr_debug or other dyndbg
-> interface instead. Goes for all files.
+you can give us the vid, PID. we can come up with a patch and see if
+works for you.
 
-Just finished the last of that now.  (man, what a PITA..)
 
-> Please get rid of CONFIG_CW1200_USE_STE_EXTENSIONS. The "extensions"=20
-> is standard stuff anyway.
-
-I'm currently working on auditing all places wrapped by STE_EXTENSIONS=20
-and determining what to nuke (or permanently enable) on a case-by-case=20
-basis.  More on this in a bit.
-
-I'll submit a v2 RFC this evening, I think.  (Still under drivers/staging)
-
-It's worth mentioning that I don't have any hardware to test my changes=20
-out at the moment; it's all sitting on my desk at $dayjob.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
-Quidquid latine dictum sit, altum viditur.
-
---sfyO1m2EN8ZOtJL6
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iD8DBQFQ1iSsPuLgii2759ARAomeAKDIkTH9UB3o7dwAgG5PCDt+JHiubwCdHknS
-w425nh6xmZwhq8WRLpffuTI=
-=+js3
------END PGP SIGNATURE-----
-
---sfyO1m2EN8ZOtJL6--
+-- 
+thanks,
+shafi
