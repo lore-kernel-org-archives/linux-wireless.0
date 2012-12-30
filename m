@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40976 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755875Ab2LCRmw (ORCPT
+Received: from storm.alittletooquiet.net ([67.23.28.199]:39653 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083Ab2L3Ov6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Dec 2012 12:42:52 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/8] regulatory: remove useless locking on exit
-Date: Mon,  3 Dec 2012 18:43:10 +0100
-Message-Id: <1354556593-2363-6-git-send-email-johannes@sipsolutions.net> (sfid-20121203_184310_178462_76876D08)
-In-Reply-To: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
-References: <1354556593-2363-1-git-send-email-johannes@sipsolutions.net>
+	Sun, 30 Dec 2012 09:51:58 -0500
+Date: Sun, 30 Dec 2012 09:40:46 -0500
+From: Forest Bond <forest@alittletooquiet.net>
+To: Otavio Salvador <otavio@ossystems.com.br>
+Cc: Malcolm Priestley <tvboxspy@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: vt6656 use
+Message-ID: <20121230144046.GO18339@alittletooquiet.net> (sfid-20121230_155202_455351_C2062C24)
+References: <CAP9ODKqv4iaZ+cWOKJRgdvs_MJOFTTKPa=G58tWixsN1Upq3Pw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="pQhZXvAqiZgbeUkD"
+In-Reply-To: <CAP9ODKqv4iaZ+cWOKJRgdvs_MJOFTTKPa=G58tWixsN1Upq3Pw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-It would be a major problem if anything were to run
-concurrently while the module is being unloaded so
-remove the locking that doesn't help anything.
+--pQhZXvAqiZgbeUkD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 10 ----------
- 1 file changed, 10 deletions(-)
+Hi Otavio,
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6cece2d..9de3360 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2406,34 +2406,24 @@ void regulatory_exit(void)
- 	cancel_work_sync(&reg_work);
- 	cancel_delayed_work_sync(&reg_timeout);
- 
--	mutex_lock(&cfg80211_mutex);
--	mutex_lock(&reg_mutex);
--
- 	reset_regdomains(true);
- 
- 	dev_set_uevent_suppress(&reg_pdev->dev, true);
- 
- 	platform_device_unregister(reg_pdev);
- 
--	spin_lock_bh(&reg_pending_beacons_lock);
- 	list_for_each_entry_safe(reg_beacon, btmp, &reg_pending_beacons, list) {
- 		list_del(&reg_beacon->list);
- 		kfree(reg_beacon);
- 	}
--	spin_unlock_bh(&reg_pending_beacons_lock);
- 
- 	list_for_each_entry_safe(reg_beacon, btmp, &reg_beacon_list, list) {
- 		list_del(&reg_beacon->list);
- 		kfree(reg_beacon);
- 	}
- 
--	spin_lock(&reg_requests_lock);
- 	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
- 		list_del(&reg_request->list);
- 		kfree(reg_request);
- 	}
--	spin_unlock(&reg_requests_lock);
--
--	mutex_unlock(&reg_mutex);
--	mutex_unlock(&cfg80211_mutex);
- }
--- 
-1.8.0
+Sorry for the delayed response.
 
+On Tue, Dec 18, 2012 at 05:53:00PM -0200, Otavio Salvador wrote:
+> I've been trying to use the adapter without success; it seems to not
+> scan the network for the available APs. I am using v3.4.22 kernel and
+> I have include the vntconfigration.dat in /etc.
+>=20
+> The system seem right and I see no errors in dmesg. Do you have any clue?
+>=20
+> Thanks in advance by any help,
+
+I have not used this driver in a few years now, so I don't think I can help.
+
+Is this on a 64 bit system?  There are known issues with 64 bit.
+
+Malcolm Priestley (CC'd) has been doing a lot of work on this driver lately=
+=2E  I
+believe he's resolved the 64 bit issues (thanks Malcolm!).  Maybe if he has=
+ time
+he can offer some help.
+
+Otherwise, I suggest following up on the linux-wireless mailing list (also
+Cc'd).  While the linux-wireless devs in general will not be interested in
+supporting a staging driver, you might find other users that are having some
+success with the driver and can offer some advice.
+
+Hope this helps.
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.rapidrollout.com
+
+--pQhZXvAqiZgbeUkD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlDgUm4ACgkQRO4fQQdv5AyjcQCg1DrzNLVRrsPOM4YyqcA4sLer
+1skAnR2z9hFpmnAbZ/qsEM2AMlK+u9px
+=et1A
+-----END PGP SIGNATURE-----
+
+--pQhZXvAqiZgbeUkD--
