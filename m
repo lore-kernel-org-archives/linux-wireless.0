@@ -1,48 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52290 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195Ab2LTP0K (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:55827 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234Ab2LaOrT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Dec 2012 10:26:10 -0500
-Message-ID: <1356017187.10029.18.camel@jlt4.sipsolutions.net> (sfid-20121220_162614_558432_553D2DAF)
-Subject: Re: [PATCH 2/3] iwl3945: disable 11a support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 20 Dec 2012 16:26:27 +0100
-In-Reply-To: <20121220144549.GA10276@redhat.com>
-References: <1356010313-9782-1-git-send-email-sgruszka@redhat.com>
-	 <1356010313-9782-2-git-send-email-sgruszka@redhat.com>
-	 <1356010819.10029.15.camel@jlt4.sipsolutions.net>
-	 <20121220144549.GA10276@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 31 Dec 2012 09:47:19 -0500
+Received: by mail-we0-f176.google.com with SMTP id r5so5810568wey.7
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Dec 2012 06:47:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20121231084639.GB23038@pandem0nium>
+References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	<20121213140753.GA26868@pandem0nium>
+	<50D04EC9.2040805@neratec.com>
+	<CAJ-VmonRjawqBY+F_-in3sSTpen=KaW9FNrG=140q38NtFCJbw@mail.gmail.com>
+	<20121231084639.GB23038@pandem0nium>
+Date: Mon, 31 Dec 2012 06:38:58 -0800
+Message-ID: <CAJ-VmokLkUY5Gc2AOHssFzEcAzEuF99EwZr5Hpz3QecytPPJBQ@mail.gmail.com> (sfid-20121231_154724_180803_8CB68C4E)
+Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
+From: Adrian Chadd <adrian@freebsd.org>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
+	nbd@openwrt.org, jonbither@gmail.com, kgiori@qca.qualcomm.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-12-20 at 15:45 +0100, Stanislaw Gruszka wrote:
-> On Thu, Dec 20, 2012 at 02:40:19PM +0100, Johannes Berg wrote:
-> > On Thu, 2012-12-20 at 14:31 +0100, Stanislaw Gruszka wrote:
-> > > I don't believe if there still are users using 11a mode. If they are,
-> > > they should probably update their network to something that was
-> > > designed in current century, but I also left module option for them.
-> > 
-> > Huh? All of VHT etc. is going to use 5 GHz and will be compatible with
-> > legacy clients, so having 11a support will allow them to connect to new
-> > networks? Or am I midunderstanding what you're doing here?
-> 
-> Yes, this disable 5GHz for 3945. I assumed this is not and will not be
-> used anymore, but seems I was wrong.
-> 
-> BTW: I'm not expect that 11ac AP will work good with 11a, i.e. I'm not
-> able to connect to mixed network 11a & 11n on my 5GHz AP, but at least
-> this should be theoretically possible. 
-> 
-> What I'm looking for is possibility to disable 5GHz to avoid network
-> traffic delays while scanning, but this should be done in cfg80211.
+On 31 December 2012 00:46, Simon Wunderlich
+<simon.wunderlich@s2003.tu-chemnitz.de> wrote:
 
-Sounds more like a policy decision in wpa_s?
+>> Your frame length logic is OK for the short spectral scan reports, but
+>> not useful for the longer aggregate reports (short_rpt=0 IIRC.)
+>
+> Yeah, I've always used short_rpt=1 AFAIR.
+>>
+>> Here there's >1 FFT report in a frame, _and_ it could be corrupted,
+>> _and_ it could be short.
+>
+> That sounds like a lot of fun :P
 
-johannes
+Yeah. Ew.
 
+> Before asking questions, I'll wait for your userland lib and see what
+> it does. I've seen some longer frames as well occasionally when starting
+> to play with spectral, but didn't care too much as I didn't know how to
+> handle it. Anyway, I prefer hiding the corrupt and messy part and only
+> pass "clean data" to userspace, at least with the Linux implementation.
+
+I'm taking the opposite approach - I'll pass the PHY error frames up
+to userland untouched (and with extra radiotap vendor info like
+per-chain RSSI/NF calibration values) and do the fixups in userland.
+
+The only fixups I'd do in kernel is stuff that requires register
+hackery to do. Otherwise I have to replace the driver each time I want
+to change/extend/fix something.
+
+I'm doing the same with radar pulse handling - it's exposed via
+bpf/radiotap the same way that any other frame is. Userland can then
+just see what kind of packet it is by inspecting the radiotap header
+and do what it needs to.
+
+> If you have some code handling and/or correct these long dataframes, I'd
+> be happy to integrate it if possible.
+
+Well right now I'm just trying to finish writing a thin layer to
+decode (and make sure I'm decoding the correct data!) before I worry
+about finding/fixing corrupted frames.
+I'll try to commit what I have thus far to FreeBSD today/tomorrow but
+I also have real work to get done.
+
+I've taken your code and broken it out a bit to support multiple data
+sources, rather than just a hard-coded single data source from a file.
+That way I can (in theory) just add a FreeBSD data source and
+represent data as you need.
+
+Also, yes - I'm using whatever your FFT_eval code in userland is. :-)
+
+
+
+Adrian
