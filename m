@@ -1,46 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:47837 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752295Ab2LPEA3 (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52542 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928Ab2LaIqq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Dec 2012 23:00:29 -0500
-Received: by mail-vc0-f174.google.com with SMTP id d16so5916319vcd.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Dec 2012 20:00:28 -0800 (PST)
-Message-ID: <50CD4759.7090107@lwfinger.net> (sfid-20121216_050035_069773_A9AFD2D2)
-Date: Sat, 15 Dec 2012 22:00:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 31 Dec 2012 03:46:46 -0500
+Date: Mon, 31 Dec 2012 09:46:39 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com,
+	nbd@openwrt.org, jonbither@gmail.com, kgiori@qca.qualcomm.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [RFCv2] Add spectral scan support for Atheros AR92xx/AR93xx
+Message-ID: <20121231084639.GB23038@pandem0nium> (sfid-20121231_094657_422674_8DDC5036)
+References: <1354811768-4414-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <20121213140753.GA26868@pandem0nium>
+ <50D04EC9.2040805@neratec.com>
+ <CAJ-VmonRjawqBY+F_-in3sSTpen=KaW9FNrG=140q38NtFCJbw@mail.gmail.com>
 MIME-Version: 1.0
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Realtek RTL8192DU
-References: <5087035E.9010609@lwfinger.net> <201212160254.11739.s.L-H@gmx.de>
-In-Reply-To: <201212160254.11739.s.L-H@gmx.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="pvezYHf7grwyp3Bc"
+In-Reply-To: <CAJ-VmonRjawqBY+F_-in3sSTpen=KaW9FNrG=140q38NtFCJbw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/15/2012 07:54 PM, Stefan Lippers-Hollmann wrote:
->
-> As I just got hold of a Realtek RTL8192DU device (DeLock 88540[1]), I'm
-> curious if you had a go with a driver for this chipset. The vendor
-> driver seems to have issues with 64 bit operation (and kernel 3.7).
->
-> usb 3-1.1: new high-speed USB device number 6 using ehci_hcd
-> usb 3-1.1: New USB device found, idVendor=0bda, idProduct=8194
-> usb 3-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> usb 3-1.1: Product: 802.11n NIC
-> usb 3-1.1: Manufacturer: Realtek
-> usb 3-1.1: SerialNumber: 00e04c000001
 
-Stefan,
+--pvezYHf7grwyp3Bc
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I have made some progress with the driver merged into staging. In addition, I 
-have fixed the problems with 64-bit operation and the lack of kernel_thread() in 
-3.7 for driver rtl8192DU_linux_v4.0.0_5260.20120921. As I'm not sure the list 
-wants to get the patch, I'll send it separately via private email.
+Hey Adrian,
 
-Your tests will be useful as my device has USB ID 0bda:8193.
+On Sun, Dec 30, 2012 at 09:33:06PM -0800, Adrian Chadd wrote:
+> Hi,
+>=20
+> I'm just going through and hacking on this now for FreeBSD (and
+> userland decoding, rather than kernel side decoding.)
 
-Larry
+Cool!
 
+>=20
+> Your frame length logic is OK for the short spectral scan reports, but
+> not useful for the longer aggregate reports (short_rpt=3D0 IIRC.)
 
+Yeah, I've always used short_rpt=3D1 AFAIR.=20
+>=20
+> Here there's >1 FFT report in a frame, _and_ it could be corrupted,
+> _and_ it could be short.
+
+That sounds like a lot of fun :P
+
+>=20
+> I'm just writing a userland library now to start parsing and
+> correcting these. It's likely that I can use your logic for the short
+> spectral reports, but I won't be able to use them for the longer
+> aggregate reports. We'll need to find some other way to determine that
+> they've been corrupted and just toss/correct as appropriate.
+>=20
+> Thanks for digging into this!
+
+Before asking questions, I'll wait for your userland lib and see what
+it does. I've seen some longer frames as well occasionally when starting
+to play with spectral, but didn't care too much as I didn't know how to
+handle it. Anyway, I prefer hiding the corrupt and messy part and only
+pass "clean data" to userspace, at least with the Linux implementation.
+
+If you have some code handling and/or correct these long dataframes, I'd
+be happy to integrate it if possible.=20
+
+Thanks!
+	Simon
+
+--pvezYHf7grwyp3Bc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlDhUO8ACgkQrzg/fFk7axZyggCfZjtZCLeV46eCPpxgc5AXvHYB
+Fy4An1FvaD+dTQEd3hSVVl9+p/31/3xK
+=efBg
+-----END PGP SIGNATURE-----
+
+--pvezYHf7grwyp3Bc--
