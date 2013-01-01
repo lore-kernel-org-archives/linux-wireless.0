@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38708 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754003Ab3ACXvw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 18:51:52 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	nlhintz@hotmail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 5/6] bcma: mips: remove assigned_irqs from structure
-Date: Fri,  4 Jan 2013 00:51:24 +0100
-Message-Id: <1357257085-11822-6-git-send-email-hauke@hauke-m.de> (sfid-20130104_005155_355144_04B45BD7)
-In-Reply-To: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
-References: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:62138 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab3AAXkz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jan 2013 18:40:55 -0500
+Received: by mail-wg0-f52.google.com with SMTP id 12so6325443wgh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jan 2013 15:40:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <50E2FE5E.6040300@openwrt.org>
+References: <773DB8A82AB6A046AE0195C68612A31901412125@sbs2003.acksys.local>
+	<CAD2nsn1UyObSBrpAq+oJOm+Q1PuC=Y9J0cFH3aC3LkPei6QZYw@mail.gmail.com>
+	<CAJ-VmomdWE2d3qUzgOR0=pnoKzeJpFG1rOT1XH3gTB-dtosuVg@mail.gmail.com>
+	<50E2FE5E.6040300@openwrt.org>
+Date: Tue, 1 Jan 2013 15:40:54 -0800
+Message-ID: <CAJ-Vmo=kbvLSdA8wGaRacAOvoZBdksJwQZ+Z52RbiUAq-T4weA@mail.gmail.com> (sfid-20130102_004100_632588_8591FE4F)
+Subject: Re: [RFC] ATH9K: infinite loop in Tasklet
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	Cedric VONCKEN <cedric.voncken@acksys.fr>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This member is not needed any more.
+On 1 January 2013 07:18, Felix Fietkau <nbd@openwrt.org> wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_mips.c            |    2 --
- include/linux/bcma/bcma_driver_mips.h |    1 -
- 2 files changed, 3 deletions(-)
+> I think the best way to properly fix this issue is to implement NAPI
+> support (which mac80211 already supports).
 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 6981507..c6d7be3 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -263,8 +263,6 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- 
- 	bcma_core_mips_early_init(mcore);
- 
--	mcore->assigned_irqs = 1;
--
- 	switch (bus->chipinfo.id) {
- 	case BCMA_CHIP_ID_BCM4716:
- 	case BCMA_CHIP_ID_BCM4748:
-diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
-index 0baf8a5..6495579 100644
---- a/include/linux/bcma/bcma_driver_mips.h
-+++ b/include/linux/bcma/bcma_driver_mips.h
-@@ -36,7 +36,6 @@ struct bcma_drv_mips {
- 	struct bcma_device *core;
- 	u8 setup_done:1;
- 	u8 early_setup_done:1;
--	unsigned int assigned_irqs;
- };
- 
- #ifdef CONFIG_BCMA_DRIVER_MIPS
--- 
-1.7.10.4
+Sure, but there may be some underlying issues (maybe even on just that
+particular platform) that need to be addressed.
 
+Migrating to NAPI / breaking out of the tasklet early should also be
+done, but it's potentially orthogonal to the OP's problem.
+
+
+Adrian
