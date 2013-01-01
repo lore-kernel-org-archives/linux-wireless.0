@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f46.google.com ([209.85.213.46]:40955 "EHLO
-	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523Ab3AZRVt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 12:21:49 -0500
-Received: by mail-yh0-f46.google.com with SMTP id q15so219079yhf.33
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2013 09:21:47 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:40653 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752292Ab3AAPTA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jan 2013 10:19:00 -0500
+Message-ID: <50E2FE5E.6040300@openwrt.org> (sfid-20130101_161915_446334_E9865545)
+Date: Tue, 01 Jan 2013 16:18:54 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20130124210110.GB22800@localhost.localdomain>
-References: <20130124205931.GB16252@localhost.localdomain>
-	<20130124210028.GA22800@localhost.localdomain>
-	<20130124210110.GB22800@localhost.localdomain>
-Date: Sat, 26 Jan 2013 18:15:47 +0100
-Message-ID: <CAOZOX0WEWYZUfrOMVB-rTfkJaO+RYVv0SF9o_A_3kzQzDdcppw@mail.gmail.com> (sfid-20130126_182154_981787_1F49D244)
-Subject: Re: [PATCH 3/4] rt2800usb: move "TX status missed" messages to debug level
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	Cedric VONCKEN <cedric.voncken@acksys.fr>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] ATH9K: infinite loop in Tasklet
+References: <773DB8A82AB6A046AE0195C68612A31901412125@sbs2003.acksys.local> <CAD2nsn1UyObSBrpAq+oJOm+Q1PuC=Y9J0cFH3aC3LkPei6QZYw@mail.gmail.com> <CAJ-VmomdWE2d3qUzgOR0=pnoKzeJpFG1rOT1XH3gTB-dtosuVg@mail.gmail.com>
+In-Reply-To: <CAJ-VmomdWE2d3qUzgOR0=pnoKzeJpFG1rOT1XH3gTB-dtosuVg@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 24, 2013 at 10:01 PM, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-> Those messages can flood in dmesg, so do not print them by default.
->
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+On 2013-01-01 5:20 AM, Adrian Chadd wrote:
+> On 30 December 2012 06:19, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+>> On Tue, Dec 11, 2012 at 3:31 PM, Cedric VONCKEN
+>> <cedric.voncken@acksys.fr> wrote:
+>>>         Any suggestion to fix correctly this issue ?
+>>
+>> having a count to break out from the loop is bit hacky. I would
+>> suggest to enable as many prints and see
+>> why the infinite loop counts(ofcourse you can have a loop count to
+>> figure out and break the loop).
+> 
+> IMHO both need to be done. It's possible that it's taking way too long
+> to handle frames in the driver layer. The ath/ath9k driver layer
+> assumes that it can dequeue frames from the hardware FASTER than it
+> can queue those frames to the network stack layer. If the latter falls
+> behind (or both, really) then you can hit this condition.
+> 
+> FWIW, I've done this in FreeBSD's ath(4) driver in both the TX and RX
+> path, to ensure that I give the tasklets all a fair crack at being
+> scheduled.
+I think the best way to properly fix this issue is to implement NAPI
+support (which mac80211 already supports).
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+- Felix
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 011410f..047ead5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -540,9 +540,9 @@ rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
->         tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
->
->         if (wcid != tx_wcid || ack != tx_ack || (!is_agg && pid != tx_pid)) {
-> -               WARNING(entry->queue->rt2x00dev,
-> -                       "TX status report missed for queue %d entry %d\n",
-> -                       entry->queue->qid, entry->entry_idx);
-> +               DEBUG(entry->queue->rt2x00dev,
-> +                     "TX status report missed for queue %d entry %d\n",
-> +                     entry->queue->qid, entry->entry_idx);
->                 return TXDONE_UNKNOWN;
->         }
->
-> --
-> 1.7.4.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
