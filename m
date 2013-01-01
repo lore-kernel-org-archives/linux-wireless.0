@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:63898 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116Ab3ARMFl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 07:05:41 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so1969777bkw.33
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 04:05:39 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCH 0/3] iw: mesh power save
-Date: Fri, 18 Jan 2013 13:05:29 +0100
-Message-Id: <1358510732-32767-1-git-send-email-marco@cozybit.com> (sfid-20130118_130544_199219_1A66681A)
+Received: from mail.ispras.ru ([83.149.199.43]:56601 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752348Ab3AAWok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jan 2013 17:44:40 -0500
+Message-ID: <50E366D6.7040709@ispras.ru> (sfid-20130101_234513_647078_79FEA809)
+Date: Wed, 02 Jan 2013 02:44:38 +0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: Re: [PATCH] p54pci: don't return zero on failure path in p54p_probe()
+References: <1357074661-15784-1-git-send-email-khoroshilov@ispras.ru> <201301012245.43064.chunkeey@googlemail.com>
+In-Reply-To: <201301012245.43064.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following commits cover all neccessary iw commands for mesh
-power save. Beacon interval, DTIM period, default power mode and
-awake window are accessed as part of the mesh params. The
-link-specific power modes are set for peer STA.
+On 01/02/2013 01:45 AM, Christian Lamparter wrote:
+> On Tuesday 01 January 2013 22:11:01 Alexey Khoroshilov wrote:
+>> If pci_set_dma_mask() or pci_set_consistent_dma_mask() fails in p54p_probe(),
+>> it breaks off initialization, deallocates all resources, but returns zero.
+>>
+>> The patch implements proper error code propagation.
+> Uh, Thanks!
+>
+> But wait, I think there's another return 0 in the error
+> path. See p54pci.c @ line 558:
+>
+> mem_len = pci_resource_len(pdev, 0);
+> if (mem_len < sizeof(...)) {
+> 	dev_err(...)
+> 	goto err_disabled_dev;
+> }
+>
+> Do you think you can add a err = -EINVAL; before the goto too?
+You are right! But I would say -ENODEV is more popular error code in 
+this case.
+> [I wonder why this wasn't found by the verification project as
+> well? Could it be that pci_resource_len(...) < sizeof(...) is
+> somehow always true and this is a dead branch?]
+Actually it was found, but I have no direct access to the results at the 
+moment. My fault.
 
-Marco Porsch (3):
-  iw: add beacon interval and DTIM period parameters to mesh join
-  iw: add default mesh Power Mode and Awake Window to mesh config
-  iw: add support for link-specific mesh power modes
+Would you like I resend the patch to fix both?
 
- mesh.c    |   84 ++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- station.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 169 insertions(+), 4 deletions(-)
-
--- 
-1.7.9.5
+--
+Best regards,
+Alexey
 
