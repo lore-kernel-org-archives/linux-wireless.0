@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34104 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754911Ab3AGTHK (ORCPT
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:48039 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940Ab3AABaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 14:07:10 -0500
-Received: by mail-pa0-f44.google.com with SMTP id hz11so10875711pad.31
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 11:07:09 -0800 (PST)
-Date: Mon, 7 Jan 2013 11:07:05 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] staging: vt6656: Remove ULONG_PTR/DWORD_PTR from
- driver.
-Message-ID: <20130107190705.GA11344@kroah.com> (sfid-20130107_200717_827654_D93D0F5E)
-References: <1354137348.2633.3.camel@user64-MCP7A>
+	Mon, 31 Dec 2012 20:30:13 -0500
+Received: by mail-pb0-f48.google.com with SMTP id rq13so7274895pbb.21
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Dec 2012 17:30:13 -0800 (PST)
+Message-ID: <50E23C19.7050008@lwfinger.net> (sfid-20130101_023020_782396_A415C8D7)
+Date: Mon, 31 Dec 2012 19:30:01 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1354137348.2633.3.camel@user64-MCP7A>
+To: htl10@users.sourceforge.net
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 WARN slowpath on suspend with 3.6.11
+References: <1356999385.78279.YahooMailClassic@web172301.mail.ir2.yahoo.com>
+In-Reply-To: <1356999385.78279.YahooMailClassic@web172301.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 28, 2012 at 09:15:48PM +0000, Malcolm Priestley wrote:
-> 
-> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> ---
->  drivers/staging/vt6656/bssdb.c |   89 +++++++++++++++++++---------------------
->  drivers/staging/vt6656/ttype.h |    3 --
->  2 files changed, 42 insertions(+), 50 deletions(-)
-> 
-> diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
-> index 539bc1d..d27469e 100644
-> --- a/drivers/staging/vt6656/bssdb.c
-> +++ b/drivers/staging/vt6656/bssdb.c
-> @@ -355,13 +355,13 @@ BOOL BSSbInsertToBSSList(void *hDeviceContext,
->  			 PBYTE pbyIEs,
->  			 void *pRxPacketContext)
->  {
-> -
-> -    PSDevice     pDevice = (PSDevice)hDeviceContext;
-> -    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
-> -    PSRxMgmtPacket  pRxPacket = (PSRxMgmtPacket)pRxPacketContext;
-> -    PKnownBSS       pBSSList = NULL;
-> -    unsigned int            ii;
-> -    BOOL            bParsingQuiet = FALSE;
-> +	PSDevice pDevice = (PSDevice)hDeviceContext;
-> +	PSMgmtObject pMgmt = &pDevice->sMgmtObj;
-> +	PSRxMgmtPacket pRxPacket = (PSRxMgmtPacket)pRxPacketContext;
-> +	PKnownBSS pBSSList = NULL;
-> +	unsigned int ii;
-> +	int bParsingQuiet = FALSE;
-> +	u32 uLen;
+On 12/31/2012 06:16 PM, Hin-Tak Leung wrote:
+> Hi,
+>
+> Does either Larry or Herton see the sort of behavior (https://bugzilla.redhat.com/show_bug.cgi?id=891019) on suspend? John, is there anything changed between 3.6.9 and 3.6.11 which would cause this?
+>
+> Other than a genuine kernel regression, it is possible that it might be fedora specific - I just went from F17 to F18. F18 seems to have an systemd integrated udevd which might behaves differently from the older udevd's... or general funniness with F18 (I noticed another bug https://bugzilla.redhat.com/show_bug.cgi?id=891018 but that might be unrelated).
+>
+> Anyway, other than whole sale downgrade I think I can try booting 3.6.9 (which suspended cleanly under F17) and see whether it is a F18-specific problem.
 
-This patch also adjusts formatting, making it hard to see that you
-really changed the BOOL variable here, which is not what you said the
-patch was doing :(
+Hin-Tak,
 
-Please redo this patch, and _only_ make the changes you say you are
-making.
+My system has never done a suspend/resume with any wireless card, thus I cannot 
+check your result. The test with 3.6.9 is a good idea.
 
-thanks,
+Sorry,
 
-greg k-h
+Larry
+
+
