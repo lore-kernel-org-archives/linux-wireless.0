@@ -1,77 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4239 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3333 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753626Ab3AHJRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 04:17:52 -0500
+	id S1752682Ab3ABOIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:08:13 -0500
+Message-ID: <50E43F40.4090206@broadcom.com> (sfid-20130102_150821_783663_D3FA5821)
+Date: Wed, 2 Jan 2013 15:08:00 +0100
 From: "Arend van Spriel" <arend@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH] iw: additional mac parameter for add interface
- primitive
-Date: Tue, 8 Jan 2013 10:17:28 +0100
-Message-ID: <1357636648-4012-2-git-send-email-arend@broadcom.com> (sfid-20130108_101759_290314_5B87EF6D)
-In-Reply-To: <1357636648-4012-1-git-send-email-arend@broadcom.com>
-References: <1357636648-4012-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: WARNING: at
+ drivers/net/wireless/brcm80211/brcmsmac/main.c:7539
+References: <CA+55aFwpdyrtvE=86e1aHE9L5TR+_xP7e4PBBKtdcey3=f+Suw@mail.gmail.com>
+ <50E4229D.5000900@broadcom.com> <20130102135031.GA11439@thinkpad-t410>
+In-Reply-To: <20130102135031.GA11439@thinkpad-t410>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When adding a P2P Device interface user-space may provide the
-address for it. This should allow user-space to exchange P2P
-messages over multiple radios using the same address.
+On 01/02/2013 02:50 PM, Seth Forshee wrote:
+> On Wed, Jan 02, 2013 at 01:05:49PM +0100, Arend van Spriel wrote:
+>> On 12/28/2012 07:07 AM, Linus Torvalds wrote:
+>>> Ok, maybe somebody is interested in this.. I don't know what triggered
+>>> it, but maybe the few lines around it give some clue.
+>>
+>> Hi Linus,
+>>
+>> I am interested (being paid for it kinda helps). The warning itself does
+>> not necessarily have to be a problem, but the frameid mismatch between
+>> tx status info and the related buffer taken from the DMA ring does.
+>> Smells like a race condition, but I need to investigate that.
+>>
+>>> I think it's new to 3.8-rc1, because I haven't seen it before (well,
+>>> I'm running current -git - v3.8.0-rc1-00035-g101e5c7470eb to be exact
+>>> - but the networking changes since -rc1 are small and seem unrelated).
+>>> But maybe it just happens under certain circumstances.
+>>
+>> We had a big contribution from Canonical (cc-ed Seth) in brcmsmac
+>> itself. Not playing the blame game, but I suspect it has altered
+>> circumstances making the real issue (that was already there) more likely
+>> to happen. Hope that helps us nailing it down.
+> 
+> I'm certain that both problems existed prior to 3.8-rc1. The warning
+> itself has generated a fairly consistent trickle of bug reports for a
+> while now. I haven't noticed any increased frequency of these messages;
+> if anything I'd say I'm hitting the WARN_ON less often (though I've been
+> doing a lot of testing under heavy load so my observations may not be
+> typical).
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- interface.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+Hi Seth,
 
-diff --git a/interface.c b/interface.c
-index 26e72dc..f03c079 100644
---- a/interface.c
-+++ b/interface.c
-@@ -168,6 +168,7 @@ static int handle_interface_add(struct nl80211_state *state,
- 	char *name;
- 	char *mesh_id = NULL;
- 	enum nl80211_iftype type;
-+	unsigned char mac_addr[ETH_ALEN];
- 	int tpset;
- 
- 	if (argc < 1)
-@@ -207,6 +208,14 @@ static int handle_interface_add(struct nl80211_state *state,
- 				fprintf(stderr, "flags error\n");
- 				return 2;
- 			}
-+		} else if (strcmp(argv[0], "mac") == 0) {
-+			argc--;
-+			argv++;
-+			if (mac_addr_a2n(mac_addr, argv[0])) {
-+				fprintf(stderr, "invalid mac address\n");
-+				return 2;
-+			}
-+			NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
- 		} else {
- 			return 1;
- 		}
-@@ -224,14 +233,14 @@ static int handle_interface_add(struct nl80211_state *state,
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [4addr on|off] [flags <flag>*]",
-+COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [4addr on|off] [flags <flag>*] [mac <MAC address>]",
- 	NL80211_CMD_NEW_INTERFACE, 0, CIB_PHY, handle_interface_add,
- 	"Add a new virtual interface with the given configuration.\n"
- 	IFACE_TYPES "\n\n"
- 	"The flags are only used for monitor interfaces, valid flags are:\n"
- 	VALID_FLAGS "\n\n"
- 	"The mesh_id is used only for mesh mode.");
--COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [4addr on|off] [flags <flag>*]",
-+COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [4addr on|off] [flags <flag>*] [mac <MAC address>]",
- 	NL80211_CMD_NEW_INTERFACE, 0, CIB_NETDEV, handle_interface_add, NULL);
- 
- static int handle_interface_del(struct nl80211_state *state,
--- 
-1.7.10.4
+Indeed the warning has been there for a while, but the fatal error
+resulting in triggering a restart from mac80211 has popped up late in
+the 3.7-rc cycles and seem to consistently fail on our smoketest as well.
+
+> The channel mismatch errors are something I plan to look into, but I've
+> been distracted by some background scanning problems (not specific to
+> brcmsmac).
+
+The channel mismatch could be related, but I do not have a clear picture
+yet. Possibly your tracepoints will help with that. Keep you posted.
+
+Gr. AvS
 
 
