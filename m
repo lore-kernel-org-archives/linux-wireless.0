@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:17475 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753850Ab3AGJD4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43888 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752134Ab3ABKuO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 04:03:56 -0500
-Date: Mon, 7 Jan 2013 14:32:45 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] ath9k_hw: Use helper routines to simplify
- ar9003_hw_init_cal()
-Message-ID: <20130107090244.GA1127@hemis.qca.qualcomm.com> (sfid-20130107_100401_867973_3CD41991)
-References: <1357547028-22891-1-git-send-email-sujith@msujith.org>
- <1357547028-22891-3-git-send-email-sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1357547028-22891-3-git-send-email-sujith@msujith.org>
+	Wed, 2 Jan 2013 05:50:14 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TqLtl-0004Db-P9
+	for linux-wireless@vger.kernel.org; Wed, 02 Jan 2013 11:50:13 +0100
+Message-ID: <1357123839.9839.1.camel@jlt4.sipsolutions.net> (sfid-20130102_115018_051855_D64AC84F)
+Subject: Re: [PATCH 0/4] mac80211: refine TX aggregation session stop
+ handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 02 Jan 2013 11:50:39 +0100
+In-Reply-To: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net> (sfid-20121228_100936_158377_93399A38)
+References: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121228_100936_158377_93399A38)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 07, 2013 at 01:53:48PM +0530, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Fri, 2012-12-28 at 10:09 +0100, Johannes Berg wrote:
+> We ran into problems when an aggregation session is stopped
+> when disconnecting, we can't clean it up completely and drop
+> all packets right away because we don't know this is valid
+> but when we don't doing it later when the station is removed
+> gets tricky.
 > 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_calib.c | 92 ++++++++++++++++-----------
->  drivers/net/wireless/ath/ath9k/hw.h           |  1 +
->  2 files changed, 55 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> index 15f9b89..f0e472c 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> @@ -960,22 +960,68 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
->  		      AR_PHY_65NM_RXRF_AGC_AGC_CAL_OVR, 0);
->  }
->  
-> +static void ar9003_hw_do_manual_peak_cal(struct ath_hw *ah,
-> +					 struct ath9k_channel *chan)
-> +{
-> +	int i;
-> +
-> +	if (!AR_SREV_9462(ah) || !AR_SREV_9565(ah))
-> +		return;
-> +
-It should be && not ||
+> To solve this, split out the STOP action into the different
+> kinds of stop: "stop and continue transmitting" (normal stop),
+> "stop and flush packets" (connection drop) and "stop and flush
+> a previously stopped session" (can happen when the connection
+> drops while a session is still stopping.)
 
--Rajkumar
+Applied all.
+
+johannes
+
