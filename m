@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:38306 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754841Ab3AYKzP (ORCPT
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:34587 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752737Ab3ABOiw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:55:15 -0500
-Date: Fri, 25 Jan 2013 16:18:39 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 0/7] mwl8k: Adding support for simultaneous AP-STA
- functionality
-Message-ID: <20130125104839.GA9243@markyou.marvell.com> (sfid-20130125_115517_808453_FE0815B8)
+	Wed, 2 Jan 2013 09:38:52 -0500
+Received: by mail-ie0-f172.google.com with SMTP id c13so16960504ieb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 06:38:51 -0800 (PST)
+Date: Wed, 2 Jan 2013 09:37:08 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 11/17] cw1200: v2: WSM (ie host-firmware) host interface
+Message-ID: <20130102143708.GA13185@localhost> (sfid-20130102_153900_522237_E6625FDD)
+References: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
+ <1356218312-13616-12-git-send-email-pizza@shaftnet.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1356218312-13616-12-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding support for simultaneous AP-STA functionality.
-This is preparation for enabling 4-address mode for AP
-and client mode. For details about 4-address mode
-please refer
-http://wireless.kernel.org/en/users/Documentation/iw?highlight=%28WDS%29#Using_4-address_for_AP_and_client_mode
+On Sat, Dec 22, 2012 at 06:18:26PM -0500, Solomon Peachy wrote:
+> +	size_t pos = buf->data - buf->begin;
+> +	size_t size = pos + extra_size;
+> +
+> +
+> +	if (size & (FWLOAD_BLOCK_SIZE - 1)) {
+> +		size &= FWLOAD_BLOCK_SIZE;
+> +		size += FWLOAD_BLOCK_SIZE;
+> +	}
 
+I think this should be
 
-Yogesh Ashok Powar (7):
-  mwl8k: Announce simultaneous AP-STA support on AP fw
-  mwl8k: Allow adding station interface on AP firmware
-  mwl8k: set mac type to MWL8K_MAC_TYPE_SECONDARY_CLIENT
-  mwl8k: Enable hw encryption for STA mode on AP fw
-  mwl8k: Add/Del self entry for AP interface only
-  mwl8k: Choose interface specific calls on vif type
-  mwl8k: Do not call STA specific cmds not supported by the AP fw
+    size = round_up(size, FWLOAD_BLOCK_SIZE);
 
- drivers/net/wireless/mwl8k.c | 66 ++++++++++++++++++++++++++++++++------------
- 1 file changed, 48 insertions(+), 18 deletions(-)
+Otherwise it fails if size > 2 * FWLOAD_BLOCK_SIZE (it may never be,
+but it still looks wrong).
 
 -- 
-1.8.0.3
-
+Bob Copeland %% www.bobcopeland.com
