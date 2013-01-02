@@ -1,139 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53969 "EHLO nbd.name"
+Received: from mms1.broadcom.com ([216.31.210.17]:4240 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757843Ab3AIMji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 07:39:38 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.8 5/5] ath9k: fix rx flush handling
-Date: Wed,  9 Jan 2013 13:39:29 +0100
-Message-Id: <1357735169-91597-5-git-send-email-nbd@openwrt.org> (sfid-20130109_133946_652549_0901C41F)
-In-Reply-To: <1357735169-91597-4-git-send-email-nbd@openwrt.org>
-References: <1357735169-91597-1-git-send-email-nbd@openwrt.org>
- <1357735169-91597-2-git-send-email-nbd@openwrt.org>
- <1357735169-91597-3-git-send-email-nbd@openwrt.org>
- <1357735169-91597-4-git-send-email-nbd@openwrt.org>
+	id S1752627Ab3ABOXD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:23:03 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/18] brcmfmac: removed deprecated set_bitrate_mask
+ support
+Date: Wed, 2 Jan 2013 15:22:39 +0100
+Message-ID: <1357136572-18273-7-git-send-email-arend@broadcom.com> (sfid-20130102_152309_533341_E89A3DC7)
+In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Right now the rx flush is not doing anything useful on AR9003+, as it only
-works if the buffers in the rx FIFO have not been purged yet, as is done
-by ath_stoprecv.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-To fix this, always call ath_flushrecv from within ath_stoprecv before
-the FIFO is emptied, but still after the hw receive path has been stopped.
+Set bitrate_mask is not desired anymore. The firmware will
+determine the correct rates to be used.
 
-This ensures that frames received (and ACKed by the hardware) shortly before
-a reset will be seen by the software, which should improve A-MPDU session
-stability.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 16 +++-------------
- drivers/net/wireless/ath/ath9k/recv.c | 16 +++++++++-------
- 2 files changed, 12 insertions(+), 20 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   62 --------------------
+ 1 file changed, 62 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6d04654..eced021 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -182,7 +182,7 @@ static void ath_restart_work(struct ath_softc *sc)
- 	ath_start_ani(sc);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 1261a9b..ee4eb44 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -2011,67 +2011,6 @@ done:
+ 	return err;
  }
  
--static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
-+static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	bool ret = true;
-@@ -204,14 +204,6 @@ static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
- 	if (!ath_drain_all_txq(sc, retry_tx))
- 		ret = false;
- 
--	if (!flush) {
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
--			ath_rx_tasklet(sc, 1, true);
--		ath_rx_tasklet(sc, 1, false);
--	} else {
--		ath_flushrecv(sc);
+-static s32
+-brcmf_cfg80211_set_bitrate_mask(struct wiphy *wiphy, struct net_device *ndev,
+-			     const u8 *addr,
+-			     const struct cfg80211_bitrate_mask *mask)
+-{
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct brcm_rateset_le rateset_le;
+-	s32 rate;
+-	s32 val;
+-	s32 err_bg;
+-	s32 err_a;
+-	u32 legacy;
+-	s32 err = 0;
+-
+-	brcmf_dbg(TRACE, "Enter\n");
+-	if (!check_vif_up(ifp->vif))
+-		return -EIO;
+-
+-	/* addr param is always NULL. ignore it */
+-	/* Get current rateset */
+-	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_CURR_RATESET,
+-				     &rateset_le, sizeof(rateset_le));
+-	if (err) {
+-		brcmf_err("could not get current rateset (%d)\n", err);
+-		goto done;
 -	}
 -
- 	tasklet_enable(&sc->intr_tq);
- 
- 	return ret;
-@@ -266,7 +258,6 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata = NULL;
- 	bool fastcc = true;
--	bool flush = false;
- 	int r;
- 
- 	__ath_cancel_work(sc);
-@@ -280,11 +271,10 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
- 
- 	if (!hchan) {
- 		fastcc = false;
--		flush = true;
- 		hchan = ah->curchan;
- 	}
- 
--	if (!ath_prepare_reset(sc, retry_tx, flush))
-+	if (!ath_prepare_reset(sc, retry_tx))
- 		fastcc = false;
- 
- 	ath_dbg(common, CONFIG, "Reset to %u MHz, HT40: %d fastcc: %d\n",
-@@ -808,7 +798,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
- 	}
- 
--	ath_prepare_reset(sc, false, true);
-+	ath_prepare_reset(sc, false);
- 
- 	if (sc->rx.frag) {
- 		dev_kfree_skb_any(sc->rx.frag);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b782974..17325a8 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -463,6 +463,13 @@ start_recv:
- 	return 0;
- }
- 
-+static void ath_flushrecv(struct ath_softc *sc)
-+{
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
-+		ath_rx_tasklet(sc, 1, true);
-+	ath_rx_tasklet(sc, 1, false);
-+}
-+
- bool ath_stoprecv(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -473,6 +480,8 @@ bool ath_stoprecv(struct ath_softc *sc)
- 	ath9k_hw_setrxfilter(ah, 0);
- 	stopped = ath9k_hw_stopdmarecv(ah, &reset);
- 
-+	ath_flushrecv(sc);
-+
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
- 		ath_edma_stop_recv(sc);
- 	else
-@@ -489,13 +498,6 @@ bool ath_stoprecv(struct ath_softc *sc)
- 	return stopped && !reset;
- }
- 
--void ath_flushrecv(struct ath_softc *sc)
--{
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
--		ath_rx_tasklet(sc, 1, true);
--	ath_rx_tasklet(sc, 1, false);
+-	legacy = ffs(mask->control[IEEE80211_BAND_2GHZ].legacy & 0xFFFF);
+-	if (!legacy)
+-		legacy = ffs(mask->control[IEEE80211_BAND_5GHZ].legacy &
+-			     0xFFFF);
+-
+-	val = wl_g_rates[legacy - 1].bitrate * 100000;
+-
+-	if (val < le32_to_cpu(rateset_le.count))
+-		/* Select rate by rateset index */
+-		rate = rateset_le.rates[val] & 0x7f;
+-	else
+-		/* Specified rate in bps */
+-		rate = val / 500000;
+-
+-	brcmf_dbg(CONN, "rate %d mbps\n", rate / 2);
+-
+-	/*
+-	 *
+-	 *      Set rate override,
+-	 *      Since the is a/b/g-blind, both a/bg_rate are enforced.
+-	 */
+-	err_bg = brcmf_fil_iovar_int_set(ifp, "bg_rate", rate);
+-	err_a = brcmf_fil_iovar_int_set(ifp, "a_rate", rate);
+-	if (err_bg && err_a) {
+-		brcmf_err("could not set fixed rate (%d) (%d)\n", err_bg,
+-			  err_a);
+-		err = err_bg | err_a;
+-	}
+-
+-done:
+-	brcmf_dbg(TRACE, "Exit\n");
+-	return err;
 -}
 -
- static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
+ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+ 				   struct brcmf_bss_info_le *bi)
  {
- 	/* Check whether the Beacon frame has DTIM indicating buffered bc/mc */
+@@ -3703,7 +3642,6 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.set_default_key = brcmf_cfg80211_config_default_key,
+ 	.set_default_mgmt_key = brcmf_cfg80211_config_default_mgmt_key,
+ 	.set_power_mgmt = brcmf_cfg80211_set_power_mgmt,
+-	.set_bitrate_mask = brcmf_cfg80211_set_bitrate_mask,
+ 	.connect = brcmf_cfg80211_connect,
+ 	.disconnect = brcmf_cfg80211_disconnect,
+ 	.suspend = brcmf_cfg80211_suspend,
 -- 
-1.8.0.2
+1.7.10.4
+
 
