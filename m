@@ -1,178 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48139 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452Ab3A2Xo6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 18:44:58 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] cfg80211: refactor hidden SSID finding
-Date: Wed, 30 Jan 2013 00:45:19 +0100
-Message-Id: <1359503120-25685-1-git-send-email-johannes@sipsolutions.net> (sfid-20130130_004508_523732_488C5419)
+Received: from mms3.broadcom.com ([216.31.210.19]:3939 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752782Ab3ABOXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:23:08 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 13/18] brcmfmac: cleanup netdev transmit callback
+Date: Wed, 2 Jan 2013 15:22:46 +0100
+Message-ID: <1357136572-18273-14-git-send-email-arend@broadcom.com> (sfid-20130102_155321_858915_FE4E3697)
+In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The header of the ethernet packet is processed conditionally, but
+the check is wrong as it checks skb length is at least ETH_ALEN. It
+should check it is at least sizeof struct ethhdr instead.
 
-Instead of duplicating the rbtree functions, pass
-an argument to the compare function. This removes
-the code duplication for the two searches.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/wireless/scan.c | 79 ++++++++++++-----------------------------------------
- 1 file changed, 17 insertions(+), 62 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   22 ++++++++++++--------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index ca367c5..72ef3b2 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -425,34 +425,13 @@ static int cmp_bss_core(struct cfg80211_bss *a, struct cfg80211_bss *b)
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index a1ca691..9ca7411 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -165,6 +165,7 @@ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	int ret;
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_pub *drvr = ifp->drvr;
++	struct ethhdr *eh;
  
- static int cmp_bss(struct cfg80211_bss *a,
--		   struct cfg80211_bss *b)
--{
--	const struct cfg80211_bss_ies *a_ies, *b_ies;
--	int r;
--
--	r = cmp_bss_core(a, b);
--	if (r)
--		return r;
--
--	a_ies = rcu_access_pointer(a->ies);
--	if (!a_ies)
--		return -1;
--	b_ies = rcu_access_pointer(b->ies);
--	if (!b_ies)
--		return 1;
--
--	return cmp_ies(WLAN_EID_SSID,
--		       a_ies->data, a_ies->len,
--		       b_ies->data, b_ies->len);
--}
--
--static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
-+		   struct cfg80211_bss *b,
-+		   bool hide_ssid)
- {
- 	const struct cfg80211_bss_ies *a_ies, *b_ies;
- 	const u8 *ie1;
- 	const u8 *ie2;
--	int i;
--	int r;
-+	int i, r;
+ 	brcmf_dbg(TRACE, "Enter\n");
  
- 	r = cmp_bss_core(a, b);
- 	if (r)
-@@ -469,14 +448,9 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
- 	ie2 = cfg80211_find_ie(WLAN_EID_SSID, b_ies->data, b_ies->len);
- 
- 	/*
--	 * Key comparator must use same algorithm in any rb-tree
--	 * search function (order is important), otherwise ordering
--	 * of items in the tree is broken and search gives incorrect
--	 * results. This code uses same order as cmp_ies() does.
--	 *
--	 * Note that due to the differring behaviour with hidden SSIDs
--	 * this function only works when "b" is the tree element and
--	 * "a" is the key we're looking for.
-+	 * Note that with "hide_ssid", the function returns a match if
-+	 * the already-present BSS ("b") is a hidden SSID beacon for
-+	 * the new BSS ("a").
- 	 */
- 
- 	/* sort missing IE before (left of) present IE */
-@@ -485,14 +459,17 @@ static int cmp_hidden_bss(struct cfg80211_bss *a, struct cfg80211_bss *b)
- 	if (!ie2)
- 		return 1;
- 
--	/* zero-size SSID is used as an indication of the hidden bss */
--	if (!ie2[1])
-+	/* zero-length SSID is used as an indication of the hidden bss */
-+	if (hide_ssid && !ie2[1])
- 		return 0;
- 
- 	/* sort by length first, then by contents */
- 	if (ie1[1] != ie2[1])
- 		return ie2[1] - ie1[1];
- 
-+	if (!hide_ssid)
-+		return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
-+
- 	/*
- 	 * zeroed SSID ie is another indication of a hidden bss;
- 	 * if it isn't zeroed just return the regular sort value
-@@ -584,7 +561,7 @@ static void rb_insert_bss(struct cfg80211_registered_device *dev,
- 		parent = *p;
- 		tbss = rb_entry(parent, struct cfg80211_internal_bss, rbn);
- 
--		cmp = cmp_bss(&bss->pub, &tbss->pub);
-+		cmp = cmp_bss(&bss->pub, &tbss->pub, false);
- 
- 		if (WARN_ON(!cmp)) {
- 			/* will sort of leak this BSS */
-@@ -603,30 +580,8 @@ static void rb_insert_bss(struct cfg80211_registered_device *dev,
- 
- static struct cfg80211_internal_bss *
- rb_find_bss(struct cfg80211_registered_device *dev,
--	    struct cfg80211_internal_bss *res)
--{
--	struct rb_node *n = dev->bss_tree.rb_node;
--	struct cfg80211_internal_bss *bss;
--	int r;
--
--	while (n) {
--		bss = rb_entry(n, struct cfg80211_internal_bss, rbn);
--		r = cmp_bss(&res->pub, &bss->pub);
--
--		if (r == 0)
--			return bss;
--		else if (r < 0)
--			n = n->rb_left;
--		else
--			n = n->rb_right;
--	}
--
--	return NULL;
--}
--
--static struct cfg80211_internal_bss *
--rb_find_hidden_bss(struct cfg80211_registered_device *dev,
--		   struct cfg80211_internal_bss *res)
-+	    struct cfg80211_internal_bss *res,
-+	    bool hidden)
- {
- 	struct rb_node *n = dev->bss_tree.rb_node;
- 	struct cfg80211_internal_bss *bss;
-@@ -634,7 +589,7 @@ rb_find_hidden_bss(struct cfg80211_registered_device *dev,
- 
- 	while (n) {
- 		bss = rb_entry(n, struct cfg80211_internal_bss, rbn);
--		r = cmp_hidden_bss(&res->pub, &bss->pub);
-+		r = cmp_bss(&res->pub, &bss->pub, hidden);
- 
- 		if (r == 0)
- 			return bss;
-@@ -684,7 +639,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		return NULL;
+@@ -202,17 +203,20 @@ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 		}
  	}
  
--	found = rb_find_bss(dev, tmp);
-+	found = rb_find_bss(dev, tmp, false);
+-	/* Update multicast statistic */
+-	if (skb->len >= ETH_ALEN) {
+-		u8 *pktdata = (u8 *)(skb->data);
+-		struct ethhdr *eh = (struct ethhdr *)pktdata;
+-
+-		if (is_multicast_ether_addr(eh->h_dest))
+-			drvr->tx_multicast++;
+-		if (ntohs(eh->h_proto) == ETH_P_PAE)
+-			atomic_inc(&drvr->pend_8021x_cnt);
++	/* validate length for ether packet */
++	if (skb->len < sizeof(*eh)) {
++		ret = -EINVAL;
++		dev_kfree_skb(skb);
++		goto done;
+ 	}
  
- 	if (found) {
- 		found->pub.beacon_interval = tmp->pub.beacon_interval;
-@@ -739,7 +694,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		/* TODO: The code is not trying to update existing probe
- 		 * response bss entries when beacon ies are
- 		 * getting changed. */
--		hidden = rb_find_hidden_bss(dev, tmp);
-+		hidden = rb_find_bss(dev, tmp, true);
- 		if (hidden)
- 			copy_hidden_ies(tmp, hidden);
++	/* handle ethernet header */
++	eh = (struct ethhdr *)(skb->data);
++	if (is_multicast_ether_addr(eh->h_dest))
++		drvr->tx_multicast++;
++	if (ntohs(eh->h_proto) == ETH_P_PAE)
++		atomic_inc(&drvr->pend_8021x_cnt);
++
+ 	/* If the protocol uses a data header, apply it */
+ 	brcmf_proto_hdrpush(drvr, ifp->idx, skb);
  
 -- 
-1.8.0
+1.7.10.4
+
 
