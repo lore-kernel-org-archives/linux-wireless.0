@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:40187 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245Ab3AKKer convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 05:34:47 -0500
-Received: by mail-wi0-f182.google.com with SMTP id hn14so927446wib.3
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2013 02:34:46 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:2559 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752788Ab3ABOXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:23:14 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 14/18] brcmfmac: remove unnecessary curly braces in
+ dhd_attach()
+Date: Wed, 2 Jan 2013 15:22:47 +0100
+Message-ID: <1357136572-18273-15-git-send-email-arend@broadcom.com> (sfid-20130102_155321_548795_FDEC74F6)
+In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <BLU0-SMTP170F868AA41C395F4961031AC290@phx.gbl>
-References: <BLU0-SMTP170F868AA41C395F4961031AC290@phx.gbl>
-Date: Fri, 11 Jan 2013 11:34:45 +0100
-Message-ID: <CACna6rwmOBqmzjvAv3n5MLdZxtfBOK3RjY4M3p5Hwm3Hbta2GA@mail.gmail.com> (sfid-20130111_113451_163575_19C4F5B6)
-Subject: Re: [PATCH] bcma: fix bcm4716/bcm4748 i2s irqflag
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Nathan Hintz <nlhintz@hotmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	hauke@hauke-m.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/1/11 Nathan Hintz <nlhintz@hotmail.com>:
-> +       if ((cpu && pcie && i2s) &&
+Stumbled into a curly braces used for if statement with only
+one conditional statement. Removing them.
 
-Braces not needed
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-
-> +           (bcma_aread32(cpu, BCMA_MIPS_OOBSELINA74) == 0x08060504 &&
-> +            bcma_aread32(pcie, BCMA_MIPS_OOBSELINA74) == 0x08060504 &&
-> +            bcma_aread32(i2s, BCMA_MIPS_OOBSELOUTA30) == 0x88)) {
-> +               bcma_awrite32(cpu, BCMA_MIPS_OOBSELINA74, 0x07060504);
-> +               bcma_awrite32(pcie, BCMA_MIPS_OOBSELINA74, 0x07060504);
-> +               bcma_awrite32(i2s, BCMA_MIPS_OOBSELOUTA30, 0x87);
-> +               bcma_info(bus,
-> +                         "Moved i2s interrupt to oob line 7 instead of 8\n");
-
-I just wonder if it's worth "info" level?
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 9ca7411..285a70e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -890,9 +890,8 @@ void brcmf_detach(struct device *dev)
+ 
+ 	brcmf_bus_detach(drvr);
+ 
+-	if (drvr->prot) {
++	if (drvr->prot)
+ 		brcmf_proto_detach(drvr);
+-	}
+ 
+ 	brcmf_debugfs_detach(drvr);
+ 	bus_if->drvr = NULL;
 -- 
-Rafał
+1.7.10.4
+
+
