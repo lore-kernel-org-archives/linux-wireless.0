@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:48168 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753450Ab3A2Ns5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 08:48:57 -0500
-Message-ID: <5107D345.7010101@neratec.com> (sfid-20130129_144901_292749_D404292C)
-Date: Tue, 29 Jan 2013 14:48:53 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from nm6.bullet.mail.ird.yahoo.com ([77.238.189.63]:39685 "EHLO
+	nm6.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752887Ab3ABPC3 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 10:02:29 -0500
+Message-ID: <1357138947.38782.YahooMailClassic@web172305.mail.ir2.yahoo.com> (sfid-20130102_160240_552367_BBEB367E)
+Date: Wed, 2 Jan 2013 15:02:27 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: rtl8187 WARN slowpath on suspend with 3.6.11
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <50E23C19.7050008@lwfinger.net>
 MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	victorg@ti.com, linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv7 1/3] nl80211/cfg80211: add radar detection command/event
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de> <1359462120-22898-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-In-Reply-To: <1359462120-22898-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2013 01:21 PM, Simon Wunderlich wrote:
-> From: Victor Goldenshtein <victorg@ti.com>
+--- On Tue, 1/1/13, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> On 12/31/2012 06:16 PM, Hin-Tak Leung
+> wrote:
+> > Hi,
+> >
+> > Does either Larry or Herton see the sort of behavior
+> (https://bugzilla.redhat.com/show_bug.cgi?id=891019) on
+> suspend? John, is there anything changed between 3.6.9 and
+> 3.6.11 which would cause this?
+> >
+> > Other than a genuine kernel regression, it is possible
+> that it might be fedora specific - I just went from F17 to
+> F18. F18 seems to have an systemd integrated udevd which
+> might behaves differently from the older udevd's... or
+> general funniness with F18 (I noticed another bug https://bugzilla.redhat.com/show_bug.cgi?id=891018 but
+> that might be unrelated).
+> >
+> > Anyway, other than whole sale downgrade I think I can
+> try booting 3.6.9 (which suspended cleanly under F17) and
+> see whether it is a F18-specific problem.
 > 
-> [...]
->  
->  /**
-> + * enum ieee80211_dfs_state - DFS states for channels
-> + *
-> + * Channel states used by the DFS code.
-> + *
-> + * @IEEE80211_DFS_USABLE: The channel can be used, but channel availability
-> + *	check (CAC) must be performed before using it for AP or IBSS.
-> + * @IEEE80211_DFS_UNAVAILABLE: A radar has been detected on this channel, it
-> + *	is therefore marked as not available.
-> + * @IEEE80211_DFS_AVAILABLE: The channel has been CAC checked and is available.
-> + */
-> +
-> +enum ieee80211_dfs_state {
-> +	IEEE80211_DFS_USABLE,
-> +	IEEE80211_DFS_UNAVAILABLE,
-> +	IEEE80211_DFS_AVAILABLE,
-> +};
-> +
-Not sure if IEEE80211_DFS_UNKNOWN is not missing here, i.e. whether a channel that
-never passed a CAC (or the CAC has been aborted) is always USABLE. Once I realized
-why ETSI defined an UNKNOWN state, but forgot meanwhile - so maybe only relevant
-for managed operation (like an UNKNOWN state can be overridden by external
-information, whereas e.g. UNAVAILABLE can't).
+> Hin-Tak,
+> 
+> My system has never done a suspend/resume with any wireless
+> card, thus I cannot 
+> check your result. The test with 3.6.9 is a good idea.
+> 
+> Sorry,
+> 
+> Larry
 
-Furthermore, is there a reason to define an additional wireless_dev.cac_started
-flag vs. adding a IEEE80211_DFS_CAC state?
+Hi Larry,
 
+Thanks for the reply. I have since rebooted to 3.6.9-2.fc17.x86_64, 3.6.10-2.fc17.x86_64 as well as 3.6.9-4.fc18.x86_64, 3.6.10-5.fc18.x86_64 and 3.6.11-3.fc18.x86_64; and all have the same problem. 3.6.9-2.fc17.x86_64 was the last kernel which I ran for over two weeks and had suspended a few times according to my /var/log/messages*. So this looks like a fedora-18 specific problems brought on by changes in userland
+between F17 and F18. (possibly the systemd integrated udevd).
+
+I'll add a comment to the bug report and let John reassign as appropriate.
+
+Hin-Tak
 
