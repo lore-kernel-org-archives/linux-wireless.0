@@ -1,65 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:33427 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625Ab3AVTkX (ORCPT
+Received: from tirith.ics.muni.cz ([147.251.4.36]:48818 "EHLO
+	tirith.ics.muni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825Ab3ABJLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 14:40:23 -0500
-Received: by mail-ob0-f178.google.com with SMTP id eh20so7511941obb.9
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 11:40:23 -0800 (PST)
+	Wed, 2 Jan 2013 04:11:32 -0500
+From: Vojtech Havel <xhavel1@fi.muni.cz>
+To: Piotr Haber <phaber@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: bugreport brcmsmac weak signal
+Date: Wed, 02 Jan 2013 10:09:04 +0100
+Message-ID: <1536004.hKi75cttfX@ledge> (sfid-20130102_101135_872377_0CDDF626)
+In-Reply-To: <50E3DFD3.6010803@broadcom.com>
+References: <1707792.Sg5XObDUQq@ledge> <50E3DFD3.6010803@broadcom.com>
 MIME-Version: 1.0
-From: Tom Gundersen <teg@jklm.no>
-Date: Tue, 22 Jan 2013 20:40:02 +0100
-Message-ID: <CAG-2HqX=iYXLq9y2+brGP-KtPMh+nKUHttS3DEgPNJKHWVJquw@mail.gmail.com> (sfid-20130122_204027_292817_8C53C8D1)
-Subject: WARNING: at drivers/net/wireless/brcm80211/brcmsmac/main.c:7539 brcms_c_wait_for_tx_completion
-To: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+T24gV2VkbmVzZGF5IDAyIG9mIEphbnVhcnkgMjAxMyAwODoyMDo1MSBQaW90ciBIYWJlciB3cm90
+ZToKPiBPbiAwMS8wMi8xMyAwMTowOSwgVm9qdGVjaCBIYXZlbCB3cm90ZToKPiA+IEhpLAo+ID4g
+Cj4gPiBJIGhhdmUgcHJvYmxlbXMgd2l0aCBteSBCcm9hZGNvbSBCQ000MzEzIHdpZmkgY2FyZCB3
+aGlsZSB1c2luZyBicmNtc21hYwo+ID4gbW9kdWxlLgo+ID4gCj4gPiBUaGUgd2lmaSBzaWduYWwg
+aXMgdGVycmlibHkgd2Vhay4gV2hlbiB0aGUgZGlzdGFuY2UgYmV0d2VlbiBteSBsYXB0b3AgYW5k
+Cj4gPiBBUCBpcyBtb3JlIHRoYW4gfjUgbSB0aGUgbmV0d29yayBpcyBub3QgdmlzaWJsZSBhdCBh
+bGwuIFdoZW4gdGhlIGxhcHRvcAo+ID4gaXMgY2xvc2VyLCBpdCBjb25uZWN0cywgYnV0IGl0IGlz
+IHZlcnkgc2xvdyBkdWUgdG8gd2VhayBzaWduYWwuIEkgaGF2ZSB0bwo+ID4gc2l0IG5leHQgdG8g
+QVAgd2hlbiBJIHdhbnQgbGluayBxdWFsaXR5IG1vcmUgdGhhbiA2MC83MC4KPiA+IAo+ID4gSWYg
+SSB1c2UgQnJvYWRjb20gaHlicmlkIGRyaXZlciAtIHdsIC0gaXQgd29ya3Mgbm9ybWFsbHkgKGJ1
+dCBoYXMKPiA+IGRpZmZlcmVudAo+ID4gcHJvYmxlbXMuLi4pLgo+ID4gCj4gPiBJIHRyaWVkIHRv
+IHVzZSB0aHJlZSBkaWZmZXJlbnQgd2lmaSBuZXR3b3JrcyB3aXRoIHRoaXMgY29tYmluYXRpb24g
+YW5kIGFsbAo+ID4gb2YgdGhlbSBoYWQgdGhlIHNhbWUgcHJvYmxlbS4KPiA+IAo+ID4gLS0tLS0K
+PiA+IE15IHNldHRpbmc6Cj4gPiAkIHVuYW1lIC1yCj4gPiAzLjguMC1yYzEKPiA+IAo+ID4gSSBh
+cHBsaWVkIHRoZSBwYXRjaCBmcm9tOgo+ID4gaHR0cDovL21hcmMuaW5mby8/bD1saW51eC13aXJl
+bGVzcyZtPTEzNTYzNTA5MDEyMTE1NCZ3PTIKPiA+IAo+ID4gVGhlIHNhbWUgd2l0aCAzLjUuNyBn
+ZW50b28ga2VybmVsLgo+ID4gLS0tLS0KPiA+IHdhdmVtb24gaW5mbzogKHdpdGggYnJjbXNtYWMs
+IH41IG0gYmV0d2VlbiBteSBsYXB0b3AgYW5kIHRoZSBhcCkKPiA+IAo+ID4g4pSM4pSASW50ZXJm
+YWNl4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACj4gPiDilIJ3bGFuMCAoSUVFRSA4MDIu
+MTFiZ24sIFdQQS9XUEEyKSwgIEVTU0lEOiAiaWhvbWUiCj4gPiDilJzilIBMZXZlbHPilIDilIDi
+lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
+lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
+lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKPiA+IOKUggo+ID4g4pSCbGluayBxdWFs
+aXR5OiAyMy83MAo+ID4g4pSCPT09PT09PT09PT09PT09PT09PT09PQo+ID4g4pSCCj4gPiDilIJz
+aWduYWwgbGV2ZWw6IC04NyBkQm0gKDIsMDAgcFcpCj4gPiDilII9PT09PT09PQo+ID4g4pSCCj4g
+PiDilIIKPiA+IOKUnOKUgFN0YXRpc3RpY3PilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
+lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
+lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKPiA+
+IOKUglJYOiAzIDgxNzgoMiw0MSBNaUIpLCBpbnZhbGlkOiAwIG53aWQsIDAgY3J5cHQsIDAgZnJh
+ZywgMyBtaXNjCj4gPiDilIJUWDogNCAxNzg5KDc3OSw2MTlLaUIpLCBtYWMgcmV0cmllczogMzEs
+IG1pc3NlZCBiZWFjb25zOiAwCj4gPiDilJzilIBJbmZv4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSACj4gPiDilIJtb2RlOiBNYW5hZ2VkLCAgYWNjZXNzIHBvaW50
+OiAobm90IHJlbGV2YW50IDotKSkKPiA+IOKUgmZyZXE6IDIsNDM3IEdIeiwgY2hhbm5lbDogNiwg
+IGJpdHJhdGU6IDUsNSBNYml0L3MKPiA+IOKUgnBvd2VyIG1ndDogb2ZmLCAgdHgtcG93ZXI6IDE5
+IGRCbSAoNzksNDMgbVcpCj4gPiDilIJyZXRyeTogbG9uZyBsaW1pdCA3LCAgcnRzL2N0czogb2Zm
+LCAgZnJhZzogb2ZmCj4gPiDilIJlbmNyeXB0aW9uOiBuL2EgKHJlcXVpcmVzIENBUF9ORVRfQURN
+SU4gcGVybWlzc2lvbnMpCj4gPiDilJzilIBOZXR3b3Jr4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSACj4gPiDilIJ3bGFuMCAoVVAgUlVOTklORyBCUk9BRENBU1QgTVVMVElDQVNU
+KQo+ID4g4pSCbWFjOiAobm90IHJlbGV2YW50IDotKSksIHFsZW46IDEwMDAKPiA+IOKUgmlwOiAx
+OTIuMTY4LjEuMTAzLzI0LCAgYmNhc3Q6IDI1NS4yNTUuMjU1LjI1NQo+ID4g4pSU4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACj4gCj4g
+SGkgVm9qdGVjaCwKPiBJIHNlZSB5b3UgYXJlIHJ1bm5pbmcgdjMuOC1yYzEsIHRoYXQncyBncmVh
+dCBzaW5jZSB5b3UgY2FuIHByb3ZpZGUgdXMKPiB3aXRoIHRoZSBjb250ZW50IG9mIC9zeXMva2Vy
+bmVsL2RlYnVnL2JyY21zbWFjL2JjbWEwOjAvaGFyZHdhcmUgc28gd2UKPiBrbm93IGV4YWN0bHkg
+d2hpY2ggaGFyZHdhcmUgeW91IGhhdmUuCj4gQWxzbyBkbWVzZyBjb250ZW50cyB3b3VsZCBiZSBo
+ZWxwZnVsIGkgdGhpbmsKPiAKPiBLaW5kIHJlZ2FyZHMKPiBQaW90cgoKSGkgUGlvdHIsCgojIGNh
+dCAvc3lzL2tlcm5lbC9kZWJ1Zy9icmNtc21hYy9iY21hMDowL2hhcmR3YXJlCmJvYXJkIHZlbmRv
+cjogMTRlNApib2FyZCB0eXBlOiA2MDgKYm9hcmQgcmV2aXNpb246IDExMDkKYm9hcmQgZmxhZ3M6
+IDQwMjIwMQpib2FyZCBmbGFnczI6IDg4NApmaXJtd2FyZSByZXZpc2lvbjogMjYyMDMyYgoKJCBk
+bWVzZwptdHJyOiB5b3VyIEJJT1MgaGFzIGNvbmZpZ3VyZWQgYW4gaW5jb3JyZWN0IG1hc2ssIGZp
+eGluZyBpdC4KYXRhMS4wMDogZmFpbGVkIHRvIGdldCBJZGVudGlmeSBEZXZpY2UgRGF0YSwgRW1h
+c2sgMHgxCmF0YTEuMDA6IGZhaWxlZCB0byBnZXQgSWRlbnRpZnkgRGV2aWNlIERhdGEsIEVtYXNr
+IDB4MQphdGExLjAwOiBjb25maWd1cmVkIGZvciBVRE1BLzEwMAphdGExOiBFSCBjb21wbGV0ZQpF
+WFQ0LWZzIChzZGEzKTogcmUtbW91bnRlZC4gT3B0czogY29tbWl0PTAKRVhUNC1mcyAoc2RhNCk6
+IHJlLW1vdW50ZWQuIE9wdHM6IGNvbW1pdD0wCk5FVDogUmVnaXN0ZXJlZCBwcm90b2NvbCBmYW1p
+bHkgMTAKY2ZnODAyMTE6IENhbGxpbmcgQ1JEQSB0byB1cGRhdGUgd29ybGQgcmVndWxhdG9yeSBk
+b21haW4KYmNtYTogYnVzMDogRm91bmQgY2hpcCB3aXRoIGlkIDB4NDMxMywgcmV2IDB4MDEgYW5k
+IHBhY2thZ2UgMHgwOApiY21hOiBidXMwOiBDb3JlIDAgZm91bmQ6IENoaXBDb21tb24gKG1hbnVm
+IDB4NEJGLCBpZCAweDgwMCwgcmV2IDB4MjQsIGNsYXNzIAoweDApCmJjbWE6IGJ1czA6IENvcmUg
+MSBmb3VuZDogSUVFRSA4MDIuMTEgKG1hbnVmIDB4NEJGLCBpZCAweDgxMiwgcmV2IDB4MTgsIGNs
+YXNzIAoweDApCmJjbWE6IGJ1czA6IENvcmUgMiBmb3VuZDogUENJZSAobWFudWYgMHg0QkYsIGlk
+IDB4ODIwLCByZXYgMHgxMSwgY2xhc3MgMHgwKQpiY21hOiBidXMwOiBGb3VuZCByZXYgOCBQTVUg
+KGNhcGFiaWxpdGllcyAweDA4NEMzMDA4KQpiY21hOiBidXMwOiBTUFJPTSBvZmZzZXQgMHg4MzAK
+YmNtYTogYnVzMDogR1BJTyBkcml2ZXIgbm90IGFjdGl2YXRlZApiY21hOiBidXMwOiBCdXMgcmVn
+aXN0ZXJlZApicmNtc21hYyBiY21hMDowOiBtZmcgNGJmIGNvcmUgODEyIHJldiAyNCBjbGFzcyAw
+IGlycSAxNwpiY21hOiBidXMwOiBTd2l0Y2hlZCB0byBjb3JlOiAweDgxMgppZWVlODAyMTEgcGh5
+MDogU2VsZWN0ZWQgcmF0ZSBjb250cm9sIGFsZ29yaXRobSAnbWluc3RyZWxfaHQnCmJyY21zbWFj
+IGJjbWEwOjA6IGJyY21zX29wc19ic3NfaW5mb19jaGFuZ2VkOiBxb3MgZW5hYmxlZDogZmFsc2Ug
+KGltcGxlbWVudCkKYnJjbXNtYWMgYmNtYTA6MDogYnJjbXNfb3BzX2NvbmZpZzogY2hhbmdlIHBv
+d2VyLXNhdmUgbW9kZTogZmFsc2UgKGltcGxlbWVudCkKSVB2NjogQUREUkNPTkYoTkVUREVWX1VQ
+KTogd2xhbjA6IGxpbmsgaXMgbm90IHJlYWR5CndsYW4wOiBhdXRoZW50aWNhdGUgd2l0aCAwMDoy
+NTo4NjpkZjo0OTo2NAp3bGFuMDogZGlyZWN0IHByb2JlIHRvIDAwOjI1Ojg2OmRmOjQ5OjY0ICh0
+cnkgMS8zKQp3bGFuMDogc2VuZCBhdXRoIHRvIDAwOjI1Ojg2OmRmOjQ5OjY0ICh0cnkgMi8zKQp3
+bGFuMDogYXV0aGVudGljYXRlZApicmNtc21hYyBiY21hMDowIHdsYW4wOiBkaXNhYmxpbmcgSFQg
+YXMgV01NL1FvUyBpcyBub3Qgc3VwcG9ydGVkIGJ5IHRoZSBBUApicmNtc21hYyBiY21hMDowIHds
+YW4wOiBkaXNhYmxpbmcgVkhUIGFzIFdNTS9Rb1MgaXMgbm90IHN1cHBvcnRlZCBieSB0aGUgQVAK
+d2xhbjA6IGFzc29jaWF0ZSB3aXRoIDAwOjI1Ojg2OmRmOjQ5OjY0ICh0cnkgMS8zKQp3bGFuMDog
+UlggQXNzb2NSZXNwIGZyb20gMDA6MjU6ODY6ZGY6NDk6NjQgKGNhcGFiPTB4NDMxIHN0YXR1cz0w
+IGFpZD0xKQpicmNtc21hYyBiY21hMDowOiBicmNtc21hYzogYnJjbXNfb3BzX2Jzc19pbmZvX2No
+YW5nZWQ6IGFzc29jaWF0ZWQKYnJjbXNtYWMgYmNtYTA6MDogYnJjbXNfb3BzX2Jzc19pbmZvX2No
+YW5nZWQ6IGFycCBmaWx0ZXJpbmc6IGVuYWJsZWQgdHJ1ZSwgCmNvdW50IDAgKGltcGxlbWVudCkK
+YnJjbXNtYWMgYmNtYTA6MDogYnJjbXNfb3BzX2Jzc19pbmZvX2NoYW5nZWQ6IHFvcyBlbmFibGVk
+OiBmYWxzZSAoaW1wbGVtZW50KQp3bGFuMDogYXNzb2NpYXRlZApJUHY2OiBBRERSQ09ORihORVRE
+RVZfQ0hBTkdFKTogd2xhbjA6IGxpbmsgYmVjb21lcyByZWFkeQ==
 
-I'm having some (occasional) problems using 3.8-rc4 (see output below).
-
-I don't know if this is new, as it is the first kernel I try on this machine.
-
-Please let me know if there is any additional info I can provide (or
-patches to try).
-
-Cheers,
-
-Tom
-
-
-[  566.256181] ------------[ cut here ]------------
-[  566.256197] WARNING: at
-drivers/net/wireless/brcm80211/brcmsmac/main.c:7539
-brcms_c_wait_for_tx_completion+0xab/0xc0 [brcmsmac]()
-[  566.256199] Hardware name: MacBookAir5,1
-[  566.256200] Modules linked in: efivars hid_generic mousedev
-hid_apple usbhid bcm5974 brcmsmac cordic mac80211 snd_hda_codec_hdmi
-snd_hda_codec_cirrus brcmutil i915 cfg80211 kvm_intel kvm rfkill
-i2c_algo_bit snd_hda_intel intel_agp intel_gtt snd_hda_codec
-drm_kms_helper snd_hwdep aesni_intel aes_x86_64 snd_pcm xhci_hcd
-ehci_pci applesmc ehci_hcd input_polldev drm microcode led_class
-snd_page_alloc snd_timer usbcore snd bcma agpgart soundcore usb_common
-battery acpi_cpufreq mperf ac evdev processor
-[  566.256234] Pid: 84, comm: kworker/u:7 Not tainted 3.8.0-rc4-TEG #2
-[  566.256236] Call Trace:
-[  566.256241]  [<ffffffff81043e9f>] warn_slowpath_common+0x7f/0xc0
-[  566.256244]  [<ffffffff81043efa>] warn_slowpath_null+0x1a/0x20
-[  566.256250]  [<ffffffffa04ca32b>]
-brcms_c_wait_for_tx_completion+0xab/0xc0 [brcmsmac]
-[  566.256255]  [<ffffffffa04bd8ab>] brcms_ops_flush+0x3b/0x60 [brcmsmac]
-[  566.256265]  [<ffffffffa04317b3>] ieee80211_scan_work+0x1b3/0x630 [mac80211]
-[  566.256269]  [<ffffffff810615d2>] process_one_work+0x132/0x4f0
-[  566.256273]  [<ffffffff81078cd1>] ? get_parent_ip+0x11/0x50
-[  566.256282]  [<ffffffffa0431600>] ?
-ieee80211_run_deferred_scan+0x90/0x90 [mac80211]
-[  566.256285]  [<ffffffff81062cfd>] worker_thread+0x15d/0x450
-[  566.256287]  [<ffffffff81062ba0>] ? busy_worker_rebind_fn+0x100/0x100
-[  566.256290]  [<ffffffff81068d00>] kthread+0xc0/0xd0
-[  566.256293]  [<ffffffff815f0000>] ? register_cpu+0x4e/0xc5
-[  566.256296]  [<ffffffff81068c40>] ? kthread_create_on_node+0x130/0x130
-[  566.256298]  [<ffffffff81602d1c>] ret_from_fork+0x7c/0xb0
-[  566.256300]  [<ffffffff81068c40>] ? kthread_create_on_node+0x130/0x130
-[  566.256302] ---[ end trace 2264c0238d7b0ba5 ]---
