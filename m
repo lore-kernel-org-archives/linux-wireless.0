@@ -1,99 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49053 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752581Ab3AUBbt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 20:31:49 -0500
-Message-ID: <1358731892.24121.238.camel@deadeye.wl.decadent.org.uk> (sfid-20130121_023208_537406_84B034B2)
-Subject: Re: [PATCH] linux-firmware: add MISSING file
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Pavel Roskin <proski@gnu.org>
-Cc: richard -rw- weinberger <richard.weinberger@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Daniel Drake <dsd@laptop.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 21 Jan 2013 01:31:32 +0000
-In-Reply-To: <20130114175533.4f184cd3@mj>
-References: <1358030383-15609-1-git-send-email-xose.vazquez@gmail.com>
-	 <CAFLxGvxTenzaaypsUz6pYmjiyEeUtkNGDKwBNeAVFUb5ZZgonQ@mail.gmail.com>
-	 <20130114175533.4f184cd3@mj>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-VCZvQISQsRs1FNey2Auk"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:2571 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752793Ab3ABOXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:23:14 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 12/18] brcmfmac: remove unused event related definitions
+Date: Wed, 2 Jan 2013 15:22:45 +0100
+Message-ID: <1357136572-18273-13-git-send-email-arend@broadcom.com> (sfid-20130102_155322_135291_312A6E66)
+In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The driver had some global definitions in dhd.h to map event
+identifiers to event names. With redesign of firmware event
+processing this has all moved to fweh module so these definitions
+can be removed.
 
---=-VCZvQISQsRs1FNey2Auk
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h |    7 -------
+ 1 file changed, 7 deletions(-)
 
-On Mon, 2013-01-14 at 17:55 -0500, Pavel Roskin wrote:
-> On Sun, 13 Jan 2013 00:09:46 +0100
-> richard -rw- weinberger <richard.weinberger@gmail.com> wrote:
->=20
-> > > +This file attempts to document the reason why a firmware is not
-> > > present +in this bundle.
-> >=20
-> > From the user's point of view this not really helpful.
-> > Wouldn't a in-kernel table of known but missing firmware files make
-> > more sense? The kernel could write a log like "Yeah, I know this
-> > firmware but sadly I don't have it because of ..."
->=20
-> The firmware file may be absent on the system even if it's in the
-> linux-firmware tree.  Conversely, the firmware may be present on the
-> system but not in the linux-firmware tree.
->=20
-> The kernel doesn't know whether the firmware is missing due to
-> licensing issues or due to misconfiguration.  The kernel cannot know
-> that.  And I don't think the kernel should include as much information
-> as the MISSING file would include.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 4937bf4..0388599 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -520,11 +520,6 @@ struct brcmf_pub {
+ #endif
+ };
+ 
+-struct bcmevent_name {
+-	uint event;
+-	const char *name;
+-};
+-
+ struct brcmf_if_event {
+ 	u8 ifidx;
+ 	u8 action;
+@@ -564,8 +559,6 @@ static inline s32 brcmf_ndev_bssidx(struct net_device *ndev)
+ 	return ifp->bssidx;
+ }
+ 
+-extern const struct bcmevent_name bcmevent_names[];
+-
+ extern int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
+ 
+ /* Return pointer to interface name */
+-- 
+1.7.10.4
 
-I can see some value in an index explaining where to get firmware,
-whether it's available from the copyright holder or some licensee or
-must be extracted from Windows drivers with a particular tool.
 
-I'm not sure whether linux-firmware.git is the right place for that,
-though.  Would distributions include this in their packages and would
-users be able to find it there?  Would a wiki page be more useful?
-
-Putting my Debian hat, I can say that we don't distribute any of the
-older files that are 'GPL but no source visible', while we do distribute
-some files not included in linux-firmware.git that require click-wrap
-licences.  I also prune files that aren't referenced by the kernel
-version in any current release.  So a file that says what's missing from
-linux-firmware.git would not be that useful to Debian users, for
-example.
-
-Ben.
-
---=20
-Ben Hutchings
-Q.  Which is the greater problem in the world today, ignorance or apathy?
-A.  I don't know and I couldn't care less.
-
---=-VCZvQISQsRs1FNey2Auk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUPyadOe/yOyVhhEJAQqvOw//RLcyEOZnEzSAZpTZ1LDGj8vlG4Uhgb3v
-3rDNk56BSo0JN4D/eH3mWBT5cbMXtGPcoOmnURvlxAs23/OTJFhQ4K9ZBcKQGJxs
-voOHUeXEBJIpwlw6nxtyJuV7Z4NhIcHtm0wJmEb6RnTFYaGYzb2Zc7MxKlMPN6uQ
-Fke+y8CPAP0sAMO+yfxBqwCkL60GaxvjltOlQVIBGQcgumihPvKvjYl/eiJRuiRy
-6JazOvC1mvb5uKUJm60AlX2D3SBVdRm31JjpPwfIhvjv4H1ilgJTSDKdGJqwJkdM
-AZGx88eLoHWVij2MFm9x39c7RpdKTiZdd3neDu84pFkMaKHhQA62m9MoFW+XfbuG
-Leoc1Nss+JiXRLhJ//KvD4j6MTgoWU/ANi13iGY/lNj+gHLA/+u6tNH7BTKKEpHE
-jIN5pQbg31XMJixL9nArJXdj8ouvzUfaou99ssvcWP+LEDBjHftrDlq9XijbEYOe
-ZDueHofcdFDnqYqISsJcCzyZ04rvdGcY1OvML18XF2y90uNe67UkL+LLF0lCpZnz
-QFcFwcTJqGPXREvjuVfWuuIl+unu5snpPaqcQELy9l4hOoP3gp+am/GlQwQwRkzv
-oyiWoZvofU5DXWXztB6gEp4ZklOwMBmUPgI8jPYBNLK8UD7Twrs0W+1m/EqS32fA
-AA7sTqgL748=
-=82jV
------END PGP SIGNATURE-----
-
---=-VCZvQISQsRs1FNey2Auk--
