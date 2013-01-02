@@ -1,61 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:41323 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756011Ab3AYMK3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 07:10:29 -0500
-Received: by mail-wi0-f177.google.com with SMTP id hm2so249089wib.4
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 04:10:28 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:2552 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752795Ab3ABOXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:23:14 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 15/18] brcmfmac: Remove unused caching dongle error.
+Date: Wed, 2 Jan 2013 15:22:48 +0100
+Message-ID: <1357136572-18273-16-git-send-email-arend@broadcom.com> (sfid-20130102_152325_455097_AACF08F8)
+In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1537149.hyND0EvR7A@sylvesterjr.pats.ua.ac.be>
-References: <1731354.xZITKB59tC@sylvesterjr.pats.ua.ac.be>
-	<CAGXE3d_fD9etSnMKFUb6YGz=4g85ACkvdgyPjusMJXus-nvFYg@mail.gmail.com>
-	<1537149.hyND0EvR7A@sylvesterjr.pats.ua.ac.be>
-Date: Fri, 25 Jan 2013 13:05:12 +0100
-Message-ID: <CAGXE3d8kBF-tBeGe6z0KVys5XiVFcrMUnYrbph-FUHJSZhQGKA@mail.gmail.com> (sfid-20130125_131033_350265_8048FB74)
-Subject: Re: Unable to get RTS/CTS working in rt2800
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 25, 2013 at 11:45 AM, Erwin Van de Velde
-<erwin.vandevelde@gmail.com> wrote:
-> On Friday 25 January 2013 09:42:31 Helmut Schaa wrote:
->> On Thu, Jan 24, 2013 at 4:58 PM, Erwin Van de Velde
->>
->> <erwin.vandevelde@gmail.com> wrote:
->> > In a test setup with 802.11a/n a colleague and I tried enabling
-> RTS/CTS.
->> > The only thing we got however was a CTS to self. RTS threshold was
-> 1000B,
->> > packet size 1400B.
->>
->> Did you use 11n aggregation?
->
-> Yes, but afterwards we also tried it with 802.11a, same result.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Bad. I expected this to work ...
+CDC errors are retained. However, it is never used so it can
+be removed.
 
->> > We looked for other options but did not find anything
->> > helpful, what else can we try to enable RTS/CTS?
->>
->> Yup, there are several issues there:
->> - The hw ignores RTS thresholds for AMPDUs AFAIK
->> - HT protection always uses CTS-to-self (hardcoded in driver in
->> rt2800_config_ht_opmode)
->>
->> I don't think any other driver allows to configure if RTS-CTS or
->> CTS-to-self should be used?
->> You can easily enforce RTS-CTS for 11n transmissions by changing
->> rt2800_config_ht_opmode.
->
-> Where do I configure that? Is it in the source code or is it a kernel
-> module parameter?
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h     |    3 ---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c |   22 ++-------------------
+ 2 files changed, 2 insertions(+), 23 deletions(-)
 
-You'd need to change the source code of rt2800_config_ht_opmode.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 0388599..bbefaf3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -496,9 +496,6 @@ struct brcmf_pub {
+ 	/* Last error return */
+ 	int bcmerror;
+ 
+-	/* Last error from dongle */
+-	int dongle_error;
+-
+ 	/* Suspend disable flag  flag */
+ 	int suspend_disable_flag;	/* "1" to disable all extra powersaving
+ 					 during suspend */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+index db3bc2e..4557709 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+@@ -147,18 +147,6 @@ brcmf_proto_cdc_query_dcmd(struct brcmf_pub *drvr, int ifidx, uint cmd,
+ 
+ 	brcmf_dbg(CDC, "Enter, cmd %d len %d\n", cmd, len);
+ 
+-	/* Respond "bcmerror" and "bcmerrorstr" with local cache */
+-	if (cmd == BRCMF_C_GET_VAR && buf) {
+-		if (!strcmp((char *)buf, "bcmerrorstr")) {
+-			strncpy((char *)buf, "bcm_error",
+-				BCME_STRLEN);
+-			goto done;
+-		} else if (!strcmp((char *)buf, "bcmerror")) {
+-			*(int *)buf = drvr->dongle_error;
+-			goto done;
+-		}
+-	}
+-
+ 	memset(msg, 0, sizeof(struct brcmf_proto_cdc_dcmd));
+ 
+ 	msg->cmd = cpu_to_le32(cmd);
+@@ -207,11 +195,8 @@ retry:
+ 	}
+ 
+ 	/* Check the ERROR flag */
+-	if (flags & CDC_DCMD_ERROR) {
++	if (flags & CDC_DCMD_ERROR)
+ 		ret = le32_to_cpu(msg->status);
+-		/* Cache error from dongle */
+-		drvr->dongle_error = ret;
+-	}
+ 
+ done:
+ 	return ret;
+@@ -258,11 +243,8 @@ int brcmf_proto_cdc_set_dcmd(struct brcmf_pub *drvr, int ifidx, uint cmd,
+ 	}
+ 
+ 	/* Check the ERROR flag */
+-	if (flags & CDC_DCMD_ERROR) {
++	if (flags & CDC_DCMD_ERROR)
+ 		ret = le32_to_cpu(msg->status);
+-		/* Cache error from dongle */
+-		drvr->dongle_error = ret;
+-	}
+ 
+ done:
+ 	return ret;
+-- 
+1.7.10.4
 
-Helmut
+
