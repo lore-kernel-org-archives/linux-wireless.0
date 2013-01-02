@@ -1,27 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13265 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479Ab3AMHez (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44238 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627Ab3ABM7k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2013 02:34:55 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: Q: how to update platform power state for the network driver
-Date: Sun, 13 Jan 2013 09:34:51 +0200
-Message-ID: <2377809.kfu5Ooh83J@lx-vladimir> (sfid-20130113_083501_658717_C3364F6A)
-In-Reply-To: <CAGRGNgVUq=8H-r=tA3W5ojyfWPfPt8YHB2zDVpK5EWeF-=5unw@mail.gmail.com>
-References: <6929081.7c7blFVDp4@lx-vladimir> <1363680.r8KF83dygC@lx-vladimir> <CAGRGNgVUq=8H-r=tA3W5ojyfWPfPt8YHB2zDVpK5EWeF-=5unw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 2 Jan 2013 07:59:40 -0500
+Message-ID: <1357131602.9839.20.camel@jlt4.sipsolutions.net> (sfid-20130102_135942_292350_F84750D1)
+Subject: Re: [PATCH V6 2/2] cfg80211/nl80211: Enable drivers to implement
+ mac address based ACL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Wed, 02 Jan 2013 14:00:02 +0100
+In-Reply-To: <1357101213-9870-2-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1357101213-9870-1-git-send-email-vthiagar@qca.qualcomm.com>
+	 <1357101213-9870-2-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, January 11, 2013 11:45:43 AM Julian Calaby wrote:
-> > #include <linux/power_supply.h>
-> > int power_supply_is_system_supplied(void);
-> One minor point: you might want to add the ability to override this,
-> even if it's only through debugfs so that people testing the code, or
-> with unusual requirements can set this how they want / need it.
+On Wed, 2013-01-02 at 10:03 +0530, Vasanthakumar Thiagarajan wrote:
 
-Sure, thanks for input
+> V5:
+> 	- Support for two mac lists, white and "optimization list"
+
+> + * @NL80211_ACL_POLICY_ACCEPT: Allow the station to authenticate
+> + * @NL80211_ACL_POLICY_OPTIMIZE: Optimize the acl, completely managed by driver
+
+I think you're confused, maybe Jouni can help you out? :)
+
+johannes
+
