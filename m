@@ -1,384 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:43061 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753010Ab3A2Xrs (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:50043 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635Ab3ABWzy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 18:47:48 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/7] mac80211: Return a status for tx operations
-Date: Tue, 29 Jan 2013 17:47:29 -0600
-Message-Id: <1359503255-18270-2-git-send-email-seth.forshee@canonical.com> (sfid-20130130_004753_517824_5F4F3224)
-In-Reply-To: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+	Wed, 2 Jan 2013 17:55:54 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so8091336pbc.5
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 14:55:53 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linville@tuxdriver.org
+Cc: j@w1.fi, linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v2 2/4] mac80211_hwsim: hrtimer beacon
+Date: Wed,  2 Jan 2013 14:55:17 -0800
+Message-Id: <1357167319-13338-2-git-send-email-thomas@cozybit.com> (sfid-20130102_235559_702397_A59E51BD)
+In-Reply-To: <1357167319-13338-1-git-send-email-thomas@cozybit.com>
+References: <1357167319-13338-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For off-channel operation we would like to know whether or not frames
-submitted for tx are dropped, but most tx interfaces don't return
-any status. The low-level interfaces do return bool but make no
-distinction between dropping a packet and sucessfully handing it off to
-the driver.
+For testing various timing-sensitive protocols (power
+save, MBCA, etc.), a beacon accuracy of jiffies is not
+sufficient. A tasklet_hrtimer is used for the beacon since
+it runs the callback in soft-IRQ context with hrtimer
+resolution.
 
-Add an enum named ieee80211_tx_status which defines status codes to
-indicate whether a tx request results in successfully handing the frame
-off to the driver, queueing the frame, or dropping it. Convert all tx
-interfaces to return one of the values.
+Also handle BSS_CHANGED_BEACON_ENABLED for hwsim.
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- net/mac80211/ieee80211_i.h |   53 ++++++++++++++++-------
- net/mac80211/tx.c          |  103 +++++++++++++++++++++++---------------------
- 2 files changed, 92 insertions(+), 64 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |   66 ++++++++++++++++++++++-----------
+ 1 file changed, 45 insertions(+), 21 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 63f0430..13fd13a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1495,46 +1495,69 @@ void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int ke
- 				     gfp_t gfp);
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 			       bool bss_notify);
--void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
--		    enum ieee80211_band band);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 59761fb..bccd17c 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -333,11 +333,11 @@ struct mac80211_hwsim_data {
+ 	int scan_chan_idx;
  
--void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
--				 struct sk_buff *skb, int tid,
--				 enum ieee80211_band band);
-+/**
-+ * enum ieee80211_tx_status - Tx request status
-+ * @IEEE80211_TX_OK: Tx request handed off to driver
-+ * @IEEE80211_TX_DROPPED: Tx request dropped
-+ * @IEEE80211_TX_QUEUED: Tx requeust queued
-+ */
-+enum ieee80211_tx_status {
-+	IEEE80211_TX_OK,
-+	IEEE80211_TX_DROPPED,
-+	IEEE80211_TX_QUEUED,
-+};
- 
--static inline void
-+enum ieee80211_tx_status
-+ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
-+	       enum ieee80211_band band);
-+
-+enum ieee80211_tx_status
-+__ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
-+			    struct sk_buff *skb, int tid,
-+			    enum ieee80211_band band);
-+
-+static inline enum ieee80211_tx_status
- ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 			  struct sk_buff *skb, int tid,
- 			  enum ieee80211_band band)
+ 	struct ieee80211_channel *channel;
+-	unsigned long beacon_int; /* in jiffies unit */
++	u64 beacon_int	/* beacon interval in us */;
+ 	unsigned int rx_filter;
+ 	bool started, idle, scanning;
+ 	struct mutex mutex;
+-	struct timer_list beacon_timer;
++	struct tasklet_hrtimer beacon_timer;
+ 	enum ps_mode {
+ 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+ 	} ps;
+@@ -897,7 +897,7 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
  {
-+	enum ieee80211_tx_status ret;
-+
- 	rcu_read_lock();
--	__ieee80211_tx_skb_tid_band(sdata, skb, tid, band);
-+	ret = __ieee80211_tx_skb_tid_band(sdata, skb, tid, band);
- 	rcu_read_unlock();
-+
-+	return ret;
+ 	struct mac80211_hwsim_data *data = hw->priv;
+ 	data->started = false;
+-	del_timer(&data->beacon_timer);
++	tasklet_hrtimer_cancel(&data->beacon_timer);
+ 	wiphy_debug(hw->wiphy, "%s\n", __func__);
  }
  
--static inline void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
--					struct sk_buff *skb, int tid)
-+static inline enum ieee80211_tx_status
-+ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
-+		     int tid)
- {
- 	struct ieee80211_chanctx_conf *chanctx_conf;
-+	enum ieee80211_tx_status ret;
+@@ -981,21 +981,31 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+ 				rcu_dereference(vif->chanctx_conf)->def.chan);
+ }
  
- 	rcu_read_lock();
- 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
- 	if (WARN_ON(!chanctx_conf)) {
- 		rcu_read_unlock();
- 		kfree_skb(skb);
+-
+-static void mac80211_hwsim_beacon(unsigned long arg)
++static enum hrtimer_restart
++mac80211_hwsim_beacon(struct hrtimer *timer)
+ {
+-	struct ieee80211_hw *hw = (struct ieee80211_hw *) arg;
+-	struct mac80211_hwsim_data *data = hw->priv;
++	struct tasklet_hrtimer *ttimer = container_of(timer,
++						      struct tasklet_hrtimer,
++						      timer);
++	struct mac80211_hwsim_data *data = container_of(ttimer,
++						struct mac80211_hwsim_data,
++						beacon_timer);
++	struct ieee80211_hw *hw = data->hw;
++	u64 bcn_int = data->beacon_int;
++	ktime_t next_bcn;
+ 
+ 	if (!data->started)
 -		return;
-+		return IEEE80211_TX_DROPPED;
- 	}
++		goto out;
  
--	__ieee80211_tx_skb_tid_band(sdata, skb, tid,
--				    chanctx_conf->def.chan->band);
-+	ret = __ieee80211_tx_skb_tid_band(sdata, skb, tid,
-+					  chanctx_conf->def.chan->band);
- 	rcu_read_unlock();
-+
-+	return ret;
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 		hw, IEEE80211_IFACE_ITER_NORMAL,
+ 		mac80211_hwsim_beacon_tx, hw);
+ 
+-	data->beacon_timer.expires = jiffies + data->beacon_int;
+-	add_timer(&data->beacon_timer);
++	next_bcn = ktime_add(hrtimer_get_expires(timer),
++			     ns_to_ktime(bcn_int * 1000));
++	tasklet_hrtimer_start(ttimer, next_bcn, HRTIMER_MODE_ABS);
++out:
++	return HRTIMER_NORESTART;
  }
  
--static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
--				    struct sk_buff *skb)
-+static inline enum ieee80211_tx_status
-+ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- {
- 	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
--	ieee80211_tx_skb_tid(sdata, skb, 7);
-+	return ieee80211_tx_skb_tid(sdata, skb, 7);
- }
+ static const char *hwsim_chantypes[] = {
+@@ -1033,9 +1043,12 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
  
- void ieee802_11_parse_elems(u8 *start, size_t len,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index f32d681..7d25bb6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1200,11 +1200,10 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 	return TX_CONTINUE;
- }
+ 	data->power_level = conf->power_level;
+ 	if (!data->started || !data->beacon_int)
+-		del_timer(&data->beacon_timer);
+-	else
+-		mod_timer(&data->beacon_timer, jiffies + data->beacon_int);
++		tasklet_hrtimer_cancel(&data->beacon_timer);
++	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
++		tasklet_hrtimer_start(&data->beacon_timer,
++				      ns_to_ktime(data->beacon_int * 1000),
++				      HRTIMER_MODE_REL);
++	}
  
--static bool ieee80211_tx_frags(struct ieee80211_local *local,
--			       struct ieee80211_vif *vif,
--			       struct ieee80211_sta *sta,
--			       struct sk_buff_head *skbs,
--			       bool txpending)
-+static enum ieee80211_tx_status
-+ieee80211_tx_frags(struct ieee80211_local *local, struct ieee80211_vif *vif,
-+		   struct ieee80211_sta *sta, struct sk_buff_head *skbs,
-+		   bool txpending)
- {
- 	struct ieee80211_tx_control control;
- 	struct sk_buff *skb, *tmp;
-@@ -1238,7 +1237,7 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 
- 			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
- 					       flags);
--			return false;
-+			return IEEE80211_TX_QUEUED;
- 		}
- 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
-@@ -1249,26 +1248,23 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 		drv_tx(local, &control, skb);
- 	}
- 
--	return true;
-+	return IEEE80211_TX_OK;
- }
- 
--/*
-- * Returns false if the frame couldn't be transmitted but was queued instead.
-- */
--static bool __ieee80211_tx(struct ieee80211_local *local,
--			   struct sk_buff_head *skbs, int led_len,
--			   struct sta_info *sta, bool txpending)
-+static enum ieee80211_tx_status
-+__ieee80211_tx(struct ieee80211_local *local, struct sk_buff_head *skbs,
-+	       int led_len, struct sta_info *sta, bool txpending)
- {
- 	struct ieee80211_tx_info *info;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_sta *pubsta;
- 	struct sk_buff *skb;
--	bool result = true;
-+	enum ieee80211_tx_status result;
- 	__le16 fc;
- 
- 	if (WARN_ON(skb_queue_empty(skbs)))
--		return true;
-+		return IEEE80211_TX_OK;
- 
- 	skb = skb_peek(skbs);
- 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
-@@ -1291,7 +1287,7 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
- 				vif->hw_queue[skb_get_queue_mapping(skb)];
- 		} else if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL) {
- 			dev_kfree_skb(skb);
--			return true;
-+			return IEEE80211_TX_DROPPED;
- 		} else
- 			vif = NULL;
- 		break;
-@@ -1371,23 +1367,20 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
  	return 0;
  }
+@@ -1085,12 +1098,22 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
  
--/*
-- * Returns false if the frame couldn't be transmitted but was queued instead.
-- */
--static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
--			 struct sk_buff *skb, bool txpending,
--			 enum ieee80211_band band)
-+static enum ieee80211_tx_status
-+ieee80211_tx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
-+	     bool txpending, enum ieee80211_band band)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_data tx;
- 	ieee80211_tx_result res_prepare;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	bool result = true;
-+	enum ieee80211_tx_status result = IEEE80211_TX_OK;
- 	int led_len;
- 
- 	if (unlikely(skb->len < 10)) {
- 		dev_kfree_skb(skb);
--		return true;
-+		return IEEE80211_TX_DROPPED;
- 	}
- 
- 	/* initialises tx */
-@@ -1396,9 +1389,17 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 
- 	if (unlikely(res_prepare == TX_DROP)) {
- 		ieee80211_free_txskb(&local->hw, skb);
--		return true;
-+		return IEEE80211_TX_DROPPED;
- 	} else if (unlikely(res_prepare == TX_QUEUED)) {
--		return true;
-+		/*
-+		 * TX_QUEUED here means that the frame was queued in
-+		 * tid_tx while aggregation is being set up. This need
-+		 * not prevent tx of other pending frames, so indicate
-+		 * success if txpending is true.
-+		 */
-+		if (txpending)
-+			return IEEE80211_TX_OK;
-+		return IEEE80211_TX_QUEUED;
- 	}
- 
- 	info->band = band;
-@@ -1447,8 +1448,9 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
--		    enum ieee80211_band band)
-+enum ieee80211_tx_status
-+ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
-+	       enum ieee80211_band band)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -1466,7 +1468,7 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
- 
- 	if (ieee80211_skb_resize(sdata, skb, headroom, may_encrypt)) {
- 		ieee80211_free_txskb(&local->hw, skb);
--		return;
-+		return IEEE80211_TX_DROPPED;
- 	}
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
-@@ -1477,11 +1479,11 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
- 	    !is_multicast_ether_addr(hdr->addr1) &&
- 	    mesh_nexthop_resolve(skb, sdata)) {
- 		/* skb queued: don't free */
--		return;
-+		return IEEE80211_TX_QUEUED;
- 	}
- 
- 	ieee80211_set_qos_hdr(sdata, skb);
--	ieee80211_tx(sdata, skb, false, band);
-+	return ieee80211_tx(sdata, skb, false, band);
- }
- 
- static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb)
-@@ -2174,18 +2176,17 @@ void ieee80211_clear_tx_pending(struct ieee80211_local *local)
- }
- 
- /*
-- * Returns false if the frame couldn't be transmitted but was queued instead,
-- * which in this case means re-queued -- take as an indication to stop sending
-- * more pending frames.
-+ * A return value of IEEE80211_TX_QUEUED in this case means re-queued --
-+ * take as an indication to stop sending more pending frames.
-  */
--static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
--				     struct sk_buff *skb)
-+static enum ieee80211_tx_status
-+ieee80211_tx_pending_skb(struct ieee80211_local *local, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
- 	struct ieee80211_hdr *hdr;
--	bool result;
-+	enum ieee80211_tx_status tx_stat;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 
- 	sdata = vif_to_sdata(info->control.vif);
-@@ -2194,10 +2195,10 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
- 		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
- 		if (unlikely(!chanctx_conf)) {
- 			dev_kfree_skb(skb);
--			return true;
-+			return IEEE80211_TX_DROPPED;
- 		}
--		result = ieee80211_tx(sdata, skb, true,
--				      chanctx_conf->def.chan->band);
-+		tx_stat = ieee80211_tx(sdata, skb, true,
-+				       chanctx_conf->def.chan->band);
- 	} else {
- 		struct sk_buff_head skbs;
- 
-@@ -2207,10 +2208,10 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		sta = sta_info_get(sdata, hdr->addr1);
- 
--		result = __ieee80211_tx(local, &skbs, skb->len, sta, true);
-+		tx_stat = __ieee80211_tx(local, &skbs, skb->len, sta, true);
- 	}
- 
--	return result;
-+	return tx_stat;
- }
- 
- /*
-@@ -2221,7 +2222,7 @@ void ieee80211_tx_pending(unsigned long data)
- 	struct ieee80211_local *local = (struct ieee80211_local *)data;
- 	unsigned long flags;
- 	int i;
--	bool txok;
-+	enum ieee80211_tx_status tx_stat;
- 
- 	rcu_read_lock();
- 
-@@ -2247,10 +2248,10 @@ void ieee80211_tx_pending(unsigned long data)
- 			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
- 						flags);
- 
--			txok = ieee80211_tx_pending_skb(local, skb);
-+			tx_stat = ieee80211_tx_pending_skb(local, skb);
- 			spin_lock_irqsave(&local->queue_stop_reason_lock,
- 					  flags);
--			if (!txok)
-+			if (tx_stat == IEEE80211_TX_QUEUED)
- 				break;
- 		}
- 
-@@ -2775,11 +2776,13 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_get_buffered_bc);
- 
--void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
--				 struct sk_buff *skb, int tid,
--				 enum ieee80211_band band)
-+enum ieee80211_tx_status
-+__ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
-+			    struct sk_buff *skb, int tid,
-+			    enum ieee80211_band band)
- {
- 	int ac = ieee802_1d_to_ac[tid & 7];
-+	enum ieee80211_tx_status ret;
- 
- 	skb_set_mac_header(skb, 0);
- 	skb_set_network_header(skb, 0);
-@@ -2794,6 +2797,8 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 	 * requirements are that we do not come into tx with bhs on.
- 	 */
- 	local_bh_disable();
--	ieee80211_xmit(sdata, skb, band);
-+	ret = ieee80211_xmit(sdata, skb, band);
- 	local_bh_enable();
+ 	if (changed & BSS_CHANGED_BEACON_INT) {
+ 		wiphy_debug(hw->wiphy, "  BCNINT: %d\n", info->beacon_int);
+-		data->beacon_int = 1024 * info->beacon_int / 1000 * HZ / 1000;
+-		if (WARN_ON(!data->beacon_int))
+-			data->beacon_int = 1;
+-		if (data->started)
+-			mod_timer(&data->beacon_timer,
+-				  jiffies + data->beacon_int);
++		data->beacon_int = info->beacon_int * 1024;
++	}
 +
-+	return ret;
- }
++	if (changed & BSS_CHANGED_BEACON_ENABLED) {
++		wiphy_debug(hw->wiphy, "  BCN EN: %d\n", info->enable_beacon);
++		if (data->started &&
++		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
++		    info->enable_beacon) {
++			if (WARN_ON(!data->beacon_int))
++				data->beacon_int = 1000 * 1024;
++			tasklet_hrtimer_start(&data->beacon_timer,
++					      ns_to_ktime(data->beacon_int *
++							  1000),
++					      HRTIMER_MODE_REL);
++		} else if (!info->enable_beacon)
++			tasklet_hrtimer_cancel(&data->beacon_timer);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
+@@ -2371,8 +2394,9 @@ static int __init init_mac80211_hwsim(void)
+ 							data->debugfs, data,
+ 							&hwsim_fops_group);
+ 
+-		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
+-			    (unsigned long) hw);
++		tasklet_hrtimer_init(&data->beacon_timer,
++				     mac80211_hwsim_beacon,
++				     CLOCK_REALTIME, HRTIMER_MODE_ABS);
+ 
+ 		list_add_tail(&data->list, &hwsim_radios);
+ 	}
 -- 
-1.7.9.5
+1.7.10.4
 
