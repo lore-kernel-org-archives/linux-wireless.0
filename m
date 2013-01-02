@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39826 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756710Ab3AQPSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 10:18:37 -0500
-Date: Thu, 17 Jan 2013 16:18:27 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: linux-wireless@vger.kernel.org,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: Re: [RFC] mac80211: soft scan vs latency
-Message-ID: <20130117151826.GA2341@redhat.com> (sfid-20130117_161847_745086_AF7FCD1E)
-References: <20130114145558.GA24250@redhat.com>
- <20130116140102.GA10746@redhat.com>
- <20130117122504.1bf51f82@dualc.maya.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130117122504.1bf51f82@dualc.maya.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:52267 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635Ab3ABWzv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 17:55:51 -0500
+Received: by mail-pa0-f47.google.com with SMTP id fa10so8239253pad.34
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 14:55:51 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linville@tuxdriver.org
+Cc: j@w1.fi, linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v2 1/4] mac80211_hwsim: fix tsf adjustment
+Date: Wed,  2 Jan 2013 14:55:16 -0800
+Message-Id: <1357167319-13338-1-git-send-email-thomas@cozybit.com> (sfid-20130102_235558_975337_498EDF6E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 17, 2013 at 12:25:04PM +0100, Andreas Hartmann wrote:
-> On Wed, 16 Jan 2013 15:01:02 +0100
-> Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> 
-> > On Mon, Jan 14, 2013 at 03:55:58PM +0100, Stanislaw Gruszka wrote:
-> > > Except latency, patch perhaps also improve throughput, since we
-> > > spend more time on-channel while scanning. But I'm not quite sure,
-> > > since overall scanning time is bigger. I did not test influence of
-> > > the patch on throughput.
-> > > 
-> > > I tested patch by doing:
-> > > 
-> > > while true; do iw dev wlan0 scan; sleep 3; done > /dev/null
-> > 
-> > I can see slight throughput improvement with patch, measured by scp:
-> > 
-> > Upload to periodical scanning machine:
-> > scp -B Fedora-18-Beta-i686-Live-Desktop.iso stasiu@192.168.1.105:~/
-> > 
-> > Unpatched: 3.9MB/s   03:15    
-> > Patched:   4.3MB/s   02:58
-> 
-> W/o any scan?
-> 
-> > Download from periodical scanning machine:
-> > scp -B stasiu@192.168.1.105:~/Fedora-18-Beta-i686-Live-Desktop.iso .
-> > 
-> > Unpatched: 5.5MB/s   02:17
-> > Patched:   6.2MB/s   02:02
-> 
-> W/o any scan?
+Make hwsim TSF offset adjustments cumulative and relative
+to the fake PHY TSF. Now adding 1000us, then adding -1000us
+doesn't result in a tsf_offset of -1000. Also the beacon
+timestamp can now correctly be expressed as (tsf +
+data->tsf_offset), which will be done in a later patch.
 
-On target machine I performed periodical scan every 3 second i.e.
-run command: "while true; do iw dev wlan0 scan; sleep 3; done" .
-Source machine was connected to AP by wire.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Stanislaw 
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ff90855..59761fb 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -357,7 +357,7 @@ struct mac80211_hwsim_data {
+ 	int power_level;
+ 
+ 	/* difference between this hw's clock and the real clock, in usecs */
+-	u64 tsf_offset;
++	s64 tsf_offset;
+ };
+ 
+ 
+@@ -423,9 +423,10 @@ static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
+ 		struct ieee80211_vif *vif, u64 tsf)
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
+-	struct timeval tv = ktime_to_timeval(ktime_get_real());
+-	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
+-	data->tsf_offset = tsf - now;
++	u64 now = mac80211_hwsim_get_tsf(hw, vif);
++	s64 delta = tsf - now;
++
++	data->tsf_offset += delta;
+ }
+ 
+ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+-- 
+1.7.10.4
 
