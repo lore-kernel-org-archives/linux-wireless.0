@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:46257 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965Ab3AUUYD (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:51548 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752732Ab3ABOqE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2013 15:24:03 -0500
-Received: by mail-la0-f48.google.com with SMTP id fq13so1529160lab.7
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2013 12:24:01 -0800 (PST)
+	Wed, 2 Jan 2013 09:46:04 -0500
+Date: Wed, 2 Jan 2013 15:45:55 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv5 2/8] cfg/mac80211: add dfs capability to
+ cfg80211_reg_can_beacon()
+Message-ID: <20130102144555.GB7794@pandem0nium> (sfid-20130102_154608_572782_49275E05)
+References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1355407113-27006-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1357133818.9839.24.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <50FDA355.7090400@gmail.com>
-References: <E1TwInB-0003VY-Jh@sipsolutions.net> <50FA04B6.8080703@gmail.com>
- <CAB=NE6UHBZhg7L_Oh5EayLBQyY=fceqUBtfz=kEFXG_u2Ko9TQ@mail.gmail.com>
- <20130121200610.GE1432@bombadil.infradead.org> <50FDA355.7090400@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 21 Jan 2013 12:23:40 -0800
-Message-ID: <CAB=NE6V7dQrPYkDG648EcrtS0xmpfYiWAUK6WZJGpCXh6Z4V2w@mail.gmail.com> (sfid-20130121_212407_560262_8208A025)
-Subject: Re: [ANN] crda: v1.1.3
-To: Richard Farina <sidhayn@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="5/uDoXvLw7AC5HRs"
+In-Reply-To: <1357133818.9839.24.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 21, 2013 at 12:21 PM, Richard Farina <sidhayn@gmail.com> wrote:
-> On 01/21/2013 03:06 PM, Luis R. Rodriguez wrote:
->> diff --git a/reglib.c b/reglib.c
->> index bc81974..1fafd37 100644
->> --- a/reglib.c
->> +++ b/reglib.c
->> @@ -9,6 +9,7 @@
->>  #include <fcntl.h>
->>  #include <stdbool.h>
->>  #include <unistd.h>
->> +#include <string.h>
->>
->>  #include <arpa/inet.h> /* ntohl */
->
-> This patch fixes the warnings, thank you.
->
-> Normally warnings are not a big deal, but often they later become errors
-> so I figured it was worth reporting. Glad to see it fixed ;-)
 
-I'll commit this but not as a fix as its doesn't fix anything but a
-compile warning. It'll be part of v1.1.4 (or guess v3.8-rc$(something)
-to keep in line with the kernel releases as iw does now, thanks for
-reporting!
+--5/uDoXvLw7AC5HRs
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Wed, Jan 02, 2013 at 02:36:58PM +0100, Johannes Berg wrote:
+> On Thu, 2012-12-13 at 14:58 +0100, Simon Wunderlich wrote:
+>=20
+> >   * @chandef: the channel definition
+> > + * @dfs_capab: supported DFS bandwidth
+> >   *
+> >   * This function returns true if there is no secondary channel or the =
+secondary
+> >   * channel(s) can be used for beaconing (i.e. is not a radar channel e=
+tc.)
+> >   */
+> >  bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+> > -			     struct cfg80211_chan_def *chandef);
+> > +			     struct cfg80211_chan_def *chandef,
+> > +			     enum nl80211_chan_width dfs_capab);
+>=20
+> Hm how does that make sense? The chandef contains a width? It seems like
+> the check whether or not DFS is supported (should be a bitfield btw)
+> should be outside of this function?
+
+I'll change the DFS support capabilities to a bitfield and drop this patch.=
+ The
+bitfield can be part of wiphy, and thus doesn't need to be passed down,
+making this patch obsolete.
+
+Cheers,
+	Simon
+
+--5/uDoXvLw7AC5HRs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlDkSCMACgkQrzg/fFk7axaUZACg6c44J2nQNbrhSP/8xOuh4CpN
+BNAAoLkCM8uSud4WiDv7vy5j5lNIyYV3
+=KwZH
+-----END PGP SIGNATURE-----
+
+--5/uDoXvLw7AC5HRs--
