@@ -1,133 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:56429 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754737Ab3AWOlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 09:41:36 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id r0NEfart004222
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:36 -0600
-Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r0NEfapl025932
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:36 -0600
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>
-Subject: [PATCH 3/5] wlcore: use wl12xx_platform_data pointer from wlcore_pdev_data
-Date: Wed, 23 Jan 2013 16:40:36 +0200
-Message-ID: <1358952038-5982-4-git-send-email-coelho@ti.com> (sfid-20130123_154141_218012_9E6EB260)
-In-Reply-To: <1358952038-5982-1-git-send-email-coelho@ti.com>
-References: <1358952038-5982-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:44574 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677Ab3ABOlI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:41:08 -0500
+Message-ID: <1357137688.9839.43.camel@jlt4.sipsolutions.net> (sfid-20130102_154112_296903_A0F65E82)
+Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from outside
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 02 Jan 2013 15:41:28 +0100
+In-Reply-To: <201301021436.55010.chunkeey@googlemail.com> (sfid-20130102_143701_280650_6146D5CB)
+References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <CAJ-Vmok_UDVykup4xHCigrBbzErOhUQOZMATJ+=qkBFOHQS+Bg@mail.gmail.com>
+	 <1357131499.9839.19.camel@jlt4.sipsolutions.net>
+	 <201301021436.55010.chunkeey@googlemail.com>
+	 (sfid-20130102_143701_280650_6146D5CB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a small cleanup to use the pointer provided by wlcore_pdev_data
-instead of using a separate pointer then copying.
+On Wed, 2013-01-02 at 14:36 +0100, Christian Lamparter wrote:
 
-Reviewed-by: Felipe Balbi <balbi@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/sdio.c |   13 +++++--------
- drivers/net/wireless/ti/wlcore/spi.c  |   16 +++++++---------
- 2 files changed, 12 insertions(+), 17 deletions(-)
+> I can't find anything useful in the 802.11-2012 spec either. There's
+> something vague in 4.7 "Difference between ESS and IBSS LANs" on page 80:
+> "The services that apply to an IBSS are the SSs [Station ServiceS]. [...].
+> The parameters that  control differentiation of the delivery of MSDUs with
+> different priority using EDCA are >FIXED<. [...]".
+> 
+> But what does this mean? Does it translate into: "Every peer of an IBSS
+> truly independent of each other when it comes to the WMM parameters.
+> Each peer can advertise (in beacons, probes, ...) and have its own set
+> of fixed parameters and no one needs to sync those from anyone else"?
+> 
+> Or does "fixed" just mean that everyone has to go with the default WMM
+> parameters from 8-105 [i.e.: no one can change them at all]?
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 1f6f6e3..6d2884f 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -217,7 +217,6 @@ static struct wl1271_if_operations sdio_ops = {
- static int wl1271_probe(struct sdio_func *func,
- 				  const struct sdio_device_id *id)
- {
--	struct wl12xx_platform_data *wlan_data;
- 	struct wlcore_platdev_data *pdev_data;
- 	struct wl12xx_sdio_glue *glue;
- 	struct resource res[1];
-@@ -251,9 +250,9 @@ static int wl1271_probe(struct sdio_func *func,
- 	/* Use block mode for transferring over one block size of data */
- 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
- 
--	wlan_data = wl12xx_get_platform_data();
--	if (IS_ERR(wlan_data)) {
--		ret = PTR_ERR(wlan_data);
-+	pdev_data->pdata = wl12xx_get_platform_data();
-+	if (IS_ERR(pdev_data->pdata)) {
-+		ret = PTR_ERR(pdev_data->pdata);
- 		dev_err(glue->dev, "missing wlan platform data: %d\n", ret);
- 		goto out_free_glue;
- 	}
-@@ -263,7 +262,7 @@ static int wl1271_probe(struct sdio_func *func,
- 	dev_dbg(glue->dev, "sdio PM caps = 0x%x\n", mmcflags);
- 
- 	if (mmcflags & MMC_PM_KEEP_POWER)
--		wlan_data->pwr_in_suspend = true;
-+		pdev_data->pdata->pwr_in_suspend = true;
- 
- 	sdio_set_drvdata(func, glue);
- 
-@@ -292,7 +291,7 @@ static int wl1271_probe(struct sdio_func *func,
- 
- 	memset(res, 0x00, sizeof(res));
- 
--	res[0].start = wlan_data->irq;
-+	res[0].start = pdev_data->pdata->irq;
- 	res[0].flags = IORESOURCE_IRQ;
- 	res[0].name = "irq";
- 
-@@ -302,8 +301,6 @@ static int wl1271_probe(struct sdio_func *func,
- 		goto out_dev_put;
- 	}
- 
--	pdev_data->pdata = wlan_data;
--
- 	ret = platform_device_add_data(glue->core, pdev_data,
- 				       sizeof(*pdev_data));
- 	if (ret) {
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index d437f4d..d62a20b 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -327,23 +327,23 @@ static struct wl1271_if_operations spi_ops = {
- static int wl1271_probe(struct spi_device *spi)
- {
- 	struct wl12xx_spi_glue *glue;
--	struct wl12xx_platform_data *pdata;
- 	struct wlcore_platdev_data *pdev_data;
- 	struct resource res[1];
- 	int ret = -ENOMEM;
- 
--	pdata = spi->dev.platform_data;
--	if (!pdata) {
--		dev_err(&spi->dev, "no platform data\n");
--		return -ENODEV;
--	}
--
- 	pdev_data = kzalloc(sizeof(*pdev_data), GFP_KERNEL);
- 	if (!pdev_data) {
- 		dev_err(&spi->dev, "can't allocate platdev_data\n");
- 		goto out;
- 	}
- 
-+	pdev_data->pdata = spi->dev.platform_data;
-+	if (!pdev_data->pdata) {
-+		dev_err(&spi->dev, "no platform data\n");
-+		ret = -ENODEV;
-+		goto out_free_pdev_data;
-+	}
-+
- 	pdev_data->if_ops = &spi_ops;
- 
- 	glue = kzalloc(sizeof(*glue), GFP_KERNEL);
-@@ -387,8 +387,6 @@ static int wl1271_probe(struct spi_device *spi)
- 		goto out_dev_put;
- 	}
- 
--	pdev_data->pdata = pdata;
--
- 	ret = platform_device_add_data(glue->core, pdev_data,
- 				       sizeof(*pdev_data));
- 	if (ret) {
--- 
-1.7.10.4
+Yeah it's a little vague, but I think it means *fixed* as you describe.
+The WMM spec describes them as fixed and also doesn't include the WMM
+Parameter IE in beacons/probe responses, so all of this would be an
+extension to the spec and we have to be careful not to break the spec
+(default) case (which is correct right now, afaict, with default
+parameters and no parameters IE)
+
+Interoperating with FreeBSD would be useful though.
+
+johannes
+
 
