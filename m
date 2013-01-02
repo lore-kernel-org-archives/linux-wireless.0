@@ -1,108 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39943 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:2570 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752462Ab3ATRwL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 12:52:11 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 7/8] ath9k_hw: reduce struct ar5416AniState size
-Date: Sun, 20 Jan 2013 18:51:58 +0100
-Message-Id: <1358704319-81749-7-git-send-email-nbd@openwrt.org> (sfid-20130120_185223_554102_D87ABB1C)
-In-Reply-To: <1358704319-81749-6-git-send-email-nbd@openwrt.org>
-References: <1358704319-81749-1-git-send-email-nbd@openwrt.org>
- <1358704319-81749-2-git-send-email-nbd@openwrt.org>
- <1358704319-81749-3-git-send-email-nbd@openwrt.org>
- <1358704319-81749-4-git-send-email-nbd@openwrt.org>
- <1358704319-81749-5-git-send-email-nbd@openwrt.org>
- <1358704319-81749-6-git-send-email-nbd@openwrt.org>
+	id S1752794Ab3ABOXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:23:14 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 18/18] brcmfmac: Update init code routines from
+ interface up.
+Date: Wed, 2 Jan 2013 15:22:51 +0100
+Message-ID: <1357136572-18273-19-git-send-email-arend@broadcom.com> (sfid-20130102_155322_409568_66CA30D6)
+In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is kept per-channel, so removing unnecessary (or constant) fields from
-it can save quite a bit of memory.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+On interface up dongle gets inialized. Move UP command to common
+routine and update these common init routines using ifp.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 13 ++++++-------
- drivers/net/wireless/ath/ath9k/ani.h |  7 -------
- 2 files changed, 6 insertions(+), 14 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    9 ++----
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   30 +++++++++-----------
+ 2 files changed, 15 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 2978287..a9218a1 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -152,7 +152,8 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
- 		aniState->ofdmNoiseImmunityLevel,
- 		immunityLevel, BEACON_RSSI(ah),
--		aniState->rssiThrLow, aniState->rssiThrHigh);
-+		ATH9K_ANI_RSSI_THR_LOW,
-+		ATH9K_ANI_RSSI_THR_HIGH);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index d655501..e3326a5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -585,14 +585,9 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 	/* Get current TOE mode from dongle */
+ 	if (brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_ol) >= 0
+ 	    && (toe_ol & TOE_TX_CSUM_OL) != 0)
+-		drvr->iflist[ifp->idx]->ndev->features |=
+-			NETIF_F_IP_CSUM;
++		ndev->features |= NETIF_F_IP_CSUM;
+ 	else
+-		drvr->iflist[ifp->idx]->ndev->features &=
+-			~NETIF_F_IP_CSUM;
+-
+-	/* make sure RF is ready for work */
+-	brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 0);
++		ndev->features &= ~NETIF_F_IP_CSUM;
  
- 	if (!scan)
- 		aniState->ofdmNoiseImmunityLevel = immunityLevel;
-@@ -173,7 +174,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
+ 	/* Allow transmit calls */
+ 	netif_start_queue(ndev);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 1ec2d57..730da84 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4265,9 +4265,8 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+ }
  
- 	weak_sig = entry_ofdm->ofdm_weak_signal_on;
- 	if (ah->opmode == NL80211_IFTYPE_STATION &&
--	    BEACON_RSSI(ah) <= aniState->rssiThrHigh)
-+	    BEACON_RSSI(ah) <= ATH9K_ANI_RSSI_THR_HIGH)
- 		weak_sig = true;
+ static s32
+-brcmf_dongle_roam(struct net_device *ndev, u32 roamvar, u32 bcn_timeout)
++brcmf_dongle_roam(struct brcmf_if *ifp, u32 roamvar, u32 bcn_timeout)
+ {
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	s32 err = 0;
+ 	__le32 roamtrigger[2];
+ 	__le32 roam_delta[2];
+@@ -4318,10 +4317,9 @@ dongle_rom_out:
+ }
  
- 	if (aniState->ofdmWeakSigDetect != weak_sig)
-@@ -216,11 +217,11 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
+ static s32
+-brcmf_dongle_scantime(struct net_device *ndev, s32 scan_assoc_time,
++brcmf_dongle_scantime(struct brcmf_if *ifp, s32 scan_assoc_time,
+ 		      s32 scan_unassoc_time, s32 scan_passive_time)
+ {
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	s32 err = 0;
  
- 	ath_dbg(common, ANI, "**** ccklevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
- 		aniState->cckNoiseImmunityLevel, immunityLevel,
--		BEACON_RSSI(ah), aniState->rssiThrLow,
--		aniState->rssiThrHigh);
-+		BEACON_RSSI(ah), ATH9K_ANI_RSSI_THR_LOW,
-+		ATH9K_ANI_RSSI_THR_HIGH);
+ 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_SCAN_CHANNEL_TIME,
+@@ -4391,6 +4389,7 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
+ {
+ 	struct net_device *ndev;
+ 	struct wireless_dev *wdev;
++	struct brcmf_if *ifp;
+ 	s32 power_mode;
+ 	s32 err = 0;
  
- 	if (ah->opmode == NL80211_IFTYPE_STATION &&
--	    BEACON_RSSI(ah) <= aniState->rssiThrLow &&
-+	    BEACON_RSSI(ah) <= ATH9K_ANI_RSSI_THR_LOW &&
- 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
- 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
+@@ -4399,35 +4398,34 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
  
-@@ -514,8 +515,6 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 	ndev = cfg_to_ndev(cfg);
+ 	wdev = ndev->ieee80211_ptr;
++	ifp = netdev_priv(ndev);
++
++	/* make sure RF is ready for work */
++	brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 0);
  
- 		ani->ofdmsTurn = true;
+-	brcmf_dongle_scantime(ndev, WL_SCAN_CHANNEL_TIME,
+-			WL_SCAN_UNASSOC_TIME, WL_SCAN_PASSIVE_TIME);
++	brcmf_dongle_scantime(ifp, WL_SCAN_CHANNEL_TIME,
++			      WL_SCAN_UNASSOC_TIME, WL_SCAN_PASSIVE_TIME);
  
--		ani->rssiThrHigh = ATH9K_ANI_RSSI_THR_HIGH;
--		ani->rssiThrLow = ATH9K_ANI_RSSI_THR_LOW;
- 		ani->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
- 		ani->cckNoiseImmunityLevel = ATH9K_ANI_CCK_DEF_LEVEL;
- 		ani->ofdmNoiseImmunityLevel = ATH9K_ANI_OFDM_DEF_LEVEL;
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 385bdba..dddb136 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -104,7 +104,6 @@ struct ath9k_ani_default {
- };
+ 	power_mode = cfg->pwr_save ? PM_FAST : PM_OFF;
+-	err = brcmf_fil_cmd_int_set(netdev_priv(ndev), BRCMF_C_SET_PM,
+-				    power_mode);
++	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, power_mode);
+ 	if (err)
+ 		goto default_conf_out;
+ 	brcmf_dbg(INFO, "power save set to %s\n",
+ 		  (power_mode ? "enabled" : "disabled"));
  
- struct ar5416AniState {
--	struct ath9k_channel *c;
- 	u8 noiseImmunityLevel;
- 	u8 ofdmNoiseImmunityLevel;
- 	u8 cckNoiseImmunityLevel;
-@@ -113,15 +112,9 @@ struct ar5416AniState {
- 	u8 spurImmunityLevel;
- 	u8 firstepLevel;
- 	u8 ofdmWeakSigDetect;
--	u8 cckWeakSigThreshold;
- 	u32 listenTime;
--	int32_t rssiThrLow;
--	int32_t rssiThrHigh;
- 	u32 ofdmPhyErrCount;
- 	u32 cckPhyErrCount;
--	int16_t pktRssi[2];
--	int16_t ofdmErrRssi[2];
--	int16_t cckErrRssi[2];
- 	struct ath9k_ani_default iniDef;
- };
+-	err = brcmf_dongle_roam(ndev, (cfg->roam_on ? 0 : 1),
+-				WL_BEACON_TIMEOUT);
++	err = brcmf_dongle_roam(ifp, (cfg->roam_on ? 0 : 1), WL_BEACON_TIMEOUT);
+ 	if (err)
+ 		goto default_conf_out;
+ 	err = brcmf_cfg80211_change_iface(wdev->wiphy, ndev, wdev->iftype,
+ 					  NULL, NULL);
+-	if (err && err != -EINPROGRESS)
++	if (err)
+ 		goto default_conf_out;
+ 	err = brcmf_dongle_probecap(cfg);
+ 	if (err)
+ 		goto default_conf_out;
  
+-	/* -EINPROGRESS: Call commit handler */
+-
+-default_conf_out:
+-
+ 	cfg->dongle_up = true;
++default_conf_out:
+ 
+ 	return err;
+ 
+@@ -4436,8 +4434,6 @@ default_conf_out:
+ static s32 __brcmf_cfg80211_up(struct brcmf_if *ifp)
+ {
+ 	set_bit(BRCMF_VIF_STATUS_READY, &ifp->vif->sme_state);
+-	if (ifp->idx)
+-		return 0;
+ 
+ 	return brcmf_config_dongle(ifp->drvr->config);
+ }
 -- 
-1.8.0.2
+1.7.10.4
+
 
