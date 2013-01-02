@@ -1,133 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f49.google.com ([209.85.210.49]:37998 "EHLO
-	mail-da0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753410Ab3ACMUP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 07:20:15 -0500
-From: Akinobu Mita <akinobu.mita@gmail.com>
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Michael Chan <mchan@broadcom.com>,
-	Thomas Sailer <t.sailer@alumni.ethz.ch>,
-	Jean-Paul Roubelat <jpr@f6fbb.org>,
-	Bing Zhao <bzhao@marvell.com>, netdev@vger.kernel.org,
-	linux-hams@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH -v2 18/26] drivers/net: rename random32() to prandom_u32()
-Date: Thu,  3 Jan 2013 21:19:14 +0900
-Message-Id: <1357215562-6288-19-git-send-email-akinobu.mita@gmail.com> (sfid-20130103_132331_352228_69174973)
-In-Reply-To: <1357215562-6288-1-git-send-email-akinobu.mita@gmail.com>
-References: <1357215562-6288-1-git-send-email-akinobu.mita@gmail.com>
+Received: from mail.ispras.ru ([83.149.199.43]:58024 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752636Ab3ABUHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 15:07:20 -0500
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH v2] p54pci: don't return zero on failure paths in p54p_probe()
+Date: Thu,  3 Jan 2013 00:06:47 +0400
+Message-Id: <1357157207-20626-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130102_210743_360440_4D482B52)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use more preferable function name which implies using a pseudo-random
-number generator.
+If pci_set_dma_mask() or pci_set_consistent_dma_mask() fails in p54p_probe(),
+it breaks off initialization, deallocates all resources, but returns zero.
+Similar issue is if check for returned value of pci_resource_len() fails.
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Acked-by: Thomas Sailer <t.sailer@alumni.ethz.ch>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Michael Chan <mchan@broadcom.com>
-Cc: Thomas Sailer <t.sailer@alumni.ethz.ch>
-Cc: Jean-Paul Roubelat <jpr@f6fbb.org>
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-hams@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
+The patch implements proper error code propagation.
+
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
+ drivers/net/wireless/p54/p54pci.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-No change from v1
-
- drivers/net/ethernet/broadcom/cnic.c    | 4 ++--
- drivers/net/hamradio/baycom_epp.c       | 2 +-
- drivers/net/hamradio/hdlcdrv.c          | 2 +-
- drivers/net/hamradio/yam.c              | 2 +-
- drivers/net/wireless/mwifiex/cfg80211.c | 4 ++--
- 5 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/ethernet/broadcom/cnic.c b/drivers/net/ethernet/broadcom/cnic.c
-index df8c30d..27d7a32 100644
---- a/drivers/net/ethernet/broadcom/cnic.c
-+++ b/drivers/net/ethernet/broadcom/cnic.c
-@@ -4085,7 +4085,7 @@ static int cnic_cm_alloc_mem(struct cnic_dev *dev)
- 	if (!cp->csk_tbl)
- 		return -ENOMEM;
- 
--	port_id = random32();
-+	port_id = prandom_u32();
- 	port_id %= CNIC_LOCAL_PORT_RANGE;
- 	if (cnic_init_id_tbl(&cp->csk_port_tbl, CNIC_LOCAL_PORT_RANGE,
- 			     CNIC_LOCAL_PORT_MIN, port_id)) {
-@@ -4145,7 +4145,7 @@ static int cnic_cm_init_bnx2_hw(struct cnic_dev *dev)
- {
- 	u32 seed;
- 
--	seed = random32();
-+	seed = prandom_u32();
- 	cnic_ctx_wr(dev, 45, 0, seed);
- 	return 0;
- }
-diff --git a/drivers/net/hamradio/baycom_epp.c b/drivers/net/hamradio/baycom_epp.c
-index 49b8b58..484f77e 100644
---- a/drivers/net/hamradio/baycom_epp.c
-+++ b/drivers/net/hamradio/baycom_epp.c
-@@ -449,7 +449,7 @@ static int transmit(struct baycom_state *bc, int cnt, unsigned char stat)
- 			if ((--bc->hdlctx.slotcnt) > 0)
- 				return 0;
- 			bc->hdlctx.slotcnt = bc->ch_params.slottime;
--			if ((random32() % 256) > bc->ch_params.ppersist)
-+			if ((prandom_u32() % 256) > bc->ch_params.ppersist)
- 				return 0;
- 		}
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index 933e5d9..57e3af8 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -559,6 +559,7 @@ static int p54p_probe(struct pci_dev *pdev,
+ 	mem_len = pci_resource_len(pdev, 0);
+ 	if (mem_len < sizeof(struct p54p_csr)) {
+ 		dev_err(&pdev->dev, "Too short PCI resources\n");
++		err = -ENODEV;
+ 		goto err_disable_dev;
  	}
-diff --git a/drivers/net/hamradio/hdlcdrv.c b/drivers/net/hamradio/hdlcdrv.c
-index a4a3516..3169252 100644
---- a/drivers/net/hamradio/hdlcdrv.c
-+++ b/drivers/net/hamradio/hdlcdrv.c
-@@ -389,7 +389,7 @@ void hdlcdrv_arbitrate(struct net_device *dev, struct hdlcdrv_state *s)
- 	if ((--s->hdlctx.slotcnt) > 0)
- 		return;
- 	s->hdlctx.slotcnt = s->ch_params.slottime;
--	if ((random32() % 256) > s->ch_params.ppersist)
-+	if ((prandom_u32() % 256) > s->ch_params.ppersist)
- 		return;
- 	start_tx(dev, s);
- }
-diff --git a/drivers/net/hamradio/yam.c b/drivers/net/hamradio/yam.c
-index c6645f1..21f231a 100644
---- a/drivers/net/hamradio/yam.c
-+++ b/drivers/net/hamradio/yam.c
-@@ -638,7 +638,7 @@ static void yam_arbitrate(struct net_device *dev)
- 	yp->slotcnt = yp->slot / 10;
  
- 	/* is random > persist ? */
--	if ((random32() % 256) > yp->pers)
-+	if ((prandom_u32() % 256) > yp->pers)
- 		return;
+@@ -568,8 +569,10 @@ static int p54p_probe(struct pci_dev *pdev,
+ 		goto err_disable_dev;
+ 	}
  
- 	yam_start_tx(dev, yp);
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index a875499..78dbc18 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -216,7 +216,7 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	mwifiex_form_mgmt_frame(skb, buf, len);
- 	mwifiex_queue_tx_pkt(priv, skb);
- 
--	*cookie = random32() | 1;
-+	*cookie = prandom_u32() | 1;
- 	cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true, GFP_ATOMIC);
- 
- 	wiphy_dbg(wiphy, "info: management frame transmitted\n");
-@@ -271,7 +271,7 @@ mwifiex_cfg80211_remain_on_channel(struct wiphy *wiphy,
- 					 duration);
- 
- 	if (!ret) {
--		*cookie = random32() | 1;
-+		*cookie = prandom_u32() | 1;
- 		priv->roc_cfg.cookie = *cookie;
- 		priv->roc_cfg.chan = *chan;
- 
+-	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
+-	    pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
++	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++	if (!err)
++		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
++	if (err) {
+ 		dev_err(&pdev->dev, "No suitable DMA available\n");
+ 		goto err_free_reg;
+ 	}
 -- 
-1.7.11.7
+1.7.9.5
 
