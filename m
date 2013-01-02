@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26388 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752037Ab3APODC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 09:03:02 -0500
-Date: Wed, 16 Jan 2013 15:01:02 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:43891 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629Ab3ABKv0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 05:51:26 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TqLuv-0004Ek-KE
+	for linux-wireless@vger.kernel.org; Wed, 02 Jan 2013 11:51:25 +0100
+Message-ID: <1357123911.9839.3.camel@jlt4.sipsolutions.net> (sfid-20130102_115129_608528_78380BB3)
+Subject: Re: [PATCH] mac80211: support HT notify channel width action
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: Re: [RFC] mac80211: soft scan vs latency
-Message-ID: <20130116140102.GA10746@redhat.com> (sfid-20130116_150306_760516_BB02AFFD)
-References: <20130114145558.GA24250@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130114145558.GA24250@redhat.com>
+Date: Wed, 02 Jan 2013 11:51:51 +0100
+In-Reply-To: <1356693299-12143-1-git-send-email-johannes@sipsolutions.net> (sfid-20121228_121444_315212_961A27CC)
+References: <1356693299-12143-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20121228_121444_315212_961A27CC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 14, 2013 at 03:55:58PM +0100, Stanislaw Gruszka wrote:
-> Except latency, patch perhaps also improve throughput, since we spend
-> more time on-channel while scanning. But I'm not quite sure, since
-> overall scanning time is bigger. I did not test influence of the patch
-> on throughput.
+On Fri, 2012-12-28 at 12:14 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> I tested patch by doing:
-> 
-> while true; do iw dev wlan0 scan; sleep 3; done > /dev/null
+> Support the HT notify channel width action frame
+> to update the rate scaling about the bandwidth
+> the peer can receive in.
 
-I can see slight throughput improvement with patch, measured by scp:
+Applied.
 
-Upload to periodical scanning machine:
-scp -B Fedora-18-Beta-i686-Live-Desktop.iso stasiu@192.168.1.105:~/
+johannes
 
-Unpatched: 3.9MB/s   03:15    
-Patched:   4.3MB/s   02:58
-
-Download from periodical scanning machine:
-scp -B stasiu@192.168.1.105:~/Fedora-18-Beta-i686-Live-Desktop.iso .
-
-Unpatched: 5.5MB/s   02:17
-Patched:   6.2MB/s   02:02
-
-Stanislaw
