@@ -1,165 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42694 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750813Ab3AWSst (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 13:48:49 -0500
-Message-ID: <1358967107.18201.23.camel@dcbw.foobar.com> (sfid-20130123_194853_511884_BE584920)
-Subject: Re: [PATCH] mac80211: improve latency and throughput while software
- scanning
-From: Dan Williams <dcbw@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Paul Stewart <pstew@chromium.org>
-Date: Wed, 23 Jan 2013 12:51:47 -0600
-In-Reply-To: <20130123113244.GA2941@redhat.com>
-References: <20130123113244.GA2941@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp08.msg.oleane.net ([62.161.4.8]:60814 "EHLO
+	smtp08.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752649Ab3ABNRx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 08:17:53 -0500
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Adrian Chadd'" <adrian@freebsd.org>,
+	"'Felix Fietkau'" <nbd@openwrt.org>
+Cc: "'Mohammed Shafi'" <shafi.wireless@gmail.com>,
+	<linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A31901412125@sbs2003.acksys.local>	<CAD2nsn1UyObSBrpAq+oJOm+Q1PuC=Y9J0cFH3aC3LkPei6QZYw@mail.gmail.com>	<CAJ-VmomdWE2d3qUzgOR0=pnoKzeJpFG1rOT1XH3gTB-dtosuVg@mail.gmail.com>	<50E2FE5E.6040300@openwrt.org> <CAJ-Vmo=kbvLSdA8wGaRacAOvoZBdksJwQZ+Z52RbiUAq-T4weA@mail.gmail.com>
+In-Reply-To: <CAJ-Vmo=kbvLSdA8wGaRacAOvoZBdksJwQZ+Z52RbiUAq-T4weA@mail.gmail.com>
+Subject: RE: [RFC] ATH9K: infinite loop in Tasklet
+Date: Wed, 2 Jan 2013 14:17:40 +0100
+Message-ID: <016301cde8eb$8b92ba60$a2b82f20$@acksys.fr> (sfid-20130102_141757_102487_2EF92A8E)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-23 at 12:32 +0100, Stanislaw Gruszka wrote:
-> Patch vastly improve latency while scanning. Slight throughput
-> improvements were observed as well. Is intended for improve performance
-> of voice and video applications, when scan is periodically requested by
-> user space (i.e. default NetworkManager behaviour).
-> 
-> Patch remove latency requirement based on PM_QOS_NETWORK_LATENCY,
-> this value is 2000 seconds by default (i.e. approximately 0.5 hour !?!).
-> 
-> Also remove listen interval requirement, which based on beaconing and
-> depending on BSS parameters. It can make we stay off-channel for a
-> second or more.
-> 
-> Instead try to offer the best latency that we could, i.e. be off-channel
-> no longer than PASSIVE channel scan time: 125 ms. That mean we will
-> scan two ACTIVE channels and go back to on-channel, and one PASSIVE
-> channel, and go back to on-channel.
-> 
-> Patch also decrease PASSIVE channel scan time to about 110 ms.
-> 
-> As drawback patch increase overall scan time. On my tests, when scanning
-> both 2GHz and 5GHz bands, scanning time increase from 5 seconds up to 10
-> seconds. Since that increase happen only when we are associated, I think
-> it can be acceptable. If eventually better scan time is needed for
-> situations when we lose signal and quickly need to decide to which AP
-> roam, additional scan flag or parameter can be introduced.
+	Thanks for your answer. 
 
-Total scan time isn't a problem as long as the latency of streaming
-applications is improved, since that was the original problem anyway.
-So I don't think it's a drawback.
+	I found a workaround for my problem. 
 
-Dan
+	In my Linux kernel, the default SLAB allocator was changed in
+default settings. 
+	SLOB  was used in place of SLAB. 
+	I select the SLAB allocator and that fix the default because it runs
+faster. 
 
-> I tested patch by doing:
-> 
-> while true; do iw dev wlan0 scan; sleep 3; done > /dev/null
-> 
-> and
-> 
-> ping -i0.2 -c 1000 HOST
-> 
-> on remote and local machine, results are as below:
-> 
-> * Ping from local periodically scanning machine to AP:
-> Unpatched: rtt min/avg/max/mdev = 0.928/24.946/182.135/36.873 ms
-> Patched:   rtt min/avg/max/mdev = 0.928/19.678/150.845/33.130 ms
-> 
-> * Ping from remote machine to periodically scanning machine:
-> Unpatched: rtt min/avg/max/mdev = 1.637/120.683/709.139/164.337 ms
-> Patched:   rtt min/avg/max/mdev = 1.807/26.893/201.435/40.284 ms
-> 
-> Throughput measured by scp show following results.
-> 
-> * Upload to periodically scanning machine:
-> Unpatched: 3.9MB/s   03:15    
-> Patched:   4.3MB/s   02:58
-> 
-> * Download from periodically scanning machine:
-> Unpatched: 5.5MB/s   02:17
-> Patched:   6.2MB/s   02:02
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  net/mac80211/scan.c |   32 +++++---------------------------
->  1 files changed, 5 insertions(+), 27 deletions(-)
-> 
-> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> index 06cbe26..505699b 100644
-> --- a/net/mac80211/scan.c
-> +++ b/net/mac80211/scan.c
-> @@ -27,7 +27,7 @@
->  
->  #define IEEE80211_PROBE_DELAY (HZ / 33)
->  #define IEEE80211_CHANNEL_TIME (HZ / 33)
-> -#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 8)
-> +#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 9)
->  
->  static void ieee80211_rx_bss_free(struct cfg80211_bss *cbss)
->  {
-> @@ -546,8 +546,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
->  	bool associated = false;
->  	bool tx_empty = true;
->  	bool bad_latency;
-> -	bool listen_int_exceeded;
-> -	unsigned long min_beacon_int = 0;
->  	struct ieee80211_sub_if_data *sdata;
->  	struct ieee80211_channel *next_chan;
->  	enum mac80211_scan_state next_scan_state;
-> @@ -566,11 +564,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
->  			if (sdata->u.mgd.associated) {
->  				associated = true;
->  
-> -				if (sdata->vif.bss_conf.beacon_int <
-> -				    min_beacon_int || min_beacon_int == 0)
-> -					min_beacon_int =
-> -						sdata->vif.bss_conf.beacon_int;
-> -
->  				if (!qdisc_all_tx_empty(sdata->dev)) {
->  					tx_empty = false;
->  					break;
-> @@ -587,34 +580,19 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
->  	 * see if we can scan another channel without interfering
->  	 * with the current traffic situation.
->  	 *
-> -	 * Since we don't know if the AP has pending frames for us
-> -	 * we can only check for our tx queues and use the current
-> -	 * pm_qos requirements for rx. Hence, if no tx traffic occurs
-> -	 * at all we will scan as many channels in a row as the pm_qos
-> -	 * latency allows us to. Additionally we also check for the
-> -	 * currently negotiated listen interval to prevent losing
-> -	 * frames unnecessarily.
-> -	 *
-> -	 * Otherwise switch back to the operating channel.
-> +	 * Keep good latency, do not stay off-channel more than 125 ms.
->  	 */
->  
->  	bad_latency = time_after(jiffies +
-> -			ieee80211_scan_get_channel_time(next_chan),
-> -			local->leave_oper_channel_time +
-> -			usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
-> -
-> -	listen_int_exceeded = time_after(jiffies +
-> -			ieee80211_scan_get_channel_time(next_chan),
-> -			local->leave_oper_channel_time +
-> -			usecs_to_jiffies(min_beacon_int * 1024) *
-> -			local->hw.conf.listen_interval);
-> +				 ieee80211_scan_get_channel_time(next_chan),
-> +				 local->leave_oper_channel_time + HZ / 8);
->  
->  	if (associated && !tx_empty) {
->  		if (local->scan_req->flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
->  			next_scan_state = SCAN_ABORT;
->  		else
->  			next_scan_state = SCAN_SUSPEND;
-> -	} else if (associated && (bad_latency || listen_int_exceeded)) {
-> +	} else if (associated && bad_latency) {
->  		next_scan_state = SCAN_SUSPEND;
->  	} else {
->  		next_scan_state = SCAN_SET_CHANNEL;
+	However  the infinite loop can still happen if the cpu is heavily
+loaded with other tasklets. 
 
+	Best regards.
+
+Cedric Voncken 
+-----Message d'origine-----
+De : adrian.chadd@gmail.com [mailto:adrian.chadd@gmail.com] De la part de
+Adrian Chadd
+Envoyé : mercredi 2 janvier 2013 00:41
+À : Felix Fietkau
+Cc : Mohammed Shafi; Cedric VONCKEN; linux-wireless@vger.kernel.org
+Objet : Re: [RFC] ATH9K: infinite loop in Tasklet
+
+On 1 January 2013 07:18, Felix Fietkau <nbd@openwrt.org> wrote:
+
+> I think the best way to properly fix this issue is to implement NAPI 
+> support (which mac80211 already supports).
+
+Sure, but there may be some underlying issues (maybe even on just that
+particular platform) that need to be addressed.
+
+Migrating to NAPI / breaking out of the tasklet early should also be done,
+but it's potentially orthogonal to the OP's problem.
+
+
+Adrian
 
