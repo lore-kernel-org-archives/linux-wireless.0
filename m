@@ -1,221 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:44988 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286Ab3AGC5I (ORCPT
+Received: from mail-da0-f47.google.com ([209.85.210.47]:44371 "EHLO
+	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752591Ab3ABRAz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2013 21:57:08 -0500
-Message-ID: <50EA39B3.1050008@gmail.com> (sfid-20130107_035750_465768_B7EA95E3)
-Date: Mon, 07 Jan 2013 10:57:55 +0800
-From: Chen Gang F T <chen.gang.flying.transformer@gmail.com>
+	Wed, 2 Jan 2013 12:00:55 -0500
+Received: by mail-da0-f47.google.com with SMTP id s35so6542452dak.6
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 09:00:55 -0800 (PST)
+Message-ID: <50E467C4.6030602@lwfinger.net> (sfid-20130102_180059_564517_7A4091D5)
+Date: Wed, 02 Jan 2013 11:00:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Chen Gang <gang.chen@asianux.com>
-CC: Joe Perches <joe@perches.com>, stas.yakovlev@gmail.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] drivers/net/wireless/ipw2x00: use strlcpy instead of
- strncpy
-References: <50E82D7D.4090107@asianux.com> <1357396966.21156.4.camel@joe-AO722> <50EA37CE.1090901@asianux.com>
-In-Reply-To: <50EA37CE.1090901@asianux.com>
-Content-Type: multipart/mixed;
- boundary="------------020805020104070605060406"
+To: Julian Wollrath <jwollrath@web.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: WARNING: at net/wireless/mlme.c:517
+References: <20130101154507.351dfb03@ilfaris> <50E325B5.205@lwfinger.net> <20130101231544.430cf1fe@ilfaris> <50E36325.3090502@lwfinger.net> <20130102120002.691dbbb4@ilfaris>
+In-Reply-To: <20130102120002.691dbbb4@ilfaris>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020805020104070605060406
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+On 01/02/2013 05:00 AM, Julian Wollrath wrote:
 
-于 2013年01月07日 10:49, Chen Gang 写道:
-> 于 2013年01月05日 22:42, Joe Perches 写道:
->> This happens because escaped is declared the wrong size.
->>
->> It'd be better to change
->> 	char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
->> to
->> 	DECLARE_SSID_BUF(escaped);
->> and use
->> 	print_ssid(escaped, network->ssid, network->ssid_len)
->> in the debug.
->>
-> 
->   if what you said is true:
->     it is better to delete escaped variable
->     use ssid instead of escaped, directly.
-> 
-   oh, sorry, it is my fault.
-   we need use duplicate buffer to print different contents, at the same time.
+> Below is the output of a short time with debug=4 from a period where
+> the interface did not manage to connect properly to the AP. Since I have
+> no LED which indicates anything the lines that state
+> "rtl8192ce:rtl92ce_led_control() [...]" do not seem necessary but I
+> suspect there is no way to detect if there really is a state LED or is
+> it?
 
-   :-)
+Thanks for the debug output. There is no way for the driver to detect if there 
+is an actual LED attached to that pin of the mini-PCIe connector, thus we 
+program it as if one were available.
+>
+> The other thing, which catched my eye, were the following repeated messages:
+> rtl8192ce:rtl92ce_set_hw_reg():<0-0> HW_VAR_SLOT_TIME 14
+> rtl8192c_common:rtl92c_phy_sw_chnl():<0-0> sw_chnl_inprogress false schdule workitem
 
-   but I still suggest to keep original author using
-      maybe he intend to keep the print size for output format
-      so I think it is better to only fix bug, not touch the features. 
+That sequence is due to scanning and is completely normal.
 
-   Regards
+I have not looked at detail at the debug listing, but I do have additional 
+questions. None of your Emails on this subject mention anything about the AP. 
+What make/model is it? What firmware is it running? Is it 802.11g or 802.11n? 
+What are the details of the encryption? The device authenticates but is never 
+able to associate after that.
 
- gchen.
+Thanks,
 
+Larry
 
-
->   but I think the original author intended to use escaped instead of ssid
->     DECLARE_SSID_BUF(ssid)  (line 5525, 5737)
->     use ssid to print debug information directly
->       (such as: line 5530..5535, 5545..5549, 5745..5749, ...)
->     when need print additional information, use escaped
->       (line 5559..5569, 5773..5782, 5791..5799)
-> 
->   so, I still suggest:
->     only fix the bug (use strlcpy instead of strncpy)
->     and not touch original features which orignal author intended using.
-> 
->   Regards
-> 
-> gchen.
-> 
-> in drivers/net/wireless/ipw2x00/ipw2200.c:
-> 
->  5519 static int ipw_find_adhoc_network(struct ipw_priv *priv,
->  5520                                   struct ipw_network_match *match,
->  5521                                   struct libipw_network *network,
->  5522                                   int roaming)
->  5523 {
->  5524         struct ipw_supported_rates rates;
->  5525         DECLARE_SSID_BUF(ssid);
->  5526 
->  5527         /* Verify that this network's capability is compatible with the
->  5528          * current mode (AdHoc or Infrastructure) */
->  5529         if ((priv->ieee->iw_mode == IW_MODE_ADHOC &&
->  5530              !(network->capability & WLAN_CAPABILITY_IBSS))) {
->  5531                 IPW_DEBUG_MERGE("Network '%s (%pM)' excluded due to "
->  5532                                 "capability mismatch.\n",
->  5533                                 print_ssid(ssid, network->ssid,
->  5534                                            network->ssid_len),
->  5535                                 network->bssid);
->  5536                 return 0;
->  5537         }
->  5538 
->  5539         if (unlikely(roaming)) {
->  5540                 /* If we are roaming, then ensure check if this is a valid
->  5541                  * network to try and roam to */
->  5542                 if ((network->ssid_len != match->network->ssid_len) ||
->  5543                     memcmp(network->ssid, match->network->ssid,
->  5544                            network->ssid_len)) {
->  5545                         IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
->  5546                                         "because of non-network ESSID.\n",
->  5547                                         print_ssid(ssid, network->ssid,
->  5548                                                    network->ssid_len),
->  5549                                         network->bssid);
->  5550                         return 0;
->  5551                 }
->  5552         } else {
->  5553                 /* If an ESSID has been configured then compare the broadcast
->  5554                  * ESSID to ours */
->  5555                 if ((priv->config & CFG_STATIC_ESSID) &&
->  5556                     ((network->ssid_len != priv->essid_len) ||
->  5557                      memcmp(network->ssid, priv->essid,
->  5558                             min(network->ssid_len, priv->essid_len)))) {
->  5559                         char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
->  5560 
->  5561                         strncpy(escaped,
->  5562                                 print_ssid(ssid, network->ssid,
->  5563                                            network->ssid_len),
->  5564                                 sizeof(escaped));
->  5565                         IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
->  5566                                         "because of ESSID mismatch: '%s'.\n",
->  5567                                         escaped, network->bssid,
->  5568                                         print_ssid(ssid, priv->essid,
->  5569                                                    priv->essid_len));
->  5570                         return 0;
->  5571                 }
->  5572         }
->  ...
->  
->  5732 static int ipw_best_network(struct ipw_priv *priv,
->  5733                             struct ipw_network_match *match,
->  5734                             struct libipw_network *network, int roaming)
->  5735 {
->  5736         struct ipw_supported_rates rates;
->  5737         DECLARE_SSID_BUF(ssid);
->  5738 
->  5739         /* Verify that this network's capability is compatible with the
->  5740          * current mode (AdHoc or Infrastructure) */
->  5741         if ((priv->ieee->iw_mode == IW_MODE_INFRA &&
->  5742              !(network->capability & WLAN_CAPABILITY_ESS)) ||
->  5743             (priv->ieee->iw_mode == IW_MODE_ADHOC &&
->  5744              !(network->capability & WLAN_CAPABILITY_IBSS))) {
->  5745                 IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded due to "
->  5746                                 "capability mismatch.\n",
->  5747                                 print_ssid(ssid, network->ssid,
->  5748                                            network->ssid_len),
->  5749                                 network->bssid);
->  5750                 return 0;
->  5751         }
->  5752 
->  5753         if (unlikely(roaming)) {
->  5754                 /* If we are roaming, then ensure check if this is a valid
->  5755                  * network to try and roam to */
->  5756                 if ((network->ssid_len != match->network->ssid_len) ||
->  5757                     memcmp(network->ssid, match->network->ssid,
->  5758                            network->ssid_len)) {
->  5759                         IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
->  5760                                         "because of non-network ESSID.\n",
->  5761                                         print_ssid(ssid, network->ssid,
->  5762                                                    network->ssid_len),
->  5763                                         network->bssid);
->  5764                         return 0;
->  5765                 }
->  5766         } else {
->  5767                 /* If an ESSID has been configured then compare the broadcast
->  5768                  * ESSID to ours */
->  5769                 if ((priv->config & CFG_STATIC_ESSID) &&
->  5770                     ((network->ssid_len != priv->essid_len) ||
->  5771                      memcmp(network->ssid, priv->essid,
->  5772                             min(network->ssid_len, priv->essid_len)))) {
->  5773                         char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
->  5774                         strncpy(escaped,
->  5775                                 print_ssid(ssid, network->ssid,
->  5776                                            network->ssid_len),
->  5777                                 sizeof(escaped));
->  5778                         IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
->  5779                                         "because of ESSID mismatch: '%s'.\n",
->  5780                                         escaped, network->bssid,
->  5781                                         print_ssid(ssid, priv->essid,
->  5782                                                    priv->essid_len));
->  5783                         return 0;
->  5784                 }
->  5785         }
->  5786 
->  5787         /* If the old network rate is better than this one, don't bother
->  5788          * testing everything else. */
->  5789         if (match->network && match->network->stats.rssi > network->stats.rssi) {
->  5790                 char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
->  5791                 strncpy(escaped,
->  5792                         print_ssid(ssid, network->ssid, network->ssid_len),
->  5793                         sizeof(escaped));
->  5794                 IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded because "
->  5795                                 "'%s (%pM)' has a stronger signal.\n",
->  5796                                 escaped, network->bssid,
->  5797                                 print_ssid(ssid, match->network->ssid,
->  5798                                            match->network->ssid_len),
->  5799                                 match->network->bssid);
->  5800                 return 0;
->  5801         }
-> 
-
-
--- 
-Chen Gang
-
-Flying Transformer
-
---------------020805020104070605060406
-Content-Type: text/x-vcard; charset=utf-8;
- name="chen_gang_flying_transformer.vcf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="chen_gang_flying_transformer.vcf"
-
-YmVnaW46dmNhcmQNCmZuOkNoZW4gR2FuZw0Kbjo7Q2hlbiBHYW5nDQp2ZXJzaW9uOjIuMQ0K
-ZW5kOnZjYXJkDQoNCg==
---------------020805020104070605060406--
