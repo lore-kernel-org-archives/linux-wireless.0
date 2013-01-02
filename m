@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:38080 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502Ab3AGRVT convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44441 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677Ab3ABNrg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 12:21:19 -0500
-MIME-Version: 1.0
-In-Reply-To: <20130107095548.GA6931@redhat.com>
-References: <20130107095548.GA6931@redhat.com>
-From: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
-Date: Mon, 7 Jan 2013 18:20:58 +0100
-Message-ID: <CAHXqBFLQau4iROXA=GL9EQFYJpRGJHpkuW7knt=9YfSqz+_XRQ@mail.gmail.com> (sfid-20130107_182126_853021_C22C5628)
-Subject: Re: [PATCH repost] net,wireless: check against default_ethtool_ops
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Ben Greear <greearb@candelatech.com>,
-	=?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org,
-	Ben Hutchings <bhutchings@solarflare.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 2 Jan 2013 08:47:36 -0500
+Message-ID: <1357134469.9839.35.camel@jlt4.sipsolutions.net> (sfid-20130102_144739_161111_1D330CC7)
+Subject: Re: [PATCHv5 7/8] mac80211: add ap channel switch command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 02 Jan 2013 14:47:49 +0100
+In-Reply-To: <1355407113-27006-8-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1355407113-27006-8-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/1/7 Stanislaw Gruszka <sgruszka@redhat.com>:
-> Since:
->
-> commit 2c60db037034d27f8c636403355d52872da92f81
-> Author: Eric Dumazet <edumazet@google.com>
-> Date:   Sun Sep 16 09:17:26 2012 +0000
->
->     net: provide a default dev->ethtool_ops
->
-> wireless core does not correctly assign ethtool_ops. In order to fix
-> the problem, and avoid assigning ethtool_ops on each individual cfg80211
-> drivers, we check against default_ethool_ops pointer instead of NULL in
-> wireless core.
-[...]
+On Thu, 2012-12-13 at 14:58 +0100, Simon Wunderlich wrote:
 
-You could instead move the assignment of default ethtool_ops to just after
-call_netdevice_notifiers(NETDEV_REGISTER) in register_netdevice() or
-just after call_netdevice_notifiers(NETDEV_POST_INIT) and initialize the default
-wireless ethtool_ops in NETDEV_POST_INIT hook. That will avoid the export.
+> +	mutex_lock(&local->mtx);
+> +	if (local->ap_cs_chandef.chan->flags & IEEE80211_CHAN_RADAR) {
+> +		sdata_info(sdata, "changing to DFS channel\n");
+> +		/* when changing to a DFS channel, stop AP. Userspace must
+> +		 * restart AP or do start radar detection first.
+> +		 */
+> +		stop_ap = true;
 
-Either way is good because register_netdevice() is called under RTNL, so
-ethtool_ops can't be called until it returns. NETDEV_POST_INIT seams more
-natural to me, but it's not a strong opinion.
+I don't see any value in this. You might just as well simply forbid
+requesting a channel change to a DFS channel, hostapd could then stop
+instead of doing the switch.
 
-Best Regards,
-Michał Mirosław
+> +	} else {
+> +		/* update the device channel directly */
+> +		sdata_info(sdata, "changing to non-DFS channel\n");
+> +
+> +		/* TODO: _oper_channel is deprecated ... use
+> +		 * vif_release/use_channel instead? In this case, we must make
+> +		 * sure that interface is down first ...
+> +		 */
+
+Well, most likely need to modify the existing channel context instead.
+However, that's tricky, and what if there are other interfaces, what
+happens to those?
+
+johannes
+
+
